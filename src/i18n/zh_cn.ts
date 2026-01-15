@@ -82,6 +82,22 @@ export const zhCn = {
         title: '会计报表',
         desc: '一键生成三大会计报表，随时掌握企业营运状况。',
       },
+      ocr: {
+        title: '智能凭证识别',
+        desc: '自动识别单据发票，提取关键字段。',
+      },
+      integration: {
+        title: '异构数据整合',
+        desc: '对接 ERP、MES 系统，整合异构数据。',
+      },
+      esg: {
+        title: '温室气体核算',
+        desc: '符合 ISO 规范，自动计算温室气体排放。',
+      },
+      audit: {
+        title: '智能稽核',
+        desc: '异常数值检测与数字证据链。',
+      },
     },
   },
   tech_specs: {
@@ -100,6 +116,18 @@ export const zhCn = {
       locutus: {
         title: 'Locutus 边缘计算协议',
         desc: '利用分布式边缘计算架构，实现高性能、低延迟的数据处理与即时同步。',
+      },
+      ocr_engine: {
+        title: '多模态文档解析引擎',
+        desc: 'AI 自动识别 .doc/.xls/.pdf/.png 等格式，精准提取关键数据。',
+      },
+      emission_db: {
+        title: '动态排放因子数据库',
+        desc: '内建权威机构核定因子库，支持自定义因子清册，确保核算合规。',
+      },
+      evidence_chain: {
+        title: '数字证据链技术',
+        desc: '提供数据 Drill-down 功能，从最终报表回溯至原始单据，确保数据可追踪。',
       },
     },
   },

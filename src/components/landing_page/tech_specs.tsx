@@ -1,6 +1,6 @@
 'use client';
 
-import { Lock, Cpu, Globe } from 'lucide-react';
+import { Lock, Cpu, Globe, ScanText, Database, Link } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
 
 export default function TechSpecs() {
@@ -18,6 +18,18 @@ export default function TechSpecs() {
     {
       key: 'locutus',
       icon: Globe,
+    },
+    {
+      key: 'ocr_engine',
+      icon: ScanText,
+    },
+    {
+      key: 'emission_db',
+      icon: Database,
+    },
+    {
+      key: 'evidence_chain',
+      icon: Link,
     },
   ];
 

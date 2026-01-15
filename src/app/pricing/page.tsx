@@ -5,7 +5,11 @@ import { useTranslation } from '@/i18n/i18n_context';
 import PricingCard from '@/components/pricing/pricing_card';
 import Header from '@/components/landing_page/header';
 import Footer from '@/components/landing_page/footer';
-import { Check, Minus, Plus } from 'lucide-react';
+import {
+  Check, Minus,
+  Plus,
+  Lock,
+} from 'lucide-react';
 import Image from 'next/image';
 import { MODULES } from '@/constants/modules';
 
@@ -249,7 +253,7 @@ export default function PricingPage() {
                                     onClick={() => !isMandatory && toggleModule(mod.key)}
                                     disabled={isMandatory}
                                     className={`
-                                      w-full flex items-center gap-2 rounded-lg p-3 transition-all duration-200 text-left
+                                      relative w-full h-full flex items-center gap-2 rounded-lg p-3 transition-all duration-200 text-left pr-8
                                       ${isSelected
                                         ? 'bg-orange-600 text-white ring-2 ring-orange-500 shadow-lg scale-[1.02]'
                                         : 'bg-white/5 text-gray-400 ring-1 ring-white/10 hover:bg-white/10 hover:text-gray-300'
@@ -258,11 +262,11 @@ export default function PricingPage() {
                                     `}
                                   >
                                     <mod.icon className={`h-4 w-4 flex-none ${isSelected ? 'text-white' : 'text-orange-400'}`} />
-                                    <span className="truncate">{t(`features.items.${mod.key}.title`)}</span>
+                                    <span className="flex-1 min-w-0 text-sm font-medium leading-tight">{t(`features.items.${mod.key}.title`)}</span>
                                     {isMandatory && (
-                                      <span className="ml-auto rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white ring-1 ring-inset ring-white/30">
-                                        {t('pricing.ai_adoption.required')}
-                                      </span>
+                                      <div className="absolute top-0 right-0 p-1.5">
+                                        <Lock className="h-3.5 w-3.5 text-white/90 drop-shadow-md" strokeWidth={2.5} />
+                                      </div>
                                     )}
                                   </button>
                                 </li>

@@ -82,6 +82,22 @@ export const en = {
         title: 'Financial Reports',
         desc: 'Generate the three major financial statements with one click to keep abreast of business operations.',
       },
+      ocr: {
+        title: 'AI OCR',
+        desc: 'Automated document recognition and data extraction.',
+      },
+      integration: {
+        title: 'System Integration',
+        desc: 'Connect with ERP and MES for unified data.',
+      },
+      esg: {
+        title: 'GHG Accounting',
+        desc: 'ISO-compliant GHG emissions calculation.',
+      },
+      audit: {
+        title: 'Smart Audit',
+        desc: 'Anomaly detection and digital audit trails.',
+      },
     },
   },
   tech_specs: {
@@ -100,6 +116,18 @@ export const en = {
       locutus: {
         title: 'Locutus Edge Computing Protocol',
         desc: 'Leverage distributed edge computing architecture for high-performance, low-latency data processing and real-time synchronization.',
+      },
+      ocr_engine: {
+        title: 'Multimodal Document Parsing Engine',
+        desc: 'AI-powered recognition for .doc/.xls/.pdf/.png to extract key data with high precision.',
+      },
+      emission_db: {
+        title: 'Dynamic Emission Factor Database',
+        desc: 'Built-in authorized factor database with support for custom factor lists to ensure compliance.',
+      },
+      evidence_chain: {
+        title: 'Digital Evidence Chain Technology',
+        desc: 'Provides data drill-down from final reports back to original documents, ensuring full traceability.',
       },
     },
   },

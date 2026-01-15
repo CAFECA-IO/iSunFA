@@ -82,6 +82,22 @@ export const zhTw = {
         title: '會計報表',
         desc: '一鍵生成三大會計報表，隨時掌握企業營運狀況。',
       },
+      ocr: {
+        title: '智能憑證辨識',
+        desc: '自動辨識單據發票，提取關鍵欄位。',
+      },
+      integration: {
+        title: '異質資料整合',
+        desc: '串接 ERP、MES 系統，整合異質資料。',
+      },
+      esg: {
+        title: '溫室氣體核算',
+        desc: '符合 ISO 規範，自動計算溫室氣體排放。',
+      },
+      audit: {
+        title: '智能稽核',
+        desc: '異常數值偵測與數位證據鏈結。',
+      },
     },
   },
   tech_specs: {
@@ -100,6 +116,18 @@ export const zhTw = {
       locutus: {
         title: 'Locutus 邊緣運算協議',
         desc: '利用分散式邊緣運算架構，實現高效能、低延遲的資料處理與即時同步。',
+      },
+      ocr_engine: {
+        title: '多模態文件解析引擎',
+        desc: 'AI 自動識別 .doc/.xls/.pdf/.png 等格式，精準提取關鍵數據。',
+      },
+      emission_db: {
+        title: '動態排放係數資料庫',
+        desc: '內建權威機構核定係數庫，支持自定義係數清冊，確保核算合規。',
+      },
+      evidence_chain: {
+        title: '數位證據鏈結技術',
+        desc: '提供數據 Drill-down 功能，從最終報表回溯至原始單據，確保數據可追蹤。',
       },
     },
   },
