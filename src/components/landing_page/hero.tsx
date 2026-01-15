@@ -25,7 +25,7 @@ export default function Hero() {
 
       <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
         <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-amber-500 pb-2">
+          <h1 className="text-5xl font-extrabold tracking-tight text-transparent sm:text-7xl bg-clip-text bg-gradient-to-br from-orange-700 via-orange-500 to-amber-400 drop-shadow-sm pb-4 leading-tight">
             {t('hero.title')}
           </h1>
           <p className="mt-6 text-lg leading-8 text-gray-600 h-24 sm:h-auto">
@@ -33,6 +33,7 @@ export default function Hero() {
               lines={[
                 t('hero.subtitle_line1'),
                 t('hero.subtitle_line2'),
+                t('hero.subtitle_line3'),
               ]}
             />
           </p>

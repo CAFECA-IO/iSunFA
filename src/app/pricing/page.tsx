@@ -35,7 +35,7 @@ export default function PricingPage() {
     );
   };
 
-  const totalPrice = 6825 + (userCount * 100) + (selectedModules.length * 1500);
+  const totalPrice = 6825 + (userCount * 105) + (selectedModules.length * 1575);
 
   return (
     <div className="bg-white">
