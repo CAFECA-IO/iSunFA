@@ -1,29 +1,12 @@
 'use client';
 
 import {
-  BookOpen,
-  Sliders,
-  Wallet,
-  PieChart,
-  Landmark,
-  Users,
-  FileText,
-  FileSignature
 } from 'lucide-react';
 import Link from 'next/link';
 
 import { useTranslation } from '@/i18n/i18n_context';
 
-const featureKeys = [
-  { key: 'bookkeeping', icon: BookOpen },
-  { key: 'adjustment', icon: Sliders },
-  { key: 'cashier', icon: Wallet },
-  { key: 'analysis', icon: PieChart },
-  { key: 'tax', icon: Landmark },
-  { key: 'salary', icon: Users },
-  { key: 'financial_report', icon: FileText },
-  { key: 'signing', icon: FileSignature },
-];
+import { MODULES } from '@/constants/modules';
 
 export default function Features() {
   const { t } = useTranslation();
@@ -42,7 +25,7 @@ export default function Features() {
         </div>
         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
           <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-3 xl:grid-cols-4">
-            {featureKeys.map((feature) => (
+            {MODULES.map((feature) => (
               <Link
                 key={feature.key}
                 href="/user/chat"
