@@ -140,10 +140,29 @@ export const ja = {
     monthly: '月払い',
     yearly: '年払い',
     save_percent: '17% お得',
+    currency_prefix: 'NT$ ',
+
     cta: '始める',
     features: '機能',
     per_key: ' / キー',
+    select_plan: 'プランを選択',
+    current_plan: '現在のプラン',
+    coming_soon_title: '近日公開',
+    coming_soon_message: '関連プランは近日公開予定です。お楽しみに。',
     plans: {
+      personal: {
+        name: 'フリープラン',
+        desc: '個人ユーザー向け',
+        price_monthly: '無料',
+        price_yearly: '無料',
+        features: {
+          fido: 'FIDO2 キー 1個',
+          vouchers: '月 10 件の証憑',
+          vouchers_overage_tooltip: '超過分 1 ポイント/件',
+          ai_reports: '月 1 件の AI レポート',
+          ai_overage_tooltip: '超過分 500 ポイント/件',
+        },
+      },
       free: {
         name: 'フリープラン',
         desc: '個人ユーザー向け',
@@ -212,9 +231,10 @@ export const ja = {
       add_module: '追加モジュール料金',
       add_module_price: 'NT$ 1,575 / 月',
       total_estimated: '月額見積もり',
-      base_included: 'プラットフォーム保守費込み',
       selected: '個選択済み',
       required: '必須',
+      local_node: 'ローカルノードサービス',
+      local_node_tooltip: '機密情報をローカルで暗号化して保存（ハードウェアレンタル料が別途かかります）',
     },
     credits: {
       title: 'ポイント購入',

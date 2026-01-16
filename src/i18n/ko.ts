@@ -139,11 +139,30 @@ export const ko = {
     subtitle: '자신에게 맞는 요금제를 선택하세요',
     monthly: '월 결제',
     yearly: '연 결제',
-    save_percent: '17% 할인',
+    save_percent: '17% 절약',
+    currency_prefix: 'NT$ ',
+
     cta: '시작하기',
     features: '기능',
     per_key: ' / 키',
+    select_plan: '요금제 선택',
+    current_plan: '현재 요금제',
+    coming_soon_title: '출시 예정',
+    coming_soon_message: '관련 요금제는 곧 출시될 예정입니다. 기대해 주세요.',
     plans: {
+      personal: {
+        name: '무료 버전',
+        desc: '개인 사용자용',
+        price_monthly: '무료',
+        price_yearly: '무료',
+        features: {
+          fido: 'FIDO2 키 1개',
+          vouchers: '월 10건의 전표',
+          vouchers_overage_tooltip: '초과 시 1 포인트/건',
+          ai_reports: '월 1건의 AI 보고서',
+          ai_overage_tooltip: '초과 시 500 포인트/건',
+        },
+      },
       free: {
         name: '무료 버전',
         desc: '개인 사용자용',
@@ -211,9 +230,10 @@ export const ko = {
       add_module: '추가 모듈 비용',
       add_module_price: 'NT$ 1,575 / 월',
       total_estimated: '예상 월 사용료',
-      base_included: '플랫폼 유지 관리비 포함',
       selected: '개 선택됨',
       required: '필수',
+      local_node: '로컬 노드 서비스',
+      local_node_tooltip: '민감한 정보를 로컬에 암호화하여 저장 (추가 하드웨어 임대료 부과)',
     },
     credits: {
       title: '포인트 구매',

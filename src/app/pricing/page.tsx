@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
+import { useAuth } from '@/contexts/auth_context';
 import PricingCard from '@/components/pricing/pricing_card';
 import Header from '@/components/landing_page/header';
 import Footer from '@/components/landing_page/footer';
@@ -13,10 +14,23 @@ import {
 import Image from 'next/image';
 import { MODULES } from '@/constants/modules';
 
+import ConfirmModal from '@/components/common/confirm_modal';
+import AuthModal from '@/components/auth/auth_modal';
+
 export default function PricingPage() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
   const [activeTab, setActiveTab] = useState<'subscription' | 'credits'>('subscription');
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+  });
+  const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+
+  // Info: (20260116 - Antigravity) Normalize plan: default/personal -> free
+  const currentPlan = (user?.plan === 'personal' || !user?.plan) ? 'free' : user.plan;
 
   // Info: (20260115 - Luphia) Pricing Calculator State
   const [userCount, setUserCount] = useState(5);
@@ -36,6 +50,19 @@ export default function PricingPage() {
   };
 
   const totalPrice = 6825 + (userCount * 105) + (selectedModules.length * 1575);
+
+  const showComingSoon = () => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    setConfirmModal({
+      isOpen: true,
+      title: t('pricing.coming_soon_title'),
+      message: t('pricing.coming_soon_message'),
+    });
+  };
 
   return (
     <div className="bg-white">
@@ -103,6 +130,7 @@ export default function PricingPage() {
                 <PricingCard
                   planKey="free"
                   billingInterval={billingInterval}
+                  currentPlan={currentPlan}
                   features={[
                     t('pricing.plans.free.features.fido'),
                     {
@@ -119,6 +147,8 @@ export default function PricingPage() {
                   planKey="team"
                   billingInterval={billingInterval}
                   popular={true}
+                  currentPlan={currentPlan}
+                  onSelect={showComingSoon}
                   features={[
                     {
                       text: t('pricing.plans.team.features.fido'),
@@ -139,6 +169,8 @@ export default function PricingPage() {
                 <PricingCard
                   planKey="business"
                   billingInterval={billingInterval}
+                  currentPlan={currentPlan}
+                  onSelect={showComingSoon}
                   features={[
                     {
                       text: t('pricing.plans.business.features.fido'),
@@ -167,126 +199,157 @@ export default function PricingPage() {
               </div>
 
               {/* Info: (20260115 - Luphia) Enterprise AI Adoption Plan Section */}
-              <div className="mt-16 rounded-3xl bg-gray-900 px-6 py-8 shadow-2xl ring-1 ring-white/10 sm:px-12 lg:px-12 lg:py-12">
-                <div className="mx-auto flex max-w-2xl flex-col gap-16 lg:mx-0 lg:max-w-none lg:flex-row lg:items-center">
-                  <div className="w-full flex-auto">
-                    <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                      {t('pricing.ai_adoption.title')}
-                    </h2>
-                    <p className="mt-6 text-lg leading-8 text-gray-300">
-                      {t('pricing.ai_adoption.description')}
-                    </p>
-
-                    <div className="mt-10 flex flex-col gap-y-4">
-                      <div className="flex items-baseline gap-x-2">
-                        <span className="text-base font-semibold leading-7 text-gray-300">
-                          {t('pricing.ai_adoption.total_estimated')}
-                        </span>
-                        <h3 className="flex-none text-4xl font-bold tracking-tight text-white">
-                          NT$ {totalPrice.toLocaleString()}
-                        </h3>
-                        <span className="text-base font-semibold leading-7 text-gray-300">
-                          {t('pricing.ai_adoption.period')}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-400">
-                        {t('pricing.ai_adoption.base_included')} (NT$ 6,825)
+              {/* Info: (20260115 - Luphia) Enterprise AI Adoption Plan Section */}
+              <div className="mt-16 rounded-3xl bg-gradient-to-b from-gray-900 to-gray-800 p-1 shadow-2xl shadow-orange-900/20 ring-1 ring-white/10">
+                <div className="rounded-[22px] bg-gray-900/50 px-6 py-8 sm:px-12 lg:px-12 lg:py-12 backdrop-blur-xl">
+                  <div className="mx-auto flex max-w-2xl flex-col gap-16 lg:mx-0 lg:max-w-none lg:flex-row lg:items-start">
+                    <div className="w-full flex-auto">
+                      <h2 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-400 sm:text-4xl">
+                        {t('pricing.ai_adoption.title')}
+                      </h2>
+                      <p className="mt-6 text-lg leading-8 text-gray-300">
+                        {t('pricing.ai_adoption.description')}
                       </p>
-                    </div>
 
-                    <ul className="mt-8 grid grid-cols-1 gap-x-8 gap-y-3 text-base leading-7 text-white sm:grid-cols-2">
-                      {(t('pricing.ai_adoption.features') as unknown as string[]).map((feature, index) => (
-                        <li key={index} className="flex gap-x-3">
-                          <Check className="h-7 w-5 flex-none text-orange-400" aria-hidden="true" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
+                      <ul className="mt-8 grid grid-cols-1 gap-x-8 gap-y-4 text-base leading-7 text-gray-300 sm:grid-cols-2">
+                        {(t('pricing.ai_adoption.features') as unknown as string[]).map((feature, index) => (
+                          <li key={index} className="flex gap-x-3 items-center">
+                            <div className="flex-none rounded-full bg-orange-500/10 p-1">
+                              <Check className="h-5 w-5 text-orange-400" aria-hidden="true" />
+                            </div>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
 
-                    {/* Add-ons Section */}
-                    <div className="mt-10 border-t border-white/10 pt-10">
-                      <div className="space-y-8">
-                        {/* Additional User */}
-                        <div className="flex items-center justify-between gap-x-4 border-b border-white/5 pb-8">
-                          <div>
-                            <span className="text-base text-gray-300 block">{t('pricing.ai_adoption.user_count')}</span>
-                            <span className="text-sm text-gray-500">{t('pricing.ai_adoption.add_user_price')}</span>
+                      {/* Add-ons Section */}
+                      <div className="mt-12 border-t border-white/10 pt-10">
+                        <div className="space-y-10">
+                          {/* Additional User */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-white/5 pb-8">
+                            <div>
+                              <span className="text-lg font-medium text-white block">{t('pricing.ai_adoption.user_count')}</span>
+                              <span className="text-sm text-gray-400 mt-1 block">{t('pricing.ai_adoption.add_user_price')}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-x-4 bg-black/20 rounded-xl p-1.5 ring-1 ring-white/10 w-full sm:w-auto">
+                              <button
+                                onClick={() => setUserCount(prev => Math.max(5, prev - 1))}
+                                className="p-2 rounded-lg hover:bg-white/10 text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+                                disabled={userCount <= 5}
+                              >
+                                <Minus className="h-5 w-5" />
+                              </button>
+                              <span className="w-12 text-center text-lg font-bold text-white tabular-nums">{userCount}</span>
+                              <button
+                                onClick={() => setUserCount(prev => prev + 1)}
+                                className="p-2 rounded-lg hover:bg-white/10 text-white transition-all hover:scale-105 active:scale-95"
+                              >
+                                <Plus className="h-5 w-5" />
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-x-3 bg-white/5 rounded-lg p-1 ring-1 ring-white/10">
-                            <button
-                              onClick={() => setUserCount(prev => Math.max(5, prev - 1))}
-                              className="p-1 rounded hover:bg-white/10 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                              disabled={userCount <= 5}
-                            >
-                              <Minus className="h-5 w-5" />
-                            </button>
-                            <span className="w-8 text-center font-semibold text-white">{userCount}</span>
-                            <button
-                              onClick={() => setUserCount(prev => prev + 1)}
-                              className="p-1 rounded hover:bg-white/10 text-white transition-colors"
-                            >
-                              <Plus className="h-5 w-5" />
-                            </button>
+
+                          {/* Additional Module */}
+                          <div>
+                            <div className="flex items-center justify-between gap-x-4 mb-8">
+                              <div>
+                                <span className="text-lg font-medium text-white block">{t('pricing.ai_adoption.add_module')}</span>
+                                <span className="text-sm text-gray-400 mt-1 block">{t('pricing.ai_adoption.add_module_price')}</span>
+                              </div>
+                              <span className="inline-flex items-center rounded-full bg-orange-400/10 px-3 py-1 text-sm font-medium text-orange-400 ring-1 ring-inset ring-orange-400/20">
+                                {selectedModules.length} {t('pricing.ai_adoption.selected')}
+                              </span>
+                            </div>
+                            <ul className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+                              {MODULES.map((mod) => {
+                                const isSelected = selectedModules.includes(mod.key);
+                                const isMandatory = !mod.optional;
+
+                                return (
+                                  <li key={mod.key}>
+                                    <button
+                                      type="button"
+                                      onClick={() => !isMandatory && toggleModule(mod.key)}
+                                      disabled={isMandatory}
+                                      className={`
+                                        group relative w-full h-full flex flex-row items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 text-left overflow-hidden
+                                        ${isSelected
+                                          ? 'bg-gradient-to-br from-orange-600 to-orange-700 text-white shadow-lg shadow-orange-900/20 ring-1 ring-orange-500'
+                                          : 'bg-white/5 text-gray-400 ring-1 ring-white/10 hover:bg-white/10 hover:text-gray-200 hover:ring-white/20'
+                                        }
+                                        ${isMandatory ? 'cursor-not-allowed' : 'cursor-pointer active:scale-[0.98]'}
+                                      `}
+                                    >
+                                      <div className={`
+                                        flex-none p-1.5 rounded-md transition-colors
+                                        ${isSelected ? 'bg-white/20 text-white' : 'bg-white/5 text-gray-400 group-hover:text-gray-300'}
+                                      `}>
+                                        <mod.icon className="h-4 w-4" />
+                                      </div>
+                                      <span className="font-medium leading-tight text-sm truncate">{t(`features.items.${mod.key}.title`)}</span>
+
+                                      {isMandatory && (
+                                        <div className="ml-auto text-white/40">
+                                          <Lock className="h-3.5 w-3.5" />
+                                        </div>
+                                      )}
+                                    </button>
+                                  </li>
+                                );
+                              })}
+                            </ul>
                           </div>
                         </div>
+                      </div>
 
-                        {/* Additional Module */}
-                        <div>
-                          <div className="flex items-center justify-between gap-x-4 mb-6">
-                            <div>
-                              <span className="text-base text-gray-300 block">{t('pricing.ai_adoption.add_module')}</span>
-                              <span className="text-sm text-gray-500">{t('pricing.ai_adoption.add_module_price')}</span>
-                            </div>
-                            <span className="text-sm font-semibold text-orange-400">
-                              {selectedModules.length} {t('pricing.ai_adoption.selected')}
+                    </div>
+                    <div className="w-full flex-none lg:w-96 lg:sticky lg:top-24 flex flex-col gap-6">
+                      <div className="relative aspect-[4/5] w-full rounded-2xl bg-gray-800 object-cover shadow-2xl ring-1 ring-white/10 overflow-hidden">
+                        <Image
+                          src="/images/hardware_lease.png"
+                          alt="Hardware Lease"
+                          fill
+                          className="object-cover grayscale-[0.2] opacity-80"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-8">
+                          <p className="text-sm font-medium text-orange-400 mb-2">On-Premise Solution</p>
+                          <h4 className="text-2xl font-bold text-white mb-2">{t('pricing.ai_adoption.local_node')}</h4>
+                          <p className="text-sm text-gray-300 leading-relaxed">
+                            {t('pricing.ai_adoption.local_node_tooltip')}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl bg-white/5 p-6 ring-1 ring-white/10 backdrop-blur-sm">
+                        <div className="flex flex-col gap-y-2">
+                          <span className="text-base font-semibold leading-7 text-gray-300">
+                            {t('pricing.ai_adoption.total_estimated')}
+                          </span>
+                          <div className="flex items-baseline gap-x-2">
+                            <h3 className="text-3xl font-bold tracking-tight text-white">
+                              {t('pricing.currency_prefix')}{totalPrice.toLocaleString()}
+                            </h3>
+                            <span className="text-base font-semibold leading-7 text-gray-400">
+                              {t('pricing.ai_adoption.period')}
                             </span>
                           </div>
-                          <ul className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3 lg:grid-cols-4">
-                            {MODULES.map((mod) => {
-                              const isSelected = selectedModules.includes(mod.key);
-                              const isMandatory = !mod.optional;
+                        </div>
 
-                              return (
-                                <li key={mod.key}>
-                                  <button
-                                    type="button"
-                                    onClick={() => !isMandatory && toggleModule(mod.key)}
-                                    disabled={isMandatory}
-                                    className={`
-                                      relative w-full h-full flex items-center gap-2 rounded-lg p-3 transition-all duration-200 text-left pr-8
-                                      ${isSelected
-                                        ? 'bg-orange-600 text-white ring-2 ring-orange-500 shadow-lg scale-[1.02]'
-                                        : 'bg-white/5 text-gray-400 ring-1 ring-white/10 hover:bg-white/10 hover:text-gray-300'
-                                      }
-                                      ${isMandatory ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'}
-                                    `}
-                                  >
-                                    <mod.icon className={`h-4 w-4 flex-none ${isSelected ? 'text-white' : 'text-orange-400'}`} />
-                                    <span className="flex-1 min-w-0 text-sm font-medium leading-tight">{t(`features.items.${mod.key}.title`)}</span>
-                                    {isMandatory && (
-                                      <div className="absolute top-0 right-0 p-1.5">
-                                        <Lock className="h-3.5 w-3.5 text-white/90 drop-shadow-md" strokeWidth={2.5} />
-                                      </div>
-                                    )}
-                                  </button>
-                                </li>
-                              );
-                            })}
-                          </ul>
+
+                        <div className="mt-6">
+                          <button
+                            type="button"
+                            onClick={showComingSoon}
+                            className="group relative flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-orange-900/20 transition-all duration-300 hover:scale-[1.02] hover:shadow-orange-900/30 hover:from-orange-400 hover:to-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 overflow-hidden"
+                          >
+                            <span className="relative z-10 flex items-center justify-center gap-2">
+                              {t('pricing.select_plan')}
+                            </span>
+                            <div className="absolute inset-0 bg-white/20 transition-transform duration-300 -translate-x-full group-hover:translate-x-0" />
+                          </button>
                         </div>
                       </div>
-                    </div>
-
-                  </div>
-                  <div className="w-full flex-none lg:w-96">
-                    <div className="relative aspect-[4/3] w-full rounded-2xl bg-gray-800 object-cover shadow-2xl ring-1 ring-white/10 overflow-hidden">
-                      <Image
-                        src="/images/hardware_lease.png"
-                        alt="Hardware Lease"
-                        fill
-                        className="object-cover grayscale-[0.2] opacity-90"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-tr from-gray-900/20 to-transparent mix-blend-multiply" />
                     </div>
                   </div>
                 </div>
@@ -329,6 +392,7 @@ export default function PricingPage() {
                       </ul>
                     </div>
                     <button
+                      onClick={showComingSoon}
                       className={`mt-8 block w-full rounded-md px-3 py-2 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${popular
                         ? 'bg-orange-600 text-white shadow-sm hover:bg-orange-500 focus-visible:outline-orange-600'
                         : 'bg-orange-50 text-orange-600 hover:bg-orange-100 focus-visible:outline-orange-600'
@@ -342,6 +406,20 @@ export default function PricingPage() {
             </div>
           </div>
         )}
+
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+        />
+
+        {/* Info: (20260116 - Antigravity) Coming Soon Modal */}
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={t('common.close')}
+        />
 
       </main>
 

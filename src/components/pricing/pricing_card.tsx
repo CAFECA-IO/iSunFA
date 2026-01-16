@@ -1,18 +1,21 @@
 import { useTranslation } from '@/i18n/i18n_context';
 import { Check, HelpCircle } from 'lucide-react';
 
-// Info: (20260102 - Antigravity) Renamed to IPricingProps for lint compliance
+// Info: (20260102 - Luphia) Renamed to IPricingProps for lint compliance
 interface IPricingProps {
   planKey: 'free' | 'team' | 'business';
   billingInterval: 'month' | 'year';
   features: (string | { text: string; tooltip?: string })[];
   popular?: boolean;
+  currentPlan?: string;
+  onSelect?: () => void;
 }
 
-export default function PricingCard({ planKey, billingInterval, features, popular }: IPricingProps) {
+export default function PricingCard({ planKey, billingInterval, features, popular, currentPlan, onSelect }: IPricingProps) {
   const { t } = useTranslation();
+  const isCurrentPlan = currentPlan === planKey;
 
-  // Info: (20260102 - Antigravity) Dynamic keys are safe here as planKey is typed
+  // Info: (20260102 - Luphia) Dynamic keys are safe here as planKey is typed
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const price = billingInterval === 'month'
     ? t(`pricing.plans.${planKey}.price_monthly` as any)
@@ -30,6 +33,11 @@ export default function PricingCard({ planKey, billingInterval, features, popula
           <h3 id={planKey} className={`text-lg font-semibold leading-8 ${popular ? 'text-orange-600' : 'text-gray-900'}`}>
             {t(`pricing.plans.${planKey}.name` as any)}
           </h3>
+          {isCurrentPlan && (
+            <span className="rounded-full bg-orange-600/10 px-2.5 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-inset ring-orange-600/20">
+              {t('pricing.current_plan')}
+            </span>
+          )}
         </div>
         <p className="mt-4 text-sm leading-6 text-gray-600">
           {t(`pricing.plans.${planKey}.desc` as any)}
@@ -66,12 +74,17 @@ export default function PricingCard({ planKey, billingInterval, features, popula
       </div>
       <button
         aria-describedby={planKey}
-        className={`mt-8 block w-full rounded-md px-3 py-2 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${popular
-          ? 'bg-orange-600 text-white shadow-sm hover:bg-orange-500 focus-visible:outline-orange-600'
-          : 'bg-orange-50 text-orange-600 hover:bg-orange-100 focus-visible:outline-orange-600'
+        disabled={isCurrentPlan}
+        onClick={onSelect}
+        className={`mt-8 block w-full rounded-md px-3 py-2 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 
+          ${isCurrentPlan
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed ring-1 ring-gray-200'
+            : popular
+              ? 'bg-orange-600 text-white shadow-sm hover:bg-orange-500 focus-visible:outline-orange-600'
+              : 'bg-orange-50 text-orange-600 hover:bg-orange-100 focus-visible:outline-orange-600'
           }`}
       >
-        {t('pricing.cta')}
+        {isCurrentPlan ? t('pricing.current_plan') : t('pricing.select_plan')}
       </button>
     </div>
   );

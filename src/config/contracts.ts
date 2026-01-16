@@ -25,4 +25,8 @@ export const ABIS = {
     'function getAddress(uint256 pubKeyX, uint256 pubKeyY, uint256 salt) public view returns (address)',
     'function createAccount(uint256 pubKeyX, uint256 pubKeyY, uint256 salt, string credentialId, string username, string imageUrl) external returns (address)',
   ]),
+  IDENTITY: parseAbi([
+    'function getPlan() external view returns (string)',
+    'function getCredits() external view returns (uint256)',
+  ]),
 };

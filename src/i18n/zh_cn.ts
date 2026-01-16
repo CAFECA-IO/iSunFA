@@ -140,10 +140,29 @@ export const zhCn = {
     monthly: '月缴',
     yearly: '年缴',
     save_percent: '省下 17%',
+    currency_prefix: 'NT$ ',
+
     cta: '立即开始',
     features: '功能特色',
     per_key: ' / 钥匙',
+    select_plan: '选择方案',
+    current_plan: '当前方案',
+    coming_soon_title: '即将推出',
+    coming_soon_message: '相关方案即将推出，敬请期待',
     plans: {
+      personal: {
+        name: '免费版',
+        desc: '适合个人使用者',
+        price_monthly: '免费',
+        price_yearly: '免费',
+        features: {
+          fido: '1 组 FIDO2 密钥',
+          vouchers: '每月 10 份会计凭证',
+          vouchers_overage_tooltip: '超出额度每份 1 点数',
+          ai_reports: '每月 1 份 AI 财报',
+          ai_overage_tooltip: '超出额度每份 500 点数',
+        },
+      },
       free: {
         name: '免费版',
         desc: '适合个人使用者',
@@ -212,9 +231,10 @@ export const zhCn = {
       add_module: '加购模块费用',
       add_module_price: 'NT$ 1,575 / 月',
       total_estimated: '预估月费',
-      base_included: '包含平台维护费',
       selected: '个已选',
       required: '必选',
+      local_node: '本地节点服务',
+      local_node_tooltip: '本地加密存储敏感信息，需额外支付硬件租赁费用',
     },
     credits: {
       title: '弹性购买点数',

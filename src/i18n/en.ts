@@ -140,10 +140,29 @@ export const en = {
     monthly: 'Monthly',
     yearly: 'Yearly',
     save_percent: 'Save 17%',
+    currency_prefix: 'NT$ ',
+
     cta: 'Get Started',
     features: 'Features',
     per_key: ' / key',
+    select_plan: 'Select Plan',
+    current_plan: 'Current Plan',
+    coming_soon_title: 'Coming Soon',
+    coming_soon_message: 'Related plans will be launched soon, stay tuned.',
     plans: {
+      personal: {
+        name: 'Free',
+        desc: 'Perfect for individuals',
+        price_monthly: 'Free',
+        price_yearly: 'Free',
+        features: {
+          fido: '1 FIDO2 Key',
+          vouchers: '10 Vouchers / Month',
+          vouchers_overage_tooltip: 'Overage: 1 Credit/Voucher',
+          ai_reports: '1 AI Report / Month',
+          ai_overage_tooltip: 'Overage: 500 Credits/Report',
+        },
+      },
       free: {
         name: 'Free',
         desc: 'Perfect for individuals',
@@ -212,9 +231,10 @@ export const en = {
       add_module: 'Additional Module Fee',
       add_module_price: 'NT$ 1,575 / month',
       total_estimated: 'Estimated Monthly Fee',
-      base_included: 'Includes Platform Maintenance',
       selected: 'Selected',
       required: 'Required',
+      local_node: 'Local Node Service',
+      local_node_tooltip: 'Locally encrypt & store sensitive info, additional hardware rental fee applies',
     },
     credits: {
       title: 'Flexible Credit Packs',

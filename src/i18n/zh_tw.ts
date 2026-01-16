@@ -152,10 +152,29 @@ export const zhTw = {
     monthly: "月繳",
     yearly: "年繳",
     save_percent: "省下 17%",
+    currency_prefix: "NT$ ",
+
     cta: "立即開始",
     features: "功能特色",
     per_key: " / 鑰匙",
+    select_plan: "選擇方案",
+    current_plan: "目前方案",
+    coming_soon_title: "即將推出",
+    coming_soon_message: "相關方案即將推出，敬請期待",
     plans: {
+      personal: {
+        name: '免費版',
+        desc: '適合個人使用者',
+        price_monthly: '免費',
+        price_yearly: '免費',
+        features: {
+          fido: '1 組 FIDO2 金鑰',
+          vouchers: '每月 10 份會計憑證',
+          vouchers_overage_tooltip: '超出額度每份 1 點數',
+          ai_reports: '每月 1 份 AI 財報',
+          ai_overage_tooltip: '超出額度每份 500 點數',
+        },
+      },
       free: {
         name: "免費版",
         desc: "適合個人使用者",
@@ -172,8 +191,8 @@ export const zhTw = {
       team: {
         name: "團隊版",
         desc: "適合成長中的團隊",
-        price_monthly: "NT$ 870",
-        price_yearly: "NT$ 8,700",
+        price_monthly: "NT$ 840",
+        price_yearly: "NT$ 8,400",
         features: {
           fido: "無限 FIDO2 金鑰",
           fido_tooltip: "根據 fido2 金鑰數量收取訂閱費",
@@ -188,8 +207,8 @@ export const zhTw = {
       business: {
         name: "企業版",
         desc: "適合大型機構與事務所",
-        price_monthly: "NT$ 2,970",
-        price_yearly: "NT$ 29,700",
+        price_monthly: "NT$ 2,940",
+        price_yearly: "NT$ 29,400",
         features: {
           fido: "無限 FIDO2 金鑰",
           fido_tooltip: "根據 fido2 金鑰數量收取訂閱費",
@@ -224,9 +243,10 @@ export const zhTw = {
       add_module: "加購模組費用",
       add_module_price: "NT$ 1,575 / 月",
       total_estimated: "預估月費",
-      base_included: "包含平台維護費",
       selected: "個已選",
       required: "必選",
+      local_node: "本地端節點服務",
+      local_node_tooltip: "本地加密儲存敏感資訊，需額外支付硬體租賃費用",
     },
     credits: {
       title: "彈性購買點數",
