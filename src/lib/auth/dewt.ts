@@ -64,6 +64,8 @@ export const signDeWT = async (user: User): Promise<string> => {
     address: user.address,
     role: user.role,
     scope: ['user'],
+    pubKeyX: user.pubKeyX,
+    pubKeyY: user.pubKeyY,
   };
 
   const dewt = await new SignJWT(payload)

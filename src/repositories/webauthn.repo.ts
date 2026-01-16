@@ -2,9 +2,9 @@ import { User } from '@/generated/client';
 import { prisma } from '@/lib/prisma';
 
 export interface IWebAuthnRepository {
+  findUserByCredentialId(credentialId: string): Promise<User | null>;
   findUserByAddress(address: string): Promise<User | null>;
   findUserById(id: string): Promise<User | null>;
-  findUserByCredentialId(credentialId: string): Promise<User | null>;
   updateChallenge(address: string, challenge: string): Promise<void>;
   upsertUser(data: {
     address: string;
@@ -17,6 +17,12 @@ export interface IWebAuthnRepository {
 }
 
 class WebAuthnRepository implements IWebAuthnRepository {
+  public async findUserByCredentialId(credentialId: string): Promise<User | null> {
+    return prisma.user.findUnique({
+      where: { credentialId },
+    });
+  }
+
   public async findUserByAddress(address: string): Promise<User | null> {
     return prisma.user.findUnique({
       where: { address },
@@ -62,11 +68,6 @@ class WebAuthnRepository implements IWebAuthnRepository {
         name: data.name ?? `User ${data.address.slice(0, 6)}`,
         imageUrl: data.imageUrl ?? null,
       },
-    });
-  }
-  public async findUserByCredentialId(credentialId: string): Promise<User | null> {
-    return prisma.user.findUnique({
-      where: { credentialId },
     });
   }
 }

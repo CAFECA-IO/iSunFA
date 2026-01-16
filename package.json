@@ -19,7 +19,6 @@
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "@tailwindcss/typography": "^0.5.19",
-    "cbor-js": "^0.1.0",
     "dotenv": "^17.2.3",
     "dotenv-expand": "^12.0.3",
     "jest": "^30.2.0",
@@ -34,7 +33,6 @@
   "devDependencies": {
     "@next/eslint-plugin-next": "^16.1.1",
     "@tailwindcss/postcss": "^4",
-    "@types/cbor-js": "^0.1.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

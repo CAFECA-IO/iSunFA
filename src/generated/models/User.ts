@@ -26,6 +26,7 @@ export type AggregateUser = {
 
 export type UserMinAggregateOutputType = {
   id: string | null
+  identityAddress: string | null
   address: string | null
   pubKeyX: string | null
   pubKeyY: string | null
@@ -40,6 +41,7 @@ export type UserMinAggregateOutputType = {
 
 export type UserMaxAggregateOutputType = {
   id: string | null
+  identityAddress: string | null
   address: string | null
   pubKeyX: string | null
   pubKeyY: string | null
@@ -54,6 +56,7 @@ export type UserMaxAggregateOutputType = {
 
 export type UserCountAggregateOutputType = {
   id: number
+  identityAddress: number
   address: number
   pubKeyX: number
   pubKeyY: number
@@ -70,6 +73,7 @@ export type UserCountAggregateOutputType = {
 
 export type UserMinAggregateInputType = {
   id?: true
+  identityAddress?: true
   address?: true
   pubKeyX?: true
   pubKeyY?: true
@@ -84,6 +88,7 @@ export type UserMinAggregateInputType = {
 
 export type UserMaxAggregateInputType = {
   id?: true
+  identityAddress?: true
   address?: true
   pubKeyX?: true
   pubKeyY?: true
@@ -98,6 +103,7 @@ export type UserMaxAggregateInputType = {
 
 export type UserCountAggregateInputType = {
   id?: true
+  identityAddress?: true
   address?: true
   pubKeyX?: true
   pubKeyY?: true
@@ -185,6 +191,7 @@ export type UserGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
 
 export type UserGroupByOutputType = {
   id: string
+  identityAddress: string | null
   address: string
   pubKeyX: string | null
   pubKeyY: string | null
@@ -220,6 +227,7 @@ export type UserWhereInput = {
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   id?: Prisma.StringFilter<"User"> | string
+  identityAddress?: Prisma.StringNullableFilter<"User"> | string | null
   address?: Prisma.StringFilter<"User"> | string
   pubKeyX?: Prisma.StringNullableFilter<"User"> | string | null
   pubKeyY?: Prisma.StringNullableFilter<"User"> | string | null
@@ -234,6 +242,7 @@ export type UserWhereInput = {
 
 export type UserOrderByWithRelationInput = {
   id?: Prisma.SortOrder
+  identityAddress?: Prisma.SortOrderInput | Prisma.SortOrder
   address?: Prisma.SortOrder
   pubKeyX?: Prisma.SortOrderInput | Prisma.SortOrder
   pubKeyY?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -253,6 +262,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
+  identityAddress?: Prisma.StringNullableFilter<"User"> | string | null
   pubKeyX?: Prisma.StringNullableFilter<"User"> | string | null
   pubKeyY?: Prisma.StringNullableFilter<"User"> | string | null
   currentChallenge?: Prisma.StringNullableFilter<"User"> | string | null
@@ -265,6 +275,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
 
 export type UserOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
+  identityAddress?: Prisma.SortOrderInput | Prisma.SortOrder
   address?: Prisma.SortOrder
   pubKeyX?: Prisma.SortOrderInput | Prisma.SortOrder
   pubKeyY?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -285,6 +296,7 @@ export type UserScalarWhereWithAggregatesInput = {
   OR?: Prisma.UserScalarWhereWithAggregatesInput[]
   NOT?: Prisma.UserScalarWhereWithAggregatesInput | Prisma.UserScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"User"> | string
+  identityAddress?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   address?: Prisma.StringWithAggregatesFilter<"User"> | string
   pubKeyX?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   pubKeyY?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
@@ -299,6 +311,7 @@ export type UserScalarWhereWithAggregatesInput = {
 
 export type UserCreateInput = {
   id?: string
+  identityAddress?: string | null
   address: string
   pubKeyX?: string | null
   pubKeyY?: string | null
@@ -313,6 +326,7 @@ export type UserCreateInput = {
 
 export type UserUncheckedCreateInput = {
   id?: string
+  identityAddress?: string | null
   address: string
   pubKeyX?: string | null
   pubKeyY?: string | null
@@ -327,6 +341,7 @@ export type UserUncheckedCreateInput = {
 
 export type UserUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  identityAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.StringFieldUpdateOperationsInput | string
   pubKeyX?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pubKeyY?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -341,6 +356,7 @@ export type UserUpdateInput = {
 
 export type UserUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  identityAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.StringFieldUpdateOperationsInput | string
   pubKeyX?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pubKeyY?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -355,6 +371,7 @@ export type UserUncheckedUpdateInput = {
 
 export type UserCreateManyInput = {
   id?: string
+  identityAddress?: string | null
   address: string
   pubKeyX?: string | null
   pubKeyY?: string | null
@@ -369,6 +386,7 @@ export type UserCreateManyInput = {
 
 export type UserUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  identityAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.StringFieldUpdateOperationsInput | string
   pubKeyX?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pubKeyY?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -383,6 +401,7 @@ export type UserUpdateManyMutationInput = {
 
 export type UserUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  identityAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.StringFieldUpdateOperationsInput | string
   pubKeyX?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pubKeyY?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -397,6 +416,7 @@ export type UserUncheckedUpdateManyInput = {
 
 export type UserCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  identityAddress?: Prisma.SortOrder
   address?: Prisma.SortOrder
   pubKeyX?: Prisma.SortOrder
   pubKeyY?: Prisma.SortOrder
@@ -411,6 +431,7 @@ export type UserCountOrderByAggregateInput = {
 
 export type UserMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  identityAddress?: Prisma.SortOrder
   address?: Prisma.SortOrder
   pubKeyX?: Prisma.SortOrder
   pubKeyY?: Prisma.SortOrder
@@ -425,6 +446,7 @@ export type UserMaxOrderByAggregateInput = {
 
 export type UserMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  identityAddress?: Prisma.SortOrder
   address?: Prisma.SortOrder
   pubKeyX?: Prisma.SortOrder
   pubKeyY?: Prisma.SortOrder
@@ -457,6 +479,7 @@ export type DateTimeFieldUpdateOperationsInput = {
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  identityAddress?: boolean
   address?: boolean
   pubKeyX?: boolean
   pubKeyY?: boolean
@@ -471,6 +494,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
 
 export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  identityAddress?: boolean
   address?: boolean
   pubKeyX?: boolean
   pubKeyY?: boolean
@@ -485,6 +509,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  identityAddress?: boolean
   address?: boolean
   pubKeyX?: boolean
   pubKeyY?: boolean
@@ -499,6 +524,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
 
 export type UserSelectScalar = {
   id?: boolean
+  identityAddress?: boolean
   address?: boolean
   pubKeyX?: boolean
   pubKeyY?: boolean
@@ -511,13 +537,14 @@ export type UserSelectScalar = {
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "address" | "pubKeyX" | "pubKeyY" | "credentialId" | "currentChallenge" | "name" | "imageUrl" | "role" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "identityAddress" | "address" | "pubKeyX" | "pubKeyY" | "credentialId" | "currentChallenge" | "name" | "imageUrl" | "role" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 
 export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "User"
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    identityAddress: string | null
     address: string
     pubKeyX: string | null
     pubKeyY: string | null
@@ -952,6 +979,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
  */
 export interface UserFieldRefs {
   readonly id: Prisma.FieldRef<"User", 'String'>
+  readonly identityAddress: Prisma.FieldRef<"User", 'String'>
   readonly address: Prisma.FieldRef<"User", 'String'>
   readonly pubKeyX: Prisma.FieldRef<"User", 'String'>
   readonly pubKeyY: Prisma.FieldRef<"User", 'String'>
