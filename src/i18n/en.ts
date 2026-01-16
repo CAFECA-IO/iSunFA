@@ -52,15 +52,15 @@ export const en = {
     items: {
       bookkeeping: {
         title: 'Automated Bookkeeping',
-        desc: 'Automate bookkeeping through AI recognition of vouchers, significantly saving time and labor costs.',
+        desc: 'Automatically generate journal entries with a professional AI accounting assistant, delivering bookkeeping quality comparable to years of practical experience from a senior accountant.',
       },
       adjustment: {
-        title: 'Account Adjustment',
-        desc: 'Flexible account adjustment functions ensure the accuracy and compliance of accounting records.',
+        title: 'Financial Control',
+        desc: 'Integrate budget planning, approval workflows, and bank transfers to improve operational efficiency.',
       },
       cashier: {
-        title: 'Cashier Management',
-        desc: 'Master cash flow in real-time and easily manage daily income, expenses, and bank transactions.',
+        title: 'Smart Collection',
+        desc: 'Integrate virtual collection accounts and electronic invoice workflows to eliminate operational time lags.',
       },
       analysis: {
         title: 'Financial Analysis',
@@ -76,7 +76,7 @@ export const en = {
       },
       salary: {
         title: 'Salary Management',
-        desc: 'Automatically calculate salary and withholding to ensure accurate payroll distribution.',
+        desc: 'From precise calculation to cloud storage of electronic payslips, fully automate payroll management and distribution with intelligent solutions.',
       },
       financial_report: {
         title: 'Financial Reports',
@@ -84,7 +84,7 @@ export const en = {
       },
       ocr: {
         title: 'AI OCR',
-        desc: 'Automated document recognition and data extraction.',
+        desc: 'Automatically recognize receipt invoices, extract key fields, and automatically classify and archive them, eliminating time-consuming and laborious manual entry.',
       },
       integration: {
         title: 'System Integration',
@@ -92,11 +92,11 @@ export const en = {
       },
       esg: {
         title: 'GHG Accounting',
-        desc: 'ISO-compliant GHG emissions calculation.',
+        desc: 'Precisely convert corporate activity data into GHG emissions, making carbon cost and compliance risks immediately visible.',
       },
       audit: {
         title: 'Smart Audit',
-        desc: 'Anomaly detection and digital audit trails.',
+        desc: 'Real-time ledger analysis with precise correction suggestions, ensuring accounting entries are always accurate and compliant.',
       },
     },
   },
