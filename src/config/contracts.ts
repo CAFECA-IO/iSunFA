@@ -1,6 +1,6 @@
 import { Address, parseAbi } from 'viem';
 
-export const ORIGIN = process.env.NEXT_PUBLIC_ORIGIN;
+export const ORIGIN = process.env.NEXT_PUBLIC_APP_URL;
 export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.isuncoin.com';
 // Info: (20251216 - Tzuhan) 從 Ignition 部署檔獲取的地址 (Chain 8017)
 // 建議: 若專案設定允許引用 src 外部檔案，可直接 import JSON；否則在此定義常量
