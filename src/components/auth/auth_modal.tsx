@@ -93,7 +93,7 @@ export default function AuthModal({ isOpen, onClose }: IAuthModalProps) {
     try {
       await registrationService.signUp(
         username.trim(),
-        (step) => setCurrentStep(step) // 更新 UI 狀態
+        (step) => setCurrentStep(step) // Info: (20260116 - Tzuhan) 更新 UI 狀態
       );
       await refreshAuth();
       onClose();
