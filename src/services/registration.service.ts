@@ -26,6 +26,7 @@ export type RegistrationStep =
 
 export class RegistrationService {
   /**
+   * Info: (20260116 - Tzuhan) 
    * 核心註冊流程：結合 WebAuthn 與 ERC-4337 部署
    * @param username 用戶暱稱
    * @param onStepChange 狀態回呼，用於更新 UI
@@ -35,13 +36,13 @@ export class RegistrationService {
     onStepChange?: (step: RegistrationStep) => void
   ) {
     try {
-      const imageUrl = "default_avatar_url"; // 未來可從參數傳入
+      const imageUrl = "default_avatar_url"; // Info: (20260116 - Tzuhan) 未來可從參數傳入
 
-      // 步驟 1: 獲取挑戰碼
+      // Info: (20260116 - Tzuhan) 步驟 1: 獲取挑戰碼
       onStepChange?.("FETCHING_CHALLENGE");
       const regChallenge = await getRegisterChallenge();
 
-      // 步驟 2: 註冊 Passkey (產生公鑰)
+      // Info: (20260116 - Tzuhan) 步驟 2: 註冊 Passkey (產生公鑰)
       onStepChange?.("CREATING_PASSKEY");
       const registration = await fido2ClientService.startRegistration({
         user: username,
@@ -50,7 +51,7 @@ export class RegistrationService {
         discoverable: "preferred",
       });
 
-      // 步驟 3: 解析公鑰座標 (X, Y)
+      // Info: (20260116 - Tzuhan) 步驟 3: 解析公鑰座標 (X, Y)
       onStepChange?.("PARSING_PASSKEY");
       const { x, y, credentialID } = await parsePasskey(
         registration,
@@ -60,7 +61,7 @@ export class RegistrationService {
       const pubKeyY = BigInt(y);
       const salt = BigInt(0);
 
-      // 步驟 4: 預測 SCW 地址 (前端讀取合約)
+      // Info: (20260116 - Tzuhan) 步驟 4: 預測 SCW 地址 (前端讀取合約)
       onStepChange?.("PREDICTING_ADDRESS");
       if (!CONTRACT_ADDRESSES.FACTORY)
         throw new Error("Factory Address not set");
@@ -72,7 +73,7 @@ export class RegistrationService {
         args: [pubKeyX, pubKeyY, salt],
       });
 
-      // 步驟 5: 計算 UserOp Hash
+      // Info: (20260116 - Tzuhan) 步驟 5: 計算 UserOp Hash
       onStepChange?.("CALCULATING_HASH");
       const factoryCallData = encodeFunctionData({
         abi: ABIS.FACTORY,
@@ -106,7 +107,7 @@ export class RegistrationService {
         args: [partialUserOp],
       });
 
-      // 步驟 6: 二次簽名 (授權部署)
+      // Info: (20260116 - Tzuhan) 步驟 6: 二次簽名 (授權部署)
       onStepChange?.("AWAITING_SIGNATURE");
       const challengeBase64 = hexToBase64Url(userOpHash);
       const authentication = await fido2ClientService.startLogin({
@@ -115,7 +116,7 @@ export class RegistrationService {
         timeout: 60000,
       });
 
-      // 步驟 7: 提交至 Bundler
+      // Info: (20260116 - Tzuhan) 步驟 7: 提交至 Bundler
       onStepChange?.("DEPLOYING");
       const encodedSignature = encodeWebAuthnSignature(
         authentication,
