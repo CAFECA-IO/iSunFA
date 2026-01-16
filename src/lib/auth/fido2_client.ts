@@ -96,7 +96,7 @@ export async function getLoginOptions(
   const data = await res.json();
   if (data.code !== ApiCode.SUCCESS) throw new Error(data.message);
 
-  return data.payload; // 回傳 { challenge, token? }
+  return data.payload; // Info: (20260116 - Tzuhan) 回傳 { challenge, token? }
 }
 
 /**
