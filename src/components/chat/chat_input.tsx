@@ -2,7 +2,7 @@
 
 import { useState, useRef, ChangeEvent } from 'react';
 import Image from 'next/image';
-import { Image as ImageIcon, Send, X, Tag, FileText, Camera } from 'lucide-react';
+import { Image as ImageIcon, Send, X, Tag, FileText } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
 
 interface IChatInputProps {
@@ -14,11 +14,14 @@ const RAW_TAGS = [
   'bookkeeping',
   'adjustment',
   'cashier',
-  'analysis',
-  'tax',
   'salary',
+  'audit',
+  'esg',
+  'ocr',
+  'tax',
   'financial_report',
-  'other'
+  'analysis',
+  'signing'
 ];
 
 export default function ChatInput({ onSend, disabled }: IChatInputProps) {
@@ -27,7 +30,6 @@ export default function ChatInput({ onSend, disabled }: IChatInputProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
     if ((!message.trim() && !selectedFile) || disabled) return;
@@ -90,12 +92,12 @@ export default function ChatInput({ onSend, disabled }: IChatInputProps) {
       )}
 
       {/* Tags */}
-      <div className="mb-2 flex flex-wrap gap-2">
+      <div className="mb-2 flex gap-2 overflow-x-auto sm:flex-wrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {RAW_TAGS.map((tagKey) => (
           <button
             key={tagKey}
             onClick={() => toggleTag(tagKey)}
-            className={`flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition-colors cursor-pointer ${selectedTags.includes(tagKey)
+            className={`flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition-colors cursor-pointer shrink-0 ${selectedTags.includes(tagKey)
               ? 'border-orange-500 bg-orange-50 text-orange-600'
               : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'
               }`}
@@ -116,16 +118,6 @@ export default function ChatInput({ onSend, disabled }: IChatInputProps) {
           aria-label="File upload"
         />
 
-        <input
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          ref={cameraInputRef}
-          onChange={handleFileChange}
-          aria-label="Camera capture"
-        />
-
         <button
           onClick={() => fileInputRef.current?.click()}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-orange-600 transition-colors hover:bg-orange-100 cursor-pointer"
@@ -133,15 +125,6 @@ export default function ChatInput({ onSend, disabled }: IChatInputProps) {
           aria-label="Upload File"
         >
           <ImageIcon className="h-5 w-5" />
-        </button>
-
-        <button
-          onClick={() => cameraInputRef.current?.click()}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-orange-600 transition-colors hover:bg-orange-100 cursor-pointer"
-          title="Take Photo"
-          aria-label="Take Photo"
-        >
-          <Camera className="h-5 w-5" />
         </button>
 
         <div className="relative flex-1">

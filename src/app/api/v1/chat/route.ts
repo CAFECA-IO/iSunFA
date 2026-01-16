@@ -6,10 +6,10 @@ import { ChatService } from '@/services/chat.service';
 export async function POST(request: NextRequest) {
   try {
     const { message, tags, image, mimeType } = await request.json();
-    const apiKey = process.env.GOOGLE_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      console.error('Missing GOOGLE_API_KEY');
+      console.error('Missing GEMINI_API_KEY');
       return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Server configuration error');
     }
 
