@@ -31,77 +31,7 @@
 
 本系統採用微服務導向的分散式架構，整合了 **iSunFA GUI**、**AICH AI Agent**、**FAITH 多模態模型** 與 **SwarmStorage** 分散式存儲。
 
-```mermaid
-graph TD
-    %% 定義樣式
-    classDef client fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-    classDef gui fill:#b3e5fc,stroke:#0277bd,stroke-width:2px;
-    classDef agent fill:#ffcc80,stroke:#ef6c00,stroke-width:4px;
-    classDef ai fill:#d1c4e9,stroke:#512da8,stroke-width:2px;
-    classDef db fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px;
-    classDef storage fill:#fff9c4,stroke:#fbc02d,stroke-width:2px;
-    classDef realtime fill:#f8bbd0,stroke:#c2185b,stroke-width:2px;
-    classDef lb fill:#eceff1,stroke:#455a64,stroke-dasharray: 5 5;
-
-    User(("使用者<br/>User")):::client
-
-    subgraph Access_Layer ["接入層 & 介面"]
-        GUI["iSunFA GUI Service<br/>(Next.js)"]:::gui
-    end
-
-    subgraph RealTime_Layer [即時通訊服務]
-        Poxa["Poxa<br/>即時通訊中繼"]:::realtime
-    end
-
-    subgraph Agent_Core [核心代理層]
-        AICH{{"AICH AI Agent<br/>工作代理人服務"}}:::agent
-    end
-
-    subgraph AI_Cluster [FAITH AI 計算叢集]
-        direction TB
-        LB_AI["AI Load Balancer"]:::lb
-        FAITH1["FAITH Model 1"]:::ai
-        FAITH2["FAITH Model 2"]:::ai
-        FAITH3["FAITH Model 3"]:::ai
-        FAITH4["FAITH Model 4"]:::ai
-        FAITH5["FAITH Model 5"]:::ai
-    end
-
-    subgraph Data_Layer [數據持久層]
-        direction TB
-        LB_DB["DB Load Balancer"]:::lb
-        PG1[("PostgreSQL 1")]:::db
-        PG2[("PostgreSQL 2")]:::db
-        PG3[("PostgreSQL 3")]:::db
-    end
-
-    subgraph File_System [分散式檔案系統]
-        direction TB
-        LB_Store["Storage Load Balancer"]:::lb
-        Swarm1["SwarmStorage 1"]:::storage
-        Swarm2["SwarmStorage 2"]:::storage
-        Swarm3["SwarmStorage 3"]:::storage
-    end
-
-    %% 互動連線
-    User <==>|HTTPS / WSS| GUI
-    
-    %% GUI 互動
-    GUI <-->|WebSocket| Poxa
-    GUI <==>|指令/任務委派| AICH
-    
-    %% Agent 核心調度邏輯
-    AICH == 調用 ==> LB_AI
-    AICH == 查詢/存檔 ==> LB_DB
-    AICH == 存取文件 ==> LB_Store
-
-    %% 負載平衡分發
-    LB_AI -.-> FAITH1 & FAITH2 & FAITH3 & FAITH4 & FAITH5
-    LB_DB -.-> PG1 & PG2 & PG3
-    LB_Store -.-> Swarm1 & Swarm2 & Swarm3
-
-
-```
+<img width="2816" height="1536" alt="isunfa_architecture" src="public/isunfa_architecture.png" />
 
 ## 部署辦法 (Deployment)
 
