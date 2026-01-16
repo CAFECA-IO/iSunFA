@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useTranslation } from '@/i18n/i18n_context';
-import BrandLogo from '@/components/landing_page/header/brand_logo';
-import LanguageSelector from '@/components/landing_page/header/language_selector';
-import UserActions from '@/components/landing_page/header/user_actions';
+import BrandLogo from '@/components/header/brand_logo';
+import LanguageSelector from '@/components/header/language_selector';
+import UserActions from '@/components/header/user_actions';
 
 export default function Header() {
   const { t } = useTranslation();

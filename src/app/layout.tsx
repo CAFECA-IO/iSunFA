@@ -1,5 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
@@ -31,6 +33,29 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Info: (20260116 - Antigravity) First run check for .env
+  const headersList = await headers();
+  const currentUrl = headersList.get('x-url') || "";
+  const envPath = path.join(process.cwd(), '.env');
+  let envExists = false;
+
+  try {
+    await fs.access(envPath);
+    envExists = true;
+  } catch {
+    envExists = false;
+  }
+
+  if (currentUrl.includes('/admin/setup')) {
+    if (envExists) {
+      redirect('/');
+    }
+  } else {
+    if (!envExists) {
+      redirect('/admin/setup');
+    }
+  }
+
   const privacyPolicyPath = path.join(process.cwd(), 'documents/privacy_policy.md');
   const privacyPolicyContent = await fs.readFile(privacyPolicyPath, 'utf8');
 

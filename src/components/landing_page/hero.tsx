@@ -46,7 +46,7 @@ export default function Hero() {
               {t('hero.free_trial')}
             </Link>
             <Link href="/pricing" className="text-sm font-semibold leading-6 text-gray-900 hover:text-orange-600 transition-colors">
-              {t('hero.pricing_link')} <span aria-hidden="true">→</span>
+              {t('hero.pricing_link')}
             </Link>
           </div>
         </div>

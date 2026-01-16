@@ -11,7 +11,7 @@ const PEM_PRIVATE_KEY = process.env.DEWT_PRIVATE_KEY_PEM;
 
 // Info: (20251223 - Tzuhan) 移除強制的 process.exit，避免在庫中直接殺死進程，改為拋出錯誤
 if (!PEM_PRIVATE_KEY) {
-  logger.error('FATAL: DEWT_PRIVATE_KEY_PEM environment variable is not set.');
+  logger.warn('DEWT_PRIVATE_KEY_PEM environment variable is not set. Auth will fail until configured.');
 }
 
 const DEWT_ALG = 'ES256';
