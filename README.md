@@ -31,7 +31,7 @@
 
 本系統採用微服務導向的分散式架構，整合了 **iSunFA GUI**、**AICH AI Agent**、**FAITH 多模態模型** 與 **SwarmStorage** 分散式存儲。
 
-<img width="2816" height="1536" alt="isunfa_architecture" src="public/isunfa_architecture.png" />
+<img width="2816" height="1536" alt="isunfa_architecture" src="public/image/isunfa_architecture.png" />
 
 ## 部署辦法 (Deployment)
 
