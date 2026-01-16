@@ -1,6 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from '@/i18n/i18n_context';
+import LanguageSelector from '@/components/header/language_selector';
+import { randomPassword } from '@/lib/utils/common';
+import { RefreshCw } from 'lucide-react';
 
 interface IEnvVar {
   key: string;
@@ -14,20 +18,31 @@ interface ISetupFormProps {
 }
 
 function SubmitButton({ isSubmitting }: { isSubmitting: boolean }) {
+  const { t } = useTranslation();
   return (
     <button
       type="submit"
       disabled={isSubmitting}
-      className="w-full rounded-md bg-orange-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full rounded-lg bg-gradient-to-r from-orange-600 to-amber-600 px-4 py-3 text-center text-sm font-bold text-white shadow-lg hover:from-orange-500 hover:to-amber-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
     >
-      {isSubmitting ? 'Saving & Restarting...' : 'Save Configuration'}
+      {isSubmitting ? t('setup.saving') : t('setup.save')}
     </button>
   );
 }
 
 export default function SetupForm({ envVars }: ISetupFormProps) {
+  const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Info: (20260116 - Luphia) Initialize values state for controlled inputs (to support setting value from Generator)
+  const [values, setValues] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    envVars.forEach(v => {
+      initial[v.key] = v.defaultValue || '';
+    });
+    return initial;
+  });
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -46,58 +61,122 @@ export default function SetupForm({ envVars }: ISetupFormProps) {
         throw new Error('Failed to save configuration');
       }
 
-      /**
-       * Info: (20260116 - Luphia) Refresh headers/cookies or just redirect
-       * Since .env is written, server restart might be needed or hot reload.
-       * Redirect to home.
-       */
       window.location.href = '/';
     } catch (err) {
       console.error(err);
-      setError('Failed to save configuration. Please try again.');
+      setError(t('setup.error'));
       setIsSubmitting(false);
     }
   };
 
+  const handleGenerate = async (key: string) => {
+    let newValue = '';
+    if (key === 'DEWT_PRIVATE_KEY_PEM') {
+      try {
+        const res = await fetch('/api/v1/admin/setup/key');
+        if (res.ok) {
+          const data = await res.json();
+          // Info: (20260116 - Luphia) Standard response structure payload
+          newValue = data.payload?.key || '';
+        } else {
+          console.error('Failed to generate key via API');
+        }
+      } catch (err) {
+        console.error('Failed to fetch key', err);
+      }
+    } else {
+      newValue = randomPassword();
+    }
+
+    if (newValue) {
+      setValues(prev => ({ ...prev, [key]: newValue }));
+    }
+  };
+
+  const isGeneratable = (key: string) => {
+    const upperKey = key.toUpperCase();
+    return (
+      upperKey.includes('SECRET') ||
+      upperKey.includes('PASSWORD') ||
+      upperKey.includes('KEY') ||
+      upperKey === 'DEWT_PRIVATE_KEY_PEM'
+    ) && !upperKey.includes('PUBLIC');
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 text-left">
-      {error && (
-        <div className="rounded-md bg-red-500/10 p-4 text-sm text-red-400 ring-1 ring-inset ring-red-500/20">
-          {error}
+    <div className="space-y-6">
+      {/* Info: (20260116 - Luphia) UI Enhancements: Language Selector and Titles inside Client Component for translation */}
+      <div className="flex flex-col items-center mb-8">
+        <div className="w-full flex justify-end mb-4">
+          <LanguageSelector />
         </div>
-      )}
-
-      {envVars.map((item) => (
-        <div key={item.key} className="space-y-2">
-          {item.description.length > 0 && (
-            <div className="mb-2 text-sm text-gray-400">
-              {item.description.map((desc, i) => (
-                <p key={i}>{desc.replace(/^#\s*/, '')}</p>
-              ))}
-            </div>
-          )}
-
-          <label htmlFor={item.key} className="block text-sm font-medium leading-6 text-white">
-            {item.key}
-            {item.required && <span className="text-red-500 ml-1">*</span>}
-          </label>
-          <div className="mt-2">
-            <input
-              id={item.key}
-              name={item.key}
-              type="text"
-              aria-label={item.key}
-              defaultValue={item.defaultValue}
-              className="block w-full rounded-md border-0 bg-white/5 py-1.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6"
-              placeholder={item.defaultValue || ''}
-            />
-          </div>
-        </div>
-      ))}
-
-      <div className="pt-8 border-t border-white/10">
-        <SubmitButton isSubmitting={isSubmitting} />
+        <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-orange-700 via-orange-500 to-amber-400 mb-2">
+          {t('setup.title')}
+        </h1>
+        <p className="text-gray-600 text-center">{t('setup.description')}</p>
       </div>
-    </form>
+
+      <form onSubmit={handleSubmit} className="space-y-6 text-left">
+        {error && (
+          <div className="rounded-md bg-red-50 p-4 text-sm text-red-600 ring-1 ring-inset ring-red-200">
+            {error}
+          </div>
+        )}
+
+        {envVars.map((item) => (
+          <div
+            key={item.key}
+            className="group space-y-2 rounded-xl bg-gray-50 p-4 ring-1 ring-gray-200 transition-all hover:ring-gray-300 hover:shadow-sm"
+          >
+            <div className="flex justify-between items-start">
+              <label
+                htmlFor={item.key}
+                className="block text-sm font-medium leading-6 text-gray-900 font-mono"
+              >
+                {item.key}
+                {item.required && <span className="text-red-500 ml-1">*</span>}
+              </label>
+              {isGeneratable(item.key) && (
+                <button
+                  type="button"
+                  onClick={() => handleGenerate(item.key)}
+                  className="text-xs flex items-center gap-1 text-orange-600 hover:text-orange-500 transition-colors bg-white px-2 py-1 rounded shadow-sm ring-1 ring-gray-200 hover:ring-orange-200"
+                >
+                  <RefreshCw size={12} />
+                  {t('setup.generate')}
+                </button>
+              )}
+            </div>
+
+            {item.description.length > 0 && (
+              <div className="text-xs text-gray-500 mb-2">
+                {item.description.map((desc, i) => (
+                  <p key={i}>{desc.replace(/^#\s*/, '')}</p>
+                ))}
+              </div>
+            )}
+
+            <div className="relative mt-2">
+              <input
+                id={item.key}
+                name={item.key}
+                type="text"
+                aria-label={item.key}
+                value={values[item.key]}
+                onChange={(e) =>
+                  setValues((prev) => ({ ...prev, [item.key]: e.target.value }))
+                }
+                className="block w-full rounded-md border-0 bg-white py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6 font-mono transition-shadow"
+                placeholder={item.defaultValue || ''}
+              />
+            </div>
+          </div>
+        ))}
+
+        <div className="pt-6 border-t border-gray-200">
+          <SubmitButton isSubmitting={isSubmitting} />
+        </div>
+      </form>
+    </div>
   );
 }

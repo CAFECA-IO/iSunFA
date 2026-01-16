@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { jsonOk, jsonFail } from '@/lib/utils/response';
+import { ApiCode } from '@/lib/utils/status';
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
     try {
       exampleContent = await fs.readFile(envExamplePath, 'utf8');
     } catch {
-      return NextResponse.json({ error: 'Failed to read template' }, { status: 500 });
+      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Failed to read template');
     }
 
     const lines = exampleContent.split('\n');
@@ -42,9 +43,9 @@ export async function POST(request: Request) {
 
     await fs.writeFile(envPath, envContent, 'utf8');
 
-    return NextResponse.json({ success: true });
+    return jsonOk({ success: true });
   } catch (error) {
     console.error('Failed to save .env', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Internal Server Error');
   }
 }

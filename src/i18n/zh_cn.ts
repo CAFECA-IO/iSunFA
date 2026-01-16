@@ -281,6 +281,17 @@ export const zhCn = {
       },
     },
   },
+  setup: {
+    title: "系统初始化设置",
+    description: "请设置系统环境变量以完成安装。",
+    save: "保存设置",
+    saving: "保存并重启中...",
+    success: "设置已保存",
+    error: "保存设置失败，请重试。",
+    generate: "随机生成",
+    missing_config: "尚未找到系统配置文件 (.env)，请验证安装或联系管理员。",
+    config_error: "错误：缺少环境配置",
+  },
   chat: {
     tags: {
       bookkeeping: '记账',

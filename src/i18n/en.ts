@@ -281,6 +281,17 @@ export const en = {
       },
     },
   },
+  setup: {
+    title: "System Initialization",
+    description: "Please configure system environment variables to complete installation.",
+    save: "Save Configuration",
+    saving: "Saving & Restarting...",
+    success: "Configuration Saved",
+    error: "Failed to save configuration, please try again.",
+    generate: "Generate Random",
+    missing_config: "System configuration file (.env) not found. Please verify installation or contact administrator.",
+    config_error: "Error: Missing Environment Configuration",
+  },
   chat: {
     tags: {
       bookkeeping: 'Bookkeeping',

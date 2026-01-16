@@ -281,6 +281,17 @@ export const ja = {
       },
     },
   },
+  setup: {
+    title: "システム初期設定",
+    description: "インストールを完了するには、システム環境変数を設定してください。",
+    save: "設定を保存",
+    saving: "保存して再起動中...",
+    success: "設定が保存されました",
+    error: "設定の保存に失敗しました。もう一度お試しください。",
+    generate: "ランダム生成",
+    missing_config: "システム設定ファイル (.env) が見つかりません。インストールを確認するか、管理者にお問い合わせください。",
+    config_error: "エラー: 環境設定が不足しています",
+  },
   chat: {
     tags: {
       bookkeeping: '記帳',

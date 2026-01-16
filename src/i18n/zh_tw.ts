@@ -293,6 +293,17 @@ export const zhTw = {
       },
     },
   },
+  setup: {
+    title: "系統初始化設定",
+    description: "請設定系統環境變數以完成安裝。",
+    save: "儲存設定",
+    saving: "儲存並重啟中...",
+    success: "設定已儲存",
+    error: "儲存設定失敗，請重試。",
+    generate: "隨機產生",
+    missing_config: "尚未找到系統設定檔 (.env)，請驗證安裝或聯繫管理員。",
+    config_error: "錯誤：缺少環境配置",
+  },
   chat: {
     tags: {
       bookkeeping: "記帳",

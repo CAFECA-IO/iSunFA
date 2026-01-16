@@ -280,6 +280,17 @@ export const ko = {
       },
     },
   },
+  setup: {
+    title: "시스템 초기 설정",
+    description: "설치를 완료하려면 시스템 환경 변수를 구성하십시오.",
+    save: "설정 저장",
+    saving: "저장 및 재시작 중...",
+    success: "설정 저장됨",
+    error: "설정 저장 실패, 다시 시도하십시오.",
+    generate: "무작위 생성",
+    missing_config: "시스템 구성 파일(.env)을 찾을 수 없습니다. 설치를 확인하거나 관리자에게 문의하십시오.",
+    config_error: "오류: 환경 구성 누락",
+  },
   chat: {
     tags: {
       bookkeeping: '기장',
