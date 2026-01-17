@@ -9,7 +9,12 @@ import { useTranslation } from '@/i18n/i18n_context';
 
 // Info: (20260104 - Luphia) interface Message removed in favor of import
 
-export default function ChatInterface() {
+// Info: (20260117 - Luphia) Allow className override for embedding in widgets
+interface IChatInterfaceProps {
+  className?: string;
+}
+
+export default function ChatInterface({ className }: IChatInterfaceProps = {}) {
   const [messages, setMessages] = useState<IMessage[]>([
     {
       role: 'model',
@@ -96,7 +101,7 @@ export default function ChatInterface() {
   const isGuestLimitReached = !user && guestUsage >= 5;
 
   return (
-    <div className="flex h-[calc(100vh-64px)] flex-col bg-gray-50 relative">
+    <div className={`flex flex-col bg-gray-50 relative ${className || 'h-[calc(100vh-64px)]'}`}>
       {!user && !authLoading && (
         <div className={`px-4 py-2 text-sm text-center border-b ${isGuestLimitReached ? 'bg-red-50 text-red-800 border-red-100' : 'bg-yellow-50 text-yellow-800 border-yellow-100'}`}>
           {isGuestLimitReached ? t('chat.guest_limit_reached') : t('chat.login_warning')}

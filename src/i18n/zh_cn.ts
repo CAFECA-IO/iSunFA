@@ -4,6 +4,9 @@ export const zhCn = {
     error: '错误',
     close: '关闭',
   },
+  faith: {
+    title: '费思',
+  },
   cookie_consent: {
     message: '我们使用 Cookie 来改善您的浏览体验并提供更个性化的服务。继续浏览即表示您同意我们的',
     accept: '全部接受',
@@ -15,6 +18,22 @@ export const zhCn = {
     security: '系统安全性分析',
     analytics: 'Google Analytics',
     cookie_settings: 'Cookie 设置',
+  },
+  dashboard: {
+    financial_overview: '财务概况',
+    revenue: '营收',
+    expenses: '支出',
+    net_profit: '净利',
+    cash_on_hand: '现金结余',
+    available_funds: '可动用资金',
+    vs_last_month: '与上月相比',
+    time_ranges: {
+      '24h': '24小时',
+      '7d': '7日',
+      '30d': '30日',
+      '3m': '季度',
+      '1y': '年度',
+    },
   },
   header: {
     free_trial: '免费试用',

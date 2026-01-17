@@ -4,6 +4,9 @@ export const zhTw = {
     error: "錯誤",
     close: "關閉",
   },
+  faith: {
+    title: "費思",
+  },
   cookie_consent: {
     message:
       "我們使用 Cookie 來改善您的瀏覽體驗並提供更個性化的服務。繼續瀏覽即表示您同意我們的",
@@ -16,6 +19,22 @@ export const zhTw = {
     security: "系統安全性分析",
     analytics: "Google Analytics",
     cookie_settings: "Cookie 設定",
+  },
+  dashboard: {
+    financial_overview: "財務概況",
+    revenue: "營收",
+    expenses: "支出",
+    net_profit: "淨利",
+    cash_on_hand: "現金結餘",
+    available_funds: "可動用資金",
+    vs_last_month: "與上月相比",
+    time_ranges: {
+      "24h": "24小時",
+      "7d": "7日",
+      "30d": "30日",
+      "3m": "季度",
+      "1y": "年度",
+    },
   },
   header: {
     free_trial: "免費試用",

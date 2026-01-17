@@ -9,6 +9,7 @@ import { I18nProvider } from "@/i18n/i18n_context";
 import { AuthProvider } from "@/contexts/auth_context";
 
 import CookieConsent from "@/components/common/cookie_consent";
+import FaithAgent from "@/components/user/faith_agent";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -67,6 +68,7 @@ export default async function RootLayout({
         <I18nProvider>
           <AuthProvider>
             {children}
+            <FaithAgent />
             <CookieConsent privacyPolicyContent={privacyPolicyContent} />
           </AuthProvider>
         </I18nProvider>

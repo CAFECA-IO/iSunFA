@@ -33,7 +33,7 @@ export default function ChatInput({ onSend, disabled }: IChatInputProps) {
 
   const handleSend = () => {
     if ((!message.trim() && !selectedFile) || disabled) return;
-    // Send raw tags directly
+    // Info: (20260117 Luphia) Send raw tags directly
     onSend(message, selectedFile, selectedTags);
     setMessage('');
     setSelectedFile(null);
@@ -61,7 +61,7 @@ export default function ChatInput({ onSend, disabled }: IChatInputProps) {
 
   return (
     <div className="border-t bg-white p-4">
-      {/* File Preview */}
+      {/* Info: (20260117 Luphia) File Preview */}
       {selectedFile && (
         <div className="mb-2 flex items-center gap-2">
           <div className="relative h-16 w-16 overflow-hidden rounded-lg border flex items-center justify-center bg-gray-50">
@@ -91,8 +91,8 @@ export default function ChatInput({ onSend, disabled }: IChatInputProps) {
         </div>
       )}
 
-      {/* Tags */}
-      <div className="mb-2 flex gap-2 overflow-x-auto sm:flex-wrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      {/* Info: (20260117 Luphia) Tags */}
+      <div className="mb-2 flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {RAW_TAGS.map((tagKey) => (
           <button
             key={tagKey}

@@ -4,6 +4,9 @@ export const ko = {
     error: '오류',
     close: '닫기',
   },
+  faith: {
+    title: 'FAITH',
+  },
   cookie_consent: {
     message: '당사는 귀하의 브라우징 경험을 개선하고 보다 개인화된 서비스를 제공하기 위해 쿠키를 사용합니다. 계속 탐색함으로써 귀하는 당사의',
     accept: '모두 동의',
@@ -15,6 +18,22 @@ export const ko = {
     security: '시스템 보안 분석',
     analytics: 'Google Analytics',
     cookie_settings: '쿠키 설정',
+  },
+  dashboard: {
+    financial_overview: '재무 개요',
+    revenue: '수익',
+    expenses: '지출',
+    net_profit: '순이익',
+    cash_on_hand: '보유 현금',
+    available_funds: '가용 자금',
+    vs_last_month: '전월 대비',
+    time_ranges: {
+      '24h': '24시간',
+      '7d': '7일',
+      '30d': '30일',
+      '3m': '3개월',
+      '1y': '1년',
+    },
   },
   header: {
     free_trial: '무료 체험',

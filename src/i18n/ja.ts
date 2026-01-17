@@ -4,6 +4,9 @@ export const ja = {
     error: 'エラー',
     close: '閉じる',
   },
+  faith: {
+    title: 'FAITH',
+  },
   cookie_consent: {
     message: '当社は、お客様のブラウジング体験を向上させ、よりパーソナライズされたサービスを提供するためにCookieを使用しています。閲覧を継続することにより、当社の',
     accept: 'すべて同意',
@@ -15,6 +18,22 @@ export const ja = {
     security: 'システムセキュリティ分析',
     analytics: 'Google Analytics',
     cookie_settings: 'Cookie 設定',
+  },
+  dashboard: {
+    financial_overview: '財務概要',
+    revenue: '収益',
+    expenses: '支出',
+    net_profit: '純利益',
+    cash_on_hand: '手元現金',
+    available_funds: '利用可能資金',
+    vs_last_month: '前月比',
+    time_ranges: {
+      '24h': '24時間',
+      '7d': '7日間',
+      '30d': '30日間',
+      '3m': '3ヶ月',
+      '1y': '1年間',
+    },
   },
   header: {
     free_trial: '無料トライアル',

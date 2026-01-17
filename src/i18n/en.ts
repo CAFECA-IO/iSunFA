@@ -4,6 +4,9 @@ export const en = {
     error: 'Error',
     close: 'Close',
   },
+  faith: {
+    title: 'FAITH',
+  },
   cookie_consent: {
     message: 'We use cookies to improve your browsing experience and provide more personalized services. By continuing to browse, you agree to our',
     accept: 'Accept All',
@@ -15,6 +18,22 @@ export const en = {
     security: 'System Security & Analysis',
     analytics: 'Google Analytics',
     cookie_settings: 'Cookie Settings',
+  },
+  dashboard: {
+    financial_overview: 'Financial Overview',
+    revenue: 'Revenue',
+    expenses: 'Expenses',
+    net_profit: 'Net Profit',
+    cash_on_hand: 'Cash on Hand',
+    available_funds: 'Available Funds',
+    vs_last_month: 'vs last month',
+    time_ranges: {
+      '24h': '24H',
+      '7d': '7D',
+      '30d': '30D',
+      '3m': '3M',
+      '1y': '1Y',
+    },
   },
   header: {
     free_trial: 'Free Trial',

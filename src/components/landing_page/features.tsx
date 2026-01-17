@@ -28,7 +28,7 @@ export default function Features() {
             {MODULES.map((feature) => (
               <Link
                 key={feature.key}
-                href="/user/chat"
+                href="/user/main"
                 className="relative flex flex-col bg-white p-8 rounded-2xl shadow-sm ring-1 ring-gray-200/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 block"
               >
                 <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
