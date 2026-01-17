@@ -35,12 +35,12 @@ export default function PricingPage() {
   // Info: (20260115 - Luphia) Pricing Calculator State
   const [userCount, setUserCount] = useState(5);
   const [selectedModules, setSelectedModules] = useState<string[]>(
-    MODULES.filter(m => !m.optional).map(m => m.key)
+    MODULES.filter(m => m.basic).map(m => m.key)
   );
 
   const toggleModule = (moduleKey: string) => {
     const targetModule = MODULES.find(m => m.key === moduleKey);
-    if (!targetModule?.optional) return; // Cannot toggle non-optional modules
+    if (targetModule?.basic) return; // Info: (20260117 - Luphia) Cannot toggle basic modules
 
     setSelectedModules(prev =>
       prev.includes(moduleKey)
@@ -222,10 +222,10 @@ export default function PricingPage() {
                         ))}
                       </ul>
 
-                      {/* Add-ons Section */}
+                      {/* Info: (20260117 - Luphia) Add-ons Section */}
                       <div className="mt-12 border-t border-white/10 pt-10">
                         <div className="space-y-10">
-                          {/* Additional User */}
+                          {/* Info: (20260117 - Luphia) Additional User */}
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-white/5 pb-8">
                             <div>
                               <span className="text-lg font-medium text-white block">{t('pricing.ai_adoption.user_count')}</span>
@@ -249,7 +249,7 @@ export default function PricingPage() {
                             </div>
                           </div>
 
-                          {/* Additional Module */}
+                          {/* Info: (20260117 - Luphia) Additional Module */}
                           <div>
                             <div className="flex items-center justify-between gap-x-4 mb-8">
                               <div>
@@ -263,7 +263,7 @@ export default function PricingPage() {
                             <ul className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
                               {MODULES.map((mod) => {
                                 const isSelected = selectedModules.includes(mod.key);
-                                const isMandatory = !mod.optional;
+                                const isMandatory = mod.basic;
 
                                 return (
                                   <li key={mod.key}>

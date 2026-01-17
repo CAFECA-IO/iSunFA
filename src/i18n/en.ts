@@ -48,55 +48,55 @@ export const en = {
   features: {
     title: 'Smarter Financial Management',
     subtitle: 'Core Advantages of iSunFA',
-    description: 'From automated bookkeeping and payroll to real-time reports and tax filing, iSunFA streamlines your entire financial workflow with AI-driven precision.',
+    description: 'Leveraging AI for automated data entry, integrating bookkeeping, payroll, tax, and GHG accounting, while generating periodic reports and analytics to help businesses efficiently achieve compliance and master operational data.',
     items: {
       bookkeeping: {
         title: 'Automated Bookkeeping',
-        desc: 'Automatically generate journal entries with a professional AI accounting assistant, delivering bookkeeping quality comparable to years of practical experience from a senior accountant.',
+        desc: 'AI auto-generates accounting entries with quality comparable to senior accountant practices.',
       },
       adjustment: {
-        title: 'Financial Control',
-        desc: 'Integrate budget planning, approval workflows, and bank transfers to improve operational efficiency.',
+        title: 'Smart Treasury',
+        desc: 'Integrates budget, approval, and transfer processes to comprehensively enhance financial operational efficiency.',
       },
       cashier: {
         title: 'Smart Collection',
-        desc: 'Integrate virtual collection accounts and electronic invoice workflows to eliminate operational time lags.',
+        desc: 'Connects virtual accounts and E-invoices for real-time reconciliation and elimination of operational time lags.',
       },
       analysis: {
         title: 'Financial Analysis',
-        desc: 'Provide in-depth financial data analysis to help you make wise business decisions.',
+        desc: 'Provides in-depth financial data analysis to assist management in making informed business decisions.',
       },
       tax: {
         title: 'Tax Filing',
-        desc: 'Automatically generate data required for tax filing, making tax reporting simple and easy.',
+        desc: 'Automatically generates various tax filing data with a simple, easy process ensuring accuracy and compliance.',
       },
       signing: {
         title: 'Document Signing',
-        desc: 'Secure, compliant digital document signing process to accelerate approval efficiency.',
+        desc: 'Compliant digital signing process that balances information security with rapidly improved approval efficiency.',
       },
       salary: {
-        title: 'Salary Management',
-        desc: 'From precise calculation to cloud storage of electronic payslips, fully automate payroll management and distribution with intelligent solutions.',
+        title: 'Payroll Management',
+        desc: 'Fully automated from calculation to disbursement, with cloud storage for payslips, making management effortless.',
       },
       financial_report: {
         title: 'Financial Reports',
-        desc: 'Generate the three major financial statements with one click to keep abreast of business operations.',
+        desc: 'One-click generation of the three major professional financial statements to instantly grasp the company\'s operational status.',
       },
       ocr: {
-        title: 'AI OCR',
-        desc: 'Automatically recognize receipt invoices, extract key fields, and automatically classify and archive them, eliminating time-consuming and laborious manual entry.',
+        title: 'Smart Receipt Recognition',
+        desc: 'Automatically extracts and archives receipt information, eliminating the burden of manual data entry.',
       },
       integration: {
-        title: 'System Integration',
-        desc: 'Connect with ERP and MES for unified data.',
+        title: 'Data Integration',
+        desc: 'Flexibly connects external heterogeneous systems to seamlessly integrate cross-platform operational data.',
       },
       esg: {
         title: 'GHG Accounting',
-        desc: 'Precisely convert corporate activity data into GHG emissions, making carbon cost and compliance risks immediately visible.',
+        desc: 'Accurately converts activity data into carbon emissions to manage compliance risks and costs.',
       },
       audit: {
         title: 'Smart Audit',
-        desc: 'Real-time ledger analysis with precise correction suggestions, ensuring accounting entries are always accurate and compliant.',
+        desc: 'Real-time ledger analysis providing correction suggestions to ensure accurate and error-free accounting entries.',
       },
     },
   },
@@ -319,12 +319,12 @@ export const en = {
   chat: {
     tags: {
       bookkeeping: 'Automated Bookkeeping',
-      adjustment: 'Financial Control',
+      adjustment: 'Smart Treasury',
       cashier: 'Smart Collection',
-      salary: 'Salary Management',
+      salary: 'Payroll Management',
       audit: 'Smart Audit',
       esg: 'GHG Accounting',
-      ocr: 'AI OCR',
+      ocr: 'Smart Receipt Recognition',
       tax: 'Tax Filing',
       financial_report: 'Financial Reports',
       analysis: 'Financial Analysis',
@@ -350,6 +350,7 @@ export const en = {
     pricing: 'Pricing',
     privacy: 'Privacy Policy',
     terms: 'Terms of Service',
+    refund: 'Refund Policy',
     contact_us: 'Contact Us',
     address: '14F, No. 521, Sec. 4, Zhongxiao E. Rd., Xinyi Dist., Taipei City 110053, Taiwan (R.O.C.)',
     hours: 'Mon - Fri, 10:00 - 17:00 Closed on National Holidays',

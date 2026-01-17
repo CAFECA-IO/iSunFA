@@ -46,6 +46,11 @@ export default function Footer() {
                       {t('footer.terms')}
                     </Link>
                   </li>
+                  <li>
+                    <Link href="/refund" className="text-sm leading-6 text-gray-400 hover:text-orange-500 transition-colors">
+                      {t('footer.refund')}
+                    </Link>
+                  </li>
                 </ul>
               </div>
               <div className="mt-10 md:mt-0">
@@ -60,8 +65,8 @@ export default function Footer() {
                     </a>
                   </li>
                   <li>
-                    <a href="tel:+886-2-2700-1979" className="text-sm leading-6 text-gray-400 hover:text-orange-500 transition-colors">
-                      +886-2-2700-1979
+                    <a href="tel:+886-2-2546-6225" className="text-sm leading-6 text-gray-400 hover:text-orange-500 transition-colors">
+                      +886-2-2546-6225
                     </a>
                   </li>
                   <li className="text-sm leading-6 text-gray-400">
@@ -82,6 +87,9 @@ export default function Footer() {
             </Link>
             <Link href="/terms" className="text-xs leading-5 text-gray-500 hover:text-orange-500 transition-colors">
               {t('footer.terms')}
+            </Link>
+            <Link href="/refund" className="text-xs leading-5 text-gray-500 hover:text-orange-500 transition-colors">
+              {t('footer.refund')}
             </Link>
             <CookieSettingsTrigger />
           </div>

@@ -14,16 +14,16 @@ import {
 } from 'lucide-react';
 
 export const MODULES = [
-  { key: 'ocr', icon: ScanLine, optional: false },
-  { key: 'bookkeeping', icon: BookOpen, optional: false },
-  { key: 'esg', icon: Leaf, optional: false },
-  { key: 'financial_report', icon: FileText, optional: false },
-  { key: 'adjustment', icon: Sliders, optional: true },
-  { key: 'cashier', icon: Wallet, optional: true },
-  { key: 'analysis', icon: PieChart, optional: true },
-  { key: 'tax', icon: Landmark, optional: true },
-  { key: 'salary', icon: Users, optional: true },
-  { key: 'signing', icon: FileSignature, optional: true },
-  { key: 'integration', icon: Network, optional: true },
-  { key: 'audit', icon: BadgeCheck, optional: true },
+  { key: 'ocr', icon: ScanLine, basic: true },
+  { key: 'bookkeeping', icon: BookOpen, basic: true },
+  { key: 'esg', icon: Leaf, basic: true },
+  { key: 'financial_report', icon: FileText, basic: true },
+  { key: 'adjustment', icon: Sliders, basic: false },
+  { key: 'cashier', icon: Wallet, basic: false },
+  { key: 'analysis', icon: PieChart, basic: false },
+  { key: 'tax', icon: Landmark, basic: false },
+  { key: 'salary', icon: Users, basic: false },
+  { key: 'signing', icon: FileSignature, basic: false },
+  { key: 'integration', icon: Network, basic: false },
+  { key: 'audit', icon: BadgeCheck, basic: false },
 ];

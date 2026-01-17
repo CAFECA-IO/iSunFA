@@ -5,6 +5,7 @@ import { ApiCode } from '@/lib/utils/status';
 import { publicClient } from '@/lib/viem';
 import { ABIS } from '@/config/contracts';
 import { Address } from 'viem';
+import { DEFAULT_PLAN } from '@/constants/plan';
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     // ToDo: (20260116 - Luphia) Use Blockchain Data for Plan & Credits
-    let plan = 'personal';
+    let plan: string = DEFAULT_PLAN;
     let credits = 0;
 
     if (user.identityAddress) {
