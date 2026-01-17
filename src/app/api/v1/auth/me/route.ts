@@ -6,6 +6,7 @@ import { publicClient } from '@/lib/viem';
 import { ABIS } from '@/config/contracts';
 import { Address } from 'viem';
 import { DEFAULT_PLAN } from '@/constants/plan';
+import { MODULES } from '@/constants/modules';
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,7 +44,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Info: (20251230 - Update) 新增 pubKeyX, pubKeyY 回傳
     return jsonOk({
       address: user.address,
       name: user.name,
@@ -52,6 +52,9 @@ export async function GET(request: NextRequest) {
       pubKeyY: user.pubKeyY,
       plan,
       credits,
+      // Info: (20260117 - Luphia) list the modules that the user has access to
+      modules: MODULES.filter((m) => m.basic).map((m) => m.key),
+      isAdmin: user.role === 'ADMIN',
     });
   } catch (error) {
     console.error('[API] /auth/me error:', error);

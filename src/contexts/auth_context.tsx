@@ -9,6 +9,8 @@ interface IUser {
   role: string | null;
   plan?: string;
   credits?: number;
+  isAdmin?: boolean;
+  modules?: string[];
 }
 
 interface IAuthContextType {
