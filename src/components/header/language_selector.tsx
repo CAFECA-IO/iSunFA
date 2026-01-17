@@ -1,12 +1,18 @@
 'use client';
 
-import { Fragment } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react';
 import { Globe, ChevronDown, Check } from 'lucide-react';
 import { useTranslation, Language } from '@/i18n/i18n_context';
 
 export default function LanguageSelector() {
   const { language, setLanguage } = useTranslation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   const languages: { code: Language; label: string }[] = [
     { code: 'zh-TW', label: '繁體中文' },
@@ -17,6 +23,8 @@ export default function LanguageSelector() {
   ];
 
   const currentLangLabel = languages.find(l => l.code === language)?.label || 'Language';
+
+  if (!mounted) return null;
 
   return (
     <Menu as="div" className="relative">

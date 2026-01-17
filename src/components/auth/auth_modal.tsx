@@ -12,6 +12,7 @@ import { X, User } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import LegalModal from "@/components/common/legal_modal";
 import { useAuth } from "@/contexts/auth_context";
+import { useRouter } from "next/navigation";
 import {
   fido2ClientService,
   getLoginOptions,
@@ -33,6 +34,7 @@ type AuthMode = "login" | "register";
 
 export default function AuthModal({ isOpen, onClose }: IAuthModalProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   const { refreshAuth } = useAuth();
   const [mode, setMode] = useState<AuthMode>("login");
   const [loading, setLoading] = useState(false);
@@ -75,6 +77,8 @@ export default function AuthModal({ isOpen, onClose }: IAuthModalProps) {
       // Info: (20260116 - Tzuhan) Add a small delay for user to see success message
       await new Promise((resolve) => setTimeout(resolve, 1500));
       onClose();
+      // Info: (20260118 - Luphia) Redirect to dashboard
+      router.push('/user/main');
     } catch (err: unknown) {
       console.error("Login error:", err);
       const message = err instanceof Error ? err.message : "Login failed";
@@ -110,6 +114,8 @@ export default function AuthModal({ isOpen, onClose }: IAuthModalProps) {
       // Info: (20260116 - Luphia) Add a small delay for user to see success message
       await new Promise((resolve) => setTimeout(resolve, 1500));
       onClose();
+      // Info: (20260118 - Luphia) Redirect to dashboard
+      router.push('/user/main');
     } catch (err: unknown) {
       console.error("Registration error:", err);
       const message =

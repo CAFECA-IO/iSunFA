@@ -12,7 +12,7 @@ export default function FaithAgent() {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
-      {/* Chat Window */}
+      {/* Info: (20260117 - Luphia) Chat Window */}
       <Transition
         show={isOpen}
         enter="transition ease-out duration-200"
@@ -44,7 +44,7 @@ export default function FaithAgent() {
         </div>
       </Transition>
 
-      {/* Floating Trigger Button */}
+      {/* Info: (20260117 - Luphia) Floating Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`

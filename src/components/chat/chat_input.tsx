@@ -8,6 +8,7 @@ import { useTranslation } from '@/i18n/i18n_context';
 interface IChatInputProps {
   onSend: (message: string, file: File | null, tags: string[]) => void;
   disabled?: boolean;
+  allowedTags?: string[];
 }
 
 const RAW_TAGS = [
@@ -24,7 +25,7 @@ const RAW_TAGS = [
   'signing'
 ];
 
-export default function ChatInput({ onSend, disabled }: IChatInputProps) {
+export default function ChatInput({ onSend, disabled, allowedTags }: IChatInputProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -55,9 +56,13 @@ export default function ChatInput({ onSend, disabled }: IChatInputProps) {
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+      prev.includes(tag) ? [] : [tag]
     );
   };
+
+  const tagsToShow = disabled
+    ? []
+    : RAW_TAGS.filter(tag => !allowedTags || allowedTags.includes(tag));
 
   return (
     <div className="border-t bg-white p-4">
@@ -93,7 +98,7 @@ export default function ChatInput({ onSend, disabled }: IChatInputProps) {
 
       {/* Info: (20260117 Luphia) Tags */}
       <div className="mb-2 flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        {RAW_TAGS.map((tagKey) => (
+        {tagsToShow.map((tagKey) => (
           <button
             key={tagKey}
             onClick={() => toggleTag(tagKey)}
