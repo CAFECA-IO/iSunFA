@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { X, Smile } from 'lucide-react';
 import { MarkdownContent } from '@/components/common/markdown_content';
-import { request } from '@/lib/api/request';
+import { request } from '@/lib/utils/request';
 import { useTranslation } from '@/i18n/i18n_context';
 
 interface ILegalModalProps {

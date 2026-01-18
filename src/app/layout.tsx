@@ -33,27 +33,22 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Info: (20260116 - Antigravity) First run check for .env
+  // Info: (20260118 - Luphia) Check if .env has all required keys from .env.example
   const headersList = await headers();
   const currentUrl = headersList.get('x-url') || "";
-  const envPath = path.join(process.cwd(), '.env');
-  let envExists = false;
 
-  try {
-    await fs.access(envPath);
-    envExists = true;
-  } catch {
-    envExists = false;
+  // Info: (20260118 - Luphia) Use the new validator
+  const { validateEnv } = await import('@/validators/env');
+  const envIsValid = validateEnv();
+
+  // Info: (20260118 - Luphia) If validation fails, force setup page (unless we are already there)
+  if (!envIsValid && !currentUrl.includes('/admin/setup')) {
+    redirect('/admin/setup');
   }
 
-  if (currentUrl.includes('/admin/setup')) {
-    if (envExists) {
-      redirect('/');
-    }
-  } else {
-    if (!envExists) {
-      redirect('/admin/setup');
-    }
+  // Info: (20260118 - Luphia) once valid, never setup again
+  if (envIsValid && currentUrl.includes('/admin/setup')) {
+    redirect('/');
   }
 
   const privacyPolicyPath = path.join(process.cwd(), 'documents/privacy_policy.md');

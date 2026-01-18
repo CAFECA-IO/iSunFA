@@ -3,7 +3,7 @@
   "version": "0.12.0",
   "private": true,
   "scripts": {
-    "dev": "npm run lint && next dev",
+    "dev": "npm run lint && prisma generate && next dev",
     "build": "npm run lint && prisma generate && next build",
     "start": "npm run build && next start",
     "lint": "eslint",

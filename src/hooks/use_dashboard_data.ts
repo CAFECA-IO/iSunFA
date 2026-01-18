@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { request } from '@/lib/api/request';
+import { request } from '@/lib/utils/request';
 
 export type TimeUnit = '24h' | '7d' | '30d' | '3m' | '1y';
 export type GasType = 'co2' | 'ch4' | 'n2o' | 'f_gases';

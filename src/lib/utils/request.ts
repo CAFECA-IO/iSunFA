@@ -56,7 +56,7 @@ export async function request<T = unknown>(url: string, options: IRequestOptions
     if (error instanceof ApiError) {
       throw error;
     }
-    // Network errors or other issues
+    // Info: (20260118 - Luphia) Network errors or other issues
     throw new ApiError(error instanceof Error ? error.message : 'Network error', 0);
   }
 }

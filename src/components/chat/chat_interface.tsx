@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import ChatInput from '@/components/chat/chat_input';
 import MessageList, { IMessage } from '@/components/chat/message_list';
-import { request } from '@/lib/api/request';
+import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
 import { useTranslation } from '@/i18n/i18n_context';
 import { MODULES } from '@/constants/modules';

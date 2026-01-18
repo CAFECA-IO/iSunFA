@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import { request } from '@/lib/api/request';
+import { request } from '@/lib/utils/request';
 
 interface IUser {
   address: string;
