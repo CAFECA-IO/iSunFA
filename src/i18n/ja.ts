@@ -1,7 +1,8 @@
 export const ja = {
   common: {
     loading: '読み込み中...',
-    error: 'エラー',
+    save: '保存',
+    confirm: '確認',
     close: '閉じる',
     agree: '同意',
   },
@@ -458,7 +459,12 @@ export const ja = {
     modules: '機能モジュール',
     system: 'システム設定',
     billing: '購入と請求',
+    dashboard: '情報戦略室',
     team: 'チーム管理',
     settings: '設定',
+  },
+  locked: {
+    title: '機能は有効になっていません',
+    purchase: '購入',
   },
 };

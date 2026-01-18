@@ -1,7 +1,8 @@
 export const zhTw = {
   common: {
     loading: "載入中...",
-    error: "錯誤",
+    save: "儲存",
+    confirm: "確認",
     close: "關閉",
     agree: "同意",
   },
@@ -473,7 +474,12 @@ export const zhTw = {
     modules: "功能模組",
     system: "系統設定",
     billing: "購買與帳單",
+    dashboard: "資訊戰情室",
     team: "團隊管理",
     settings: "設定",
+  },
+  locked: {
+    title: "未開通的功能",
+    purchase: "購買",
   },
 };

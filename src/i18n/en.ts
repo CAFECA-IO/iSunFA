@@ -1,7 +1,8 @@
 export const en = {
   common: {
     loading: 'Loading...',
-    error: 'Error',
+    save: 'Save',
+    confirm: 'Confirm',
     close: 'Close',
     agree: 'Agree',
   },
@@ -459,7 +460,12 @@ export const en = {
     modules: 'Modules',
     system: 'System',
     billing: 'Purchase & Billing',
+    dashboard: 'Information War Room',
     team: 'Team Management',
     settings: 'Settings',
+  },
+  locked: {
+    title: 'Function Not Activated',
+    purchase: 'Purchase',
   },
 };

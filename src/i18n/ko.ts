@@ -1,7 +1,8 @@
 export const ko = {
   common: {
     loading: '로딩 중...',
-    error: '오류',
+    save: '저장',
+    confirm: '확인',
     close: '닫기',
     agree: '동의',
   },
@@ -458,7 +459,12 @@ export const ko = {
     modules: '기능 모듈',
     system: '시스템 설정',
     billing: '구매 및 청구',
+    dashboard: '정보 상황실',
     team: '팀 관리',
     settings: '설정',
+  },
+  locked: {
+    title: '기능이 활성화되지 않음',
+    purchase: '구매',
   },
 };

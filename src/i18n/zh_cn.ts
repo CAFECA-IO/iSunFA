@@ -1,7 +1,8 @@
 export const zhCn = {
   common: {
     loading: '载入中...',
-    error: '错误',
+    save: '保存',
+    confirm: '确认',
     close: '关闭',
     agree: '同意',
   },
@@ -458,7 +459,12 @@ export const zhCn = {
     modules: '功能模块',
     system: '系统设置',
     billing: '购买与账单',
+    dashboard: '资讯战情室',
     team: '团队管理',
     settings: '设置',
+  },
+  locked: {
+    title: '未开通的功能',
+    purchase: '购买',
   },
 };
