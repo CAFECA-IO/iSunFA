@@ -28,11 +28,11 @@ export default function UserActions() {
 
   return (
     <Menu as="div" className="relative">
-      <MenuButton className="flex items-center gap-x-1 text-sm font-semibold leading-6 text-gray-900 hover:text-orange-600 transition-colors focus:outline-none">
-        <span className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+      <MenuButton className="flex items-center gap-x-2 rounded-full bg-white pl-1 pr-3 py-1 text-sm font-semibold leading-6 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 hover:ring-orange-300 transition-all focus:outline-none">
+        <span className="h-8 w-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 ring-1 ring-inset ring-orange-100">
           <User className="h-5 w-5" />
         </span>
-        <span className="ml-2 sm:inline">{user.name}</span>
+        <span className="sm:inline">{user.name}</span>
         <ChevronDown className="h-4 w-4 text-gray-400" aria-hidden="true" />
       </MenuButton>
       <Transition

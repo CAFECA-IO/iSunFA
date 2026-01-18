@@ -3,16 +3,17 @@ import path from 'path';
 import { NextRequest } from 'next/server';
 import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
+import { ALLOWED_DOCS } from '@/constants/documents';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  // Info: (20260102 - Luphia) Whitelist allowed documents for security
-  const ALLOWED_DOCS = ['terms_of_service', 'privacy_policy', 'business_license'];
+  // Info: (20260118 - Luphia) Whitelist allowed documents using constants
   const { slug } = await params;
 
-  if (!ALLOWED_DOCS.includes(slug)) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!ALLOWED_DOCS.includes(slug as any)) {
     return jsonFail(ApiCode.VALIDATION_ERROR, 'Invalid document type');
   }
 

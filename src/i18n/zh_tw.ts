@@ -3,6 +3,7 @@ export const zhTw = {
     loading: "載入中...",
     error: "錯誤",
     close: "關閉",
+    agree: "同意",
   },
   faith: {
     title: "費思",
@@ -150,6 +151,7 @@ export const zhTw = {
     tos_required: "您必須同意服務條款與隱私權條款",
     login_failed: "登入失敗",
     reg_failed: "註冊失敗",
+    scroll_to_agree: "請詳細閱覽相關條文",
   },
   features: {
     title: "更聰明的財務管理",

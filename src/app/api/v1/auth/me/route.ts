@@ -5,7 +5,7 @@ import { ApiCode } from '@/lib/utils/status';
 import { publicClient } from '@/lib/viem';
 import { ABIS } from '@/config/contracts';
 import { Address } from 'viem';
-import { DEFAULT_PLAN } from '@/constants/plan';
+import { DEFAULT_PLAN } from '@/constants/plans';
 import { MODULES } from '@/constants/modules';
 
 export async function GET(request: NextRequest) {

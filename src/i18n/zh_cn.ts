@@ -3,6 +3,7 @@ export const zhCn = {
     loading: '载入中...',
     error: '错误',
     close: '关闭',
+    agree: '同意',
   },
   faith: {
     title: '费思',
@@ -139,6 +140,7 @@ export const zhCn = {
     tos_required: '您必须同意服务条款和隐私政策',
     login_failed: '登录失败',
     reg_failed: '注册失败',
+    scroll_to_agree: '请详细阅览相关条文',
   },
   features: {
     title: '更聪明的财务管理',

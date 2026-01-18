@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
-import { X } from 'lucide-react';
+import { X, Smile } from 'lucide-react';
 import { MarkdownContent } from '@/components/common/markdown_content';
 import { request } from '@/lib/api/request';
 import { useTranslation } from '@/i18n/i18n_context';
@@ -10,16 +10,19 @@ import { useTranslation } from '@/i18n/i18n_context';
 interface ILegalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  documentType: 'terms_of_service' | 'privacy_policy' | null;
+  documentType: 'terms_of_service' | 'privacy_policy' | 'refund_policy' | null;
 }
 
+// Info: (20260118 - Luphia) Refactored for scroll detection and interactive buttons
 export default function LegalModal({ isOpen, onClose, documentType }: ILegalModalProps) {
   const { t } = useTranslation();
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
 
   useEffect(() => {
     if (isOpen && documentType) {
+      setHasScrolledToBottom(false);
       const fetchContent = async () => {
         setLoading(true);
         try {
@@ -36,7 +39,19 @@ export default function LegalModal({ isOpen, onClose, documentType }: ILegalModa
     }
   }, [isOpen, documentType]);
 
-  const titleKey = documentType === 'terms_of_service' ? 'auth_modal.tos_link' : 'auth_modal.privacy_link';
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    // Info: (20260118 - Luphia) Allow small buffer (e.g. 5px)
+    if (scrollHeight - scrollTop - clientHeight < 5) {
+      setHasScrolledToBottom(true);
+    }
+  };
+
+  const titleKey = documentType === 'terms_of_service'
+    ? 'auth_modal.tos_link'
+    : documentType === 'privacy_policy'
+      ? 'auth_modal.privacy_link'
+      : 'footer.refund';
 
   return (
     <Transition show={isOpen}>
@@ -79,7 +94,10 @@ export default function LegalModal({ isOpen, onClose, documentType }: ILegalModa
                     {documentType ? t(titleKey) : ''}
                   </DialogTitle>
 
-                  <div className="mt-2 text-sm text-gray-500 max-h-[60vh] overflow-y-auto px-2 border-t border-b border-gray-100 py-4">
+                  <div
+                    className="mt-2 text-sm text-gray-500 max-h-[60vh] overflow-y-auto px-2 border-t border-b border-gray-100 py-4 scroll-smooth"
+                    onScroll={handleScroll}
+                  >
                     {loading ? (
                       <div className="flex justify-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
@@ -89,20 +107,60 @@ export default function LegalModal({ isOpen, onClose, documentType }: ILegalModa
                     )}
                   </div>
 
-                  <div className="mt-5 sm:mt-6">
+                  {/* Info: (20260118 - Luphia) Interactive Buttons */}
+                  <div className="mt-5 sm:mt-6 flex gap-3">
                     <button
                       type="button"
-                      className="inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+                      className="flex-1 w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 hover:text-red-500 transition-all group"
                       onClick={onClose}
                     >
-                      {t('common.close')}
+                      <span className="inline-block transition-transform duration-300 group-hover:animate-[shake_0.5s_ease-in-out_infinite]">
+                        {t('common.close')}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!hasScrolledToBottom}
+                      className={`flex-1 w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm transition-all group
+                        ${hasScrolledToBottom
+                          ? 'bg-orange-600 hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600'
+                          : 'bg-gray-300 cursor-not-allowed'}
+                      `}
+                      onClick={onClose}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        {hasScrolledToBottom && (
+                          <Smile className="w-5 h-5 group-hover:animate-[nod_0.5s_ease-in-out_infinite]" />
+                        )}
+                        <span>{t('common.agree')}</span>
+                      </div>
                     </button>
                   </div>
+                  {!hasScrolledToBottom && !loading && (
+                    <div className="absolute bottom-20 left-0 right-0 flex justify-center pointer-events-none">
+                      <span className="bg-orange-50/90 backdrop-blur-sm text-orange-600 px-4 py-2 rounded-full shadow-lg border border-orange-200 text-sm font-bold animate-bounce">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {t('auth_modal.scroll_to_agree' as any)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </DialogPanel>
             </TransitionChild>
           </div>
         </div>
+        <style>{`
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+          }
+          @keyframes nod {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-4px); }
+            75% { transform: translateY(4px); }
+          }
+        `}</style>
       </Dialog>
     </Transition>
   );

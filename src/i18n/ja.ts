@@ -3,6 +3,7 @@ export const ja = {
     loading: '読み込み中...',
     error: 'エラー',
     close: '閉じる',
+    agree: '同意',
   },
   faith: {
     title: 'FAITH',
@@ -139,6 +140,7 @@ export const ja = {
     tos_required: '利用規約とプライバシーポリシーに同意する必要があります',
     login_failed: 'ログイン失敗',
     reg_failed: '登録失敗',
+    scroll_to_agree: '関連条項を詳細にお読みください',
   },
   features: {
     title: 'よりスマートな財務管理',

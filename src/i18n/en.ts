@@ -3,6 +3,7 @@ export const en = {
     loading: 'Loading...',
     error: 'Error',
     close: 'Close',
+    agree: 'Agree',
   },
   faith: {
     title: 'FAITH',
@@ -140,6 +141,7 @@ export const en = {
     tos_required: 'You must agree to the Terms of Service and Privacy Policy',
     login_failed: 'Login failed',
     reg_failed: 'Registration failed',
+    scroll_to_agree: 'Please read the relevant provisions in detail.',
   },
   features: {
     title: 'Smarter Financial Management',

@@ -3,6 +3,7 @@ export const ko = {
     loading: '로딩 중...',
     error: '오류',
     close: '닫기',
+    agree: '동의',
   },
   faith: {
     title: 'FAITH',
@@ -140,6 +141,7 @@ export const ko = {
     tos_required: '이용 약관 및 개인정보 처리방침에 동의해야 합니다',
     login_failed: '로그인 실패',
     reg_failed: '가입 실패',
+    scroll_to_agree: '관련 조항을 자세히 읽어 주십시오',
   },
   features: {
     title: '더 스마트한 재무 관리',
