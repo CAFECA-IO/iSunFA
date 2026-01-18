@@ -426,6 +426,7 @@ export const zhCn = {
       financial_report: '会计报表',
       analysis: '财务分析',
       signing: '文件签核',
+      integration: '系统集成',
       other: '其他',
     },
     input_placeholder: '输入信息或上传凭证',
@@ -452,5 +453,12 @@ export const zhCn = {
     address: '110053 台北市信义区忠孝东路四段 521 号 14 楼',
     hours: '周一至周五，10:00 - 17:00 国定假日休业',
     rights_reserved: 'All rights reserved.',
+  },
+  sidebar: {
+    modules: '功能模块',
+    system: '系统设置',
+    billing: '购买与账单',
+    team: '团队管理',
+    settings: '设置',
   },
 };

@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, Fragment } from 'react';
+import Link from 'next/link';
 import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react';
-import { User, LogOut, ChevronDown } from 'lucide-react';
+import { User, LogOut, ChevronDown, Settings, CreditCard, Users } from 'lucide-react';
+import { MODULES } from '@/constants/modules';
 import { useAuth } from '@/contexts/auth_context';
 import { useTranslation } from '@/i18n/i18n_context';
 import AuthModal from '@/components/auth/auth_modal';
@@ -11,6 +13,12 @@ export default function UserActions() {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+
+  // Info: (20260118 - Luphia) Check if a module is active for the current user
+  const isModuleActive = (moduleKey: string) => {
+    if (!user || !user.modules) return false;
+    return user.modules.includes(moduleKey);
+  };
 
   if (!user) {
     return (
@@ -44,7 +52,7 @@ export default function UserActions() {
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
       >
-        <MenuItems className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+        <MenuItems className="absolute right-0 z-10 mt-2 w-64 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none max-h-[80vh] overflow-y-auto">
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="text-sm text-gray-900 font-medium truncate">{user.name || 'User'}</p>
             {/* Info: (20260104) Removed address, added Plan and Credits */}
@@ -59,6 +67,92 @@ export default function UserActions() {
               </div>
             </div>
           </div>
+
+          <div className="py-1 border-b border-gray-100">
+            <div className="px-3 py-1">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                {t('sidebar.modules')}
+              </h3>
+            </div>
+            {MODULES.map((module) => {
+              const active = isModuleActive(module.key);
+              const Icon = module.icon;
+              return (
+                <MenuItem key={module.key}>
+                  {({ focus }) => (
+                    active ? (
+                      <Link
+                        href={`/user/${module.key}`}
+                        className={`
+                          ${focus ? 'bg-orange-50 text-orange-600' : 'text-gray-700'}
+                          group flex items-center px-4 py-2 text-sm
+                        `}
+                      >
+                        <Icon className={`mr-3 h-4 w-4 ${focus ? 'text-orange-500' : 'text-gray-400 group-hover:text-gray-500'}`} />
+                        {t(`chat.tags.${module.key}`)}
+                      </Link>
+                    ) : (
+                      <div className="flex items-center px-4 py-2 text-sm text-gray-400 opacity-60 cursor-not-allowed">
+                        <Icon className="mr-3 h-4 w-4 text-gray-300" />
+                        {t(`chat.tags.${module.key}`)}
+                      </div>
+                    )
+                  )}
+                </MenuItem>
+              );
+            })}
+          </div>
+
+          <div className="py-1 border-b border-gray-100">
+            <div className="px-3 py-1">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                {t('sidebar.system')}
+              </h3>
+            </div>
+            <MenuItem>
+              {({ focus }) => (
+                <Link
+                  href="/user/billing"
+                  className={`
+                    ${focus ? 'bg-orange-50 text-orange-600' : 'text-gray-700'}
+                    group flex items-center px-4 py-2 text-sm
+                  `}
+                >
+                  <CreditCard className="mr-3 h-4 w-4 text-gray-400 group-hover:text-orange-500" />
+                  {t('sidebar.billing')}
+                </Link>
+              )}
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
+                <Link
+                  href="/user/team"
+                  className={`
+                    ${focus ? 'bg-orange-50 text-orange-600' : 'text-gray-700'}
+                    group flex items-center px-4 py-2 text-sm
+                  `}
+                >
+                  <Users className="mr-3 h-4 w-4 text-gray-400 group-hover:text-orange-500" />
+                  {t('sidebar.team')}
+                </Link>
+              )}
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
+                <Link
+                  href="/user/settings"
+                  className={`
+                    ${focus ? 'bg-orange-50 text-orange-600' : 'text-gray-700'}
+                    group flex items-center px-4 py-2 text-sm
+                  `}
+                >
+                  <Settings className="mr-3 h-4 w-4 text-gray-400 group-hover:text-orange-500" />
+                  {t('sidebar.settings')}
+                </Link>
+              )}
+            </MenuItem>
+          </div>
+
           <MenuItem>
             {({ focus }) => (
               <button

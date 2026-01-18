@@ -426,6 +426,7 @@ export const ko = {
       financial_report: '재무 보고서',
       analysis: '재무 분석',
       signing: '전자 서명',
+      integration: '시스템 통합',
       other: '기타',
     },
     input_placeholder: '메시지 입력 또는 문서 업로드',
@@ -452,5 +453,12 @@ export const ko = {
     address: '110053 타이베이시 신의구 중효동로 4단 521호 14층',
     hours: '월 - 금, 10:00 - 17:00 국경일 휴무',
     rights_reserved: 'All rights reserved.',
+  },
+  sidebar: {
+    modules: '기능 모듈',
+    system: '시스템 설정',
+    billing: '구매 및 청구',
+    team: '팀 관리',
+    settings: '설정',
   },
 };

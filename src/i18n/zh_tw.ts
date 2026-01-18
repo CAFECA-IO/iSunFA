@@ -438,6 +438,7 @@ export const zhTw = {
       financial_report: "會計報表",
       analysis: "財務分析",
       signing: "文件簽核",
+      integration: "系統整合",
       other: "其他",
     },
     input_placeholder: "輸入訊息或上傳憑證",
@@ -467,5 +468,12 @@ export const zhTw = {
     address: "110053 臺北市信義區忠孝東路四段 521 號 14 樓",
     hours: "週一至週五，10:00 - 17:00 國定假日休業",
     rights_reserved: "All rights reserved.",
+  },
+  sidebar: {
+    modules: "功能模組",
+    system: "系統設定",
+    billing: "購買與帳單",
+    team: "團隊管理",
+    settings: "設定",
   },
 };

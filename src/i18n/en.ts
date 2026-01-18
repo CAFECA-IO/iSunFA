@@ -427,6 +427,7 @@ export const en = {
       financial_report: 'Financial Reports',
       analysis: 'Financial Analysis',
       signing: 'Document Signing',
+      integration: 'System Integration',
       other: 'Other',
     },
     input_placeholder: 'Type a message or upload document',
@@ -453,5 +454,12 @@ export const en = {
     address: '14F, No. 521, Sec. 4, Zhongxiao E. Rd., Xinyi Dist., Taipei City 110053, Taiwan (R.O.C.)',
     hours: 'Mon - Fri, 10:00 - 17:00 Closed on National Holidays',
     rights_reserved: 'All rights reserved.',
+  },
+  sidebar: {
+    modules: 'Modules',
+    system: 'System',
+    billing: 'Purchase & Billing',
+    team: 'Team Management',
+    settings: 'Settings',
   },
 };

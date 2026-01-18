@@ -426,6 +426,7 @@ export const ja = {
       financial_report: '財務諸表',
       analysis: '財務分析',
       signing: '電子署名',
+      integration: 'システム統合',
       other: 'その他',
     },
     input_placeholder: 'メッセージを入力または文書をアップロード',
@@ -452,5 +453,12 @@ export const ja = {
     address: '110053 台北市信義区忠孝東路四段521号14階',
     hours: '月〜金 10:00 - 17:00 (祝日休業)',
     rights_reserved: 'All rights reserved.',
+  },
+  sidebar: {
+    modules: '機能モジュール',
+    system: 'システム設定',
+    billing: '購入と請求',
+    team: 'チーム管理',
+    settings: '設定',
   },
 };
