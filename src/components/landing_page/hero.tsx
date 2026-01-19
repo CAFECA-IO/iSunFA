@@ -1,11 +1,18 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/i18n/i18n_context';
+import { useAuth } from '@/contexts/auth_context';
 import SubtitleTypewriter from '@/components/landing_page/subtitle_typewriter';
+import AuthModal from '@/components/auth/auth_modal';
 
 export default function Hero() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const router = useRouter();
+  const [isAuthModalOpen, setAuthModalOpen] = useState(false);
 
   return (
     <div className="relative isolate px-6 pt-14 lg:px-8 bg-white overflow-hidden">
@@ -38,19 +45,29 @@ export default function Hero() {
             />
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-
-            <Link
-              href="/user/main"
+            <button
+              onClick={() => {
+                if (user) {
+                  router.push('/user/main');
+                } else {
+                  setAuthModalOpen(true);
+                }
+              }}
               className="rounded-md bg-orange-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
             >
               {t('hero.free_trial')}
-            </Link>
+            </button>
             <Link href="/pricing" className="text-sm font-semibold leading-6 text-gray-900 hover:text-orange-600 transition-colors">
               {t('hero.pricing_link')}
             </Link>
           </div>
         </div>
       </div>
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
 
       <div
         className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"

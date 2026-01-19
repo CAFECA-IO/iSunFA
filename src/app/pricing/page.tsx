@@ -29,8 +29,8 @@ export default function PricingPage() {
   });
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
 
-  // Info: (20260116 - Antigravity) Normalize plan: default/personal -> free
-  const currentPlan = (user?.plan === 'personal' || !user?.plan) ? 'free' : user.plan;
+  // Info: (20260119 - Luphia) Allow guest users to select free plan to trigger login
+  const currentPlan = user ? ((user.plan === 'personal' || !user.plan) ? 'free' : user.plan) : undefined;
 
   // Info: (20260115 - Luphia) Pricing Calculator State
   const [userCount, setUserCount] = useState(5);
@@ -142,6 +142,7 @@ export default function PricingPage() {
                       tooltip: t('pricing.plans.free.features.ai_overage_tooltip'),
                     },
                   ]}
+                  onSelect={showComingSoon}
                 />
                 <PricingCard
                   planKey="team"
@@ -412,7 +413,7 @@ export default function PricingPage() {
           onClose={() => setAuthModalOpen(false)}
         />
 
-        {/* Info: (20260116 - Antigravity) Coming Soon Modal */}
+        {/* Info: (20260116 - Luphia) Coming Soon Modal */}
         <ConfirmModal
           isOpen={confirmModal.isOpen}
           onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
