@@ -62,7 +62,7 @@ export default async function RootLayout({
         <I18nProvider>
           <AuthProvider>
             {children}
-            <FaithAgent />
+            {!currentUrl.includes('/slide/') && <FaithAgent />}
             <CookieConsent privacyPolicyContent={privacyPolicyContent} />
           </AuthProvider>
         </I18nProvider>
