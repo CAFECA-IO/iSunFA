@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /* Info: (20260121 - Luphia) config options here */
 };
 
 export default nextConfig;

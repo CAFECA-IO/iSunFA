@@ -21,6 +21,42 @@ import DeepInsightSlide15 from '@/app/slide/deep_insight/15/page';
 import DeepInsightSlide16 from '@/app/slide/deep_insight/16/page';
 import DeepInsightSlide17 from '@/app/slide/deep_insight/17/page';
 
+// Info: (20260121 - Luphia) Lazy Load Wrapper
+function LazySlide({ children }: { children: React.ReactNode }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          /**
+           * Info: (20260121 - Luphia) Keep logic simple
+           * once loaded, stay loaded (avoids flicker) or keep observing?
+           * For memory, we might want to unload if far away, but that causes state loss.
+           * Let's stick to "render if close".
+           */
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '500px' } // Info: (20260121 - Luphia) Load well in advance
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="w-full h-full">
+      {isVisible ? children : <div className="w-full h-full animate-pulse bg-neutral-100" />}
+    </div>
+  );
+}
+
 export default function DeepInsightSlideBrowser() {
   const [currentSlide, setCurrentSlide] = useState(1);
   const totalSlides = 17;
@@ -198,7 +234,9 @@ export default function DeepInsightSlideBrowser() {
                   className="bg-white"
                 >
                   <div className="w-full h-full [&>div]:!min-h-0 [&>div]:!h-full [&>div]:!bg-transparent [&>div]:!p-0">
-                    <Component />
+                    <LazySlide>
+                      <Component />
+                    </LazySlide>
                   </div>
                 </div>
                 {/* Info: (20260121 - Luphia) Overlay Page Number for Mobile */}
