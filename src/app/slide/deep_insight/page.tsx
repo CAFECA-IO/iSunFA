@@ -205,18 +205,16 @@ export default function DeepInsightSlideBrowser() {
         <div className="flex flex-col items-center gap-4 py-[35vh] min-h-screen">
           {Array.from({ length: totalSlides }, (_, i) => i + 1).map((id) => {
             const distance = Math.abs(id - currentSlide);
-            // Info: (20260121 - Luphia) Only load 5 slides: current +/- 2
-            const shouldRender = distance <= 2;
+            // Info: (20260121 - Luphia) Only load 3 slides: current +/- 1
+            const shouldRender = distance <= 1;
 
             /**
              * Info: (20260121 - Luphia) Visual Effects based on distance
              * 0: opacity-100 blur-0 grayscale-0
              * 1: opacity-40 blur-sm grayscale
-             * 2: opacity-20 blur-md grayscale
              */
             const opacityClass = distance === 0 ? 'opacity-100 scale-100' :
-              distance === 1 ? 'opacity-40 scale-95 blur-[2px] grayscale' :
-                'opacity-20 scale-90 blur-[4px] grayscale';
+              'opacity-40 scale-95 blur-[2px] grayscale';
 
             const Component = SlideComponents[id];
 
