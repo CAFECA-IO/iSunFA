@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { en } from '@/i18n/en';
 import { zhTw } from '@/i18n/zh_tw';
 import { zhCn } from '@/i18n/zh_cn';
@@ -8,9 +8,10 @@ import { ko } from '@/i18n/ko';
 import { ja } from '@/i18n/ja';
 
 export type Language = 'en' | 'zh-TW' | 'zh-CN' | 'ko' | 'ja';
-type Dictionary = typeof en;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Dictionary = any;
 
-// Helper to get nested value by key string "auth_modal.login_btn"
+// Info: (20260120 - Luphia) Helper to get nested value by key string "auth_modal.login_btn"
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getNestedValue(obj: any, path: string): string {
   return path.split('.').reduce((prev, curr) => (prev ? prev[curr] : null), obj) || path;
@@ -19,7 +20,7 @@ function getNestedValue(obj: any, path: string): string {
 interface II18nContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, options?: Record<string, string | number>) => string;
 }
 
 const I18nContext = createContext<II18nContextType | undefined>(undefined);
@@ -37,7 +38,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [dictionary, setDictionary] = useState<Dictionary>(zhTw);
 
   useEffect(() => {
-    // Load persisted language
+    // Info: (20260120 - Luphia) Load persisted language
     const savedLang = localStorage.getItem('isunfa_lang') as Language;
     if (savedLang && Object.keys(dictionaries).includes(savedLang) && savedLang !== language) {
       setLanguage(savedLang);
@@ -51,8 +52,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('isunfa_lang', lang);
   };
 
-  const t = (key: string): string => {
-    return getNestedValue(dictionary, key);
+  const t = (key: string, options?: Record<string, string | number>): string => {
+    let text = getNestedValue(dictionary, key);
+    if (options) {
+      Object.entries(options).forEach(([k, v]) => {
+        text = text.replace(new RegExp(`{{${k}}}`, 'g'), String(v));
+      });
+    }
+    return text;
   };
 
   return (
