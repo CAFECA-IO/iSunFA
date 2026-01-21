@@ -474,8 +474,8 @@ export const ko = {
   },
   analysis: {
     title: '재무 분석',
-    internal_analysis: '내부 통찰력 분석',
-    external_analysis: '외부 통찰력 분석',
+    internal_analysis: '내부 분석',
+    external_analysis: '외부 분석',
     history_reports: '분석 이력',
     date_range: '날짜 범위',
     start_date: '시작 날짜',
