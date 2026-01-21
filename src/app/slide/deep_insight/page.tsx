@@ -1,12 +1,88 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight, MonitorPlay, Download, Grid, Maximize2 } from 'lucide-react';
 import Link from 'next/link';
+import DeepInsightSlide1 from '@/app/slide/deep_insight/1/page';
+import DeepInsightSlide2 from '@/app/slide/deep_insight/2/page';
+import DeepInsightSlide3 from '@/app/slide/deep_insight/3/page';
+import DeepInsightSlide4 from '@/app/slide/deep_insight/4/page';
+import DeepInsightSlide5 from '@/app/slide/deep_insight/5/page';
+import DeepInsightSlide6 from '@/app/slide/deep_insight/6/page';
+import DeepInsightSlide7 from '@/app/slide/deep_insight/7/page';
+import DeepInsightSlide8 from '@/app/slide/deep_insight/8/page';
+import DeepInsightSlide9 from '@/app/slide/deep_insight/9/page';
+import DeepInsightSlide10 from '@/app/slide/deep_insight/10/page';
+import DeepInsightSlide11 from '@/app/slide/deep_insight/11/page';
+import DeepInsightSlide12 from '@/app/slide/deep_insight/12/page';
+import DeepInsightSlide13 from '@/app/slide/deep_insight/13/page';
+import DeepInsightSlide14 from '@/app/slide/deep_insight/14/page';
+import DeepInsightSlide15 from '@/app/slide/deep_insight/15/page';
+import DeepInsightSlide16 from '@/app/slide/deep_insight/16/page';
+import DeepInsightSlide17 from '@/app/slide/deep_insight/17/page';
 
 export default function DeepInsightSlideBrowser() {
   const [currentSlide, setCurrentSlide] = useState(1);
   const totalSlides = 17;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  // Info: (20260121 - Luphia) Dynamic scaling logic
+  const [mobileScale, setMobileScale] = useState(0.3);
+
+  useEffect(() => {
+    const handleResize = () => {
+      // Info: (20260121 - Luphia) Desktop Preview Calc
+      if (containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        const targetWidth = 1280;
+        const targetHeight = 720;
+        const scaleX = width / targetWidth;
+        const scaleY = height / targetHeight;
+        const newScale = Math.min(scaleX, scaleY);
+        setScale(newScale);
+      }
+
+      // Info: (20260121 - Luphia) Mobile List Calc
+      if (window.innerWidth < 768) {
+        /**
+         * Info: (20260121 - Luphia) Mobile Width usually < 768. 
+         * We want to fit 1280px into window width (minus details?)
+         * Let's assume full width minus some padding
+         */
+        const w = window.innerWidth;
+        const targetW = 1280;
+        setMobileScale(w / targetW);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Info: (20260121 - Luphia) Slide Components Map
+  const SlideComponents: { [key: number]: React.ComponentType } = {
+    1: DeepInsightSlide1,
+    2: DeepInsightSlide2,
+    3: DeepInsightSlide3,
+    4: DeepInsightSlide4,
+    5: DeepInsightSlide5,
+    6: DeepInsightSlide6,
+    7: DeepInsightSlide7,
+    8: DeepInsightSlide8,
+    9: DeepInsightSlide9,
+    10: DeepInsightSlide10,
+    11: DeepInsightSlide11,
+    12: DeepInsightSlide12,
+    13: DeepInsightSlide13,
+    14: DeepInsightSlide14,
+    15: DeepInsightSlide15,
+    16: DeepInsightSlide16,
+    17: DeepInsightSlide17,
+  };
+
+  const CurrentSlideComponent = SlideComponents[currentSlide];
 
   // Info: (20260121 - Luphia) Based on recent implementation context:
   const slideTitles: { [key: number]: string } = {
@@ -44,8 +120,8 @@ export default function DeepInsightSlideBrowser() {
   // Info: (20260121 - Luphia) Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') nextSlide();
-      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') nextSlide();
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') prevSlide();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -53,9 +129,10 @@ export default function DeepInsightSlideBrowser() {
 
   return (
     <div className="flex flex-col h-screen bg-neutral-900 text-white overflow-hidden">
-      {/* Info: (20260121 - Luphia) Top Bar */}
-      <div className="h-14 border-b border-neutral-800 flex items-center justify-between px-4 bg-neutral-900 z-20">
-        <div className="flex items-center gap-3">
+
+      {/* Info: (20260121 - Luphia) Universal Header */}
+      <div className="h-14 border-b border-neutral-800 flex items-center justify-between px-4 bg-neutral-900 z-20 flex-shrink-0">
+        <Link href="/slide" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="bg-orange-600 p-1.5 rounded-lg">
             <MonitorPlay size={20} className="text-white" />
           </div>
@@ -63,9 +140,10 @@ export default function DeepInsightSlideBrowser() {
             <h1 className="text-sm font-bold text-gray-200">DeepInsight Presentation</h1>
             <p className="text-xs text-gray-500">v1.2.0 • 2026 iSunFA</p>
           </div>
-        </div>
+        </Link>
 
-        <div className="flex items-center gap-2">
+        {/* Info: (20260121 - Luphia) Desktop Controls - Hidden on Mobile */}
+        <div className="hidden md:flex items-center gap-2">
           <span className="text-xs font-mono text-gray-500 mr-2">
             {currentSlide} / {totalSlides}
           </span>
@@ -85,14 +163,15 @@ export default function DeepInsightSlideBrowser() {
           </button>
         </div>
 
+        {/* Info: (20260121 - Luphia) Right Side Actions - Visible on both but adjusted */}
         <div className="flex items-center gap-3">
-          <Link href="/slide/deep_insight/print" target="_blank">
+          <Link href="/slide/deep_insight/print" target="_blank" className="hidden md:block">
             <button className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded-md text-xs font-medium transition-colors border border-neutral-700">
               <Download size={14} />
               <span>PDF</span>
             </button>
           </Link>
-          <Link href={`/slide/deep_insight/${currentSlide}`} target="_blank">
+          <Link href={`/slide/deep_insight/${currentSlide}`} target="_blank" className="hidden md:block">
             <button className="p-2 hover:bg-neutral-800 rounded-md text-gray-400 hover:text-white transition-colors">
               <Maximize2 size={18} />
             </button>
@@ -100,47 +179,95 @@ export default function DeepInsightSlideBrowser() {
         </div>
       </div>
 
-      {/* Info: (20260121 - Luphia) Main Content Area (iframe) */}
-      <div className="flex-1 bg-neutral-950 flex items-center justify-center p-8 relative">
-        <div className="relative w-full h-full max-w-[1280px] max-h-[760px] shadow-2xl overflow-hidden rounded-lg bg-white ring-1 ring-neutral-800">
-          {/* Info: (20260121 - Luphia) Using key to force re-render if needed, but src change is usually enough */}
-          <iframe
-            src={`/slide/deep_insight/${currentSlide}`}
-            className="w-full h-full border-0"
-            title="Slide Preview"
-          />
+      {/* Info: (20260121 - Luphia) Mobile Vertical Scroll View - Visible only on mobile */}
+      <div className="md:hidden flex-1 overflow-y-auto bg-neutral-900">
+        <div className="flex flex-col items-center gap-4 py-4">
+          {Array.from({ length: totalSlides }, (_, i) => i + 1).map((id) => {
+            const Component = SlideComponents[id];
+            return (
+              <div key={id} className="w-full relative overflow-hidden"
+                style={{ height: 720 * mobileScale }}>
+                {/* Info: (20260121 - Luphia) Scale Wrapper */}
+                <div
+                  style={{
+                    transform: `scale(${mobileScale})`,
+                    transformOrigin: 'top left',
+                    width: 1280,
+                    height: 720
+                  }}
+                  className="bg-white"
+                >
+                  <div className="w-full h-full [&>div]:!min-h-0 [&>div]:!h-full [&>div]:!bg-transparent [&>div]:!p-0">
+                    <Component />
+                  </div>
+                </div>
+                {/* Info: (20260121 - Luphia) Overlay Page Number for Mobile */}
+                <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded-full z-10 pointer-events-none">
+                  {id} / {totalSlides}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Info: (20260121 - Luphia) Bottom Thumbnail Strip */}
-      <div className="h-40 border-t border-neutral-800 bg-neutral-900 flex flex-col">
-        <div className="px-4 py-2 text-xs text-gray-500 font-bold uppercase tracking-wider flex items-center gap-2">
-          <Grid size={12} />
-          Slide Navigator
-        </div>
-        <div className="flex-1 overflow-x-auto flex items-center gap-3 px-4 pb-4 scrollbar-hide">
-          {Array.from({ length: totalSlides }, (_, i) => i + 1).map((id) => (
-            <button
-              key={id}
-              onClick={() => goToSlide(id)}
-              className={`flex-shrink-0 w-48 h-28 rounded-lg border-2 transition-all duration-200 relative group overflow-hidden ${currentSlide === id
-                ? 'border-orange-500 ring-2 ring-orange-500/20'
-                : 'border-neutral-800 hover:border-neutral-700 opacity-60 hover:opacity-100'
-                }`}
+      {/* Info: (20260121 - Luphia) Desktop Layout - Hidden on Mobile */}
+      <div className="hidden md:flex flex-1 overflow-hidden">
+        {/* Info: (20260121 - Luphia) Simple flex container for desktop content since header is moved out */}
+
+        {/* Info: (20260121 - Luphia) Main Layout: Content (Left) + Navigator (Right) */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Info: (20260121 - Luphia) Preview Area */}
+          <div className="flex-1 bg-neutral-950 flex items-center justify-center p-8 relative overflow-hidden" ref={containerRef}>
+            {/* Info: (20260121 - Luphia) Scaled Content Wrapper */}
+            <div
+              style={{
+                transform: `scale(${scale})`,
+                width: 1280,
+                height: 720,
+                transformOrigin: 'center center'
+              }}
+              className="bg-white shadow-2xl flex-shrink-0 relative overflow-hidden ring-1 ring-neutral-800"
             >
-              {/* Info: (20260121 - Luphia) Mini Preview Mock - Using iframe is too heavy, just use a placeholder styling */}
-              <div className="absolute inset-0 bg-white">
-                <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300 text-xs font-mono">
-                  LOGO
-                </div>
-                {/* Info: (20260121 - Luphia) Overlay Title */}
-                <div className="absolute bottom-0 inset-x-0 bg-neutral-900/90 p-2 text-left">
-                  <div className="text-[10px] font-bold text-orange-500 mb-0.5">#{id.toString().padStart(2, '0')}</div>
-                  <div className="text-[10px] text-gray-300 font-medium truncate">{slideTitles[id] || `Slide ${id}`}</div>
-                </div>
+              <div className="w-full h-full [&>div]:!min-h-0 [&>div]:!h-full [&>div]:!bg-transparent [&>div]:!p-0">
+                <CurrentSlideComponent />
               </div>
-            </button>
-          ))}
+            </div>
+          </div>
+
+          {/* Info: (20260121 - Luphia) Side Navigator (Right) */}
+          <div className="w-64 border-l border-neutral-800 bg-neutral-900 flex flex-col flex-shrink-0">
+            <div className="px-4 py-3 text-xs text-gray-500 font-bold uppercase tracking-wider flex items-center gap-2 border-b border-neutral-800">
+              <Grid size={12} />
+              <span>Navigator</span>
+            </div>
+            <div className="flex-1 overflow-y-auto flex flex-col gap-4 p-4 scrollbar-hide">
+              {Array.from({ length: totalSlides }, (_, i) => i + 1).map((id) => (
+                <button
+                  key={id}
+                  onClick={() => goToSlide(id)}
+                  className={`flex-shrink-0 w-full aspect-video rounded-lg border-2 transition-all duration-200 relative group overflow-hidden ${currentSlide === id
+                    ? 'border-orange-500 ring-2 ring-orange-500/20'
+                    : 'border-neutral-800 hover:border-neutral-700 opacity-60 hover:opacity-100'
+                    }`}
+                >
+                  {/* Info: (20260121 - Luphia) Mini Preview Mock */}
+                  <div className="absolute inset-0 bg-white">
+                    <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300 text-xs font-mono">
+                      LOGO
+                    </div>
+                    {/* Info: (20260121 - Luphia) Overlay Title */}
+                    <div className="absolute bottom-0 inset-x-0 bg-neutral-900/90 p-2 text-left">
+                      <div className="flex justify-between items-center mb-0.5">
+                        <span className="text-[10px] font-bold text-orange-500">#{id.toString().padStart(2, '0')}</span>
+                      </div>
+                      <div className="text-[10px] text-gray-300 font-medium truncate leading-tight">{slideTitles[id] || `Slide ${id}`}</div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
