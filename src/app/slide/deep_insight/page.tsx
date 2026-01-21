@@ -21,42 +21,6 @@ import DeepInsightSlide15 from '@/app/slide/deep_insight/15/page';
 import DeepInsightSlide16 from '@/app/slide/deep_insight/16/page';
 import DeepInsightSlide17 from '@/app/slide/deep_insight/17/page';
 
-// Info: (20260121 - Luphia) Lazy Load Wrapper
-function LazySlide({ children }: { children: React.ReactNode }) {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          /**
-           * Info: (20260121 - Luphia) Keep logic simple
-           * once loaded, stay loaded (avoids flicker) or keep observing?
-           * For memory, we might want to unload if far away, but that causes state loss.
-           * Let's stick to "render if close".
-           */
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '500px' } // Info: (20260121 - Luphia) Load well in advance
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div ref={ref} className="w-full h-full">
-      {isVisible ? children : <div className="w-full h-full animate-pulse bg-neutral-100" />}
-    </div>
-  );
-}
-
 export default function DeepInsightSlideBrowser() {
   const [currentSlide, setCurrentSlide] = useState(1);
   const totalSlides = 17;
@@ -216,13 +180,50 @@ export default function DeepInsightSlideBrowser() {
       </div>
 
       {/* Info: (20260121 - Luphia) Mobile Vertical Scroll View - Visible only on mobile */}
-      <div className="md:hidden flex-1 overflow-y-auto bg-neutral-900">
-        <div className="flex flex-col items-center gap-4 py-4">
+      <div
+        className="md:hidden flex-1 overflow-y-auto bg-neutral-900 scroll-smooth"
+        onScroll={(e) => {
+          const target = e.currentTarget;
+          // Info: (20260121 - Luphia) 35vh is approx 35% of clientHeight
+          const paddingOffset = target.clientHeight * 0.35;
+          const slideHeight = (720 * mobileScale) + 16;
+
+          // Info: (20260121 - Luphia) Center of the Viewport relative to content top (0)
+          const scrollCenter = target.scrollTop + (target.clientHeight / 2);
+
+          // Info: (20260121 - Luphia) Adjust for the top padding so 0 starts at the first slide
+          const relativePosition = scrollCenter - paddingOffset;
+
+          const index = Math.floor(relativePosition / slideHeight) + 1;
+          const safeIndex = Math.max(1, Math.min(totalSlides, index));
+
+          if (safeIndex !== currentSlide) {
+            setCurrentSlide(safeIndex);
+          }
+        }}
+      >
+        <div className="flex flex-col items-center gap-4 py-[35vh] min-h-screen">
           {Array.from({ length: totalSlides }, (_, i) => i + 1).map((id) => {
+            const distance = Math.abs(id - currentSlide);
+            // Info: (20260121 - Luphia) Only load 5 slides: current +/- 2
+            const shouldRender = distance <= 2;
+
+            /**
+             * Info: (20260121 - Luphia) Visual Effects based on distance
+             * 0: opacity-100 blur-0 grayscale-0
+             * 1: opacity-40 blur-sm grayscale
+             * 2: opacity-20 blur-md grayscale
+             */
+            const opacityClass = distance === 0 ? 'opacity-100 scale-100' :
+              distance === 1 ? 'opacity-40 scale-95 blur-[2px] grayscale' :
+                'opacity-20 scale-90 blur-[4px] grayscale';
+
             const Component = SlideComponents[id];
+
             return (
-              <div key={id} className="w-full relative overflow-hidden"
+              <div key={id} className={`w-full relative overflow-hidden transition-all duration-500 ease-out ${opacityClass}`}
                 style={{ height: 720 * mobileScale }}>
+
                 {/* Info: (20260121 - Luphia) Scale Wrapper */}
                 <div
                   style={{
@@ -231,17 +232,17 @@ export default function DeepInsightSlideBrowser() {
                     width: 1280,
                     height: 720
                   }}
-                  className="bg-white"
+                  className="bg-white shadow-xl rounded-lg"
                 >
                   <div className="w-full h-full [&>div]:!min-h-0 [&>div]:!h-full [&>div]:!bg-transparent [&>div]:!p-0">
-                    <LazySlide>
-                      <Component />
-                    </LazySlide>
+                    {shouldRender ? <Component /> : <div className="w-full h-full bg-neutral-800/50 animate-pulse" />}
                   </div>
                 </div>
+
                 {/* Info: (20260121 - Luphia) Overlay Page Number for Mobile */}
-                <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded-full z-10 pointer-events-none">
-                  {id} / {totalSlides}
+                <div className={`absolute top-2 right-2 px-2 py-1 rounded-full z-10 pointer-events-none transition-opacity duration-300 ${distance === 0 ? 'bg-orange-600 text-white shadow-lg' : 'bg-black/50 text-gray-400'}`}>
+                  <span className="text-[10px] font-bold">{id}</span>
+                  <span className="text-[8px] opacity-80">/{totalSlides}</span>
                 </div>
               </div>
             );
