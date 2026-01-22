@@ -10,7 +10,7 @@ export default function CafecaFintechSlide4() {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sky-100/50 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-100/50 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/3"></div>
 
-      <div className="container mx-auto px-16 py-12 relative z-10 flex flex-col h-full">
+      <div className="w-full max-w-[1280px] mx-auto px-16 py-12 relative z-10 flex flex-col h-full">
 
         {/* Info: (20260122 - Luphia) Header */}
         <div className="mb-8 flex flex-col items-center">

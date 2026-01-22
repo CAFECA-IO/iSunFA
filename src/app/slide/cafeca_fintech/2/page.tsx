@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Database, Zap, Target } from 'lucide-react';
+import { Calendar, Database, Zap, Target, Banknote, Coins } from 'lucide-react';
 
 export default function CafecaFintechSlide2() {
   return (
@@ -38,6 +38,26 @@ export default function CafecaFintechSlide2() {
               <div>
                 <div className="text-sm text-slate-500 font-medium uppercase tracking-wide mb-1">核心聚焦</div>
                 <div className="text-xl font-bold text-slate-900">金融科技技術</div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="bg-sky-50 p-3 rounded-xl shrink-0">
+                <Banknote className="text-sky-600" size={24} />
+              </div>
+              <div>
+                <div className="text-sm text-slate-500 font-medium uppercase tracking-wide mb-1">資本總額</div>
+                <div className="text-xl font-bold text-slate-900 font-mono">50,000,000</div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="bg-sky-50 p-3 rounded-xl shrink-0">
+                <Coins className="text-sky-600" size={24} />
+              </div>
+              <div>
+                <div className="text-sm text-slate-500 font-medium uppercase tracking-wide mb-1">實收資本額</div>
+                <div className="text-xl font-bold text-slate-900 font-mono">3,000,000</div>
               </div>
             </div>
           </div>
