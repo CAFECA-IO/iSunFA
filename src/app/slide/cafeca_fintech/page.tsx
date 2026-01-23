@@ -10,10 +10,13 @@ import CafecaFintechSlide4 from '@/app/slide/cafeca_fintech/4/page';
 import CafecaFintechSlide5 from '@/app/slide/cafeca_fintech/5/page';
 import CafecaFintechSlide6 from '@/app/slide/cafeca_fintech/6/page';
 import CafecaFintechSlide7 from '@/app/slide/cafeca_fintech/7/page';
+import CafecaFintechSlide8 from '@/app/slide/cafeca_fintech/8/page';
+import CafecaFintechSlide9 from '@/app/slide/cafeca_fintech/9/page';
+import CafecaFintechSlide10 from '@/app/slide/cafeca_fintech/10/page';
 
 export default function CafecaFintechSlideBrowser() {
   const [currentSlide, setCurrentSlide] = useState(1);
-  const totalSlides = 7;
+  const totalSlides = 10;
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
@@ -55,18 +58,24 @@ export default function CafecaFintechSlideBrowser() {
     5: CafecaFintechSlide5,
     6: CafecaFintechSlide6,
     7: CafecaFintechSlide7,
+    8: CafecaFintechSlide8,
+    9: CafecaFintechSlide9,
+    10: CafecaFintechSlide10,
   };
 
   const CurrentSlideComponent = SlideComponents[currentSlide];
 
   const slideTitles: { [key: number]: string } = {
     1: 'Cover: CAFECA Fintech',
-    2: 'Company Profile',
-    3: 'Core Technology',
-    4: 'R&D Investment',
-    5: 'Equity Structure',
-    6: 'Regulatory Sandbox',
-    7: 'Thank You',
+    2: 'Corporate Vision',
+    3: 'Company Profile',
+    4: 'Core Technology',
+    5: 'Core Product: iSunFA',
+    6: 'R&D Investment',
+    7: 'Equity Structure',
+    8: 'Fundraising Goals',
+    9: 'Regulatory Sandbox',
+    10: 'Thank You',
   };
 
   const nextSlide = useCallback(() => {

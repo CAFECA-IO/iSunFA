@@ -1,95 +1,148 @@
 
-import React from 'react';
-import { Fingerprint, Lock, Server, Brain, Zap } from 'lucide-react';
+import { Calendar, Database, Zap, Target, Banknote, Coins } from 'lucide-react';
 
-export default function CafecaFintechSlide3() {
+export default function CafecaFintechSlide2() {
   return (
     <div className="h-full w-full bg-slate-50 relative flex overflow-hidden">
 
-      {/* Info: (20260122 - Luphia) Left Sidebar - Title and Decoration */}
-      <div className="w-[30%] h-full bg-slate-900 text-white p-10 flex flex-col justify-between relative shadow-2xl z-20">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-900/50 border border-sky-700/50 text-sky-400 text-xs font-bold tracking-wider mb-8">
+      {/* Info: (20260122 - Luphia) Left Sidebar - Summary */}
+      <div className="w-[35%] h-full bg-white border-r border-slate-200 p-10 flex flex-col relative z-10 shadow-lg">
+        <div className="flex-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100 text-sky-700 text-xs font-bold tracking-wider mb-8">
             <Zap size={14} />
-            CORE TECHNOLOGY
+            COMPANY PROFILE
           </div>
 
-          <h2 className="text-5xl font-extrabold leading-tight mb-6">
-            <span className="text-sky-400">核心</span>
+          <h2 className="text-4xl font-extrabold text-slate-900 leading-tight mb-8">
+            <span className="text-sky-600">CAFECA</span>
             <br />
-            技術
+            Fintech
           </h2>
-          <p className="text-slate-400 leading-relaxed text-lg">
-            四大核心支柱，構建安全、高效、智能的金融科技生態系統。
-          </p>
+
+          <div className="space-y-8">
+            <div className="flex items-start gap-4">
+              <div className="bg-sky-50 p-3 rounded-xl shrink-0">
+                <Calendar className="text-sky-600" size={24} />
+              </div>
+              <div>
+                <div className="text-sm text-slate-500 font-medium uppercase tracking-wide mb-1">成立時間</div>
+                <div className="text-xl font-bold text-slate-900 font-mono">2017.04.18</div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="bg-sky-50 p-3 rounded-xl shrink-0">
+                <Target className="text-sky-600" size={24} />
+              </div>
+              <div>
+                <div className="text-sm text-slate-500 font-medium uppercase tracking-wide mb-1">核心聚焦</div>
+                <div className="text-xl font-bold text-slate-900">金融科技技術</div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="bg-sky-50 p-3 rounded-xl shrink-0">
+                <Banknote className="text-sky-600" size={24} />
+              </div>
+              <div>
+                <div className="text-sm text-slate-500 font-medium uppercase tracking-wide mb-1">額定股份</div>
+                <div className="text-xl font-bold text-slate-900 font-mono">5,000,000 股</div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="bg-sky-50 p-3 rounded-xl shrink-0">
+                <Coins className="text-sky-600" size={24} />
+              </div>
+              <div>
+                <div className="text-sm text-slate-500 font-medium uppercase tracking-wide mb-1">已發行股份</div>
+                <div className="text-xl font-bold text-slate-900 font-mono">300,000 股</div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Info: (20260122 - Luphia) Abstract graphic */}
-        <div className="relative w-full aspect-square border-t border-slate-700 pt-8 opacity-50">
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-500/20 to-transparent rounded-full blur-3xl"></div>
-          <div className="grid grid-cols-2 gap-4 h-full">
-            <div className="bg-slate-800/50 rounded-2xl"></div>
-            <div className="bg-slate-800/30 rounded-2xl translate-y-8"></div>
-            <div className="bg-slate-800/30 rounded-2xl -translate-y-4"></div>
-            <div className="bg-slate-800/50 rounded-2xl"></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Info: (20260122 - Luphia) Right Content - 2x2 Grid */}
-      <div className="flex-1 h-full p-12 bg-slate-100 flex items-center justify-center">
-        <div className="grid grid-cols-2 gap-8 w-full max-w-5xl h-full max-h-[600px]">
-
-          {/* Info: (20260122 - Luphia) Card 1: Digital ID */}
-          <div className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 group border border-slate-200">
-            <div className="w-14 h-14 bg-sky-50 rounded-2xl flex items-center justify-center mb-6 text-sky-600 group-hover:scale-110 transition-transform duration-300">
-              <Fingerprint size={32} />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-3">CAFECA 數位身份證</h3>
-            <p className="text-slate-600 text-sm leading-relaxed text-justify">
-              利用生物識別和先進加密技術，我們創建不可篡改的數位 ID 和電子簽章系統。
-            </p>
-          </div>
-
-          {/* Info: (20260122 - Luphia) Card 2: Alohomora */}
-          <div className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 group border border-slate-200">
-            <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center mb-6 text-purple-600 group-hover:scale-110 transition-transform duration-300">
-              <Lock size={32} />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-3">Alohomora 同態加密</h3>
-            <p className="text-slate-600 text-sm leading-relaxed text-justify">
-              透過特殊的代數結構設計，使資訊在加密狀態下仍能保有數學特性，實現數據可用不可見的高強度安全計算。
-            </p>
-          </div>
-
-          {/* Info: (20260122 - Luphia) Card 3: Locutus */}
-          <div className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 group border border-slate-200">
-            <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6 text-emerald-600 group-hover:scale-110 transition-transform duration-300">
-              <Server size={32} />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-3">Locutus 邊緣運算</h3>
-            <p className="text-slate-600 text-sm leading-relaxed text-justify">
-              利用邊緣運算技術整合全球分佈式閒置節點，構建出具備極致彈性與超大規模的去中心化算力矩陣。
-            </p>
-          </div>
-
-          {/* Info: (20260122 - Luphia) Card 4: FAITH */}
-          <div className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 group border border-slate-200">
-            <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center mb-6 text-orange-600 group-hover:scale-110 transition-transform duration-300">
-              <Brain size={32} />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-3">FAITH 智能模型</h3>
-            <p className="text-slate-600 text-sm leading-relaxed text-justify">
-              會計專業多模態模型，驅動 iSunFA 等多元化的 AI 自動化服務，賦能企業實現智慧會計轉型。
-            </p>
-          </div>
-
+        <div className="text-slate-400 text-[10px] font-mono border-t border-slate-100 pt-6">
+          CAFECA FINTECH • PROPRIETARY & CONFIDENTIAL
         </div>
       </div>
 
-      {/* Info: (20260122 - Luphia) Footer for Right Side */}
-      <div className="absolute bottom-6 right-12 text-slate-300 text-[10px] font-mono mix-blend-multiply">
-        CAFECA FINTECH • CORE TECHNOLOGIES
+      {/* Info: (20260122 - Luphia) Right Content - Compact Timeline */}
+      <div className="flex-1 h-full bg-slate-50/50 p-10 flex flex-col justify-center relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+          <Database size={400} />
+        </div>
+
+        <div className="space-y-5 relative z-10">
+
+          {/* Info: (20260122 - Luphia) Timeline Item 1 */}
+          <div className="flex gap-4 group">
+            <div className="flex flex-col items-center">
+              <div className="w-3 h-3 rounded-full bg-sky-500 mt-2 ring-4 ring-white shadow-sm"></div>
+              <div className="w-0.5 flex-1 bg-slate-200 my-1 group-last:hidden"></div>
+            </div>
+            <div className="pb-2">
+              <div className="flex items-baseline gap-3 mb-1">
+                <span className="text-lg font-bold text-sky-600 font-mono">2018 - 2021</span>
+                <h3 className="text-base font-bold text-slate-800">賦能好好證券</h3>
+              </div>
+              <p className="text-slate-600 text-sm leading-relaxed text-justify">
+                加速金融監理沙盒實證流程，厚植創新金融業務之領照競爭力。
+              </p>
+            </div>
+          </div>
+
+          {/* Info: (20260122 - Luphia) Timeline Item 2 */}
+          <div className="flex gap-4 group">
+            <div className="flex flex-col items-center">
+              <div className="w-3 h-3 rounded-full bg-sky-500 mt-2 ring-4 ring-white shadow-sm"></div>
+              <div className="w-0.5 flex-1 bg-slate-200 my-1 group-last:hidden"></div>
+            </div>
+            <div className="pb-2">
+              <div className="flex items-baseline gap-3 mb-1">
+                <span className="text-lg font-bold text-sky-600 font-mono">2019</span>
+                <h3 className="text-base font-bold text-slate-800">賦能金管會檢查局</h3>
+              </div>
+              <p className="text-slate-600 text-sm leading-relaxed text-justify">
+                建構數位孿生實驗環境，強化金融政策之情境模擬與回測驗證。
+              </p>
+            </div>
+          </div>
+
+          {/* Info: (20260122 - Luphia) Timeline Item 3 */}
+          <div className="flex gap-4 group">
+            <div className="flex flex-col items-center">
+              <div className="w-3 h-3 rounded-full bg-sky-500 mt-2 ring-4 ring-white shadow-sm"></div>
+              <div className="w-0.5 flex-1 bg-slate-200 my-1 group-last:hidden"></div>
+            </div>
+            <div className="pb-2">
+              <div className="flex items-baseline gap-3 mb-1">
+                <span className="text-lg font-bold text-sky-600 font-mono">2020 - 2021</span>
+                <h3 className="text-base font-bold text-slate-800">參與國家高速網路中心</h3>
+              </div>
+              <p className="text-slate-600 text-sm leading-relaxed text-justify">
+                建構國家級 AI 大數據算力平台。
+              </p>
+            </div>
+          </div>
+
+          {/* Info: (20260122 - Luphia) Timeline Item 4 */}
+          <div className="flex gap-4 group">
+            <div className="flex flex-col items-center">
+              <div className="w-3 h-3 rounded-full bg-orange-500 mt-2 ring-4 ring-white shadow-sm"></div>
+            </div>
+            <div>
+              <div className="flex items-baseline gap-3 mb-1">
+                <span className="text-lg font-bold text-orange-600 font-mono">2022 - Now</span>
+                <h3 className="text-base font-bold text-slate-800">FAITH 核心引擎</h3>
+              </div>
+              <p className="text-slate-600 text-sm leading-relaxed text-justify">
+                憑藉深厚的行業實務底蘊，開創以 <span className="font-bold text-orange-600">FAITH</span> (Financial Accounting Insight Trusted Heuristics) 為核心引擎的全方位金融科技生態，賦能多元化產品矩陣。
+              </p>
+            </div>
+          </div>
+
+        </div>
       </div>
 
     </div>

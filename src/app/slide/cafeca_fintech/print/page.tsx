@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect } from 'react';
@@ -9,6 +8,9 @@ import CafecaFintechSlide4 from '@/app/slide/cafeca_fintech/4/page';
 import CafecaFintechSlide5 from '@/app/slide/cafeca_fintech/5/page';
 import CafecaFintechSlide6 from '@/app/slide/cafeca_fintech/6/page';
 import CafecaFintechSlide7 from '@/app/slide/cafeca_fintech/7/page';
+import CafecaFintechSlide8 from '@/app/slide/cafeca_fintech/8/page';
+import CafecaFintechSlide9 from '@/app/slide/cafeca_fintech/9/page';
+import CafecaFintechSlide10 from '@/app/slide/cafeca_fintech/10/page';
 
 export default function CafecaFintechPrint() {
   useEffect(() => {
@@ -62,6 +64,9 @@ export default function CafecaFintechPrint() {
       <div className="slide-page"><CafecaFintechSlide5 /></div>
       <div className="slide-page"><CafecaFintechSlide6 /></div>
       <div className="slide-page"><CafecaFintechSlide7 /></div>
+      <div className="slide-page"><CafecaFintechSlide8 /></div>
+      <div className="slide-page"><CafecaFintechSlide9 /></div>
+      <div className="slide-page"><CafecaFintechSlide10 /></div>
     </div>
   );
 }

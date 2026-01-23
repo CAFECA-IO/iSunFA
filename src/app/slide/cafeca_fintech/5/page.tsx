@@ -1,98 +1,75 @@
-
-import React from 'react';
-import { PieChart, Users, ArrowRightLeft, ScrollText } from 'lucide-react';
+import { Sparkles, Building2, ArrowDown } from 'lucide-react';
 
 export default function CafecaFintechSlide5() {
   return (
-    <div className="h-full w-full bg-slate-50 flex overflow-hidden relative">
+    <div className="h-full w-full bg-slate-50 relative flex flex-col overflow-hidden">
 
-      <div className="absolute top-0 right-0 w-[400px] h-full bg-sky-50 -skew-x-12 translate-x-1/2 transform origin-top"></div>
-
-      {/* Info: (20260122 - Luphia) Left Content */}
-      <div className="flex-1 p-16 flex flex-col justify-center relative z-10">
-        <div className="mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100 text-sky-700 text-xs font-bold tracking-wider mb-6">
-            <PieChart size={14} />
-            EQUITY STRUCTURE
-          </div>
-          <h2 className="text-5xl font-extrabold text-slate-900 mb-6">股權結構</h2>
-          <p className="text-slate-600 text-lg max-w-xl leading-relaxed">
-            穩健的股權架構與創新的研發成果交換機制，奠定公司長遠發展的基石。
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-8 max-w-2xl">
-
-          {/* Info: (20260122 - Luphia) Block 1: Issued Shares */}
-          <div className="flex items-start gap-6 bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-            <div className="w-12 h-12 bg-sky-100 rounded-full flex items-center justify-center text-sky-600 shrink-0">
-              <Users size={24} />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">已發行股份</h3>
-              <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-4xl font-bold text-sky-600 font-mono">30</span>
-                <span className="text-sm text-slate-500 font-medium">萬股</span>
-              </div>
-              <p className="text-slate-600 text-sm">由自身與家人持有</p>
-            </div>
-          </div>
-
-          {/* Info: (20260122 - Luphia) Block 2: Stock Options */}
-          <div className="flex items-start gap-6 bg-white p-8 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50 rounded-bl-[100px] z-0"></div>
-            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 shrink-0 z-10">
-              <ArrowRightLeft size={24} />
-            </div>
-            <div className="z-10">
-              <h3 className="text-xl font-bold text-slate-900 mb-2">研發成果交換選擇權</h3>
-              <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-4xl font-bold text-orange-600 font-mono">100</span>
-                <span className="text-sm text-slate-500 font-medium">萬股</span>
-                <span className="text-xs text-slate-400 ml-2 bg-slate-100 px-2 py-1 rounded">@ 20 元 / 股</span>
-              </div>
-              <p className="text-slate-600 text-sm mb-4">透過選擇權交換研發成果</p>
-
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 w-fit">
-                <ScrollText size={14} />
-                持有者：台灣陽光雲有限公司
-              </div>
-            </div>
-          </div>
-
-        </div>
+      {/* Info: (20260123) Background Elements */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-0 w-full h-1/2 bg-sky-50"></div>
+        <div className="absolute bottom-0 w-full h-1/2 bg-slate-900"></div>
       </div>
 
-      {/* Info: (20260122 - Luphia) Right Graphic Area */}
-      <div className="w-[45%] bg-slate-900 relative flex items-center justify-center p-12 overflow-hidden">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-sky-500 via-slate-900 to-slate-900"></div>
+      {/* Info: (20260123) Header */}
+      <div className="relative z-10 w-full px-16 pt-12 mb-8">
+        <div className="flex items-center gap-4 mb-2">
+          <div className="w-12 h-1 bg-sky-600 rounded-full"></div>
+          <span className="text-sky-700 font-bold tracking-[0.2em] uppercase text-sm">核心產品</span>
+        </div>
+        <h1 className="text-5xl font-extrabold text-slate-800 leading-tight">
+          iSunFA
+        </h1>
+      </div>
 
-        {/* Info: (20260122 - Luphia) Visualization Diagram */}
-        <div className="relative w-full max-w-md aspect-square">
-          {/* Center Circle */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-slate-800 rounded-full border-4 border-sky-500/30 flex items-center justify-center z-10 shadow-[0_0_50px_rgba(14,165,233,0.2)]">
-            <div className="text-center">
-              <div className="text-sky-400 font-bold text-xl tracking-wider">CAFECA</div>
-              <div className="text-slate-500 text-[10px]">EQUITY</div>
-            </div>
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-16 pb-12 gap-8">
+
+        {/* Info: (20260123) Top Card - The Surface */}
+        <div className="w-full max-w-4xl bg-white rounded-3xl p-8 shadow-xl border border-slate-100 flex items-center gap-8 relative z-20 transform translate-y-4 hover:-translate-y-1 transition-transform duration-500">
+          <div className="w-20 h-20 bg-sky-100 rounded-2xl flex items-center justify-center text-sky-600 shrink-0">
+            <Sparkles size={40} />
           </div>
-
-          {/* Orbit Item 1 */}
-          <div className="absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 animate-[spin_10s_linear_infinite]">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
-              <Users size={24} className="text-sky-600" />
-            </div>
+          <div className="flex-1">
+            <div className="text-sm font-bold text-sky-600 uppercase tracking-widest mb-1">表面價值</div>
+            <h2 className="text-3xl font-bold text-slate-800 mb-2">AI 智能會計軟體</h2>
+            <p className="text-slate-500 text-lg leading-relaxed">由先進人工智能模型驅動的出納、自動化記帳、稅務合規與財務分析系統。</p>
           </div>
-
-          {/* Orbit Item 2 */}
-          <div className="absolute top-1/2 left-1/2 w-80 h-80 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-slate-700 animate-[spin_15s_linear_infinite_reverse]">
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-6 w-20 h-20 bg-orange-500 rounded-full flex flex-col items-center justify-center shadow-lg text-white text-[10px] font-bold">
-              <div>Option</div>
-              <div className="text-lg">100萬</div>
-            </div>
+          <div className="text-right shrink-0">
+            <span className="block text-4xl font-extrabold text-slate-200">10%</span>
+            <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">可見效用</span>
           </div>
         </div>
 
+        {/* Info: (20260123) Connector */}
+        <div className="relative z-30 flex flex-col items-center justify-center text-white/80 animate-bounce">
+          <span className="text-xs font-mono font-bold tracking-widest mb-1 opacity-80">底層核心</span>
+          <ArrowDown size={24} />
+        </div>
+
+        {/* Info: (20260123) Bottom Card - The Core Reality */}
+        <div className="w-full max-w-5xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl p-10 shadow-2xl border border-white/10 flex items-center gap-10 relative z-20 hover:scale-[1.02] transition-transform duration-500 ring-1 ring-white/10">
+          <div className="w-24 h-24 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center text-sky-400 shrink-0 border border-white/20 shadow-[0_0_30px_rgba(56,189,248,0.3)]">
+            <Building2 size={48} />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="px-2 py-0.5 rounded bg-sky-500 text-white text-[10px] font-bold uppercase tracking-wider">金融牌照賦能</div>
+              <div className="text-sm font-bold text-sky-400 uppercase tracking-widest opacity-80">合規後上線</div>
+            </div>
+            <h2 className="text-4xl font-bold text-white mb-3">銀行核心融資與放款系統</h2>
+            <p className="text-slate-300 text-lg font-light leading-relaxed">
+              透過財務分析技術實現<span className="text-white font-medium">銀行核心系統</span>，即時捕捉財務健康狀況，實現大規模融資與放款審核。
+            </p>
+          </div>
+          <div className="text-right shrink-0">
+            <span className="block text-5xl font-extrabold text-white/20">90%</span>
+            <span className="text-xs text-white/40 font-medium uppercase tracking-wider">真實價值</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div className="absolute bottom-6 right-12 text-white/20 text-[10px] font-mono z-10">
+        CAFECA FINTECH • CORE PRODUCT
       </div>
 
     </div>

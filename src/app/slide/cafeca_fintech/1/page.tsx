@@ -1,4 +1,3 @@
-
 export default function CafecaFintechSlide1() {
   return (
     <div className="min-h-screen w-full bg-slate-100 flex items-center justify-center p-4">

@@ -1,151 +1,111 @@
-
-import React from 'react';
-import { Calendar, Database, Zap, Target, Banknote, Coins } from 'lucide-react';
-
 export default function CafecaFintechSlide2() {
   return (
-    <div className="h-full w-full bg-slate-50 relative flex overflow-hidden">
+    <div className="min-h-screen w-full bg-slate-100 flex items-center justify-center p-4">
+      <div className="w-[1280px] h-[720px] bg-white relative overflow-hidden shadow-2xl flex flex-col border border-gray-200">
 
-      {/* Info: (20260122 - Luphia) Left Sidebar - Summary */}
-      <div className="w-[35%] h-full bg-white border-r border-slate-200 p-10 flex flex-col relative z-10 shadow-lg">
-        <div className="flex-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100 text-sky-700 text-xs font-bold tracking-wider mb-8">
-            <Zap size={14} />
-            COMPANY PROFILE
+        {/* Info: (20260123) Background Gradients - Keeping consistent with Slide 1 but slightly varied */}
+        <div
+          className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl pointer-events-none"
+          aria-hidden="true"
+        >
+          <div
+            className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[70rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#0ea5e9] to-indigo-400 opacity-20"
+            style={{
+              clipPath:
+                'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
+            }}
+          />
+        </div>
+
+        {/* Info: (20260123) Header Area */}
+        <div className="px-16 pt-12">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-1 bg-sky-500 rounded-full"></div>
+            <span className="text-sky-600 font-bold tracking-[0.2em] uppercase text-sm">企業願景</span>
           </div>
-
-          <h2 className="text-4xl font-extrabold text-slate-900 leading-tight mb-8">
-            <span className="text-sky-600">CAFECA</span>
+          <h1 className="text-5xl font-extrabold text-slate-800 leading-tight">
+            打造 <span className="text-sky-600">MIT</span> 銀行核心系統
             <br />
-            Fintech
-          </h2>
+            <span className="text-3xl text-slate-400 font-light mt-2 block">對標全球標準</span>
+          </h1>
+        </div>
 
-          <div className="space-y-8">
-            <div className="flex items-start gap-4">
-              <div className="bg-sky-50 p-3 rounded-xl shrink-0">
-                <Calendar className="text-sky-600" size={24} />
-              </div>
-              <div>
-                <div className="text-sm text-slate-500 font-medium uppercase tracking-wide mb-1">成立時間</div>
-                <div className="text-xl font-bold text-slate-900 font-mono">2017.04.18</div>
-              </div>
+        {/* Info: (20260123) Main Content - 3 Pillars */}
+        <div className="flex-1 px-16 flex items-center justify-between gap-8 h-full">
+
+          {/* Info: (20260123) Card 1: Benchmark */}
+          <div className="flex-1 h-80 bg-slate-50 rounded-2xl p-8 border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-sky-100 rounded-bl-[100px] -mr-8 -mt-8 opacity-50"></div>
+
+            <h3 className="text-xl font-bold text-slate-700 mb-4 z-10 relative">對標目標</h3>
+            <div className="text-4xl font-extrabold text-blue-900 mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-blue-700">
+              Temenos
+            </div>
+            <p className="text-slate-500 leading-relaxed font-light text-justify">
+              對標全球第一銀行軟體 Temenos，確保企業級可靠性、擴展性與安全架構。
+            </p>
+            <div className="absolute bottom-8 right-8 text-sky-200">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Info: (20260123) Card 2: MIT Core */}
+          <div className="flex-1 h-96 bg-gradient-to-br from-sky-600 to-blue-700 rounded-2xl p-8 shadow-xl text-white relative overflow-hidden transform scale-105 z-10">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+
+            <div className="flex items-center gap-3 mb-6">
+              <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold tracking-widest backdrop-blur-sm">核心使命</span>
             </div>
 
-            <div className="flex items-start gap-4">
-              <div className="bg-sky-50 p-3 rounded-xl shrink-0">
-                <Target className="text-sky-600" size={24} />
-              </div>
-              <div>
-                <div className="text-sm text-slate-500 font-medium uppercase tracking-wide mb-1">核心聚焦</div>
-                <div className="text-xl font-bold text-slate-900">金融科技技術</div>
-              </div>
-            </div>
+            <h2 className="text-4xl font-bold mb-6">
+              MIT <br />
+              <span className="text-2xl font-normal opacity-90">銀行系統</span>
+            </h2>
 
-            <div className="flex items-start gap-4">
-              <div className="bg-sky-50 p-3 rounded-xl shrink-0">
-                <Banknote className="text-sky-600" size={24} />
-              </div>
-              <div>
-                <div className="text-sm text-slate-500 font-medium uppercase tracking-wide mb-1">資本總額</div>
-                <div className="text-xl font-bold text-slate-900 font-mono">50,000,000</div>
-              </div>
-            </div>
+            <p className="text-blue-100 leading-relaxed text-lg mb-8">
+              臺灣製造。 <br />
+              自主研發的高效能金融基礎設施，專為完全自主與快速在地化而設計。
+            </p>
 
-            <div className="flex items-start gap-4">
-              <div className="bg-sky-50 p-3 rounded-xl shrink-0">
-                <Coins className="text-sky-600" size={24} />
-              </div>
-              <div>
-                <div className="text-sm text-slate-500 font-medium uppercase tracking-wide mb-1">實收資本額</div>
-                <div className="text-xl font-bold text-slate-900 font-mono">3,000,000</div>
-              </div>
+            <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+              <div className="w-3/4 h-full bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]"></div>
             </div>
+          </div>
+
+          {/* Info: (20260123) Card 3: Global Market */}
+          <div className="flex-1 h-80 bg-slate-50 rounded-2xl p-8 border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-100 rounded-bl-[100px] -mr-8 -mt-8 opacity-50"></div>
+
+            <h3 className="text-xl font-bold text-slate-700 mb-4 z-10 relative">全球雄心</h3>
+            <div className="text-3xl font-extrabold text-indigo-900 mb-6">
+              挑戰全球市場
+            </div>
+            <p className="text-slate-500 leading-relaxed font-light text-justify">
+              以具競爭力、模組化且現代化的技術棧挑戰國際市場，隨時準備跨境部署。
+            </p>
+            <div className="absolute bottom-8 right-8 text-indigo-200">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Info: (20260123) Footer */}
+        <div className="absolute bottom-4 w-full px-16 flex justify-between text-gray-400 text-xs tracking-widest uppercase font-medium">
+          <div>企業戰略</div>
+          <div className="flex gap-2 items-center">
+            <div className="w-2 h-2 rounded-full bg-sky-400"></div>
+            2026 CAFECA FINTECH
           </div>
         </div>
 
-        <div className="text-slate-400 text-[10px] font-mono border-t border-slate-100 pt-6">
-          CAFECA FINTECH • PROPRIETARY & CONFIDENTIAL
-        </div>
       </div>
-
-      {/* Info: (20260122 - Luphia) Right Content - Compact Timeline */}
-      <div className="flex-1 h-full bg-slate-50/50 p-10 flex flex-col justify-center relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-          <Database size={400} />
-        </div>
-
-        <div className="space-y-5 relative z-10">
-
-          {/* Info: (20260122 - Luphia) Timeline Item 1 */}
-          <div className="flex gap-4 group">
-            <div className="flex flex-col items-center">
-              <div className="w-3 h-3 rounded-full bg-sky-500 mt-2 ring-4 ring-white shadow-sm"></div>
-              <div className="w-0.5 flex-1 bg-slate-200 my-1 group-last:hidden"></div>
-            </div>
-            <div className="pb-2">
-              <div className="flex items-baseline gap-3 mb-1">
-                <span className="text-lg font-bold text-sky-600 font-mono">2018 - 2021</span>
-                <h3 className="text-base font-bold text-slate-800">賦能好好證券</h3>
-              </div>
-              <p className="text-slate-600 text-sm leading-relaxed text-justify">
-                加速金融監理沙盒實證流程，厚植創新金融業務之領照競爭力。
-              </p>
-            </div>
-          </div>
-
-          {/* Info: (20260122 - Luphia) Timeline Item 2 */}
-          <div className="flex gap-4 group">
-            <div className="flex flex-col items-center">
-              <div className="w-3 h-3 rounded-full bg-sky-500 mt-2 ring-4 ring-white shadow-sm"></div>
-              <div className="w-0.5 flex-1 bg-slate-200 my-1 group-last:hidden"></div>
-            </div>
-            <div className="pb-2">
-              <div className="flex items-baseline gap-3 mb-1">
-                <span className="text-lg font-bold text-sky-600 font-mono">2019</span>
-                <h3 className="text-base font-bold text-slate-800">賦能金管會檢查局</h3>
-              </div>
-              <p className="text-slate-600 text-sm leading-relaxed text-justify">
-                建構數位孿生實驗環境，強化金融政策之情境模擬與回測驗證。
-              </p>
-            </div>
-          </div>
-
-          {/* Info: (20260122 - Luphia) Timeline Item 3 */}
-          <div className="flex gap-4 group">
-            <div className="flex flex-col items-center">
-              <div className="w-3 h-3 rounded-full bg-sky-500 mt-2 ring-4 ring-white shadow-sm"></div>
-              <div className="w-0.5 flex-1 bg-slate-200 my-1 group-last:hidden"></div>
-            </div>
-            <div className="pb-2">
-              <div className="flex items-baseline gap-3 mb-1">
-                <span className="text-lg font-bold text-sky-600 font-mono">2020 - 2021</span>
-                <h3 className="text-base font-bold text-slate-800">參與國家高速網路中心</h3>
-              </div>
-              <p className="text-slate-600 text-sm leading-relaxed text-justify">
-                建構國家級 AI 大數據算力平台。
-              </p>
-            </div>
-          </div>
-
-          {/* Info: (20260122 - Luphia) Timeline Item 4 */}
-          <div className="flex gap-4 group">
-            <div className="flex flex-col items-center">
-              <div className="w-3 h-3 rounded-full bg-orange-500 mt-2 ring-4 ring-white shadow-sm"></div>
-            </div>
-            <div>
-              <div className="flex items-baseline gap-3 mb-1">
-                <span className="text-lg font-bold text-orange-600 font-mono">2022 - Now</span>
-                <h3 className="text-base font-bold text-slate-800">FAITH 核心引擎</h3>
-              </div>
-              <p className="text-slate-600 text-sm leading-relaxed text-justify">
-                憑藉深厚的行業實務底蘊，開創以 <span className="font-bold text-orange-600">FAITH</span> (Financial Accounting Insight Trusted Heuristics) 為核心引擎的全方位金融科技生態，賦能多元化產品矩陣。
-              </p>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
     </div>
   );
 }
