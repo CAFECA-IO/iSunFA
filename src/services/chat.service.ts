@@ -123,4 +123,11 @@ export class ChatService {
     const response = await result.response;
     return response.text();
   }
+
+  async generateRaw(prompt: string): Promise<string> {
+    const model = this.genAI.getGenerativeModel({ model: this.modelName });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  }
 }

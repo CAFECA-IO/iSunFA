@@ -1,17 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { Check, Calendar, Coins, FileBarChart, Globe } from 'lucide-react';
 import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
-import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES, COST_PER_GENERATION, getPeriodDateRange } from '@/components/user/analysis/utils';
 import PaymentConfirmModal from '@/components/common/payment_confirm_modal';
+import ConfirmModal from '@/components/common/confirm_modal';
 import HistorySection from '@/components/user/analysis/history_section';
+import { fido2ClientService } from '@/lib/auth/fido2_client';
+import { getAnalysisCost } from '@/lib/analysis/pricing';
+import { getPeriodDateRange } from '@/lib/analysis/utils';
+import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES } from '@/constants/analysis';
 
 export default function AnalysisView() {
   const { t } = useTranslation();
-  const { refreshAuth } = useAuth();
+  const { user, refreshAuth } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'internal' | 'external' | 'history'>('internal');
   const [category, setCategory] = useState<string>(INTERNAL_CATEGORIES[0]);
@@ -32,8 +36,22 @@ export default function AnalysisView() {
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
 
+  // Info: (20260128 - Luphia) Calculate dynamic cost
+  const calculatedCost = useMemo(() => {
+    return getAnalysisCost({
+      category,
+      periodType,
+      periodValue: String(selectedPeriodValue),
+      year: selectedYear,
+    });
+  }, [category, periodType, selectedPeriodValue, selectedYear]);
+
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Info: (20260128 - Luphia) Error Modal State
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Info: (20260120 - Luphia) Generate specific period options based on type
   const renderPeriodOptions = () => {
@@ -167,6 +185,50 @@ export default function AnalysisView() {
   const handleConfirmGenerate = async () => {
     try {
       setIsLoading(true);
+
+      if (!user?.address) {
+        throw new Error(t('analysis.error.user_address_missing') || 'User address not found');
+      }
+
+      // Info: (20260128 - Luphia) 1. Create Order & Get Challenge
+      const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
+        method: 'POST',
+        body: JSON.stringify({
+          category,
+          periodType,
+          year: selectedYear,
+          periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
+        })
+      });
+
+      if (!orderRes?.payload) throw new Error('Failed to create order');
+      const { orderId, challenge } = orderRes.payload;
+
+      /**
+       * Info: (20260128 - Luphia) 2. Sign the Challenge Order
+       * Encode challenge string to base64url as expected by FIDO2 libraries/browsers
+       */
+      const challengeBase64 = btoa(challenge)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+
+      const authentication = await fido2ClientService.startLogin({
+        challenge: challengeBase64,
+        timeout: 60000,
+        userVerification: 'required',
+        allowCredentials: [],
+      });
+
+      /**
+       * Info: (20260128 - Luphia) 3. Attach orderId to the authentication object so backend knows which order this is for
+       * We can use a custom property or just send it alongside.
+       * The backend expects `authentication.orderId`. 
+       * `AuthenticationJSON` type might not have `orderId`. We should cast or extend.
+       */
+      const authWithOrder = { ...authentication, orderId };
+
+      // Info: (20260128 - Luphia) 4. Send to API
       await request('/api/v1/user/analysis', {
         method: 'POST',
         body: JSON.stringify({
@@ -174,14 +236,19 @@ export default function AnalysisView() {
           periodType,
           year: selectedYear,
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
+          authentication: authWithOrder,
         }),
       });
+
       // Info: (20260120 - Luphia) Refresh user balance
       await refreshAuth();
     } catch (error) {
       console.error('Analysis generation failed:', error);
+      setErrorMessage(t('auth_modal.failed'));
+      setIsErrorModalOpen(true);
     } finally {
       setIsLoading(false);
+      setIsPaymentModalOpen(false);
     }
   };
 
@@ -388,7 +455,7 @@ export default function AnalysisView() {
                   <Coins className="h-4 w-4 text-gray-500" />
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 font-medium leading-none mb-0.5">{t('analysis.confirm_cost')}</span>
-                    <span className="text-sm font-bold text-gray-900 leading-none">{COST_PER_GENERATION}</span>
+                    <span className="text-sm font-bold text-gray-900 leading-none">{calculatedCost}</span>
                   </div>
                 </div>
               </div>
@@ -421,12 +488,21 @@ export default function AnalysisView() {
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         onConfirm={handleConfirmGenerate}
-        cost={COST_PER_GENERATION}
+        cost={calculatedCost}
         analysisType={t(`analysis.categories.${category}`)}
         period={simplePeriodString}
         country={activeTab === 'external' ? selectedCountry : undefined}
         keyword={activeTab === 'external' && category !== 'market_trends' ? keyword : undefined}
         isLoading={isLoading}
+      />
+
+      {/* Info: (20260128 - Luphia) Error Confirm Modal */}
+      <ConfirmModal
+        isOpen={isErrorModalOpen}
+        onClose={() => setIsErrorModalOpen(false)}
+        title={t('common.error')} // Info: (20260128 - Luphia) or specific title like "Analysis Failed"
+        message={errorMessage}
+        confirmText={t('common.close')}
       />
 
       {/* Info: (20260120 - Luphia) History Section */}

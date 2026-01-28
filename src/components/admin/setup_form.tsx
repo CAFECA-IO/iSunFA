@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/i18n/i18n_context';
 import LanguageSelector from '@/components/header/language_selector';
 import { randomPassword } from '@/lib/utils/common';
+import { request } from '@/lib/utils/request';
 import { RefreshCw } from 'lucide-react';
 
 interface IEnvVar {
@@ -32,6 +34,7 @@ function SubmitButton({ isSubmitting }: { isSubmitting: boolean }) {
 
 export default function SetupForm({ envVars }: ISetupFormProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,22 +52,29 @@ export default function SetupForm({ envVars }: ISetupFormProps) {
     setIsSubmitting(true);
     setError(null);
 
+    // Info: (20260128 - Luphia) Convert FormData to a plain object for JSON body
     const formData = new FormData(event.currentTarget);
+    const payload: Record<string, string> = {};
+    formData.forEach((value, key) => {
+      payload[key] = value.toString();
+    });
 
     try {
-      const response = await fetch('/api/v1/admin/setup', {
+      await request('/api/v1/admin/setup', {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to save configuration');
-      }
-
-      window.location.href = '/';
+      // Info: (20260116 - Luphia) Redirect to login after successful setup
+      router.push('/api/v1/auth/login');
     } catch (err) {
-      console.error(err);
-      setError(t('setup.error'));
+      console.error('Setup failed:', err);
+      const message = err instanceof Error ? err.message : t('setup.error');
+      setError(message);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -72,17 +82,16 @@ export default function SetupForm({ envVars }: ISetupFormProps) {
   const handleGenerate = async (key: string) => {
     let newValue = '';
     if (key === 'DEWT_PRIVATE_KEY_PEM') {
+      setIsSubmitting(true); // Info: (20260128 - Luphia) Use isSubmitting for general loading indication
       try {
-        const res = await fetch('/api/v1/admin/setup/key');
-        if (res.ok) {
-          const data = await res.json();
-          // Info: (20260116 - Luphia) Standard response structure payload
-          newValue = data.payload?.key || '';
-        } else {
-          console.error('Failed to generate key via API');
-        }
+        const data = await request<{ key: string }>('/api/v1/admin/setup/key');
+        newValue = data.key || '';
       } catch (err) {
-        console.error('Failed to fetch key', err);
+        console.error('Failed to generate key via API:', err);
+        const message = err instanceof Error ? err.message : 'Failed to generate key';
+        setError(message);
+      } finally {
+        setIsSubmitting(false);
       }
     } else {
       newValue = randomPassword();

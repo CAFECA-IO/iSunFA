@@ -1,0 +1,14 @@
+{
+  "title": "Financial Analysis - irsc",
+  "userId": "fc5f5f00-60a9-462c-a244-faca54ce2ab3",
+  "params": {
+    "category": "irsc",
+    "periodType": "yearly",
+    "periodValue": 2025,
+    "year": 2025,
+    "orderId": "23f69998-4c5c-4b73-b3e9-b337bedc05e9"
+  },
+  "cost": 200,
+  "createdAt": "2026-01-28T12:13:29.332Z",
+  "result": "AI Analysis Content Placeholder..."
+}

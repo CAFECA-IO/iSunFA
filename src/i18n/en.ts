@@ -540,6 +540,8 @@ export const en = {
         processing: 'Processing',
         failed: 'Failed',
       },
+      empty_title: 'No Analysis Yet',
+      empty_description: 'Start your journey by generating your first financial analysis report using our advanced AI tools.',
     },
   },
 };

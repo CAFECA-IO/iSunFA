@@ -1,0 +1,14 @@
+{
+  "title": "Financial Analysis - market_trends",
+  "userId": "fc5f5f00-60a9-462c-a244-faca54ce2ab3",
+  "params": {
+    "category": "market_trends",
+    "periodType": "monthly",
+    "periodValue": 1,
+    "year": 2026,
+    "orderId": "a556d52e-3235-471e-85a3-68aee5720b17"
+  },
+  "cost": 150,
+  "createdAt": "2026-01-28T11:57:19.964Z",
+  "result": "AI Analysis Content Placeholder..."
+}

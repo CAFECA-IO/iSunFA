@@ -538,6 +538,8 @@ export const zhCn = {
         processing: '处理中',
         failed: '失败',
       },
+      empty_title: '尚无分析报告',
+      empty_description: '使用我们先进的 A​​I 工具生成您的第一份财务分析报告，开启您的旅程。',
     },
   },
 };

@@ -538,6 +538,8 @@ export const ja = {
         processing: '処理中',
         failed: '失敗',
       },
+      empty_title: '分析レポートはまだありません',
+      empty_description: '高度なAIツールを使用して最初の財務分析レポートを作成し、旅を始めましょう。',
     },
   },
 };

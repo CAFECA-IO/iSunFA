@@ -1,0 +1,14 @@
+{
+  "title": "Financial Analysis - balance_sheet",
+  "userId": "fc5f5f00-60a9-462c-a244-faca54ce2ab3",
+  "params": {
+    "category": "balance_sheet",
+    "periodType": "monthly",
+    "periodValue": 1,
+    "year": 2026,
+    "orderId": "1e831677-5243-41ed-a659-04b73f7beeb2"
+  },
+  "cost": 30,
+  "createdAt": "2026-01-28T09:13:14.158Z",
+  "result": "AI Analysis Content Placeholder..."
+}

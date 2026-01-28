@@ -31,7 +31,7 @@ interface IParsedPublicKey {
 }
 
 class WebAuthnService {
-  constructor(private readonly repo: IWebAuthnRepository) {}
+  constructor(private readonly repo: IWebAuthnRepository) { }
 
   public async generateLoginOptions(address: string): Promise<string> {
     const user = await this.ensureUserSynced(address);
@@ -250,6 +250,53 @@ class WebAuthnService {
         role: user.role,
       },
     };
+  }
+  // Info: (20260120 - Luphia) 驗證 FIDO2 簽章 (用於敏感操作確認)
+  public async verifySignature(
+    address: string,
+    authenticationData: AuthenticationJSON,
+    expectedContent?: string
+  ): Promise<void> {
+    const user = await this.repo.findUserByAddress(address);
+
+    if (!user || !user.pubKeyX || !user.pubKeyY) {
+      throw new AppError(ApiCode.NOT_FOUND, 'User data incomplete. Please retry.');
+    }
+
+    /**
+     * Info: (20260128 - Luphia)
+     * If expectedContent provided, encode it to base64url because frontend signs the encoded version.
+     * Otherwise use user.currentChallenge (which is already base64url encoded).
+     */
+    const challengeToVerify = expectedContent
+      ? Buffer.from(expectedContent).toString('base64url')
+      : user.currentChallenge;
+
+    if (!challengeToVerify) {
+      throw new AppError(ApiCode.VALIDATION_ERROR, 'No challenge to verify against');
+    }
+
+    // Info: (20260120 - Luphia) 還原公鑰
+    const credentialPublicKey = reconstructKeyFromXY(user.pubKeyX, user.pubKeyY);
+
+    const credential: CredentialInfo = {
+      id: authenticationData.id,
+      publicKey: credentialPublicKey,
+      algorithm: 'ES256',
+      transports: [],
+    };
+
+    try {
+      await verifyAuthentication(authenticationData, credential, challengeToVerify);
+    } catch (error) {
+      console.error('Signature verification failed:', error);
+      throw new AppError(ApiCode.UNAUTHORIZED, 'Invalid signature');
+    }
+
+    // Info: (20260120 - Luphia) Only clear challenge if we verified against the stored challenge
+    if (!expectedContent) {
+      await this.repo.updateChallenge(address, '');
+    }
   }
 }
 

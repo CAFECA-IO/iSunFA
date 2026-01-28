@@ -26,5 +26,76 @@ model User {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  orders           Order[]
+  analyses         Analysis[]
+  missions         Mission[]
+
+  @@map("user")
   @@index([address])
+}
+
+model Order {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id])
+  type        String
+  amount      Int
+  data        Json
+  status      String   @default("PENDING")
+  challenge   String
+  signature   String?
+  transactionHash String? @map("transaction_hash")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  analysis    Analysis[]
+
+  @@map("order")
+}
+
+// Info: (20260128 - Luphia) Analysis 直接將 data 與 result 放在 mission 裡面
+model Analysis {
+  id          String   @id
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id])
+  orderId     String   @map("order_id")
+  order       Order    @relation(fields: [orderId], references: [id])
+  type        String
+  missionId   String?  @map("mission_id")
+  mission     Mission? @relation(fields: [missionId], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("analysis")
+}
+
+model Mission {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id])
+  name        String
+  status      String   @default("PENDING") // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
+  tasks       Task[]
+  analyses    Analysis[]
+  data        Json?
+  result      Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("mission")
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  missionId   String   @map("mission_id")
+  mission     Mission  @relation(fields: [missionId], references: [id])
+  type        String
+  status      String   @default("PENDING") // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
+  order       Int      @default(0) // Info: (20260128 - Luphia) Execution order. Equal values = parallel
+  data        Json?
+  result      Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("task")
 }
