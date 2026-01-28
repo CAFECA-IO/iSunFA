@@ -120,8 +120,10 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: IAuthModalProp
       await new Promise((resolve) => setTimeout(resolve, 1500));
       if (onSuccess) onSuccess();
       onClose();
-      // Info: (20260118 - Luphia) Redirect to dashboard
-      router.push('/user/main');
+      // Info: (20260118 - Luphia) Redirect to dashboard if at /
+      if (pathname === "/") {
+        router.push('/user/main');
+      }
     } catch (err: unknown) {
       console.error("Registration error:", err);
       const message =
