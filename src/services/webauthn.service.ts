@@ -8,12 +8,14 @@ import type {
 } from '@passwordless-id/webauthn/dist/esm/types';
 import { verifyAuthentication, verifyRegistration } from '@/lib/auth/fido2_server';
 import { signDeWT } from '@/lib/auth/dewt';
-import { IWebAuthnRepository, webAuthnRepo } from '@/repositories/webauthn.repo';
+import type { IWebAuthnRepository } from '@/repositories/webauthn.repo';
+import { webAuthnRepo } from '@/repositories/webauthn.repo';
 import { AppError } from '@/lib/utils/error';
 import { ApiCode } from '@/lib/utils/status';
 import { extractXYFromSPKI, reconstructKeyFromXY } from '@/lib/auth/crypto_utils';
 import { randomBytes } from 'crypto';
 import { generateChallengeToken, verifyChallengeToken } from '@/lib/auth/challenge_token';
+import type { User } from '@/generated/client';
 
 interface ILoginResult {
   dewt: string;
@@ -60,16 +62,13 @@ class WebAuthnService {
       throw new AppError(ApiCode.NOT_FOUND, 'User data incomplete. Please retry login flow.');
     }
 
-    // Info: (20251226 - Tzuhan) 將 DB 中的 (X, Y) 還原為驗證庫需要的 SPKI Key 字串
     const credentialPublicKey = reconstructKeyFromXY(user.pubKeyX, user.pubKeyY);
 
-    // Info: (20251223 - Tzuhan) 建構符合 CredentialInfo 定義的物件
-    // Info: (20251223 - Tzuhan) P-256 對應的演算法名稱通常是 'ES256'
     const credential: CredentialInfo = {
       id: authenticationData.id,
       publicKey: credentialPublicKey,
       algorithm: 'ES256',
-      transports: [], // Info: (20251223 - Tzuhan) 資料庫未存 transports，給空陣列以符合型別
+      transports: [],
     };
 
     try {
@@ -79,9 +78,13 @@ class WebAuthnService {
       throw new AppError(ApiCode.UNAUTHORIZED, 'Invalid signature');
     }
 
-    // Info: (20251223 - Tzuhan) 驗證通過，簽發 Token
     const dewt = await signDeWT(user);
-    await this.repo.updateChallenge(address, '');
+    // Info: (20260123 - Tzuhan) DB 壞掉時這步可能會失敗，但登入應該要算成功
+    try {
+      await this.repo.updateChallenge(address, '');
+    } catch (e) {
+      console.warn('[Login] Failed to clear challenge in DB (Non-critical):', e);
+    }
 
     return {
       dewt,
@@ -107,12 +110,16 @@ class WebAuthnService {
   }
 
   private async ensureUserSynced(address: string) {
-    const user = await this.repo.findUserByAddress(address);
-    if (user) return user;
+    // Info: (20260123 - Tzuhan) 加強容錯：如果 DB 壞了，直接回傳 null 讓後續流程決定是否走鏈上
+    try {
+      const user = await this.repo.findUserByAddress(address);
+      if (user) return user;
+    } catch (e) {
+      console.warn('[Sync] DB Unavailable, skipping local cache check.', e);
+    }
 
     console.log(`[Sync] Fetching ${address} from chain...`);
     try {
-      // Info: (20251226 - Tzuhan) Update: 更新 event 定義以包含 name, imageUrl
       const logs = await publicClient.getLogs({
         address: CONTRACT_ADDRESSES.FACTORY as `0x${string}`,
         event: parseAbiItem(
@@ -124,44 +131,51 @@ class WebAuthnService {
 
       if (logs.length === 0) return null;
 
-      // Info: (20251226 - Tzuhan) Update: 解構取得 name
       const { pubKeyX, pubKeyY, credentialId, name, imageUrl } = logs[0].args;
 
       if (!pubKeyX || !pubKeyY) return null;
 
-      return await this.repo.upsertUser({
-        address: address,
-        pubKeyX: pubKeyX.toString(),
-        pubKeyY: pubKeyY.toString(),
-        credentialId: credentialId,
-        name: name || `User ${address.slice(0, 6)}`, // Info: (20251226 - Tzuhan) 使用鏈上抓到的 name
-        imageUrl: imageUrl,
-      });
+      // Info: (20260123 - Tzuhan) 如果 DB 寫入失敗 (連線拒絕)，回傳一個「臨時物件」讓流程繼續
+      try {
+        return await this.repo.upsertUser({
+          address: address,
+          pubKeyX: pubKeyX.toString(),
+          pubKeyY: pubKeyY.toString(),
+          credentialId: credentialId,
+          name: name || `User ${address.slice(0, 6)}`,
+          imageUrl: imageUrl,
+        });
+      } catch (dbError) {
+        console.warn('[Sync] DB Write Failed (Offline Mode). Returning ephemeral user.', dbError);
+        return {
+          id: 'ephemeral_id', // 臨時 ID
+          address,
+          pubKeyX: pubKeyX.toString(),
+          pubKeyY: pubKeyY.toString(),
+          credentialId: credentialId || '',
+          name: name || `User ${address.slice(0, 6)}`,
+          imageUrl: imageUrl || null,
+          role: 'USER',
+          currentChallenge: null,
+          identityAddress: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as User;
+      }
     } catch (error) {
       console.error('[Sync] Chain fetch failed:', error);
       return null;
     }
   }
 
-  // Info: (20260105 - Tzuhan) 產生無狀態 Challenge (給 Discoverable Login 用)
   public async generateStatelessLoginOptions() {
     return await generateChallengeToken();
   }
 
-  /**
-   * Info: (20260105 - Tzuhan) 救災模式
-   * 從鏈上掃描事件並恢復用戶
-   * 當 DB 清空時，這是唯一能找回使用者的方法
-   */
-  private async recoverUserByCredentialId(credentialId: string) {
+  private async recoverUserByCredentialId(credentialId: string): Promise<User | null> {
     try {
       console.log('[Recovery] Scanning blockchain for AccountCreated events...');
 
-      /**
-       * Info: (20260105 - Tzuhan) 1. 抓取所有 AccountCreated 事件
-       * 注意：因為 credentialId 沒有 indexed，我們必須抓回來在記憶體中過濾
-       * 在生產環境如果事件量大，這會變慢，但在目前階段是可行的
-       */
       const logs = await publicClient.getLogs({
         address: CONTRACT_ADDRESSES.FACTORY as `0x${string}`,
         event: parseAbiItem(
@@ -170,7 +184,6 @@ class WebAuthnService {
         fromBlock: 'earliest',
       });
 
-      // Info: (20260105 - Tzuhan) 2. 尋找符合的 credentialId
       const matchLog = logs.find((log) => log.args.credentialId === credentialId);
 
       if (!matchLog) {
@@ -183,17 +196,34 @@ class WebAuthnService {
 
       console.log(`[Recovery] Found user ${scw} on chain. Restoring...`);
 
-      // Info: (20260105 - Tzuhan) 3. 恢復用戶到 DB
-      const user = await this.repo.upsertUser({
-        address: scw,
-        pubKeyX: pubKeyX.toString(),
-        pubKeyY: pubKeyY.toString(),
-        credentialId: credentialId,
-        name: name || `User ${scw.slice(0, 6)}`,
-        imageUrl: imageUrl,
-      });
-
-      return user;
+      // Info: (20260123 - Tzuhan) 容錯處理：DB 寫入失敗時回傳記憶體物件
+      try {
+        const user = await this.repo.upsertUser({
+          address: scw,
+          pubKeyX: pubKeyX.toString(),
+          pubKeyY: pubKeyY.toString(),
+          credentialId: credentialId,
+          name: name || `User ${scw.slice(0, 6)}`,
+          imageUrl: imageUrl,
+        });
+        return user;
+      } catch (dbError) {
+        console.warn('[Recovery] DB Write Failed (Offline Mode). Using ephemeral data.', dbError);
+        return {
+          id: `ephemeral_${scw}`,
+          address: scw,
+          pubKeyX: pubKeyX.toString(),
+          pubKeyY: pubKeyY.toString(),
+          credentialId: credentialId,
+          name: name || `User ${scw.slice(0, 6)}`,
+          imageUrl: imageUrl || null,
+          role: 'USER',
+          currentChallenge: null,
+          identityAddress: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as User;
+      }
     } catch (error) {
       console.error('[Recovery] Failed to recover user:', error);
       return null;
@@ -205,16 +235,24 @@ class WebAuthnService {
     challengeToken: string,
     authenticationData: AuthenticationJSON
   ): Promise<ILoginResult> {
-    // Info: (20260105 - Tzuhan) 1. 驗證 Challenge
     const expectedChallenge = await verifyChallengeToken(challengeToken);
 
-    // Info: (20260105 - Tzuhan) 2. 透過 Credential ID 找人
-    let user = await this.repo.findUserByCredentialId(authenticationData.id);
+    // Info: (20260123 - Tzuhan) 這裡加上 try-catch，捕捉 DB 連線錯誤
+    let user: User | null = null;
+    try {
+      user = await this.repo.findUserByCredentialId(authenticationData.id);
+    } catch (dbError) {
+      console.warn(
+        '[Login] DB Connection Refused (Index Offline). Falling back to Chain Truth.',
+        dbError
+      );
+      // Info: (20260123 - Tzuhan) user 保持為 null，讓下方的 if (!user) 觸發鏈上救援
+    }
 
-    // Info: (20260105 - Tzuhan) 3. 若 DB 找不到 (可能是 DB 被清空)，嘗試從鏈上救援
+    // Info: (20260123 - Tzuhan) 3. 若 DB 找不到 (或 DB 壞掉)，嘗試從鏈上救援
     if (!user) {
       console.log(
-        `[Login] User not found in DB, attempting to recover from chain using Credential ID: ${authenticationData.id}`
+        `[Login] Attempting to recover from chain using Credential ID: ${authenticationData.id}`
       );
       user = await this.recoverUserByCredentialId(authenticationData.id);
     }
@@ -223,7 +261,6 @@ class WebAuthnService {
       throw new AppError(ApiCode.NOT_FOUND, 'User not found or passkey not registered');
     }
 
-    // Info: (20260105 - Tzuhan) 4. 還原公鑰並驗證
     const credentialPublicKey = reconstructKeyFromXY(user.pubKeyX, user.pubKeyY);
     const credential: CredentialInfo = {
       id: authenticationData.id,
@@ -250,53 +287,6 @@ class WebAuthnService {
         role: user.role,
       },
     };
-  }
-  // Info: (20260120 - Luphia) 驗證 FIDO2 簽章 (用於敏感操作確認)
-  public async verifySignature(
-    address: string,
-    authenticationData: AuthenticationJSON,
-    expectedContent?: string
-  ): Promise<void> {
-    const user = await this.repo.findUserByAddress(address);
-
-    if (!user || !user.pubKeyX || !user.pubKeyY) {
-      throw new AppError(ApiCode.NOT_FOUND, 'User data incomplete. Please retry.');
-    }
-
-    /**
-     * Info: (20260128 - Luphia)
-     * If expectedContent provided, encode it to base64url because frontend signs the encoded version.
-     * Otherwise use user.currentChallenge (which is already base64url encoded).
-     */
-    const challengeToVerify = expectedContent
-      ? Buffer.from(expectedContent).toString('base64url')
-      : user.currentChallenge;
-
-    if (!challengeToVerify) {
-      throw new AppError(ApiCode.VALIDATION_ERROR, 'No challenge to verify against');
-    }
-
-    // Info: (20260120 - Luphia) 還原公鑰
-    const credentialPublicKey = reconstructKeyFromXY(user.pubKeyX, user.pubKeyY);
-
-    const credential: CredentialInfo = {
-      id: authenticationData.id,
-      publicKey: credentialPublicKey,
-      algorithm: 'ES256',
-      transports: [],
-    };
-
-    try {
-      await verifyAuthentication(authenticationData, credential, challengeToVerify);
-    } catch (error) {
-      console.error('Signature verification failed:', error);
-      throw new AppError(ApiCode.UNAUTHORIZED, 'Invalid signature');
-    }
-
-    // Info: (20260120 - Luphia) Only clear challenge if we verified against the stored challenge
-    if (!expectedContent) {
-      await this.repo.updateChallenge(address, '');
-    }
   }
 }
 
