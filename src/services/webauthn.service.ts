@@ -288,6 +288,34 @@ class WebAuthnService {
       },
     };
   }
+
+  public async verifySignature(
+    address: string,
+    authenticationData: AuthenticationJSON,
+    expectedChallenge: string
+  ): Promise<boolean> {
+    const user = await this.repo.findUserByAddress(address);
+
+    if (!user || !user.pubKeyX || !user.pubKeyY) {
+      throw new AppError(ApiCode.NOT_FOUND, 'User not found or passkey not registered');
+    }
+
+    const credentialPublicKey = reconstructKeyFromXY(user.pubKeyX, user.pubKeyY);
+    const credential: CredentialInfo = {
+      id: authenticationData.id,
+      publicKey: credentialPublicKey,
+      algorithm: 'ES256',
+      transports: [],
+    };
+
+    try {
+      await verifyAuthentication(authenticationData, credential, expectedChallenge);
+      return true;
+    } catch (error) {
+      console.error('Signature verification failed:', error);
+      throw new AppError(ApiCode.UNAUTHORIZED, 'Invalid signature');
+    }
+  }
 }
 
 export const webAuthnService = new WebAuthnService(webAuthnRepo);
