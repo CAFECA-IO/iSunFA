@@ -39,8 +39,9 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
             });
 
             if (response.txHash) {
-                onSuccess(response.txHash);
                 onClose();
+                alert(`Payment Successful! Transaction Hash: ${response.txHash}`);
+                onSuccess(response.txHash);
             } else {
                 throw new Error(response.message || 'Minting failed');
             }
