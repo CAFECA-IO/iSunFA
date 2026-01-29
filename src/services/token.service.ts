@@ -200,6 +200,8 @@ export async function mintToAddress(tokenAddress: string, to: string, amount: nu
 // Info: (20260126 - Luphia) 協助註冊用戶 Identity (如果 mint 失敗通常是因為這個)
 export async function registerUser(tokenAddress: string, userAddress: string): Promise<ActionResponse> {
   try {
+    const validUserAddress = getAddress(userAddress);
+
     // Info: (20260126 - Luphia) 1. 查詢 Registry
     const tokenAbi = parseAbi(['function identityRegistry() view returns (address)']);
     const registryAddress = await client.readContract({
@@ -208,28 +210,62 @@ export async function registerUser(tokenAddress: string, userAddress: string): P
       functionName: 'identityRegistry'
     });
 
+    console.log(`[RegisterUser] Registry: ${registryAddress}, deploying identity for ${validUserAddress}`);
+
     // Info: (20260126 - Luphia) 2. 部署 User Identity
     const uoiHash = await wallet.deployContract({
       abi: IDENTITY_ARTIFACT.abi,
       bytecode: IDENTITY_ARTIFACT.bytecode as `0x${string}`,
-      args: [userAddress, false]
+      args: [validUserAddress, false]
     });
     const uoiReceipt = await client.waitForTransactionReceipt({ hash: uoiHash });
-    const userIdentityAddress = uoiReceipt.contractAddress!;
+    const userIdentityAddress = uoiReceipt.contractAddress;
 
-    // Info: (20260126 - Luphia) 3. 註冊
-    const regAbi = parseAbi(['function registerIdentity(address, address, uint16) external']);
-    const tx = await wallet.writeContract({
+    if (!userIdentityAddress) {
+      throw new Error('Failed to deploy Identity contract (no address returned)');
+    }
+    console.log(`[RegisterUser] Identity Deployed at ${userIdentityAddress}`);
+
+    // Info: (20260129 - Antigravity) Check if user is already verified
+    const irAbi = parseAbi([
+      'function registerIdentity(address, address, uint16) external',
+      'function updateIdentity(address, address) external',
+      'function isVerified(address) view returns (bool)',
+      'function identity(address) view returns (address)'
+    ]);
+
+    const isVerified = await client.readContract({
       address: registryAddress,
-      abi: regAbi,
-      functionName: 'registerIdentity',
-      args: [userAddress as `0x${string}`, userIdentityAddress, 158] // Info: (20260126 - Luphia) 158 TW
+      abi: irAbi,
+      functionName: 'isVerified',
+      args: [validUserAddress]
     });
 
+    let tx;
+    if (isVerified) {
+      console.log(`[RegisterUser] User ${validUserAddress} is already verified. Updating identity found.`);
+      tx = await wallet.writeContract({
+        address: registryAddress,
+        abi: irAbi,
+        functionName: 'updateIdentity',
+        args: [validUserAddress, userIdentityAddress]
+      });
+    } else {
+      console.log(`[RegisterUser] Registering new identity for ${validUserAddress}`);
+      tx = await wallet.writeContract({
+        address: registryAddress,
+        abi: irAbi,
+        functionName: 'registerIdentity',
+        args: [validUserAddress, userIdentityAddress, 158] // Info: (20260126 - Luphia) 158 TW
+      });
+    }
+
     await client.waitForTransactionReceipt({ hash: tx });
+    console.log(`[RegisterUser] Registration/Update confirmed: ${tx}`);
 
     return { success: true, message: `用戶已註冊 Identity (${userIdentityAddress})`, data: { tx } };
   } catch (error) {
+    console.error('RegisterUser failed during step:', (error as Error).message);
     return { success: false, message: (error as Error).message };
   }
 }

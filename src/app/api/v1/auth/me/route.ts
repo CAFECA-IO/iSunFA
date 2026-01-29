@@ -2,10 +2,7 @@ import { NextRequest } from 'next/server';
 import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
-import { publicClient } from '@/lib/viem';
-import { ABIS } from '@/config/contracts';
-import { Address } from 'viem';
-import { DEFAULT_PLAN } from '@/constants/plans';
+// import { DEFAULT_PLAN } from '@/constants/plans';
 import { MODULES } from '@/constants/modules';
 
 export async function GET(request: NextRequest) {
@@ -20,11 +17,14 @@ export async function GET(request: NextRequest) {
     }
 
     // ToDo: (20260116 - Luphia) Use Blockchain Data for Plan & Credits
-    let plan: string = DEFAULT_PLAN;
-    let credits = 0;
+    // let plan: string = DEFAULT_PLAN;
+    // let credits = 0;
 
     if (user.identityAddress) {
       try {
+        // Info: (20260116 - Luphia) Use Blockchain Data for Plan & Credits
+        // Commented out as getPlan/getCredits are not in ABI currently
+        /* 
         const [chainPlan, chainCredits] = await Promise.all([
           publicClient.readContract({
             address: user.identityAddress as Address,
@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
         ]);
         plan = chainPlan as string;
         credits = Number(chainCredits);
+        */
       } catch (err) {
         console.warn(`[API] /auth/me failed to read contract for ${user.identityAddress}:`, err);
       }
@@ -50,11 +51,12 @@ export async function GET(request: NextRequest) {
       role: user.role,
       pubKeyX: user.pubKeyX,
       pubKeyY: user.pubKeyY,
-      plan,
-      credits,
+      // plan,
+      // credits,
       // Info: (20260117 - Luphia) list the modules that the user has access to
       modules: MODULES.filter((m) => m.basic).map((m) => m.key),
       isAdmin: user.role === 'ADMIN',
+      identityAddress: user.identityAddress,
     });
   } catch (error) {
     console.error('[API] /auth/me error:', error);
