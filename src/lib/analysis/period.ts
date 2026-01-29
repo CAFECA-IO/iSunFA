@@ -1,5 +1,3 @@
-export const COST_PER_GENERATION = 500;
-
 // Info: (20260120 - Luphia) Helper to calculate date range
 export const getPeriodDateRange = (pType: string, year: number, pValue: string | number) => {
   if (pType === 'daily') return { start: String(pValue), end: String(pValue) };

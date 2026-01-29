@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "npm run lint && jest --passWithNoTests",
     "update-version": "npm run lint && echo 'Updating version...'",
-    "swarm": "npm run build && next start -p 10020"
+    "swarm": "npm run build && next start -p 10020",
+    "worker": "npx tsx scripts/workers.run.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -10,7 +10,7 @@ import ConfirmModal from '@/components/common/confirm_modal';
 import HistorySection from '@/components/user/analysis/history_section';
 import { fido2ClientService } from '@/lib/auth/fido2_client';
 import { getAnalysisCost } from '@/lib/analysis/pricing';
-import { getPeriodDateRange } from '@/lib/analysis/utils';
+import { getPeriodDateRange } from '@/lib/analysis/period';
 import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES } from '@/constants/analysis';
 
 export default function AnalysisView() {

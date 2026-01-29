@@ -1,0 +1,14 @@
+{
+  "title": "Financial Analysis - irsc",
+  "userId": "198b5c9d-446c-43ca-92ec-0457fad0dd2a",
+  "params": {
+    "category": "irsc",
+    "periodType": "yearly",
+    "periodValue": 2024,
+    "year": 2024,
+    "orderId": "29b9cbcf-122c-4fbd-8827-626d4de37a55"
+  },
+  "cost": 200,
+  "createdAt": "2026-01-29T09:31:24.426Z",
+  "result": "Analysis Mission Generated. Pending Execution."
+}
