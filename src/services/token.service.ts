@@ -10,6 +10,10 @@ import TIR_ARTIFACT from '@erc3643org/erc-3643/artifacts/contracts/registry/impl
 import COMPLIANCE_ARTIFACT from '@erc3643org/erc-3643/artifacts/contracts/compliance/modular/ModularCompliance.sol/ModularCompliance.json';
 import IDENTITY_ARTIFACT from '@erc3643org/erc-3643/artifacts/@onchain-id/solidity/contracts/Identity.sol/Identity.json';
 import TOKEN_ARTIFACT from '@erc3643org/erc-3643/artifacts/contracts/token/Token.sol/Token.json';
+import { UserOperationJson } from '@/validators';
+import { buildTransferUserOp } from '@/lib/utils/user_op_builder';
+import { bundlerService } from '@/services/bundler.service';
+import { CONTRACT_ADDRESSES, ABIS } from '@/config/contracts';
 
 // Info: (20260126 - Luphia) 設定區塊鏈環境
 const chainId = parseInt(process.env.NEXT_PUBLIC_ISUNCOIN_CHAIN_ID || '8017');
@@ -391,5 +395,85 @@ async function togglePause(tokenAddress: string, isPause: boolean): Promise<Acti
   } catch (error) {
     console.error(`系統${isPause ? '暫停' : '恢復'}失敗:`, error);
     return { success: false, message: `系統${isPause ? '暫停' : '恢復'}失敗: ${(error as Error).message}` };
+  }
+}
+
+// Info: (20260130 - Antigravity) Client Token Transfer Support
+
+/**
+ * Info: (20260130 - Antigravity) Backend prepares the UserOp for the client to sign.
+ * This ensures the logic (Gas, Nonce, CallData) is handled securely and consistently on the server.
+ */
+export async function prepareTransferUserOp(
+  sender: string,
+  amount: number
+): Promise<ActionResponse & { data?: { userOp: UserOperationJson, userOpHash: string } }> {
+  try {
+    const validSender = getAddress(sender);
+    const validRecipient = CONTRACT_ADDRESSES.NTD_TOKEN; // Transfer back to contract/platform
+
+    // 1. Build UserOp
+    const userOp = await buildTransferUserOp(
+      validSender,
+      validRecipient,
+      amount.toString(),
+      CONTRACT_ADDRESSES.NTD_TOKEN
+    );
+
+    // 2. Calculate UserOp Hash using EntryPoint
+    const userOpHash = await client.readContract({
+      address: CONTRACT_ADDRESSES.ENTRY_POINT,
+      abi: ABIS.ENTRY_POINT,
+      functionName: 'getUserOpHash',
+      args: [userOp as unknown as {
+        sender: `0x${string}`;
+        nonce: bigint;
+        initCode: `0x${string}`;
+        callData: `0x${string}`;
+        callGasLimit: bigint;
+        verificationGasLimit: bigint;
+        preVerificationGas: bigint;
+        maxFeePerGas: bigint;
+        maxPriorityFeePerGas: bigint;
+        paymasterAndData: `0x${string}`;
+        signature: `0x${string}`;
+      }]
+    });
+
+    return {
+      success: true,
+      message: 'UserOp prepared',
+      data: {
+        userOp,
+        userOpHash
+      }
+    };
+  } catch (error) {
+    console.error('prepareTransferUserOp failed:', error);
+    return { success: false, message: `Failed to prepare transfer: ${(error as Error).message}` };
+  }
+}
+
+/**
+ * Info: (20260130 - Antigravity) Submits the signed UserOp to the Bundler.
+ */
+export async function submitSignedUserOp(
+  userOp: UserOperationJson
+): Promise<ActionResponse> {
+  try {
+    const result = await bundlerService.sendUserOp(userOp, CONTRACT_ADDRESSES.ENTRY_POINT);
+
+    if (result.status === 'reverted') {
+      return { success: false, message: 'Transaction reverted on chain' };
+    }
+
+    return {
+      success: true,
+      message: 'Transfer successful',
+      data: { tx: result.transactionHash }
+    };
+  } catch (error) {
+    console.error('submitSignedUserOp failed:', error);
+    return { success: false, message: `Transfer failed: ${(error as Error).message}` };
   }
 }

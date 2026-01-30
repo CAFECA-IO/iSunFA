@@ -16,6 +16,8 @@ interface IUser {
   modules?: string[];
   identityAddress?: string | null;
   isVerified?: boolean;
+  pubKeyX?: string;
+  pubKeyY?: string;
 }
 
 interface IAuthContextType {

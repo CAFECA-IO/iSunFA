@@ -5,10 +5,11 @@ import { useTranslation } from '@/i18n/i18n_context';
 import { Check, Calendar, Coins, FileBarChart, Globe } from 'lucide-react';
 import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
-import PaymentConfirmModal from '@/components/common/payment_confirm_modal';
-import ConfirmModal from '@/components/common/confirm_modal';
+import PaymentConfirmModal, { PaymentStatus } from '@/components/common/payment_confirm_modal';
 import HistorySection from '@/components/user/analysis/history_section';
 import { fido2ClientService } from '@/lib/auth/fido2_client';
+import { encodeWebAuthnSignature, hexToBase64Url } from '@/lib/auth/crypto_utils';
+import { prepareTransferUserOp, submitSignedUserOp } from '@/services/token.service';
 import { getAnalysisCost } from '@/lib/analysis/pricing';
 import { getPeriodDateRange } from '@/lib/analysis/utils';
 import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES } from '@/constants/analysis';
@@ -30,7 +31,11 @@ export default function AnalysisView() {
 
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-  const [selectedPeriodValue, setSelectedPeriodValue] = useState<string | number>('');
+  const [selectedPeriodValue, setSelectedPeriodValue] = useState<string>('');
+
+  // Info: (20260130 - Antigravity) Payment Status State
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   // Info: (20260120 - Luphia) External Analysis States
   const [selectedCountry, setSelectedCountry] = useState<string>('');
@@ -48,10 +53,6 @@ export default function AnalysisView() {
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Info: (20260128 - Luphia) Error Modal State
-  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
 
   // Info: (20260120 - Luphia) Generate specific period options based on type
   const renderPeriodOptions = () => {
@@ -92,10 +93,10 @@ export default function AnalysisView() {
             {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
               <button
                 key={month}
-                onClick={() => setSelectedPeriodValue(month)}
+                onClick={() => setSelectedPeriodValue(month.toString())}
                 className={`
                   h-10 text-sm font-medium rounded-lg transition-all border
-                  ${selectedPeriodValue === month
+                  ${selectedPeriodValue === month.toString()
                     ? 'bg-orange-50 border-orange-200 text-orange-700 ring-1 ring-orange-200'
                     : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
                   }
@@ -167,7 +168,7 @@ export default function AnalysisView() {
 
   // Info: (20260120 - Luphia) Derived period string for display and modal
   const simplePeriodString = (() => {
-    const periodVal = periodType === 'yearly' ? selectedYear : selectedPeriodValue;
+    const periodVal = periodType === 'yearly' ? selectedYear.toString() : selectedPeriodValue;
     // Info: (20260120 - Luphia) For daily buttons, we might want to ensure selectedPeriodValue is set
     if (periodType === 'daily' && !periodVal) return '';
 
@@ -180,17 +181,71 @@ export default function AnalysisView() {
   // Info: (20260120 - Antigravity) Open Payment Modal instead of direct generate
   const handleGenerate = () => {
     setIsPaymentModalOpen(true);
+    setPaymentStatus('idle'); // Reset status when opening modal
+    setErrorMessage('');
   };
 
   const handleConfirmGenerate = async () => {
     try {
       setIsLoading(true);
+      setPaymentStatus('preparing');
+      setErrorMessage('');
 
       if (!user?.address) {
         throw new Error(t('analysis.error.user_address_missing') || 'User address not found');
       }
 
-      // Info: (20260128 - Luphia) 1. Create Order & Get Challenge
+      // Info: (20260130 - Antigravity) 0. Check Balance & Cost
+      if (!calculatedCost || calculatedCost <= 0) {
+        // Skip payment logic if free? existing logic assumed cost > 0
+      }
+
+      // Info: (20260130 - Antigravity) 1. Prepare Transfer UserOp (Server Action)
+      const prepRes = await prepareTransferUserOp(user.address, calculatedCost);
+      if (!prepRes.success || !prepRes.data) {
+        throw new Error(prepRes.message || 'Failed to prepare transfer');
+      }
+      const { userOp, userOpHash } = prepRes.data;
+
+      // Info: (20260130 - Antigravity) 2. Sign the UserOp Hash (Client FIDO2)
+      setPaymentStatus('signing_payment');
+
+      if (!user.pubKeyX || !user.pubKeyY) {
+        throw new Error('User public keys missing. Please re-login.');
+      }
+
+      const challengeBase64 = hexToBase64Url(userOpHash);
+      const transferAuth = await fido2ClientService.startLogin({
+        challenge: challengeBase64,
+        timeout: 60000,
+        userVerification: 'required',
+        allowCredentials: [],
+      });
+
+      // Info: (20260130 - Antigravity) 3. Encode Signature & Attach to UserOp
+      const encodedSignature = encodeWebAuthnSignature(
+        transferAuth,
+        BigInt(user.pubKeyX),
+        BigInt(user.pubKeyY)
+      );
+
+      // Info: (20260130 - Antigravity) 4. Submit Signed UserOp (Server Action)
+      setPaymentStatus('submitting_payment');
+      const submitRes = await submitSignedUserOp({
+        ...userOp,
+        signature: encodedSignature
+      });
+
+      if (!submitRes.success) {
+        throw new Error(submitRes.message || 'Token transfer failed');
+      }
+
+      setPaymentStatus('payment_success');
+      // Short delay to show success
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Info: (20260128 - Luphia) 5. Create Order & Get Challenge (Existing Logic)
+      setPaymentStatus('signing_analysis');
       const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
         method: 'POST',
         body: JSON.stringify({
@@ -198,6 +253,7 @@ export default function AnalysisView() {
           periodType,
           year: selectedYear,
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
+          txHash: (submitRes.data as { tx: string })?.tx
         })
       });
 
@@ -205,30 +261,24 @@ export default function AnalysisView() {
       const { orderId, challenge } = orderRes.payload;
 
       /**
-       * Info: (20260128 - Luphia) 2. Sign the Challenge Order
-       * Encode challenge string to base64url as expected by FIDO2 libraries/browsers
+       * Info: (20260128 - Luphia) 6. Sign the Analysis Order
        */
-      const challengeBase64 = btoa(challenge)
+      const analysisChallengeBase64 = btoa(challenge)
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=+$/, '');
 
       const authentication = await fido2ClientService.startLogin({
-        challenge: challengeBase64,
+        challenge: analysisChallengeBase64,
         timeout: 60000,
         userVerification: 'required',
         allowCredentials: [],
       });
 
-      /**
-       * Info: (20260128 - Luphia) 3. Attach orderId to the authentication object so backend knows which order this is for
-       * We can use a custom property or just send it alongside.
-       * The backend expects `authentication.orderId`. 
-       * `AuthenticationJSON` type might not have `orderId`. We should cast or extend.
-       */
       const authWithOrder = { ...authentication, orderId };
 
-      // Info: (20260128 - Luphia) 4. Send to API
+      // Info: (20260128 - Luphia) 8. Send to API
+      setPaymentStatus('analyzing');
       await request('/api/v1/user/analysis', {
         method: 'POST',
         body: JSON.stringify({
@@ -242,17 +292,21 @@ export default function AnalysisView() {
 
       // Info: (20260120 - Luphia) Refresh user balance
       await refreshAuth();
+
+      setIsPaymentModalOpen(false);
+      setPaymentStatus('idle'); // Reset for next time
     } catch (error) {
       console.error('Analysis generation failed:', error);
-      setErrorMessage(t('auth_modal.failed'));
-      setIsErrorModalOpen(true);
+      setPaymentStatus('error');
+      setErrorMessage(t('auth_modal.failed') + `: ${(error as Error).message}`);
+      // Keep modal open to show error state in stepper
     } finally {
       setIsLoading(false);
-      setIsPaymentModalOpen(false);
     }
   };
 
   const isDaily = periodType === 'daily';
+  const country = activeTab === 'external' ? selectedCountry : undefined;
 
   return (
     <div className="space-y-6">
@@ -486,23 +540,27 @@ export default function AnalysisView() {
       {/* Info: (20260120 - Luphia) Payment Confirmation Modal */}
       <PaymentConfirmModal
         isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
+        onClose={() => {
+          if (paymentStatus === 'error') {
+            setPaymentStatus('idle');
+            setErrorMessage('');
+            setIsPaymentModalOpen(false);
+          } else if (paymentStatus === 'idle') {
+            setIsPaymentModalOpen(false);
+          }
+        }}
         onConfirm={handleConfirmGenerate}
         cost={calculatedCost}
         analysisType={t(`analysis.categories.${category}`)}
-        period={simplePeriodString}
-        country={activeTab === 'external' ? selectedCountry : undefined}
+        period={t('analysis.selected_period_desc', {
+          value: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
+          type: t(`analysis.time_units.${periodType}`)
+        })}
+        country={country}
         keyword={activeTab === 'external' && category !== 'market_trends' ? keyword : undefined}
         isLoading={isLoading}
-      />
-
-      {/* Info: (20260128 - Luphia) Error Confirm Modal */}
-      <ConfirmModal
-        isOpen={isErrorModalOpen}
-        onClose={() => setIsErrorModalOpen(false)}
-        title={t('common.error')} // Info: (20260128 - Luphia) or specific title like "Analysis Failed"
-        message={errorMessage}
-        confirmText={t('common.close')}
+        status={paymentStatus}
+        errorMessage={errorMessage}
       />
 
       {/* Info: (20260120 - Luphia) History Section */}

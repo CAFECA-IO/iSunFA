@@ -556,5 +556,14 @@ export const zhTw = {
       empty_title: '尚無分析報告',
       empty_description: '使用我們先進的 AI 工具產生您的第一份財務分析報告，開啟您的旅程。',
     },
+    steps: {
+      preparing: '準備交易中...',
+      signing_payment: '請簽署支付交易',
+      submitting_payment: '支付交易上鏈中...',
+      payment_success: '支付成功！',
+      signing_analysis: '請簽署分析請求',
+      analyzing: '正在生成分析報告...',
+    },
+
   },
 };
