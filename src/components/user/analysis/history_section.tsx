@@ -24,7 +24,7 @@ export default function HistorySection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Info: (20260128 - AntiGravity) Fetch history from API
+  // Info: (20260128 - Tzuhan) Fetch history from API
   useEffect(() => {
     async function fetchHistory() {
       try {

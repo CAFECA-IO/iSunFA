@@ -33,7 +33,7 @@ export default function AnalysisView() {
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedPeriodValue, setSelectedPeriodValue] = useState<string>('');
 
-  // Info: (20260130 - Antigravity) Payment Status State
+  // Info: (20260130 - Tzuhan) Payment Status State
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -178,7 +178,7 @@ export default function AnalysisView() {
     return `${start} ~ ${end}`;
   })();
 
-  // Info: (20260120 - Antigravity) Open Payment Modal instead of direct generate
+  // Info: (20260120 - Tzuhan) Open Payment Modal instead of direct generate
   const handleGenerate = () => {
     setIsPaymentModalOpen(true);
     setPaymentStatus('idle'); // Reset status when opening modal
@@ -195,19 +195,19 @@ export default function AnalysisView() {
         throw new Error(t('analysis.error.user_address_missing') || 'User address not found');
       }
 
-      // Info: (20260130 - Antigravity) 0. Check Balance & Cost
+      // Info: (20260130 - Tzuhan) 0. Check Balance & Cost
       if (!calculatedCost || calculatedCost <= 0) {
         // Skip payment logic if free? existing logic assumed cost > 0
       }
 
-      // Info: (20260130 - Antigravity) 1. Prepare Transfer UserOp (Server Action)
+      // Info: (20260130 - Tzuhan) 1. Prepare Transfer UserOp (Server Action)
       const prepRes = await prepareTransferUserOp(user.address, calculatedCost);
       if (!prepRes.success || !prepRes.data) {
         throw new Error(prepRes.message || 'Failed to prepare transfer');
       }
       const { userOp, userOpHash } = prepRes.data;
 
-      // Info: (20260130 - Antigravity) 2. Sign the UserOp Hash (Client FIDO2)
+      // Info: (20260130 - Tzuhan) 2. Sign the UserOp Hash (Client FIDO2)
       setPaymentStatus('signing_payment');
 
       if (!user.pubKeyX || !user.pubKeyY) {
@@ -222,14 +222,14 @@ export default function AnalysisView() {
         allowCredentials: [],
       });
 
-      // Info: (20260130 - Antigravity) 3. Encode Signature & Attach to UserOp
+      // Info: (20260130 - Tzuhan) 3. Encode Signature & Attach to UserOp
       const encodedSignature = encodeWebAuthnSignature(
         transferAuth,
         BigInt(user.pubKeyX),
         BigInt(user.pubKeyY)
       );
 
-      // Info: (20260130 - Antigravity) 4. Submit Signed UserOp (Server Action)
+      // Info: (20260130 - Tzuhan) 4. Submit Signed UserOp (Server Action)
       setPaymentStatus('submitting_payment');
       const submitRes = await submitSignedUserOp({
         ...userOp,

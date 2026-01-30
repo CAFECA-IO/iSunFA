@@ -438,14 +438,6 @@ export default function PricingPage() {
           isOpen={kycModalOpen}
           onClose={() => setKycModalOpen(false)}
           onSuccess={() => {
-            // Info: (20260129 - Antigravity) After KYC, open Payment Modal
-            // We need to refresh user to get the new identityAddress, but for smooth UX we can just proceed
-            // However, payment modal relies on identity existing on chain.
-            // The API /user/kyc deployed it.
-            // We should ideally refresh auth context here to update local state
-            // But since refreshAuth is async, we can just proceed to payment logic which might just work
-            // or we can wait for a bit?
-            // Actually, let's trigger payment modal immediately.
             setPaymentModalOpen(true);
           }}
         />
@@ -456,7 +448,7 @@ export default function PricingPage() {
           credits={pendingCredits}
           amount={pendingAmount}
           onSuccess={async (tx) => {
-            // Info: (20260129 - Antigravity) Refresh user balance after minting
+            // Info: (20260129 - Tzuhan) Refresh user balance after minting
             await refreshAuth();
 
             setConfirmModal({

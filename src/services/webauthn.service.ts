@@ -109,7 +109,7 @@ class WebAuthnService {
     };
   }
 
-  private async ensureUserSynced(address: string) {
+  public async ensureUserSynced(address: string) {
     // Info: (20260123 - Tzuhan) 加強容錯：如果 DB 壞了，直接回傳 null 讓後續流程決定是否走鏈上
     try {
       const user = await this.repo.findUserByAddress(address);

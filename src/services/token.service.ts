@@ -230,7 +230,7 @@ export async function registerUser(tokenAddress: string, userAddress: string): P
     }
     console.log(`[RegisterUser] Identity Deployed at ${userIdentityAddress}`);
 
-    // Info: (20260129 - Antigravity) Check if user is already verified
+    // Info: (20260129 - Tzuhan) Check if user is already verified
     const irAbi = parseAbi([
       'function registerIdentity(address, address, uint16) external',
       'function updateIdentity(address, address) external',
@@ -398,10 +398,10 @@ async function togglePause(tokenAddress: string, isPause: boolean): Promise<Acti
   }
 }
 
-// Info: (20260130 - Antigravity) Client Token Transfer Support
+// Info: (20260130 - Tzuhan) Client Token Transfer Support
 
 /**
- * Info: (20260130 - Antigravity) Backend prepares the UserOp for the client to sign.
+ * Info: (20260130 - Tzuhan) Backend prepares the UserOp for the client to sign.
  * This ensures the logic (Gas, Nonce, CallData) is handled securely and consistently on the server.
  */
 export async function prepareTransferUserOp(
@@ -455,7 +455,7 @@ export async function prepareTransferUserOp(
 }
 
 /**
- * Info: (20260130 - Antigravity) Submits the signed UserOp to the Bundler.
+ * Info: (20260130 - Tzuhan) Submits the signed UserOp to the Bundler.
  */
 export async function submitSignedUserOp(
   userOp: UserOperationJson

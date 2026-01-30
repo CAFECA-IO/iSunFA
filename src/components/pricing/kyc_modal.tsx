@@ -29,13 +29,13 @@ export default function KYCModal({ isOpen, onClose, onSuccess }: IKYCModalProps)
         setError(null);
 
         try {
-            // Info: (20260129 - Antigravity) Submit KYC data and trigger Identity deployment
+            // Info: (20260129 - Tzuhan) Submit KYC data and trigger Identity deployment
             await request('/api/v1/user/kyc', {
                 method: 'POST',
                 body: JSON.stringify({
                     ...formData,
                     submittedAt: new Date().toISOString(),
-                    // Photo upload is skipped as per requirement "現在都可以不用傳"
+                    // Todo: (20260129 - Tzuhan) Photo upload is skipped as per requirement "現在都可以不用傳"
                 }),
             });
 

@@ -3,6 +3,7 @@ import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
 import { orderGenerator } from '@/lib/order/generator';
+import { webAuthnService } from '@/services/webauthn.service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,6 +22,9 @@ export async function POST(request: NextRequest) {
     if (!category || !periodType) {
       return jsonFail(ApiCode.VALIDATION_ERROR, 'Missing required fields');
     }
+
+    // Info: (20260130 - Tzuhan) Ensure user exists in DB before creating order to avoid FK errors
+    await webAuthnService.ensureUserSynced(user.address);
 
     // Info: (20260128 - Luphia) Generate Analysis Order and Challenge
     const result = await orderGenerator.generateAnalysisOrder(user.id, {

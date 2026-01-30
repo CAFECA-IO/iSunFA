@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         let userData = response.payload;
         try {
           if (userData.address) {
-            // Info: (20260129 - Antigravity) Fetch credits from blockchain
+            // Info: (20260129 - Tzuhan) Fetch credits from blockchain
             const balance = await publicClient.readContract({
               address: CONTRACT_ADDRESSES.NTD_TOKEN,
               abi: ABIS.NTD_TOKEN,
@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
             const credits = Number(formatUnits(balance, 18));
 
-            // Info: (20260129 - Antigravity) Fetch verification status from IdentityRegistry
+            // Info: (20260129 - Tzuhan) Fetch verification status from IdentityRegistry
             const isVerified = await publicClient.readContract({
               address: CONTRACT_ADDRESSES.IDENTITY_REGISTRY,
               abi: ABIS.IDENTITY_REGISTRY,
