@@ -1,26 +1,26 @@
-import { Database, Brain, Zap, ShieldCheck } from 'lucide-react';
+import { LineChart, Fingerprint, Mic, Tags } from 'lucide-react';
 
-export default function DeepInsightSlide2() {
+export default function DeepReviewSlide2() {
   const features = [
     {
-      title: '全方位資訊聚合',
-      desc: '橫跨新聞、社群、財報、司法、政府與專利等多維度數據，打破資訊孤島。',
-      icon: Database,
+      title: '深度競爭力分析',
+      desc: '結合 NLP 技術比對商品介紹文字，自動生成包含歷史績效、風險報酬比及前十大成分股的深度競品報告。',
+      icon: LineChart,
     },
     {
-      title: '深度的量化與質化分析',
-      desc: '不僅提供數據，更提供具備專業會計邏輯的分析建議，將原始數據轉化為可執行洞察。',
-      icon: Brain,
+      title: '數位身分證與簽核',
+      desc: '利用生物辨識技術串接審查簽核流程，自動發送審查 Email 並追蹤委員回覆進度，確保審查軌跡完整留存。',
+      icon: Fingerprint,
     },
     {
-      title: '端到端的自動化流程',
-      desc: '從需求理解到報告生成，全程無人值守或半自動化引導，大幅提升分析效率。',
-      icon: Zap,
+      title: '智能會議助理',
+      desc: '將錄音自動轉為逐字稿，並由 GAI 針對討論重點進行摘要彙整，加速會議紀錄產出。',
+      icon: Mic,
     },
     {
-      title: '高可信度的驗證機制',
-      desc: '內建歷史回測與數據校正機制，確保報告準確性與可靠性。',
-      icon: ShieldCheck,
+      title: '動態商品標籤',
+      desc: '根據最新市場趨勢或投行報告挖掘新標籤，並實現商品與投資主題，如：矽光子平臺、生物相似藥、鈣鈦礦電池等的精準配對。',
+      icon: Tags,
     },
   ];
 
@@ -58,13 +58,13 @@ export default function DeepInsightSlide2() {
         {/* Info: (20260121 - Luphia) Header */}
         <div className="absolute top-16 left-16">
           <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-            DeepInsight <span className="text-orange-600">能提供什麼服務？</span>
+            DeepReview <span className="text-orange-600">能提供什麼服務？</span>
           </h2>
           <div className="h-1.5 w-24 bg-gradient-to-r from-orange-500 to-amber-400 mt-4 rounded-full"></div>
         </div>
 
         {/* Info: (20260121 - Luphia) Content Container - Grid */}
-        <div className="z-10 w-full px-16 mt-24">
+        <div className="z-10 w-full px-16 mt-32">
           <div className="grid grid-cols-2 gap-10">
             {features.map((feature, idx) => (
               <div key={idx} className="flex gap-6 p-8 rounded-2xl bg-white/95 border border-orange-200 shadow-lg hover:shadow-xl transition-all group backdrop-blur-md">
@@ -74,10 +74,10 @@ export default function DeepInsightSlide2() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-orange-700 transition-colors">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-orange-700 transition-colors">
                     {feature.title}
                   </h3>
-                  <p className="text-lg text-gray-700 leading-relaxed font-medium">
+                  <p className="text-[17px] text-gray-700 leading-relaxed font-medium">
                     {feature.desc}
                   </p>
                 </div>

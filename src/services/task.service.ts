@@ -65,6 +65,7 @@ export class TaskService {
 
     // Info: (20260130 - Luphia) Execution
     console.log(`[TaskService] Executing LLM for Task ${task.id}...`);
+    console.log(`[TaskService] Full Prompt: ${fullPrompt}`);
     const result = await chatService.generateRaw(fullPrompt);
 
     /**

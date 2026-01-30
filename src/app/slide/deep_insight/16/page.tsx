@@ -1,36 +1,56 @@
-import { Fingerprint, FileCheck, BarChart4, Building2 } from 'lucide-react';
+import { Globe2, Cpu, Scale, TrendingUp, HeartHandshake } from 'lucide-react';
 
-export default function DeepInsightSlide16() {
-  const features = [
+export default function DeepInsightSlide15() {
+  const points = [
     {
       id: 1,
-      title: 'FIDO2 數位身分證',
-      subtitle: 'FIDO2 Digital Identity',
-      desc: '導入 <span class="text-blue-600 font-bold">FIDO2 國際級無密碼認證標準</span>，結合數位簽章技術，確保每一筆金融交易與資產轉移皆在最高等級的安全框架下執行。',
-      icon: Fingerprint,
-      color: 'text-blue-600',
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-    },
-    {
-      id: 2,
-      title: '智能會計審計與核銷',
-      subtitle: 'Intelligent Audit',
-      desc: '運用人工智能會計審計技術，<span class="text-orange-600 font-bold">即時追蹤並自動化核銷</span> 企業之專案執行進度與資金用途，大幅提升投後管理效率，防範資金濫用。',
-      icon: FileCheck,
+      title: '市場先機',
+      subtitle: 'Market Opportunity',
+      desc: '2025 年適逢 <span class="text-orange-600 font-bold">人工智能政策驅動</span> 的關鍵轉折點，正是產品全面部署的最佳戰略時機。',
+      icon: TrendingUp,
       color: 'text-orange-600',
       bg: 'bg-orange-50',
       border: 'border-orange-200',
     },
     {
+      id: 2,
+      title: '技術核心',
+      subtitle: 'Core Technology',
+      desc: '以 <span class="text-blue-600 font-bold">三大會計審計專屬 AI 模型</span> 為基礎，構建人工智能會計審計的服務標準化。',
+      icon: Cpu,
+      color: 'text-blue-600',
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
+    },
+    {
       id: 3,
-      title: '金融商品評級技術',
-      subtitle: 'Financial Product Rating',
-      desc: '動態整合數位足跡與財報邏輯，透過 AI 評級模型對金融商品進行 <span class="text-indigo-600 font-bold">即時風險量化</span>，提供最具公信力的定價參考。',
-      icon: BarChart4,
+      title: '國際接軌',
+      subtitle: 'Global Alignment',
+      desc: '與國際權威機構結盟，共同定義 <span class="text-indigo-600 font-bold">ESG 量化評估指標與標準</span>，確保領先地位。',
+      icon: Globe2,
       color: 'text-indigo-600',
       bg: 'bg-indigo-50',
       border: 'border-indigo-200',
+    },
+    {
+      id: 4,
+      title: '營收動能',
+      subtitle: 'Revenue Momentum',
+      desc: '採用高預測性的訂閱制營收模式，預期 <span class="text-green-600 font-bold">毛利率將突破 70%</span>，展現強勁獲利能力。',
+      icon: Scale,
+      color: 'text-green-600',
+      bg: 'bg-green-50',
+      border: 'border-green-200',
+    },
+    {
+      id: 5,
+      title: '社會價值',
+      subtitle: 'Social Value',
+      desc: '透過先進技術深耕並強化 <span class="text-pink-600 font-bold">ESG 永續投資</span> 的價值主張，推動正向循環。',
+      icon: HeartHandshake,
+      color: 'text-pink-600',
+      bg: 'bg-pink-50',
+      border: 'border-pink-200',
     },
   ];
 
@@ -66,55 +86,46 @@ export default function DeepInsightSlide16() {
         </div>
 
         {/* Info: (20260121 - Luphia) Header */}
-        <div className="w-full px-16 pt-16 mb-8 relative z-20 text-center">
-          <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">
-            金融監理 <span className="text-orange-600">沙盒實驗</span>
+        <div className="w-full px-16 pt-12 mb-8 relative z-20 text-center">
+          <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+            為何 <span className="text-orange-600">選擇我們？</span>
           </h2>
-          <h3 className="text-2xl font-bold text-gray-600 mb-6">
-            Convertible Bond 可轉換公司債發行與交換平臺
-          </h3>
+          <div className="h-1.5 w-24 bg-gradient-to-r from-orange-500 to-amber-400 mt-6 rounded-full mx-auto"></div>
 
-          {/* Info: (20260121 - Luphia) Invitation Box */}
-          <div className="max-w-4xl mx-auto bg-white/60 backdrop-blur-md rounded-xl p-6 border border-gray-100 shadow-sm flex items-start gap-4 text-left">
-            <div className="p-3 bg-orange-100 rounded-lg text-orange-600">
-              <Building2 size={24} />
+          <div className="mt-8 max-w-4xl mx-auto bg-white/70 backdrop-blur-sm p-6 rounded-2xl border border-gray-100 shadow-sm relative">
+            <div className="text-xl text-gray-700 font-medium leading-relaxed">
+              我們不只是一家會計軟體公司——<br />我們是 <span className='font-bold text-gray-900'>人工智能、先進金融科技、企業永續</span> 相互交織的關鍵核心樞紐
             </div>
-            <div>
-              <p className="text-gray-700 leading-relaxed font-medium">
-                依據《金融科技發展與創新實驗條例》，我們正積極籌備申請監理沙盒。若貴機構持有 <span className="font-bold text-gray-900">證券商、商業銀行或信託業牌照</span>，我們誠摯邀請您共同擔任「<span className="text-orange-600 font-bold border-b-2 border-orange-200">創新實驗申請人</span>」。
-              </p>
-            </div>
+            {/* Info: (20260121 - Luphia) Quote Icons */}
+            <div className="absolute top-4 left-4 text-gray-200 transform -scale-x-100 font-serif text-6xl leading-none">❝</div>
+            <div className="absolute bottom-[-20px] right-4 text-gray-200 font-serif text-6xl leading-none">❞</div>
           </div>
         </div>
 
-        {/* Info: (20260121 - Luphia) Feature Cards */}
-        <div className="w-full px-20 grid grid-cols-3 gap-8 z-10">
-          {features.map((f) => (
-            <div
-              key={f.id}
-              className={`bg-white rounded-3xl shadow-xl border ${f.border} p-8 flex flex-col items-center text-center h-[320px] hover:-translate-y-2 transition-all duration-300 group relative overflow-hidden`}
-            >
-              {/* Info: (20260121 - Luphia) Top Accent */}
-              <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-gray-200 via-${f.color.split('-')[1]}-400 to-gray-200`}></div>
+        {/* Info: (20260121 - Luphia) 5 Key Points Grid */}
+        <div className="w-full px-12 z-10">
+          <div className="grid grid-cols-5 gap-4">
+            {points.map((p) => (
+              <div key={p.id} className={`bg-white rounded-2xl shadow-lg border ${p.border} p-5 flex flex-col items-center text-center h-[340px] hover:-translate-y-2 transition-all duration-300 group relative overflow-hidden`}>
+                {/* Info: (20260121 - Luphia) Icon */}
+                <div className={`w-14 h-14 rounded-xl ${p.bg} flex items-center justify-center ${p.color} mb-4 shadow-sm group-hover:scale-110 transition-transform duration-300 z-10`}>
+                  <p.icon size={28} strokeWidth={2} />
+                </div>
 
-              {/* Info: (20260121 - Luphia) Icon */}
-              <div className={`w-16 h-16 rounded-2xl ${f.bg} flex items-center justify-center ${f.color} mb-4 shadow-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}>
-                <f.icon size={32} strokeWidth={1.5} />
+                {/* Info: (20260121 - Luphia) Title */}
+                <h3 className={`text-lg font-bold ${p.color} mb-1 z-10`}>{p.title}</h3>
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 z-10">{p.subtitle}</div>
+
+                {/* Info: (20260121 - Luphia) Desc */}
+                <p className="text-gray-600 text-xs leading-relaxed font-medium text-justify z-10" dangerouslySetInnerHTML={{ __html: p.desc }}></p>
+
+                {/* Info: (20260121 - Luphia) Decorative Background Icon */}
+                <div className="absolute -bottom-6 -right-6 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-500 z-0">
+                  <p.icon size={120} />
+                </div>
               </div>
-
-              {/* Info: (20260121 - Luphia) Title */}
-              <h3 className={`text-xl font-bold text-gray-900 mb-1 z-10`}>{f.title}</h3>
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 z-10">{f.subtitle}</div>
-
-              {/* Info: (20260121 - Luphia) Description */}
-              <p className="text-gray-600 text-sm leading-relaxed font-medium text-justify z-10" dangerouslySetInnerHTML={{ __html: f.desc }}></p>
-
-              {/* Info: (20260121 - Luphia) Decorative Background Icon */}
-              <div className="absolute -bottom-8 -right-8 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-500 z-0">
-                <f.icon size={150} />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Info: (20260121 - Luphia) Footer */}
@@ -122,7 +133,7 @@ export default function DeepInsightSlide16() {
           <div>Confidential</div>
           <div className="flex gap-2 items-center">
             <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-            2026 iSunFA Corp.
+            2026 CAFECA Fintech
           </div>
         </div>
       </div>

@@ -69,6 +69,7 @@ export default function DeepInsightSlide3() {
               <div className="space-y-2">
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">國家/市場</div>
                 <div className="flex gap-2">
+                  <div className="px-3 py-1.5 bg-white border border-gray-200 text-gray-400 rounded text-xs">ALL</div>
                   <div className="px-3 py-1.5 bg-orange-600 text-white rounded text-xs font-bold flex items-center gap-1 shadow-sm">
                     <Globe size={12} /> TWN
                   </div>
@@ -203,7 +204,7 @@ export default function DeepInsightSlide3() {
           <div>Confidential</div>
           <div className="flex gap-2 items-center">
             <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-            2026 iSunFA Corp.
+            2026 CAFECA Fintech
           </div>
         </div>
       </div>

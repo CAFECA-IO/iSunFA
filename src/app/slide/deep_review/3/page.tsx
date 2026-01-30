@@ -1,33 +1,33 @@
-import { EyeOff, Hourglass, Scale } from 'lucide-react';
+import { Hourglass, FileText, Puzzle } from 'lucide-react';
 
-export default function DeepInsightSlide3() {
+export default function DeepReviewSlide3() {
   const painPoints = [
     {
       id: 1,
-      title: '視角侷限',
-      subtitle: 'Perspective Limitation',
-      desc: '傳統分析往往侷限於企業單方面提供的敘述與官方揭露的制式資訊',
-      icon: EyeOff,
-      color: 'text-slate-600',
-      bg: 'bg-slate-100',
-      border: 'border-slate-200',
-    },
-    {
-      id: 2,
-      title: '效率瓶頸',
+      title: '分析效率瓶頸',
       subtitle: 'Efficiency Bottleneck',
-      desc: '人工分析的速度已無法跟上現今數據爆發的步調',
+      desc: '人工搜尋與比對費時，需大量人力手動在海量商品中搜尋，且資料校核過程繁瑣易錯',
       icon: Hourglass,
       color: 'text-orange-600',
       bg: 'bg-orange-50',
       border: 'border-orange-200',
     },
     {
+      id: 2,
+      title: '意見彙總不易',
+      subtitle: 'Consolidation Difficulty',
+      desc: '多檔商品同時審核時，需人工歸納委員意見與製作紀錄，歷史檔案調閱困難',
+      icon: FileText,
+      color: 'text-slate-600',
+      bg: 'bg-slate-100',
+      border: 'border-slate-200',
+    },
+    {
       id: 3,
-      title: '主觀偏誤',
-      subtitle: 'Subjective Bias',
-      desc: '分析師容易下意識地尋找能支持其既有立場的證據',
-      icon: Scale,
+      title: '標籤配對難度高',
+      subtitle: 'Complex Tag Matching',
+      desc: '難以即時根據最新市場趨勢或報告挖掘新標籤，導致商品與投資主題配對錯失時機',
+      icon: Puzzle,
       color: 'text-red-600',
       bg: 'bg-red-50',
       border: 'border-red-200',
@@ -68,7 +68,7 @@ export default function DeepInsightSlide3() {
         {/* Info: (20260121 - Luphia) Header */}
         <div className="w-full px-16 pt-16 mb-16 relative z-20 text-center">
           <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-            傳統分析的 <span className="text-orange-600">侷限性</span>
+            傳統審查管理的 <span className="text-orange-600">局限性</span>
           </h2>
           <div className="h-1.5 w-24 bg-gradient-to-r from-orange-500 to-amber-400 mt-6 rounded-full mx-auto"></div>
         </div>

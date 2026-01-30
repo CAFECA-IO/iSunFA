@@ -1,42 +1,45 @@
-import { Database, Scale, Cpu, History, BookOpen, LineChart } from 'lucide-react';
+import { Users, ClipboardCheck, Layers, Trophy, Briefcase, Rocket } from 'lucide-react';
 
-export default function DeepInsightSlide14() {
+export default function DeepInsightSlide13() {
   const advantages = [
     {
       id: 1,
-      title: '獨家訓練數據',
-      subtitle: 'Exclusive Training Data',
-      desc: '整合 <span class="text-blue-700 font-bold text-xl">30 年以上</span> 的財務會計專屬訓練數據，訓練金融事件推理能力',
-      icon: Database,
+      title: '市場實績',
+      subtitle: 'Market Validation',
+      highlight: '逾 2,000 名會計軟體用戶實測',
+      desc: '客戶群涵蓋各類核心產業，市場實績紮實，系統穩定性與實用性備受肯定。',
+      icon: Users,
       color: 'text-blue-600',
       bg: 'bg-blue-50',
       border: 'border-blue-200',
-      gradient: 'from-blue-600 to-cyan-500',
-      subIcon: History,
+      gradient: 'from-blue-600 to-indigo-500',
+      subIcon: Trophy,
     },
     {
       id: 2,
-      title: '全面資訊整合',
-      subtitle: 'Comprehensive Information',
-      desc: '整合 <span class="text-purple-700 font-bold text-xl">逾 20 年</span> 的政策法規與財經媒體、交易所、企業公開資訊',
-      icon: Scale,
-      color: 'text-purple-600',
-      bg: 'bg-purple-50',
-      border: 'border-purple-200',
-      gradient: 'from-purple-600 to-pink-500',
-      subIcon: BookOpen,
-    },
-    {
-      id: 3,
-      title: '卓越模型效能',
-      subtitle: 'Model Performance Excellence',
-      desc: '具備 <span class="text-orange-700 font-bold">嚴謹的回測驗證</span>、<span class="text-orange-700 font-bold">在地化調適</span> 與 <span class="text-orange-700 font-bold">高質量的 AI 可解釋性</span>',
-      icon: Cpu,
+      title: '實務驗證',
+      subtitle: 'Practical Verification',
+      highlight: '流程經過財會實務深度驗證',
+      desc: '由專業會計師團隊參與設計，邏輯嚴謹，可無縫對接既有作業流程，降低導入門檻。',
+      icon: ClipboardCheck,
       color: 'text-orange-600',
       bg: 'bg-orange-50',
       border: 'border-orange-200',
       gradient: 'from-orange-600 to-amber-500',
-      subIcon: LineChart,
+      subIcon: Briefcase,
+    },
+    {
+      id: 3,
+      title: '標準架構',
+      subtitle: 'Standardized Architecture',
+      highlight: '具備標準化導入架構',
+      desc: '模組化設計確保系統能迅速推廣至不同應用場景，並具備持續優化與擴充的彈性。',
+      icon: Layers,
+      color: 'text-green-600',
+      bg: 'bg-green-50',
+      border: 'border-green-200',
+      gradient: 'from-green-600 to-emerald-500',
+      subIcon: Rocket,
     },
   ];
 
@@ -76,7 +79,7 @@ export default function DeepInsightSlide14() {
           <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
             我們的 <span className="text-orange-600">優勢</span>
           </h2>
-          <p className="mt-4 text-xl text-gray-500 font-medium">數據深度與模型優勢</p>
+          <p className="mt-4 text-xl text-gray-500 font-medium">具備市場驗證之實戰能力</p>
           <div className="h-1.5 w-24 bg-gradient-to-r from-orange-500 to-amber-400 mt-6 rounded-full mx-auto"></div>
         </div>
 
@@ -100,10 +103,17 @@ export default function DeepInsightSlide14() {
 
               {/* Info: (20260121 - Luphia) Title */}
               <h3 className="text-2xl font-bold text-gray-900 mb-1 z-10">{adv.title}</h3>
-              <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-8 z-10">{adv.subtitle}</div>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6 z-10">{adv.subtitle}</div>
 
-              {/* Info: (20260121 - Luphia) Description / Content */}
-              <p className="text-gray-600 leading-relaxed font-medium text-lg z-10" dangerouslySetInnerHTML={{ __html: adv.desc }}></p>
+              {/* Info: (20260121 - Luphia) Highlight */}
+              <div className={`mb-4 px-3 py-1.5 rounded-lg ${adv.bg} ${adv.color} font-bold text-sm inline-block z-10 shadow-sm border ${adv.border}`}>
+                {adv.highlight}
+              </div>
+
+              {/* Info: (20260121 - Luphia) Description */}
+              <p className="text-gray-600 leading-relaxed font-medium text-justify text-sm z-10">
+                {adv.desc}
+              </p>
 
               {/* Info: (20260121 - Luphia) Decorative Background Icon */}
               <div className="absolute -bottom-8 -right-8 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-500 z-0">
@@ -118,7 +128,7 @@ export default function DeepInsightSlide14() {
           <div>Confidential</div>
           <div className="flex gap-2 items-center">
             <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-            2026 iSunFA Corp.
+            2026 CAFECA Fintech
           </div>
         </div>
       </div>

@@ -42,16 +42,16 @@ export default function DeepInsightSlide1() {
 
           {/* Info: (20260121 - Luphia) Main Title */}
           <h1 className="text-6xl md:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-orange-700 via-orange-500 to-amber-400 leading-tight drop-shadow-sm pb-2">
-            DeepInsight
+            DeepReview
             <br />
             <span className="text-5xl md:text-5xl text-gray-500 font-light mt-4 block">
-              best solution of MarketPulse / 市場快炒
+              金融商品審查暨管理平台解決方案
             </span>
           </h1>
 
           {/* Info: (20260121 - Luphia) Subtitle */}
           <p className="text-2xl text-gray-600 font-light tracking-wide mt-6 border-t border-orange-100 pt-8 inline-block">
-            數據驅動的智能金融洞察引擎
+            轉化數據為決策價值，定義金融商品智慧管理新標準
           </p>
 
         </div>

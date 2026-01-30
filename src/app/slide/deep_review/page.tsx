@@ -3,28 +3,27 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight, MonitorPlay, Download, Grid, Maximize2 } from 'lucide-react';
 import Link from 'next/link';
-import DeepInsightSlide1 from '@/app/slide/deep_insight/1/page';
-import DeepInsightSlide2 from '@/app/slide/deep_insight/2/page';
-import DeepInsightSlide3 from '@/app/slide/deep_insight/3/page';
-import DeepInsightSlide4 from '@/app/slide/deep_insight/4/page';
-import DeepInsightSlide5 from '@/app/slide/deep_insight/5/page';
-import DeepInsightSlide6 from '@/app/slide/deep_insight/6/page';
-import DeepInsightSlide7 from '@/app/slide/deep_insight/7/page';
-import DeepInsightSlide8 from '@/app/slide/deep_insight/8/page';
-import DeepInsightSlide9 from '@/app/slide/deep_insight/9/page';
-import DeepInsightSlide10 from '@/app/slide/deep_insight/10/page';
-import DeepInsightSlide11 from '@/app/slide/deep_insight/11/page';
-import DeepInsightSlide12 from '@/app/slide/deep_insight/12/page';
-import DeepInsightSlide13 from '@/app/slide/deep_insight/13/page';
-import DeepInsightSlide14 from '@/app/slide/deep_insight/14/page';
-import DeepInsightSlide15 from '@/app/slide/deep_insight/15/page';
-import DeepInsightSlide16 from '@/app/slide/deep_insight/16/page';
-import DeepInsightSlide17 from '@/app/slide/deep_insight/17/page';
-import DeepInsightSlide18 from '@/app/slide/deep_insight/18/page';
+import DeepReviewSlide1 from '@/app/slide/deep_review/1/page';
+import DeepReviewSlide2 from '@/app/slide/deep_review/2/page';
+import DeepReviewSlide3 from '@/app/slide/deep_review/3/page';
+import DeepReviewSlide4 from '@/app/slide/deep_review/4/page';
+import DeepReviewSlide5 from '@/app/slide/deep_review/5/page';
+import DeepReviewSlide6 from '@/app/slide/deep_review/6/page';
+import DeepReviewSlide7 from '@/app/slide/deep_review/7/page';
+import DeepReviewSlide8 from '@/app/slide/deep_review/8/page';
+import DeepReviewSlide9 from '@/app/slide/deep_review/9/page';
+import DeepReviewSlide10 from '@/app/slide/deep_review/10/page';
+import DeepReviewSlide11 from '@/app/slide/deep_review/11/page';
+import DeepReviewSlide12 from '@/app/slide/deep_review/12/page';
+import DeepReviewSlide13 from '@/app/slide/deep_review/13/page';
+import DeepReviewSlide14 from '@/app/slide/deep_review/14/page';
+import DeepReviewSlide15 from '@/app/slide/deep_review/15/page';
+import DeepReviewSlide16 from '@/app/slide/deep_review/16/page';
+import DeepReviewSlide17 from '@/app/slide/deep_review/17/page';
 
-export default function DeepInsightSlideBrowser() {
+export default function DeepReviewSlideBrowser() {
   const [currentSlide, setCurrentSlide] = useState(1);
-  const totalSlides = 18;
+  const totalSlides = 17;
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
@@ -64,48 +63,46 @@ export default function DeepInsightSlideBrowser() {
 
   // Info: (20260121 - Luphia) Slide Components Map
   const SlideComponents: { [key: number]: React.ComponentType } = {
-    1: DeepInsightSlide1,
-    2: DeepInsightSlide2,
-    3: DeepInsightSlide3,
-    4: DeepInsightSlide4,
-    5: DeepInsightSlide5,
-    6: DeepInsightSlide6,
-    7: DeepInsightSlide7,
-    8: DeepInsightSlide8,
-    9: DeepInsightSlide9,
-    10: DeepInsightSlide10,
-    11: DeepInsightSlide11,
-    12: DeepInsightSlide12,
-    13: DeepInsightSlide13,
-    14: DeepInsightSlide14,
-    15: DeepInsightSlide15,
-    16: DeepInsightSlide16,
-    17: DeepInsightSlide17,
-    18: DeepInsightSlide18,
+    1: DeepReviewSlide1,
+    2: DeepReviewSlide2,
+    3: DeepReviewSlide3,
+    4: DeepReviewSlide4,
+    5: DeepReviewSlide5,
+    6: DeepReviewSlide6,
+    7: DeepReviewSlide7,
+    8: DeepReviewSlide8,
+    9: DeepReviewSlide9,
+    10: DeepReviewSlide10,
+    11: DeepReviewSlide11,
+    12: DeepReviewSlide12,
+    13: DeepReviewSlide13,
+    14: DeepReviewSlide14,
+    15: DeepReviewSlide15,
+    16: DeepReviewSlide16,
+    17: DeepReviewSlide17,
   };
 
   const CurrentSlideComponent = SlideComponents[currentSlide];
 
   // Info: (20260121 - Luphia) Based on recent implementation context:
   const slideTitles: { [key: number]: string } = {
-    1: 'Cover: DeepInsight',
-    2: 'Services Overview',
-    3: 'Limitations',
-    4: 'Solution',
-    5: 'Quick Demo',
-    6: 'Quick Demo: MarketPulse',
-    7: 'Trinity Architecture',
-    8: 'Operational Flow',
-    9: 'Deployment Strategy',
-    10: 'Case: IRSC Rating',
-    11: 'Case: IRSC Rating',
-    12: 'Case: MarketPulse',
-    13: 'Core Values',
-    14: 'Our Advantages',
-    15: 'Data & Model',
-    16: 'Why Choose Us',
-    17: 'Regulatory Sandbox',
-    18: 'Thank You',
+    1: 'Cover: DeepReview',
+    2: 'Slide 2',
+    3: 'Slide 3',
+    4: 'Slide 4',
+    5: 'Slide 5',
+    6: 'Slide 6',
+    7: 'Slide 7',
+    8: 'Slide 8',
+    9: 'Slide 9',
+    10: 'Slide 10',
+    11: 'Slide 11',
+    12: 'Slide 12',
+    13: 'Slide 13',
+    14: 'Slide 14',
+    15: 'Slide 15',
+    16: 'Slide 16',
+    17: 'Slide 17',
   };
 
   const nextSlide = useCallback(() => {
@@ -140,7 +137,7 @@ export default function DeepInsightSlideBrowser() {
             <MonitorPlay size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-gray-200">DeepInsight Presentation</h1>
+            <h1 className="text-sm font-bold text-gray-200">DeepReview Presentation</h1>
             <p className="text-xs text-gray-500">v1.2.0 • 2026 CAFECA</p>
           </div>
         </Link>
