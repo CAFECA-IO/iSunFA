@@ -20,10 +20,14 @@ import DeepReviewSlide14 from '@/app/slide/deep_review/14/page';
 import DeepReviewSlide15 from '@/app/slide/deep_review/15/page';
 import DeepReviewSlide16 from '@/app/slide/deep_review/16/page';
 import DeepReviewSlide17 from '@/app/slide/deep_review/17/page';
+import DeepReviewSlide18 from '@/app/slide/deep_review/18/page';
+import DeepReviewSlide19 from '@/app/slide/deep_review/19/page';
+import DeepReviewSlide20 from '@/app/slide/deep_review/20/page';
+import DeepReviewSlide21 from '@/app/slide/deep_review/21/page';
 
 export default function DeepReviewSlideBrowser() {
   const [currentSlide, setCurrentSlide] = useState(1);
-  const totalSlides = 17;
+  const totalSlides = 21;
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
@@ -80,6 +84,10 @@ export default function DeepReviewSlideBrowser() {
     15: DeepReviewSlide15,
     16: DeepReviewSlide16,
     17: DeepReviewSlide17,
+    18: DeepReviewSlide18,
+    19: DeepReviewSlide19,
+    20: DeepReviewSlide20,
+    21: DeepReviewSlide21,
   };
 
   const CurrentSlideComponent = SlideComponents[currentSlide];
@@ -87,22 +95,26 @@ export default function DeepReviewSlideBrowser() {
   // Info: (20260121 - Luphia) Based on recent implementation context:
   const slideTitles: { [key: number]: string } = {
     1: 'Cover: DeepReview',
-    2: 'Slide 2',
-    3: 'Slide 3',
-    4: 'Slide 4',
-    5: 'Slide 5',
-    6: 'Slide 6',
-    7: 'Slide 7',
-    8: 'Slide 8',
-    9: 'Slide 9',
-    10: 'Slide 10',
-    11: 'Slide 11',
-    12: 'Slide 12',
-    13: 'Slide 13',
-    14: 'Slide 14',
-    15: 'Slide 15',
-    16: 'Slide 16',
-    17: 'Slide 17',
+    2: 'Services',
+    3: 'Pain Points',
+    4: 'Solution',
+    5: 'Issue Management',
+    6: 'Product Management',
+    7: 'Committee Settings',
+    8: 'Strategy Meeting',
+    9: 'Competitor Analysis',
+    10: 'Trinity Architecture',
+    11: 'Operational Flow',
+    12: 'Deployment & Strategy',
+    13: 'Case: IRSC Rating',
+    14: 'DeepReview Core Values',
+    15: 'Local Execution',
+    16: 'Rapid Fine-tuning',
+    17: 'Our Advantages (Validation)',
+    18: 'Our Advantages (Data & Model)',
+    19: 'Why Choose Us',
+    20: 'Regulatory Sandbox',
+    21: 'Thank You',
   };
 
   const nextSlide = useCallback(() => {
@@ -165,13 +177,13 @@ export default function DeepReviewSlideBrowser() {
 
         {/* Info: (20260121 - Luphia) Right Side Actions - Visible on both but adjusted */}
         <div className="flex items-center gap-3">
-          <Link href="/slide/deep_insight/print" target="_blank" className="hidden md:block">
+          <Link href="/slide/deep_review/print" target="_blank" className="hidden md:block">
             <button className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded-md text-xs font-medium transition-colors border border-neutral-700">
               <Download size={14} />
               <span>PDF</span>
             </button>
           </Link>
-          <Link href={`/slide/deep_insight/${currentSlide}`} target="_blank" className="hidden md:block">
+          <Link href={`/slide/deep_review/${currentSlide}`} target="_blank" className="hidden md:block">
             <button className="p-2 hover:bg-neutral-800 rounded-md text-gray-400 hover:text-white transition-colors">
               <Maximize2 size={18} />
             </button>
@@ -184,21 +196,29 @@ export default function DeepReviewSlideBrowser() {
         className="md:hidden flex-1 overflow-y-auto bg-neutral-900 scroll-smooth"
         onScroll={(e) => {
           const target = e.currentTarget;
-          // Info: (20260121 - Luphia) 35vh is approx 35% of clientHeight
-          const paddingOffset = target.clientHeight * 0.35;
-          const slideHeight = (720 * mobileScale) + 16;
+          const containerCenter = target.getBoundingClientRect().top + (target.clientHeight / 2);
 
-          // Info: (20260121 - Luphia) Center of the Viewport relative to content top (0)
-          const scrollCenter = target.scrollTop + (target.clientHeight / 2);
+          // Info: (20260121 - Luphia) Get the inner wrapper that holds all slides
+          const innerWrapper = target.firstElementChild as HTMLElement;
+          if (!innerWrapper) return;
 
-          // Info: (20260121 - Luphia) Adjust for the top padding so 0 starts at the first slide
-          const relativePosition = scrollCenter - paddingOffset;
+          let closestSlideIndex = 1;
+          let minDistance = Infinity;
 
-          const index = Math.floor(relativePosition / slideHeight) + 1;
-          const safeIndex = Math.max(1, Math.min(totalSlides, index));
+          // Info: (20260130 - Luphia) Iterate through children to find closest to center
+          Array.from(innerWrapper.children).forEach((child, index) => {
+            const rect = child.getBoundingClientRect();
+            const childCenter = rect.top + (rect.height / 2);
+            const dist = Math.abs(containerCenter - childCenter);
 
-          if (safeIndex !== currentSlide) {
-            setCurrentSlide(safeIndex);
+            if (dist < minDistance) {
+              minDistance = dist;
+              closestSlideIndex = index + 1; // 1-based index
+            }
+          });
+
+          if (closestSlideIndex !== currentSlide) {
+            setCurrentSlide(closestSlideIndex);
           }
         }}
       >
@@ -207,6 +227,7 @@ export default function DeepReviewSlideBrowser() {
             const distance = Math.abs(id - currentSlide);
             // Info: (20260121 - Luphia) Only load 3 slides: current +/- 1
             const shouldRender = distance <= 1;
+            const isResponsive = [8].includes(id);
 
             /**
              * Info: (20260121 - Luphia) Visual Effects based on distance
@@ -217,6 +238,22 @@ export default function DeepReviewSlideBrowser() {
               'opacity-40 scale-95 blur-[2px] grayscale';
 
             const Component = SlideComponents[id];
+
+            if (isResponsive) {
+              // Info: (20260130 - Luphia) Responsive Render (No Scaling)
+              return (
+                <div key={id} className={`w-full relative overflow-hidden transition-all duration-500 ease-out ${opacityClass}`}
+                  style={{ height: 'auto', minHeight: '80vh' }}>
+                  <div className="w-full h-full bg-white shadow-xl rounded-lg overflow-hidden">
+                    {shouldRender ? <Component /> : <div className="w-full h-64 bg-neutral-800/50 animate-pulse" />}
+                  </div>
+                  <div className={`absolute top-2 right-2 px-2 py-1 rounded-full z-10 pointer-events-none transition-opacity duration-300 ${distance === 0 ? 'bg-orange-600 text-white shadow-lg' : 'bg-black/50 text-gray-400'}`}>
+                    <span className="text-[10px] font-bold">{id}</span>
+                    <span className="text-[8px] opacity-80">/{totalSlides}</span>
+                  </div>
+                </div>
+              );
+            }
 
             return (
               <div key={id} className={`w-full relative overflow-hidden transition-all duration-500 ease-out ${opacityClass}`}

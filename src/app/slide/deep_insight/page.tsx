@@ -21,10 +21,13 @@ import DeepInsightSlide15 from '@/app/slide/deep_insight/15/page';
 import DeepInsightSlide16 from '@/app/slide/deep_insight/16/page';
 import DeepInsightSlide17 from '@/app/slide/deep_insight/17/page';
 import DeepInsightSlide18 from '@/app/slide/deep_insight/18/page';
+import DeepInsightSlide19 from '@/app/slide/deep_insight/19/page';
+import DeepInsightSlide20 from '@/app/slide/deep_insight/20/page';
+import DeepInsightSlide21 from '@/app/slide/deep_insight/21/page';
 
 export default function DeepInsightSlideBrowser() {
   const [currentSlide, setCurrentSlide] = useState(1);
-  const totalSlides = 18;
+  const totalSlides = 21;
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
@@ -82,6 +85,9 @@ export default function DeepInsightSlideBrowser() {
     16: DeepInsightSlide16,
     17: DeepInsightSlide17,
     18: DeepInsightSlide18,
+    19: DeepInsightSlide19,
+    20: DeepInsightSlide20,
+    21: DeepInsightSlide21,
   };
 
   const CurrentSlideComponent = SlideComponents[currentSlide];
@@ -94,18 +100,21 @@ export default function DeepInsightSlideBrowser() {
     4: 'Solution',
     5: 'Quick Demo',
     6: 'Quick Demo: MarketPulse',
-    7: 'Trinity Architecture',
-    8: 'Operational Flow',
-    9: 'Deployment Strategy',
-    10: 'Case: IRSC Rating',
+    7: 'DeepInsight Interpretation',
+    8: 'Trinity Architecture',
+    9: 'Operational Flow',
+    10: 'Deployment Strategy',
     11: 'Case: IRSC Rating',
-    12: 'Case: MarketPulse',
-    13: 'Core Values',
-    14: 'Our Advantages',
-    15: 'Data & Model',
-    16: 'Why Choose Us',
-    17: 'Regulatory Sandbox',
-    18: 'Thank You',
+    12: 'Case: IRSC Rating',
+    13: 'Case: MarketPulse',
+    14: 'Core Values',
+    15: 'Local Execution (ASUS Ascent GX10)',
+    16: 'Rapid Fine-tuning',
+    17: 'Our Advantages',
+    18: 'Data & Model',
+    19: 'Why Choose Us',
+    20: 'Regulatory Sandbox',
+    21: 'Thank You',
   };
 
   const nextSlide = useCallback(() => {

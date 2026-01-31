@@ -19,6 +19,10 @@ import DeepInsightSlide14 from '@/app/slide/deep_insight/14/page';
 import DeepInsightSlide15 from '@/app/slide/deep_insight/15/page';
 import DeepInsightSlide16 from '@/app/slide/deep_insight/16/page';
 import DeepInsightSlide17 from '@/app/slide/deep_insight/17/page';
+import DeepInsightSlide18 from '@/app/slide/deep_insight/18/page';
+import DeepInsightSlide19 from '@/app/slide/deep_insight/19/page';
+import DeepInsightSlide20 from '@/app/slide/deep_insight/20/page';
+import DeepInsightSlide21 from '@/app/slide/deep_insight/21/page';
 
 export default function DeepInsightPrint() {
   useEffect(() => {
@@ -82,6 +86,10 @@ export default function DeepInsightPrint() {
       <div className="slide-page"><DeepInsightSlide15 /></div>
       <div className="slide-page"><DeepInsightSlide16 /></div>
       <div className="slide-page"><DeepInsightSlide17 /></div>
+      <div className="slide-page"><DeepInsightSlide18 /></div>
+      <div className="slide-page"><DeepInsightSlide19 /></div>
+      <div className="slide-page"><DeepInsightSlide20 /></div>
+      <div className="slide-page"><DeepInsightSlide21 /></div>
     </div>
   );
 }

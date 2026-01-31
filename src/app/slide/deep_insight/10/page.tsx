@@ -1,41 +1,52 @@
+import { Target, FileCode, Binary, TrendingUp, Rocket } from 'lucide-react';
 
-import { Search, Database, BarChart3, FileText, Clock, Zap, Layers, PiggyBank } from 'lucide-react';
-
-export default function DeepInsightSlide7() {
-  const processSteps = [
-    { id: 1, label: '識別標的', icon: Search },
-    { id: 2, label: '多源爬蟲', icon: Database },
-    { id: 3, label: '指標分析', icon: BarChart3 },
-    { id: 4, label: '報告整合', icon: FileText },
-  ];
-
-  const metrics = [
+export default function DeepInsightSlide6() {
+  const steps = [
     {
-      value: '95%',
-      label: '節省時間',
-      desc: '較傳統人工收集資料縮短 95% 以上時間',
-      icon: Zap,
-      color: 'text-yellow-500',
-      bg: 'bg-yellow-50',
-      border: 'border-yellow-200',
+      id: '01',
+      title: '需求設定',
+      sub: 'Requirement Setting',
+      desc: '定義目標市場與分析範疇',
+      icon: Target,
+      color: 'bg-gray-100 text-gray-600',
+      gradient: 'from-gray-700 to-slate-500',
     },
     {
-      value: '10+',
-      label: '涵蓋廣度',
-      desc: '納入司法判決、政府補助等非傳統財報數據',
-      icon: Layers,
-      color: 'text-blue-500',
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
+      id: '02',
+      title: '模板生成',
+      sub: 'Template Generation',
+      desc: '產出任務執行策略模板與參數',
+      icon: FileCode,
+      color: 'bg-orange-50 text-orange-600',
+      gradient: 'from-orange-600 to-amber-500',
     },
     {
-      value: '80%',
-      label: '成本降低',
-      desc: '降低約 80% 的初級分析師作業負擔',
-      icon: PiggyBank,
-      color: 'text-green-500',
-      bg: 'bg-green-50',
-      border: 'border-green-200',
+      id: '03',
+      title: '策略量化',
+      sub: 'Strategy Quantification',
+      desc: '將分析指標轉化為可執行的量化邏輯',
+      icon: Binary,
+      color: 'bg-blue-50 text-blue-600',
+      gradient: 'from-blue-600 to-cyan-500',
+    },
+    {
+      id: '04',
+      title: '回測優化',
+      sub: 'Backtest Optimization',
+      desc: '進行試運行，根據回測結果調整策略',
+      icon: TrendingUp,
+      color: 'bg-purple-50 text-purple-600',
+      gradient: 'from-purple-600 to-pink-500',
+    },
+    {
+      id: '05',
+      title: '完成訓練',
+      sub: 'Training Completion',
+      desc: '正式完成代理人訓練並上線',
+      icon: Rocket,
+      color: 'bg-green-50 text-green-600',
+      highlight: true,
+      gradient: 'from-green-600 to-emerald-500',
     },
   ];
 
@@ -70,73 +81,41 @@ export default function DeepInsightSlide7() {
           />
         </div>
 
-        {/* Info: (20260121 - Luphia)Header */}
-        <div className="w-full px-16 pt-12 mb-8 relative z-20 text-center">
+        {/* Info: (20260121 - Luphia) Header */}
+        <div className="w-full px-16 pt-16 mb-16 relative z-20">
           <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-            案例分析 — <span className="text-orange-600">IRSC 智能企業評級</span>
+            部署與 <span className="text-orange-600">策略導入</span>
           </h2>
-          <p className="mt-3 text-xl text-gray-500 font-medium">單一企業深度挖掘：15-20 分鐘完成專業評級</p>
-          <div className="h-1.5 w-24 bg-gradient-to-r from-orange-500 to-amber-400 mt-6 rounded-full mx-auto"></div>
+          <div className="h-1.5 w-24 bg-gradient-to-r from-orange-500 to-amber-400 mt-4 rounded-full"></div>
+          <p className="mt-4 text-xl text-gray-500 font-medium">Deployment & Strategy Implementation</p>
         </div>
 
-        {/* Info: (20260121 - Luphia) Main Layout: Top (Process) + Bottom (Metrics) */}
-        <div className="w-full px-16 flex flex-col gap-8 z-10 flex-1">
+        {/* Info: (20260121 - Luphia) Timeline / Roadmap Container */}
+        <div className="w-full px-16 relative z-10 flex flex-col justify-center h-[350px]">
+          {/* Info: (20260121 - Luphia) Connection Line */}
+          <div className="absolute top-1/2 left-24 right-24 h-1 bg-gray-100 -translate-y-[80px] z-0"></div>
 
-          {/* Info: (20260121 - Luphia) 1. Process Flow & Qualitative Benefit */}
-          <div className="flex gap-8 h-[220px]">
-            {/* Info: (20260121 - Luphia) Process Steps */}
-            <div className="flex-1 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-lg p-6 flex flex-col justify-center">
-              <div className="flex justify-between items-center relative">
-                {/* Info: (20260121 - Luphia) Connecting Line */}
-                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -z-10"></div>
-
-                {processSteps.map((step) => (
-                  <div key={step.id} className="flex flex-col items-center bg-white px-2">
-                    <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 mb-2 shadow-sm">
-                      <step.icon size={20} />
-                    </div>
-                    <span className="text-sm font-bold text-slate-700">{step.label}</span>
-                  </div>
-                ))}
-
-                {/* Info: (20260121 - Luphia) Time Highlight */}
-                <div className="flex flex-col items-center bg-white px-2 relative -top-8">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 border-4 border-white flex flex-col items-center justify-center text-white shadow-xl animate-pulse">
-                    <Clock size={20} className="mb-1" />
-                    <span className="text-xs font-bold leading-none">15-20</span>
-                    <span className="text-[10px] opacity-80">min</span>
-                  </div>
-                  <div className="mt-2 text-sm font-bold text-orange-600">生成時間</div>
+          <div className="flex justify-between items-start relative z-10">
+            {steps.map((step) => (
+              <div key={step.id} className="flex flex-col items-center w-[200px] group">
+                {/* Info: (20260121 - Luphia) Icon Circle */}
+                <div className={`w-20 h-20 rounded-full ${step.color} border-4 border-white shadow-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 relative bg-white`}>
+                  <step.icon size={32} strokeWidth={2} />
+                  {step.highlight && (
+                    <div className="absolute inset-0 rounded-full border-4 border-orange-400 opacity-30 animate-ping"></div>
+                  )}
                 </div>
-              </div>
-            </div>
 
-            {/* Info: (20260121 - Luphia) Qualitative Benefit */}
-            <div className="w-[350px] bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-xl p-6 flex flex-col justify-center text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-8 opacity-10">
-                <BarChart3 size={120} />
-              </div>
-              <h3 className="text-lg font-bold text-orange-400 mb-3 flex items-center gap-2">
-                <Zap size={20} />
-                質化效益
-              </h3>
-              <p className="text-slate-300 leading-relaxed text-justify text-sm">
-                即時分析獲利與償債能力，提供精準投資建議，大幅縮短決策週期。
-              </p>
-            </div>
-          </div>
+                {/* Info: (20260121 - Luphia) Content Card with Connector */}
+                <div className="relative">
+                  {/* Info: (20260121 - Luphia) Triangle Connector pointing up to the line/circle */}
+                  <div className="absolute left-1/2 -top-2 -translate-x-1/2 w-4 h-4 bg-white transform rotate-45 border-t border-l border-gray-100 z-20"></div>
 
-          {/* Info: (20260121 - Luphia) 2. Metrics Grid */}
-          <div className="grid grid-cols-3 gap-6">
-            {metrics.map((m, i) => (
-              <div key={i} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 flex items-center gap-6 hover:-translate-y-1 transition-transform duration-300">
-                <div className={`w-20 h-20 rounded-2xl ${m.bg} flex items-center justify-center ${m.color} shadow-inner`}>
-                  <m.icon size={36} strokeWidth={1.5} />
-                </div>
-                <div>
-                  <div className={`text-4xl font-extrabold ${m.color} tracking-tight`}>{m.value}</div>
-                  <div className="text-lg font-bold text-gray-800 mb-1">{m.label}</div>
-                  <div className="text-xs text-gray-500">{m.desc}</div>
+                  <div className="mt-2 bg-white/80 backdrop-blur-sm border border-gray-100 shadow-lg rounded-xl p-5 text-center transition-all hover:-translate-y-1 hover:shadow-xl hover:border-orange-100">
+                    <div className="text-xs font-bold text-gray-400 mb-1 tracking-wider uppercase">{step.id} {step.sub}</div>
+                    <h3 className={`text-xl font-black bg-gradient-to-r ${step.gradient} bg-clip-text text-transparent mb-2`}>{step.title}</h3>
+                    <p className="text-sm text-gray-600 leading-snug">{step.desc}</p>
+                  </div>
                 </div>
               </div>
             ))}

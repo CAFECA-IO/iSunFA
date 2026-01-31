@@ -1,36 +1,45 @@
-import { Fingerprint, FileCheck, BarChart4, Building2 } from 'lucide-react';
+import { Users, ClipboardCheck, Layers, Trophy, Briefcase, Rocket } from 'lucide-react';
 
-export default function DeepInsightSlide16() {
-  const features = [
+export default function DeepInsightSlide13() {
+  const advantages = [
     {
       id: 1,
-      title: 'FIDO2 數位身分證',
-      subtitle: 'FIDO2 Digital Identity',
-      desc: '導入 <span class="text-blue-600 font-bold">FIDO2 國際級無密碼認證標準</span>，結合數位簽章技術，確保每一筆金融交易與資產轉移皆在最高等級的安全框架下執行。',
-      icon: Fingerprint,
+      title: '市場實績',
+      subtitle: 'Market Validation',
+      highlight: '逾 2,000 名會計軟體用戶實測',
+      desc: '客戶群涵蓋各類核心產業，市場實績紮實，系統穩定性與實用性備受肯定。',
+      icon: Users,
       color: 'text-blue-600',
       bg: 'bg-blue-50',
       border: 'border-blue-200',
+      gradient: 'from-blue-600 to-indigo-500',
+      subIcon: Trophy,
     },
     {
       id: 2,
-      title: '智能會計審計與核銷',
-      subtitle: 'Intelligent Audit',
-      desc: '運用人工智能會計審計技術，<span class="text-orange-600 font-bold">即時追蹤並自動化核銷</span> 企業之專案執行進度與資金用途，大幅提升投後管理效率，防範資金濫用。',
-      icon: FileCheck,
+      title: '實務驗證',
+      subtitle: 'Practical Verification',
+      highlight: '流程經過財會實務深度驗證',
+      desc: '由專業會計師團隊參與設計，邏輯嚴謹，可無縫對接既有作業流程，降低導入門檻。',
+      icon: ClipboardCheck,
       color: 'text-orange-600',
       bg: 'bg-orange-50',
       border: 'border-orange-200',
+      gradient: 'from-orange-600 to-amber-500',
+      subIcon: Briefcase,
     },
     {
       id: 3,
-      title: '金融商品評級技術',
-      subtitle: 'Financial Product Rating',
-      desc: '動態整合數位足跡與財報邏輯，透過 AI 評級模型對金融商品進行 <span class="text-indigo-600 font-bold">即時風險量化</span>，提供最具公信力的定價參考。',
-      icon: BarChart4,
-      color: 'text-indigo-600',
-      bg: 'bg-indigo-50',
-      border: 'border-indigo-200',
+      title: '標準架構',
+      subtitle: 'Standardized Architecture',
+      highlight: '具備標準化導入架構',
+      desc: '模組化設計確保系統能迅速推廣至不同應用場景，並具備持續優化與擴充的彈性。',
+      icon: Layers,
+      color: 'text-green-600',
+      bg: 'bg-green-50',
+      border: 'border-green-200',
+      gradient: 'from-green-600 to-emerald-500',
+      subIcon: Rocket,
     },
   ];
 
@@ -66,52 +75,49 @@ export default function DeepInsightSlide16() {
         </div>
 
         {/* Info: (20260121 - Luphia) Header */}
-        <div className="w-full px-16 pt-16 mb-8 relative z-20 text-center">
-          <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">
-            金融監理 <span className="text-orange-600">沙盒實驗</span>
+        <div className="w-full px-16 pt-16 mb-12 relative z-20 text-center">
+          <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+            我們的 <span className="text-orange-600">優勢</span>
           </h2>
-          <h3 className="text-2xl font-bold text-gray-600 mb-6">
-            Convertible Bond 可轉換公司債發行與交換平臺
-          </h3>
-
-          {/* Info: (20260121 - Luphia) Invitation Box */}
-          <div className="max-w-4xl mx-auto bg-white/60 backdrop-blur-md rounded-xl p-6 border border-gray-100 shadow-sm flex items-start gap-4 text-left">
-            <div className="p-3 bg-orange-100 rounded-lg text-orange-600">
-              <Building2 size={24} />
-            </div>
-            <div>
-              <p className="text-gray-700 leading-relaxed font-medium">
-                依據《金融科技發展與創新實驗條例》，我們正積極籌備申請監理沙盒。若貴機構持有 <span className="font-bold text-gray-900">證券商、商業銀行或信託業牌照</span>，我們誠摯邀請您共同擔任「<span className="text-orange-600 font-bold border-b-2 border-orange-200">創新實驗申請人</span>」。
-              </p>
-            </div>
-          </div>
+          <p className="mt-4 text-xl text-gray-500 font-medium">具備市場驗證之實戰能力</p>
+          <div className="h-1.5 w-24 bg-gradient-to-r from-orange-500 to-amber-400 mt-6 rounded-full mx-auto"></div>
         </div>
 
-        {/* Info: (20260121 - Luphia) Feature Cards */}
+        {/* Info: (20260121 - Luphia) Advantage Cards */}
         <div className="w-full px-20 grid grid-cols-3 gap-8 z-10">
-          {features.map((f) => (
+          {advantages.map((adv) => (
             <div
-              key={f.id}
-              className={`bg-white rounded-3xl shadow-xl border ${f.border} p-8 flex flex-col items-center text-center h-[320px] hover:-translate-y-2 transition-all duration-300 group relative overflow-hidden`}
+              key={adv.id}
+              className={`bg-white rounded-3xl shadow-xl border ${adv.border} p-8 flex flex-col items-center text-center h-[420px] hover:-translate-y-2 transition-all duration-300 group relative overflow-hidden`}
             >
               {/* Info: (20260121 - Luphia) Top Accent */}
-              <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-gray-200 via-${f.color.split('-')[1]}-400 to-gray-200`}></div>
+              <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${adv.gradient}`}></div>
 
               {/* Info: (20260121 - Luphia) Icon */}
-              <div className={`w-16 h-16 rounded-2xl ${f.bg} flex items-center justify-center ${f.color} mb-4 shadow-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}>
-                <f.icon size={32} strokeWidth={1.5} />
+              <div className={`w-20 h-20 rounded-2xl ${adv.bg} flex items-center justify-center ${adv.color} mb-6 shadow-inner group-hover:scale-110 transition-transform duration-300 z-10 relative`}>
+                <adv.icon size={40} strokeWidth={1.5} />
+                <div className="absolute -right-2 -bottom-2 bg-white rounded-full p-1 shadow-md border border-gray-100">
+                  <adv.subIcon size={16} className={adv.color} />
+                </div>
               </div>
 
               {/* Info: (20260121 - Luphia) Title */}
-              <h3 className={`text-xl font-bold text-gray-900 mb-1 z-10`}>{f.title}</h3>
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 z-10">{f.subtitle}</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-1 z-10">{adv.title}</h3>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6 z-10">{adv.subtitle}</div>
+
+              {/* Info: (20260121 - Luphia) Highlight */}
+              <div className={`mb-4 px-3 py-1.5 rounded-lg ${adv.bg} ${adv.color} font-bold text-sm inline-block z-10 shadow-sm border ${adv.border}`}>
+                {adv.highlight}
+              </div>
 
               {/* Info: (20260121 - Luphia) Description */}
-              <p className="text-gray-600 text-sm leading-relaxed font-medium text-justify z-10" dangerouslySetInnerHTML={{ __html: f.desc }}></p>
+              <p className="text-gray-600 leading-relaxed font-medium text-justify text-sm z-10">
+                {adv.desc}
+              </p>
 
               {/* Info: (20260121 - Luphia) Decorative Background Icon */}
               <div className="absolute -bottom-8 -right-8 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-500 z-0">
-                <f.icon size={150} />
+                <adv.icon size={180} />
               </div>
             </div>
           ))}
