@@ -85,7 +85,7 @@ export default function DeepReviewSlide15() {
               {/* Info: (20260121 - Luphia) Product Image */}
               <div className="absolute inset-0 flex items-center justify-center p-6">
                 <Image
-                  src="https://isuncloud.com/_next/image?url=%2Fasus_ascent_gx10.png&w=1080&q=75"
+                  src="/images/asus_ascent_gx10.png"
                   alt="ASUS Ascent GX10"
                   fill
                   className="object-contain drop-shadow-xl p-6"
