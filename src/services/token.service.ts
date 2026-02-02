@@ -1,8 +1,8 @@
 'use server';
 
 // Info: (20260126 - Luphia) 伺服器端操作：處理部署與鑄造邏輯
-import { createPublicClient, createWalletClient, http, parseAbi, defineChain, getAddress } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
+import { parseAbi, getAddress } from 'viem';
+import { account, publicClient, walletClient } from '@/lib/viem';
 import IR_ARTIFACT from '@erc3643org/erc-3643/artifacts/contracts/registry/implementation/IdentityRegistry.sol/IdentityRegistry.json';
 import IRS_ARTIFACT from '@erc3643org/erc-3643/artifacts/contracts/registry/implementation/IdentityRegistryStorage.sol/IdentityRegistryStorage.json';
 import CTR_ARTIFACT from '@erc3643org/erc-3643/artifacts/contracts/registry/implementation/ClaimTopicsRegistry.sol/ClaimTopicsRegistry.json';
@@ -15,19 +15,6 @@ import { buildTransferUserOp } from '@/lib/utils/user_op_builder';
 import { bundlerService } from '@/services/bundler.service';
 import { CONTRACT_ADDRESSES, ABIS } from '@/config/contracts';
 
-// Info: (20260126 - Luphia) 設定區塊鏈環境
-const chainId = parseInt(process.env.NEXT_PUBLIC_ISUNCOIN_CHAIN_ID || '8017');
-const targetChain = defineChain({
-  id: chainId,
-  name: 'TargetChain',
-  nativeCurrency: { name: 'Token', symbol: 'TOK', decimals: 18 },
-  rpcUrls: { default: { http: [process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.isuncoin.com'] } },
-});
-
-// Info: (20260126 - Luphia) 初始化客戶端
-const account = privateKeyToAccount(process.env.ISUNCOIN_PRIVATE_KEY as `0x${string}`);
-const client = createPublicClient({ chain: targetChain, transport: http() });
-const wallet = createWalletClient({ account, chain: targetChain, transport: http() });
 
 // Info: (20260126 - Luphia) 回傳結果型別
 type ActionResponse = {
@@ -39,43 +26,46 @@ type ActionResponse = {
 // Info: (20260126 - Luphia) 部署整個 TWD 系統
 export async function deploySystem(name: string = 'New Taiwan Dollar', symbol: string = 'TWD', decimals: number = 18): Promise<ActionResponse> {
   try {
+    if (!walletClient || !publicClient || !account) {
+      throw new Error('Wallet client or public client or account is not initialized');
+    }
     console.log('--- 開始由 Web 介面觸發部署 ---');
 
     // Info: (20260126 - Luphia) 1. 部署 ClaimTopicsRegistry
-    const ctrHash = await wallet.deployContract({
+    const ctrHash = await walletClient.deployContract({
       abi: CTR_ARTIFACT.abi,
       bytecode: CTR_ARTIFACT.bytecode as `0x${string}`,
     });
-    const ctrReceipt = await client.waitForTransactionReceipt({ hash: ctrHash });
+    const ctrReceipt = await publicClient.waitForTransactionReceipt({ hash: ctrHash });
     const CTR_ADDRESS = ctrReceipt.contractAddress!;
-    await wallet.writeContract({ address: CTR_ADDRESS, abi: CTR_ARTIFACT.abi, functionName: 'init', args: [] });
+    await walletClient.writeContract({ address: CTR_ADDRESS, abi: CTR_ARTIFACT.abi, functionName: 'init', args: [] });
 
     // Info: (20260126 - Luphia) 2. 部署 TrustedIssuersRegistry
-    const tirHash = await wallet.deployContract({
+    const tirHash = await walletClient.deployContract({
       abi: TIR_ARTIFACT.abi,
       bytecode: TIR_ARTIFACT.bytecode as `0x${string}`,
     });
-    const tirReceipt = await client.waitForTransactionReceipt({ hash: tirHash });
+    const tirReceipt = await publicClient.waitForTransactionReceipt({ hash: tirHash });
     const TIR_ADDRESS = tirReceipt.contractAddress!;
-    await wallet.writeContract({ address: TIR_ADDRESS, abi: TIR_ARTIFACT.abi, functionName: 'init', args: [] });
+    await walletClient.writeContract({ address: TIR_ADDRESS, abi: TIR_ARTIFACT.abi, functionName: 'init', args: [] });
 
     // Info: (20260126 - Luphia) 3. 部署 IdentityRegistryStorage
-    const irsHash = await wallet.deployContract({
+    const irsHash = await walletClient.deployContract({
       abi: IRS_ARTIFACT.abi,
       bytecode: IRS_ARTIFACT.bytecode as `0x${string}`,
     });
-    const irsReceipt = await client.waitForTransactionReceipt({ hash: irsHash });
+    const irsReceipt = await publicClient.waitForTransactionReceipt({ hash: irsHash });
     const IRS_ADDRESS = irsReceipt.contractAddress!;
-    await wallet.writeContract({ address: IRS_ADDRESS, abi: IRS_ARTIFACT.abi, functionName: 'init', args: [] });
+    await walletClient.writeContract({ address: IRS_ADDRESS, abi: IRS_ARTIFACT.abi, functionName: 'init', args: [] });
 
     // Info: (20260126 - Luphia) 4. 部署 IdentityRegistry
-    const irHash = await wallet.deployContract({
+    const irHash = await walletClient.deployContract({
       abi: IR_ARTIFACT.abi,
       bytecode: IR_ARTIFACT.bytecode as `0x${string}`,
     });
-    const irReceipt = await client.waitForTransactionReceipt({ hash: irHash });
+    const irReceipt = await publicClient.waitForTransactionReceipt({ hash: irHash });
     const IR_ADDRESS = irReceipt.contractAddress!;
-    await wallet.writeContract({
+    await walletClient.writeContract({
       address: IR_ADDRESS,
       abi: IR_ARTIFACT.abi,
       functionName: 'init',
@@ -83,7 +73,7 @@ export async function deploySystem(name: string = 'New Taiwan Dollar', symbol: s
     });
 
     // Info: (20260126 - Luphia) 將部署者設為 Registry 的 Agent，才有權限 registerIdentity
-    await wallet.writeContract({
+    await walletClient.writeContract({
       address: IR_ADDRESS,
       abi: IR_ARTIFACT.abi,
       functionName: 'addAgent',
@@ -91,30 +81,30 @@ export async function deploySystem(name: string = 'New Taiwan Dollar', symbol: s
     });
 
     // Info: (20260126 - Luphia) 5. 部署 ModularCompliance
-    const compHash = await wallet.deployContract({
+    const compHash = await walletClient.deployContract({
       abi: COMPLIANCE_ARTIFACT.abi,
       bytecode: COMPLIANCE_ARTIFACT.bytecode as `0x${string}`,
     });
-    const compReceipt = await client.waitForTransactionReceipt({ hash: compHash });
+    const compReceipt = await publicClient.waitForTransactionReceipt({ hash: compHash });
     const COMP_ADDRESS = compReceipt.contractAddress!;
-    await wallet.writeContract({ address: COMP_ADDRESS, abi: COMPLIANCE_ARTIFACT.abi, functionName: 'init', args: [] });
+    await walletClient.writeContract({ address: COMP_ADDRESS, abi: COMPLIANCE_ARTIFACT.abi, functionName: 'init', args: [] });
 
     // Info: (20260126 - Luphia) 6. 部署 Issuer Identity
-    const ioiHash = await wallet.deployContract({
+    const ioiHash = await walletClient.deployContract({
       abi: IDENTITY_ARTIFACT.abi,
       bytecode: IDENTITY_ARTIFACT.bytecode as `0x${string}`,
       args: [account.address, false]
     });
-    const ioiReceipt = await client.waitForTransactionReceipt({ hash: ioiHash });
+    const ioiReceipt = await publicClient.waitForTransactionReceipt({ hash: ioiHash });
     const IOI_ADDRESS = ioiReceipt.contractAddress!;
 
     // Info: (20260126 - Luphia) 7. 部署 TWD Token
-    const tokenHash = await wallet.deployContract({
+    const tokenHash = await walletClient.deployContract({
       abi: TOKEN_ARTIFACT.abi,
       bytecode: TOKEN_ARTIFACT.bytecode as `0x${string}`,
       args: []
     });
-    const tokenReceipt = await client.waitForTransactionReceipt({ hash: tokenHash });
+    const tokenReceipt = await publicClient.waitForTransactionReceipt({ hash: tokenHash });
     const TOKEN_ADDRESS = tokenReceipt.contractAddress!;
 
     const TOKEN_ABI = parseAbi([
@@ -124,7 +114,7 @@ export async function deploySystem(name: string = 'New Taiwan Dollar', symbol: s
     ]);
 
     // Info: (20260126 - Luphia) 初始化 Token
-    await wallet.writeContract({
+    await walletClient.writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
       functionName: 'init',
@@ -133,12 +123,12 @@ export async function deploySystem(name: string = 'New Taiwan Dollar', symbol: s
 
     // Info: (20260126 - Luphia) 連結
     const IRS_ABI = parseAbi(['function bindIdentityRegistry(address) external']);
-    await wallet.writeContract({ address: IRS_ADDRESS, abi: IRS_ABI, functionName: 'bindIdentityRegistry', args: [IR_ADDRESS] });
+    await walletClient.writeContract({ address: IRS_ADDRESS, abi: IRS_ABI, functionName: 'bindIdentityRegistry', args: [IR_ADDRESS] });
 
     const COMPLIANCE_ABI = parseAbi(['function bindToken(address) external']);
-    await wallet.writeContract({ address: COMP_ADDRESS, abi: COMPLIANCE_ABI, functionName: 'bindToken', args: [TOKEN_ADDRESS] });
+    await walletClient.writeContract({ address: COMP_ADDRESS, abi: COMPLIANCE_ABI, functionName: 'bindToken', args: [TOKEN_ADDRESS] });
 
-    await wallet.writeContract({ address: TOKEN_ADDRESS, abi: TOKEN_ABI, functionName: 'addAgent', args: [account.address] });
+    await walletClient.writeContract({ address: TOKEN_ADDRESS, abi: TOKEN_ABI, functionName: 'addAgent', args: [account.address] });
 
     // Info: (20260126 - Luphia) 需將此新地址回傳給前端更新
     return {
@@ -163,6 +153,9 @@ export async function deploySystem(name: string = 'New Taiwan Dollar', symbol: s
 // Info: (20260126 - Luphia) 鑄造代幣給指定地址
 export async function mintToAddress(tokenAddress: string, to: string, amount: number): Promise<ActionResponse> {
   try {
+    if (!walletClient || !publicClient || !account) {
+      throw new Error('Wallet client or public client or account is not initialized');
+    }
     const validTo = getAddress(to);
     const amountBigInt = BigInt(amount) * BigInt(10) ** BigInt(18);
 
@@ -184,14 +177,14 @@ export async function mintToAddress(tokenAddress: string, to: string, amount: nu
     ]);
 
     // Info: (20260126 - Luphia) 嘗試 Mint
-    const tx = await wallet.writeContract({
+    const tx = await walletClient.writeContract({
       address: getAddress(tokenAddress),
       abi: tokenAbi,
       functionName: 'batchMint',
       args: [[validTo], [amountBigInt]]
     });
 
-    await client.waitForTransactionReceipt({ hash: tx });
+    await publicClient.waitForTransactionReceipt({ hash: tx });
 
     return { success: true, message: `鑄造交易已確認: ${tx}`, data: { tx } };
 
@@ -204,11 +197,14 @@ export async function mintToAddress(tokenAddress: string, to: string, amount: nu
 // Info: (20260126 - Luphia) 協助註冊用戶 Identity (如果 mint 失敗通常是因為這個)
 export async function registerUser(tokenAddress: string, userAddress: string): Promise<ActionResponse> {
   try {
+    if (!walletClient || !publicClient || !account) {
+      throw new Error('Wallet client or public client or account is not initialized');
+    }
     const validUserAddress = getAddress(userAddress);
 
     // Info: (20260126 - Luphia) 1. 查詢 Registry
     const tokenAbi = parseAbi(['function identityRegistry() view returns (address)']);
-    const registryAddress = await client.readContract({
+    const registryAddress = await publicClient.readContract({
       address: getAddress(tokenAddress),
       abi: tokenAbi,
       functionName: 'identityRegistry'
@@ -217,12 +213,12 @@ export async function registerUser(tokenAddress: string, userAddress: string): P
     console.log(`[RegisterUser] Registry: ${registryAddress}, deploying identity for ${validUserAddress}`);
 
     // Info: (20260126 - Luphia) 2. 部署 User Identity
-    const uoiHash = await wallet.deployContract({
+    const uoiHash = await walletClient.deployContract({
       abi: IDENTITY_ARTIFACT.abi,
       bytecode: IDENTITY_ARTIFACT.bytecode as `0x${string}`,
       args: [validUserAddress, false]
     });
-    const uoiReceipt = await client.waitForTransactionReceipt({ hash: uoiHash });
+    const uoiReceipt = await publicClient.waitForTransactionReceipt({ hash: uoiHash });
     const userIdentityAddress = uoiReceipt.contractAddress;
 
     if (!userIdentityAddress) {
@@ -238,7 +234,7 @@ export async function registerUser(tokenAddress: string, userAddress: string): P
       'function identity(address) view returns (address)'
     ]);
 
-    const isVerified = await client.readContract({
+    const isVerified = await publicClient.readContract({
       address: registryAddress,
       abi: irAbi,
       functionName: 'isVerified',
@@ -248,7 +244,7 @@ export async function registerUser(tokenAddress: string, userAddress: string): P
     let tx;
     if (isVerified) {
       console.log(`[RegisterUser] User ${validUserAddress} is already verified. Updating identity found.`);
-      tx = await wallet.writeContract({
+      tx = await walletClient.writeContract({
         address: registryAddress,
         abi: irAbi,
         functionName: 'updateIdentity',
@@ -256,7 +252,7 @@ export async function registerUser(tokenAddress: string, userAddress: string): P
       });
     } else {
       console.log(`[RegisterUser] Registering new identity for ${validUserAddress}`);
-      tx = await wallet.writeContract({
+      tx = await walletClient.writeContract({
         address: registryAddress,
         abi: irAbi,
         functionName: 'registerIdentity',
@@ -264,7 +260,7 @@ export async function registerUser(tokenAddress: string, userAddress: string): P
       });
     }
 
-    await client.waitForTransactionReceipt({ hash: tx });
+    await publicClient.waitForTransactionReceipt({ hash: tx });
     console.log(`[RegisterUser] Registration/Update confirmed: ${tx}`);
 
     return { success: true, message: `用戶已註冊 Identity (${userIdentityAddress})`, data: { tx } };
@@ -277,6 +273,9 @@ export async function registerUser(tokenAddress: string, userAddress: string): P
 // Info: (20260127 - Tzuhan) 強制轉帳
 export async function forcedTransfer(tokenAddress: string, from: string, to: string, amount: number): Promise<ActionResponse> {
   try {
+    if (!walletClient || !publicClient || !account) {
+      throw new Error('Wallet client or public client or account is not initialized');
+    }
     const validFrom = getAddress(from);
     const validTo = getAddress(to);
     const amountBigInt = BigInt(Math.floor(amount * 10 ** 18)); // Ensure integer
@@ -287,14 +286,14 @@ export async function forcedTransfer(tokenAddress: string, from: string, to: str
 
     console.log(`Executing forcedTransfer: ${validFrom} -> ${validTo} (${amount})`);
 
-    const tx = await wallet.writeContract({
+    const tx = await walletClient.writeContract({
       address: getAddress(tokenAddress),
       abi: tokenAbi,
       functionName: 'forcedTransfer',
       args: [validFrom, validTo, amountBigInt]
     });
 
-    await client.waitForTransactionReceipt({ hash: tx });
+    await publicClient.waitForTransactionReceipt({ hash: tx });
     return { success: true, message: `強制轉帳成功: ${tx}`, data: { tx } };
   } catch (error) {
     console.error('強制轉帳失敗:', error);
@@ -311,6 +310,9 @@ export async function forcedTransfer(tokenAddress: string, from: string, to: str
 // Info: (20260127 - Tzuhan) 銷毀代幣
 export async function burn(tokenAddress: string, from: string, amount: number): Promise<ActionResponse> {
   try {
+    if (!walletClient || !publicClient || !account) {
+      throw new Error('Wallet client or public client or account is not initialized');
+    }
     const validFrom = getAddress(from);
     const amountBigInt = BigInt(amount) * BigInt(10) ** BigInt(18);
 
@@ -318,14 +320,14 @@ export async function burn(tokenAddress: string, from: string, amount: number): 
       'function burn(address, uint256) external',
     ]);
 
-    const tx = await wallet.writeContract({
+    const tx = await walletClient.writeContract({
       address: getAddress(tokenAddress),
       abi: tokenAbi,
       functionName: 'burn',
       args: [validFrom, amountBigInt]
     });
 
-    await client.waitForTransactionReceipt({ hash: tx });
+    await publicClient.waitForTransactionReceipt({ hash: tx });
     return { success: true, message: `銷毀交易已確認: ${tx}`, data: { tx } };
   } catch (error) {
     console.error('銷毀失敗:', error);
@@ -344,6 +346,9 @@ export async function unfreeze(tokenAddress: string, target: string, amount: num
 
 async function toggleFreeze(tokenAddress: string, target: string, amount: number, isFreeze: boolean): Promise<ActionResponse> {
   try {
+    if (!walletClient || !publicClient || !account) {
+      throw new Error('Wallet client or public client or account is not initialized');
+    }
     const validTarget = getAddress(target);
     const amountBigInt = BigInt(amount) * BigInt(10) ** BigInt(18);
     const functionName = isFreeze ? 'freezePartialTokens' : 'unfreezePartialTokens';
@@ -352,14 +357,14 @@ async function toggleFreeze(tokenAddress: string, target: string, amount: number
       `function ${functionName}(address, uint256) external`,
     ]);
 
-    const tx = await wallet.writeContract({
+    const tx = await walletClient.writeContract({
       address: getAddress(tokenAddress),
       abi: tokenAbi,
       functionName: functionName,
       args: [validTarget, amountBigInt]
     });
 
-    await client.waitForTransactionReceipt({ hash: tx });
+    await publicClient.waitForTransactionReceipt({ hash: tx });
     return { success: true, message: `${isFreeze ? '凍結' : '解凍'}交易已確認: ${tx}`, data: { tx } };
   } catch (error) {
     console.error(`${isFreeze ? '凍結' : '解凍'}失敗:`, error);
@@ -378,19 +383,22 @@ export async function unpause(tokenAddress: string): Promise<ActionResponse> {
 
 async function togglePause(tokenAddress: string, isPause: boolean): Promise<ActionResponse> {
   try {
+    if (!walletClient || !publicClient || !account) {
+      throw new Error('Wallet client or public client or account is not initialized');
+    }
     const functionName = isPause ? 'pause' : 'unpause';
     const tokenAbi = parseAbi([
       `function ${functionName}() external`,
     ]);
 
-    const tx = await wallet.writeContract({
+    const tx = await walletClient.writeContract({
       address: getAddress(tokenAddress),
       abi: tokenAbi,
       functionName: functionName,
       args: []
     });
 
-    await client.waitForTransactionReceipt({ hash: tx });
+    await publicClient.waitForTransactionReceipt({ hash: tx });
     return { success: true, message: `系統已${isPause ? '暫停' : '恢復'}: ${tx}`, data: { tx } };
   } catch (error) {
     console.error(`系統${isPause ? '暫停' : '恢復'}失敗:`, error);
@@ -401,7 +409,7 @@ async function togglePause(tokenAddress: string, isPause: boolean): Promise<Acti
 // Info: (20260130 - Tzuhan) Client Token Transfer Support
 
 /**
- * Info: (20260130 - Tzuhan) Backend prepares the UserOp for the client to sign.
+ * Info: (20260130 - Tzuhan) Backend prepares the UserOp for the publicClient to sign.
  * This ensures the logic (Gas, Nonce, CallData) is handled securely and consistently on the server.
  */
 export async function prepareTransferUserOp(
@@ -423,7 +431,7 @@ export async function prepareTransferUserOp(
     );
 
     // Info: (20260130 - Tzuhan) 2. Calculate UserOp Hash using EntryPoint
-    const userOpHash = await client.readContract({
+    const userOpHash = await publicClient.readContract({
       address: CONTRACT_ADDRESSES.ENTRY_POINT,
       abi: ABIS.ENTRY_POINT,
       functionName: 'getUserOpHash',
