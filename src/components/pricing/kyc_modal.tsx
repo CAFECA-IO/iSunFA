@@ -105,6 +105,7 @@ export default function KYCModal({ isOpen, onClose, onSuccess }: IKYCModalProps)
                                                     Full Name
                                                 </label>
                                                 <input
+                                                    aria-label="Full Name"
                                                     type="text"
                                                     id="fullName"
                                                     required
@@ -118,6 +119,7 @@ export default function KYCModal({ isOpen, onClose, onSuccess }: IKYCModalProps)
                                                     ID Number
                                                 </label>
                                                 <input
+                                                    aria-label="ID Number"
                                                     type="text"
                                                     id="idNumber"
                                                     required

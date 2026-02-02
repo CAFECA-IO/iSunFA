@@ -113,6 +113,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
                                                     Your Bank Account (Last 5 Digits)
                                                 </label>
                                                 <input
+                                                    aria-label="Your Bank Account (Last 5 Digits)"
                                                     type="text"
                                                     id="bankAccount"
                                                     maxLength={5}
@@ -129,6 +130,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
                                                     Transfer Date
                                                 </label>
                                                 <input
+                                                    aria-label="Transfer Date"
                                                     type="date"
                                                     id="transferDate"
                                                     required
