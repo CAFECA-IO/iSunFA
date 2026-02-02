@@ -6,6 +6,7 @@ import { Check, Calendar, Coins, FileBarChart, Globe } from 'lucide-react';
 import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
 import PaymentConfirmModal, { PaymentStatus } from '@/components/common/payment_confirm_modal';
+import AnalysisGenerationModal, { AnalysisStatus } from '@/components/user/analysis/analysis_generation_modal';
 import HistorySection from '@/components/user/analysis/history_section';
 import { fido2ClientService } from '@/lib/auth/fido2_client';
 import { encodeWebAuthnSignature, hexToBase64Url } from '@/lib/auth/crypto_utils';
@@ -35,6 +36,7 @@ export default function AnalysisView() {
 
   // Info: (20260130 - Tzuhan) Payment Status State
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
+  const [analysisStatus, setAnalysisStatus] = useState<AnalysisStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [txHash, setTxHash] = useState<string>('');
 
@@ -53,6 +55,7 @@ export default function AnalysisView() {
   }, [category, periodType, selectedPeriodValue, selectedYear]);
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Info: (20260120 - Luphia) Generate specific period options based on type
@@ -257,12 +260,17 @@ export default function AnalysisView() {
     }
   };
 
+  const handlePaymentNext = () => {
+    setIsPaymentModalOpen(false);
+    setIsAnalysisModalOpen(true);
+    setAnalysisStatus('idle');
+  };
+
   // Info: (20260130 - Tzuhan) Step 2: Handle Report Generation
   const handleGenerateReport = async () => {
     try {
       setIsLoading(true);
-      // Ensure we have a separate status or reuse signing_analysis
-      setPaymentStatus('signing_analysis');
+      setAnalysisStatus('signing');
       setErrorMessage('');
 
       if (!txHash) {
@@ -302,7 +310,7 @@ export default function AnalysisView() {
       const authWithOrder = { ...authentication, orderId };
 
       // 8. Send to API
-      setPaymentStatus('analyzing');
+      setAnalysisStatus('analyzing');
       await request('/api/v1/user/analysis', {
         method: 'POST',
         body: JSON.stringify({
@@ -317,11 +325,11 @@ export default function AnalysisView() {
       // Refresh user balance
       await refreshAuth();
 
-      setIsPaymentModalOpen(false);
-      setPaymentStatus('idle');
+      setAnalysisStatus('success');
+      // maybe auto close after a while or let user close
     } catch (error) {
       console.error('Report generation failed:', error);
-      setPaymentStatus('error');
+      setAnalysisStatus('error');
       setErrorMessage(t('auth_modal.failed') + `: ${(error as Error).message}`);
     } finally {
       setIsLoading(false);
@@ -573,7 +581,8 @@ export default function AnalysisView() {
             setIsPaymentModalOpen(false);
           }
         }}
-        onConfirm={paymentStatus === 'payment_success' ? handleGenerateReport : handlePayment}
+        onConfirm={handlePayment}
+        onNext={handlePaymentNext}
         cost={calculatedCost}
         analysisType={t(`analysis.categories.${category}`)}
         period={t('analysis.selected_period_desc', {
@@ -586,6 +595,24 @@ export default function AnalysisView() {
         status={paymentStatus}
         errorMessage={errorMessage}
         txHash={txHash}
+      />
+
+      {/* Info: (20260130 - Tzuhan) Analysis Generation Modal */}
+      <AnalysisGenerationModal
+        isOpen={isAnalysisModalOpen}
+        onClose={() => {
+          if (analysisStatus === 'error' || analysisStatus === 'success') {
+            setAnalysisStatus('idle');
+            setErrorMessage('');
+            setIsAnalysisModalOpen(false);
+            // if success, we might want to navigate or show result, but checking activeTab is enough for now
+          } else if (analysisStatus === 'idle') {
+            setIsAnalysisModalOpen(false);
+          }
+        }}
+        onConfirm={handleGenerateReport}
+        status={analysisStatus}
+        errorMessage={errorMessage}
       />
 
       {/* Info: (20260120 - Luphia) History Section */}
