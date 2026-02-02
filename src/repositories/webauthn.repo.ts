@@ -42,6 +42,20 @@ class WebAuthnRepository implements IWebAuthnRepository {
     });
   }
 
+  public async updateKYCData(userId: string, data: JSON): Promise<User> {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { kycData: JSON.stringify(data) },
+    });
+  }
+
+  public async updateIdentityAddress(userId: string, identityAddress: string): Promise<User> {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { identityAddress },
+    });
+  }
+
   // Info: (20251223 - Tzuhan) 用於 Indexer 或 Lazy Sync 寫入
   public async upsertUser(data: {
     address: string;

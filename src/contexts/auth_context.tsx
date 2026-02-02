@@ -2,6 +2,9 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { request } from '@/lib/utils/request';
+import { publicClient } from '@/lib/viem_public';
+import { ABIS, CONTRACT_ADDRESSES } from '@/config/contracts';
+import { formatUnits } from 'viem';
 
 interface IUser {
   address: string;
@@ -11,6 +14,10 @@ interface IUser {
   credits?: number;
   isAdmin?: boolean;
   modules?: string[];
+  identityAddress?: string | null;
+  isVerified?: boolean;
+  pubKeyX?: string;
+  pubKeyY?: string;
 }
 
 interface IAuthContextType {
@@ -39,7 +46,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: 'GET',
       });
       if (response && response.payload) {
-        setUser(response.payload);
+        let userData = response.payload;
+        try {
+          if (userData.address) {
+            // Info: (20260129 - Tzuhan) Fetch credits from blockchain
+            const balance = await publicClient.readContract({
+              address: CONTRACT_ADDRESSES.NTD_TOKEN,
+              abi: ABIS.NTD_TOKEN,
+              functionName: 'balanceOf',
+              args: [userData.address as `0x${string}`]
+            });
+            const credits = Number(formatUnits(balance, 18));
+
+            // Info: (20260129 - Tzuhan) Fetch verification status from IdentityRegistry
+            const isVerified = await publicClient.readContract({
+              address: CONTRACT_ADDRESSES.IDENTITY_REGISTRY,
+              abi: ABIS.IDENTITY_REGISTRY,
+              functionName: 'isVerified',
+              args: [userData.address as `0x${string}`]
+            });
+
+            userData = { ...userData, credits, isVerified };
+          }
+        } catch (e) {
+          console.warn('Failed to fetch user balance:', e);
+        }
+        setUser(userData);
       } else {
         setUser(null);
         localStorage.removeItem('dewt');

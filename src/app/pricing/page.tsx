@@ -16,10 +16,12 @@ import { MODULES } from '@/constants/modules';
 
 import ConfirmModal from '@/components/common/confirm_modal';
 import AuthModal from '@/components/auth/auth_modal';
+import KYCModal from '@/components/pricing/kyc_modal';
+import PaymentModal from '@/components/pricing/payment_modal';
 
 export default function PricingPage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, refreshAuth } = useAuth();
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
   const [activeTab, setActiveTab] = useState<'subscription' | 'credits'>('subscription');
   const [confirmModal, setConfirmModal] = useState({
@@ -28,6 +30,10 @@ export default function PricingPage() {
     message: '',
   });
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+  const [kycModalOpen, setKycModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [pendingAmount, setPendingAmount] = useState(0);
+  const [pendingCredits, setPendingCredits] = useState(0);
 
   // Info: (20260119 - Luphia) Allow guest users to select free plan to trigger login
   const currentPlan = user ? ((user.plan === 'personal' || !user.plan) ? 'free' : user.plan) : undefined;
@@ -393,7 +399,22 @@ export default function PricingPage() {
                       </ul>
                     </div>
                     <button
-                      onClick={showComingSoon}
+                      onClick={() => {
+                        if (!user) {
+                          setAuthModalOpen(true);
+                          return;
+                        }
+                        console.log(t(`pricing.credits.plans.${tier}.credits`));
+                        console.log(t(`pricing.credits.plans.${tier}.price`));
+                        setPendingCredits(Number(t(`pricing.credits.plans.${tier}.credits`).split(' ')[0]));
+                        setPendingAmount(Number(t(`pricing.credits.plans.${tier}.price`).split(' ')[1]));
+
+                        if (user.isVerified) {
+                          setPaymentModalOpen(true);
+                        } else {
+                          setKycModalOpen(true);
+                        }
+                      }}
                       className={`mt-8 block w-full rounded-md px-3 py-2 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${popular
                         ? 'bg-orange-600 text-white shadow-sm hover:bg-orange-500 focus-visible:outline-orange-600'
                         : 'bg-orange-50 text-orange-600 hover:bg-orange-100 focus-visible:outline-orange-600'
@@ -411,6 +432,31 @@ export default function PricingPage() {
         <AuthModal
           isOpen={isAuthModalOpen}
           onClose={() => setAuthModalOpen(false)}
+        />
+
+        <KYCModal
+          isOpen={kycModalOpen}
+          onClose={() => setKycModalOpen(false)}
+          onSuccess={() => {
+            setPaymentModalOpen(true);
+          }}
+        />
+
+        <PaymentModal
+          isOpen={paymentModalOpen}
+          onClose={() => setPaymentModalOpen(false)}
+          credits={pendingCredits}
+          amount={pendingAmount}
+          onSuccess={async (tx) => {
+            // Info: (20260129 - Tzuhan) Refresh user balance after minting
+            await refreshAuth();
+
+            setConfirmModal({
+              isOpen: true,
+              title: 'Purchase Successful',
+              message: `Tokens minted successfully! Tx: ${tx}`,
+            });
+          }}
         />
 
         {/* Info: (20260116 - Luphia) Coming Soon Modal */}

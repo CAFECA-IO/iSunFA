@@ -13,6 +13,7 @@
     "worker": "npx tsx scripts/workers.run.ts"
   },
   "dependencies": {
+    "@erc3643org/erc-3643": "^4.1.3",
     "@google/generative-ai": "^0.24.1",
     "@headlessui/react": "^2.2.9",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.1",

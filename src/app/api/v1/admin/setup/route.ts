@@ -5,7 +5,7 @@ import { ApiCode } from '@/lib/utils/status';
 
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData();
+    const body = await request.json();
     const envExamplePath = path.join(process.cwd(), '.env.example');
     const envPath = path.join(process.cwd(), '.env');
 
@@ -30,8 +30,8 @@ export async function POST(request: Request) {
       const match = trimmed.match(/^([^=]+)=(.*)$/);
       if (match) {
         const key = match[1];
-        const value = formData.get(key);
-        if (value !== null) {
+        const value = body[key];
+        if (value !== undefined && value !== null) {
           envContent += `${key}="${value}"\n`;
         } else {
           envContent += `${key}=\n`;
