@@ -97,7 +97,7 @@ export default function DeepInsightSlide3() {
           <div>Confidential</div>
           <div className="flex gap-2 items-center">
             <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-            2026 iSunFA Corp.
+            2026 CAFECA Fintech
           </div>
         </div>
       </div>

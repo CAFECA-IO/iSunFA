@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { request } from '@/lib/utils/request';
 import { Check, ChevronLeft, ChevronRight, Loader2, Sparkles, X } from 'lucide-react';
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
+import { Fragment } from 'react';
+import { MarkdownContent } from '@/components/common/markdown_content';
 
 interface IHistoryItem {
   id: string;
@@ -24,7 +27,12 @@ export default function HistorySection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Info: (20260128 - AntiGravity) Fetch history from API
+  // Info: (20260130 - Luphia) Report View Modal State
+  const [selectedReport, setSelectedReport] = useState<{ id: string; content: string; type: string } | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loadingReport, setLoadingReport] = useState(false);
+
+  // Info: (20260130 - Luphia) Fetch history from API
   useEffect(() => {
     async function fetchHistory() {
       try {
@@ -46,6 +54,37 @@ export default function HistorySection() {
 
     fetchHistory();
   }, [t]);
+
+  // Info: (20260130 - Luphia) Handle View Report
+  const handleViewReport = async (item: IHistoryItem) => {
+    try {
+      setLoadingReport(true);
+      // Info: (20260130 - Luphia) Fetch details
+      const result = await request<{ code: string; payload: { id: string; result: string; type: string } }>(`/api/v1/user/analysis/${item.reportId}`);
+
+      if (result.code === 'SUCCESS') {
+        const content = typeof result.payload.result === 'string' ? result.payload.result : JSON.stringify(result.payload.result, null, 2);
+        setSelectedReport({
+          id: result.payload.id,
+          content: content || 'No content available.',
+          type: result.payload.type
+        });
+        setIsModalOpen(true);
+      } else {
+        // Info: (20260130 - Luphia) Handle error (maybe toast)
+        console.error('Failed to load report:', result);
+      }
+    } catch (err) {
+      console.error('Report fetch error:', err);
+    } finally {
+      setLoadingReport(false);
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedReport(null);
+  };
 
   const totalPages = Math.ceil(history.length / itemsPerPage);
   const currentData = history.slice(
@@ -156,8 +195,9 @@ export default function HistorySection() {
                       <button
                         className="text-orange-600 hover:text-orange-900 font-medium mr-3 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
+                        onClick={() => handleViewReport(item)}
                       >
-                        {t('analysis.history.view')}
+                        {loadingReport && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.view')}
                       </button>
                       <button
                         className="text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -194,8 +234,9 @@ export default function HistorySection() {
                       <button
                         className="text-orange-600 font-medium disabled:opacity-50"
                         disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
+                        onClick={() => handleViewReport(item)}
                       >
-                        {t('analysis.history.view')}
+                        {loadingReport && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.view')}
                       </button>
                       <button
                         className="text-gray-600 disabled:opacity-50"
@@ -236,6 +277,58 @@ export default function HistorySection() {
           </button>
         </div>
       )}
-    </div>
+
+      {/* Info: (20260130 - Luphia) Report Content Modal */}
+      <Transition appear show={isModalOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={closeModal}>
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/25" />
+          </TransitionChild>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <TransitionChild
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <DialogPanel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <DialogTitle
+                    as="h3"
+                    className="text-lg font-medium leading-6 text-gray-900 flex justify-between items-center mb-4"
+                  >
+                    <span>{selectedReport ? t(`analysis.categories.${selectedReport.type}`) : 'Report'}</span>
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                      onClick={closeModal}
+                    >
+                      {t('common.close')}
+                    </button>
+                  </DialogTitle>
+                  <div className="mt-2 text-sm text-gray-500 max-h-[70vh] overflow-y-auto prose prose-sm max-w-none">
+                    {selectedReport && (
+                      <MarkdownContent content={selectedReport.content} theme="light" />
+                    )}
+                  </div>
+                </DialogPanel>
+              </TransitionChild>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+    </div >
   );
 }

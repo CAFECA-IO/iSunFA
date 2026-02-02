@@ -7,10 +7,11 @@ import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
 import PaymentConfirmModal from '@/components/common/payment_confirm_modal';
 import ConfirmModal from '@/components/common/confirm_modal';
+import SuccessNotification from '@/components/common/success_notification';
 import HistorySection from '@/components/user/analysis/history_section';
 import { fido2ClientService } from '@/lib/auth/fido2_client';
 import { getAnalysisCost } from '@/lib/analysis/pricing';
-import { getPeriodDateRange } from '@/lib/analysis/utils';
+import { getPeriodDateRange } from '@/lib/analysis/period';
 import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES } from '@/constants/analysis';
 
 export default function AnalysisView() {
@@ -52,6 +53,9 @@ export default function AnalysisView() {
   // Info: (20260128 - Luphia) Error Modal State
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Info: (20260130 - Luphia) Success Notification State
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
 
   // Info: (20260120 - Luphia) Generate specific period options based on type
   const renderPeriodOptions = () => {
@@ -242,6 +246,10 @@ export default function AnalysisView() {
 
       // Info: (20260120 - Luphia) Refresh user balance
       await refreshAuth();
+
+      // Info: (20260130 - Luphia) Redirect to history and show success notification
+      setActiveTab('history');
+      setShowSuccessNotification(true);
     } catch (error) {
       console.error('Analysis generation failed:', error);
       setErrorMessage(t('auth_modal.failed'));
@@ -503,6 +511,14 @@ export default function AnalysisView() {
         title={t('common.error')} // Info: (20260128 - Luphia) or specific title like "Analysis Failed"
         message={errorMessage}
         confirmText={t('common.close')}
+      />
+
+      {/* Info: (20260130 - Luphia) Success Notification */}
+      <SuccessNotification
+        show={showSuccessNotification}
+        title={t('analysis.success.title')}
+        message={t('analysis.success.message')}
+        onClose={() => setShowSuccessNotification(false)}
       />
 
       {/* Info: (20260120 - Luphia) History Section */}

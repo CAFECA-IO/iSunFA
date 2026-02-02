@@ -7,8 +7,8 @@ import { analysisService } from '@/services/analysis.service';
 import { webAuthnService } from '@/services/webauthn.service';
 import { AppError } from '@/lib/utils/error';
 import { analysisRepo } from '@/repositories/analysis.repo';
-import { orderGenerator } from '@/lib/order/generator';
-import { getPeriodDateRange } from '@/lib/analysis/utils';
+import { orderGenerator } from '@/lib/order/order.generator';
+import { getPeriodDateRange } from '@/lib/analysis/period';
 
 export async function POST(request: NextRequest) {
   try {

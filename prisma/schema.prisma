@@ -61,6 +61,8 @@ model Analysis {
   orderId     String   @map("order_id")
   order       Order    @relation(fields: [orderId], references: [id])
   type        String
+  data        Json
+  result      Json?
   missionId   String?  @map("mission_id")
   mission     Mission? @relation(fields: [missionId], references: [id])
   createdAt   DateTime @default(now()) @map("created_at")
