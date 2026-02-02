@@ -132,8 +132,7 @@ export const getIdentityFromDeWT = async (
   // Info: (20260124 - Tzuhan) 4. 重組 User 物件 (Fallback)
   // Info: (20260124 - Tzuhan) 只要簽名驗證通過 (步驟 1)，這裡的資料就是可信的
   if (!payload.sub || !payload.address) return null;
-
-  return {
+  const result = {
     id: payload.sub as string,
     address: payload.address as string,
     role: (payload.role as 'USER' | 'ADMIN') || 'USER',
@@ -145,7 +144,9 @@ export const getIdentityFromDeWT = async (
     credentialId: null,
     currentChallenge: null,
     identityAddress: null,
-    createdAt: new Date(0), // 1970-01-01 代表未知
-    updatedAt: new Date(0),
+    createdAt: payload.iat ? new Date(payload.iat * 1000) : new Date(),
+    updatedAt: payload.iat ? new Date(payload.iat * 1000) : new Date(),
   } as User;
+  console.log(result);
+  return result;
 };

@@ -17,7 +17,7 @@ export default function KYCModal({ isOpen, onClose, onSuccess }: IKYCModalProps)
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Mock form data
+    // Info: (20260202 - Tzuhan) Mock form data
     const [formData, setFormData] = useState({
         fullName: '',
         idNumber: '',
@@ -129,7 +129,7 @@ export default function KYCModal({ isOpen, onClose, onSuccess }: IKYCModalProps)
                                                 />
                                             </div>
 
-                                            {/* Photo Upload Placeholder */}
+                                            {/* Info: (20260202 - Tzuhan) Photo Upload Placeholder */}
                                             <div className="mt-4">
                                                 <label htmlFor="photoId" className="block text-sm font-medium text-gray-700">
                                                     Photo ID (Optional)

@@ -193,7 +193,7 @@ export default function AnalysisView() {
   // Info: (20260120 - Tzuhan) Open Payment Modal instead of direct generate
   const handleGenerate = () => {
     setIsPaymentModalOpen(true);
-    setPaymentStatus('idle'); // Reset status when opening modal
+    setPaymentStatus('idle'); // Info: (20260130 - Tzuhan) Reset status when opening modal
     setErrorMessage('');
     setTxHash('');
   };
@@ -285,7 +285,7 @@ export default function AnalysisView() {
         throw new Error('Payment transaction hash not found. Please pay first.');
       }
 
-      // 5. Create Order & Get Challenge (Existing Logic)
+      // Info: (20260130 - Tzuhan) 5. Create Order & Get Challenge (Existing Logic)
       const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
         method: 'POST',
         body: JSON.stringify({
@@ -300,9 +300,7 @@ export default function AnalysisView() {
       if (!orderRes?.payload) throw new Error('Failed to create order');
       const { orderId, challenge } = orderRes.payload;
 
-      /**
-       * 6. Sign the Analysis Order
-       */
+      // Info: (20260130 - Tzuhan) 6. Sign the Analysis Order
       const analysisChallengeBase64 = btoa(challenge)
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
@@ -317,7 +315,7 @@ export default function AnalysisView() {
 
       const authWithOrder = { ...authentication, orderId };
 
-      // 8. Send to API
+      // Info: (20260130 - Tzuhan) 8. Send to API
       setAnalysisStatus('analyzing');
       await request('/api/v1/user/analysis', {
         method: 'POST',
@@ -330,11 +328,11 @@ export default function AnalysisView() {
         }),
       });
 
-      // Refresh user balance
+      // Info: (20260130 - Tzuhan) Refresh user balance
       await refreshAuth();
 
       setAnalysisStatus('success');
-      // maybe auto close after a while or let user close
+      // Info: (20260130 - Tzuhan) maybe auto close after a while or let user close
       // Info: (20260130 - Luphia) Redirect to history and show success notification
       setActiveTab('history');
       setShowSuccessNotification(true);

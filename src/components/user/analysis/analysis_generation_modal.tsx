@@ -75,7 +75,7 @@ export default function AnalysisGenerationModal({
                                     </DialogTitle>
 
                                     <div className="mt-4">
-                                        {/* Status Message */}
+                                        {/* Info: (20260202 - Tzuhan) Status Message */}
                                         <div className="text-center bg-gray-50 rounded-lg p-6 min-h-[120px] flex flex-col items-center justify-center">
                                             {status === 'error' ? (
                                                 <div className="space-y-2">

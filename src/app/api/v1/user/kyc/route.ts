@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
-// import { webAuthnRepo } from '@/repositories/webauthn.repo';
 import { registerUser } from '@/services/token.service';
 import { ABIS, CONTRACT_ADDRESSES } from '@/config/contracts';
 import { publicClient } from '@/lib/viem_public';
@@ -18,7 +17,7 @@ export async function POST(request: NextRequest) {
 
         const body = await request.json();
 
-        // Update KYC Data
+        // Info: (20260202 - Tzuhan) Update KYC Data
         // const updatedUser = await webAuthnRepo.updateKYCData(user.id, body);
         console.log('[API] KYC Data updated for user:', user.address, "kycData:", body);
 
@@ -37,7 +36,7 @@ export async function POST(request: NextRequest) {
 
         try {
             const identityAddress = await publicClient.readContract({
-                address: CONTRACT_ADDRESSES.IDENTITY_REGISTRY, // We need registry address.
+                address: CONTRACT_ADDRESSES.IDENTITY_REGISTRY, // Info: (20260202 - Tzuhan) We need registry address.
                 abi: ABIS.IDENTITY_REGISTRY,
                 functionName: 'identity',
                 args: [user.address as `0x${string}`]

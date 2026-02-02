@@ -105,11 +105,11 @@ export default function PaymentConfirmModal({
                     {t('analysis.confirm_title')}
                   </DialogTitle>
 
-                  {/* Processing / Error / Success View */}
+                  {/* Info: (20260202 - Tzuhan) Processing / Error / Success View */}
                   {isProcessing || status === 'error' || isSuccess ? (
                     <div className="mt-6 space-y-6">
 
-                      {/* Status Message */}
+                      {/* Info: (20260202 - Tzuhan) Status Message */}
                       <div className="text-center bg-gray-50 rounded-lg p-6 min-h-[120px] flex flex-col items-center justify-center">
                         {status === 'error' ? (
                           <div className="space-y-2">
@@ -155,7 +155,7 @@ export default function PaymentConfirmModal({
                       </div>
                     </div>
                   ) : (
-                    /* Initial Confirmation View */
+                    /* Info: (20260202 - Tzuhan) Initial Confirmation View */
                     <div className="mt-4">
                       <p className="text-sm text-gray-500 mb-4">
                         {t('analysis.confirm_desc')}

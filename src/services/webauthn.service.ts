@@ -148,7 +148,7 @@ class WebAuthnService {
       } catch (dbError) {
         console.warn('[Sync] DB Write Failed (Offline Mode). Returning ephemeral user.', dbError);
         return {
-          id: 'ephemeral_id', // 臨時 ID
+          id: 'ephemeral_id', // Info: (20260202 - Tzuhan) 臨時 ID
           address,
           pubKeyX: pubKeyX.toString(),
           pubKeyY: pubKeyY.toString(),
