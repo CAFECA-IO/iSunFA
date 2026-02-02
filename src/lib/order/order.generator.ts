@@ -4,7 +4,7 @@ import { getAnalysisCost, IOrderParams } from '@/lib/analysis/pricing';
 import { ApiCode } from '@/lib/utils/status';
 import { AppError } from '@/lib/utils/error';
 
-import { ORDER_STATUS } from '@/constants/orders';
+import { ORDER_STATUS } from '@/constants/status';
 
 export interface IOrderResult {
   orderId: string;

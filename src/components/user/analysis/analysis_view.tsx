@@ -7,12 +7,13 @@ import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
 import PaymentConfirmModal, { PaymentStatus } from '@/components/common/payment_confirm_modal';
 import AnalysisGenerationModal, { AnalysisStatus } from '@/components/user/analysis/analysis_generation_modal';
+import SuccessNotification from '@/components/common/success_notification';
 import HistorySection from '@/components/user/analysis/history_section';
 import { fido2ClientService } from '@/lib/auth/fido2_client';
 import { encodeWebAuthnSignature, hexToBase64Url } from '@/lib/auth/crypto_utils';
 import { prepareTransferUserOp, submitSignedUserOp } from '@/services/token.service';
 import { getAnalysisCost } from '@/lib/analysis/pricing';
-import { getPeriodDateRange } from '@/lib/analysis/utils';
+import { getPeriodDateRange } from '@/lib/analysis/period';
 import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES } from '@/constants/analysis';
 
 export default function AnalysisView() {
@@ -37,7 +38,7 @@ export default function AnalysisView() {
   // Info: (20260130 - Tzuhan) Payment Status State
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
   const [analysisStatus, setAnalysisStatus] = useState<AnalysisStatus>('idle');
-  const [errorMessage, setErrorMessage] = useState<string>('');
+
   const [txHash, setTxHash] = useState<string>('');
 
   // Info: (20260120 - Luphia) External Analysis States
@@ -57,6 +58,13 @@ export default function AnalysisView() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Info: (20260128 - Luphia) Error Modal State
+  // const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Info: (20260130 - Luphia) Success Notification State
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
 
   // Info: (20260120 - Luphia) Generate specific period options based on type
   const renderPeriodOptions = () => {
@@ -327,6 +335,9 @@ export default function AnalysisView() {
 
       setAnalysisStatus('success');
       // maybe auto close after a while or let user close
+      // Info: (20260130 - Luphia) Redirect to history and show success notification
+      setActiveTab('history');
+      setShowSuccessNotification(true);
     } catch (error) {
       console.error('Report generation failed:', error);
       setAnalysisStatus('error');
@@ -613,6 +624,14 @@ export default function AnalysisView() {
         onConfirm={handleGenerateReport}
         status={analysisStatus}
         errorMessage={errorMessage}
+      />
+
+      {/* Info: (20260130 - Luphia) Success Notification */}
+      <SuccessNotification
+        show={showSuccessNotification}
+        title={t('analysis.success.title')}
+        message={t('analysis.success.message')}
+        onClose={() => setShowSuccessNotification(false)}
       />
 
       {/* Info: (20260120 - Luphia) History Section */}

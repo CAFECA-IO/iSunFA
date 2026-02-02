@@ -1,41 +1,52 @@
-import { Search, Users, Repeat, FileSpreadsheet, Clock, Zap, MessageCircle, CheckCircle, Timer, Database } from 'lucide-react';
+import { Target, FileCode, Binary, TrendingUp, Rocket } from 'lucide-react';
 
-export default function DeepInsightSlide8() {
-  const processSteps = [
-    { id: 1, label: '基礎分析', icon: Search },
-    { id: 2, label: '競品識別', icon: Users },
-    { id: 3, label: '多元數據收集', icon: Database, highlight: true },
-    { id: 4, label: '3家競品分析', icon: Repeat },
-    { id: 5, label: '綜合報告', icon: FileSpreadsheet },
-  ];
-
-  const metrics = [
+export default function DeepInsightSlide6() {
+  const steps = [
     {
-      value: '1,000+',
-      label: '深度對比',
-      desc: '同時處理超過 1,000+ 條跨產品社群輿情觀點',
-      icon: MessageCircle,
-      color: 'text-purple-500',
-      bg: 'bg-purple-50',
-      border: 'border-purple-200',
+      id: '01',
+      title: '需求設定',
+      sub: 'Requirement Setting',
+      desc: '定義目標市場與分析範疇',
+      icon: Target,
+      color: 'bg-gray-100 text-gray-600',
+      gradient: 'from-gray-700 to-slate-500',
     },
     {
-      value: '70%',
-      label: '節省時間',
-      desc: '透過 AICH 自我檢驗信心指數，減少人工複核時間 70%',
-      icon: CheckCircle,
-      color: 'text-indigo-500',
-      bg: 'bg-indigo-50',
-      border: 'border-indigo-200',
+      id: '02',
+      title: '模板生成',
+      sub: 'Template Generation',
+      desc: '產出任務執行策略模板與參數',
+      icon: FileCode,
+      color: 'bg-orange-50 text-orange-600',
+      gradient: 'from-orange-600 to-amber-500',
     },
     {
-      value: '2 Hrs',
-      label: '決策速度',
-      desc: '將原本需耗時 3-5 天的競品分析縮短至 2 小時內',
-      icon: Timer,
-      color: 'text-rose-500',
-      bg: 'bg-rose-50',
-      border: 'border-rose-200',
+      id: '03',
+      title: '策略量化',
+      sub: 'Strategy Quantification',
+      desc: '將分析指標轉化為可執行的量化邏輯',
+      icon: Binary,
+      color: 'bg-blue-50 text-blue-600',
+      gradient: 'from-blue-600 to-cyan-500',
+    },
+    {
+      id: '04',
+      title: '回測優化',
+      sub: 'Backtest Optimization',
+      desc: '進行試運行，根據回測結果調整策略',
+      icon: TrendingUp,
+      color: 'bg-purple-50 text-purple-600',
+      gradient: 'from-purple-600 to-pink-500',
+    },
+    {
+      id: '05',
+      title: '完成訓練',
+      sub: 'Training Completion',
+      desc: '正式完成代理人訓練並上線',
+      icon: Rocket,
+      color: 'bg-green-50 text-green-600',
+      highlight: true,
+      gradient: 'from-green-600 to-emerald-500',
     },
   ];
 
@@ -71,76 +82,40 @@ export default function DeepInsightSlide8() {
         </div>
 
         {/* Info: (20260121 - Luphia) Header */}
-        <div className="w-full px-16 pt-12 mb-8 relative z-20 text-center">
+        <div className="w-full px-16 pt-16 mb-16 relative z-20">
           <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-            案例分析 — <span className="text-orange-600">IRSC 金融商品評級</span>
+            部署與 <span className="text-orange-600">策略導入</span>
           </h2>
-          <p className="mt-3 text-xl text-gray-500 font-medium">橫向對比與競爭力分析：快速掌握同類商品優劣勢</p>
-          <div className="h-1.5 w-24 bg-gradient-to-r from-orange-500 to-amber-400 mt-6 rounded-full mx-auto"></div>
+          <div className="h-1.5 w-24 bg-gradient-to-r from-orange-500 to-amber-400 mt-4 rounded-full"></div>
+          <p className="mt-4 text-xl text-gray-500 font-medium">Deployment & Strategy Implementation</p>
         </div>
 
-        {/* Info: (20260121 - Luphia) Main Layout: Top (Process) + Bottom (Metrics) */}
-        <div className="w-full px-16 flex flex-col gap-8 z-10 flex-1">
+        {/* Info: (20260121 - Luphia) Timeline / Roadmap Container */}
+        <div className="w-full px-16 relative z-10 flex flex-col justify-center h-[350px]">
+          {/* Info: (20260121 - Luphia) Connection Line */}
+          <div className="absolute top-1/2 left-24 right-24 h-1 bg-gray-100 -translate-y-[80px] z-0"></div>
 
-          {/* Info: (20260121 - Luphia) 1. Process Flow & Qualitative Benefit */}
-          <div className="flex gap-8 h-[220px]">
-            {/* Info: (20260121 - Luphia) Process Steps */}
-            <div className="flex-1 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-lg p-6 flex flex-col justify-center">
-              <div className="flex justify-between items-center relative gap-2">
-                {/* Info: (20260121 - Luphia) Connecting Line */}
-                <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-gray-200 -z-10"></div>
-
-                {processSteps.map((step) => (
-                  <div key={step.id} className="flex flex-col items-center bg-white px-2 z-10">
-                    <div className={`w-12 h-12 rounded-full ${step.highlight ? 'bg-orange-500 border-orange-400 text-white shadow-orange-200' : 'bg-slate-50 border-slate-200 text-slate-600'} border flex items-center justify-center mb-2 shadow-sm relative group transition-all duration-300 ${step.highlight ? 'scale-110 shadow-lg ring-4 ring-orange-100' : ''}`}>
-                      <step.icon size={20} />
-                      {/* Info: (20260121 - Luphia) Highlight for loop step */}
-                      {step.id === 4 && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">3x</div>
-                      )}
-                    </div>
-                    <span className={`text-sm font-bold ${step.highlight ? 'text-orange-600' : 'text-slate-700'}`}>{step.label}</span>
-                  </div>
-                ))}
-
-                {/* Info: (20260121 - Luphia) Time Highlight */}
-                <div className="flex flex-col items-center bg-white px-2 relative -top-8 z-20">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 border-4 border-white flex flex-col items-center justify-center text-white shadow-xl animate-pulse">
-                    <Clock size={20} className="mb-1" />
-                    <span className="text-sm font-bold leading-none">100-120</span>
-                    <span className="text-[10px] opacity-80">min</span>
-                  </div>
-                  <div className="mt-2 text-sm font-bold text-orange-600">生成時間</div>
+          <div className="flex justify-between items-start relative z-10">
+            {steps.map((step) => (
+              <div key={step.id} className="flex flex-col items-center w-[200px] group">
+                {/* Info: (20260121 - Luphia) Icon Circle */}
+                <div className={`w-20 h-20 rounded-full ${step.color} border-4 border-white shadow-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 relative bg-white`}>
+                  <step.icon size={32} strokeWidth={2} />
+                  {step.highlight && (
+                    <div className="absolute inset-0 rounded-full border-4 border-orange-400 opacity-30 animate-ping"></div>
+                  )}
                 </div>
-              </div>
-            </div>
 
-            {/* Info: (20260121 - Luphia) Qualitative Benefit */}
-            <div className="w-[350px] bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-xl p-6 flex flex-col justify-center text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-8 opacity-10">
-                <Zap size={120} />
-              </div>
-              <h3 className="text-lg font-bold text-orange-400 mb-3 flex items-center gap-2">
-                <Zap size={20} />
-                質化效益
-              </h3>
-              <p className="text-slate-300 leading-relaxed text-justify text-sm">
-                提升分析準確性，快速掌握同類商品的優劣勢，為投資決策提供堅實依據。
-              </p>
-            </div>
-          </div>
+                {/* Info: (20260121 - Luphia) Content Card with Connector */}
+                <div className="relative">
+                  {/* Info: (20260121 - Luphia) Triangle Connector pointing up to the line/circle */}
+                  <div className="absolute left-1/2 -top-2 -translate-x-1/2 w-4 h-4 bg-white transform rotate-45 border-t border-l border-gray-100 z-20"></div>
 
-          {/* Info: (20260121 - Luphia) 2. Metrics Grid */}
-          <div className="grid grid-cols-3 gap-6">
-            {metrics.map((m, i) => (
-              <div key={i} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 flex items-center gap-6 hover:-translate-y-1 transition-transform duration-300">
-                <div className={`w-20 h-20 rounded-2xl ${m.bg} flex items-center justify-center ${m.color} shadow-inner`}>
-                  <m.icon size={36} strokeWidth={1.5} />
-                </div>
-                <div>
-                  <div className={`text-4xl font-extrabold ${m.color} tracking-tight`}>{m.value}</div>
-                  <div className="text-lg font-bold text-gray-800 mb-1">{m.label}</div>
-                  <div className="text-xs text-gray-500 leading-tight">{m.desc}</div>
+                  <div className="mt-2 bg-white/80 backdrop-blur-sm border border-gray-100 shadow-lg rounded-xl p-5 text-center transition-all hover:-translate-y-1 hover:shadow-xl hover:border-orange-100">
+                    <div className="text-xs font-bold text-gray-400 mb-1 tracking-wider uppercase">{step.id} {step.sub}</div>
+                    <h3 className={`text-xl font-black bg-gradient-to-r ${step.gradient} bg-clip-text text-transparent mb-2`}>{step.title}</h3>
+                    <p className="text-sm text-gray-600 leading-snug">{step.desc}</p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -152,7 +127,7 @@ export default function DeepInsightSlide8() {
           <div>Confidential</div>
           <div className="flex gap-2 items-center">
             <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-            2026 iSunFA Corp.
+            2026 CAFECA Fintech
           </div>
         </div>
       </div>

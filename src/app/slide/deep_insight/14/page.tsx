@@ -1,42 +1,39 @@
-import { Database, Scale, Cpu, History, BookOpen, LineChart } from 'lucide-react';
+import { ShieldCheck, GitBranch, Crown } from 'lucide-react';
 
-export default function DeepInsightSlide14() {
-  const advantages = [
+export default function DeepInsightSlide10() {
+  const values = [
     {
       id: 1,
-      title: '獨家訓練數據',
-      subtitle: 'Exclusive Training Data',
-      desc: '整合 <span class="text-blue-700 font-bold text-xl">30 年以上</span> 的財務會計專屬訓練數據，訓練金融事件推理能力',
-      icon: Database,
-      color: 'text-blue-600',
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-      gradient: 'from-blue-600 to-cyan-500',
-      subIcon: History,
+      title: '專業領先',
+      sub: 'Professional Leading',
+      desc: '業界首創具備 <span class="text-orange-600 font-bold">會計師執業水準</span> 的 AI 模型 FAITH',
+      icon: Crown,
+      color: 'text-amber-500',
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
+      gradient: 'from-amber-500 to-orange-500',
     },
     {
       id: 2,
-      title: '全面資訊整合',
-      subtitle: 'Comprehensive Information',
-      desc: '整合 <span class="text-purple-700 font-bold text-xl">逾 20 年</span> 的政策法規與財經媒體、交易所、企業公開資訊',
-      icon: Scale,
-      color: 'text-purple-600',
-      bg: 'bg-purple-50',
-      border: 'border-purple-200',
-      gradient: 'from-purple-600 to-pink-500',
-      subIcon: BookOpen,
+      title: '執行卓越',
+      sub: 'Execution Excellence',
+      desc: '高效且具備 <span class="text-blue-600 font-bold">自我回測能力</span> 的代理人 AICH',
+      icon: ShieldCheck,
+      color: 'text-blue-500',
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
+      gradient: 'from-blue-500 to-indigo-500',
     },
     {
       id: 3,
-      title: '卓越模型效能',
-      subtitle: 'Model Performance Excellence',
-      desc: '具備 <span class="text-orange-700 font-bold">嚴謹的回測驗證</span>、<span class="text-orange-700 font-bold">在地化調適</span> 與 <span class="text-orange-700 font-bold">高質量的 AI 可解釋性</span>',
-      icon: Cpu,
-      color: 'text-orange-600',
-      bg: 'bg-orange-50',
-      border: 'border-orange-200',
-      gradient: 'from-orange-600 to-amber-500',
-      subIcon: LineChart,
+      title: '靈活擴充',
+      sub: 'Flexible Expansion',
+      desc: '透過 DeepForge <span class="text-purple-600 font-bold">持續學習新技能</span> 適應市場變化',
+      icon: GitBranch,
+      color: 'text-purple-500',
+      bg: 'bg-purple-50',
+      border: 'border-purple-200',
+      gradient: 'from-purple-500 to-pink-500',
     },
   ];
 
@@ -73,44 +70,46 @@ export default function DeepInsightSlide14() {
 
         {/* Info: (20260121 - Luphia) Header */}
         <div className="w-full px-16 pt-16 mb-12 relative z-20 text-center">
-          <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-            我們的 <span className="text-orange-600">優勢</span>
+          <h2 className="text-5xl font-extrabold text-gray-900 tracking-tight mb-4">
+            DeepInsight <span className="text-orange-600">核心價值</span>
           </h2>
-          <p className="mt-4 text-xl text-gray-500 font-medium">數據深度與模型優勢</p>
-          <div className="h-1.5 w-24 bg-gradient-to-r from-orange-500 to-amber-400 mt-6 rounded-full mx-auto"></div>
+          <div className="h-1.5 w-32 bg-gradient-to-r from-orange-500 to-amber-400 rounded-full mx-auto"></div>
         </div>
 
-        {/* Info: (20260121 - Luphia) Advantage Cards */}
-        <div className="w-full px-20 grid grid-cols-3 gap-8 z-10">
-          {advantages.map((adv) => (
-            <div
-              key={adv.id}
-              className={`bg-white rounded-3xl shadow-xl border ${adv.border} p-8 flex flex-col items-center text-center h-[420px] hover:-translate-y-2 transition-all duration-300 group relative overflow-hidden`}
-            >
-              {/* Info: (20260121 - Luphia) Top Accent */}
-              <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${adv.gradient}`}></div>
+        {/* Info: (20260121 - Luphia) Core Values Cards */}
+        <div className="w-full px-20 grid grid-cols-3 gap-10 z-10">
+          {values.map((v) => (
+            <div key={v.id} className="group relative bg-white rounded-3xl shadow-xl border border-gray-100 p-8 flex flex-col items-center text-center h-[320px] hover:-translate-y-2 transition-all duration-500 overflow-hidden">
+              {/* Info: (20260121 - Luphia) Top Gradient Line */}
+              <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${v.gradient}`}></div>
 
               {/* Info: (20260121 - Luphia) Icon */}
-              <div className={`w-20 h-20 rounded-2xl ${adv.bg} flex items-center justify-center ${adv.color} mb-6 shadow-inner group-hover:scale-110 transition-transform duration-300 z-10 relative`}>
-                <adv.icon size={40} strokeWidth={1.5} />
-                <div className="absolute -right-2 -bottom-2 bg-white rounded-full p-1 shadow-md border border-gray-100">
-                  <adv.subIcon size={16} className={adv.color} />
-                </div>
+              <div className={`w-20 h-20 rounded-2xl ${v.bg} flex items-center justify-center ${v.color} mb-6 shadow-inner group-hover:scale-110 transition-transform duration-500`}>
+                <v.icon size={40} strokeWidth={1.5} />
               </div>
 
               {/* Info: (20260121 - Luphia) Title */}
-              <h3 className="text-2xl font-bold text-gray-900 mb-1 z-10">{adv.title}</h3>
-              <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-8 z-10">{adv.subtitle}</div>
+              <h3 className={`text-2xl font-bold text-gray-900 mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r ${v.gradient} transition-all`}>
+                {v.title}
+              </h3>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">{v.sub}</div>
 
-              {/* Info: (20260121 - Luphia) Description / Content */}
-              <p className="text-gray-600 leading-relaxed font-medium text-lg z-10" dangerouslySetInnerHTML={{ __html: adv.desc }}></p>
+              {/* Info: (20260121 - Luphia) Desc */}
+              <p className="text-gray-600 leading-relaxed font-medium text-lg" dangerouslySetInnerHTML={{ __html: v.desc }}></p>
 
-              {/* Info: (20260121 - Luphia) Decorative Background Icon */}
-              <div className="absolute -bottom-8 -right-8 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-500 z-0">
-                <adv.icon size={180} />
+              {/* Info: (20260121 - Luphia) Decorative BG Icon */}
+              <div className="absolute -bottom-8 -right-8 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-500">
+                <v.icon size={150} />
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Info: (20260121 - Luphia) Closing Statement */}
+        <div className="mt-16 relative z-20 max-w-4xl text-center px-8 py-6 bg-white/50 backdrop-blur-md rounded-2xl mx-auto">
+          <p className="text-2xl text-gray-700 font-medium leading-relaxed">
+            <span className="font-bold text-gray-900">iSunFA DeepInsight</span> 是您在快速變化的金融市場中，<br />最可靠的<span className="text-orange-600 font-bold border-b-4 border-orange-200">金融研究團隊</span>。
+          </p>
         </div>
 
         {/* Info: (20260121 - Luphia) Footer */}
@@ -118,7 +117,7 @@ export default function DeepInsightSlide14() {
           <div>Confidential</div>
           <div className="flex gap-2 items-center">
             <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-            2026 iSunFA Corp.
+            2026 CAFECA Fintech
           </div>
         </div>
       </div>

@@ -36,13 +36,13 @@ export default function DeepInsightSlide1() {
           {/* Info: (20260121 - Luphia) Brand area */}
           <div className="mb-12">
             <span className="text-orange-600 font-bold tracking-[0.2em] text-sm md:text-base border border-orange-200 px-4 py-1 rounded-full uppercase bg-orange-50">
-              iSunFA Intelligence
+              FAITH Intelligence
             </span>
           </div>
 
           {/* Info: (20260121 - Luphia) Main Title */}
           <h1 className="text-6xl md:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-orange-700 via-orange-500 to-amber-400 leading-tight drop-shadow-sm pb-2">
-            iSunFA DeepInsight
+            DeepInsight
             <br />
             <span className="text-5xl md:text-5xl text-gray-500 font-light mt-4 block">
               best solution of MarketPulse / 市場快炒
@@ -61,7 +61,7 @@ export default function DeepInsightSlide1() {
           <div>Confidential</div>
           <div className="flex gap-2 items-center">
             <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-            2026 iSunFA Corp.
+            2026 CAFECA Fintech
           </div>
         </div>
 

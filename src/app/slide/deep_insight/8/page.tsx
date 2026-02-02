@@ -1,53 +1,46 @@
-import { Target, FileCode, Binary, TrendingUp, Rocket } from 'lucide-react';
+import { Brain, Bot, GraduationCap } from 'lucide-react';
 
-export default function DeepInsightSlide6() {
-  const steps = [
+export default function DeepInsightSlide4() {
+  const pillars = [
     {
-      id: '01',
-      title: '需求設定',
-      sub: 'Requirement Setting',
-      desc: '定義目標市場與分析範疇',
-      icon: Target,
-      color: 'bg-gray-100 text-gray-600',
-      gradient: 'from-gray-700 to-slate-500',
+      id: 'faith',
+      title: 'FAITH',
+      version: 'v0.1.0',
+      subtitle: '多模態會計專業模型',
+      desc: '具備大學通識與會計師專業，理解非結構化資料，負責任務拆解。作為系統的「大腦」，提供專業邏輯與決策支持。',
+      role: '系統的大腦',
+      icon: Brain,
+      color: 'from-orange-500 to-amber-500',
+      bg: 'bg-orange-50',
+      border: 'border-orange-200',
+      text: 'text-orange-700',
     },
     {
-      id: '02',
-      title: '模板生成',
-      sub: 'Template Generation',
-      desc: '產出任務執行策略模板與參數',
-      icon: FileCode,
-      color: 'bg-orange-50 text-orange-600',
-      gradient: 'from-orange-600 to-amber-500',
+      id: 'aich',
+      title: 'AICH',
+      version: 'v0.8.0',
+      subtitle: '自監督式執行代理人',
+      desc: '執行爬蟲、摘要、資料庫探索，忠實執行繁瑣任務並檢驗信心指數。作為系統的「手腳」，確保任務精確執行。',
+      role: '系統的手腳',
+      icon: Bot,
+      color: 'from-blue-500 to-cyan-500',
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
+      text: 'text-blue-700',
     },
     {
-      id: '03',
-      title: '策略量化',
-      sub: 'Strategy Quantification',
-      desc: '將分析指標轉化為可執行的量化邏輯',
-      icon: Binary,
-      color: 'bg-blue-50 text-blue-600',
-      gradient: 'from-blue-600 to-cyan-500',
-    },
-    {
-      id: '04',
-      title: '回測優化',
-      sub: 'Backtest Optimization',
-      desc: '進行試運行，根據回測結果調整策略',
-      icon: TrendingUp,
-      color: 'bg-purple-50 text-purple-600',
-      gradient: 'from-purple-600 to-pink-500',
-    },
-    {
-      id: '05',
-      title: '完成訓練',
-      sub: 'Training Completion',
-      desc: '正式完成代理人訓練並上線',
-      icon: Rocket,
-      color: 'bg-green-50 text-green-600',
-      highlight: true,
-      gradient: 'from-green-600 to-emerald-500',
-    },
+      id: 'deepforge',
+      title: 'DeepForge',
+      version: 'v0.1.0',
+      subtitle: '代理人訓練基地',
+      desc: '專為 AICH 設計的訓練環境，持續擴充任務執行能力。作為系統的「學院」，不斷提升代理人的技能邊界。',
+      role: '系統的學院',
+      icon: GraduationCap,
+      color: 'from-purple-500 to-pink-500',
+      bg: 'bg-purple-50',
+      border: 'border-purple-200',
+      text: 'text-purple-700',
+    }
   ];
 
   return (
@@ -82,44 +75,62 @@ export default function DeepInsightSlide6() {
         </div>
 
         {/* Info: (20260121 - Luphia) Header */}
-        <div className="w-full px-16 pt-16 mb-16 relative z-20">
+        <div className="w-full px-16 pt-16 mb-12 relative z-20">
           <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-            部署與 <span className="text-orange-600">策略導入</span>
+            核心技術支柱 — <span className="text-orange-600">三位一體架構</span>
           </h2>
-          <div className="h-1.5 w-24 bg-gradient-to-r from-orange-500 to-amber-400 mt-4 rounded-full"></div>
-          <p className="mt-4 text-xl text-gray-500 font-medium">Deployment & Strategy Implementation</p>
+          <div className="h-1.5 w-32 bg-gradient-to-r from-orange-500 to-amber-400 mt-4 rounded-full"></div>
+          <p className="mt-4 text-xl text-gray-500 font-medium">The Trinity Architecture</p>
         </div>
 
-        {/* Info: (20260121 - Luphia) Timeline / Roadmap Container */}
-        <div className="w-full px-16 relative z-10 flex flex-col justify-center h-[350px]">
-          {/* Info: (20260121 - Luphia) Connection Line */}
-          <div className="absolute top-1/2 left-24 right-24 h-1 bg-gray-100 -translate-y-[80px] z-0"></div>
+        {/* Info: (20260121 - Luphia) Cards Container */}
+        <div className="w-full px-16 grid grid-cols-3 gap-8 z-10">
+          {pillars.map((pillar) => (
+            <div
+              key={pillar.id}
+              className="relative group h-[420px] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+            >
+              {/* Info: (20260121 - Luphia) Top Accent Bar */}
+              <div className={`h-2 w-full bg-gradient-to-r ${pillar.color}`}></div>
 
-          <div className="flex justify-between items-start relative z-10">
-            {steps.map((step) => (
-              <div key={step.id} className="flex flex-col items-center w-[200px] group">
-                {/* Info: (20260121 - Luphia) Icon Circle */}
-                <div className={`w-20 h-20 rounded-full ${step.color} border-4 border-white shadow-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 relative bg-white`}>
-                  <step.icon size={32} strokeWidth={2} />
-                  {step.highlight && (
-                    <div className="absolute inset-0 rounded-full border-4 border-orange-400 opacity-30 animate-ping"></div>
-                  )}
-                </div>
-
-                {/* Info: (20260121 - Luphia) Content Card with Connector */}
-                <div className="relative">
-                  {/* Info: (20260121 - Luphia) Triangle Connector pointing up to the line/circle */}
-                  <div className="absolute left-1/2 -top-2 -translate-x-1/2 w-4 h-4 bg-white transform rotate-45 border-t border-l border-gray-100 z-20"></div>
-
-                  <div className="mt-2 bg-white/80 backdrop-blur-sm border border-gray-100 shadow-lg rounded-xl p-5 text-center transition-all hover:-translate-y-1 hover:shadow-xl hover:border-orange-100">
-                    <div className="text-xs font-bold text-gray-400 mb-1 tracking-wider uppercase">{step.id} {step.sub}</div>
-                    <h3 className={`text-xl font-black bg-gradient-to-r ${step.gradient} bg-clip-text text-transparent mb-2`}>{step.title}</h3>
-                    <p className="text-sm text-gray-600 leading-snug">{step.desc}</p>
+              <div className="p-8 flex flex-col h-full">
+                {/* Info: (20260121 - Luphia) Icon & Title */}
+                <div className="flex justify-between items-start mb-6">
+                  <div className={`w-16 h-16 rounded-2xl ${pillar.bg} flex items-center justify-center ${pillar.text} shadow-inner group-hover:scale-110 transition-transform duration-500`}>
+                    <pillar.icon size={32} strokeWidth={1.5} />
+                  </div>
+                  <div className="text-right">
+                    <h3 className={`text-3xl font-black bg-gradient-to-r ${pillar.color} bg-clip-text text-transparent tracking-tight font-sans`}>{pillar.title}</h3>
+                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${pillar.bg} ${pillar.text} mt-1`}>
+                      {pillar.version}
+                    </span>
                   </div>
                 </div>
+
+                {/* Info: (20260121 - Luphia) Subtitle */}
+                <h4 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-100">
+                  {pillar.subtitle}
+                </h4>
+
+                {/* Info: (20260121 - Luphia) Description */}
+                <p className="text-gray-600 leading-relaxed text-justify mb-auto font-medium">
+                  {pillar.desc}
+                </p>
+
+                {/* Info: (20260121 - Luphia) Role Tag */}
+                <div className={`mt-6 py-3 px-4 rounded-xl ${pillar.bg} border ${pillar.border} flex items-center justify-center gap-2`}>
+                  <span className={`font-bold ${pillar.text} text-sm tracking-wide`}>
+                    {pillar.role}
+                  </span>
+                </div>
               </div>
-            ))}
-          </div>
+
+              {/* Info: (20260121 - Luphia) Decorative Background Icon */}
+              <div className="absolute -bottom-12 -right-12 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-500">
+                <pillar.icon size={200} />
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Info: (20260121 - Luphia) Footer */}
@@ -127,7 +138,7 @@ export default function DeepInsightSlide6() {
           <div>Confidential</div>
           <div className="flex gap-2 items-center">
             <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-            2026 iSunFA Corp.
+            2026 CAFECA Fintech
           </div>
         </div>
       </div>

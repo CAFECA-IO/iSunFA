@@ -2,8 +2,8 @@ import { NextRequest } from 'next/server';
 import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
-import { orderGenerator } from '@/lib/order/generator';
 import { webAuthnService } from '@/services/webauthn.service';
+import { orderGenerator } from '@/lib/order/order.generator';
 
 export async function POST(request: NextRequest) {
   try {

@@ -20,10 +20,14 @@ import DeepInsightSlide14 from '@/app/slide/deep_insight/14/page';
 import DeepInsightSlide15 from '@/app/slide/deep_insight/15/page';
 import DeepInsightSlide16 from '@/app/slide/deep_insight/16/page';
 import DeepInsightSlide17 from '@/app/slide/deep_insight/17/page';
+import DeepInsightSlide18 from '@/app/slide/deep_insight/18/page';
+import DeepInsightSlide19 from '@/app/slide/deep_insight/19/page';
+import DeepInsightSlide20 from '@/app/slide/deep_insight/20/page';
+import DeepInsightSlide21 from '@/app/slide/deep_insight/21/page';
 
 export default function DeepInsightSlideBrowser() {
   const [currentSlide, setCurrentSlide] = useState(1);
-  const totalSlides = 17;
+  const totalSlides = 21;
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
@@ -80,6 +84,10 @@ export default function DeepInsightSlideBrowser() {
     15: DeepInsightSlide15,
     16: DeepInsightSlide16,
     17: DeepInsightSlide17,
+    18: DeepInsightSlide18,
+    19: DeepInsightSlide19,
+    20: DeepInsightSlide20,
+    21: DeepInsightSlide21,
   };
 
   const CurrentSlideComponent = SlideComponents[currentSlide];
@@ -91,18 +99,22 @@ export default function DeepInsightSlideBrowser() {
     3: 'Limitations',
     4: 'Solution',
     5: 'Quick Demo',
-    6: 'Trinity Architecture',
-    7: 'Operational Flow',
-    8: 'Deployment Strategy',
-    9: 'Case: IRSC Rating',
-    10: 'Case: IRSC Rating',
-    11: 'Case: MarketPulse',
-    12: 'Core Values',
-    13: 'Our Advantages',
-    14: 'Data & Model',
-    15: 'Why Choose Us',
-    16: 'Regulatory Sandbox',
-    17: 'Thank You',
+    6: 'Quick Demo: MarketPulse',
+    7: 'DeepInsight Interpretation',
+    8: 'Trinity Architecture',
+    9: 'Operational Flow',
+    10: 'Deployment Strategy',
+    11: 'Case: IRSC Rating',
+    12: 'Case: IRSC Rating',
+    13: 'Case: MarketPulse',
+    14: 'Core Values',
+    15: 'Local Execution (ASUS Ascent GX10)',
+    16: 'Rapid Fine-tuning',
+    17: 'Our Advantages',
+    18: 'Data & Model',
+    19: 'Why Choose Us',
+    20: 'Regulatory Sandbox',
+    21: 'Thank You',
   };
 
   const nextSlide = useCallback(() => {
@@ -138,7 +150,7 @@ export default function DeepInsightSlideBrowser() {
           </div>
           <div>
             <h1 className="text-sm font-bold text-gray-200">DeepInsight Presentation</h1>
-            <p className="text-xs text-gray-500">v1.2.0 • 2026 iSunFA</p>
+            <p className="text-xs text-gray-500">v1.2.0 • 2026 CAFECA</p>
           </div>
         </Link>
 

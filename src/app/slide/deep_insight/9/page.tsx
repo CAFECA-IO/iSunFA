@@ -1,41 +1,58 @@
+import { User, Brain, Bot, Sparkles, RefreshCw, FileText, ShieldCheck, ArrowRight } from 'lucide-react';
 
-import { Search, Database, BarChart3, FileText, Clock, Zap, Layers, PiggyBank } from 'lucide-react';
-
-export default function DeepInsightSlide7() {
-  const processSteps = [
-    { id: 1, label: '識別標的', icon: Search },
-    { id: 2, label: '多源爬蟲', icon: Database },
-    { id: 3, label: '指標分析', icon: BarChart3 },
-    { id: 4, label: '報告整合', icon: FileText },
-  ];
-
-  const metrics = [
+export default function DeepInsightSlide5() {
+  const steps = [
     {
-      value: '95%',
-      label: '節省時間',
-      desc: '較傳統人工收集資料縮短 95% 以上時間',
-      icon: Zap,
-      color: 'text-yellow-500',
-      bg: 'bg-yellow-50',
-      border: 'border-yellow-200',
+      id: '01',
+      title: '需求輸入',
+      desc: '用戶簡述報告需求，定義分析目標與範圍。',
+      icon: User,
+      color: 'bg-gray-100 text-gray-600',
     },
     {
-      value: '10+',
-      label: '涵蓋廣度',
-      desc: '納入司法判決、政府補助等非傳統財報數據',
-      icon: Layers,
-      color: 'text-blue-500',
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
+      id: '02',
+      title: '策略拆解',
+      desc: 'FAITH 制定量化策略，將大目標分解可執行任務。',
+      icon: Brain,
+      color: 'bg-orange-50 text-orange-600',
+      highlight: true,
     },
     {
-      value: '80%',
-      label: '成本降低',
-      desc: '降低約 80% 的初級分析師作業負擔',
-      icon: PiggyBank,
-      color: 'text-green-500',
-      bg: 'bg-green-50',
-      border: 'border-green-200',
+      id: '03',
+      title: '代理執行',
+      desc: 'AICH 領取任務，執行爬蟲與資料庫探索並回報。',
+      icon: Bot,
+      color: 'bg-blue-50 text-blue-600',
+      highlight: true,
+    },
+    {
+      id: '04',
+      title: '數據清洗',
+      desc: '針對回報進行標準化處理，確保數據品質。',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600',
+    },
+    {
+      id: '05',
+      title: '循環迭代',
+      desc: '重複執行與清洗，確保資料完整性與深度。',
+      icon: RefreshCw,
+      color: 'bg-green-50 text-green-600',
+    },
+    {
+      id: '06',
+      title: '報告生成',
+      desc: 'FAITH 整合成果，生成結構化且具專業邏輯報告。',
+      icon: FileText,
+      color: 'bg-orange-50 text-orange-600',
+      highlight: true,
+    },
+    {
+      id: '07',
+      title: '準確驗證',
+      desc: '透過 AI Agent 進行回測，驗證結果可靠性。',
+      icon: ShieldCheck,
+      color: 'bg-red-50 text-red-600',
     },
   ];
 
@@ -70,74 +87,95 @@ export default function DeepInsightSlide7() {
           />
         </div>
 
-        {/* Info: (20260121 - Luphia)Header */}
-        <div className="w-full px-16 pt-12 mb-8 relative z-20 text-center">
+        {/* Info: (20260121 - Luphia) Header */}
+        <div className="w-full px-16 pt-12 mb-10 relative z-20 text-center">
           <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-            案例分析 — <span className="text-orange-600">IRSC 智能企業評級</span>
+            DeepInsight <span className="text-orange-600">運作流程</span>
           </h2>
-          <p className="mt-3 text-xl text-gray-500 font-medium">單一企業深度挖掘：15-20 分鐘完成專業評級</p>
+          <p className="mt-3 text-xl text-gray-500 font-medium">從需求到洞察的 7 個關鍵步驟</p>
           <div className="h-1.5 w-24 bg-gradient-to-r from-orange-500 to-amber-400 mt-6 rounded-full mx-auto"></div>
         </div>
 
-        {/* Info: (20260121 - Luphia) Main Layout: Top (Process) + Bottom (Metrics) */}
-        <div className="w-full px-16 flex flex-col gap-8 z-10 flex-1">
-
-          {/* Info: (20260121 - Luphia) 1. Process Flow & Qualitative Benefit */}
-          <div className="flex gap-8 h-[220px]">
-            {/* Info: (20260121 - Luphia) Process Steps */}
-            <div className="flex-1 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-lg p-6 flex flex-col justify-center">
-              <div className="flex justify-between items-center relative">
-                {/* Info: (20260121 - Luphia) Connecting Line */}
-                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -z-10"></div>
-
-                {processSteps.map((step) => (
-                  <div key={step.id} className="flex flex-col items-center bg-white px-2">
-                    <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 mb-2 shadow-sm">
-                      <step.icon size={20} />
+        {/* Info: (20260121 - Luphia) Steps Flow Container */}
+        <div className="w-full px-8 flex flex-col gap-12 z-10">
+          {/* Info: (20260121 - Luphia) Row 1: Steps 1-4 */}
+          <div className="flex justify-center items-stretch gap-6">
+            {steps.slice(0, 4).map((step, index) => (
+              <div key={step.id} className="flex items-center gap-2">
+                {/* Info: (20260121 - Luphia) Card */}
+                <div className="flex flex-col items-center w-[180px] group relative">
+                  {/* Info: (20260121 - Luphia) Number Bubble */}
+                  <div className="mb-4 relative z-20">
+                    <div className={`w-14 h-14 rounded-2xl ${step.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 border-2 border-white relative overflow-hidden`}>
+                      <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <step.icon size={28} strokeWidth={1.5} />
                     </div>
-                    <span className="text-sm font-bold text-slate-700">{step.label}</span>
+                    <div className="absolute -top-3 -right-3 w-7 h-7 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs font-bold border-2 border-white shadow-md z-30">
+                      {step.id}
+                    </div>
                   </div>
-                ))}
 
-                {/* Info: (20260121 - Luphia) Time Highlight */}
-                <div className="flex flex-col items-center bg-white px-2 relative -top-8">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 border-4 border-white flex flex-col items-center justify-center text-white shadow-xl animate-pulse">
-                    <Clock size={20} className="mb-1" />
-                    <span className="text-xs font-bold leading-none">15-20</span>
-                    <span className="text-[10px] opacity-80">min</span>
+                  {/* Info: (20260121 - Luphia) Content */}
+                  <div className={`text-center bg-white/90 backdrop-blur-md p-5 pt-8 -mt-6 rounded-2xl border ${step.highlight ? 'border-orange-200 shadow-orange-100' : 'border-gray-100'} shadow-lg h-[150px] w-full hover:shadow-xl transition-all hover:-translate-y-1 relative z-10 flex flex-col items-center`}>
+                    {step.highlight && (
+                      <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-orange-400 animate-pulse"></div>
+                    )}
+                    <h3 className={`text-lg font-bold mb-3 ${step.highlight ? 'text-orange-700' : 'text-gray-900'}`}>
+                      {step.title}
+                    </h3>
+                    <p className="text-xs text-gray-600 leading-relaxed text-justify font-medium">
+                      {step.desc}
+                    </p>
                   </div>
-                  <div className="mt-2 text-sm font-bold text-orange-600">生成時間</div>
                 </div>
-              </div>
-            </div>
 
-            {/* Info: (20260121 - Luphia) Qualitative Benefit */}
-            <div className="w-[350px] bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-xl p-6 flex flex-col justify-center text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-8 opacity-10">
-                <BarChart3 size={120} />
+                {/* Info: (20260121 - Luphia) Connector Arrow (Right) except for last item in row */}
+                {index < 3 && (
+                  <div className="pt-12 text-gray-300 transform -translate-x-1">
+                    <ArrowRight size={20} className="text-gray-300/60" />
+                  </div>
+                )}
               </div>
-              <h3 className="text-lg font-bold text-orange-400 mb-3 flex items-center gap-2">
-                <Zap size={20} />
-                質化效益
-              </h3>
-              <p className="text-slate-300 leading-relaxed text-justify text-sm">
-                即時分析獲利與償債能力，提供精準投資建議，大幅縮短決策週期。
-              </p>
-            </div>
+            ))}
           </div>
 
-          {/* Info: (20260121 - Luphia) 2. Metrics Grid */}
-          <div className="grid grid-cols-3 gap-6">
-            {metrics.map((m, i) => (
-              <div key={i} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 flex items-center gap-6 hover:-translate-y-1 transition-transform duration-300">
-                <div className={`w-20 h-20 rounded-2xl ${m.bg} flex items-center justify-center ${m.color} shadow-inner`}>
-                  <m.icon size={36} strokeWidth={1.5} />
+          {/* Info: (20260121 - Luphia) Row 2: Steps 5-7 */}
+          <div className="flex justify-center items-stretch gap-6 pl-12">
+            {steps.slice(4, 7).map((step, index) => (
+              <div key={step.id} className="flex items-center gap-2">
+                {/* Info: (20260121 - Luphia) Card */}
+                <div className="flex flex-col items-center w-[180px] group relative">
+                  {/* Info: (20260121 - Luphia) Number Bubble */}
+                  <div className="mb-4 relative z-20">
+                    <div className={`w-14 h-14 rounded-2xl ${step.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 border-2 border-white relative overflow-hidden`}>
+                      <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <step.icon size={28} strokeWidth={1.5} />
+                    </div>
+                    <div className="absolute -top-3 -right-3 w-7 h-7 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs font-bold border-2 border-white shadow-md z-30">
+                      {step.id}
+                    </div>
+                  </div>
+
+                  {/* Info: (20260121 - Luphia) Content */}
+                  <div className={`text-center bg-white/90 backdrop-blur-md p-5 pt-8 -mt-6 rounded-2xl border ${step.highlight ? 'border-orange-200 shadow-orange-100' : 'border-gray-100'} shadow-lg h-[150px] w-full hover:shadow-xl transition-all hover:-translate-y-1 relative z-10 flex flex-col items-center`}>
+                    {step.highlight && (
+                      <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-orange-400 animate-pulse"></div>
+                    )}
+                    <h3 className={`text-lg font-bold mb-3 ${step.highlight ? 'text-orange-700' : 'text-gray-900'}`}>
+                      {step.title}
+                    </h3>
+                    <p className="text-xs text-gray-600 leading-relaxed text-justify font-medium">
+                      {step.desc}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <div className={`text-4xl font-extrabold ${m.color} tracking-tight`}>{m.value}</div>
-                  <div className="text-lg font-bold text-gray-800 mb-1">{m.label}</div>
-                  <div className="text-xs text-gray-500">{m.desc}</div>
-                </div>
+
+                {/* Info: (20260121 - Luphia) Connector Arrow (Right) except for last item */}
+                {index < 2 && (
+                  <div className="pt-12 text-gray-300 transform -translate-x-1">
+                    <ArrowRight size={20} className="text-gray-300/60" />
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -148,7 +186,7 @@ export default function DeepInsightSlide7() {
           <div>Confidential</div>
           <div className="flex gap-2 items-center">
             <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-            2026 iSunFA Corp.
+            2026 CAFECA Fintech
           </div>
         </div>
       </div>

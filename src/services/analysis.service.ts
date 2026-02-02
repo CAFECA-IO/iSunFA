@@ -4,16 +4,7 @@ import { getAnalysisCost } from '@/lib/analysis/pricing';
 import { storageService } from '@/services/storage.service';
 import { analysisRepo } from '@/repositories/analysis.repo';
 import { promises as fs } from 'fs';
-import { ChatService } from '@/services/chat.service';
-import { COMPANY as ECQ } from '@/constants/prompts/company/ecq';
-import { COMPANY as ERE } from '@/constants/prompts/company/ere';
-import { COMPANY as GDI } from '@/constants/prompts/company/gdi';
-import { COMPANY as GES } from '@/constants/prompts/company/ges';
-import { COMPANY as MMP } from '@/constants/prompts/company/mmp';
-import { COMPANY as SRR } from '@/constants/prompts/company/srr';
-import { COMPANY as TPM } from '@/constants/prompts/company/tpm';
-import { COMPANY as UEE } from '@/constants/prompts/company/uee';
-import { COMPANY as FINAL } from '@/constants/prompts/company/final';
+import { missionGenerator, IMissionDefinition } from '@/lib/worker/mission.generator';
 
 
 export interface IGenerateAnalysisParams {
@@ -48,64 +39,24 @@ export class AnalysisService {
       throw new Error('Missing required parameters');
     }
 
+    // Info: (20260129 - Luphia) Generate Mission Content via MissionGenerator
+    let missionDef: IMissionDefinition | null = null;
     let analysisResult = "AI Analysis Content Placeholder...";
 
-    // Info: (20260128 - Luphia) IRSC Split-Task Execution
-    if (params.category === 'irsc') {
-      try {
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-          throw new Error('Missing GEMINI_API_KEY');
-        }
+    try {
+      missionDef = missionGenerator.generateMission({
+        category: params.category,
+        periodType: params.periodType,
+        periodValue: params.periodValue,
+        year: params.year
+      });
 
-        const chatService = new ChatService(apiKey);
-        const targetInfo = `Target Company: ${params.periodValue} (Fiscal Year: ${params.year})`;
-        console.log(`[AnalysisService] Starting IRSC Analysis for ${targetInfo}...`);
-
-        const tasks = [
-          { key: 'ECQ', prompt: ECQ },
-          { key: 'MMP', prompt: MMP },
-          { key: 'UEE', prompt: UEE },
-          { key: 'GDI', prompt: GDI },
-          { key: 'TPM', prompt: TPM },
-          { key: 'SRR', prompt: SRR },
-          { key: 'ERE', prompt: ERE },
-          { key: 'GES', prompt: GES },
-        ];
-
-        // Info: (20260128 - Luphia) Execute 8 dimensions in parallel
-        const results = await Promise.all(
-          tasks.map(async (task) => {
-            console.log(`[AnalysisService] Running task: ${task.key}`);
-            const fullPrompt = `${targetInfo}\n\n${task.prompt}`;
-            // Info: (20260128 - Luphia) Use generating model to get analysis for specific dimension
-            const result = await chatService.generateRaw(fullPrompt);
-            return { key: task.key, content: result };
-          })
-        );
-
-        console.log(`[AnalysisService] All dimensions completed. Synthesizing final report...`);
-
-        // Info: (20260128 - Luphia) Construct Final Prompt
-        let finalPrompt = FINAL;
-        results.forEach(({ key, content }) => {
-          finalPrompt = finalPrompt.replace(`[${key}_CONTENT]`, content);
-        });
-
-        // Info: (20260128 - Luphia) Add context to final prompt as well
-        finalPrompt = `${targetInfo}\n\n${finalPrompt}`;
-
-        // Info: (20260128 - Luphia) Generate Final Report
-        analysisResult = await chatService.generateRaw(finalPrompt);
-        console.log(`[AnalysisService] IRSC Final Report Generated.`);
-
-      } catch (error) {
-        console.error('[AnalysisService] IRSC Generation Failed:', error);
-        analysisResult = "Failed to generate IRSC report. Please contact support.";
+      if (missionDef) {
+        analysisResult = "Analysis Mission Generated. Pending Execution.";
       }
-    } else {
-      // Info: (20260120 - Luphia) Simulate API delay for other categories
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+    } catch (error) {
+      console.error('[AnalysisService] Mission Generation Failed:', error);
+      analysisResult = "Analysis Generation Failed. Please contact support.";
     }
 
     // Info: (20260128 - Luphia) Create Plan Content
@@ -152,7 +103,7 @@ export class AnalysisService {
           userId,
           orderId: params.orderId,
           category: params.category,
-          missionName: `Analysis-${params.category}-${params.periodType}`,
+          missionName: missionDef ? missionDef.name : `Analysis-${params.category}-${params.periodType}`,
           missionData: {
             cost,
             remainingBalance: 9500,
@@ -161,7 +112,8 @@ export class AnalysisService {
             periodType: params.periodType,
             periodValue: params.periodValue,
             year: params.year
-          }
+          },
+          tasks: missionDef ? missionDef.tasks : undefined // Info: (20260130 - Luphia) Save tasks to DB
         });
       } catch (error) {
         console.error(`[AnalysisService] Failed to save report to DB:`, error);

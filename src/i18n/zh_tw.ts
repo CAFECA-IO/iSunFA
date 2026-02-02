@@ -519,11 +519,11 @@ export const zhTw = {
       daily: '日報',
     },
     cost_hint: '消耗: {{cost}} 點數',
-    confirm_title: '確認產生分析報告',
+    confirm_title: '確認生成分析報告',
     confirm_desc: '此操作將消耗點數，請確認詳細資訊：',
     confirm_cost: '本次消耗',
     confirm_balance: '支付後餘額',
-    confirm_action: '支付並產生',
+    confirm_action: '支付並生成',
     cancel: '取消',
     period: '分析期間',
     selected_period_desc: '已選擇 {{value}} 之 {{type}}',
@@ -565,5 +565,9 @@ export const zhTw = {
       analyzing: '正在生成分析報告...',
     },
 
+    success: {
+      title: '分析報告生成中',
+      message: '您可以在此閱覽生成進度與結果',
+    },
   },
 };
