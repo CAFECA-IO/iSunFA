@@ -274,7 +274,7 @@ export async function registerUser(tokenAddress: string, userAddress: string): P
   }
 }
 
-// Info: (20260127 - Admin) 強制轉帳
+// Info: (20260127 - Tzuhan) 強制轉帳
 export async function forcedTransfer(tokenAddress: string, from: string, to: string, amount: number): Promise<ActionResponse> {
   try {
     const validFrom = getAddress(from);
@@ -298,7 +298,7 @@ export async function forcedTransfer(tokenAddress: string, from: string, to: str
     return { success: true, message: `強制轉帳成功: ${tx}`, data: { tx } };
   } catch (error) {
     console.error('強制轉帳失敗:', error);
-    // Info: (20260128) Error Analysis
+    // Info: (20260128 - Tzuhan) Error Analysis
     let reason = (error as Error).message;
     if (reason.includes('Identity')) reason = 'Identity Invalid or Missing';
     else if (reason.includes('Compliance')) reason = 'Compliance Check Failed (e.g. Limit exceeded, Blacklisted)';
@@ -308,7 +308,7 @@ export async function forcedTransfer(tokenAddress: string, from: string, to: str
   }
 }
 
-// Info: (20260127 - Admin) 銷毀代幣
+// Info: (20260127 - Tzuhan) 銷毀代幣
 export async function burn(tokenAddress: string, from: string, amount: number): Promise<ActionResponse> {
   try {
     const validFrom = getAddress(from);
@@ -333,7 +333,7 @@ export async function burn(tokenAddress: string, from: string, amount: number): 
   }
 }
 
-// Info: (20260127 - Admin) 凍結/解凍代幣
+// Info: (20260127 - Tzuhan) 凍結/解凍代幣
 export async function freeze(tokenAddress: string, target: string, amount: number): Promise<ActionResponse> {
   return toggleFreeze(tokenAddress, target, amount, true);
 }
@@ -367,7 +367,7 @@ async function toggleFreeze(tokenAddress: string, target: string, amount: number
   }
 }
 
-// Info: (20260127 - Admin) 暫停/恢復系統
+// Info: (20260127 - Tzuhan) 暫停/恢復系統
 export async function pause(tokenAddress: string): Promise<ActionResponse> {
   return togglePause(tokenAddress, true);
 }
@@ -410,11 +410,11 @@ export async function prepareTransferUserOp(
 ): Promise<ActionResponse & { data?: { userOp: UserOperationJson, userOpHash: string } }> {
   try {
     const validSender = getAddress(sender);
-    const validRecipient = CONTRACT_ADDRESSES.NTD_TOKEN; // Transfer back to contract/platform
+    const validRecipient = CONTRACT_ADDRESSES.ISUNCOIN;
 
-    const amountWei = (Number(amount) * 10 ** 18).toString(); // ToDo: use decimal (fetch from token contract)
+    const amountWei = (Number(amount) * 10 ** 18).toString();
 
-    // 1. Build UserOp
+    // Info: (20260130 - Tzuhan) 1. Build UserOp
     const userOp = await buildTransferUserOp(
       validSender,
       validRecipient,
@@ -422,7 +422,7 @@ export async function prepareTransferUserOp(
       CONTRACT_ADDRESSES.NTD_TOKEN
     );
 
-    // 2. Calculate UserOp Hash using EntryPoint
+    // Info: (20260130 - Tzuhan) 2. Calculate UserOp Hash using EntryPoint
     const userOpHash = await client.readContract({
       address: CONTRACT_ADDRESSES.ENTRY_POINT,
       abi: ABIS.ENTRY_POINT,
