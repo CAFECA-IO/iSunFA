@@ -36,6 +36,7 @@ export default function AnalysisView() {
   // Info: (20260130 - Tzuhan) Payment Status State
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [txHash, setTxHash] = useState<string>('');
 
   // Info: (20260120 - Luphia) External Analysis States
   const [selectedCountry, setSelectedCountry] = useState<string>('');
@@ -183,9 +184,11 @@ export default function AnalysisView() {
     setIsPaymentModalOpen(true);
     setPaymentStatus('idle'); // Reset status when opening modal
     setErrorMessage('');
+    setTxHash('');
   };
 
-  const handleConfirmGenerate = async () => {
+  // Info: (20260130 - Tzuhan) Step 1: Handle Payment
+  const handlePayment = async () => {
     try {
       setIsLoading(true);
       setPaymentStatus('preparing');
@@ -198,6 +201,7 @@ export default function AnalysisView() {
       // Info: (20260130 - Tzuhan) 0. Check Balance & Cost
       if (!calculatedCost || calculatedCost <= 0) {
         // Skip payment logic if free? existing logic assumed cost > 0
+        // Todo: (20260130 - Tzuhan)
       }
 
       // Info: (20260130 - Tzuhan) 1. Prepare Transfer UserOp (Server Action)
@@ -240,12 +244,32 @@ export default function AnalysisView() {
         throw new Error(submitRes.message || 'Token transfer failed');
       }
 
+      const transactionHash = (submitRes.data as { tx: string })?.tx;
+      setTxHash(transactionHash);
       setPaymentStatus('payment_success');
-      // Short delay to show success
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Info: (20260128 - Luphia) 5. Create Order & Get Challenge (Existing Logic)
+    } catch (error) {
+      console.error('Payment failed:', error);
+      setPaymentStatus('error');
+      setErrorMessage(t('auth_modal.failed') + `: ${(error as Error).message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Info: (20260130 - Tzuhan) Step 2: Handle Report Generation
+  const handleGenerateReport = async () => {
+    try {
+      setIsLoading(true);
+      // Ensure we have a separate status or reuse signing_analysis
       setPaymentStatus('signing_analysis');
+      setErrorMessage('');
+
+      if (!txHash) {
+        throw new Error('Payment transaction hash not found. Please pay first.');
+      }
+
+      // 5. Create Order & Get Challenge (Existing Logic)
       const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
         method: 'POST',
         body: JSON.stringify({
@@ -253,7 +277,7 @@ export default function AnalysisView() {
           periodType,
           year: selectedYear,
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-          txHash: (submitRes.data as { tx: string })?.tx
+          txHash: txHash
         })
       });
 
@@ -261,7 +285,7 @@ export default function AnalysisView() {
       const { orderId, challenge } = orderRes.payload;
 
       /**
-       * Info: (20260128 - Luphia) 6. Sign the Analysis Order
+       * 6. Sign the Analysis Order
        */
       const analysisChallengeBase64 = btoa(challenge)
         .replace(/\+/g, '-')
@@ -277,7 +301,7 @@ export default function AnalysisView() {
 
       const authWithOrder = { ...authentication, orderId };
 
-      // Info: (20260128 - Luphia) 8. Send to API
+      // 8. Send to API
       setPaymentStatus('analyzing');
       await request('/api/v1/user/analysis', {
         method: 'POST',
@@ -290,16 +314,15 @@ export default function AnalysisView() {
         }),
       });
 
-      // Info: (20260120 - Luphia) Refresh user balance
+      // Refresh user balance
       await refreshAuth();
 
       setIsPaymentModalOpen(false);
-      setPaymentStatus('idle'); // Reset for next time
+      setPaymentStatus('idle');
     } catch (error) {
-      console.error('Analysis generation failed:', error);
+      console.error('Report generation failed:', error);
       setPaymentStatus('error');
       setErrorMessage(t('auth_modal.failed') + `: ${(error as Error).message}`);
-      // Keep modal open to show error state in stepper
     } finally {
       setIsLoading(false);
     }
@@ -541,15 +564,16 @@ export default function AnalysisView() {
       <PaymentConfirmModal
         isOpen={isPaymentModalOpen}
         onClose={() => {
-          if (paymentStatus === 'error') {
+          if (paymentStatus === 'error' || paymentStatus === 'payment_success') {
             setPaymentStatus('idle');
             setErrorMessage('');
             setIsPaymentModalOpen(false);
+            setTxHash('');
           } else if (paymentStatus === 'idle') {
             setIsPaymentModalOpen(false);
           }
         }}
-        onConfirm={handleConfirmGenerate}
+        onConfirm={paymentStatus === 'payment_success' ? handleGenerateReport : handlePayment}
         cost={calculatedCost}
         analysisType={t(`analysis.categories.${category}`)}
         period={t('analysis.selected_period_desc', {
@@ -561,6 +585,7 @@ export default function AnalysisView() {
         isLoading={isLoading}
         status={paymentStatus}
         errorMessage={errorMessage}
+        txHash={txHash}
       />
 
       {/* Info: (20260120 - Luphia) History Section */}

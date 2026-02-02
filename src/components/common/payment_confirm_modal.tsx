@@ -1,8 +1,8 @@
 'use client';
 
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
-import { Coins, X, Loader2, CheckCircle2, Circle } from 'lucide-react';
+import { Coins, X, Loader2, CheckCircle2, Circle, Copy, Check } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { useAuth } from '@/contexts/auth_context';
 
@@ -20,6 +20,7 @@ interface IPaymentConfirmModalProps {
   isLoading?: boolean;
   status?: PaymentStatus;
   errorMessage?: string;
+  txHash?: string;
 }
 
 export default function PaymentConfirmModal({
@@ -34,9 +35,20 @@ export default function PaymentConfirmModal({
   isLoading = false,
   status = 'idle',
   errorMessage,
+  txHash,
 }: IPaymentConfirmModalProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (txHash) {
+      await navigator.clipboard.writeText(txHash);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }
+  };
+
   if (!user) {
     alert(`You are not logged in`);
     return;
@@ -157,6 +169,29 @@ export default function PaymentConfirmModal({
                       <div className="text-center bg-gray-50 rounded-lg p-4">
                         {status === 'error' ? (
                           <p className="text-sm text-red-600 font-medium">{errorMessage || t('auth_modal.failed')}</p>
+                        ) : status === 'payment_success' ? (
+                          <div className="space-y-1">
+                            <p className="text-sm text-green-600 font-bold">{t('analysis.steps.payment_success')}</p>
+                            {txHash && (
+                              <div className="flex items-center justify-center gap-2 mt-1">
+                                <p className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded" title={txHash}>
+                                  {txHash.slice(0, 6)}...{txHash.slice(-4)}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={handleCopy}
+                                  className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                                  title="Copy TxHash"
+                                >
+                                  {isCopied ? (
+                                    <Check className="h-3 w-3 text-green-500" />
+                                  ) : (
+                                    <Copy className="h-3 w-3 text-gray-400" />
+                                  )}
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <p className="text-sm text-gray-700 font-medium animate-pulse">
                             {t(`analysis.steps.${status}`)}
@@ -196,6 +231,17 @@ export default function PaymentConfirmModal({
                           <span className="text-gray-500">{t('analysis.period')}</span>
                           <span className="font-medium text-gray-900">{period}</span>
                         </div>
+
+                        {/* Info: (20260130 - Tzuhan) TxHash Display */}
+                        {txHash && (
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-500">TxHash</span>
+                            <span className="font-mono text-xs text-gray-900 max-w-[150px] truncate" title={txHash}>
+                              {txHash.slice(0, 6)}...{txHash.slice(-4)}
+                            </span>
+                          </div>
+                        )}
+
                         <div className="h-px bg-gray-200 my-2" />
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-gray-900 font-semibold">{t('analysis.confirm_cost')}</span>
@@ -215,7 +261,7 @@ export default function PaymentConfirmModal({
                 </div>
 
                 <div className="mt-6 sm:mt-8 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                  {!isProcessing && status !== 'error' && (
+                  {(!isProcessing || status === 'payment_success') && status !== 'error' && (
                     <>
                       <button
                         type="button"
@@ -224,7 +270,7 @@ export default function PaymentConfirmModal({
                         onClick={onConfirm}
                       >
                         {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                        {t('analysis.confirm_action')}
+                        {status === 'payment_success' ? t('analysis.generate') : t('analysis.confirm_action')}
                       </button>
                       <button
                         type="button"
