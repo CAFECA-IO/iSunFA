@@ -412,11 +412,13 @@ export async function prepareTransferUserOp(
     const validSender = getAddress(sender);
     const validRecipient = CONTRACT_ADDRESSES.NTD_TOKEN; // Transfer back to contract/platform
 
+    const amountWei = (Number(amount) * 10 ** 18).toString(); // ToDo: use decimal (fetch from token contract)
+
     // 1. Build UserOp
     const userOp = await buildTransferUserOp(
       validSender,
       validRecipient,
-      amount.toString(),
+      amountWei,
       CONTRACT_ADDRESSES.NTD_TOKEN
     );
 
@@ -425,18 +427,18 @@ export async function prepareTransferUserOp(
       address: CONTRACT_ADDRESSES.ENTRY_POINT,
       abi: ABIS.ENTRY_POINT,
       functionName: 'getUserOpHash',
-      args: [userOp as unknown as {
-        sender: `0x${string}`;
-        nonce: bigint;
-        initCode: `0x${string}`;
-        callData: `0x${string}`;
-        callGasLimit: bigint;
-        verificationGasLimit: bigint;
-        preVerificationGas: bigint;
-        maxFeePerGas: bigint;
-        maxPriorityFeePerGas: bigint;
-        paymasterAndData: `0x${string}`;
-        signature: `0x${string}`;
+      args: [{
+        sender: userOp.sender as `0x${string}`,
+        nonce: BigInt(userOp.nonce),
+        initCode: userOp.initCode as `0x${string}`,
+        callData: userOp.callData as `0x${string}`,
+        callGasLimit: BigInt(userOp.callGasLimit),
+        verificationGasLimit: BigInt(userOp.verificationGasLimit),
+        preVerificationGas: BigInt(userOp.preVerificationGas),
+        maxFeePerGas: BigInt(userOp.maxFeePerGas),
+        maxPriorityFeePerGas: BigInt(userOp.maxPriorityFeePerGas),
+        paymasterAndData: userOp.paymasterAndData as `0x${string}`,
+        signature: userOp.signature as `0x${string}`,
       }]
     });
 

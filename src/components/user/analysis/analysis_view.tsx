@@ -200,9 +200,9 @@ export default function AnalysisView() {
 
       // Info: (20260130 - Tzuhan) 0. Check Balance & Cost
       if (!calculatedCost || calculatedCost <= 0) {
-        // Skip payment logic if free? existing logic assumed cost > 0
-        // Todo: (20260130 - Tzuhan)
+        // Todo: (20260130 - Tzuhan) skip payment logic if free
       }
+      console.log('calculatedCost', calculatedCost);
 
       // Info: (20260130 - Tzuhan) 1. Prepare Transfer UserOp (Server Action)
       const prepRes = await prepareTransferUserOp(user.address, calculatedCost);
