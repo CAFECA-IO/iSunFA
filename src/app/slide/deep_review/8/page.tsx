@@ -81,18 +81,6 @@ export default function DeepReviewSlide8() {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [transcript]);
 
-  // Info: (20260130 - Luphia) Simulate Live Transcript
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Info: (20260130 - Luphia) Toggle speaking status randomly for demo
-      setMembers(prev => prev.map(m => ({
-        ...m,
-        status: Math.random() > 0.8 ? 'speaking' : 'listening'
-      })));
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
   const handleVote = () => {
     setIsVoting(true);
     // Info: (20260130 - Luphia) Simulate random votes

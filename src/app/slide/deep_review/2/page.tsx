@@ -1,4 +1,5 @@
 import { LineChart, Fingerprint, Mic, Tags } from 'lucide-react';
+import SlideQRCode from '@/components/slide/slide_qr_code';
 
 export default function DeepReviewSlide2() {
   const features = [
@@ -56,33 +57,48 @@ export default function DeepReviewSlide2() {
         </div>
 
         {/* Info: (20260121 - Luphia) Header */}
-        <div className="absolute top-16 left-16">
+        <div className="absolute top-16 left-16 z-20">
           <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
             DeepReview <span className="text-orange-600">能提供什麼服務？</span>
           </h2>
           <div className="h-1.5 w-24 bg-gradient-to-r from-orange-500 to-amber-400 mt-4 rounded-full"></div>
         </div>
 
-        {/* Info: (20260121 - Luphia) Content Container - Grid */}
-        <div className="z-10 w-full px-16 mt-32">
-          <div className="grid grid-cols-2 gap-10">
-            {features.map((feature, idx) => (
-              <div key={idx} className="flex gap-6 p-8 rounded-2xl bg-white/95 border border-orange-200 shadow-lg hover:shadow-xl transition-all group backdrop-blur-md">
-                <div className="flex-shrink-0">
-                  <div className="w-16 h-16 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all duration-300 shadow-inner">
-                    <feature.icon size={32} strokeWidth={1.5} />
+        {/* Info: (20260121 - Luphia) Content Container - Flex */}
+        <div className="z-10 w-full h-full pt-32 px-16 pb-16 flex">
+          {/* Info: (20260121 - Luphia) Left Content - 70% */}
+          <div className="w-[70%] pr-8 flex items-center">
+            <div className="grid grid-cols-2 gap-6">
+              {features.map((feature, idx) => (
+                <div key={idx} className="flex gap-4 p-5 rounded-2xl bg-white/95 border border-orange-200 shadow-md hover:shadow-lg transition-all group backdrop-blur-md">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all duration-300 shadow-inner">
+                      <feature.icon size={24} strokeWidth={1.5} />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-700 transition-colors">
+                      {feature.title}
+                    </h3>
+                    <p className="text-[15px] text-gray-700 leading-relaxed font-medium">
+                      {feature.desc}
+                    </p>
                   </div>
                 </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-orange-700 transition-colors">
-                    {feature.title}
-                  </h3>
-                  <p className="text-[17px] text-gray-700 leading-relaxed font-medium">
-                    {feature.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          {/* Info: (20260121 - Luphia) Right Content - 30% - QR Code */}
+          <div className="w-[30%] flex flex-col items-center justify-center border-l border-gray-200/50 pl-8">
+            <SlideQRCode
+              url="https://irsc.isunfa.com"
+              className=""
+              size={220}
+            />
+            <p className="mt-6 text-center text-gray-600 font-medium">
+              掃描 QR Code<br />立即體驗智能分析
+            </p>
           </div>
         </div>
 
