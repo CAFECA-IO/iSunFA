@@ -121,6 +121,7 @@ export const en = {
   },
   header: {
     free_trial: 'Free Trial',
+    accounting_consultation_room:'Accounting Consultation Room',
     pricing: 'Pricing',
     login: 'Login',
     plan: 'Current Plan',

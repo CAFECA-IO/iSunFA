@@ -121,6 +121,7 @@ export const zhTw = {
   },
   header: {
     free_trial: "免費試用",
+    accounting_consultation_room: "會計諮詢室",
     pricing: "收費模式",
     login: "登入",
     plan: "目前方案",
