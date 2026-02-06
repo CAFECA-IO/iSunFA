@@ -91,17 +91,17 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
                                 <div className="sm:flex sm:items-start w-full">
                                     <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
                                         <DialogTitle as="h3" className="text-base font-semibold leading-6 text-gray-900">
-                                            {t('pricing.payment_modal.title')}
+                                            {t('pricing.credits.payment_modal.title')}
                                         </DialogTitle>
                                         <div className="mt-4 bg-gray-50 p-4 rounded-md border border-gray-200 space-y-3">
                                             <div className="flex justify-between items-center">
-                                                <span className="text-sm text-gray-500">{t('pricing.payment_modal.amount_to_pay')}</span>
+                                                <span className="text-sm text-gray-500">{t('pricing.credits.payment_modal.amount_to_pay')}</span>
                                                 <span className="text-lg font-bold text-gray-900">{displayPrice || `$${amount}`}</span>
                                             </div>
                                             <div className="flex justify-between items-center border-t border-gray-200 pt-3">
-                                                <span className="text-sm text-gray-500">{t('pricing.payment_modal.tokens_to_receive')}</span>
+                                                <span className="text-sm text-gray-500">{t('pricing.credits.payment_modal.tokens_to_receive')}</span>
                                                 <span className="text-lg font-bold text-orange-600">
-                                                    {t('pricing.payment_modal.credits_unit', { count: credits.toLocaleString() })}
+                                                    {t('pricing.credits.payment_modal.credits_unit', { count: credits.toLocaleString() })}
                                                 </span>
                                             </div>
                                         </div>
@@ -120,7 +120,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
                                                     className="inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 disabled:opacity-50 sm:ml-3 sm:w-auto items-center gap-2"
                                                 >
                                                     {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                                                    {loading ? t('pricing.payment_modal.processing') : t('pricing.payment_modal.confirm_btn')}
+                                                    {loading ? t('pricing.credits.payment_modal.processing') : t('pricing.credits.payment_modal.confirm_btn')}
                                                 </button>
                                                 <button
                                                     type="button"
