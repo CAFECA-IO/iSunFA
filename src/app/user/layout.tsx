@@ -3,6 +3,7 @@
 import AuthGuard from '@/components/auth/auth_guard';
 import UserHeader from '@/components/user/user_header';
 import UserFooter from '@/components/user/user_footer';
+import FaithAgent from '@/components/user/faith_agent';
 
 export default function UserLayout({
   children,
@@ -18,6 +19,7 @@ export default function UserLayout({
             {children}
           </main>
         </div>
+        <FaithAgent />
         <UserFooter />
       </div>
     </AuthGuard>

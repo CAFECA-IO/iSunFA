@@ -85,22 +85,20 @@ const CommentItem = ({ comment }: { comment: IComment }) => {
         </div>
       </div>
 
-      {/* Like/Dislike Buttons in bottom right */}
+      {/* Info: (20260206 - Julian) Like/Dislike Buttons in bottom right */}
       <div className="absolute bottom-6 right-6 flex items-center gap-4">
         <button
           onClick={handleLike}
-          className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${
-            liked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
-          }`}
+          className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${liked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
+            }`}
         >
           <ThumbsUp size={16} fill={liked ? "currentColor" : "none"} />
           <span>{comment.likes + (liked ? 1 : 0)}</span>
         </button>
         <button
           onClick={handleDislike}
-          className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${
-            disliked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
-          }`}
+          className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${disliked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
+            }`}
         >
           <ThumbsDown size={16} fill={disliked ? "currentColor" : "none"} />
           <span>{comment.dislikes + (disliked ? 1 : 0)}</span>
@@ -126,12 +124,12 @@ const CommentSection = () => {
   const displayedComments =
     mockComments.length > 0 ? (
       <div className="space-y-6">
-        {/* 會計師評論範例 */}
+        {/* Info: (20260206 - Julian) 會計師評論範例 */}
         {mockComments.map((comment) => (
           <CommentItem key={comment.id} comment={comment} />
         ))}
 
-        {/* 更多留言載入 */}
+        {/* Info: (20260206 - Julian) 更多留言載入 */}
         <button className="w-full py-4 border-2 border-dashed border-gray-100 rounded-2xl text-gray-300 font-bold hover:border-orange-200 hover:text-orange-400 transition-all">
           載入更多討論...
         </button>
@@ -157,7 +155,7 @@ const CommentSection = () => {
         </button>
       </div>
 
-      {/* 發表評論 Input */}
+      {/* Info: (20260206 - Julian) 發表評論 Input */}
       <div
         className={`mb-10 transition-all duration-300 overflow-hidden ${isShowInput ? "max-h-60 opacity-100" : "max-h-0 opacity-0"}`}
       >
@@ -187,7 +185,7 @@ const CommentSection = () => {
         </div>
       </div>
 
-      {/* 評論區 */}
+      {/* Info: (20260206 - Julian) 評論區 */}
       {displayedComments}
     </section>
   );
@@ -218,7 +216,7 @@ export default function AiTalkDetailPage() {
   const [liked, setLiked] = useState<boolean>(false);
   const [disliked, setDisliked] = useState<boolean>(false);
 
-  const homePagePath = "/accounting_ai_talk";
+  const homePagePath = "/ai_consultation_room";
 
   if (!data) {
     return (
@@ -251,7 +249,7 @@ export default function AiTalkDetailPage() {
       <Header />
 
       <main className="max-w-4xl mx-auto px-6 py-12">
-        {/* Navigation / Breadcrumbs */}
+        {/* Info: (20260206 - Julian) Navigation / Breadcrumbs */}
         <nav className="mb-10">
           <Link
             href={homePagePath}
@@ -264,7 +262,7 @@ export default function AiTalkDetailPage() {
           </Link>
         </nav>
 
-        {/* 1. 問題區塊 */}
+        {/* Info: (20260206 - Julian) 1. 問題區塊 */}
         <article className="space-y-12">
           <header className="flex flex-wrap items-center gap-3 text-sm">
             <div className="flex gap-2">
@@ -295,7 +293,7 @@ export default function AiTalkDetailPage() {
               {data.question}
             </p>
 
-            {/* 附件預覽 */}
+            {/* Info: (20260206 - Julian) 附件預覽 */}
             {data.attachments && data.attachments.length > 0 && (
               <div className="mt-6 flex flex-wrap gap-3">
                 {data.attachments.map((attachment) => (
@@ -320,9 +318,9 @@ export default function AiTalkDetailPage() {
           </div>
         </div>
 
-        {/* 2. AI 回覆區塊 */}
+        {/* Info: (20260206 - Julian) 2. AI 回覆區塊 */}
         <section className="bg-linear-to-br from-orange-50 to-amber-50 rounded-[2.5rem] p-10 border border-orange-100 relative overflow-hidden shadow-sm">
-          {/* 裝飾用的 AI 標章 */}
+          {/* Info: (20260206 - Julian) 裝飾用的 AI 標章 */}
           <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
             <Sparkles className="w-32 h-32 text-orange-600" />
           </div>
@@ -380,7 +378,7 @@ export default function AiTalkDetailPage() {
             </div>
           </article>
 
-          {/* 互動工具列 */}
+          {/* Info: (20260206 - Julian) 互動工具列 */}
           <footer className="mt-10 pt-8 border-t border-orange-200/50 flex flex-wrap items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <button
@@ -392,11 +390,10 @@ export default function AiTalkDetailPage() {
                     setDisliked(false);
                   }
                 }}
-                className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 ${
-                  liked
-                    ? "bg-orange-600 text-white  border-transparent"
-                    : "bg-white border-orange-200 hover:bg-orange-50 "
-                }`}
+                className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 ${liked
+                  ? "bg-orange-600 text-white  border-transparent"
+                  : "bg-white border-orange-200 hover:bg-orange-50 "
+                  }`}
               >
                 <ThumbsUp size={18} />
                 <span>{data.countOfLike + (liked ? 1 : 0)} 人贊同</span>
@@ -410,11 +407,10 @@ export default function AiTalkDetailPage() {
                     setLiked(false);
                   }
                 }}
-                className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 ${
-                  disliked
-                    ? "bg-orange-600 text-white border-transparent"
-                    : "bg-white border-orange-200 hover:bg-orange-50 "
-                }`}
+                className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 ${disliked
+                  ? "bg-orange-600 text-white border-transparent"
+                  : "bg-white border-orange-200 hover:bg-orange-50 "
+                  }`}
               >
                 <ThumbsDown size={18} />
                 <span>{data.countOfDislike + (disliked ? 1 : 0)} 人不贊同</span>
@@ -430,7 +426,7 @@ export default function AiTalkDetailPage() {
           </footer>
         </section>
 
-        {/* 3. 評論區塊 */}
+        {/* Info: (20260206 - Julian) 3. 評論區塊 */}
         <CommentSection />
       </main>
 

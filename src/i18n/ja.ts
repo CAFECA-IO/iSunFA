@@ -120,7 +120,7 @@ export const ja = {
   },
   header: {
     free_trial: '無料トライアル',
-    accounting_ai_talk: '会計諮詢室',
+    ai_consultation_room: 'AI 諮詢室',
     pricing: '料金',
     login: 'ログイン',
     plan: '現在のプラン',

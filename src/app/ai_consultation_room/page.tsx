@@ -56,7 +56,7 @@ const ThreadCard = ({
       href={linkPath}
       className="bg-white flex flex-col hover:scale-105 transition-all ease-in-out duration-300 hover:cursor-pointer hover:border-orange-400 size-[300px] rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md"
     >
-      {/* Q 區塊 (問題) */}
+      {/* Info: (20260206 - Julian) Q 區塊 (問題) */}
       <div className="p-6 flex-1 overflow-hidden">
         <div className="flex items-center gap-2 mb-3">
           <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded">
@@ -72,7 +72,7 @@ const ThreadCard = ({
         </h3>
       </div>
 
-      {/* A 區塊 (AI 回答摘要) */}
+      {/* Info: (20260206 - Julian) A 區塊 (AI 回答摘要) */}
       <div className="bg-orange-50 flex-1 p-6 border-t border-orange-100 flex flex-col justify-between overflow-hidden">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -92,7 +92,7 @@ const ThreadCard = ({
           </p>
         </div>
 
-        {/* Toolbar */}
+        {/* Info: (20260206 - Julian) Toolbar */}
         <div className="flex items-center gap-4 pt-2 mt-2 border-t border-orange-100/50">
           <div className="flex items-center gap-1 text-orange-400 ">
             <ThumbsUp size={14} />
@@ -138,7 +138,7 @@ const AiChat = () => {
   return (
     <aside className="w-80 fixed right-4 bottom-24 z-50 transition-all duration-300 ease-in-out p-6 bg-white rounded-2xl border border-orange-400 shadow-sm ml-4">
       <div className="flex items-center justify-between text-lg font-bold">
-        <h2 className=" text-gray-800">會計諮詢室</h2>
+        <h2 className=" text-gray-800">AI 諮詢室</h2>
         <button
           type="button"
           onClick={() => setIsChatOpen(!isChatOpen)}
@@ -185,7 +185,7 @@ export default function AccountingAiTalkPage() {
 
       <main className="relative pt-12 min-h-screen">
         <div className="flex flex-col mb-2 items-center gap-4">
-          <h1 className="text-4xl font-bold text-gray-800">會計諮詢室</h1>
+          <h1 className="text-4xl font-bold text-gray-800">AI 諮詢室</h1>
           <p className="text-gray-400">
             與 AI 進行即時會計問答，並和社群成員分享討論
           </p>
