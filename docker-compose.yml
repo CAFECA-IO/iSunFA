@@ -1,0 +1,19 @@
+# ToDo: (20251211 - Luphia) docker-compose.yml with poxa, ipfs, postgres, isuncoin
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: isunfa_db
+    restart: always
+    ports:
+      - '${POSTGRES_PORT:-5435}:5432'
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-isunfa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-isunfa}
+      POSTGRES_DB:       ${POSTGRES_DB:-isunfa}
+    volumes:                       
+      - postgres_data:/var/lib/postgresql/data
+volumes:                           
+  postgres_data:
