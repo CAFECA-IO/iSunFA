@@ -2,119 +2,120 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 // import { useTranslation } from '@/i18n/i18n_context';
 import Header from "@/components/landing_page/header";
 import Footer from "@/components/landing_page/footer";
-import { PlusIcon, MinusIcon } from "lucide-react";
+import {
+  PlusIcon,
+  MinusIcon,
+  ThumbsUp,
+  ThumbsDown,
+  Share2,
+} from "lucide-react";
+import { timestampToString } from "@/lib/utils/common";
+import { IThread, mockThreads } from "@/interfaces/ai_talk";
 
-interface IThread {
-  id: number;
-  question: string;
-  answer: string;
-  createdAt: number;
-  author: string;
-  tags: string[];
+function formatTime(timestamp: number, now: number) {
+  const diff = now - timestamp;
+
+  if (diff < 60) {
+    return "Just now";
+  } else if (diff < 86400) {
+    const hours = Math.floor(diff / 3600);
+    return `${hours} hours ago`;
+  } else if (diff < 604800) {
+    const days = Math.floor(diff / 86400);
+    return `${days} days ago`;
+  } else {
+    return timestampToString(timestamp).dateWithDash;
+  }
 }
 
-const threads: IThread[] = [
-  {
-    id: 1,
-    question: "What is the capital of France?",
-    answer: "The capital of France is Paris.",
-    author: "John Doe",
-    tags: ["France", "Paris"],
-    createdAt: Date.now(),
-  },
-  {
-    id: 2,
-    question: "What is the capital of Japan?",
-    answer: "The capital of Japan is Tokyo.",
-    author: "Jane Smith",
-    tags: ["Japan", "Tokyo"],
-    createdAt: Date.now(),
-  },
-  {
-    id: 3,
-    question: "What is the most popular sport in the world?",
-    answer: "The most popular sport in the world is football.",
-    author: "David Lee",
-    tags: ["Sport", "Football"],
-    createdAt: Date.now(),
-  },
-  {
-    id: 4,
-    question: "What is the smallest animal in the world?",
-    answer: "The smallest animal in the world is the tardigrade.",
-    author: "Anne Wang",
-    tags: ["Animal", "Smallest"],
-    createdAt: Date.now(),
-  },
-  {
-    id: 5,
-    question: "Is AI a threat to humanity?",
-    answer: "AI is a tool that can be used for good or evil.",
-    author: "Frank Chen",
-    tags: ["AI", "Threat"],
-    createdAt: Date.now(),
-  },
-  {
-    id: 6,
-    question: "小規模營業稅如何計算？",
-    answer: "查定課徵營業稅額 ＝ 國稅局查定每月銷售額 × 稅率 (通常為 1%)...",
-    author: "匿名創業家",
-    tags: ["營業稅", "小規模"],
-    createdAt: 173827382,
-  },
-  {
-    id: 7,
-    question: "公司買車報支加油費，發票沒打統編可以扣抵嗎？",
-    answer: "不可以。依據營業稅法，未載明統一編號之進項憑證不得扣抵銷項稅額...",
-    author: "Finance_Alice",
-    tags: ["扣抵稅額", "憑證"],
-    createdAt: 173827382,
-  },
-];
+const ThreadCard = ({
+  id,
+  question,
+  answer,
+  authorId,
+  tags,
+  createdAt,
+  countOfLike,
+  countOfDislike,
+  countOfShare,
+}: IThread) => {
+  const pathname = usePathname();
+  const linkPath = `${pathname}/${id}`;
+  const [now] = useState(() => Date.now() / 1000);
 
-const ThreadCard = ({ question, answer, author, tags }: IThread) => (
-  <div className="bg-white grid grid-rows-2 hover:scale-105 transition-all ease-in-out duration-300 hover:cursor-pointer hover:border-pink-400 size-[250px] rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md">
-    {/* Q 區塊 (問題) */}
-    <div className="p-5">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="px-2 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded">
-          Q
-        </span>
-        <span className="text-gray-400 text-xs">{author} • 剛剛</span>
+  const displayedTime = (
+    <span className="text-gray-400"> • {formatTime(createdAt, now)}</span>
+  );
+
+  return (
+    <Link
+      href={linkPath}
+      className="bg-white flex flex-col hover:scale-105 transition-all ease-in-out duration-300 hover:cursor-pointer hover:border-orange-400 size-[300px] rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md"
+    >
+      {/* Q 區塊 (問題) */}
+      <div className="p-6 flex-1 overflow-hidden">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded">
+            Q
+          </span>
+          <p className="text-gray-700 text-xs">
+            {authorId}
+            {displayedTime}
+          </p>
+        </div>
+        <h3 className="font-bold text-gray-800 leading-snug line-clamp-3">
+          {question}
+        </h3>
       </div>
-      <h3 className="font-bold text-gray-800 leading-snug line-clamp-2">
-        {question}
-      </h3>
-    </div>
 
-    {/* A 區塊 (AI 回答摘要) */}
-    <div className="bg-pink-50 h-full p-5 border-t border-pink-100">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="px-2 py-1 bg-pink-200 text-pink-700 text-xs font-bold rounded">
-          AI
-        </span>
-        <div className="flex gap-1">
-          {tags.map((tag) => (
-            <span key={tag} className="text-[10px] text-pink-400">
-              #{tag}
+      {/* A 區塊 (AI 回答摘要) */}
+      <div className="bg-orange-50 flex-1 p-6 border-t border-orange-100 flex flex-col justify-between overflow-hidden">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2 py-1 bg-orange-200 text-orange-700 text-xs font-bold rounded">
+              AI
             </span>
-          ))}
+            <div className="flex gap-1">
+              {tags.map((tag) => (
+                <span key={tag} className="text-[10px] text-orange-400">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-orange-900 line-clamp-3 leading-relaxed">
+            {answer}
+          </p>
+        </div>
+
+        {/* Toolbar */}
+        <div className="flex items-center gap-4 pt-2 mt-2 border-t border-orange-100/50">
+          <div className="flex items-center gap-1 text-orange-400 ">
+            <ThumbsUp size={14} />
+            <span className="text-xs">{countOfLike}</span>
+          </div>
+          <div className="flex items-center gap-1 text-orange-400 ">
+            <ThumbsDown size={14} />
+            <span className="text-xs">{countOfDislike}</span>
+          </div>
+          <div className="flex items-center gap-1 text-orange-400 ">
+            <Share2 size={14} />
+            <span className="text-xs">{countOfShare}</span>
+          </div>
         </div>
       </div>
-      <p className="text-sm text-pink-900 line-clamp-3 leading-relaxed">
-        {answer}
-      </p>
-    </div>
-  </div>
-);
+    </Link>
+  );
+};
 
 const ThreadGrid = ({ threads }: { threads: IThread[] }) => {
   const displayedThreads =
     threads.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 justify-items-center gap-4 px-24 py-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-items-center gap-4 px-24 py-6">
         {threads.map((item) => (
           <ThreadCard key={item.id} {...item} />
         ))}
@@ -122,7 +123,7 @@ const ThreadGrid = ({ threads }: { threads: IThread[] }) => {
     ) : (
       <div className="p-10 h-[500px] gap-2 flex flex-col items-center justify-center">
         <p className="text-gray-700 text-lg font-bold">目前沒有任何對話紀錄</p>
-        <Link href="/" className="text-pink-500 hover:text-pink-600">
+        <Link href="/" className="text-orange-500 hover:text-orange-600">
           回首頁
         </Link>
       </div>
@@ -135,13 +136,13 @@ const AiChat = () => {
   const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
 
   return (
-    <aside className="w-80 fixed right-4 bottom-24 z-50 transition-all duration-300 ease-in-out p-6 bg-white rounded-2xl border border-gray-100 shadow-sm ml-4">
+    <aside className="w-80 fixed right-4 bottom-24 z-50 transition-all duration-300 ease-in-out p-6 bg-white rounded-2xl border border-orange-400 shadow-sm ml-4">
       <div className="flex items-center justify-between text-lg font-bold">
         <h2 className=" text-gray-800">會計諮詢室</h2>
         <button
           type="button"
           onClick={() => setIsChatOpen(!isChatOpen)}
-          className="text-gray-400 p-2 hover:text-pink-400"
+          className="text-gray-400 p-2 hover:text-orange-400"
         >
           {isChatOpen ? <MinusIcon /> : <PlusIcon />}
         </button>
@@ -152,21 +153,23 @@ const AiChat = () => {
       >
         <div className="relative">
           <textarea
+            id="ai-question-input"
+            aria-label="請輸入你的問題"
             placeholder="請輸入你的問題..."
-            className="w-full h-32 p-4 outline-none bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-pink-200 resize-none"
+            className="w-full h-32 p-4 outline-none bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-orange-200 resize-none"
           />
         </div>
 
-        <button className="w-full py-3 flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 hover:border-pink-300 hover:text-pink-400 transition-colors">
+        <button className="w-full py-3 flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 hover:border-orange-300 hover:text-orange-400 transition-colors">
           <PlusIcon />
           <span className="text-sm font-medium">上傳發票 / 單據 (OCR)</span>
         </button>
 
-        <button className="w-full py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl shadow-lg shadow-pink-100 transition-all active:scale-95">
+        <button className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl shadow-lg shadow-orange-100 transition-all active:scale-95">
           立即向 AI 提問
         </button>
 
-        <p className="pt-4 text-[10px] text-gray-400 leading-relaxed text-center">
+        <p className="pt-2 text-sm text-gray-400 leading-relaxed text-center">
           * AI 回覆僅供參考，不代表正式法律建議。
         </p>
       </div>
@@ -174,14 +177,19 @@ const AiChat = () => {
   );
 };
 
-export default function AccountingConsultationRoomPage() {
+export default function AccountingAiTalkPage() {
   // const { t } = useTranslation();
   return (
     <div className="bg-white">
       <Header />
 
-      <main className="relative min-h-screen">
-        <ThreadGrid threads={threads} />
+      <main className="relative pt-12 min-h-screen">      
+        <div className="flex flex-col mb-2 items-center gap-4">
+          <h1 className="text-4xl font-bold text-gray-800">會計諮詢室</h1>
+          <p className="text-gray-400">與 AI 進行即時會計問答，並和社群成員分享討論</p>
+        </div>
+
+        <ThreadGrid threads={mockThreads} />
         <AiChat />
       </main>
 
