@@ -121,6 +121,7 @@ export const ko = {
   },
   header: {
     free_trial: '무료 체험',
+    ai_consultation_room: 'AI 상담실',
     pricing: '요금제',
     login: '로그인',
     plan: '현재 요금제',
