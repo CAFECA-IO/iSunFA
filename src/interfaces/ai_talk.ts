@@ -97,3 +97,37 @@ export const mockThreads: IThread[] = [
     attachments: ["憑證_06.jpg", "憑證_07.jpg"],
   },
 ];
+
+export interface IComment {
+  id: string;
+  authorId: string;
+  content: string;
+  createdAt: number;
+  likes: number;
+  dislikes: number;
+  isProfessional: boolean;
+  isVerified: boolean;
+}
+
+export const mockComments: IComment[] = [
+  {
+    id: "1",
+    authorId: "user_001",
+    content: "AI 的解析基本正確，但要補充一點：如果是餐飲業，還需注意「交際費」在年度申報時的限額問題。建議建立獨立的餐飲支出清單，方便月底核銷。",
+    createdAt: 1770365492,
+    likes: 10,
+    dislikes: 2,
+    isProfessional: true,
+    isVerified: true,
+  },
+  {
+    id: "2",
+    authorId: "user_002",
+    content: "AI 解析有誤，請注意。",
+    createdAt: 1770345093,
+    likes: 15,
+    dislikes: 3,
+    isProfessional: false,
+    isVerified: false,
+  },
+];

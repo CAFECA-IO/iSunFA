@@ -115,7 +115,7 @@ const ThreadCard = ({
 const ThreadGrid = ({ threads }: { threads: IThread[] }) => {
   const displayedThreads =
     threads.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-items-center gap-4 px-24 py-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-items-center gap-x-4 gap-y-8 px-24 py-6">
         {threads.map((item) => (
           <ThreadCard key={item.id} {...item} />
         ))}
@@ -183,10 +183,12 @@ export default function AccountingAiTalkPage() {
     <div className="bg-white">
       <Header />
 
-      <main className="relative pt-12 min-h-screen">      
+      <main className="relative pt-12 min-h-screen">
         <div className="flex flex-col mb-2 items-center gap-4">
           <h1 className="text-4xl font-bold text-gray-800">會計諮詢室</h1>
-          <p className="text-gray-400">與 AI 進行即時會計問答，並和社群成員分享討論</p>
+          <p className="text-gray-400">
+            與 AI 進行即時會計問答，並和社群成員分享討論
+          </p>
         </div>
 
         <ThreadGrid threads={mockThreads} />
