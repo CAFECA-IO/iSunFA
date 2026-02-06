@@ -120,7 +120,7 @@ export const zhCn = {
   },
   header: {
     free_trial: '免费试用',
-    accounting_consultation_room: '会計諮詢室',
+    accounting_ai_talk: '会計諮詢室',
     pricing: '收费模式',
     login: '登录',
     plan: '当前方案',
