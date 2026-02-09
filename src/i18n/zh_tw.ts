@@ -593,6 +593,7 @@ export const zhTw = {
     file_size_error: '檔案 "{name}" 超過 5MB 限制',
     file_count_error: '最多只能上傳 {count} 張圖片',
     upload_btn: '上傳發票 / 單據 (OCR)',
+    drop_to_upload: '放開以開始上傳',
     ask_ai: '立即向 AI 提問',
     disclaimer: '* AI 回覆僅供參考，不代表正式法律建議。其分析內容基於提供的數據。',
     discussion_title: '專家與用戶討論',

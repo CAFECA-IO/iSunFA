@@ -565,6 +565,7 @@ export const ko = {
     file_size_error: '"{name}" 파일이 5MB 제한을 초과했습니다',
     file_count_error: '최대 {count}장의 이미지만 업로드할 수 있습니다',
     upload_btn: '영수증 / 증빙서류 업로드 (OCR)',
+    drop_to_upload: '업로드하려면 파일을 놓으세요',
     ask_ai: '지금 AI에게 질문하기',
     disclaimer: '* AI 답변은 참고용일 뿐이며 공식적인 법률 조언이 아닙니다. 분석 내용은 제공된 데이터를 기반으로 합니다.',
     discussion_title: '전문가 및 사용자 토론',

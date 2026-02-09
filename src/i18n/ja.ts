@@ -565,6 +565,7 @@ export const ja = {
     file_size_error: 'ファイル「{name}」が5MBの制限を超えています',
     file_count_error: '最大{count}枚の画像までアップロード可能です',
     upload_btn: '請求書・領収書のアップロード (OCR)',
+    drop_to_upload: 'ドロップしてアップロード',
     ask_ai: '今すぐAIに質問する',
     disclaimer: '* AIの回答はあくまで参考であり、正式な法的助言ではありません。分析内容は提供されたデータに基づいています。',
     discussion_title: '専門家とユーザーの議論',

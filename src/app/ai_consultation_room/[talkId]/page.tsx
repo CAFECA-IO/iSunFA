@@ -22,6 +22,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 
 import { CommentSection } from "@/components/ai_consultation_room/comment_section";
 import { AttachmentItem } from "@/components/ai_consultation_room/attachment_item";
+import { AiChat } from "@/components/ai_consultation_room/ai_chat";
 
 export default function AiTalkDetailPage() {
   const { t } = useTranslation();
@@ -231,6 +232,9 @@ export default function AiTalkDetailPage() {
 
         {/* Info: (20260206 - Julian) 3. 評論區塊 */}
         <CommentSection comments={data.comments} />
+
+        {/* Info: (20260208 - Julian) 4. AI 聊天區塊 */}
+        <AiChat />
       </main>
 
       <Footer />

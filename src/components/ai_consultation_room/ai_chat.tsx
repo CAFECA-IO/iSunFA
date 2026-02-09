@@ -8,19 +8,21 @@ export const AiChat = () => {
    const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
    const [question, setQuestion] = useState<string>("");
+   const [isDragging, setIsDragging] = useState<boolean>(false);
    const fileInputRef = useRef<HTMLInputElement>(null);
 
    const isSubmitDisabled = !question.trim();
 
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  const processFiles = (files: FileList | null) => {
     if (files) {
       const fileList = Array.from(files);
       const maxSize = 5 * 1024 * 1024; // 5MB
       const maxCount = 5;
 
       const validFiles = fileList.filter((file) => {
+        if (!file.type.startsWith("image/")) {
+          return false;
+        }
         if (file.size > maxSize) {
           alert(
             t("ai_consultation_room.file_size_error").replace(
@@ -46,15 +48,34 @@ export const AiChat = () => {
         }
         return totalFiles;
       });
-
-      // Reset input value to allow uploading same file again if deleted
-      e.target.value = "";
     }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    processFiles(e.target.files);
+    e.target.value = "";
+  };
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const onDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    processFiles(e.dataTransfer.files);
   };
 
   const removeFile = (index: number) => {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
+
 
   return (
     <div
@@ -117,6 +138,9 @@ export const AiChat = () => {
 
       <div className="overflow-y-auto">
         <div
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
           className={`transition-all duration-300 ease-in-out flex flex-col gap-4 flex-1 ${
             isChatOpen ? "opacity-100 h-fit mt-6" : "opacity-0 h-0"
           }`}
@@ -131,7 +155,6 @@ export const AiChat = () => {
                 onChange={(e) => setQuestion(e.target.value)}
                 className="w-full h-36 p-4 outline-none bg-gray-50 border-2 border-transparent focus:border-orange-200 rounded-2xl text-sm transition-all resize-none shadow-inner"
               />
-
             </div>
 
             {/* Display Uploaded Files */}
@@ -174,13 +197,19 @@ export const AiChat = () => {
 
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-2xl text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50 transition-all"
+              className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all ${
+                isDragging
+                  ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
+                  : "border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50"
+              }`}
             >
-              <PlusIcon size={20} className="shrink-0" />
+              <PlusIcon size={20} className={`shrink-0 ${isDragging ? "animate-bounce" : ""}`} />
               <span className="text-sm font-semibold">
-                {t("ai_consultation_room.upload_btn")}
+                {isDragging ? t("ai_consultation_room.drop_to_upload") : t("ai_consultation_room.upload_btn")}
               </span>
+
             </button>
+
 
             <button
               id="ai-chat-submit"
