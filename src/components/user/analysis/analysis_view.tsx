@@ -6,6 +6,7 @@ import { Check, Calendar, Coins, FileBarChart, Globe } from 'lucide-react';
 import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
 import PaymentConfirmModal, { PaymentStatus } from '@/components/common/payment_confirm_modal';
+import ConfirmModal from '@/components/common/confirm_modal';
 import AnalysisGenerationModal, { AnalysisStatus } from '@/components/user/analysis/analysis_generation_modal';
 import SuccessNotification from '@/components/common/success_notification';
 import HistorySection from '@/components/user/analysis/history_section';
@@ -16,9 +17,12 @@ import { getAnalysisCost } from '@/lib/analysis/pricing';
 import { getPeriodDateRange } from '@/lib/analysis/period';
 import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES } from '@/constants/analysis';
 
+import { useRouter } from 'next/navigation';
+
 export default function AnalysisView() {
   const { t } = useTranslation();
   const { user, refreshAuth } = useAuth();
+  const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<'internal' | 'external' | 'history'>('internal');
   const [category, setCategory] = useState<string>(INTERNAL_CATEGORIES[0]);
@@ -57,6 +61,7 @@ export default function AnalysisView() {
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
+  const [insufficientCreditsModal, setInsufficientCreditsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Info: (20260128 - Luphia) Error Modal State
@@ -65,6 +70,11 @@ export default function AnalysisView() {
 
   // Info: (20260130 - Luphia) Success Notification State
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+
+  const handleBuyCredits = () => {
+    setInsufficientCreditsModal(false);
+    router.push('/pricing?tab=credits');
+  };
 
   // Info: (20260120 - Luphia) Generate specific period options based on type
   const renderPeriodOptions = () => {
@@ -213,6 +223,15 @@ export default function AnalysisView() {
       if (!calculatedCost || calculatedCost <= 0) {
         // Todo: (20260130 - Tzuhan) skip payment logic if free
       }
+
+      // Info: (20260206) Check user credits
+      if ((user.credits || 0) < calculatedCost) {
+        setInsufficientCreditsModal(true);
+        setIsLoading(false);
+        setPaymentStatus('idle');
+        return;
+      }
+
       console.log('calculatedCost', calculatedCost);
 
       // Info: (20260130 - Tzuhan) 1. Prepare Transfer UserOp (Server Action)
@@ -622,6 +641,15 @@ export default function AnalysisView() {
         onConfirm={handleGenerateReport}
         status={analysisStatus}
         errorMessage={errorMessage}
+      />
+
+      <ConfirmModal
+        isOpen={insufficientCreditsModal}
+        onClose={() => setInsufficientCreditsModal(false)}
+        title={t('analysis.insufficient_credits.title')}
+        message={t('analysis.insufficient_credits.message')}
+        confirmText={t('analysis.insufficient_credits.buy_btn')}
+        onConfirm={handleBuyCredits}
       />
 
       {/* Info: (20260130 - Luphia) Success Notification */}
