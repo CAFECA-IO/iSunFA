@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { useAuth } from '@/contexts/auth_context';
 import PricingCard from '@/components/pricing/pricing_card';
@@ -16,24 +17,34 @@ import { MODULES } from '@/constants/modules';
 
 import ConfirmModal from '@/components/common/confirm_modal';
 import AuthModal from '@/components/auth/auth_modal';
-import KYCModal from '@/components/pricing/kyc_modal';
+// import KYCModal from '@/components/pricing/kyc_modal';
 import PaymentModal from '@/components/pricing/payment_modal';
+import { request } from '@/lib/utils/request';
+import { Loader2 } from 'lucide-react';
+import { CREDIT_PLANS } from '@/config/credit_plans';
 
 export default function PricingPage() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { user, refreshAuth } = useAuth();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') === 'credits' ? 'credits' : 'subscription';
+
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
-  const [activeTab, setActiveTab] = useState<'subscription' | 'credits'>('subscription');
+  const [activeTab, setActiveTab] = useState<'subscription' | 'credits'>(initialTab);
+  const [pricingPlans, setPricingPlans] = useState<typeof CREDIT_PLANS>([]);
+  const [loadingPlans, setLoadingPlans] = useState(false);
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     title: '',
     message: '',
   });
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
-  const [kycModalOpen, setKycModalOpen] = useState(false);
+  // const [kycModalOpen, setKycModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [deployingPlanId, setDeployingPlanId] = useState<string | null>(null);
   const [pendingAmount, setPendingAmount] = useState(0);
   const [pendingCredits, setPendingCredits] = useState(0);
+  const [pendingDisplayPrice, setPendingDisplayPrice] = useState('');
 
   // Info: (20260119 - Luphia) Allow guest users to select free plan to trigger login
   const currentPlan = user ? ((user.plan === 'personal' || !user.plan) ? 'free' : user.plan) : undefined;
@@ -67,6 +78,54 @@ export default function PricingPage() {
       isOpen: true,
       title: t('pricing.coming_soon_title'),
       message: t('pricing.coming_soon_message'),
+    });
+  };
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        setLoadingPlans(true);
+        const response = await request<{ payload: typeof CREDIT_PLANS }>('/api/v1/pricing/plans');
+        if (response && response.payload) {
+          setPricingPlans(response.payload);
+        } else {
+          console.error("Invalid plans response");
+        }
+      } catch (e) {
+        console.error("Failed to fetch plans", e);
+      } finally {
+        setLoadingPlans(false);
+      }
+    };
+
+    if (activeTab === 'credits') {
+      fetchPlans();
+    }
+  }, [activeTab]);
+
+  const getPrice = (plan: typeof CREDIT_PLANS[0]) => {
+    switch (language) {
+      case 'zh-TW':
+        return `NT$ ${plan.price.twd.toLocaleString()}`;
+      case 'zh-CN':
+        return `¥ ${plan.price.cny.toLocaleString()}`;
+      case 'ja':
+        return `¥ ${plan.price.jpy.toLocaleString()}`;
+      case 'ko':
+        return `₩ ${plan.price.krw.toLocaleString()}`;
+      default:
+        return `$${plan.price.usd.toLocaleString()}`;
+    }
+  }
+
+  const handlePaymentSuccess = async (tx: string) => {
+    // Info: (20260129 - Tzuhan) Refresh user balance after minting
+    await refreshAuth();
+
+    setConfirmModal({
+      isOpen: true,
+      title: 'Purchase Successful',
+      message: `Tokens minted successfully! Tx: ${tx}`,
     });
   };
 
@@ -205,7 +264,6 @@ export default function PricingPage() {
                 />
               </div>
 
-              {/* Info: (20260115 - Luphia) Enterprise AI Adoption Plan Section */}
               {/* Info: (20260115 - Luphia) Enterprise AI Adoption Plan Section */}
               <div className="mt-16 rounded-3xl bg-gradient-to-b from-gray-900 to-gray-800 p-1 shadow-2xl shadow-orange-900/20 ring-1 ring-white/10">
                 <div className="rounded-[22px] bg-gray-900/50 px-6 py-8 sm:px-12 lg:px-12 lg:py-12 backdrop-blur-xl">
@@ -365,67 +423,109 @@ export default function PricingPage() {
           </>
         ) : (
           <div className="mx-auto max-w-7xl px-6 lg:px-8 pb-24 pt-10">
-            <div className="mx-auto mt-4 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-              {['tier1', 'tier2', 'tier3', 'tier4', 'tier5', 'tier6'].map((tier) => {
-                const popular = tier === 'tier2';
-                return (
-                  <div key={tier} className={`relative flex flex-col justify-between rounded-3xl bg-white p-8 ring-1 xl:p-10 ${popular ? 'ring-2 ring-orange-600' : 'ring-gray-200'}`}>
-                    {popular && (
-                      <div className="absolute -top-4 left-0 right-0 mx-auto w-32 rounded-full bg-orange-600 px-3 py-1 text-center text-sm font-semibold text-white shadow-sm">
-                        Most Popular
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="text-lg font-semibold leading-8 text-gray-900">
-                        {t(`pricing.credits.plans.${tier}.credits`)}
-                      </h3>
-                      <p className="mt-4 text-sm leading-6 text-gray-600">
-                        {t(`pricing.credits.plans.${tier}.desc`)}
-                      </p>
-                      <p className="mt-6 flex items-baseline gap-x-1">
-                        <span className="text-4xl font-bold tracking-tight text-gray-900">
-                          {t(`pricing.credits.plans.${tier}.price`)}
-                        </span>
-                      </p>
-                      <ul className="mt-8 space-y-3 text-sm leading-6 text-gray-600">
-                        <li className="flex gap-x-3">
-                          <Check className="h-6 w-5 flex-none text-orange-600" aria-hidden="true" />
-                          {t('pricing.credits.items.validity')}
-                        </li>
-                        <li className="flex gap-x-3">
-                          <Check className="h-6 w-5 flex-none text-orange-600" aria-hidden="true" />
-                          {t('pricing.credits.items.all_features')}
-                        </li>
-                      </ul>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (!user) {
-                          setAuthModalOpen(true);
-                          return;
-                        }
-                        console.log(t(`pricing.credits.plans.${tier}.credits`));
-                        console.log(t(`pricing.credits.plans.${tier}.price`));
-                        setPendingCredits(Number(t(`pricing.credits.plans.${tier}.credits`).split(' ')[0]));
-                        setPendingAmount(Number(t(`pricing.credits.plans.${tier}.price`).split(' ')[1]));
+            {loadingPlans ? (
+              <div className="flex justify-center py-20">
+                <Loader2 className="h-10 w-10 animate-spin text-orange-600" />
+              </div>
+            ) : (
+              <div className="mx-auto mt-4 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+                {pricingPlans.map((plan) => {
+                  const popular = plan.popular;
+                  const baseCredits = plan.price.usd * 30;
+                  const bonus = Math.max(0, plan.credits - baseCredits);
+                  const percent = baseCredits > 0 ? Math.round((bonus / baseCredits) * 100) : 0;
+                  const isDeploying = deployingPlanId === plan.id;
 
-                        if (user.isVerified) {
-                          setPaymentModalOpen(true);
-                        } else {
-                          setKycModalOpen(true);
-                        }
-                      }}
-                      className={`mt-8 block w-full rounded-md px-3 py-2 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${popular
-                        ? 'bg-orange-600 text-white shadow-sm hover:bg-orange-500 focus-visible:outline-orange-600'
-                        : 'bg-orange-50 text-orange-600 hover:bg-orange-100 focus-visible:outline-orange-600'
-                        }`}
-                    >
-                      {t('pricing.credits.buy_btn')}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+                  return (
+                    <div key={plan.id} className={`relative flex flex-col justify-between rounded-3xl bg-white p-8 ring-1 xl:p-10 ${popular ? 'ring-2 ring-orange-600' : 'ring-gray-200'}`}>
+                      {popular && (
+                        <div className="absolute -top-4 left-0 right-0 mx-auto w-32 rounded-full bg-orange-600 px-3 py-1 text-center text-sm font-semibold text-white shadow-sm">
+                          Most Popular
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="text-lg font-semibold leading-8 text-gray-900">
+                          {t(`pricing.credits.plans.${plan.id}.credits`, { count: plan.credits.toLocaleString() })}
+                        </h3>
+                        <p className="mt-4 text-sm leading-6 text-gray-600">
+                          {t(`pricing.credits.plans.${plan.id}.desc`, {
+                            bonus: bonus.toLocaleString(),
+                            percent: percent.toString(),
+                          })}
+                        </p>
+                        <p className="mt-6 flex items-baseline gap-x-1">
+                          <span className="text-4xl font-bold tracking-tight text-gray-900">
+                            {t(`pricing.credits.plans.${plan.id}.price`, { price: getPrice(plan) })}
+                          </span>
+                        </p>
+                        <ul className="mt-8 space-y-3 text-sm leading-6 text-gray-600">
+                          <li className="flex gap-x-3">
+                            <Check className="h-6 w-5 flex-none text-orange-600" aria-hidden="true" />
+                            {t('pricing.credits.items.validity')}
+                          </li>
+                          <li className="flex gap-x-3">
+                            <Check className="h-6 w-5 flex-none text-orange-600" aria-hidden="true" />
+                            {t('pricing.credits.items.all_features')}
+                          </li>
+                        </ul>
+                      </div>
+                      <button
+                        disabled={!!deployingPlanId} // Info: (20260206 - Tzuhan) Disable if ANY plan is deploying
+                        onClick={async () => {
+                          if (!user) {
+                            setAuthModalOpen(true);
+                            return;
+                          }
+
+                          setPendingCredits(plan.credits);
+                          setPendingAmount(language === 'zh-TW' ? plan.price.twd : plan.price.usd);
+                          setPendingDisplayPrice(getPrice(plan));
+
+                          // Info: (20260206 - Tzuhan) Direct check identity, if no identity, deploy one
+                          if (user.isVerified) {
+                            setPaymentModalOpen(true);
+                          } else {
+                            try {
+                              setDeployingPlanId(plan.id);
+                              // Info: (20260206 - Tzuhan) Auto deploy identity
+                              await request('/api/v1/user/kyc', {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                  fullName: user.name || 'User', // Info: (20260206 - Tzuhan) Minimal data
+                                  idNumber: 'N/A',
+                                  submittedAt: new Date().toISOString(),
+                                }),
+                              });
+
+                              // Info: (20260206 - Tzuhan) Refresh auth to get new identity status
+                              await refreshAuth();
+
+                              setPaymentModalOpen(true);
+                            } catch (error) {
+                              console.error('Failed to deploy identity:', error);
+                              setConfirmModal({
+                                isOpen: true,
+                                title: 'Error',
+                                message: 'Failed to initialize identity wallet. Please try again.',
+                              });
+                            } finally {
+                              setDeployingPlanId(null);
+                            }
+                          }
+                        }}
+                        className={`mt-8 block w-full rounded-md px-3 py-2 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 flex items-center justify-center gap-2 ${popular
+                          ? 'bg-orange-600 text-white shadow-sm hover:bg-orange-500 focus-visible:outline-orange-600'
+                          : 'bg-orange-50 text-orange-600 hover:bg-orange-100 focus-visible:outline-orange-600'
+                          } ${deployingPlanId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {isDeploying && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {isDeploying ? 'Initializing...' : t('pricing.credits.buy_btn')}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -434,29 +534,21 @@ export default function PricingPage() {
           onClose={() => setAuthModalOpen(false)}
         />
 
-        <KYCModal
+        {/* <KYCModal
           isOpen={kycModalOpen}
           onClose={() => setKycModalOpen(false)}
           onSuccess={() => {
             setPaymentModalOpen(true);
           }}
-        />
+        /> */}
 
         <PaymentModal
           isOpen={paymentModalOpen}
           onClose={() => setPaymentModalOpen(false)}
-          credits={pendingCredits}
+          onSuccess={handlePaymentSuccess}
           amount={pendingAmount}
-          onSuccess={async (tx) => {
-            // Info: (20260129 - Tzuhan) Refresh user balance after minting
-            await refreshAuth();
-
-            setConfirmModal({
-              isOpen: true,
-              title: 'Purchase Successful',
-              message: `Tokens minted successfully! Tx: ${tx}`,
-            });
-          }}
+          credits={pendingCredits}
+          displayPrice={pendingDisplayPrice}
         />
 
         {/* Info: (20260116 - Luphia) Coming Soon Modal */}
