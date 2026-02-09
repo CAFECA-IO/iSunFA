@@ -104,9 +104,11 @@ export default function CafecaFintechPrint() {
           zip.file(`CafecaFintech_Slide_${(i + 1).toString().padStart(2, '0')}.png`, base64, { base64: true });
         }
 
-        // Info: (20260202 - Luphia) Update progress based on total slides to show movement, 
-        // though strictly we might want to map to selected count. 
-        // Showing "Processed X/Total" is fine.
+        /**
+         * Info: (20260202 - Luphia)
+         * Update progress based on total slides to show movement
+         * though strictly we might want to map to selected count
+         */
         setProgress(Math.round(((i + 1) / slidePages.length) * 100));
       }
 
