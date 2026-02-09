@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
+import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/landing_page/header";
 import Footer from "@/components/landing_page/footer";
-import { mockThreads, IComment } from "@/interfaces/ai_talk";
-import { timestampToString } from "@/lib/utils/common";
+import { mockThreads, IComment, IAttachment } from "@/interfaces/ai_talk";
+import { timestampToString,formatTime } from "@/lib/utils/common";
 import {
   ChevronLeft,
   MessageSquare,
@@ -19,11 +21,65 @@ import {
   Sparkles,
   Paperclip,
   Send,
+  X,
 } from "lucide-react";
+import { MarkdownContent } from '@/components/common/markdown_content';
 
-const CommentItem = ({ comment }: { comment: IComment }) => {
+const CommentPostInput = ({
+  isShowInput,
+  value,
+  onChange,
+}: {
+  isShowInput: boolean;
+  value: string;
+  onChange: (val: string) => void;
+}) => {
+  return (
+    <div
+      className={`transition-all duration-300 overflow-hidden ${isShowInput ? "max-h-60 opacity-100 mb-6" : "max-h-0 opacity-0 mb-0"}`}
+    >
+      <div className="flex gap-4 p-6 rounded-4xl bg-orange-50/50 border border-orange-100 shadow-inner">
+        <div className="w-12 h-12 bg-white rounded-2xl shrink-0 flex items-center justify-center text-orange-200 border border-orange-50 shadow-sm">
+          <User size={24} />
+        </div>
+        <div className="flex-1 space-y-3">
+          <textarea
+            id="ai-comment-input"
+            aria-label="發表評論"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="分享您的見解或提出疑問..."
+            className="w-full bg-white border border-orange-100 rounded-2xl p-4 text-sm focus:outline-none focus:border-orange-500 transition-all placeholder:text-gray-300 min-h-[100px] resize-none shadow-sm"
+          />
+          <div className="flex justify-end">
+            <button
+              disabled={!value.trim()}
+              className="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-orange-500 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-md shadow-orange-200"
+            >
+              <Send size={16} />
+              <span>送出評論</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CommentItem = ({
+  comment,
+  isReply = false,
+}: {
+  comment: IComment;
+  isReply?: boolean;
+}) => {
   const [liked, setLiked] = useState<boolean>(false);
   const [disliked, setDisliked] = useState<boolean>(false);
+  const [showReplies, setShowReplies] = useState<boolean>(false);
+  const [replyInput, setReplyInput] = useState<string>("");
+  const [now] = useState(() => Date.now() / 1000);
+
+  const initial = comment.authorId.slice(0, 1).toUpperCase();
 
   const isShowProTag = comment.isProfessional && (
     <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -61,69 +117,109 @@ const CommentItem = ({ comment }: { comment: IComment }) => {
     }
   };
 
+  const toggleReplies = () => {
+    if (showReplies) setReplyInput("");
+    setShowReplies(!showReplies);
+  };
+
+  const hasReplies = comment.replies && comment.replies.length > 0;
+
   return (
-    <div className="group relative flex gap-5 p-6 rounded-3xl bg-white border border-gray-100 hover:border-orange-300 transition-all">
-      {isShowProTag}
+    <div className={`space-y-4 ${isReply ? "ml-14" : ""}`}>
+      <div className="group relative flex gap-5 p-6 rounded-3xl bg-white border border-gray-100 hover:border-orange-300 transition-all">
+        {isShowProTag}
 
-      <div className="w-14 h-14 bg-blue-100 rounded-2xl shrink-0 flex items-center justify-center text-blue-600 font-bold text-xl relative">
-        U{isShowVerifiedIcon}
-      </div>
-
-      <div className="flex-1 space-y-2">
-        <div className="flex items-center gap-2">
-          <span className="font-extrabold text-gray-900">
-            {comment.authorId}
-          </span>
-          {isShowVerifiedTag}
-          <span className="text-xs text-gray-400">2 小時前</span>
+        <div className="w-14 h-14 bg-blue-100 rounded-2xl shrink-0 flex items-center justify-center text-blue-600 font-bold text-xl relative">
+          {initial}
+          {isShowVerifiedIcon}
         </div>
-        <p className="text-gray-700 leading-relaxed pr-20">{comment.content}</p>
-        <div className="flex items-center gap-4 pt-2">
-          <button className="text-xs font-bold text-gray-400 hover:text-orange-500">
-            回覆
+
+        <div className="flex-1 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="font-extrabold text-gray-900">
+              {comment.authorId}
+            </span>
+            {isShowVerifiedTag}
+            <span className="text-xs text-gray-400">
+              {formatTime(comment.createdAt, now)}
+            </span>
+          </div>
+          <p className="text-gray-700 leading-relaxed pr-20">
+            {comment.replyToUserId && (
+              <span className="text-blue-500 font-medium mr-1">
+                @{comment.replyToUserId}
+              </span>
+            )}
+            {comment.content}
+          </p>
+          <div className="flex items-center gap-4 pt-2">
+            <button
+              onClick={toggleReplies}
+              className="text-xs font-bold text-gray-400 hover:text-orange-500 transition-colors"
+            >
+              回覆{hasReplies ? `(${comment.replies.length})` : ""}
+            </button>
+          </div>
+        </div>
+
+        {/* Info: (20260206 - Julian) Like/Dislike Buttons in bottom right */}
+        <div className="absolute bottom-6 right-6 flex items-center gap-4">
+          <button
+            onClick={handleLike}
+            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${
+              liked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            <ThumbsUp size={16} fill={liked ? "currentColor" : "none"} />
+            <span>{comment.likes + (liked ? 1 : 0)}</span>
+          </button>
+          <button
+            onClick={handleDislike}
+            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${
+              disliked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            <ThumbsDown size={16} fill={disliked ? "currentColor" : "none"} />
+            <span>{comment.dislikes + (disliked ? 1 : 0)}</span>
           </button>
         </div>
       </div>
 
-      {/* Info: (20260206 - Julian) Like/Dislike Buttons in bottom right */}
-      <div className="absolute bottom-6 right-6 flex items-center gap-4">
-        <button
-          onClick={handleLike}
-          className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${liked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
-            }`}
-        >
-          <ThumbsUp size={16} fill={liked ? "currentColor" : "none"} />
-          <span>{comment.likes + (liked ? 1 : 0)}</span>
-        </button>
-        <button
-          onClick={handleDislike}
-          className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${disliked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
-            }`}
-        >
-          <ThumbsDown size={16} fill={disliked ? "currentColor" : "none"} />
-          <span>{comment.dislikes + (disliked ? 1 : 0)}</span>
-        </button>
-      </div>
+      {/* Reply Input & Nested Replies */}
+      {showReplies && (
+        <div className="space-y-4">
+          <div className={isReply ? "" : "ml-14"}>
+            <CommentPostInput
+              isShowInput={showReplies}
+              value={replyInput}
+              onChange={setReplyInput}
+            />
+          </div>
+          {hasReplies && (
+            <div className="space-y-4">
+              {comment.replies.map((reply) => (
+                <CommentItem key={reply.id} comment={reply} isReply />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
 const CommentSection = ({ comments }: { comments: IComment[] }) => {
-  const [commentInput, setCommentInput] = useState<string>("");
   const [isShowInput, setIsShowInput] = useState<boolean>(true);
+  const [commentInput, setCommentInput] = useState<string>("");
 
   const openInputHandler = () => {
-    if (isShowInput) {
-      setCommentInput("");
-      setIsShowInput(false);
-    } else {
-      setIsShowInput(true);
-    }
+    if (isShowInput) setCommentInput("");
+    setIsShowInput((prev) => !prev);
   };
 
   const displayedComments =
     comments.length > 0 ? (
-      <div className="space-y-6">
+      <div className="space-y-6 mt-6">
         {/* Info: (20260206 - Julian) 會計師評論範例 */}
         {comments.map((comment) => (
           <CommentItem key={comment.id} comment={comment} />
@@ -135,7 +231,7 @@ const CommentSection = ({ comments }: { comments: IComment[] }) => {
         </button>
       </div>
     ) : (
-      <div className="flex items-center justify-center h-20 text-gray-400">
+      <div className="flex mt-6 items-center justify-center h-20 text-gray-400">
         尚無討論
       </div>
     );
@@ -156,34 +252,11 @@ const CommentSection = ({ comments }: { comments: IComment[] }) => {
       </div>
 
       {/* Info: (20260206 - Julian) 發表評論 Input */}
-      <div
-        className={`mb-10 transition-all duration-300 overflow-hidden ${isShowInput ? "max-h-60 opacity-100" : "max-h-0 opacity-0"}`}
-      >
-        <div className="flex gap-4 p-6 rounded-4xl bg-orange-50/50 border border-orange-100 shadow-inner">
-          <div className="w-12 h-12 bg-white rounded-2xl shrink-0 flex items-center justify-center text-orange-200 border border-orange-50 shadow-sm">
-            <User size={24} />
-          </div>
-          <div className="flex-1 space-y-3">
-            <textarea
-              id="ai-comment-input"
-              aria-label="發表評論"
-              value={commentInput}
-              onChange={(e) => setCommentInput(e.target.value)}
-              placeholder="分享您的見解或提出疑問..."
-              className="w-full bg-white border border-orange-100 rounded-2xl p-4 text-sm focus:outline-none focus:border-orange-500 transition-all placeholder:text-gray-300 min-h-[100px] resize-none shadow-sm"
-            />
-            <div className="flex justify-end">
-              <button
-                disabled={!commentInput.trim()}
-                className="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-orange-500 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-md shadow-orange-200"
-              >
-                <Send size={16} />
-                <span>送出評論</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <CommentPostInput
+        isShowInput={isShowInput}
+        value={commentInput}
+        onChange={setCommentInput}
+      />
 
       {/* Info: (20260206 - Julian) 評論區 */}
       {displayedComments}
@@ -191,19 +264,118 @@ const CommentSection = ({ comments }: { comments: IComment[] }) => {
   );
 };
 
-const AttachmentItem = ({ name }: { name: string }) => {
-  return (
-    <div className="group relative w-32 h-32 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center p-2 cursor-zoom-in hover:shadow-lg transition-all">
-      <div className="bg-gray-50 rounded-xl w-full h-full flex items-center justify-center mb-1 group-hover:bg-orange-50 transition-colors">
-        <Paperclip
-          className="text-gray-400 group-hover:text-orange-500 transition-colors"
-          size={24}
-        />
-      </div>
-      <span className="text-[10px] text-gray-500 truncate w-full text-center">
-        {name}
-      </span>
+const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const isImage = attachment.mimeType.startsWith("image/");
+
+  const thumbnail = attachment.thumbnailUrl ? (
+    <div className="rounded-xl overflow-hidden relative w-full flex items-center justify-center mb-1 h-[90px] shrink-0">
+      <Image
+        src={attachment.thumbnailUrl}
+        alt={attachment.fileName}
+        fill
+        className="object-contain group-hover:bg-orange-50 transition-colors"
+      />
     </div>
+  ) : (
+    <div className="bg-gray-50 rounded-xl w-full h-full flex items-center justify-center mb-1 group-hover:bg-orange-50 transition-colors">
+      <Paperclip
+        className="text-gray-400 group-hover:text-orange-500 transition-colors"
+        size={24}
+      />
+    </div>
+  );
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => isImage && setIsModalOpen(true)}
+        className={`group relative w-32 h-32 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center p-2 transition-all ${
+          isImage ? "cursor-zoom-in hover:shadow-lg" : "cursor-default"
+        }`}
+        aria-label={isImage ? `查看圖片: ${attachment.fileName}` : attachment.fileName}
+      >
+        {thumbnail}
+        <span className="text-[10px] text-gray-500 truncate w-full text-center px-1">
+          {attachment.fileName}
+        </span>
+      </button>
+
+      {/* Info: (20260209 - Julian) Image Preview Modal */}
+      <Transition show={isModalOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-60"
+          onClose={() => setIsModalOpen(false)}
+        >
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" />
+          </TransitionChild>
+
+          <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+              <TransitionChild
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <DialogPanel className="relative transform overflow-hidden rounded-2xl bg-white p-2 text-left shadow-2xl transition-all sm:my-8 max-w-5xl w-full">
+                  <div className="absolute right-4 top-4 z-10">
+                    <button
+                      type="button"
+                      className="rounded-full bg-black/20 p-2 text-white hover:bg-black/40 backdrop-blur-md transition-all focus:outline-none"
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      <X className="h-6 w-6" aria-hidden="true" />
+                    </button>
+                  </div>
+                  
+                  <div className="relative w-full aspect-video min-h-[300px] max-h-[85vh] bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center">
+                    <Image
+                      src={attachment.url}
+                      alt={attachment.fileName}
+                      fill
+                      className="object-contain"
+                      priority
+                    />
+                  </div>
+                  
+                  <div className="p-4 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-gray-900 font-bold">{attachment.fileName}</h3>
+                      <p className="text-xs text-gray-400">
+                        {Math.round(attachment.fileSize / 1024)} KB • {attachment.mimeType}
+                      </p>
+                    </div>
+                    <a 
+                      href={attachment.url} 
+                      download={attachment.fileName}
+                      className="bg-orange-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-orange-500 transition-all active:scale-95"
+                    >
+                      下載原始檔案
+                    </a>
+                  </div>
+                </DialogPanel>
+              </TransitionChild>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+    </>
   );
 };
 
@@ -294,10 +466,10 @@ export default function AiTalkDetailPage() {
             </p>
 
             {/* Info: (20260206 - Julian) 附件預覽 */}
-            {data.attachments && data.attachments.length > 0 && (
+            {data.attachments.length > 0 && (
               <div className="mt-6 flex flex-wrap gap-3">
                 {data.attachments.map((attachment) => (
-                  <AttachmentItem key={attachment} name={attachment} />
+                  <AttachmentItem key={attachment.id} attachment={attachment} />
                 ))}
               </div>
             )}
@@ -339,43 +511,8 @@ export default function AiTalkDetailPage() {
             </div>
           </header>
 
-          <article className="prose prose-orange max-w-none prose-p:text-gray-800 prose-strong:text-orange-900 prose-li:text-gray-700">
-            <div className="bg-white/50 backdrop-blur-sm px-6 rounded-2xl mb-6 border border-white/50">
-              <p className="font-bold text-2xl text-orange-900 leading-relaxed">
-                {data.answer}
-              </p>
-            </div>
-
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="shrink-0">
-                  <CheckCircle2 className="text-orange-500" size={20} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">
-                    法條依據
-                  </h3>
-                  <p>
-                    依據《加值型及非加值型營業稅法》第 33
-                    條規定，營業人以進項稅額扣抵銷項稅額者，應具備載明其名稱、地址及統一編號之憑證。
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="mt-1 shrink-0">
-                  <CheckCircle2 className="text-orange-500" size={20} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">
-                    執行建議
-                  </h3>
-                  <p>
-                    請確保發票上載明貴司統編，並確認屬於營業必要支出。若為餐飲業，需注意交際費限額問題。
-                  </p>
-                </div>
-              </div>
-            </div>
+          <article>
+            <MarkdownContent content={data.answer} theme='light'  />
           </article>
 
           {/* Info: (20260206 - Julian) 互動工具列 */}
@@ -390,10 +527,11 @@ export default function AiTalkDetailPage() {
                     setDisliked(false);
                   }
                 }}
-                className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 ${liked
-                  ? "bg-orange-600 text-white  border-transparent"
-                  : "bg-white border-orange-200 hover:bg-orange-50 "
-                  }`}
+                className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 ${
+                  liked
+                    ? "bg-orange-600 text-white  border-transparent"
+                    : "bg-white border-orange-200 hover:bg-orange-50 "
+                }`}
               >
                 <ThumbsUp size={18} />
                 <span>{data.countOfLike + (liked ? 1 : 0)} 人贊同</span>
@@ -407,10 +545,11 @@ export default function AiTalkDetailPage() {
                     setLiked(false);
                   }
                 }}
-                className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 ${disliked
-                  ? "bg-orange-600 text-white border-transparent"
-                  : "bg-white border-orange-200 hover:bg-orange-50 "
-                  }`}
+                className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 ${
+                  disliked
+                    ? "bg-orange-600 text-white border-transparent"
+                    : "bg-white border-orange-200 hover:bg-orange-50 "
+                }`}
               >
                 <ThumbsDown size={18} />
                 <span>{data.countOfDislike + (disliked ? 1 : 0)} 人不贊同</span>
