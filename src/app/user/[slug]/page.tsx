@@ -15,7 +15,7 @@ export default function UserDynamicPage() {
   const { t } = useTranslation();
 
   // Info: (20260118 - Luphia) Safely extract slug (handle string or array)
-  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+  const slug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
 
   useEffect(() => {
     if (loading) return;

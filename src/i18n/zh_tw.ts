@@ -122,6 +122,7 @@ export const zhTw = {
   },
   header: {
     free_trial: "免費試用",
+    ai_consultation_room: "AI 諮詢室",
     pricing: "收費模式",
     login: "登入",
     plan: "目前方案",

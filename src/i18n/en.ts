@@ -122,6 +122,7 @@ export const en = {
   },
   header: {
     free_trial: 'Free Trial',
+    ai_consultation_room: 'AI Consultation Room',
     pricing: 'Pricing',
     login: 'Login',
     plan: 'Current Plan',
