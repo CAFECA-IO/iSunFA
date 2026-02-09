@@ -265,7 +265,6 @@ export default function PricingPage() {
               </div>
 
               {/* Info: (20260115 - Luphia) Enterprise AI Adoption Plan Section */}
-              {/* Info: (20260115 - Luphia) Enterprise AI Adoption Plan Section */}
               <div className="mt-16 rounded-3xl bg-gradient-to-b from-gray-900 to-gray-800 p-1 shadow-2xl shadow-orange-900/20 ring-1 ring-white/10">
                 <div className="rounded-[22px] bg-gray-900/50 px-6 py-8 sm:px-12 lg:px-12 lg:py-12 backdrop-blur-xl">
                   <div className="mx-auto flex max-w-2xl flex-col gap-16 lg:mx-0 lg:max-w-none lg:flex-row lg:items-start">
@@ -471,7 +470,7 @@ export default function PricingPage() {
                         </ul>
                       </div>
                       <button
-                        disabled={!!deployingPlanId} // Disable if ANY plan is deploying
+                        disabled={!!deployingPlanId} // Info: (20260206 - Tzuhan) Disable if ANY plan is deploying
                         onClick={async () => {
                           if (!user) {
                             setAuthModalOpen(true);
@@ -482,23 +481,23 @@ export default function PricingPage() {
                           setPendingAmount(language === 'zh-TW' ? plan.price.twd : plan.price.usd);
                           setPendingDisplayPrice(getPrice(plan));
 
-                          // Info: (20260206) Direct check identity, if no identity, deploy one
+                          // Info: (20260206 - Tzuhan) Direct check identity, if no identity, deploy one
                           if (user.isVerified) {
                             setPaymentModalOpen(true);
                           } else {
                             try {
                               setDeployingPlanId(plan.id);
-                              // Auto deploy identity
+                              // Info: (20260206 - Tzuhan) Auto deploy identity
                               await request('/api/v1/user/kyc', {
                                 method: 'POST',
                                 body: JSON.stringify({
-                                  fullName: user.name || 'User', // Minimal data
+                                  fullName: user.name || 'User', // Info: (20260206 - Tzuhan) Minimal data
                                   idNumber: 'N/A',
                                   submittedAt: new Date().toISOString(),
                                 }),
                               });
 
-                              // Refresh auth to get new identity status
+                              // Info: (20260206 - Tzuhan) Refresh auth to get new identity status
                               await refreshAuth();
 
                               setPaymentModalOpen(true);

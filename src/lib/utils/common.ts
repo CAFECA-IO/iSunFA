@@ -48,3 +48,20 @@ export function timestampToString(timestamp: number | undefined) {
     dateAndTime, // Info: (20260206 - Julian) e.g., "2026-01-01 12:34"
   };
 }
+
+// Info: (20260209 - Julian) 轉換時間戳為相對時間的工具
+export function formatTime(timestamp: number, now: number) {
+  const diff = now - timestamp;
+
+  if (diff < 60) {
+    return "Just now";
+  } else if (diff < 86400) {
+    const hours = Math.floor(diff / 3600);
+    return `${hours} hours ago`;
+  } else if (diff < 604800) {
+    const days = Math.floor(diff / 86400);
+    return `${days} days ago`;
+  } else {
+    return timestampToString(timestamp).dateWithDash;
+  }
+}
