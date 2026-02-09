@@ -7,7 +7,6 @@ import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
 import PaymentConfirmModal, { PaymentStatus } from '@/components/common/payment_confirm_modal';
 import ConfirmModal from '@/components/common/confirm_modal';
-import AnalysisGenerationModal, { AnalysisStatus } from '@/components/user/analysis/analysis_generation_modal';
 import SuccessNotification from '@/components/common/success_notification';
 import HistorySection from '@/components/user/analysis/history_section';
 import { fido2ClientService } from '@/lib/auth/fido2_client';
@@ -38,11 +37,7 @@ export default function AnalysisView() {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedPeriodValue, setSelectedPeriodValue] = useState<string>('');
-
-  // Info: (20260130 - Tzuhan) Payment Status State
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
-  const [analysisStatus, setAnalysisStatus] = useState<AnalysisStatus>('idle');
-
+  const [workflowStatus, setWorkflowStatus] = useState<PaymentStatus>('idle');
   const [txHash, setTxHash] = useState<string>('');
 
   // Info: (20260120 - Luphia) External Analysis States
@@ -60,7 +55,6 @@ export default function AnalysisView() {
   }, [category, periodType, selectedPeriodValue, selectedYear]);
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const [insufficientCreditsModal, setInsufficientCreditsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -200,49 +194,58 @@ export default function AnalysisView() {
     return `${start} ~ ${end}`;
   })();
 
-  // Info: (20260120 - Tzuhan) Open Payment Modal instead of direct generate
+  // Info: (20260120 - Tzuhan) Open Payment Modal
   const handleGenerate = () => {
     setIsPaymentModalOpen(true);
-    setPaymentStatus('idle'); // Info: (20260130 - Tzuhan) Reset status when opening modal
+    setWorkflowStatus('idle');
     setErrorMessage('');
     setTxHash('');
   };
 
-  // Info: (20260130 - Tzuhan) Step 1: Handle Payment
-  const handlePayment = async () => {
+  // Info: (20260209 - Tzuhan) Combined Analysis Workflow (Single Signature)
+  const handleAnalysisWorkflow = async () => {
     try {
       setIsLoading(true);
-      setPaymentStatus('preparing');
+      setWorkflowStatus('preparing');
       setErrorMessage('');
 
       if (!user?.address) {
         throw new Error(t('analysis.error.user_address_missing') || 'User address not found');
       }
 
-      // Info: (20260130 - Tzuhan) 0. Check Balance & Cost
-      if (!calculatedCost || calculatedCost <= 0) {
-        // Todo: (20260130 - Tzuhan) skip payment logic if free
-      }
-
-      // Info: (20260206) Check user credits
+      // Info: (20260209 - Tzuhan) Check user credits
       if ((user.credits || 0) < calculatedCost) {
         setInsufficientCreditsModal(true);
         setIsLoading(false);
-        setPaymentStatus('idle');
+        setWorkflowStatus('idle');
         return;
       }
 
-      console.log('calculatedCost', calculatedCost);
+      // Info: (20260209 - Tzuhan) 1. 在發送交易前，先向後端請求一個 orderId
 
-      // Info: (20260130 - Tzuhan) 1. Prepare Transfer UserOp (Server Action)
-      const prepRes = await prepareTransferUserOp(user.address, calculatedCost);
+      const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
+        method: 'POST',
+        body: JSON.stringify({
+          category,
+          periodType,
+          year: selectedYear,
+          periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
+          txHash: null // Info: (20260209 - Tzuhan) No txHash yet
+        })
+      });
+
+      if (!orderRes?.payload) throw new Error('Failed to create order');
+      const { orderId } = orderRes.payload; // Info: (20260209 - Tzuhan) We don't need the random challenge for *this* signature, we sign the UserOp.
+
+      // Info: (20260209 - Tzuhan) 2. 準備轉帳 UserOp
+      const prepRes = await prepareTransferUserOp(user.address, calculatedCost, orderId);
       if (!prepRes.success || !prepRes.data) {
         throw new Error(prepRes.message || 'Failed to prepare transfer');
       }
       const { userOp, userOpHash } = prepRes.data;
 
-      // Info: (20260130 - Tzuhan) 2. Sign the UserOp Hash (Client FIDO2)
-      setPaymentStatus('signing_payment');
+      // Info: (20260209 - Tzuhan) 3. 簽署 UserOp Hash (Client FIDO2)
+      setWorkflowStatus('signing_payment');
 
       if (!user.pubKeyX || !user.pubKeyY) {
         throw new Error('User public keys missing. Please re-login.');
@@ -256,15 +259,15 @@ export default function AnalysisView() {
         allowCredentials: [],
       });
 
-      // Info: (20260130 - Tzuhan) 3. Encode Signature & Attach to UserOp
+      // Info: (20260209 - Tzuhan) 4. 編碼簽名並附加到 UserOp
       const encodedSignature = encodeWebAuthnSignature(
         transferAuth,
         BigInt(user.pubKeyX),
         BigInt(user.pubKeyY)
       );
 
-      // Info: (20260130 - Tzuhan) 4. Submit Signed UserOp (Server Action)
-      setPaymentStatus('submitting_payment');
+      // Info: (20260209 - Tzuhan) 5. 提交已簽署的 UserOp (付款)
+      setWorkflowStatus('submitting_payment');
       const submitRes = await submitSignedUserOp({
         ...userOp,
         signature: encodedSignature
@@ -276,66 +279,10 @@ export default function AnalysisView() {
 
       const transactionHash = (submitRes.data as { tx: string })?.tx;
       setTxHash(transactionHash);
-      setPaymentStatus('payment_success');
 
-    } catch (error) {
-      console.error('Payment failed:', error);
-      setPaymentStatus('error');
-      setErrorMessage(t('auth_modal.failed') + `: ${(error as Error).message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      // Info: (20260209 - Tzuhan) 6. 提交分析請求
+      setWorkflowStatus('payment_success'); // Info: (20260209 - Tzuhan) Reuse this status or add a new one like 'analyzing'
 
-  const handlePaymentNext = () => {
-    setIsPaymentModalOpen(false);
-    setIsAnalysisModalOpen(true);
-    setAnalysisStatus('idle');
-  };
-
-  // Info: (20260130 - Tzuhan) Step 2: Handle Report Generation
-  const handleGenerateReport = async () => {
-    try {
-      setIsLoading(true);
-      setAnalysisStatus('signing');
-      setErrorMessage('');
-
-      if (!txHash) {
-        throw new Error('Payment transaction hash not found. Please pay first.');
-      }
-
-      // Info: (20260130 - Tzuhan) 5. Create Order & Get Challenge (Existing Logic)
-      const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
-        method: 'POST',
-        body: JSON.stringify({
-          category,
-          periodType,
-          year: selectedYear,
-          periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-          txHash: txHash
-        })
-      });
-
-      if (!orderRes?.payload) throw new Error('Failed to create order');
-      const { orderId, challenge } = orderRes.payload;
-
-      // Info: (20260130 - Tzuhan) 6. Sign the Analysis Order
-      const analysisChallengeBase64 = btoa(challenge)
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-
-      const authentication = await fido2ClientService.startLogin({
-        challenge: analysisChallengeBase64,
-        timeout: 60000,
-        userVerification: 'required',
-        allowCredentials: [],
-      });
-
-      const authWithOrder = { ...authentication, orderId };
-
-      // Info: (20260130 - Tzuhan) 8. Send to API
-      setAnalysisStatus('analyzing');
       await request('/api/v1/user/analysis', {
         method: 'POST',
         body: JSON.stringify({
@@ -343,21 +290,28 @@ export default function AnalysisView() {
           periodType,
           year: selectedYear,
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-          authentication: authWithOrder,
+          authentication: {
+            orderId,
+            transactionHash,
+            ...transferAuth,
+          },
         }),
       });
 
-      // Info: (20260130 - Tzuhan) Refresh user balance
+      // Info: (20260209 - Tzuhan) Refresh user balance
       await refreshAuth();
 
-      setAnalysisStatus('success');
-      // Info: (20260130 - Tzuhan) maybe auto close after a while or let user close
-      // Info: (20260130 - Luphia) Redirect to history and show success notification
-      setActiveTab('history');
-      setShowSuccessNotification(true);
+      setWorkflowStatus('payment_success');
+
+      setTimeout(() => {
+        setIsPaymentModalOpen(false);
+        setActiveTab('history');
+        setShowSuccessNotification(true);
+      }, 2000);
+
     } catch (error) {
-      console.error('Report generation failed:', error);
-      setAnalysisStatus('error');
+      console.error('Analysis workflow failed:', error);
+      setWorkflowStatus('error');
       setErrorMessage(t('auth_modal.failed') + `: ${(error as Error).message}`);
     } finally {
       setIsLoading(false);
@@ -600,17 +554,16 @@ export default function AnalysisView() {
       <PaymentConfirmModal
         isOpen={isPaymentModalOpen}
         onClose={() => {
-          if (paymentStatus === 'error' || paymentStatus === 'payment_success') {
-            setPaymentStatus('idle');
+          if (workflowStatus === 'error' || workflowStatus === 'payment_success') {
+            setWorkflowStatus('idle');
             setErrorMessage('');
             setIsPaymentModalOpen(false);
             setTxHash('');
-          } else if (paymentStatus === 'idle') {
+          } else if (workflowStatus === 'idle') {
             setIsPaymentModalOpen(false);
           }
         }}
-        onConfirm={handlePayment}
-        onNext={handlePaymentNext}
+        onConfirm={handleAnalysisWorkflow}
         cost={calculatedCost}
         analysisType={t(`analysis.categories.${category}`)}
         period={t('analysis.selected_period_desc', {
@@ -620,28 +573,12 @@ export default function AnalysisView() {
         country={country}
         keyword={activeTab === 'external' && category !== 'market_trends' ? keyword : undefined}
         isLoading={isLoading}
-        status={paymentStatus}
+        status={workflowStatus}
         errorMessage={errorMessage}
         txHash={txHash}
       />
 
-      {/* Info: (20260130 - Tzuhan) Analysis Generation Modal */}
-      <AnalysisGenerationModal
-        isOpen={isAnalysisModalOpen}
-        onClose={() => {
-          if (analysisStatus === 'error' || analysisStatus === 'success') {
-            setAnalysisStatus('idle');
-            setErrorMessage('');
-            setIsAnalysisModalOpen(false);
-            // if success, we might want to navigate or show result, but checking activeTab is enough for now
-          } else if (analysisStatus === 'idle') {
-            setIsAnalysisModalOpen(false);
-          }
-        }}
-        onConfirm={handleGenerateReport}
-        status={analysisStatus}
-        errorMessage={errorMessage}
-      />
+      {/* Info: (20260209 - Tzuhan) Analysis Generation Modal Removed - Merged into Payment Workflow */}
 
       <ConfirmModal
         isOpen={insufficientCreditsModal}
@@ -656,8 +593,23 @@ export default function AnalysisView() {
       <SuccessNotification
         show={showSuccessNotification}
         title={t('analysis.success.title')}
-        message={t('analysis.success.message')}
+        message={(
+          <div className="flex flex-col gap-2">
+            <span>{t('analysis.success.message')}</span>
+            {txHash && (
+              <a
+                href={`${process.env.NEXT_PUBLIC_BAIFA_EXPLORER || 'https://baifa.io'}/tx/${txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-orange-600 hover:text-orange-700 underline text-xs break-all"
+              >
+                {t('analysis.success.view_tx')}: {txHash}
+              </a>
+            )}
+          </div>
+        )}
         onClose={() => setShowSuccessNotification(false)}
+        autoCloseDelay={10000}
       />
 
       {/* Info: (20260120 - Luphia) History Section */}

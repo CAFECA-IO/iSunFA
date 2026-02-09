@@ -551,6 +551,11 @@ export const ja = {
       empty_title: '分析レポートはまだありません',
       empty_description: '高度なAIツールを使用して最初の財務分析レポートを作成し、旅を始めましょう。',
     },
+    success: {
+      title: '分析リクエストが送信されました',
+      message: 'リクエストはオンチェーンに記録されました。レポートの生成には時間がかかります。履歴レポートタブで進捗を確認してください。',
+      view_tx: 'トランザクションを表示',
+    },
   },
     ai_consultation_room: {
     title: 'AI相談室',

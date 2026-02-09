@@ -12,7 +12,6 @@ interface IPaymentConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  onNext?: () => void;
   cost: number;
   analysisType: string;
   period: string;
@@ -28,7 +27,6 @@ export default function PaymentConfirmModal({
   isOpen,
   onClose,
   onConfirm,
-  onNext,
   cost,
   analysisType,
   period,
@@ -123,7 +121,9 @@ export default function PaymentConfirmModal({
                             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
                               <CheckCircle2 className="h-6 w-6 text-green-600" />
                             </div>
+                            {/* Info: (20260209 - Tzuhan) Reusing key or should add new one "Analysis Requested" */}
                             <p className="text-sm text-green-600 font-bold">{t('analysis.steps.payment_success')}</p>
+                            <p className="text-xs text-gray-500">{t('analysis.success.message')}</p>
                             {txHash && (
                               <div className="flex items-center justify-center gap-2 mt-2 bg-white p-2 rounded border border-gray-200 max-w-[200px] mx-auto">
                                 <p className="text-xs font-mono text-gray-500 truncate" title={txHash}>
@@ -209,13 +209,12 @@ export default function PaymentConfirmModal({
                       {isSuccess ? (
                         <button
                           type="button"
-                          className="inline-flex w-full justify-center items-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:col-start-2 transition-all"
+                          className="inline-flex w-full justify-center items-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:col-span-2 transition-all"
                           onClick={() => {
-                            if (onNext) onNext();
-                            else onClose();
+                            onClose();
                           }}
                         >
-                          {t('common.next') || 'Next'}
+                          {t('common.close') || 'Close'}
                         </button>
                       ) : (
                         <button
@@ -229,14 +228,16 @@ export default function PaymentConfirmModal({
                         </button>
                       )}
 
-                      <button
-                        type="button"
-                        disabled={isLoading}
-                        className="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0 transition-all disabled:opacity-50"
-                        onClick={onClose}
-                      >
-                        {isSuccess ? t('common.close') : t('analysis.cancel')}
-                      </button>
+                      {!isSuccess && (
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          className="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0 transition-all disabled:opacity-50"
+                          onClick={onClose}
+                        >
+                          {t('analysis.cancel')}
+                        </button>
+                      )}
                     </>
                   )}
                   {status === 'error' && (

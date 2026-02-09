@@ -552,6 +552,11 @@ export const en = {
       empty_title: 'No Analysis Yet',
       empty_description: 'Start your journey by generating your first financial analysis report using our advanced AI tools.',
     },
+    success: {
+      title: 'Analysis Request Submitted',
+      message: 'Your request is on-chain. Report generation takes time. Please check progress in the History Reports tab.',
+      view_tx: 'View Transaction',
+    },
   },
     ai_consultation_room: {
     title: 'AI Consultation Room',

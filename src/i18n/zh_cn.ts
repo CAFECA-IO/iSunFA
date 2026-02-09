@@ -545,6 +545,11 @@ export const zhCn = {
       empty_title: '尚无分析报告',
       empty_description: '使用我们先进的 A​​I 工具生成您的第一份财务分析报告，开启您的旅程。',
     },
+    success: {
+      title: '分析请求已提交',
+      message: '您的请求已上链，报告生成需时，请至历史报告分页查看进度。',
+      view_tx: '查看交易',
+    },
   },
     ai_consultation_room: {
     title: 'AI 咨询室',
