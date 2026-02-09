@@ -226,7 +226,7 @@ export const mockThreads: IThreadDetail[] = [
     id: 6,
     authorId: "user_006",
     question: "小規模營業稅如何計算？",
-    answer: "查定課徵營業稅額 ＝ 國稅局查定每月銷售額 × 稅率 (通常為 1%)。",
+    answer: "# 查定課徵營業稅額 ＝ 國稅局查定每月銷售額 × 稅率 (通常為 1%)。\n\n- 執行建議：\n請確保發票上載明貴司統編，並確認屬於營業必要支出。若為餐飲業，需注意交際費限額問題。",
     tags: ["營業稅", "小規模"],
     createdAt: 1743827385,
     countOfLike: 35,

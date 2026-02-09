@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState,useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 // import { useTranslation } from '@/i18n/i18n_context';
@@ -14,7 +14,9 @@ import {
   Share2,
   MessageCircleMore,
   Bot,
+  X,
 } from "lucide-react";
+import Image from "next/image";
 import { formatTime } from "@/lib/utils/common";
 import { IThread, mockThreads } from "@/interfaces/ai_talk";
 
@@ -107,7 +109,7 @@ const ThreadGrid = ({ threads }: { threads: IThread[] }) => {
         ))}
       </div>
     ) : (
-      <div className="p-10 h-[500px] gap-2 flex flex-col items-center justify-center">
+      <div className="p-10 overflow-y-auto h-[500px] gap-2 flex flex-col items-center justify-center">
         <p className="text-gray-700 text-lg font-bold">目前沒有任何對話紀錄</p>
         <Link href="/" className="text-orange-500 hover:text-orange-600">
           回首頁
@@ -120,6 +122,41 @@ const ThreadGrid = ({ threads }: { threads: IThread[] }) => {
 
 const AiChat = () => {
   const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const fileList = Array.from(files);
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxCount = 5;
+
+      const validFiles = fileList.filter((file) => {
+        if (file.size > maxSize) {
+          alert(`檔案 "${file.name}" 超過 5MB 限制`);
+          return false;
+        }
+        return true;
+      });
+
+      setUploadedFiles((prev) => {
+        const totalFiles = [...prev, ...validFiles];
+        if (totalFiles.length > maxCount) {
+          alert(`最多只能上傳 ${maxCount} 張圖片`);
+          return totalFiles.slice(0, maxCount);
+        }
+        return totalFiles;
+      });
+      
+      // Reset input value to allow uploading same file again if deleted
+      e.target.value = '';
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   return (
     <div
@@ -178,35 +215,76 @@ const AiChat = () => {
 
       <div className="overflow-hidden">
         <div
-        className={`transition-all duration-300 ease-in-out flex flex-col gap-4 flex-1 ${
-          isChatOpen ? "opacity-100 mt-6" : "opacity-0 h-0"
-        }`}
-      >
-        <div className="flex-1 space-y-4">
-          <div className="relative">
-            <textarea
-              id="ai-question-input"
-              aria-label="請輸入你的問題"
-              placeholder="請輸入你的問題..."
-              className="w-full h-40 p-4 outline-none bg-gray-50 border-2 border-transparent focus:border-orange-200 rounded-2xl text-sm transition-all resize-none shadow-inner"
+          className={`transition-all duration-300 ease-in-out flex flex-col gap-4 flex-1 ${
+            isChatOpen ? "opacity-100 mt-6" : "opacity-0 h-0"
+          }`}
+        >
+          <div className="flex-1 space-y-4 overflow-y-auto pr-1">
+            <div className="relative">
+              <textarea
+                id="ai-question-input"
+                aria-label="請輸入你的問題"
+                placeholder="請輸入你的問題..."
+                className="w-full h-36 p-4 outline-none bg-gray-50 border-2 border-transparent focus:border-orange-200 rounded-2xl text-sm transition-all resize-none shadow-inner"
+              />
+            </div>
+
+            {/* Display Uploaded Files */}
+            {uploadedFiles.length > 0 && (
+              <div className="flex overflow-x-auto gap-2 py-1">
+                {uploadedFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    className="group shrink-0 w-16 h-16 relative rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center shadow-sm"
+                  >
+                    <div className="w-full h-full relative rounded-xl overflow-hidden">
+                      <Image
+                        src={URL.createObjectURL(file)}
+                        alt={file.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(index)}
+                      className="absolute -top-1 -right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      aria-label="刪除文件"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              multiple
+              accept="image/*"
             />
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full py-3.5 flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-2xl text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50 transition-all"
+            >
+              <PlusIcon size={20} />
+              <span className="text-sm font-semibold">上傳發票 / 單據 (OCR)</span>
+            </button>
+
+            <button className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-200 transition-all active:scale-[0.98] hover:-translate-y-0.5">
+              立即向 AI 提問
+            </button>
           </div>
 
-          <button className="w-full py-3.5 flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-2xl text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50 transition-all">
-            <PlusIcon size={20} />
-            <span className="text-sm font-semibold">上傳發票 / 單據 (OCR)</span>
-          </button>
-
-          <button className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-200 transition-all active:scale-[0.98] hover:-translate-y-0.5">
-            立即向 AI 提問
-          </button>
+          <p className="text-[11px] text-gray-400 leading-relaxed text-center px-4">
+            * AI 回覆僅供參考，不代表正式法律建議。其分析內容基於提供的數據。
+          </p>
         </div>
-
-        <p className="text-[11px] text-gray-400 leading-relaxed text-center px-4">
-          * AI 回覆僅供參考，不代表正式法律建議。其分析內容基於提供的數據。
-        </p>
       </div>
-  </div>
     </div>
   );
 };

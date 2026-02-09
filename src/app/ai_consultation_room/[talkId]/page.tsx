@@ -54,7 +54,7 @@ const CommentPostInput = ({
           <div className="flex justify-end">
             <button
               disabled={!value.trim()}
-              className="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-orange-500 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-md shadow-orange-200"
+              className="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 enabled:hover:bg-orange-500 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-md shadow-orange-200"
             >
               <Send size={16} />
               <span>送出評論</span>
@@ -240,7 +240,7 @@ const CommentSection = ({ comments }: { comments: IComment[] }) => {
     <section className="pt-20">
       <div className="flex items-center justify-between mb-8">
         <h3 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
-          專家與用戶討論 <span className="text-gray-300 font-normal">5</span>
+          專家與用戶討論 <span className="text-gray-300 font-normal">{comments.length}</span>
         </h3>
         <button
           onClick={openInputHandler}
@@ -292,7 +292,7 @@ const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
       <button
         type="button"
         onClick={() => isImage && setIsModalOpen(true)}
-        className={`group relative w-32 h-32 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center p-2 transition-all ${
+        className={`group relative w-32 h-32 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center outline-none p-2 transition-all ${
           isImage ? "cursor-zoom-in hover:shadow-lg" : "cursor-default"
         }`}
         aria-label={isImage ? `查看圖片: ${attachment.fileName}` : attachment.fileName}
