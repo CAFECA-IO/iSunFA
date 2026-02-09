@@ -12,6 +12,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Share2,
+  MessageCircleMore,
+  Bot,
 } from "lucide-react";
 import { timestampToString } from "@/lib/utils/common";
 import { IThread, mockThreads } from "@/interfaces/ai_talk";
@@ -136,44 +138,92 @@ const AiChat = () => {
   const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
 
   return (
-    <aside className="w-80 fixed right-4 bottom-24 z-50 transition-all duration-300 ease-in-out p-6 bg-white rounded-2xl border border-orange-400 shadow-sm ml-4">
-      <div className="flex items-center justify-between text-lg font-bold">
-        <h2 className=" text-gray-800">AI 諮詢室</h2>
+    <div
+      className={`fixed right-6 bottom-24 z-50 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) bg-white border-2 border-orange-400 shadow-[0_20px_50px_rgba(234,88,12,0.15)] flex flex-col overflow-hidden ${
+        isChatOpen
+          ? "w-80 h-[500px] p-6 rounded-3xl"
+          : "w-16 h-16 p-0 rounded-full hover:scale-110 active:scale-95 items-center justify-center hover:bg-orange-50"
+      }`}
+    >
+      {!isChatOpen && (
         <button
           type="button"
-          onClick={() => setIsChatOpen(!isChatOpen)}
-          className="text-gray-400 p-2 hover:text-orange-400"
+          onClick={() => setIsChatOpen(true)}
+          className="absolute inset-0 w-full h-full rounded-full z-10"
+          aria-label="開啟 AI 諮詢室"
+        />
+      )}
+      <div
+        className={`flex items-center ${isChatOpen ? "justify-between" : "justify-center"} w-full transition-all duration-300`}
+      >
+        {isChatOpen && (
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <Bot size={20} className="text-orange-600" />
+            </div>
+            <h2 className="text-lg font-bold text-gray-800 whitespace-nowrap">
+              AI 諮詢室
+            </h2>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={(e) => {
+            if (isChatOpen) {
+              e.stopPropagation();
+              setIsChatOpen(false);
+            }
+          }}
+          className={`text-orange-500 transition-all duration-300 ${
+            isChatOpen ? "p-2 hover:bg-gray-100 rounded-xl" : "p-0"
+          }`}
+          aria-label={isChatOpen ? "關閉 AI 諮詢室" : "開啟 AI 諮詢室"}
         >
-          {isChatOpen ? <MinusIcon /> : <PlusIcon />}
+          {isChatOpen ? (
+            <MinusIcon size={24} />
+          ) : (
+            <div className="relative flex items-center justify-center">
+              <MessageCircleMore
+                size={32}
+                className="text-orange-500 transition-transform duration-500"
+              />
+            </div>
+          )}
         </button>
       </div>
 
-      <div
-        className={`${isChatOpen ? "h-[340px]" : "h-0"} overflow-y-clip pt-4 space-y-4 transition-all duration-300 ease-in-out`}
+      <div className="overflow-hidden">
+        <div
+        className={`transition-all duration-300 ease-in-out flex flex-col gap-4 flex-1 ${
+          isChatOpen ? "opacity-100 mt-6" : "opacity-0 h-0"
+        }`}
       >
-        <div className="relative">
-          <textarea
-            id="ai-question-input"
-            aria-label="請輸入你的問題"
-            placeholder="請輸入你的問題..."
-            className="w-full h-32 p-4 outline-none bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-orange-200 resize-none"
-          />
+        <div className="flex-1 space-y-4">
+          <div className="relative">
+            <textarea
+              id="ai-question-input"
+              aria-label="請輸入你的問題"
+              placeholder="請輸入你的問題..."
+              className="w-full h-40 p-4 outline-none bg-gray-50 border-2 border-transparent focus:border-orange-200 rounded-2xl text-sm transition-all resize-none shadow-inner"
+            />
+          </div>
+
+          <button className="w-full py-3.5 flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-2xl text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50 transition-all">
+            <PlusIcon size={20} />
+            <span className="text-sm font-semibold">上傳發票 / 單據 (OCR)</span>
+          </button>
+
+          <button className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-200 transition-all active:scale-[0.98] hover:-translate-y-0.5">
+            立即向 AI 提問
+          </button>
         </div>
 
-        <button className="w-full py-3 flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 hover:border-orange-300 hover:text-orange-400 transition-colors">
-          <PlusIcon />
-          <span className="text-sm font-medium">上傳發票 / 單據 (OCR)</span>
-        </button>
-
-        <button className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl shadow-lg shadow-orange-100 transition-all active:scale-95">
-          立即向 AI 提問
-        </button>
-
-        <p className="pt-2 text-sm text-gray-400 leading-relaxed text-center">
-          * AI 回覆僅供參考，不代表正式法律建議。
+        <p className="text-[11px] text-gray-400 leading-relaxed text-center px-4">
+          * AI 回覆僅供參考，不代表正式法律建議。其分析內容基於提供的數據。
         </p>
       </div>
-    </aside>
+  </div>
+    </div>
   );
 };
 

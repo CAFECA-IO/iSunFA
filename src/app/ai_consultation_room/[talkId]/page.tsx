@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/landing_page/header";
 import Footer from "@/components/landing_page/footer";
-import { mockThreads, IComment, mockComments } from "@/interfaces/ai_talk";
+import { mockThreads, IComment } from "@/interfaces/ai_talk";
 import { timestampToString } from "@/lib/utils/common";
 import {
   ChevronLeft,
@@ -108,7 +108,7 @@ const CommentItem = ({ comment }: { comment: IComment }) => {
   );
 };
 
-const CommentSection = () => {
+const CommentSection = ({ comments }: { comments: IComment[] }) => {
   const [commentInput, setCommentInput] = useState<string>("");
   const [isShowInput, setIsShowInput] = useState<boolean>(true);
 
@@ -122,10 +122,10 @@ const CommentSection = () => {
   };
 
   const displayedComments =
-    mockComments.length > 0 ? (
+    comments.length > 0 ? (
       <div className="space-y-6">
         {/* Info: (20260206 - Julian) 會計師評論範例 */}
-        {mockComments.map((comment) => (
+        {comments.map((comment) => (
           <CommentItem key={comment.id} comment={comment} />
         ))}
 
@@ -340,8 +340,8 @@ export default function AiTalkDetailPage() {
           </header>
 
           <article className="prose prose-orange max-w-none prose-p:text-gray-800 prose-strong:text-orange-900 prose-li:text-gray-700">
-            <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-white/50">
-              <p className="font-bold text-2xl text-orange-900 mb-2 leading-relaxed">
+            <div className="bg-white/50 backdrop-blur-sm px-6 rounded-2xl mb-6 border border-white/50">
+              <p className="font-bold text-2xl text-orange-900 leading-relaxed">
                 {data.answer}
               </p>
             </div>
@@ -427,7 +427,7 @@ export default function AiTalkDetailPage() {
         </section>
 
         {/* Info: (20260206 - Julian) 3. 評論區塊 */}
-        <CommentSection />
+        <CommentSection comments={data.comments} />
       </main>
 
       <Footer />
