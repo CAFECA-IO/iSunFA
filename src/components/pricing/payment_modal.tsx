@@ -4,6 +4,7 @@ import { Fragment, useState } from 'react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { X, Loader2 } from 'lucide-react';
 import { request } from '@/lib/utils/request';
+import { useTranslation } from '@/i18n/i18n_context';
 
 interface IPaymentModalProps {
     isOpen: boolean;
@@ -11,16 +12,13 @@ interface IPaymentModalProps {
     onSuccess: (txHash: string) => void;
     amount: number;
     credits: number;
+    displayPrice?: string;
 }
 
-export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credits }: IPaymentModalProps) {
+export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credits, displayPrice }: IPaymentModalProps) {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    const [formData, setFormData] = useState({
-        bankAccountLast5: '',
-        transferDate: new Date().toISOString().split('T')[0],
-    });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -33,14 +31,11 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
                 body: JSON.stringify({
                     amount,
                     credits,
-                    bankAccountLast5: formData.bankAccountLast5,
-                    transferDate: formData.transferDate,
                 }),
             });
 
             if (response.txHash) {
                 onClose();
-                alert(`Payment Successful! Transaction Hash: ${response.txHash}`);
                 onSuccess(response.txHash);
             } else {
                 throw new Error(response.message || 'Minting failed');
@@ -88,7 +83,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
                                         onClick={onClose}
                                         disabled={loading}
                                     >
-                                        <span className="sr-only">Close</span>
+                                        <span className="sr-only">{t('common.close')}</span>
                                         <X className="h-6 w-6" aria-hidden="true" />
                                     </button>
                                 </div>
@@ -96,50 +91,22 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
                                 <div className="sm:flex sm:items-start w-full">
                                     <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
                                         <DialogTitle as="h3" className="text-base font-semibold leading-6 text-gray-900">
-                                            Bank Transfer Details
+                                            {t('pricing.credits.payment_modal.title')}
                                         </DialogTitle>
-                                        <div className="mt-2 text-sm text-gray-500">
-                                            <p>Please transfer the amount of <strong className="text-gray-900">{amount} NTD</strong> to the following account:</p>
-                                            <div className="mt-3 bg-gray-50 p-3 rounded-md border border-gray-200">
-                                                <p>Bank: <span className="font-medium text-gray-900">iSun Bank (000)</span></p>
-                                                <p>Account: <span className="font-medium text-gray-900">123-456-7890123</span></p>
-                                                <p>Name: <span className="font-medium text-gray-900">iSunFA Platform</span></p>
+                                        <div className="mt-4 bg-gray-50 p-4 rounded-md border border-gray-200 space-y-3">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm text-gray-500">{t('pricing.credits.payment_modal.amount_to_pay')}</span>
+                                                <span className="text-lg font-bold text-gray-900">{displayPrice || `$${amount}`}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center border-t border-gray-200 pt-3">
+                                                <span className="text-sm text-gray-500">{t('pricing.credits.payment_modal.tokens_to_receive')}</span>
+                                                <span className="text-lg font-bold text-orange-600">
+                                                    {t('pricing.credits.payment_modal.credits_unit', { count: credits.toLocaleString() })}
+                                                </span>
                                             </div>
                                         </div>
 
                                         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-                                            <div>
-                                                <label htmlFor="bankAccount" className="block text-sm font-medium text-gray-700">
-                                                    Your Bank Account (Last 5 Digits)
-                                                </label>
-                                                <input
-                                                    aria-label="Your Bank Account (Last 5 Digits)"
-                                                    type="text"
-                                                    id="bankAccount"
-                                                    maxLength={5}
-                                                    minLength={5}
-                                                    required
-                                                    placeholder="12345"
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-3 py-2 border text-gray-500"
-                                                    value={formData.bankAccountLast5}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, bankAccountLast5: e.target.value.replace(/\D/g, '').slice(0, 5) }))}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label htmlFor="transferDate" className="block text-sm font-medium text-gray-700">
-                                                    Transfer Date
-                                                </label>
-                                                <input
-                                                    aria-label="Transfer Date"
-                                                    type="date"
-                                                    id="transferDate"
-                                                    required
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-3 py-2 border text-gray-500"
-                                                    value={formData.transferDate}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, transferDate: e.target.value }))}
-                                                />
-                                            </div>
-
                                             {error && (
                                                 <div className="text-red-500 text-sm mt-2">
                                                     {error}
@@ -153,7 +120,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
                                                     className="inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 disabled:opacity-50 sm:ml-3 sm:w-auto items-center gap-2"
                                                 >
                                                     {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                                                    {loading ? 'Processing...' : 'Confirm Payment'}
+                                                    {loading ? t('pricing.credits.payment_modal.processing') : t('pricing.credits.payment_modal.confirm_btn')}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -161,7 +128,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
                                                     onClick={onClose}
                                                     disabled={loading}
                                                 >
-                                                    Cancel
+                                                    {t('common.cancel')}
                                                 </button>
                                             </div>
                                         </form>
