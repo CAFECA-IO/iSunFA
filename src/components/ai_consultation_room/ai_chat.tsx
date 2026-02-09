@@ -5,18 +5,18 @@ import { useTranslation } from "@/i18n/i18n_context";
 
 export const AiChat = () => {
   const { t } = useTranslation();
-   const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
-   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-   const [question, setQuestion] = useState<string>("");
-   const [isDragging, setIsDragging] = useState<boolean>(false);
-   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [question, setQuestion] = useState<string>("");
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-   const isSubmitDisabled = !question.trim();
+  const isSubmitDisabled = !question.trim();
 
   const processFiles = (files: FileList | null) => {
     if (files) {
       const fileList = Array.from(files);
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 5 * 1024 * 1024; // Info: (20260209 - Julian) 5MB
       const maxCount = 5;
 
       const validFiles = fileList.filter((file) => {
@@ -79,11 +79,10 @@ export const AiChat = () => {
 
   return (
     <div
-      className={`fixed right-6 bottom-24 z-50 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) bg-white border-2 border-orange-400 shadow-[0_20px_50px_rgba(234,88,12,0.15)] flex flex-col overflow-hidden ${
-        isChatOpen
+      className={`fixed right-6 bottom-24 z-50 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) bg-white border-2 border-orange-400 shadow-[0_20px_50px_rgba(234,88,12,0.15)] flex flex-col overflow-hidden ${isChatOpen
           ? "w-80 h-[500px] p-6 rounded-3xl"
           : "w-16 h-16 p-0 rounded-full hover:scale-110 active:scale-95 items-center justify-center hover:bg-orange-50"
-      }`}
+        }`}
     >
       {!isChatOpen && (
         <button
@@ -114,9 +113,8 @@ export const AiChat = () => {
               setIsChatOpen(false);
             }
           }}
-          className={`text-orange-500 transition-all duration-300 ${
-            isChatOpen ? "p-2 hover:bg-gray-100 rounded-xl" : "p-0"
-          }`}
+          className={`text-orange-500 transition-all duration-300 ${isChatOpen ? "p-2 hover:bg-gray-100 rounded-xl" : "p-0"
+            }`}
           aria-label={
             isChatOpen
               ? t("ai_consultation_room.close_chat")
@@ -141,9 +139,8 @@ export const AiChat = () => {
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
-          className={`transition-all duration-300 ease-in-out flex flex-col gap-4 flex-1 ${
-            isChatOpen ? "opacity-100 h-fit mt-6" : "opacity-0 h-0"
-          }`}
+          className={`transition-all duration-300 ease-in-out flex flex-col gap-4 flex-1 ${isChatOpen ? "opacity-100 h-fit mt-6" : "opacity-0 h-0"
+            }`}
         >
           <div className="flex-1 space-y-4 pr-1">
             <div className="relative">
@@ -157,7 +154,7 @@ export const AiChat = () => {
               />
             </div>
 
-            {/* Display Uploaded Files */}
+            {/* Info: (20260209 - Julian) Display Uploaded Files */}
             {uploadedFiles.length > 0 && (
               <div className="flex overflow-x-auto gap-2 py-1">
                 {uploadedFiles.map((file, index) => (
@@ -197,11 +194,10 @@ export const AiChat = () => {
 
             <button
               onClick={() => fileInputRef.current?.click()}
-              className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all ${
-                isDragging
+              className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all ${isDragging
                   ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
                   : "border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50"
-              }`}
+                }`}
             >
               <PlusIcon size={20} className={`shrink-0 ${isDragging ? "animate-bounce" : ""}`} />
               <span className="text-sm font-semibold">
@@ -214,11 +210,10 @@ export const AiChat = () => {
             <button
               id="ai-chat-submit"
               disabled={isSubmitDisabled}
-              className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all ${
-                isSubmitDisabled
+              className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all ${isSubmitDisabled
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
                   : "bg-orange-600 hover:bg-orange-500 text-white shadow-orange-200 active:scale-[0.98] hover:-translate-y-0.5"
-              }`}
+                }`}
             >
               {t("ai_consultation_room.ask_ai")}
             </button>

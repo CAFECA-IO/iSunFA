@@ -17,12 +17,12 @@ export interface IComment {
   createdAt: number;
   likes: number;
   dislikes: number;
-  isProfessional: boolean; // 是否為專業評論
-  isVerified: boolean; // 用戶是否為專業認證
-  parentId: string | null; // 如果是第一層評論則為 null，回覆則存父評論 ID
-  replyToUserId?: string; // 可選：用於顯示「@某人」
-  replies: IComment[]; // 巢狀結構，存放該評論下的所有回覆
-  isDeleted: boolean; // 當評論被刪除但仍有子回覆時，可用於顯示「此評論已刪除」
+  isProfessional: boolean; // Info: (20260209 - Julian) 是否為專業評論
+  isVerified: boolean; // Info: (20260209 - Julian) 用戶是否為專業認證
+  parentId: string | null; // Info: (20260209 - Julian) 如果是第一層評論則為 null，回覆則存父評論 ID
+  replyToUserId?: string; // Info: (20260209 - Julian) 可選：用於顯示「@某人」
+  replies: IComment[]; // Info: (20260209 - Julian) 巢狀結構，存放該評論下的所有回覆
+  isDeleted: boolean; // Info: (20260209 - Julian) 當評論被刪除但仍有子回覆時，可用於顯示「此評論已刪除」
 }
 
 export interface IAttachment {
@@ -30,13 +30,13 @@ export interface IAttachment {
   fileName: string;
   url: string;
   fileSize: number;
-  mimeType: string; // 檔案類型，例如 "image/jpeg"
+  mimeType: string; // Info: (20260209 - Julian) 檔案類型，例如 "image/jpeg"
   dimensions?: {
-    // 可選：圖片寬高，有助於前端預留 Layout 空間
+    // Info: (20260209 - Julian) 可選：圖片寬高，有助於前端預留 Layout 空間
     width: number;
     height: number;
   };
-  thumbnailUrl?: string; // 可選：縮圖路徑，加速列表讀取速度
+  thumbnailUrl?: string; // Info: (20260209 - Julian) 可選：縮圖路徑，加速列表讀取速度
 }
 
 export interface IThreadDetail extends IThread {
@@ -140,7 +140,7 @@ const mockAttachments: IAttachment[] = [
       width: 800,
       height: 600,
     },
-    thumbnailUrl:"/test/電子紙本發票2.png",
+    thumbnailUrl: "/test/電子紙本發票2.png",
   },
   {
     id: "2",
@@ -152,7 +152,7 @@ const mockAttachments: IAttachment[] = [
       width: 800,
       height: 600,
     },
-    thumbnailUrl:"/test/捐款收據範例.jpg",
+    thumbnailUrl: "/test/捐款收據範例.jpg",
   },
 ];
 
@@ -246,6 +246,6 @@ export const mockThreads: IThreadDetail[] = [
     countOfDislike: 8,
     countOfShare: 30,
     attachments: [mockAttachments[0], mockAttachments[1]],
-    comments: [mockComments[0], mockComments[1], mockComments[2],mockComments[3]],
+    comments: [mockComments[0], mockComments[1], mockComments[2], mockComments[3]],
   },
 ];

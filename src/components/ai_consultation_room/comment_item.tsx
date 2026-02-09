@@ -109,18 +109,16 @@ export const CommentItem = ({
         <div className="absolute bottom-6 right-6 flex items-center gap-4">
           <button
             onClick={handleLike}
-            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${
-              liked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
-            }`}
+            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${liked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
+              }`}
           >
             <ThumbsUp size={16} fill={liked ? "currentColor" : "none"} />
             <span>{comment.likes + (liked ? 1 : 0)}</span>
           </button>
           <button
             onClick={handleDislike}
-            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${
-              disliked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
-            }`}
+            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${disliked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
+              }`}
           >
             <ThumbsDown size={16} fill={disliked ? "currentColor" : "none"} />
             <span>{comment.dislikes + (disliked ? 1 : 0)}</span>
@@ -128,7 +126,7 @@ export const CommentItem = ({
         </div>
       </div>
 
-      {/* Reply Input & Nested Replies */}
+      {/* Info: (20260209 - Julian) Reply Input & Nested Replies */}
       {showReplies && (
         <div className="space-y-4">
           <div className={isReply ? "" : "ml-14"}>
