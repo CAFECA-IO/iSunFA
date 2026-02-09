@@ -1,19 +1,17 @@
-"use client";
-
 import { useState, useRef } from "react";
 import Image from "next/image";
-import {
-  PlusIcon,
-  MinusIcon,
-  MessageCircleMore,
-  Bot,
-  X,
-} from "lucide-react";
+import { PlusIcon, MinusIcon, MessageCircleMore, Bot, X } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
 
 export const AiChat = () => {
-  const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
+   const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
+   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+   const [question, setQuestion] = useState<string>("");
+   const fileInputRef = useRef<HTMLInputElement>(null);
+
+   const isSubmitDisabled = !question.trim();
+
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -24,7 +22,12 @@ export const AiChat = () => {
 
       const validFiles = fileList.filter((file) => {
         if (file.size > maxSize) {
-          alert(`檔案 "${file.name}" 超過 5MB 限制`);
+          alert(
+            t("ai_consultation_room.file_size_error").replace(
+              "{name}",
+              file.name
+            )
+          );
           return false;
         }
         return true;
@@ -33,14 +36,19 @@ export const AiChat = () => {
       setUploadedFiles((prev) => {
         const totalFiles = [...prev, ...validFiles];
         if (totalFiles.length > maxCount) {
-          alert(`最多只能上傳 ${maxCount} 張圖片`);
+          alert(
+            t("ai_consultation_room.file_count_error").replace(
+              "{count}",
+              maxCount.toString()
+            )
+          );
           return totalFiles.slice(0, maxCount);
         }
         return totalFiles;
       });
-      
+
       // Reset input value to allow uploading same file again if deleted
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 
@@ -61,7 +69,7 @@ export const AiChat = () => {
           type="button"
           onClick={() => setIsChatOpen(true)}
           className="absolute inset-0 w-full h-full rounded-full z-10"
-          aria-label="開啟 AI 諮詢室"
+          aria-label={t("ai_consultation_room.open_chat")}
         />
       )}
       <div
@@ -73,7 +81,7 @@ export const AiChat = () => {
               <Bot size={20} className="text-orange-600" />
             </div>
             <h2 className="text-lg font-bold text-gray-800 whitespace-nowrap">
-              AI 諮詢室
+              {t("ai_consultation_room.title")}
             </h2>
           </div>
         )}
@@ -88,7 +96,11 @@ export const AiChat = () => {
           className={`text-orange-500 transition-all duration-300 ${
             isChatOpen ? "p-2 hover:bg-gray-100 rounded-xl" : "p-0"
           }`}
-          aria-label={isChatOpen ? "關閉 AI 諮詢室" : "開啟 AI 諮詢室"}
+          aria-label={
+            isChatOpen
+              ? t("ai_consultation_room.close_chat")
+              : t("ai_consultation_room.open_chat")
+          }
         >
           {isChatOpen ? (
             <MinusIcon size={24} />
@@ -103,20 +115,23 @@ export const AiChat = () => {
         </button>
       </div>
 
-      <div className="overflow-hidden">
+      <div className="overflow-y-auto">
         <div
           className={`transition-all duration-300 ease-in-out flex flex-col gap-4 flex-1 ${
-            isChatOpen ? "opacity-100 mt-6" : "opacity-0 h-0"
+            isChatOpen ? "opacity-100 h-fit mt-6" : "opacity-0 h-0"
           }`}
         >
-          <div className="flex-1 space-y-4 overflow-y-auto pr-1">
+          <div className="flex-1 space-y-4 pr-1">
             <div className="relative">
               <textarea
                 id="ai-question-input"
-                aria-label="請輸入你的問題"
-                placeholder="請輸入你的問題..."
+                aria-label={t("ai_consultation_room.input_placeholder")}
+                placeholder={t("ai_consultation_room.input_placeholder")}
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
                 className="w-full h-36 p-4 outline-none bg-gray-50 border-2 border-transparent focus:border-orange-200 rounded-2xl text-sm transition-all resize-none shadow-inner"
               />
+
             </div>
 
             {/* Display Uploaded Files */}
@@ -159,22 +174,34 @@ export const AiChat = () => {
 
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full py-3.5 flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-2xl text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50 transition-all"
+              className="w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-2xl text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50 transition-all"
             >
-              <PlusIcon size={20} />
-              <span className="text-sm font-semibold">上傳發票 / 單據 (OCR)</span>
+              <PlusIcon size={20} className="shrink-0" />
+              <span className="text-sm font-semibold">
+                {t("ai_consultation_room.upload_btn")}
+              </span>
             </button>
 
-            <button className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-200 transition-all active:scale-[0.98] hover:-translate-y-0.5">
-              立即向 AI 提問
+            <button
+              id="ai-chat-submit"
+              disabled={isSubmitDisabled}
+              className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all ${
+                isSubmitDisabled
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                  : "bg-orange-600 hover:bg-orange-500 text-white shadow-orange-200 active:scale-[0.98] hover:-translate-y-0.5"
+              }`}
+            >
+              {t("ai_consultation_room.ask_ai")}
             </button>
+
           </div>
 
           <p className="text-[11px] text-gray-400 leading-relaxed text-center px-4">
-            * AI 回覆僅供參考，不代表正式法律建議。其分析內容基於提供的數據。
+            {t("ai_consultation_room.disclaimer")}
           </p>
         </div>
       </div>
     </div>
   );
 };
+

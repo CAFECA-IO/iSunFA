@@ -1,12 +1,17 @@
-"use client";
-
 import { useState, Fragment } from "react";
-import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react";
+import {
+  Dialog,
+  DialogPanel,
+  Transition,
+  TransitionChild,
+} from "@headlessui/react";
 import Image from "next/image";
 import { Paperclip, X } from "lucide-react";
 import { IAttachment } from "@/interfaces/ai_talk";
+import { useTranslation } from "@/i18n/i18n_context";
 
 export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const isImage = attachment.mimeType.startsWith("image/");
@@ -37,7 +42,14 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
         className={`group relative w-32 h-32 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center outline-none p-2 transition-all ${
           isImage ? "cursor-zoom-in hover:shadow-lg" : "cursor-default"
         }`}
-        aria-label={isImage ? `查看圖片: ${attachment.fileName}` : attachment.fileName}
+        aria-label={
+          isImage
+            ? t("ai_consultation_room.view_image").replace(
+                "{name}",
+                attachment.fileName
+              )
+            : attachment.fileName
+        }
       >
         {thumbnail}
         <span className="text-[10px] text-gray-500 truncate w-full text-center px-1">
@@ -85,7 +97,7 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
                       <X className="h-6 w-6" aria-hidden="true" />
                     </button>
                   </div>
-                  
+
                   <div className="relative w-full aspect-video min-h-[300px] max-h-[85vh] bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center">
                     <Image
                       src={attachment.url}
@@ -95,20 +107,23 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
                       priority
                     />
                   </div>
-                  
+
                   <div className="p-4 flex items-center justify-between">
                     <div>
-                      <h3 className="text-gray-900 font-bold">{attachment.fileName}</h3>
+                      <h3 className="text-gray-900 font-bold">
+                        {attachment.fileName}
+                      </h3>
                       <p className="text-xs text-gray-400">
-                        {Math.round(attachment.fileSize / 1024)} KB • {attachment.mimeType}
+                        {Math.round(attachment.fileSize / 1024)} KB •{" "}
+                        {attachment.mimeType}
                       </p>
                     </div>
-                    <a 
-                      href={attachment.url} 
+                    <a
+                      href={attachment.url}
                       download={attachment.fileName}
                       className="bg-orange-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-orange-500 transition-all active:scale-95"
                     >
-                      下載原始檔案
+                      {t("ai_consultation_room.download_original")}
                     </a>
                   </div>
                 </DialogPanel>
@@ -120,3 +135,4 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
     </>
   );
 };
+

@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { ThumbsUp, ThumbsDown, Share2 } from "lucide-react";
 import { formatTime } from "@/lib/utils/common";
 import { IThread } from "@/interfaces/ai_talk";
+import { useTranslation } from "@/i18n/i18n_context";
+
 
 export const ThreadCard = ({
   id,
@@ -18,6 +20,7 @@ export const ThreadCard = ({
   countOfDislike,
   countOfShare,
 }: IThread) => {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const linkPath = `${pathname}/${id}`;
   const [now] = useState(() => Date.now() / 1000);
@@ -35,7 +38,7 @@ export const ThreadCard = ({
       <div className="p-6 flex-1 overflow-hidden">
         <div className="flex items-center gap-2 mb-3">
           <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded">
-            Q
+            {t("ai_consultation_room.q_label")}
           </span>
           <p className="text-gray-700 text-xs">
             {authorId}
@@ -52,7 +55,7 @@ export const ThreadCard = ({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2 py-1 bg-orange-200 text-orange-700 text-xs font-bold rounded">
-              AI
+              {t("ai_consultation_room.ai_label")}
             </span>
             <div className="flex gap-1">
               {tags.map((tag) => (
@@ -66,6 +69,7 @@ export const ThreadCard = ({
             {answer}
           </p>
         </div>
+
 
         {/* Info: (20260206 - Julian) Toolbar */}
         <div className="flex items-center gap-4 pt-2 mt-2 border-t border-orange-100/50">

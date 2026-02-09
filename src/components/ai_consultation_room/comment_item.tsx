@@ -1,10 +1,9 @@
-"use client";
-
 import { useState } from "react";
 import { ThumbsUp, ThumbsDown, CheckCircle2 } from "lucide-react";
 import { formatTime } from "@/lib/utils/common";
 import { IComment } from "@/interfaces/ai_talk";
 import { CommentPostInput } from "@/components/ai_consultation_room/comment_post_input";
+import { useTranslation } from "@/i18n/i18n_context";
 
 export const CommentItem = ({
   comment,
@@ -13,6 +12,7 @@ export const CommentItem = ({
   comment: IComment;
   isReply?: boolean;
 }) => {
+  const { t } = useTranslation();
   const [liked, setLiked] = useState<boolean>(false);
   const [disliked, setDisliked] = useState<boolean>(false);
   const [showReplies, setShowReplies] = useState<boolean>(false);
@@ -23,13 +23,15 @@ export const CommentItem = ({
 
   const isShowProTag = comment.isProfessional && (
     <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-      <span className="text-xs text-gray-400">#專業回饋</span>
+      <span className="text-xs text-gray-400">
+        {t("ai_consultation_room.pro_feedback")}
+      </span>
     </div>
   );
 
   const isShowVerifiedTag = comment.isVerified && (
     <span className="text-[10px] bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
-      專業認證
+      {t("ai_consultation_room.certified")}
     </span>
   );
 
@@ -97,7 +99,8 @@ export const CommentItem = ({
               onClick={toggleReplies}
               className="text-xs font-bold text-gray-400 hover:text-orange-500 transition-colors"
             >
-              回覆{hasReplies ? `(${comment.replies.length})` : ""}
+              {t("ai_consultation_room.reply")}
+              {hasReplies ? `(${comment.replies.length})` : ""}
             </button>
           </div>
         </div>
@@ -147,3 +150,4 @@ export const CommentItem = ({
     </div>
   );
 };
+

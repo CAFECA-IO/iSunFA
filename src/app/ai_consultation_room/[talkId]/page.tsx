@@ -18,10 +18,13 @@ import {
   Sparkles,
 } from "lucide-react";
 import { MarkdownContent } from '@/components/common/markdown_content';
+import { useTranslation } from "@/i18n/i18n_context";
+
 import { CommentSection } from "@/components/ai_consultation_room/comment_section";
 import { AttachmentItem } from "@/components/ai_consultation_room/attachment_item";
 
 export default function AiTalkDetailPage() {
+  const { t } = useTranslation();
   const params = useParams();
   const talkId = params?.talkId ?? "";
 
@@ -41,13 +44,17 @@ export default function AiTalkDetailPage() {
             <div className="bg-orange-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
               <MessageSquare className="text-orange-500 w-10 h-10" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">未找到對話紀錄</h1>
-            <p className="text-gray-500">抱歉，我們無法找到您要查看的內容。</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {t("ai_consultation_room.not_found")}
+            </h1>
+            <p className="text-gray-500">
+              {t("ai_consultation_room.not_found_desc")}
+            </p>
             <Link
               href={homePagePath}
               className="text-orange-600 font-semibold hover:text-orange-700 inline-flex items-center gap-1"
             >
-              <ChevronLeft size={20} /> 返回上一頁
+              <ChevronLeft size={20} /> {t("ai_consultation_room.back_to_prev")}
             </Link>
           </div>
         </main>
@@ -72,7 +79,9 @@ export default function AiTalkDetailPage() {
             <div className="bg-gray-50 p-2 rounded-full group-hover:bg-orange-50 transition-colors">
               <ChevronLeft size={18} />
             </div>
-            <span className="text-sm font-medium">返回對話列表</span>
+            <span className="text-sm font-medium">
+              {t("ai_consultation_room.back_to_list")}
+            </span>
           </Link>
         </nav>
 
@@ -91,7 +100,9 @@ export default function AiTalkDetailPage() {
             </div>
             <div className="flex items-center gap-1.5 text-gray-400">
               <Clock size={16} />
-              <span>發布於 {dateWithDash}</span>
+              <span>
+                {t("ai_consultation_room.published_at")} {dateWithDash}
+              </span>
             </div>
             <div className="flex items-center gap-1.5 text-gray-400">
               <User size={16} />
@@ -101,7 +112,7 @@ export default function AiTalkDetailPage() {
 
           <div className="bg-gray-50 rounded-3xl p-8 border border-gray-100 italic relative">
             <span className="absolute -top-4 left-6 bg-white border border-gray-100 px-3 py-1 rounded-full text-xs font-bold text-gray-400">
-              問題原文
+              {t("ai_consultation_room.original_question")}
             </span>
             <p className="text-gray-700 text-lg leading-relaxed">
               {data.question}
@@ -127,7 +138,7 @@ export default function AiTalkDetailPage() {
           </div>
           <div className="relative flex justify-center">
             <span className="bg-white px-4 text-sm text-gray-300 flex items-center gap-2">
-              <Sparkles size={16} /> AI 解析結果
+              <Sparkles size={16} /> {t("ai_consultation_room.ai_result")}
             </span>
           </div>
         </div>
@@ -145,16 +156,17 @@ export default function AiTalkDetailPage() {
             </div>
             <div>
               <h2 className="text-xl font-extrabold text-orange-900">
-                AccounTalk AI
+                {t("ai_consultation_room.ai_name")}
               </h2>
               <p className="text-xs text-orange-600 font-medium">
-                模型版本：v2.1-Standard • 經過專家驗證
+
+                {t("ai_consultation_room.ai_model_version")}
               </p>
             </div>
           </header>
 
           <article>
-            <MarkdownContent content={data.answer} theme='light'  />
+            <MarkdownContent content={data.answer} theme="light" />
           </article>
 
           {/* Info: (20260206 - Julian) 互動工具列 */}
@@ -176,7 +188,12 @@ export default function AiTalkDetailPage() {
                 }`}
               >
                 <ThumbsUp size={18} />
-                <span>{data.countOfLike + (liked ? 1 : 0)} 人贊同</span>
+                <span>
+                  {t("ai_consultation_room.agree_count").replace(
+                    "{count}",
+                    (data.countOfLike + (liked ? 1 : 0)).toString()
+                  )}
+                </span>
               </button>
               <button
                 onClick={() => {
@@ -194,14 +211,19 @@ export default function AiTalkDetailPage() {
                 }`}
               >
                 <ThumbsDown size={18} />
-                <span>{data.countOfDislike + (disliked ? 1 : 0)} 人不贊同</span>
+                <span>
+                  {t("ai_consultation_room.disagree_count").replace(
+                    "{count}",
+                    (data.countOfDislike + (disliked ? 1 : 0)).toString()
+                  )}
+                </span>
               </button>
             </div>
 
             <div className="flex items-center gap-4">
               <button className="flex items-center gap-2 text-orange-600 bg-white border border-orange-200 px-5 py-2.5 rounded-2xl font-bold hover:bg-orange-50 transition-all">
                 <Share2 size={18} />
-                <span>分享此知識點</span>
+                <span>{t("ai_consultation_room.share_knowledge")}</span>
               </button>
             </div>
           </footer>
