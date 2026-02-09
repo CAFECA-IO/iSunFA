@@ -1,5 +1,5 @@
 import { UserOperationJson } from "@/validators";
-import { encodeFunctionData, parseAbi, Address, toHex } from "viem";
+import { encodeFunctionData, parseAbi, Address, toHex, keccak256, stringToBytes } from "viem";
 import { publicClient } from "@/lib/viem_public";
 import { CONTRACT_ADDRESSES, ABIS } from "@/config/contracts";
 
@@ -11,7 +11,8 @@ export async function buildTransferUserOp(
     sender: Address,
     to: Address,
     amount: string, // Info: (20260130 - Tzuhan) Parsed 18 decimals string
-    tokenAddress: Address = CONTRACT_ADDRESSES.NTD_TOKEN
+    tokenAddress: Address = CONTRACT_ADDRESSES.NTD_TOKEN,
+    orderId?: string // Info: (20260209 - Tzuhan) Optional Order ID to bind payment
 ): Promise<UserOperationJson> {
 
     /** Info: (20260130 - Tzuhan) 
@@ -19,11 +20,35 @@ export async function buildTransferUserOp(
      * Info: Standard ERC20 Transfer
     */
     const tokenAbi = parseAbi(['function transfer(address to, uint256 amount) external returns (bool)']);
-    const executeCallData = encodeFunctionData({
+    let executeCallData = encodeFunctionData({
         abi: tokenAbi,
         functionName: 'transfer',
         args: [to, BigInt(amount)],
     });
+
+    // Info: (20260209 - Tzuhan) If orderId is provided, append its hash to the call data
+    // This allows verification that the payment is bound to a specific order
+    if (orderId) {
+        const orderHash = keccak256(stringToBytes(orderId));
+        // Append without changing the function selector or arguments logic for the inner call?
+        // Actually, we can't easily append to `executeCallData` because it's encoded for `transfer`.
+        // However, we can append it to the `scwCallData` or just rely on the fact that we are signing the UserOp which *contains* this data?
+        // Wait, simply adding it to the UserOp structure isn't standard unless we put it in `paymasterAndData` or similar which might affect gas.
+        // A better way for simple binding is to encode it into the `transfer` call if the token supports it (ERC-1363), but here it's standard ERC-20.
+        // Alternatively, we can append it to the `callData` of the `execute` function if the `execute` function allows extra data or we ignore it.
+        // But `SCW.execute` usually takes (dest, value, func).
+
+        // Strategy: We will confuse the decoder if we just append.
+        // IMPORTANT: The standard way to "attach" data to a transaction without affecting execution logic 
+        // is often to send it as part of the `callData` but strictly, `execute` might not support variable length arguments at the end if strict.
+
+        // Let's look at `SCW` ABI. It usually is `execute(address to, uint256 value, bytes data)`.
+        // If we change `executeCallData` (the `data` param), we change what is executed on the Token contract.
+        // Token.transfer(to, amount) -> checks 64 bytes of args. If we give more, it usually ignores the trailing bytes in Solidity!
+        // So appending data to `executeCallData` is the way to go.
+
+        executeCallData = (executeCallData + orderHash.slice(2)) as `0x${string}`;
+    }
 
     /** Info: (20260130 - Tzuhan) 
      * 2. Encode SCW Execute (The actual call data for the EntryPoint)

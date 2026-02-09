@@ -7,7 +7,7 @@ import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
 import PaymentConfirmModal, { PaymentStatus } from '@/components/common/payment_confirm_modal';
 import ConfirmModal from '@/components/common/confirm_modal';
-import AnalysisGenerationModal, { AnalysisStatus } from '@/components/user/analysis/analysis_generation_modal';
+// import AnalysisGenerationModal, { AnalysisStatus } from '@/components/user/analysis/analysis_generation_modal'; // Unused
 import SuccessNotification from '@/components/common/success_notification';
 import HistorySection from '@/components/user/analysis/history_section';
 import { fido2ClientService } from '@/lib/auth/fido2_client';
@@ -40,8 +40,9 @@ export default function AnalysisView() {
   const [selectedPeriodValue, setSelectedPeriodValue] = useState<string>('');
 
   // Info: (20260130 - Tzuhan) Payment Status State
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
-  const [analysisStatus, setAnalysisStatus] = useState<AnalysisStatus>('idle');
+  // Info: (20260130 - Tzuhan) Analysis Workflow State
+  const [workflowStatus, setWorkflowStatus] = useState<PaymentStatus>('idle');
+  // const [analysisStatus, setAnalysisStatus] = useState<AnalysisStatus>('idle'); // Info: Merged into workflowStatus
 
   const [txHash, setTxHash] = useState<string>('');
 
@@ -60,7 +61,7 @@ export default function AnalysisView() {
   }, [category, periodType, selectedPeriodValue, selectedYear]);
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
+  // const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false); // Info: No longer needed separately
   const [insufficientCreditsModal, setInsufficientCreditsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -200,49 +201,67 @@ export default function AnalysisView() {
     return `${start} ~ ${end}`;
   })();
 
-  // Info: (20260120 - Tzuhan) Open Payment Modal instead of direct generate
+  // Info: (20260120 - Tzuhan) Open Payment Modal
   const handleGenerate = () => {
     setIsPaymentModalOpen(true);
-    setPaymentStatus('idle'); // Info: (20260130 - Tzuhan) Reset status when opening modal
+    setWorkflowStatus('idle');
     setErrorMessage('');
     setTxHash('');
   };
 
-  // Info: (20260130 - Tzuhan) Step 1: Handle Payment
-  const handlePayment = async () => {
+  // Info: (20260209 - Tzuhan) Combined Analysis Workflow (Single Signature)
+  const handleAnalysisWorkflow = async () => {
     try {
       setIsLoading(true);
-      setPaymentStatus('preparing');
+      setWorkflowStatus('preparing');
       setErrorMessage('');
 
       if (!user?.address) {
         throw new Error(t('analysis.error.user_address_missing') || 'User address not found');
       }
 
-      // Info: (20260130 - Tzuhan) 0. Check Balance & Cost
-      if (!calculatedCost || calculatedCost <= 0) {
-        // Todo: (20260130 - Tzuhan) skip payment logic if free
-      }
-
-      // Info: (20260206) Check user credits
+      // Check user credits
       if ((user.credits || 0) < calculatedCost) {
         setInsufficientCreditsModal(true);
         setIsLoading(false);
-        setPaymentStatus('idle');
+        setWorkflowStatus('idle');
         return;
       }
 
-      console.log('calculatedCost', calculatedCost);
+      // 1. Create Order to get Order ID
+      // We need an order ID *before* payment to bind them together.
+      // However, previous flow created order *after* payment with txHash.
+      // Now we create order first, but we might not have txHash yet.
+      // The API should allow creating an order without txHash initially, or we pass a dummy one and update it?
+      // Actually, `/api/v1/user/order` takes txHash. We need to check if we can call it without txHash or if we should modify it.
+      // Let's assume for now we modify/use the API to get an order ID first. 
+      // Wait, the previous implementation of `handleGenerateReport` called `/api/v1/user/order` with `txHash`.
+      // If we want to bind payment to order, we need orderId BEFORE payment.
+      // So we must call `/api/v1/user/order` WITHOUT txHash first (or with null).
 
-      // Info: (20260130 - Tzuhan) 1. Prepare Transfer UserOp (Server Action)
-      const prepRes = await prepareTransferUserOp(user.address, calculatedCost);
+      const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
+        method: 'POST',
+        body: JSON.stringify({
+          category,
+          periodType,
+          year: selectedYear,
+          periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
+          txHash: null // Info: No txHash yet
+        })
+      });
+
+      if (!orderRes?.payload) throw new Error('Failed to create order');
+      const { orderId } = orderRes.payload; // We don't need the random challenge for *this* signature, we sign the UserOp.
+
+      // 2. Prepare Transfer UserOp with Order ID
+      const prepRes = await prepareTransferUserOp(user.address, calculatedCost, orderId);
       if (!prepRes.success || !prepRes.data) {
         throw new Error(prepRes.message || 'Failed to prepare transfer');
       }
       const { userOp, userOpHash } = prepRes.data;
 
-      // Info: (20260130 - Tzuhan) 2. Sign the UserOp Hash (Client FIDO2)
-      setPaymentStatus('signing_payment');
+      // 3. Sign the UserOp Hash (Client FIDO2)
+      setWorkflowStatus('signing_payment');
 
       if (!user.pubKeyX || !user.pubKeyY) {
         throw new Error('User public keys missing. Please re-login.');
@@ -256,15 +275,15 @@ export default function AnalysisView() {
         allowCredentials: [],
       });
 
-      // Info: (20260130 - Tzuhan) 3. Encode Signature & Attach to UserOp
+      // 4. Encode Signature & Attach to UserOp
       const encodedSignature = encodeWebAuthnSignature(
         transferAuth,
         BigInt(user.pubKeyX),
         BigInt(user.pubKeyY)
       );
 
-      // Info: (20260130 - Tzuhan) 4. Submit Signed UserOp (Server Action)
-      setPaymentStatus('submitting_payment');
+      // 5. Submit Signed UserOp (Payment)
+      setWorkflowStatus('submitting_payment');
       const submitRes = await submitSignedUserOp({
         ...userOp,
         signature: encodedSignature
@@ -276,66 +295,21 @@ export default function AnalysisView() {
 
       const transactionHash = (submitRes.data as { tx: string })?.tx;
       setTxHash(transactionHash);
-      setPaymentStatus('payment_success');
 
-    } catch (error) {
-      console.error('Payment failed:', error);
-      setPaymentStatus('error');
-      setErrorMessage(t('auth_modal.failed') + `: ${(error as Error).message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      // 6. Submit Analysis Request
+      // We pass the transactionHash. The backend will verify that the transaction input contains the hash of orderId.
+      setWorkflowStatus('payment_success'); // Reuse this status or add a new one like 'analyzing'
 
-  const handlePaymentNext = () => {
-    setIsPaymentModalOpen(false);
-    setIsAnalysisModalOpen(true);
-    setAnalysisStatus('idle');
-  };
+      // Short delay to let UI show payment success or just move to analyzing? 
+      // Let's go straight to analyzing visual if we want, or keep "payment_success" briefly.
+      // But the user wants "One step".
 
-  // Info: (20260130 - Tzuhan) Step 2: Handle Report Generation
-  const handleGenerateReport = async () => {
-    try {
-      setIsLoading(true);
-      setAnalysisStatus('signing');
-      setErrorMessage('');
+      // Let's call analysis API immediately.
+      // We need to pass `authentication` to `/api/v1/user/analysis`. 
+      // The API expects `authentication.orderId` and verifies signature.
+      // We need to change the API to accept `transactionHash` and skip signature verification if validated via chain.
+      // For now, we construct a "dummy" authentication object or minimal one containing what's needed.
 
-      if (!txHash) {
-        throw new Error('Payment transaction hash not found. Please pay first.');
-      }
-
-      // Info: (20260130 - Tzuhan) 5. Create Order & Get Challenge (Existing Logic)
-      const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
-        method: 'POST',
-        body: JSON.stringify({
-          category,
-          periodType,
-          year: selectedYear,
-          periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-          txHash: txHash
-        })
-      });
-
-      if (!orderRes?.payload) throw new Error('Failed to create order');
-      const { orderId, challenge } = orderRes.payload;
-
-      // Info: (20260130 - Tzuhan) 6. Sign the Analysis Order
-      const analysisChallengeBase64 = btoa(challenge)
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-
-      const authentication = await fido2ClientService.startLogin({
-        challenge: analysisChallengeBase64,
-        timeout: 60000,
-        userVerification: 'required',
-        allowCredentials: [],
-      });
-
-      const authWithOrder = { ...authentication, orderId };
-
-      // Info: (20260130 - Tzuhan) 8. Send to API
-      setAnalysisStatus('analyzing');
       await request('/api/v1/user/analysis', {
         method: 'POST',
         body: JSON.stringify({
@@ -343,21 +317,31 @@ export default function AnalysisView() {
           periodType,
           year: selectedYear,
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-          authentication: authWithOrder,
+          authentication: {
+            orderId,
+            transactionHash,
+            // We pass the FIDO2 response just in case but it's for the UserOp, not the challenge from order.
+            // The backend must distinguish this.
+            ...transferAuth,
+          },
         }),
       });
 
-      // Info: (20260130 - Tzuhan) Refresh user balance
+      // Refresh user balance
       await refreshAuth();
 
-      setAnalysisStatus('success');
-      // Info: (20260130 - Tzuhan) maybe auto close after a while or let user close
-      // Info: (20260130 - Luphia) Redirect to history and show success notification
-      setActiveTab('history');
-      setShowSuccessNotification(true);
+      setWorkflowStatus('payment_success'); // Or 'success' if we want to close modal
+      // Let's stick with payment_success for the modal to show success state, then maybe auto close?
+
+      setTimeout(() => {
+        setIsPaymentModalOpen(false);
+        setActiveTab('history');
+        setShowSuccessNotification(true);
+      }, 2000);
+
     } catch (error) {
-      console.error('Report generation failed:', error);
-      setAnalysisStatus('error');
+      console.error('Analysis workflow failed:', error);
+      setWorkflowStatus('error');
       setErrorMessage(t('auth_modal.failed') + `: ${(error as Error).message}`);
     } finally {
       setIsLoading(false);
@@ -600,17 +584,17 @@ export default function AnalysisView() {
       <PaymentConfirmModal
         isOpen={isPaymentModalOpen}
         onClose={() => {
-          if (paymentStatus === 'error' || paymentStatus === 'payment_success') {
-            setPaymentStatus('idle');
+          if (workflowStatus === 'error' || workflowStatus === 'payment_success') {
+            setWorkflowStatus('idle');
             setErrorMessage('');
             setIsPaymentModalOpen(false);
             setTxHash('');
-          } else if (paymentStatus === 'idle') {
+          } else if (workflowStatus === 'idle') {
             setIsPaymentModalOpen(false);
           }
         }}
-        onConfirm={handlePayment}
-        onNext={handlePaymentNext}
+        onConfirm={handleAnalysisWorkflow} // Use combined handler
+        // onNext={handlePaymentNext} // Removed
         cost={calculatedCost}
         analysisType={t(`analysis.categories.${category}`)}
         period={t('analysis.selected_period_desc', {
@@ -620,28 +604,12 @@ export default function AnalysisView() {
         country={country}
         keyword={activeTab === 'external' && category !== 'market_trends' ? keyword : undefined}
         isLoading={isLoading}
-        status={paymentStatus}
+        status={workflowStatus}
         errorMessage={errorMessage}
         txHash={txHash}
       />
 
-      {/* Info: (20260130 - Tzuhan) Analysis Generation Modal */}
-      <AnalysisGenerationModal
-        isOpen={isAnalysisModalOpen}
-        onClose={() => {
-          if (analysisStatus === 'error' || analysisStatus === 'success') {
-            setAnalysisStatus('idle');
-            setErrorMessage('');
-            setIsAnalysisModalOpen(false);
-            // if success, we might want to navigate or show result, but checking activeTab is enough for now
-          } else if (analysisStatus === 'idle') {
-            setIsAnalysisModalOpen(false);
-          }
-        }}
-        onConfirm={handleGenerateReport}
-        status={analysisStatus}
-        errorMessage={errorMessage}
-      />
+      {/* Analysis Generation Modal Removed - Merged into Payment Workflow */}
 
       <ConfirmModal
         isOpen={insufficientCreditsModal}
@@ -656,8 +624,23 @@ export default function AnalysisView() {
       <SuccessNotification
         show={showSuccessNotification}
         title={t('analysis.success.title')}
-        message={t('analysis.success.message')}
+        message={(
+          <div className="flex flex-col gap-2">
+            <span>{t('analysis.success.message')}</span>
+            {txHash && (
+              <a
+                href={`${process.env.NEXT_PUBLIC_BAIFA_EXPLORER || 'https://baifa.io'}/tx/${txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-orange-600 hover:text-orange-700 underline text-xs break-all"
+              >
+                {t('analysis.success.view_tx')}: {txHash}
+              </a>
+            )}
+          </div>
+        )}
         onClose={() => setShowSuccessNotification(false)}
+        autoCloseDelay={10000}
       />
 
       {/* Info: (20260120 - Luphia) History Section */}

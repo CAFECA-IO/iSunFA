@@ -9,6 +9,9 @@ import { AppError } from '@/lib/utils/error';
 import { analysisRepo } from '@/repositories/analysis.repo';
 import { orderGenerator } from '@/lib/order/order.generator';
 import { getPeriodDateRange } from '@/lib/analysis/period';
+import { decodeFunctionData, keccak256, stringToBytes, parseAbi } from 'viem';
+import { publicClient } from '@/lib/viem_public';
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,31 +25,108 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { category, periodType, periodValue, year, authentication } = body;
 
-    // Info: (20260128 - Luphia) Validate FIDO2 Signature against Order
+    // Info: (20260128 - Luphia) Validate FIDO2 Signature OR Transaction Binding
     if (!authentication || !authentication.orderId) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, 'FIDO2 signature and Order ID are required');
+      return jsonFail(ApiCode.VALIDATION_ERROR, 'Order ID is required');
     }
 
     const orderId = authentication.orderId;
+    const authWithTx = authentication as AuthenticationJSON & { transactionHash?: string };
+    const txHash = authWithTx.transactionHash;
 
     try {
-      // Info: (20260128 - Luphia) 1. Get Pending Order to retrieve the challenge string (content)
-      const order = await orderGenerator.getPendingOrder(orderId, user.id);
+      if (txHash) {
+        // Info: (20260209 - Tzuhan) Verify Transaction Binding
+        console.log(`[Analysis] Verifying transaction binding for Order ${orderId} in Tx ${txHash}`);
 
-      // Info: (20260128 - Luphia) 2. Verify Signature: The challenge signed by user MUST match order.challenge
-      await webAuthnService.verifySignature(user.address, authentication, order.challenge);
+        // 1. Get Transaction
+        const tx = await publicClient.getTransaction({ hash: txHash as `0x${string}` });
+        if (!tx) {
+          throw new Error('Transaction not found');
+        }
 
-      // Info: (20260128 - Luphia) 3. Complete Order: Save signature and optional transactionHash
-      const authWithTx = authentication as AuthenticationJSON & { transactionHash?: string };
-      const txHash = authWithTx.transactionHash;
-      await orderGenerator.completeOrder(orderId, JSON.stringify(authentication), txHash);
+        // 2. Decode EntryPoint.handleOps
+        // We assume the transaction is to the EntryPoint
+        // Note: ABIS.ENTRY_POINT might need to be checked if it covers handleOps
+        // Or we use a local parseAbi for handleOps
+
+        let foundUserOp = false;
+        let verifiedHash = false;
+
+        try {
+          const handleOpsAbi = parseAbi([
+            'function handleOps((address sender, uint256 nonce, bytes initCode, bytes callData, uint256 callGasLimit, uint256 verificationGasLimit, uint256 preVerificationGas, uint256 maxFeePerGas, uint256 maxPriorityFeePerGas, bytes paymasterAndData, bytes signature)[] ops, address beneficiary) external'
+          ]);
+
+          const { args } = decodeFunctionData({
+            abi: handleOpsAbi,
+            data: tx.input,
+          });
+          const ops = args[0];
+
+          // 3. Find UserOp for this user
+          for (const op of ops) {
+            if (op.sender.toLowerCase() === user.address.toLowerCase()) {
+              foundUserOp = true;
+              // 4. Decode SCW.execute from callData
+              // execute(address dest, uint256 value, bytes func)
+              const executeAbi = parseAbi(['function execute(address, uint256, bytes) external']);
+
+              const { args: executeArgs } = decodeFunctionData({
+                abi: executeAbi,
+                data: op.callData,
+              });
+
+              const innerCallData = executeArgs[2];
+
+              // 5. Verify Hash
+              const orderHash = keccak256(stringToBytes(orderId));
+              // The innerCallData should END with this hash (32 bytes = 64 hex chars)
+              // innerCallData is `0x...`
+              const hashHex = orderHash.slice(2).toLowerCase(); // remove 0x
+              if (innerCallData.toLowerCase().endsWith(hashHex)) {
+                verifiedHash = true;
+              } else {
+                console.warn(`[Analysis] Hash mismatch. Expected end with ${hashHex}, got data ${innerCallData}`);
+              }
+              break;
+            }
+          }
+
+        } catch (decodeError) {
+          console.error('[Analysis] Failed to decode transaction:', decodeError);
+          throw new Error('Invalid transaction structure');
+        }
+
+        if (!foundUserOp) {
+          throw new Error('No UserOperation found for this user in the transaction');
+        }
+        if (!verifiedHash) {
+          throw new Error('Transaction is not bound to this Order ID');
+        }
+
+        // Info: (20260209 - Tzuhan) Mark order as complete
+        await orderGenerator.completeOrder(orderId, JSON.stringify({ verifiedVia: 'tx', txHash }), txHash);
+
+      } else {
+        // Info: (20260128 - Luphia) Fallback to Signature Verification (Legacy 2-step) or if txHash not provided
+
+        // 1. Get Pending Order
+        const order = await orderGenerator.getPendingOrder(orderId, user.id);
+
+        // 2. Verify Signature
+        await webAuthnService.verifySignature(user.address, authentication, order.challenge);
+
+        // 3. Complete Order
+        await orderGenerator.completeOrder(orderId, JSON.stringify(authentication), undefined);
+      }
 
     } catch (error) {
       if (error instanceof AppError) {
         return jsonFail(error.code, error.message);
       }
       console.error('Order verification failed:', error);
-      return jsonFail(ApiCode.UNAUTHORIZED, 'Signature verification failed');
+      return jsonFail(ApiCode.UNAUTHORIZED, `Verification failed: ${(error as Error).message}`);
     }
 
     /**

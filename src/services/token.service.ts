@@ -414,7 +414,8 @@ async function togglePause(tokenAddress: string, isPause: boolean): Promise<Acti
  */
 export async function prepareTransferUserOp(
   sender: string,
-  amount: number
+  amount: number,
+  orderId?: string
 ): Promise<ActionResponse & { data?: { userOp: UserOperationJson, userOpHash: string } }> {
   try {
     const validSender = getAddress(sender);
@@ -427,7 +428,8 @@ export async function prepareTransferUserOp(
       validSender,
       validRecipient,
       amountWei,
-      CONTRACT_ADDRESSES.NTD_TOKEN
+      CONTRACT_ADDRESSES.NTD_TOKEN,
+      orderId
     );
 
     // Info: (20260130 - Tzuhan) 2. Calculate UserOp Hash using EntryPoint

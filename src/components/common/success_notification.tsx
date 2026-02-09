@@ -1,13 +1,13 @@
 'use client';
 
-import { Fragment, useEffect } from 'react';
+import { Fragment, useEffect, ReactNode } from 'react';
 import { Transition } from '@headlessui/react';
 import { Check } from 'lucide-react';
 
 interface ISuccessNotificationProps {
   show: boolean;
   title: string;
-  message: string;
+  message: ReactNode;
   onClose: () => void;
   autoCloseDelay?: number;
 }
@@ -56,7 +56,7 @@ export default function SuccessNotification({
                 </div>
                 <div className="ml-3 w-0 flex-1 pt-0.5">
                   <p className="text-sm font-semibold text-gray-900">{title}</p>
-                  <p className="mt-1 text-sm text-gray-500">{message}</p>
+                  <div className="mt-1 text-sm text-gray-500">{message}</div>
                 </div>
                 <div className="ml-4 flex flex-shrink-0">
                   <button

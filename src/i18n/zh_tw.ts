@@ -577,8 +577,9 @@ export const zhTw = {
     },
 
     success: {
-      title: '分析報告生成中',
-      message: '您可以在此閱覽生成進度與結果',
+      title: '分析請求已提交',
+      message: '您的請求已上鏈，報告生成需時，請至歷史報告分頁查看進度。',
+      view_tx: '檢視交易',
     },
   },
 };
