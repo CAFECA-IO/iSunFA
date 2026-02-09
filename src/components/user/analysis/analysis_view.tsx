@@ -220,7 +220,7 @@ export default function AnalysisView() {
         throw new Error(t('analysis.error.user_address_missing') || 'User address not found');
       }
 
-      // Check user credits
+      // Info: (20260209 - Tzuhan) Check user credits
       if ((user.credits || 0) < calculatedCost) {
         setInsufficientCreditsModal(true);
         setIsLoading(false);
@@ -228,16 +228,7 @@ export default function AnalysisView() {
         return;
       }
 
-      // 1. Create Order to get Order ID
-      // We need an order ID *before* payment to bind them together.
-      // However, previous flow created order *after* payment with txHash.
-      // Now we create order first, but we might not have txHash yet.
-      // The API should allow creating an order without txHash initially, or we pass a dummy one and update it?
-      // Actually, `/api/v1/user/order` takes txHash. We need to check if we can call it without txHash or if we should modify it.
-      // Let's assume for now we modify/use the API to get an order ID first. 
-      // Wait, the previous implementation of `handleGenerateReport` called `/api/v1/user/order` with `txHash`.
-      // If we want to bind payment to order, we need orderId BEFORE payment.
-      // So we must call `/api/v1/user/order` WITHOUT txHash first (or with null).
+      // Info: (20260209 - Tzuhan) 1. 在發送交易前，先向後端請求一個 orderId
 
       const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
         method: 'POST',
@@ -246,21 +237,21 @@ export default function AnalysisView() {
           periodType,
           year: selectedYear,
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-          txHash: null // Info: No txHash yet
+          txHash: null // Info: (20260209 - Tzuhan) No txHash yet
         })
       });
 
       if (!orderRes?.payload) throw new Error('Failed to create order');
       const { orderId } = orderRes.payload; // We don't need the random challenge for *this* signature, we sign the UserOp.
 
-      // 2. Prepare Transfer UserOp with Order ID
+      // Info: (20260209 - Tzuhan) 2. 準備轉帳 UserOp
       const prepRes = await prepareTransferUserOp(user.address, calculatedCost, orderId);
       if (!prepRes.success || !prepRes.data) {
         throw new Error(prepRes.message || 'Failed to prepare transfer');
       }
       const { userOp, userOpHash } = prepRes.data;
 
-      // 3. Sign the UserOp Hash (Client FIDO2)
+      // Info: (20260209 - Tzuhan) 3. 簽署 UserOp Hash (Client FIDO2)
       setWorkflowStatus('signing_payment');
 
       if (!user.pubKeyX || !user.pubKeyY) {
@@ -275,14 +266,14 @@ export default function AnalysisView() {
         allowCredentials: [],
       });
 
-      // 4. Encode Signature & Attach to UserOp
+      // Info: (20260209 - Tzuhan) 4. 編碼簽名並附加到 UserOp
       const encodedSignature = encodeWebAuthnSignature(
         transferAuth,
         BigInt(user.pubKeyX),
         BigInt(user.pubKeyY)
       );
 
-      // 5. Submit Signed UserOp (Payment)
+      // Info: (20260209 - Tzuhan) 5. 提交已簽署的 UserOp (付款)
       setWorkflowStatus('submitting_payment');
       const submitRes = await submitSignedUserOp({
         ...userOp,
@@ -296,19 +287,8 @@ export default function AnalysisView() {
       const transactionHash = (submitRes.data as { tx: string })?.tx;
       setTxHash(transactionHash);
 
-      // 6. Submit Analysis Request
-      // We pass the transactionHash. The backend will verify that the transaction input contains the hash of orderId.
-      setWorkflowStatus('payment_success'); // Reuse this status or add a new one like 'analyzing'
-
-      // Short delay to let UI show payment success or just move to analyzing? 
-      // Let's go straight to analyzing visual if we want, or keep "payment_success" briefly.
-      // But the user wants "One step".
-
-      // Let's call analysis API immediately.
-      // We need to pass `authentication` to `/api/v1/user/analysis`. 
-      // The API expects `authentication.orderId` and verifies signature.
-      // We need to change the API to accept `transactionHash` and skip signature verification if validated via chain.
-      // For now, we construct a "dummy" authentication object or minimal one containing what's needed.
+      // Info: (20260209 - Tzuhan) 6. 提交分析請求
+      setWorkflowStatus('payment_success'); // Info: (20260209 - Tzuhan) Reuse this status or add a new one like 'analyzing'
 
       await request('/api/v1/user/analysis', {
         method: 'POST',
@@ -320,18 +300,15 @@ export default function AnalysisView() {
           authentication: {
             orderId,
             transactionHash,
-            // We pass the FIDO2 response just in case but it's for the UserOp, not the challenge from order.
-            // The backend must distinguish this.
             ...transferAuth,
           },
         }),
       });
 
-      // Refresh user balance
+      // Info: (20260209 - Tzuhan) Refresh user balance
       await refreshAuth();
 
-      setWorkflowStatus('payment_success'); // Or 'success' if we want to close modal
-      // Let's stick with payment_success for the modal to show success state, then maybe auto close?
+      setWorkflowStatus('payment_success');
 
       setTimeout(() => {
         setIsPaymentModalOpen(false);

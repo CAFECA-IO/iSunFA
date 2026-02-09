@@ -39,17 +39,13 @@ export async function POST(request: NextRequest) {
         // Info: (20260209 - Tzuhan) Verify Transaction Binding
         console.log(`[Analysis] Verifying transaction binding for Order ${orderId} in Tx ${txHash}`);
 
-        // 1. Get Transaction
+        // Info: (20260209 - Tzuhan) 1. Get Transaction
         const tx = await publicClient.getTransaction({ hash: txHash as `0x${string}` });
         if (!tx) {
           throw new Error('Transaction not found');
         }
 
-        // 2. Decode EntryPoint.handleOps
-        // We assume the transaction is to the EntryPoint
-        // Note: ABIS.ENTRY_POINT might need to be checked if it covers handleOps
-        // Or we use a local parseAbi for handleOps
-
+        // Info: (20260209 - Tzuhan) 2. Decode EntryPoint.handleOps
         let foundUserOp = false;
         let verifiedHash = false;
 
@@ -64,12 +60,12 @@ export async function POST(request: NextRequest) {
           });
           const ops = args[0];
 
-          // 3. Find UserOp for this user
+          // Info: (20260209 - Tzuhan) 3. Find UserOp for this user
           for (const op of ops) {
             if (op.sender.toLowerCase() === user.address.toLowerCase()) {
               foundUserOp = true;
-              // 4. Decode SCW.execute from callData
-              // execute(address dest, uint256 value, bytes func)
+              // Info: (20260209 - Tzuhan) 4. Decode SCW.execute from callData
+              // Info: (20260209 - Tzuhan) execute(address dest, uint256 value, bytes func)
               const executeAbi = parseAbi(['function execute(address, uint256, bytes) external']);
 
               const { args: executeArgs } = decodeFunctionData({
@@ -79,10 +75,10 @@ export async function POST(request: NextRequest) {
 
               const innerCallData = executeArgs[2];
 
-              // 5. Verify Hash
+              // Info: (20260209 - Tzuhan) 5. Verify Hash
               const orderHash = keccak256(stringToBytes(orderId));
-              // The innerCallData should END with this hash (32 bytes = 64 hex chars)
-              // innerCallData is `0x...`
+              // Info: (20260209 - Tzuhan) The innerCallData should END with this hash (32 bytes = 64 hex chars)
+              // Info: (20260209 - Tzuhan) innerCallData is `0x...`
               const hashHex = orderHash.slice(2).toLowerCase(); // remove 0x
               if (innerCallData.toLowerCase().endsWith(hashHex)) {
                 verifiedHash = true;
@@ -111,13 +107,13 @@ export async function POST(request: NextRequest) {
       } else {
         // Info: (20260128 - Luphia) Fallback to Signature Verification (Legacy 2-step) or if txHash not provided
 
-        // 1. Get Pending Order
+        // Info: (20260209 - Tzuhan) 1. Get Pending Order
         const order = await orderGenerator.getPendingOrder(orderId, user.id);
 
-        // 2. Verify Signature
+        // Info: (20260209 - Tzuhan) 2. Verify Signature
         await webAuthnService.verifySignature(user.address, authentication, order.challenge);
 
-        // 3. Complete Order
+        // Info: (20260209 - Tzuhan) 3. Complete Order
         await orderGenerator.completeOrder(orderId, JSON.stringify(authentication), undefined);
       }
 
