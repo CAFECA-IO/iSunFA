@@ -1,0 +1,63 @@
+"use client";
+
+import { useState } from "react";
+import { MessageSquare } from "lucide-react";
+import { IComment } from "@/interfaces/ai_talk";
+import { CommentItem } from "@/components/ai_consultation_room/comment_item";
+import { CommentPostInput } from "@/components/ai_consultation_room/comment_post_input";
+
+export const CommentSection = ({ comments }: { comments: IComment[] }) => {
+  const [isShowInput, setIsShowInput] = useState<boolean>(true);
+  const [commentInput, setCommentInput] = useState<string>("");
+
+  const openInputHandler = () => {
+    if (isShowInput) setCommentInput("");
+    setIsShowInput((prev) => !prev);
+  };
+
+  const displayedComments =
+    comments.length > 0 ? (
+      <div className="space-y-6 mt-6">
+        {/* Info: (20260206 - Julian) 會計師評論範例 */}
+        {comments.map((comment) => (
+          <CommentItem key={comment.id} comment={comment} />
+        ))}
+
+        {/* Info: (20260206 - Julian) 更多留言載入 */}
+        <button className="w-full py-4 border-2 border-dashed border-gray-100 rounded-2xl text-gray-300 font-bold hover:border-orange-200 hover:text-orange-400 transition-all">
+          載入更多討論...
+        </button>
+      </div>
+    ) : (
+      <div className="flex mt-6 items-center justify-center h-20 text-gray-400">
+        尚無討論
+      </div>
+    );
+
+  return (
+    <section className="pt-20">
+      <div className="flex items-center justify-between mb-8">
+        <h3 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
+          專家與用戶討論 <span className="text-gray-300 font-normal">{comments.length}</span>
+        </h3>
+        <button
+          onClick={openInputHandler}
+          className="text-sm font-semibold text-orange-600 hover:text-orange-700 flex items-center gap-1 transition-colors"
+        >
+          <MessageSquare size={16} />
+          {isShowInput ? "取消發表" : "發表我的見解"}
+        </button>
+      </div>
+
+      {/* Info: (20260206 - Julian) 發表評論 Input */}
+      <CommentPostInput
+        isShowInput={isShowInput}
+        value={commentInput}
+        onChange={setCommentInput}
+      />
+
+      {/* Info: (20260206 - Julian) 評論區 */}
+      {displayedComments}
+    </section>
+  );
+};

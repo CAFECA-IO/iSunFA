@@ -1,0 +1,180 @@
+"use client";
+
+import { useState, useRef } from "react";
+import Image from "next/image";
+import {
+  PlusIcon,
+  MinusIcon,
+  MessageCircleMore,
+  Bot,
+  X,
+} from "lucide-react";
+
+export const AiChat = () => {
+  const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const fileList = Array.from(files);
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxCount = 5;
+
+      const validFiles = fileList.filter((file) => {
+        if (file.size > maxSize) {
+          alert(`檔案 "${file.name}" 超過 5MB 限制`);
+          return false;
+        }
+        return true;
+      });
+
+      setUploadedFiles((prev) => {
+        const totalFiles = [...prev, ...validFiles];
+        if (totalFiles.length > maxCount) {
+          alert(`最多只能上傳 ${maxCount} 張圖片`);
+          return totalFiles.slice(0, maxCount);
+        }
+        return totalFiles;
+      });
+      
+      // Reset input value to allow uploading same file again if deleted
+      e.target.value = '';
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div
+      className={`fixed right-6 bottom-24 z-50 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) bg-white border-2 border-orange-400 shadow-[0_20px_50px_rgba(234,88,12,0.15)] flex flex-col overflow-hidden ${
+        isChatOpen
+          ? "w-80 h-[500px] p-6 rounded-3xl"
+          : "w-16 h-16 p-0 rounded-full hover:scale-110 active:scale-95 items-center justify-center hover:bg-orange-50"
+      }`}
+    >
+      {!isChatOpen && (
+        <button
+          type="button"
+          onClick={() => setIsChatOpen(true)}
+          className="absolute inset-0 w-full h-full rounded-full z-10"
+          aria-label="開啟 AI 諮詢室"
+        />
+      )}
+      <div
+        className={`flex items-center ${isChatOpen ? "justify-between" : "justify-center"} w-full transition-all duration-300`}
+      >
+        {isChatOpen && (
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <Bot size={20} className="text-orange-600" />
+            </div>
+            <h2 className="text-lg font-bold text-gray-800 whitespace-nowrap">
+              AI 諮詢室
+            </h2>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={(e) => {
+            if (isChatOpen) {
+              e.stopPropagation();
+              setIsChatOpen(false);
+            }
+          }}
+          className={`text-orange-500 transition-all duration-300 ${
+            isChatOpen ? "p-2 hover:bg-gray-100 rounded-xl" : "p-0"
+          }`}
+          aria-label={isChatOpen ? "關閉 AI 諮詢室" : "開啟 AI 諮詢室"}
+        >
+          {isChatOpen ? (
+            <MinusIcon size={24} />
+          ) : (
+            <div className="relative flex items-center justify-center">
+              <MessageCircleMore
+                size={32}
+                className="text-orange-500 transition-transform duration-500"
+              />
+            </div>
+          )}
+        </button>
+      </div>
+
+      <div className="overflow-hidden">
+        <div
+          className={`transition-all duration-300 ease-in-out flex flex-col gap-4 flex-1 ${
+            isChatOpen ? "opacity-100 mt-6" : "opacity-0 h-0"
+          }`}
+        >
+          <div className="flex-1 space-y-4 overflow-y-auto pr-1">
+            <div className="relative">
+              <textarea
+                id="ai-question-input"
+                aria-label="請輸入你的問題"
+                placeholder="請輸入你的問題..."
+                className="w-full h-36 p-4 outline-none bg-gray-50 border-2 border-transparent focus:border-orange-200 rounded-2xl text-sm transition-all resize-none shadow-inner"
+              />
+            </div>
+
+            {/* Display Uploaded Files */}
+            {uploadedFiles.length > 0 && (
+              <div className="flex overflow-x-auto gap-2 py-1">
+                {uploadedFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    className="group shrink-0 w-16 h-16 relative rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center shadow-sm"
+                  >
+                    <div className="w-full h-full relative rounded-xl overflow-hidden">
+                      <Image
+                        src={URL.createObjectURL(file)}
+                        alt={file.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(index)}
+                      className="absolute -top-1 -right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      aria-label="刪除文件"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              multiple
+              accept="image/*"
+            />
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full py-3.5 flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-2xl text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50 transition-all"
+            >
+              <PlusIcon size={20} />
+              <span className="text-sm font-semibold">上傳發票 / 單據 (OCR)</span>
+            </button>
+
+            <button className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-200 transition-all active:scale-[0.98] hover:-translate-y-0.5">
+              立即向 AI 提問
+            </button>
+          </div>
+
+          <p className="text-[11px] text-gray-400 leading-relaxed text-center px-4">
+            * AI 回覆僅供參考，不代表正式法律建議。其分析內容基於提供的數據。
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
