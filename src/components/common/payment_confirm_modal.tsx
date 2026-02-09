@@ -121,7 +121,8 @@ export default function PaymentConfirmModal({
                             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
                               <CheckCircle2 className="h-6 w-6 text-green-600" />
                             </div>
-                            <p className="text-sm text-green-600 font-bold">{t('analysis.steps.payment_success')}</p> {/* Reusing key or should add new one "Analysis Requested" */}
+                            {/* Info: (20260209 - Tzuhan) Reusing key or should add new one "Analysis Requested" */}
+                            <p className="text-sm text-green-600 font-bold">{t('analysis.steps.payment_success')}</p>
                             <p className="text-xs text-gray-500">{t('analysis.success.message')}</p>
                             {txHash && (
                               <div className="flex items-center justify-center gap-2 mt-2 bg-white p-2 rounded border border-gray-200 max-w-[200px] mx-auto">

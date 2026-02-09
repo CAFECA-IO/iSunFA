@@ -77,9 +77,13 @@ export async function POST(request: NextRequest) {
 
               // Info: (20260209 - Tzuhan) 5. Verify Hash
               const orderHash = keccak256(stringToBytes(orderId));
-              // Info: (20260209 - Tzuhan) The innerCallData should END with this hash (32 bytes = 64 hex chars)
-              // Info: (20260209 - Tzuhan) innerCallData is `0x...`
-              const hashHex = orderHash.slice(2).toLowerCase(); // remove 0x
+              /**
+               * Info: (20260209 - Tzuhan)
+               * The innerCallData should END with this hash (32 bytes = 64 hex chars)
+               * innerCallData is `0x...`
+               * remove 0x from orderHash
+               */
+              const hashHex = orderHash.slice(2).toLowerCase();
               if (innerCallData.toLowerCase().endsWith(hashHex)) {
                 verifiedHash = true;
               } else {

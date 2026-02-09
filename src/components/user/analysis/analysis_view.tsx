@@ -7,7 +7,6 @@ import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
 import PaymentConfirmModal, { PaymentStatus } from '@/components/common/payment_confirm_modal';
 import ConfirmModal from '@/components/common/confirm_modal';
-// import AnalysisGenerationModal, { AnalysisStatus } from '@/components/user/analysis/analysis_generation_modal'; // Unused
 import SuccessNotification from '@/components/common/success_notification';
 import HistorySection from '@/components/user/analysis/history_section';
 import { fido2ClientService } from '@/lib/auth/fido2_client';
@@ -38,12 +37,7 @@ export default function AnalysisView() {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedPeriodValue, setSelectedPeriodValue] = useState<string>('');
-
-  // Info: (20260130 - Tzuhan) Payment Status State
-  // Info: (20260130 - Tzuhan) Analysis Workflow State
   const [workflowStatus, setWorkflowStatus] = useState<PaymentStatus>('idle');
-  // const [analysisStatus, setAnalysisStatus] = useState<AnalysisStatus>('idle'); // Info: Merged into workflowStatus
-
   const [txHash, setTxHash] = useState<string>('');
 
   // Info: (20260120 - Luphia) External Analysis States
@@ -61,7 +55,6 @@ export default function AnalysisView() {
   }, [category, periodType, selectedPeriodValue, selectedYear]);
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  // const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false); // Info: No longer needed separately
   const [insufficientCreditsModal, setInsufficientCreditsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -242,7 +235,7 @@ export default function AnalysisView() {
       });
 
       if (!orderRes?.payload) throw new Error('Failed to create order');
-      const { orderId } = orderRes.payload; // We don't need the random challenge for *this* signature, we sign the UserOp.
+      const { orderId } = orderRes.payload; // Info: (20260209 - Tzuhan) We don't need the random challenge for *this* signature, we sign the UserOp.
 
       // Info: (20260209 - Tzuhan) 2. 準備轉帳 UserOp
       const prepRes = await prepareTransferUserOp(user.address, calculatedCost, orderId);
@@ -570,8 +563,7 @@ export default function AnalysisView() {
             setIsPaymentModalOpen(false);
           }
         }}
-        onConfirm={handleAnalysisWorkflow} // Use combined handler
-        // onNext={handlePaymentNext} // Removed
+        onConfirm={handleAnalysisWorkflow}
         cost={calculatedCost}
         analysisType={t(`analysis.categories.${category}`)}
         period={t('analysis.selected_period_desc', {
@@ -586,7 +578,7 @@ export default function AnalysisView() {
         txHash={txHash}
       />
 
-      {/* Analysis Generation Modal Removed - Merged into Payment Workflow */}
+      {/* Info: (20260209 - Tzuhan) Analysis Generation Modal Removed - Merged into Payment Workflow */}
 
       <ConfirmModal
         isOpen={insufficientCreditsModal}
