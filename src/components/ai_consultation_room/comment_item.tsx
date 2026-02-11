@@ -4,6 +4,7 @@ import { formatTime } from "@/lib/utils/common";
 import { IComment } from "@/interfaces/ai_talk";
 import { CommentPostInput } from "@/components/ai_consultation_room/comment_post_input";
 import { useTranslation } from "@/i18n/i18n_context";
+import { ApiCode } from "@/lib/utils/status";
 
 export const CommentItem = ({
   comment,
@@ -15,6 +16,8 @@ export const CommentItem = ({
   const { t } = useTranslation();
   const [liked, setLiked] = useState<boolean>(false);
   const [disliked, setDisliked] = useState<boolean>(false);
+  const [likes, setLikes] = useState<number>(comment.likes);
+  const [dislikes, setDislikes] = useState<number>(comment.dislikes);
   const [showReplies, setShowReplies] = useState<boolean>(false);
   const [replyInput, setReplyInput] = useState<string>("");
   const [now] = useState(() => Date.now() / 1000);
@@ -41,23 +44,31 @@ export const CommentItem = ({
     </div>
   );
 
-  const handleLike = () => {
-    if (liked) {
-      setLiked(false);
-    } else {
-      setLiked(true);
-      setDisliked(false);
+  const handleReaction = async (reaction: "LIKE" | "DISLIKE") => {
+    try {
+      const response = await fetch(`/api/v1/ai_talk/comment/${comment.id}/react`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reaction }),
+      });
+
+      const data = await response.json();
+      if (data.code === ApiCode.SUCCESS) {
+        const { countOfLike, countOfDislike, userReaction } = data.payload;
+        setLikes(countOfLike);
+        setDislikes(countOfDislike);
+        setLiked(userReaction === "LIKE");
+        setDisliked(userReaction === "DISLIKE");
+      }
+    } catch (error) {
+      console.error("Failed to react to comment:", error);
     }
   };
 
-  const handleDislike = () => {
-    if (disliked) {
-      setDisliked(false);
-    } else {
-      setDisliked(true);
-      setLiked(false);
-    }
-  };
+  const handleLike = () => handleReaction("LIKE");
+  const handleDislike = () => handleReaction("DISLIKE");
 
   const toggleReplies = () => {
     if (showReplies) setReplyInput("");
@@ -113,7 +124,7 @@ export const CommentItem = ({
               }`}
           >
             <ThumbsUp size={16} fill={liked ? "currentColor" : "none"} />
-            <span>{comment.likes + (liked ? 1 : 0)}</span>
+            <span>{likes}</span>
           </button>
           <button
             onClick={handleDislike}
@@ -121,7 +132,7 @@ export const CommentItem = ({
               }`}
           >
             <ThumbsDown size={16} fill={disliked ? "currentColor" : "none"} />
-            <span>{comment.dislikes + (disliked ? 1 : 0)}</span>
+            <span>{dislikes}</span>
           </button>
         </div>
       </div>

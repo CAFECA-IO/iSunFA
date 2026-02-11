@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/landing_page/header";
 import Footer from "@/components/landing_page/footer";
-import { mockThreads } from "@/interfaces/ai_talk";
+import { IThreadDetail } from "@/interfaces/ai_talk";
 import { timestampToString } from "@/lib/utils/common";
 import {
   ChevronLeft,
@@ -16,32 +16,93 @@ import {
   Clock,
   User,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { MarkdownContent } from '@/components/common/markdown_content';
 import { useTranslation } from "@/i18n/i18n_context";
-
 import { CommentSection } from "@/components/ai_consultation_room/comment_section";
 import { AttachmentItem } from "@/components/ai_consultation_room/attachment_item";
 import { AiChat } from "@/components/ai_consultation_room/ai_chat";
+import { ApiCode } from "@/lib/utils/status";
 
 export default function AiTalkDetailPage() {
   const { t } = useTranslation();
   const params = useParams();
   const talkId = params?.talkId ?? "";
 
-  const data = mockThreads.find((thread) => thread.id === Number(talkId));
-
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [data, setData] = useState<IThreadDetail | null>(null);
   const [liked, setLiked] = useState<boolean>(false);
   const [disliked, setDisliked] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (!talkId) return;
+
+    const fetchThreadDetail = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/v1/ai_talk/thread/${talkId}`);
+        const result = await response.json();
+        
+        if (result.code === ApiCode.SUCCESS) {
+          setData(result.payload);
+        } else {
+          setData(null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch thread detail:", error);
+        setData(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchThreadDetail();
+  }, [talkId]);
+
+  const handleReaction = async (reaction: "LIKE" | "DISLIKE") => {
+    if (!talkId) return;
+
+    try {
+      const response = await fetch(`/api/v1/ai_talk/thread/${talkId}/react`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reaction }),
+      });
+
+      const result = await response.json();
+      if (result.code === ApiCode.SUCCESS) {
+        const { countOfLike, countOfDislike, userReaction } = result.payload;
+        setData((prev) => (prev ? { ...prev, countOfLike, countOfDislike } : null));
+        setLiked(userReaction === "LIKE");
+        setDisliked(userReaction === "DISLIKE");
+      }
+    } catch (error) {
+      console.error("Failed to post reaction:", error);
+    }
+  };
+
   const homePagePath = "/ai_consultation_room";
+
+  if (isLoading) {
+    return (
+      <div className="bg-white min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="animate-spin text-orange-500 w-10 h-10" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!data) {
     return (
       <div className="bg-white min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center p-6 text-center">
-          <div className="space-y-4">
+        <main className="flex-1 space-y-4 min-h-[calc(100vh-300px)] flex flex-col items-center justify-center p-6 text-center">
             <div className="bg-orange-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
               <MessageSquare className="text-orange-500 w-10 h-10" />
             </div>
@@ -57,7 +118,6 @@ export default function AiTalkDetailPage() {
             >
               <ChevronLeft size={20} /> {t("ai_consultation_room.back_to_prev")}
             </Link>
-          </div>
         </main>
         <Footer />
       </div>
@@ -174,14 +234,7 @@ export default function AiTalkDetailPage() {
           <footer className="mt-10 pt-8 border-t border-orange-200/50 flex flex-wrap items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => {
-                  if (liked) {
-                    setLiked(false);
-                  } else {
-                    setLiked(true);
-                    setDisliked(false);
-                  }
-                }}
+                onClick={() => handleReaction("LIKE")}
                 className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 ${
                   liked
                     ? "bg-orange-600 text-white  border-transparent"
@@ -192,19 +245,12 @@ export default function AiTalkDetailPage() {
                 <span>
                   {t("ai_consultation_room.agree_count").replace(
                     "{count}",
-                    (data.countOfLike + (liked ? 1 : 0)).toString()
+                    data.countOfLike.toString()
                   )}
                 </span>
               </button>
               <button
-                onClick={() => {
-                  if (disliked) {
-                    setDisliked(false);
-                  } else {
-                    setDisliked(true);
-                    setLiked(false);
-                  }
-                }}
+                onClick={() => handleReaction("DISLIKE")}
                 className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 ${
                   disliked
                     ? "bg-orange-600 text-white border-transparent"
@@ -215,7 +261,7 @@ export default function AiTalkDetailPage() {
                 <span>
                   {t("ai_consultation_room.disagree_count").replace(
                     "{count}",
-                    (data.countOfDislike + (disliked ? 1 : 0)).toString()
+                    data.countOfDislike.toString()
                   )}
                 </span>
               </button>

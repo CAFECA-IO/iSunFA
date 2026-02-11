@@ -23,9 +23,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       console.error('Thread not found');
       return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Thread not found');
     }
+
+    const {countOfLike,countOfDislike} = thread
     
     return jsonOk({
-        message: `Thread ${threadId} reacted successfully with ${reaction}`,
+       countOfLike,
+       countOfDislike,
+        userReaction:reaction // LIKE | DISLIKE | NULL
     });
   } 
   catch (error) {

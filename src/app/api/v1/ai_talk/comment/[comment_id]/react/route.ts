@@ -23,9 +23,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       console.error('Comment not found');
       return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Comment not found');
     }
+
+    const {countOfLike,countOfDislike} = comment
     
     return jsonOk({
-        message: `Comment ${commentId} reacted successfully with ${reaction}`,
+      countOfLike,
+      countOfDislike,
+      userReaction:reaction // LIKE | DISLIKE | NULL
     });
   } 
   catch (error) {

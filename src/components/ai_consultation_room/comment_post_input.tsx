@@ -1,16 +1,55 @@
-import { User, Send } from "lucide-react";
+import { useState } from "react";
+import { User, Send, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useParams } from "next/navigation";
+import { ApiCode } from "@/lib/utils/status";
 
 export const CommentPostInput = ({
   isShowInput,
   value,
   onChange,
+  parentId = "",
+  onSuccess,
 }: {
   isShowInput: boolean;
   value: string;
   onChange: (val: string) => void;
+  parentId?: string;
+  onSuccess?: () => void;
 }) => {
   const { t } = useTranslation();
+  const params = useParams();
+  const talkId = params?.talkId as string;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!value.trim() || isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      const response = await fetch(`/api/v1/ai_talk/thread/${talkId}/comment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: value,
+          parentId: parentId,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.code === ApiCode.SUCCESS) {
+        onChange("");
+        onSuccess?.();
+      }
+    } catch (error) {
+      console.error("Failed to post comment:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div
       className={`transition-all duration-300 overflow-hidden ${isShowInput ? "max-h-60 opacity-100 mb-6" : "max-h-0 opacity-0 mb-0"}`}
@@ -30,10 +69,15 @@ export const CommentPostInput = ({
           />
           <div className="flex justify-end">
             <button
-              disabled={!value.trim()}
+              onClick={handleSubmit}
+              disabled={!value.trim() || isSubmitting}
               className="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 enabled:hover:bg-orange-500 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-md shadow-orange-200"
             >
-              <Send size={16} />
+              {isSubmitting ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Send size={16} />
+              )}
               <span>{t("ai_consultation_room.submit_comment")}</span>
             </button>
           </div>
