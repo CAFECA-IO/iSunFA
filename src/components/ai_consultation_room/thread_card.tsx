@@ -65,7 +65,7 @@ export const ThreadCard = ({
               ))}
             </div>
           </div>
-          <p className="text-xs text-orange-900 line-clamp-3 leading-relaxed">
+          <p className="text-xs text-orange-900 line-clamp-2 leading-relaxed">
             {answer}
           </p>
         </div>

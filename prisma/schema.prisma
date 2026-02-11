@@ -27,78 +27,172 @@ model User {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  orders           Order[]
-  analyses         Analysis[]
-  missions         Mission[]
+  orders    Order[]
+  analyses  Analysis[]
+  missions  Mission[]
+  threads   Thread[]
+  comments  Comment[]
+  reactions Reaction[]
 
-  @@map("user")
   @@index([address])
+  @@map("user")
 }
 
 model Order {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  user        User     @relation(fields: [userId], references: [id])
-  type        String
-  amount      Int
-  data        Json
-  status      String   @default("PENDING")
-  challenge   String
-  signature   String?
-  transactionHash String? @map("transaction_hash")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id])
+  type            String
+  amount          Int
+  data            Json
+  status          String   @default("PENDING")
+  challenge       String
+  signature       String?
+  transactionHash String?  @map("transaction_hash")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
-  analysis    Analysis[]
+  analysis Analysis[]
 
   @@map("order")
 }
 
 // Info: (20260128 - Luphia) Analysis 直接將 data 與 result 放在 mission 裡面
 model Analysis {
-  id          String   @id
-  userId      String   @map("user_id")
-  user        User     @relation(fields: [userId], references: [id])
-  orderId     String   @map("order_id")
-  order       Order    @relation(fields: [orderId], references: [id])
-  type        String
-  data        Json
-  result      Json?
-  missionId   String?  @map("mission_id")
-  mission     Mission? @relation(fields: [missionId], references: [id])
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        String   @id
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  orderId   String   @map("order_id")
+  order     Order    @relation(fields: [orderId], references: [id])
+  type      String
+  data      Json
+  result    Json?
+  missionId String?  @map("mission_id")
+  mission   Mission? @relation(fields: [missionId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("analysis")
 }
 
 model Mission {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  user        User     @relation(fields: [userId], references: [id])
-  name        String
-  status      String   @default("PENDING") // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
-  tasks       Task[]
-  analyses    Analysis[]
-  data        Json?
-  result      Json?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        String     @id @default(uuid())
+  userId    String     @map("user_id")
+  user      User       @relation(fields: [userId], references: [id])
+  name      String
+  status    String     @default("PENDING") // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
+  tasks     Task[]
+  analyses  Analysis[]
+  data      Json?
+  result    Json?
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
 
   @@map("mission")
 }
 
 model Task {
-  id          String   @id @default(uuid())
-  missionId   String   @map("mission_id")
-  mission     Mission  @relation(fields: [missionId], references: [id])
-  type        String
-  status      String   @default("PENDING") // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
-  order       Int      @default(0) // Info: (20260128 - Luphia) Execution order. Equal values = parallel
-  data        Json?
-  result      Json?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(uuid())
+  missionId String   @map("mission_id")
+  mission   Mission  @relation(fields: [missionId], references: [id])
+  type      String
+  status    String   @default("PENDING") // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
+  order     Int      @default(0) // Info: (20260128 - Luphia) Execution order. Equal values = parallel
+  data      Json?
+  result    Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("task")
+}
+
+// Info: (20260211 - Julian) AI Consultation Room
+// 討論串
+model Thread {
+  id          Int          @id @default(autoincrement())
+  authorId    String
+  author      User         @relation(fields: [authorId], references: [id])
+  question    String       @db.Text
+  answer      String?      @db.Text
+  createdAt   DateTime     @default(now())
+  attachments Attachment[]
+  comments    Comment[]
+  reactions   Reaction[]
+  tags        Tag[]
+
+  @@map("thread")
+}
+
+// 附件：儲存圖片資訊
+model Attachment {
+  id       String @id @default(uuid())
+  threadId Int
+  thread   Thread @relation(fields: [threadId], references: [id])
+  fileName String
+  url      String
+  fileSize Int
+  mimeType String
+
+  @@map("attachment")
+}
+
+// 評論：支援巢狀回覆
+model Comment {
+  id       String @id @default(uuid())
+  content  String @db.Text
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+  threadId Int
+  thread   Thread @relation(fields: [threadId], references: [id])
+
+  // 巢狀邏輯
+  parentId String?
+  parent   Comment?  @relation("ReplyTo", fields: [parentId], references: [id])
+  replies  Comment[] @relation("ReplyTo")
+
+  createdAt      DateTime   @default(now())
+  isProfessional Boolean    @default(false)
+  reactions      Reaction[]
+
+  @@map("comment")
+}
+
+// 討論串標籤
+model Tag {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  threads Thread[]
+
+  @@map("tag")
+}
+
+enum ReactionType {
+  LIKE
+  DISLIKE
+}
+
+// 討論串的按讚
+model Reaction {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  // 評價類型：是讚還是倒讚
+  type ReactionType
+
+  // 關聯使用者
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // 關聯討論串
+  threadId Int?
+  thread   Thread? @relation(fields: [threadId], references: [id])
+
+  // 關聯評論
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id])
+
+  // 核心約束：一個使用者對同一個物件只能有一個評價
+  @@unique([userId, threadId])
+  @@unique([userId, commentId])
+  @@map("reaction")
 }
