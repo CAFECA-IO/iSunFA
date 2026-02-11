@@ -4,7 +4,7 @@ import { formatTime } from "@/lib/utils/common";
 import { IComment } from "@/interfaces/ai_talk";
 import { CommentPostInput } from "@/components/ai_consultation_room/comment_post_input";
 import { useTranslation } from "@/i18n/i18n_context";
-import { useAuth } from '@/contexts/auth_context';
+import { useAuth } from "@/contexts/auth_context";
 import { ApiCode } from "@/lib/utils/status";
 
 export const CommentItem = ({
@@ -49,13 +49,16 @@ export const CommentItem = ({
   const handleReaction = async (reaction: "LIKE" | "DISLIKE") => {
     if (!user) return;
     try {
-      const response = await fetch(`/api/v1/ai_talk/comment/${comment.id}/react`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `/api/v1/ai_talk/comment/${comment.id}/react`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ reaction }),
         },
-        body: JSON.stringify({ reaction }),
-      });
+      );
 
       const data = await response.json();
       if (data.code === ApiCode.SUCCESS) {
@@ -125,8 +128,9 @@ export const CommentItem = ({
             onClick={handleLike}
             disabled={!user}
             title={!user ? t("ai_consultation_room.login_to_react") : ""}
-            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${liked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
-              }`}
+            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+              liked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
+            }`}
           >
             <ThumbsUp size={16} fill={liked ? "currentColor" : "none"} />
             <span>{likes}</span>
@@ -135,8 +139,9 @@ export const CommentItem = ({
             onClick={handleDislike}
             disabled={!user}
             title={!user ? t("ai_consultation_room.login_to_react") : ""}
-            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${disliked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
-              }`}
+            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+              disliked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
+            }`}
           >
             <ThumbsDown size={16} fill={disliked ? "currentColor" : "none"} />
             <span>{dislikes}</span>
@@ -166,4 +171,3 @@ export const CommentItem = ({
     </div>
   );
 };
-

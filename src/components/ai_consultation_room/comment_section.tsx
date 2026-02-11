@@ -64,4 +64,3 @@ export const CommentSection = ({ comments }: { comments: IComment[] }) => {
     </section>
   );
 };
-

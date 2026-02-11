@@ -8,7 +8,6 @@ import { formatTime } from "@/lib/utils/common";
 import { IThread } from "@/interfaces/ai_talk";
 import { useTranslation } from "@/i18n/i18n_context";
 
-
 export const ThreadCard = ({
   id,
   question,
@@ -69,7 +68,6 @@ export const ThreadCard = ({
             {answer}
           </p>
         </div>
-
 
         {/* Info: (20260206 - Julian) Toolbar */}
         <div className="flex items-center gap-4 pt-2 mt-2 border-t border-orange-100/50">

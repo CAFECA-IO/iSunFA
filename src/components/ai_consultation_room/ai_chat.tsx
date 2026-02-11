@@ -1,12 +1,19 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { PlusIcon, MinusIcon, MessageCircleMore, Bot, X, Loader2 } from "lucide-react";
+import {
+  PlusIcon,
+  MinusIcon,
+  MessageCircleMore,
+  Bot,
+  X,
+  Loader2,
+} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAiContext } from "@/contexts/ai_context";
-import { useAuth } from '@/contexts/auth_context';
+import { useAuth } from "@/contexts/auth_context";
 import { IAttachment } from "@/interfaces/ai_talk";
 import { ApiCode } from "@/lib/utils/status";
-import LoginButton from '@/components/common/login_button';
+import LoginButton from "@/components/common/login_button";
 
 export const AiChat = () => {
   const { t } = useTranslation();
@@ -67,8 +74,8 @@ export const AiChat = () => {
           alert(
             t("ai_consultation_room.file_size_error").replace(
               "{name}",
-              file.name
-            )
+              file.name,
+            ),
           );
           return false;
         }
@@ -81,8 +88,8 @@ export const AiChat = () => {
         alert(
           t("ai_consultation_room.file_count_error").replace(
             "{count}",
-            maxCount.toString()
-          )
+            maxCount.toString(),
+          ),
         );
         return;
       }
@@ -149,61 +156,71 @@ export const AiChat = () => {
     }
   };
 
-  const displayedButtons = user ? <>
-  <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              className="hidden"
-              multiple
-              accept="image/*"
+  const displayedButtons = user ? (
+    <>
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        className="hidden"
+        multiple
+        accept="image/*"
+      />
+
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        disabled={isUploading}
+        className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all ${
+          isDragging
+            ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
+            : "border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50"
+        } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
+      >
+        {isUploading ? (
+          <Loader2 size={20} className="animate-spin text-orange-500" />
+        ) : (
+          <>
+            <PlusIcon
+              size={20}
+              className={`shrink-0 ${isDragging ? "animate-bounce" : ""}`}
             />
+            <span className="text-sm font-semibold">
+              {isDragging
+                ? t("ai_consultation_room.drop_to_upload")
+                : t("ai_consultation_room.upload_btn")}
+            </span>
+          </>
+        )}
+      </button>
 
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all ${isDragging
-                  ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
-                  : "border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50"
-                } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
-              {isUploading ? (
-                <Loader2 size={20} className="animate-spin text-orange-500" />
-              ) : (
-                <>
-                  <PlusIcon size={20} className={`shrink-0 ${isDragging ? "animate-bounce" : ""}`} />
-                  <span className="text-sm font-semibold">
-                    {isDragging ? t("ai_consultation_room.drop_to_upload") : t("ai_consultation_room.upload_btn")}
-                  </span>
-                </>
-              )}
-            </button>
-
-            <button
-              id="ai-chat-submit"
-              onClick={handleSubmit}
-              disabled={isSubmitDisabled}
-              className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center ${isSubmitDisabled
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-                  : "bg-orange-600 hover:bg-orange-500 text-white shadow-orange-200 active:scale-[0.98] hover:-translate-y-0.5"
-                }`}
-            >
-              {isSubmitting ? (
-                <Loader2 size={24} className="animate-spin" />
-              ) : (
-                t("ai_consultation_room.ask_ai")
-              )}
-            </button>
-  </>:
-  <LoginButton label="Please login to use the AI chat" />
-
+      <button
+        id="ai-chat-submit"
+        onClick={handleSubmit}
+        disabled={isSubmitDisabled}
+        className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center ${
+          isSubmitDisabled
+            ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+            : "bg-orange-600 hover:bg-orange-500 text-white shadow-orange-200 active:scale-[0.98] hover:-translate-y-0.5"
+        }`}
+      >
+        {isSubmitting ? (
+          <Loader2 size={24} className="animate-spin" />
+        ) : (
+          t("ai_consultation_room.ask_ai")
+        )}
+      </button>
+    </>
+  ) : (
+    <LoginButton label="Please login to use the AI chat" />
+  );
 
   return (
     <div
-      className={`fixed right-6 bottom-24 z-50 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) bg-white border-2 border-orange-400 shadow-[0_20px_50px_rgba(234,88,12,0.15)] flex flex-col overflow-hidden ${isChatOpen
+      className={`fixed right-6 bottom-24 z-50 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) bg-white border-2 border-orange-400 shadow-[0_20px_50px_rgba(234,88,12,0.15)] flex flex-col overflow-hidden ${
+        isChatOpen
           ? "w-80 h-[500px] p-6 rounded-3xl"
           : "w-16 h-16 p-0 rounded-full hover:scale-110 active:scale-95 items-center justify-center hover:bg-orange-50"
-        }`}
+      }`}
     >
       {!isChatOpen && (
         <button
@@ -234,8 +251,9 @@ export const AiChat = () => {
               setIsChatOpen(false);
             }
           }}
-          className={`text-orange-500 transition-all duration-300 ${isChatOpen ? "p-2 hover:bg-gray-100 rounded-xl" : "p-0"
-            }`}
+          className={`text-orange-500 transition-all duration-300 ${
+            isChatOpen ? "p-2 hover:bg-gray-100 rounded-xl" : "p-0"
+          }`}
           aria-label={
             isChatOpen
               ? t("ai_consultation_room.close_chat")
@@ -255,7 +273,9 @@ export const AiChat = () => {
         </button>
       </div>
 
-      <div className={`overflow-y-auto overflow-x-hidden flex-col h-full ${isChatOpen ? "flex" : "hidden"}`}>
+      <div
+        className={`overflow-y-auto overflow-x-hidden flex-col h-full ${isChatOpen ? "flex" : "hidden"}`}
+      >
         <div
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
@@ -313,4 +333,3 @@ export const AiChat = () => {
     </div>
   );
 };
-

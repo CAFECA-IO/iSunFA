@@ -3,8 +3,8 @@ import { User, Send, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useParams } from "next/navigation";
 import { ApiCode } from "@/lib/utils/status";
-import LoginButton from '@/components/common/login_button';
-import { useAuth } from '@/contexts/auth_context';
+import LoginButton from "@/components/common/login_button";
+import { useAuth } from "@/contexts/auth_context";
 
 export const CommentPostInput = ({
   isShowInput,
@@ -54,18 +54,22 @@ export const CommentPostInput = ({
     }
   };
 
-  const displayedSubmit = user?      <button
-              onClick={handleSubmit}
-              disabled={!value.trim() || isSubmitting}
-              className="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 enabled:hover:bg-orange-500 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-md shadow-orange-200"
-            >
-              {isSubmitting ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Send size={16} />
-              )}
-              <span>{t("ai_consultation_room.submit_comment")}</span>
-            </button>: <LoginButton label="Please login to comment" />
+  const displayedSubmit = user ? (
+    <button
+      onClick={handleSubmit}
+      disabled={!value.trim() || isSubmitting}
+      className="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 enabled:hover:bg-orange-500 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-md shadow-orange-200"
+    >
+      {isSubmitting ? (
+        <Loader2 size={16} className="animate-spin" />
+      ) : (
+        <Send size={16} />
+      )}
+      <span>{t("ai_consultation_room.submit_comment")}</span>
+    </button>
+  ) : (
+    <LoginButton label="Please login to comment" />
+  );
 
   return (
     <div
@@ -84,12 +88,9 @@ export const CommentPostInput = ({
             placeholder={t("ai_consultation_room.comment_placeholder")}
             className="w-full bg-white border border-orange-100 rounded-2xl p-4 text-sm focus:outline-none focus:border-orange-500 transition-all placeholder:text-gray-300 min-h-[100px] resize-none shadow-sm"
           />
-          <div className="flex justify-end">
-          {displayedSubmit}
-          </div>
+          <div className="flex justify-end">{displayedSubmit}</div>
         </div>
       </div>
     </div>
   );
 };
-
