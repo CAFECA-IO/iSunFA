@@ -276,7 +276,7 @@ export const AiChat = () => {
 
             {/* Info: (20260209 - Julian) Display Uploaded Files */}
             {attachments.length > 0 && (
-              <div className="flex overflow-x-auto gap-2 py-1">
+              <div className="flex w-full overflow-x-auto gap-2 py-1">
                 {attachments.map((file) => (
                   <div
                     key={file.id}

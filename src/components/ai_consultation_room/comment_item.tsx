@@ -4,6 +4,7 @@ import { formatTime } from "@/lib/utils/common";
 import { IComment } from "@/interfaces/ai_talk";
 import { CommentPostInput } from "@/components/ai_consultation_room/comment_post_input";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useAuth } from '@/contexts/auth_context';
 import { ApiCode } from "@/lib/utils/status";
 
 export const CommentItem = ({
@@ -14,6 +15,7 @@ export const CommentItem = ({
   isReply?: boolean;
 }) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [liked, setLiked] = useState<boolean>(false);
   const [disliked, setDisliked] = useState<boolean>(false);
   const [likes, setLikes] = useState<number>(comment.likes);
@@ -45,6 +47,7 @@ export const CommentItem = ({
   );
 
   const handleReaction = async (reaction: "LIKE" | "DISLIKE") => {
+    if (!user) return;
     try {
       const response = await fetch(`/api/v1/ai_talk/comment/${comment.id}/react`, {
         method: "POST",
@@ -120,7 +123,9 @@ export const CommentItem = ({
         <div className="absolute bottom-6 right-6 flex items-center gap-4">
           <button
             onClick={handleLike}
-            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${liked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
+            disabled={!user}
+            title={!user ? t("ai_consultation_room.login_to_react") : ""}
+            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${liked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
               }`}
           >
             <ThumbsUp size={16} fill={liked ? "currentColor" : "none"} />
@@ -128,7 +133,9 @@ export const CommentItem = ({
           </button>
           <button
             onClick={handleDislike}
-            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${disliked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
+            disabled={!user}
+            title={!user ? t("ai_consultation_room.login_to_react") : ""}
+            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${disliked ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
               }`}
           >
             <ThumbsDown size={16} fill={disliked ? "currentColor" : "none"} />

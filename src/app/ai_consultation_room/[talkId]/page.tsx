@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { MarkdownContent } from '@/components/common/markdown_content';
 import { useTranslation } from "@/i18n/i18n_context";
+import { useAuth } from '@/contexts/auth_context';
 import { CommentSection } from "@/components/ai_consultation_room/comment_section";
 import { AttachmentItem } from "@/components/ai_consultation_room/attachment_item";
 import { AiChat } from "@/components/ai_consultation_room/ai_chat";
@@ -27,6 +28,7 @@ import { ApiCode } from "@/lib/utils/status";
 
 export default function AiTalkDetailPage() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const params = useParams();
   const talkId = params?.talkId ?? "";
 
@@ -61,7 +63,7 @@ export default function AiTalkDetailPage() {
   }, [talkId]);
 
   const handleReaction = async (reaction: "LIKE" | "DISLIKE") => {
-    if (!talkId) return;
+    if (!talkId || !user) return;
 
     try {
       const response = await fetch(`/api/v1/ai_talk/thread/${talkId}/react`, {
@@ -235,7 +237,9 @@ export default function AiTalkDetailPage() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => handleReaction("LIKE")}
-                className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 ${
+                disabled={!user}
+                title={!user ? t("ai_consultation_room.login_to_react") : ""}
+                className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                   liked
                     ? "bg-orange-600 text-white  border-transparent"
                     : "bg-white border-orange-200 hover:bg-orange-50 "
@@ -251,7 +255,9 @@ export default function AiTalkDetailPage() {
               </button>
               <button
                 onClick={() => handleReaction("DISLIKE")}
-                className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 ${
+                disabled={!user}
+                title={!user ? t("ai_consultation_room.login_to_react") : ""}
+                className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                   disliked
                     ? "bg-orange-600 text-white border-transparent"
                     : "bg-white border-orange-200 hover:bg-orange-50 "

@@ -594,6 +594,7 @@ export const ko = {
     reply: '답장',
     view_image: '이미지 보기: {name}',
     download_original: '원본 파일 다운로드',
+    login_to_react: '로그인하여 반응하기',
     ai_name: 'AccounTalk AI',
     q_label: 'Q',
     ai_label: 'AI',

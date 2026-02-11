@@ -594,6 +594,7 @@ export const ja = {
     reply: '返信',
     view_image: '画像を表示: {name}',
     download_original: '元ファイルをダウンロード',
+    login_to_react: 'ログインしてリアクションする',
     ai_name: 'AccounTalk AI',
     q_label: 'Q',
     ai_label: 'AI',
