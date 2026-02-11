@@ -3,12 +3,16 @@ import Image from "next/image";
 import { PlusIcon, MinusIcon, MessageCircleMore, Bot, X, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAiContext } from "@/contexts/ai_context";
+import { useAuth } from '@/contexts/auth_context';
 import { IAttachment } from "@/interfaces/ai_talk";
 import { ApiCode } from "@/lib/utils/status";
+import LoginButton from '@/components/common/login_button';
 
 export const AiChat = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { isChatOpen, setIsChatOpen } = useAiContext();
+
   const [attachments, setAttachments] = useState<IAttachment[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -145,6 +149,54 @@ export const AiChat = () => {
     }
   };
 
+  const displayedButtons = user ? <>
+  <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              multiple
+              accept="image/*"
+            />
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all ${isDragging
+                  ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
+                  : "border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50"
+                } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              {isUploading ? (
+                <Loader2 size={20} className="animate-spin text-orange-500" />
+              ) : (
+                <>
+                  <PlusIcon size={20} className={`shrink-0 ${isDragging ? "animate-bounce" : ""}`} />
+                  <span className="text-sm font-semibold">
+                    {isDragging ? t("ai_consultation_room.drop_to_upload") : t("ai_consultation_room.upload_btn")}
+                  </span>
+                </>
+              )}
+            </button>
+
+            <button
+              id="ai-chat-submit"
+              onClick={handleSubmit}
+              disabled={isSubmitDisabled}
+              className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center ${isSubmitDisabled
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                  : "bg-orange-600 hover:bg-orange-500 text-white shadow-orange-200 active:scale-[0.98] hover:-translate-y-0.5"
+                }`}
+            >
+              {isSubmitting ? (
+                <Loader2 size={24} className="animate-spin" />
+              ) : (
+                t("ai_consultation_room.ask_ai")
+              )}
+            </button>
+  </>:
+  <LoginButton label="Please login to use the AI chat" />
+
 
   return (
     <div
@@ -203,16 +255,15 @@ export const AiChat = () => {
         </button>
       </div>
 
-      <div className="overflow-y-auto">
+      <div className={`overflow-y-auto overflow-x-hidden flex-col h-full ${isChatOpen ? "flex" : "hidden"}`}>
         <div
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
-          className={`transition-all duration-300 ease-in-out flex flex-col gap-4 flex-1 ${isChatOpen ? "opacity-100 h-fit mt-6" : "opacity-0 h-0"
-            }`}
+          className={`transition-all duration-300 ease-in-out flex flex-col gap-4 flex-1 ${isChatOpen ? "opacity-100 h-fit mt-6" : "opacity-0 h-0"}`}
         >
-          <div className="flex-1 space-y-4 pr-1">
-            <div className="relative">
+          <div className="flex-1 h-full space-y-4 pr-1 flex flex-col items-center">
+            <div className="relative w-full">
               <textarea
                 id="ai-question-input"
                 aria-label={t("ai_consultation_room.input_placeholder")}
@@ -251,53 +302,7 @@ export const AiChat = () => {
                 ))}
               </div>
             )}
-
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              className="hidden"
-              multiple
-              accept="image/*"
-            />
-
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all ${isDragging
-                  ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
-                  : "border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50"
-                } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
-              {isUploading ? (
-                <Loader2 size={20} className="animate-spin text-orange-500" />
-              ) : (
-                <>
-                  <PlusIcon size={20} className={`shrink-0 ${isDragging ? "animate-bounce" : ""}`} />
-                  <span className="text-sm font-semibold">
-                    {isDragging ? t("ai_consultation_room.drop_to_upload") : t("ai_consultation_room.upload_btn")}
-                  </span>
-                </>
-              )}
-            </button>
-
-
-            <button
-              id="ai-chat-submit"
-              onClick={handleSubmit}
-              disabled={isSubmitDisabled}
-              className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center ${isSubmitDisabled
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-                  : "bg-orange-600 hover:bg-orange-500 text-white shadow-orange-200 active:scale-[0.98] hover:-translate-y-0.5"
-                }`}
-            >
-              {isSubmitting ? (
-                <Loader2 size={24} className="animate-spin" />
-              ) : (
-                t("ai_consultation_room.ask_ai")
-              )}
-            </button>
-
+            {displayedButtons}
           </div>
 
           <p className="text-[11px] text-gray-400 leading-relaxed text-center px-4">

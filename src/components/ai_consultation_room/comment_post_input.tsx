@@ -3,6 +3,8 @@ import { User, Send, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useParams } from "next/navigation";
 import { ApiCode } from "@/lib/utils/status";
+import LoginButton from '@/components/common/login_button';
+import { useAuth } from '@/contexts/auth_context';
 
 export const CommentPostInput = ({
   isShowInput,
@@ -18,9 +20,11 @@ export const CommentPostInput = ({
   onSuccess?: () => void;
 }) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+
   const params = useParams();
   const talkId = params?.talkId as string;
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleSubmit = async () => {
     if (!value.trim() || isSubmitting) return;
@@ -50,6 +54,19 @@ export const CommentPostInput = ({
     }
   };
 
+  const displayedSubmit = user?      <button
+              onClick={handleSubmit}
+              disabled={!value.trim() || isSubmitting}
+              className="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 enabled:hover:bg-orange-500 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-md shadow-orange-200"
+            >
+              {isSubmitting ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Send size={16} />
+              )}
+              <span>{t("ai_consultation_room.submit_comment")}</span>
+            </button>: <LoginButton label="Please login to comment" />
+
   return (
     <div
       className={`transition-all duration-300 overflow-hidden ${isShowInput ? "max-h-60 opacity-100 mb-6" : "max-h-0 opacity-0 mb-0"}`}
@@ -68,18 +85,7 @@ export const CommentPostInput = ({
             className="w-full bg-white border border-orange-100 rounded-2xl p-4 text-sm focus:outline-none focus:border-orange-500 transition-all placeholder:text-gray-300 min-h-[100px] resize-none shadow-sm"
           />
           <div className="flex justify-end">
-            <button
-              onClick={handleSubmit}
-              disabled={!value.trim() || isSubmitting}
-              className="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 enabled:hover:bg-orange-500 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-md shadow-orange-200"
-            >
-              {isSubmitting ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Send size={16} />
-              )}
-              <span>{t("ai_consultation_room.submit_comment")}</span>
-            </button>
+          {displayedSubmit}
           </div>
         </div>
       </div>

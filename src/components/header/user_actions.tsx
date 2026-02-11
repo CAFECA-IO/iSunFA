@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, Fragment } from 'react';
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react';
 import { User, LogOut, ChevronDown, Settings, CreditCard, Users, LayoutDashboard } from 'lucide-react';
 import { MODULES } from '@/constants/modules';
 import { useAuth } from '@/contexts/auth_context';
 import { useTranslation } from '@/i18n/i18n_context';
-import AuthModal from '@/components/auth/auth_modal';
+import LoginButton from '@/components/common/login_button';
 
 export default function UserActions() {
   const { user, logout, refreshAuth } = useAuth();
   const { t } = useTranslation();
-  const [isAuthModalOpen, setAuthModalOpen] = useState(false);
 
   // Info: (20260118 - Luphia) Check if a module is active for the current user
   const isModuleActive = (moduleKey: string) => {
@@ -22,15 +21,7 @@ export default function UserActions() {
 
   if (!user) {
     return (
-      <>
-        <button
-          onClick={() => setAuthModalOpen(true)}
-          className="rounded-full bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-all hover:scale-105 active:scale-95"
-        >
-          {t('header.login')}
-        </button>
-        <AuthModal isOpen={isAuthModalOpen} onClose={() => setAuthModalOpen(false)} />
-      </>
+      <LoginButton />
     );
   }
 
