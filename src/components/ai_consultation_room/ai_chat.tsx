@@ -1,19 +1,23 @@
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
-import { PlusIcon, MinusIcon, MessageCircleMore, Bot, X } from "lucide-react";
+import { PlusIcon, MinusIcon, MessageCircleMore, Bot, X, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useAiContext } from "@/contexts/ai_context";
+import { IAttachment } from "@/interfaces/ai_talk";
+import { ApiCode } from "@/lib/utils/status";
 
 export const AiChat = () => {
   const { t } = useTranslation();
-  const [isChatOpen, setIsChatOpen] = useState<boolean>(true);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const { isChatOpen, setIsChatOpen } = useAiContext();
+  const [attachments, setAttachments] = useState<IAttachment[]>([]);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   const [question, setQuestion] = useState<string>("");
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isSubmitDisabled = !question.trim();
+  const isSubmitDisabled = !question.trim() || isUploading;
 
-  const processFiles = (files: FileList | null) => {
+  const processFiles = async (files: FileList | null) => {
     if (files) {
       const fileList = Array.from(files);
       const maxSize = 5 * 1024 * 1024; // Info: (20260209 - Julian) 5MB
@@ -35,19 +39,41 @@ export const AiChat = () => {
         return true;
       });
 
-      setUploadedFiles((prev) => {
-        const totalFiles = [...prev, ...validFiles];
-        if (totalFiles.length > maxCount) {
-          alert(
-            t("ai_consultation_room.file_count_error").replace(
-              "{count}",
-              maxCount.toString()
-            )
-          );
-          return totalFiles.slice(0, maxCount);
+      if (validFiles.length === 0) return;
+
+      if (attachments.length + validFiles.length > maxCount) {
+        alert(
+          t("ai_consultation_room.file_count_error").replace(
+            "{count}",
+            maxCount.toString()
+          )
+        );
+        return;
+      }
+
+      setIsUploading(true);
+      try {
+        for (const file of validFiles) {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const response = await fetch("/api/v1/ai_talk/attachment/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+          if (data.code === ApiCode.SUCCESS) {
+            setAttachments((prev) => [...prev, data.payload]);
+          } else {
+            console.error("Upload failed:", data.message);
+          }
         }
-        return totalFiles;
-      });
+      } catch (error) {
+        console.error("Upload error:", error);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -72,8 +98,19 @@ export const AiChat = () => {
     processFiles(e.dataTransfer.files);
   };
 
-  const removeFile = (index: number) => {
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  const removeFile = async (id: string) => {
+    try {
+      const response = await fetch(`/api/v1/ai_talk/attachment/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+      if (data.code === ApiCode.SUCCESS) {
+        setAttachments((prev) => prev.filter((att) => att.id !== id));
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+    }
   };
 
 
@@ -155,24 +192,24 @@ export const AiChat = () => {
             </div>
 
             {/* Info: (20260209 - Julian) Display Uploaded Files */}
-            {uploadedFiles.length > 0 && (
+            {attachments.length > 0 && (
               <div className="flex overflow-x-auto gap-2 py-1">
-                {uploadedFiles.map((file, index) => (
+                {attachments.map((file) => (
                   <div
-                    key={index}
+                    key={file.id}
                     className="group shrink-0 w-16 h-16 relative rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center shadow-sm"
                   >
                     <div className="w-full h-full relative rounded-xl overflow-hidden">
                       <Image
-                        src={URL.createObjectURL(file)}
-                        alt={file.name}
+                        src={file.url}
+                        alt={file.fileName}
                         fill
                         className="object-cover"
                       />
                     </div>
                     <button
                       type="button"
-                      onClick={() => removeFile(index)}
+                      onClick={() => removeFile(file.id)}
                       className="absolute -top-1 -right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                       aria-label="刪除文件"
                     >
@@ -194,16 +231,22 @@ export const AiChat = () => {
 
             <button
               onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
               className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all ${isDragging
                   ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
                   : "border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50"
-                }`}
+                } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              <PlusIcon size={20} className={`shrink-0 ${isDragging ? "animate-bounce" : ""}`} />
-              <span className="text-sm font-semibold">
-                {isDragging ? t("ai_consultation_room.drop_to_upload") : t("ai_consultation_room.upload_btn")}
-              </span>
-
+              {isUploading ? (
+                <Loader2 size={20} className="animate-spin text-orange-500" />
+              ) : (
+                <>
+                  <PlusIcon size={20} className={`shrink-0 ${isDragging ? "animate-bounce" : ""}`} />
+                  <span className="text-sm font-semibold">
+                    {isDragging ? t("ai_consultation_room.drop_to_upload") : t("ai_consultation_room.upload_btn")}
+                  </span>
+                </>
+              )}
             </button>
 
 
