@@ -11,11 +11,43 @@ export const AiChat = () => {
   const { isChatOpen, setIsChatOpen } = useAiContext();
   const [attachments, setAttachments] = useState<IAttachment[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [question, setQuestion] = useState<string>("");
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isSubmitDisabled = !question.trim() || isUploading;
+  const isSubmitDisabled = !question.trim() || isUploading || isSubmitting;
+
+  const handleSubmit = async () => {
+    if (isSubmitDisabled) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/v1/ai_talk/thread", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          question,
+          attachments: attachments.map((att) => att.id),
+        }),
+      });
+
+      const data = await response.json();
+      if (data.code === ApiCode.SUCCESS) {
+        setQuestion("");
+        setAttachments([]);
+        // Optional: Provide feedback or redirect
+      } else {
+        console.error("Failed to create thread:", data.message);
+      }
+    } catch (error) {
+      console.error("Error creating thread:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const processFiles = async (files: FileList | null) => {
     if (files) {
@@ -252,13 +284,18 @@ export const AiChat = () => {
 
             <button
               id="ai-chat-submit"
+              onClick={handleSubmit}
               disabled={isSubmitDisabled}
-              className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all ${isSubmitDisabled
+              className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center ${isSubmitDisabled
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
                   : "bg-orange-600 hover:bg-orange-500 text-white shadow-orange-200 active:scale-[0.98] hover:-translate-y-0.5"
                 }`}
             >
-              {t("ai_consultation_room.ask_ai")}
+              {isSubmitting ? (
+                <Loader2 size={24} className="animate-spin" />
+              ) : (
+                t("ai_consultation_room.ask_ai")
+              )}
             </button>
 
           </div>
