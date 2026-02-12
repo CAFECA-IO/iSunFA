@@ -30,7 +30,7 @@ export const AiChat = () => {
   const isSubmitDisabled = !question.trim() || isUploading || isSubmitting;
 
   const handleSubmit = async () => {
-    if (isSubmitDisabled) return;
+    if (isSubmitDisabled || !user) return;
 
     setIsSubmitting(true);
     try {
@@ -42,6 +42,7 @@ export const AiChat = () => {
         body: JSON.stringify({
           question,
           attachments: attachments.map((att) => att.id),
+          userAddress: user.address,
         }),
       });
 
@@ -49,7 +50,7 @@ export const AiChat = () => {
       if (data.code === ApiCode.SUCCESS) {
         setQuestion("");
         setAttachments([]);
-        // Optional: Provide feedback or redirect
+        // ToDo: 導向 /ai_consultation_room/{threadId} 頁面
       } else {
         console.error("Failed to create thread:", data.message);
       }

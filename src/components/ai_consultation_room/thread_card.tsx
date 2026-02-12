@@ -57,7 +57,7 @@ export const ThreadCard = ({
               {t("ai_consultation_room.ai_label")}
             </span>
             <div className="flex gap-1">
-              {tags.map((tag) => (
+              {tags?.map((tag) => (
                 <span key={tag} className="text-[10px] text-orange-400">
                   #{tag}
                 </span>
@@ -73,11 +73,11 @@ export const ThreadCard = ({
         <div className="flex items-center gap-4 pt-2 mt-2 border-t border-orange-100/50">
           <div className="flex items-center gap-1 text-orange-400 ">
             <ThumbsUp size={14} />
-            <span className="text-xs">{countOfLike}</span>
+            <span className="text-xs">{countOfLike ?? 0}</span>
           </div>
           <div className="flex items-center gap-1 text-orange-400 ">
             <ThumbsDown size={14} />
-            <span className="text-xs">{countOfDislike}</span>
+            <span className="text-xs">{countOfDislike ?? 0}</span>
           </div>
           <div className="flex items-center gap-1 text-orange-400 ">
             <Share2 size={14} />

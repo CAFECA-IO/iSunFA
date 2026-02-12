@@ -24,7 +24,7 @@ export const CommentItem = ({
   const [replyInput, setReplyInput] = useState<string>("");
   const [now] = useState(() => Date.now() / 1000);
 
-  const initial = comment.authorId.slice(0, 1).toUpperCase();
+  const initial = comment.authorName.slice(0, 1).toUpperCase();
 
   const isShowProTag = comment.isProfessional && (
     <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -96,7 +96,7 @@ export const CommentItem = ({
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-2">
             <span className="font-extrabold text-gray-900">
-              {comment.authorId}
+              {comment.authorName}
             </span>
             {isShowVerifiedTag}
             <span className="text-xs text-gray-400">
@@ -104,9 +104,9 @@ export const CommentItem = ({
             </span>
           </div>
           <p className="text-gray-700 leading-relaxed pr-20">
-            {comment.replyToUserId && (
+            {comment.replyToUserName && (
               <span className="text-blue-500 font-medium mr-1">
-                @{comment.replyToUserId}
+                @{comment.replyToUserName}
               </span>
             )}
             {comment.content}

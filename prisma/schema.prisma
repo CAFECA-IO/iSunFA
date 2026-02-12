@@ -27,12 +27,13 @@ model User {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  orders    Order[]
-  analyses  Analysis[]
-  missions  Mission[]
-  threads   Thread[]
-  comments  Comment[]
-  reactions Reaction[]
+  orders          Order[]
+  analyses        Analysis[]
+  missions        Mission[]
+  threads         Thread[]
+  comments        Comment[]
+  receivedReplies Comment[]  @relation("CommentRecipient")
+  reactions       Reaction[]
 
   @@index([address])
   @@map("user")
@@ -109,16 +110,18 @@ model Task {
 // Info: (20260211 - Julian) AI Consultation Room
 // Info: (20260212 - Julian) 討論串
 model Thread {
-  id          Int          @id @default(autoincrement())
-  userId      String       @map("user_id")
-  user        User         @relation(fields: [userId], references: [id])
-  question    String       @db.Text
-  answer      String?      @db.Text
-  createdAt   DateTime     @default(now()) @map("created_at")
+  id          Int             @id @default(autoincrement())
+  userId      String          @map("user_id")
+  user        User            @relation(fields: [userId], references: [id])
+  question    String          @db.Text
+  answer      String?         @db.Text
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
   attachments Attachment[]
   comments    Comment[]
   reactions   Reaction[]
-  tags        Tag[]
+  tags        ThreadsOnTags[]
+  shares      Share[]
 
   @@map("thread")
 }
@@ -150,7 +153,12 @@ model Comment {
   parentComment   Comment?  @relation("ReplyTo", fields: [parentCommentId], references: [id])
   replies         Comment[] @relation("ReplyTo")
 
+  // Info: (20260212 - Julian) 回覆對象
+  replyToUserId String? @map("reply_to_user_id")
+  replyToUser   User?   @relation("CommentRecipient", fields: [replyToUserId], references: [id])
+
   createdAt      DateTime   @default(now()) @map("created_at")
+  deletedAt      DateTime?  @map("deleted_at")
   isProfessional Boolean    @default(false) @map("is_professional")
   reactions      Reaction[]
 
@@ -159,9 +167,9 @@ model Comment {
 
 // Info: (20260212 - Julian) 討論串標籤
 model Tag {
-  id      Int      @id @default(autoincrement())
-  name    String   @unique
-  threads Thread[]
+  id      Int             @id @default(autoincrement())
+  name    String          @unique
+  threads ThreadsOnTags[]
 
   @@map("tag")
 }
@@ -195,4 +203,30 @@ model Reaction {
   @@unique([userId, threadId])
   @@unique([userId, commentId])
   @@map("reaction")
+}
+
+// Info: (20260212 - Julian) 討論串的分享紀錄
+model Share {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Info: (20260212 - Julian) 關聯討論串
+  threadId Int    @map("thread_id")
+  thread   Thread @relation(fields: [threadId], references: [id])
+
+  @@map("share")
+}
+
+// Info: (20260212 - Julian) Thread - Tag
+model ThreadsOnTags {
+  threadId  Int      @map("thread_id")
+  thread    Thread   @relation(fields: [threadId], references: [id])
+  tagId     Int      @map("tag_id")
+  tag       Tag      @relation(fields: [tagId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Info: (20260212 - Julian) 討論串和標籤是多對多的關係
+  @@id([threadId, tagId])
+  @@map("threads_on_tags")
 }

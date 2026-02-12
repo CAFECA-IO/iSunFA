@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/landing_page/header";
 import Footer from "@/components/landing_page/footer";
-import { IThreadDetail } from "@/interfaces/ai_talk";
+import { IThreadDetail,mockComments } from "@/interfaces/ai_talk";
 import { timestampToString } from "@/lib/utils/common";
 import {
   ChevronLeft,
@@ -283,7 +283,7 @@ export default function AiTalkDetailPage() {
         </section>
 
         {/* Info: (20260206 - Julian) 3. 評論區塊 */}
-        <CommentSection comments={data.comments} />
+        <CommentSection comments={mockComments} />
 
         {/* Info: (20260208 - Julian) 4. AI 聊天區塊 */}
         <AiChat />

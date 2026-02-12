@@ -8,11 +8,12 @@ export interface IThread {
   countOfLike: number;
   countOfDislike: number;
   countOfShare: number;
+  countOfComment: number;
 }
 
 export interface IComment {
   id: string;
-  authorId: string;
+  authorName: string;
   content: string;
   createdAt: number;
   likes: number;
@@ -20,7 +21,7 @@ export interface IComment {
   isProfessional: boolean; // Info: (20260209 - Julian) 是否為專業評論
   isVerified: boolean; // Info: (20260209 - Julian) 用戶是否為專業認證
   parentId: string | null; // Info: (20260209 - Julian) 如果是第一層評論則為 null，回覆則存父評論 ID
-  replyToUserId?: string; // Info: (20260209 - Julian) 可選：用於顯示「@某人」
+  replyToUserName?: string; // Info: (20260209 - Julian) 可選：用於顯示「@某人」
   replies: IComment[]; // Info: (20260209 - Julian) 巢狀結構，存放該評論下的所有回覆
   isDeleted: boolean; // Info: (20260209 - Julian) 當評論被刪除但仍有子回覆時，可用於顯示「此評論已刪除」
 }
@@ -41,13 +42,12 @@ export interface IAttachment {
 
 export interface IThreadDetail extends IThread {
   attachments: IAttachment[];
-  comments: IComment[];
 }
 
-const mockComments: IComment[] = [
+export const mockComments: IComment[] = [
   {
     id: "1",
-    authorId: "user_001",
+    authorName: "user_001",
     content:
       "AI 的解析基本正確，但要補充一點：如果是餐飲業，還需注意「交際費」在年度申報時的限額問題。建議建立獨立的餐飲支出清單，方便月底核銷。",
     createdAt: 1770365492,
@@ -61,7 +61,7 @@ const mockComments: IComment[] = [
   },
   {
     id: "2",
-    authorId: "user_002",
+    authorName: "user_002",
     content: "AI 解析有誤，請注意。",
     createdAt: 1770345093,
     likes: 1,
@@ -74,7 +74,7 @@ const mockComments: IComment[] = [
   },
   {
     id: "3",
-    authorId: "user_003",
+    authorName: "user_003",
     content: "AI 的回答很棒，謝謝！",
     createdAt: 1770345093,
     likes: 0,
@@ -87,7 +87,7 @@ const mockComments: IComment[] = [
   },
   {
     id: "4",
-    authorId: "user_004",
+    authorName: "user_004",
     content: "測試巢狀評論",
     createdAt: 1770345093,
     likes: 45,
@@ -98,7 +98,7 @@ const mockComments: IComment[] = [
     replies: [
       {
         id: "5",
-        authorId: "user_005",
+        authorName: "David Chen",
         content: "我是巢狀 01",
         createdAt: 1770345093,
         likes: 1,
@@ -106,13 +106,13 @@ const mockComments: IComment[] = [
         isProfessional: false,
         isVerified: false,
         parentId: '4',
-        replyToUserId: "user_004",
+        replyToUserName: "David Chen",
         replies: [],
         isDeleted: false,
       },
       {
         id: "6",
-        authorId: "user_006",
+        authorName: "user_006",
         content: "我是巢狀 02",
         createdAt: 1770345093,
         likes: 2,
@@ -120,7 +120,7 @@ const mockComments: IComment[] = [
         isProfessional: false,
         isVerified: false,
         parentId: '4',
-        replyToUserId: "user_005",
+        replyToUserName: "David Chen",
         replies: [],
         isDeleted: false,
       },
@@ -168,7 +168,7 @@ export const mockThreads: IThreadDetail[] = [
     countOfDislike: 2,
     countOfShare: 5,
     attachments: [],
-    comments: [],
+    countOfComment: 0,
   },
   {
     id: 2,
@@ -181,7 +181,7 @@ export const mockThreads: IThreadDetail[] = [
     countOfDislike: 3,
     countOfShare: 8,
     attachments: [],
-    comments: [mockComments[2]],
+    countOfComment: 1,
   },
   {
     id: 3,
@@ -194,7 +194,7 @@ export const mockThreads: IThreadDetail[] = [
     countOfDislike: 4,
     countOfShare: 12,
     attachments: [],
-    comments: [mockComments[1]],
+    countOfComment: 1,
   },
   {
     id: 4,
@@ -207,7 +207,7 @@ export const mockThreads: IThreadDetail[] = [
     countOfDislike: 5,
     countOfShare: 15,
     attachments: [],
-    comments: [],
+    countOfComment: 0,
   },
   {
     id: 5,
@@ -220,7 +220,7 @@ export const mockThreads: IThreadDetail[] = [
     countOfDislike: 6,
     countOfShare: 20,
     attachments: [],
-    comments: [],
+    countOfComment: 0,
   },
   {
     id: 6,
@@ -233,7 +233,7 @@ export const mockThreads: IThreadDetail[] = [
     countOfDislike: 7,
     countOfShare: 25,
     attachments: [mockAttachments[0], mockAttachments[1]],
-    comments: [mockComments[0], mockComments[1]],
+    countOfComment: 2,
   },
   {
     id: 7,
@@ -246,6 +246,6 @@ export const mockThreads: IThreadDetail[] = [
     countOfDislike: 8,
     countOfShare: 30,
     attachments: [mockAttachments[0], mockAttachments[1]],
-    comments: [mockComments[0], mockComments[1], mockComments[2], mockComments[3]],
+    countOfComment: 4,
   },
 ];
