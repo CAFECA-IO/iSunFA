@@ -12,7 +12,7 @@ export const ThreadCard = ({
   id,
   question,
   answer,
-  authorId,
+  authorName,
   tags,
   createdAt,
   countOfLike,
@@ -40,7 +40,7 @@ export const ThreadCard = ({
             {t("ai_consultation_room.q_label")}
           </span>
           <p className="text-gray-700 text-xs">
-            {authorId}
+            {authorName}
             {displayedTime}
           </p>
         </div>

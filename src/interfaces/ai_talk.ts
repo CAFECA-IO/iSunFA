@@ -1,6 +1,6 @@
 export interface IThread {
   id: number;
-  authorId: string;
+  authorName: string;
   question: string;
   answer: string;
   createdAt: number;
@@ -159,7 +159,7 @@ const mockAttachments: IAttachment[] = [
 export const mockThreads: IThreadDetail[] = [
   {
     id: 1,
-    authorId: "user_001",
+    authorName: "Joan Chen",
     question: "What is the capital of France?",
     answer: "The capital of France is Paris.",
     tags: ["France", "Paris"],
@@ -172,7 +172,7 @@ export const mockThreads: IThreadDetail[] = [
   },
   {
     id: 2,
-    authorId: "user_002",
+    authorName: "Mona Doe",
     question: "What is the capital of Japan?",
     answer: "The capital of Japan is Tokyo.",
     tags: ["Japan", "Tokyo"],
@@ -185,7 +185,7 @@ export const mockThreads: IThreadDetail[] = [
   },
   {
     id: 3,
-    authorId: "user_003",
+    authorName: "Sam Lee",
     question: "What is the most popular sport in the world?",
     answer: "The most popular sport in the world is football.",
     tags: ["Sport", "Football"],
@@ -198,7 +198,7 @@ export const mockThreads: IThreadDetail[] = [
   },
   {
     id: 4,
-    authorId: "user_004",
+    authorName: "Peter Huang",
     question: "What is the smallest animal in the world?",
     answer: "The smallest animal in the world is the tardigrade.",
     tags: ["Animal", "Smallest"],
@@ -211,7 +211,7 @@ export const mockThreads: IThreadDetail[] = [
   },
   {
     id: 5,
-    authorId: "user_005",
+    authorName: "Tina Wang",
     question: "Is AI a threat to humanity?",
     answer: "AI is a tool that can be used for good or evil.",
     tags: ["AI", "Threat"],
@@ -224,7 +224,7 @@ export const mockThreads: IThreadDetail[] = [
   },
   {
     id: 6,
-    authorId: "user_006",
+    authorName: "Nora Lin",
     question: "小規模營業稅如何計算？",
     answer: "# 查定課徵營業稅額 ＝ 國稅局查定每月銷售額 × 稅率 (通常為 1%)。\n\n- 執行建議：\n請確保發票上載明貴司統編，並確認屬於營業必要支出。若為餐飲業，需注意交際費限額問題。",
     tags: ["營業稅", "小規模"],
@@ -237,7 +237,7 @@ export const mockThreads: IThreadDetail[] = [
   },
   {
     id: 7,
-    authorId: "user_007",
+    authorName: "Frank Yang",
     question: "公司買車報支加油費，發票沒打統編可以扣抵嗎？",
     answer: "# 不可以。依據營業稅法，未載明統一編號之進項憑證不得扣抵銷項稅額。\n\n請確保發票上載明貴司統編，並確認屬於營業必要支出。若為餐飲業，需注意交際費限額問題。\n\n- 法條依據：\n 依據《加值型及非加值型營業稅法》第 33 條規定，營業人以進項稅額扣抵銷項稅額者，應具備載明其名稱、地址及統一編號之憑證。\n\n- 執行建議：\n請確保發票上載明貴司統編，並確認屬於營業必要支出。若為餐飲業，需注意交際費限額問題。",
     tags: ["扣抵稅額", "憑證"],

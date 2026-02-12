@@ -169,7 +169,7 @@ export default function AiTalkDetailPage() {
             </div>
             <div className="flex items-center gap-1.5 text-gray-400">
               <User size={16} />
-              <span>{data.authorId}</span>
+              <span>{data.authorName}</span>
             </div>
           </header>
 
