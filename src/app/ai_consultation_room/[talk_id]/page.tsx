@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/landing_page/header";
 import Footer from "@/components/landing_page/footer";
-import { IThreadDetail,mockComments } from "@/interfaces/ai_talk";
+import { IThreadDetail } from "@/interfaces/ai_talk";
 import { timestampToString } from "@/lib/utils/common";
 import {
   ChevronLeft,
@@ -34,8 +34,7 @@ export default function AiTalkDetailPage() {
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [data, setData] = useState<IThreadDetail | null>(null);
-  const [liked, setLiked] = useState<boolean>(false);
-  const [disliked, setDisliked] = useState<boolean>(false);
+  const [userReaction, setUserReaction] = useState<"LIKE"|"DISLIKE"|null>(null);
 
   useEffect(() => {
     if (!talkId) return;
@@ -48,6 +47,7 @@ export default function AiTalkDetailPage() {
         
         if (result.code === ApiCode.SUCCESS) {
           setData(result.payload);
+          setUserReaction(result.payload.userReaction);
         } else {
           setData(null);
         }
@@ -63,7 +63,7 @@ export default function AiTalkDetailPage() {
   }, [talkId]);
 
   const handleReaction = async (reaction: "LIKE" | "DISLIKE") => {
-    if (!talkId || !user) return;
+    if (!(talkId && user)) return;
 
     try {
       const response = await fetch(`/api/v1/ai_talk/thread/${talkId}/react`, {
@@ -71,15 +71,14 @@ export default function AiTalkDetailPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ reaction }),
+        body: JSON.stringify({ reaction , userAddress: user.address }),
       });
 
       const result = await response.json();
       if (result.code === ApiCode.SUCCESS) {
         const { countOfLike, countOfDislike, userReaction } = result.payload;
         setData((prev) => (prev ? { ...prev, countOfLike, countOfDislike } : null));
-        setLiked(userReaction === "LIKE");
-        setDisliked(userReaction === "DISLIKE");
+        setUserReaction(userReaction);
       }
     } catch (error) {
       console.error("Failed to post reaction:", error);
@@ -240,9 +239,9 @@ export default function AiTalkDetailPage() {
                 disabled={!user}
                 title={!user ? t("ai_consultation_room.login_to_react") : ""}
                 className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  liked
+                  userReaction ===  'LIKE'
                     ? "bg-orange-600 text-white  border-transparent"
-                    : "bg-white border-orange-200 hover:bg-orange-50 "
+                    : "bg-white border-orange-200 enabled:hover:bg-orange-50 "
                 }`}
               >
                 <ThumbsUp size={18} />
@@ -258,9 +257,9 @@ export default function AiTalkDetailPage() {
                 disabled={!user}
                 title={!user ? t("ai_consultation_room.login_to_react") : ""}
                 className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  disliked
+                  userReaction === 'DISLIKE'
                     ? "bg-orange-600 text-white border-transparent"
-                    : "bg-white border-orange-200 hover:bg-orange-50 "
+                    : "bg-white border-orange-200 enabled:hover:bg-orange-50 "
                 }`}
               >
                 <ThumbsDown size={18} />
@@ -283,7 +282,7 @@ export default function AiTalkDetailPage() {
         </section>
 
         {/* Info: (20260206 - Julian) 3. 評論區塊 */}
-        <CommentSection comments={mockComments} />
+        <CommentSection />
 
         {/* Info: (20260208 - Julian) 4. AI 聊天區塊 */}
         <AiChat />

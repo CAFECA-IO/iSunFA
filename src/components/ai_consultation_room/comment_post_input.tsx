@@ -6,19 +6,21 @@ import { ApiCode } from "@/lib/utils/status";
 import LoginButton from "@/components/common/login_button";
 import { useAuth } from "@/contexts/auth_context";
 
+interface ICommentPostInput{
+    isShowInput: boolean;
+  value: string;
+  onChange: (val: string) => void;
+  parentId?: string;
+  onSuccess?: () => void;
+}
+
 export const CommentPostInput = ({
   isShowInput,
   value,
   onChange,
   parentId = "",
   onSuccess,
-}: {
-  isShowInput: boolean;
-  value: string;
-  onChange: (val: string) => void;
-  parentId?: string;
-  onSuccess?: () => void;
-}) => {
+}: ICommentPostInput) => {
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -26,8 +28,12 @@ export const CommentPostInput = ({
   const talkId = params?.talk_id as string;
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+  // ToDo: 新增 @ 其他用戶的功能
+  const replyTo = value.includes("@") ? value.split("@")[1] : "";
+
+  // Info: (20260212 - Julian) 處理提交
   const handleSubmit = async () => {
-    if (!value.trim() || isSubmitting) return;
+    if (!value.trim() || isSubmitting || !user) return;
 
     try {
       setIsSubmitting(true);
@@ -38,7 +44,9 @@ export const CommentPostInput = ({
         },
         body: JSON.stringify({
           content: value,
-          parentId: parentId,
+          parentId,
+          isProfessional: false, // ToDo: 判斷是否為專業人士
+          replyTo 
         }),
       });
 

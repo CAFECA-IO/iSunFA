@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 
 /**
  * 取得所有討論串
+ * GET /api/v1/ai_talk/thread
  */
 export async function GET() {
   try {
@@ -14,7 +15,7 @@ export async function GET() {
     const threads = await prisma.thread.findMany()
     
     // Info: (20260212 - Julian) 取得與討論串關聯的標籤
-    const tagIds = await prisma.threadsOnTags.findMany({
+    const tagIds = await prisma.threadTag.findMany({
       where: {threadId: { in: threads.map((thread) => thread.id)}},
     })
     const tags = await prisma.tag.findMany({
@@ -67,6 +68,7 @@ export async function GET() {
 
 /**
  * 向 AI 提問(建立討論串)
+ * POST /api/v1/ai_talk/thread
  */
 export async function POST(request: NextRequest) {
   try {
@@ -102,7 +104,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Info: (20260212 - Julian) 建立討論串和標籤的關聯
-    const threadOnTags = await prisma.threadsOnTags.create({
+    const threadOnTags = await prisma.threadTag.create({
       data: {threadId: thread.id, tagId: tags.id},
     });
 

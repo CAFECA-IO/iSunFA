@@ -1,14 +1,34 @@
-import { useState } from "react";
+'use client'
+
+import { useState,useEffect } from "react";
+import { useParams } from "next/navigation";
 import { MessageSquare } from "lucide-react";
 import { IComment } from "@/interfaces/ai_talk";
 import { CommentItem } from "@/components/ai_consultation_room/comment_item";
 import { CommentPostInput } from "@/components/ai_consultation_room/comment_post_input";
 import { useTranslation } from "@/i18n/i18n_context";
 
-export const CommentSection = ({ comments }: { comments: IComment[] }) => {
+export const CommentSection = () => {
   const { t } = useTranslation();
+  const params = useParams();
+  const threadId = params?.talk_id ?? ''
+
   const [isShowInput, setIsShowInput] = useState<boolean>(true);
   const [commentInput, setCommentInput] = useState<string>("");
+  const [comments, setComments] = useState<IComment[]>([]);
+
+  useEffect(() => {
+    if (threadId) {
+      fetch(`/api/v1/ai_talk/thread/${threadId}/comment`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.code === 'SUCCESS') {
+            setComments(data.payload);
+          }
+        })
+        .catch((err) => console.error("Fetch comments error:", err));
+    }
+  }, [threadId]);
 
   const openInputHandler = () => {
     if (isShowInput) setCommentInput("");

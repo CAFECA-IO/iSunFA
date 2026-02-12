@@ -56,7 +56,7 @@ export const CommentItem = ({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ reaction }),
+          body: JSON.stringify({ reaction,userAddress:user.address }),
         },
       );
 
@@ -83,6 +83,25 @@ export const CommentItem = ({
 
   const hasReplies = comment.replies && comment.replies.length > 0;
 
+  // Info: (20260212 - Julian) 拆分 @用戶 字串並加上樣式
+  const renderContent = (text: string) => {
+    if (!text) return null;
+    const parts = text.split(/(@[^\s]+)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith("@")) {
+        return (
+          <span
+            key={index}
+            className="text-blue-600 bg-gray-100 p-1 rounded font-medium"
+          >
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <div className={`space-y-4 ${isReply ? "ml-14" : ""}`}>
       <div className="group relative flex gap-5 p-6 rounded-3xl bg-white border border-gray-100 hover:border-orange-300 transition-all">
@@ -105,11 +124,11 @@ export const CommentItem = ({
           </div>
           <p className="text-gray-700 leading-relaxed pr-20">
             {comment.replyToUserName && (
-              <span className="text-blue-500 font-medium mr-1">
+              <span className="text-blue-500 font-semibold mr-1">
                 @{comment.replyToUserName}
               </span>
             )}
-            {comment.content}
+            {renderContent(comment.content)}
           </p>
           <div className="flex items-center gap-4 pt-2">
             <button
