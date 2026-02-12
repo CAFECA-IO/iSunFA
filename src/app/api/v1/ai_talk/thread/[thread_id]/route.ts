@@ -2,14 +2,19 @@ import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
 import { prisma } from '@/lib/prisma';
 import { IAttachment, IThreadDetail } from '@/interfaces/ai_talk';
+import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 
 /**
  * 取得單一討論串
  * GET /api/v1/ai_talk/thread/:thread_id
  */
  
-export async function GET(_request: Request, { params }: { params: Promise<{ thread_id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ thread_id: string }> }) {
   try {
+     // Info: (20260212 - Julian) Verify Token & Get User
+   const authHeader = request.headers.get('Authorization');
+   const user = await getIdentityFromDeWT(authHeader);
+
     const { thread_id: threadId } = await params;
     const thread = await prisma.thread.findUnique({
       where: {id: threadId},
@@ -21,10 +26,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ thr
     }
 
     // ToDo: 取得登入的使用者
-    const loginUserId = ''
+    const currentUserId = user?.id ?? ''
 
-    // Info: (20260212 - Julian) 取得討論串的使用者
-    const user = await prisma.user.findUnique({
+    // Info: (20260212 - Julian) 取得討論串的作者
+    const author = await prisma.user.findUnique({
       where: {id: thread.userId},
     })
 
@@ -42,7 +47,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ thr
     })
     const likeCount = reaction.filter((reaction) => reaction.type === 'LIKE').length
     const dislikeCount = reaction.filter((reaction) => reaction.type === 'DISLIKE').length
-    const userReaction = reaction.find((reaction) => reaction.userId === loginUserId)?.type ?? null
+    const userReaction = reaction.find((reaction) => reaction.userId === currentUserId)?.type ?? null
 
     // Info: (20260212 - Julian) 取得與討論串關聯的分享數
     const shareCount = await prisma.share.count({
@@ -71,7 +76,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ thr
       question: thread.question,
       answer: thread.answer ?? '-',
       createdAt: new Date(thread.createdAt).getTime()/1000,
-      authorName: user?.name ?? 'Unknown',
+      authorName: author?.name ?? 'Unknown',
       tags: tags.map((tag) => tag.name),
       countOfLike: likeCount,
       countOfDislike: dislikeCount,

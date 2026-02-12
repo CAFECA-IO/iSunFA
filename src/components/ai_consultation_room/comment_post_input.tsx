@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { request } from "@/lib/utils/request";
 import { User, Send, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useParams } from "next/navigation";
 import { ApiCode } from "@/lib/utils/status";
 import LoginButton from "@/components/common/login_button";
 import { useAuth } from "@/contexts/auth_context";
+import { IApiResponse } from "@/lib/utils/response";
 
 interface ICommentPostInput{
     isShowInput: boolean;
@@ -37,11 +39,8 @@ export const CommentPostInput = ({
 
     try {
       setIsSubmitting(true);
-      const response = await fetch(`/api/v1/ai_talk/thread/${talkId}/comment`, {
+      const data = await request<IApiResponse<{message: string}>>(`/api/v1/ai_talk/thread/${talkId}/comment`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           content: value,
           parentId,
@@ -49,8 +48,6 @@ export const CommentPostInput = ({
           replyTo 
         }),
       });
-
-      const data = await response.json();
       if (data.code === ApiCode.SUCCESS) {
         onChange("");
         onSuccess?.();

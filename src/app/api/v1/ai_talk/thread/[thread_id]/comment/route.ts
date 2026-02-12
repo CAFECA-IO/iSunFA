@@ -3,6 +3,7 @@ import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
 import { prisma } from '@/lib/prisma';
 import { IComment } from '@/interfaces/ai_talk';
+import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 
 /**
  * 取得討論串的評論
@@ -75,6 +76,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ thr
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ thread_id: string }> }) {
   try {
+     // Info: (20260212 - Julian) Verify Token & Get User
+   const authHeader = request.headers.get('Authorization');
+   const user = await getIdentityFromDeWT(authHeader);
+
+   if (!user) {
+     console.error('User not found');
+     return jsonFail(ApiCode.NOT_FOUND, 'User not found');
+   }
+
     const body = await request.json();
     const { content  , parentId,isProfessional,replyTo } = body;
 
@@ -102,13 +112,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       where: { name: replyTo },
     }) : null;
 
+
+    // Info: (20260212 - Julian) 限制巢狀評論只有兩層：如果評論已有 parentCommentId，則直接使用該 parentCommentId
+    const parentCommentId = parentComment?.parentCommentId || parentComment?.id || null
+
     const comment = await prisma.comment.create({
       data: { 
-        userId: thread.userId,
+        userId: user.id,
         threadId, 
         content, 
         isProfessional,
-        parentCommentId:parentComment?.id ?? null,
+        parentCommentId, 
         replyToUserId: replyToUser?.id ?? null 
       },
     })

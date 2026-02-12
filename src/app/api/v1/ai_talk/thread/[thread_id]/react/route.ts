@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
 import { prisma } from '@/lib/prisma';
+import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 
 /**
  * 對討論串點讚/倒讚
@@ -9,8 +10,17 @@ import { prisma } from '@/lib/prisma';
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ thread_id: string }> }) {
   try {
+     // Info: (20260212 - Julian) Verify Token & Get User
+   const authHeader = request.headers.get('Authorization');
+   const user = await getIdentityFromDeWT(authHeader);
+
+if(!user){
+  console.error('User not found');
+  return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'User not found');
+}
+
     const body = await request.json();
-    const { reaction,userAddress } = body;
+    const { reaction } = body;
 
     if (!reaction) {
       console.error('Reaction is required');
@@ -24,12 +34,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'ThreadId is required');
     }
 
-    const user = await prisma.user.findUnique({
-      where: {address: userAddress},
+    const author = await prisma.user.findUnique({
+      where: {address: user.address},
     })
-    if (!user) {
-      console.error('User not found');
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'User not found');
+    if (!author) {
+      console.error('Author not found');
+      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Author not found');
     }
     const userId = user.id;
  

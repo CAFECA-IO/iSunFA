@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { request } from "@/lib/utils/request";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/landing_page/header";
 import Footer from "@/components/landing_page/footer";
-import { IThreadDetail } from "@/interfaces/ai_talk";
+import { IThreadDetail, UserReaction } from "@/interfaces/ai_talk";
 import { timestampToString } from "@/lib/utils/common";
 import {
   ChevronLeft,
@@ -25,6 +26,7 @@ import { CommentSection } from "@/components/ai_consultation_room/comment_sectio
 import { AttachmentItem } from "@/components/ai_consultation_room/attachment_item";
 import { AiChat } from "@/components/ai_consultation_room/ai_chat";
 import { ApiCode } from "@/lib/utils/status";
+import { IApiResponse } from "@/lib/utils/response";
 
 export default function AiTalkDetailPage() {
   const { t } = useTranslation();
@@ -42,12 +44,11 @@ export default function AiTalkDetailPage() {
     const fetchThreadDetail = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/v1/ai_talk/thread/${talkId}`);
-        const result = await response.json();
+        const result = await request<IApiResponse<IThreadDetail>>(`/api/v1/ai_talk/thread/${talkId}`);
         
         if (result.code === ApiCode.SUCCESS) {
           setData(result.payload);
-          setUserReaction(result.payload.userReaction);
+          setUserReaction(result?.payload?.userReaction ?? null);
         } else {
           setData(null);
         }
@@ -66,16 +67,12 @@ export default function AiTalkDetailPage() {
     if (!(talkId && user)) return;
 
     try {
-      const response = await fetch(`/api/v1/ai_talk/thread/${talkId}/react`, {
+      const result = await request<IApiResponse<{ countOfLike: number; countOfDislike: number; userReaction: UserReaction }>>(`/api/v1/ai_talk/thread/${talkId}/react`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ reaction , userAddress: user.address }),
+        body: JSON.stringify({ reaction }),
       });
 
-      const result = await response.json();
-      if (result.code === ApiCode.SUCCESS) {
+      if (result.code === ApiCode.SUCCESS && result.payload) {
         const { countOfLike, countOfDislike, userReaction } = result.payload;
         setData((prev) => (prev ? { ...prev, countOfLike, countOfDislike } : null));
         setUserReaction(userReaction);

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { request } from "@/lib/utils/request";
 import Image from "next/image";
 import {
   PlusIcon,
@@ -14,6 +15,7 @@ import { useAuth } from "@/contexts/auth_context";
 import { IAttachment } from "@/interfaces/ai_talk";
 import { ApiCode } from "@/lib/utils/status";
 import LoginButton from "@/components/common/login_button";
+import { IApiResponse } from "@/lib/utils/response";
 
 export const AiChat = () => {
   const { t } = useTranslation();
@@ -34,19 +36,14 @@ export const AiChat = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/v1/ai_talk/thread", {
+      const data = await request<IApiResponse<{threadId: string}>>("/api/v1/ai_talk/thread", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           question,
           attachments: attachments.map((att) => att.id),
-          userAddress: user.address,
         }),
       });
 
-      const data = await response.json();
       if (data.code === ApiCode.SUCCESS) {
         setQuestion("");
         setAttachments([]);
@@ -144,11 +141,10 @@ export const AiChat = () => {
 
   const removeFile = async (id: string) => {
     try {
-      const response = await fetch(`/api/v1/ai_talk/attachment/${id}`, {
+      const data = await request<IApiResponse<{ id: string }>>(`/api/v1/ai_talk/attachment/${id}`, {
         method: "DELETE",
       });
 
-      const data = await response.json();
       if (data.code === ApiCode.SUCCESS) {
         setAttachments((prev) => prev.filter((att) => att.id !== id));
       }

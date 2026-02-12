@@ -3,7 +3,7 @@ import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
 import { IThread } from '@/interfaces/ai_talk';
 import { prisma } from '@/lib/prisma';
-// import { ChatService } from '@/services/chat.service';
+import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 
 /**
  * 取得所有討論串
@@ -73,18 +73,27 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { question /* , attachments = [] */ , userAddress } = body;
+    const { question /* , attachments = [] */ } = body;
 
-    if (!question) {
+        if (!question) {
       console.error('Missing question');
       return jsonFail(ApiCode.VALIDATION_ERROR, 'Question is required');
     }
 
-    const user = await prisma.user.findUnique({
-      where: {address: userAddress},
+         // Info: (20260212 - Julian) Verify Token & Get User
+       const authHeader = request.headers.get('Authorization');
+       const user = await getIdentityFromDeWT(authHeader);
+
+       if (!user) {
+         console.error('User not found');
+         return jsonFail(ApiCode.NOT_FOUND, 'User not found');
+       }
+
+    const author = await prisma.user.findUnique({
+      where: {address: user.address},
     });
 
-    if (!user) {
+    if (!author) {
       console.error('User not found');
       return jsonFail(ApiCode.NOT_FOUND, 'User not found');
     }
@@ -104,7 +113,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Info: (20260212 - Julian) 建立討論串和標籤的關聯
-    const threadOnTags = await prisma.threadTag.create({
+   await prisma.threadTag.create({
       data: {threadId: thread.id, tagId: tags.id},
     });
 
@@ -118,11 +127,7 @@ export async function POST(request: NextRequest) {
     // const chatService = new ChatService(apiKey);
     // const reply = await chatService.generateResponse(message, tags, image, mimeType);
 
-    return jsonOk({
-      threadId: thread.id,
-      tags: tags.id,
-      threadOnTags: threadOnTags.createdAt,
-    });
+    return jsonOk({threadId: thread.id});
   } catch (error) {
     console.error('[API] /threads error:', error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Internal Server Error');

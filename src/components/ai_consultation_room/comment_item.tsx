@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { request } from "@/lib/utils/request";
 import { ThumbsUp, ThumbsDown, CheckCircle2 } from "lucide-react";
 import { formatTime } from "@/lib/utils/common";
-import { IComment } from "@/interfaces/ai_talk";
+import { IComment,UserReaction } from "@/interfaces/ai_talk";
 import { CommentPostInput } from "@/components/ai_consultation_room/comment_post_input";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
 import { ApiCode } from "@/lib/utils/status";
+import { IApiResponse } from "@/lib/utils/response";
 
 export const CommentItem = ({
   comment,
@@ -46,22 +48,18 @@ export const CommentItem = ({
     </div>
   );
 
-  const handleReaction = async (reaction: "LIKE" | "DISLIKE") => {
+  const handleReaction = async (reaction: UserReaction) => {
     if (!user) return;
     try {
-      const response = await fetch(
+      const data = await request<IApiResponse<{countOfLike: number, countOfDislike: number, userReaction: UserReaction}>>(
         `/api/v1/ai_talk/comment/${comment.id}/react`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ reaction,userAddress:user.address }),
+          body: JSON.stringify({ reaction }),
         },
       );
 
-      const data = await response.json();
-      if (data.code === ApiCode.SUCCESS) {
+      if (data.code === ApiCode.SUCCESS && data.payload) {
         const { countOfLike, countOfDislike, userReaction } = data.payload;
         setLikes(countOfLike);
         setDislikes(countOfDislike);
@@ -176,6 +174,7 @@ export const CommentItem = ({
               isShowInput={showReplies}
               value={replyInput}
               onChange={setReplyInput}
+              parentId={comment.id}
             />
           </div>
           {hasReplies && (
