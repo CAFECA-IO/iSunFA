@@ -1,12 +1,15 @@
 'use client'
 
-import { useState,useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { MessageSquare } from "lucide-react";
 import { IComment } from "@/interfaces/ai_talk";
 import { CommentItem } from "@/components/ai_consultation_room/comment_item";
 import { CommentPostInput } from "@/components/ai_consultation_room/comment_post_input";
 import { useTranslation } from "@/i18n/i18n_context";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
 
 export const CommentSection = () => {
   const { t } = useTranslation();
@@ -16,19 +19,26 @@ export const CommentSection = () => {
   const [isShowInput, setIsShowInput] = useState<boolean>(true);
   const [commentInput, setCommentInput] = useState<string>("");
   const [comments, setComments] = useState<IComment[]>([]);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
+
+  const fetchComments = useCallback(() => {
+    setRefreshKey((prev) => prev + 1);
+  }, []);
 
   useEffect(() => {
-    if (threadId) {
-      fetch(`/api/v1/ai_talk/thread/${threadId}/comment`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.code === 'SUCCESS') {
-            setComments(data.payload);
-          }
-        })
-        .catch((err) => console.error("Fetch comments error:", err));
-    }
-  }, [threadId]);
+    if (!threadId) return;
+    const loadComments = async () => {
+      try {
+        const data = await request<IApiResponse<IComment[]>>(`/api/v1/ai_talk/thread/${threadId}/comment`);
+        if (data.code === ApiCode.SUCCESS && data.payload) {
+          setComments(data.payload);
+        }
+      } catch (err) {
+        console.error("Fetch comments error:", err);
+      }
+    };
+    loadComments();
+  }, [threadId, refreshKey]);
 
   const openInputHandler = () => {
     if (isShowInput) setCommentInput("");
@@ -40,7 +50,11 @@ export const CommentSection = () => {
       <div className="space-y-6 mt-6">
         {/* Info: (20260206 - Julian) 會計師評論範例 */}
         {comments.map((comment) => (
-          <CommentItem key={comment.id} comment={comment} />
+          <CommentItem
+            key={comment.id}
+            comment={comment}
+            onSuccess={fetchComments}
+          />
         ))}
 
         {/* Info: (20260206 - Julian) 更多留言載入 */}
@@ -77,6 +91,10 @@ export const CommentSection = () => {
         isShowInput={isShowInput}
         value={commentInput}
         onChange={setCommentInput}
+        onSuccess={() => {
+          fetchComments();
+          setIsShowInput(false);
+        }}
       />
 
       {/* Info: (20260206 - Julian) 評論區 */}

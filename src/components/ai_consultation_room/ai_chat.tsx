@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import Image from "next/image";
 import {
@@ -19,6 +20,7 @@ import { IApiResponse } from "@/lib/utils/response";
 
 export const AiChat = () => {
   const { t } = useTranslation();
+  const router = useRouter();
   const { user } = useAuth();
   const { isChatOpen, setIsChatOpen } = useAiContext();
 
@@ -47,7 +49,12 @@ export const AiChat = () => {
       if (data.code === ApiCode.SUCCESS) {
         setQuestion("");
         setAttachments([]);
-        // ToDo: 導向 /ai_consultation_room/{threadId} 頁面
+        // Info: (20260212 - Julian) 延遲 500 ms 後導向 /ai_consultation_room/{threadId} 頁面
+        setTimeout(() => {
+          if (data.payload && data.payload.threadId) {
+            router.push(`/ai_consultation_room/${data.payload.threadId}`);
+          }
+        }, 500);
       } else {
         console.error("Failed to create thread:", data.message);
       }

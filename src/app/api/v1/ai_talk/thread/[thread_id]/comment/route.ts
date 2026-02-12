@@ -9,16 +9,25 @@ import { getIdentityFromDeWT } from '@/lib/auth/dewt';
  * 取得討論串的評論
  * GET /api/v1/ai_talk/thread/:thread_id/comment
  */
-export async function GET(_request: Request, { params }: { params: Promise<{ thread_id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ thread_id: string }> }) {
   try {
+     // Info: (20260212 - Julian) Verify Token & Get User
+   const authHeader = request.headers.get('Authorization');
+   const user = await getIdentityFromDeWT(authHeader);
+
+   if (!user) {
+     console.error('User not found');
+     return jsonFail(ApiCode.NOT_FOUND, 'User not found');
+   }
+
     const { thread_id:threadId } = await params;
 
     if (!threadId) {
       return jsonFail(ApiCode.VALIDATION_ERROR, 'Invalid thread ID');
     }
 
-    // ToDo: 取得登入的使用者
-    const loginUserId = ''
+    // Info: (20260212 - Julian) 取得登入的使用者
+    const loginUserId = user.id;
 
     // Info: (20260212 - Julian) 一次取得該討論串所有評論及其關聯資料
     const comments = await prisma.comment.findMany({
@@ -112,13 +121,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       where: { name: replyTo },
     }) : null;
 
+    // Info: (20260212 - Julian) 取得登入的使用者
+    const loginUserId = user.id;
 
     // Info: (20260212 - Julian) 限制巢狀評論只有兩層：如果評論已有 parentCommentId，則直接使用該 parentCommentId
     const parentCommentId = parentComment?.parentCommentId || parentComment?.id || null
 
-    const comment = await prisma.comment.create({
+    // Info: (20260212 - Julian) 新增評論
+   await prisma.comment.create({
       data: { 
-        userId: user.id,
+        userId: loginUserId,
         threadId, 
         content, 
         isProfessional,
@@ -127,9 +139,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       },
     })
     
-    return jsonOk({
-        message: `Comment created successfully, commentId: ${comment.id}`,
-    });
+    return jsonOk({});
   } 
   catch (error) {
     console.error(`[API] /thread/${(await params).thread_id}/comment error:`, error);

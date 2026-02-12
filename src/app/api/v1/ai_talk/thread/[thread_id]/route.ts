@@ -25,7 +25,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ thre
       return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Thread not found');
     }
 
-    // ToDo: 取得登入的使用者
+    // Info: (20260212 - Julian) 取得登入的使用者
     const currentUserId = user?.id ?? ''
 
     // Info: (20260212 - Julian) 取得討論串的作者

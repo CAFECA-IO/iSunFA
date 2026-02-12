@@ -39,7 +39,7 @@ export const CommentPostInput = ({
 
     try {
       setIsSubmitting(true);
-      const data = await request<IApiResponse<{message: string}>>(`/api/v1/ai_talk/thread/${talkId}/comment`, {
+      const data = await request<IApiResponse<object>>(`/api/v1/ai_talk/thread/${talkId}/comment`, {
         method: "POST",
         body: JSON.stringify({
           content: value,

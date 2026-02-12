@@ -12,7 +12,9 @@ import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 export async function GET() {
   try {
     // Info: (20260212 - Julian) 取得所有討論串
-    const threads = await prisma.thread.findMany()
+    const threads = await prisma.thread.findMany({
+      orderBy: {createdAt: 'desc'}, // Info: (20260212 - Julian) 依建立時間倒序
+    })
     
     // Info: (20260212 - Julian) 取得與討論串關聯的標籤
     const tagIds = await prisma.threadTag.findMany({
@@ -72,14 +74,6 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { question /* , attachments = [] */ } = body;
-
-        if (!question) {
-      console.error('Missing question');
-      return jsonFail(ApiCode.VALIDATION_ERROR, 'Question is required');
-    }
-
          // Info: (20260212 - Julian) Verify Token & Get User
        const authHeader = request.headers.get('Authorization');
        const user = await getIdentityFromDeWT(authHeader);
@@ -89,13 +83,21 @@ export async function POST(request: NextRequest) {
          return jsonFail(ApiCode.NOT_FOUND, 'User not found');
        }
 
+    const body = await request.json();
+    const { question /* , attachments = [] */ } = body;
+
+    if (!question) {
+      console.error('Missing question');
+      return jsonFail(ApiCode.VALIDATION_ERROR, 'Question is required');
+    }
+
     const author = await prisma.user.findUnique({
       where: {address: user.address},
     });
 
     if (!author) {
-      console.error('User not found');
-      return jsonFail(ApiCode.NOT_FOUND, 'User not found');
+      console.error('Author not found');
+      return jsonFail(ApiCode.NOT_FOUND, 'Author not found');
     }
 
     // Info: (20260212 - Julian) 建立討論串
@@ -108,13 +110,17 @@ export async function POST(request: NextRequest) {
     });
 
     // Info: (20260212 - Julian) 建立標籤
-    const tags = await prisma.tag.create({
-      data: {name: '稅法'},
+    const tags = await prisma.tag.upsert({
+      where: {name: '稅法'},
+      create: {name: '稅法'},
+      update: {},
     });
 
     // Info: (20260212 - Julian) 建立討論串和標籤的關聯
-   await prisma.threadTag.create({
-      data: {threadId: thread.id, tagId: tags.id},
+   await prisma.threadTag.upsert({
+      where: {threadId_tagId: {threadId: thread.id, tagId: tags.id}},
+      create: {threadId: thread.id, tagId: tags.id},
+      update: {},
     });
 
     // const apiKey = process.env.GEMINI_API_KEY;
