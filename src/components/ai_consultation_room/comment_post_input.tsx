@@ -23,7 +23,7 @@ export const CommentPostInput = ({
   const { user } = useAuth();
 
   const params = useParams();
-  const talkId = params?.talkId as string;
+  const talkId = params?.talk_id as string;
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleSubmit = async () => {

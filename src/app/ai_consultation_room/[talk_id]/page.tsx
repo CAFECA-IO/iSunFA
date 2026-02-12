@@ -30,7 +30,7 @@ export default function AiTalkDetailPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const params = useParams();
-  const talkId = params?.talkId ?? "";
+  const talkId = params?.talk_id ?? "";
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [data, setData] = useState<IThreadDetail | null>(null);

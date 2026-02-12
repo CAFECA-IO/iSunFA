@@ -107,14 +107,14 @@ model Task {
 }
 
 // Info: (20260211 - Julian) AI Consultation Room
-// 討論串
+// Info: (20260212 - Julian) 討論串
 model Thread {
   id          Int          @id @default(autoincrement())
-  authorId    String
-  author      User         @relation(fields: [authorId], references: [id])
+  userId      String       @map("user_id")
+  user        User         @relation(fields: [userId], references: [id])
   question    String       @db.Text
   answer      String?      @db.Text
-  createdAt   DateTime     @default(now())
+  createdAt   DateTime     @default(now()) @map("created_at")
   attachments Attachment[]
   comments    Comment[]
   reactions   Reaction[]
@@ -123,41 +123,41 @@ model Thread {
   @@map("thread")
 }
 
-// 附件：儲存圖片資訊
+// Info: (20260212 - Julian) 附件：儲存圖片資訊
 model Attachment {
   id       String @id @default(uuid())
-  threadId Int
+  threadId Int    @map("thread_id")
   thread   Thread @relation(fields: [threadId], references: [id])
-  fileName String
+  fileName String @map("file_name")
   url      String
-  fileSize Int
-  mimeType String
+  fileSize Int    @map("file_size")
+  mimeType String @map("mime_type")
 
   @@map("attachment")
 }
 
-// 評論：支援巢狀回覆
+// Info: (20260212 - Julian) 評論：支援巢狀回覆
 model Comment {
   id       String @id @default(uuid())
   content  String @db.Text
-  authorId String
-  author   User   @relation(fields: [authorId], references: [id])
-  threadId Int
+  userId   String @map("user_id")
+  user     User   @relation(fields: [userId], references: [id])
+  threadId Int    @map("thread_id")
   thread   Thread @relation(fields: [threadId], references: [id])
 
-  // 巢狀邏輯
-  parentId String?
-  parent   Comment?  @relation("ReplyTo", fields: [parentId], references: [id])
-  replies  Comment[] @relation("ReplyTo")
+  // Info: (20260212 - Julian) 巢狀邏輯
+  parentCommentId String?   @map("parent_comment_id")
+  parentComment   Comment?  @relation("ReplyTo", fields: [parentCommentId], references: [id])
+  replies         Comment[] @relation("ReplyTo")
 
-  createdAt      DateTime   @default(now())
-  isProfessional Boolean    @default(false)
+  createdAt      DateTime   @default(now()) @map("created_at")
+  isProfessional Boolean    @default(false) @map("is_professional")
   reactions      Reaction[]
 
   @@map("comment")
 }
 
-// 討論串標籤
+// Info: (20260212 - Julian) 討論串標籤
 model Tag {
   id      Int      @id @default(autoincrement())
   name    String   @unique
@@ -171,27 +171,27 @@ enum ReactionType {
   DISLIKE
 }
 
-// 討論串的按讚
+// Info: (20260212 - Julian) 討論串的按讚
 model Reaction {
   id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
 
-  // 評價類型：是讚還是倒讚
+  // Info: (20260212 - Julian) 評價類型：是讚還是倒讚
   type ReactionType
 
-  // 關聯使用者
-  userId String
+  // Info: (20260212 - Julian) 關聯使用者
+  userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id])
 
-  // 關聯討論串
-  threadId Int?
+  // Info: (20260212 - Julian) 關聯討論串
+  threadId Int?    @map("thread_id")
   thread   Thread? @relation(fields: [threadId], references: [id])
 
-  // 關聯評論
-  commentId String?
+  // Info: (20260212 - Julian) 關聯評論
+  commentId String?  @map("comment_id")
   comment   Comment? @relation(fields: [commentId], references: [id])
 
-  // 核心約束：一個使用者對同一個物件只能有一個評價
+  // Info: (20260212 - Julian) 核心約束：一個使用者對同一個物件只能有一個評價
   @@unique([userId, threadId])
   @@unique([userId, commentId])
   @@map("reaction")
