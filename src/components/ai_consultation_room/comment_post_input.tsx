@@ -1,10 +1,20 @@
 import { useState } from "react";
+import { request } from "@/lib/utils/request";
 import { User, Send, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useParams } from "next/navigation";
 import { ApiCode } from "@/lib/utils/status";
 import LoginButton from "@/components/common/login_button";
 import { useAuth } from "@/contexts/auth_context";
+import { IApiResponse } from "@/lib/utils/response";
+
+interface ICommentPostInput{
+    isShowInput: boolean;
+  value: string;
+  onChange: (val: string) => void;
+  parentId?: string;
+  onSuccess?: () => void;
+}
 
 export const CommentPostInput = ({
   isShowInput,
@@ -12,13 +22,7 @@ export const CommentPostInput = ({
   onChange,
   parentId = "",
   onSuccess,
-}: {
-  isShowInput: boolean;
-  value: string;
-  onChange: (val: string) => void;
-  parentId?: string;
-  onSuccess?: () => void;
-}) => {
+}: ICommentPostInput) => {
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -26,23 +30,24 @@ export const CommentPostInput = ({
   const talkId = params?.talk_id as string;
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+  // ToDo: (20260112 - Julian) 新增 @ 其他用戶的功能
+  const replyTo = value.includes("@") ? value.split("@")[1] : "";
+
+  // Info: (20260212 - Julian) 處理提交
   const handleSubmit = async () => {
-    if (!value.trim() || isSubmitting) return;
+    if (!value.trim() || isSubmitting || !user) return;
 
     try {
       setIsSubmitting(true);
-      const response = await fetch(`/api/v1/ai_talk/thread/${talkId}/comment`, {
+      const data = await request<IApiResponse<object>>(`/api/v1/ai_talk/thread/${talkId}/comment`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           content: value,
-          parentId: parentId,
+          parentId,
+          isProfessional: false, // ToDo: (20260112 - Julian) 判斷是否為專業人士
+          replyTo 
         }),
       });
-
-      const data = await response.json();
       if (data.code === ApiCode.SUCCESS) {
         onChange("");
         onSuccess?.();

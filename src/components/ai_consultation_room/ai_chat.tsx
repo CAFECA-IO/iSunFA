@@ -1,4 +1,6 @@
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { request } from "@/lib/utils/request";
 import Image from "next/image";
 import {
   PlusIcon,
@@ -14,9 +16,11 @@ import { useAuth } from "@/contexts/auth_context";
 import { IAttachment } from "@/interfaces/ai_talk";
 import { ApiCode } from "@/lib/utils/status";
 import LoginButton from "@/components/common/login_button";
+import { IApiResponse } from "@/lib/utils/response";
 
 export const AiChat = () => {
   const { t } = useTranslation();
+  const router = useRouter();
   const { user } = useAuth();
   const { isChatOpen, setIsChatOpen } = useAiContext();
 
@@ -30,26 +34,27 @@ export const AiChat = () => {
   const isSubmitDisabled = !question.trim() || isUploading || isSubmitting;
 
   const handleSubmit = async () => {
-    if (isSubmitDisabled) return;
+    if (isSubmitDisabled || !user) return;
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/v1/ai_talk/thread", {
+      const data = await request<IApiResponse<{threadId: string}>>("/api/v1/ai_talk/thread", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           question,
           attachments: attachments.map((att) => att.id),
         }),
       });
 
-      const data = await response.json();
       if (data.code === ApiCode.SUCCESS) {
         setQuestion("");
         setAttachments([]);
-        // Optional: Provide feedback or redirect
+        // Info: (20260212 - Julian) 延遲 500 ms 後導向 /ai_consultation_room/{threadId} 頁面
+        setTimeout(() => {
+          if (data.payload && data.payload.threadId) {
+            router.push(`/ai_consultation_room/${data.payload.threadId}`);
+          }
+        }, 500);
       } else {
         console.error("Failed to create thread:", data.message);
       }
@@ -143,11 +148,10 @@ export const AiChat = () => {
 
   const removeFile = async (id: string) => {
     try {
-      const response = await fetch(`/api/v1/ai_talk/attachment/${id}`, {
+      const data = await request<IApiResponse<{ id: string }>>(`/api/v1/ai_talk/attachment/${id}`, {
         method: "DELETE",
       });
 
-      const data = await response.json();
       if (data.code === ApiCode.SUCCESS) {
         setAttachments((prev) => prev.filter((att) => att.id !== id));
       }

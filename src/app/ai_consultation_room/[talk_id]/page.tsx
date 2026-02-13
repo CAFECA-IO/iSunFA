@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { request } from "@/lib/utils/request";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/landing_page/header";
 import Footer from "@/components/landing_page/footer";
-import { IThreadDetail } from "@/interfaces/ai_talk";
+import { IThreadDetail, UserReaction } from "@/interfaces/ai_talk";
 import { timestampToString } from "@/lib/utils/common";
 import {
   ChevronLeft,
@@ -25,6 +26,7 @@ import { CommentSection } from "@/components/ai_consultation_room/comment_sectio
 import { AttachmentItem } from "@/components/ai_consultation_room/attachment_item";
 import { AiChat } from "@/components/ai_consultation_room/ai_chat";
 import { ApiCode } from "@/lib/utils/status";
+import { IApiResponse } from "@/lib/utils/response";
 
 export default function AiTalkDetailPage() {
   const { t } = useTranslation();
@@ -34,8 +36,7 @@ export default function AiTalkDetailPage() {
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [data, setData] = useState<IThreadDetail | null>(null);
-  const [liked, setLiked] = useState<boolean>(false);
-  const [disliked, setDisliked] = useState<boolean>(false);
+  const [userReaction, setUserReaction] = useState<"LIKE"|"DISLIKE"|null>(null);
 
   useEffect(() => {
     if (!talkId) return;
@@ -43,11 +44,11 @@ export default function AiTalkDetailPage() {
     const fetchThreadDetail = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/v1/ai_talk/thread/${talkId}`);
-        const result = await response.json();
+        const result = await request<IApiResponse<IThreadDetail>>(`/api/v1/ai_talk/thread/${talkId}`);
         
         if (result.code === ApiCode.SUCCESS) {
           setData(result.payload);
+          setUserReaction(result?.payload?.userReaction ?? null);
         } else {
           setData(null);
         }
@@ -63,23 +64,18 @@ export default function AiTalkDetailPage() {
   }, [talkId]);
 
   const handleReaction = async (reaction: "LIKE" | "DISLIKE") => {
-    if (!talkId || !user) return;
+    if (!(talkId && user)) return;
 
     try {
-      const response = await fetch(`/api/v1/ai_talk/thread/${talkId}/react`, {
+      const result = await request<IApiResponse<{ countOfLike: number; countOfDislike: number; userReaction: UserReaction }>>(`/api/v1/ai_talk/thread/${talkId}/react`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({ reaction }),
       });
 
-      const result = await response.json();
-      if (result.code === ApiCode.SUCCESS) {
+      if (result.code === ApiCode.SUCCESS && result.payload) {
         const { countOfLike, countOfDislike, userReaction } = result.payload;
         setData((prev) => (prev ? { ...prev, countOfLike, countOfDislike } : null));
-        setLiked(userReaction === "LIKE");
-        setDisliked(userReaction === "DISLIKE");
+        setUserReaction(userReaction);
       }
     } catch (error) {
       console.error("Failed to post reaction:", error);
@@ -169,7 +165,7 @@ export default function AiTalkDetailPage() {
             </div>
             <div className="flex items-center gap-1.5 text-gray-400">
               <User size={16} />
-              <span>{data.authorId}</span>
+              <span>{data.authorName}</span>
             </div>
           </header>
 
@@ -240,9 +236,9 @@ export default function AiTalkDetailPage() {
                 disabled={!user}
                 title={!user ? t("ai_consultation_room.login_to_react") : ""}
                 className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  liked
+                  userReaction ===  'LIKE'
                     ? "bg-orange-600 text-white  border-transparent"
-                    : "bg-white border-orange-200 hover:bg-orange-50 "
+                    : "bg-white border-orange-200 enabled:hover:bg-orange-50 "
                 }`}
               >
                 <ThumbsUp size={18} />
@@ -258,9 +254,9 @@ export default function AiTalkDetailPage() {
                 disabled={!user}
                 title={!user ? t("ai_consultation_room.login_to_react") : ""}
                 className={`flex items-center gap-2 border px-5 py-2.5 rounded-2xl text-orange-500 font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  disliked
+                  userReaction === 'DISLIKE'
                     ? "bg-orange-600 text-white border-transparent"
-                    : "bg-white border-orange-200 hover:bg-orange-50 "
+                    : "bg-white border-orange-200 enabled:hover:bg-orange-50 "
                 }`}
               >
                 <ThumbsDown size={18} />
@@ -283,7 +279,7 @@ export default function AiTalkDetailPage() {
         </section>
 
         {/* Info: (20260206 - Julian) 3. 評論區塊 */}
-        <CommentSection comments={data.comments} />
+        <CommentSection />
 
         {/* Info: (20260208 - Julian) 4. AI 聊天區塊 */}
         <AiChat />
