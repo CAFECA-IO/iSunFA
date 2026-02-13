@@ -595,6 +595,7 @@ export const en = {
     reply: 'Reply',
     view_image: 'View Image: {name}',
     download_original: 'Download Original File',
+    login_to_react: 'Please login to react',
     ai_name: 'AccounTalk AI',
     q_label: 'Q',
     ai_label: 'AI',

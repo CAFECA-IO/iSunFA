@@ -619,6 +619,7 @@ export const zhTw = {
     reply: '回覆',
     view_image: '查看圖片: {name}',
     download_original: '下載原始檔案',
+    login_to_react: '登入後即可按讚或倒讚',
     ai_name: 'AccounTalk AI',
     q_label: 'Q',
     ai_label: 'AI',

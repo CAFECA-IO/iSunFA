@@ -55,6 +55,9 @@ export function formatTime(timestamp: number, now: number) {
 
   if (diff < 60) {
     return "Just now";
+  } else if (diff < 3600) {
+    const minutes = Math.floor(diff / 60);
+    return `${minutes} minutes ago`;
   } else if (diff < 86400) {
     const hours = Math.floor(diff / 3600);
     return `${hours} hours ago`;

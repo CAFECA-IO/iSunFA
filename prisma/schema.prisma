@@ -14,8 +14,12 @@ enum Role {
 
 model User {
   id               String   @id @default(uuid())
-  identityAddress  String?  @map("identity_address") // Info: (20260112 - Tzuhan) RWA Identity Contract (ONCHAINID)
-  address          String   @unique //  Info: (20260112 - Tzuhan) 用戶的錢包 (address) 是這個 RWA Identity Contract 合約的 Owner
+
+  // Info: (20260112 - Tzuhan) RWA Identity Contract (ONCHAINID)
+  identityAddress  String?  @map("identity_address")
+
+  //  Info: (20260112 - Tzuhan) 用戶的錢包 (address) 是這個 RWA Identity Contract 合約的 Owner
+  address          String   @unique
   pubKeyX          String?  @map("pub_key_x")
   pubKeyY          String?  @map("pub_key_y")
   credentialId     String?  @unique @map("credential_id")
@@ -27,78 +31,211 @@ model User {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  orders           Order[]
-  analyses         Analysis[]
-  missions         Mission[]
+  orders          Order[]
+  analyses        Analysis[]
+  missions        Mission[]
+  threads         Thread[]
+  comments        Comment[]
+  receivedReplies Comment[]  @relation("CommentRecipient")
+  reactions       Reaction[]
 
-  @@map("user")
   @@index([address])
+  @@map("user")
 }
 
 model Order {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  user        User     @relation(fields: [userId], references: [id])
-  type        String
-  amount      Int
-  data        Json
-  status      String   @default("PENDING")
-  challenge   String
-  signature   String?
-  transactionHash String? @map("transaction_hash")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id])
+  type            String
+  amount          Int
+  data            Json
+  status          String   @default("PENDING")
+  challenge       String
+  signature       String?
+  transactionHash String?  @map("transaction_hash")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
-  analysis    Analysis[]
+  analysis Analysis[]
 
   @@map("order")
 }
 
 // Info: (20260128 - Luphia) Analysis 直接將 data 與 result 放在 mission 裡面
 model Analysis {
-  id          String   @id
-  userId      String   @map("user_id")
-  user        User     @relation(fields: [userId], references: [id])
-  orderId     String   @map("order_id")
-  order       Order    @relation(fields: [orderId], references: [id])
-  type        String
-  data        Json
-  result      Json?
-  missionId   String?  @map("mission_id")
-  mission     Mission? @relation(fields: [missionId], references: [id])
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        String   @id
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  orderId   String   @map("order_id")
+  order     Order    @relation(fields: [orderId], references: [id])
+  type      String
+  data      Json
+  result    Json?
+  missionId String?  @map("mission_id")
+  mission   Mission? @relation(fields: [missionId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("analysis")
 }
 
 model Mission {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  user        User     @relation(fields: [userId], references: [id])
-  name        String
-  status      String   @default("PENDING") // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
-  tasks       Task[]
-  analyses    Analysis[]
-  data        Json?
-  result      Json?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        String     @id @default(uuid())
+  userId    String     @map("user_id")
+  user      User       @relation(fields: [userId], references: [id])
+  name      String
+
+  // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
+  status    String     @default("PENDING")
+  tasks     Task[]
+  analyses  Analysis[]
+  data      Json?
+  result    Json?
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
 
   @@map("mission")
 }
 
 model Task {
-  id          String   @id @default(uuid())
-  missionId   String   @map("mission_id")
-  mission     Mission  @relation(fields: [missionId], references: [id])
-  type        String
-  status      String   @default("PENDING") // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
-  order       Int      @default(0) // Info: (20260128 - Luphia) Execution order. Equal values = parallel
-  data        Json?
-  result      Json?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(uuid())
+  missionId String   @map("mission_id")
+  mission   Mission  @relation(fields: [missionId], references: [id])
+  type      String
+
+  // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
+  status    String   @default("PENDING")
+
+  // Info: (20260128 - Luphia) Execution order. Equal values = parallel
+  order     Int      @default(0)
+  data      Json?
+  result    Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("task")
+}
+
+// Info: (20260211 - Julian) AI Consultation Room 討論串
+model Thread {
+  id          String       @id @default(uuid())
+  userId      String       @map("user_id")
+  user        User         @relation(fields: [userId], references: [id])
+  question    String       @db.Text
+  answer      String?      @db.Text
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  attachments Attachment[]
+  comments    Comment[]
+  reactions   Reaction[]
+  tags        ThreadTag[]
+  shares      Share[]
+
+  @@map("thread")
+}
+
+// Info: (20260212 - Julian) 附件：儲存圖片資訊
+model Attachment {
+  id       String @id @default(uuid())
+  threadId String @map("thread_id")
+  thread   Thread @relation(fields: [threadId], references: [id])
+  fileName String @map("file_name")
+  url      String
+  fileSize Int    @map("file_size")
+  mimeType String @map("mime_type")
+
+  @@map("attachment")
+}
+
+// Info: (20260212 - Julian) 評論：支援巢狀回覆
+model Comment {
+  id       String @id @default(uuid())
+  content  String @db.Text
+  userId   String @map("user_id")
+  user     User   @relation(fields: [userId], references: [id])
+  threadId String @map("thread_id")
+  thread   Thread @relation(fields: [threadId], references: [id])
+
+  // Info: (20260212 - Julian) 巢狀邏輯
+  parentCommentId String?   @map("parent_comment_id")
+  parentComment   Comment?  @relation("ReplyTo", fields: [parentCommentId], references: [id])
+  replies         Comment[] @relation("ReplyTo")
+
+  // Info: (20260212 - Julian) 回覆對象
+  replyToUserId String? @map("reply_to_user_id")
+  replyToUser   User?   @relation("CommentRecipient", fields: [replyToUserId], references: [id])
+
+  createdAt      DateTime   @default(now()) @map("created_at")
+  deletedAt      DateTime?  @map("deleted_at")
+  isProfessional Boolean    @default(false) @map("is_professional")
+  reactions      Reaction[]
+
+  @@map("comment")
+}
+
+// Info: (20260212 - Julian) 討論串標籤
+model Tag {
+  id      String      @id @default(uuid())
+  name    String      @unique
+  threads ThreadTag[]
+
+  @@map("tag")
+}
+
+enum ReactionType {
+  LIKE
+  DISLIKE
+}
+
+// Info: (20260212 - Julian) 討論串的按讚
+model Reaction {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Info: (20260212 - Julian) 評價類型：是讚還是倒讚
+  type ReactionType
+
+  // Info: (20260212 - Julian) 關聯使用者
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Info: (20260212 - Julian) 關聯討論串
+  threadId String? @map("thread_id")
+  thread   Thread? @relation(fields: [threadId], references: [id])
+
+  // Info: (20260212 - Julian) 關聯評論
+  commentId String?  @map("comment_id")
+  comment   Comment? @relation(fields: [commentId], references: [id])
+
+  // Info: (20260212 - Julian) 核心約束：一個使用者對同一個物件只能有一個評價
+  @@unique([userId, threadId])
+  @@unique([userId, commentId])
+  @@map("reaction")
+}
+
+// Info: (20260212 - Julian) 討論串的分享紀錄
+model Share {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Info: (20260212 - Julian) 關聯討論串
+  threadId String @map("thread_id")
+  thread   Thread @relation(fields: [threadId], references: [id])
+
+  @@map("share")
+}
+
+// Info: (20260212 - Julian) Threads - Tags
+model ThreadTag {
+  threadId  String   @map("thread_id")
+  thread    Thread   @relation(fields: [threadId], references: [id])
+  tagId     String   @map("tag_id")
+  tag       Tag      @relation(fields: [tagId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Info: (20260212 - Julian) 討論串和標籤是多對多的關係
+  @@id([threadId, tagId])
+  @@map("thread_tag")
 }
