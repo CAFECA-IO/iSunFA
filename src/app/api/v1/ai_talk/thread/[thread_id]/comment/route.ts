@@ -6,7 +6,7 @@ import { IComment } from '@/interfaces/ai_talk';
 import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 
 /**
- * 取得討論串的評論
+ * Info: (20260112 - Julian) 取得討論串的評論
  * GET /api/v1/ai_talk/thread/:thread_id/comment
  */
 export async function GET(request: Request, { params }: { params: Promise<{ thread_id: string }> }) {
@@ -63,11 +63,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ thre
 
     const rootComments: IComment[] = [];
     formattedComments.forEach(c => {
-      // 如果有父評論，且父評論在同一個 Thread 下，則加入父評論的 replies
+      // Info: (20260112 - Julian) 如果有父評論，且父評論在同一個 Thread 下，則加入父評論的 replies
       if (c.parentId && commentMap.has(c.parentId)) {
         commentMap.get(c.parentId)!.replies.push(c);
       } else {
-        // 沒有父評論，或者是頂層評論
+        // Info: (20260112 - Julian) 沒有父評論，或者是頂層評論
         rootComments.push(c);
       }
     });
@@ -80,7 +80,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ thre
 }
 
 /**
- * 新增評論或回覆
+ * Info: (20260112 - Julian) 新增評論或回覆
  * POST /api/v1/ai_talk/thread/:thread_id/comment
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ thread_id: string }> }) {
