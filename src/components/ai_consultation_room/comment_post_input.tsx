@@ -8,8 +8,8 @@ import LoginButton from "@/components/common/login_button";
 import { useAuth } from "@/contexts/auth_context";
 import { IApiResponse } from "@/lib/utils/response";
 
-interface ICommentPostInput{
-    isShowInput: boolean;
+interface ICommentPostInput {
+  isShowInput: boolean;
   value: string;
   onChange: (val: string) => void;
   parentId?: string;
@@ -39,15 +39,18 @@ export const CommentPostInput = ({
 
     try {
       setIsSubmitting(true);
-      const data = await request<IApiResponse<object>>(`/api/v1/ai_talk/thread/${talkId}/comment`, {
-        method: "POST",
-        body: JSON.stringify({
-          content: value,
-          parentId,
-          isProfessional: false, // ToDo: 判斷是否為專業人士
-          replyTo 
-        }),
-      });
+      const data = await request<IApiResponse<object>>(
+        `/api/v1/ai_talk/thread/${talkId}/comment`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            content: value,
+            parentId,
+            isProfessional: false, // ToDo: 判斷是否為專業人士
+            replyTo,
+          }),
+        },
+      );
       if (data.code === ApiCode.SUCCESS) {
         onChange("");
         onSuccess?.();
@@ -60,12 +63,12 @@ export const CommentPostInput = ({
   };
 
   // Info: (20260213 Julian) 處理按鍵事件
-    const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     // Info: (20260213 Julian) 如果正在輸入法組字（選字）中，就直接跳過不執行
     if (e.nativeEvent.isComposing) {
       return;
     }
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }

@@ -1,5 +1,5 @@
-import { jsonOk, jsonFail } from '@/lib/utils/response';
-import { ApiCode } from '@/lib/utils/status';
+import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
 
 /**
  * 上傳發票圖片
@@ -10,17 +10,16 @@ export async function POST() {
     // For now, return a mock attachment
     const mockAttachment = {
       id: Math.random().toString(36).substring(7),
-      fileName: 'uploaded_file.png',
-      url: '/test/電子紙本發票2.png',
+      fileName: "uploaded_file.png",
+      url: "/test/電子紙本發票2.png",
       fileSize: 1024 * 1024,
-      mimeType: 'image/png',
-      thumbnailUrl: '/test/電子紙本發票2.png',
+      mimeType: "image/png",
+      thumbnailUrl: "/test/電子紙本發票2.png",
     };
-    
-    return jsonOk(mockAttachment, 'Attachment uploaded successfully');
-  } 
-  catch (error) {
-    console.error('[API] /attachment/upload error:', error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+
+    return jsonOk(mockAttachment, "Attachment uploaded successfully");
+  } catch (error) {
+    console.error("[API] /attachment/upload error:", error);
+    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }
