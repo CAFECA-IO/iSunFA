@@ -1,9 +1,7 @@
 import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
 
-/**
- * 上傳發票圖片
- */
+// Info: (20260212 - Julian) 上傳發票圖片
 export async function POST() {
   try {
     // Info: (20260211 - Antigravity) In real implementation, you would process the file here
