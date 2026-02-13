@@ -15,17 +15,19 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const isImage = attachment.mimeType.startsWith("image/");
+  const localFileUrl = `/api/v1/file/${attachment.id}`;
 
-  const thumbnail = attachment.thumbnailUrl ? (
+  const thumbnail = isImage ? (
     <div className="rounded-xl overflow-hidden relative w-full flex items-center justify-center mb-1 h-[90px] shrink-0">
       <Image
-        src={attachment.thumbnailUrl}
+        src={localFileUrl}
         alt={attachment.fileName}
         fill
         className="object-contain group-hover:bg-orange-50 transition-colors"
       />
     </div>
   ) : (
+
     <div className="bg-gray-50 rounded-xl w-full h-full flex items-center justify-center mb-1 group-hover:bg-orange-50 transition-colors">
       <Paperclip
         className="text-gray-400 group-hover:text-orange-500 transition-colors"
@@ -100,7 +102,7 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
 
                   <div className="relative w-full aspect-video min-h-[300px] max-h-[85vh] bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center">
                     <Image
-                      src={attachment.url}
+                      src={localFileUrl}
                       alt={attachment.fileName}
                       fill
                       className="object-contain"
@@ -119,7 +121,7 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
                       </p>
                     </div>
                     <a
-                      href={attachment.url}
+                      href={localFileUrl}
                       download={attachment.fileName}
                       className="bg-orange-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-orange-500 transition-all active:scale-95"
                     >
