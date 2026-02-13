@@ -59,6 +59,18 @@ export const CommentPostInput = ({
     }
   };
 
+  // Info: (20260213 Julian) 處理按鍵事件
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Info: (20260213 Julian) 如果正在輸入法組字（選字）中，就直接跳過不執行
+    if (e.nativeEvent.isComposing) {
+      return;
+    }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   const displayedSubmit = user ? (
     <button
       onClick={handleSubmit}
@@ -90,6 +102,7 @@ export const CommentPostInput = ({
             aria-label={t("ai_consultation_room.submit_comment")}
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder={t("ai_consultation_room.comment_placeholder")}
             className="w-full bg-white border border-orange-100 rounded-2xl p-4 text-sm focus:outline-none focus:border-orange-500 transition-all placeholder:text-gray-300 min-h-[100px] resize-none shadow-sm"
           />

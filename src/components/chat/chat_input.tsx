@@ -42,6 +42,10 @@ export default function ChatInput({ onSend, disabled, allowedTags }: IChatInputP
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Info: (20260213 Julian) 如果正在輸入法組字（選字）中，就直接跳過不執行
+    if (e.nativeEvent.isComposing) {
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
