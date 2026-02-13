@@ -22,7 +22,7 @@ export async function GET(
     const thread = await prisma.thread.findUnique({
       where: { id: threadId },
       include: {
-        attachments: true,
+        files: true,
       },
     });
 
@@ -71,16 +71,15 @@ export async function GET(
       where: { threadId: thread.id },
     });
 
-    // Info: (20260212 - Julian) 取得與討論串關聯的附件
-    const formattedAttachments: IAttachment[] = thread.attachments.map(
-      (attachment) => ({
-        id: attachment.id,
-        fileName: attachment.fileName,
-        url: attachment.url,
-        fileSize: attachment.fileSize,
-        mimeType: attachment.mimeType,
-      }),
-    );
+    // Info: (20260212 - Julian) 取得與討論串關聯的 File
+    const formattedAttachments: IAttachment[] = thread.files.map((file) => ({
+      id: file.id,
+      fileName: file.fileName,
+      url: file.url || "",
+      fileSize: file.fileSize,
+      mimeType: file.mimeType,
+    }));
+
 
     const response: IThreadDetail = {
       id: thread.id,

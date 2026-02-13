@@ -6,7 +6,6 @@ import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { ChatService } from "@/services/chat.service";
 
-
 /**
  * 取得所有討論串
  * GET /api/v1/ai_talk/thread
@@ -107,7 +106,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { question /* , attachments = [] */ } = body;
+    const { question, files = [] } = body;
 
     if (!question) {
       console.error("Missing question");
@@ -134,7 +133,21 @@ export async function POST(request: NextRequest) {
     }
 
     const chatService = new ChatService(apiKey);
-    const { answer, tags } = await chatService.askAccountTalk(question);
+
+    // Info: (20260213 - Julian) 整理圖片資料發給 AI (直接從 body 取得，不經由 DB)
+    const imagesForAi = files
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((f: any) => f.data && f.mimeType)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((f: any) => ({
+        data: f.data,
+        mimeType: f.mimeType,
+      }));
+
+    const { answer, tags } = await chatService.askAccountTalk(
+      question,
+      imagesForAi,
+    );
 
     // Info: (20260212 - Julian) 建立討論串
     const thread = await prisma.thread.create({
@@ -144,6 +157,20 @@ export async function POST(request: NextRequest) {
         answer: answer,
       },
     });
+
+    // Info: (20260213 - Julian) 建立已上傳檔案與討論串的關聯
+    const fileIds = files
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((f: any) => f.id)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((f: any) => f.id);
+
+    if (fileIds.length > 0) {
+      await prisma.file.updateMany({
+        where: { id: { in: fileIds } },
+        data: { threadId: thread.id },
+      });
+    }
 
     // Info: (20260212 - Julian) 建立標籤並關聯
     if (tags && tags.length > 0) {
