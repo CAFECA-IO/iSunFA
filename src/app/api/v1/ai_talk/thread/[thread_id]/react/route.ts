@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 
 /**
- * 對討論串點讚/倒讚
+ * Info: (20260112 - Julian) 對討論串點讚/倒讚
  * POST /api/v1/ai_talk/thread/:thread_id/react
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ thread_id: string }> }) {
