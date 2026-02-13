@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 
 /**
- * 取得所有討論串
+ * Info: (20260112 - Julian) 取得所有討論串
  * GET /api/v1/ai_talk/thread
  */
 export async function GET() {
@@ -69,7 +69,7 @@ export async function GET() {
 }
 
 /**
- * 向 AI 提問(建立討論串)
+ * Info: (20260112 - Julian) 向 AI 提問(建立討論串)
  * POST /api/v1/ai_talk/thread
  */
 export async function POST(request: NextRequest) {
