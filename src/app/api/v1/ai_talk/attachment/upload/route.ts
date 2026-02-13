@@ -1,10 +1,13 @@
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
+// import { prisma } from '@/lib/prisma';
 
 /**
  * 上傳發票圖片
+ * POST /api/v1/ai_talk/attachment/upload
  */
-export async function POST() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function POST(request: Request) {
   try {
     // Info: (20260211 - Antigravity) In real implementation, you would process the file here
     // For now, return a mock attachment
