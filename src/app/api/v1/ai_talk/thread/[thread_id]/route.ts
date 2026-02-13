@@ -21,6 +21,9 @@ export async function GET(
     const { thread_id: threadId } = await params;
     const thread = await prisma.thread.findUnique({
       where: { id: threadId },
+      include: {
+        attachments: true,
+      },
     });
 
     if (!thread) {
@@ -69,10 +72,7 @@ export async function GET(
     });
 
     // Info: (20260212 - Julian) 取得與討論串關聯的附件
-    const attachments = await prisma.attachment.findMany({
-      where: { threadId: thread.id },
-    });
-    const formattedAttachments: IAttachment[] = attachments.map(
+    const formattedAttachments: IAttachment[] = thread.attachments.map(
       (attachment) => ({
         id: attachment.id,
         fileName: attachment.fileName,
