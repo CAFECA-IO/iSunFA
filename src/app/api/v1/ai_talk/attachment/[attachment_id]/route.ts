@@ -2,9 +2,7 @@ import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
 // import { IAttachment } from '@/interfaces/ai_talk';
 
-/**
- * 刪除已上傳但尚未送出的圖片
- */
+// Info: (20260212 - Julian) 刪除已上傳但尚未送出的圖
 export async function DELETE({ params }: { params: Promise<{ attachment_id: string }> }) {
   try {
     // const { attachment_id: attachmentId } = await params;
