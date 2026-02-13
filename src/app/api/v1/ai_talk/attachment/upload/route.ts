@@ -4,8 +4,12 @@ import { ApiCode } from '@/lib/utils/status';
 // Info: (20260212 - Julian) 上傳發票圖片
 export async function POST() {
   try {
-    // Info: (20260211 - Antigravity) In real implementation, you would process the file here
-    // For now, return a mock attachment
+    /**
+     * ToDo: (20260211 - Julian) 檔案處理流程
+     * 使用 laria.ts 將檔案分隔保存至 IPFS
+     * 保留 metadata fid(hash) 值
+     * 目前回傳模擬附件資料，待後續實作
+     */
     const mockAttachment = {
       id: Math.random().toString(36).substring(7),
       fileName: 'uploaded_file.png',
