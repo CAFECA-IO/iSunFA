@@ -5,7 +5,7 @@ import { IAttachment, IThreadDetail } from "@/interfaces/ai_talk";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 
 /**
- * 取得單一討論串
+ * Info: (20260112 - Julian) 取得單一討論串
  * GET /api/v1/ai_talk/thread/:thread_id
  */
 

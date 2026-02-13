@@ -30,7 +30,7 @@ export const CommentPostInput = ({
   const talkId = params?.talk_id as string;
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // ToDo: 新增 @ 其他用戶的功能
+  // ToDo: (20260112 - Julian) 新增 @ 其他用戶的功能
   const replyTo = value.includes("@") ? value.split("@")[1] : "";
 
   // Info: (20260212 - Julian) 處理提交

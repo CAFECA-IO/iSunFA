@@ -14,8 +14,12 @@ enum Role {
 
 model User {
   id               String   @id @default(uuid())
-  identityAddress  String?  @map("identity_address") // Info: (20260112 - Tzuhan) RWA Identity Contract (ONCHAINID)
-  address          String   @unique //  Info: (20260112 - Tzuhan) 用戶的錢包 (address) 是這個 RWA Identity Contract 合約的 Owner
+
+  // Info: (20260112 - Tzuhan) RWA Identity Contract (ONCHAINID)
+  identityAddress  String?  @map("identity_address")
+
+  //  Info: (20260112 - Tzuhan) 用戶的錢包 (address) 是這個 RWA Identity Contract 合約的 Owner
+  address          String   @unique
   pubKeyX          String?  @map("pub_key_x")
   pubKeyY          String?  @map("pub_key_y")
   credentialId     String?  @unique @map("credential_id")
@@ -81,7 +85,9 @@ model Mission {
   userId    String     @map("user_id")
   user      User       @relation(fields: [userId], references: [id])
   name      String
-  status    String     @default("PENDING") // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
+
+  // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
+  status    String     @default("PENDING")
   tasks     Task[]
   analyses  Analysis[]
   data      Json?
@@ -97,8 +103,12 @@ model Task {
   missionId String   @map("mission_id")
   mission   Mission  @relation(fields: [missionId], references: [id])
   type      String
-  status    String   @default("PENDING") // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
-  order     Int      @default(0) // Info: (20260128 - Luphia) Execution order. Equal values = parallel
+
+  // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
+  status    String   @default("PENDING")
+
+  // Info: (20260128 - Luphia) Execution order. Equal values = parallel
+  order     Int      @default(0)
   data      Json?
   result    Json?
   createdAt DateTime @default(now()) @map("created_at")
@@ -107,8 +117,7 @@ model Task {
   @@map("task")
 }
 
-// Info: (20260211 - Julian) AI Consultation Room
-// Info: (20260212 - Julian) 討論串
+// Info: (20260211 - Julian) AI Consultation Room 討論串
 model Thread {
   id        String      @id @default(uuid())
   userId    String      @map("user_id")
