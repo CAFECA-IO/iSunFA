@@ -46,7 +46,7 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
           isImage
             ? t("ai_consultation_room.view_image").replace(
                 "{name}",
-                attachment.fileName
+                attachment.fileName,
               )
             : attachment.fileName
         }
@@ -135,4 +135,3 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
     </>
   );
 };
-

@@ -1,16 +1,81 @@
-import { User, Send } from "lucide-react";
+import { useState } from "react";
+import { request } from "@/lib/utils/request";
+import { User, Send, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useParams } from "next/navigation";
+import { ApiCode } from "@/lib/utils/status";
+import LoginButton from "@/components/common/login_button";
+import { useAuth } from "@/contexts/auth_context";
+import { IApiResponse } from "@/lib/utils/response";
+
+interface ICommentPostInput{
+    isShowInput: boolean;
+  value: string;
+  onChange: (val: string) => void;
+  parentId?: string;
+  onSuccess?: () => void;
+}
 
 export const CommentPostInput = ({
   isShowInput,
   value,
   onChange,
-}: {
-  isShowInput: boolean;
-  value: string;
-  onChange: (val: string) => void;
-}) => {
+  parentId = "",
+  onSuccess,
+}: ICommentPostInput) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+
+  const params = useParams();
+  const talkId = params?.talk_id as string;
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  // ToDo: (20260112 - Julian) 新增 @ 其他用戶的功能
+  const replyTo = value.includes("@") ? value.split("@")[1] : "";
+
+  // Info: (20260212 - Julian) 處理提交
+  const handleSubmit = async () => {
+    if (!value.trim() || isSubmitting || !user) return;
+
+    try {
+      setIsSubmitting(true);
+      const data = await request<IApiResponse<object>>(`/api/v1/ai_talk/thread/${talkId}/comment`, {
+        method: "POST",
+        body: JSON.stringify({
+          content: value,
+          parentId,
+          isProfessional: false, // ToDo: (20260112 - Julian) 判斷是否為專業人士
+          replyTo 
+        }),
+      });
+      if (data.code === ApiCode.SUCCESS) {
+        onChange("");
+        onSuccess?.();
+      }
+    } catch (error) {
+      console.error("Failed to post comment:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const displayedSubmit = user ? (
+    <button
+      onClick={handleSubmit}
+      disabled={!value.trim() || isSubmitting}
+      className="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 enabled:hover:bg-orange-500 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-md shadow-orange-200"
+    >
+      {isSubmitting ? (
+        <Loader2 size={16} className="animate-spin" />
+      ) : (
+        <Send size={16} />
+      )}
+      <span>{t("ai_consultation_room.submit_comment")}</span>
+    </button>
+  ) : (
+    <LoginButton label="Please login to comment" />
+  );
+
   return (
     <div
       className={`transition-all duration-300 overflow-hidden ${isShowInput ? "max-h-60 opacity-100 mb-6" : "max-h-0 opacity-0 mb-0"}`}
@@ -28,18 +93,9 @@ export const CommentPostInput = ({
             placeholder={t("ai_consultation_room.comment_placeholder")}
             className="w-full bg-white border border-orange-100 rounded-2xl p-4 text-sm focus:outline-none focus:border-orange-500 transition-all placeholder:text-gray-300 min-h-[100px] resize-none shadow-sm"
           />
-          <div className="flex justify-end">
-            <button
-              disabled={!value.trim()}
-              className="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 enabled:hover:bg-orange-500 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-md shadow-orange-200"
-            >
-              <Send size={16} />
-              <span>{t("ai_consultation_room.submit_comment")}</span>
-            </button>
-          </div>
+          <div className="flex justify-end">{displayedSubmit}</div>
         </div>
       </div>
     </div>
   );
 };
-

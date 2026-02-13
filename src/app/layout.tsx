@@ -7,6 +7,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
 import { I18nProvider } from "@/i18n/i18n_context";
 import { AuthProvider } from "@/contexts/auth_context";
+import { AiContextProvider } from "@/contexts/ai_context";
 import CookieConsent from "@/components/common/cookie_consent";
 
 const geistSans = Geist({
@@ -60,8 +61,10 @@ export default async function RootLayout({
       >
         <I18nProvider>
           <AuthProvider>
-            {children}
-            <CookieConsent privacyPolicyContent={privacyPolicyContent} />
+            <AiContextProvider>
+              {children}
+              <CookieConsent privacyPolicyContent={privacyPolicyContent} />
+            </AiContextProvider>
           </AuthProvider>
         </I18nProvider>
       </body>

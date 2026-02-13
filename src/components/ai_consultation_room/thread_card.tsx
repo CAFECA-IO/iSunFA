@@ -8,12 +8,11 @@ import { formatTime } from "@/lib/utils/common";
 import { IThread } from "@/interfaces/ai_talk";
 import { useTranslation } from "@/i18n/i18n_context";
 
-
 export const ThreadCard = ({
   id,
   question,
   answer,
-  authorId,
+  authorName,
   tags,
   createdAt,
   countOfLike,
@@ -41,7 +40,7 @@ export const ThreadCard = ({
             {t("ai_consultation_room.q_label")}
           </span>
           <p className="text-gray-700 text-xs">
-            {authorId}
+            {authorName}
             {displayedTime}
           </p>
         </div>
@@ -58,28 +57,27 @@ export const ThreadCard = ({
               {t("ai_consultation_room.ai_label")}
             </span>
             <div className="flex gap-1">
-              {tags.map((tag) => (
+              {tags?.map((tag) => (
                 <span key={tag} className="text-[10px] text-orange-400">
                   #{tag}
                 </span>
               ))}
             </div>
           </div>
-          <p className="text-xs text-orange-900 line-clamp-3 leading-relaxed">
-            {answer}
+          <p className="text-xs text-orange-900 line-clamp-2 leading-relaxed">
+            {answer ?? ""}
           </p>
         </div>
-
 
         {/* Info: (20260206 - Julian) Toolbar */}
         <div className="flex items-center gap-4 pt-2 mt-2 border-t border-orange-100/50">
           <div className="flex items-center gap-1 text-orange-400 ">
             <ThumbsUp size={14} />
-            <span className="text-xs">{countOfLike}</span>
+            <span className="text-xs">{countOfLike ?? 0}</span>
           </div>
           <div className="flex items-center gap-1 text-orange-400 ">
             <ThumbsDown size={14} />
-            <span className="text-xs">{countOfDislike}</span>
+            <span className="text-xs">{countOfDislike ?? 0}</span>
           </div>
           <div className="flex items-center gap-1 text-orange-400 ">
             <Share2 size={14} />

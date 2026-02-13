@@ -588,6 +588,7 @@ export const zhCn = {
     reply: '回复',
     view_image: '查看图片: {name}',
     download_original: '下载原始档案',
+    login_to_react: '登录后即可按赞或倒赞',
     ai_name: 'AccounTalk AI',
     q_label: 'Q',
     ai_label: 'AI',
