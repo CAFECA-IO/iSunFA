@@ -1,9 +1,10 @@
-import { NextRequest } from 'next/server';
-import { jsonOk, jsonFail } from '@/lib/utils/response';
-import { ApiCode } from '@/lib/utils/status';
-import { IThread } from '@/interfaces/ai_talk';
-import { prisma } from '@/lib/prisma';
-import { getIdentityFromDeWT } from '@/lib/auth/dewt';
+import { NextRequest } from "next/server";
+import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
+import { IThread } from "@/interfaces/ai_talk";
+import { prisma } from "@/lib/prisma";
+import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { ChatService } from "@/services/chat.service";
 
 /**
  * Info: (20260112 - Julian) 取得所有討論串
@@ -13,58 +14,79 @@ export async function GET() {
   try {
     // Info: (20260212 - Julian) 取得所有討論串
     const threads = await prisma.thread.findMany({
-      orderBy: {createdAt: 'desc'}, // Info: (20260212 - Julian) 依建立時間倒序
-    })
-    
+      orderBy: { createdAt: "desc" }, // Info: (20260212 - Julian) 依建立時間倒序
+      include: {
+        _count: {
+          select: {
+            comments: true,
+            shares: true,
+          },
+        },
+      },
+    });
+
     // Info: (20260212 - Julian) 取得與討論串關聯的標籤
     const tagIds = await prisma.threadTag.findMany({
-      where: {threadId: { in: threads.map((thread) => thread.id)}},
-    })
+      where: { threadId: { in: threads.map((thread) => thread.id) } },
+    });
     const tags = await prisma.tag.findMany({
-      where: {id: { in: tagIds.map((tagId) => tagId.tagId)}},
-    })
-
-    // Info: (20260212 - Julian) 取得與討論串關聯的按讚數、倒讚數
-    const likeCount = await prisma.reaction.count({
-      where: {threadId: { in: threads.map((thread) => thread.id)}, type: 'LIKE'},
-    })
-    const dislikeCount = await prisma.reaction.count({
-      where: {threadId: { in: threads.map((thread) => thread.id)}, type: 'DISLIKE'},
-    })
-
-    // Info: (20260212 - Julian) 取得討論串的評論數
-    const comments = await prisma.comment.count({
-      where: {threadId: { in: threads.map((thread) => thread.id)}},
-    })
-
-    // Info: (20260212 - Julian) 取得與討論串的分享數
-    const shareCount = await prisma.share.count({
-      where: {threadId: { in: threads.map((thread) => thread.id)}},
-    })
+      where: { id: { in: tagIds.map((tagId) => tagId.tagId) } },
+    });
 
     // Info: (20260212 - Julian) 取得討論串的使用者
     const users = await prisma.user.findMany({
-      where: {id: { in: threads.map((thread) => thread.userId)}},
-    })
+      where: { id: { in: threads.map((thread) => thread.userId) } },
+    });
+
+    // Info: (20260212 - Julian) 取得與討論串關聯的按讚數、倒讚數
+    const reactionCounts = await prisma.reaction.groupBy({
+      by: ["threadId", "type"],
+      _count: { _all: true },
+    });
+    const likeCounts = reactionCounts.filter(
+      (reaction) => reaction.type === "LIKE",
+    );
+    const dislikeCounts = reactionCounts.filter(
+      (reaction) => reaction.type === "DISLIKE",
+    );
 
     // Info: (20260212 - Julian) 整理資料
-    const response: IThread[] = threads.map((thread) => ({
-      id: thread.id,
-      question: thread.question,
-      answer: thread.answer ?? '-',
-      createdAt: new Date(thread.createdAt).getTime()/1000,
-      authorName: users.find((user) => user.id === thread.userId)?.name ?? 'Unknown',
-      tags: tags.map((tag) => tag.name),
-      countOfLike: likeCount,
-      countOfDislike: dislikeCount,
-      countOfShare: shareCount,
-      countOfComment: comments,
-    }));
+    const response: IThread[] = threads.map((thread) => {
+      const authorName =
+        users.find((user) => user.id === thread.userId)?.name ?? "Unknown";
+
+      // Info: (20260212 - Julian) 取得與討論串關聯的標籤名
+      const threadTags = tagIds
+        .filter((tagId) => tagId.threadId === thread.id)
+        .map((tagId) => tags.find((tag) => tag.id === tagId.tagId)?.name)
+        .filter((name): name is string => !!name);
+
+      // Info: (20260212 - Julian) 取得與討論串關聯的按讚數、倒讚數
+      const countOfLike =
+        likeCounts.find((reaction) => reaction.threadId === thread.id)?._count
+          ._all ?? 0;
+      const countOfDislike =
+        dislikeCounts.find((reaction) => reaction.threadId === thread.id)
+          ?._count._all ?? 0;
+
+      return {
+        id: thread.id,
+        question: thread.question,
+        answer: thread.answer ?? "-",
+        createdAt: new Date(thread.createdAt).getTime() / 1000,
+        authorName,
+        tags: threadTags,
+        countOfLike,
+        countOfDislike,
+        countOfShare: thread._count.shares,
+        countOfComment: thread._count.comments,
+      };
+    });
 
     return jsonOk(response);
   } catch (error) {
-    console.error('[API] /threads error:', error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    console.error("[API] /threads error:", error);
+    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }
 
@@ -74,68 +96,104 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-         // Info: (20260212 - Julian) Verify Token & Get User
-       const authHeader = request.headers.get('Authorization');
-       const user = await getIdentityFromDeWT(authHeader);
+    // Info: (20260212 - Julian) Verify Token & Get User
+    const authHeader = request.headers.get("Authorization");
+    const user = await getIdentityFromDeWT(authHeader);
 
-       if (!user) {
-         console.error('User not found');
-         return jsonFail(ApiCode.NOT_FOUND, 'User not found');
-       }
+    if (!user) {
+      console.error("User not found");
+      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+    }
 
     const body = await request.json();
-    const { question /* , attachments = [] */ } = body;
+    const { question, files = [] } = body;
 
     if (!question) {
-      console.error('Missing question');
-      return jsonFail(ApiCode.VALIDATION_ERROR, 'Question is required');
+      console.error("Missing question");
+      return jsonFail(ApiCode.VALIDATION_ERROR, "Question is required");
     }
 
     const author = await prisma.user.findUnique({
-      where: {address: user.address},
+      where: { address: user.address },
     });
 
     if (!author) {
-      console.error('Author not found');
-      return jsonFail(ApiCode.NOT_FOUND, 'Author not found');
+      console.error("Author not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Author not found");
     }
+
+    // Info: (20260213 - Julian) 使用 AI 生成答案與標籤
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error("Missing GEMINI_API_KEY");
+      return jsonFail(
+        ApiCode.INTERNAL_SERVER_ERROR,
+        "Server configuration error",
+      );
+    }
+
+    const chatService = new ChatService(apiKey);
+
+    // Info: (20260213 - Julian) 整理圖片資料發給 AI (直接從 body 取得，不經由 DB)
+    const imagesForAi = files
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((f: any) => f.data && f.mimeType)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((f: any) => ({
+        data: f.data,
+        mimeType: f.mimeType,
+      }));
+
+    const { answer, tags } = await chatService.askAccountTalk(
+      question,
+      imagesForAi,
+    );
 
     // Info: (20260212 - Julian) 建立討論串
     const thread = await prisma.thread.create({
       data: {
         question,
-        userId: user.id,
-        answer: '# 不可以。依據營業稅法，未載明統一編號之進項憑證不得扣抵銷項稅額。\n\n請確保發票上載明貴司統編，並確認屬於營業必要支出。若為餐飲業，需注意交際費限額問題。\n\n- 法條依據：\n 依據《加值型及非加值型營業稅法》第 33 條規定，營業人以進項稅額扣抵銷項稅額者，應具備載明其名稱、地址及統一編號之憑證。\n\n- 執行建議：\n請確保發票上載明貴司統編，並確認屬於營業必要支出。若為餐飲業，需注意交際費限額問題。'
+        userId: author.id,
+        answer: answer,
       },
     });
 
-    // Info: (20260212 - Julian) 建立標籤
-    const tags = await prisma.tag.upsert({
-      where: {name: '稅法'},
-      create: {name: '稅法'},
-      update: {},
-    });
+    // Info: (20260213 - Julian) 建立已上傳檔案與討論串的關聯
+    const fileIds = files
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((f: any) => f.id)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((f: any) => f.id);
 
-    // Info: (20260212 - Julian) 建立討論串和標籤的關聯
-   await prisma.threadTag.upsert({
-      where: {threadId_tagId: {threadId: thread.id, tagId: tags.id}},
-      create: {threadId: thread.id, tagId: tags.id},
-      update: {},
-    });
+    if (fileIds.length > 0) {
+      await prisma.file.updateMany({
+        where: { id: { in: fileIds } },
+        data: { threadId: thread.id },
+      });
+    }
 
-    // const apiKey = process.env.GEMINI_API_KEY;
+    // Info: (20260212 - Julian) 建立標籤並關聯
+    if (tags && tags.length > 0) {
+      for (const tagName of tags) {
+        const tag = await prisma.tag.upsert({
+          where: { name: tagName },
+          create: { name: tagName },
+          update: {},
+        });
 
-    // if (!apiKey) {
-    //   console.error('Missing GEMINI_API_KEY');
-    //   return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Server configuration error');
-    // }
+        await prisma.threadTag.create({
+          data: {
+            threadId: thread.id,
+            tagId: tag.id,
+          },
+        });
+      }
+    }
 
-    // const chatService = new ChatService(apiKey);
-    // const reply = await chatService.generateResponse(message, tags, image, mimeType);
-
-    return jsonOk({threadId: thread.id});
+    return jsonOk({ threadId: thread.id });
   } catch (error) {
-    console.error('[API] /threads error:', error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    console.error("[API] /threads error:", error);
+    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }
+

@@ -33,7 +33,11 @@ export default function PricingPage() {
   const [activeTab, setActiveTab] = useState<'subscription' | 'credits'>(initialTab);
   const [pricingPlans, setPricingPlans] = useState<typeof CREDIT_PLANS>([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
-  const [confirmModal, setConfirmModal] = useState({
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string | React.ReactNode;
+  }>({
     isOpen: false,
     title: '',
     message: '',
@@ -77,7 +81,27 @@ export default function PricingPage() {
     setConfirmModal({
       isOpen: true,
       title: t('pricing.coming_soon_title'),
-      message: t('pricing.coming_soon_message'),
+      message: (
+        <span>
+          {t('pricing.coming_soon_prefix')}
+          <a
+            href="https://www.economic.ntpc.gov.tw/Api/News/Page?id=8173"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-orange-600 hover:text-orange-500 underline decoration-orange-600/30 hover:decoration-orange-500"
+          >
+            {t('pricing.coming_soon_program')}
+          </a>
+          {t('pricing.coming_soon_middle')}
+          <a
+            href="mailto:contact@isunfa.com"
+            className="text-orange-600 hover:text-orange-500 underline decoration-orange-600/30 hover:decoration-orange-500"
+          >
+            {t('pricing.coming_soon_email')}
+          </a>
+          {t('pricing.coming_soon_suffix')}
+        </span>
+      ),
     });
   };
 

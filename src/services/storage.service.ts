@@ -73,9 +73,9 @@ export class StorageService {
   }
   async uploadLaria(file: Blob | File): Promise<string> {
     const tempId = randomUUID();
-    const tempDir = path.join(tmpdir(), 'isunfa-upload', tempId);
-    const inputPath = path.join(tempDir, 'input_file');
-    const outputDir = path.join(tempDir, 'shards');
+    const tempDir = path.join(tmpdir(), "isunfa-upload", tempId);
+    const inputPath = path.join(tempDir, "input_file");
+    const outputDir = path.join(tempDir, "shards");
 
     try {
       // Info: (20260128 - Luphia) 1. Prepare temp directories
@@ -99,7 +99,9 @@ export class StorageService {
         // Info: (20260128 - Luphia) Check if shard exists (it should)
         try {
           const shardBuffer = await fs.readFile(shardPath);
-          const shardFile = new File([shardBuffer], shardName, { type: 'application/octet-stream' });
+          const shardFile = new File([shardBuffer], shardName, {
+            type: "application/octet-stream",
+          });
           const hash = await this.uploadFile(shardFile);
           shardHashes.push(hash);
         } catch (e) {
@@ -108,11 +110,11 @@ export class StorageService {
       }
 
       // Info: (20260128 - Luphia) 5. Process Metadata
-      const metadataPath = path.join(outputDir, 'metadata.json');
+      const metadataPath = path.join(outputDir, "metadata.json");
       const metadataBuffer = await fs.readFile(metadataPath);
       const metadata = JSON.parse(metadataBuffer.toString());
 
-      // Info: (20260128 - Luphia) Add shard hashes to metadata
+      // Info: (20260213 - Julian) Add shard hashes to metadata
       metadata.shards = shardHashes;
 
       /**
@@ -120,20 +122,93 @@ export class StorageService {
        * Create a Blob/File from the updated metadata JSON
        */
       const updatedMetadataStr = JSON.stringify(metadata);
-      const metadataFile = new File([updatedMetadataStr], 'metadata.json', { type: 'application/json' });
+      const metadataFile = new File([updatedMetadataStr], "metadata.json", {
+        type: "application/json",
+      });
       const metadataHash = await this.uploadFile(metadataFile);
 
       return metadataHash;
-
     } catch (error) {
-      console.error('[StorageService] Laria upload failed:', error);
+      console.error("[StorageService] Laria upload failed:", error);
       throw error;
     } finally {
       // Info: (20260128 - Luphia) 7. Cleanup
       try {
         await fs.rm(tempDir, { recursive: true, force: true });
       } catch (e) {
-        console.warn('Failed to clean up temp dir:', e);
+        console.warn("Failed to clean up temp dir:", e);
+      }
+    }
+  }
+
+  /**
+   * Info: (20260213 - Julian)
+   * Recover a file using Laria shards.
+   * @param metadataHash - The hash of the metadata file
+   */
+  async recoverLaria(metadataHash: string): Promise<Buffer> {
+    const tempId = randomUUID();
+    const tempDir = path.join(tmpdir(), "isunfa-download", tempId);
+    const outputDir = path.join(tempDir, "shards");
+    const recoveredPath = path.join(tempDir, "recovered_file");
+
+    const domain = this.storageDomain.replace(/\/$/, "");
+
+    try {
+      await fs.mkdir(outputDir, { recursive: true });
+
+      // Info: (20260213 - Julian) 1. Download metadata
+      const metadataRes = await fetch(`${domain}/api/v1/file/${metadataHash}`);
+      if (!metadataRes.ok) {
+        throw new Error(`Failed to fetch metadata: ${metadataRes.statusText}`);
+      }
+      const metadata = await metadataRes.json();
+      /**
+       * Info: (20260213 - Julian) 這裡假設 Storage 回傳的是原始 JSON 或 payload 包含原始 JSON
+       * 根據之前的 API 慣例，這裡可能是 { code: 'SUCCESS', payload: { ... } }
+       */
+      const metaObj = metadata.payload || metadata;
+
+      const { shards, originalFileSize } = metaObj;
+      if (!shards || typeof originalFileSize !== "number") {
+        throw new Error("Invalid metadata format");
+      }
+
+      // Info: (20260213 - Julian) 寫入 metadata.json (recoverFile 需要它)
+      await fs.writeFile(
+        path.join(outputDir, "metadata.json"),
+        JSON.stringify({ originalFileSize }),
+      );
+
+      // Info: (20260213 - Julian) 2. Download Shards
+      for (let i = 0; i < shards.length; i++) {
+        const shardHash = shards[i];
+        const shardRes = await fetch(`${domain}/api/v1/file/${shardHash}`);
+        if (!shardRes.ok) {
+          throw new Error(`Failed to fetch shard ${i + 1}: ${shardRes.statusText}`);
+        }
+        const shardBuffer = Buffer.from(await shardRes.arrayBuffer());
+        await fs.writeFile(
+          path.join(outputDir, `shard-${i + 1}.bin`),
+          shardBuffer,
+        );
+      }
+
+      // Info: (20260213 - Julian) 3. Recover
+      const { recoverFile } = await import("@/lib/laria");
+      await recoverFile(outputDir, recoveredPath);
+
+      // Info: (20260213 - Julian) 4. Read restored data
+      return await fs.readFile(recoveredPath);
+    } catch (error) {
+      console.error("[StorageService] Laria recovery failed:", error);
+      throw error;
+    } finally {
+      // Info: (20260213 - Julian) 5. Cleanup
+      try {
+        await fs.rm(tempDir, { recursive: true, force: true });
+      } catch (e) {
+        console.warn("Failed to clean up download temp dir:", e);
       }
     }
   }

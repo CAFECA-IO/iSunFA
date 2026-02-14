@@ -47,30 +47,3 @@ export interface IThreadDetail extends IThread {
   userReaction: UserReaction; // Info: (20260212 - Julian) 使用者對該討論串的按讚、倒讚
   attachments: IAttachment[];
 }
-
-export const mockAttachments: IAttachment[] = [
-  {
-    id: "1",
-    fileName: "憑證_01.jpg",
-    url: "/test/電子紙本發票2.png",
-    fileSize: 1024,
-    mimeType: "image/jpeg",
-    dimensions: {
-      width: 800,
-      height: 600,
-    },
-    thumbnailUrl: "/test/電子紙本發票2.png",
-  },
-  {
-    id: "2",
-    fileName: "憑證_02.jpg",
-    url: "/test/捐款收據範例.jpg",
-    fileSize: 1024,
-    mimeType: "image/jpeg",
-    dimensions: {
-      width: 800,
-      height: 600,
-    },
-    thumbnailUrl: "/test/捐款收據範例.jpg",
-  },
-];

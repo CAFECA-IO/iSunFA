@@ -119,33 +119,35 @@ model Task {
 
 // Info: (20260211 - Julian) AI Consultation Room 討論串
 model Thread {
-  id          String       @id @default(uuid())
-  userId      String       @map("user_id")
-  user        User         @relation(fields: [userId], references: [id])
-  question    String       @db.Text
-  answer      String?      @db.Text
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
-  attachments Attachment[]
-  comments    Comment[]
-  reactions   Reaction[]
-  tags        ThreadTag[]
-  shares      Share[]
+  id        String      @id @default(uuid())
+  userId    String      @map("user_id")
+  user      User        @relation(fields: [userId], references: [id])
+  question  String      @db.Text
+  answer    String?     @db.Text
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+  files     File[]
+  comments  Comment[]
+  reactions Reaction[]
+  tags      ThreadTag[]
+  shares    Share[]
 
   @@map("thread")
 }
 
-// Info: (20260212 - Julian) 附件：儲存圖片資訊
-model Attachment {
-  id       String @id @default(uuid())
-  threadId String @map("thread_id")
-  thread   Thread @relation(fields: [threadId], references: [id])
-  fileName String @map("file_name")
-  url      String
-  fileSize Int    @map("file_size")
-  mimeType String @map("mime_type")
+// Info: (20260213 - Julian) 上傳檔案：儲存 hash
+model File {
+  id       String  @id @default(uuid())
+  fileName String  @map("file_name")
+  hash     String
+  mimeType String  @map("mime_type")
+  fileSize Int     @map("file_size")
+  url      String? // Info: (20260213 - Julian) 方便前端直接渲染
 
-  @@map("attachment")
+  thread   Thread? @relation(fields: [threadId], references: [id])
+  threadId String? @map("thread_id")
+
+  @@map("file")
 }
 
 // Info: (20260212 - Julian) 評論：支援巢狀回覆

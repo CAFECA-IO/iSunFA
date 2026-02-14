@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
@@ -14,7 +14,7 @@ import { ApiCode } from "@/lib/utils/status";
 export const CommentSection = () => {
   const { t } = useTranslation();
   const params = useParams();
-  const threadId = params?.talk_id ?? ''
+  const threadId = params?.talk_id ?? "";
 
   const [isShowInput, setIsShowInput] = useState<boolean>(true);
   const [commentInput, setCommentInput] = useState<string>("");
@@ -29,7 +29,9 @@ export const CommentSection = () => {
     if (!threadId) return;
     const loadComments = async () => {
       try {
-        const data = await request<IApiResponse<IComment[]>>(`/api/v1/ai_talk/thread/${threadId}/comment`);
+        const data = await request<IApiResponse<IComment[]>>(
+          `/api/v1/ai_talk/thread/${threadId}/comment`,
+        );
         if (data.code === ApiCode.SUCCESS && data.payload) {
           setComments(data.payload);
         }

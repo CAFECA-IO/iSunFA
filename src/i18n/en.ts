@@ -277,8 +277,12 @@ export const en = {
     per_key: ' / key',
     select_plan: 'Select Plan',
     current_plan: 'Current Plan',
-    coming_soon_title: 'Coming Soon',
-    coming_soon_message: 'Related plans will be launched soon, stay tuned.',
+    coming_soon_title: 'Contact Us',
+    coming_soon_prefix: 'We have been selected as an ',
+    coming_soon_program: 'AI service provider for the New Taipei City Industry AI Transformation Coaching Program',
+    coming_soon_middle: '. Contact us at ',
+    coming_soon_email: 'contact@isunfa.com',
+    coming_soon_suffix: ' for the latest offers.',
     plans: {
       personal: {
         name: 'Free',
@@ -558,7 +562,7 @@ export const en = {
       view_tx: 'View Transaction',
     },
   },
-    ai_consultation_room: {
+  ai_consultation_room: {
     title: 'AI Consultation Room',
     subtitle: 'Real-time accounting Q&A with AI, and share discussions with community members.',
     not_found: 'Discussion Recording Not Found',
@@ -568,7 +572,7 @@ export const en = {
     original_question: 'Original Question',
     published_at: 'Published at',
     ai_result: 'AI Analysis Result',
-    ai_model_version: 'Model Version: v2.1-Standard • Expert Verified',
+    ai_model_version: 'Model Version: v0.1.0-Standard • Expert Verified',
     agree_count: '{count} people agree',
     disagree_count: '{count} people disagree',
     share_knowledge: 'Share this Insight',
@@ -596,8 +600,13 @@ export const en = {
     view_image: 'View Image: {name}',
     download_original: 'Download Original File',
     login_to_react: 'Please login to react',
-    ai_name: 'AccounTalk AI',
+    ai_name: 'FAITH',
     q_label: 'Q',
     ai_label: 'AI',
-  }
+  },
+  ai_consultation_section: {
+    title: 'AI Consultation Room',
+    description: 'Experience real-time interactive Q&A with AI accountants to quickly clarify financial and carbon tax issues; share insights and feedback to grow together with the community.',
+    button: 'Ask AI Now',
+  },
 };

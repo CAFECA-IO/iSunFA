@@ -130,4 +130,63 @@ export class ChatService {
     const response = await result.response;
     return response.text();
   }
+
+  /**
+   * Info: (20260213 - Julian) 向 AI 提問，並取得答案與關聯標籤
+   */
+  async askAccountTalk(
+    message: string,
+    images: { data: string; mimeType: string }[] = [],
+  ): Promise<{ answer: string; tags: string[] }> {
+    const prompt = `
+      你是一位專業的會計師。請針對以下問題提供詳細、專業且親切的回答（使用台灣繁體中文）。
+      同時，請根據問題內容建議 1-3 個相關的會計標籤（例如：稅法, 記帳, 財務報表, 創業, 勞健保, 營業稅, 所得稅）。
+
+      使用者問題： "${message}"
+
+      輸出要求：
+      請僅輸出包含以下欄位的 JSON 格式，不要包含任何開場白或導言：
+      {
+        "answer": "你的回答內容（支援 Markdown 格式）",
+        "tags": ["標籤1", "標籤2"]
+      }
+
+      請確保輸出是合法的 JSON 格式。
+    `;
+
+    try {
+      const model = this.genAI.getGenerativeModel({ model: this.modelName });
+      const parts: Part[] = [{ text: prompt }];
+
+      // Info: (20260213 - Julian) 加入多張圖片支援
+      if (images && images.length > 0) {
+        images.forEach((img) => {
+          parts.push({
+            inlineData: {
+              data: img.data,
+              mimeType: img.mimeType,
+            },
+          });
+        });
+      }
+
+      const result = await model.generateContent(parts);
+      const response = await result.response;
+      const responseText = response.text();
+
+      // Info: (20260213 - Julian) 尋找 JSON 區塊
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const result = JSON.parse(jsonMatch[0]);
+        return {
+          answer: result.answer || responseText,
+          tags: Array.isArray(result.tags) ? result.tags : ["其他"],
+        };
+      }
+      return { answer: responseText, tags: ["其他"] };
+    } catch (error) {
+      console.error("[ChatService] Error in askAccountTalk:", error);
+      return { answer: "AI 暫時無法回答，請稍後再試。", tags: ["錯誤"] };
+    }
+  }
 }

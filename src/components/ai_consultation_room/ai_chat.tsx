@@ -1,4 +1,6 @@
-import { useRef, useState } from "react";
+'use client';
+
+import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import Image from "next/image";
@@ -18,18 +20,43 @@ import { ApiCode } from "@/lib/utils/status";
 import LoginButton from "@/components/common/login_button";
 import { IApiResponse } from "@/lib/utils/response";
 
+// Info: (20260213 - Julian) 將 File 轉換為 Base64 (不含 prefix)
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.split(",")[1];
+      resolve(base64);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
+
 export const AiChat = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
   const { isChatOpen, setIsChatOpen } = useAiContext();
 
-  const [attachments, setAttachments] = useState<IAttachment[]>([]);
+  const [attachments, setAttachments] = useState<(IAttachment & { base64?: string })[]>([]);
+  const [localFiles, setLocalFiles] = useState<{ file: File; url: string }[]>([]);
+
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [question, setQuestion] = useState<string>("");
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Info: (20260213 - Julian) 清除 Object URLs 避免記憶體洩漏
+  useEffect(() => {
+    return () => {
+      localFiles.forEach((item) => URL.revokeObjectURL(item.url));
+    };
+  }, [localFiles]);
+
 
   const isSubmitDisabled = !question.trim() || isUploading || isSubmitting;
 
@@ -38,17 +65,26 @@ export const AiChat = () => {
 
     setIsSubmitting(true);
     try {
-      const data = await request<IApiResponse<{ threadId: string }>>("/api/v1/ai_talk/thread", {
-        method: "POST",
-        body: JSON.stringify({
-          question,
-          attachments: attachments.map((att) => att.id),
-        }),
-      });
+      const data = await request<IApiResponse<{ threadId: string }>>(
+        "/api/v1/ai_talk/thread",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            question,
+            files: attachments.map((att) => ({
+              id: att.id,
+              data: att.base64,
+              mimeType: att.mimeType,
+            })),
+          }),
+        },
+      );
 
       if (data.code === ApiCode.SUCCESS) {
         setQuestion("");
         setAttachments([]);
+        setLocalFiles([]);
+
         // Info: (20260212 - Julian) 延遲 500 ms 後導向 /ai_consultation_room/{threadId} 頁面
         setTimeout(() => {
           if (data.payload && data.payload.threadId) {
@@ -101,18 +137,34 @@ export const AiChat = () => {
 
       setIsUploading(true);
       try {
-        for (const file of validFiles) {
+        const newLocalFiles = validFiles.map((file) => ({
+          file,
+          url: URL.createObjectURL(file),
+        }));
+        setLocalFiles((prev) => [...prev, ...newLocalFiles]);
+
+        for (let i = 0; i < validFiles.length; i++) {
+          const file = validFiles[i];
           const formData = new FormData();
           formData.append("file", file);
 
-          const response = await fetch("/api/v1/ai_talk/attachment/upload", {
+          const response = await fetch("/api/v1/file/upload", {
             method: "POST",
             body: formData,
           });
 
           const data = await response.json();
           if (data.code === ApiCode.SUCCESS) {
-            setAttachments((prev) => [...prev, data.payload]);
+            // Info: (20260213 - Julian) 同時轉換為 base64 供 AI 使用
+            const base64 = await fileToBase64(file);
+            setAttachments((prev) => [...prev, { ...data.payload, base64 }]);
+
+            // Info: (20260213 - Julian) 上傳成功後移除本地預覽
+            setLocalFiles((prev) => {
+              const target = prev.find((item) => item.file === file);
+              if (target) URL.revokeObjectURL(target.url);
+              return prev.filter((item) => item.file !== file);
+            });
           } else {
             console.error("Upload failed:", data.message);
           }
@@ -148,7 +200,7 @@ export const AiChat = () => {
 
   const removeFile = async (id: string) => {
     try {
-      const data = await request<IApiResponse<{ id: string }>>(`/api/v1/ai_talk/attachment/${id}`, {
+      const data = await request<IApiResponse<{ id: string }>>(`/api/v1/file/${id}`, {
         method: "DELETE",
       });
 
@@ -297,9 +349,30 @@ export const AiChat = () => {
               />
             </div>
 
-            {/* Info: (20260209 - Julian) Display Uploaded Files */}
-            {attachments.length > 0 && (
+            {/* Info: (20260213 - Julian) 顯示本地預覽 */}
+            {(localFiles.length > 0 || attachments.length > 0) && (
               <div className="flex w-full overflow-x-auto gap-2 py-1">
+                {localFiles.map((item, index) => (
+                  <div
+                    key={`local-${index}`}
+                    className="group shrink-0 w-16 h-16 relative rounded-xl border border-orange-200 bg-orange-50 flex items-center justify-center shadow-sm"
+                  >
+                    <div className="w-full h-full relative rounded-xl overflow-hidden opacity-60">
+                      <Image
+                        src={item.url}
+                        alt={item.file.name}
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Loader2
+                          size={16}
+                          className="animate-spin text-orange-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
                 {attachments.map((file) => (
                   <div
                     key={file.id}
@@ -325,6 +398,7 @@ export const AiChat = () => {
                 ))}
               </div>
             )}
+
             {displayedButtons}
           </div>
 

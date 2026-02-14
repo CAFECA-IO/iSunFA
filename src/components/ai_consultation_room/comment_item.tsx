@@ -52,13 +52,16 @@ export const CommentItem = ({
   const handleReaction = async (reaction: UserReaction) => {
     if (!user) return;
     try {
-      const data = await request<IApiResponse<{countOfLike: number, countOfDislike: number, userReaction: UserReaction}>>(
-        `/api/v1/ai_talk/comment/${comment.id}/react`,
-        {
-          method: "POST",
-          body: JSON.stringify({ reaction }),
-        },
-      );
+      const data = await request<
+        IApiResponse<{
+          countOfLike: number;
+          countOfDislike: number;
+          userReaction: UserReaction;
+        }>
+      >(`/api/v1/ai_talk/comment/${comment.id}/react`, {
+        method: "POST",
+        body: JSON.stringify({ reaction }),
+      });
 
       if (data.code === ApiCode.SUCCESS && data.payload) {
         const { countOfLike, countOfDislike, userReaction } = data.payload;
@@ -146,10 +149,15 @@ export const CommentItem = ({
             disabled={!user}
             title={!user ? t("ai_consultation_room.login_to_react") : ""}
             className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-              reaction === "LIKE" ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
+              reaction === "LIKE"
+                ? "text-orange-500"
+                : "text-gray-400 hover:text-gray-600"
             }`}
           >
-            <ThumbsUp size={16} fill={reaction === "LIKE" ? "currentColor" : "none"} />
+            <ThumbsUp
+              size={16}
+              fill={reaction === "LIKE" ? "currentColor" : "none"}
+            />
             <span>{likesCount}</span>
           </button>
           <button
@@ -157,10 +165,15 @@ export const CommentItem = ({
             disabled={!user}
             title={!user ? t("ai_consultation_room.login_to_react") : ""}
             className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-              reaction === "DISLIKE" ? "text-orange-500" : "text-gray-400 hover:text-gray-600"
+              reaction === "DISLIKE"
+                ? "text-orange-500"
+                : "text-gray-400 hover:text-gray-600"
             }`}
           >
-            <ThumbsDown size={16} fill={reaction === "DISLIKE" ? "currentColor" : "none"} />
+            <ThumbsDown
+              size={16}
+              fill={reaction === "DISLIKE" ? "currentColor" : "none"}
+            />
             <span>{dislikesCount}</span>
           </button>
         </div>

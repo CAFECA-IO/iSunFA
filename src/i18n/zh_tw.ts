@@ -288,8 +288,12 @@ export const zhTw = {
     per_key: " / 鑰匙",
     select_plan: "選擇方案",
     current_plan: "目前方案",
-    coming_soon_title: "即將推出",
-    coming_soon_message: "相關方案即將推出，敬請期待",
+    coming_soon_title: '聯絡我們',
+    coming_soon_prefix: '我們已獲選為',
+    coming_soon_program: '新北產業 AI 化輔導計畫 AI 服務供應商',
+    coming_soon_middle: '，聯繫我們以取得最新優惠 ',
+    coming_soon_email: 'contact@isunfa.com',
+    coming_soon_suffix: '',
     plans: {
       personal: {
         name: '免費版',
@@ -592,7 +596,7 @@ export const zhTw = {
     original_question: '問題原文',
     published_at: '發布於',
     ai_result: 'AI 解析結果',
-    ai_model_version: '模型版本：v2.1-Standard • 經過專家驗證',
+    ai_model_version: '模型版本：v0.1.0-Standard • 經過專家驗證',
     agree_count: '{count} 人贊同',
     disagree_count: '{count} 人不贊同',
     share_knowledge: '分享此知識點',
@@ -620,8 +624,13 @@ export const zhTw = {
     view_image: '查看圖片: {name}',
     download_original: '下載原始檔案',
     login_to_react: '登入後即可按讚或倒讚',
-    ai_name: 'AccounTalk AI',
+    ai_name: '費思',
     q_label: 'Q',
     ai_label: 'AI',
-  }
+  },
+  ai_consultation_section: {
+    title: 'AI 諮詢室',
+    description: '體驗與人工智能會計師的即時互動問答，快速釐清財務與碳費議題；分享洞察與回饋，與社群共創成長。',
+    button: '立即諮詢 AI',
+  },
 };
