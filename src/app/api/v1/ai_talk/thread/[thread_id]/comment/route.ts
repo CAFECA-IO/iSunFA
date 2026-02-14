@@ -67,7 +67,7 @@ export async function GET(
 
     const rootComments: IComment[] = [];
     formattedComments.forEach((c) => {
-      // 如果有父評論，且父評論在同一個 Thread 下，則加入父評論的 replies
+      // Info: (20260213 - Julian) 如果有父評論，且父評論在同一個 Thread 下，則加入父評論的 replies
       if (c.parentId && commentMap.has(c.parentId)) {
         commentMap.get(c.parentId)!.replies.push(c);
       } else {
