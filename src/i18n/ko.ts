@@ -277,8 +277,12 @@ export const ko = {
     per_key: ' / 키',
     select_plan: '요금제 선택',
     current_plan: '현재 요금제',
-    coming_soon_title: '출시 예정',
-    coming_soon_message: '관련 요금제는 곧 출시될 예정입니다. 기대해 주세요.',
+    coming_soon_title: '문의하기',
+    coming_soon_prefix: '',
+    coming_soon_program: '뉴타이베이 산업 AI 전환 코칭 프로그램의 AI 서비스 제공업체',
+    coming_soon_middle: '로 선정되었습니다. 최신 혜택은 ',
+    coming_soon_email: 'contact@isunfa.com',
+    coming_soon_suffix: '으로 문의해 주십시오.',
     plans: {
       personal: {
         name: '무료 버전',
@@ -557,7 +561,7 @@ export const ko = {
       view_tx: '트랜잭션 보기',
     },
   },
-    ai_consultation_room: {
+  ai_consultation_room: {
     title: 'AI 상담실',
     subtitle: 'AI와 실시간 회계 Q&A를 진행하고 커뮤니티 회원들과 토론을 공유하세요.',
     not_found: '대화 기록을 찾을 수 없습니다',
@@ -567,7 +571,7 @@ export const ko = {
     original_question: '질문 원문',
     published_at: '게시일:',
     ai_result: 'AI 분석 결과',
-    ai_model_version: '모델 버전: v2.1-Standard • 전문가 검증 완료',
+    ai_model_version: '모델 버전: v0.1.0-Standard • 전문가 검증 완료',
     agree_count: '{count}명 찬성',
     disagree_count: '{count}명 반대',
     share_knowledge: '이 지식 공유하기',
@@ -595,8 +599,13 @@ export const ko = {
     view_image: '이미지 보기: {name}',
     download_original: '원본 파일 다운로드',
     login_to_react: '로그인하여 반응하기',
-    ai_name: 'AccounTalk AI',
+    ai_name: 'FAITH',
     q_label: 'Q',
     ai_label: 'AI',
-  }
+  },
+  ai_consultation_section: {
+    title: 'AI 상담실',
+    description: 'AI 회계사와의 실시간 대화형 Q&A를 통해 재무 및 탄소세 관련 문제를 빠르게 해결하세요. 통찰력과 피드백을 공유하며 커뮤니티와 함께 성장하세요.',
+    button: '지금 AI에게 질문하기',
+  },
 };

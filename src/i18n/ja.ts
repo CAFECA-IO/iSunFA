@@ -276,8 +276,12 @@ export const ja = {
     per_key: ' / キー',
     select_plan: 'プランを選択',
     current_plan: '現在のプラン',
-    coming_soon_title: '近日公開',
-    coming_soon_message: '関連プランは近日公開予定です。お楽しみに。',
+    coming_soon_title: 'お問い合わせ',
+    coming_soon_prefix: '',
+    coming_soon_program: '新北産業AI化支援プログラムのAIサービスプロバイダー',
+    coming_soon_middle: 'に選定されました。最新の特典については ',
+    coming_soon_email: 'contact@isunfa.com',
+    coming_soon_suffix: ' までお問い合わせください。',
     plans: {
       personal: {
         name: 'フリープラン',
@@ -557,7 +561,7 @@ export const ja = {
       view_tx: 'トランザクションを表示',
     },
   },
-    ai_consultation_room: {
+  ai_consultation_room: {
     title: 'AI相談室',
     subtitle: 'AIとのリアルタイム会計Q&A、およびコミュニティメンバーとの議論の共有。',
     not_found: '会話履歴が見つかりません',
@@ -567,7 +571,7 @@ export const ja = {
     original_question: '質問原文',
     published_at: '公開日：',
     ai_result: 'AI解析結果',
-    ai_model_version: 'モデルバージョン：v2.1-Standard • 専門家検証済み',
+    ai_model_version: 'モデルバージョン：v0.1.0-Standard • 専門家検証済み',
     agree_count: '{count}人が賛成',
     disagree_count: '{count}人が反対',
     share_knowledge: 'この知識を共有する',
@@ -595,8 +599,13 @@ export const ja = {
     view_image: '画像を表示: {name}',
     download_original: '元ファイルをダウンロード',
     login_to_react: 'ログインしてリアクションする',
-    ai_name: 'AccounTalk AI',
+    ai_name: 'FAITH',
     q_label: 'Q',
     ai_label: 'AI',
-  }
+  },
+  ai_consultation_section: {
+    title: 'AI相談室',
+    description: 'AI会計士とのリアルタイムな対話型Q&Aを体験し、財務や炭素税の課題を素早く解決しましょう。洞察やフィードバックを共有し、コミュニティと共に成長しましょう。',
+    button: '今すぐAIに相談',
+  },
 };

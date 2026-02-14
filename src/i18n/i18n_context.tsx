@@ -14,7 +14,8 @@ type Dictionary = any;
 // Info: (20260120 - Luphia) Helper to get nested value by key string "auth_modal.login_btn"
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getNestedValue(obj: any, path: string): string {
-  return path.split('.').reduce((prev, curr) => (prev ? prev[curr] : null), obj) || path;
+  const value = path.split('.').reduce((prev, curr) => (prev ? prev[curr] : undefined), obj);
+  return value !== undefined ? value : path;
 }
 
 interface II18nContextType {

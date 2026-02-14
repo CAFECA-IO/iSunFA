@@ -276,8 +276,12 @@ export const zhCn = {
     per_key: ' / 钥匙',
     select_plan: '选择方案',
     current_plan: '当前方案',
-    coming_soon_title: '即将推出',
-    coming_soon_message: '相关方案即将推出，敬请期待',
+    coming_soon_title: '联络我们',
+    coming_soon_prefix: '我们已获选为',
+    coming_soon_program: '新北产业 AI 化辅导计画 AI 服务供应商',
+    coming_soon_middle: '，联系我们以取得最新优惠 ',
+    coming_soon_email: 'contact@isunfa.com',
+    coming_soon_suffix: '',
     plans: {
       personal: {
         name: '免费版',
@@ -551,7 +555,7 @@ export const zhCn = {
       view_tx: '查看交易',
     },
   },
-    ai_consultation_room: {
+  ai_consultation_room: {
     title: 'AI 咨询室',
     subtitle: '与 AI 进行即时会计问答，并和社区成员分享讨论',
     not_found: '未找到对话记录',
@@ -561,7 +565,7 @@ export const zhCn = {
     original_question: '问题原文',
     published_at: '发布于',
     ai_result: 'AI 解析结果',
-    ai_model_version: '模型版本：v2.1-Standard • 经过专家验证',
+    ai_model_version: '模型版本：v0.1.0-Standard • 经过专家验证',
     agree_count: '{count} 人赞同',
     disagree_count: '{count} 人不赞同',
     share_knowledge: '分享此知识点',
@@ -589,8 +593,13 @@ export const zhCn = {
     view_image: '查看图片: {name}',
     download_original: '下载原始档案',
     login_to_react: '登录后即可按赞或倒赞',
-    ai_name: 'AccounTalk AI',
+    ai_name: '费思',
     q_label: 'Q',
     ai_label: 'AI',
-  }
+  },
+  ai_consultation_section: {
+    title: 'AI 咨询室',
+    description: '体验与人工智能会计师的即时互动问答，快速厘清财务与碳费议题；分享洞察与反馈，与社群共创成长。',
+    button: '立即咨询 AI',
+  },
 };
