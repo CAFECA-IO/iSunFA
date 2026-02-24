@@ -14,13 +14,13 @@ export async function POST(request: NextRequest) {
             return jsonFail(ApiCode.UNAUTHORIZED, 'Invalid or expired token');
         }
 
-        const { amount } = await request.json();
+        const { credits } = await request.json();
 
-        if (!amount || amount <= 0) {
-            return jsonFail(ApiCode.VALIDATION_ERROR, 'Invalid amount');
+        if (!credits || credits <= 0) {
+            return jsonFail(ApiCode.VALIDATION_ERROR, 'Invalid credits amount');
         }
 
-        const result = await mintToAddress(CONTRACT_ADDRESSES.NTD_TOKEN, user.address, amount);
+        const result = await mintToAddress(CONTRACT_ADDRESSES.NTD_TOKEN, user.address, credits);
 
         if (!result.success) {
             return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, result.message);
