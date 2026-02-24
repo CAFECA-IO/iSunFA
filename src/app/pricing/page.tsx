@@ -143,7 +143,8 @@ export default function PricingPage() {
   }
 
   const handlePaymentSuccess = async () => {
-    setPaymentModalOpen(false);
+    // Info: (20260224 - Tzuhan) no use now, remove in the future
+    // setPaymentModalOpen(false);
   };
 
   return (
