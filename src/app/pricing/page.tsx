@@ -127,6 +127,29 @@ export default function PricingPage() {
     }
   }, [activeTab]);
 
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment_status');
+    const orderId = searchParams.get('orderId');
+    if (paymentStatus && orderId) {
+      const saved = sessionStorage.getItem('pendingPayment');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          setPendingAmount(data.amount);
+          setPendingCredits(data.credits);
+          setPendingBaseCredits(data.baseCredits);
+          setPendingBonusCredits(data.bonusCredits);
+          setPendingDisplayPrice(data.displayPrice);
+          setPaymentModalOpen(true);
+        } catch (e) {
+          console.error('Failed to parse pending payment state', e);
+        }
+      } else {
+        setPaymentModalOpen(true);
+      }
+    }
+  }, [searchParams]);
+
   const getPrice = (plan: typeof CREDIT_PLANS[0]) => {
     switch (language) {
       case 'zh-TW':
