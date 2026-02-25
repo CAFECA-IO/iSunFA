@@ -227,16 +227,16 @@ const PaySlip: React.FC<IPaySlipProps> = ({
   return (
     <div
       id="payslip-download"
-      className={`flex flex-col gap-12px bg-surface-neutral-surface-lv2 ${className}`}
+      className={`flex flex-col gap-3 bg-surface-neutral-surface-lv2 ${className}`}
     >
       {/* Info: (20250708 - Julian) Title */}
-      <div className="grid grid-cols-1 gap-12px tablet:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 tablet:grid-cols-2">
         {/* Info: (20250708 - Julian) 姓名和日期 */}
-        <div className="flex flex-col items-start gap-8px">
+        <div className="flex flex-col items-start gap-2">
           <p className="text-xs font-medium text-text-brand-primary-lv1 tablet:text-base tablet:font-semibold">
             {formattedDate}
           </p>
-          <div className="flex items-baseline gap-lv-2 text-2xl font-bold text-text-neutral-primary tablet:text-28px">
+          <div className="flex items-baseline gap-2 text-2xl font-bold text-text-neutral-primary tablet:text-[28px]">
             {showingName}
             <span className="block text-xs font-medium tablet:hidden">
               {showingNumber}
@@ -251,7 +251,7 @@ const PaySlip: React.FC<IPaySlipProps> = ({
           <Image src="/icons/money_bag.svg" alt="salary_icon" width={32} height={32} />
           <p>NT ${numberWithCommas(totalSalary)}</p>
         </div> */}
-        <div className="flex flex-col gap-8px">
+        <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase text-black">
               {t("calculator.result.reported")}

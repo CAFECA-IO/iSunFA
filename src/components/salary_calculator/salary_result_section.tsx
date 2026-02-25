@@ -77,11 +77,11 @@ const SalaryResultSection: React.FC = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-24px tablet:w-fit">
+      <div className="flex flex-col gap-6 tablet:w-fit">
         {/* Info: (20250708 - Julian) Result */}
         <div
           ref={downloadRef}
-          className="w-full shrink-0 rounded-lg bg-surface-neutral-surface-lv2 p-24px shadow-Dropshadow_XS tablet:w-650px"
+          className="w-full shrink-0 rounded-lg bg-surface-neutral-surface-lv2 p-6 shadow-Dropshadow_XS tablet:w-[650px]"
         >
           <PaySlip
             employeeName={showingName}
@@ -92,7 +92,7 @@ const SalaryResultSection: React.FC = () => {
           />
         </div>
         {/* Info: (20250708 - Julian) Buttons */}
-        <div className="grid grid-cols-1 gap-24px tablet:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 tablet:grid-cols-2">
           <button type="button" onClick={downloadPng} disabled={btnDisabled}>
             {t("calculator.button.download")} <Download size={20} />
           </button>

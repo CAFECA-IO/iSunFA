@@ -12,24 +12,22 @@ const ToggleSwitch: React.FC<IToggleSwitchProps> = ({
   title,
 }) => {
   return (
-    <div className="flex items-center gap-16px">
+    <button
+      type="button"
+      onClick={handleToggle}
+      className="flex items-center gap-3 group relative"
+    >
       {/* Info: (20250806 - Julian) Toggle Switch */}
-      <button
-        type="button"
-        onClick={handleToggle}
-        className={`relative w-66px rounded-full p-2px transition-all duration-300 ease-in-out ${isOn ? "bg-switch-surface-active" : "bg-switch-surface-base"}`}
+      <div
+        className={`group relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${isOn ? "bg-orange-600" : "bg-gray-200"}`}
       >
-        <div
-          className={`h-32px w-32px rounded-full bg-switch-surface-controller shadow-switch-controller transition-all duration-300 ease-in-out ${isOn ? "translate-x-30px" : "translate-x-0"}`}
-        ></div>
-      </button>
+        <span
+          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${isOn ? "translate-x-5" : "translate-x-0"}`}
+        />
+      </div>
       {/* Info: (20250806 - Julian) Title */}
-      {title && (
-        <p className="text-base font-medium text-switch-text-primary">
-          {title}
-        </p>
-      )}
-    </div>
+      {title && <p className="text-sm font-semibold text-gray-700">{title}</p>}
+    </button>
   );
 };
 

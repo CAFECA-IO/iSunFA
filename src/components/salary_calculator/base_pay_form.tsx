@@ -18,7 +18,7 @@ const BasePayForm: React.FC = () => {
   } = useCalculatorCtx();
 
   return (
-    <form className="flex flex-col gap-24px">
+    <form className="flex flex-col gap-6">
       {/* Info: (20250709 - Julian) 本薪（應稅） */}
       <AmountInput
         title={t("calculator.base_pay_form.base_salary")}
@@ -45,13 +45,13 @@ const BasePayForm: React.FC = () => {
       />
 
       {/* Info: (20250709 - Julian) 其他津貼（免稅） */}
-      <div className="flex flex-col gap-8px">
+      <div className="flex flex-col gap-2">
         <AmountInput
           title={t("calculator.base_pay_form.other_allowance_without_tax")}
           value={otherAllowanceWithoutTax}
           setValue={setOtherAllowanceWithoutTax}
         />
-        <p className="text-sm font-medium text-input-text-secondary">
+        <p className="text-xs font-medium text-gray-500 pl-1">
           {t("calculator.base_pay_form.additional_information")}
         </p>
       </div>

@@ -27,14 +27,14 @@ const HourCounter: React.FC<IHourCounterProps> = ({
   const plusClickHandler = () => setValue((prev) => prev + 1);
 
   return (
-    <div className="flex flex-col gap-8px">
-      <p className="text-sm font-semibold text-input-text-primary">{title}</p>
-      <div className="flex w-full items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+    <div className="flex flex-col gap-2">
+      <p className="text-sm font-semibold text-gray-700">{title}</p>
+      <div className="flex w-full items-center overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm ring-1 ring-gray-200 transition-all focus-within:ring-2 focus-within:ring-orange-500">
         <button
           type="button"
           disabled={minusDisabled}
           onClick={minusClickHandler}
-          className="h-44px px-12px py-10px text-icon-surface-single-color-primary disabled:text-icon-surface-single-color-tertiary"
+          className="flex h-11 items-center justify-center border-r border-gray-100 bg-gray-50 px-4 transition-colors hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-gray-50 text-gray-400"
         >
           <Minus size={16} />
         </button>
@@ -43,13 +43,13 @@ const HourCounter: React.FC<IHourCounterProps> = ({
           setValue={setValue}
           min={minValue}
           max={maxValue}
-          className="w-80px flex-1 bg-transparent px-12px py-10px text-center font-medium text-input-text-input-filled"
+          className="w-full flex-1 bg-transparent px-3 py-2 text-center text-sm font-bold text-gray-900 outline-none placeholder:text-gray-400"
         />
         <button
           type="button"
           disabled={plusDisabled}
           onClick={plusClickHandler}
-          className="h-44px px-12px py-10px text-icon-surface-single-color-primary disabled:text-icon-surface-single-color-tertiary"
+          className="flex h-11 items-center justify-center border-l border-gray-100 bg-gray-50 px-4 transition-colors hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-gray-50 text-gray-400"
         >
           <Plus size={16} />
         </button>

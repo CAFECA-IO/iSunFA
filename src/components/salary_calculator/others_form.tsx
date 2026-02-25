@@ -35,31 +35,33 @@ const OthersForm: React.FC = () => {
       <label
         key={`radio-vpc-${i}`}
         htmlFor={`radio-vpc-${i}`}
-        className="flex h-44px items-center gap-8px"
+        className="flex cursor-pointer items-center gap-2"
       >
-        <input
-          id={`radio-vpc-${i}`}
-          name="radio-vpc"
-          type="radio"
-          checked={isChecked}
-          onChange={changeVpc}
-          className="relative h-16px w-16px appearance-none outline-none rounded-full border border-checkbox-stroke-unselected bg-white after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
-        />
-        <p className="text-sm font-normal text-checkbox-text-primary">
-          {i * 100}%
-        </p>
+        <div className="relative flex items-center justify-center">
+          <input
+            id={`radio-vpc-${i}`}
+            name="radio-vpc"
+            type="radio"
+            checked={isChecked}
+            onChange={changeVpc}
+            className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-gray-300 bg-white transition-all checked:border-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+          />
+          <div className="absolute h-2.5 w-2.5 scale-0 rounded-full bg-orange-600 transition-transform peer-checked:scale-100" />
+        </div>
+        <p className="text-sm font-medium text-gray-700">{i * 100}%</p>
       </label>
     );
   });
 
   return (
-    <form className="flex flex-col gap-24px">
+    <form className="flex flex-col gap-8">
       {/* Info: (20250806 - Julian) 勞保投保狀態 */}
-      <div className="flex flex-col gap-12px">
-        <p className="text-sm font-semibold text-input-text-primary">
+      <div className="flex flex-col gap-3">
+        <p className="text-sm font-bold text-gray-900 flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
           {t("calculator.others_form.labor_coverage_status")}
         </p>
-        <div className="flex flex-col items-start gap-lv-7 tablet:gap-18px">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Info: (20250806 - Julian) 勞保是否勾選 */}
           <ToggleSwitch
             isOn={isLaborInsurance}
@@ -81,7 +83,7 @@ const OthersForm: React.FC = () => {
         </div>
       </div>
       {/* Info: (20250709 - Julian) 扶養人數 */}
-      <div className="flex w-full flex-col gap-12px tablet:w-fit">
+      <div className="flex w-full flex-col gap-3 md:w-fit">
         <HourCounter
           title={t("calculator.others_form.number_of_dependents")}
           value={numberOfDependents}
@@ -101,11 +103,12 @@ const OthersForm: React.FC = () => {
         setValue={setOtherAdjustments}
       />
       {/* Info: (20250710 - Julian) 自提勞退 */}
-      <div className="flex flex-col gap-8px">
-        <p className="text-sm font-semibold text-input-text-primary">
+      <div className="flex flex-col gap-4">
+        <p className="text-sm font-bold text-gray-900 flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
           {t("calculator.others_form.voluntary_pension_contribution")}
         </p>
-        <div className="flex flex-wrap items-center gap-x-36px gap-y-12px">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 rounded-xl border border-gray-100 bg-gray-50/50 p-6">
           {vpcRadios}
         </div>
       </div>

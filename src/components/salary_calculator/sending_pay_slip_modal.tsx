@@ -32,22 +32,22 @@ const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
 
   return (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
-      <div className="relative flex w-90vw flex-col rounded-sm bg-surface-neutral-surface-lv2 md:w-fit">
+      <div className="relative flex w-[90vw] flex-col rounded-sm bg-surface-neutral-surface-lv2 md:w-fit">
         {/* Info: (20250723 - Julian) Modal Header */}
-        <div className="relative flex items-start justify-center px-40px py-16px">
+        <div className="relative flex items-start justify-center px-10 py-4">
           <h2 className="text-lg font-bold text-card-text-primary">
             {t("calculator.sending_pay_slip_modal.title")}
           </h2>
           <button
             type="button"
             onClick={modalVisibleHandler}
-            className="absolute right-20px"
+            className="absolute right-5"
           >
             <X size={24} />
           </button>
         </div>
         {/* Info: (20250723 - Julian) Modal Content */}
-        <div className="flex flex-col gap-10px px-20px py-8px">
+        <div className="flex flex-col gap-2.5 px-5 py-2">
           <p className="text-sm font-normal text-card-text-secondary">
             {t("calculator.sending_pay_slip_modal.content_1")}
             <span className="font-semibold">
@@ -67,7 +67,7 @@ const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
           <div
             className={`flex items-center divide-x rounded-sm border bg-input-surface-input-background ${isValidEmail ? "divide-input-stroke-input border-input-stroke-input" : "divide-input-stroke-error border-input-stroke-error"}`}
           >
-            <div className="flex items-center gap-8px px-12px py-10px">
+            <div className="flex items-center gap-2 px-3 py-2.5">
               <Mail
                 size={16}
                 className={`${isValidEmail ? "text-icon-surface-single-color-primary" : "text-text-state-error"}`}
@@ -85,7 +85,7 @@ const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
               placeholder={t(
                 "calculator.sending_pay_slip_modal.email_placeholder",
               )}
-              className={`flex-1 bg-transparent px-12px py-10px font-medium outline-none ${isValidEmail ? "placeholder:text-input-text-input-placeholder" : "text-input-text-error"}`}
+              className={`flex-1 bg-transparent px-3 py-2.5 font-medium outline-none ${isValidEmail ? "placeholder:text-input-text-input-placeholder" : "text-input-text-error"}`}
             />
           </div>
           {/* Info: (20250723 - Julian) Invalid Email Message */}
@@ -96,7 +96,7 @@ const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
           )}
         </div>
         {/* Info: (20250723 - Julian) Buttons */}
-        <div className="grid grid-cols-2 gap-12px px-20px py-16px">
+        <div className="grid grid-cols-2 gap-3 px-5 py-4">
           <button
             type="button"
             className="w-full"

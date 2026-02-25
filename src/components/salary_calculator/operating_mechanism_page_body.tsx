@@ -26,7 +26,7 @@ const OperatingMechanismContent: React.FC = () => {
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center px-20px tablet:px-100px">
+      <div className="flex items-center justify-center px-5 tablet:px-25">
         Loading...
       </div>
     );
@@ -42,19 +42,19 @@ const OperatingMechanismContent: React.FC = () => {
   const formattedContent = content
     .replace(
       /<h1/g,
-      '<h1 class="mt-56px text-lg font-semibold text-text-neutral-primary"',
+      '<h1 class="mt-14 text-lg font-semibold text-text-neutral-primary"',
     )
     .replace(
       /<h2/g,
-      '<h2 class="mt-10px text-md font-semibold text-text-neutral-secondary"',
+      '<h2 class="mt-[10px] text-md font-semibold text-text-neutral-secondary"',
     )
     .replace(
       /<ol/g,
-      '<ol class="ml-20px list-decimal list-outside text-text-neutral-secondary"',
+      '<ol class="ml-5 list-decimal list-outside text-text-neutral-secondary"',
     )
     .replace(
       /<ul/g,
-      '<ul class="ml-20px list-disc list-outside text-text-neutral-secondary"',
+      '<ul class="ml-5 list-disc list-outside text-text-neutral-secondary"',
     )
     .replace(
       /<p/g,
@@ -62,9 +62,9 @@ const OperatingMechanismContent: React.FC = () => {
     );
 
   return (
-    <div className="flex flex-col items-stretch p-20px tablet:p-80px">
+    <div className="flex flex-col items-stretch p-5 tablet:p-[80px]">
       {/* Info: (20251112 - Julian) Title & Version */}
-      <div className="flex flex-col items-center gap-4px">
+      <div className="flex flex-col items-center gap-1">
         <h1 className="text-center text-xl font-semibold text-text-neutral-primary">
           {t("calculator.operating_mechanism.main_title")}
         </h1>

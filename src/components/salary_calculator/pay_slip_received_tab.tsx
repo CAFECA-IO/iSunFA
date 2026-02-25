@@ -10,7 +10,7 @@ import SortingButton from "@/components/salary_calculator/sorting_button";
 import ViewPaySlipModal from "@/components/salary_calculator/view_pay_slip_modal";
 
 const cellStyle =
-  "table-cell border-b border-stroke-neutral-quaternary px-24px py-12px align-middle";
+  "table-cell align-middle border-b border-stroke-neutral-quaternary px-6 py-3";
 
 const ReceivedItem: React.FC<{
   record: IReceivedRecord;
@@ -26,31 +26,31 @@ const ReceivedItem: React.FC<{
   return (
     <div
       onClick={clickHandler}
-      className="table-row h-50px hover:cursor-pointer hover:bg-surface-brand-primary-30"
+      className="table-row h-[50px] hover:cursor-pointer hover:bg-surface-brand-primary-30"
     >
       {/* Info: (20250723 - Julian) Pay Period */}
       <div className={cellStyle}>
-        <div className="flex items-center gap-8px">
+        <div className="flex items-center gap-2">
           <Calendar size={16} className="text-text-neutral-tertiary" />
           <p>{periodStr}</p>
         </div>
       </div>
       {/* Info: (20250723 - Julian) From */}
       <div className={cellStyle}>
-        <div className="flex items-center gap-8px">
+        <div className="flex items-center gap-2">
           <Calendar size={16} className="text-text-neutral-tertiary" />
           <p>{fromEmail}</p>
         </div>
       </div>
       {/* Info: (20250723 - Julian) Net Pay */}
       <div className={cellStyle}>
-        <div className="flex items-center gap-8px">
+        <div className="flex items-center gap-2">
           <DollarSign size={16} className="text-text-neutral-tertiary" />
           <p>{amountStr}</p>
         </div>
       </div>
       {/* Info: (20250723 - Julian) Action */}
-      <div className={`${cellStyle} w-50px text-center`}>
+      <div className={`${cellStyle} w-[50px] text-center`}>
         <button
           type="button"
           className="text-button-text-secondary hover:text-button-text-secondary-hover"
@@ -127,7 +127,7 @@ const ReceivedTab: React.FC<{
               />
             </div>
             <div
-              className={`${cellStyle} w-50px text-center text-text-neutral-primary`}
+              className={`${cellStyle} w-[50px] text-center text-text-neutral-primary`}
             >
               Action
             </div>

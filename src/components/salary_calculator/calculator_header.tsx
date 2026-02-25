@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from 'next/navigation';
+import { usePathname } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ISUNFA_ROUTE } from "@/constants/url";
 import LanguageSelector from "@/components/header/language_selector";
-import BrandLogo from '@/components/header/brand_logo';
-import UserActions from '@/components/header/user_actions';
+import BrandLogo from "@/components/header/brand_logo";
+import UserActions from "@/components/header/user_actions";
 import { useAuth } from "@/contexts/auth_context";
 
 const CalculatorHeader: React.FC = () => {
@@ -21,13 +21,16 @@ const CalculatorHeader: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-xl shadow-sm ring-1 ring-gray-900/5">
-      <nav className="flex items-center justify-between p-3 lg:px-8" aria-label="Global">
+      <nav
+        className="flex items-center justify-between p-3 lg:px-8"
+        aria-label="Global"
+      >
         <div className="flex items-center gap-x-6">
           <BrandLogo />
           <div className="hidden lg:flex items-center gap-x-4">
             <Link
               href={ISUNFA_ROUTE.SALARY_CALCULATOR}
-           className={`text-sm font-medium transition-colors hover:text-orange-600 ${isCalc ? "text-orange-600" : "text-gray-600"}`}
+              className={`text-sm font-medium transition-colors hover:text-orange-600 ${isCalc ? "text-orange-600" : "text-gray-600"}`}
             >
               {t("calculator.header.main_title")}
             </Link>
@@ -38,7 +41,7 @@ const CalculatorHeader: React.FC = () => {
               {t("calculator.header.how_it_works")}
             </Link>
           </div>
-{user && (
+          {user && (
             <div className="hidden md:flex items-center gap-x-4">
               <Link
                 href={ISUNFA_ROUTE.PAY_SLIP}

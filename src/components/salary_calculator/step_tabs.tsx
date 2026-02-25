@@ -96,33 +96,34 @@ const StepTabs: React.FC = () => {
     };
 
     const stepClass = isActive
-      ? "border-stroke-state-success bg-surface-state-success-soft text-text-state-success"
+      ? "border-orange-600 bg-orange-50 text-orange-900 shadow-sm"
       : isCompleted
-        ? "text-text-state-success border-stroke-neutral-tertiary"
-        : "border-stroke-neutral-tertiary text-text-neutral-secondary";
+        ? "border-green-200 bg-green-50/30 text-green-700"
+        : "border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50/50";
 
     const iconClass = isActive
-      ? " text-surface-state-success"
+      ? "text-orange-600"
       : isCompleted
-        ? "text-surface-state-success-dark"
-        : "text-surface-neutral-mute";
+        ? "text-green-500"
+        : "text-gray-300";
 
     return (
       <button
         key={step}
         type="button"
         onClick={clickHandler}
-        className={`${stepClass} flex h-40px w-full items-center justify-center gap-8px rounded-sm border px-12px py-lv-3 text-xs font-medium tablet:py-8px`}
+        className={`${stepClass} flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 transition-all duration-200 text-xs font-bold uppercase tracking-wider`}
       >
-        <CircleCheck size={20} className={iconClass} />
+        <CircleCheck
+          size={18}
+          className={`${iconClass} transition-colors duration-200`}
+        />
         {step}
       </button>
     );
   });
 
-  return (
-    <div className="grid grid-cols-2 gap-8px tablet:grid-cols-4">{tabs}</div>
-  );
+  return <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{tabs}</div>;
 };
 
 export default StepTabs;
