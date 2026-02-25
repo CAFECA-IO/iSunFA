@@ -1,3 +1,5 @@
+'use client';
+
 import Head from 'next/head';
 import { useTranslation } from '@/i18n/i18n_context';
 import OperatingMechanismPageBody from '@/components/salary_calculator/operating_mechanism_page_body';

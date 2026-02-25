@@ -43,7 +43,7 @@ const ResendingPaySlipModal: React.FC<IResendingPaySlipModalProps> = ({
 
   const resendPaySlip = () => {
     // ToDo: (20250725 - Julian) 重置薪資單功能
-     
+
     console.log("Reset Pay Slip");
 
     setIsSending(true);

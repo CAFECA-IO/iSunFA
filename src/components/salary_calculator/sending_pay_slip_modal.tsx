@@ -26,7 +26,7 @@ const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
 
   const sendPaySlip = () => {
     // ToDo: (20250723 - Julian) 實作發送薪資單的邏輯
-     
+
     console.log("Sending pay slip to:", emailInput);
   };
 

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -456,7 +456,7 @@ const BasicInfoForm: React.FC = () => {
           >
             <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
               {t(
-                `calculator.basic_info_form.payroll_option_${payrollDaysBase}`,
+                `calculator.basic_info_form.payroll_option_${payrollDaysBase.toLowerCase()}`,
               )}
             </div>
             <div className="px-12px py-10px">

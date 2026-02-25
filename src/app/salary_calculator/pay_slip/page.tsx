@@ -1,3 +1,5 @@
+'use client';
+
 import Head from 'next/head';
 import { useTranslation } from '@/i18n/i18n_context';
 import MyPaySlipPageBody from '@/components/salary_calculator/my_pay_slip_page_body';

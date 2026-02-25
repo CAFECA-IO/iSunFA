@@ -64,7 +64,7 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
 
   const addEmployee = () => {
     // ToDo: (20250715 - Julian) Add employee API call logic here
-     
+
     console.log("Employee added:", {
       name: nameInput,
       number: numberInput,
@@ -84,7 +84,7 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
 
   const editEmployee = () => {
     // ToDo: (20250715 - Julian) Edit employee API call logic here
-     
+
     console.log("Employee edited:", {
       id: data?.id,
       name: nameInput,

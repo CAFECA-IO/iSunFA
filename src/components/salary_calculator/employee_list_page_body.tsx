@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "@/i18n/i18n_context";
-import CalculatorNavbar from "@/components/salary_calculator/calculator_navbar";
+import CalculatorHeader from "@/components/salary_calculator/calculator_header";
 import EmployeeList from "@/components/salary_calculator/employee_list";
 
 const EmployeeListPageBody: React.FC = () => {
@@ -9,7 +9,7 @@ const EmployeeListPageBody: React.FC = () => {
   return (
     <main className="min-h-screen overflow-x-hidden bg-white">
       {/* Info: (20250715 - Julian) Header */}
-      <CalculatorNavbar />
+      <CalculatorHeader />
 
       {/* Info: (20250715 - Julian) Main Content */}
       <div className="flex flex-col items-stretch gap-56px px-240px py-56px">

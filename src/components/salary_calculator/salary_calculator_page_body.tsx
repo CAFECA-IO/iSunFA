@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
 import React, { useState } from "react";
 import Image from "next/image";
 import { useTranslation } from "@/i18n/i18n_context";
 import SalaryResultSection from "@/components/salary_calculator/salary_result_section";
 import SalaryFormSection from "@/components/salary_calculator/salary_form_section";
-import CalculatorNavbar from "@/components/salary_calculator/calculator_navbar";
+import CalculatorHeader from "@/components/salary_calculator/calculator_header";
 import ProgressBar from "@/components/salary_calculator/progress_bar";
 
 enum CalcTab {
@@ -26,7 +26,7 @@ const SalaryCalculatorPageBody: React.FC = () => {
   return (
     <main className="min-h-screen overflow-x-hidden bg-surface-neutral-main-background">
       {/* Info: (20250708 - Julian) Header */}
-      <CalculatorNavbar />
+      <CalculatorHeader />
 
       {/* Info: (20250887 - Julian) Main Content Desktop */}
       <div className="hidden gap-84px overflow-x-auto p-80px tablet:flex">

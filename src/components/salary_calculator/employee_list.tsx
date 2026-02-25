@@ -104,7 +104,7 @@ const EmployeeList: React.FC = () => {
   const [isShowModal, setIsShowModal] = useState<boolean>(false);
   // const [currentPage, setCurrentPage] = useState<number>(0);
   // ToDo: (20250715 - Julian) Get total pages from API
-   
+
   // const [totalPages, setTotalPages] = useState<number>(0);
 
   const changeKeyword = (e: React.ChangeEvent<HTMLInputElement>) => {

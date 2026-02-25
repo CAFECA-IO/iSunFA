@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
-import CalculatorNavbar from "@/components/salary_calculator/calculator_navbar";
+import CalculatorHeader from "@/components/salary_calculator/calculator_header";
 import { timestampToString } from "@/lib/utils/common";
 
 interface IOperatingMechanismData {
@@ -83,7 +83,7 @@ const OperatingMechanismPageBody: React.FC = () => {
   return (
     <main className="min-h-screen overflow-x-hidden bg-surface-neutral-main-background">
       {/* Info: (20251112 - Julian) Header */}
-      <CalculatorNavbar />
+      <CalculatorHeader />
 
       {/* Info: (20251112 - Julian) Main Content */}
       <OperatingMechanismContent />

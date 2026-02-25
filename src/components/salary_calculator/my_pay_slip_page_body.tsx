@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ChevronDown, Search } from "lucide-react";
-import CalculatorNavbar from "@/components/salary_calculator/calculator_navbar";
+import CalculatorHeader from "@/components/salary_calculator/calculator_header";
 import ReceivedTab from "@/components/salary_calculator/pay_slip_received_tab";
 import SentTab from "@/components/salary_calculator/pay_slip_sent_tab";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
@@ -288,7 +288,7 @@ const MyPaySlipPageBody: React.FC = () => {
   return (
     <main className="min-h-screen overflow-x-hidden bg-white">
       {/* Info: (20250718 - Julian) Header */}
-      <CalculatorNavbar />
+      <CalculatorHeader />
 
       {/* Info: (20250718 - Julian) Main Content */}
       <div className="flex flex-col items-stretch gap-56px px-240px py-56px">
