@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ChevronDown, Search } from "lucide-react";

@@ -87,35 +87,35 @@ const PaySlip: React.FC<IPaySlipProps> = ({
       value: overtimePayWithTax,
     },
     {
-      label: t("calculator:result.other_allowance_with_tax"),
+      label: t("calculator.result.other_allowance_with_tax"),
       value: otherAllowanceWithTax,
     },
     {
-      label: t("calculator:result.total_salary_with_tax"),
+      label: t("calculator.result.total_salary_with_tax"),
       value: totalSalaryWithTax,
     },
     {
-      label: t("calculator:result.meal_allowance_without_tax"),
+      label: t("calculator.result.meal_allowance_without_tax"),
       value: mealAllowanceWithoutTax,
     },
     {
-      label: t("calculator:result.overtime_pay_without_tax"),
+      label: t("calculator.result.overtime_pay_without_tax"),
       value: overtimePayWithoutTax,
     },
     {
-      label: t("calculator:result.other_allowance_without_tax"),
+      label: t("calculator.result.other_allowance_without_tax"),
       value: otherAllowanceWithoutTax,
     },
     {
-      label: t("calculator:result.leave_salary_without_tax"),
+      label: t("calculator.result.leave_salary_without_tax"),
       value: leaveSalaryWithoutTax,
     },
     {
-      label: t("calculator:result.total_salary_without_tax"),
+      label: t("calculator.result.total_salary_without_tax"),
       value: totalSalaryWithoutTax,
     },
     {
-      label: t("calculator:result.total_monthly_salary"),
+      label: t("calculator.result.total_monthly_salary"),
       value: totalMonthlySalary,
     },
   ];
@@ -123,39 +123,39 @@ const PaySlip: React.FC<IPaySlipProps> = ({
   // Info: (20250708 - Julian) 員工負擔項目
   const employeeRowItems: RowItem[] = [
     {
-      label: t("calculator:result.employee_paid_labor_insurance"),
+      label: t("calculator.result.employee_paid_labor_insurance"),
       value: employeePaidLaborInsurance,
     },
     {
-      label: t("calculator:result.employee_paid_health_insurance"),
+      label: t("calculator.result.employee_paid_health_insurance"),
       value: employeePaidHealthInsurance,
     },
     {
-      label: t("calculator:result.voluntary_pension_contribution"),
+      label: t("calculator.result.voluntary_pension_contribution"),
       value: voluntaryPensionContribution,
     },
     {
-      label: t("calculator:result.withheld_income_tax"),
+      label: t("calculator.result.withheld_income_tax"),
       value: withheldIncomeTax,
     },
     {
-      label: t("calculator:result.withheld_second_generation_nhi_premium"),
+      label: t("calculator.result.withheld_second_generation_nhi_premium"),
       value: withheldSecondGenerationNHIPremium,
     },
     {
-      label: t("calculator:result.leave_deduction_with_tax"),
+      label: t("calculator.result.leave_deduction_with_tax"),
       value: leaveDeductionTaxable,
     },
     {
-      label: t("calculator:result.leave_deduction_without_tax"),
+      label: t("calculator.result.leave_deduction_without_tax"),
       value: leaveDeductionTaxFree,
     },
     {
-      label: t("calculator:result.other_deductions_adjustments"),
+      label: t("calculator.result.other_deductions_adjustments"),
       value: otherDeductionsOrAdjustments,
     },
     {
-      label: t("calculator:result.total_deductions"),
+      label: t("calculator.result.total_deductions"),
       value: totalEmployeeBurden,
     },
   ];
@@ -163,33 +163,33 @@ const PaySlip: React.FC<IPaySlipProps> = ({
   // Info: (20250708 - Julian) 投保級距項目
   const insuredSalaryRowItems: RowItem[] = [
     {
-      label: t("calculator:result.health_insurance_salary_bracket"),
+      label: t("calculator.result.health_insurance_salary_bracket"),
       value: healthInsuranceSalaryBracket,
     },
     {
-      label: t("calculator:result.labor_insurance_salary_bracket"),
+      label: t("calculator.result.labor_insurance_salary_bracket"),
       value: laborInsuranceSalaryBracket,
     },
     {
-      label: t("calculator:result.employment_insurance_salary_bracket"),
+      label: t("calculator.result.employment_insurance_salary_bracket"),
       value: employmentInsuranceSalaryBracket,
     },
     {
       label: t(
-        "calculator:result.occupational_injury_insurance_salary_bracket",
+        "calculator.result.occupational_injury_insurance_salary_bracket",
       ),
       value: occupationalInjuryInsuranceSalaryBracket,
     },
     {
-      label: t("calculator:result.labor_pension_salary_bracket"),
+      label: t("calculator.result.labor_pension_salary_bracket"),
       value: laborPensionSalaryBracket,
     },
     {
-      label: t("calculator:result.occupational_injury_industry_rate"),
+      label: t("calculator.result.occupational_injury_industry_rate"),
       value: occupationalInjuryIndustryRate,
     },
     {
-      label: t("calculator:result.insured_salary"),
+      label: t("calculator.result.insured_salary"),
       value: insuredSalary,
     },
   ];
@@ -197,29 +197,29 @@ const PaySlip: React.FC<IPaySlipProps> = ({
   // Info: (20250708 - Julian) 雇主負擔項目
   const employerRowItems: RowItem[] = [
     {
-      label: t("calculator:result.employer_paid_labor_insurance"),
+      label: t("calculator.result.employer_paid_labor_insurance"),
       value: employerPaidLaborInsurance,
     },
     {
-      label: t("calculator:result.employer_paid_health_insurance"),
+      label: t("calculator.result.employer_paid_health_insurance"),
       value: employerPaidHealthInsurance,
     },
     {
-      label: t("calculator:result.employer_paid_pension_contribution"),
+      label: t("calculator.result.employer_paid_pension_contribution"),
       value: employerPaidPensionContribution,
     },
     {
       label: t(
-        "calculator:result.company_burden_occupational_accident_insurance",
+        "calculator.result.company_burden_occupational_accident_insurance",
       ),
       value: companyBurdenOccupationalAccidentInsurance,
     },
     {
-      label: t("calculator:result.total_salary"),
+      label: t("calculator.result.total_salary"),
       value: totalSalary,
     },
     {
-      label: t("calculator:result.total_employer_cost"),
+      label: t("calculator.result.total_employer_cost"),
       value: totalEmployerCost,
     },
   ];

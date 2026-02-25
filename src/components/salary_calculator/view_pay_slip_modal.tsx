@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useRef, useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { X, Download, Send } from "lucide-react";

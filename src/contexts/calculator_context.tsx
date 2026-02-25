@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState,  createContext, useContext } from 'react';
 import { MONTHS, MonthType } from '@/constants/month';
 import {

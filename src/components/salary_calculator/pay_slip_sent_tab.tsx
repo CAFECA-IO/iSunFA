@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { User, Calendar, Send } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";

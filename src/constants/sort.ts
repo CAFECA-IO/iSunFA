@@ -1,4 +1,7 @@
-import { SortOptions } from '@/constants/display';
+enum SortOptions {
+  newest = 'newest',
+  oldest = 'oldest',
+}
 
 export enum SortOptionQuery {
   newest = 'desc',

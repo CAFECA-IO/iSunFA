@@ -94,14 +94,14 @@ const SalaryResultSection: React.FC = () => {
         {/* Info: (20250708 - Julian) Buttons */}
         <div className="grid grid-cols-1 gap-24px tablet:grid-cols-2">
           <button type="button" onClick={downloadPng} disabled={btnDisabled}>
-            {t("calculator:BUTTON.DOWNLOAD")} <Download size={20} />
+            {t("calculator.button.download")} <Download size={20} />
           </button>
           <button
             type="button"
             onClick={sendingBtnClickHandler}
             disabled={btnDisabled}
           >
-            {t("calculator:BUTTON.SEND")} <Send size={20} />
+            {t("calculator.button.send")} <Send size={20} />
           </button>
         </div>
       </div>

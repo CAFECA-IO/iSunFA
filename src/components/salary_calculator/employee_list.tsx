@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { Search, User, Hash, Mail, Plus, Edit, Trash } from "lucide-react";

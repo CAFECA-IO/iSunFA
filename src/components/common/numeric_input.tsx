@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { numberWithCommas } from '@/lib/utils/common';
 // import BigNumberjs from 'bignumber.js';

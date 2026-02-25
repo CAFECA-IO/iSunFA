@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
@@ -24,7 +26,7 @@ const ProgressBar: React.FC = () => {
       <div className="flex w-full items-end gap-12px">
         <div className="flex flex-1 flex-col items-start gap-8px">
           <p className="text-base font-semibold text-text-state-success">
-            {t("calculator:TABS.COMPLETED")} {progress}%
+            {t("calculator.tabs.completed")} {progress}%
           </p>
           <div className="relative h-8px w-full rounded-full bg-progress-bar-surface-base">
             <span
@@ -39,7 +41,7 @@ const ProgressBar: React.FC = () => {
 
         <button type="button" onClick={modalVisibleHandler}>
           <RefreshCw size={16} className="-scale-x-100" />{" "}
-          {t("calculator:BUTTON.RESET")}
+          {t("calculator.button.reset")}
         </button>
       </div>
 
@@ -62,7 +64,7 @@ const ProgressBar: React.FC = () => {
             </div>
             {/* Info: (20250723 - Julian) Modal Content */}
             <div className="px-20px py-8px text-sm font-normal text-card-text-secondary">
-              {t("calculator:reset_modal.content")}
+              {t("calculator.reset_modal.content")}
             </div>
             {/* Info: (20250723 - Julian) buttons */}
             <div className="grid grid-cols-2 gap-12px px-20px py-16px">
@@ -78,7 +80,7 @@ const ProgressBar: React.FC = () => {
                 className="w-full"
                 onClick={resetClickHandler}
               >
-                {t("calculator:reset_modal.submit")}
+                {t("calculator.reset_modal.submit")}
               </button>
             </div>
           </div>

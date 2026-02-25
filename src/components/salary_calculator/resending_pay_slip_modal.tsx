@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -28,8 +30,8 @@ const ResendingPaySlipModal: React.FC<IResendingPaySlipModalProps> = ({
       // Info: (20250725 - Julian) 顯示訊息 Modal
       // messageModalDataHandler({
       //   messageType: MessageType.SUCCESS,
-      //   title: t('calculator:MESSAGE.RESEND_SUCCESS_TITLE'),
-      //   content: t('calculator:MESSAGE.RESEND_SUCCESS_CONTENT'),
+      //   title: t('calculator.MESSAGE.RESEND_SUCCESS_TITLE'),
+      //   content: t('calculator.MESSAGE.RESEND_SUCCESS_CONTENT'),
       //   submitBtnStr: t('common:COMMON.CLOSE'),
       //   submitBtnFunction: messageModalVisibilityHandler,
       // });
@@ -65,27 +67,27 @@ const ResendingPaySlipModal: React.FC<IResendingPaySlipModalProps> = ({
     <>
       {/* Info: (20250723 - Julian) Modal Content */}
       <div className="px-20px py-8px text-card-text-secondary">
-        {t("calculator:MESSAGE.RESEND_PAY_SLIP_CONTENT_1")}
+        {t("calculator.MESSAGE.RESEND_PAY_SLIP_CONTENT_1")}
         <span className="font-bold">
-          {t("calculator:MESSAGE.RESEND_PAY_SLIP_CONTENT_BOLD_1", {
+          {t("calculator.MESSAGE.RESEND_PAY_SLIP_CONTENT_BOLD_1", {
             month: monthName,
           })}
         </span>
-        {t("calculator:MESSAGE.RESEND_PAY_SLIP_CONTENT_2")}
+        {t("calculator.MESSAGE.RESEND_PAY_SLIP_CONTENT_2")}
         <span className="font-bold">
-          {t("calculator:MESSAGE.RESEND_PAY_SLIP_CONTENT_BOLD_2", {
+          {t("calculator.MESSAGE.RESEND_PAY_SLIP_CONTENT_BOLD_2", {
             name: sentToName,
           })}
         </span>
-        {t("calculator:MESSAGE.RESEND_PAY_SLIP_CONTENT_3")}
+        {t("calculator.MESSAGE.RESEND_PAY_SLIP_CONTENT_3")}
       </div>
       {/* Info: (20250723 - Julian) Buttons */}
       <div className="grid grid-cols-2 gap-12px px-20px py-16px">
         <button type="button" className="w-full" onClick={modalVisibleHandler}>
-          {t("calculator:MESSAGE.RESEND_PAY_SLIP_CANCEL_BTN")}
+          {t("calculator.MESSAGE.RESEND_PAY_SLIP_CANCEL_BTN")}
         </button>
         <button type="button" className="w-full" onClick={resendPaySlip}>
-          {t("calculator:MESSAGE.RESEND_PAY_SLIP_SUBMIT_BTN")}
+          {t("calculator.MESSAGE.RESEND_PAY_SLIP_SUBMIT_BTN")}
         </button>
       </div>
     </>
@@ -97,7 +99,7 @@ const ResendingPaySlipModal: React.FC<IResendingPaySlipModalProps> = ({
         {/* Info: (20250723 - Julian) Modal Header */}
         <div className="relative flex items-start justify-center px-40px py-16px">
           <h2 className="text-lg font-bold text-card-text-primary">
-            {t("calculator:MESSAGE.RESEND_PAY_SLIP_TITLE")}
+            {t("calculator.MESSAGE.RESEND_PAY_SLIP_TITLE")}
           </h2>
           <button
             type="button"

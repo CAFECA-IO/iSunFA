@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import CalculatorNavbar from "@/components/salary_calculator/calculator_navbar";

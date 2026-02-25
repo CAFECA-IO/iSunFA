@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from "react";
 import Image from "next/image";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -49,7 +51,7 @@ const SalaryCalculatorPageBody: React.FC = () => {
               width={24}
               height={24}
             />
-            <p>{t("calculator:tabs.calculator")}</p>
+            <p>{t("calculator.tabs.calculator")}</p>
           </button>
           <button
             type="button"
@@ -62,7 +64,7 @@ const SalaryCalculatorPageBody: React.FC = () => {
               width={24}
               height={24}
             />
-            <p>{t("calculator:tabs.pay_slip")}</p>
+            <p>{t("calculator.tabs.pay_slip")}</p>
           </button>
         </div>
         {/* Info: (20250828 - Julian) Form Part */}

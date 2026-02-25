@@ -1,7 +1,9 @@
+'use client';
+
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { usePathname } from 'next/navigation';
 import { useTranslation } from "@/i18n/i18n_context";
 import { LogIn, LogOut, Home } from "lucide-react";
 import useOuterClick from "@/lib/hooks/use_outer_click";
@@ -12,7 +14,7 @@ import { UserIcon } from "lucide-react";
 
 const CalculatorNavbar: React.FC = () => {
   const { t } = useTranslation();
-  const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
 
   const isSignIn = !!user;
@@ -23,9 +25,9 @@ const CalculatorNavbar: React.FC = () => {
     setComponentVisible: setIsShowUserMenu,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const isCalc = router.pathname === ISUNFA_ROUTE.SALARY_CALCULATOR;
-  const isList = router.pathname === ISUNFA_ROUTE.EMPLOYEE_LIST;
-  const isSlip = router.pathname === ISUNFA_ROUTE.PAY_SLIP;
+  const isCalc = pathname === ISUNFA_ROUTE.SALARY_CALCULATOR;
+  const isList = pathname === ISUNFA_ROUTE.EMPLOYEE_LIST;
+  const isSlip = pathname === ISUNFA_ROUTE.PAY_SLIP;
 
   const toggleUserMenu = () => setIsShowUserMenu((prev) => !prev);
 
@@ -83,7 +85,7 @@ const CalculatorNavbar: React.FC = () => {
     // Info: (20250724 - Julian) 先隱藏
     <button className="flex items-center gap-8px px-24px py-10px font-medium text-button-text-primary">
       <LogIn size={24} />
-      {t("calculator:NAVBAR.LOGIN")}
+      {t("calculator.header.login")}
     </button>
   );
 
