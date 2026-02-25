@@ -583,7 +583,7 @@ export const en = {
     input_placeholder: 'Please enter your question...',
     file_size_error: 'File "{name}" exceeds 5MB limit',
     file_count_error: 'Maximum {count} images can be uploaded',
-    upload_btn: 'Upload Invoice / Receipt (OCR)',
+    upload_btn: 'Upload Attachment',
     drop_to_upload: 'Drop to upload',
     ask_ai: 'Ask AI Now',
     disclaimer: '* AI responses are for reference only and do not represent formal legal advice. The analysis is based on provided data.',

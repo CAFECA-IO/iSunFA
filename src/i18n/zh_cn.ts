@@ -576,7 +576,7 @@ export const zhCn = {
     input_placeholder: '请输入你的问题...',
     file_size_error: '档案 "{name}" 超过 5MB 限制',
     file_count_error: '最多只能上传 {count} 张图片',
-    upload_btn: '上传发票 / 单据 (OCR)',
+    upload_btn: '上传附件',
     drop_to_upload: '放开以开始上传',
     ask_ai: '立即向 AI 提問',
     disclaimer: '* AI 回复仅供参考，不代表正式法律建议。其分析内容基于提供的数据。',

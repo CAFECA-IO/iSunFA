@@ -5,7 +5,7 @@ import { ChatService } from '@/services/chat.service';
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, tags, image, mimeType } = await request.json();
+    const { message, tags, file, mimeType } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     const chatService = new ChatService(apiKey);
-    const reply = await chatService.generateResponse(message, tags, image, mimeType);
+    const reply = await chatService.generateResponse(message, tags, file, mimeType);
 
     return jsonOk({ reply });
   } catch (error) {
