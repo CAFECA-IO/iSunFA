@@ -17,7 +17,6 @@ import { MODULES } from '@/constants/modules';
 
 import ConfirmModal from '@/components/common/confirm_modal';
 import AuthModal from '@/components/auth/auth_modal';
-// import KYCModal from '@/components/pricing/kyc_modal';
 import PaymentModal from '@/components/pricing/payment_modal';
 import { request } from '@/lib/utils/request';
 import { Loader2 } from 'lucide-react';
@@ -33,17 +32,22 @@ export default function PricingPage() {
   const [activeTab, setActiveTab] = useState<'subscription' | 'credits'>(initialTab);
   const [pricingPlans, setPricingPlans] = useState<typeof CREDIT_PLANS>([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
-  const [confirmModal, setConfirmModal] = useState({
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string | React.ReactNode;
+  }>({
     isOpen: false,
     title: '',
     message: '',
   });
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
-  // const [kycModalOpen, setKycModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [deployingPlanId, setDeployingPlanId] = useState<string | null>(null);
   const [pendingAmount, setPendingAmount] = useState(0);
   const [pendingCredits, setPendingCredits] = useState(0);
+  const [pendingBaseCredits, setPendingBaseCredits] = useState(0);
+  const [pendingBonusCredits, setPendingBonusCredits] = useState(0);
   const [pendingDisplayPrice, setPendingDisplayPrice] = useState('');
 
   // Info: (20260119 - Luphia) Allow guest users to select free plan to trigger login
@@ -77,7 +81,27 @@ export default function PricingPage() {
     setConfirmModal({
       isOpen: true,
       title: t('pricing.coming_soon_title'),
-      message: t('pricing.coming_soon_message'),
+      message: (
+        <span>
+          {t('pricing.coming_soon_prefix')}
+          <a
+            href="https://www.economic.ntpc.gov.tw/Api/News/Page?id=8173"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-orange-600 hover:text-orange-500 underline decoration-orange-600/30 hover:decoration-orange-500"
+          >
+            {t('pricing.coming_soon_program')}
+          </a>
+          {t('pricing.coming_soon_middle')}
+          <a
+            href="mailto:contact@isunfa.com"
+            className="text-orange-600 hover:text-orange-500 underline decoration-orange-600/30 hover:decoration-orange-500"
+          >
+            {t('pricing.coming_soon_email')}
+          </a>
+          {t('pricing.coming_soon_suffix')}
+        </span>
+      ),
     });
   };
 
@@ -118,15 +142,9 @@ export default function PricingPage() {
     }
   }
 
-  const handlePaymentSuccess = async (tx: string) => {
-    // Info: (20260129 - Tzuhan) Refresh user balance after minting
-    await refreshAuth();
-
-    setConfirmModal({
-      isOpen: true,
-      title: 'Purchase Successful',
-      message: `Tokens minted successfully! Tx: ${tx}`,
-    });
+  const handlePaymentSuccess = async () => {
+    // Info: (20260224 - Tzuhan) no use now, remove in the future
+    // setPaymentModalOpen(false);
   };
 
   return (
@@ -478,6 +496,8 @@ export default function PricingPage() {
                           }
 
                           setPendingCredits(plan.credits);
+                          setPendingBaseCredits(baseCredits);
+                          setPendingBonusCredits(bonus);
                           setPendingAmount(language === 'zh-TW' ? plan.price.twd : plan.price.usd);
                           setPendingDisplayPrice(getPrice(plan));
 
@@ -534,20 +554,14 @@ export default function PricingPage() {
           onClose={() => setAuthModalOpen(false)}
         />
 
-        {/* <KYCModal
-          isOpen={kycModalOpen}
-          onClose={() => setKycModalOpen(false)}
-          onSuccess={() => {
-            setPaymentModalOpen(true);
-          }}
-        /> */}
-
         <PaymentModal
           isOpen={paymentModalOpen}
           onClose={() => setPaymentModalOpen(false)}
           onSuccess={handlePaymentSuccess}
           amount={pendingAmount}
           credits={pendingCredits}
+          baseCredits={pendingBaseCredits}
+          bonusCredits={pendingBonusCredits}
           displayPrice={pendingDisplayPrice}
         />
 

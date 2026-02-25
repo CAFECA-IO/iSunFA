@@ -1,3 +1,5 @@
+'use client';
+
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { request } from "@/lib/utils/request";
@@ -82,7 +84,7 @@ export const AiChat = () => {
         setQuestion("");
         setAttachments([]);
         setLocalFiles([]);
-        
+
         // Info: (20260212 - Julian) 延遲 500 ms 後導向 /ai_consultation_room/{threadId} 頁面
         setTimeout(() => {
           if (data.payload && data.payload.threadId) {

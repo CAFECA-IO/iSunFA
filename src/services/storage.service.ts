@@ -157,14 +157,16 @@ export class StorageService {
     try {
       await fs.mkdir(outputDir, { recursive: true });
 
-      // 1. Download metadata
+      // Info: (20260213 - Julian) 1. Download metadata
       const metadataRes = await fetch(`${domain}/api/v1/file/${metadataHash}`);
       if (!metadataRes.ok) {
         throw new Error(`Failed to fetch metadata: ${metadataRes.statusText}`);
       }
       const metadata = await metadataRes.json();
-      // Info: (20260213 - Julian) 這裡假設 Storage 回傳的是原始 JSON 或 payload 包含原始 JSON
-      // 根據之前的 API 慣例，這裡可能是 { code: 'SUCCESS', payload: { ... } }
+      /**
+       * Info: (20260213 - Julian) 這裡假設 Storage 回傳的是原始 JSON 或 payload 包含原始 JSON
+       * 根據之前的 API 慣例，這裡可能是 { code: 'SUCCESS', payload: { ... } }
+       */
       const metaObj = metadata.payload || metadata;
 
       const { shards, originalFileSize } = metaObj;
@@ -172,13 +174,13 @@ export class StorageService {
         throw new Error("Invalid metadata format");
       }
 
-      // 寫入 metadata.json (recoverFile 需要它)
+      // Info: (20260213 - Julian) 寫入 metadata.json (recoverFile 需要它)
       await fs.writeFile(
         path.join(outputDir, "metadata.json"),
         JSON.stringify({ originalFileSize }),
       );
 
-      // 2. Download Shards
+      // Info: (20260213 - Julian) 2. Download Shards
       for (let i = 0; i < shards.length; i++) {
         const shardHash = shards[i];
         const shardRes = await fetch(`${domain}/api/v1/file/${shardHash}`);
@@ -192,17 +194,17 @@ export class StorageService {
         );
       }
 
-      // 3. Recover
+      // Info: (20260213 - Julian) 3. Recover
       const { recoverFile } = await import("@/lib/laria");
       await recoverFile(outputDir, recoveredPath);
 
-      // 4. Read restored data
+      // Info: (20260213 - Julian) 4. Read restored data
       return await fs.readFile(recoveredPath);
     } catch (error) {
       console.error("[StorageService] Laria recovery failed:", error);
       throw error;
     } finally {
-      // 5. Cleanup
+      // Info: (20260213 - Julian) 5. Cleanup
       try {
         await fs.rm(tempDir, { recursive: true, force: true });
       } catch (e) {
@@ -211,6 +213,5 @@ export class StorageService {
     }
   }
 }
-
 
 export const storageService = new StorageService();

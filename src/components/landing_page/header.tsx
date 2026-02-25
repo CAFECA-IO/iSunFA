@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { useTranslation } from '@/i18n/i18n_context';
+import Link from "next/link";
+import { useTranslation } from "@/i18n/i18n_context";
 import BrandLogo from '@/components/header/brand_logo';
 import LanguageSelector from '@/components/header/language_selector';
 import UserActions from '@/components/header/user_actions';

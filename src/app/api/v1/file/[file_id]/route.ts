@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { storageService } from "@/services/storage.service";
 
 /**
- * 取得檔案（取得檔案分片清單，再拼起來）
+ * Info: (20260213 - Julian) 取得檔案
+ * 取得檔案分片清單，再拼起來
  * GET /api/v1/file/:file_id
  */
 export async function GET(
@@ -24,8 +25,10 @@ export async function GET(
       return jsonFail(ApiCode.NOT_FOUND, "File not found");
     }
 
-    // Info: (20260213 - Julian) 從 URL 提取 Metadata Hash (CID)
-    // 假設 URL 格式為 https://storage.cafeca.io/api/v1/file/Qm...
+    /**
+     * Info: (20260213 - Julian) 從 URL 提取 Metadata Hash (CID)
+     * 假設 URL 格式為 https://storage.cafeca.io/api/v1/file/Qm...
+     */
     const urlParts = file.url?.split("/");
     const metadataHash = urlParts?.[urlParts.length - 1];
 
@@ -53,7 +56,7 @@ export async function GET(
 }
 
 /**
- * 刪除已上傳的檔案 (從資料庫正式移除)
+ * Info: (20260213 - Julian) 刪除已上傳的檔案 (從資料庫正式移除)
  * DELETE /api/v1/file/:file_id
  */
 export async function DELETE(
