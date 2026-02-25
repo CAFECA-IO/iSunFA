@@ -149,9 +149,9 @@ const BasicInfoForm: React.FC = () => {
             type="radio"
             checked={isChecked}
             onChange={changeType}
-            className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-gray-300 bg-white transition-all checked:border-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+            className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-gray-300 bg-white transition-all checked:border-orange-400 outline-none"
           />
-          <div className="absolute h-2.5 w-2.5 scale-0 rounded-full bg-orange-600 transition-transform peer-checked:scale-100" />
+          <div className="absolute h-2.5 w-2.5 scale-0 rounded-full bg-orange-400 transition-transform peer-checked:scale-100" />
         </div>
         <p className="text-sm font-medium text-gray-700">{str}</p>
       </label>
@@ -183,9 +183,9 @@ const BasicInfoForm: React.FC = () => {
             type="radio"
             checked={isChecked}
             onChange={changeType}
-            className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-gray-300 bg-white transition-all checked:border-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+            className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-gray-300 bg-white transition-all checked:border-orange-400 outline-none"
           />
-          <div className="absolute h-2.5 w-2.5 scale-0 rounded-full bg-orange-600 transition-transform peer-checked:scale-100" />
+          <div className="absolute h-2.5 w-2.5 scale-0 rounded-full bg-orange-400 transition-transform peer-checked:scale-100" />
         </div>
         <p className="text-sm font-medium text-gray-700">{str}</p>
       </label>
@@ -214,7 +214,7 @@ const BasicInfoForm: React.FC = () => {
         key={year}
         type="button"
         onClick={clickHandler}
-        className="px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-orange-50 hover:text-orange-900"
+        className="px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-orange-50 hover:text-orange-900 hover:cursor-pointer"
       >
         {year}
       </button>
@@ -232,7 +232,7 @@ const BasicInfoForm: React.FC = () => {
         key={month.name}
         type="button"
         onClick={clickHandler}
-        className="px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-orange-50 hover:text-orange-900"
+        className="px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-orange-50 hover:text-orange-900 hover:cursor-pointer"
       >
         {monthName}
       </button>
@@ -247,7 +247,7 @@ const BasicInfoForm: React.FC = () => {
         key={option}
         type="button"
         onClick={clickHandler}
-        className="px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-orange-50 hover:text-orange-900"
+        className="px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-orange-50 hover:text-orange-900 hover:cursor-pointer"
       >
         {t(`calculator.basic_info_form.payroll_option_${option.toLowerCase()}`)}
       </button>
@@ -296,63 +296,62 @@ const BasicInfoForm: React.FC = () => {
     <>
       {/* Info: (20250711 - Julian) 員工基本資料表單 */}
       <form className="grid grid-cols-2 gap-x-8 gap-y-6">
-        {/* Info: (20250708 - Julian) 員工姓名 */}
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-bold text-gray-700">
-            {t("calculator.basic_info_form.employee_name")}
-            <span className="text-red-500">*</span>
-          </p>
-          <div
-            className={`flex h-44px items-center rounded-lg border bg-white shadow-sm ring-1 transition-all focus-within:ring-2 ${
-              isNameError
-                ? "border-red-300 ring-red-300 focus-within:ring-red-500"
-                : "border-gray-200 ring-gray-200 focus-within:ring-orange-500"
-            }`}
-          >
+        {/* Info: (20250708 - Julian) 員工姓名 & 就業類型 */}
+        <div className="col-span-2 flex items-end gap-8">
+          <div className="flex flex-col gap-2 flex-1">
+            <p className="text-sm font-bold text-gray-700">
+              {t("calculator.basic_info_form.employee_name")}
+              <span className="text-red-500">*</span>
+            </p>
             <div
-              className={`pl-3 pr-1 py-2 ${isNameError ? "text-red-500" : "text-gray-400"}`}
+              className={`flex h-44px items-center rounded-lg bg-white ring-2 transition-all ${
+                isNameError
+                  ? " ring-red-300 focus-within:ring-orange-300"
+                  : " ring-gray-200 focus-within:ring-orange-300"
+              }`}
             >
-              <User size={16} />
-            </div>
-            <input
-              id="input-employee-name"
-              name="input-employee-name"
-              type="text"
-              className={`flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 outline-none placeholder:text-gray-400`}
-              placeholder={t(
-                "calculator.basic_info_form.employee_name_placeholder",
-              )}
-              value={employeeName}
-              onChange={handleEmployeeNameChange}
-              required
-            />
-            {/* Info: (20250711 - Julian) 登入時才顯示員工列表按鈕 */}
-            {isSignIn && (
-              <button
-                type="button"
-                onClick={toggleEmployeeListModal}
-                className="flex h-full items-center gap-2 border-l border-gray-200 px-4 py-2 transition-colors hover:bg-gray-50"
+              <div
+                className={`pl-3 pr-1 py-2 ${isNameError ? "text-red-500" : "text-gray-400"}`}
               >
-                <Search size={16} className="text-gray-400" />
-                <p className="text-xs font-semibold text-orange-600">
-                  {t("calculator.employee_list.main_title")}
-                </p>
-              </button>
-            )}
+                <User size={16} />
+              </div>
+              <input
+                id="input-employee-name"
+                name="input-employee-name"
+                type="text"
+                className={`flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 border-gray-200 border-r outline-none placeholder:text-gray-400`}
+                placeholder={t(
+                  "calculator.basic_info_form.employee_name_placeholder",
+                )}
+                value={employeeName}
+                onChange={handleEmployeeNameChange}
+                required
+              />
+              {/* Info: (20250711 - Julian) 登入時才顯示員工列表按鈕 */}
+              {isSignIn && (
+                <button
+                  type="button"
+                  onClick={toggleEmployeeListModal}
+                  className="flex h-full items-center gap-2 text-gray-700 hover:text-orange-600 px-4 py-2 transition-colors"
+                >
+                  <Search size={16} className="text-gray-400" />
+                  <p className="text-xs font-semibold">
+                    {t("calculator.employee_list.main_title")}
+                  </p>
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-end gap-x-8 gap-y-2">
+            {employmentRadioBtn}
           </div>
         </div>
-
-        {/* Info: (20251112 - Julian) 就業類型 */}
-        <div className="flex flex-wrap items-end gap-x-8 gap-y-2">
-          {employmentRadioBtn}
-        </div>
-
         {/* Info: (20250708 - Julian) 員工編號 */}
         <div className="col-span-2 flex flex-col gap-2">
           <p className="text-sm font-bold text-gray-700">
             {t("calculator.basic_info_form.employee_number")}
           </p>
-          <div className="flex h-44px items-center rounded-lg border border-gray-200 bg-white shadow-sm ring-1 ring-gray-200 transition-all focus-within:ring-2 focus-within:ring-orange-500">
+          <div className="flex h-44px items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all focus-within:ring-orange-300">
             <input
               id="input-employee-number"
               name="input-employee-number"
@@ -387,7 +386,7 @@ const BasicInfoForm: React.FC = () => {
           <div
             ref={industryDropdownRef}
             onClick={toggleIndustryDropdown}
-            className="relative flex h-44px items-center rounded-lg border border-gray-200 bg-white shadow-sm ring-1 ring-gray-200 transition-all hover:bg-gray-50 hover:ring-orange-300 active:scale-[0.99] cursor-pointer"
+            className={`relative flex h-44px items-center rounded-lg bg-white ring-2 transition-all ${isIndustryOpen ? "ring-orange-300" : "ring-gray-200"} cursor-pointer`}
           >
             <div className="flex-1 truncate bg-transparent px-3 py-2 text-sm font-medium text-gray-900">
               {industryCategory.CODE} - {industryCategory.INDUSTRY}
@@ -396,7 +395,7 @@ const BasicInfoForm: React.FC = () => {
               <ChevronDown size={16} />
             </div>
             {isIndustryOpen && (
-              <div className="absolute top-[calc(100%+8px)] z-50 flex max-h-60 w-full flex-col overflow-y-auto rounded-xl border border-gray-100 bg-white py-2 shadow-2xl ring-1 ring-black ring-opacity-5">
+              <div className="absolute top-[calc(100%+8px)] z-50 flex max-h-60 w-full flex-col overflow-y-auto rounded-xl border border-gray-300 bg-white py-2 shadow-2xl">
                 {industryDropdown}
               </div>
             )}
@@ -412,7 +411,9 @@ const BasicInfoForm: React.FC = () => {
           <div
             ref={yearDropdownRef}
             onClick={toggleYearDropdown}
-            className="relative flex h-44px items-center rounded-lg border border-gray-200 bg-white shadow-sm ring-1 ring-gray-200 transition-all hover:bg-gray-50 hover:ring-orange-300 active:scale-[0.99] cursor-pointer"
+            className={`relative flex h-44px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${
+              isYearOpen ? " ring-orange-300" : " ring-gray-200"
+            }`}
           >
             <div className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900">
               {selectedYear}
@@ -421,7 +422,7 @@ const BasicInfoForm: React.FC = () => {
               <ChevronDown size={16} />
             </div>
             {isYearOpen && (
-              <div className="absolute top-[calc(100%+8px)] z-50 flex max-h-60 w-full flex-col overflow-y-auto rounded-xl border border-gray-100 bg-white py-2 shadow-2xl ring-1 ring-black ring-opacity-5">
+              <div className="absolute top-[calc(100%+8px)] z-50 flex max-h-60 w-full flex-col overflow-y-auto rounded-xl border border-gray-300 bg-white py-2 shadow-2xl">
                 {yearDropdown}
               </div>
             )}
@@ -437,7 +438,9 @@ const BasicInfoForm: React.FC = () => {
           <div
             ref={monthDropdownRef}
             onClick={toggleMonthDropdown}
-            className="relative flex h-44px items-center rounded-lg border border-gray-200 bg-white shadow-sm ring-1 ring-gray-200 transition-all hover:bg-gray-50 hover:ring-orange-300 active:scale-[0.99] cursor-pointer"
+            className={`relative flex h-44px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${
+              isMonthOpen ? " ring-orange-300" : " ring-gray-200"
+            }`}
           >
             <div className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900">
               {t(
@@ -448,7 +451,7 @@ const BasicInfoForm: React.FC = () => {
               <ChevronDown size={16} />
             </div>
             {isMonthOpen && (
-              <div className="absolute top-[calc(100%+8px)] z-50 flex max-h-60 w-full flex-col overflow-y-auto rounded-xl border border-gray-100 bg-white py-2 shadow-2xl ring-1 ring-black ring-opacity-5">
+              <div className="absolute top-[calc(100%+8px)] z-50 flex max-h-60 w-full flex-col overflow-y-auto rounded-xl border border-gray-300 bg-white py-2 shadow-2xl">
                 {monthDropdown}
               </div>
             )}
@@ -464,7 +467,7 @@ const BasicInfoForm: React.FC = () => {
           <div
             ref={payrollDropdownRef}
             onClick={togglePayrollDropdown}
-            className="relative flex h-44px items-center rounded-lg border border-gray-200 bg-white shadow-sm ring-1 ring-gray-200 transition-all hover:bg-gray-50 hover:ring-orange-300 active:scale-[0.99] cursor-pointer"
+            className={`relative flex h-44px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${isPayrollOpen ? " ring-orange-300" : " ring-gray-200"}`}
           >
             <div className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900">
               {t(
@@ -475,7 +478,7 @@ const BasicInfoForm: React.FC = () => {
               <ChevronDown size={16} />
             </div>
             {isPayrollOpen && (
-              <div className="absolute top-[calc(100%+8px)] z-50 flex max-h-60 w-full flex-col overflow-y-auto rounded-xl border border-gray-100 bg-white py-2 shadow-2xl ring-1 ring-black ring-opacity-5">
+              <div className="absolute top-[calc(100%+8px)] z-50 flex max-h-60 w-full flex-col overflow-y-auto rounded-xl border border-gray-300 bg-white py-2 shadow-2xl">
                 {payrollDropdown}
               </div>
             )}
@@ -486,7 +489,7 @@ const BasicInfoForm: React.FC = () => {
         </div>
 
         {/* Info: (20250806 - Julian) 到職日 */}
-        <div className="col-span-2 flex flex-col items-start justify-between gap-x-40px gap-y-lv-3 tablet:h-44px tablet:flex-row tablet:items-center">
+        <div className="col-span-2 flex flex-col items-start justify-between gap-x-40px gap-y-lv-3 sm:h-10 sm:flex-row sm:items-center">
           <ToggleSwitch
             isOn={isJoined}
             handleToggle={toggleJoined}
@@ -500,7 +503,7 @@ const BasicInfoForm: React.FC = () => {
               <div
                 ref={joiningDayRef}
                 onClick={toggleJoiningDayDropdown}
-                className="relative flex h-44px w-90px items-center rounded-lg border border-gray-200 bg-white shadow-sm ring-1 ring-gray-200 transition-all hover:bg-gray-50 hover:ring-orange-300 active:scale-[0.99] cursor-pointer"
+                className={`relative flex h-44px w-90px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${isJoiningDayOpen ? " ring-orange-300" : " ring-gray-200"}`}
               >
                 <div className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900">
                   {dayOfJoining}
@@ -509,7 +512,7 @@ const BasicInfoForm: React.FC = () => {
                   <ChevronDown size={16} />
                 </div>
                 {isJoiningDayOpen && (
-                  <div className="absolute top-[calc(100%+8px)] z-50 flex max-h-40 w-full flex-col overflow-y-auto rounded-xl border border-gray-100 bg-white py-2 shadow-2xl ring-1 ring-black ring-opacity-5">
+                  <div className="absolute top-[calc(100%+8px)] z-50 grid max-h-40 w-max grid-cols-7 gap-2 overflow-y-auto rounded-xl border border-gray-300 bg-white py-2 shadow-2xl">
                     {joiningDayDropdown}
                   </div>
                 )}
@@ -519,7 +522,7 @@ const BasicInfoForm: React.FC = () => {
         </div>
 
         {/* Info: (20250806 - Julian) 離職日 */}
-        <div className="col-span-2 flex flex-col items-start justify-between gap-x-40px gap-y-lv-3 tablet:h-44px tablet:flex-row tablet:items-center">
+        <div className="col-span-2 flex flex-col items-start justify-between gap-x-40px gap-y-lv-3 sm:h-10 sm:flex-row sm:items-center">
           <ToggleSwitch
             isOn={isLeft}
             handleToggle={toggleLeft}
@@ -533,7 +536,7 @@ const BasicInfoForm: React.FC = () => {
               <div
                 ref={leavingDayRef}
                 onClick={toggleLeavingDayDropdown}
-                className="relative flex h-44px w-90px items-center rounded-lg border border-gray-200 bg-white shadow-sm ring-1 ring-gray-200 transition-all hover:bg-gray-50 hover:ring-orange-300 active:scale-[0.99] cursor-pointer"
+                className={`relative flex h-44px w-90px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${isLeavingDayOpen ? " ring-orange-300" : " ring-gray-200"}`}
               >
                 <div className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900">
                   {dayOfLeaving}
@@ -542,7 +545,7 @@ const BasicInfoForm: React.FC = () => {
                   <ChevronDown size={16} />
                 </div>
                 {isLeavingDayOpen && (
-                  <div className="absolute top-[calc(100%+8px)] z-50 flex max-h-40 w-full flex-col overflow-y-auto rounded-xl border border-gray-100 bg-white py-2 shadow-2xl ring-1 ring-black ring-opacity-5">
+                  <div className="absolute top-[calc(100%+8px)] z-50 grid max-h-40 w-max grid-cols-7 gap-2 overflow-y-auto rounded-xl border border-gray-300 bg-white py-2 shadow-2xl">
                     {leavingDayDropdown}
                   </div>
                 )}

@@ -22,7 +22,7 @@ const SalaryFormSection: React.FC = () => {
     );
 
   return (
-    <div className="flex w-full min-w-[320px] flex-col gap-7 tablet:gap-8">
+    <div className="flex w-full min-w-[320px] flex-col gap-7 lg:gap-8">
       {/* Info: (20250708 - Julian) Progress bar */}
       <ProgressBar />
       {/* Info: (20250708 - Julian) Step Tabs */}

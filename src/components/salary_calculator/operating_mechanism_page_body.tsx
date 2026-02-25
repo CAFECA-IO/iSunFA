@@ -26,7 +26,7 @@ const OperatingMechanismContent: React.FC = () => {
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center px-5 tablet:px-25">
+      <div className="flex items-center justify-center px-5 lg:px-25">
         Loading...
       </div>
     );
@@ -62,7 +62,7 @@ const OperatingMechanismContent: React.FC = () => {
     );
 
   return (
-    <div className="flex flex-col items-stretch p-5 tablet:p-[80px]">
+    <div className="flex flex-col items-stretch p-5 lg:p-[80px]">
       {/* Info: (20251112 - Julian) Title & Version */}
       <div className="flex flex-col items-center gap-1">
         <h1 className="text-center text-xl font-semibold text-text-neutral-primary">

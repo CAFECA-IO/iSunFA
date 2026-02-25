@@ -53,9 +53,10 @@ const FilterSection: React.FC<{
     selectedYear === yearOptions[0]
       ? t("calculator.my_pay_slip.all")
       : selectedYear;
-  const monthStr = t(
-    `date:month_name.${selectedMonth.slice(0, 3).toLowerCase()}`,
-  );
+  const monthStr =
+    selectedMonth === "All"
+      ? t("calculator.my_pay_slip.all")
+      : t(`date.month_name.${selectedMonth.slice(0, 3).toLowerCase()}`);
 
   const toggleYearDropdown = () => setShowYear((prev) => !prev);
   const toggleMonthDropdown = () => setShowMonth((prev) => !prev);
@@ -90,6 +91,11 @@ const FilterSection: React.FC<{
   const monthDropdown = isShowMonth && (
     <div className="absolute top-50px flex w-full flex-col rounded-sm border border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS">
       {monthOptions.map((month) => {
+        const monStr =
+          month === "All"
+            ? t("calculator.my_pay_slip.all")
+            : t(`date.month_name.${month.slice(0, 3).toLowerCase()}`);
+
         const clickHandler = () => {
           setSelectedMonth(month);
           setShowMonth(false);
@@ -101,7 +107,7 @@ const FilterSection: React.FC<{
             onClick={clickHandler}
             className="px-12px py-10px hover:bg-input-surface-input-hover"
           >
-            {t(`date:month_name.${month.slice(0, 3).toLowerCase()}`)}
+            {monStr}
           </button>
         );
       })}

@@ -53,13 +53,15 @@ const ResultBlock: React.FC<IResultBlockProps> = ({
     });
 
   return (
-    <div className={`flex flex-col rounded-sm p-12px ${backgroundColor}`}>
+    <div
+      className={`flex flex-col text-gray-700 rounded-xl p-4 ${backgroundColor}`}
+    >
       {/* Info: (20250708 - Julian) 項目 */}
-      <div className="flex flex-1 flex-col gap-12px text-xs font-normal text-text-neutral-secondary">
+      <div className="flex flex-1 flex-col gap-2.5 text-xs font-medium text-text-neutral-secondary">
         {displayRowItems}
       </div>
       {/* Info: (20250708 - Julian) 分界線 */}
-      <hr className="my-12px border-divider-stroke-lv-3" />
+      <hr className="my-4 border-black/10" />
       {/* Info: (20250708 - Julian) 總計 */}
       {displayTotalRowItem}
     </div>

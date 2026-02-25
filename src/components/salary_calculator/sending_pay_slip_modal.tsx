@@ -11,7 +11,7 @@ const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
 
   const monthName = selectedMonth.name;
   const monthWithI18n = t(
-    `date:month_name.${monthName.toLowerCase().slice(0, 3)}`,
+    `date.month_name.${monthName.toLowerCase().slice(0, 3)}`,
   );
 
   const [emailInput, setEmailInput] = useState<string>(employeeEmail);

@@ -664,7 +664,7 @@ export const zhTw = {
       payroll_option_fixed: "固定 30 天",
       payroll_option_actual: "實際日曆天數",
       joined_this_month_1: "到職日",
-      joined_this_month_2: "",
+      joined_this_month_2: " ",
       left_this_month: "離職日",
     },
     base_pay_form: {

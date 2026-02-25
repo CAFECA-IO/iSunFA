@@ -44,9 +44,9 @@ const OthersForm: React.FC = () => {
             type="radio"
             checked={isChecked}
             onChange={changeVpc}
-            className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-gray-300 bg-white transition-all checked:border-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+            className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-gray-300 bg-white transition-all checked:border-orange-400 outline-none"
           />
-          <div className="absolute h-2.5 w-2.5 scale-0 rounded-full bg-orange-600 transition-transform peer-checked:scale-100" />
+          <div className="absolute h-2.5 w-2.5 scale-0 rounded-full bg-orange-400 transition-transform peer-checked:scale-100" />
         </div>
         <p className="text-sm font-medium text-gray-700">{i * 100}%</p>
       </label>
@@ -108,7 +108,7 @@ const OthersForm: React.FC = () => {
           <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
           {t("calculator.others_form.voluntary_pension_contribution")}
         </p>
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 rounded-xl border border-gray-100 bg-gray-50/50 p-6">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 rounded-xl py-6">
           {vpcRadios}
         </div>
       </div>

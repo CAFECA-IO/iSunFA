@@ -45,15 +45,6 @@ const WorkHoursForm: React.FC = () => {
     setLeavePayoutHours,
   } = useCalculatorCtx();
 
-  // const totalNonTaxableStyle =
-  //   totalNonTaxableHours >= 46
-  //     ? "text-text-state-error"
-  //     : "text-text-brand-secondary-lv1";
-  // const totalTaxableStyle =
-  //   totalTaxableHours >= 46
-  //     ? "text-text-state-error"
-  //     : "text-text-brand-secondary-lv1";
-
   return (
     <form className="flex flex-col gap-10">
       {/* Info: (20250709 - Julian) 加班時數（免稅） */}

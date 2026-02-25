@@ -35,7 +35,7 @@ const ProgressBar: React.FC = () => {
           </div>
           <div className="relative h-2 w-full rounded-full bg-gray-100 overflow-hidden">
             <div
-              className="absolute h-full rounded-full bg-linear-to-r from-green-400 to-green-600 shadow-[0_0_8px_rgba(34,197,94,0.4)]"
+              className="absolute h-full rounded-full bg-linear-to-r transition-all duration-200 from-green-400 to-green-600 shadow-[0_0_8px_rgba(34,197,94,0.4)]"
               style={{
                 width: `${progress}%`,
                 transition: "width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
@@ -47,7 +47,7 @@ const ProgressBar: React.FC = () => {
         <button
           type="button"
           onClick={modalVisibleHandler}
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-50 hover:text-orange-600 group"
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-gray-500 transition-colors hover:text-orange-600 group"
         >
           <RefreshCw
             size={14}
@@ -89,14 +89,14 @@ const ProgressBar: React.FC = () => {
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
-                className="flex-1 rounded-xl px-5 py-3 text-sm font-bold text-gray-500 transition-colors hover:bg-gray-50"
+                className="flex-1 rounded-xl px-5 py-3 text-sm font-bold text-gray-500 transition-colors hover:bg-gray-200 bg-gray-100"
                 onClick={modalVisibleHandler}
               >
                 {t("common.cancel")}
               </button>
               <button
                 type="button"
-                className="flex-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-orange-500 hover:shadow-orange-200 active:scale-95"
+                className="flex-2 rounded-xl bg-orange-400 px-5 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-orange-600 hover:shadow-orange-200 active:scale-95"
                 onClick={resetClickHandler}
               >
                 {t("calculator.reset_modal.submit")}

@@ -27,7 +27,7 @@ const AmountInput: React.FC<IAmountInputProps> = ({
       <p className="text-sm font-semibold text-gray-700">
         {title} {required && <span className="text-red-500">*</span>}
       </p>
-      <div className="flex h-11 items-center overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm ring-1 ring-gray-200 transition-all focus-within:ring-2 focus-within:ring-orange-500">
+      <div className="flex h-11 items-center overflow-hidden rounded-lg bg-white ring-2 ring-gray-200 transition-all focus-within:ring-2 focus-within:ring-orange-500">
         <NumericInput
           className="flex-1 bg-transparent px-3 py-2 text-right text-sm font-bold text-gray-900 outline-none placeholder:text-gray-400"
           value={value}

@@ -77,12 +77,9 @@ const SalaryResultSection: React.FC = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-6 tablet:w-fit">
+      <div className="flex flex-col gap-6 lg:w-fit">
         {/* Info: (20250708 - Julian) Result */}
-        <div
-          ref={downloadRef}
-          className="w-full shrink-0 rounded-lg bg-surface-neutral-surface-lv2 p-6 shadow-Dropshadow_XS tablet:w-[650px]"
-        >
+        <div ref={downloadRef} className="w-full shrink-0 lg:w-[650px]">
           <PaySlip
             employeeName={showingName}
             employeeNumber={employeeNumber}
@@ -92,14 +89,20 @@ const SalaryResultSection: React.FC = () => {
           />
         </div>
         {/* Info: (20250708 - Julian) Buttons */}
-        <div className="grid grid-cols-1 gap-6 tablet:grid-cols-2">
-          <button type="button" onClick={downloadPng} disabled={btnDisabled}>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <button
+            type="button"
+            onClick={downloadPng}
+            disabled={btnDisabled}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-orange-400 bg-white text-sm font-bold text-orange-500 transition-all duration-200 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
             {t("calculator.button.download")} <Download size={20} />
           </button>
           <button
             type="button"
             onClick={sendingBtnClickHandler}
             disabled={btnDisabled}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-400 text-sm font-bold text-white shadow-md shadow-orange-100 transition-all duration-200 hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none"
           >
             {t("calculator.button.send")} <Send size={20} />
           </button>

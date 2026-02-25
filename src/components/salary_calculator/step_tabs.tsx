@@ -96,13 +96,13 @@ const StepTabs: React.FC = () => {
     };
 
     const stepClass = isActive
-      ? "border-orange-600 bg-orange-50 text-orange-900 shadow-sm"
+      ? "border-orange-400 bg-orange-50 text-orange-900"
       : isCompleted
-        ? "border-green-200 bg-green-50/30 text-green-700"
-        : "border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50/50";
+        ? "border-green-400 bg-green-50 text-green-700"
+        : "border-gray-300 text-gray-400 hover:text-gray-600 hover:bg-gray-50";
 
     const iconClass = isActive
-      ? "text-orange-600"
+      ? "text-orange-400"
       : isCompleted
         ? "text-green-500"
         : "text-gray-300";
@@ -112,10 +112,10 @@ const StepTabs: React.FC = () => {
         key={step}
         type="button"
         onClick={clickHandler}
-        className={`${stepClass} flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 transition-all duration-200 text-xs font-bold uppercase tracking-wider`}
+        className={`${stepClass} flex h-11 w-full items-center justify-center gap-1 rounded-xl border px-4 transition-all duration-200 text-xs font-bold uppercase tracking-wider`}
       >
         <CircleCheck
-          size={18}
+          size={20}
           className={`${iconClass} transition-colors duration-200`}
         />
         {step}
