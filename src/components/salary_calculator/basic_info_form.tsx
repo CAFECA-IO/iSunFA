@@ -119,6 +119,15 @@ const BasicInfoForm: React.FC = () => {
   const toggleJoiningDayDropdown = () => setIsJoiningDayOpen((prev) => !prev);
   const toggleLeavingDayDropdown = () => setIsLeavingDayOpen((prev) => !prev);
 
+  // Info: (20260226 - Julian) 鍵盤事件處理
+  const createKeyDownHandler =
+    (action: () => void) => (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        action();
+      }
+    };
+
   // Info: (20250709 - Julian) input change handlers
   const handleEmployeeNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     changeEmployeeName(e.target.value);
@@ -138,15 +147,16 @@ const BasicInfoForm: React.FC = () => {
 
     return (
       <label
-        key={`radio-${type}`}
-        htmlFor={`radio-${type}`}
+        key={`employment-${type}`}
+        htmlFor={`employment-${type}`}
         className="flex cursor-pointer items-center gap-2 py-2"
       >
         <div className="relative flex items-center justify-center">
           <input
-            id={`radio-${type}`}
+            id={`employment-${type}`}
             name="radio-employment-type"
             type="radio"
+            aria-label={str}
             checked={isChecked}
             onChange={changeType}
             className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-gray-300 bg-white transition-all checked:border-orange-400 outline-none"
@@ -172,15 +182,16 @@ const BasicInfoForm: React.FC = () => {
 
     return (
       <label
-        key={`radio-${type}`}
-        htmlFor={`radio-${type}`}
+        key={`tax-residency-${type}`}
+        htmlFor={`tax-residency-${type}`}
         className="flex cursor-pointer items-center gap-2 py-2"
       >
         <div className="relative flex items-center justify-center">
           <input
-            id={`radio-${type}`}
+            id={`tax-residency-${type}`}
             name="radio-tax-residency-status"
             type="radio"
+            aria-label={str}
             checked={isChecked}
             onChange={changeType}
             className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-gray-300 bg-white transition-all checked:border-orange-400 outline-none"
@@ -299,10 +310,13 @@ const BasicInfoForm: React.FC = () => {
         {/* Info: (20250708 - Julian) 員工姓名 & 就業類型 */}
         <div className="col-span-2 flex items-end gap-8">
           <div className="flex flex-col gap-2 flex-1">
-            <p className="text-sm font-bold text-gray-700">
+            <label
+              htmlFor="input-employee-name"
+              className="text-sm font-bold text-gray-700"
+            >
               {t("calculator.basic_info_form.employee_name")}
               <span className="text-red-500">*</span>
-            </p>
+            </label>
             <div
               className={`flex h-44px items-center rounded-lg bg-white ring-2 transition-all ${
                 isNameError
@@ -319,6 +333,7 @@ const BasicInfoForm: React.FC = () => {
                 id="input-employee-name"
                 name="input-employee-name"
                 type="text"
+                aria-label={t("calculator.basic_info_form.employee_name")}
                 className={`flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 border-gray-200 border-r outline-none placeholder:text-gray-400`}
                 placeholder={t(
                   "calculator.basic_info_form.employee_name_placeholder",
@@ -348,14 +363,18 @@ const BasicInfoForm: React.FC = () => {
         </div>
         {/* Info: (20250708 - Julian) 員工編號 */}
         <div className="col-span-2 flex flex-col gap-2">
-          <p className="text-sm font-bold text-gray-700">
+          <label
+            htmlFor="input-employee-number"
+            className="text-sm font-bold text-gray-700"
+          >
             {t("calculator.basic_info_form.employee_number")}
-          </p>
+          </label>
           <div className="flex h-44px items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all focus-within:ring-orange-300">
             <input
               id="input-employee-number"
               name="input-employee-number"
               type="text"
+              aria-label={t("calculator.basic_info_form.employee_number")}
               className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 outline-none placeholder:text-gray-400"
               placeholder={t(
                 "calculator.basic_info_form.employee_number_placeholder",
@@ -386,6 +405,9 @@ const BasicInfoForm: React.FC = () => {
           <div
             ref={industryDropdownRef}
             onClick={toggleIndustryDropdown}
+            onKeyDown={createKeyDownHandler(toggleIndustryDropdown)}
+            role="button"
+            tabIndex={0}
             className={`relative flex h-44px items-center rounded-lg bg-white ring-2 transition-all ${isIndustryOpen ? "ring-orange-300" : "ring-gray-200"} cursor-pointer`}
           >
             <div className="flex-1 truncate bg-transparent px-3 py-2 text-sm font-medium text-gray-900">
@@ -411,6 +433,9 @@ const BasicInfoForm: React.FC = () => {
           <div
             ref={yearDropdownRef}
             onClick={toggleYearDropdown}
+            onKeyDown={createKeyDownHandler(toggleYearDropdown)}
+            role="button"
+            tabIndex={0}
             className={`relative flex h-44px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${
               isYearOpen ? " ring-orange-300" : " ring-gray-200"
             }`}
@@ -438,6 +463,9 @@ const BasicInfoForm: React.FC = () => {
           <div
             ref={monthDropdownRef}
             onClick={toggleMonthDropdown}
+            onKeyDown={createKeyDownHandler(toggleMonthDropdown)}
+            role="button"
+            tabIndex={0}
             className={`relative flex h-44px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${
               isMonthOpen ? " ring-orange-300" : " ring-gray-200"
             }`}
@@ -467,6 +495,9 @@ const BasicInfoForm: React.FC = () => {
           <div
             ref={payrollDropdownRef}
             onClick={togglePayrollDropdown}
+            onKeyDown={createKeyDownHandler(togglePayrollDropdown)}
+            role="button"
+            tabIndex={0}
             className={`relative flex h-44px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${isPayrollOpen ? " ring-orange-300" : " ring-gray-200"}`}
           >
             <div className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900">
@@ -503,6 +534,9 @@ const BasicInfoForm: React.FC = () => {
               <div
                 ref={joiningDayRef}
                 onClick={toggleJoiningDayDropdown}
+                onKeyDown={createKeyDownHandler(toggleJoiningDayDropdown)}
+                role="button"
+                tabIndex={0}
                 className={`relative flex h-44px w-90px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${isJoiningDayOpen ? " ring-orange-300" : " ring-gray-200"}`}
               >
                 <div className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900">
@@ -536,6 +570,9 @@ const BasicInfoForm: React.FC = () => {
               <div
                 ref={leavingDayRef}
                 onClick={toggleLeavingDayDropdown}
+                onKeyDown={createKeyDownHandler(toggleLeavingDayDropdown)}
+                role="button"
+                tabIndex={0}
                 className={`relative flex h-44px w-90px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${isLeavingDayOpen ? " ring-orange-300" : " ring-gray-200"}`}
               >
                 <div className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900">

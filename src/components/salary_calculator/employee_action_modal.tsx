@@ -142,6 +142,7 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
               </div>
               <input
                 type="text"
+                aria-label={t("calculator.employee_list.name")}
                 value={nameInput}
                 onChange={changeNameHandler}
                 className="flex-1 bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
@@ -157,6 +158,7 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
             <div className="flex items-center rounded-sm border border-input-stroke-input">
               <input
                 type="text"
+                aria-label={t("calculator.employee_list.number")}
                 value={numberInput}
                 onChange={changeNumberHandler}
                 className="flex-1 bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
@@ -194,6 +196,7 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
             >
               <input
                 type="text"
+                aria-label={t("calculator.employee_list.email")}
                 value={emailInput}
                 onChange={changeEmailHandler}
                 className="flex-1 bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"

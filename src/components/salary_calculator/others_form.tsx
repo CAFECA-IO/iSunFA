@@ -42,6 +42,7 @@ const OthersForm: React.FC = () => {
             id={`radio-vpc-${i}`}
             name="radio-vpc"
             type="radio"
+            aria-label={`${i * 100}%`}
             checked={isChecked}
             onChange={changeVpc}
             className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-gray-300 bg-white transition-all checked:border-orange-400 outline-none"

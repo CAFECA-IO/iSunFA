@@ -6,18 +6,18 @@ function useOuterClick<T extends HTMLElement>(initialVisibleState: boolean) {
 
   const targetRef = useRef<T>(null);
 
-  function handleClickOutside(event: MouseEvent): void {
-    if (componentVisibleRef.current && event.target instanceof HTMLElement && !targetRef.current?.contains(event.target)) {
-      setComponentVisible(false);
-    }
-  }
-
   useEffect(() => {
+    function handleClickOutside(event: MouseEvent): void {
+      if (componentVisibleRef.current && event.target instanceof HTMLElement && !targetRef.current?.contains(event.target)) {
+        setComponentVisible(false);
+      }
+    }
+
     document.addEventListener('click', handleClickOutside, true);
     return () => {
       document.removeEventListener('click', handleClickOutside, true);  
     };
-  }, []);
+  }, [componentVisibleRef, setComponentVisible]);
 
   return {
     targetRef,

@@ -80,6 +80,7 @@ const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
             </div>
             <input
               type="text"
+              aria-label={t("calculator.sending_pay_slip_modal.email")}
               value={emailInput}
               onChange={changeEmailInput}
               placeholder={t(

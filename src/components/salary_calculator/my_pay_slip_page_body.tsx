@@ -61,6 +61,19 @@ const FilterSection: React.FC<{
   const toggleYearDropdown = () => setShowYear((prev) => !prev);
   const toggleMonthDropdown = () => setShowMonth((prev) => !prev);
 
+  const handleYearKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleYearDropdown();
+    }
+  };
+  const handleMonthKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleMonthDropdown();
+    }
+  };
+
   const changeSearchQuery = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
@@ -121,6 +134,9 @@ const FilterSection: React.FC<{
         <div ref={yearRef} className="relative">
           <div
             onClick={toggleYearDropdown}
+            onKeyDown={handleYearKeyDown}
+            role="button"
+            tabIndex={0}
             className={`flex items-center divide-x rounded-sm border bg-input-surface-input-background hover:cursor-pointer hover:divide-input-stroke-input-hover hover:border-input-stroke-input-hover ${isShowYear ? "divide-input-stroke-input-hover border-input-stroke-input-hover" : "divide-input-stroke-input border-input-stroke-input"}`}
           >
             <div className="px-12px py-10px text-base font-medium text-input-text-input-placeholder">
@@ -141,6 +157,9 @@ const FilterSection: React.FC<{
         <div ref={monthRef} className="relative">
           <div
             onClick={toggleMonthDropdown}
+            onKeyDown={handleMonthKeyDown}
+            role="button"
+            tabIndex={0}
             className={`flex items-center divide-x rounded-sm border bg-input-surface-input-background hover:cursor-pointer hover:divide-input-stroke-input-hover hover:border-input-stroke-input-hover ${isShowMonth ? "divide-input-stroke-input-hover border-input-stroke-input-hover" : "divide-input-stroke-input border-input-stroke-input"}`}
           >
             <div className="px-12px py-10px text-base font-medium text-input-text-input-placeholder">
@@ -167,6 +186,7 @@ const FilterSection: React.FC<{
           type="text"
           value={searchQuery}
           onChange={changeSearchQuery}
+          aria-label={t("calculator.my_pay_slip.search_placeholder")}
           placeholder={t("calculator.my_pay_slip.search_placeholder")}
           className="flex-1 bg-transparent px-12px py-10px text-base font-medium outline-none placeholder:text-input-text-input-placeholder"
         />

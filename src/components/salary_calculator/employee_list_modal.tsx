@@ -2,11 +2,53 @@ import React, { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { X, Search, User, Hash } from "lucide-react";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
-import { dummyEmployeeForCalc } from "@/interfaces/employees";
+import { dummyEmployeeForCalc, IEmployeeForCalc } from "@/interfaces/employees";
 
 interface IEmployeeListModalProps {
   modalVisibleHandler: () => void;
 }
+
+const EmployeeItem: React.FC<{
+  employee: IEmployeeForCalc;
+  handleClick: () => void;
+}> = ({ employee, handleClick }) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
+  return (
+    <div
+      key={employee.id}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      className="group flex items-center bg-surface-neutral-surface-lv2 px-24px py-12px hover:cursor-pointer hover:bg-surface-brand-primary-soft"
+    >
+      <div className="flex flex-1 items-center gap-8px">
+        <User
+          size={16}
+          className="text-text-neutral-tertiary group-hover:text-text-neutral-primary"
+        />
+        <p className="font-medium text-text-neutral-secondary group-hover:text-text-neutral-primary">
+          {employee.name}
+        </p>
+      </div>
+      <div className="flex items-center gap-8px text-sm font-medium">
+        <Hash
+          size={16}
+          className="text-text-neutral-tertiary group-hover:text-text-neutral-primary"
+        />
+        <p className="text-text-neutral-secondary group-hover:text-text-neutral-primary">
+          {employee.number}
+        </p>
+      </div>
+    </div>
+  );
+};
 
 const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({
   modalVisibleHandler,
@@ -46,30 +88,11 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({
         };
 
         return (
-          <div
+          <EmployeeItem
             key={employee.id}
-            onClick={handleClick}
-            className="group flex items-center bg-surface-neutral-surface-lv2 px-24px py-12px hover:cursor-pointer hover:bg-surface-brand-primary-soft"
-          >
-            <div className="flex flex-1 items-center gap-8px">
-              <User
-                size={16}
-                className="text-text-neutral-tertiary group-hover:text-text-neutral-primary"
-              />
-              <p className="font-medium text-text-neutral-secondary group-hover:text-text-neutral-primary">
-                {employee.name}
-              </p>
-            </div>
-            <div className="flex items-center gap-8px text-sm font-medium">
-              <Hash
-                size={16}
-                className="text-text-neutral-tertiary group-hover:text-text-neutral-primary"
-              />
-              <p className="text-text-neutral-secondary group-hover:text-text-neutral-primary">
-                {employee.number}
-              </p>
-            </div>
-          </div>
+            employee={employee}
+            handleClick={handleClick}
+          />
         );
       })
     ) : (
@@ -105,6 +128,7 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({
             </div>
             <input
               type="text"
+              aria-label={t("calculator.employee_list.search_placeholder")}
               value={keyword}
               onChange={changeKeyword}
               placeholder={t("calculator.employee_list.search_placeholder")}

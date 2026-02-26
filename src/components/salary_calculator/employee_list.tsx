@@ -147,6 +147,7 @@ const EmployeeList: React.FC = () => {
             </div>
             <input
               type="text"
+              aria-label={t("calculator.employee_list.search_placeholder")}
               value={keyword}
               onChange={changeKeyword}
               placeholder={t("calculator.employee_list.search_placeholder")}

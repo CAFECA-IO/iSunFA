@@ -21,10 +21,19 @@ const SentItem: React.FC<{
   const periodStr = `${payPeriodDate.monthName.slice(0, 3)} ${payPeriodDate.year}`;
 
   const clickHandler = () => itemClickHandler(id);
+  const keyDownHandler = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      itemClickHandler(id);
+    }
+  };
 
   return (
     <div
       onClick={clickHandler}
+      onKeyDown={keyDownHandler}
+      role="button"
+      tabIndex={0}
       className="table-row h-50px hover:cursor-pointer hover:bg-surface-brand-primary-30"
     >
       {/* Info: (20250723 - Julian) Pay Period */}
