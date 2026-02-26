@@ -36,7 +36,7 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
   const [mealAllowanceInput, setMealAllowanceInput] =
     useState<number>(defaultMealAllowance);
   const [emailInput, setEmailInput] = useState<string>(defaultEmail);
-  const [isEmailValid, setIsEmailValid] = useState(true);
+  const [isEmailValid, setIsEmailValid] = useState<boolean>(true);
 
   const submitDisabled =
     !nameInput || !emailInput || !isEmailValid || baseSalaryInput === 0;

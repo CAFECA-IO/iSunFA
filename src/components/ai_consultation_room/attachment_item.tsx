@@ -5,11 +5,11 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import Image from "next/image";
 import { Paperclip, X, Loader2 } from "lucide-react";
 import { IAttachment } from "@/interfaces/ai_talk";
 import { useTranslation } from "@/i18n/i18n_context";
 import { downloadFile } from "@/lib/file_operator";
+import { FilePreview, isImage, isVideo, isAudio, isPdf } from "@/components/common/file_preview";
 
 export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
   const { t } = useTranslation();
@@ -17,7 +17,8 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
   const [localFileUrl, setLocalFileUrl] = useState<string>("");
   const [isDownloading, setIsDownloading] = useState<boolean>(true);
 
-  const isImage = attachment.mimeType.startsWith("image/");
+  const isImageFile = isImage(attachment.fileName) || attachment.mimeType.startsWith("image/");
+  const isPreviewable = isImageFile || isVideo(attachment.fileName) || isAudio(attachment.fileName) || isPdf(attachment.fileName);
 
   useEffect(() => {
     let objectUrl = "";
@@ -56,14 +57,12 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
     <div className="bg-gray-50 rounded-xl w-full h-full flex items-center justify-center mb-1 transition-colors">
       <Loader2 className="animate-spin text-orange-500" size={24} />
     </div>
-  ) : isImage && localFileUrl ? (
+  ) : isImageFile && localFileUrl ? (
     <div className="rounded-xl overflow-hidden relative w-full flex items-center justify-center mb-1 h-[90px] shrink-0">
-      <Image
-        src={localFileUrl}
-        alt={attachment.fileName}
-        fill
-        className="object-contain group-hover:bg-orange-50 transition-colors"
-        unoptimized
+      <FilePreview
+        file={{ filename: attachment.fileName, mimeType: attachment.mimeType }}
+        url={localFileUrl}
+        className="object-cover w-full h-full pointer-events-none"
       />
     </div>
   ) : (
@@ -80,15 +79,15 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
       <button
         type="button"
         onClick={() => {
-          if (isImage && !isDownloading && localFileUrl) {
+          if (isPreviewable && !isDownloading && localFileUrl) {
             setIsModalOpen(true);
           }
         }}
         className={`group relative w-32 h-32 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center outline-none p-2 transition-all ${
-          isImage && !isDownloading ? "cursor-zoom-in hover:shadow-lg" : "cursor-default"
+          isPreviewable && !isDownloading ? "cursor-zoom-in hover:shadow-lg" : "cursor-default"
         }`}
         aria-label={
-          isImage
+          isPreviewable
             ? t("ai_consultation_room.view_image").replace(
                 "{name}",
                 attachment.fileName,
@@ -145,14 +144,13 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
 
                   <div className="relative w-full aspect-video min-h-[300px] max-h-[85vh] bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center">
                     {localFileUrl && (
-                      <Image
-                        src={localFileUrl}
-                        alt={attachment.fileName}
-                        fill
-                        className="object-contain"
-                        priority
-                        unoptimized
-                      />
+                      <div className="w-full h-full flex items-center justify-center relative">
+                        <FilePreview
+                          file={{ filename: attachment.fileName, mimeType: attachment.mimeType }}
+                          url={localFileUrl}
+                          className="object-contain max-h-[85vh] max-w-full w-auto p-4"
+                        />
+                      </div>
                     )}
                   </div>
 

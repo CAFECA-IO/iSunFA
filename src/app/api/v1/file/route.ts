@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const newFormData = new FormData();
     newFormData.append("file", file);
 
-    const targetUrl = `${STORAGE_DOMAIN}/api/v1/file/`;
+    const targetUrl = `${STORAGE_DOMAIN}/api/v1/file`;
 
     const newHeaders = new Headers(request.headers);
     newHeaders.delete("host");

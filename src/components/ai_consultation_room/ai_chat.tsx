@@ -3,7 +3,6 @@
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { request } from "@/lib/utils/request";
-import Image from "next/image";
 import { uploadFile, ILariaMetadata } from "@/lib/file_operator";
 import {
   PlusIcon,
@@ -20,6 +19,7 @@ import { IAttachment } from "@/interfaces/ai_talk";
 import { ApiCode } from "@/lib/utils/status";
 import LoginButton from "@/components/common/login_button";
 import { IApiResponse } from "@/lib/utils/response";
+import { FilePreview } from "@/components/common/file_preview";
 
 // Info: (20260213 - Julian) 將 File 轉換為 Base64 (不含 prefix)
 const fileToBase64 = (file: File): Promise<string> => {
@@ -371,11 +371,10 @@ export const AiChat = () => {
                     className="group shrink-0 w-16 h-16 relative rounded-xl border border-orange-200 bg-orange-50 flex items-center justify-center shadow-sm"
                   >
                     <div className="w-full h-full relative rounded-xl overflow-hidden opacity-60">
-                      <Image
-                        src={item.url}
-                        alt={item.file.name}
-                        fill
-                        className="object-cover"
+                      <FilePreview 
+                        file={{ filename: item.file.name, mimeType: item.file.type }}
+                        url={item.url}
+                        className="object-cover w-full h-full pointer-events-none"
                       />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <Loader2
@@ -392,11 +391,11 @@ export const AiChat = () => {
                     className="group shrink-0 w-16 h-16 relative rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center shadow-sm"
                   >
                     <div className="w-full h-full relative rounded-xl overflow-hidden">
-                      <Image
-                        src={file.base64 ? `data:${file.mimeType};base64,${file.base64}` : file.url}
-                        alt={file.fileName}
-                        fill
-                        className="object-cover"
+                      <FilePreview 
+                        file={{ filename: file.fileName, mimeType: file.mimeType }}
+                        base64={file.base64}
+                        url={file.url}
+                        className="object-cover w-full h-full pointer-events-none"
                       />
                     </div>
                     <button
