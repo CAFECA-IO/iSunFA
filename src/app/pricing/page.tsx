@@ -17,7 +17,6 @@ import { MODULES } from '@/constants/modules';
 
 import ConfirmModal from '@/components/common/confirm_modal';
 import AuthModal from '@/components/auth/auth_modal';
-// import KYCModal from '@/components/pricing/kyc_modal';
 import PaymentModal from '@/components/pricing/payment_modal';
 import { request } from '@/lib/utils/request';
 import { Loader2 } from 'lucide-react';
@@ -43,11 +42,12 @@ export default function PricingPage() {
     message: '',
   });
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
-  // const [kycModalOpen, setKycModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [deployingPlanId, setDeployingPlanId] = useState<string | null>(null);
   const [pendingAmount, setPendingAmount] = useState(0);
   const [pendingCredits, setPendingCredits] = useState(0);
+  const [pendingBaseCredits, setPendingBaseCredits] = useState(0);
+  const [pendingBonusCredits, setPendingBonusCredits] = useState(0);
   const [pendingDisplayPrice, setPendingDisplayPrice] = useState('');
 
   // Info: (20260119 - Luphia) Allow guest users to select free plan to trigger login
@@ -142,15 +142,9 @@ export default function PricingPage() {
     }
   }
 
-  const handlePaymentSuccess = async (tx: string) => {
-    // Info: (20260129 - Tzuhan) Refresh user balance after minting
-    await refreshAuth();
-
-    setConfirmModal({
-      isOpen: true,
-      title: 'Purchase Successful',
-      message: `Tokens minted successfully! Tx: ${tx}`,
-    });
+  const handlePaymentSuccess = async () => {
+    // Info: (20260224 - Tzuhan) no use now, remove in the future
+    // setPaymentModalOpen(false);
   };
 
   return (
@@ -502,6 +496,8 @@ export default function PricingPage() {
                           }
 
                           setPendingCredits(plan.credits);
+                          setPendingBaseCredits(baseCredits);
+                          setPendingBonusCredits(bonus);
                           setPendingAmount(language === 'zh-TW' ? plan.price.twd : plan.price.usd);
                           setPendingDisplayPrice(getPrice(plan));
 
@@ -558,20 +554,14 @@ export default function PricingPage() {
           onClose={() => setAuthModalOpen(false)}
         />
 
-        {/* <KYCModal
-          isOpen={kycModalOpen}
-          onClose={() => setKycModalOpen(false)}
-          onSuccess={() => {
-            setPaymentModalOpen(true);
-          }}
-        /> */}
-
         <PaymentModal
           isOpen={paymentModalOpen}
           onClose={() => setPaymentModalOpen(false)}
           onSuccess={handlePaymentSuccess}
           amount={pendingAmount}
           credits={pendingCredits}
+          baseCredits={pendingBaseCredits}
+          bonusCredits={pendingBonusCredits}
           displayPrice={pendingDisplayPrice}
         />
 
