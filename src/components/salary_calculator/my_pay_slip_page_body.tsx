@@ -223,7 +223,7 @@ const MyPaySlipPageBody: React.FC = () => {
   const filteredSortedReceived = useMemo(() => {
     let result = [...receivedRecords];
 
-    // 搜尋與篩選
+    // Info: (20250225 - Julian) 搜尋與篩選
     if (selectedYear !== "All") {
       result = result.filter(
         (r) => timestampToString(r.payPeriod).year === selectedYear,
@@ -239,7 +239,7 @@ const MyPaySlipPageBody: React.FC = () => {
       result = result.filter((r) => r.fromEmail.toLowerCase().includes(query));
     }
 
-    // 排序
+    // Info: (20250225 - Julian) 排序
     return result.sort((a, b) => {
       if (receivedPayPeriodSortOrder === SortOrder.ASC)
         return a.payPeriod - b.payPeriod;
@@ -262,7 +262,7 @@ const MyPaySlipPageBody: React.FC = () => {
   const filteredSortedSent = useMemo(() => {
     let result = [...sentRecords];
 
-    // 搜尋與篩選
+    // Info: (20250225 - Julian) 搜尋與篩選
     if (selectedYear !== "All") {
       result = result.filter(
         (r) => timestampToString(r.payPeriod).year === selectedYear,
@@ -278,7 +278,7 @@ const MyPaySlipPageBody: React.FC = () => {
       result = result.filter((r) => r.toEmail.toLowerCase().includes(query));
     }
 
-    // 排序
+    // Info: (20250225 - Julian) 排序
     return result.sort((a, b) => {
       if (sentPayPeriodSortOrder === SortOrder.ASC)
         return a.payPeriod - b.payPeriod;
