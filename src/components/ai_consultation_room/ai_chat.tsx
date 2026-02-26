@@ -101,7 +101,8 @@ export const AiChat = () => {
     if (files) {
       const fileList = Array.from(files);
       const maxSize = 5 * 1024 * 1024; // Info: (20260209 - Julian) 5MB
-      const maxCount = 5;
+      // Info: (20260226 - Julian) 目前先限制一次只能上傳一張圖片
+      const maxCount = 1;
 
       const validFiles = fileList.filter((file) => {
         if (!file.type.startsWith("image/")) {
@@ -121,6 +122,7 @@ export const AiChat = () => {
 
       if (validFiles.length === 0) return;
 
+      // Info: (20260226 - Julian) 檢查包含已選取的檔案，總數是否超過限制
       if (files.length + validFiles.length > maxCount) {
         alert(
           t("ai_consultation_room.file_count_error").replace(
