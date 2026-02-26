@@ -151,7 +151,7 @@ export async function deploySystem(name: string = 'New Taiwan Dollar', symbol: s
 }
 
 // Info: (20260126 - Luphia) 鑄造代幣給指定地址
-export async function mintToAddress(tokenAddress: string, to: string, amount: number): Promise<ActionResponse> {
+export async function mintToAddress(tokenAddress: string, to: string, amount: number, memo?: string): Promise<ActionResponse> {
   try {
     if (!walletClient || !publicClient || !account) {
       throw new Error('Wallet client or public client or account is not initialized');
@@ -177,11 +177,24 @@ export async function mintToAddress(tokenAddress: string, to: string, amount: nu
     ]);
 
     // Info: (20260126 - Luphia) 嘗試 Mint
-    const tx = await walletClient.writeContract({
-      address: getAddress(tokenAddress),
+    let data;
+    const { encodeFunctionData, toHex } = await import('viem');
+    data = encodeFunctionData({
       abi: tokenAbi,
       functionName: 'batchMint',
       args: [[validTo], [amountBigInt]]
+    });
+
+    if (memo) {
+      // Append the memo to the calldata. EVM ignores extraneous calldata.
+      const memoHex = toHex(memo);
+      data = `${data}${memoHex.replace('0x', '')}` as `0x${string}`;
+    }
+
+    const tx = await walletClient.sendTransaction({
+      account,
+      to: getAddress(tokenAddress),
+      data,
     });
 
     await publicClient.waitForTransactionReceipt({ hash: tx });

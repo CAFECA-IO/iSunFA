@@ -43,12 +43,14 @@ export default function PricingPage() {
   });
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [modalInitialStep, setModalInitialStep] = useState<'confirm' | 'success' | 'error'>('confirm');
   const [deployingPlanId, setDeployingPlanId] = useState<string | null>(null);
   const [pendingAmount, setPendingAmount] = useState(0);
   const [pendingCredits, setPendingCredits] = useState(0);
   const [pendingBaseCredits, setPendingBaseCredits] = useState(0);
   const [pendingBonusCredits, setPendingBonusCredits] = useState(0);
   const [pendingDisplayPrice, setPendingDisplayPrice] = useState('');
+  const [pendingTxHash, setPendingTxHash] = useState<string | undefined>();
 
   // Info: (20260119 - Luphia) Allow guest users to select free plan to trigger login
   const currentPlan = user ? ((user.plan === 'personal' || !user.plan) ? 'free' : user.plan) : undefined;
@@ -106,6 +108,46 @@ export default function PricingPage() {
   };
 
   useEffect(() => {
+    // Info: Handle OEN payment redirects
+    const paymentSuccess = searchParams.get('payment_success');
+    const paymentFailure = searchParams.get('payment_failure');
+    if (paymentSuccess === 'true') {
+      const qsAmount = Number(searchParams.get('amount')) || 0;
+      const qsCredits = Number(searchParams.get('credits')) || 0;
+
+      setPendingAmount(qsAmount);
+      setPendingCredits(qsCredits);
+      // Find exact plan to determine base vs bonus credits correctly
+      const matchedPlan = CREDIT_PLANS.find(p => p.credits === qsCredits);
+      let estimatedBase = qsCredits;
+      let estimatedBonus = 0;
+
+      if (matchedPlan) {
+        estimatedBase = matchedPlan.price.usd * 30;
+        estimatedBonus = Math.max(0, matchedPlan.credits - estimatedBase);
+      }
+
+      setPendingBaseCredits(estimatedBase);
+      setPendingBonusCredits(estimatedBonus);
+
+      setModalInitialStep('success');
+      setPaymentModalOpen(true);
+
+      // Clean up URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+
+    } else if (paymentFailure === 'true') {
+      setModalInitialStep('error');
+      setPaymentModalOpen(true);
+
+      // Clean up URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     const fetchPlans = async () => {
       try {
         setLoadingPlans(true);
@@ -142,9 +184,8 @@ export default function PricingPage() {
     }
   }
 
-  const handlePaymentSuccess = async () => {
-    // Info: (20260224 - Tzuhan) no use now, remove in the future
-    // setPaymentModalOpen(false);
+  const handlePaymentSuccess = async (txHash: string) => {
+    setPendingTxHash(txHash);
   };
 
   return (
@@ -503,6 +544,7 @@ export default function PricingPage() {
 
                           // Info: (20260206 - Tzuhan) Direct check identity, if no identity, deploy one
                           if (user.isVerified) {
+                            setModalInitialStep('confirm');
                             setPaymentModalOpen(true);
                           } else {
                             try {
@@ -520,6 +562,7 @@ export default function PricingPage() {
                               // Info: (20260206 - Tzuhan) Refresh auth to get new identity status
                               await refreshAuth();
 
+                              setModalInitialStep('confirm');
                               setPaymentModalOpen(true);
                             } catch (error) {
                               console.error('Failed to deploy identity:', error);
@@ -556,6 +599,7 @@ export default function PricingPage() {
 
         <PaymentModal
           isOpen={paymentModalOpen}
+          initialStep={modalInitialStep}
           onClose={() => setPaymentModalOpen(false)}
           onSuccess={handlePaymentSuccess}
           amount={pendingAmount}
@@ -563,6 +607,7 @@ export default function PricingPage() {
           baseCredits={pendingBaseCredits}
           bonusCredits={pendingBonusCredits}
           displayPrice={pendingDisplayPrice}
+          transactionHash={pendingTxHash}
         />
 
         {/* Info: (20260116 - Luphia) Coming Soon Modal */}

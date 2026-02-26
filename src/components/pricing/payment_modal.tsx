@@ -16,29 +16,36 @@ interface IPaymentModalProps {
     baseCredits: number;
     bonusCredits: number;
     displayPrice?: string;
+    initialStep?: 'confirm' | 'success' | 'error';
+    transactionHash?: string;
 }
 
-export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credits, baseCredits, bonusCredits, displayPrice }: IPaymentModalProps) {
+export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credits, baseCredits, bonusCredits, displayPrice, initialStep, transactionHash }: IPaymentModalProps) {
     const { t } = useTranslation();
     const { user, refreshAuth } = useAuth();
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [step, setStep] = useState<'confirm' | 'success' | 'error'>('confirm');
+    const [step, setStep] = useState<'confirm' | 'success' | 'error'>(initialStep || 'confirm');
     const [originalCredits, setOriginalCredits] = useState<number>(0);
-    const [txHash, setTxHash] = useState<string | null>(null);
+    const [txHash, setTxHash] = useState<string | null>(transactionHash || null);
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [useSavedCard, setUseSavedCard] = useState(true);
 
     const wasOpen = useRef(isOpen);
 
     useEffect(() => {
         if (isOpen && !wasOpen.current) {
-            setStep('confirm');
+            setStep(initialStep || 'confirm');
             setError(null);
             setLoading(false);
-            setTxHash(null);
+            setTxHash(transactionHash || null);
             setOriginalCredits(user?.credits || 0);
+            setAgreedToTerms(false);
+            setUseSavedCard(true);
         }
         wasOpen.current = isOpen;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, user?.credits]);
 
     const handleClose = () => {
@@ -53,21 +60,25 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
         setError(null);
 
         try {
-            const response = await request<{ message?: string; payload?: { txHash: string; message: string } }>('/api/v1/token/mint', {
+            const response = await request<{ message?: string; payload?: { requireBinding: boolean; redirectUrl?: string; txHash?: string; } }>('/api/v1/payment/oen/checkout', {
                 method: 'POST',
                 body: JSON.stringify({
                     amount,
                     credits,
+                    useSavedCard: (user as { oenToken?: string })?.oenToken ? useSavedCard : false,
                 }),
             });
 
-            if (response.payload?.txHash) {
+            if (response.payload?.requireBinding && response.payload.redirectUrl) {
+                window.location.href = response.payload.redirectUrl;
+                return;
+            } else if (!response.payload?.requireBinding && response.payload?.txHash) {
                 await refreshAuth();
                 setTxHash(response.payload.txHash);
                 setStep('success');
                 onSuccess(response.payload.txHash);
             } else {
-                throw new Error(response.message || 'Minting failed');
+                throw new Error(response.message || 'Payment failed');
             }
 
         } catch (err) {
@@ -145,11 +156,53 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
                                                     </div>
                                                 </div>
 
+                                                {(user as { oenToken?: string })?.oenToken && (
+                                                    <div className="mt-4 space-y-2 bg-gray-50 p-4 rounded-md border border-gray-200">
+                                                        <label className="text-sm font-medium text-gray-700">{t('pricing.credits.payment_modal.payment_method') || '付款方式'}</label>
+                                                        <div className="flex flex-col gap-2">
+                                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                                <input
+                                                                    type="radio"
+                                                                    name="paymentMethod"
+                                                                    checked={useSavedCard}
+                                                                    onChange={() => setUseSavedCard(true)}
+                                                                    className="h-4 w-4 text-orange-600 focus:ring-orange-600"
+                                                                />
+                                                                <span className="text-sm text-gray-700">{t('pricing.credits.payment_modal.use_saved_card') || '使用已綁定的信用卡'} 💳</span>
+                                                            </label>
+                                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                                <input
+                                                                    type="radio"
+                                                                    name="paymentMethod"
+                                                                    checked={!useSavedCard}
+                                                                    onChange={() => setUseSavedCard(false)}
+                                                                    className="h-4 w-4 text-orange-600 focus:ring-orange-600"
+                                                                />
+                                                                <span className="text-sm text-gray-700">{t('pricing.credits.payment_modal.bind_new_card') || '綁定新信用卡'}</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="mt-4 flex flex-col gap-2">
+                                                    <label className="flex items-start gap-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={agreedToTerms}
+                                                            onChange={(e) => setAgreedToTerms(e.target.checked)}
+                                                            className="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-600"
+                                                        />
+                                                        <span className="text-sm text-gray-600">
+                                                            {t('pricing.credits.payment_modal.agree_tos') || '我同意使用條款 (Terms of Service) 與退費政策 (Refund Policy)'}
+                                                        </span>
+                                                    </label>
+                                                </div>
+
                                                 <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                                                     <div className="mt-6 sm:flex sm:flex-row-reverse">
                                                         <button
                                                             type="submit"
-                                                            disabled={loading}
+                                                            disabled={loading || !agreedToTerms}
                                                             className="inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto items-center gap-2"
                                                         >
                                                             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
