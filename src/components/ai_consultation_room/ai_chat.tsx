@@ -15,7 +15,7 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAiContext } from "@/contexts/ai_context";
 import { useAuth } from "@/contexts/auth_context";
-import { IAttachment } from "@/interfaces/ai_talk";
+import { IFile } from "@/interfaces/ai_talk";
 import { ApiCode } from "@/lib/utils/status";
 import LoginButton from "@/components/common/login_button";
 import { IApiResponse } from "@/lib/utils/response";
@@ -42,10 +42,9 @@ export const AiChat = () => {
   const { user } = useAuth();
   const { isChatOpen, setIsChatOpen } = useAiContext();
 
-  const [attachments, setAttachments] = useState<(IAttachment & { base64?: string })[]>([]);
+  const [files, setFiles] = useState<(IFile & { base64?: string })[]>([]);
   const [localFiles, setLocalFiles] = useState<{ file: File; url: string }[]>([]);
 
-  const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [question, setQuestion] = useState<string>("");
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -59,7 +58,7 @@ export const AiChat = () => {
   }, [localFiles]);
 
 
-  const isSubmitDisabled = !question.trim() || isUploading || isSubmitting;
+  const isSubmitDisabled = !question.trim() || isSubmitting;
 
   const handleSubmit = async () => {
     if (isSubmitDisabled || !user) return;
@@ -72,18 +71,14 @@ export const AiChat = () => {
           method: "POST",
           body: JSON.stringify({
             question,
-            files: attachments.map((att) => ({
-              id: att.id,
-              data: att.base64,
-              mimeType: att.mimeType,
-            })),
+            files,
           }),
         },
       );
 
       if (data.code === ApiCode.SUCCESS) {
         setQuestion("");
-        setAttachments([]);
+        setFiles([]);
         setLocalFiles([]);
 
         // Info: (20260212 - Julian) 延遲 500 ms 後導向 /ai_consultation_room/{threadId} 頁面
@@ -126,7 +121,7 @@ export const AiChat = () => {
 
       if (validFiles.length === 0) return;
 
-      if (attachments.length + validFiles.length > maxCount) {
+      if (files.length + validFiles.length > maxCount) {
         alert(
           t("ai_consultation_room.file_count_error").replace(
             "{count}",
@@ -135,8 +130,6 @@ export const AiChat = () => {
         );
         return;
       }
-
-      setIsUploading(true);
       try {
         const newLocalFiles = validFiles.map((file) => ({
           file,
@@ -157,14 +150,16 @@ export const AiChat = () => {
 
             // Info: (20260213 - Julian) 同時轉換為 base64 供 AI 使用
             const base64 = await fileToBase64(file);
-            setAttachments((prev) => [
+            setFiles((prev) => [
               ...prev, 
               { 
                 id: uploadResult.hash,
+                hash: uploadResult.hash,
+                threadId: "", 
                 fileName: file.name,
                 mimeType: file.type,
+                metadata: JSON.stringify(uploadResult.metadata),
                 fileSize: file.size,
-                url: `/api/v1/file/${uploadResult.hash}`,
                 base64 
               }
             ]);
@@ -181,8 +176,6 @@ export const AiChat = () => {
         }
       } catch (error) {
         console.error("Upload error:", error);
-      } finally {
-        setIsUploading(false);
       }
     }
   };
@@ -216,7 +209,7 @@ export const AiChat = () => {
       });
 
       if (data.code === ApiCode.SUCCESS) {
-        setAttachments((prev) => prev.filter((att) => att.id !== id));
+        setFiles((prev) => prev.filter((att) => att.id !== id));
       } else {
         console.error("Delete failed:", data.message);
       }
@@ -239,27 +232,20 @@ export const AiChat = () => {
 
       <button
         onClick={() => fileInputRef.current?.click()}
-        disabled={isUploading}
         className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all ${isDragging
           ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
           : "border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50"
-          } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
+          }`}
       >
-        {isUploading ? (
-          <Loader2 size={20} className="animate-spin text-orange-500" />
-        ) : (
-          <>
-            <PlusIcon
-              size={20}
-              className={`shrink-0 ${isDragging ? "animate-bounce" : ""}`}
-            />
-            <span className="text-sm font-semibold">
-              {isDragging
-                ? t("ai_consultation_room.drop_to_upload")
-                : t("ai_consultation_room.upload_btn")}
-            </span>
-          </>
-        )}
+        <PlusIcon
+          size={20}
+          className={`shrink-0 ${isDragging ? "animate-bounce" : ""}`}
+        />
+        <span className="text-sm font-semibold">
+          {isDragging
+            ? t("ai_consultation_room.drop_to_upload")
+            : t("ai_consultation_room.upload_btn")}
+        </span>
       </button>
 
       <button
@@ -318,7 +304,7 @@ export const AiChat = () => {
               setIsChatOpen(false);
             }
           }}
-          className={`text-orange-500 transition-all duration-300 ${isChatOpen ? "p-2 hover:bg-gray-100 rounded-xl" : "p-0"
+          className={`text-orange-500 transition-all duration-300 ${isChatOpen ? "p-2 hover:bg-gray-100 rounded-full" : "p-0"
             }`}
           aria-label={
             isChatOpen
@@ -363,7 +349,7 @@ export const AiChat = () => {
             </div>
 
             {/* Info: (20260213 - Julian) 顯示本地預覽 */}
-            {(localFiles.length > 0 || attachments.length > 0) && (
+            {(localFiles.length > 0 || files.length > 0) && (
               <div className="flex w-full overflow-x-auto gap-2 py-1">
                 {localFiles.map((item, index) => (
                   <div
@@ -385,16 +371,15 @@ export const AiChat = () => {
                     </div>
                   </div>
                 ))}
-                {attachments.map((file) => (
+                {files.map((file) => (
                   <div
                     key={file.id}
                     className="group shrink-0 w-16 h-16 relative rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center shadow-sm"
                   >
                     <div className="w-full h-full relative rounded-xl overflow-hidden">
                       <FilePreview 
-                        file={{ filename: file.fileName, mimeType: file.mimeType }}
+                        file={{ filename:'', mimeType: 'image/jpeg' }}
                         base64={file.base64}
-                        url={file.url}
                         className="object-cover w-full h-full pointer-events-none"
                       />
                     </div>

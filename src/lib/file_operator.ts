@@ -72,7 +72,7 @@ const uploadSingleFile = (file: Blob, fileName: string): Promise<string> => {
           reject(new Error('Invalid response'));
         }
       } else {
-        reject(new Error('Upload failed'));
+        reject(new Error(`Upload failed: ${xhr.status} ${xhr.responseText}`));
       }
     };
 

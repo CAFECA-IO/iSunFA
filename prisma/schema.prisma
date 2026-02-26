@@ -13,10 +13,10 @@ enum Role {
 }
 
 model User {
-  id               String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Info: (20260112 - Tzuhan) RWA Identity Contract (ONCHAINID)
-  identityAddress  String?  @map("identity_address")
+  identityAddress String? @map("identity_address")
 
   //  Info: (20260112 - Tzuhan) 用戶的錢包 (address) 是這個 RWA Identity Contract 合約的 Owner
   address          String   @unique
@@ -81,10 +81,10 @@ model Analysis {
 }
 
 model Mission {
-  id        String     @id @default(uuid())
-  userId    String     @map("user_id")
-  user      User       @relation(fields: [userId], references: [id])
-  name      String
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+  name   String
 
   // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
   status    String     @default("PENDING")
@@ -99,13 +99,13 @@ model Mission {
 }
 
 model Task {
-  id        String   @id @default(uuid())
-  missionId String   @map("mission_id")
-  mission   Mission  @relation(fields: [missionId], references: [id])
+  id        String  @id @default(uuid())
+  missionId String  @map("mission_id")
+  mission   Mission @relation(fields: [missionId], references: [id])
   type      String
 
   // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
-  status    String   @default("PENDING")
+  status String @default("PENDING")
 
   // Info: (20260128 - Luphia) Execution order. Equal values = parallel
   order     Int      @default(0)
@@ -135,14 +135,10 @@ model Thread {
   @@map("thread")
 }
 
-// Info: (20260213 - Julian) 上傳檔案：儲存 hash
+// Info: (20260226 - Julian) 上傳檔案：儲存 hash
 model File {
-  id       String  @id @default(uuid())
-  fileName String  @map("file_name")
-  hash     String
-  mimeType String  @map("mime_type")
-  fileSize Int     @map("file_size")
-  url      String? // Info: (20260213 - Julian) 方便前端直接渲染
+  id   String @id @default(uuid())
+  hash String
 
   thread   Thread? @relation(fields: [threadId], references: [id])
   threadId String? @map("thread_id")

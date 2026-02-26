@@ -35,10 +35,14 @@ export interface IFilePreviewProps {
   loadPreview?: (file: ILariaMetadata | { filename: string; mimeType?: string }) => void;
 }
 
-export const FilePreview: React.FC<IFilePreviewProps> = ({ file, fileId, url, base64: initialBase64, progress, loadPreview, className }) => {
+export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fileId, url, base64: initialBase64, progress, loadPreview, className }) => {
   const [localBase64, setLocalBase64] = useState<string | undefined>(initialBase64);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [downloadProgress, setDownloadProgress] = useState<number>(0);
+  const [meta, setMeta] = useState<{ filename: string; mimeType?: string }>({
+    filename: initialFile.filename,
+    mimeType: initialFile.mimeType,
+  });
 
   useEffect(() => {
     setLocalBase64(initialBase64);
@@ -53,8 +57,14 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file, fileId, url, ba
         onProgress: (p) => {
           if (!isCancelled) setDownloadProgress(p);
         },
-        onSuccess: (blob) => {
+        onSuccess: (blob, filename) => {
           if (isCancelled) return;
+          
+          // Info: (20260226 - Julian) Update metadata if discovered from download
+          if (filename && (!meta.filename || meta.filename === fileId)) {
+            setMeta({ filename, mimeType: blob.type });
+          }
+
           const reader = new FileReader();
           reader.readAsDataURL(blob);
           reader.onloadend = () => {
@@ -74,13 +84,28 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file, fileId, url, ba
     return () => {
       isCancelled = true;
     };
-  }, [fileId, localBase64, url]);
+  }, [fileId, localBase64, url, meta.filename]);
 
   const previewUrl = localBase64
-    ? (localBase64.startsWith('data:') ? localBase64 : `data:${file.mimeType || 'application/octet-stream'};base64,${localBase64}`)
+    ? (localBase64.startsWith('data:') ? localBase64 : `data:${meta.mimeType || 'application/octet-stream'};base64,${localBase64}`)
     : url;
 
   const currentProgress = progress !== undefined ? progress : (isDownloading ? downloadProgress : undefined);
+
+  if (isDownloading && !previewUrl) {
+    return (
+      <div className={`flex flex-col items-center justify-center w-full h-full bg-gray-50/50 ${className}`}>
+        <div className="relative w-8 h-8 flex items-center justify-center">
+             <div className="absolute inset-0 border-2 border-orange-100 rounded-full"></div>
+             <div 
+               className="absolute inset-0 border-2 border-orange-500 rounded-full border-t-transparent animate-spin"
+               style={{ clipPath: `polygon(0 0, 100% 0, 100% ${currentProgress || 0}%, 0 ${currentProgress || 0}%)` }}
+             ></div>
+             <span className="text-[10px] font-bold text-orange-600">{Math.round(currentProgress || 0)}%</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!previewUrl) {
     if (currentProgress !== undefined) {
@@ -100,12 +125,12 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file, fileId, url, ba
       );
     }
 
-    const ext = getExtension(file.filename);
+    const ext = getExtension(meta.filename);
     const supported = ['png', 'jpg', 'jpeg', 'mp4', 'mov', 'mp3', 'm3u8', 'pdf'].includes(ext);
     if (supported && loadPreview) {
       return (
         <button
-          onClick={() => loadPreview(file)}
+          onClick={() => loadPreview(meta)}
           className={`text-xs text-blue-500 hover:underline font-medium flex items-center gap-1 ${className || 'mt-2'}`}
         >
           <span className="w-4 h-4 rounded-full border border-blue-500 flex items-center justify-center text-[10px]">▶</span>
@@ -113,23 +138,29 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file, fileId, url, ba
         </button>
       );
     }
-    return null;
+    
+    // Fallback Icon for non-previewable or not-yet-loaded
+    return (
+      <div className={`flex items-center justify-center bg-gray-50 text-gray-400 ${className}`}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.51a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+      </div>
+    );
   }
 
   const preventContext = (e: React.MouseEvent) => e.preventDefault();
 
-  if (isImage(file.filename)) {
+  if (isImage(meta.filename)) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={previewUrl}
-        alt={file.filename}
+        alt={meta.filename}
         className={className || "mt-2 rounded-lg max-h-[400px] w-auto object-contain bg-black/5 shadow-sm"}
         onContextMenu={preventContext}
       />
     );
   }
-  if (isVideo(file.filename)) {
+  if (isVideo(meta.filename)) {
     return (
       // eslint-disable-next-line jsx-a11y/media-has-caption
       <video
@@ -137,12 +168,12 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file, fileId, url, ba
         controlsList="nodownload"
         src={previewUrl}
         className={className || "mt-2 rounded-lg max-h-[400px] w-full max-w-[600px] bg-black shadow-sm"}
-        aria-label={`Video preview for ${file.filename}`}
+        aria-label={`Video preview for ${meta.filename}`}
         onContextMenu={preventContext}
       />
     );
   }
-  if (isAudio(file.filename)) {
+  if (isAudio(meta.filename)) {
     return (
       // eslint-disable-next-line jsx-a11y/media-has-caption
       <audio
@@ -150,19 +181,26 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file, fileId, url, ba
         controlsList="nodownload"
         src={previewUrl}
         className={className || "mt-2 w-full max-w-[400px]"}
-        aria-label={`Audio preview for ${file.filename}`}
+        aria-label={`Audio preview for ${meta.filename}`}
         onContextMenu={preventContext}
       />
     );
   }
-  if (isPdf(file.filename)) {
+  if (isPdf(meta.filename)) {
     return (
       <iframe
         src={`${previewUrl}#toolbar=0`}
         className={className || "mt-2 rounded-lg w-full h-[600px] bg-white border border-white/10"}
-        title={`PDF preview for ${file.filename}`}
+        title={`PDF preview for ${meta.filename}`}
       />
     );
   }
-  return null;
+  
+  // Final fallback
+  return (
+    <div className={`flex items-center justify-center bg-gray-50 text-gray-400 ${className}`}>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.51a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+    </div>
+  );
 };
+

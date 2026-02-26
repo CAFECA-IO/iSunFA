@@ -1,6 +1,5 @@
 import { jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
 
 /**
  * POST /api/v1/file
@@ -22,14 +21,19 @@ export async function POST(request: Request) {
     }
 
     const newFormData = new FormData();
-    newFormData.append("file", file);
+    newFormData.append("file", file, file.name);
 
     const targetUrl = `${STORAGE_DOMAIN}/api/v1/file`;
 
-    const newHeaders = new Headers(request.headers);
-    newHeaders.delete("host");
-    newHeaders.delete("content-type");
-    newHeaders.delete("content-length");
+    // Info: (20260226 - Julian) 僅保留必要的 headers 轉發，避免干擾 fetch 的 Content-Type 處理
+    const newHeaders = new Headers();
+    const headersToForward = ['authorization', 'cookie', 'user-agent', 'accept'];
+    headersToForward.forEach(h => {
+      const val = request.headers.get(h);
+      if (val) newHeaders.set(h, val);
+    });
+
+    console.log(`[API] Proxying POST to ${targetUrl}, file: ${file.name}`);
 
     const response = await fetch(targetUrl, {
       method: "POST",
@@ -38,39 +42,23 @@ export async function POST(request: Request) {
     });
 
     const responseBody = await response.text();
+    console.log(`[API] Storage response status: ${response.status}`);
 
     if (response.ok) {
-      let json: { payload?: { hash?: string } } | undefined;
       try {
-        json = JSON.parse(responseBody);
+        JSON.parse(responseBody);
       } catch (e) {
         console.error("[API] Proxy /file/ POST error:", e);
       }
-
-      // Info: (20260226 - Julian) 將檔案的 metadata file id 保存於資料庫
-      if (json?.payload?.hash && file.name.endsWith(".meta.json")) {
-        const hash = json.payload.hash;
-        
-        await prisma.file.create({
-          data: {
-            id: hash,
-            fileName: file.name,
-            hash: hash,
-            mimeType: file.type || "application/json",
-            fileSize: file.size,
-            url: `/api/v1/file/${hash}`,
-          },
-        });
-      }
     }
-
+      
     return new Response(responseBody, {
       status: response.status,
       headers: response.headers,
       statusText: response.statusText,
     });
   } catch (error) {
-    console.error("[API] Proxy /file/ POST error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    console.error(`[API] Proxy /file/ POST error:`, error);
+    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, `Internal Server Error: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

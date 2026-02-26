@@ -178,10 +178,10 @@ export default function AiTalkDetailPage() {
             </p>
 
             {/* Info: (20260206 - Julian) 附件預覽 */}
-            {data.attachments.length > 0 && (
+            {data.file && data.file.length > 0 && (
               <div className="mt-6 flex flex-wrap gap-3">
-                {data.attachments.map((attachment) => (
-                  <AttachmentItem key={attachment.id} attachment={attachment} />
+                {data.file.map((file) => (
+                  <AttachmentItem key={file.id} file={file} />
                 ))}
               </div>
             )}

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 /**
  * GET /api/v1/file/:file_id
- * Info: (20260226 - Julian) 取得檔案
+ * Info: (20260226 - Julian) 取得檔案碎片
  * 直接對接 STORAGE_DOMAIN
  */
 export async function GET(
@@ -42,6 +42,7 @@ export async function GET(
 
 /**
  * Info: (20260213 - Julian) 刪除已上傳的檔案 (從資料庫正式移除)
+ * 目前沒有使用，但保留
  * DELETE /api/v1/file/:file_id
  */
 export async function DELETE(

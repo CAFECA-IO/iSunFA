@@ -1,7 +1,7 @@
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
-import { IAttachment, IThreadDetail } from "@/interfaces/ai_talk";
+import { IFile, IThreadDetail } from "@/interfaces/ai_talk";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 
 /**
@@ -72,14 +72,11 @@ export async function GET(
     });
 
     // Info: (20260212 - Julian) 取得與討論串關聯的 File
-    const formattedAttachments: IAttachment[] = thread.files.map((file) => ({
+    const formattedFiles: IFile[] = thread.files.map((file) => ({
       id: file.id,
-      fileName: file.fileName,
-      url: file.url || "",
-      fileSize: file.fileSize,
-      mimeType: file.mimeType,
+      hash: file.hash,
+      threadId: file.threadId ?? '',
     }));
-
 
     const response: IThreadDetail = {
       id: thread.id,
@@ -93,7 +90,7 @@ export async function GET(
       countOfShare: shareCount,
       countOfComment: commentsOfThread.length,
       userReaction: userReaction,
-      attachments: formattedAttachments,
+      file: formattedFiles,
     };
 
     return jsonOk(response);

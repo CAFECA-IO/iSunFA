@@ -1,75 +1,49 @@
-import { useState, Fragment, useEffect } from "react";
+import { useState, Fragment } from "react";
 import {
   Dialog,
   DialogPanel,
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { Paperclip, X, Loader2 } from "lucide-react";
-import { IAttachment } from "@/interfaces/ai_talk";
+import { X } from "lucide-react";
+import { IFile } from "@/interfaces/ai_talk";
 import { useTranslation } from "@/i18n/i18n_context";
-import { downloadFile } from "@/lib/file_operator";
+import { ILariaMetadata } from "@/lib/file_operator";
 import { FilePreview, isImage, isVideo, isAudio, isPdf } from "@/components/common/file_preview";
 
-export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
+export const AttachmentItem = ({ file }: { file: IFile }) => {
   const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [localFileUrl, setLocalFileUrl] = useState<string>("");
-  const [isDownloading, setIsDownloading] = useState<boolean>(true);
+  const [localMeta, setLocalMeta] = useState<{ filename: string; mimeType?: string; fileSize?: number }>({
+    filename: file.hash,
+  });
 
-  const isImageFile = isImage(attachment.fileName) || attachment.mimeType.startsWith("image/");
-  const isPreviewable = isImageFile || isVideo(attachment.fileName) || isAudio(attachment.fileName) || isPdf(attachment.fileName);
+  const isPreviewable = isImage(localMeta.filename) || isVideo(localMeta.filename) || isAudio(localMeta.filename) || isPdf(localMeta.filename);
 
-  useEffect(() => {
-    let objectUrl = "";
-    let isCancelled = false;
+  const handlePreviewLoad = (metadata: ILariaMetadata | { filename: string; mimeType?: string; originalFileSize?: number; fileSize?: number }) => {
+    let filename = "";
+    let mimeType = "";
+    let fileSize = 0;
 
-    // Info: (20260226 - Julian) 使用前端下載與合併邏輯
-    downloadFile(attachment.id, {
-      onSuccess: (blob) => {
-        if (!isCancelled) {
-          objectUrl = URL.createObjectURL(blob);
-          setLocalFileUrl(objectUrl);
-          setIsDownloading(false);
-        } else {
-          try {
-            URL.revokeObjectURL(URL.createObjectURL(blob));
-          } catch {
-            // ignore
-          }
-        }
-      },
-      onError: (err) => {
-        console.error("Failed to download file:", attachment.id, err);
-        if (!isCancelled) setIsDownloading(false);
-      }
+    if ('filename' in metadata) {
+      filename = metadata.filename;
+      mimeType = metadata.mimeType || "";
+      fileSize = (metadata as { originalFileSize?: number; fileSize?: number }).originalFileSize || (metadata as { originalFileSize?: number; fileSize?: number }).fileSize || 0;
+    }
+
+    setLocalMeta({
+      filename,
+      mimeType: mimeType || undefined,
+      fileSize: fileSize || undefined
     });
+  };
 
-    return () => {
-      isCancelled = true;
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
-    };
-  }, [attachment.id]);
-
-  const thumbnail = isDownloading ? (
-    <div className="bg-gray-50 rounded-xl w-full h-full flex items-center justify-center mb-1 transition-colors">
-      <Loader2 className="animate-spin text-orange-500" size={24} />
-    </div>
-  ) : isImageFile && localFileUrl ? (
+  const thumbnail = (
     <div className="rounded-xl overflow-hidden relative w-full flex items-center justify-center mb-1 h-[90px] shrink-0">
       <FilePreview
-        file={{ filename: attachment.fileName, mimeType: attachment.mimeType }}
-        url={localFileUrl}
+        fileId={file.hash}
+        file={{ filename: localMeta.filename, mimeType: localMeta.mimeType }}
         className="object-cover w-full h-full pointer-events-none"
-      />
-    </div>
-  ) : (
-    <div className="bg-gray-50 rounded-xl w-full h-full flex items-center justify-center mb-1 group-hover:bg-orange-50 transition-colors">
-      <Paperclip
-        className="text-gray-400 group-hover:text-orange-500 transition-colors"
-        size={24}
       />
     </div>
   );
@@ -79,25 +53,25 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
       <button
         type="button"
         onClick={() => {
-          if (isPreviewable && !isDownloading && localFileUrl) {
+          if (isPreviewable) {
             setIsModalOpen(true);
           }
         }}
         className={`group relative w-32 h-32 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center outline-none p-2 transition-all ${
-          isPreviewable && !isDownloading ? "cursor-zoom-in hover:shadow-lg" : "cursor-default"
+          isPreviewable ? "cursor-zoom-in hover:shadow-lg" : "cursor-default"
         }`}
         aria-label={
           isPreviewable
             ? t("ai_consultation_room.view_image").replace(
                 "{name}",
-                attachment.fileName,
+                localMeta.filename,
               )
-            : attachment.fileName
+            : localMeta.filename
         }
       >
         {thumbnail}
         <span className="text-[10px] text-gray-500 truncate w-full text-center px-1">
-          {attachment.fileName}
+          {localMeta.filename}
         </span>
       </button>
 
@@ -143,36 +117,28 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
                   </div>
 
                   <div className="relative w-full aspect-video min-h-[300px] max-h-[85vh] bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center">
-                    {localFileUrl && (
-                      <div className="w-full h-full flex items-center justify-center relative">
-                        <FilePreview
-                          file={{ filename: attachment.fileName, mimeType: attachment.mimeType }}
-                          url={localFileUrl}
-                          className="object-contain max-h-[85vh] max-w-full w-auto p-4"
-                        />
-                      </div>
-                    )}
+                    <div className="w-full h-full flex items-center justify-center relative">
+                      <FilePreview
+                        fileId={file.hash}
+                        file={{ filename: localMeta.filename, mimeType: localMeta.mimeType }}
+                        className="object-contain max-h-[85vh] max-w-full w-auto p-4"
+                        loadPreview={handlePreviewLoad}
+                      />
+                    </div>
                   </div>
 
                   <div className="p-4 flex items-center justify-between">
                     <div>
                       <h3 className="text-gray-900 font-bold">
-                        {attachment.fileName}
+                        {localMeta.filename}
                       </h3>
-                      <p className="text-xs text-gray-400">
-                        {Math.round(attachment.fileSize / 1024)} KB •{" "}
-                        {attachment.mimeType}
-                      </p>
+                      {localMeta.mimeType && (
+                        <p className="text-xs text-gray-400">
+                          {localMeta.fileSize ? `${Math.round(localMeta.fileSize / 1024)} KB • ` : ""}
+                          {localMeta.mimeType}
+                        </p>
+                      )}
                     </div>
-                    {localFileUrl && (
-                      <a
-                        href={localFileUrl}
-                        download={attachment.fileName}
-                        className="bg-orange-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-orange-500 transition-all active:scale-95"
-                      >
-                        {t("ai_consultation_room.download_original")}
-                      </a>
-                    )}
                   </div>
                 </DialogPanel>
               </TransitionChild>

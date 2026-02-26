@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { IThread } from "@/interfaces/ai_talk";
+import { IThread ,IFile} from "@/interfaces/ai_talk";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { ChatService } from "@/services/chat.service";
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { question, files = [] } = body;
+    const { question, files= [] } = body;
 
     if (!question) {
       console.error("Missing question");
@@ -158,17 +158,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Info: (20260213 - Julian) 建立已上傳檔案與討論串的關聯
-    const fileIds = files
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .filter((f: any) => f.id)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((f: any) => f.id);
-
-    if (fileIds.length > 0) {
-      await prisma.file.updateMany({
-        where: { id: { in: fileIds } },
-        data: { threadId: thread.id },
+    // Info: (20260226 - Julian) 建立上傳檔案並與討論串關聯
+    if(files.length > 0){
+      await prisma.file.createMany({
+        data: files.map((file: IFile) => ({
+          ...file,
+          threadId: thread.id,
+        })),
       });
     }
 
