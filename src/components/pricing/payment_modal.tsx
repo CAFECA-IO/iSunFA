@@ -6,6 +6,7 @@ import { X, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { request } from '@/lib/utils/request';
 import { useTranslation } from '@/i18n/i18n_context';
 import { useAuth } from '@/contexts/auth_context';
+import LegalModal from '@/components/common/legal_modal';
 
 interface IPaymentModalProps {
     isOpen: boolean;
@@ -31,6 +32,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
     const [txHash, setTxHash] = useState<string | null>(transactionHash || null);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [useSavedCard, setUseSavedCard] = useState(true);
+    const [legalDoc, setLegalDoc] = useState<'terms_of_service' | 'privacy_policy' | 'refund_policy' | null>(null);
 
     const wasOpen = useRef(isOpen);
 
@@ -96,8 +98,9 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
     };
 
     return (
-        <Transition show={isOpen} as={Fragment}>
-            <Dialog as="div" className="relative z-50" onClose={handleClose}>
+        <>
+            <Transition show={isOpen} as={Fragment}>
+                <Dialog as="div" className="relative z-50" onClose={handleClose}>
                 <TransitionChild
                     as={Fragment}
                     enter="ease-out duration-300"
@@ -185,17 +188,43 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
                                                 )}
 
                                                 <div className="mt-4 flex flex-col gap-2">
-                                                    <label className="flex items-start gap-2 cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={agreedToTerms}
-                                                            onChange={(e) => setAgreedToTerms(e.target.checked)}
-                                                            className="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-600"
-                                                        />
-                                                        <span className="text-sm text-gray-600">
-                                                            {t('pricing.credits.payment_modal.agree_tos') || '我同意使用條款 (Terms of Service) 與退費政策 (Refund Policy)'}
-                                                        </span>
-                                                    </label>
+                                                    <div className="relative flex items-start">
+                                                        <div className="flex h-6 items-center">
+                                                            <input
+                                                                id="tos-payment"
+                                                                type="checkbox"
+                                                                checked={agreedToTerms}
+                                                                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                                                                className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-600 cursor-pointer"
+                                                            />
+                                                        </div>
+                                                        <div className="ml-3 text-sm leading-6">
+                                                            <label htmlFor="tos-payment" className="font-medium text-gray-900 cursor-pointer">
+                                                                {t('auth_modal.tos_agree') || '我同意'}{' '}
+                                                                <button
+                                                                    type="button"
+                                                                    className="font-semibold text-orange-600 hover:text-orange-500 underline decoration-transparent hover:decoration-orange-500 transition-all"
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        setLegalDoc('terms_of_service');
+                                                                    }}
+                                                                >
+                                                                    {t('auth_modal.tos_link') || '使用條款 (Terms of Service)'}
+                                                                </button>{' '}
+                                                                {t('auth_modal.and') || '與'}{' '}
+                                                                <button
+                                                                    type="button"
+                                                                    className="font-semibold text-orange-600 hover:text-orange-500 underline decoration-transparent hover:decoration-orange-500 transition-all"
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        setLegalDoc('refund_policy');
+                                                                    }}
+                                                                >
+                                                                    {t('footer.refund') || '退費政策 (Refund Policy)'}
+                                                                </button>
+                                                            </label>
+                                                        </div>
+                                                    </div>
                                                 </div>
 
                                                 <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -325,5 +354,11 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, amount, credi
                 </div>
             </Dialog>
         </Transition>
+        <LegalModal
+            isOpen={!!legalDoc}
+            onClose={() => setLegalDoc(null)}
+            documentType={legalDoc}
+        />
+        </>
     );
 }

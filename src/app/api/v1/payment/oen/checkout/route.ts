@@ -20,8 +20,10 @@ export async function POST(request: NextRequest) {
         }
 
         const { amount, credits, useSavedCard } = await request.json();
+        console.log(`[OEN Checkout] Request received: amount=${amount}, credits=${credits}, useSavedCard=${useSavedCard}, userId=${user.id}`);
 
         if (!amount || amount <= 0 || !credits || credits <= 0) {
+            console.error('[OEN Checkout] Invalid amount or credits');
             return jsonFail(ApiCode.VALIDATION_ERROR, 'Invalid amount or credits');
         }
 
@@ -31,11 +33,14 @@ export async function POST(request: NextRequest) {
         });
 
         if (!dbUser) {
+            console.error(`[OEN Checkout] User not found in DB: ${user.id}`);
             return jsonFail(ApiCode.NOT_FOUND, 'User not found');
         }
+        console.log(`[OEN Checkout] User fetched from DB: hasTokens=${!!dbUser.oenToken}`);
 
         if (useSavedCard && dbUser.oenToken) {
             // Flow: Directly charge using the saved token
+            console.log(`[OEN Checkout] Flow: Directly charge using saved token`);
 
             // Create a pending order first
             const order = await prisma.order.create({
@@ -51,7 +56,9 @@ export async function POST(request: NextRequest) {
                     }
                 }
             });
+            console.log(`[OEN Checkout] Created pending payment order: ${order.id}`);
 
+            console.log(`[OEN Checkout] Calling OEN /token/transactions API: amount=${amount}, email=${dbUser.id}@isunfa.tw`);
             // Call OEN /token/transactions API
             const oenRes = await fetch('https://payment-api.testing.oen.tw/token/transactions', {
                 method: 'POST',
@@ -78,11 +85,14 @@ export async function POST(request: NextRequest) {
             });
 
             const oenData = await oenRes.json();
+            console.log(`[OEN Checkout] OEN /token/transactions response: status=${oenRes.status}`, JSON.stringify(oenData));
 
             if (oenData.code === "S0000" || oenRes.ok) { // Assuming S0000 or similar success code
+                console.log(`[OEN Checkout] Charge successful, proceeding to mint ${credits} credits to ${user.address}...`);
                 // Payment successful, mint points!
                 const memo = JSON.stringify({ provider: "OEN", orderId: order.id, amount });
                 const mintResult = await mintToAddress(CONTRACT_ADDRESSES.NTD_TOKEN, user.address, credits, memo);
+                console.log(`[OEN Checkout] Mint result: success=${mintResult.success}, message=${mintResult.message}`);
 
                 if (!mintResult.success) {
                     // Update order to fail, though payment succeeded (edge case to handle in prod, refund etc)
@@ -99,6 +109,7 @@ export async function POST(request: NextRequest) {
                     where: { id: order.id },
                     data: { status: "COMPLETED", transactionHash: txHash, data: { ...order.data as object, oenResponse: oenData } }
                 });
+                console.log(`[OEN Checkout] Order ${order.id} COMPLETED with txHash: ${txHash}`);
 
                 return jsonOk({
                     requireBinding: false,
@@ -106,6 +117,7 @@ export async function POST(request: NextRequest) {
                     txHash: txHash
                 });
             } else {
+                console.error(`[OEN Checkout] Charge failed via OEN`);
                 await prisma.order.update({
                     where: { id: order.id },
                     data: { status: "FAILED", data: { ...order.data as object, oenResponse: oenData } }
@@ -114,6 +126,7 @@ export async function POST(request: NextRequest) {
             }
 
         } else {
+            console.log(`[OEN Checkout] Flow: No token or wants to bind a new card`);
             // Flow: No token or wants to bind a new card. Call OEN /checkout-token
 
             // Create a pending order to track this checkout intention
@@ -136,6 +149,10 @@ export async function POST(request: NextRequest) {
             const protocol = hostUrl.includes('localhost') ? 'http' : 'https';
             const originBase = `${protocol}://${hostUrl}`;
 
+            const webhookBase = process.env.NEXT_PUBLIC_APP_URL || originBase;
+
+            console.log(`[OEN Checkout] webhookBase: ${webhookBase}`);
+
             const oenRes = await fetch('https://payment-api.testing.oen.tw/checkout-token', {
                 method: 'POST',
                 headers: {
@@ -147,14 +164,16 @@ export async function POST(request: NextRequest) {
                     successUrl: `${originBase}/pricing?tab=credits&payment_success=true&order_id=${order.id}&amount=${amount}&credits=${credits}`,
                     failureUrl: `${originBase}/pricing?tab=credits&payment_failure=true&order_id=${order.id}`,
                     customId: order.id,
-                    callbackUrl: `${originBase}/api/payment/callback/oen`
+                    callbackUrl: `${webhookBase}/api/payment/callback/oen`
                 })
             });
 
             const oenData = await oenRes.json();
+            console.log(`[OEN Checkout] OEN /checkout-token response: status=${oenRes.status}`, JSON.stringify(oenData));
 
             if (oenData.code === "S0000" && oenData.data?.id) {
                 const paymentId = oenData.data.id;
+                console.log(`[OEN Checkout] Received checkout-token paymentId: ${paymentId}`);
 
                 await prisma.order.update({
                     where: { id: order.id },
@@ -167,6 +186,7 @@ export async function POST(request: NextRequest) {
                     redirectUrl: `https://mermer.testing.oen.tw/checkout/subscription/create/${paymentId}`
                 });
             } else {
+                console.error(`[OEN Checkout] Failed to get OEN checkout token`);
                 return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Failed to get OEN checkout token', oenData);
             }
         }

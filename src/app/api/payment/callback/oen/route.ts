@@ -44,12 +44,15 @@ export async function POST(request: NextRequest) {
         if (typeof customId === 'string' && customId.startsWith('{')) {
             try { customId = JSON.parse(customId).orderId || customId; } catch { }
         }
+        console.log(`[OEN Callback] Parsed customId (orderId): ${customId}`);
 
         // OEN standard places token at root, but check data just in case
         const token = body.token || body.data?.token;
         const status = body.status || body.data?.status || body.success ? 'SUCCESS' : '';
+        console.log(`[OEN Callback] Extracted token: ${token ? 'yes' : 'no'}, status: ${status}`);
 
         if (!customId) {
+            console.error(`[OEN Callback] No customId provided in payload`);
             return NextResponse.json({ message: "No customId provided" }, { status: 400 });
         }
 
@@ -59,8 +62,10 @@ export async function POST(request: NextRequest) {
         });
 
         if (!order) {
+            console.error(`[OEN Callback] Order not found for customId: ${customId}`);
             return NextResponse.json({ message: "Order not found" }, { status: 404 });
         }
+        console.log(`[OEN Callback] Found order: id=${order.id}, type=${order.type}, status=${order.status}, userId=${order.userId}`);
 
         // If OEN sends a new binding token, we save it to the user profile
         if (token && typeof token === 'string') {
@@ -74,6 +79,7 @@ export async function POST(request: NextRequest) {
         // If the callback explicitly indicates a successful binding and we haven't processed it yet
         if ((status === 'SUCCESS' || body.success === true || (token && typeof token === 'string')) && order.status === 'PENDING' && order.type === 'OEN_BINDING') {
             const orderData = order.data as { credits?: number, amount?: number };
+            console.log(`[OEN Callback] Processing successful binding for order ${order.id}, credits=${orderData.credits}, amount=${orderData.amount}`);
 
             if (orderData.credits && orderData.amount && token) {
                 // Binding was successful, now let's actually CHARGE the user.
@@ -94,12 +100,14 @@ export async function POST(request: NextRequest) {
                         }
                     }
                 });
+                console.log(`[OEN Callback] Created OEN_PAYMENT chargeOrder: ${chargeOrder.id}`);
 
                 // Update the binding order's status to COMPLETED so we don't process it again
                 await prisma.order.update({
                     where: { id: order.id },
                     data: { status: "COMPLETED" }
                 });
+                console.log(`[OEN Callback] Marked binding order ${order.id} as COMPLETED`);
 
                 const oenRes = await fetch('https://payment-api.testing.oen.tw/token/transactions', {
                     method: 'POST',
@@ -108,7 +116,7 @@ export async function POST(request: NextRequest) {
                         'Authorization': `Bearer ${OEN_TRANSACTION_TOKEN}`
                     },
                     body: JSON.stringify({
-                        merchantId: "mermer",
+                        merchantId: process.env.OEN_MERCHANT_ID || "mermer",
                         amount: orderData.amount,
                         currency: "TWD",
                         token: token,
