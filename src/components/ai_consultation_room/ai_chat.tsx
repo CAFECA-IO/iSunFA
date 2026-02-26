@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import Image from "next/image";
+import { uploadFile, ILariaMetadata } from "@/lib/file_operator";
 import {
   PlusIcon,
   MinusIcon,
@@ -145,19 +146,28 @@ export const AiChat = () => {
 
         for (let i = 0; i < validFiles.length; i++) {
           const file = validFiles[i];
-          const formData = new FormData();
-          formData.append("file", file);
 
-          const response = await fetch("/api/v1/file/upload", {
-            method: "POST",
-            body: formData,
-          });
+          try {
+            const uploadResult = await new Promise<{hash: string, metadata?: ILariaMetadata}>((resolve, reject) => {
+              uploadFile(file, {
+                onSuccess: (hash, metadata) => resolve({ hash, metadata }),
+                onError: (error) => reject(error),
+              });
+            });
 
-          const data = await response.json();
-          if (data.code === ApiCode.SUCCESS) {
             // Info: (20260213 - Julian) 同時轉換為 base64 供 AI 使用
             const base64 = await fileToBase64(file);
-            setAttachments((prev) => [...prev, { ...data.payload, base64 }]);
+            setAttachments((prev) => [
+              ...prev, 
+              { 
+                id: uploadResult.hash,
+                fileName: file.name,
+                mimeType: file.type,
+                fileSize: file.size,
+                url: `/api/v1/file/${uploadResult.hash}`,
+                base64 
+              }
+            ]);
 
             // Info: (20260213 - Julian) 上傳成功後移除本地預覽
             setLocalFiles((prev) => {
@@ -165,8 +175,8 @@ export const AiChat = () => {
               if (target) URL.revokeObjectURL(target.url);
               return prev.filter((item) => item.file !== file);
             });
-          } else {
-            console.error("Upload failed:", data.message);
+          } catch (uploadError) {
+            console.error("Upload failed for file", file.name, uploadError);
           }
         }
       } catch (error) {
@@ -199,13 +209,16 @@ export const AiChat = () => {
   };
 
   const removeFile = async (id: string) => {
+    // Info: (20260226 - Julian) 呼叫後端 API，將檔案資料從 db 刪除
     try {
-      const data = await request<IApiResponse<{ id: string }>>(`/api/v1/file/${id}`, {
+      const data = await request<IApiResponse<{ id: string }>>(`/api/v1/file/${id}`, { 
         method: "DELETE",
       });
 
       if (data.code === ApiCode.SUCCESS) {
         setAttachments((prev) => prev.filter((att) => att.id !== id));
+      } else {
+        console.error("Delete failed:", data.message);
       }
     } catch (error) {
       console.error("Delete error:", error);
@@ -380,7 +393,7 @@ export const AiChat = () => {
                   >
                     <div className="w-full h-full relative rounded-xl overflow-hidden">
                       <Image
-                        src={file.url}
+                        src={file.base64 ? `data:${file.mimeType};base64,${file.base64}` : file.url}
                         alt={file.fileName}
                         fill
                         className="object-cover"

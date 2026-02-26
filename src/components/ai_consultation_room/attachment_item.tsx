@@ -1,4 +1,4 @@
-import { useState, Fragment } from "react";
+import { useState, Fragment, useEffect } from "react";
 import {
   Dialog,
   DialogPanel,
@@ -6,28 +6,67 @@ import {
   TransitionChild,
 } from "@headlessui/react";
 import Image from "next/image";
-import { Paperclip, X } from "lucide-react";
+import { Paperclip, X, Loader2 } from "lucide-react";
 import { IAttachment } from "@/interfaces/ai_talk";
 import { useTranslation } from "@/i18n/i18n_context";
+import { downloadFile } from "@/lib/file_operator";
 
 export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
   const { t } = useTranslation();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [localFileUrl, setLocalFileUrl] = useState<string>("");
+  const [isDownloading, setIsDownloading] = useState<boolean>(true);
 
   const isImage = attachment.mimeType.startsWith("image/");
-  const localFileUrl = `/api/v1/file/${attachment.id}`;
 
-  const thumbnail = isImage ? (
+  useEffect(() => {
+    let objectUrl = "";
+    let isCancelled = false;
+
+    // Info: (20260226 - Julian) 使用前端下載與合併邏輯
+    downloadFile(attachment.id, {
+      onSuccess: (blob) => {
+        if (!isCancelled) {
+          objectUrl = URL.createObjectURL(blob);
+          setLocalFileUrl(objectUrl);
+          setIsDownloading(false);
+        } else {
+          try {
+            URL.revokeObjectURL(URL.createObjectURL(blob));
+          } catch {
+            // ignore
+          }
+        }
+      },
+      onError: (err) => {
+        console.error("Failed to download file:", attachment.id, err);
+        if (!isCancelled) setIsDownloading(false);
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [attachment.id]);
+
+  const thumbnail = isDownloading ? (
+    <div className="bg-gray-50 rounded-xl w-full h-full flex items-center justify-center mb-1 transition-colors">
+      <Loader2 className="animate-spin text-orange-500" size={24} />
+    </div>
+  ) : isImage && localFileUrl ? (
     <div className="rounded-xl overflow-hidden relative w-full flex items-center justify-center mb-1 h-[90px] shrink-0">
       <Image
         src={localFileUrl}
         alt={attachment.fileName}
         fill
         className="object-contain group-hover:bg-orange-50 transition-colors"
+        unoptimized
       />
     </div>
   ) : (
-
     <div className="bg-gray-50 rounded-xl w-full h-full flex items-center justify-center mb-1 group-hover:bg-orange-50 transition-colors">
       <Paperclip
         className="text-gray-400 group-hover:text-orange-500 transition-colors"
@@ -40,9 +79,13 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
     <>
       <button
         type="button"
-        onClick={() => isImage && setIsModalOpen(true)}
+        onClick={() => {
+          if (isImage && !isDownloading && localFileUrl) {
+            setIsModalOpen(true);
+          }
+        }}
         className={`group relative w-32 h-32 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center outline-none p-2 transition-all ${
-          isImage ? "cursor-zoom-in hover:shadow-lg" : "cursor-default"
+          isImage && !isDownloading ? "cursor-zoom-in hover:shadow-lg" : "cursor-default"
         }`}
         aria-label={
           isImage
@@ -101,13 +144,16 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
                   </div>
 
                   <div className="relative w-full aspect-video min-h-[300px] max-h-[85vh] bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center">
-                    <Image
-                      src={localFileUrl}
-                      alt={attachment.fileName}
-                      fill
-                      className="object-contain"
-                      priority
-                    />
+                    {localFileUrl && (
+                      <Image
+                        src={localFileUrl}
+                        alt={attachment.fileName}
+                        fill
+                        className="object-contain"
+                        priority
+                        unoptimized
+                      />
+                    )}
                   </div>
 
                   <div className="p-4 flex items-center justify-between">
@@ -120,13 +166,15 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
                         {attachment.mimeType}
                       </p>
                     </div>
-                    <a
-                      href={localFileUrl}
-                      download={attachment.fileName}
-                      className="bg-orange-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-orange-500 transition-all active:scale-95"
-                    >
-                      {t("ai_consultation_room.download_original")}
-                    </a>
+                    {localFileUrl && (
+                      <a
+                        href={localFileUrl}
+                        download={attachment.fileName}
+                        className="bg-orange-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-orange-500 transition-all active:scale-95"
+                      >
+                        {t("ai_consultation_room.download_original")}
+                      </a>
+                    )}
                   </div>
                 </DialogPanel>
               </TransitionChild>
