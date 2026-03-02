@@ -26,7 +26,7 @@ export default function PricingPage() {
   const { t, language } = useTranslation();
   const { user, refreshAuth } = useAuth();
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get('tab') === 'credits' ? 'credits' : 'subscription';
+  const initialTab = searchParams?.get('tab') === 'credits' ? 'credits' : 'subscription';
 
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
   const [activeTab, setActiveTab] = useState<'subscription' | 'credits'>(initialTab);
