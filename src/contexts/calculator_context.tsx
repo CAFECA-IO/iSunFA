@@ -76,7 +76,7 @@ interface ICalculatorContext {
   setIsNameError: React.Dispatch<React.SetStateAction<boolean>>;
 
   // Info: (20250709 - Julian) Step 2: 基本薪資相關 state 和 functions
-  // 以下皆使用 Dispatch 來更新 state
+  // Info: (20250709 - Julian) 以下皆使用 Dispatch 來更新 state
   baseSalary: number;
   setBaseSalary: React.Dispatch<React.SetStateAction<number>>;
   mealAllowance: number;
@@ -98,7 +98,8 @@ interface ICalculatorContext {
   setTwoAndOneThirdsHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
   twoAndTwoThirdsHoursForNonTax: number;
   setTwoAndTwoThirdsHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
-  totalNonTaxableHours: number; // Info: (20250710 - Julian) 總免稅加班時數
+  // Info: (20250710 - Julian) 總免稅加班時數
+  totalNonTaxableHours: number;
   // Info: (20250722 - Julian) Taxable hours
   oneAndOneThirdHoursForTaxable: number;
   setOneAndOneThirdsHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
@@ -110,7 +111,8 @@ interface ICalculatorContext {
   setTwoAndOneThirdsHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
   twoAndTwoThirdsHoursForTaxable: number;
   setTwoAndTwoThirdsHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
-  totalTaxableHours: number; // Info: (20250710 - Julian) 總應稅加班時數
+  // Info: (20250710 - Julian) 總應稅加班時數
+  totalTaxableHours: number;
   // Info: (20250722 - Julian) Leave hours
   sickLeaveHours: number;
   setSickLeaveHours: React.Dispatch<React.SetStateAction<number>>;
@@ -120,7 +122,7 @@ interface ICalculatorContext {
   setLeavePayoutHours: React.Dispatch<React.SetStateAction<number>>;
 
   // Info: (20250710 - Julian) Step 4: 其他相關 state 和 functions
-  // 除了 VPC 皆使用 Dispatch 來更新 state
+  // Info: (20250710 - Julian) 除了 VPC 皆使用 Dispatch 來更新 state
   isLaborInsurance: boolean;
   toggleLaborInsurance: () => void;
   isNHI: boolean;
@@ -148,7 +150,9 @@ export const CalculatorContext = createContext<ICalculatorContext | undefined>(u
 export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250714 - Julian) 計算機的表單選項
   const thisYear = new Date().getFullYear();
-  const thisMonth = new Date().getMonth() + 1; // 月份從 0 開始，所以要加 1
+
+  // 月份從 0 開始，所以要加 1
+  const thisMonth = new Date().getMonth() + 1;
 
   // Info: (20250714 - Julian) 年份選項：今年起往後推到 2025 年
   const yearGap = thisYear - 2025 + 1;
@@ -156,7 +160,9 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
 
   // Info: (20250714 - Julian) 月份選項：只顯示 1 月到現在的月份
   const monthOptions = MONTHS.slice(0, thisMonth);
-  const defaultMonth = monthOptions[monthOptions.length - 1]; // Info: (20250815 - Julian) 預設為當前月份
+
+  // Info: (20250815 - Julian) 預設為當前月份
+  const defaultMonth = monthOptions[monthOptions.length - 1];
 
   // Info: (20250806 - Julian) 基準天數選項：1. 固定 30 天、2. 實際天數
   const payrollDaysBaseOptions = ['FIXED', 'ACTUAL'];
@@ -256,7 +262,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   //   twoAndTwoThirdsHoursForTaxable,
   // ]);
 
-  // ✅直接計算總時數，不要用 useEffect，避免二次渲染
+  // Info: (20250710 - Julian) 直接計算總時數，不要用 useEffect，避免二次渲染
   const totalNonTaxableHours =
     oneAndOneThirdsHoursForNonTax +
     oneAndTwoThirdsHoursForNonTax +
