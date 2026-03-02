@@ -137,8 +137,9 @@ model Thread {
 
 // Info: (20260226 - Julian) 上傳檔案：儲存 hash
 model File {
-  id   String @id @default(uuid())
-  hash String
+  id       String  @id @default(uuid())
+  hash     String
+  fileName String? @map("file_name")
 
   thread   Thread? @relation(fields: [threadId], references: [id])
   threadId String? @map("thread_id")

@@ -38,7 +38,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 // Info: (20260302 - Julian) 目前先限制一次只能上傳一張圖片
 const FILE_LIMIT = 1;
-// Info: (20260302 - Julian) 20MB
+// Info: (20260302 - Julian) 限制 20MB
 const MAX_FILE_SIZE = 1024 * 1024 * 20;
 
 export const AiChat = () => {
@@ -72,11 +72,13 @@ export const AiChat = () => {
     };
   }, [localFiles]);
 
-  // Info: (20260302 - Julian) 不可上傳：1. 正在提交 2. 檔案數量超過限制
-  const isUploadDisabled = isSubmitting || files.length >= FILE_LIMIT;
+  // Info: (20260302 - Julian) 不可上傳：1. 正在提交 2. 檔案數量(包含上傳中)超過限制
+  const isUploadDisabled =
+    isSubmitting || files.length + localFiles.length >= FILE_LIMIT;
 
-  // Info: (20260302 - Julian) 不可提交：1. 沒有輸入問題 2. 正在提交
-  const isSubmitDisabled = !question.trim() || isSubmitting;
+  // Info: (20260302 - Julian) 不可提交：1. 沒有輸入問題 2. 正在提交 3. 正在上傳檔案
+  const isSubmitDisabled =
+    !question.trim() || isSubmitting || localFiles.length > 0;
 
   const handleSubmit = async () => {
     if (isSubmitDisabled || !user) return;
@@ -116,93 +118,92 @@ export const AiChat = () => {
   };
 
   const processFiles = async (selectedFiles: FileList | null) => {
-    if (selectedFiles) {
-      const fileList = Array.from(selectedFiles);
-      const maxSize = MAX_FILE_SIZE;
-      const maxCount = FILE_LIMIT;
+    if (!selectedFiles || isUploadDisabled) return;
+    const fileList = Array.from(selectedFiles);
+    const maxSize = MAX_FILE_SIZE;
+    const maxCount = FILE_LIMIT;
 
-      const validFiles = fileList.filter((file) => {
-        if (!file.type.startsWith("image/")) {
-          return false;
-        }
-        if (file.size > maxSize) {
-          setConfirmModal({
-            isOpen: true,
-            title: t("ai_consultation_room.file_size_error_title"),
-            message: t("ai_consultation_room.file_size_error_content").replace(
-              "{name}",
-              file.name,
-            ),
-          });
-          return false;
-        }
-        return true;
-      });
-
-      if (validFiles.length === 0) return;
-
-      // Info: (20260226 - Julian) 檢查包含已選取的檔案，總數是否超過限制
-      if (files.length + validFiles.length > maxCount) {
+    const validFiles = fileList.filter((file) => {
+      if (!file.type.startsWith("image/")) {
+        return false;
+      }
+      if (file.size > maxSize) {
         setConfirmModal({
           isOpen: true,
-          title: t("ai_consultation_room.file_count_error_title"),
-          message: t("ai_consultation_room.file_count_error_content").replace(
-            "{count}",
-            maxCount.toString(),
+          title: t("ai_consultation_room.file_size_error_title"),
+          message: t("ai_consultation_room.file_size_error_content").replace(
+            "{name}",
+            file.name,
           ),
         });
-        return;
+        return false;
       }
-      try {
-        const newLocalFiles = validFiles.map((file) => ({
-          file,
-          url: URL.createObjectURL(file),
-        }));
-        setLocalFiles((prev) => [...prev, ...newLocalFiles]);
+      return true;
+    });
 
-        for (let i = 0; i < validFiles.length; i++) {
-          const file = validFiles[i];
+    if (validFiles.length === 0) return;
 
-          try {
-            const uploadResult = await new Promise<{
-              hash: string;
-              metadata?: ILariaMetadata;
-            }>((resolve, reject) => {
-              uploadFile(file, {
-                onSuccess: (hash, metadata) => resolve({ hash, metadata }),
-                onError: (error) => reject(error),
-              });
+    // Info: (20260302 - Julian) 檢查包含已選取、上傳中的檔案，總數是否超過限制
+    if (files.length + localFiles.length + validFiles.length > maxCount) {
+      setConfirmModal({
+        isOpen: true,
+        title: t("ai_consultation_room.file_count_error_title"),
+        message: t("ai_consultation_room.file_count_error_content").replace(
+          "{count}",
+          maxCount.toString(),
+        ),
+      });
+      return;
+    }
+    try {
+      const newLocalFiles = validFiles.map((file) => ({
+        file,
+        url: URL.createObjectURL(file),
+      }));
+      setLocalFiles((prev) => [...prev, ...newLocalFiles]);
+
+      for (let i = 0; i < validFiles.length; i++) {
+        const file = validFiles[i];
+
+        try {
+          const uploadResult = await new Promise<{
+            hash: string;
+            metadata?: ILariaMetadata;
+          }>((resolve, reject) => {
+            uploadFile(file, {
+              onSuccess: (hash, metadata) => resolve({ hash, metadata }),
+              onError: (error) => reject(error),
             });
+          });
 
-            // Info: (20260213 - Julian) 同時轉換為 base64 供 AI 使用
-            const base64 = await fileToBase64(file);
-            setFiles((prev) => [
-              ...prev,
-              {
-                id: uploadResult.hash,
-                hash: uploadResult.hash,
-                threadId: "",
-                fileName: file.name,
-                mimeType: file.type,
-                metadata: JSON.stringify(uploadResult.metadata),
-                fileSize: file.size,
-                base64,
-              },
-            ]);
+          // Info: (20260213 - Julian) 同時轉換為 base64 供 AI 使用
+          const base64 = await fileToBase64(file);
+          setFiles((prev) => [
+            ...prev,
+            {
+              id: uploadResult.hash,
+              hash: uploadResult.hash,
+              threadId: "",
+              fileName: file.name,
+              mimeType: file.type,
+              metadata: JSON.stringify(uploadResult.metadata),
+              fileSize: file.size,
+              base64,
+            },
+          ]);
 
-            // Info: (20260213 - Julian) 上傳成功後移除本地預覽
-            setLocalFiles((prev) => {
-              const target = prev.find((item) => item.file === file);
-              if (target) URL.revokeObjectURL(target.url);
-              return prev.filter((item) => item.file !== file);
-            });
-          } catch (uploadError) {
-            console.error("Upload failed for file", file.name, uploadError);
-          }
+          // Info: (20260213 - Julian) 上傳成功後移除本地預覽
+          setLocalFiles((prev) => {
+            const target = prev.find((item) => item.file === file);
+            if (target) URL.revokeObjectURL(target.url);
+            return prev.filter((item) => item.file !== file);
+          });
+        } catch (uploadError) {
+          console.error("Upload failed for file", file.name, uploadError);
         }
-      } catch (error) {
-        console.error("Upload error:", error);
       }
+    } catch (error) {
+      console.error("Upload error:", error);
     }
   };
 

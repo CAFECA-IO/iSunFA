@@ -9,16 +9,17 @@ import { X } from "lucide-react";
 import { IFile } from "@/interfaces/ai_talk";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ILariaMetadata } from "@/lib/file_operator";
-import { FilePreview, isImage, isVideo, isAudio, isPdf } from "@/components/common/file_preview";
+import { FilePreview} from "@/components/common/file_preview";
 
 export const AttachmentItem = ({ file }: { file: IFile }) => {
   const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [localMeta, setLocalMeta] = useState<{ filename: string; mimeType?: string; fileSize?: number }>({
-    filename: file.hash,
+  const [localMeta, setLocalMeta] = useState<{ hash: string; filename?: string; mimeType?: string; fileSize?: number }>({
+    hash: file.hash,
+    filename: file.fileName,
   });
 
-  const isPreviewable = isImage(localMeta.filename) || isVideo(localMeta.filename) || isAudio(localMeta.filename) || isPdf(localMeta.filename);
+  const fileName = localMeta.filename ?? file.fileName ?? 'unknown';
 
   const handlePreviewLoad = (metadata: ILariaMetadata | { filename: string; mimeType?: string; originalFileSize?: number; fileSize?: number }) => {
     let filename = "";
@@ -26,13 +27,14 @@ export const AttachmentItem = ({ file }: { file: IFile }) => {
     let fileSize = 0;
 
     if ('filename' in metadata) {
-      filename = metadata.filename;
+      filename = metadata.filename
       mimeType = metadata.mimeType || "";
       fileSize = (metadata as { originalFileSize?: number; fileSize?: number }).originalFileSize || (metadata as { originalFileSize?: number; fileSize?: number }).fileSize || 0;
     }
 
     setLocalMeta({
-      filename,
+      hash: file.hash,
+      filename: filename || file.fileName || 'unknown',
       mimeType: mimeType || undefined,
       fileSize: fileSize || undefined
     });
@@ -42,7 +44,7 @@ export const AttachmentItem = ({ file }: { file: IFile }) => {
     <div className="rounded-xl overflow-hidden relative w-full flex items-center justify-center mb-1 h-[90px] shrink-0">
       <FilePreview
         fileId={file.hash}
-        file={{ filename: localMeta.filename, mimeType: localMeta.mimeType }}
+        file={{ filename: localMeta.hash, mimeType: localMeta.mimeType }}
         className="object-cover w-full h-full pointer-events-none"
       />
     </div>
@@ -52,26 +54,18 @@ export const AttachmentItem = ({ file }: { file: IFile }) => {
     <>
       <button
         type="button"
-        onClick={() => {
-          if (isPreviewable) {
-            setIsModalOpen(true);
-          }
-        }}
-        className={`group relative w-32 h-32 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center outline-none p-2 transition-all ${
-          isPreviewable ? "cursor-zoom-in hover:shadow-lg" : "cursor-default"
-        }`}
+        onClick={() => setIsModalOpen(true)}
+        className={`group relative w-32 h-32 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center outline-none p-2 transition-all cursor-zoom-in hover:shadow-lg`}
         aria-label={
-          isPreviewable
-            ? t("ai_consultation_room.view_image").replace(
-                "{name}",
-                localMeta.filename,
-              )
-            : localMeta.filename
+          t("ai_consultation_room.view_image").replace(
+            "{name}",
+            fileName,
+          )
         }
       >
         {thumbnail}
         <span className="text-[10px] text-gray-500 truncate w-full text-center px-1">
-          {localMeta.filename}
+          {fileName}
         </span>
       </button>
 
@@ -120,7 +114,7 @@ export const AttachmentItem = ({ file }: { file: IFile }) => {
                     <div className="w-full h-full flex items-center justify-center relative">
                       <FilePreview
                         fileId={file.hash}
-                        file={{ filename: localMeta.filename, mimeType: localMeta.mimeType }}
+                        file={{ filename: localMeta.hash, mimeType: localMeta.mimeType }}
                         className="object-contain max-h-[85vh] max-w-full w-auto p-4"
                         loadPreview={handlePreviewLoad}
                       />
@@ -130,7 +124,7 @@ export const AttachmentItem = ({ file }: { file: IFile }) => {
                   <div className="p-4 flex items-center justify-between">
                     <div>
                       <h3 className="text-gray-900 font-bold">
-                        {localMeta.filename}
+                        {fileName}
                       </h3>
                       {localMeta.mimeType && (
                         <p className="text-xs text-gray-400">
