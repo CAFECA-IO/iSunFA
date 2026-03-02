@@ -75,6 +75,7 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
           if (finalBlob) {
              const objectUrl = URL.createObjectURL(finalBlob);
              setLocalUrl(objectUrl);
+             setLocalBase64(undefined);
              setIsDownloading(false);
           } else {
              setLocalUrl(url);
@@ -121,7 +122,6 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
                              
               if (isHeic) {
                 const heic2any = (await import('heic2any')).default;
-                
                 const convertedBlob = await heic2any({
                   blob: inputBlob,
                   toType: 'image/jpeg',
