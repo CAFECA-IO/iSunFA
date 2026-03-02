@@ -50,8 +50,10 @@ const StepTabs: React.FC = () => {
       (s) => s.step === index + 1 && s.completed,
     );
 
-    // Info: (20250714 - Julian) 點擊按鈕時的處理函數
-    // 第三步（工時）和第四步（其他）沒有特別的檢查條件，所以直接切換到下一步
+    /**
+     * Info: (20250714 - Julian) 點擊按鈕時的處理函數
+     * 第三步（工時）和第四步（其他）沒有特別的檢查條件，所以直接切換到下一步
+     */
     const clickHandler = () => {
       switch (currentStep) {
         case 1:
