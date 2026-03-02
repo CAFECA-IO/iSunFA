@@ -35,6 +35,48 @@ export interface IFilePreviewProps {
   loadPreview?: (file: ILariaMetadata | { filename: string; mimeType?: string }) => void;
 }
 
+// Info: (20260302 - Julian) 實作下載等候室：儲存目前正在被遠端抓取的 fileId，如果同一時間有多個元件需要抓取同一 fileId 的檔案，可以避免重複抓取
+const inProgressDownloads = new Map<string, {
+  progressListeners: ((p: number) => void)[];
+  successListeners: ((blob: Blob, filename?: string) => void)[];
+  errorListeners: ((err: string) => void)[];
+}>();
+
+// Info: (20260302 - Julian) 實作 HEIC 轉檔快取：避免同一時間有多個元件需要轉檔同一個 HEIC 檔案，避免重複轉檔
+const heicCache = new Map<string, Blob | null>();
+const heicPromises = new Map<string, Promise<Blob | null>>();
+
+// Info: (20260302 - Julian) 實作 HEIC 轉檔：將 HEIC 檔案轉檔為 JPEG 檔案
+const convertHeicToJpeg = async (sourceBlob: Blob, cacheKey: string): Promise<Blob | null> => {
+  if (heicCache.has(cacheKey)) return heicCache.get(cacheKey)!;
+  if (heicPromises.has(cacheKey)) return heicPromises.get(cacheKey)!;
+  
+  const promise = (async () => {
+    try {
+      const heic2any = (await import('heic2any')).default;
+      const convertedBlob = await heic2any({
+        blob: sourceBlob,
+        toType: 'image/jpeg',
+      });
+      let finalBlob: Blob | undefined;
+      if (convertedBlob) {
+        finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+      }
+      heicCache.set(cacheKey, finalBlob || null);
+      heicPromises.delete(cacheKey);
+      return finalBlob || null;
+    } catch (e) {
+      console.error("Failed to convert HEIC:", e);
+      heicCache.set(cacheKey, null);
+      heicPromises.delete(cacheKey);
+      return null;
+    }
+  })();
+  
+  heicPromises.set(cacheKey, promise);
+  return promise;
+};
+
 export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fileId, url, base64: initialBase64, progress, loadPreview, className }) => {
   const [localBase64, setLocalBase64] = useState<string | undefined>(initialBase64);
   const [localUrl, setLocalUrl] = useState<string | undefined>(url);
@@ -47,6 +89,7 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
 
   useEffect(() => {
     // Info: (20260302 - Julian) Convert incoming base64 or URL if it's HEIC so local previews work
+    let isCancelled = false;
     const checkInitialHeic = async () => {
       const isHeic = initialFile.mimeType === 'image/heic' || initialFile.mimeType === 'image/heif' || 
                       initialFile.filename.toLowerCase().endsWith('.heic') || initialFile.filename.toLowerCase().endsWith('.heif');
@@ -58,19 +101,17 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
       if (sourceUrl && isHeic) {
         setIsDownloading(true);
         try {
-          const heic2any = (await import('heic2any')).default;
           // Fetch the object URL or reconstruct a blob from base64
           const res = await fetch(sourceUrl);
           const inputBlob = await res.blob();
-          const convertedBlob = await heic2any({
-            blob: inputBlob,
-            toType: 'image/jpeg',
-          });
           
-          let finalBlob: Blob | undefined;
-          if (convertedBlob) {
-             finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-          }
+          // Use checksum or url proxy as cache key (approx) 
+          // (for base64 we can use a hash or just the string length + first few chars)
+          const cacheKey = sourceUrl.length > 500 ? `b64-${sourceUrl.length}-${sourceUrl.slice(sourceUrl.length - 20)}` : sourceUrl;
+          
+          const finalBlob = await convertHeicToJpeg(inputBlob, cacheKey);
+          
+          if (isCancelled) return;
           
           if (finalBlob) {
              const objectUrl = URL.createObjectURL(finalBlob);
@@ -83,6 +124,7 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
              setIsDownloading(false);
           }
         } catch (e) {
+          if (isCancelled) return;
           console.error("Failed to convert initial HEIC:", e);
           setLocalUrl(url);
           setLocalBase64(initialBase64);
@@ -95,41 +137,37 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
     };
     
     checkInitialHeic();
+    return () => { isCancelled = true; };
   }, [initialBase64, initialFile.mimeType, initialFile.filename, url]);
 
   useEffect(() => {
     let isCancelled = false;
     
-    if (fileId && !localBase64 && !url) {
-      setIsDownloading(true);
-      downloadFile(fileId, {
-        onProgress: (p) => {
-          if (!isCancelled) setDownloadProgress(p);
-        },
-        onSuccess: (blob, filename) => {
+    const initDownload = async () => {
+      if (fileId && !localBase64 && !url) {
+        setIsDownloading(true);
+        
+        const onProg = (p: number) => { if (!isCancelled) setDownloadProgress(p); };
+        const onSucc = (blob: Blob, filename?: string) => {
           if (isCancelled) return;
-          
-          // Info: (20260226 - Julian) Update metadata if discovered from download
-          if (filename && (!meta.filename || meta.filename === fileId)) {
-            setMeta({ filename, mimeType: blob.type });
+          if (filename) {
+            setMeta(prev => {
+              if (!prev.filename || prev.filename === fileId) {
+                return { ...prev, filename, mimeType: blob.type };
+              }
+              return prev;
+            });
           }
           
           const processBlob = async (inputBlob: Blob) => {
             try {
               let finalBlob = inputBlob;
               const isHeic = inputBlob.type === 'image/heic' || inputBlob.type === 'image/heif' || 
-                             filename.toLowerCase().endsWith('.heic') || filename.toLowerCase().endsWith('.heif');
+                             filename?.toLowerCase().endsWith('.heic') || filename?.toLowerCase().endsWith('.heif');
                              
               if (isHeic) {
-                const heic2any = (await import('heic2any')).default;
-                const convertedBlob = await heic2any({
-                  blob: inputBlob,
-                  toType: 'image/jpeg',
-                });
-                // heic2any can return Blob | Blob[]. Handle both.
-                if (convertedBlob) {
-                   finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-                }
+                const res = await convertHeicToJpeg(inputBlob, fileId);
+                if (res) finalBlob = res;
               }
               
               if (isCancelled) return;
@@ -149,18 +187,51 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
           };
 
           processBlob(blob);
-        },
-        onError: (err) => {
+        };
+        const onErr = (err: string) => { 
           console.error("Failed to download file:", err);
-          if (!isCancelled) setIsDownloading(false);
+          if (!isCancelled) setIsDownloading(false); 
+        };
+
+        if (inProgressDownloads.has(fileId)) {
+          const handlers = inProgressDownloads.get(fileId)!;
+          handlers.progressListeners.push(onProg);
+          handlers.successListeners.push(onSucc);
+          handlers.errorListeners.push(onErr);
+        } else {
+          const handlers = {
+            progressListeners: [onProg],
+            successListeners: [onSucc],
+            errorListeners: [onErr]
+          };
+          inProgressDownloads.set(fileId, handlers);
+          
+          downloadFile(fileId, {
+            onProgress: (p) => {
+              inProgressDownloads.get(fileId)?.progressListeners.forEach(cb => cb(p));
+            },
+            onSuccess: (blob, filename) => {
+              // Must cache immediately just in case
+              const hl = inProgressDownloads.get(fileId)?.successListeners || [];
+              inProgressDownloads.delete(fileId);
+              hl.forEach(cb => cb(blob, filename));
+            },
+            onError: (err: string) => {
+              const hl = inProgressDownloads.get(fileId)?.errorListeners || [];
+              inProgressDownloads.delete(fileId);
+              hl.forEach(cb => cb(err));
+            }
+          });
         }
-      });
-    }
+      }
+    };
+
+    initDownload();
     
     return () => {
       isCancelled = true;
     };
-  }, [fileId, localBase64, url, meta.filename]);
+  }, [fileId, localBase64, url]);
 
   const previewUrl = localBase64
     ? (localBase64.startsWith('data:') ? localBase64 : `data:${meta.mimeType || 'application/octet-stream'};base64,${localBase64}`)
