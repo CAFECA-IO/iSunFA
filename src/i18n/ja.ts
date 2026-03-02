@@ -5,6 +5,7 @@ export const ja = {
     confirm: "確認",
     cancel: "キャンセル",
     close: "閉じる",
+    coming_soon_message: "まもなく登場",
     agree: "同意",
     pagination: {
       prev: "前へ",

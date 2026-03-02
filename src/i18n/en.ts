@@ -5,6 +5,7 @@ export const en = {
     confirm: "Confirm",
     cancel: "Cancel",
     close: "Close",
+    coming_soon_message: "Coming Soon",
     agree: "Agree",
     pagination: {
       prev: "Previous",

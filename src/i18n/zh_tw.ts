@@ -5,6 +5,7 @@ export const zhTw = {
     confirm: "確認",
     cancel: "取消",
     close: "關閉",
+    coming_soon_message: "即將推出",
     agree: "同意",
     pagination: {
       prev: "上一頁",

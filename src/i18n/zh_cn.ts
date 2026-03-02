@@ -5,6 +5,7 @@ export const zhCn = {
     confirm: "确认",
     cancel: "取消",
     close: "关闭",
+    coming_soon_message: "即将推出",
     agree: "同意",
     pagination: {
       prev: "上一页",

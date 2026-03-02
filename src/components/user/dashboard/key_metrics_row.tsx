@@ -20,7 +20,7 @@ interface IKeyMetricsRowProps {
 
 export const KeyMetricsRow = ({ currentData }: IKeyMetricsRowProps) => {
   const { t } = useTranslation();
-  const currentFunds = currentData.fundsData[currentData.fundsData.length - 1].value;
+  const currentFunds = currentData.fundsData?.length > 0 ? currentData.fundsData[currentData.fundsData.length - 1].value : 0;
 
   // Info: (20260118 - Luphia) Determine Revenue Status
   const getRevenueStatus = (rate: number) => {

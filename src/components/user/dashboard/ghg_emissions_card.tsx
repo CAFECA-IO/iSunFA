@@ -61,12 +61,12 @@ export const GHGEmissionsCard = ({ currentData, gasType, setGasType }: IGHGEmiss
                   {(() => {
                     const data = currentData.ghgData;
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const maxVal = Math.max(...data.map((d: any) => d.total));
+                    const maxVal = data ? Math.max(...data.map((d: any) => d.total)) : 0;
 
                     return (
                       <svg width="100%" height="100%" preserveAspectRatio="none">
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {data.map((d: any, i: number) => {
+                        {data && data.map((d: any, i: number) => {
                           const count = data.length;
                           const barGap = 30; // Info: (20260118 - Luphia) Increased gap
                           const slotWidth = 100 / count;

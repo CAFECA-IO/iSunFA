@@ -5,6 +5,7 @@ export const ko = {
     confirm: "확인",
     cancel: "취소",
     close: "닫기",
+    coming_soon_message: "오픈 예정",
     agree: "동의",
     pagination: {
       prev: "이전",
