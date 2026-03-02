@@ -41,7 +41,6 @@ export async function POST(request: NextRequest) {
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
 
-    // Find the specific card chosen by the user, verify it belongs to them and is OEN
     const oenPaymentMethod = dbUser.paymentMethods.find((pm) => pm.id === paymentMethodId && pm.provider === "OEN");
     const providerToken = oenPaymentMethod?.token;
 
@@ -243,7 +242,7 @@ export async function POST(request: NextRequest) {
       console.log(`[OEN Checkout] webhookBase: ${webhookBase}`);
 
       // Info: (20260302 - Tzuhan) [流程 3-6b: 呼叫應援科技 checkout-token API] 取得一個供使用者填寫信用卡的對外付款頁面 ID
-      // 傳入的 successUrl 附帶了 payment_success=true (對應流程 5-1)，callbackUrl 則是供 OEN 背景 webhook 使用的結帳結果通知端點
+      //  Info: (20260302 - Tzuhan) 傳入的 successUrl 附帶了 payment_success=true (對應流程 5-1)，callbackUrl 則是供 OEN 背景 webhook 使用的結帳結果通知端點
       const oenRes = await fetch(
         "https://payment-api.testing.oen.tw/checkout-token",
         {

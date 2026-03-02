@@ -255,7 +255,7 @@ export default function PaymentModal({
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
-                <DialogPanel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                <DialogPanel className="relative transform overflow-hidden rounded-2xl bg-white px-4 pb-4 pt-5 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 ring-1 ring-black/5">
                   <div className="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
                     <button
                       type="button"
@@ -308,79 +308,92 @@ export default function PaymentModal({
                               >
                                 {t("pricing.credits.payment_modal.title")}
                               </DialogTitle>
-                              <div className="mt-4 bg-gray-50 p-4 rounded-md border border-gray-200 space-y-3">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-sm text-gray-500">
-                                    {t(
-                                      "pricing.credits.payment_modal.amount_to_pay",
-                                    ) ||
-                                      t(
-                                        "pricing.credits.payment_modal.amount_paid",
-                                      )}
+                              <div className="mt-6 bg-gray-50/80 p-5 rounded-xl border border-gray-200/60 shadow-sm space-y-4">
+                                <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                                  <span className="text-sm font-medium text-gray-500">
+                                    {t("pricing.credits.payment_modal.amount_to_pay") || t("pricing.credits.payment_modal.amount_paid")}
                                   </span>
-                                  <span className="text-lg font-bold text-gray-900">
+                                  <span className="text-xl font-bold text-gray-900 tracking-tight">
                                     {displayPrice || `$${amount}`}
                                   </span>
                                 </div>
-                                <div className="flex justify-between items-center border-t border-gray-200 pt-3">
-                                  <span className="text-sm text-gray-500">
-                                    {t(
-                                      "pricing.credits.payment_modal.tokens_to_receive",
-                                    ) ||
-                                      t(
-                                        "pricing.credits.payment_modal.tokens_received",
-                                      )}
+                                <div className="flex justify-between items-center px-2">
+                                  <span className="text-sm font-medium text-gray-500">
+                                    {t("pricing.credits.payment_modal.tokens_to_receive") || t("pricing.credits.payment_modal.tokens_received")}
                                   </span>
-                                  <span className="text-lg font-bold text-orange-600">
-                                    {baseCredits.toLocaleString()}{" "}
-                                    {t(
-                                      "pricing.credits.payment_modal.credits_unit_short",
-                                      { count: "" },
-                                    ).trim() || "點"}
+                                  <div className="text-right flex flex-col items-end">
+                                    <span className="text-lg font-bold text-orange-600">
+                                      {baseCredits.toLocaleString()}{" "}
+                                      {t("pricing.credits.payment_modal.credits_unit_short", { count: "" }).trim() || "點"}
+                                    </span>
                                     {bonusCredits > 0 && (
-                                      <span className="text-sm text-orange-400 ml-1">
-                                        +{" "}
-                                        {t(
-                                          "pricing.credits.payment_modal.bonus_points",
-                                          { count: bonusCredits.toLocaleString() },
-                                        ) ||
-                                          `活動贈與 ${bonusCredits.toLocaleString()} 點`}
+                                      <span className="inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-inset ring-orange-600/20 mt-1">
+                                        + {t("pricing.credits.payment_modal.bonus_points", { count: bonusCredits.toLocaleString() }) || `贈送 ${bonusCredits.toLocaleString()} 點`}
                                       </span>
                                     )}
-                                  </span>
+                                  </div>
                                 </div>
                               </div>
 
                               {user && (
-                                <div className="mt-4 space-y-2 bg-gray-50 p-4 rounded-md border border-gray-200">
-                                  <label className="text-sm font-medium text-gray-700">
+                                <div className="mt-6 space-y-3">
+                                  <h4 className="text-sm font-semibold text-gray-900">
                                     {t("pricing.credits.payment_modal.payment_method") || "付款方式"}
-                                  </label>
-                                  <div className="flex flex-col gap-2">
+                                  </h4>
+                                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                     {(user.paymentMethods || []).map((pm) => {
                                       const data = pm.data as Record<string, string> | undefined;
-                                      const brand: string = (data?.cardBrand || data?.card_brand) ? String(data.cardBrand || data.card_brand) : "信用卡";
-                                      const last4: string = (data?.card4No || data?.card_4no) ? String(data.card4No || data.card_4no) : "****";
+                                      const brand: string = (data?.cardBrand || data?.card_brand || data?.issuer) ? String(data.cardBrand || data.card_brand || data.issuer) : "信用卡";
+                                      const last4: string = (data?.card4No || data?.card4no || data?.card_4no) ? String(data.card4No || data.card4no || data.card_4no) : "****";
+                                      const isSelected = selectedPaymentMethodId === pm.id;
 
                                       return (
-                                        <label key={pm.id} htmlFor={`pm-${pm.id}`} className="flex items-center gap-2 cursor-pointer">
+                                        <label
+                                          key={pm.id}
+                                          htmlFor={`pm-${pm.id}`}
+                                          className={`relative flex cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all duration-200 ${isSelected
+                                            ? "border-orange-500 bg-orange-50 ring-1 ring-orange-500"
+                                            : "border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/30"
+                                            }`}
+                                        >
                                           <input
                                             id={`pm-${pm.id}`}
                                             type="radio"
                                             name="paymentMethod"
                                             value={pm.id}
-                                            checked={selectedPaymentMethodId === pm.id}
+                                            checked={isSelected}
                                             onChange={() => setSelectedPaymentMethodId(pm.id)}
-                                            className="h-4 w-4 text-orange-600 focus:ring-orange-600"
+                                            className="sr-only"
                                             aria-label={`${brand} **** ${last4}`}
                                           />
-                                          <span className="text-sm text-gray-700">
-                                            {brand} **** {last4} 💳
-                                          </span>
+                                          <div className="flex w-full items-center justify-between">
+                                            <div className="flex items-center">
+                                              <div className="text-sm">
+                                                <p className={`font-semibold ${isSelected ? "text-orange-900" : "text-gray-900"}`}>
+                                                  {brand}
+                                                </p>
+                                                <div className={`mt-1 flex items-center gap-2 ${isSelected ? "text-orange-700" : "text-gray-500"}`}>
+                                                  <span className="text-xs">••••</span>
+                                                  <span>{last4}</span>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <CheckCircle2
+                                              className={`h-5 w-5 ${isSelected ? "text-orange-600" : "text-transparent"}`}
+                                              aria-hidden="true"
+                                            />
+                                          </div>
                                         </label>
                                       );
                                     })}
-                                    <label htmlFor="pm-new" className="flex items-center gap-2 cursor-pointer pt-1 border-t border-gray-200 mt-1">
+
+                                    <label
+                                      htmlFor="pm-new"
+                                      className={`relative flex cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all duration-200 ${selectedPaymentMethodId === "new"
+                                        ? "border-orange-500 bg-orange-50 ring-1 ring-orange-500"
+                                        : "border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/30"
+                                        }`}
+                                    >
                                       <input
                                         id="pm-new"
                                         type="radio"
@@ -388,12 +401,21 @@ export default function PaymentModal({
                                         value="new"
                                         checked={selectedPaymentMethodId === "new"}
                                         onChange={() => setSelectedPaymentMethodId("new")}
-                                        className="h-4 w-4 text-orange-600 focus:ring-orange-600"
+                                        className="sr-only"
                                         aria-label={t("pricing.credits.payment_modal.bind_new_card") || "綁定新信用卡"}
                                       />
-                                      <span className="text-sm text-gray-700">
-                                        ➕ {t("pricing.credits.payment_modal.bind_new_card") || "綁定新信用卡"}
-                                      </span>
+                                      <div className="flex w-full items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                          <div className={`flex h-8 w-8 items-center justify-center rounded-full border border-dashed ${selectedPaymentMethodId === "new" ? "border-orange-400 bg-orange-100/50" : "border-gray-300 bg-gray-50"}`}>
+                                            <svg className={`h-4 w-4 ${selectedPaymentMethodId === "new" ? "text-orange-600" : "text-gray-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                          </div>
+                                          <span className={`text-sm font-semibold ${selectedPaymentMethodId === "new" ? "text-orange-900" : "text-gray-900"}`}>
+                                            {t("pricing.credits.payment_modal.bind_new_card") || "綁定新信用卡"}
+                                          </span>
+                                        </div>
+                                      </div>
                                     </label>
                                   </div>
                                 </div>
@@ -455,7 +477,7 @@ export default function PaymentModal({
                                   <button
                                     type="submit"
                                     disabled={loading || !agreedToTerms}
-                                    className="inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto items-center gap-2"
+                                    className="inline-flex w-full justify-center rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:from-orange-500 hover:to-orange-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto items-center gap-2"
                                   >
                                     {loading && (
                                       <Loader2 className="h-4 w-4 animate-spin" />
