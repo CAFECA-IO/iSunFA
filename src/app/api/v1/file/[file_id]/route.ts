@@ -3,8 +3,8 @@ import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 
 /**
- * GET /api/v1/file/:file_id
  * Info: (20260226 - Julian) 取得檔案碎片
+ * GET /api/v1/file/:file_id
  * 直接對接 STORAGE_DOMAIN
  */
 export async function GET(
@@ -33,14 +33,14 @@ export async function GET(
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
         const data = await response.json();
-        // Normalize if already an IApiResponse to avoid double-wrapping
+        // Info: (20260226 - Julian) Normalize if already an IApiResponse to avoid double-wrapping
         if (data && typeof data === 'object' && 'success' in data && 'payload' in data) {
           return jsonOk(data.payload, data.message);
         }
         return jsonOk(data);
       }
 
-      // For binary files/shards, return the raw response body
+      // Info: (20260226 - Julian) For binary files/shards, return the raw response body
       return new Response(response.body, {
         status: response.status,
         headers: response.headers,
