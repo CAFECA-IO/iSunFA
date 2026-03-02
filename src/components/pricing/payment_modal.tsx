@@ -94,7 +94,8 @@ export default function PaymentModal({
         body: JSON.stringify({
           amount,
           credits,
-          useSavedCard: (user as { oenToken?: string })?.oenToken
+          useSavedCard: (user as { hasSavedPaymentMethod?: boolean })
+            ?.hasSavedPaymentMethod
             ? useSavedCard
             : false,
         }),
@@ -223,7 +224,7 @@ export default function PaymentModal({
                             </div>
                           </div>
 
-                          {(user as { oenToken?: string })?.oenToken && (
+                          {(user as { hasSavedPaymentMethod?: boolean })?.hasSavedPaymentMethod && (
                             <div className="mt-4 space-y-2 bg-gray-50 p-4 rounded-md border border-gray-200">
                               <label
                                 htmlFor="use-saved-card"

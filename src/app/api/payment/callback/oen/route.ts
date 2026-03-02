@@ -88,11 +88,21 @@ export async function POST(request: NextRequest) {
 
 
         if (token && typeof token === "string") {
-            await prisma.user.update({
-                where: { id: order.userId },
-                data: { oenToken: token },
+            await prisma.paymentMethod.upsert({
+                where: {
+                    userId_provider: {
+                        userId: order.userId,
+                        provider: "OEN",
+                    },
+                },
+                update: { token: token },
+                create: {
+                    userId: order.userId,
+                    provider: "OEN",
+                    token: token,
+                },
             });
-            console.log(`[OEN Callback] Saved token for user ${order.userId}`);
+            console.log(`[OEN Callback] Saved token for user ${order.userId} in PaymentMethod`);
         }
 
 

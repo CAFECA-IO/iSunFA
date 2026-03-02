@@ -30,17 +30,21 @@ export async function POST(request: NextRequest) {
 
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },
+      include: { paymentMethods: true },
     });
 
     if (!dbUser) {
       console.error(`[OEN Checkout] User not found in DB: ${user.id}`);
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
+    const oenPaymentMethod = dbUser.paymentMethods.find((pm) => pm.provider === "OEN");
+    const oenToken = oenPaymentMethod?.token;
+
     console.log(
-      `[OEN Checkout] User fetched from DB: hasTokens=${!!dbUser.oenToken}`,
+      `[OEN Checkout] User fetched from DB: hasTokens=${!!oenToken}`,
     );
 
-    if (useSavedCard && dbUser.oenToken) {
+    if (useSavedCard && oenToken) {
       console.log(`[OEN Checkout] Flow: Directly charge using saved token`);
 
       const order = await prisma.order.create({
@@ -52,7 +56,7 @@ export async function POST(request: NextRequest) {
           data: {
             credits,
             amount,
-            oenToken: dbUser.oenToken,
+            oenToken: oenToken,
           },
         },
       });
@@ -74,7 +78,7 @@ export async function POST(request: NextRequest) {
             merchantId: "mermer",
             amount: amount,
             currency: "TWD",
-            token: dbUser.oenToken,
+            token: oenToken,
             orderId: order.id,
             userName: dbUser.name || "Unknown",
             userEmail: `${dbUser.id}@isunfa.tw`,

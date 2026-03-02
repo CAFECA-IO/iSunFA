@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getIdentityFromDeWT } from '@/lib/auth/dewt';
+import { prisma } from '@/lib/prisma';
 import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
 // import { DEFAULT_PLAN } from '@/constants/plans';
@@ -57,6 +58,9 @@ export async function GET(request: NextRequest) {
       modules: MODULES.filter((m) => m.basic).map((m) => m.key),
       isAdmin: user.role === 'ADMIN',
       identityAddress: user.identityAddress,
+      hasSavedPaymentMethod: !!(await prisma.paymentMethod.findFirst({
+        where: { userId: user.id, provider: 'OEN' },
+      })),
     });
   } catch (error) {
     console.error('[API] /auth/me error:', error);

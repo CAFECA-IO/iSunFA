@@ -18,6 +18,7 @@ interface IUser {
   isVerified?: boolean;
   pubKeyX?: string;
   pubKeyY?: string;
+  hasSavedPaymentMethod?: boolean;
 }
 
 interface IAuthContextType {
