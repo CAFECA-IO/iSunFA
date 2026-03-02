@@ -92,7 +92,7 @@ const BasicInfoForm: React.FC = () => {
 
   // Info: (20250806 - Julian) 生成日期字串
   const selectedMonthNum =
-    monthOptions.findIndex((month) => month.name === selectedMonth.name) + 1; // 月份從 1 開始計算
+    monthOptions.findIndex((month) => month.name === selectedMonth.name) + 1;
   const dateStr = `${selectedYear}/${selectedMonthNum < 10 ? `0${selectedMonthNum}` : selectedMonthNum}/`;
 
   // Info: (20250806 - Julian) 當月的最大天數
@@ -318,11 +318,10 @@ const BasicInfoForm: React.FC = () => {
               <span className="text-red-500">*</span>
             </label>
             <div
-              className={`flex h-44px items-center rounded-lg bg-white ring-2 transition-all ${
-                isNameError
+              className={`flex h-44px items-center rounded-lg bg-white ring-2 transition-all ${isNameError
                   ? " ring-red-300 focus-within:ring-orange-300"
                   : " ring-gray-200 focus-within:ring-orange-300"
-              }`}
+                }`}
             >
               <div
                 className={`pl-3 pr-1 py-2 ${isNameError ? "text-red-500" : "text-gray-400"}`}
@@ -342,8 +341,8 @@ const BasicInfoForm: React.FC = () => {
                 onChange={handleEmployeeNameChange}
                 required
               />
-              {/* Info: (20250711 - Julian) 登入時才顯示員工列表按鈕 */}
-              {isSignIn && (
+              {/* Info: (20250711 - Julian) 登入時才顯示員工列表按鈕，暫時關閉此功能 */}
+              {isSignIn && false && (
                 <button
                   type="button"
                   onClick={toggleEmployeeListModal}
@@ -436,9 +435,8 @@ const BasicInfoForm: React.FC = () => {
             onKeyDown={createKeyDownHandler(toggleYearDropdown)}
             role="button"
             tabIndex={0}
-            className={`relative flex h-44px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${
-              isYearOpen ? " ring-orange-300" : " ring-gray-200"
-            }`}
+            className={`relative flex h-44px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${isYearOpen ? " ring-orange-300" : " ring-gray-200"
+              }`}
           >
             <div className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900">
               {selectedYear}
@@ -466,9 +464,8 @@ const BasicInfoForm: React.FC = () => {
             onKeyDown={createKeyDownHandler(toggleMonthDropdown)}
             role="button"
             tabIndex={0}
-            className={`relative flex h-44px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${
-              isMonthOpen ? " ring-orange-300" : " ring-gray-200"
-            }`}
+            className={`relative flex h-44px items-center rounded-lg bg-white ring-2 transition-all hover:ring-orange-300 cursor-pointer ${isMonthOpen ? " ring-orange-300" : " ring-gray-200"
+              }`}
           >
             <div className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900">
               {t(

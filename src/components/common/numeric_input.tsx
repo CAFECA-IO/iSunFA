@@ -93,7 +93,6 @@ const NumericInput: React.FC<INumericInputProps> = ({
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
 
-    // Deprecated: (20250709 - Julian) 以下至 line 75 為 2025/7/9 新增的邏輯，如果 component 出錯請優先檢查這裡
     // Info: (20250709 - Julian) 取得最大值和最小值，沒有則為 undefined
     const maximum = props.max && typeof props.max === 'number' ? props.max : undefined;
     const minimum = props.min && typeof props.min === 'number' ? props.min : undefined;
@@ -114,8 +113,8 @@ const NumericInput: React.FC<INumericInputProps> = ({
       availableValue
         .toString()
         .replace(/^0+(\d)/, '$1') // Info: (20250319 - Anna) 避免 01，但允許 0.1
-        .replace(/[^0-9.]/g, '') // 移除非數字和小數點字符
-        .replace(/(\..*)\./g, '$1') || '0'; // 只允許一個小數點
+        .replace(/[^0-9.]/g, '') // Info: (20250319 - Anna) 移除非數字和小數點字符
+        .replace(/(\..*)\./g, '$1') || '0'; // Info: (20250319 - Anna) 只允許一個小數點
 
     // Info: (20250319 - Anna) 允許輸入 `.`，但顯示 `0.`
     if (sanitizedValue === '.') {

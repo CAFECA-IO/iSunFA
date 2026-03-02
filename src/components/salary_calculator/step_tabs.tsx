@@ -50,8 +50,10 @@ const StepTabs: React.FC = () => {
       (s) => s.step === index + 1 && s.completed,
     );
 
-    // Info: (20250714 - Julian) 點擊按鈕時的處理函數
-    // 第三步（工時）和第四步（其他）沒有特別的檢查條件，所以直接切換到下一步
+    /**
+     * Info: (20250714 - Julian) 點擊按鈕時的處理函數
+     * 第三步（工時）和第四步（其他）沒有特別的檢查條件，所以直接切換到下一步
+     */
     const clickHandler = () => {
       switch (currentStep) {
         case 1:
@@ -123,7 +125,7 @@ const StepTabs: React.FC = () => {
     );
   });
 
-  return <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{tabs}</div>;
+  return <div className="grid grid-cols-2 gap-3 min-w-[350px] md:grid-cols-4">{tabs}</div>;
 };
 
 export default StepTabs;

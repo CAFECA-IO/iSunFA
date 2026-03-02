@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { request } from "@/lib/utils/request";
-import Image from "next/image";
+import { uploadFile, ILariaMetadata } from "@/lib/file_operator";
 import {
   PlusIcon,
   MinusIcon,
@@ -15,10 +15,12 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAiContext } from "@/contexts/ai_context";
 import { useAuth } from "@/contexts/auth_context";
-import { IAttachment } from "@/interfaces/ai_talk";
+import { IFile } from "@/interfaces/ai_talk";
 import { ApiCode } from "@/lib/utils/status";
 import LoginButton from "@/components/common/login_button";
+import ConfirmModal from "@/components/common/confirm_modal";
 import { IApiResponse } from "@/lib/utils/response";
+import { FilePreview } from "@/components/common/file_preview";
 
 // Info: (20260213 - Julian) 將 File 轉換為 Base64 (不含 prefix)
 const fileToBase64 = (file: File): Promise<string> => {
@@ -34,6 +36,10 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
+// Info: (20260302 - Julian) 目前先限制一次只能上傳一張圖片
+const FILE_LIMIT = 1;
+// Info: (20260302 - Julian) 限制 20MB
+const MAX_FILE_SIZE = 1024 * 1024 * 20;
 
 export const AiChat = () => {
   const { t } = useTranslation();
@@ -41,10 +47,19 @@ export const AiChat = () => {
   const { user } = useAuth();
   const { isChatOpen, setIsChatOpen } = useAiContext();
 
-  const [attachments, setAttachments] = useState<(IAttachment & { base64?: string })[]>([]);
-  const [localFiles, setLocalFiles] = useState<{ file: File; url: string }[]>([]);
-
-  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [files, setFiles] = useState<(IFile & { base64?: string })[]>([]);
+  const [localFiles, setLocalFiles] = useState<{ file: File; url: string }[]>(
+    [],
+  );
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string | React.ReactNode;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [question, setQuestion] = useState<string>("");
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -57,8 +72,13 @@ export const AiChat = () => {
     };
   }, [localFiles]);
 
+  // Info: (20260302 - Julian) 不可上傳：1. 正在提交 2. 檔案數量(包含上傳中)超過限制
+  const isUploadDisabled =
+    isSubmitting || files.length + localFiles.length >= FILE_LIMIT;
 
-  const isSubmitDisabled = !question.trim() || isUploading || isSubmitting;
+  // Info: (20260302 - Julian) 不可提交：1. 沒有輸入問題 2. 正在提交 3. 正在上傳檔案
+  const isSubmitDisabled =
+    !question.trim() || isSubmitting || localFiles.length > 0;
 
   const handleSubmit = async () => {
     if (isSubmitDisabled || !user) return;
@@ -71,18 +91,14 @@ export const AiChat = () => {
           method: "POST",
           body: JSON.stringify({
             question,
-            files: attachments.map((att) => ({
-              id: att.id,
-              data: att.base64,
-              mimeType: att.mimeType,
-            })),
+            files,
           }),
         },
       );
 
       if (data.code === ApiCode.SUCCESS) {
         setQuestion("");
-        setAttachments([]);
+        setFiles([]);
         setLocalFiles([]);
 
         // Info: (20260212 - Julian) 延遲 500 ms 後導向 /ai_consultation_room/{threadId} 頁面
@@ -101,79 +117,93 @@ export const AiChat = () => {
     }
   };
 
-  const processFiles = async (files: FileList | null) => {
-    if (files) {
-      const fileList = Array.from(files);
-      const maxSize = 5 * 1024 * 1024; // Info: (20260209 - Julian) 5MB
-      const maxCount = 5;
+  const processFiles = async (selectedFiles: FileList | null) => {
+    if (!selectedFiles || isUploadDisabled) return;
+    const fileList = Array.from(selectedFiles);
+    const maxSize = MAX_FILE_SIZE;
+    const maxCount = FILE_LIMIT;
 
-      const validFiles = fileList.filter((file) => {
-        if (!file.type.startsWith("image/")) {
-          return false;
-        }
-        if (file.size > maxSize) {
-          alert(
-            t("ai_consultation_room.file_size_error").replace(
-              "{name}",
-              file.name,
-            ),
-          );
-          return false;
-        }
-        return true;
-      });
-
-      if (validFiles.length === 0) return;
-
-      if (attachments.length + validFiles.length > maxCount) {
-        alert(
-          t("ai_consultation_room.file_count_error").replace(
-            "{count}",
-            maxCount.toString(),
-          ),
-        );
-        return;
+    const validFiles = fileList.filter((file) => {
+      if (!file.type.startsWith("image/")) {
+        return false;
       }
+      if (file.size > maxSize) {
+        setConfirmModal({
+          isOpen: true,
+          title: t("ai_consultation_room.file_size_error_title"),
+          message: t("ai_consultation_room.file_size_error_content").replace(
+            "{name}",
+            file.name,
+          ),
+        });
+        return false;
+      }
+      return true;
+    });
 
-      setIsUploading(true);
-      try {
-        const newLocalFiles = validFiles.map((file) => ({
-          file,
-          url: URL.createObjectURL(file),
-        }));
-        setLocalFiles((prev) => [...prev, ...newLocalFiles]);
+    if (validFiles.length === 0) return;
 
-        for (let i = 0; i < validFiles.length; i++) {
-          const file = validFiles[i];
-          const formData = new FormData();
-          formData.append("file", file);
+    // Info: (20260302 - Julian) 檢查包含已選取、上傳中的檔案，總數是否超過限制
+    if (files.length + localFiles.length + validFiles.length > maxCount) {
+      setConfirmModal({
+        isOpen: true,
+        title: t("ai_consultation_room.file_count_error_title"),
+        message: t("ai_consultation_room.file_count_error_content").replace(
+          "{count}",
+          maxCount.toString(),
+        ),
+      });
+      return;
+    }
+    try {
+      const newLocalFiles = validFiles.map((file) => ({
+        file,
+        url: URL.createObjectURL(file),
+      }));
+      setLocalFiles((prev) => [...prev, ...newLocalFiles]);
 
-          const response = await fetch("/api/v1/file/upload", {
-            method: "POST",
-            body: formData,
+      for (let i = 0; i < validFiles.length; i++) {
+        const file = validFiles[i];
+
+        try {
+          const uploadResult = await new Promise<{
+            hash: string;
+            metadata?: ILariaMetadata;
+          }>((resolve, reject) => {
+            uploadFile(file, {
+              onSuccess: (hash, metadata) => resolve({ hash, metadata }),
+              onError: (error) => reject(error),
+            });
           });
 
-          const data = await response.json();
-          if (data.code === ApiCode.SUCCESS) {
-            // Info: (20260213 - Julian) 同時轉換為 base64 供 AI 使用
-            const base64 = await fileToBase64(file);
-            setAttachments((prev) => [...prev, { ...data.payload, base64 }]);
+          // Info: (20260213 - Julian) 同時轉換為 base64 供 AI 使用
+          const base64 = await fileToBase64(file);
+          setFiles((prev) => [
+            ...prev,
+            {
+              id: uploadResult.hash,
+              hash: uploadResult.hash,
+              threadId: "",
+              fileName: file.name,
+              mimeType: file.type,
+              metadata: JSON.stringify(uploadResult.metadata),
+              fileSize: file.size,
+              base64,
+            },
+          ]);
 
-            // Info: (20260213 - Julian) 上傳成功後移除本地預覽
-            setLocalFiles((prev) => {
-              const target = prev.find((item) => item.file === file);
-              if (target) URL.revokeObjectURL(target.url);
-              return prev.filter((item) => item.file !== file);
-            });
-          } else {
-            console.error("Upload failed:", data.message);
-          }
+          // Info: (20260213 - Julian) 上傳成功後移除本地預覽
+          setLocalFiles((prev) => {
+            const target = prev.find((item) => item.file === file);
+            if (target) URL.revokeObjectURL(target.url);
+            return prev.filter((item) => item.file !== file);
+          });
+        } catch (uploadError) {
+          console.error("Upload failed for file", file.name, uploadError);
         }
-      } catch (error) {
-        console.error("Upload error:", error);
-      } finally {
-        setIsUploading(false);
       }
+    } catch (error) {
+      console.error("Upload error:", error);
     }
   };
 
@@ -199,17 +229,8 @@ export const AiChat = () => {
   };
 
   const removeFile = async (id: string) => {
-    try {
-      const data = await request<IApiResponse<{ id: string }>>(`/api/v1/file/${id}`, {
-        method: "DELETE",
-      });
-
-      if (data.code === ApiCode.SUCCESS) {
-        setAttachments((prev) => prev.filter((att) => att.id !== id));
-      }
-    } catch (error) {
-      console.error("Delete error:", error);
-    }
+    // Info: (20260302 - Julian) 移除檔案
+    setFiles((prev) => prev.filter((att) => att.id !== id));
   };
 
   const displayedButtons = user ? (
@@ -226,14 +247,19 @@ export const AiChat = () => {
 
       <button
         onClick={() => fileInputRef.current?.click()}
-        disabled={isUploading}
-        className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all ${isDragging
+        disabled={isUploadDisabled}
+        className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all disabled:bg-gray-200 disabled:text-gray-500 ${isDragging
           ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
-          : "border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50"
-          } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
+          : "border-gray-200 text-gray-500 enabled:hover:border-orange-300 enabled:hover:text-orange-500 enabled:hover:bg-orange-50/50"
+          }`}
       >
-        {isUploading ? (
-          <Loader2 size={20} className="animate-spin text-orange-500" />
+        {isUploadDisabled ? (
+          <p className="text-sm text-gray-500">
+            {t("ai_consultation_room.file_count_error_content").replace(
+              "{count}",
+              FILE_LIMIT.toString(),
+            )}
+          </p>
         ) : (
           <>
             <PlusIcon
@@ -305,7 +331,7 @@ export const AiChat = () => {
               setIsChatOpen(false);
             }
           }}
-          className={`text-orange-500 transition-all duration-300 ${isChatOpen ? "p-2 hover:bg-gray-100 rounded-xl" : "p-0"
+          className={`text-orange-500 transition-all duration-300 ${isChatOpen ? "p-2 hover:bg-gray-100 rounded-full" : "p-0"
             }`}
           aria-label={
             isChatOpen
@@ -345,12 +371,12 @@ export const AiChat = () => {
                 placeholder={t("ai_consultation_room.input_placeholder")}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                className="w-full h-36 p-4 outline-none bg-gray-50 border-2 border-transparent focus:border-orange-200 rounded-2xl text-sm transition-all resize-none shadow-inner"
+                className="w-full h-36 p-4 outline-none bg-gray-50 border-2 border-transparent focus:border-orange-200 rounded-2xl text-sm text-gray-800 transition-all resize-none shadow-inner"
               />
             </div>
 
             {/* Info: (20260213 - Julian) 顯示本地預覽 */}
-            {(localFiles.length > 0 || attachments.length > 0) && (
+            {(localFiles.length > 0 || files.length > 0) && (
               <div className="flex w-full overflow-x-auto gap-2 py-1">
                 {localFiles.map((item, index) => (
                   <div
@@ -358,11 +384,13 @@ export const AiChat = () => {
                     className="group shrink-0 w-16 h-16 relative rounded-xl border border-orange-200 bg-orange-50 flex items-center justify-center shadow-sm"
                   >
                     <div className="w-full h-full relative rounded-xl overflow-hidden opacity-60">
-                      <Image
-                        src={item.url}
-                        alt={item.file.name}
-                        fill
-                        className="object-cover"
+                      <FilePreview
+                        file={{
+                          filename: item.file.name,
+                          mimeType: item.file.type,
+                        }}
+                        url={item.url}
+                        className="object-cover w-full h-full pointer-events-none"
                       />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <Loader2
@@ -373,17 +401,19 @@ export const AiChat = () => {
                     </div>
                   </div>
                 ))}
-                {attachments.map((file) => (
+                {files.map((file) => (
                   <div
                     key={file.id}
                     className="group shrink-0 w-16 h-16 relative rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center shadow-sm"
                   >
                     <div className="w-full h-full relative rounded-xl overflow-hidden">
-                      <Image
-                        src={file.url}
-                        alt={file.fileName}
-                        fill
-                        className="object-cover"
+                      <FilePreview
+                        file={{
+                          filename: file.fileName ?? "",
+                          mimeType: file.mimeType,
+                        }}
+                        base64={file.base64}
+                        className="object-cover w-full h-full pointer-events-none"
                       />
                     </div>
                     <button
@@ -407,6 +437,15 @@ export const AiChat = () => {
           </p>
         </div>
       </div>
+
+      {/* Info: (20260302 - Julian) File Size Error Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={t("common.close")}
+      />
     </div>
   );
 };

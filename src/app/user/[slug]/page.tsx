@@ -78,7 +78,7 @@ export default function UserDynamicPage() {
       <div className="flex flex-1 items-center justify-center rounded-xl bg-white border border-dashed border-gray-300 p-12">
         <div className="text-center">
           <h3 className="mt-2 text-sm font-semibold text-gray-900">{title}</h3>
-          <p className="mt-1 text-sm text-gray-500">{t('pricing.coming_soon_message')}</p>
+          <p className="mt-1 text-sm text-gray-500">{t('common.coming_soon_message')}</p>
         </div>
       </div>
     </div>
