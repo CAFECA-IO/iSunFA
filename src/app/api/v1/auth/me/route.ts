@@ -14,8 +14,39 @@ export async function GET(request: NextRequest) {
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, 'Invalid or expired token');
+      return jsonFail(ApiCode.UNAUTHORIZED, 'Invalid or missing device token');
     }
+
+    // Info: (20260302 - Tzuhan) [流程 6-1: 檢查綁卡狀態] 每次前端請求使用者資料時，取得該使用者所有的 OEN 綁定紀錄，供前端 PaymentModal 選擇
+    const paymentMethods = await prisma.paymentMethod.findMany({
+      where: { userId: user.id, provider: 'OEN' },
+      select: {
+        id: true,
+        provider: true,
+        data: true,
+        isDefault: true,
+        createdAt: true,
+      }
+    });
+
+    // Info: (20260302 - Tzuhan) [機制: 處理中點數] 找出所有已扣款成功但還未上鏈的訂單點數加總，讓前端介面能顯示「處理中」，避免使用者誤以為扣款失敗
+    const pendingOrders = await prisma.order.findMany({
+      where: {
+        userId: user.id,
+        status: { in: ['PENDING', 'MINT_FAILED'] },
+        type: 'OEN_PAYMENT',
+        paymentTransactions: {
+          some: {
+            status: 'SUCCESS'
+          }
+        }
+      },
+    });
+
+    const pendingCredits = pendingOrders.reduce((sum, order) => {
+      const data = order.data as { credits?: number };
+      return sum + (data?.credits || 0);
+    }, 0);
 
     // ToDo: (20260116 - Luphia) Use Blockchain Data for Plan & Credits
     // let plan: string = DEFAULT_PLAN;
@@ -48,19 +79,17 @@ export async function GET(request: NextRequest) {
 
     return jsonOk({
       address: user.address,
-      name: user.name,
-      role: user.role,
-      pubKeyX: user.pubKeyX,
-      pubKeyY: user.pubKeyY,
-      // plan,
-      // credits,
-      // Info: (20260117 - Luphia) list the modules that the user has access to
-      modules: MODULES.filter((m) => m.basic).map((m) => m.key),
-      isAdmin: user.role === 'ADMIN',
-      identityAddress: user.identityAddress,
-      hasSavedPaymentMethod: !!(await prisma.paymentMethod.findFirst({
-        where: { userId: user.id, provider: 'OEN' },
-      })),
+      payload: {
+        ...user,
+        modules: MODULES.filter((m) => m.basic).map((m) => m.key),
+        isAdmin: user.role === 'ADMIN',
+        identityAddress: user.identityAddress,
+        paymentMethods: paymentMethods.map(pm => ({
+          ...pm,
+          createdAt: pm.createdAt.toISOString()
+        })),
+        pendingCredits,
+      },
     });
   } catch (error) {
     console.error('[API] /auth/me error:', error);

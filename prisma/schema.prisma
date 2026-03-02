@@ -13,10 +13,10 @@ enum Role {
 }
 
 model User {
-  id               String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Info: (20260112 - Tzuhan) RWA Identity Contract (ONCHAINID)
-  identityAddress  String?  @map("identity_address")
+  identityAddress String? @map("identity_address")
 
   //  Info: (20260112 - Tzuhan) 用戶的錢包 (address) 是這個 RWA Identity Contract 合約的 Owner
   address          String   @unique
@@ -31,14 +31,15 @@ model User {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  orders          Order[]
-  analyses        Analysis[]
-  missions        Mission[]
-  threads         Thread[]
-  comments        Comment[]
-  receivedReplies Comment[]  @relation("CommentRecipient")
-  reactions       Reaction[]
-  paymentMethods  PaymentMethod[]
+  orders              Order[]
+  analyses            Analysis[]
+  missions            Mission[]
+  threads             Thread[]
+  comments            Comment[]
+  receivedReplies     Comment[]            @relation("CommentRecipient")
+  reactions           Reaction[]
+  paymentMethods      PaymentMethod[]
+  paymentTransactions PaymentTransaction[]
 
   @@index([address])
   @@map("user")
@@ -58,7 +59,8 @@ model Order {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  analysis Analysis[]
+  analysis            Analysis[]
+  paymentTransactions PaymentTransaction[]
 
   @@map("order")
 }
@@ -82,10 +84,10 @@ model Analysis {
 }
 
 model Mission {
-  id        String     @id @default(uuid())
-  userId    String     @map("user_id")
-  user      User       @relation(fields: [userId], references: [id])
-  name      String
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+  name   String
 
   // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
   status    String     @default("PENDING")
@@ -100,13 +102,13 @@ model Mission {
 }
 
 model Task {
-  id        String   @id @default(uuid())
-  missionId String   @map("mission_id")
-  mission   Mission  @relation(fields: [missionId], references: [id])
+  id        String  @id @default(uuid())
+  missionId String  @map("mission_id")
+  mission   Mission @relation(fields: [missionId], references: [id])
   type      String
 
   // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
-  status    String   @default("PENDING")
+  status String @default("PENDING")
 
   // Info: (20260128 - Luphia) Execution order. Equal values = parallel
   order     Int      @default(0)
@@ -247,12 +249,34 @@ model PaymentMethod {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id])
-  provider  String   
-  token     String   
+  provider  String
+  token     String
+  data      Json?
   isDefault Boolean  @default(false) @map("is_default")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([userId, provider])
+  transactions PaymentTransaction[]
+
   @@map("payment_method")
+}
+
+// Info: (20260302 - Tzuhan) 獨立的 PaymentTransaction Table，減少支付模組的耦合性
+model PaymentTransaction {
+  id              String         @id @default(uuid())
+  userId          String         @map("user_id")
+  user            User           @relation(fields: [userId], references: [id])
+  paymentMethodId String?        @map("payment_method_id")
+  paymentMethod   PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  orderId         String?        @map("order_id")
+  order           Order?         @relation(fields: [orderId], references: [id])
+  provider        String
+  amount          Int
+  status          String         @default("PENDING") // Info: (20260302 - Tzuhan) PENDING, SUCCESS, FAILED
+  errorMessage    String?        @map("error_message")
+  rawData         Json?          @map("raw_data")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@map("payment_transaction")
 }

@@ -20,7 +20,7 @@ import { CREDIT_PLANS } from "@/config/credit_plans";
 
 export default function PricingPage() {
   const { t, language } = useTranslation();
-  const { user, refreshAuth } = useAuth();
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const initialTab =
     searchParams.get("tab") === "credits" ? "credits" : "subscription";
@@ -45,15 +45,15 @@ export default function PricingPage() {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [modalInitialStep, setModalInitialStep] = useState<
-    "confirm" | "success" | "error"
+    "confirm" | "processing" | "success" | "error"
   >("confirm");
-  const [deployingPlanId, setDeployingPlanId] = useState<string | null>(null);
   const [pendingAmount, setPendingAmount] = useState(0);
   const [pendingCredits, setPendingCredits] = useState(0);
   const [pendingBaseCredits, setPendingBaseCredits] = useState(0);
   const [pendingBonusCredits, setPendingBonusCredits] = useState(0);
   const [pendingDisplayPrice, setPendingDisplayPrice] = useState("");
   const [pendingTxHash, setPendingTxHash] = useState<string | undefined>();
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
 
   // Info: (20260119 - Luphia) Allow guest users to select free plan to trigger login
   const currentPlan = user
@@ -115,14 +115,18 @@ export default function PricingPage() {
   };
 
   useEffect(() => {
+    // Info: (20260302 - Tzuhan) [流程 5-1: 接收應援科技(OEN)回傳結果] 當結帳跳轉 OEN 完畢後，OEN 會將用戶導轉回此頁面，並附帶 URL 查詢參數
     const paymentSuccess = searchParams.get("payment_success");
     const paymentFailure = searchParams.get("payment_failure");
     if (paymentSuccess === "true") {
+      // Info: (20260302 - Tzuhan) [流程 5-2: 處理成功跳轉] 如果從 OEN 跳轉回來帶有付款成功訊息，從 URL 中解析出金額、點數及訂單 ID
       const qsAmount = Number(searchParams.get("amount")) || 0;
       const qsCredits = Number(searchParams.get("credits")) || 0;
+      const orderId = searchParams.get("order_id");
 
       setPendingAmount(qsAmount);
       setPendingCredits(qsCredits);
+      if (orderId) setPendingOrderId(orderId);
 
       const matchedPlan = CREDIT_PLANS.find((p) => p.credits === qsCredits);
       let estimatedBase = qsCredits;
@@ -136,12 +140,14 @@ export default function PricingPage() {
       setPendingBaseCredits(estimatedBase);
       setPendingBonusCredits(estimatedBonus);
 
-      setModalInitialStep("success");
+      // Info: (20260302 - Tzuhan) [流程 5-3: 開啟處理中彈窗] 確認收到應援科技回傳後，重置瀏覽器 URL 並開啟付款處理中彈窗，並傳入 orderId 給 modal 進行輪詢
+      setModalInitialStep("processing");
       setPaymentModalOpen(true);
 
       const newUrl = window.location.pathname;
       window.history.replaceState({}, "", newUrl);
     } else if (paymentFailure === "true") {
+      // Info: (20260302 - Tzuhan) [流程 5-4: 處理失敗跳轉] 如果付款失敗，開啟付款失敗的彈窗
       setModalInitialStep("error");
       setPaymentModalOpen(true);
 
@@ -216,21 +222,19 @@ export default function PricingPage() {
           <div className="flex rounded-lg bg-gray-100 p-1">
             <button
               onClick={() => setActiveTab("subscription")}
-              className={`${
-                activeTab === "subscription"
-                  ? "bg-white shadow-sm"
-                  : "hover:bg-gray-50"
-              } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              className={`${activeTab === "subscription"
+                ? "bg-white shadow-sm"
+                : "hover:bg-gray-50"
+                } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
             >
               {t("pricing.credits.tab_subscription")}
             </button>
             <button
               onClick={() => setActiveTab("credits")}
-              className={`${
-                activeTab === "credits"
-                  ? "bg-white shadow-sm"
-                  : "hover:bg-gray-50"
-              } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              className={`${activeTab === "credits"
+                ? "bg-white shadow-sm"
+                : "hover:bg-gray-50"
+                } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
             >
               {t("pricing.credits.tab_credits")}
             </button>
@@ -244,21 +248,19 @@ export default function PricingPage() {
               <div className="relative flex rounded-full bg-gray-100 p-1">
                 <button
                   onClick={() => setBillingInterval("month")}
-                  className={`${
-                    billingInterval === "month"
-                      ? "bg-white shadow-sm"
-                      : "hover:bg-gray-50"
-                  } relative rounded-full px-4 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+                  className={`${billingInterval === "month"
+                    ? "bg-white shadow-sm"
+                    : "hover:bg-gray-50"
+                    } relative rounded-full px-4 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
                 >
                   {t("pricing.monthly")}
                 </button>
                 <button
                   onClick={() => setBillingInterval("year")}
-                  className={`${
-                    billingInterval === "year"
-                      ? "bg-white shadow-sm"
-                      : "hover:bg-gray-50"
-                  } relative rounded-full px-4 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+                  className={`${billingInterval === "year"
+                    ? "bg-white shadow-sm"
+                    : "hover:bg-gray-50"
+                    } relative rounded-full px-4 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
                 >
                   {t("pricing.yearly")}
                 </button>
@@ -460,10 +462,9 @@ export default function PricingPage() {
                                       disabled={isMandatory}
                                       className={`
                                         group relative w-full h-full flex flex-row items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 text-left overflow-hidden
-                                        ${
-                                          isSelected
-                                            ? "bg-gradient-to-br from-orange-600 to-orange-700 text-white shadow-lg shadow-orange-900/20 ring-1 ring-orange-500"
-                                            : "bg-white/5 text-gray-400 ring-1 ring-white/10 hover:bg-white/10 hover:text-gray-200 hover:ring-white/20"
+                                        ${isSelected
+                                          ? "bg-gradient-to-br from-orange-600 to-orange-700 text-white shadow-lg shadow-orange-900/20 ring-1 ring-orange-500"
+                                          : "bg-white/5 text-gray-400 ring-1 ring-white/10 hover:bg-white/10 hover:text-gray-200 hover:ring-white/20"
                                         }
                                         ${isMandatory ? "cursor-not-allowed" : "cursor-pointer active:scale-[0.98]"}
                                       `}
@@ -567,7 +568,6 @@ export default function PricingPage() {
                     baseCredits > 0
                       ? Math.round((bonus / baseCredits) * 100)
                       : 0;
-                  const isDeploying = deployingPlanId === plan.id;
 
                   return (
                     <div
@@ -616,13 +616,15 @@ export default function PricingPage() {
                         </ul>
                       </div>
                       <button
-                        disabled={!!deployingPlanId} // Info: (20260206 - Tzuhan) Disable if ANY plan is deploying
-                        onClick={async () => {
+                        onClick={() => {
+                          // [流程 1-1: 選擇方案] 使用者在定價頁面點擊某個方案的「購買」按鈕
                           if (!user) {
+                            // [流程 1-2: 檢查登入狀態] 若尚未登入，則喚起登入/註冊流程
                             setAuthModalOpen(true);
                             return;
                           }
 
+                          // [流程 1-3: 準備付款狀態] 記錄選擇的方案點數、金額以及顯示的價格，將狀態傳遞給後續的 PaymentModal 開啟使用
                           setPendingCredits(plan.credits);
                           setPendingBaseCredits(baseCredits);
                           setPendingBonusCredits(bonus);
@@ -633,56 +635,17 @@ export default function PricingPage() {
                           );
                           setPendingDisplayPrice(getPrice(plan));
 
-                          // Info: (20260206 - Tzuhan) Direct check identity, if no identity, deploy one
-                          if (user.isVerified) {
-                            setModalInitialStep("confirm");
-                            setPaymentModalOpen(true);
-                          } else {
-                            try {
-                              setDeployingPlanId(plan.id);
-                              // Info: (20260206 - Tzuhan) Auto deploy identity
-                              await request("/api/v1/user/kyc", {
-                                method: "POST",
-                                body: JSON.stringify({
-                                  fullName: user.name || "User", // Info: (20260206 - Tzuhan) Minimal data
-                                  idNumber: "N/A",
-                                  submittedAt: new Date().toISOString(),
-                                }),
-                              });
-
-                              // Info: (20260206 - Tzuhan) Refresh auth to get new identity status
-                              await refreshAuth();
-
-                              setModalInitialStep("confirm");
-                              setPaymentModalOpen(true);
-                            } catch (error) {
-                              console.error(
-                                "Failed to deploy identity:",
-                                error,
-                              );
-                              setConfirmModal({
-                                isOpen: true,
-                                title: "Error",
-                                message:
-                                  "Failed to initialize identity wallet. Please try again.",
-                              });
-                            } finally {
-                              setDeployingPlanId(null);
-                            }
-                          }
+                          // Info: (20260302 - Tzuhan) 移除直接在此處檢查 isVerified 的邏輯，改由 PaymentModal 進行。
+                          // Info: (20260302 - Tzuhan) [流程 1-4: 開啟付款彈窗] 使用者點擊後直接開啟 PaymentModal，讓使用者先看到明細與條款
+                          setModalInitialStep("confirm");
+                          setPaymentModalOpen(true);
                         }}
-                        className={`mt-8 block w-full rounded-md px-3 py-2 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 flex items-center justify-center gap-2 ${
-                          popular
-                            ? "bg-orange-600 text-white shadow-sm hover:bg-orange-500 focus-visible:outline-orange-600"
-                            : "bg-orange-50 text-orange-600 hover:bg-orange-100 focus-visible:outline-orange-600"
-                        } ${deployingPlanId ? "opacity-50 cursor-not-allowed" : ""}`}
+                        className={`mt-8 block w-full rounded-md px-3 py-2 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 flex items-center justify-center gap-2 ${popular
+                          ? "bg-orange-600 text-white shadow-sm hover:bg-orange-500 focus-visible:outline-orange-600"
+                          : "bg-orange-50 text-orange-600 hover:bg-orange-100 focus-visible:outline-orange-600"
+                          }`}
                       >
-                        {isDeploying && (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        )}
-                        {isDeploying
-                          ? "Initializing..."
-                          : t("pricing.credits.buy_btn")}
+                        {t("pricing.credits.buy_btn")}
                       </button>
                     </div>
                   );
@@ -708,6 +671,7 @@ export default function PricingPage() {
           bonusCredits={pendingBonusCredits}
           displayPrice={pendingDisplayPrice}
           transactionHash={pendingTxHash}
+          orderId={pendingOrderId}
         />
 
         {/* Info: (20260116 - Luphia) Coming Soon Modal */}

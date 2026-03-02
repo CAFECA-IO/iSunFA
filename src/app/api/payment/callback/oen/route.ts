@@ -21,6 +21,7 @@ interface IOenCallbackPayload {
 
 export async function POST(request: NextRequest) {
     try {
+        // Info: (20260302 - Tzuhan) [流程 4-1: 接收應援科技(OEN) Webhook] 使用者在 OEN 結帳頁面完成綁卡/授權後，OEN 伺服器會在背景呼叫此 API (Callback) 傳遞結果
         let bodyText = "";
         let body: IOenCallbackPayload = {};
         try {
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Info: (20260302 - Tzuhan) [流程 4-2: 找出對應訂單] 透過 OEN 回傳的 customId (對應我們自己的 order.id) 尋找 PENDING 狀態的 OEN_BINDING 訂單
         const order = await prisma.order.findUnique({
             where: { id: customId },
             include: { user: true },
@@ -87,22 +89,40 @@ export async function POST(request: NextRequest) {
         );
 
 
+        let paymentMethodId: string | undefined;
+
         if (token && typeof token === "string") {
-            await prisma.paymentMethod.upsert({
+            // Info: (20260302 - Tzuhan) [流程 4-3: 儲存信用卡 Token] 如果回傳內容包含 token，表示綁卡成功，將此 token 存入 PaymentMethod，未來即可進行免跳轉的直接扣款
+            const existingMethod = await prisma.paymentMethod.findFirst({
                 where: {
-                    userId_provider: {
-                        userId: order.userId,
-                        provider: "OEN",
-                    },
-                },
-                update: { token: token },
-                create: {
                     userId: order.userId,
                     provider: "OEN",
                     token: token,
-                },
+                }
             });
-            console.log(`[OEN Callback] Saved token for user ${order.userId} in PaymentMethod`);
+
+            if (existingMethod) {
+                paymentMethodId = existingMethod.id;
+                console.log(`[OEN Callback] Token already exists for user ${order.userId}`);
+            } else {
+                const mergedData: Record<string, unknown> = body.data ? { ...body.data } : {};
+
+                if (body.card_4no) mergedData['card_4no'] = body.card_4no;
+                if (body.card4no) mergedData['card4no'] = body.card4no;
+                if (body.card_brand) mergedData['card_brand'] = body.card_brand;
+                if (body.issuer) mergedData['issuer'] = body.issuer;
+
+                const paymentMethod = await prisma.paymentMethod.create({
+                    data: {
+                        userId: order.userId,
+                        provider: "OEN",
+                        token: token,
+                        data: (Object.keys(mergedData).length > 0 ? mergedData : Prisma.DbNull) as Prisma.InputJsonValue,
+                    },
+                });
+                paymentMethodId = paymentMethod.id;
+                console.log(`[OEN Callback] Saved token for user ${order.userId} in PaymentMethod`);
+            }
         }
 
 
@@ -113,6 +133,7 @@ export async function POST(request: NextRequest) {
             order.status === "PENDING" &&
             order.type === "OEN_BINDING"
         ) {
+            // Info: (20260302 - Tzuhan) [流程 4-4: 發動正式扣款] 確認綁卡成功且原始訂單為發起綁卡狀態，則進入正式扣款流程
             const orderData = order.data as { credits?: number; amount?: number };
             console.log(
                 `[OEN Callback] Processing successful binding for order ${order.id}, credits=${orderData.credits}, amount=${orderData.amount}`,
@@ -124,7 +145,7 @@ export async function POST(request: NextRequest) {
                     `[OEN Callback] Charging bound token for order ${order.id}...`,
                 );
 
-
+                // Info: (20260302 - Tzuhan) [流程 4-5: 建立 OEN_PAYMENT 扣款訂單]
                 const chargeOrder = await prisma.order.create({
                     data: {
                         userId: order.userId,
@@ -135,7 +156,6 @@ export async function POST(request: NextRequest) {
                             credits: orderData.credits,
                             amount: orderData.amount,
                             bindingOrderId: order.id,
-                            oenToken: token,
                         },
                     },
                 });
@@ -143,7 +163,20 @@ export async function POST(request: NextRequest) {
                     `[OEN Callback] Created OEN_PAYMENT chargeOrder: ${chargeOrder.id}`,
                 );
 
+                // Info: (20260302 - Tzuhan) 建立 Transaction 紀錄，與訂單及信用卡綁定
+                const paymentTransaction = await prisma.paymentTransaction.create({
+                    data: {
+                        userId: order.userId,
+                        paymentMethodId: paymentMethodId,
+                        orderId: chargeOrder.id,
+                        provider: "OEN",
+                        amount: orderData.amount,
+                        status: "PENDING",
+                    }
+                });
+                console.log(`[OEN Callback] Created payment transaction: ${paymentTransaction.id}`);
 
+                // Info: (20260302 - Tzuhan) [流程 4-6: 更新原始綁卡訂單] 綁卡階段已結束，將其標示為 COMPLETED
                 await prisma.order.update({
                     where: { id: order.id },
                     data: { status: "COMPLETED" },
@@ -152,6 +185,7 @@ export async function POST(request: NextRequest) {
                     `[OEN Callback] Marked binding order ${order.id} as COMPLETED`,
                 );
 
+                // Info: (20260302 - Tzuhan) [流程 4-7: 呼叫 OEN API 進行扣款] (與流程 3-6a 相同)，使用剛剛取得的 token 進行請款
                 const oenRes = await fetch(
                     "https://payment-api.testing.oen.tw/token/transactions",
                     {
@@ -184,9 +218,19 @@ export async function POST(request: NextRequest) {
                 const oenData = await oenRes.json();
 
                 if (oenData.code === "S0000" || oenRes.ok) {
+                    // Info: (20260302 - Tzuhan) [流程 4-8: 扣款成功，鑄造代幣] (同流程 3-7a) 發行點數至用戶錢包
                     console.log(
                         `[OEN Callback] Charge successful for order ${chargeOrder.id}, proceeding to mint points.`,
                     );
+
+                    // Info: (20260302 - Tzuhan) 將實體交易紀錄標示為成功
+                    await prisma.paymentTransaction.update({
+                        where: { id: paymentTransaction.id },
+                        data: {
+                            status: "SUCCESS",
+                            rawData: oenData
+                        }
+                    });
 
                     const memo = JSON.stringify({
                         provider: "OEN",
@@ -201,6 +245,7 @@ export async function POST(request: NextRequest) {
                     );
 
                     if (mintResult.success) {
+                        // Info: (20260302 - Tzuhan) [流程 4-9: 更新扣款訂單完成] 將剛剛建立的 OEN_PAYMENT 更新為 COMPLETED，並儲存 transactionHash
                         const txHash = (mintResult.data as { tx: string })?.tx;
                         await prisma.order.update({
                             where: { id: chargeOrder.id },
@@ -239,6 +284,17 @@ export async function POST(request: NextRequest) {
                         `[OEN Callback] Charge failed for order ${chargeOrder.id}:`,
                         oenData,
                     );
+
+                    // Info: (20260302 - Tzuhan) 將實體交易紀錄標示為失敗
+                    await prisma.paymentTransaction.update({
+                        where: { id: paymentTransaction.id },
+                        data: {
+                            status: "FAILED",
+                            rawData: oenData,
+                            errorMessage: "Charge failed via OEN"
+                        }
+                    });
+
                     await prisma.order.update({
                         where: { id: chargeOrder.id },
                         data: {

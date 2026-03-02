@@ -207,6 +207,7 @@ export async function deploySystem(
 }
 
 // Info: (20260126 - Luphia) 鑄造代幣給指定地址
+// Info: (20260302 - Tzuhan) [流程 7-1: 鑄造與發送代幣] 在付款成功且 OEN 扣款完成後 (流程 3-7a 或 4-8)，此函式會被呼叫，透過智能合約將購買的點數 (Credits) 鑄造並發送至使用者的錢包地址 (Wallet Address)
 export async function mintToAddress(
   tokenAddress: string,
   to: string,

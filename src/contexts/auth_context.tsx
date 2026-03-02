@@ -12,6 +12,7 @@ interface IUser {
   role: string | null;
   plan?: string;
   credits?: number;
+  pendingCredits?: number;
   isAdmin?: boolean;
   modules?: string[];
   identityAddress?: string | null;
@@ -19,6 +20,13 @@ interface IUser {
   pubKeyX?: string;
   pubKeyY?: string;
   hasSavedPaymentMethod?: boolean;
+  paymentMethods?: {
+    id: string;
+    provider: string;
+    data?: Record<string, unknown>;
+    isDefault: boolean;
+    createdAt: string;
+  }[];
 }
 
 interface IAuthContextType {
@@ -43,11 +51,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const response = await request<{ payload: IUser }>('/api/v1/auth/me', {
+      const response = await request<{ payload: { address: string; payload: IUser } }>('/api/v1/auth/me', {
         method: 'GET',
       });
-      if (response && response.payload) {
-        let userData = response.payload;
+      if (response && response.payload && response.payload.payload) {
+        let userData = response.payload.payload;
         try {
           if (userData.address) {
             // Info: (20260129 - Tzuhan) Fetch credits from blockchain
@@ -67,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               args: [userData.address as `0x${string}`]
             });
 
+            // Info: (20260302 - Tzuhan) 將從區塊鏈取得的 credits 寫入 userData，同時也包含後端傳來的 pendingCredits
             userData = { ...userData, credits, isVerified };
           }
         } catch (e) {
