@@ -1,4 +1,4 @@
-import { jsonFail } from "@/lib/utils/response";
+import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 
 /**
@@ -45,18 +45,33 @@ export async function POST(request: Request) {
     console.log(`[API] Storage response status: ${response.status}`);
 
     if (response.ok) {
+      let data;
       try {
-        JSON.parse(responseBody);
+        data = JSON.parse(responseBody);
+        // Normalize if already an IApiResponse to avoid double-wrapping
+        if (data && typeof data === 'object' && 'success' in data && 'payload' in data) {
+          return jsonOk(data.payload, data.message);
+        }
       } catch (e) {
-        console.error("[API] Proxy /file/ POST error:", e);
+        console.error(`[API] Proxy /file POST error:`, e);
+        data = responseBody;
       }
-    }
+      return jsonOk(data);
+    } else {
+      let errorMessage = "Storage Error";
+      let code = ApiCode.INTERNAL_SERVER_ERROR;
+      try {
+        const errorData = JSON.parse(responseBody);
+        errorMessage = errorData.message || errorMessage;
+        if (errorData.code && Object.values(ApiCode).includes(errorData.code)) {
+          code = errorData.code;
+        }
+      } catch (e) {
+        console.error(`[API] Proxy /file POST error:`, e);
+      }
       
-    return new Response(responseBody, {
-      status: response.status,
-      headers: response.headers,
-      statusText: response.statusText,
-    });
+      return jsonFail(code, errorMessage, { status: response.status });
+    }
   } catch (error) {
     console.error(`[API] Proxy /file/ POST error:`, error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, `Internal Server Error: ${error instanceof Error ? error.message : String(error)}`);

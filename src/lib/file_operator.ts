@@ -243,9 +243,15 @@ export const downloadFile = async (cid: string, callbacks: IDownloadCallbacks) =
       try {
         const initialText = await initialBlob.text();
         const parsed = JSON.parse(initialText);
-        if (isLariaMetadata(parsed)) {
+        
+        // Info: (20260302 - Julian) Handle standard IApiResponse wrapping
+        const data = (parsed && typeof parsed === 'object' && 'success' in parsed && 'payload' in parsed) 
+          ? parsed.payload 
+          : parsed;
+
+        if (isLariaMetadata(data)) {
           isMetadata = true;
-          metadata = parsed;
+          metadata = data;
         }
       } catch {
         // Info: (20260113 - Luphia) Not JSON, so it's a regular file

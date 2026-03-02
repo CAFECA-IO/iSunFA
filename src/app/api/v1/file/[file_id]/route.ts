@@ -29,13 +29,41 @@ export async function GET(
       headers: newHeaders,
     });
 
-    return new Response(response.body, {
-      status: response.status,
-      headers: response.headers,
-    });
+    if (response.ok) {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const data = await response.json();
+        // Normalize if already an IApiResponse to avoid double-wrapping
+        if (data && typeof data === 'object' && 'success' in data && 'payload' in data) {
+          return jsonOk(data.payload, data.message);
+        }
+        return jsonOk(data);
+      }
+
+      // For binary files/shards, return the raw response body
+      return new Response(response.body, {
+        status: response.status,
+        headers: response.headers,
+      });
+    } else {
+      let errorMessage = "Storage Error";
+      let code = ApiCode.INTERNAL_SERVER_ERROR;
+      try {
+        const responseBody = await response.text();
+        const errorData = JSON.parse(responseBody);
+        errorMessage = errorData.message || errorMessage;
+        if (errorData.code && Object.values(ApiCode).includes(errorData.code)) {
+          code = errorData.code;
+        }
+      } catch (e) {
+        console.error(`[API] Proxy /file/:file_id error:`, e);
+      }
+
+      return jsonFail(code, errorMessage, { status: response.status });
+    }
 
   } catch (error) {
-    console.error(`[API] Proxy /file/get error:`, error);
+    console.error(`[API] Proxy /file/:file_id error:`, error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }
