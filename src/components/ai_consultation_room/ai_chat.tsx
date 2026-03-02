@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/auth_context";
 import { IFile } from "@/interfaces/ai_talk";
 import { ApiCode } from "@/lib/utils/status";
 import LoginButton from "@/components/common/login_button";
+import ConfirmModal from '@/components/common/confirm_modal';
 import { IApiResponse } from "@/lib/utils/response";
 import { FilePreview } from "@/components/common/file_preview";
 
@@ -44,7 +45,15 @@ export const AiChat = () => {
 
   const [files, setFiles] = useState<(IFile & { base64?: string })[]>([]);
   const [localFiles, setLocalFiles] = useState<{ file: File; url: string }[]>([]);
-
+    const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string | React.ReactNode;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+  });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [question, setQuestion] = useState<string>("");
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -109,12 +118,14 @@ export const AiChat = () => {
           return false;
         }
         if (file.size > maxSize) {
-          alert(
-            t("ai_consultation_room.file_size_error").replace(
+          setConfirmModal({
+            isOpen: true,
+            title: t("ai_consultation_room.file_size_error_title"),
+            message: t("ai_consultation_room.file_size_error_content").replace(
               "{name}",
               file.name,
             ),
-          );
+          });
           return false;
         }
         return true;
@@ -124,13 +135,15 @@ export const AiChat = () => {
 
       // Info: (20260226 - Julian) 檢查包含已選取的檔案，總數是否超過限制
       if (files.length + validFiles.length > maxCount) {
-        alert(
-          t("ai_consultation_room.file_count_error").replace(
+        setConfirmModal({
+          isOpen: true,
+          title: t("ai_consultation_room.file_count_error_title"),
+          message: t("ai_consultation_room.file_count_error_content").replace(
             "{count}",
             maxCount.toString(),
           ),
-        );
-        return;
+        });
+        return; 
       }
       try {
         const newLocalFiles = validFiles.map((file) => ({
@@ -406,6 +419,15 @@ export const AiChat = () => {
           </p>
         </div>
       </div>
+
+      {/* Info: (20260302 - Julian) File Size Error Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={t('common.close')}
+      />
     </div>
   );
 };
