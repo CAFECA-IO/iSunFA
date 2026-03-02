@@ -11,12 +11,18 @@ interface IOenCallbackPayload {
     token?: string;
     status?: string;
     success?: boolean;
+    card_4no?: string;
+    card4no?: string;
+    card_brand?: string;
+    issuer?: string;
     data?: {
         token?: string;
         status?: string;
-        [key: string]: unknown;
+        card_4no?: string;
+        card4no?: string;
+        card_brand?: string;
+        issuer?: string;
     };
-    [key: string]: unknown;
 }
 
 export async function POST(request: NextRequest) {
@@ -105,12 +111,18 @@ export async function POST(request: NextRequest) {
                 paymentMethodId = existingMethod.id;
                 console.log(`[OEN Callback] Token already exists for user ${order.userId}`);
             } else {
-                const mergedData: Record<string, unknown> = body.data ? { ...body.data } : {};
+                interface ICardData {
+                    card_4no?: string;
+                    card4no?: string;
+                    card_brand?: string;
+                    issuer?: string;
+                }
+                const mergedData: ICardData = body.data ? { ...body.data } : {};
 
-                if (body.card_4no) mergedData['card_4no'] = body.card_4no;
-                if (body.card4no) mergedData['card4no'] = body.card4no;
-                if (body.card_brand) mergedData['card_brand'] = body.card_brand;
-                if (body.issuer) mergedData['issuer'] = body.issuer;
+                if (body.card_4no) mergedData.card_4no = body.card_4no;
+                if (body.card4no) mergedData.card4no = body.card4no;
+                if (body.card_brand) mergedData.card_brand = body.card_brand;
+                if (body.issuer) mergedData.issuer = body.issuer;
 
                 const paymentMethod = await prisma.paymentMethod.create({
                     data: {

@@ -23,7 +23,13 @@ interface IUser {
   paymentMethods?: {
     id: string;
     provider: string;
-    data?: Record<string, unknown>;
+    data?: {
+      card_4no?: string;
+      card4No?: string;
+      card_brand?: string;
+      cardBrand?: string;
+      issuer?: string;
+    };
     isDefault: boolean;
     createdAt: string;
   }[];
@@ -51,11 +57,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const response = await request<{ payload: { address: string; payload: IUser } }>('/api/v1/auth/me', {
+      const response = await request<{ payload: IUser }>('/api/v1/auth/me', {
         method: 'GET',
       });
-      if (response && response.payload && response.payload.payload) {
-        let userData = response.payload.payload;
+      if (response && response.payload) {
+        let userData = response.payload;
         try {
           if (userData.address) {
             // Info: (20260129 - Tzuhan) Fetch credits from blockchain

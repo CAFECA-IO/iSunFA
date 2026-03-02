@@ -27,7 +27,7 @@ export async function GET(
         const order = await prisma.order.findUnique({
             where: {
                 id: orderId,
-                userId: user.id, // Ensure the user can only fetch their own order
+                userId: user.id, // Info: (20260302 - Tzuhan) Ensure the user can only fetch their own order
             },
             select: {
                 id: true,

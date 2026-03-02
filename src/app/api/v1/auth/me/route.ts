@@ -78,18 +78,16 @@ export async function GET(request: NextRequest) {
     }
 
     return jsonOk({
+      ...user,
       address: user.address,
-      payload: {
-        ...user,
-        modules: MODULES.filter((m) => m.basic).map((m) => m.key),
-        isAdmin: user.role === 'ADMIN',
-        identityAddress: user.identityAddress,
-        paymentMethods: paymentMethods.map(pm => ({
-          ...pm,
-          createdAt: pm.createdAt.toISOString()
-        })),
-        pendingCredits,
-      },
+      modules: MODULES.filter((m) => m.basic).map((m) => m.key),
+      isAdmin: user.role === 'ADMIN',
+      identityAddress: user.identityAddress,
+      paymentMethods: paymentMethods.map(pm => ({
+        ...pm,
+        createdAt: pm.createdAt.toISOString()
+      })),
+      pendingCredits,
     });
   } catch (error) {
     console.error('[API] /auth/me error:', error);
