@@ -92,7 +92,7 @@ const BasicInfoForm: React.FC = () => {
 
   // Info: (20250806 - Julian) 生成日期字串
   const selectedMonthNum =
-    monthOptions.findIndex((month) => month.name === selectedMonth.name) + 1; // 月份從 1 開始計算
+    monthOptions.findIndex((month) => month.name === selectedMonth.name) + 1;
   const dateStr = `${selectedYear}/${selectedMonthNum < 10 ? `0${selectedMonthNum}` : selectedMonthNum}/`;
 
   // Info: (20250806 - Julian) 當月的最大天數
