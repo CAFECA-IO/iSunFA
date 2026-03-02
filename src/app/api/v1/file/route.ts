@@ -2,8 +2,8 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 
 /**
- * POST /api/v1/file
  * Info: (20260226 - Julian) 上傳檔案
+ * POST /api/v1/file
  * 直接對接 STORAGE_DOMAIN
  */
 export async function POST(request: Request) {
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       let data;
       try {
         data = JSON.parse(responseBody);
-        // Normalize if already an IApiResponse to avoid double-wrapping
+        // Info: (20260226 - Julian) Normalize if already an IApiResponse to avoid double-wrapping
         if (data && typeof data === 'object' && 'success' in data && 'payload' in data) {
           return jsonOk(data.payload, data.message);
         }
