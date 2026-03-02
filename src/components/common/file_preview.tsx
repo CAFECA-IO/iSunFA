@@ -7,7 +7,7 @@ export const getExtension = (filename: string) => {
 
 export const isImage = (filename: string) => {
   const ext = getExtension(filename);
-  return ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext);
+  return ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp','heic'].includes(ext);
 };
 
 export const isVideo = (filename: string) => {
@@ -37,6 +37,7 @@ export interface IFilePreviewProps {
 
 export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fileId, url, base64: initialBase64, progress, loadPreview, className }) => {
   const [localBase64, setLocalBase64] = useState<string | undefined>(initialBase64);
+  const [localUrl, setLocalUrl] = useState<string | undefined>(url);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [downloadProgress, setDownloadProgress] = useState<number>(0);
   const [meta, setMeta] = useState<{ filename: string; mimeType?: string }>({
@@ -45,8 +46,55 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
   });
 
   useEffect(() => {
-    setLocalBase64(initialBase64);
-  }, [initialBase64]);
+    // Info: (20260302 - Julian) Convert incoming base64 or URL if it's HEIC so local previews work
+    const checkInitialHeic = async () => {
+      const isHeic = initialFile.mimeType === 'image/heic' || initialFile.mimeType === 'image/heif' || 
+                      initialFile.filename.toLowerCase().endsWith('.heic') || initialFile.filename.toLowerCase().endsWith('.heif');
+      
+      const sourceUrl = initialBase64 
+        ? (initialBase64.startsWith('data:') ? initialBase64 : `data:image/heic;base64,${initialBase64}`) 
+        : url;
+
+      if (sourceUrl && isHeic) {
+        setIsDownloading(true);
+        try {
+          const heic2any = (await import('heic2any')).default;
+          // Fetch the object URL or reconstruct a blob from base64
+          const res = await fetch(sourceUrl);
+          const inputBlob = await res.blob();
+          const convertedBlob = await heic2any({
+            blob: inputBlob,
+            toType: 'image/jpeg',
+          });
+          
+          let finalBlob: Blob | undefined;
+          if (convertedBlob) {
+             finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+          }
+          
+          if (finalBlob) {
+             const objectUrl = URL.createObjectURL(finalBlob);
+             setLocalUrl(objectUrl);
+             setIsDownloading(false);
+          } else {
+             setLocalUrl(url);
+             setLocalBase64(initialBase64);
+             setIsDownloading(false);
+          }
+        } catch (e) {
+          console.error("Failed to convert initial HEIC:", e);
+          setLocalUrl(url);
+          setLocalBase64(initialBase64);
+          setIsDownloading(false);
+        }
+      } else {
+        setLocalUrl(url);
+        setLocalBase64(initialBase64);
+      }
+    };
+    
+    checkInitialHeic();
+  }, [initialBase64, initialFile.mimeType, initialFile.filename, url]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -64,15 +112,43 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
           if (filename && (!meta.filename || meta.filename === fileId)) {
             setMeta({ filename, mimeType: blob.type });
           }
-
-          const reader = new FileReader();
-          reader.readAsDataURL(blob);
-          reader.onloadend = () => {
-            if (!isCancelled) {
-              setLocalBase64(reader.result as string);
-              setIsDownloading(false);
+          
+          const processBlob = async (inputBlob: Blob) => {
+            try {
+              let finalBlob = inputBlob;
+              const isHeic = inputBlob.type === 'image/heic' || inputBlob.type === 'image/heif' || 
+                             filename.toLowerCase().endsWith('.heic') || filename.toLowerCase().endsWith('.heif');
+                             
+              if (isHeic) {
+                const heic2any = (await import('heic2any')).default;
+                
+                const convertedBlob = await heic2any({
+                  blob: inputBlob,
+                  toType: 'image/jpeg',
+                });
+                // heic2any can return Blob | Blob[]. Handle both.
+                if (convertedBlob) {
+                   finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+                }
+              }
+              
+              if (isCancelled) return;
+              
+              const reader = new FileReader();
+              reader.readAsDataURL(finalBlob);
+              reader.onloadend = () => {
+                if (!isCancelled) {
+                  setLocalBase64(reader.result as string);
+                  setIsDownloading(false);
+                }
+              };
+            } catch (err) {
+              console.error("Failed to process HEIC image:", err);
+              if (!isCancelled) setIsDownloading(false);
             }
           };
+
+          processBlob(blob);
         },
         onError: (err) => {
           console.error("Failed to download file:", err);
@@ -88,7 +164,7 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
 
   const previewUrl = localBase64
     ? (localBase64.startsWith('data:') ? localBase64 : `data:${meta.mimeType || 'application/octet-stream'};base64,${localBase64}`)
-    : url;
+    : localUrl;
 
   const currentProgress = progress !== undefined ? progress : (isDownloading ? downloadProgress : undefined);
 
@@ -126,7 +202,7 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
     }
 
     const ext = getExtension(meta.filename);
-    const supported = ['png', 'jpg', 'jpeg', 'mp4', 'mov', 'mp3', 'm3u8', 'pdf'].includes(ext);
+    const supported = ['png', 'jpg', 'jpeg', 'mp4', 'mov', 'mp3', 'm3u8', 'pdf','heic'].includes(ext);
     if (supported && loadPreview) {
       return (
         <button
@@ -149,17 +225,19 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
 
   const preventContext = (e: React.MouseEvent) => e.preventDefault();
 
-  if (isImage(meta.filename)) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={previewUrl}
-        alt={meta.filename}
-        className={className || "mt-2 rounded-lg max-h-[400px] w-auto object-contain bg-black/5 shadow-sm"}
-        onContextMenu={preventContext}
-      />
-    );
-  }
+    if (isImage(meta.filename)) {
+      // If it's HEIC locally passed in via base64, usually that doesn't work in src either. 
+      // But in this implementation `localBase64` will be the JPEG we just computed in `processBlob`.
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={previewUrl}
+          alt={meta.filename}
+          className={className || "mt-2 rounded-lg max-h-[400px] w-auto object-contain bg-black/5 shadow-sm"}
+          onContextMenu={preventContext}
+        />
+      );
+    }
   if (isVideo(meta.filename)) {
     return (
       // eslint-disable-next-line jsx-a11y/media-has-caption
