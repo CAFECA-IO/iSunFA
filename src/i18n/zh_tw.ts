@@ -618,7 +618,7 @@ export const zhTw = {
     close_chat: '關閉 AI 諮詢室',
     input_placeholder: '請輸入你的問題...',
     file_size_error_title: '檔案大小錯誤',
-    file_size_error_content: '檔案 "{name}" 超過 5MB 限制',
+    file_size_error_content: '檔案 "{name}" 超過 20MB 限制',
     file_count_error_title: '檔案數量錯誤',
     file_count_error_content: '最多只能上傳 {count} 張圖片',
     upload_btn: '上傳附件',

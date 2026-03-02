@@ -592,7 +592,7 @@ export const zhCn = {
     close_chat: '关闭 AI 咨询室',
     input_placeholder: '请输入你的问题...',
     file_size_error_title: '文件大小错误',
-    file_size_error_content: '档案 "{name}" 超过 5MB 限制',
+    file_size_error_content: '档案 "{name}" 超过 20MB 限制',
     file_count_error_title: '文件数量错误',
     file_count_error_content: '最多只能上传 {count} 张图片',
     upload_btn: '上传附件',

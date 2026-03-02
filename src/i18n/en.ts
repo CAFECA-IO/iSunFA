@@ -613,7 +613,7 @@ export const en = {
     close_chat: "Close AI Consultation Room",
     input_placeholder: "Please enter your question...",
     file_size_error_title: "File Size Error",
-    file_size_error_content: 'File "{name}" exceeds 5MB limit',
+    file_size_error_content: 'File "{name}" exceeds 20MB limit',
     file_count_error_title: "File Count Error",
     file_count_error_content: "Maximum {count} images can be uploaded",
     upload_btn: "Upload Invoice / Receipt (OCR)",

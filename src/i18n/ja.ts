@@ -610,7 +610,7 @@ export const ja = {
     close_chat: 'AI相談室を閉じる',
     input_placeholder: '質問を入力してください...',
     file_size_error_title: 'ファイルサイズエラー',
-    file_size_error_content: 'ファイル「{name}」が5MBの制限を超えています',
+    file_size_error_content: 'ファイル「{name}」が20MBの限制を超えています',
     file_count_error_title: 'ファイル数量エラー',
     file_count_error_content: '最大{count}枚の画像までアップロード可能です',
     upload_btn: '添付ファイルをアップロード',

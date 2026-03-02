@@ -606,7 +606,7 @@ export const ko = {
     close_chat: 'AI 상담실 닫기',
     input_placeholder: '질문을 입력해 주세요...',
     file_size_error_title: "파일 크기 오류",
-    file_size_error_content: '"{name}" 파일이 5MB 제한을 초과했습니다',
+    file_size_error_content: '"{name}" 파일이 20MB 제한을 초과했습니다',
     file_count_error_title: '파일 수량 오류',
     file_count_error_content: '최대 {count}장의 이미지만 업로드할 수 있습니다',
     upload_btn: '첨부파일 업로드',

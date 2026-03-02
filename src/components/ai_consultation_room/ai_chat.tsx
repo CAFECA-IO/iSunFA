@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -18,7 +18,7 @@ import { useAuth } from "@/contexts/auth_context";
 import { IFile } from "@/interfaces/ai_talk";
 import { ApiCode } from "@/lib/utils/status";
 import LoginButton from "@/components/common/login_button";
-import ConfirmModal from '@/components/common/confirm_modal';
+import ConfirmModal from "@/components/common/confirm_modal";
 import { IApiResponse } from "@/lib/utils/response";
 import { FilePreview } from "@/components/common/file_preview";
 
@@ -36,6 +36,10 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
+// Info: (20260302 - Julian) 目前先限制一次只能上傳一張圖片
+const FILE_LIMIT = 1;
+// Info: (20260302 - Julian) 20MB
+const MAX_FILE_SIZE = 1024 * 1024 * 20;
 
 export const AiChat = () => {
   const { t } = useTranslation();
@@ -44,15 +48,17 @@ export const AiChat = () => {
   const { isChatOpen, setIsChatOpen } = useAiContext();
 
   const [files, setFiles] = useState<(IFile & { base64?: string })[]>([]);
-  const [localFiles, setLocalFiles] = useState<{ file: File; url: string }[]>([]);
-    const [confirmModal, setConfirmModal] = useState<{
+  const [localFiles, setLocalFiles] = useState<{ file: File; url: string }[]>(
+    [],
+  );
+  const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
     message: string | React.ReactNode;
   }>({
     isOpen: false,
-    title: '',
-    message: '',
+    title: "",
+    message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [question, setQuestion] = useState<string>("");
@@ -66,7 +72,10 @@ export const AiChat = () => {
     };
   }, [localFiles]);
 
+  // Info: (20260302 - Julian) 不可上傳：1. 正在提交 2. 檔案數量超過限制
+  const isUploadDisabled = isSubmitting || files.length >= FILE_LIMIT;
 
+  // Info: (20260302 - Julian) 不可提交：1. 沒有輸入問題 2. 正在提交
   const isSubmitDisabled = !question.trim() || isSubmitting;
 
   const handleSubmit = async () => {
@@ -106,12 +115,11 @@ export const AiChat = () => {
     }
   };
 
-  const processFiles = async (files: FileList | null) => {
-    if (files) {
-      const fileList = Array.from(files);
-      const maxSize = 5 * 1024 * 1024; // Info: (20260209 - Julian) 5MB
-      // Info: (20260226 - Julian) 目前先限制一次只能上傳一張圖片
-      const maxCount = 1;
+  const processFiles = async (selectedFiles: FileList | null) => {
+    if (selectedFiles) {
+      const fileList = Array.from(selectedFiles);
+      const maxSize = MAX_FILE_SIZE;
+      const maxCount = FILE_LIMIT;
 
       const validFiles = fileList.filter((file) => {
         if (!file.type.startsWith("image/")) {
@@ -143,7 +151,7 @@ export const AiChat = () => {
             maxCount.toString(),
           ),
         });
-        return; 
+        return;
       }
       try {
         const newLocalFiles = validFiles.map((file) => ({
@@ -156,7 +164,10 @@ export const AiChat = () => {
           const file = validFiles[i];
 
           try {
-            const uploadResult = await new Promise<{hash: string, metadata?: ILariaMetadata}>((resolve, reject) => {
+            const uploadResult = await new Promise<{
+              hash: string;
+              metadata?: ILariaMetadata;
+            }>((resolve, reject) => {
               uploadFile(file, {
                 onSuccess: (hash, metadata) => resolve({ hash, metadata }),
                 onError: (error) => reject(error),
@@ -166,17 +177,17 @@ export const AiChat = () => {
             // Info: (20260213 - Julian) 同時轉換為 base64 供 AI 使用
             const base64 = await fileToBase64(file);
             setFiles((prev) => [
-              ...prev, 
-              { 
+              ...prev,
+              {
                 id: uploadResult.hash,
                 hash: uploadResult.hash,
-                threadId: "", 
+                threadId: "",
                 fileName: file.name,
                 mimeType: file.type,
                 metadata: JSON.stringify(uploadResult.metadata),
                 fileSize: file.size,
-                base64 
-              }
+                base64,
+              },
             ]);
 
             // Info: (20260213 - Julian) 上傳成功後移除本地預覽
@@ -217,20 +228,8 @@ export const AiChat = () => {
   };
 
   const removeFile = async (id: string) => {
-    // Info: (20260226 - Julian) 呼叫後端 API，將檔案資料從 db 刪除
-    try {
-      const data = await request<IApiResponse<{ id: string }>>(`/api/v1/file/${id}`, { 
-        method: "DELETE",
-      });
-
-      if (data.code === ApiCode.SUCCESS) {
-        setFiles((prev) => prev.filter((att) => att.id !== id));
-      } else {
-        console.error("Delete failed:", data.message);
-      }
-    } catch (error) {
-      console.error("Delete error:", error);
-    }
+    // Info: (20260302 - Julian) 移除檔案
+    setFiles((prev) => prev.filter((att) => att.id !== id));
   };
 
   const displayedButtons = user ? (
@@ -247,30 +246,44 @@ export const AiChat = () => {
 
       <button
         onClick={() => fileInputRef.current?.click()}
-        className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all ${isDragging
-          ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
-          : "border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/50"
-          }`}
+        disabled={isUploadDisabled}
+        className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all disabled:bg-gray-200 disabled:text-gray-500 ${
+          isDragging
+            ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
+            : "border-gray-200 text-gray-500 enabled:hover:border-orange-300 enabled:hover:text-orange-500 enabled:hover:bg-orange-50/50"
+        }`}
       >
-        <PlusIcon
-          size={20}
-          className={`shrink-0 ${isDragging ? "animate-bounce" : ""}`}
-        />
-        <span className="text-sm font-semibold">
-          {isDragging
-            ? t("ai_consultation_room.drop_to_upload")
-            : t("ai_consultation_room.upload_btn")}
-        </span>
+        {isUploadDisabled ? (
+          <p className="text-sm text-gray-500">
+            {t("ai_consultation_room.file_count_error_content").replace(
+              "{count}",
+              FILE_LIMIT.toString(),
+            )}
+          </p>
+        ) : (
+          <>
+            <PlusIcon
+              size={20}
+              className={`shrink-0 ${isDragging ? "animate-bounce" : ""}`}
+            />
+            <span className="text-sm font-semibold">
+              {isDragging
+                ? t("ai_consultation_room.drop_to_upload")
+                : t("ai_consultation_room.upload_btn")}
+            </span>
+          </>
+        )}
       </button>
 
       <button
         id="ai-chat-submit"
         onClick={handleSubmit}
         disabled={isSubmitDisabled}
-        className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center ${isSubmitDisabled
-          ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-          : "bg-orange-600 hover:bg-orange-500 text-white shadow-orange-200 active:scale-[0.98] hover:-translate-y-0.5"
-          }`}
+        className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center ${
+          isSubmitDisabled
+            ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+            : "bg-orange-600 hover:bg-orange-500 text-white shadow-orange-200 active:scale-[0.98] hover:-translate-y-0.5"
+        }`}
       >
         {isSubmitting ? (
           <Loader2 size={24} className="animate-spin" />
@@ -285,10 +298,11 @@ export const AiChat = () => {
 
   return (
     <div
-      className={`fixed right-6 bottom-24 z-50 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) bg-white border-2 border-orange-400 shadow-[0_20px_50px_rgba(234,88,12,0.15)] flex flex-col overflow-hidden ${isChatOpen
-        ? "w-80 h-[500px] p-6 rounded-3xl"
-        : "w-16 h-16 p-0 rounded-full hover:scale-110 active:scale-95 items-center justify-center hover:bg-orange-50"
-        }`}
+      className={`fixed right-6 bottom-24 z-50 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) bg-white border-2 border-orange-400 shadow-[0_20px_50px_rgba(234,88,12,0.15)] flex flex-col overflow-hidden ${
+        isChatOpen
+          ? "w-80 h-[500px] p-6 rounded-3xl"
+          : "w-16 h-16 p-0 rounded-full hover:scale-110 active:scale-95 items-center justify-center hover:bg-orange-50"
+      }`}
     >
       {!isChatOpen && (
         <button
@@ -319,8 +333,9 @@ export const AiChat = () => {
               setIsChatOpen(false);
             }
           }}
-          className={`text-orange-500 transition-all duration-300 ${isChatOpen ? "p-2 hover:bg-gray-100 rounded-full" : "p-0"
-            }`}
+          className={`text-orange-500 transition-all duration-300 ${
+            isChatOpen ? "p-2 hover:bg-gray-100 rounded-full" : "p-0"
+          }`}
           aria-label={
             isChatOpen
               ? t("ai_consultation_room.close_chat")
@@ -372,8 +387,11 @@ export const AiChat = () => {
                     className="group shrink-0 w-16 h-16 relative rounded-xl border border-orange-200 bg-orange-50 flex items-center justify-center shadow-sm"
                   >
                     <div className="w-full h-full relative rounded-xl overflow-hidden opacity-60">
-                      <FilePreview 
-                        file={{ filename: item.file.name, mimeType: item.file.type }}
+                      <FilePreview
+                        file={{
+                          filename: item.file.name,
+                          mimeType: item.file.type,
+                        }}
                         url={item.url}
                         className="object-cover w-full h-full pointer-events-none"
                       />
@@ -392,8 +410,11 @@ export const AiChat = () => {
                     className="group shrink-0 w-16 h-16 relative rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center shadow-sm"
                   >
                     <div className="w-full h-full relative rounded-xl overflow-hidden">
-                      <FilePreview 
-                        file={{ filename:'', mimeType: 'image/jpeg' }}
+                      <FilePreview
+                        file={{
+                          filename: file.fileName ?? "",
+                          mimeType: file.mimeType,
+                        }}
                         base64={file.base64}
                         className="object-cover w-full h-full pointer-events-none"
                       />
@@ -423,10 +444,10 @@ export const AiChat = () => {
       {/* Info: (20260302 - Julian) File Size Error Modal */}
       <ConfirmModal
         isOpen={confirmModal.isOpen}
-        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
         title={confirmModal.title}
         message={confirmModal.message}
-        confirmText={t('common.close')}
+        confirmText={t("common.close")}
       />
     </div>
   );
