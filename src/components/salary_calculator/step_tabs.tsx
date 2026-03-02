@@ -123,7 +123,7 @@ const StepTabs: React.FC = () => {
     );
   });
 
-  return <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{tabs}</div>;
+  return <div className="grid grid-cols-2 gap-3 min-w-[350px] md:grid-cols-4">{tabs}</div>;
 };
 
 export default StepTabs;

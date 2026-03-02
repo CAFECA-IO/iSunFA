@@ -248,11 +248,10 @@ export const AiChat = () => {
       <button
         onClick={() => fileInputRef.current?.click()}
         disabled={isUploadDisabled}
-        className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all disabled:bg-gray-200 disabled:text-gray-500 ${
-          isDragging
-            ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
-            : "border-gray-200 text-gray-500 enabled:hover:border-orange-300 enabled:hover:text-orange-500 enabled:hover:bg-orange-50/50"
-        }`}
+        className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all disabled:bg-gray-200 disabled:text-gray-500 ${isDragging
+          ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
+          : "border-gray-200 text-gray-500 enabled:hover:border-orange-300 enabled:hover:text-orange-500 enabled:hover:bg-orange-50/50"
+          }`}
       >
         {isUploadDisabled ? (
           <p className="text-sm text-gray-500">
@@ -280,11 +279,10 @@ export const AiChat = () => {
         id="ai-chat-submit"
         onClick={handleSubmit}
         disabled={isSubmitDisabled}
-        className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center ${
-          isSubmitDisabled
-            ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-            : "bg-orange-600 hover:bg-orange-500 text-white shadow-orange-200 active:scale-[0.98] hover:-translate-y-0.5"
-        }`}
+        className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center ${isSubmitDisabled
+          ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+          : "bg-orange-600 hover:bg-orange-500 text-white shadow-orange-200 active:scale-[0.98] hover:-translate-y-0.5"
+          }`}
       >
         {isSubmitting ? (
           <Loader2 size={24} className="animate-spin" />
@@ -299,11 +297,10 @@ export const AiChat = () => {
 
   return (
     <div
-      className={`fixed right-6 bottom-24 z-50 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) bg-white border-2 border-orange-400 shadow-[0_20px_50px_rgba(234,88,12,0.15)] flex flex-col overflow-hidden ${
-        isChatOpen
-          ? "w-80 h-[500px] p-6 rounded-3xl"
-          : "w-16 h-16 p-0 rounded-full hover:scale-110 active:scale-95 items-center justify-center hover:bg-orange-50"
-      }`}
+      className={`fixed right-6 bottom-24 z-50 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) bg-white border-2 border-orange-400 shadow-[0_20px_50px_rgba(234,88,12,0.15)] flex flex-col overflow-hidden ${isChatOpen
+        ? "w-80 h-[500px] p-6 rounded-3xl"
+        : "w-16 h-16 p-0 rounded-full hover:scale-110 active:scale-95 items-center justify-center hover:bg-orange-50"
+        }`}
     >
       {!isChatOpen && (
         <button
@@ -334,9 +331,8 @@ export const AiChat = () => {
               setIsChatOpen(false);
             }
           }}
-          className={`text-orange-500 transition-all duration-300 ${
-            isChatOpen ? "p-2 hover:bg-gray-100 rounded-full" : "p-0"
-          }`}
+          className={`text-orange-500 transition-all duration-300 ${isChatOpen ? "p-2 hover:bg-gray-100 rounded-full" : "p-0"
+            }`}
           aria-label={
             isChatOpen
               ? t("ai_consultation_room.close_chat")
@@ -375,7 +371,7 @@ export const AiChat = () => {
                 placeholder={t("ai_consultation_room.input_placeholder")}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                className="w-full h-36 p-4 outline-none bg-gray-50 border-2 border-transparent focus:border-orange-200 rounded-2xl text-sm transition-all resize-none shadow-inner"
+                className="w-full h-36 p-4 outline-none bg-gray-50 border-2 border-transparent focus:border-orange-200 rounded-2xl text-sm text-gray-800 transition-all resize-none shadow-inner"
               />
             </div>
 

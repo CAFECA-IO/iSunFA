@@ -24,7 +24,7 @@ const SalaryCalculatorPageBody: React.FC = () => {
   const paySlipClickHandler = () => setCurrentTab(CalcTab.PAY_SLIP);
 
   return (
-    <main className="min-h-screen bg-gray-30 overflow-x-hidden">
+    <main className="min-h-screen bg-white overflow-x-hidden">
       {/* Info: (20250708 - Julian) Header */}
       <CalculatorHeader />
 
