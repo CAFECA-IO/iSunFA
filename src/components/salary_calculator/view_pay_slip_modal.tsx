@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import { toPng } from "html-to-image";
 import { useTranslation } from "@/i18n/i18n_context";
 import { X, Download, Send } from "lucide-react";
 import PaySlip from "@/components/salary_calculator/pay_slip";
@@ -8,7 +9,6 @@ import ResendingPaySlipModal from "@/components/salary_calculator/resending_pay_
 import { useAuth } from "@/contexts/auth_context";
 import { ISalaryCalculatorUI } from "@/interfaces/salary_calculator";
 import { timestampToString } from "@/lib/utils/common";
-// import html2canvas from 'html2canvas';
 
 interface IViewPaySlipModal {
   monthStr: string;
@@ -51,28 +51,26 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
   const downloadPng = () => {
     if (!downloadRef.current) return;
 
-    // ToDo: (20260224 - Julian) ================== 實作下載圖片功能
-    // html2canvas(downloadRef.current, {
-    //   backgroundColor: null,
-    //   scale: 2,
-    //   onclone: (clonedNode) => {
-    //     // Info: (20250725 - Julian) 調整樣式
-    //     const frame = clonedNode.querySelector<HTMLIFrameElement>('#download-area');
-    //     if (frame) {
-    //       frame.style.width = '100%';
-    //       frame.style.height = 'auto';
-    //       frame.style.overflowY = 'visible'; // Info: (20250725 - Julian) 取消滾動條
-    //     }
-    //   },
-    // }).then((canvas) => {
-    //   // Info: (20250710 - Julian) 下載圖片
-    //   const link = document.createElement('a');
-    //   link.href = canvas.toDataURL('image/png');
-    //   link.download = `${employeeName}_${formattedMonth}_${yearStr}.png`;
-    //   document.body.appendChild(link);
-    //   link.click();
-    //   document.body.removeChild(link);
-    // });
+    toPng(downloadRef.current, {
+      pixelRatio: 2,
+      style: {
+        width: '100%',
+        height: 'auto',
+        overflowY: 'visible', // Info: (20250725 - Julian) 取消滾動條
+      },
+    })
+      .then((dataUrl) => {
+        // Info: (20250710 - Julian) 下載圖片
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `${employeeName}_${monthWithI18n}_${yearStr}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      })
+      .catch((err) => {
+        console.error('oops, something went wrong!', err);
+      });
   };
 
   const modalVisibleHandler = () => setIsShowModal((prev) => !prev);
