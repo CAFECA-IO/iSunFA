@@ -14,6 +14,62 @@ const generateSeries = (count: number, base: number, variance: number, trend: nu
   });
 };
 
+const emptyGas = {
+  ghgData: [],
+  metrics: {
+    carbonCost: '$0',
+    carbonTrend: '+0%',
+    carbonTotal: '0t',
+    scope1Current: '0t',
+    scope1Trend: '+0%',
+    scope1TrendVal: 0,
+    scope2Current: '0t',
+    scope2Trend: '+0%',
+    scope2TrendVal: 0,
+    scope3Current: '0t',
+    scope3Trend: '+0%',
+    scope3TrendVal: 0,
+    emissionsIntensity: '0',
+    isTop10Percent: false,
+    goalStatus: 'behind',
+    goalProgress: 0,
+    goalTarget: '-20% by 2030',
+  }
+}
+const emptyData = {
+  financial: {
+    fundsData: [],
+    revenueData: [],
+    expenditureData: [],
+    metrics: {
+      fundsTrend: '+0%',
+      revenueCurrent: 0,
+      revenueTrend: '+0%',
+      revenueTrendVal: 0,
+      revenueTarget: 0,
+      revenueAchievement: 0,
+      expenditureCurrent: 0,
+      expenditureTrend: '+0%',
+      expenditureTrendVal: 0,
+      expenditureBudget: 0,
+      expenditureRate: 0,
+      pendingCount: 0,
+      applyingCount: 0,
+      anomaliesCritical: 0,
+      anomaliesWarning: 0,
+      healthCompliant: 0,
+      healthNonCompliant: 0,
+      systems: [],
+    },
+  },
+  gas: {
+    co2: emptyGas,
+    ch4: emptyGas,
+    n2o: emptyGas,
+    f_gases: emptyGas,
+  },
+};
+
 const generateDataForUnit = (unit: TimeUnit) => {
   const count = 30;
   const isGrowth = ['30d', '3m', '1y'].includes(unit);
@@ -177,7 +233,7 @@ export async function GET(req: NextRequest) {
     const validTimeUnits: TimeUnit[] = ['24h', '7d', '30d', '3m', '1y'];
     const unit = validTimeUnits.includes(timeUnit) ? timeUnit : '24h';
 
-    const data = generateDataForUnit(unit);
+    const data = false ? generateDataForUnit(unit) : emptyData;
 
     return jsonOk(data);
   } catch (error) {

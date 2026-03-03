@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ThumbsUp, ThumbsDown, Share2, MessageSquare } from "lucide-react";
+import { ThumbsUp, ThumbsDown, /* Share2, */ MessageSquare } from "lucide-react";
 import { formatTime } from "@/lib/utils/common";
 import { IThread } from "@/interfaces/ai_talk";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -17,7 +17,7 @@ export const ThreadCard = ({
   createdAt,
   countOfLike,
   countOfDislike,
-  countOfShare,
+  // countOfShare,
   countOfComment,
 }: IThread) => {
   const { t } = useTranslation();
@@ -84,10 +84,11 @@ export const ThreadCard = ({
             <MessageSquare size={14} />
             <span className="text-xs">{countOfComment ?? 0}</span>
           </div>
-          <div className="flex items-center gap-1 text-orange-400 ">
+          {/* ToDo: (20260302 - Julian) 實作分享功能 */}
+          {/* <div className="flex items-center gap-1 text-orange-400 ">
             <Share2 size={14} />
             <span className="text-xs">{countOfShare ?? 0}</span>
-          </div>
+          </div> */}
         </div>
       </div>
     </Link>

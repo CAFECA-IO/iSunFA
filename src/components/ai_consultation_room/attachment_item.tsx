@@ -5,33 +5,47 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import Image from "next/image";
-import { Paperclip, X } from "lucide-react";
-import { IAttachment } from "@/interfaces/ai_talk";
+import { X } from "lucide-react";
+import { IFile } from "@/interfaces/ai_talk";
 import { useTranslation } from "@/i18n/i18n_context";
+import { ILariaMetadata } from "@/lib/file_operator";
+import { FilePreview } from "@/components/common/file_preview";
 
-export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
+export const AttachmentItem = ({ file }: { file: IFile }) => {
   const { t } = useTranslation();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [localMeta, setLocalMeta] = useState<{ hash: string; filename?: string; mimeType?: string; fileSize?: number }>({
+    hash: file.hash,
+    filename: file.fileName,
+  });
 
-  const isImage = attachment.mimeType.startsWith("image/");
-  const localFileUrl = `/api/v1/file/${attachment.id}`;
+  const fileName = localMeta.filename ?? file.fileName ?? 'unknown';
 
-  const thumbnail = isImage ? (
+  const handlePreviewLoad = (metadata: ILariaMetadata | { filename: string; mimeType?: string; originalFileSize?: number; fileSize?: number }) => {
+    let filename = "";
+    let mimeType = "";
+    let fileSize = 0;
+
+    if ('filename' in metadata) {
+      filename = metadata.filename
+      mimeType = metadata.mimeType || "";
+      fileSize = (metadata as { originalFileSize?: number; fileSize?: number }).originalFileSize || (metadata as { originalFileSize?: number; fileSize?: number }).fileSize || 0;
+    }
+
+    setLocalMeta({
+      hash: file.hash,
+      filename: filename || file.fileName || 'unknown',
+      mimeType: mimeType || undefined,
+      fileSize: fileSize || undefined
+    });
+  };
+
+  const thumbnail = (
     <div className="rounded-xl overflow-hidden relative w-full flex items-center justify-center mb-1 h-[90px] shrink-0">
-      <Image
-        src={localFileUrl}
-        alt={attachment.fileName}
-        fill
-        className="object-contain group-hover:bg-orange-50 transition-colors"
-      />
-    </div>
-  ) : (
-
-    <div className="bg-gray-50 rounded-xl w-full h-full flex items-center justify-center mb-1 group-hover:bg-orange-50 transition-colors">
-      <Paperclip
-        className="text-gray-400 group-hover:text-orange-500 transition-colors"
-        size={24}
+      <FilePreview
+        fileId={file.hash}
+        file={{ filename: localMeta.hash, mimeType: localMeta.mimeType }}
+        className="object-cover w-full h-full pointer-events-none"
       />
     </div>
   );
@@ -40,22 +54,18 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
     <>
       <button
         type="button"
-        onClick={() => isImage && setIsModalOpen(true)}
-        className={`group relative w-32 h-32 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center outline-none p-2 transition-all ${
-          isImage ? "cursor-zoom-in hover:shadow-lg" : "cursor-default"
-        }`}
+        onClick={() => setIsModalOpen(true)}
+        className={`group relative w-32 h-32 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center outline-none p-2 transition-all cursor-zoom-in hover:shadow-lg`}
         aria-label={
-          isImage
-            ? t("ai_consultation_room.view_image").replace(
-                "{name}",
-                attachment.fileName,
-              )
-            : attachment.fileName
+          t("ai_consultation_room.view_image").replace(
+            "{name}",
+            fileName,
+          )
         }
       >
         {thumbnail}
         <span className="text-[10px] text-gray-500 truncate w-full text-center px-1">
-          {attachment.fileName}
+          {fileName}
         </span>
       </button>
 
@@ -101,32 +111,28 @@ export const AttachmentItem = ({ attachment }: { attachment: IAttachment }) => {
                   </div>
 
                   <div className="relative w-full aspect-video min-h-[300px] max-h-[85vh] bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center">
-                    <Image
-                      src={localFileUrl}
-                      alt={attachment.fileName}
-                      fill
-                      className="object-contain"
-                      priority
-                    />
+                    <div className="w-full h-full flex items-center justify-center relative">
+                      <FilePreview
+                        fileId={file.hash}
+                        file={{ filename: localMeta.hash, mimeType: localMeta.mimeType }}
+                        className="object-contain max-h-[85vh] max-w-full w-auto p-4"
+                        loadPreview={handlePreviewLoad}
+                      />
+                    </div>
                   </div>
 
                   <div className="p-4 flex items-center justify-between">
                     <div>
                       <h3 className="text-gray-900 font-bold">
-                        {attachment.fileName}
+                        {fileName}
                       </h3>
-                      <p className="text-xs text-gray-400">
-                        {Math.round(attachment.fileSize / 1024)} KB •{" "}
-                        {attachment.mimeType}
-                      </p>
+                      {localMeta.mimeType && (
+                        <p className="text-xs text-gray-400">
+                          {localMeta.fileSize ? `${Math.round(localMeta.fileSize / 1024)} KB • ` : ""}
+                          {localMeta.mimeType}
+                        </p>
+                      )}
                     </div>
-                    <a
-                      href={localFileUrl}
-                      download={attachment.fileName}
-                      className="bg-orange-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-orange-500 transition-all active:scale-95"
-                    >
-                      {t("ai_consultation_room.download_original")}
-                    </a>
                   </div>
                 </DialogPanel>
               </TransitionChild>

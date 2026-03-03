@@ -37,7 +37,7 @@ export default function LockedPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={t('pricing.coming_soon_title')}
-        message={t('pricing.coming_soon_message')}
+        message={t('common.coming_soon_message')}
         confirmText={t('common.confirm')}
         onConfirm={() => setIsModalOpen(false)}
       />

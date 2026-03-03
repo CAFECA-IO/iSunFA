@@ -72,7 +72,7 @@ export default function ChatInterface({ className }: IChatInterfaceProps = {}) {
         body: JSON.stringify({
           message: text,
           tags,
-          image: base64Data,
+          file: base64Data,
           mimeType: file?.type,
 
         }),

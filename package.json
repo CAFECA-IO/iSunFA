@@ -1,6 +1,6 @@
 {
   "name": "isunfa",
-  "version": "0.12.0+7",
+  "version": "0.12.0+10",
   "private": true,
   "scripts": {
     "dev": "npm run lint && prisma generate && next dev",
@@ -36,6 +36,7 @@
     "react-dom": "19.2.3",
     "react-markdown": "^10.1.0",
     "react-qr-code": "^2.0.18",
+    "react-usestateref": "^2.0.0",
     "recharts": "^3.6.0",
     "remark-gfm": "^4.0.1"
   },
