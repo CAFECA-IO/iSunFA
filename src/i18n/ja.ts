@@ -504,7 +504,7 @@ export const ja = {
     purchase: '購入',
   },
   analysis: {
-    title: 'トークン分析',
+    title: '財務分析',
     internal_analysis: '内部分析',
     external_analysis: '外部分析',
     history_reports: '履歴レポート',

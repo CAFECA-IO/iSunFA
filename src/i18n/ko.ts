@@ -500,7 +500,7 @@ export const ko = {
     purchase: '구매',
   },
   analysis: {
-    title: '토큰 분석',
+    title: '재무 분석',
     internal_analysis: '내부 분석',
     external_analysis: '외부 분석',
     history_reports: '이력 보고서',

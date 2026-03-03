@@ -505,7 +505,7 @@ export const en = {
     purchase: 'Purchase',
   },
   analysis: {
-    title: 'Token Analysis',
+    title: 'Financial Analysis',
     internal_analysis: 'Internal Analysis',
     external_analysis: 'External Analysis',
     history_reports: 'History Reports',
