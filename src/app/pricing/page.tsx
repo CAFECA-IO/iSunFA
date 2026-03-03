@@ -1,22 +1,20 @@
 "use client";
 
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useTranslation } from "@/i18n/i18n_context";
+import Image from "next/image";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/auth_context";
+import { useTranslation } from "@/i18n/i18n_context";
+import { request } from "@/lib/utils/request";
+import { MODULES } from "@/constants/modules";
+import { CREDIT_PLANS } from "@/config/credit_plans";
 import PricingCard from "@/components/pricing/pricing_card";
 import Header from "@/components/landing_page/header";
 import Footer from "@/components/landing_page/footer";
-import { Check, Minus, Plus, Lock } from "lucide-react";
-import Image from "next/image";
-import { MODULES } from "@/constants/modules";
-
+import { Check, Minus, Plus, Lock, Loader2 } from "lucide-react";
 import ConfirmModal from "@/components/common/confirm_modal";
 import AuthModal from "@/components/auth/auth_modal";
 import PaymentModal from "@/components/pricing/payment_modal";
-import { request } from "@/lib/utils/request";
-import { Loader2 } from "lucide-react";
-import { CREDIT_PLANS } from "@/config/credit_plans";
 
 export default function PricingPage() {
   const { t, language } = useTranslation();

@@ -6,7 +6,6 @@ export type IOenCallbackData = {
     card4no?: string;
     cardBrand?: string;
     issuer?: string;
-    paymentInfo?: string;
 };
 
 export type IOenCallbackPayload = {
@@ -17,7 +16,6 @@ export type IOenCallbackPayload = {
     card4no?: string;
     cardBrand?: string;
     issuer?: string;
-    paymentInfo?: string;
     data?: IOenCallbackData;
 };
 

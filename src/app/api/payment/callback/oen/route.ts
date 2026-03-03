@@ -97,7 +97,6 @@ export async function POST(request: NextRequest) {
                 const mergedData: IOenCallbackData = body.data ? { ...body.data } : {};
 
                 if (rawBody.card4no) mergedData.card4no = String(rawBody.card4no);
-                if (rawBody.paymentInfo) mergedData.paymentInfo = String(rawBody.paymentInfo);
                 if (rawBody.cardBrand) mergedData.cardBrand = String(rawBody.cardBrand);
                 if (rawBody.issuer) mergedData.issuer = String(rawBody.issuer);
 

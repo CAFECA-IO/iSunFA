@@ -245,8 +245,8 @@ export async function POST(request: NextRequest) {
           },
           body: JSON.stringify({
             merchantId: "mermer",
-            successUrl: `${originBase}/pricing?tab=credits&payment_success=true&order_id=${order.id}&amount=${amount}&credits=${credits}`,
-            failureUrl: `${originBase}/pricing?tab=credits&payment_failure=true&order_id=${order.id}`,
+            successUrl: `${webhookBase}/pricing?tab=credits&payment_success=true&order_id=${order.id}&amount=${amount}&credits=${credits}`,
+            failureUrl: `${webhookBase}/pricing?tab=credits&payment_failure=true&order_id=${order.id}&amount=${amount}&credits=${credits}`,
             customId: order.id,
             callbackUrl: `${webhookBase}/api/payment/callback/oen`,
           }),

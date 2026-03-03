@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         // Info: (20260302 - Tzuhan) [流程 4-1: 獲取身分驗證資訊] 從 Header 中取得 DeWT Token 並解析出使用者資訊
@@ -17,7 +17,7 @@ export async function GET(
             return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
         }
 
-        const orderId = params.id;
+        const orderId = (await params).id;
 
         if (!orderId) {
             return jsonFail(ApiCode.VALIDATION_ERROR, "Order ID is required");

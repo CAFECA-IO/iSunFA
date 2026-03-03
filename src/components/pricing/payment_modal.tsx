@@ -123,7 +123,7 @@ export default function PaymentModal({
 
           } else if (status === "FAILED" || status === "MINT_FAILED") {
             // Info: (20260302 - Tzuhan) [流程 5-6b: 訂單失敗]
-            setError(errorMessage || "Payment processing failed. Please try again.");
+            setError(errorMessage || t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。");
             setStep("error");
             return; // Info: (20260303 - Tzuhan) 失敗即終止，不再呼叫 setTimeout
           }
@@ -218,11 +218,11 @@ export default function PaymentModal({
       console.error("Deprecate: (20260310 - Tzuhan) ", "Payment Submission failed:", err);
       const errorMessage =
         (err as Error).message ||
-        "Payment processing failed. Please try again.";
+        t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。";
       if (errorMessage !== "OK") {
         setError(errorMessage);
       } else {
-        setError("Payment processing failed. Please try again.");
+        setError(t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。");
       }
       setStep("error");
     } finally {
@@ -642,11 +642,11 @@ export default function PaymentModal({
                               <div className="mt-4 w-full text-center">
                                 <p className="text-sm text-gray-500">
                                   {error ||
-                                    "Payment processing failed. Please try again."}
+                                    t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。"}
                                 </p>
                               </div>
 
-                              <div className="mt-6 w-full sm:flex sm:flex-row-reverse">
+                              <div className="mt-6 mr-2 w-full sm:flex sm:flex-row-reverse">
                                 <button
                                   type="button"
                                   className="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
