@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Info: (20260302 - Tzuhan) [流程 3-2: 取得訂單參數] 解析前端傳來的購買金額、點數、以及是否使用已綁定信用卡的選項
-    const { amount, credits, paymentMethodId } = (await request.json()) as IOenCheckoutRequest;
+    const { amount, previousCredits, credits, paymentMethodId } = (await request.json()) as IOenCheckoutRequest;
     console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Checkout] Request received: amount=${amount}, credits=${credits}, paymentMethodId=${paymentMethodId}, userId=${user.id}`,
     );
 
@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
           data: {
             credits,
             amount,
+            previousCredits,
           },
         },
       });
@@ -224,6 +225,7 @@ export async function POST(request: NextRequest) {
           data: {
             credits,
             amount,
+            previousCredits
           },
         },
       });

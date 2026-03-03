@@ -111,12 +111,18 @@ export default function PaymentModal({
         if (!mounted) return;
 
         if (res?.payload) {
-          const { status, transactionHash: tHash, errorMessage } = res.payload;
+          const { status, transactionHash: tHash, errorMessage, data } = res.payload;
 
           if (status === "COMPLETED") {
             // Info: (20260302 - Tzuhan) [流程 5-6a: 訂單完成]
             await refreshAuth();
             if (tHash) setTxHash(tHash);
+
+            // Info: (20260303 - Tzuhan) Extract `previousCredits` from order metadata as original credits.
+            if (data?.previousCredits !== undefined) {
+              setOriginalCredits(data.previousCredits);
+            }
+
             setStep("success");
             if (tHash) onSuccess(tHash);
             return; // Info: (20260303 - Tzuhan) 成功即終止，不再呼叫 setTimeout
@@ -192,6 +198,7 @@ export default function PaymentModal({
         body: JSON.stringify({
           amount,
           credits,
+          previousCredits: originalCredits,
           paymentMethodId: selectedPaymentMethodId !== "new" ? selectedPaymentMethodId : null,
         }),
       });

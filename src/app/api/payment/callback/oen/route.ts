@@ -138,6 +138,9 @@ export async function POST(request: NextRequest) {
                         data: {
                             credits: orderData.credits,
                             amount: orderData.amount,
+                            previousCredits: orderData.previousCredits,
+                            card4no: String((body.data?.card4no || body.card4no || "")) || undefined,
+                            issuer: String((body.data?.issuer || body.issuer || "")) || undefined,
                             bindingOrderId: order.id,
                         },
                     },
@@ -161,7 +164,14 @@ export async function POST(request: NextRequest) {
                 // Info: (20260302 - Tzuhan) [流程 4-6: 更新原始綁卡訂單] 綁卡階段已結束，將其標示為 COMPLETED
                 await prisma.order.update({
                     where: { id: order.id },
-                    data: { status: "COMPLETED" },
+                    data: {
+                        status: "COMPLETED",
+                        data: {
+                            ...(order.data as IOenOrderData),
+                            card4no: String((body.data?.card4no || body.card4no || "")) || undefined,
+                            issuer: String((body.data?.issuer || body.issuer || "")) || undefined,
+                        } as Prisma.InputJsonObject
+                    },
                 });
                 console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Marked binding order ${order.id} as COMPLETED`,
                 );
