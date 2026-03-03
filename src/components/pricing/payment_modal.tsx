@@ -160,7 +160,7 @@ export default function PaymentModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // [流程 2-1: 確認付款] 使用者在付款彈窗中勾選同意條款並點擊確認付款
+    // Info: (20260303 - Tzuhan) [流程 2-1: 確認付款] 使用者在付款彈窗中勾選同意條款並點擊確認付款
     setLoading(true);
     setError(null);
 
@@ -200,13 +200,13 @@ export default function PaymentModal({
         !response.payload?.requireBinding &&
         response.payload?.txHash
       ) {
-        // [流程 2-3b: 直接扣款成功] 若選擇使用已綁定的卡片，後端會直接發動扣款並鑄造代幣。前端取得成功的 txHash 後更新畫面為「付款成功」
+        // Info: (20260303 - Tzuhan) [流程 2-3b: 直接扣款成功] 若選擇使用已綁定的卡片，後端會直接發動扣款並鑄造代幣。前端取得成功的 txHash 後更新畫面為「付款成功」
         await refreshAuth();
         setTxHash(response.payload.txHash);
         setStep("success");
         onSuccess(response.payload.txHash);
       } else if (response.payload?.requireBinding && response.payload.redirectUrl) {
-        // [流程 2-3a: 需要導向應援科技金流] 若使用者選擇綁定新卡或尚未綁卡，後端會回傳 OEN 的結帳頁面 URL，前端將畫面導向該位址進行刷卡
+        // Info: (20260303 - Tzuhan) [流程 2-3a: 需要導向應援科技金流] 若使用者選擇綁定新卡或尚未綁卡，後端會回傳 OEN 的結帳頁面 URL，前端將畫面導向該位址進行刷卡
         window.location.href = response.payload.redirectUrl;
         onClose();
         return;
@@ -214,7 +214,7 @@ export default function PaymentModal({
         throw new Error(response.message || "Payment failed");
       }
     } catch (err) {
-      // [流程 2-3c: 捕捉錯誤] 若扣款 API 發生異常，顯示失敗畫面
+      // Info: (20260303 - Tzuhan) [流程 2-3c: 捕捉錯誤] 若扣款 API 發生異常，顯示失敗畫面
       console.error("Deprecate: (20260310 - Tzuhan) ", "Payment Submission failed:", err);
       const errorMessage =
         (err as Error).message ||
@@ -649,7 +649,7 @@ export default function PaymentModal({
                               <div className="mt-6 mr-2 w-full sm:flex sm:flex-row-reverse">
                                 <button
                                   type="button"
-                                  className="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                  className="inline-flex w-full justify-center rounded-md bg-white ml-3 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
                                   onClick={handleClose}
                                 >
                                   {t("pricing.credits.payment_modal.close_btn") ||
