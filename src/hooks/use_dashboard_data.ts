@@ -4,13 +4,26 @@ import { request } from '@/lib/utils/request';
 export type TimeUnit = '24h' | '7d' | '30d' | '3m' | '1y';
 export type GasType = 'co2' | 'ch4' | 'n2o' | 'f_gases';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DashboardResponse = any;
+export interface IDashboardMetrics { value: string | number; trend?: number }
+export interface IDashboardFinancial {
+  fundsData: Record<string, unknown>[];
+  revenueData: Record<string, unknown>[];
+  expenditureData: Record<string, unknown>[];
+  metrics: Record<string, IDashboardMetrics>;
+}
+export interface IDashboardGas {
+  ghgData: Record<string, unknown>[];
+  metrics: Record<string, IDashboardMetrics>;
+}
+export interface IDashboardResponse {
+  financial: IDashboardFinancial;
+  gas: Record<GasType, IDashboardGas>;
+}
 
 export const useDashboardData = () => {
   const [timeUnit, setTimeUnit] = useState<TimeUnit>('24h');
   const [gasType, setGasType] = useState<GasType>('co2');
-  const [apiData, setApiData] = useState<DashboardResponse | null>(null);
+  const [apiData, setApiData] = useState<IDashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(false);
   // Info: (20260118 - Luphia) Trigger for manual/auto refresh
@@ -25,7 +38,7 @@ export const useDashboardData = () => {
       if (!apiData) setLoading(true);
 
       try {
-        const response = await request<{ payload: DashboardResponse }>('/api/v1/user/dashboard', {
+        const response = await request<{ payload: IDashboardResponse }>('/api/v1/user/dashboard', {
           query: { timeUnit }
         });
         if (response && response.payload) {
@@ -39,7 +52,6 @@ export const useDashboardData = () => {
     };
 
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeUnit, refreshTrigger]);
 
   // Info: (20260118 - Luphia) Auto-refresh interval (10s)

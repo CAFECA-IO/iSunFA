@@ -12,12 +12,25 @@ interface IUser {
   role: string | null;
   plan?: string;
   credits?: number;
+  pendingCredits?: number;
   isAdmin?: boolean;
   modules?: string[];
   identityAddress?: string | null;
   isVerified?: boolean;
   pubKeyX?: string;
   pubKeyY?: string;
+  hasSavedPaymentMethod?: boolean;
+  paymentMethods?: {
+    id: string;
+    provider: string;
+    data?: {
+      card4No?: string;
+      cardBrand?: string;
+      issuer?: string;
+    };
+    isDefault: boolean;
+    createdAt: string;
+  }[];
 }
 
 interface IAuthContextType {
@@ -66,10 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               args: [userData.address as `0x${string}`]
             });
 
+            // Info: (20260302 - Tzuhan) 將從區塊鏈取得的 credits 寫入 userData，同時也包含後端傳來的 pendingCredits
             userData = { ...userData, credits, isVerified };
           }
         } catch (e) {
-          console.warn('Failed to fetch user balance:', e);
+          console.warn("Deprecate: (20260310 - Tzuhan) ", 'Failed to fetch user balance:', e);
         }
         setUser(userData);
       } else {
@@ -77,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('dewt');
       }
     } catch (error) {
-      console.error('Failed to fetch user:', error);
+      console.error("Deprecate: (20260310 - Tzuhan) ", 'Failed to fetch user:', error);
       setUser(null);
       localStorage.removeItem('dewt');
     } finally {

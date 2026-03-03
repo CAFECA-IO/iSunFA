@@ -7,10 +7,10 @@ export const bigIntStringSchema = z.string().regex(/^\d+$/, 'BigInt string expec
 
 /** Info: (20250822 - Tzuhan) 任意 JSON 值（不解析） */
 type JSONPrimitive = string | number | boolean | null;
-interface IJSONObject {
+export interface IJSONObject {
   [key: string]: JSONValue;
 }
-type JSONArray = JSONValue[];
+export type JSONArray = JSONValue[];
 export type JSONValue = JSONPrimitive | IJSONObject | JSONArray;
 const jsonPrimitiveSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 export const jsonValueSchema: z.ZodType<JSONValue> = z.lazy(() =>
