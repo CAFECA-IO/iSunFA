@@ -24,9 +24,7 @@ interface IUser {
     id: string;
     provider: string;
     data?: {
-      card_4no?: string;
       card4No?: string;
-      card_brand?: string;
       cardBrand?: string;
       issuer?: string;
     };

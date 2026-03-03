@@ -6,24 +6,7 @@ import { Prisma } from "@/generated/client";
 
 const OEN_TRANSACTION_TOKEN = process.env.OEN_TRANSACTION_TOKEN;
 
-interface IOenCallbackPayload {
-    customId?: string;
-    token?: string;
-    status?: string;
-    success?: boolean;
-    card_4no?: string;
-    card4no?: string;
-    card_brand?: string;
-    issuer?: string;
-    data?: {
-        token?: string;
-        status?: string;
-        card_4no?: string;
-        card4no?: string;
-        card_brand?: string;
-        issuer?: string;
-    };
-}
+import { IOenCallbackPayload, IOenCardData, IOenOrderData } from "@/interfaces/payment";
 
 export async function POST(request: NextRequest) {
     try {
@@ -111,18 +94,21 @@ export async function POST(request: NextRequest) {
                 paymentMethodId = existingMethod.id;
                 console.log(`[OEN Callback] Token already exists for user ${order.userId}`);
             } else {
-                interface ICardData {
-                    card_4no?: string;
-                    card4no?: string;
-                    card_brand?: string;
-                    issuer?: string;
-                }
-                const mergedData: ICardData = body.data ? { ...body.data } : {};
+                const rawBody = body as Record<string, unknown>;
+                const mergedData: IOenCardData = body.data ? { ...body.data } : {};
 
-                if (body.card_4no) mergedData.card_4no = body.card_4no;
-                if (body.card4no) mergedData.card4no = body.card4no;
-                if (body.card_brand) mergedData.card_brand = body.card_brand;
-                if (body.issuer) mergedData.issuer = body.issuer;
+                if (rawBody.card4no) {
+                    mergedData.card4no = String(rawBody.card4no);
+                }
+                if (rawBody.paymentInfo) {
+                    mergedData.paymentInfo = String(rawBody.paymentInfo);
+                }
+                if (rawBody.cardBrand) {
+                    mergedData.cardBrand = String(rawBody.cardBrand);
+                }
+                if (rawBody.issuer) {
+                    mergedData.issuer = String(rawBody.issuer);
+                }
 
                 const paymentMethod = await prisma.paymentMethod.create({
                     data: {
@@ -146,7 +132,7 @@ export async function POST(request: NextRequest) {
             order.type === "OEN_BINDING"
         ) {
             // Info: (20260302 - Tzuhan) [流程 4-4: 發動正式扣款] 確認綁卡成功且原始訂單為發起綁卡狀態，則進入正式扣款流程
-            const orderData = order.data as { credits?: number; amount?: number };
+            const orderData = order.data as IOenOrderData;
             console.log(
                 `[OEN Callback] Processing successful binding for order ${order.id}, credits=${orderData.credits}, amount=${orderData.amount}`,
             );
@@ -266,9 +252,9 @@ export async function POST(request: NextRequest) {
                                 transactionHash: txHash,
                                 data: {
                                     ...orderData,
-                                    callbackBody: body as unknown as Prisma.InputJsonValue,
+                                    callbackBody: body,
                                     chargeResponse: oenData,
-                                },
+                                } as Prisma.InputJsonObject,
                             },
                         });
                         console.log(
@@ -281,10 +267,10 @@ export async function POST(request: NextRequest) {
                                 status: "MINT_FAILED",
                                 data: {
                                     ...orderData,
-                                    callbackBody: body as unknown as Prisma.InputJsonValue,
+                                    callbackBody: body,
                                     chargeResponse: oenData,
                                     error: mintResult.message,
-                                },
+                                } as Prisma.InputJsonObject,
                             },
                         });
                         console.error(
@@ -313,10 +299,10 @@ export async function POST(request: NextRequest) {
                             status: "FAILED",
                             data: {
                                 ...orderData,
-                                callbackBody: body as unknown as Prisma.InputJsonValue,
+                                callbackBody: body,
                                 chargeResponse: oenData,
                                 error: "Charge failed via OEN",
-                            },
+                            } as Prisma.InputJsonObject,
                         },
                     });
                 }

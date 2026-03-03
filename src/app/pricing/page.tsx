@@ -378,9 +378,7 @@ export default function PricingPage() {
 
                       <ul className="mt-8 grid grid-cols-1 gap-x-8 gap-y-4 text-base leading-7 text-gray-300 sm:grid-cols-2">
                         {(
-                          t(
-                            "pricing.ai_adoption.features",
-                          ) as unknown as string[]
+                          t<string[]>("pricing.ai_adoption.features")
                         ).map((feature, index) => (
                           <li key={index} className="flex gap-x-3 items-center">
                             <div className="flex-none rounded-full bg-orange-500/10 p-1">

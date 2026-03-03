@@ -49,9 +49,9 @@ export default function PaymentConfirmModal({
     }
   };
 
-  if (!user || !user.credits) {
+  if (!user || user.credits === undefined) {
     return null;
-  };
+  }
 
   const isProcessing = status !== 'idle' && status !== 'error' && status !== 'payment_success';
   const isSuccess = status === 'payment_success';

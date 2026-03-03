@@ -13,20 +13,8 @@ import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
 import LegalModal from "@/components/common/legal_modal";
+import { IPaymentModalProps, IOenCheckoutResponse, IOrderStatusResponse } from "@/interfaces/payment";
 
-interface IPaymentModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: (txHash: string) => void;
-  amount: number;
-  credits: number;
-  baseCredits: number;
-  bonusCredits: number;
-  displayPrice?: string;
-  initialStep?: "confirm" | "processing" | "success" | "error";
-  transactionHash?: string;
-  orderId?: string | null;
-}
 
 export default function PaymentModal({
   isOpen,
@@ -104,47 +92,68 @@ export default function PaymentModal({
   };
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    let isPolling = false;
+    let mounted = true;
+    let timeoutId: NodeJS.Timeout;
 
-    // Info: (20260302 - Tzuhan) [流程 5-4: 啟動輪詢] 當處於 processing 狀態並具有 orderId 時，開啟輪詢機制
-    if (step === "processing" && orderId) {
-      interval = setInterval(async () => {
-        if (isPolling) return;
-        isPolling = true;
+    // Info: (20260302 - Tzuhan) [流程 5-4: 啟動輪詢] 抽出輪詢邏輯為獨立的非同步函式
+    const pollOrderStatus = async () => {
+      // Info: (20260303 - Tzuhan) 若狀態已經不是處理中，或沒有 orderId，或元件已卸載，則直接終止
+      if (step !== "processing" || !orderId || !mounted) return;
 
-        try {
-          // Info: (20260302 - Tzuhan) [流程 5-5: 呼叫訂單狀態 API] 每 3 秒呼叫一次後端 /api/v1/user/order/[order_id] 以檢查訂單是否更新
-          const res = await request<{ payload?: { status: string; transactionHash?: string; errorMessage?: string } }>(
-            `/api/v1/user/order/${orderId}`
-          );
+      try {
+        // Info: (20260302 - Tzuhan) [流程 5-5: 呼叫訂單狀態 API] 檢查訂單是否更新
+        const res = await request<{ payload?: IOrderStatusResponse }>(
+          `/api/v1/user/order/${orderId}`
+        );
 
-          if (res?.payload) {
-            const { status, transactionHash: tHash, errorMessage } = res.payload;
-            if (status === "COMPLETED") {
-              // Info: (20260302 - Tzuhan) [流程 5-6a: 訂單完成] 清除輪詢器，刷新使用者資訊，並跳轉至「成功」畫面
-              clearInterval(interval);
-              await refreshAuth();
-              if (tHash) setTxHash(tHash);
-              setStep("success");
-              if (tHash) onSuccess(tHash);
-            } else if (status === "FAILED" || status === "MINT_FAILED") {
-              // Info: (20260302 - Tzuhan) [流程 5-6b: 訂單失敗] 清除輪詢器，設定錯誤訊息並跳轉至「失敗」畫面
-              clearInterval(interval);
-              setError(errorMessage || "Payment processing failed. Please try again.");
-              setStep("error");
-            }
+        // Info: (20260303 - Tzuhan) 防禦：如果等待 API 期間使用者關閉了彈窗（元件卸載），不應繼續更新 State
+        if (!mounted) return;
+
+        if (res?.payload) {
+          const { status, transactionHash: tHash, errorMessage } = res.payload;
+
+          if (status === "COMPLETED") {
+            // Info: (20260302 - Tzuhan) [流程 5-6a: 訂單完成]
+            await refreshAuth();
+            if (tHash) setTxHash(tHash);
+            setStep("success");
+            if (tHash) onSuccess(tHash);
+            return; // Info: (20260303 - Tzuhan) 成功即終止，不再呼叫 setTimeout
+
+          } else if (status === "FAILED" || status === "MINT_FAILED") {
+            // Info: (20260302 - Tzuhan) [流程 5-6b: 訂單失敗]
+            setError(errorMessage || "Payment processing failed. Please try again.");
+            setStep("error");
+            return; // Info: (20260303 - Tzuhan) 失敗即終止，不再呼叫 setTimeout
           }
-        } catch (err) {
-          console.error("Failed to poll order status:", err);
-        } finally {
-          isPolling = false;
         }
-      }, 3000);
+
+        // Info: (20260302 - Tzuhan) 若狀態仍為 PENDING，排程下一次輪詢
+        // Info: (20260303 - Tzuhan) 使用 setTimeout 的好處：確保是「前一次請求完成後」才開始倒數 3 秒，絕對不會發生請求堆疊
+        if (mounted) {
+          timeoutId = setTimeout(pollOrderStatus, 3000);
+        }
+
+      } catch (err) {
+        console.error("Failed to poll order status:", err);
+        // Info: (20260303 - Tzuhan) 遇到網路瞬斷也可以容錯，繼續排程下一次輪詢
+        if (mounted) {
+          timeoutId = setTimeout(pollOrderStatus, 3000);
+        }
+      }
+    };
+
+    // Info: (20260303 - Tzuhan) 滿足條件時觸發第一次輪詢
+    if (step === "processing" && orderId) {
+      pollOrderStatus();
     }
 
+    // Info: (20260303 - Tzuhan) 清理函式 (Cleanup Function)
     return () => {
-      if (interval) clearInterval(interval);
+      mounted = false; // Info: (20260303 - Tzuhan) 標記元件已卸載，阻斷尚未回來的 API 更新 State
+      if (timeoutId) {
+        clearTimeout(timeoutId); // Info: (20260303 - Tzuhan) 清除尚未執行的計時器
+      }
     };
   }, [step, orderId, refreshAuth, onSuccess]);
 
@@ -176,11 +185,7 @@ export default function PaymentModal({
       // Info: (20260302 - Tzuhan) 取得應援科技(OEN)結帳頁面 URL 或是直接扣款結果
       const response = await request<{
         message?: string;
-        payload?: {
-          requireBinding: boolean;
-          redirectUrl?: string;
-          txHash?: string;
-        };
+        payload?: IOenCheckoutResponse;
       }>("/api/v1/payment/oen/checkout", {
         method: "POST",
         body: JSON.stringify({
@@ -343,8 +348,8 @@ export default function PaymentModal({
                                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                     {(user.paymentMethods || []).map((pm) => {
                                       const data = pm.data as Record<string, string> | undefined;
-                                      const brand: string = (data?.cardBrand || data?.card_brand || data?.issuer) ? String(data.cardBrand || data.card_brand || data.issuer) : "信用卡";
-                                      const last4: string = (data?.card4No || data?.card4no || data?.card_4no) ? String(data.card4No || data.card4no || data.card_4no) : "****";
+                                      const brand: string = (data?.cardBrand || data?.issuer) ? String(data.cardBrand || data.issuer) : "信用卡";
+                                      const last4: string = (data?.card4no) ? String(data.card4no) : "****";
                                       const isSelected = selectedPaymentMethodId === pm.id;
 
                                       return (

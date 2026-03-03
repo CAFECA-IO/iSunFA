@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { IOenCheckoutRequest, IOenOrderData } from "@/interfaces/payment";
+import { Prisma } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { mintToAddress } from "@/services/token.service";
@@ -20,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Info: (20260302 - Tzuhan) [流程 3-2: 取得訂單參數] 解析前端傳來的購買金額、點數、以及是否使用已綁定信用卡的選項
-    const { amount, credits, paymentMethodId } = await request.json();
+    const { amount, credits, paymentMethodId } = (await request.json()) as IOenCheckoutRequest;
     console.log(
       `[OEN Checkout] Request received: amount=${amount}, credits=${credits}, paymentMethodId=${paymentMethodId}, userId=${user.id}`,
     );
@@ -177,7 +179,7 @@ export async function POST(request: NextRequest) {
           data: {
             status: "COMPLETED",
             transactionHash: txHash,
-            data: { ...(order.data as object), checkoutResponse: oenData },
+            data: { ...(order.data as IOenOrderData), checkoutResponse: oenData } as Prisma.InputJsonObject,
           },
         });
         console.log(
@@ -206,7 +208,7 @@ export async function POST(request: NextRequest) {
           where: { id: order.id },
           data: {
             status: "FAILED",
-            data: { ...(order.data as object), checkoutResponse: oenData },
+            data: { ...(order.data as IOenOrderData), checkoutResponse: oenData } as Prisma.InputJsonObject,
           },
         });
         return jsonFail(
@@ -233,10 +235,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      const hostUrl = request.headers.get("host") || "localhost:3000";
-      const protocol = hostUrl.includes("localhost") ? "http" : "https";
-      const originBase = `${protocol}://${hostUrl}`;
-
+      const originBase = request.nextUrl.origin;
       const webhookBase = process.env.NEXT_PUBLIC_APP_URL || originBase;
 
       console.log(`[OEN Checkout] webhookBase: ${webhookBase}`);
@@ -276,7 +275,7 @@ export async function POST(request: NextRequest) {
 
         await prisma.order.update({
           where: { id: order.id },
-          data: { data: { ...(order.data as object), paymentId: paymentId } },
+          data: { data: { ...(order.data as IOenOrderData), paymentId: paymentId } as Prisma.InputJsonObject },
         });
 
         return jsonOk({

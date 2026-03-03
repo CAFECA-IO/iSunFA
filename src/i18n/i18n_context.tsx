@@ -8,20 +8,25 @@ import { ko } from '@/i18n/ko';
 import { ja } from '@/i18n/ja';
 
 export type Language = 'en' | 'zh-TW' | 'zh-CN' | 'ko' | 'ja';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Dictionary = any;
+type Dictionary = Record<string, unknown>;
 
-// Info: (20260120 - Luphia) Helper to get nested value by key string "auth_modal.login_btn"
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getNestedValue(obj: any, path: string): string {
-  const value = path.split('.').reduce((prev, curr) => (prev ? prev[curr] : undefined), obj);
-  return value !== undefined ? value : path;
+function getNestedValue<T = string>(obj: Record<string, unknown>, path: string): T {
+  const value = path.split('.').reduce((prev: unknown, curr: string) => {
+    if (prev && typeof prev === 'object' && !Array.isArray(prev)) {
+      return (prev as Record<string, unknown>)[curr];
+    }
+    return undefined;
+  }, obj);
+  return value !== undefined ? (value as T) : (path as unknown as T);
 }
 
 interface II18nContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string, options?: Record<string, string | number>) => string;
+  t: {
+    (key: string, options?: Record<string, string | number>): string;
+    <T>(key: string, options?: Record<string, string | number>): T;
+  };
 }
 
 const I18nContext = createContext<II18nContextType | undefined>(undefined);
@@ -53,14 +58,16 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('isunfa_lang', lang);
   };
 
-  const t = (key: string, options?: Record<string, string | number>): string => {
-    let text = getNestedValue(dictionary, key);
-    if (options) {
+  const t = <T = string>(key: string, options?: Record<string, string | number>): T => {
+    const text: unknown = getNestedValue<unknown>(dictionary, key);
+    if (options && typeof text === 'string') {
+      let stringText = text;
       Object.entries(options).forEach(([k, v]) => {
-        text = text.replace(new RegExp(`{{${k}}}`, 'g'), String(v));
+        stringText = stringText.replace(new RegExp(`{{${k}}}`, 'g'), String(v));
       });
+      return stringText as T;
     }
-    return text;
+    return text as T;
   };
 
   return (
