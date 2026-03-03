@@ -154,7 +154,7 @@ export default function PricingPage() {
 
       router.replace(pathname, { scroll: false });
     }
-  }, [searchParams]);
+  }, [searchParams, pathname, router]);
 
   useEffect(() => {
     const fetchPlans = async () => {

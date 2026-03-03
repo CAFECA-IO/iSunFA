@@ -1,7 +1,7 @@
 "use server";
 
 // Info: (20260126 - Luphia) 伺服器端操作：處理部署與鑄造邏輯
-import { parseAbi, getAddress } from "viem";
+import { parseAbi, getAddress, parseEther, encodeFunctionData, toHex } from "viem";
 import { account, publicClient, walletClient } from "@/lib/viem";
 import IR_ARTIFACT from "@erc3643org/erc-3643/artifacts/contracts/registry/implementation/IdentityRegistry.sol/IdentityRegistry.json";
 import IRS_ARTIFACT from "@erc3643org/erc-3643/artifacts/contracts/registry/implementation/IdentityRegistryStorage.sol/IdentityRegistryStorage.json";
@@ -221,7 +221,7 @@ export async function mintToAddress(
       );
     }
     const validTo = getAddress(to);
-    const amountBigInt = BigInt(amount) * BigInt(10) ** BigInt(18);
+    const amountBigInt = parseEther(amount.toString());
 
     /**
      * Info: (20260126 - Luphia) 預先檢查：用戶是否有 Identity?
@@ -241,9 +241,7 @@ export async function mintToAddress(
     ]);
 
     // Info: (20260126 - Luphia) 嘗試 Mint
-    let data;
-    const { encodeFunctionData, toHex } = await import("viem");
-    data = encodeFunctionData({
+    let data: `0x${string}` = encodeFunctionData({
       abi: tokenAbi,
       functionName: "batchMint",
       args: [[validTo], [amountBigInt]],
@@ -384,7 +382,7 @@ export async function forcedTransfer(
     }
     const validFrom = getAddress(from);
     const validTo = getAddress(to);
-    const amountBigInt = BigInt(Math.floor(amount * 10 ** 18)); // Ensure integer
+    const amountBigInt = parseEther(amount.toString());
 
     const tokenAbi = parseAbi([
       "function forcedTransfer(address, address, uint256) external returns (bool)",
@@ -429,7 +427,7 @@ export async function burn(
       );
     }
     const validFrom = getAddress(from);
-    const amountBigInt = BigInt(amount) * BigInt(10) ** BigInt(18);
+    const amountBigInt = parseEther(amount.toString());
 
     const tokenAbi = parseAbi(["function burn(address, uint256) external"]);
 
@@ -478,7 +476,7 @@ async function toggleFreeze(
       );
     }
     const validTarget = getAddress(target);
-    const amountBigInt = BigInt(amount) * BigInt(10) ** BigInt(18);
+    const amountBigInt = parseEther(amount.toString());
     const functionName = isFreeze
       ? "freezePartialTokens"
       : "unfreezePartialTokens";

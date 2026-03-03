@@ -47,10 +47,10 @@ export async function POST(request: NextRequest) {
     const providerToken = oenPaymentMethod?.token;
 
     console.log(
-      `[OEN Checkout] User ${JSON.stringify(dbUser)} fetched from DB: hasTokens=${!!providerToken}`,
+      `[OEN Checkout] User ID: ${dbUser.id} fetched from DB: hasTokens=${!!providerToken}`,
     );
 
-    if (paymentMethodId && providerToken && oenPaymentMethod) {
+    if (providerToken) {
       // Info: (20260302 - Tzuhan) [流程 3-4a: 使用儲存的卡片直接扣款] 前端選擇使用舊卡，且後端確實有存 token
       console.log(`[OEN Checkout] Flow: Directly charge using saved token`);
 
