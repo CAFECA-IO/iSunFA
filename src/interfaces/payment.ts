@@ -33,13 +33,6 @@ export type IOenOrderData = {
     error?: string;
 };
 
-export interface IOenCardData {
-    card4no?: string;
-    cardBrand?: string;
-    issuer?: string;
-    paymentInfo?: string;
-}
-
 export interface IOenCheckoutRequest {
     amount: number;
     credits: number;

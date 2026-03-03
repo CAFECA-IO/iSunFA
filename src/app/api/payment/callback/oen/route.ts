@@ -6,7 +6,7 @@ import { Prisma } from "@/generated/client";
 
 const OEN_TRANSACTION_TOKEN = process.env.OEN_TRANSACTION_TOKEN;
 
-import { IOenCallbackPayload, IOenCardData, IOenOrderData } from "@/interfaces/payment";
+import { IOenCallbackPayload, IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
 
 export async function POST(request: NextRequest) {
     try {
@@ -95,20 +95,12 @@ export async function POST(request: NextRequest) {
                 console.log(`[OEN Callback] Token already exists for user ${order.userId}`);
             } else {
                 const rawBody = body as Record<string, unknown>;
-                const mergedData: IOenCardData = body.data ? { ...body.data } : {};
+                const mergedData: IOenCallbackData = body.data ? { ...body.data } : {};
 
-                if (rawBody.card4no) {
-                    mergedData.card4no = String(rawBody.card4no);
-                }
-                if (rawBody.paymentInfo) {
-                    mergedData.paymentInfo = String(rawBody.paymentInfo);
-                }
-                if (rawBody.cardBrand) {
-                    mergedData.cardBrand = String(rawBody.cardBrand);
-                }
-                if (rawBody.issuer) {
-                    mergedData.issuer = String(rawBody.issuer);
-                }
+                if (rawBody.card4no) mergedData.card4no = String(rawBody.card4no);
+                if (rawBody.paymentInfo) mergedData.paymentInfo = String(rawBody.paymentInfo);
+                if (rawBody.cardBrand) mergedData.cardBrand = String(rawBody.cardBrand);
+                if (rawBody.issuer) mergedData.issuer = String(rawBody.issuer);
 
                 const paymentMethod = await prisma.paymentMethod.create({
                     data: {
