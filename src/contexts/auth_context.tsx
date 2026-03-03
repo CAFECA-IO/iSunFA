@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             userData = { ...userData, credits, isVerified };
           }
         } catch (e) {
-          console.warn('Failed to fetch user balance:', e);
+          console.warn("Deprecate: (20260310 - Tzuhan) ", 'Failed to fetch user balance:', e);
         }
         setUser(userData);
       } else {
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('dewt');
       }
     } catch (error) {
-      console.error('Failed to fetch user:', error);
+      console.error("Deprecate: (20260310 - Tzuhan) ", 'Failed to fetch user:', error);
       setUser(null);
       localStorage.removeItem('dewt');
     } finally {

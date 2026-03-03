@@ -55,7 +55,7 @@ export async function GET(
             errorMessage
         });
     } catch (error) {
-        console.error("[API] GET /user/order/[id] error:", error);
+        console.error("Deprecate: (20260310 - Tzuhan) ", "[API] GET /user/order/[id] error:", error);
         return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Failed to fetch order details");
     }
 }

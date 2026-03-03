@@ -67,7 +67,7 @@ export default function PaymentModal({
         setOriginalCredits(null);
       }
 
-      console.log("[PaymentModal] Initializing with user paymentMethods:", user?.paymentMethods);
+      console.log("Deprecate: (20260310 - Tzuhan) ", "[PaymentModal] Initializing with user paymentMethods:", user?.paymentMethods);
 
       setAgreedToTerms(false);
       setSelectedPaymentMethodId(user?.paymentMethods?.[0]?.id || "new");
@@ -136,7 +136,7 @@ export default function PaymentModal({
         }
 
       } catch (err) {
-        console.error("Failed to poll order status:", err);
+        console.error("Deprecate: (20260310 - Tzuhan) ", "Failed to poll order status:", err);
         // Info: (20260303 - Tzuhan) 遇到網路瞬斷也可以容錯，繼續排程下一次輪詢
         if (mounted) {
           timeoutId = setTimeout(pollOrderStatus, 3000);
@@ -215,7 +215,7 @@ export default function PaymentModal({
       }
     } catch (err) {
       // [流程 2-3c: 捕捉錯誤] 若扣款 API 發生異常，顯示失敗畫面
-      console.error("Payment Submission failed:", err);
+      console.error("Deprecate: (20260310 - Tzuhan) ", "Payment Submission failed:", err);
       const errorMessage =
         (err as Error).message ||
         "Payment processing failed. Please try again.";

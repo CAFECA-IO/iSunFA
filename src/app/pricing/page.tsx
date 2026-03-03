@@ -166,10 +166,10 @@ export default function PricingPage() {
         if (response && response.payload) {
           setPricingPlans(response.payload);
         } else {
-          console.error("Invalid plans response");
+          console.error("Deprecate: (20260310 - Tzuhan) ", "Invalid plans response");
         }
       } catch (e) {
-        console.error("Failed to fetch plans", e);
+        console.error("Deprecate: (20260310 - Tzuhan) ", "Failed to fetch plans", e);
       } finally {
         setLoadingPlans(false);
       }

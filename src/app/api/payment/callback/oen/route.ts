@@ -27,15 +27,14 @@ export async function POST(request: NextRequest) {
                 body = JSON.parse(bodyText);
             }
         } catch (e) {
-            console.error("[OEN Callback] Failed to parse payload:", e);
+            console.error("Deprecate: (20260310 - Tzuhan) ", "[OEN Callback] Failed to parse payload:", e);
             return NextResponse.json(
                 { message: "Invalid payload format" },
                 { status: 400 },
             );
         }
 
-        console.log(
-            "[OEN Callback] Received payload:",
+        console.log("Deprecate: (20260310 - Tzuhan) ", "[OEN Callback] Received payload:",
             JSON.stringify(body, null, 2),
         );
 
@@ -44,21 +43,20 @@ export async function POST(request: NextRequest) {
             try {
                 customId = JSON.parse(customId).orderId || customId;
             } catch (e) {
-                console.warn("[OEN Callback] Failed to parse customId as JSON:", e);
+                console.warn("Deprecate: (20260310 - Tzuhan) ", "[OEN Callback] Failed to parse customId as JSON:", e);
             }
         }
-        console.log(`[OEN Callback] Parsed customId (orderId): ${customId}`);
+        console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Parsed customId (orderId): ${customId}`);
 
 
         const token = body.token || body.data?.token;
         const status =
             body.status || body.data?.status || body.success ? "SUCCESS" : "";
-        console.log(
-            `[OEN Callback] Extracted token: ${token ? "yes" : "no"}, status: ${status}`,
+        console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Extracted token: ${token ? "yes" : "no"}, status: ${status}`,
         );
 
         if (!customId) {
-            console.error(`[OEN Callback] No customId provided in payload`);
+            console.error("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] No customId provided in payload`);
             return NextResponse.json(
                 { message: "No customId provided" },
                 { status: 400 },
@@ -72,11 +70,10 @@ export async function POST(request: NextRequest) {
         });
 
         if (!order) {
-            console.error(`[OEN Callback] Order not found for customId: ${customId}`);
+            console.error("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Order not found for customId: ${customId}`);
             return NextResponse.json({ message: "Order not found" }, { status: 404 });
         }
-        console.log(
-            `[OEN Callback] Found order: id=${order.id}, type=${order.type}, status=${order.status}, userId=${order.userId}`,
+        console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Found order: id=${order.id}, type=${order.type}, status=${order.status}, userId=${order.userId}`,
         );
 
 
@@ -94,7 +91,7 @@ export async function POST(request: NextRequest) {
 
             if (existingMethod) {
                 paymentMethodId = existingMethod.id;
-                console.log(`[OEN Callback] Token already exists for user ${order.userId}`);
+                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Token already exists for user ${order.userId}`);
             } else {
                 const rawBody = body as Record<string, unknown>;
                 const mergedData: IOenCallbackData = body.data ? { ...body.data } : {};
@@ -113,7 +110,7 @@ export async function POST(request: NextRequest) {
                     },
                 });
                 paymentMethodId = paymentMethod.id;
-                console.log(`[OEN Callback] Saved token for user ${order.userId} in PaymentMethod`);
+                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Saved token for user ${order.userId} in PaymentMethod`);
             }
         }
 
@@ -124,14 +121,12 @@ export async function POST(request: NextRequest) {
         if (isPaymentSuccess && isBindingOrder) {
             // Info: (20260302 - Tzuhan) [流程 4-4: 發動正式扣款] 確認綁卡成功且原始訂單為發起綁卡狀態，則進入正式扣款流程
             const orderData = order.data as IOenOrderData;
-            console.log(
-                `[OEN Callback] Processing successful binding for order ${order.id}, credits=${orderData.credits}, amount=${orderData.amount}`,
+            console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Processing successful binding for order ${order.id}, credits=${orderData.credits}, amount=${orderData.amount}`,
             );
 
             if (orderData.credits && orderData.amount && token) {
 
-                console.log(
-                    `[OEN Callback] Charging bound token for order ${order.id}...`,
+                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Charging bound token for order ${order.id}...`,
                 );
 
                 // Info: (20260302 - Tzuhan) [流程 4-5: 建立 OEN_PAYMENT 扣款訂單]
@@ -148,8 +143,7 @@ export async function POST(request: NextRequest) {
                         },
                     },
                 });
-                console.log(
-                    `[OEN Callback] Created OEN_PAYMENT chargeOrder: ${chargeOrder.id}`,
+                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Created OEN_PAYMENT chargeOrder: ${chargeOrder.id}`,
                 );
 
                 // Info: (20260302 - Tzuhan) 建立 Transaction 紀錄，與訂單及信用卡綁定
@@ -163,15 +157,14 @@ export async function POST(request: NextRequest) {
                         status: "PENDING",
                     }
                 });
-                console.log(`[OEN Callback] Created payment transaction: ${paymentTransaction.id}`);
+                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Created payment transaction: ${paymentTransaction.id}`);
 
                 // Info: (20260302 - Tzuhan) [流程 4-6: 更新原始綁卡訂單] 綁卡階段已結束，將其標示為 COMPLETED
                 await prisma.order.update({
                     where: { id: order.id },
                     data: { status: "COMPLETED" },
                 });
-                console.log(
-                    `[OEN Callback] Marked binding order ${order.id} as COMPLETED`,
+                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Marked binding order ${order.id} as COMPLETED`,
                 );
 
                 // Info: (20260302 - Tzuhan) [流程 4-7: 呼叫 OEN API 進行扣款] (與流程 3-6a 相同)，使用剛剛取得的 token 進行請款
@@ -208,8 +201,7 @@ export async function POST(request: NextRequest) {
 
                 if (oenData.code === "S0000" || oenRes.ok) {
                     // Info: (20260302 - Tzuhan) [流程 4-8: 扣款成功，鑄造代幣] (同流程 3-7a) 發行點數至用戶錢包
-                    console.log(
-                        `[OEN Callback] Charge successful for order ${chargeOrder.id}, proceeding to mint points.`,
+                    console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Charge successful for order ${chargeOrder.id}, proceeding to mint points.`,
                     );
 
                     // Info: (20260302 - Tzuhan) 將實體交易紀錄標示為成功
@@ -248,8 +240,7 @@ export async function POST(request: NextRequest) {
                                 } as Prisma.InputJsonObject,
                             },
                         });
-                        console.log(
-                            `[OEN Callback] Order ${chargeOrder.id} completed, minted ${orderData.credits} credits. txHash: ${txHash}`,
+                        console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Order ${chargeOrder.id} completed, minted ${orderData.credits} credits. txHash: ${txHash}`,
                         );
                     } else {
                         await prisma.order.update({
@@ -264,13 +255,11 @@ export async function POST(request: NextRequest) {
                                 } as Prisma.InputJsonObject,
                             },
                         });
-                        console.error(
-                            `[OEN Callback] Mint failed for order ${chargeOrder.id}: ${mintResult.message}`,
+                        console.error("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Mint failed for order ${chargeOrder.id}: ${mintResult.message}`,
                         );
                     }
                 } else {
-                    console.error(
-                        `[OEN Callback] Charge failed for order ${chargeOrder.id}:`,
+                    console.error("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Charge failed for order ${chargeOrder.id}:`,
                         oenData,
                     );
 
@@ -298,8 +287,7 @@ export async function POST(request: NextRequest) {
                     });
                 }
             } else if (!token) {
-                console.log(
-                    `[OEN Callback] No token received for order ${order.id}, cannot charge.`,
+                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] No token received for order ${order.id}, cannot charge.`,
                 );
 
             }
@@ -307,7 +295,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ message: "OK" });
     } catch (error) {
-        console.error("[OEN Callback] Error processing webhook:", error);
+        console.error("Deprecate: (20260310 - Tzuhan) ", "[OEN Callback] Error processing webhook:", error);
         return NextResponse.json(
             { message: "Internal Server Error" },
             { status: 500 },

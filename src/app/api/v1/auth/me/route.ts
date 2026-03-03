@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
         credits = Number(chainCredits);
         */
       } catch (err) {
-        console.warn(`[API] /auth/me failed to read contract for ${user.identityAddress}:`, err);
+        console.warn("Deprecate: (20260310 - Tzuhan) ", `[API] /auth/me failed to read contract for ${user.identityAddress}:`, err);
       }
     }
 
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
       pendingCredits,
     });
   } catch (error) {
-    console.error('[API] /auth/me error:', error);
+    console.error("Deprecate: (20260310 - Tzuhan) ", '[API] /auth/me error:', error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Internal Server Error');
   }
 }
