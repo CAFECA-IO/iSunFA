@@ -52,7 +52,8 @@ export async function GET(
             id: order.id,
             status: order.status,
             transactionHash: order.transactionHash,
-            errorMessage
+            errorMessage,
+            data: order.data,
         });
     } catch (error) {
         console.error("Deprecate: (20260310 - Tzuhan) ", "[API] GET /user/order/[id] error:", error);

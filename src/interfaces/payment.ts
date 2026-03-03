@@ -21,6 +21,8 @@ export type IOenCallbackPayload = {
 
 export type IOenOrderData = {
     credits?: number;
+    previousCredits?: number;
+    issuer?: string;
     amount?: number;
     paymentId?: string;
     bindingOrderId?: string;
@@ -33,6 +35,7 @@ export type IOenOrderData = {
 
 export interface IOenCheckoutRequest {
     amount: number;
+    previousCredits: number;
     credits: number;
     paymentMethodId?: string | null;
 }
@@ -49,6 +52,7 @@ export interface IOrderStatusResponse {
     status: string;
     transactionHash?: string;
     errorMessage?: string;
+    data?: Partial<IOenOrderData>;
 }
 
 export interface IPaymentModalProps {
