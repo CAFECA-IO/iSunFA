@@ -104,16 +104,16 @@ export class ChatService {
     `;
   }
 
-  async generateResponse(message: string, tags: string[] = [], image?: string, mimeType?: string): Promise<string> {
+  async generateResponse(message: string, tags: string[] = [], file?: string, mimeType?: string): Promise<string> {
     const model = this.genAI.getGenerativeModel({ model: this.modelName });
     const prompt = this.getPrompt(message, tags);
 
     const parts: Part[] = [{ text: prompt }];
 
-    if (image) {
+    if (file) {
       parts.push({
         inlineData: {
-          data: image,
+          data: file,
           mimeType: mimeType || 'image/jpeg',
         },
       });

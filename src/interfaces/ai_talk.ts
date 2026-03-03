@@ -29,21 +29,19 @@ export interface IComment {
   userReaction: UserReaction; // Info: (20260212 - Julian) 使用者對該評論的按讚、倒讚
 }
 
-export interface IAttachment {
+export interface IFile {
   id: string;
-  fileName: string;
-  url: string;
-  fileSize: number;
-  mimeType: string; // Info: (20260209 - Julian) 檔案類型，例如 "image/jpeg"
-  dimensions?: {
-    // Info: (20260209 - Julian) 可選：圖片寬高，有助於前端預留 Layout 空間
-    width: number;
-    height: number;
-  };
-  thumbnailUrl?: string; // Info: (20260209 - Julian) 可選：縮圖路徑，加速列表讀取速度
+  hash: string; // Info: (20260226 - Julian) 上傳至 IPFS 後，檔案的 Hash 值就是檔案 id
+  threadId: string; // Info: (20260226 - Julian) 檔案所屬的討論串 id
+  
+  fileName?: string;
+  mimeType?: string;
+  metadata?: string;
+  fileSize?: number;
+  base64?: string;
 }
 
 export interface IThreadDetail extends IThread {
   userReaction: UserReaction; // Info: (20260212 - Julian) 使用者對該討論串的按讚、倒讚
-  attachments: IAttachment[];
+  file: IFile[];
 }

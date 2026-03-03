@@ -13,7 +13,7 @@ import {
   MessageSquare,
   ThumbsUp,
   ThumbsDown,
-  Share2,
+  // Share2,
   Clock,
   User,
   Sparkles,
@@ -178,10 +178,10 @@ export default function AiTalkDetailPage() {
             </p>
 
             {/* Info: (20260206 - Julian) 附件預覽 */}
-            {data.attachments.length > 0 && (
+            {data.file && data.file.length > 0 && (
               <div className="mt-6 flex flex-wrap gap-3">
-                {data.attachments.map((attachment) => (
-                  <AttachmentItem key={attachment.id} attachment={attachment} />
+                {data.file.map((file) => (
+                  <AttachmentItem key={file.id} file={file} />
                 ))}
               </div>
             )}
@@ -269,12 +269,13 @@ export default function AiTalkDetailPage() {
               </button>
             </div>
 
-            <div className="flex items-center gap-4">
+            {/* ToDo: (20260302 - Julian) 實作分享功能 */}
+            {/* <div className="flex items-center gap-4">
               <button className="flex items-center gap-2 text-orange-600 bg-white border border-orange-200 px-5 py-2.5 rounded-2xl font-bold hover:bg-orange-50 transition-all">
                 <Share2 size={18} />
                 <span>{t("ai_consultation_room.share_knowledge")}</span>
               </button>
-            </div>
+            </div> */}
           </footer>
         </section>
 

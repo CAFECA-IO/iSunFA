@@ -24,7 +24,6 @@ export default function PricingPage() {
   const pathname = usePathname();
   const initialTab =
     searchParams.get("tab") === "credits" ? "credits" : "subscription";
-
   const [billingInterval, setBillingInterval] = useState<"month" | "year">(
     "month",
   );
