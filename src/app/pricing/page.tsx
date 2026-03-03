@@ -612,14 +612,14 @@ export default function PricingPage() {
                       </div>
                       <button
                         onClick={() => {
-                          // [流程 1-1: 選擇方案] 使用者在定價頁面點擊某個方案的「購買」按鈕
+                          // Info: (20260302 - Tzuhan) [流程 1-1: 選擇方案] 使用者在定價頁面點擊某個方案的「購買」按鈕
                           if (!user) {
-                            // [流程 1-2: 檢查登入狀態] 若尚未登入，則喚起登入/註冊流程
+                            // Info: (20260302 - Tzuhan) [流程 1-2: 檢查登入狀態] 若尚未登入，則喚起登入/註冊流程
                             setAuthModalOpen(true);
                             return;
                           }
 
-                          // [流程 1-3: 準備付款狀態] 記錄選擇的方案點數、金額以及顯示的價格，將狀態傳遞給後續的 PaymentModal 開啟使用
+                          // Info: (20260302 - Tzuhan) [流程 1-3: 準備付款狀態] 記錄選擇的方案點數、金額以及顯示的價格，將狀態傳遞給後續的 PaymentModal 開啟使用
                           setPendingCredits(plan.credits);
                           setPendingBaseCredits(baseCredits);
                           setPendingBonusCredits(bonus);
