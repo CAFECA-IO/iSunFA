@@ -1,9 +1,15 @@
-'use client';
+"use client";
 
-import { Fragment, useState, useEffect } from 'react';
-import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react';
-import { Globe, ChevronDown, Check } from 'lucide-react';
-import { useTranslation, Language } from '@/i18n/i18n_context';
+import { Fragment, useState, useEffect } from "react";
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Transition,
+} from "@headlessui/react";
+import { Globe, ChevronDown, Check } from "lucide-react";
+import { useTranslation, Language } from "@/i18n/i18n_context";
 
 export default function LanguageSelector() {
   const { language, setLanguage } = useTranslation();
@@ -15,14 +21,15 @@ export default function LanguageSelector() {
   }, []);
 
   const languages: { code: Language; label: string }[] = [
-    { code: 'zh-TW', label: '繁體中文' },
-    { code: 'zh-CN', label: '简体中文' },
-    { code: 'en', label: 'English' },
-    { code: 'ko', label: '한국어' },
-    { code: 'ja', label: '日本語' },
+    { code: "zh-TW", label: "繁體中文" },
+    { code: "zh-CN", label: "简体中文" },
+    { code: "en", label: "English" },
+    { code: "ko", label: "한국어" },
+    { code: "ja", label: "日本語" },
   ];
 
-  const currentLangLabel = languages.find(l => l.code === language)?.label || 'Language';
+  const currentLangLabel =
+    languages.find((l) => l.code === language)?.label || "Language";
 
   if (!mounted) return null;
 
@@ -49,8 +56,8 @@ export default function LanguageSelector() {
                 <button
                   onClick={() => setLanguage(lang.code)}
                   className={`
-                    ${focus ? 'bg-orange-50' : ''}
-                    ${language === lang.code ? 'font-bold text-orange-600' : 'text-gray-700'}
+                    ${focus ? "bg-orange-50" : ""}
+                    ${language === lang.code ? "font-bold text-orange-600" : "text-gray-700"}
                     group flex w-full items-center justify-between px-4 py-2 text-sm
                   `}
                 >

@@ -1,13 +1,27 @@
-'use client';
+"use client";
 
-import { Fragment } from 'react';
-import Link from 'next/link';
-import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react';
-import { User, LogOut, ChevronDown, Settings, CreditCard, Users, LayoutDashboard } from 'lucide-react';
-import { MODULES } from '@/constants/modules';
-import { useAuth } from '@/contexts/auth_context';
-import { useTranslation } from '@/i18n/i18n_context';
-import LoginButton from '@/components/common/login_button';
+import { Fragment } from "react";
+import Link from "next/link";
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Transition,
+} from "@headlessui/react";
+import {
+  User,
+  LogOut,
+  ChevronDown,
+  Settings,
+  CreditCard,
+  Users,
+  LayoutDashboard,
+} from "lucide-react";
+import { MODULES } from "@/constants/modules";
+import { useAuth } from "@/contexts/auth_context";
+import { useTranslation } from "@/i18n/i18n_context";
+import LoginButton from "@/components/common/login_button";
 
 export default function UserActions() {
   const { user, logout, refreshAuth } = useAuth();
@@ -20,14 +34,15 @@ export default function UserActions() {
   };
 
   if (!user) {
-    return (
-      <LoginButton />
-    );
+    return <LoginButton />;
   }
 
   return (
     <Menu as="div" className="relative">
-      <MenuButton onClick={refreshAuth} className="flex items-center gap-x-2 rounded-full bg-white pl-1 pr-3 py-1 text-sm font-semibold leading-6 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 hover:ring-orange-300 transition-all focus:outline-none">
+      <MenuButton
+        onClick={refreshAuth}
+        className="flex items-center gap-x-2 rounded-full bg-white pl-1 pr-3 py-1 text-sm font-semibold leading-6 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 hover:ring-orange-300 transition-all focus:outline-none"
+      >
         <span className="h-8 w-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 ring-1 ring-inset ring-orange-100">
           <User className="h-5 w-5" />
         </span>
@@ -52,16 +67,23 @@ export default function UserActions() {
                   <User className="h-5 w-5 md:h-6 md:w-6" />
                 </div>
                 <div className="overflow-hidden">
-                  <p className="text-sm font-bold text-gray-900 truncate max-w-[120px] md:max-w-none">{user.name || 'User'}</p>
-                  <p className="text-xs text-gray-500 truncate max-w-[120px] md:max-w-none">{user.address}</p>
+                  <p className="text-sm font-bold text-gray-900 truncate max-w-[120px] md:max-w-none">
+                    {user.name || "User"}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate max-w-[120px] md:max-w-none">
+                    {user.address}
+                  </p>
                 </div>
               </div>
-              <div className="text-right flex-shrink-0">
+              <div className="text-right shrink-0">
                 <div className="inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700 ring-1 ring-inset ring-orange-600/20 mb-1">
-                  {t(`pricing.plans.${user.plan || 'personal'}.name`)}
+                  {t(`pricing.plans.${user.plan || "personal"}.name`)}
                 </div>
                 <p className="text-xs text-gray-500">
-                  {t('header.credits')}: <span className="font-semibold text-gray-900">{user.credits?.toLocaleString() || 0}</span>
+                  {t("header.credits")}:{" "}
+                  <span className="font-semibold text-gray-900">
+                    {user.credits?.toLocaleString() || 0}
+                  </span>
                 </p>
               </div>
             </div>
@@ -71,7 +93,7 @@ export default function UserActions() {
             {/* Info: (20260118 - Luphia) Modules Grid */}
             <div className="mb-4">
               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 md:mb-3 px-1 md:px-2">
-                {t('sidebar.modules')}
+                {t("sidebar.modules")}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {MODULES.map((module) => {
@@ -79,17 +101,21 @@ export default function UserActions() {
                   const Icon = module.icon;
                   return (
                     <MenuItem key={module.key} as={Fragment}>
-                      {({ focus }) => (
+                      {({ focus }) =>
                         active ? (
                           <Link
                             href={`/user/${module.key}`}
                             className={`
-                                ${focus ? 'bg-orange-50 ring-1 ring-orange-200' : 'bg-white hover:bg-gray-50 ring-1 ring-gray-100'}
+                                ${focus ? "bg-orange-50 ring-1 ring-orange-200" : "bg-white hover:bg-gray-50 ring-1 ring-gray-100"}
                                 group flex flex-col items-center justify-center p-2 md:p-3 rounded-lg transition-all duration-200 h-full w-full
                               `}
                           >
-                            <Icon className={`h-5 w-5 md:h-6 md:w-6 mb-1 md:mb-2 ${focus ? 'text-orange-600' : 'text-gray-500 group-hover:text-orange-500'}`} />
-                            <span className={`text-xs md:text-sm font-medium ${focus ? 'text-orange-900' : 'text-gray-700'} text-center`}>
+                            <Icon
+                              className={`h-5 w-5 md:h-6 md:w-6 mb-1 md:mb-2 ${focus ? "text-orange-600" : "text-gray-500 group-hover:text-orange-500"}`}
+                            />
+                            <span
+                              className={`text-xs md:text-sm font-medium ${focus ? "text-orange-900" : "text-gray-700"} text-center`}
+                            >
                               {t(`chat.tags.${module.key}`)}
                             </span>
                           </Link>
@@ -101,7 +127,7 @@ export default function UserActions() {
                             </span>
                           </div>
                         )
-                      )}
+                      }
                     </MenuItem>
                   );
                 })}
@@ -111,7 +137,7 @@ export default function UserActions() {
             {/* Info: (20260118 - Luphia) Bottom System Actions */}
             <div>
               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 md:mb-3 px-1 md:px-2">
-                {t('sidebar.system')}
+                {t("sidebar.system")}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                 <MenuItem as={Fragment}>
@@ -119,12 +145,12 @@ export default function UserActions() {
                     <Link
                       href="/user/main"
                       className={`
-                            ${focus ? 'bg-gray-50 text-gray-900' : 'text-gray-600'}
+                            ${focus ? "bg-gray-50 text-gray-900" : "text-gray-600"}
                             group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50 h-full w-full
                           `}
                     >
                       <LayoutDashboard className="h-5 w-5 mb-1 text-gray-400 group-hover:text-gray-600" />
-                      {t('sidebar.dashboard')}
+                      {t("sidebar.dashboard")}
                     </Link>
                   )}
                 </MenuItem>
@@ -133,12 +159,12 @@ export default function UserActions() {
                     <Link
                       href="/user/team"
                       className={`
-                            ${focus ? 'bg-gray-50 text-gray-900' : 'text-gray-600'}
+                            ${focus ? "bg-gray-50 text-gray-900" : "text-gray-600"}
                             group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50 h-full w-full
                           `}
                     >
                       <Users className="h-5 w-5 mb-1 text-gray-400 group-hover:text-gray-600" />
-                      {t('sidebar.team')}
+                      {t("sidebar.team")}
                     </Link>
                   )}
                 </MenuItem>
@@ -147,12 +173,12 @@ export default function UserActions() {
                     <Link
                       href="/user/billing"
                       className={`
-                            ${focus ? 'bg-gray-50 text-gray-900' : 'text-gray-600'}
+                            ${focus ? "bg-gray-50 text-gray-900" : "text-gray-600"}
                             group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50 h-full w-full
                           `}
                     >
                       <CreditCard className="h-5 w-5 mb-1 text-gray-400 group-hover:text-gray-600" />
-                      {t('sidebar.billing')}
+                      {t("sidebar.billing")}
                     </Link>
                   )}
                 </MenuItem>
@@ -161,12 +187,12 @@ export default function UserActions() {
                     <Link
                       href="/user/settings"
                       className={`
-                            ${focus ? 'bg-gray-50 text-gray-900' : 'text-gray-600'}
+                            ${focus ? "bg-gray-50 text-gray-900" : "text-gray-600"}
                             group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50 h-full w-full
                           `}
                     >
                       <Settings className="h-5 w-5 mb-1 text-gray-400 group-hover:text-gray-600" />
-                      {t('sidebar.settings')}
+                      {t("sidebar.settings")}
                     </Link>
                   )}
                 </MenuItem>
@@ -175,12 +201,14 @@ export default function UserActions() {
                     <button
                       onClick={logout}
                       className={`
-                            ${focus ? 'bg-red-50 text-red-700' : 'text-gray-600'}
+                            ${focus ? "bg-red-50 text-red-700" : "text-gray-600"}
                             group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors hover:bg-red-50 h-full w-full
                           `}
                     >
-                      <LogOut className={`h-5 w-5 mb-1 ${focus ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'}`} />
-                      {t('header.logout')}
+                      <LogOut
+                        className={`h-5 w-5 mb-1 ${focus ? "text-red-500" : "text-gray-400 group-hover:text-red-500"}`}
+                      />
+                      {t("header.logout")}
                     </button>
                   )}
                 </MenuItem>

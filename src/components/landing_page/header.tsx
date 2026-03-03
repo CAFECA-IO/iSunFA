@@ -1,28 +1,17 @@
 'use client';
 
-import Link from "next/link";
-import { useTranslation } from "@/i18n/i18n_context";
 import BrandLogo from '@/components/header/brand_logo';
+import HeaderNav from '@/components/header/header_nav';
 import LanguageSelector from '@/components/header/language_selector';
 import UserActions from '@/components/header/user_actions';
 
 export default function Header() {
-  const { t } = useTranslation();
-
   return (
     <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-xl shadow-sm ring-1 ring-gray-900/5">
       <nav className="flex items-center justify-between p-3 lg:px-8" aria-label="Global">
         <BrandLogo />
-        <div className="flex gap-x-8 items-center">
-          <Link href='/salary_calculator' className="text-sm font-semibold leading-6 text-gray-900 hover:text-orange-600 transition-colors hidden md:block">
-            {t('header.salary_calculator')}
-          </Link>
-          <Link href='/ai_consultation_room' className="text-sm font-semibold leading-6 text-gray-900 hover:text-orange-600 transition-colors hidden md:block">
-            {t('header.ai_consultation_room')}
-          </Link>
-          <Link href="/pricing" className="text-sm font-semibold leading-6 text-gray-900 hover:text-orange-600 transition-colors hidden md:block">
-            {t('header.pricing')}
-          </Link>
+        <div className="flex gap-x-6 lg:gap-x-8 items-center">
+          <HeaderNav />
           <LanguageSelector />
           <UserActions />
         </div>

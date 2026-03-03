@@ -8,6 +8,7 @@ import { ISUNFA_ROUTE } from "@/constants/url";
 import LanguageSelector from "@/components/header/language_selector";
 import BrandLogo from "@/components/header/brand_logo";
 import UserActions from "@/components/header/user_actions";
+import HeaderNav from '@/components/header/header_nav';
 // import { useAuth } from "@/contexts/auth_context";
 
 const CalculatorHeader: React.FC = () => {
@@ -61,6 +62,7 @@ const CalculatorHeader: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-x-4 lg:gap-x-8">
+          <HeaderNav />
           <LanguageSelector />
           <UserActions />
         </div>
