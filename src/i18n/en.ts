@@ -74,7 +74,7 @@ export const en = {
     ocr_exceptions: "Exceptions",
     process_audit: "Process Audit",
     pending_approvals: "Pending",
-    auto_bookkeeping: "Auto Bookkeeping Ratio",
+    auto_bookkeeping: "Auto Voucher Management Ratio",
     time_saved: "Time Saved",
 
     carbon_compliance: "Carbon & Compliance",
@@ -158,10 +158,10 @@ export const en = {
     title: "Smarter Financial Management",
     subtitle: "Core Advantages of iSunFA",
     description:
-      "Leveraging AI for automated data entry, integrating bookkeeping, payroll, tax, and GHG accounting, while generating periodic reports and analytics to help businesses efficiently achieve compliance and master operational data.",
+      "Leveraging AI for automated data entry, integrating voucher management, payroll, tax, and GHG accounting, while generating periodic reports and analytics to help businesses efficiently achieve compliance and master operational data.",
     items: {
       bookkeeping: {
-        title: "Automated Bookkeeping",
+        title: "Voucher Management",
         desc: "AI auto-generates accounting entries with quality comparable to senior accountant practices.",
       },
       adjustment: {
@@ -455,7 +455,7 @@ export const en = {
   },
   chat: {
     tags: {
-      bookkeeping: "Automated Bookkeeping",
+      bookkeeping: "Voucher Management",
       adjustment: "Smart Treasury",
       cashier: "Smart Collection",
       salary: "Payroll Management",
@@ -478,7 +478,7 @@ export const en = {
   hero: {
     title: "Solving Financial Accounting and GHG Inventory Matters",
     subtitle_line1:
-      "Providing bookkeeping and tax solutions required for corporate financing and government subsidy applications.",
+      "Providing voucher management and tax solutions required for corporate financing and government subsidy applications.",
     subtitle_line2:
       "Providing professional financial statement compilation, financial auditing, and auditing services for clients.",
     subtitle_line3:

@@ -73,7 +73,7 @@ export const zhTw = {
     ocr_exceptions: "異常項目",
     process_audit: "流程審核中心",
     pending_approvals: "待批閱",
-    auto_bookkeeping: "自動記帳比例",
+    auto_bookkeeping: "傳票管理比例",
     time_saved: "節省工時",
 
     carbon_compliance: "溫室氣體核算模組",
@@ -167,10 +167,10 @@ export const zhTw = {
     title: "更聰明的財務管理",
     subtitle: "iSunFA 核心優勢",
     description:
-      "搭配人工智能辨識自動入錄，整合自動記帳、薪資、稅務與溫室氣體核算，定期生成報表與分析摘要，助企業高效達成專業合規，精準掌控營運數據。",
+      "搭配人工智能辨識自動入錄，整合傳票管理、薪資、稅務與溫室氣體核算，定期生成報表與分析摘要，助企業高效達成專業合規，精準掌控營運數據。",
     items: {
       bookkeeping: {
-        title: "自動記帳",
+        title: "傳票管理",
         desc: "AI 自動生成會計分錄，帳本品質媲美資深會計師實務。",
       },
       adjustment: {
@@ -202,7 +202,7 @@ export const zhTw = {
         desc: "一鍵生成三大專業財務報表，即時掌握企業營運現況。",
       },
       ocr: {
-        title: "憑證辨識",
+        title: "憑證管理",
         desc: "自動提取單據資訊並分類歸檔，免除手動輸入作業負擔。",
       },
       integration: {
@@ -460,13 +460,13 @@ export const zhTw = {
   },
   chat: {
     tags: {
-      bookkeeping: "自動記帳",
+      bookkeeping: "傳票管理",
       adjustment: "智能出納",
       cashier: "智能收款",
       salary: "薪資管理",
       audit: "智能稽核",
       esg: "碳排核算",
-      ocr: "憑證辨識",
+      ocr: "憑證管理",
       tax: "稅務申報",
       financial_report: "會計報表",
       analysis: "財務分析",

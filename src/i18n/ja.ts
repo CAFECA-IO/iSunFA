@@ -73,7 +73,7 @@ export const ja = {
     ocr_exceptions: "例外項目",
     process_audit: "プロセス承認センター",
     pending_approvals: "承認待ち",
-    auto_bookkeeping: "自動記帳比率",
+    auto_bookkeeping: "伝票管理比率",
     time_saved: "削減時間",
 
     carbon_compliance: "GHG算定モジュール",
@@ -157,10 +157,10 @@ export const ja = {
     title: "よりスマートな財務管理",
     subtitle: "iSunFA の主な利点",
     description:
-      "AI認識による自動入力を活用し、自動記帳、給与、税務、温室効果ガス算定を統合。定期的にレポートと分析サマリーを生成し、企業の効率的な専門コンプライアンス達成と運営データの正確な把握を支援します。",
+      "AI認識による自動入力を活用し、伝票管理、給与、税務、温室効果ガス算定を統合。定期的にレポートと分析サマリーを生成し、企業の効率的な専門コンプライアンス達成と運営データの正確な把握を支援します。",
     items: {
       bookkeeping: {
-        title: "自動記帳",
+        title: "伝票管理",
         desc: "AIが会計仕訳を自動生成し、ベテラン会計士の実務に匹敵する帳簿品質を実現します。",
       },
       adjustment: {
@@ -455,7 +455,7 @@ export const ja = {
   },
   chat: {
     tags: {
-      bookkeeping: "自動記帳",
+      bookkeeping: "伝票管理",
       adjustment: "スマート出納",
       cashier: "スマート入金管理",
       salary: "給与管理",

@@ -73,7 +73,7 @@ export const ko = {
     ocr_exceptions: "예외 항목",
     process_audit: "프로세스 승인 센터",
     pending_approvals: "승인 대기",
-    auto_bookkeeping: "자동 기장 비율",
+    auto_bookkeeping: "전표 관리 비율",
     time_saved: "절감 시간",
 
     carbon_compliance: "온실가스 회계 모듈",
@@ -157,10 +157,10 @@ export const ko = {
     title: "더 스마트한 재무 관리",
     subtitle: "iSunFA 핵심 장점",
     description:
-      "AI 인식을 통한 자동 입력을 활용하여 자동 기장, 급여, 세무 및 온실가스 산정을 통합합니다. 정기적으로 보고서와 분석 요약을 생성하여 기업이 전문 규정 준수를 효율적으로 달성하고 운영 데이터를 정밀하게 제어할 수 있도록 지원합니다.",
+      "AI 인식을 통한 자동 입력을 활용하여 전표 관리, 급여, 세무 및 온실가스 산정을 통합합니다. 정기적으로 보고서와 분석 요약을 생성하여 기업이 전문 규정 준수를 효율적으로 달성하고 운영 데이터를 정밀하게 제어할 수 있도록 지원합니다.",
     items: {
       bookkeeping: {
-        title: "자동 기장",
+        title: "전표 관리",
         desc: "AI가 회계 분개를 자동 생성하여, 숙련된 회계사의 실무에 버금가는 장부 품질을 제공합니다.",
       },
       adjustment: {
@@ -451,7 +451,7 @@ export const ko = {
   },
   chat: {
     tags: {
-      bookkeeping: "자동 기장",
+      bookkeeping: "전표 관리",
       adjustment: "스마트 자금 관리",
       cashier: "스마트 수금",
       salary: "급여 관리",
