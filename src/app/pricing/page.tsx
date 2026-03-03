@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
@@ -22,6 +22,8 @@ export default function PricingPage() {
   const { t, language } = useTranslation();
   const { user } = useAuth();
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const initialTab =
     searchParams.get("tab") === "credits" ? "credits" : "subscription";
 
@@ -144,15 +146,13 @@ export default function PricingPage() {
       setModalInitialStep("processing");
       setPaymentModalOpen(true);
 
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, "", newUrl);
+      router.replace(pathname, { scroll: false });
     } else if (paymentFailure === "true") {
       // Info: (20260302 - Tzuhan) [流程 5-4: 處理失敗跳轉] 如果付款失敗，開啟付款失敗的彈窗
       setModalInitialStep("error");
       setPaymentModalOpen(true);
 
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, "", newUrl);
+      router.replace(pathname, { scroll: false });
     }
   }, [searchParams]);
 

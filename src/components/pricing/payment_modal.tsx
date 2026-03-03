@@ -15,6 +15,13 @@ import { useAuth } from "@/contexts/auth_context";
 import LegalModal from "@/components/common/legal_modal";
 import { IPaymentModalProps, IOenCheckoutResponse, IOrderStatusResponse } from "@/interfaces/payment";
 
+const parseCardInfo = (data: unknown) => {
+  const pmData = data as Record<string, unknown> | undefined;
+  const brand = pmData?.cardBrand || pmData?.issuer ? String(pmData.cardBrand || pmData.issuer) : "信用卡";
+  const last4 = pmData?.card4no ? String(pmData.card4no) : "****";
+  return { brand, last4 };
+};
+
 
 export default function PaymentModal({
   isOpen,
@@ -56,13 +63,7 @@ export default function PaymentModal({
       setLoading(false);
       setTxHash(transactionHash || null);
 
-      if (initialStep === "success") {
-        const storedCredits = localStorage.getItem('iSunFA_payment_original_credits');
-        if (storedCredits) {
-          setOriginalCredits(parseInt(storedCredits, 10));
-          localStorage.removeItem('iSunFA_payment_original_credits');
-        }
-      } else {
+      if (initialStep !== "success") {
         setOriginalCredits(null);
       }
 
@@ -206,9 +207,6 @@ export default function PaymentModal({
         onSuccess(response.payload.txHash);
       } else if (response.payload?.requireBinding && response.payload.redirectUrl) {
         // [流程 2-3a: 需要導向應援科技金流] 若使用者選擇綁定新卡或尚未綁卡，後端會回傳 OEN 的結帳頁面 URL，前端將畫面導向該位址進行刷卡
-        if (user?.credits !== undefined) {
-          localStorage.setItem('iSunFA_payment_original_credits', user.credits.toString());
-        }
         window.location.href = response.payload.redirectUrl;
         onClose();
         return;
@@ -347,9 +345,7 @@ export default function PaymentModal({
                                   </h4>
                                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                     {(user.paymentMethods || []).map((pm) => {
-                                      const data = pm.data as Record<string, string> | undefined;
-                                      const brand: string = (data?.cardBrand || data?.issuer) ? String(data.cardBrand || data.issuer) : "信用卡";
-                                      const last4: string = (data?.card4no) ? String(data.card4no) : "****";
+                                      const { brand, last4 } = parseCardInfo(pm.data);
                                       const isSelected = selectedPaymentMethodId === pm.id;
 
                                       return (

@@ -43,7 +43,9 @@ export async function POST(request: NextRequest) {
         if (typeof customId === "string" && customId.startsWith("{")) {
             try {
                 customId = JSON.parse(customId).orderId || customId;
-            } catch { }
+            } catch (e) {
+                console.warn("[OEN Callback] Failed to parse customId as JSON:", e);
+            }
         }
         console.log(`[OEN Callback] Parsed customId (orderId): ${customId}`);
 
@@ -116,13 +118,10 @@ export async function POST(request: NextRequest) {
         }
 
 
-        if (
-            (status === "SUCCESS" ||
-                body.success === true ||
-                (token && typeof token === "string")) &&
-            order.status === "PENDING" &&
-            order.type === "OEN_BINDING"
-        ) {
+        const isPaymentSuccess = status === "SUCCESS" || body.success === true || (token && typeof token === "string");
+        const isBindingOrder = order.status === "PENDING" && order.type === "OEN_BINDING";
+
+        if (isPaymentSuccess && isBindingOrder) {
             // Info: (20260302 - Tzuhan) [流程 4-4: 發動正式扣款] 確認綁卡成功且原始訂單為發起綁卡狀態，則進入正式扣款流程
             const orderData = order.data as IOenOrderData;
             console.log(
