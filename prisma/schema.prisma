@@ -31,13 +31,15 @@ model User {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  orders          Order[]
-  analyses        Analysis[]
-  missions        Mission[]
-  threads         Thread[]
-  comments        Comment[]
-  receivedReplies Comment[]  @relation("CommentRecipient")
-  reactions       Reaction[]
+  orders              Order[]
+  analyses            Analysis[]
+  missions            Mission[]
+  threads             Thread[]
+  comments            Comment[]
+  receivedReplies     Comment[]            @relation("CommentRecipient")
+  reactions           Reaction[]
+  paymentMethods      PaymentMethod[]
+  paymentTransactions PaymentTransaction[]
 
   @@index([address])
   @@map("user")
@@ -57,7 +59,8 @@ model Order {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  analysis Analysis[]
+  analysis            Analysis[]
+  paymentTransactions PaymentTransaction[]
 
   @@map("order")
 }
@@ -237,4 +240,40 @@ model ThreadTag {
   // Info: (20260212 - Julian) 討論串和標籤是多對多的關係
   @@id([threadId, tagId])
   @@map("thread_tag")
+}
+
+model PaymentMethod {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  provider  String
+  token     String
+  data      Json?
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  transactions PaymentTransaction[]
+
+  @@map("payment_method")
+}
+
+// Info: (20260302 - Tzuhan) 獨立的 PaymentTransaction Table，減少支付模組的耦合性
+model PaymentTransaction {
+  id              String         @id @default(uuid())
+  userId          String         @map("user_id")
+  user            User           @relation(fields: [userId], references: [id])
+  paymentMethodId String?        @map("payment_method_id")
+  paymentMethod   PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  orderId         String?        @map("order_id")
+  order           Order?         @relation(fields: [orderId], references: [id])
+  provider        String
+  amount          Int
+  status          String         @default("PENDING") // Info: (20260302 - Tzuhan) PENDING, SUCCESS, FAILED
+  errorMessage    String?        @map("error_message")
+  rawData         Json?          @map("raw_data")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@map("payment_transaction")
 }
