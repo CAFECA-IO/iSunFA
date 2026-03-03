@@ -525,7 +525,7 @@ export const zhTw = {
     purchase: "購買",
   },
   analysis: {
-    title: "代幣分析",
+    title: "財務分析",
     internal_analysis: "內部數據分析",
     external_analysis: "外部數據分析",
     history_reports: "歷史報告",
