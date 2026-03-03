@@ -162,7 +162,7 @@ export default function PaymentModal({
         clearTimeout(timeoutId); // Info: (20260303 - Tzuhan) 清除尚未執行的計時器
       }
     };
-  }, [step, orderId, refreshAuth, onSuccess]);
+  }, [t, step, orderId, refreshAuth, onSuccess]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
