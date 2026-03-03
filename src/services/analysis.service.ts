@@ -13,6 +13,8 @@ export interface IGenerateAnalysisParams {
   periodValue: string;
   year: number;
   orderId?: string;
+  country?: string;
+  keyword?: string;
 }
 
 export class AnalysisService {
@@ -48,7 +50,9 @@ export class AnalysisService {
         category: params.category,
         periodType: params.periodType,
         periodValue: params.periodValue,
-        year: params.year
+        year: params.year,
+        country: params.country,
+        keyword: params.keyword
       });
 
       if (missionDef) {
@@ -111,7 +115,9 @@ export class AnalysisService {
             planHash: reportId,
             periodType: params.periodType,
             periodValue: params.periodValue,
-            year: params.year
+            year: params.year,
+            country: params.country,
+            keyword: params.keyword
           },
           tasks: missionDef ? missionDef.tasks : undefined // Info: (20260130 - Luphia) Save tasks to DB
         });

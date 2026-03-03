@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { category, periodType, periodValue, year, authentication } = body;
+    const { category, periodType, periodValue, year, country, keyword, authentication } = body;
 
     // Info: (20260128 - Luphia) Validate FIDO2 Signature OR Transaction Binding
     if (!authentication || !authentication.orderId) {
@@ -139,6 +139,8 @@ export async function POST(request: NextRequest) {
       periodType,
       periodValue,
       year,
+      country,
+      keyword,
       orderId
     });
 

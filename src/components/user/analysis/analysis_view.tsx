@@ -230,7 +230,9 @@ export default function AnalysisView() {
           periodType,
           year: selectedYear,
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-          txHash: null // Info: (20260209 - Tzuhan) No txHash yet
+          txHash: null, // Info: (20260209 - Tzuhan) No txHash yet
+          country,
+          keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : undefined
         })
       });
 
@@ -290,6 +292,8 @@ export default function AnalysisView() {
           periodType,
           year: selectedYear,
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
+          country,
+          keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : undefined,
           authentication: {
             orderId,
             transactionHash,
