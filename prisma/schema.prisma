@@ -40,6 +40,7 @@ model User {
   reactions           Reaction[]
   paymentMethods      PaymentMethod[]
   paymentTransactions PaymentTransaction[]
+  invoices            Invoice[]
 
   @@index([address])
   @@map("user")
@@ -146,6 +147,8 @@ model File {
 
   thread   Thread? @relation(fields: [threadId], references: [id])
   threadId String? @map("thread_id")
+
+  invoice Invoice?
 
   @@map("file")
 }
@@ -276,4 +279,22 @@ model PaymentTransaction {
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
   @@map("payment_transaction")
+}
+
+// Info: (20260304 - Julian) 憑證
+model Invoice {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  text      String   @db.Text // Info: (20260304 - Julian) AI 辨識出的文字結果
+
+  // Info: (20260304 - Julian) 一個憑證只會對應一個檔案
+  fileId String @unique @map("file_id")
+  file   File   @relation(fields: [fileId], references: [id])
+
+  // Info: (20260304 - Julian) 上傳者
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("invoice")
 }
