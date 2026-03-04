@@ -120,10 +120,12 @@ export async function GET(request: NextRequest) {
       where: { userId: author.id },
     };
 
+    // Info: (20260304 - Julian) 關鍵字篩選
     if (keyWord) {
       filteredConditions.where!.text = { contains: keyWord };
     }
 
+    // Info: (20260304 - Julian) 建立時間區間篩選
     if (startDate || endDate) {
       filteredConditions.where!.createdAt = {};
       if (startDate) {
@@ -134,11 +136,13 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Info: (20260304 - Julian) 分頁
     if (page && pageSize) {
       filteredConditions.skip = (page - 1) * pageSize;
       filteredConditions.take = pageSize;
     }
 
+    // Info: (20260304 - Julian) 排序
     if (orderByParams) {
       try {
         filteredConditions.orderBy = JSON.parse(orderByParams);
