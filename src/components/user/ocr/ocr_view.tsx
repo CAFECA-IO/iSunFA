@@ -1,51 +1,55 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslation } from "@/i18n/i18n_context";
 import JournalUploadView from "@/components/user/ocr/journal_upload_view";
 import JournalListView from "@/components/user/ocr/journal_list_view";
 
 export default function OcrView() {
-  const { t } = useTranslation();
-
   const [activeTab, setActiveTab] = useState<"upload" | "list">("upload");
 
   const renderView = () => {
     switch (activeTab) {
       case "upload":
-        return (
-          <JournalUploadView onUploadComplete={() => setActiveTab("list")} />
-        );
+        return <JournalUploadView onUploadComplete={() => setActiveTab("list")} />;
       case "list":
         return <JournalListView />;
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Info: (20260304 - Julian) Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t("ocr.title")}</h1>
+    <div className="flex h-[calc(100vh-80px)] w-full flex-col bg-gray-50">
+      <div className="flex justify-between px-8 py-6 pb-4 pt-12">
+        <h1 className="text-2xl font-bold font-sans text-slate-800">
+          憑證管理
+        </h1>
       </div>
 
-      <div className="flex items-center">
-        {/* Info: (20260304 - Julian) Tabs */}
-        <div className="flex flex-col gap-2 rounded-lg bg-gray-100 p-1">
+      {/* Info: (20260304 - Julian) Menu */}
+      <div className="flex px-4 items-center">
+        {/* Info: (20260304 - Julian) Upload Area */}
+        <div className="w-[180px] p-4 flex flex-col gap-2">
           <button
+            type="button"
+            className={`flex w-full items-center justify-start gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === "upload" 
+                ? "bg-slate-200 text-slate-900 shadow-sm" 
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
             onClick={() => setActiveTab("upload")}
-            className={`${
-              activeTab === "upload" ? "bg-white shadow-sm" : "hover:bg-gray-50"
-            } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
           >
-            {t("ocr.upload")}
+            上傳憑證
           </button>
+          {/* Info: (20260304 - Julian) View Logs */}
           <button
+            type="button"
+             className={`flex w-full items-center justify-start gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === "list" 
+                ? "bg-slate-200 text-slate-900 shadow-sm" 
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
             onClick={() => setActiveTab("list")}
-            className={`${
-              activeTab === "list" ? "bg-white shadow-sm" : "hover:bg-gray-50"
-            } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
           >
-            {t("ocr.list")}
+            憑證列表
           </button>
         </div>
 

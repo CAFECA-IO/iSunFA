@@ -118,6 +118,7 @@ export async function GET(request: NextRequest) {
 
     const filteredConditions: Prisma.JournalFindManyArgs = {
       where: { userId: author.id },
+      include: { file: true },
     };
 
     // Info: (20260304 - Julian) 關鍵字篩選
