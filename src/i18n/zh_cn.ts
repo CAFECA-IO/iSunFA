@@ -630,4 +630,15 @@ export const zhCn = {
     description: '体验与人工智能会计师的即时互动问答，快速厘清财务与碳费议题；分享洞察与反馈，与社群共创成长。',
     button: '立即咨询 AI',
   },
+  ocr: {
+    title: "凭证管理",
+    upload: "上传凭证",
+    list: "凭证列表",
+    uploading: "上传中...",
+    click_or_drag: "点击或拖拽文件至此",
+    single_file_only: "一次仅限上传一个文件",
+    analyze_prompt: "是否分析此凭证？",
+    analyze_btn: "是的，让 AI 分析凭证",
+    reupload_btn: "重新上传",
+  },
 };

@@ -876,4 +876,15 @@ export const zhTw = {
       sat: "星期六",
     },
   },
+  ocr:{
+    title: "憑證管理",
+    upload: "上傳憑證",
+    list: "憑證清單",
+    uploading: "上傳中...",
+    click_or_drag: "點擊或拖曳檔案至此",
+    single_file_only: "一次僅限上傳一個檔案",
+    analyze_prompt: "是否分析此憑證？",
+    analyze_btn: "是的，讓 AI 分析憑證",
+    reupload_btn: "重新上傳",
+  }
 };
