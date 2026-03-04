@@ -1,11 +1,11 @@
-import React from 'react';
-import { useTranslation } from 'next-i18next';
-import { useCalculatorCtx } from '@/contexts/calculator_context';
-import { MAX_MEAL_ALLOWANCE } from '@/constants/salary_calculator';
-import AmountInput from '@/components/salary_calculator/amount_input';
+import React from "react";
+import { useTranslation } from "@/i18n/i18n_context";
+import { useCalculatorCtx } from "@/contexts/calculator_context";
+import { MAX_MEAL_ALLOWANCE } from "@/constants/salary_calculator";
+import AmountInput from "@/components/salary_calculator/amount_input";
 
 const BasePayForm: React.FC = () => {
-  const { t } = useTranslation('calculator');
+  const { t } = useTranslation();
   const {
     baseSalary,
     setBaseSalary,
@@ -18,10 +18,10 @@ const BasePayForm: React.FC = () => {
   } = useCalculatorCtx();
 
   return (
-    <form className="flex flex-col gap-24px">
+    <form className="flex flex-col gap-6">
       {/* Info: (20250709 - Julian) 本薪（應稅） */}
       <AmountInput
-        title={t('calculator:BASE_PAY_FORM.BASE_SALARY')}
+        title={t("calculator.base_pay_form.base_salary")}
         value={baseSalary}
         setValue={setBaseSalary}
         minimum={0}
@@ -30,7 +30,7 @@ const BasePayForm: React.FC = () => {
 
       {/* Info: (20250709 - Julian) 伙食費（免稅） */}
       <AmountInput
-        title={t('calculator:BASE_PAY_FORM.MEAL_ALLOWANCE')}
+        title={t("calculator.base_pay_form.meal_allowance")}
         value={mealAllowance}
         setValue={setMealAllowance}
         minimum={0}
@@ -39,20 +39,20 @@ const BasePayForm: React.FC = () => {
 
       {/* Info: (20250709 - Julian) 其他津貼（應稅） */}
       <AmountInput
-        title={t('calculator:BASE_PAY_FORM.OTHER_ALLOWANCE_WITH_TAX')}
+        title={t("calculator.base_pay_form.other_allowance_with_tax")}
         value={otherAllowanceWithTax}
         setValue={setOtherAllowanceWithTax}
       />
 
       {/* Info: (20250709 - Julian) 其他津貼（免稅） */}
-      <div className="flex flex-col gap-8px">
+      <div className="flex flex-col gap-2">
         <AmountInput
-          title={t('calculator:BASE_PAY_FORM.OTHER_ALLOWANCE_WITHOUT_TAX')}
+          title={t("calculator.base_pay_form.other_allowance_without_tax")}
           value={otherAllowanceWithoutTax}
           setValue={setOtherAllowanceWithoutTax}
         />
-        <p className="text-sm font-medium text-input-text-secondary">
-          {t('calculator:BASE_PAY_FORM.ADDITIONAL_INFORMATION')}
+        <p className="text-xs font-medium text-gray-500 pl-1">
+          {t("calculator.base_pay_form.additional_information")}
         </p>
       </div>
     </form>

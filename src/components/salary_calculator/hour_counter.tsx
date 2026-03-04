@@ -1,6 +1,6 @@
-import React from 'react';
-import { FaPlus, FaMinus } from 'react-icons/fa6';
-import NumericInput from '@/components/numeric_input/numeric_input';
+import React from "react";
+import { Plus, Minus } from "lucide-react";
+import NumericInput from "@/components/common/numeric_input";
 
 interface IHourCounterProps {
   title: string;
@@ -27,31 +27,31 @@ const HourCounter: React.FC<IHourCounterProps> = ({
   const plusClickHandler = () => setValue((prev) => prev + 1);
 
   return (
-    <div className="flex flex-col gap-8px">
-      <p className="text-sm font-semibold text-input-text-primary">{title}</p>
-      <div className="flex w-full items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+    <div className="flex flex-col gap-2">
+      <p className="text-sm font-semibold text-gray-700">{title}</p>
+      <div className="flex w-full items-center overflow-hidden rounded-lg bg-white ring-1 ring-gray-300 transition-all ">
         <button
           type="button"
           disabled={minusDisabled}
           onClick={minusClickHandler}
-          className="h-44px px-12px py-10px text-icon-surface-single-color-primary disabled:text-icon-surface-single-color-tertiary"
+          className="flex h-12 items-center justify-center bg-gray-100 px-4 transition-colors enabled:hover:bg-orange-100 enabled:hover:text-orange-500 disabled:opacity-30 enabled:active:bg-orange-200 disabled:hover:bg-gray-50 text-gray-400"
         >
-          <FaMinus size={16} />
+          <Minus size={20} />
         </button>
         <NumericInput
           value={value}
           setValue={setValue}
           min={minValue}
           max={maxValue}
-          className="w-80px flex-1 bg-transparent px-12px py-10px text-center font-medium text-input-text-input-filled"
+          className="w-full flex-1 bg-transparent px-3 py-2 text-center text-base font-bold text-gray-900 outline-none placeholder:text-gray-400"
         />
         <button
           type="button"
           disabled={plusDisabled}
           onClick={plusClickHandler}
-          className="h-44px px-12px py-10px text-icon-surface-single-color-primary disabled:text-icon-surface-single-color-tertiary"
+          className="flex h-12 items-center justify-center bg-gray-100 px-4 transition-colors enabled:hover:bg-orange-100 enabled:hover:text-orange-500 disabled:opacity-30 enabled:active:bg-orange-200 disabled:hover:bg-gray-50 text-gray-400"
         >
-          <FaPlus size={16} />
+          <Plus size={20} />
         </button>
       </div>
     </div>

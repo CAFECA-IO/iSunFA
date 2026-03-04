@@ -1,20 +1,19 @@
-import React, { useRef, useState } from 'react';
-import { useTranslation } from 'next-i18next';
-import { RxCross2 } from 'react-icons/rx';
-import { TbDownload } from 'react-icons/tb';
-import { LuSend } from 'react-icons/lu';
-import PaySlip from '@/components/salary_calculator/pay_slip';
-import ResendingPaySlipModal from '@/components/salary_calculator/resending_pay_slip_modal';
-import { Button } from '@/components/button/button';
-import { useUserCtx } from '@/contexts/user_context';
-import { ISalaryCalculator } from '@/interfaces/calculator';
-import { timestampToString } from '@/lib/utils/common';
-import html2canvas from 'html2canvas';
+"use client";
+
+import React, { useRef, useState } from "react";
+import { toPng } from "html-to-image";
+import { useTranslation } from "@/i18n/i18n_context";
+import { X, Download, Send } from "lucide-react";
+import PaySlip from "@/components/salary_calculator/pay_slip";
+import ResendingPaySlipModal from "@/components/salary_calculator/resending_pay_slip_modal";
+import { useAuth } from "@/contexts/auth_context";
+import { ISalaryCalculatorUI } from "@/interfaces/salary_calculator";
+import { timestampToString } from "@/lib/utils/common";
 
 interface IViewPaySlipModal {
   monthStr: string;
   yearStr: string;
-  paySlipData: ISalaryCalculator;
+  paySlipData: ISalaryCalculatorUI;
   modalCloseHandler: () => void;
   sentDate?: number; // Info: (20250725 - Julian) 用於判斷是否為已發送的薪資單
   sentTo?: string; // Info: (20250725 - Julian) 發送對象
@@ -28,19 +27,22 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
   sentDate,
   sentTo,
 }) => {
-  const { t } = useTranslation(['calculator', 'date_picker']);
+  const { t } = useTranslation();
+  const { user } = useAuth();
   const downloadRef = useRef<HTMLDivElement>(null);
 
   const [isShowModal, setIsShowModal] = useState<boolean>(false);
 
   const isSentRecord = !!sentDate && !!sentTo;
 
-  const { username } = useUserCtx();
-  const employeeName = username ?? '-';
-  const employeeNumber = '123456'; // ToDo: (20250806 - Julian) 取得員工編號
+  const username = user?.name;
+  const employeeName = username ?? "-";
+  const employeeNumber = "123456"; // ToDo: (20250806 - Julian) 取得員工編號
 
-  const formattedMonth = monthStr.length > 3 ? `${monthStr.slice(0, 3)}.` : monthStr;
-  const monthWithI18n = t(`date_picker:DATE_PICKER.${monthStr.toUpperCase().slice(0, 3)}`);
+  // const formattedMonth = monthStr.length > 3 ? `${monthStr.slice(0, 3)}.` : monthStr;
+  const monthWithI18n = t(
+    `date.month_name.${monthStr.toLowerCase().slice(0, 3)}`,
+  );
 
   // Info: (20250725 - Julian) 打開確認用的 Modal
   const resendBtnClickHandler = () => setIsShowModal(true);
@@ -49,27 +51,26 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
   const downloadPng = () => {
     if (!downloadRef.current) return;
 
-    html2canvas(downloadRef.current, {
-      backgroundColor: null,
-      scale: 2,
-      onclone: (clonedNode) => {
-        // Info: (20250725 - Julian) 調整樣式
-        const frame = clonedNode.querySelector<HTMLIFrameElement>('#download-area');
-        if (frame) {
-          frame.style.width = '100%';
-          frame.style.height = 'auto';
-          frame.style.overflowY = 'visible'; // Info: (20250725 - Julian) 取消滾動條
-        }
+    toPng(downloadRef.current, {
+      pixelRatio: 2,
+      style: {
+        width: '100%',
+        height: 'auto',
+        overflowY: 'visible', // Info: (20250725 - Julian) 取消滾動條
       },
-    }).then((canvas) => {
-      // Info: (20250710 - Julian) 下載圖片
-      const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/png');
-      link.download = `${employeeName}_${formattedMonth}_${yearStr}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    });
+    })
+      .then((dataUrl) => {
+        // Info: (20250710 - Julian) 下載圖片
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `${employeeName}_${monthWithI18n}_${yearStr}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      })
+      .catch((err) => {
+        console.error('oops, something went wrong!', err);
+      });
   };
 
   const modalVisibleHandler = () => setIsShowModal((prev) => !prev);
@@ -81,11 +82,15 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
         <div className="relative flex items-start justify-center px-40px py-16px">
           <h2 className="text-lg font-bold text-card-text-primary">
             {isSentRecord
-              ? t('calculator:MY_PAY_SLIP.PAY_SLIP')
-              : t('calculator:MY_PAY_SLIP.MAIN_TITLE')}
+              ? t("calculator.my_pay_slip.pay_slip")
+              : t("calculator.my_pay_slip.main_title")}
           </h2>
-          <button type="button" onClick={modalCloseHandler} className="absolute right-20px">
-            <RxCross2 scale={24} />
+          <button
+            type="button"
+            onClick={modalCloseHandler}
+            className="absolute right-20px"
+          >
+            <X size={24} />
           </button>
         </div>
         {/* Info: (20250725 - Julian) Modal Body */}
@@ -104,9 +109,10 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
           />
           {isSentRecord && (
             <div className="flex items-center gap-8px px-40px text-sm">
-              <LuSend size={16} className="text-text-neutral-tertiary" />
+              <Send size={16} className="text-text-neutral-tertiary" />
               <p className="font-medium text-text-neutral-secondary">
-                {t('calculator:MY_PAY_SLIP.SENT_ON')}: {timestampToString(sentDate).date}
+                {t("calculator.my_pay_slip.sent_on")}:{" "}
+                {timestampToString(sentDate).dateWithDash}
               </p>
             </div>
           )}
@@ -114,19 +120,18 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
         {/* Info: (20250725 - Julian) Button */}
         <div className="flex items-center gap-12px px-20px py-16px">
           {/* Info: (20250725 - Julian) Download Btn */}
-          <Button type="button" variant="tertiary" onClick={downloadPng} className="w-full">
-            {t('calculator:BUTTON.DOWNLOAD')} <TbDownload size={20} />
-          </Button>
+          <button type="button" onClick={downloadPng} className="w-full">
+            {t("calculator.button.download")} <Download size={20} />
+          </button>
           {/* Info: (20250725 - Julian) Resend Btn */}
           {isSentRecord && (
-            <Button
+            <button
               type="button"
-              variant="tertiary"
               onClick={resendBtnClickHandler}
               className="w-full"
             >
-              {t('calculator:BUTTON.RESEND')} <LuSend size={20} />
-            </Button>
+              {t("calculator.button.re_send")} <Send size={20} />
+            </button>
           )}
         </div>
       </div>
@@ -135,7 +140,7 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
       {isShowModal && (
         <ResendingPaySlipModal
           monthName={monthWithI18n}
-          sentToName={sentTo ?? '-'}
+          sentToName={sentTo ?? "-"}
           modalVisibleHandler={modalVisibleHandler}
         />
       )}

@@ -1,19 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'next-i18next';
-import { FaChevronDown } from 'react-icons/fa6';
-import { FiSearch } from 'react-icons/fi';
-import CalculatorNavbar from '@/components/salary_calculator/calculator_navbar';
-import ReceivedTab from '@/components/salary_calculator/pay_slip_received_tab';
-import SentTab from '@/components/salary_calculator/pay_slip_sent_tab';
-import { useCalculatorCtx } from '@/contexts/calculator_context';
-import useOuterClick from '@/lib/hooks/use_outer_click';
-import {
-  IReceivedRecord,
-  ISentRecord,
-  dummyReceivedData,
-  dummySentData,
-} from '@/interfaces/pay_slip';
-import { SortOrder } from '@/constants/sort';
+"use client";
+
+import React, { useState, useMemo, Fragment } from "react";
+import { useTranslation } from "@/i18n/i18n_context";
+import { Listbox, ListboxButton, ListboxOption, ListboxOptions, Transition } from "@headlessui/react";
+import { ChevronDown, Search } from "lucide-react";
+import CalculatorHeader from "@/components/salary_calculator/calculator_header";
+import ReceivedTab from "@/components/salary_calculator/pay_slip_received_tab";
+import SentTab from "@/components/salary_calculator/pay_slip_sent_tab";
+import { useCalculatorCtx } from "@/contexts/calculator_context";
+import { dummyReceivedData, dummySentData } from "@/interfaces/pay_slip";
+import { SortOrder } from "@/constants/sort";
+import { timestampToString } from "@/lib/utils/common";
 
 const FilterSection: React.FC<{
   selectedYear: string;
@@ -30,132 +27,114 @@ const FilterSection: React.FC<{
   searchQuery,
   setSearchQuery,
 }) => {
-  const { t } = useTranslation('calculator');
-  const { yearOptions: defaultYearOptions, monthOptions: defaultMonthOptions } = useCalculatorCtx();
+  const { t } = useTranslation();
+  const { yearOptions: defaultYearOptions, monthOptions: defaultMonthOptions } =
+    useCalculatorCtx();
 
-  const yearOptions = ['All', ...defaultYearOptions];
-  const monthOptions = ['All', ...defaultMonthOptions.map((month) => month.name)];
+  const yearOptions = ["All", ...defaultYearOptions];
+  const monthOptions = [
+    "All",
+    ...defaultMonthOptions.map((month) => month.name),
+  ];
 
-  const {
-    targetRef: yearRef,
-    componentVisible: isShowYear,
-    setComponentVisible: setShowYear,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  const {
-    targetRef: monthRef,
-    componentVisible: isShowMonth,
-    setComponentVisible: setShowMonth,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  const yearStr = selectedYear === yearOptions[0] ? t('date_picker:DATE_PICKER.ALL') : selectedYear;
-  const monthStr = t(`date_picker:DATE_PICKER.${selectedMonth.slice(0, 3).toUpperCase()}`);
-
-  const toggleYearDropdown = () => setShowYear((prev) => !prev);
-  const toggleMonthDropdown = () => setShowMonth((prev) => !prev);
+  const yearStr = (val: string) =>
+    val === yearOptions[0] ? t("calculator.my_pay_slip.all") : val;
+  const monthStr = (val: string) =>
+    val === "All"
+      ? t("calculator.my_pay_slip.all")
+      : t(`date.month_name.${val.slice(0, 3).toLowerCase()}`);
 
   const changeSearchQuery = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
-  const yearDropdown = isShowYear && (
-    <div className="absolute top-50px flex w-full flex-col rounded-sm border border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS">
-      {yearOptions.map((year, index) => {
-        const str = index === 0 ? t('date_picker:DATE_PICKER.ALL') : year;
-        const clickHandler = () => {
-          setSelectedYear(year);
-          setShowYear(false);
-        };
-
-        return (
-          <button
-            key={year}
-            type="button"
-            onClick={clickHandler}
-            className="px-12px py-10px hover:bg-input-surface-input-hover"
-          >
-            {str}
-          </button>
-        );
-      })}
-    </div>
-  );
-
-  const monthDropdown = isShowMonth && (
-    <div className="absolute top-50px flex w-full flex-col rounded-sm border border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS">
-      {monthOptions.map((month) => {
-        const clickHandler = () => {
-          setSelectedMonth(month);
-          setShowMonth(false);
-        };
-        return (
-          <button
-            key={month}
-            type="button"
-            onClick={clickHandler}
-            className="px-12px py-10px hover:bg-input-surface-input-hover"
-          >
-            {t(`date_picker:DATE_PICKER.${month.slice(0, 3).toUpperCase()}`)}
-          </button>
-        );
-      })}
-    </div>
-  );
-
   return (
     <div className="grid grid-cols-2 items-center gap-24px">
       <div className="grid grid-cols-2 items-center gap-12px">
         {/* Info: (20250722 - Julian) Year Selection */}
-        <div ref={yearRef} className="relative">
-          <div
-            onClick={toggleYearDropdown}
-            className={`flex items-center divide-x rounded-sm border bg-input-surface-input-background hover:cursor-pointer hover:divide-input-stroke-input-hover hover:border-input-stroke-input-hover ${isShowYear ? 'divide-input-stroke-input-hover border-input-stroke-input-hover' : 'divide-input-stroke-input border-input-stroke-input'}`}
-          >
-            <div className="px-12px py-10px text-base font-medium text-input-text-input-placeholder">
-              {t('calculator:BASIC_INFO_FORM.YEAR')}
-            </div>
-            <div className="flex flex-1 items-center py-10px text-right text-base font-medium text-input-text-input-filled">
-              <div className="flex-1 px-12px">{yearStr}</div>
-              <div className="px-12px text-icon-surface-single-color-primary">
-                <FaChevronDown size={16} />
+        <Listbox value={selectedYear} onChange={setSelectedYear}>
+          <div className="relative">
+            <ListboxButton className="flex w-full items-center divide-x rounded-sm border border-input-stroke-input bg-input-surface-input-background transition-colors hover:border-input-stroke-input-hover hover:divide-input-stroke-input-hover focus:outline-none data-open:border-input-stroke-input-hover data-open:divide-input-stroke-input-hover">
+              <div className="px-12px py-10px text-base font-medium text-input-text-input-placeholder">
+                {t("calculator.basic_info_form.year")}
               </div>
-            </div>
+              <div className="flex flex-1 items-center py-10px text-right text-base font-medium text-input-text-input-filled">
+                <div className="flex-1 px-12px">{yearStr(selectedYear)}</div>
+                <div className="px-12px text-icon-surface-single-color-primary">
+                  <ChevronDown size={16} />
+                </div>
+              </div>
+            </ListboxButton>
+            <Transition
+              as={Fragment}
+              leave="transition ease-in duration-100"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <ListboxOptions className="absolute z-10 mt-1 flex w-full flex-col overflow-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS focus:outline-none">
+                {yearOptions.map((year, index) => (
+                  <ListboxOption
+                    key={year}
+                    value={year}
+                    className="cursor-pointer px-12px py-10px text-base font-medium transition-colors hover:bg-input-surface-input-hover data-selected:bg-orange-50 data-selected:text-orange-900"
+                  >
+                    {index === 0 ? t("calculator.my_pay_slip.all") : year}
+                  </ListboxOption>
+                ))}
+              </ListboxOptions>
+            </Transition>
           </div>
-          {/* Info: (20250722 - Julian) Year Dropdown */}
-          {yearDropdown}
-        </div>
+        </Listbox>
 
         {/* Info: (20250722 - Julian) Month Selection */}
-        <div ref={monthRef} className="relative">
-          <div
-            onClick={toggleMonthDropdown}
-            className={`flex items-center divide-x rounded-sm border bg-input-surface-input-background hover:cursor-pointer hover:divide-input-stroke-input-hover hover:border-input-stroke-input-hover ${isShowMonth ? 'divide-input-stroke-input-hover border-input-stroke-input-hover' : 'divide-input-stroke-input border-input-stroke-input'}`}
-          >
-            <div className="px-12px py-10px text-base font-medium text-input-text-input-placeholder">
-              {t('calculator:BASIC_INFO_FORM.MONTH')}
-            </div>
-            <div className="flex flex-1 items-center py-10px text-right text-base font-medium text-input-text-input-filled">
-              <div className="flex-1 px-12px">{monthStr}</div>
-              <div className="px-12px text-icon-surface-single-color-primary">
-                <FaChevronDown size={16} />
+        <Listbox value={selectedMonth} onChange={setSelectedMonth}>
+          <div className="relative">
+            <ListboxButton className="flex w-full items-center divide-x rounded-sm border border-input-stroke-input bg-input-surface-input-background transition-colors hover:border-input-stroke-input-hover hover:divide-input-stroke-input-hover focus:outline-none data-open:border-input-stroke-input-hover data-open:divide-input-stroke-input-hover">
+              <div className="px-12px py-10px text-base font-medium text-input-text-input-placeholder">
+                {t("calculator.basic_info_form.month")}
               </div>
-            </div>
+              <div className="flex flex-1 items-center py-10px text-right text-base font-medium text-input-text-input-filled">
+                <div className="flex-1 px-12px">{monthStr(selectedMonth)}</div>
+                <div className="px-12px text-icon-surface-single-color-primary">
+                  <ChevronDown size={16} />
+                </div>
+              </div>
+            </ListboxButton>
+            <Transition
+              as={Fragment}
+              leave="transition ease-in duration-100"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <ListboxOptions className="absolute z-10 mt-1 flex w-full flex-col overflow-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS focus:outline-none">
+                {monthOptions.map((month) => (
+                  <ListboxOption
+                    key={month}
+                    value={month}
+                    className="cursor-pointer px-12px py-10px text-base font-medium transition-colors hover:bg-input-surface-input-hover data-selected:bg-orange-50 data-selected:text-orange-900"
+                  >
+                    {month === "All"
+                      ? t("calculator.my_pay_slip.all")
+                      : t(`date.month_name.${month.slice(0, 3).toLowerCase()}`)}
+                  </ListboxOption>
+                ))}
+              </ListboxOptions>
+            </Transition>
           </div>
-          {/* Info: (20250722 - Julian) Month Dropdown */}
-          {monthDropdown}
-        </div>
+        </Listbox>
       </div>
 
       {/* Info: (20250722 - Julian) Search bar */}
       <div className="flex flex-1 items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
         <div className="px-12px py-10px text-icon-surface-single-color-primary">
-          <FiSearch size={16} />
+          <Search size={16} />
         </div>
         <input
           type="text"
           value={searchQuery}
           onChange={changeSearchQuery}
-          placeholder={t('calculator:MY_PAY_SLIP.SEARCH_PLACEHOLDER')}
+          aria-label={t("calculator.my_pay_slip.search_placeholder")}
+          placeholder={t("calculator.my_pay_slip.search_placeholder")}
           className="flex-1 bg-transparent px-12px py-10px text-base font-medium outline-none placeholder:text-input-text-input-placeholder"
         />
       </div>
@@ -164,86 +143,130 @@ const FilterSection: React.FC<{
 };
 
 const MyPaySlipPageBody: React.FC = () => {
-  const { t } = useTranslation('calculator');
+  const { t } = useTranslation();
 
-  const [currentTab, setCurrentTab] = useState<'received' | 'sent'>('received');
-  const [receivedRecords, setReceivedRecords] = useState<IReceivedRecord[]>(dummyReceivedData);
-  const [sentRecords, setSentRecords] = useState<ISentRecord[]>(dummySentData);
+  // ToDo: (20260225 - Julian) should replace with real data
+  const receivedRecords = dummyReceivedData;
+  const sentRecords = dummySentData;
+
+  const [currentTab, setCurrentTab] = useState<"received" | "sent">("received");
 
   // Info: (20250723 - Julian) 查詢條件
-  const [selectedYear, setSelectedYear] = useState<string>('All');
-  const [selectedMonth, setSelectedMonth] = useState<string>('All');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedYear, setSelectedYear] = useState<string>("All");
+  const [selectedMonth, setSelectedMonth] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Info: (20250724 - Julian) 排序
-  const [receivedPayPeriodSortOrder, setReceivedPayPeriodSortOrder] = useState<null | SortOrder>(
-    null
-  );
-  const [receivedNetPaySortOrder, setReceivedNetPaySortOrder] = useState<null | SortOrder>(null);
-  const [sentPayPeriodSortOrder, setSentPayPeriodSortOrder] = useState<null | SortOrder>(null);
-  const [sentIssuedDateSortOrder, setSentIssuedDateSortOrder] = useState<null | SortOrder>(null);
+  const [receivedPayPeriodSortOrder, setReceivedPayPeriodSortOrder] =
+    useState<null | SortOrder>(null);
+  const [receivedNetPaySortOrder, setReceivedNetPaySortOrder] =
+    useState<null | SortOrder>(null);
+  const [sentPayPeriodSortOrder, setSentPayPeriodSortOrder] =
+    useState<null | SortOrder>(null);
+  const [sentIssuedDateSortOrder, setSentIssuedDateSortOrder] =
+    useState<null | SortOrder>(null);
 
-  // Deprecated: (20250724 - Julian) 之後會用 API 取代
-  useEffect(() => {
-    const sortedReceived = [...receivedRecords].sort((a, b) => {
-      if (receivedPayPeriodSortOrder === SortOrder.ASC) {
+  // Info: (20260225 - Julian) 將排序與搜尋邏輯封裝在 useMemo 中，根據原始資料和排序/搜尋條件直接計算出顯示列表
+  const filteredSortedReceived = useMemo(() => {
+    let result = [...receivedRecords];
+
+    // Info: (20260225 - Julian) 搜尋與篩選
+    if (selectedYear !== "All") {
+      result = result.filter(
+        (r) => timestampToString(r.payPeriod).year === selectedYear,
+      );
+    }
+    if (selectedMonth !== "All") {
+      result = result.filter(
+        (r) => timestampToString(r.payPeriod).monthName === selectedMonth,
+      );
+    }
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter((r) => r.fromEmail.toLowerCase().includes(query));
+    }
+
+    // Info: (20260225 - Julian) 排序
+    return result.sort((a, b) => {
+      if (receivedPayPeriodSortOrder === SortOrder.ASC)
         return a.payPeriod - b.payPeriod;
-      }
-      if (receivedPayPeriodSortOrder === SortOrder.DESC) {
+      if (receivedPayPeriodSortOrder === SortOrder.DESC)
         return b.payPeriod - a.payPeriod;
-      }
-      if (receivedNetPaySortOrder === SortOrder.ASC) {
-        return a.netPay - b.netPay;
-      }
-      if (receivedNetPaySortOrder === SortOrder.DESC) {
+      if (receivedNetPaySortOrder === SortOrder.ASC) return a.netPay - b.netPay;
+      if (receivedNetPaySortOrder === SortOrder.DESC)
         return b.netPay - a.netPay;
-      }
       return 0;
     });
-    setReceivedRecords(sortedReceived);
-  }, [receivedPayPeriodSortOrder, receivedNetPaySortOrder]);
+  }, [
+    receivedRecords,
+    receivedPayPeriodSortOrder,
+    receivedNetPaySortOrder,
+    selectedYear,
+    selectedMonth,
+    searchQuery,
+  ]);
 
-  // Deprecated: (20250724 - Julian) 之後會用 API 取代
-  useEffect(() => {
-    const sortedSent = [...sentRecords].sort((a, b) => {
-      if (sentPayPeriodSortOrder === SortOrder.ASC) {
+  const filteredSortedSent = useMemo(() => {
+    let result = [...sentRecords];
+
+    // Info: (20260225 - Julian) 搜尋與篩選
+    if (selectedYear !== "All") {
+      result = result.filter(
+        (r) => timestampToString(r.payPeriod).year === selectedYear,
+      );
+    }
+    if (selectedMonth !== "All") {
+      result = result.filter(
+        (r) => timestampToString(r.payPeriod).monthName === selectedMonth,
+      );
+    }
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter((r) => r.toEmail.toLowerCase().includes(query));
+    }
+
+    // Info: (20260225 - Julian) 排序
+    return result.sort((a, b) => {
+      if (sentPayPeriodSortOrder === SortOrder.ASC)
         return a.payPeriod - b.payPeriod;
-      }
-      if (sentPayPeriodSortOrder === SortOrder.DESC) {
+      if (sentPayPeriodSortOrder === SortOrder.DESC)
         return b.payPeriod - a.payPeriod;
-      }
-      if (sentIssuedDateSortOrder === SortOrder.ASC) {
+      if (sentIssuedDateSortOrder === SortOrder.ASC)
         return a.issuedDate - b.issuedDate;
-      }
-      if (sentIssuedDateSortOrder === SortOrder.DESC) {
+      if (sentIssuedDateSortOrder === SortOrder.DESC)
         return b.issuedDate - a.issuedDate;
-      }
       return 0;
     });
-    setSentRecords(sortedSent);
-  }, [sentPayPeriodSortOrder, sentIssuedDateSortOrder]);
+  }, [
+    sentRecords,
+    sentPayPeriodSortOrder,
+    sentIssuedDateSortOrder,
+    selectedYear,
+    selectedMonth,
+    searchQuery,
+  ]);
 
   const receivedStyle =
-    currentTab === 'received'
-      ? 'border-tabs-stroke-active text-tabs-text-active'
-      : 'border-tabs-stroke-default text-tabs-text-default hover:border-tabs-stroke-hover hover:text-tabs-text-hover';
+    currentTab === "received"
+      ? "border-tabs-stroke-active text-tabs-text-active"
+      : "border-tabs-stroke-default text-tabs-text-default hover:border-tabs-stroke-hover hover:text-tabs-text-hover";
   const sentStyle =
-    currentTab === 'sent'
-      ? 'border-tabs-stroke-active text-tabs-text-active'
-      : 'border-tabs-stroke-default text-tabs-text-default hover:border-tabs-stroke-hover hover:text-tabs-text-hover';
+    currentTab === "sent"
+      ? "border-tabs-stroke-active text-tabs-text-active"
+      : "border-tabs-stroke-default text-tabs-text-default hover:border-tabs-stroke-hover hover:text-tabs-text-hover";
 
-  const clickReceivedTab = () => setCurrentTab('received');
-  const clickSentTab = () => setCurrentTab('sent');
+  const clickReceivedTab = () => setCurrentTab("received");
+  const clickSentTab = () => setCurrentTab("sent");
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-white">
       {/* Info: (20250718 - Julian) Header */}
-      <CalculatorNavbar />
+      <CalculatorHeader />
 
       {/* Info: (20250718 - Julian) Main Content */}
       <div className="flex flex-col items-stretch gap-56px px-240px py-56px">
         <h1 className="text-center text-32px font-bold text-text-brand-primary-lv1">
-          {t('calculator:MY_PAY_SLIP.MAIN_TITLE')}
+          {t("calculator.my_pay_slip.main_title")}
         </h1>
 
         {/* Info: (20250718 - Julian) Tabs */}
@@ -253,14 +276,14 @@ const MyPaySlipPageBody: React.FC = () => {
             onClick={clickReceivedTab}
             className={`${receivedStyle} w-full border-b-2 px-12px py-8px`}
           >
-            {t('calculator:MY_PAY_SLIP.TAB_RECEIVED')}
+            {t("calculator.my_pay_slip.tab_received")}
           </button>
           <button
             type="button"
             onClick={clickSentTab}
             className={`${sentStyle} w-full border-b-2 px-12px py-8px`}
           >
-            {t('calculator:MY_PAY_SLIP.TAB_SENT')}
+            {t("calculator.my_pay_slip.tab_sent")}
           </button>
         </div>
 
@@ -274,9 +297,9 @@ const MyPaySlipPageBody: React.FC = () => {
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
           />
-          {currentTab === 'received' ? (
+          {currentTab === "received" ? (
             <ReceivedTab
-              receivedRecords={receivedRecords}
+              receivedRecords={filteredSortedReceived}
               payPeriodSortOrder={receivedPayPeriodSortOrder}
               setPayPeriodSortOrder={setReceivedPayPeriodSortOrder}
               netPaySortOrder={receivedNetPaySortOrder}
@@ -284,7 +307,7 @@ const MyPaySlipPageBody: React.FC = () => {
             />
           ) : (
             <SentTab
-              sentRecords={sentRecords}
+              sentRecords={filteredSortedSent}
               payPeriodSortOrder={sentPayPeriodSortOrder}
               setPayPeriodSortOrder={setSentPayPeriodSortOrder}
               issuedDateSortOrder={sentIssuedDateSortOrder}

@@ -1,9 +1,9 @@
 import {
-  SalaryDeduction,
+  ISalaryDeduction,
   SALARY_DEDUCTIONS,
-  InsuranceParameters,
+  IInsuranceParameters,
   INSURANCE_PARAMETERS,
-  OCCUPATIONAL_ACCIDENT_INSURANCE_RATE,
+  OCCUPATIONAL_ACCIDENT_INSURANCE_RATE
 } from '@/constants/salary_levels';
 import {
   IGetSalaryLevelOptions,
@@ -11,7 +11,7 @@ import {
   ISalaryCalculatorResult,
 } from '@/interfaces/salary_calculator';
 
-const getInsuranceParametersByYear = (year: number): InsuranceParameters => {
+const getInsuranceParametersByYear = (year: number): IInsuranceParameters => {
   const insuranceParameters = INSURANCE_PARAMETERS.find((params) => params.YEAR === year);
   if (!insuranceParameters) {
     // ToDo: (20250727 - Luphia) Defined ErrorCode and ErrorMessage
@@ -69,7 +69,7 @@ export const getSalaryLevel = (options: IGetSalaryLevelOptions) => {
   return salaryLevel;
 };
 
-const getSalaryDeductionsByYear = (year: number): SalaryDeduction[] => {
+const getSalaryDeductionsByYear = (year: number): ISalaryDeduction[] => {
   const salaryDeduction = SALARY_DEDUCTIONS.find((deduction) => deduction.YEAR === year);
   if (!salaryDeduction) {
     // ToDo: (20250727 - Luphia) 定義 ErrorCode 與 ErrorMessage
@@ -237,16 +237,38 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
     employeeEndDateRaw > realDaysInMonth || employeeEndDateRaw < employeeStartDate
       ? realDaysInMonth
       : employeeEndDateRaw;
+  // Info: (20260302 - Luphia) 確認是否本月退保
+  const isResignedThisMonth = options.employeeEndDate !== undefined;
   // Info: (20250814 - Luphia) 計算基礎薪資比例 1. 完整一個月 2. 工作不滿一個月但等於 30 日 3. 該月不到 30 日且工作不滿一個月
   const baseSalaryRatio = isUsing30DaysSystem
     ? // Info: (20250814 - Luphia) 30 日制計算方式
-      employeeStartDate === 1 && employeeEndDate === realDaysInMonth
+    employeeStartDate === 1 && employeeEndDate === realDaysInMonth
       ? 30 / 30
       : realDaysInMonth < 30
         ? (employeeEndDate - employeeStartDate + 1 + 30 - realDaysInMonth) / 30
         : (employeeEndDate - employeeStartDate + 1) / 30
     : // Info: (20250814 - Luphia) 實際日曆天數計算方式
-      (employeeEndDate - employeeStartDate + 1) / realDaysInMonth;
+    (employeeEndDate - employeeStartDate + 1) / realDaysInMonth;
+
+  let insuranceDays;
+
+  if (!isResignedThisMonth) {
+    /**
+     * Info: (20260302 - Luphia) 狀況一：仍在職（本月未退保）
+     * 勞保局規定：不論大小月或 2 月，當月計費天數皆為「30 - 到職日 + 1」
+     * 若為 31 號到職，勞保局規定算 1 天，用 Math.max(1, ...) 可完美防呆
+     */
+    insuranceDays = Math.max(1, 30 - employeeStartDate + 1);
+  } else {
+    /**
+     * Info: (20260302 - Luphia) 狀況二：本月離職（本月有退保）
+     * 勞保局規定：退保當月看「實際天數」，但單月上限最多不超過 30 天
+     * (2/28 退保會算出 27 天；若 3/31 退保，Math.min 會將 30 天卡頂)
+     */
+    insuranceDays = Math.min(30, employeeEndDate - employeeStartDate + 1);
+  }
+
+  const insuranceRatio = insuranceDays / 30;
 
   // Info: (20250814 - Luphia) 計算約定月薪
   const baseSalary = baseSalaryTaxable + baseSalaryTaxFree;
@@ -299,7 +321,7 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
       overTimeHoursTaxable200 * 2 +
       overTimeHoursTaxable233 * (7 / 3) +
       overTimeHoursTaxable266 * (8 / 3)) *
-      baseSalaryPerHour
+    baseSalaryPerHour
   );
   const overTimePayTaxFree = Math.ceil(
     (overTimeHoursTaxFree100 +
@@ -308,7 +330,7 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
       overTimeHoursTaxFree200 * 2 +
       overTimeHoursTaxFree233 * (7 / 3) +
       overTimeHoursTaxFree266 * (8 / 3)) *
-      baseSalaryPerHour
+    baseSalaryPerHour
   );
 
   // Info: (20250727 - Luphia) 計算本薪（應稅）與伙食費（未稅），用出席時數計算，需足額，故採無條件進入
@@ -349,29 +371,29 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
   const companyBurdenHealthInsurance =
     isHealthInsuranceEnrolled && employeeEndDateRaw === realDaysInMonth
       ? Math.round(
-          salaryLevel.healthInsuranceLevel *
-            healthInsuranceRate *
-            (1 + insuranceParameters.AVERAGE_DEPENDENTS) *
-            insuranceBurden.HEALTH_INSURANCE.COMPANY
-        )
+        salaryLevel.healthInsuranceLevel *
+        healthInsuranceRate *
+        (1 + insuranceParameters.AVERAGE_DEPENDENTS) *
+        insuranceBurden.HEALTH_INSURANCE.COMPANY
+      )
       : 0;
-  // Info: (20251009 - Luphia) 按照到職日數比例計算勞保，採四捨五入
+  // Info: (20260302 - Luphia) 按照到職日數比例計算勞保，採四捨五入，使用 insuranceRatio
   const companyBurdenLaborInsurance = isLaborInsuranceEnrolled
     ? Math.round(
-        salaryLevel.laborInsuranceLevel *
-          laborInsuranceRate *
-          insuranceBurden.LABOR_INSURANCE.COMPANY *
-          baseSalaryRatio
-      )
+      salaryLevel.laborInsuranceLevel *
+      laborInsuranceRate *
+      insuranceBurden.LABOR_INSURANCE.COMPANY *
+      insuranceRatio
+    )
     : 0;
   // Info: (20251009 - Luphia) 按照到職日數比例計算就保，採四捨五入
   const companyBurdenEmploymentInsurance = isLaborInsuranceEnrolled
     ? Math.round(
-        salaryLevel.employmentInsuranceLevel *
-          employmentInsuranceRate *
-          insuranceBurden.EMPLOYMENT_INSURANCE.COMPANY *
-          baseSalaryRatio
-      )
+      salaryLevel.employmentInsuranceLevel *
+      employmentInsuranceRate *
+      insuranceBurden.EMPLOYMENT_INSURANCE.COMPANY *
+      insuranceRatio
+    )
     : 0;
   // Info: (20251009 - Luphia) 按著到職日數比例計算職災保險，採四捨五入
   const occupationalDisasterIndustryRate = getOccupationalAccidentInsuranceRatesByYearJob(
@@ -384,16 +406,16 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
     job
   );
   const companyBurdenOccupationalAccidentInsurance = isLaborInsuranceEnrolled
-    ? Math.round(baseOccupationalAccidentInsuranceFee * baseSalaryRatio)
+    ? Math.round(baseOccupationalAccidentInsuranceFee * insuranceRatio)
     : 0;
   // Info: (20251009 - Luphia) 按照到職日數比例計算勞退，採四捨五入
   const companyBurdenPensionInsurance = isPensionInsuranceEnrolled
     ? Math.round(
-        salaryLevel.pensionInsuranceLevel *
-          pensionInsuranceRate *
-          insuranceBurden.PENSION_INSURANCE.COMPANY *
-          baseSalaryRatio
-      )
+      salaryLevel.pensionInsuranceLevel *
+      pensionInsuranceRate *
+      insuranceBurden.PENSION_INSURANCE.COMPANY *
+      baseSalaryRatio
+    )
     : 0;
   const totalCompanyBurden =
     totalSalary +
@@ -404,33 +426,33 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
     companyBurdenOccupationalAccidentInsurance;
 
   // Info: (20250727 - Luphia) 計算員工負擔與扣項
-  // Info: (20251009 - Luphia) 按照到職日數比例計算勞保，採四捨五入
+  // Info: (20260302 - Luphia) 按照到職日數比例計算勞保，採四捨五入，使用 insuranceRatio
   const employeeBurdenLaborInsurance = isLaborInsuranceEnrolled
     ? Math.round(
-        salaryLevel.laborInsuranceLevel *
-          laborInsuranceRate *
-          insuranceBurden.LABOR_INSURANCE.EMPLOYEE *
-          baseSalaryRatio
-      )
+      salaryLevel.laborInsuranceLevel *
+      laborInsuranceRate *
+      insuranceBurden.LABOR_INSURANCE.EMPLOYEE *
+      insuranceRatio
+    )
     : 0;
   // Info: (20251009 - Luphia) 按照到職日數比例計算就保，採四捨五入
   const employeeBurdenEmploymentInsurance = isLaborInsuranceEnrolled
     ? Math.round(
-        salaryLevel.employmentInsuranceLevel *
-          employmentInsuranceRate *
-          insuranceBurden.EMPLOYMENT_INSURANCE.EMPLOYEE *
-          baseSalaryRatio
-      )
+      salaryLevel.employmentInsuranceLevel *
+      employmentInsuranceRate *
+      insuranceBurden.EMPLOYMENT_INSURANCE.EMPLOYEE *
+      insuranceRatio
+    )
     : 0;
   // Info: (20251009 - Luphia) 若員工記薪結束日不是月底則不需要保健保
   const employeeBurdenHealthInsurance =
     isHealthInsuranceEnrolled && employeeEndDateRaw === realDaysInMonth
       ? Math.round(
-          salaryLevel.healthInsuranceLevel *
-            healthInsuranceRate *
-            insuranceBurden.HEALTH_INSURANCE.EMPLOYEE +
-            employeeBurdenHealthInsurancePremiums
-        )
+        salaryLevel.healthInsuranceLevel *
+        healthInsuranceRate *
+        insuranceBurden.HEALTH_INSURANCE.EMPLOYEE +
+        employeeBurdenHealthInsurancePremiums
+      )
       : 0;
   // Info: (20251009 - Luphia) 根據自負比例計算勞退自負金額
   employeeBurdenPensionInsurance *= companyBurdenPensionInsurance / 0.06;

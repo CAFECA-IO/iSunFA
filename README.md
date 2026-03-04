@@ -1,116 +1,90 @@
 # iSunFA
-歡迎來到 iSunFA 區塊鏈會計與人工智能審計技術的官方網站專案。iSunFA 陽光智能會計是一個融合區塊鏈技術和人工智能審計的先進會計解決方案，旨在提供更加透明、安全和高效的財務管理體驗。此份文件將說明如何完成 iSunFA 官方網站的環境準備與部署。
-> 最後更新於 2024-08-09
+歡迎來到 iSunFA 區塊鏈會計與人工智能審計技術專案。iSunFA 陽光智能會計是一個融合區塊鏈技術和人工智能審計的先進會計解決方案，旨在提供更加透明、安全和高效的財務管理碳盤查體驗。此份文件將說明如何完成 iSunFA 官方網站的環境準備與部署。
+> 最後更新於 2026-01-16
 
-## 開發流程
-- node 版本參考 `.nvmrc`
-- 可使用 `nvm use` 自動安裝跟使用統一 node 版本；使用低於 `18.17.1` 版本會跳警告
+## 專案核心
+**iSunFA** 致力於**解決財務會計與溫室氣體盤查大小事**。透過整合最前沿的加密技術與專為財務領域設計的 AI 推理模型，我們打造了一個值得信賴的自動化會計平台。從自動記帳、薪資管理、稅務申報到符合 ISO 規範的溫室氣體盤查，iSunFA 透過 AI 智能精準優化企業的完整財務與永續管理流程。
 
-## 部署流程
-1. [環境準備](#環境準備)
-2. [管理帳號設定](#管理帳號設定)
-3. [SWAP 設定](#swap-設定)
-4. [執行環境準備](#執行環境準備)
-5. [原始碼下載與編譯](#原始碼下載與編譯)
-6. [最終檢查](#最終檢查)
+## 核心優勢與功能
 
-### 環境準備
-請確保您的系統滿足以下最低要求：
-- Ubuntu 22.04
-- 1 Core CPU
-- 2 GB Ram
-- 20 GB Disk Space
+### 智慧財務管理
+- **自動記帳**: 透過 AI 自動識別 .doc/.xls/.pdf/.png 等格式憑證與單據，精準提取關鍵欄位，大幅節省時間與人力成本。
+- **會計報表**: 一鍵生成三大會計報表，隨時掌握企業營運狀況。
+- **帳務調整**: 提供靈活的帳務調整功能，同時確保會計紀錄的準確性與合規性。
+- **出納管理**: 即時掌握現金流向，輕鬆管理日常收支與銀行往來。
+- **薪資管理**: 自動計算薪資與扣繳，確保員工薪資發放準確無誤。
+- **稅務申報**: 自動生成報稅所需資料，讓稅務申報變得簡單輕鬆。
+- **文件簽核**: 安全、合規的數位文件簽署流程，加速審批效率。
 
-### 管理帳號設定
-```shell
-# 建立 iSunFA 帳號
-useradd -m -s /usr/bin/bash isunfa
-```
+### 永續與稽核
+- **溫室氣體核算**: 符合 ISO 規範，內建權威機構核定係數庫，自動計算溫室氣體排放。
+- **智能稽核**: 具備異常數值偵測能力，並建立數位證據鏈結，確保資料可信度。
+- **異質資料整合**: 可串接 ERP、MES 系統，整合企業內部的異質資料。
+- **數據追溯**: 提供數據鑽取功能，可從最終報表回溯至原始單據，確保數據具有可追蹤性。
 
-```shell
-# 設定 iSunFA 登入密碼
-passwd isunfa
-New password:
-```
+### 先進技術
+- **財務專用 AI 模型**: 具備深度理解與推理能力，精準處理複雜會計問題。
+- **隱私計算**: 在不解密資料的情況下完成驗證與計算，有效保護隱私並建立共識信任。
+- **分散式邊緣運算**: 利用分散式架構實現高效能、低延遲的資料處理與即時同步。
 
-```shell
-# 授權 iSunFA sudo 權限
-sudo usermod -g sudo isunfa
-```
+## 系統架構圖
 
-### SWAP 設定
-```shell
-# 建立 swap 檔案
-sudo fallocate -l 4G /swapfile
-```
+本系統採用微服務導向的分散式架構，整合了 **iSunFA GUI**、**AICH AI Agent**、**FAITH 多模態模型** 與 **SwarmStorage** 分散式存儲。
 
-```shell
-# 設定 swap 與開機啟動程序
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
-echo "/swapfile none swap sw 0 0" | sudo tee -a /etc/fstab
-```
+<img width="2816" height="1536" alt="isunfa_architecture" src="public/images/isunfa_architecture.png" />
 
-### 執行環境準備
-```shell
-# 安裝必要函式庫
-sudo apt-get update
-sudo apt-get install openssl libtool autoconf automake uuid-dev build-essential gcc g++ software-properties-common unzip make git libcap2-bin -y
-```
+## 部署辦法 (Deployment)
 
-### Install Node
-```shell
-# 安裝 nodejs, pm2 並授予 80 443 port 權限
-bash <(curl https://raw.githubusercontent.com/Luphia/SIMPLE/master/shell/install-env.sh -kL)
-```
+### 環境需求
+- **OS**: Linux / macOS
+- **Runtime**: Node.js v20+
+- **Container**: Docker & Docker Compose
+- **Database**: PostgreSQL 16+
 
-### 原始碼下載與編譯
-```shell
-# 資料夾建立與授權移轉
-sudo mkdir /workspace
-sudo chown isunfa /workspace -R
-```
+### 快速啟動 (Quick Start)
 
-```shell
-# 下載原始碼
-cd /workspace
-git clone https://github.com/CAFECA-IO/iSunFA
-```
+1.  **複製專案**
+    ```bash
+    git clone https://github.com/CAFECA-IO/iSunFA.git
+    cd iSunFA
+    ```
 
-```shell
-# 安裝函式庫
-cd /workspace/iSunFA
-npm install
-```
+2.  **安裝依賴**
+    ```bash
+    npm install
+    ```
 
-```shell
-# 設定環境參數
-cp example.local.env .env.local
-vi .env.local
-```
+3.  **啟動基礎設施 (Docker)**
+    啟動 PostgreSQL 資料庫及其他相依服務：
+    ```bash
+    docker-compose up -d
+    ```
 
-```shell
-# 編譯
-npm run build
-```
+4.  **設定環境變數**
+    複製範例設定檔並依據實際環境修改：
+    ```bash
+    cp .env.example .env
+    ```
 
-### 最終檢查
-```shell
-# 啟動專案
-pm2 start npm --name iSunFA -- run production
-```
+5.  **初始化資料庫**
+    生成 Prisma Client 並同步資料庫結構：
+    ```bash
+    npx prisma generate
+    npx prisma db push
+    ```
 
-```shell
-# 檢視 log
-pm2 log iSunFA
-```
+6.  **啟動開發伺服器**
+    ```bash
+    npm run dev
+    ```
+    服務將運行於 http://localhost:3000
 
-```shell
-# 出現以下資訊即表示起動成功
-   ▲ Next.js 14.0.4
-   - Local:        http://localhost:80
-```
-
+7.  **生產環境構建與運行**
+    ```bash
+    npm run build
+    npm start
+    # 或使用 Swarm 模式端口 (10020)
+    npm run swarm
+    ```
 ## 聯繫我們
-如果您對 iSunFA 感興趣或有任何疑問，請隨時聯繫我們的客戶支持團隊。我們期待著與您一起開啟更加先進、高效的財務管理體驗，讓您的企業在 WEB3 時代更上一層樓。
+如果您對 iSunFA 感興趣或有任何疑問，請隨時聯繫我們的[客戶支持團隊](contact@isunfa.com)。我們期待著與您一起開啟更加先進、高效的財務管理體驗，讓您的企業在人工智能時代更上一層樓。

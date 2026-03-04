@@ -1,18 +1,18 @@
-import React from 'react';
-import { useTranslation } from 'next-i18next';
-import { FaCircleCheck } from 'react-icons/fa6';
-import { useCalculatorCtx } from '@/contexts/calculator_context';
-import { useModalContext } from '@/contexts/modal_context';
-import { MessageType } from '@/interfaces/message_modal';
-import { getMinimumWage } from '@/lib/utils/salary_calculator';
+import React from "react";
+import { useTranslation } from "@/i18n/i18n_context";
+import { CircleCheck } from "lucide-react";
+import { useCalculatorCtx } from "@/contexts/calculator_context";
+// import { useModalContext } from '@/contexts/modal_context';
+// import { MessageType } from '@/interfaces/message_modal';
+import { getMinimumWage } from "@/lib/utils/salary_calculator";
 
 const StepTabs: React.FC = () => {
-  const { t } = useTranslation(['calculator', 'common']);
+  const { t } = useTranslation();
   const steps = [
-    t('calculator:TABS.BASIC_INFO'),
-    t('calculator:TABS.BASE_PAY'),
-    t('calculator:TABS.WORK_HOURS'),
-    t('calculator:TABS.OTHERS'),
+    t("calculator.tabs.basic_info"),
+    t("calculator.tabs.base_pay"),
+    t("calculator.tabs.work_hours"),
+    t("calculator.tabs.others"),
   ];
 
   const {
@@ -27,38 +27,48 @@ const StepTabs: React.FC = () => {
     setIsNameError,
     selectedYear,
   } = useCalculatorCtx();
-  const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
+
+  // ToDo: (20260224 - Julian) =========== 這裡要實作 Modal
+  // const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
 
   // Info: (20251002 - Julian) 取得當前年份的最低基本薪資
   const thisYear = parseInt(selectedYear);
   const minBasicSalary = getMinimumWage(thisYear);
 
   // Info: (20251002 - Julian) 本薪（應稅）＋伙食費（免稅）＋其他加給（應稅）＋其他加給（免稅）應大於等於最低基本薪資
-  const wage = baseSalary + mealAllowance + otherAllowanceWithTax + otherAllowanceWithoutTax;
+  const wage =
+    baseSalary +
+    mealAllowance +
+    otherAllowanceWithTax +
+    otherAllowanceWithoutTax;
   const isWageError = wage < minBasicSalary;
 
   const tabs = steps.map((step, index) => {
     const isActive = currentStep === index + 1;
     // Info: (20250710 - Julian) 檢查 completeSteps 是否包含當前步驟
-    const isCompleted = completeSteps.some((s) => s.step === index + 1 && s.completed);
+    const isCompleted = completeSteps.some(
+      (s) => s.step === index + 1 && s.completed,
+    );
 
-    // Info: (20250714 - Julian) 點擊按鈕時的處理函數
-    // 第三步（工時）和第四步（其他）沒有特別的檢查條件，所以直接切換到下一步
+    /**
+     * Info: (20250714 - Julian) 點擊按鈕時的處理函數
+     * 第三步（工時）和第四步（其他）沒有特別的檢查條件，所以直接切換到下一步
+     */
     const clickHandler = () => {
       switch (currentStep) {
         case 1:
           // Info: (20250714 - Julian) 第一步（基本資訊）的檢查條件
-          if (employeeName === '') {
+          if (employeeName === "") {
             // Info: (20250714 - Julian) 如果姓名有錯誤，則不允許切換到下一步，且顯示錯誤訊息
             setIsNameError(true);
-            messageModalDataHandler({
-              messageType: MessageType.ERROR,
-              title: t('calculator:MESSAGE.NAME_ERROR_TITLE'),
-              content: t('calculator:MESSAGE.NAME_ERROR_CONTENT'),
-              submitBtnStr: t('common:COMMON.CLOSE'),
-              submitBtnFunction: messageModalVisibilityHandler,
-            });
-            messageModalVisibilityHandler();
+            // messageModalDataHandler({
+            //   messageType: MessageType.ERROR,
+            //   title: t('calculator:MESSAGE.NAME_ERROR_TITLE'),
+            //   content: t('calculator:MESSAGE.NAME_ERROR_CONTENT'),
+            //   submitBtnStr: t('common:COMMON.CLOSE'),
+            //   submitBtnFunction: messageModalVisibilityHandler,
+            // });
+            // messageModalVisibilityHandler();
             return;
           }
           // Info: (20250714 - Julian) 如果姓名正確，則切換到下一步
@@ -68,14 +78,14 @@ const StepTabs: React.FC = () => {
           // Info: (20250714 - Julian) 第二步（基本薪資）的檢查條件
           if (isWageError) {
             // Info: (20250714 - Julian) 如果薪資小於最小值，則不允許切換到下一步，且顯示錯誤訊息
-            messageModalDataHandler({
-              messageType: MessageType.ERROR,
-              title: t('calculator:MESSAGE.SALARY_ERROR_TITLE'),
-              content: t('calculator:MESSAGE.SALARY_ERROR_CONTENT'),
-              submitBtnStr: t('common:COMMON.CLOSE'),
-              submitBtnFunction: messageModalVisibilityHandler,
-            });
-            messageModalVisibilityHandler();
+            // messageModalDataHandler({
+            //   messageType: MessageType.ERROR,
+            //   title: t('calculator:MESSAGE.SALARY_ERROR_TITLE'),
+            //   content: t('calculator:MESSAGE.SALARY_ERROR_CONTENT'),
+            //   submitBtnStr: t('common:COMMON.CLOSE'),
+            //   submitBtnFunction: messageModalVisibilityHandler,
+            // });
+            // messageModalVisibilityHandler();
             return;
           }
           // Info: (20250714 - Julian) 如果基本薪資正確，則切換到下一步
@@ -88,31 +98,34 @@ const StepTabs: React.FC = () => {
     };
 
     const stepClass = isActive
-      ? 'border-stroke-state-success bg-surface-state-success-soft text-text-state-success'
+      ? "border-orange-400 bg-orange-50 text-orange-900"
       : isCompleted
-        ? 'text-text-state-success border-stroke-neutral-tertiary'
-        : 'border-stroke-neutral-tertiary text-text-neutral-secondary';
+        ? "border-green-400 bg-green-50 text-green-700"
+        : "border-gray-300 text-gray-400 hover:text-gray-600 hover:bg-gray-50";
 
     const iconClass = isActive
-      ? ' text-surface-state-success'
+      ? "text-orange-400"
       : isCompleted
-        ? 'text-surface-state-success-dark'
-        : 'text-surface-neutral-mute';
+        ? "text-green-500"
+        : "text-gray-300";
 
     return (
       <button
         key={step}
         type="button"
         onClick={clickHandler}
-        className={`${stepClass} flex h-40px w-full items-center justify-center gap-8px rounded-sm border px-12px py-lv-3 text-xs font-medium tablet:py-8px`}
+        className={`${stepClass} flex h-11 w-full items-center justify-center gap-1 rounded-xl border px-4 transition-all duration-200 text-xs font-bold uppercase tracking-wider`}
       >
-        <FaCircleCheck size={20} className={iconClass} />
+        <CircleCheck
+          size={20}
+          className={`${iconClass} transition-colors duration-200`}
+        />
         {step}
       </button>
     );
   });
 
-  return <div className="grid grid-cols-2 gap-8px tablet:grid-cols-4">{tabs}</div>;
+  return <div className="grid grid-cols-2 gap-3 min-w-[350px] md:grid-cols-4">{tabs}</div>;
 };
 
 export default StepTabs;

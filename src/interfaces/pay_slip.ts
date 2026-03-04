@@ -1,9 +1,9 @@
-import { ISalaryCalculator, defaultSalaryCalculatorResult } from '@/interfaces/calculator';
+import { ISalaryCalculatorUI, defaultSalaryCalculatorResult } from '@/interfaces/salary_calculator';
 
 export interface IPaySlipRecord {
   id: string;
   payPeriod: number;
-  paySlipData: ISalaryCalculator;
+  paySlipData: ISalaryCalculatorUI;
 }
 
 // ToDo: (20250725 - Julian) 還有優化空間

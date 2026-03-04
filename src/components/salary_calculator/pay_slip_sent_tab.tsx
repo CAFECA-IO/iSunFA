@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
-import { PiUserFill } from 'react-icons/pi';
-import { FiCalendar } from 'react-icons/fi';
-import { LuSend } from 'react-icons/lu';
-import { useTranslation } from 'next-i18next';
-import { ISentRecord } from '@/interfaces/pay_slip';
-import { timestampToString } from '@/lib/utils/common';
-import { SortOrder } from '@/constants/sort';
-import SortingButton from '@/components/salary_calculator/sorting_button';
-import ViewPaySlipModal from '@/components/salary_calculator/view_pay_slip_modal';
+"use client";
+
+import React, { useState } from "react";
+import { User, Calendar, Send } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
+import { ISentRecord } from "@/interfaces/pay_slip";
+import { timestampToString } from "@/lib/utils/common";
+import { SortOrder } from "@/constants/sort";
+import SortingButton from "@/components/salary_calculator/sorting_button";
+import ViewPaySlipModal from "@/components/salary_calculator/view_pay_slip_modal";
 
 const cellStyle =
-  'table-cell border-b border-stroke-neutral-quaternary px-24px py-12px align-middle';
+  "table-cell border-b border-stroke-neutral-quaternary px-24px py-12px align-middle";
 
 const SentItem: React.FC<{
   record: ISentRecord;
@@ -18,34 +18,43 @@ const SentItem: React.FC<{
 }> = ({ record, itemClickHandler }) => {
   const { id, payPeriod, toEmail, issuedDate } = record;
   const payPeriodDate = timestampToString(payPeriod);
-  const periodStr = `${payPeriodDate.monthShortName} ${payPeriodDate.year}`;
+  const periodStr = `${payPeriodDate.monthName.slice(0, 3)} ${payPeriodDate.year}`;
 
   const clickHandler = () => itemClickHandler(id);
+  const keyDownHandler = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      itemClickHandler(id);
+    }
+  };
 
   return (
     <div
       onClick={clickHandler}
+      onKeyDown={keyDownHandler}
+      role="button"
+      tabIndex={0}
       className="table-row h-50px hover:cursor-pointer hover:bg-surface-brand-primary-30"
     >
       {/* Info: (20250723 - Julian) Pay Period */}
       <div className={cellStyle}>
         <div className="flex items-center gap-8px">
-          <FiCalendar size={16} className="text-text-neutral-tertiary" />
+          <Calendar size={16} className="text-text-neutral-tertiary" />
           <p>{periodStr}</p>
         </div>
       </div>
       {/* Info: (20250723 - Julian) From */}
       <div className={cellStyle}>
         <div className="flex items-center gap-8px">
-          <PiUserFill size={16} className="text-text-neutral-tertiary" />
+          <User size={16} className="text-text-neutral-tertiary" />
           <p>{toEmail}</p>
         </div>
       </div>
       {/* Info: (20250723 - Julian) Net Pay */}
       <div className={cellStyle}>
         <div className="flex items-center gap-8px">
-          <LuSend size={16} className="text-text-neutral-tertiary" />
-          <p>{timestampToString(issuedDate).date}</p>
+          <Send size={16} className="text-text-neutral-tertiary" />
+          <p>{timestampToString(issuedDate).dateWithSlash}</p>
         </div>
       </div>
     </div>
@@ -57,7 +66,9 @@ const SentTab: React.FC<{
   payPeriodSortOrder: SortOrder | null;
   setPayPeriodSortOrder: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   issuedDateSortOrder: SortOrder | null;
-  setIssuedDateSortOrder: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  setIssuedDateSortOrder: React.Dispatch<
+    React.SetStateAction<SortOrder | null>
+  >;
 }> = ({
   sentRecords,
   payPeriodSortOrder,
@@ -65,15 +76,17 @@ const SentTab: React.FC<{
   issuedDateSortOrder,
   setIssuedDateSortOrder,
 }) => {
-  const { t } = useTranslation(['calculator', 'date_picker']);
+  const { t } = useTranslation();
 
   const [isShowModal, setIsShowModal] = useState<boolean>(false);
   const [currentRecord, setCurrentRecord] = useState<ISentRecord | null>(null);
 
   const currentMonth = currentRecord
-    ? timestampToString(currentRecord.payPeriod).monthFullName
-    : '-';
-  const currentYear = currentRecord ? timestampToString(currentRecord.payPeriod).year : '-';
+    ? timestampToString(currentRecord.payPeriod).monthName
+    : "-";
+  const currentYear = currentRecord
+    ? timestampToString(currentRecord.payPeriod).year
+    : "-";
 
   const itemClickHandler = (recordId: string) => {
     // Info: (20250725 - Julian) 找到目標 record 並顯示 Modal
@@ -98,15 +111,15 @@ const SentTab: React.FC<{
           <div className="table-row">
             <div className={cellStyle}>
               <SortingButton
-                string={t('calculator:MY_PAY_SLIP.PAY_PERIOD')}
+                string={t("calculator.my_pay_slip.pay_period")}
                 sortOrder={payPeriodSortOrder}
                 setSortOrder={setPayPeriodSortOrder}
               />
             </div>
-            <div className={cellStyle}>{t('calculator:MY_PAY_SLIP.TO')}</div>
+            <div className={cellStyle}>{t("calculator.my_pay_slip.to")}</div>
             <div className={cellStyle}>
               <SortingButton
-                string={t('calculator:MY_PAY_SLIP.PAYSLIP_ISSUED_DATE')}
+                string={t("calculator.my_pay_slip.payslip_issued_date")}
                 sortOrder={issuedDateSortOrder}
                 setSortOrder={setIssuedDateSortOrder}
               />
@@ -117,7 +130,11 @@ const SentTab: React.FC<{
         {/* Info: (20250723 - Julian) Table Body */}
         <div className="table-row-group">
           {sentRecords.map((record) => (
-            <SentItem key={record.id} record={record} itemClickHandler={itemClickHandler} />
+            <SentItem
+              key={record.id}
+              record={record}
+              itemClickHandler={itemClickHandler}
+            />
           ))}
         </div>
       </div>

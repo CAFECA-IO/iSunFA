@@ -1,16 +1,16 @@
-import React from 'react';
+import React from "react";
 // import Image from 'next/image';
-import { useTranslation } from 'next-i18next';
-import ResultBlock from '@/components/salary_calculator/result_block';
-import { numberWithCommas } from '@/lib/utils/common';
-import { ISalaryCalculator, RowItem } from '@/interfaces/calculator';
+import { useTranslation } from "@/i18n/i18n_context";
+import ResultBlock from "@/components/salary_calculator/result_block";
+import { numberWithCommas } from "@/lib/utils/common";
+import { ISalaryCalculatorUI, RowItem } from "@/interfaces/salary_calculator";
 
 interface IPaySlipProps {
   employeeName: string;
   employeeNumber: string;
   selectedMonth: string;
   selectedYear: string;
-  resultData: ISalaryCalculator;
+  resultData: ISalaryCalculatorUI;
   className?: string;
 }
 
@@ -20,14 +20,15 @@ const PaySlip: React.FC<IPaySlipProps> = ({
   selectedMonth,
   selectedYear,
   resultData,
-  className = '',
+  className = "",
 }) => {
-  const { t } = useTranslation('calculator');
+  const { t } = useTranslation();
 
-  const showingName = employeeName !== '' ? employeeName : '-';
-  const showingNumber = employeeNumber !== '' ? employeeNumber : '-';
+  const showingName = employeeName !== "" ? employeeName : "-";
+  const showingNumber = employeeNumber !== "" ? employeeNumber : "-";
   // Info: (20250709 - Julian) 格式化日期
-  const formattedMonth = selectedMonth.length > 3 ? `${selectedMonth.slice(0, 3)}.` : selectedMonth;
+  const formattedMonth =
+    selectedMonth.length > 3 ? `${selectedMonth.slice(0, 3)}.` : selectedMonth;
   const formattedDate = `${formattedMonth} ${selectedYear}`;
 
   const {
@@ -77,41 +78,44 @@ const PaySlip: React.FC<IPaySlipProps> = ({
 
   // Info: (20250708 - Julian) 月薪資項目
   const monthlyRowItems: RowItem[] = [
-    { label: t('calculator:RESULT.BASE_SALARY_WITH_TAX'), value: baseSalaryWithTax },
     {
-      label: t('calculator:RESULT.OVERTIME_PAY_WITH_TAX'),
+      label: t("calculator.result.base_salary_with_tax"),
+      value: baseSalaryWithTax,
+    },
+    {
+      label: t("calculator.result.overtime_pay_with_tax"),
       value: overtimePayWithTax,
     },
     {
-      label: t('calculator:RESULT.OTHER_ALLOWANCE_WITH_TAX'),
+      label: t("calculator.result.other_allowance_with_tax"),
       value: otherAllowanceWithTax,
     },
     {
-      label: t('calculator:RESULT.TOTAL_SALARY_WITH_TAX'),
+      label: t("calculator.result.total_salary_with_tax"),
       value: totalSalaryWithTax,
     },
     {
-      label: t('calculator:RESULT.MEAL_ALLOWANCE_WITHOUT_TAX'),
+      label: t("calculator.result.meal_allowance_without_tax"),
       value: mealAllowanceWithoutTax,
     },
     {
-      label: t('calculator:RESULT.OVERTIME_PAY_WITHOUT_TAX'),
+      label: t("calculator.result.overtime_pay_without_tax"),
       value: overtimePayWithoutTax,
     },
     {
-      label: t('calculator:RESULT.OTHER_ALLOWANCE_WITHOUT_TAX'),
+      label: t("calculator.result.other_allowance_without_tax"),
       value: otherAllowanceWithoutTax,
     },
     {
-      label: t('calculator:RESULT.LEAVE_SALARY_WITHOUT_TAX'),
+      label: t("calculator.result.leave_salary_without_tax"),
       value: leaveSalaryWithoutTax,
     },
     {
-      label: t('calculator:RESULT.TOTAL_SALARY_WITHOUT_TAX'),
+      label: t("calculator.result.total_salary_without_tax"),
       value: totalSalaryWithoutTax,
     },
     {
-      label: t('calculator:RESULT.TOTAL_MONTHLY_SALARY'),
+      label: t("calculator.result.total_monthly_salary"),
       value: totalMonthlySalary,
     },
   ];
@@ -119,39 +123,39 @@ const PaySlip: React.FC<IPaySlipProps> = ({
   // Info: (20250708 - Julian) 員工負擔項目
   const employeeRowItems: RowItem[] = [
     {
-      label: t('calculator:RESULT.EMPLOYEE_PAID_LABOR_INSURANCE'),
+      label: t("calculator.result.employee_paid_labor_insurance"),
       value: employeePaidLaborInsurance,
     },
     {
-      label: t('calculator:RESULT.EMPLOYEE_PAID_HEALTH_INSURANCE'),
+      label: t("calculator.result.employee_paid_health_insurance"),
       value: employeePaidHealthInsurance,
     },
     {
-      label: t('calculator:RESULT.VOLUNTARY_PENSION_CONTRIBUTION'),
+      label: t("calculator.result.voluntary_pension_contribution"),
       value: voluntaryPensionContribution,
     },
     {
-      label: t('calculator:RESULT.WITHHELD_INCOME_TAX'),
+      label: t("calculator.result.withheld_income_tax"),
       value: withheldIncomeTax,
     },
     {
-      label: t('calculator:RESULT.WITHHELD_SECOND_GENERATION_NHI_PREMIUM'),
+      label: t("calculator.result.withheld_second_generation_nhi_premium"),
       value: withheldSecondGenerationNHIPremium,
     },
     {
-      label: t('calculator:RESULT.LEAVE_DEDUCTION_WITH_TAX'),
+      label: t("calculator.result.leave_deduction_with_tax"),
       value: leaveDeductionTaxable,
     },
     {
-      label: t('calculator:RESULT.LEAVE_DEDUCTION_WITHOUT_TAX'),
+      label: t("calculator.result.leave_deduction_without_tax"),
       value: leaveDeductionTaxFree,
     },
     {
-      label: t('calculator:RESULT.OTHER_DEDUCTIONS_ADJUSTMENTS'),
+      label: t("calculator.result.other_deductions_adjustments"),
       value: otherDeductionsOrAdjustments,
     },
     {
-      label: t('calculator:RESULT.TOTAL_DEDUCTIONS'),
+      label: t("calculator.result.total_deductions"),
       value: totalEmployeeBurden,
     },
   ];
@@ -159,31 +163,33 @@ const PaySlip: React.FC<IPaySlipProps> = ({
   // Info: (20250708 - Julian) 投保級距項目
   const insuredSalaryRowItems: RowItem[] = [
     {
-      label: t('calculator:RESULT.HEALTH_INSURANCE_SALARY_BRACKET'),
+      label: t("calculator.result.health_insurance_salary_bracket"),
       value: healthInsuranceSalaryBracket,
     },
     {
-      label: t('calculator:RESULT.LABOR_INSURANCE_SALARY_BRACKET'),
+      label: t("calculator.result.labor_insurance_salary_bracket"),
       value: laborInsuranceSalaryBracket,
     },
     {
-      label: t('calculator:RESULT.EMPLOYMENT_INSURANCE_SALARY_BRACKET'),
+      label: t("calculator.result.employment_insurance_salary_bracket"),
       value: employmentInsuranceSalaryBracket,
     },
     {
-      label: t('calculator:RESULT.OCCUPATIONAL_INJURY_INSURANCE_SALARY_BRACKET'),
+      label: t(
+        "calculator.result.occupational_injury_insurance_salary_bracket",
+      ),
       value: occupationalInjuryInsuranceSalaryBracket,
     },
     {
-      label: t('calculator:RESULT.LABOR_PENSION_SALARY_BRACKET'),
+      label: t("calculator.result.labor_pension_salary_bracket"),
       value: laborPensionSalaryBracket,
     },
     {
-      label: t('calculator:RESULT.OCCUPATIONAL_INJURY_INDUSTRY_RATE'),
+      label: t("calculator.result.occupational_injury_industry_rate"),
       value: occupationalInjuryIndustryRate,
     },
     {
-      label: t('calculator:RESULT.INSURED_SALARY'),
+      label: t("calculator.result.insured_salary"),
       value: insuredSalary,
     },
   ];
@@ -191,27 +197,29 @@ const PaySlip: React.FC<IPaySlipProps> = ({
   // Info: (20250708 - Julian) 雇主負擔項目
   const employerRowItems: RowItem[] = [
     {
-      label: t('calculator:RESULT.EMPLOYER_PAID_LABOR_INSURANCE'),
+      label: t("calculator.result.employer_paid_labor_insurance"),
       value: employerPaidLaborInsurance,
     },
     {
-      label: t('calculator:RESULT.EMPLOYER_PAID_HEALTH_INSURANCE'),
+      label: t("calculator.result.employer_paid_health_insurance"),
       value: employerPaidHealthInsurance,
     },
     {
-      label: t('calculator:RESULT.EMPLOYER_PAID_PENSION_CONTRIBUTION'),
+      label: t("calculator.result.employer_paid_pension_contribution"),
       value: employerPaidPensionContribution,
     },
     {
-      label: t('calculator:RESULT.COMPANY_BURDEN_OCCUPATIONAL_ACCIDENT_INSURANCE'),
+      label: t(
+        "calculator.result.company_burden_occupational_accident_insurance",
+      ),
       value: companyBurdenOccupationalAccidentInsurance,
     },
     {
-      label: t('calculator:RESULT.MONTHLY_PAY'),
+      label: t("calculator.result.monthly_pay"),
       value: totalSalary,
     },
     {
-      label: t('calculator:RESULT.TOTAL_EMPLOYER_COST'),
+      label: t("calculator.result.total_employer_cost"),
       value: totalEmployerCost,
     },
   ];
@@ -219,20 +227,23 @@ const PaySlip: React.FC<IPaySlipProps> = ({
   return (
     <div
       id="payslip-download"
-      className={`flex flex-col gap-12px bg-surface-neutral-surface-lv2 ${className}`}
+      className={`relative flex flex-col gap-6 rounded-2xl bg-white p-6 shadow-xl border border-gray-200 overflow-hidden ${className}`}
     >
+      <div className="absolute top-0 left-0 w-full h-1" />
       {/* Info: (20250708 - Julian) Title */}
-      <div className="grid grid-cols-1 gap-12px tablet:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 text-gray-900 lg:grid-cols-2">
         {/* Info: (20250708 - Julian) 姓名和日期 */}
-        <div className="flex flex-col items-start gap-8px">
-          <p className="text-xs font-medium text-text-brand-primary-lv1 tablet:text-base tablet:font-semibold">
+        <div className="flex flex-col items-start gap-2">
+          <p className="text-xs font-medium text-text-brand-primary-lv1 lg:text-base lg:font-semibold">
             {formattedDate}
           </p>
-          <div className="flex items-baseline gap-lv-2 text-2xl font-bold text-text-neutral-primary tablet:text-28px">
+          <div className="flex items-baseline gap-2 text-2xl font-bold text-text-neutral-primary lg:text-[28px]">
             {showingName}
-            <span className="block text-xs font-medium tablet:hidden">{showingNumber}</span>
+            <span className="block text-xs font-medium lg:hidden">
+              {showingNumber}
+            </span>
           </div>
-          <p className="hidden text-xs font-medium text-text-neutral-primary tablet:block">
+          <p className="hidden text-xs font-medium text-text-neutral-primary lg:block">
             {showingNumber}
           </p>
         </div>
@@ -241,40 +252,53 @@ const PaySlip: React.FC<IPaySlipProps> = ({
           <Image src="/icons/money_bag.svg" alt="salary_icon" width={32} height={32} />
           <p>NT ${numberWithCommas(totalSalary)}</p>
         </div> */}
-        <div className="flex flex-col gap-8px">
+        <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase text-black">
-              {t('calculator:RESULT.REPORTED')}
+            <p className="text-xs font-semibold uppercase ">
+              {t("calculator.result.reported")}
             </p>
             <div className="text-2xl font-bold text-text-brand-primary-lv2">
-              {numberWithCommas(totalSalaryTaxable)}{' '}
-              <span className="text-base font-semibold text-text-neutral-tertiary">NTD</span>
+              {numberWithCommas(totalSalaryTaxable)}{" "}
+              <span className="text-base font-semibold text-text-neutral-tertiary">
+                NTD
+              </span>
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase text-black">
-              {t('calculator:RESULT.PAID')}
+            <p className="text-xs font-semibold uppercase ">
+              {t("calculator.result.paid")}
             </p>
             <div className="text-2xl font-bold text-text-brand-primary-lv2">
-              {numberWithCommas(totalPayment)}{' '}
-              <span className="text-base font-semibold text-text-neutral-tertiary">NTD</span>
+              {numberWithCommas(totalPayment)}{" "}
+              <span className="text-base font-semibold text-text-neutral-tertiary">
+                NTD
+              </span>
             </div>
           </div>
         </div>
       </div>
       {/* Info: (20250708 - Julian) Result Field */}
-      <div className="grid grid-cols-1 gap-12px tablet:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Info: (20250708 - Julian) 月薪資合計 */}
-        <ResultBlock backgroundColor="bg-surface-support-soft-maple" rowItems={monthlyRowItems} />
+        <ResultBlock
+          backgroundColor="bg-orange-100"
+          rowItems={monthlyRowItems}
+        />
         {/* Info: (20250708 - Julian) 員工負擔 */}
-        <ResultBlock backgroundColor="bg-surface-support-soft-rose" rowItems={employeeRowItems} />
+        <ResultBlock
+          backgroundColor="bg-rose-100"
+          rowItems={employeeRowItems}
+        />
         {/* Info: (20250708 - Julian) 投保薪資 */}
         <ResultBlock
-          backgroundColor="bg-surface-support-soft-baby"
+          backgroundColor="bg-sky-100"
           rowItems={insuredSalaryRowItems}
         />
         {/* Info: (20250708 - Julian) 雇主總負擔 */}
-        <ResultBlock backgroundColor="bg-surface-support-soft-green" rowItems={employerRowItems} />
+        <ResultBlock
+          backgroundColor="bg-emerald-100"
+          rowItems={employerRowItems}
+        />
       </div>
     </div>
   );

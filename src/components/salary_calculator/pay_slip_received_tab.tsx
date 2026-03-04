@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'next-i18next';
-import { FiCalendar, FiDownload } from 'react-icons/fi';
-import { RiMoneyDollarCircleLine } from 'react-icons/ri';
-import { IReceivedRecord } from '@/interfaces/pay_slip';
-import { numberWithCommas, timestampToString } from '@/lib/utils/common';
-import { SortOrder } from '@/constants/sort';
-import SortingButton from '@/components/salary_calculator/sorting_button';
-import ViewPaySlipModal from '@/components/salary_calculator/view_pay_slip_modal';
+"use client";
+
+import React, { useState } from "react";
+import { useTranslation } from "@/i18n/i18n_context";
+import { Calendar, Download, DollarSign } from "lucide-react";
+import { IReceivedRecord } from "@/interfaces/pay_slip";
+import { numberWithCommas, timestampToString } from "@/lib/utils/common";
+import { SortOrder } from "@/constants/sort";
+import SortingButton from "@/components/salary_calculator/sorting_button";
+import ViewPaySlipModal from "@/components/salary_calculator/view_pay_slip_modal";
 
 const cellStyle =
-  'table-cell border-b border-stroke-neutral-quaternary px-24px py-12px align-middle';
+  "table-cell align-middle border-b border-stroke-neutral-quaternary px-6 py-3";
 
 const ReceivedItem: React.FC<{
   record: IReceivedRecord;
@@ -17,44 +18,53 @@ const ReceivedItem: React.FC<{
 }> = ({ record, itemClickHandler }) => {
   const { id, payPeriod, fromEmail, netPay } = record;
   const payPeriodDate = timestampToString(payPeriod);
-  const periodStr = `${payPeriodDate.monthShortName} ${payPeriodDate.year}`;
+  const periodStr = `${payPeriodDate.monthName.slice(0, 3)} ${payPeriodDate.year}`;
   const amountStr = `NT $${numberWithCommas(netPay)}`;
 
   const clickHandler = () => itemClickHandler(id);
+  const keyDownHandler = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      itemClickHandler(id);
+    }
+  };
 
   return (
     <div
       onClick={clickHandler}
-      className="table-row h-50px hover:cursor-pointer hover:bg-surface-brand-primary-30"
+      onKeyDown={keyDownHandler}
+      role="button"
+      tabIndex={0}
+      className="table-row h-[50px] hover:cursor-pointer hover:bg-surface-brand-primary-30"
     >
       {/* Info: (20250723 - Julian) Pay Period */}
       <div className={cellStyle}>
-        <div className="flex items-center gap-8px">
-          <FiCalendar size={16} className="text-text-neutral-tertiary" />
+        <div className="flex items-center gap-2">
+          <Calendar size={16} className="text-text-neutral-tertiary" />
           <p>{periodStr}</p>
         </div>
       </div>
       {/* Info: (20250723 - Julian) From */}
       <div className={cellStyle}>
-        <div className="flex items-center gap-8px">
-          <FiCalendar size={16} className="text-text-neutral-tertiary" />
+        <div className="flex items-center gap-2">
+          <Calendar size={16} className="text-text-neutral-tertiary" />
           <p>{fromEmail}</p>
         </div>
       </div>
       {/* Info: (20250723 - Julian) Net Pay */}
       <div className={cellStyle}>
-        <div className="flex items-center gap-8px">
-          <RiMoneyDollarCircleLine size={16} className="text-text-neutral-tertiary" />
+        <div className="flex items-center gap-2">
+          <DollarSign size={16} className="text-text-neutral-tertiary" />
           <p>{amountStr}</p>
         </div>
       </div>
       {/* Info: (20250723 - Julian) Action */}
-      <div className={`${cellStyle} w-50px text-center`}>
+      <div className={`${cellStyle} w-[50px] text-center`}>
         <button
           type="button"
           className="text-button-text-secondary hover:text-button-text-secondary-hover"
         >
-          <FiDownload size={16} />
+          <Download size={16} />
         </button>
       </div>
     </div>
@@ -74,15 +84,19 @@ const ReceivedTab: React.FC<{
   netPaySortOrder,
   setNetPaySortOrder,
 }) => {
-  const { t } = useTranslation('calculator');
+  const { t } = useTranslation();
 
   const [isShowModal, setIsShowModal] = useState<boolean>(false);
-  const [currentRecord, setCurrentRecord] = useState<IReceivedRecord | null>(null);
+  const [currentRecord, setCurrentRecord] = useState<IReceivedRecord | null>(
+    null,
+  );
 
   const currentMonth = currentRecord
-    ? timestampToString(currentRecord.payPeriod).monthFullName
-    : '-';
-  const currentYear = currentRecord ? timestampToString(currentRecord.payPeriod).year : '-';
+    ? timestampToString(currentRecord.payPeriod).monthName
+    : "-";
+  const currentYear = currentRecord
+    ? timestampToString(currentRecord.payPeriod).year
+    : "-";
 
   const itemClickHandler = (recordId: string) => {
     // Info: (20250725 - Julian) 找到目標 record 並顯示 Modal
@@ -107,21 +121,23 @@ const ReceivedTab: React.FC<{
           <div className="table-row">
             <div className={cellStyle}>
               <SortingButton
-                string={t('calculator:MY_PAY_SLIP.PAY_PERIOD')}
+                string={t("calculator.my_pay_slip.pay_period")}
                 sortOrder={payPeriodSortOrder}
                 setSortOrder={setPayPeriodSortOrder}
               />
             </div>
-            <div className={cellStyle}>{t('calculator:MY_PAY_SLIP.FROM')}</div>
+            <div className={cellStyle}>{t("calculator.my_pay_slip.from")}</div>
             <div className={cellStyle}>
               <SortingButton
-                string={t('calculator:MY_PAY_SLIP.NET_PAY')}
+                string={t("calculator.my_pay_slip.net_pay")}
                 sortOrder={netPaySortOrder}
                 setSortOrder={setNetPaySortOrder}
                 className="text-text-neutral-secondary"
               />
             </div>
-            <div className={`${cellStyle} w-50px text-center text-text-neutral-primary`}>
+            <div
+              className={`${cellStyle} w-[50px] text-center text-text-neutral-primary`}
+            >
               Action
             </div>
           </div>
@@ -130,7 +146,11 @@ const ReceivedTab: React.FC<{
         {/* Info: (20250723 - Julian) Table Body */}
         <div className="table-row-group">
           {receivedRecords.map((record) => (
-            <ReceivedItem key={record.id} record={record} itemClickHandler={itemClickHandler} />
+            <ReceivedItem
+              key={record.id}
+              record={record}
+              itemClickHandler={itemClickHandler}
+            />
           ))}
         </div>
       </div>

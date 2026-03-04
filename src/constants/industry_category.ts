@@ -1,4 +1,4 @@
-import { IndustryCategoryItem } from '@/interfaces/calculator';
+import { IndustryCategoryItem } from '@/interfaces/salary_calculator';
 
 // Info: (20251113 - Julian) 行業別選項
 export const INDUSTRY_CATEGORY_OPTIONS: IndustryCategoryItem[] = [

@@ -1,6 +1,6 @@
-import React from 'react';
-import { LuArrowUpDown } from 'react-icons/lu';
-import { SortOrder } from '@/constants/sort';
+import React from "react";
+import { ArrowUpDown } from "lucide-react";
+import { SortOrder } from "@/constants/sort";
 
 const SortingButton: React.FC<{
   string: string;
@@ -8,7 +8,7 @@ const SortingButton: React.FC<{
   setSortOrder: (sortOrder: null | SortOrder) => void;
   handleReset?: () => void;
   className?: string;
-}> = ({ string, sortOrder, setSortOrder, handleReset, className = '' }) => {
+}> = ({ string, sortOrder, setSortOrder, handleReset, className = "" }) => {
   const clickHandler = () => {
     // Info: (20250724 - Julian) 如果有 handleReset，則執行，用於清除其他排序狀態
     if (handleReset) {
@@ -38,12 +38,22 @@ const SortingButton: React.FC<{
       onClick={clickHandler}
       className={`flex items-center gap-8px ${className}`}
     >
-      <p className={sortOrder ? 'text-text-brand-primary-lv1' : 'text-text-neutral-secondary'}>
+      <p
+        className={
+          sortOrder
+            ? "text-text-brand-primary-lv1"
+            : "text-text-neutral-secondary"
+        }
+      >
         {string}
       </p>
-      <LuArrowUpDown
+      <ArrowUpDown
         size={16}
-        className={sortOrder ? 'text-text-brand-primary-lv1' : 'text-text-neutral-tertiary'}
+        className={
+          sortOrder
+            ? "text-text-brand-primary-lv1"
+            : "text-text-neutral-tertiary"
+        }
       />
     </button>
   );
