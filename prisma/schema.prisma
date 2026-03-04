@@ -40,7 +40,7 @@ model User {
   reactions           Reaction[]
   paymentMethods      PaymentMethod[]
   paymentTransactions PaymentTransaction[]
-  invoices            Invoice[]
+  journals            Journal[]
 
   @@index([address])
   @@map("user")
@@ -148,7 +148,7 @@ model File {
   thread   Thread? @relation(fields: [threadId], references: [id])
   threadId String? @map("thread_id")
 
-  invoice Invoice?
+  journal Journal?
 
   @@map("file")
 }
@@ -281,8 +281,8 @@ model PaymentTransaction {
   @@map("payment_transaction")
 }
 
-// Info: (20260304 - Julian) 憑證
-model Invoice {
+// Info: (20260304 - Julian) 憑證/日記帳
+model Journal {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -296,5 +296,5 @@ model Invoice {
   userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id])
 
-  @@map("invoice")
+  @@map("journal")
 }

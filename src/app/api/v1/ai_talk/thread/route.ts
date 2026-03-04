@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { IThread, IFile} from "@/interfaces/ai_talk";
+import { IThread, IFile } from "@/interfaces/ai_talk";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { ChatService } from "@/services/chat.service";
