@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, Fragment } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
+import { Listbox, ListboxButton, ListboxOption, ListboxOptions, Transition } from "@headlessui/react";
 import { ChevronDown, Search } from "lucide-react";
 import CalculatorHeader from "@/components/salary_calculator/calculator_header";
 import ReceivedTab from "@/components/salary_calculator/pay_slip_received_tab";
 import SentTab from "@/components/salary_calculator/pay_slip_sent_tab";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
-import useOuterClick from "@/lib/hooks/use_outer_click";
 import { dummyReceivedData, dummySentData } from "@/interfaces/pay_slip";
 import { SortOrder } from "@/constants/sort";
 import { timestampToString } from "@/lib/utils/common";
@@ -37,144 +37,91 @@ const FilterSection: React.FC<{
     ...defaultMonthOptions.map((month) => month.name),
   ];
 
-  const {
-    targetRef: yearRef,
-    componentVisible: isShowYear,
-    setComponentVisible: setShowYear,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  const {
-    targetRef: monthRef,
-    componentVisible: isShowMonth,
-    setComponentVisible: setShowMonth,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  const yearStr =
-    selectedYear === yearOptions[0]
+  const yearStr = (val: string) =>
+    val === yearOptions[0] ? t("calculator.my_pay_slip.all") : val;
+  const monthStr = (val: string) =>
+    val === "All"
       ? t("calculator.my_pay_slip.all")
-      : selectedYear;
-  const monthStr =
-    selectedMonth === "All"
-      ? t("calculator.my_pay_slip.all")
-      : t(`date.month_name.${selectedMonth.slice(0, 3).toLowerCase()}`);
-
-  const toggleYearDropdown = () => setShowYear((prev) => !prev);
-  const toggleMonthDropdown = () => setShowMonth((prev) => !prev);
-
-  const handleYearKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      toggleYearDropdown();
-    }
-  };
-  const handleMonthKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      toggleMonthDropdown();
-    }
-  };
+      : t(`date.month_name.${val.slice(0, 3).toLowerCase()}`);
 
   const changeSearchQuery = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
-  const yearDropdown = isShowYear && (
-    <div className="absolute top-50px flex w-full flex-col rounded-sm border border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS">
-      {yearOptions.map((year, index) => {
-        const str = index === 0 ? t("calculator.my_pay_slip.all") : year;
-        const clickHandler = () => {
-          setSelectedYear(year);
-          setShowYear(false);
-        };
-
-        return (
-          <button
-            key={year}
-            type="button"
-            onClick={clickHandler}
-            className="px-12px py-10px hover:bg-input-surface-input-hover"
-          >
-            {str}
-          </button>
-        );
-      })}
-    </div>
-  );
-
-  const monthDropdown = isShowMonth && (
-    <div className="absolute top-50px flex w-full flex-col rounded-sm border border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS">
-      {monthOptions.map((month) => {
-        const monStr =
-          month === "All"
-            ? t("calculator.my_pay_slip.all")
-            : t(`date.month_name.${month.slice(0, 3).toLowerCase()}`);
-
-        const clickHandler = () => {
-          setSelectedMonth(month);
-          setShowMonth(false);
-        };
-        return (
-          <button
-            key={month}
-            type="button"
-            onClick={clickHandler}
-            className="px-12px py-10px hover:bg-input-surface-input-hover"
-          >
-            {monStr}
-          </button>
-        );
-      })}
-    </div>
-  );
-
   return (
     <div className="grid grid-cols-2 items-center gap-24px">
       <div className="grid grid-cols-2 items-center gap-12px">
         {/* Info: (20250722 - Julian) Year Selection */}
-        <div ref={yearRef} className="relative">
-          <div
-            onClick={toggleYearDropdown}
-            onKeyDown={handleYearKeyDown}
-            role="button"
-            tabIndex={0}
-            className={`flex items-center divide-x rounded-sm border bg-input-surface-input-background hover:cursor-pointer hover:divide-input-stroke-input-hover hover:border-input-stroke-input-hover ${isShowYear ? "divide-input-stroke-input-hover border-input-stroke-input-hover" : "divide-input-stroke-input border-input-stroke-input"}`}
-          >
-            <div className="px-12px py-10px text-base font-medium text-input-text-input-placeholder">
-              {t("calculator.basic_info_form.year")}
-            </div>
-            <div className="flex flex-1 items-center py-10px text-right text-base font-medium text-input-text-input-filled">
-              <div className="flex-1 px-12px">{yearStr}</div>
-              <div className="px-12px text-icon-surface-single-color-primary">
-                <ChevronDown size={16} />
+        <Listbox value={selectedYear} onChange={setSelectedYear}>
+          <div className="relative">
+            <ListboxButton className="flex w-full items-center divide-x rounded-sm border border-input-stroke-input bg-input-surface-input-background transition-colors hover:border-input-stroke-input-hover hover:divide-input-stroke-input-hover focus:outline-none data-open:border-input-stroke-input-hover data-open:divide-input-stroke-input-hover">
+              <div className="px-12px py-10px text-base font-medium text-input-text-input-placeholder">
+                {t("calculator.basic_info_form.year")}
               </div>
-            </div>
+              <div className="flex flex-1 items-center py-10px text-right text-base font-medium text-input-text-input-filled">
+                <div className="flex-1 px-12px">{yearStr(selectedYear)}</div>
+                <div className="px-12px text-icon-surface-single-color-primary">
+                  <ChevronDown size={16} />
+                </div>
+              </div>
+            </ListboxButton>
+            <Transition
+              as={Fragment}
+              leave="transition ease-in duration-100"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <ListboxOptions className="absolute z-10 mt-1 flex w-full flex-col overflow-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS focus:outline-none">
+                {yearOptions.map((year, index) => (
+                  <ListboxOption
+                    key={year}
+                    value={year}
+                    className="cursor-pointer px-12px py-10px text-base font-medium transition-colors hover:bg-input-surface-input-hover data-selected:bg-orange-50 data-selected:text-orange-900"
+                  >
+                    {index === 0 ? t("calculator.my_pay_slip.all") : year}
+                  </ListboxOption>
+                ))}
+              </ListboxOptions>
+            </Transition>
           </div>
-          {/* Info: (20250722 - Julian) Year Dropdown */}
-          {yearDropdown}
-        </div>
+        </Listbox>
 
         {/* Info: (20250722 - Julian) Month Selection */}
-        <div ref={monthRef} className="relative">
-          <div
-            onClick={toggleMonthDropdown}
-            onKeyDown={handleMonthKeyDown}
-            role="button"
-            tabIndex={0}
-            className={`flex items-center divide-x rounded-sm border bg-input-surface-input-background hover:cursor-pointer hover:divide-input-stroke-input-hover hover:border-input-stroke-input-hover ${isShowMonth ? "divide-input-stroke-input-hover border-input-stroke-input-hover" : "divide-input-stroke-input border-input-stroke-input"}`}
-          >
-            <div className="px-12px py-10px text-base font-medium text-input-text-input-placeholder">
-              {t("calculator.basic_info_form.month")}
-            </div>
-            <div className="flex flex-1 items-center py-10px text-right text-base font-medium text-input-text-input-filled">
-              <div className="flex-1 px-12px">{monthStr}</div>
-              <div className="px-12px text-icon-surface-single-color-primary">
-                <ChevronDown size={16} />
+        <Listbox value={selectedMonth} onChange={setSelectedMonth}>
+          <div className="relative">
+            <ListboxButton className="flex w-full items-center divide-x rounded-sm border border-input-stroke-input bg-input-surface-input-background transition-colors hover:border-input-stroke-input-hover hover:divide-input-stroke-input-hover focus:outline-none data-open:border-input-stroke-input-hover data-open:divide-input-stroke-input-hover">
+              <div className="px-12px py-10px text-base font-medium text-input-text-input-placeholder">
+                {t("calculator.basic_info_form.month")}
               </div>
-            </div>
+              <div className="flex flex-1 items-center py-10px text-right text-base font-medium text-input-text-input-filled">
+                <div className="flex-1 px-12px">{monthStr(selectedMonth)}</div>
+                <div className="px-12px text-icon-surface-single-color-primary">
+                  <ChevronDown size={16} />
+                </div>
+              </div>
+            </ListboxButton>
+            <Transition
+              as={Fragment}
+              leave="transition ease-in duration-100"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <ListboxOptions className="absolute z-10 mt-1 flex w-full flex-col overflow-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS focus:outline-none">
+                {monthOptions.map((month) => (
+                  <ListboxOption
+                    key={month}
+                    value={month}
+                    className="cursor-pointer px-12px py-10px text-base font-medium transition-colors hover:bg-input-surface-input-hover data-selected:bg-orange-50 data-selected:text-orange-900"
+                  >
+                    {month === "All"
+                      ? t("calculator.my_pay_slip.all")
+                      : t(`date.month_name.${month.slice(0, 3).toLowerCase()}`)}
+                  </ListboxOption>
+                ))}
+              </ListboxOptions>
+            </Transition>
           </div>
-          {/* Info: (20250722 - Julian) Month Dropdown */}
-          {monthDropdown}
-        </div>
+        </Listbox>
       </div>
 
       {/* Info: (20250722 - Julian) Search bar */}
