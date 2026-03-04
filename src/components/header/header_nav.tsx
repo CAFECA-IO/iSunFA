@@ -65,13 +65,13 @@ export default function HeaderNav() {
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          <MenuItems className="absolute flex flex-col mt-2 z-10 top-6 w-28 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+          <MenuItems className="absolute flex flex-col mt-2 z-10 top-6 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
             {NAV_ITEMS.map((item) => (
               <MenuItem key={item.label}>
                 {() => (
                   <Link
                     href={item.href}
-                    className="p-2 text-sm leading-6 text-gray-700 hover:text-orange-600 transition-colors whitespace-nowrap"
+                    className="px-4 py-2 text-sm leading-6 text-gray-700 hover:text-orange-600 transition-colors whitespace-normal"
                   >
                     <span>{item.label}</span>
                   </Link>

@@ -114,11 +114,11 @@ const StepTabs: React.FC = () => {
         key={step}
         type="button"
         onClick={clickHandler}
-        className={`${stepClass} flex h-11 w-full items-center justify-center gap-1 rounded-xl border px-4 transition-all duration-200 text-xs font-bold uppercase tracking-wider`}
+        className={`${stepClass} flex h-11 w-full items-center justify-center gap-1 rounded-xl border px-2 transition-all duration-200 text-xs font-bold uppercase tracking-wider`}
       >
         <CircleCheck
           size={20}
-          className={`${iconClass} transition-colors duration-200`}
+          className={`${iconClass} shrink-0 transition-colors duration-200`}
         />
         {step}
       </button>

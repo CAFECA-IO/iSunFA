@@ -2,7 +2,13 @@
 
 import React, { useState, Fragment } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { Listbox, ListboxButton, ListboxOption, ListboxOptions, Transition } from "@headlessui/react";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from "@headlessui/react";
 import { ChevronDown, Search, User } from "lucide-react";
 import EmployeeListModal from "@/components/salary_calculator/employee_list_modal";
 import ToggleSwitch from "@/components/salary_calculator/toggle_switch";
@@ -165,7 +171,7 @@ const BasicInfoForm: React.FC = () => {
       {/* Info: (20250711 - Julian) 員工基本資料表單 */}
       <form className="grid grid-cols-2 gap-x-8 gap-y-6">
         {/* Info: (20250708 - Julian) 員工姓名 & 就業類型 */}
-        <div className="col-span-2 flex items-end gap-8">
+        <div className="col-span-2 flex flex-wrap items-end gap-8">
           <div className="flex flex-col gap-2 flex-1">
             <label
               htmlFor="input-employee-name"
@@ -175,10 +181,11 @@ const BasicInfoForm: React.FC = () => {
               <span className="text-red-500">*</span>
             </label>
             <div
-              className={`flex h-44px items-center rounded-lg bg-white ring-2 transition-all ${isNameError
+              className={`flex h-[36px] items-center rounded-lg bg-white ring-2 transition-all ${
+                isNameError
                   ? " ring-red-300 focus-within:ring-orange-300"
                   : " ring-gray-200 focus-within:ring-orange-300"
-                }`}
+              }`}
             >
               <div
                 className={`pl-3 pr-1 py-2 ${isNameError ? "text-red-500" : "text-gray-400"}`}
@@ -190,7 +197,7 @@ const BasicInfoForm: React.FC = () => {
                 name="input-employee-name"
                 type="text"
                 aria-label={t("calculator.basic_info_form.employee_name")}
-                className={`flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 border-gray-200 border-r outline-none placeholder:text-gray-400`}
+                className={`flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 outline-none placeholder:text-gray-400`}
                 placeholder={t(
                   "calculator.basic_info_form.employee_name_placeholder",
                 )}
@@ -203,9 +210,9 @@ const BasicInfoForm: React.FC = () => {
                 <button
                   type="button"
                   onClick={toggleEmployeeListModal}
-                  className="flex h-full items-center gap-2 text-gray-700 hover:text-orange-600 px-4 py-2 transition-colors"
+                  className="flex h-full items-center border-gray-200 border-l-2 gap-2 text-gray-700 hover:text-orange-600 px-4 py-2 transition-colors"
                 >
-                  <Search size={16} className="text-gray-400" />
+                  <Search size={16} className="shrink-0" />
                   <p className="text-xs font-semibold">
                     {t("calculator.employee_list.main_title")}
                   </p>
@@ -213,7 +220,7 @@ const BasicInfoForm: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="flex flex-wrap items-end gap-x-8 gap-y-2">
+          <div className="flex flex-wrap items-end gap-x-8">
             {employmentRadioBtn}
           </div>
         </div>
@@ -281,8 +288,10 @@ const BasicInfoForm: React.FC = () => {
                       value={category}
                       className="cursor-pointer px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-orange-50 hover:text-orange-900 data-selected:bg-orange-50 data-selected:text-orange-900"
                     >
-                      <span className="font-bold text-orange-600">{category.CODE}</span> -{" "}
-                      {category.INDUSTRY}
+                      <span className="font-bold text-orange-600">
+                        {category.CODE}
+                      </span>{" "}
+                      - {category.INDUSTRY}
                     </ListboxOption>
                   ))}
                 </ListboxOptions>
@@ -339,7 +348,9 @@ const BasicInfoForm: React.FC = () => {
             <div className="relative">
               <ListboxButton className="flex w-full h-44px items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
                 <div className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 text-left">
-                  {t(`date.month_name.${selectedMonth.name.slice(0, 3).toLowerCase()}`)}
+                  {t(
+                    `date.month_name.${selectedMonth.name.slice(0, 3).toLowerCase()}`,
+                  )}
                 </div>
                 <div className="px-3 py-2 text-gray-400">
                   <ChevronDown size={16} />
@@ -358,7 +369,9 @@ const BasicInfoForm: React.FC = () => {
                       value={month}
                       className="cursor-pointer px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-orange-50 hover:text-orange-900 data-selected:bg-orange-50 data-selected:text-orange-900"
                     >
-                      {t(`date.month_name.${month.name.slice(0, 3).toLowerCase()}`)}
+                      {t(
+                        `date.month_name.${month.name.slice(0, 3).toLowerCase()}`,
+                      )}
                     </ListboxOption>
                   ))}
                 </ListboxOptions>
@@ -377,7 +390,9 @@ const BasicInfoForm: React.FC = () => {
             <div className="relative">
               <ListboxButton className="flex w-full h-44px items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
                 <div className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 text-left">
-                  {t(`calculator.basic_info_form.payroll_option_${payrollDaysBase.toLowerCase()}`)}
+                  {t(
+                    `calculator.basic_info_form.payroll_option_${payrollDaysBase.toLowerCase()}`,
+                  )}
                 </div>
                 <div className="px-3 py-2 text-gray-400">
                   <ChevronDown size={16} />
@@ -396,7 +411,9 @@ const BasicInfoForm: React.FC = () => {
                       value={option}
                       className="cursor-pointer px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-orange-50 hover:text-orange-900 data-selected:bg-orange-50 data-selected:text-orange-900"
                     >
-                      {t(`calculator.basic_info_form.payroll_option_${option.toLowerCase()}`)}
+                      {t(
+                        `calculator.basic_info_form.payroll_option_${option.toLowerCase()}`,
+                      )}
                     </ListboxOption>
                   ))}
                 </ListboxOptions>
@@ -409,7 +426,7 @@ const BasicInfoForm: React.FC = () => {
         </div>
 
         {/* Info: (20250806 - Julian) 到職日 */}
-        <div className="col-span-2 flex flex-col items-start justify-between gap-x-40px gap-y-lv-3 sm:h-10 sm:flex-row sm:items-center">
+        <div className="col-span-2 flex flex-row items-center justify-between gap-x-40px gap-y-lv-3">
           <ToggleSwitch
             isOn={isJoined}
             handleToggle={toggleJoined}
@@ -436,7 +453,7 @@ const BasicInfoForm: React.FC = () => {
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <ListboxOptions className="absolute top-[calc(100%+8px)] z-50 grid max-h-40 w-max grid-cols-7 gap-1 overflow-y-auto rounded-xl border border-gray-300 bg-white p-2 shadow-2xl focus:outline-none">
+                    <ListboxOptions className="absolute bottom-[calc(100%+8px)] right-0 z-50 grid max-h-40 w-max grid-cols-7 gap-1 overflow-y-auto rounded-xl border border-gray-300 bg-white p-2 shadow-2xl focus:outline-none">
                       {joiningDayOptions.map((day) => {
                         const dayStr = day.toString().padStart(2, "0");
                         return (
@@ -485,7 +502,7 @@ const BasicInfoForm: React.FC = () => {
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <ListboxOptions className="absolute top-[calc(100%+8px)] z-50 grid max-h-40 w-max grid-cols-7 gap-1 overflow-y-auto rounded-xl border border-gray-300 bg-white p-2 shadow-2xl focus:outline-none">
+                    <ListboxOptions className="absolute bottom-[calc(100%+8px)] right-0 z-50 grid max-h-40 w-max grid-cols-7 gap-1 overflow-y-auto rounded-xl border border-gray-300 bg-white p-2 shadow-2xl focus:outline-none">
                       {leavingDayOptions.map((day) => {
                         const dayStr = day.toString().padStart(2, "0");
                         return (
