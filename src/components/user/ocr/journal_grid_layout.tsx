@@ -55,13 +55,9 @@ const JournalGridLayout = ({
       {t("ocr.no_records")}
     </div>
   );
-  const gridView = (
-    <div className="grid grid-cols-4 gap-2">
-      {journals.map((journal) => (
-        <JournalGridItem key={journal.id} journal={journal} />
-      ))}
-    </div>
-  );
+  const gridView = journals.map((journal) => (
+    <JournalGridItem key={journal.id} journal={journal} />
+  ));
 
   return (
     <div className="grid grid-cols-4 gap-2">

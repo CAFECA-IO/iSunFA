@@ -102,13 +102,19 @@ export default function JournalListView() {
                 : (t("ocr.sort_desc") as string)
             }
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 active:scale-95"
+            className="flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 active:scale-95"
             onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
           >
             {sortOrder === "asc" ? (
-              <ArrowUp size={18} />
+              <div className="flex items-center gap-2">
+                <p>{t("ocr.sort_asc")}</p>
+                <ArrowDown size={18} />
+              </div>
             ) : (
-              <ArrowDown size={18} />
+              <div className="flex items-center gap-2">
+                <p>{t("ocr.sort_desc")}</p>
+                <ArrowUp size={18} />
+              </div>
             )}
           </button>
 
