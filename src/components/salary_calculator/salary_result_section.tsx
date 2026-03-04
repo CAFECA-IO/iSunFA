@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { toPng } from "html-to-image";
-import { Download, /* Send */ } from "lucide-react";
+import { Download /* Send */ } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import SendingPaySlipModal from "@/components/salary_calculator/sending_pay_slip_modal";
 import AuthModal from "@/components/auth/auth_modal";
@@ -48,14 +48,14 @@ const SalaryResultSection: React.FC = () => {
     toPng(downloadRef.current, {
       pixelRatio: 2,
       style: {
-        width: '100%',
-        height: 'auto',
-        overflowY: 'visible', // Info: (20250725 - Julian) 取消滾動條
+        width: "100%",
+        height: "auto",
+        overflowY: "visible", // Info: (20250725 - Julian) 取消滾動條
       },
     })
       .then((dataUrl) => {
         // Info: (20250710 - Julian) 下載圖片
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = dataUrl;
         link.download = `${employeeName}_${formattedDate}.png`;
         document.body.appendChild(link);
@@ -63,7 +63,7 @@ const SalaryResultSection: React.FC = () => {
         document.body.removeChild(link);
       })
       .catch((err) => {
-        console.error('oops, something went wrong!', err);
+        console.error("oops, something went wrong!", err);
       });
   };
 

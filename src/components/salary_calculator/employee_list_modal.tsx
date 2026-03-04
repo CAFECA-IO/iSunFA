@@ -26,18 +26,18 @@ const EmployeeItem: React.FC<{
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      className="group flex items-center bg-surface-neutral-surface-lv2 px-24px py-12px hover:cursor-pointer hover:bg-surface-brand-primary-soft"
+      className="group bg-surface-neutral-surface-lv2 px-24px py-12px hover:bg-surface-brand-primary-soft flex items-center hover:cursor-pointer"
     >
-      <div className="flex flex-1 items-center gap-8px">
+      <div className="gap-8px flex flex-1 items-center">
         <User
           size={16}
           className="text-text-neutral-tertiary group-hover:text-text-neutral-primary"
         />
-        <p className="font-medium text-text-neutral-secondary group-hover:text-text-neutral-primary">
+        <p className="text-text-neutral-secondary group-hover:text-text-neutral-primary font-medium">
           {employee.name}
         </p>
       </div>
-      <div className="flex items-center gap-8px text-sm font-medium">
+      <div className="gap-8px flex items-center text-sm font-medium">
         <Hash
           size={16}
           className="text-text-neutral-tertiary group-hover:text-text-neutral-primary"
@@ -97,32 +97,32 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({
       })
     ) : (
       <div className="p-20px">
-        <p className="text-center text-text-neutral-secondary">
+        <p className="text-text-neutral-secondary text-center">
           {t("calculator.employee_list.no_data")}
         </p>
       </div>
     );
 
   return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
-      <div className="relative flex w-90vw flex-col rounded-sm bg-surface-neutral-surface-lv2 md:w-440px">
+    <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+      <div className="w-90vw bg-surface-neutral-surface-lv2 md:w-440px relative flex flex-col rounded-sm">
         {/* Info: (20250711 - Julian) Modal Header */}
-        <div className="relative flex items-start justify-center px-40px py-16px">
-          <h2 className="text-lg font-bold text-card-text-primary">
+        <div className="px-40px py-16px relative flex items-start justify-center">
+          <h2 className="text-card-text-primary text-lg font-bold">
             {t("calculator.employee_list.main_title")}
           </h2>
           <button
             type="button"
             onClick={modalVisibleHandler}
-            className="absolute right-20px"
+            className="right-20px absolute"
           >
             <X scale={24} />
           </button>
         </div>
         {/* Info: (20250711 - Julian) Modal Body */}
-        <div className="flex flex-col gap-24px px-40px py-24px">
+        <div className="gap-24px px-40px py-24px flex flex-col">
           {/* Info: (20250711 - Julian) Search bar */}
-          <div className="flex items-center rounded-sm border border-input-stroke-input">
+          <div className="border-input-stroke-input flex items-center rounded-sm border">
             <div className="px-12px py-10px text-icon-surface-single-color-primary">
               <Search size={16} />
             </div>
@@ -132,11 +132,11 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({
               value={keyword}
               onChange={changeKeyword}
               placeholder={t("calculator.employee_list.search_placeholder")}
-              className="flex-1 bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
+              className="px-12px py-10px placeholder:text-input-text-input-placeholder flex-1 bg-transparent outline-none"
             />
           </div>
           {/* Info: (20250711 - Julian) Employee list content */}
-          <div className="flex max-h-500px flex-col divide-y divide-stroke-neutral-quaternary overflow-y-auto pb-30px">
+          <div className="max-h-500px divide-stroke-neutral-quaternary pb-30px flex flex-col divide-y overflow-y-auto">
             {displayedEmployeesList}
           </div>
         </div>

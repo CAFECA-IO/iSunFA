@@ -2,7 +2,13 @@
 
 import React, { useState, useMemo, Fragment } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { Listbox, ListboxButton, ListboxOption, ListboxOptions, Transition } from "@headlessui/react";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from "@headlessui/react";
 import { ChevronDown, Search } from "lucide-react";
 import CalculatorHeader from "@/components/salary_calculator/calculator_header";
 import ReceivedTab from "@/components/salary_calculator/pay_slip_received_tab";
@@ -49,17 +55,17 @@ const FilterSection: React.FC<{
   };
 
   return (
-    <div className="grid grid-cols-2 items-center gap-24px">
-      <div className="grid grid-cols-2 items-center gap-12px">
+    <div className="gap-24px grid grid-cols-2 items-center">
+      <div className="gap-12px grid grid-cols-2 items-center">
         {/* Info: (20250722 - Julian) Year Selection */}
         <Listbox value={selectedYear} onChange={setSelectedYear}>
           <div className="relative">
-            <ListboxButton className="flex w-full items-center divide-x rounded-sm border border-input-stroke-input bg-input-surface-input-background transition-colors hover:border-input-stroke-input-hover hover:divide-input-stroke-input-hover focus:outline-none data-open:border-input-stroke-input-hover data-open:divide-input-stroke-input-hover">
-              <div className="px-12px py-10px text-base font-medium text-input-text-input-placeholder">
+            <ListboxButton className="border-input-stroke-input bg-input-surface-input-background hover:border-input-stroke-input-hover hover:divide-input-stroke-input-hover data-open:border-input-stroke-input-hover data-open:divide-input-stroke-input-hover flex w-full items-center divide-x rounded-sm border transition-colors focus:outline-none">
+              <div className="px-12px py-10px text-input-text-input-placeholder text-base font-medium">
                 {t("calculator.basic_info_form.year")}
               </div>
-              <div className="flex flex-1 items-center py-10px text-right text-base font-medium text-input-text-input-filled">
-                <div className="flex-1 px-12px">{yearStr(selectedYear)}</div>
+              <div className="py-10px text-input-text-input-filled flex flex-1 items-center text-right text-base font-medium">
+                <div className="px-12px flex-1">{yearStr(selectedYear)}</div>
                 <div className="px-12px text-icon-surface-single-color-primary">
                   <ChevronDown size={16} />
                 </div>
@@ -71,12 +77,12 @@ const FilterSection: React.FC<{
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <ListboxOptions className="absolute z-10 mt-1 flex w-full flex-col overflow-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS focus:outline-none">
+              <ListboxOptions className="border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS absolute z-10 mt-1 flex w-full flex-col overflow-auto rounded-sm border focus:outline-none">
                 {yearOptions.map((year, index) => (
                   <ListboxOption
                     key={year}
                     value={year}
-                    className="cursor-pointer px-12px py-10px text-base font-medium transition-colors hover:bg-input-surface-input-hover data-selected:bg-orange-50 data-selected:text-orange-900"
+                    className="px-12px py-10px hover:bg-input-surface-input-hover cursor-pointer text-base font-medium transition-colors data-selected:bg-orange-50 data-selected:text-orange-900"
                   >
                     {index === 0 ? t("calculator.my_pay_slip.all") : year}
                   </ListboxOption>
@@ -89,12 +95,12 @@ const FilterSection: React.FC<{
         {/* Info: (20250722 - Julian) Month Selection */}
         <Listbox value={selectedMonth} onChange={setSelectedMonth}>
           <div className="relative">
-            <ListboxButton className="flex w-full items-center divide-x rounded-sm border border-input-stroke-input bg-input-surface-input-background transition-colors hover:border-input-stroke-input-hover hover:divide-input-stroke-input-hover focus:outline-none data-open:border-input-stroke-input-hover data-open:divide-input-stroke-input-hover">
-              <div className="px-12px py-10px text-base font-medium text-input-text-input-placeholder">
+            <ListboxButton className="border-input-stroke-input bg-input-surface-input-background hover:border-input-stroke-input-hover hover:divide-input-stroke-input-hover data-open:border-input-stroke-input-hover data-open:divide-input-stroke-input-hover flex w-full items-center divide-x rounded-sm border transition-colors focus:outline-none">
+              <div className="px-12px py-10px text-input-text-input-placeholder text-base font-medium">
                 {t("calculator.basic_info_form.month")}
               </div>
-              <div className="flex flex-1 items-center py-10px text-right text-base font-medium text-input-text-input-filled">
-                <div className="flex-1 px-12px">{monthStr(selectedMonth)}</div>
+              <div className="py-10px text-input-text-input-filled flex flex-1 items-center text-right text-base font-medium">
+                <div className="px-12px flex-1">{monthStr(selectedMonth)}</div>
                 <div className="px-12px text-icon-surface-single-color-primary">
                   <ChevronDown size={16} />
                 </div>
@@ -106,12 +112,12 @@ const FilterSection: React.FC<{
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <ListboxOptions className="absolute z-10 mt-1 flex w-full flex-col overflow-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS focus:outline-none">
+              <ListboxOptions className="border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS absolute z-10 mt-1 flex w-full flex-col overflow-auto rounded-sm border focus:outline-none">
                 {monthOptions.map((month) => (
                   <ListboxOption
                     key={month}
                     value={month}
-                    className="cursor-pointer px-12px py-10px text-base font-medium transition-colors hover:bg-input-surface-input-hover data-selected:bg-orange-50 data-selected:text-orange-900"
+                    className="px-12px py-10px hover:bg-input-surface-input-hover cursor-pointer text-base font-medium transition-colors data-selected:bg-orange-50 data-selected:text-orange-900"
                   >
                     {month === "All"
                       ? t("calculator.my_pay_slip.all")
@@ -125,7 +131,7 @@ const FilterSection: React.FC<{
       </div>
 
       {/* Info: (20250722 - Julian) Search bar */}
-      <div className="flex flex-1 items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+      <div className="border-input-stroke-input bg-input-surface-input-background flex flex-1 items-center rounded-sm border">
         <div className="px-12px py-10px text-icon-surface-single-color-primary">
           <Search size={16} />
         </div>
@@ -135,7 +141,7 @@ const FilterSection: React.FC<{
           onChange={changeSearchQuery}
           aria-label={t("calculator.my_pay_slip.search_placeholder")}
           placeholder={t("calculator.my_pay_slip.search_placeholder")}
-          className="flex-1 bg-transparent px-12px py-10px text-base font-medium outline-none placeholder:text-input-text-input-placeholder"
+          className="px-12px py-10px placeholder:text-input-text-input-placeholder flex-1 bg-transparent text-base font-medium outline-none"
         />
       </div>
     </div>
@@ -264,31 +270,31 @@ const MyPaySlipPageBody: React.FC = () => {
       <CalculatorHeader />
 
       {/* Info: (20250718 - Julian) Main Content */}
-      <div className="flex flex-col items-stretch gap-56px px-240px py-56px">
-        <h1 className="text-center text-32px font-bold text-text-brand-primary-lv1">
+      <div className="gap-56px px-240px py-56px flex flex-col items-stretch">
+        <h1 className="text-32px text-text-brand-primary-lv1 text-center font-bold">
           {t("calculator.my_pay_slip.main_title")}
         </h1>
 
         {/* Info: (20250718 - Julian) Tabs */}
-        <div className="grid grid-cols-2 gap-16px">
+        <div className="gap-16px grid grid-cols-2">
           <button
             type="button"
             onClick={clickReceivedTab}
-            className={`${receivedStyle} w-full border-b-2 px-12px py-8px`}
+            className={`${receivedStyle} px-12px py-8px w-full border-b-2`}
           >
             {t("calculator.my_pay_slip.tab_received")}
           </button>
           <button
             type="button"
             onClick={clickSentTab}
-            className={`${sentStyle} w-full border-b-2 px-12px py-8px`}
+            className={`${sentStyle} px-12px py-8px w-full border-b-2`}
           >
             {t("calculator.my_pay_slip.tab_sent")}
           </button>
         </div>
 
         {/* Info: (20250718 - Julian) List */}
-        <div className="flex w-full flex-col gap-24px">
+        <div className="gap-24px flex w-full flex-col">
           <FilterSection
             selectedYear={selectedYear}
             setSelectedYear={setSelectedYear}

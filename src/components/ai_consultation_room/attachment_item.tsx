@@ -14,38 +14,57 @@ import { FilePreview } from "@/components/common/file_preview";
 export const AttachmentItem = ({ file }: { file: IFile }) => {
   const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [localMeta, setLocalMeta] = useState<{ hash: string; filename?: string; mimeType?: string; fileSize?: number }>({
+  const [localMeta, setLocalMeta] = useState<{
+    hash: string;
+    filename?: string;
+    mimeType?: string;
+    fileSize?: number;
+  }>({
     hash: file.hash,
     filename: file.fileName,
   });
 
-  const fileName = localMeta.filename ?? file.fileName ?? 'unknown';
+  const fileName = localMeta.filename ?? file.fileName ?? "unknown";
 
-  const handlePreviewLoad = (metadata: ILariaMetadata | { filename: string; mimeType?: string; originalFileSize?: number; fileSize?: number }) => {
+  const handlePreviewLoad = (
+    metadata:
+      | ILariaMetadata
+      | {
+          filename: string;
+          mimeType?: string;
+          originalFileSize?: number;
+          fileSize?: number;
+        },
+  ) => {
     let filename = "";
     let mimeType = "";
     let fileSize = 0;
 
-    if ('filename' in metadata) {
-      filename = metadata.filename
+    if ("filename" in metadata) {
+      filename = metadata.filename;
       mimeType = metadata.mimeType || "";
-      fileSize = (metadata as { originalFileSize?: number; fileSize?: number }).originalFileSize || (metadata as { originalFileSize?: number; fileSize?: number }).fileSize || 0;
+      fileSize =
+        (metadata as { originalFileSize?: number; fileSize?: number })
+          .originalFileSize ||
+        (metadata as { originalFileSize?: number; fileSize?: number })
+          .fileSize ||
+        0;
     }
 
     setLocalMeta({
       hash: file.hash,
-      filename: filename || file.fileName || 'unknown',
+      filename: filename || file.fileName || "unknown",
       mimeType: mimeType || undefined,
-      fileSize: fileSize || undefined
+      fileSize: fileSize || undefined,
     });
   };
 
   const thumbnail = (
-    <div className="rounded-xl overflow-hidden relative w-full flex items-center justify-center mb-1 h-[90px] shrink-0">
+    <div className="relative mb-1 flex h-[90px] w-full shrink-0 items-center justify-center overflow-hidden rounded-xl">
       <FilePreview
         fileId={file.hash}
         file={{ filename: localMeta.hash, mimeType: localMeta.mimeType }}
-        className="object-cover w-full h-full pointer-events-none"
+        className="pointer-events-none h-full w-full object-cover"
       />
     </div>
   );
@@ -55,16 +74,14 @@ export const AttachmentItem = ({ file }: { file: IFile }) => {
       <button
         type="button"
         onClick={() => setIsModalOpen(true)}
-        className={`group relative w-32 h-32 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center outline-none p-2 transition-all cursor-zoom-in hover:shadow-lg`}
-        aria-label={
-          t("ai_consultation_room.view_image").replace(
-            "{name}",
-            fileName,
-          )
-        }
+        className={`group relative flex h-32 w-32 cursor-zoom-in flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white p-2 transition-all outline-none hover:shadow-lg`}
+        aria-label={t("ai_consultation_room.view_image").replace(
+          "{name}",
+          fileName,
+        )}
       >
         {thumbnail}
-        <span className="text-[10px] text-gray-500 truncate w-full text-center px-1">
+        <span className="w-full truncate px-1 text-center text-[10px] text-gray-500">
           {fileName}
         </span>
       </button>
@@ -99,36 +116,39 @@ export const AttachmentItem = ({ file }: { file: IFile }) => {
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <DialogPanel className="relative transform overflow-hidden rounded-2xl bg-white p-2 text-left shadow-2xl transition-all sm:my-8 max-w-5xl w-full">
-                  <div className="absolute right-4 top-4 z-10">
+                <DialogPanel className="relative w-full max-w-5xl transform overflow-hidden rounded-2xl bg-white p-2 text-left shadow-2xl transition-all sm:my-8">
+                  <div className="absolute top-4 right-4 z-10">
                     <button
                       type="button"
-                      className="rounded-full bg-black/20 p-2 text-white hover:bg-black/40 backdrop-blur-md transition-all focus:outline-none"
+                      className="rounded-full bg-black/20 p-2 text-white backdrop-blur-md transition-all hover:bg-black/40 focus:outline-none"
                       onClick={() => setIsModalOpen(false)}
                     >
                       <X className="h-6 w-6" aria-hidden="true" />
                     </button>
                   </div>
 
-                  <div className="relative w-full aspect-video min-h-[300px] max-h-[85vh] bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center">
-                    <div className="w-full h-full flex items-center justify-center relative">
+                  <div className="relative flex aspect-video max-h-[85vh] min-h-[300px] w-full items-center justify-center overflow-hidden rounded-xl bg-gray-50">
+                    <div className="relative flex h-full w-full items-center justify-center">
                       <FilePreview
                         fileId={file.hash}
-                        file={{ filename: localMeta.hash, mimeType: localMeta.mimeType }}
-                        className="object-contain max-h-[85vh] max-w-full w-auto p-4"
+                        file={{
+                          filename: localMeta.hash,
+                          mimeType: localMeta.mimeType,
+                        }}
+                        className="max-h-[85vh] w-auto max-w-full object-contain p-4"
                         loadPreview={handlePreviewLoad}
                       />
                     </div>
                   </div>
 
-                  <div className="p-4 flex items-center justify-between">
+                  <div className="flex items-center justify-between p-4">
                     <div>
-                      <h3 className="text-gray-900 font-bold">
-                        {fileName}
-                      </h3>
+                      <h3 className="font-bold text-gray-900">{fileName}</h3>
                       {localMeta.mimeType && (
                         <p className="text-xs text-gray-400">
-                          {localMeta.fileSize ? `${Math.round(localMeta.fileSize / 1024)} KB • ` : ""}
+                          {localMeta.fileSize
+                            ? `${Math.round(localMeta.fileSize / 1024)} KB • `
+                            : ""}
                           {localMeta.mimeType}
                         </p>
                       )}

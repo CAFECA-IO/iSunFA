@@ -114,7 +114,7 @@ const StepTabs: React.FC = () => {
         key={step}
         type="button"
         onClick={clickHandler}
-        className={`${stepClass} flex h-11 w-full items-center justify-center gap-1 rounded-xl border px-2 transition-all duration-200 text-xs font-bold uppercase tracking-wider`}
+        className={`${stepClass} flex h-11 w-full items-center justify-center gap-1 rounded-xl border px-2 text-xs font-bold tracking-wider uppercase transition-all duration-200`}
       >
         <CircleCheck
           size={20}
@@ -125,7 +125,11 @@ const StepTabs: React.FC = () => {
     );
   });
 
-  return <div className="grid grid-cols-2 gap-3 min-w-[350px] md:grid-cols-4">{tabs}</div>;
+  return (
+    <div className="grid min-w-[350px] grid-cols-2 gap-3 md:grid-cols-4">
+      {tabs}
+    </div>
+  );
 };
 
 export default StepTabs;

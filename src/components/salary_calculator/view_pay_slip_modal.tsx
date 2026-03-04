@@ -54,14 +54,14 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
     toPng(downloadRef.current, {
       pixelRatio: 2,
       style: {
-        width: '100%',
-        height: 'auto',
-        overflowY: 'visible', // Info: (20250725 - Julian) 取消滾動條
+        width: "100%",
+        height: "auto",
+        overflowY: "visible", // Info: (20250725 - Julian) 取消滾動條
       },
     })
       .then((dataUrl) => {
         // Info: (20250710 - Julian) 下載圖片
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = dataUrl;
         link.download = `${employeeName}_${monthWithI18n}_${yearStr}.png`;
         document.body.appendChild(link);
@@ -69,18 +69,18 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
         document.body.removeChild(link);
       })
       .catch((err) => {
-        console.error('oops, something went wrong!', err);
+        console.error("oops, something went wrong!", err);
       });
   };
 
   const modalVisibleHandler = () => setIsShowModal((prev) => !prev);
 
   return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
-      <div className="relative flex w-90vw flex-col rounded-sm bg-surface-neutral-surface-lv2 md:w-670px">
+    <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+      <div className="w-90vw bg-surface-neutral-surface-lv2 md:w-670px relative flex flex-col rounded-sm">
         {/* Info: (20250725 - Julian) Modal Header */}
-        <div className="relative flex items-start justify-center px-40px py-16px">
-          <h2 className="text-lg font-bold text-card-text-primary">
+        <div className="px-40px py-16px relative flex items-start justify-center">
+          <h2 className="text-card-text-primary text-lg font-bold">
             {isSentRecord
               ? t("calculator.my_pay_slip.pay_slip")
               : t("calculator.my_pay_slip.main_title")}
@@ -88,7 +88,7 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
           <button
             type="button"
             onClick={modalCloseHandler}
-            className="absolute right-20px"
+            className="right-20px absolute"
           >
             <X size={24} />
           </button>
@@ -97,7 +97,7 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
         <div
           id="download-area"
           ref={downloadRef}
-          className="flex h-600px w-full flex-col overflow-y-auto"
+          className="h-600px flex w-full flex-col overflow-y-auto"
         >
           <PaySlip
             employeeName={employeeName}
@@ -108,9 +108,9 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
             className="px-40px py-24px"
           />
           {isSentRecord && (
-            <div className="flex items-center gap-8px px-40px text-sm">
+            <div className="gap-8px px-40px flex items-center text-sm">
               <Send size={16} className="text-text-neutral-tertiary" />
-              <p className="font-medium text-text-neutral-secondary">
+              <p className="text-text-neutral-secondary font-medium">
                 {t("calculator.my_pay_slip.sent_on")}:{" "}
                 {timestampToString(sentDate).dateWithDash}
               </p>
@@ -118,7 +118,7 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
           )}
         </div>
         {/* Info: (20250725 - Julian) Button */}
-        <div className="flex items-center gap-12px px-20px py-16px">
+        <div className="gap-12px px-20px py-16px flex items-center">
           {/* Info: (20250725 - Julian) Download Btn */}
           <button type="button" onClick={downloadPng} className="w-full">
             {t("calculator.button.download")} <Download size={20} />

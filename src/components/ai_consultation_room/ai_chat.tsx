@@ -248,10 +248,11 @@ export const AiChat = () => {
       <button
         onClick={() => fileInputRef.current?.click()}
         disabled={isUploadDisabled}
-        className={`w-full p-3 flex items-center justify-center gap-2 border-2 border-dashed outline-none rounded-2xl transition-all disabled:bg-gray-200 disabled:text-gray-500 ${isDragging
-          ? "border-orange-500 bg-orange-50 text-orange-600 scale-[1.02] shadow-md"
-          : "border-gray-200 text-gray-500 enabled:hover:border-orange-300 enabled:hover:text-orange-500 enabled:hover:bg-orange-50/50"
-          }`}
+        className={`flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-3 transition-all outline-none disabled:bg-gray-200 disabled:text-gray-500 ${
+          isDragging
+            ? "scale-[1.02] border-orange-500 bg-orange-50 text-orange-600 shadow-md"
+            : "border-gray-200 text-gray-500 enabled:hover:border-orange-300 enabled:hover:bg-orange-50/50 enabled:hover:text-orange-500"
+        }`}
       >
         {isUploadDisabled ? (
           <p className="text-sm text-gray-500">
@@ -279,10 +280,11 @@ export const AiChat = () => {
         id="ai-chat-submit"
         onClick={handleSubmit}
         disabled={isSubmitDisabled}
-        className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center ${isSubmitDisabled
-          ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-          : "bg-orange-600 hover:bg-orange-500 text-white shadow-orange-200 active:scale-[0.98] hover:-translate-y-0.5"
-          }`}
+        className={`flex w-full items-center justify-center rounded-2xl py-4 font-bold shadow-lg transition-all ${
+          isSubmitDisabled
+            ? "cursor-not-allowed bg-gray-200 text-gray-400 shadow-none"
+            : "bg-orange-600 text-white shadow-orange-200 hover:-translate-y-0.5 hover:bg-orange-500 active:scale-[0.98]"
+        }`}
       >
         {isSubmitting ? (
           <Loader2 size={24} className="animate-spin" />
@@ -297,16 +299,17 @@ export const AiChat = () => {
 
   return (
     <div
-      className={`fixed right-6 bottom-24 z-50 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) bg-white border-2 border-orange-400 shadow-[0_20px_50px_rgba(234,88,12,0.15)] flex flex-col overflow-hidden ${isChatOpen
-        ? "w-80 h-[500px] p-6 rounded-3xl"
-        : "w-16 h-16 p-0 rounded-full hover:scale-110 active:scale-95 items-center justify-center hover:bg-orange-50"
-        }`}
+      className={`cubic-bezier(0.4, 0, 0.2, 1) fixed right-6 bottom-24 z-50 flex flex-col overflow-hidden border-2 border-orange-400 bg-white shadow-[0_20px_50px_rgba(234,88,12,0.15)] transition-all duration-500 ${
+        isChatOpen
+          ? "h-[500px] w-80 rounded-3xl p-6"
+          : "h-16 w-16 items-center justify-center rounded-full p-0 hover:scale-110 hover:bg-orange-50 active:scale-95"
+      }`}
     >
       {!isChatOpen && (
         <button
           type="button"
           onClick={() => setIsChatOpen(true)}
-          className="absolute inset-0 w-full h-full rounded-full z-10"
+          className="absolute inset-0 z-10 h-full w-full rounded-full"
           aria-label={t("ai_consultation_room.open_chat")}
         />
       )}
@@ -315,10 +318,10 @@ export const AiChat = () => {
       >
         {isChatOpen && (
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-orange-100 rounded-lg">
+            <div className="rounded-lg bg-orange-100 p-2">
               <Bot size={20} className="text-orange-600" />
             </div>
-            <h2 className="text-lg font-bold text-gray-800 whitespace-nowrap">
+            <h2 className="text-lg font-bold whitespace-nowrap text-gray-800">
               {t("ai_consultation_room.title")}
             </h2>
           </div>
@@ -331,8 +334,9 @@ export const AiChat = () => {
               setIsChatOpen(false);
             }
           }}
-          className={`text-orange-500 transition-all duration-300 ${isChatOpen ? "p-2 hover:bg-gray-100 rounded-full" : "p-0"
-            }`}
+          className={`text-orange-500 transition-all duration-300 ${
+            isChatOpen ? "rounded-full p-2 hover:bg-gray-100" : "p-0"
+          }`}
           aria-label={
             isChatOpen
               ? t("ai_consultation_room.close_chat")
@@ -353,7 +357,7 @@ export const AiChat = () => {
       </div>
 
       <div
-        className={`overflow-y-auto overflow-x-hidden flex-col h-full ${isChatOpen ? "flex" : "hidden"}`}
+        className={`h-full flex-col overflow-x-hidden overflow-y-auto ${isChatOpen ? "flex" : "hidden"}`}
       >
         <div
           onDragOver={onDragOver}
@@ -361,9 +365,9 @@ export const AiChat = () => {
           onDrop={onDrop}
           role="region"
           aria-label="File Upload Drop Zone"
-          className={`transition-all duration-300 ease-in-out flex flex-col gap-4 flex-1 ${isChatOpen ? "opacity-100 h-fit mt-6" : "opacity-0 h-0"}`}
+          className={`flex flex-1 flex-col gap-4 transition-all duration-300 ease-in-out ${isChatOpen ? "mt-6 h-fit opacity-100" : "h-0 opacity-0"}`}
         >
-          <div className="flex-1 h-full space-y-4 pr-1 flex flex-col items-center">
+          <div className="flex h-full flex-1 flex-col items-center space-y-4 pr-1">
             <div className="relative w-full">
               <textarea
                 id="ai-question-input"
@@ -371,26 +375,26 @@ export const AiChat = () => {
                 placeholder={t("ai_consultation_room.input_placeholder")}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                className="w-full h-36 p-4 outline-none bg-gray-50 border-2 border-transparent focus:border-orange-200 rounded-2xl text-sm text-gray-800 transition-all resize-none shadow-inner"
+                className="h-36 w-full resize-none rounded-2xl border-2 border-transparent bg-gray-50 p-4 text-sm text-gray-800 shadow-inner transition-all outline-none focus:border-orange-200"
               />
             </div>
 
             {/* Info: (20260213 - Julian) 顯示本地預覽 */}
             {(localFiles.length > 0 || files.length > 0) && (
-              <div className="flex w-full overflow-x-auto gap-2 py-1">
+              <div className="flex w-full gap-2 overflow-x-auto py-1">
                 {localFiles.map((item, index) => (
                   <div
                     key={`local-${index}`}
-                    className="group shrink-0 w-16 h-16 relative rounded-xl border border-orange-200 bg-orange-50 flex items-center justify-center shadow-sm"
+                    className="group relative flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 shadow-sm"
                   >
-                    <div className="w-full h-full relative rounded-xl overflow-hidden opacity-60">
+                    <div className="relative h-full w-full overflow-hidden rounded-xl opacity-60">
                       <FilePreview
                         file={{
                           filename: item.file.name,
                           mimeType: item.file.type,
                         }}
                         url={item.url}
-                        className="object-cover w-full h-full pointer-events-none"
+                        className="pointer-events-none h-full w-full object-cover"
                       />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <Loader2
@@ -404,22 +408,22 @@ export const AiChat = () => {
                 {files.map((file) => (
                   <div
                     key={file.id}
-                    className="group shrink-0 w-16 h-16 relative rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center shadow-sm"
+                    className="group relative flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-gray-100 bg-gray-50 shadow-sm"
                   >
-                    <div className="w-full h-full relative rounded-xl overflow-hidden">
+                    <div className="relative h-full w-full overflow-hidden rounded-xl">
                       <FilePreview
                         file={{
                           filename: file.fileName ?? "",
                           mimeType: file.mimeType,
                         }}
                         base64={file.base64}
-                        className="object-cover w-full h-full pointer-events-none"
+                        className="pointer-events-none h-full w-full object-cover"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={() => removeFile(file.id)}
-                      className="absolute -top-1 -right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      className="absolute -top-1 -right-1 z-10 rounded-full bg-black/50 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
                       aria-label="刪除文件"
                     >
                       <X size={10} />
@@ -432,7 +436,7 @@ export const AiChat = () => {
             {displayedButtons}
           </div>
 
-          <p className="text-[11px] text-gray-400 leading-relaxed text-center px-4">
+          <p className="px-4 text-center text-[11px] leading-relaxed text-gray-400">
             {t("ai_consultation_room.disclaimer")}
           </p>
         </div>
