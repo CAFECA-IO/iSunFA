@@ -13,7 +13,9 @@ export default function OcrView() {
   const renderView = () => {
     switch (activeTab) {
       case "upload":
-        return <JournalUploadView />;
+        return (
+          <JournalUploadView onUploadComplete={() => setActiveTab("list")} />
+        );
       case "list":
         return <JournalListView />;
     }

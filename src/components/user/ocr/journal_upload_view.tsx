@@ -9,19 +9,28 @@ import {
   Wand2,
   File as FileIcon,
 } from "lucide-react";
-import { uploadFile } from "@/lib/file_operator";
+import { uploadFile, fileToBase64 } from "@/lib/file_operator";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
 
-export default function JournalUploadView() {
+export default function JournalUploadView({
+  onUploadComplete,
+}: {
+  onUploadComplete?: () => void;
+}) {
   const { t } = useTranslation();
 
-  const [isUploading, setIsUploading] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [uploadedFile, setUploadedFile] = useState<{
     file: File;
     previewUrl: string | null;
     hash: string;
+    base64: string;
   } | null>(null);
 
   useEffect(() => {
@@ -35,14 +44,17 @@ export default function JournalUploadView() {
   const processFile = async (file: File) => {
     setIsUploading(true);
     try {
-      const { hash } = await new Promise<{ hash: string }>(
-        (resolve, reject) => {
+      const [hashInfo, base64] = await Promise.all([
+        new Promise<{ hash: string }>((resolve, reject) => {
           uploadFile(file, {
             onSuccess: (hash) => resolve({ hash }),
             onError: (error) => reject(error),
           });
-        },
-      );
+        }),
+        fileToBase64(file),
+      ]);
+      const { hash } = hashInfo;
+
       // Optionally handle success (e.g., switch to list view or show success message)
       setUploadedFile({
         file,
@@ -50,11 +62,40 @@ export default function JournalUploadView() {
           ? URL.createObjectURL(file)
           : null,
         hash,
+        base64,
       });
     } catch (error) {
       console.error("Upload failed", error);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleAnalyze = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!uploadedFile) return;
+
+    setIsAnalyzing(true);
+    try {
+      const data = await request<IApiResponse<object>>("/api/v1/ocr", {
+        method: "POST",
+        body: JSON.stringify({
+          file: {
+            hash: uploadedFile.hash,
+            fileName: uploadedFile.file.name,
+            mimeType: uploadedFile.file.type,
+            base64: uploadedFile.base64,
+          },
+        }),
+      });
+
+      if (data.code === ApiCode.SUCCESS) {
+        onUploadComplete?.();
+      }
+    } catch (error) {
+      console.error("Analysis failed", error);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -89,6 +130,7 @@ export default function JournalUploadView() {
   };
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
       className={`flex size-full flex-col items-center justify-center rounded-2xl border-2 transition-colors ${
         uploadedFile
@@ -159,14 +201,14 @@ export default function JournalUploadView() {
               <button
                 type="button"
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-orange-600 hover:shadow focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  /* handle AI analysis */
-                  console.log("Analyzing file:", uploadedFile.hash);
-                  // Optionally setActiveTab("list") or trigger processing states
-                }}
+                onClick={handleAnalyze}
+                disabled={isAnalyzing}
               >
-                <Wand2 className="h-4 w-4" />
+                {isAnalyzing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Wand2 className="h-4 w-4" />
+                )}
                 {t("ocr.analyze_btn")}
               </button>
               <button

@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { request } from "@/lib/utils/request";
-import { uploadFile, ILariaMetadata } from "@/lib/file_operator";
+import { uploadFile, ILariaMetadata, fileToBase64 } from "@/lib/file_operator";
 import {
   PlusIcon,
   MinusIcon,
@@ -21,20 +21,6 @@ import LoginButton from "@/components/common/login_button";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { IApiResponse } from "@/lib/utils/response";
 import { FilePreview } from "@/components/common/file_preview";
-
-// Info: (20260213 - Julian) 將 File 轉換為 Base64 (不含 prefix)
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      const result = reader.result as string;
-      const base64 = result.split(",")[1];
-      resolve(base64);
-    };
-    reader.onerror = (error) => reject(error);
-  });
-};
 
 // Info: (20260302 - Julian) 目前先限制一次只能上傳一張圖片
 const FILE_LIMIT = 1;
