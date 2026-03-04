@@ -4,7 +4,7 @@ import { mintToAddress } from "@/services/token.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { Prisma } from "@/generated/client";
 
-const OEN_TRANSACTION_TOKEN = process.env.OEN_TRANSACTION_TOKEN;
+const OEN_ACCESS_TOKEN = process.env.OEN_ACCESS_TOKEN;
 
 import { IOenCallbackPayload, IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
 
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            Authorization: `Bearer ${OEN_TRANSACTION_TOKEN}`,
+                            Authorization: `Bearer ${OEN_ACCESS_TOKEN}`,
                         },
                         body: JSON.stringify({
                             merchantId: process.env.OEN_MERCHANT_ID || "mermer",
