@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 import { AuthenticationJSON } from '@passwordless-id/webauthn/dist/esm/types';
+import { decodeFunctionData, keccak256, stringToBytes, parseAbi, decodeEventLog } from 'viem';
+
 import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
@@ -9,10 +11,10 @@ import { AppError } from '@/lib/utils/error';
 import { analysisRepo } from '@/repositories/analysis.repo';
 import { orderGenerator } from '@/lib/order/order.generator';
 import { getPeriodDateRange } from '@/lib/analysis/period';
-import { decodeFunctionData, keccak256, stringToBytes, parseAbi } from 'viem';
 import { publicClient } from '@/lib/viem_public';
+import { ABIS } from '@/config/contracts';
 
-
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('Authorization');
@@ -103,6 +105,41 @@ export async function POST(request: NextRequest) {
         }
         if (!verifiedHash) {
           throw new Error('Transaction is not bound to this Order ID');
+        }
+
+        // Check if the UserOperation actually succeeded on-chain
+        const receipt = await publicClient.getTransactionReceipt({ hash: txHash as `0x${string}` });
+        if (!receipt) {
+          throw new Error('Transaction receipt not found');
+        }
+
+        let userOpSuccess = false;
+        for (const log of receipt.logs) {
+          try {
+            const decoded = decodeEventLog({
+              abi: ABIS.ENTRY_POINT,
+              data: log.data,
+              topics: log.topics,
+            });
+            if (decoded.eventName === 'UserOperationEvent') {
+              const args = decoded.args as { sender: string; success: boolean };
+              if (args.sender.toLowerCase() === user.address.toLowerCase()) {
+                if (args.success) {
+                  userOpSuccess = true;
+                }
+                break;
+              }
+            }
+          } catch (e) {
+            if (e instanceof Error && e.name !== 'AbiEventSignatureNotFoundError') {
+              console.log('[Info: (20260304 - Tzuhan)] Ignoring log decode error:', e);
+            }
+          }
+        }
+
+        if (!userOpSuccess) {
+          await orderGenerator.failOrder(orderId, 'UserOperation failed on-chain (e.g. out of gas or insufficient balance)');
+          throw new AppError(ApiCode.VALIDATION_ERROR, 'The token transfer failed on-chain. Order cancelled.');
         }
 
         // Info: (20260209 - Tzuhan) Mark order as complete
