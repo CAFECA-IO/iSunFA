@@ -9,7 +9,6 @@ import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { prisma } from "@/lib/prisma";
 
 const OEN_ACCESS_TOKEN = process.env.OEN_ACCESS_TOKEN;
-const OEN_TRANSACTION_TOKEN = process.env.OEN_TRANSACTION_TOKEN;
 
 export async function POST(request: NextRequest) {
   try {
@@ -91,7 +90,7 @@ export async function POST(request: NextRequest) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${OEN_TRANSACTION_TOKEN}`,
+            Authorization: `Bearer ${OEN_ACCESS_TOKEN}`,
           },
           body: JSON.stringify({
             merchantId: "mermer",
