@@ -52,7 +52,7 @@ export const useDashboardData = () => {
     };
 
     fetchData();
-  }, [timeUnit, refreshTrigger]);
+  }, [timeUnit, refreshTrigger, apiData]);
 
   // Info: (20260118 - Luphia) Auto-refresh interval (10s)
   useEffect(() => {
