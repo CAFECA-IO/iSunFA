@@ -5,6 +5,7 @@ import { mintToAddress } from "@/services/token.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 
 import { IOenCallbackPayload, IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
+import { ORDER_STATUS } from "@/constants/status";
 
 export async function POST(request: NextRequest) {
     try {
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
                 await prisma.order.update({
                     where: { id: order.id },
                     data: {
-                        status: "MINT_FAILED",
+                        status: ORDER_STATUS.MINT_FAILED,
                         data: { ...(order.data as object), oenResponse: body, error: mintResult.message },
                     },
                 });

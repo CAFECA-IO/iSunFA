@@ -12,6 +12,13 @@ export interface IOrderResult {
   cost: number;
 }
 
+export interface IPaymentOrderParams {
+  amount: number;
+  credits: number;
+  paymentMethodId: string;
+  previousCredits: number;
+}
+
 export class OrderGenerator {
   // Info: (20260128 - Luphia) Generate an order for analysis and return the challenge string to be signed.
   async generateAnalysisOrder(userId: string, params: IOrderParams): Promise<IOrderResult> {
@@ -49,6 +56,41 @@ export class OrderGenerator {
       orderId: order.id,
       challenge: challenge,
       cost,
+    };
+  }
+
+  // Info: (20260305 - Tzuhan) Generate an order for points purchase and return the challenge string to be signed.
+  async generatePaymentOrder(userId: string, params: IPaymentOrderParams): Promise<IOrderResult> {
+    const orderData = {
+      ...params,
+      timestamp: new Date().toISOString()
+    };
+
+    // Info: (20260305 - Tzuhan) Create challenge from hashed JSON data
+    const jsonString = JSON.stringify(orderData);
+    const hash = createHash('sha256').update(jsonString);
+    const challenge = hash.digest('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    // Info: (20260305 - Tzuhan) Create PENDING order
+    const order = await prisma.order.create({
+      data: {
+        userId,
+        type: 'PAYMENT',
+        amount: params.amount,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data: orderData as any,
+        status: ORDER_STATUS.PENDING,
+        challenge: challenge,
+      },
+    });
+
+    return {
+      orderId: order.id,
+      challenge: challenge,
+      cost: params.amount,
     };
   }
 
