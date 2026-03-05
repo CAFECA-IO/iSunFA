@@ -46,7 +46,7 @@ export default function JournalDetailModal({
   const [editText, setEditText] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  // confirm conditions
+  // Info: (20260305 - Julian) confirm conditions
   const [showConfirmClose, setShowConfirmClose] = useState<boolean>(false);
   const [showConfirmSave, setShowConfirmSave] = useState<boolean>(false);
 
@@ -91,7 +91,7 @@ export default function JournalDetailModal({
         },
       );
       if (data.code === ApiCode.SUCCESS && data.payload?.journal) {
-        // Must merge the new data because the PUT api might not return the associated file object
+        // Info: (20260305 - Julian) Must merge the new data because the PUT api might not return the associated file object
         const newJournal = {
           ...journal,
           ...data.payload.journal,
@@ -135,7 +135,7 @@ export default function JournalDetailModal({
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
                 <DialogPanel className="relative flex h-[85vh] w-full max-w-[90vw] transform flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all">
-                  {/* Header */}
+                  {/* Info: (20260305 - Julian) Header */}
                   <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
                     <DialogTitle
                       as="h3"
@@ -152,9 +152,9 @@ export default function JournalDetailModal({
                     </button>
                   </div>
 
-                  {/* Body Content */}
+                  {/* Info: (20260305 - Julian) Body Content */}
                   <div className="flex flex-1 overflow-hidden bg-gray-50">
-                    {/* Left: Preview */}
+                    {/* Info: (20260305 - Julian) Left: Preview */}
                     <ZoomablePreview
                       hasContent={!!journal.file?.hash}
                       fallbackText={t("ocr.no_image") as string}
@@ -170,7 +170,7 @@ export default function JournalDetailModal({
                       )}
                     </ZoomablePreview>
 
-                    {/* Right: Text / Edit */}
+                    {/* Info: (20260305 - Julian) Right: Text / Edit */}
                     <div className="flex w-1/2 flex-col bg-white p-6">
                       <div className="mb-4 flex items-center justify-between">
                         <h4 className="font-medium text-gray-700">
@@ -255,7 +255,7 @@ export default function JournalDetailModal({
         </Dialog>
       </Transition>
 
-      {/* Confirm Save Modal */}
+      {/* Info: (20260305 - Julian) Confirm Save Modal */}
       <ConfirmModal
         isOpen={showConfirmSave}
         onClose={() => setShowConfirmSave(false)}
@@ -266,7 +266,7 @@ export default function JournalDetailModal({
         onConfirm={executeSave}
       />
 
-      {/* Confirm Close Modal */}
+      {/* Info: (20260305 - Julian) Confirm Close Modal */}
       <ConfirmModal
         isOpen={showConfirmClose}
         onClose={() => setShowConfirmClose(false)}
