@@ -19,7 +19,7 @@ const JournalGridItem = ({
   return (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
     <div
-      className="relative flex size-72 flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border border-gray-300 bg-gray-100 p-2 hover:cursor-pointer hover:bg-orange-100"
+      className="relative flex size-72 flex-col items-center justify-center gap-2 justify-self-center overflow-hidden rounded-lg border border-gray-300 bg-gray-100 p-2 hover:cursor-pointer hover:bg-orange-100"
       onClick={() => onSelect(journal)}
     >
       <div className="absolute top-2 right-2 flex items-center gap-2">
@@ -85,7 +85,7 @@ const JournalGridLayout = ({
   ));
 
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       {isLoading ? loadingView : journals.length === 0 ? emptyView : gridView}
     </div>
   );

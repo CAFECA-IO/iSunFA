@@ -10,9 +10,6 @@ import {
 } from "@headlessui/react";
 import {
   X,
-  ZoomIn,
-  ZoomOut,
-  Maximize,
   Loader2,
   PencilIcon,
   SaveIcon,
@@ -22,6 +19,7 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import ConfirmModal from "@/components/common/confirm_modal";
+import ZoomablePreview from "@/components/user/ocr/zoomable_preview";
 import { IJournal } from "@/interfaces/journal";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -48,12 +46,6 @@ export default function JournalDetailModal({
   const [editText, setEditText] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  // zoom state
-  const [scale, setScale] = useState<number>(1);
-  const handleZoomIn = () => setScale((s) => Math.min(s + 0.25, 3));
-  const handleZoomOut = () => setScale((s) => Math.max(s - 0.25, 0.5));
-  const handleZoomReset = () => setScale(1);
-
   // confirm conditions
   const [showConfirmClose, setShowConfirmClose] = useState<boolean>(false);
   const [showConfirmSave, setShowConfirmSave] = useState<boolean>(false);
@@ -62,7 +54,6 @@ export default function JournalDetailModal({
     if (isOpen && journal) {
       setEditText(journal.text);
       setIsEditing(false);
-      setScale(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, journal?.id]);
@@ -119,7 +110,7 @@ export default function JournalDetailModal({
   return (
     <>
       <Transition show={isOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-40" onClose={requestClose}>
+        <Dialog as="div" className="relative z-100" onClose={requestClose}>
           <TransitionChild
             as={Fragment}
             enter="ease-out duration-300"
@@ -143,7 +134,7 @@ export default function JournalDetailModal({
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
-                <DialogPanel className="relative flex h-[85vh] w-full max-w-6xl transform flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all">
+                <DialogPanel className="relative flex h-[85vh] w-full max-w-[90vw] transform flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all">
                   {/* Header */}
                   <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
                     <DialogTitle
@@ -164,59 +155,20 @@ export default function JournalDetailModal({
                   {/* Body Content */}
                   <div className="flex flex-1 overflow-hidden bg-gray-50">
                     {/* Left: Preview */}
-                    <div className="relative flex w-1/2 flex-col border-r border-gray-200 bg-gray-100 p-4">
-                      {/* Zoom Controls */}
-                      <div className="absolute top-6 right-6 z-10 flex gap-2 rounded-lg bg-white/90 p-1 shadow-sm backdrop-blur">
-                        <button
-                          type="button"
-                          onClick={handleZoomOut}
-                          disabled={scale <= 1}
-                          title={t("ocr.zoom_out") as string}
-                          className="enable:hover:bg-gray-200 rounded p-1.5 disabled:opacity-50"
-                        >
-                          <ZoomOut size={16} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleZoomReset}
-                          disabled={scale === 1}
-                          title={t("ocr.zoom_reset") as string}
-                          className="enable:hover:bg-gray-200 rounded p-1.5 disabled:opacity-50"
-                        >
-                          <Maximize size={16} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleZoomIn}
-                          disabled={scale >= 3}
-                          title={t("ocr.zoom_in") as string}
-                          className="enable:hover:bg-gray-200 rounded p-1.5 disabled:opacity-50"
-                        >
-                          <ZoomIn size={16} />
-                        </button>
-                      </div>
-
-                      <div className="flex flex-1 items-center justify-center overflow-auto rounded-lg border border-gray-200 bg-white p-4">
-                        {journal.file?.hash ? (
-                          <div
-                            className="origin-center transition-transform duration-200"
-                            style={{ transform: `scale(${scale})` }}
-                          >
-                            <FilePreview
-                              file={{
-                                filename: journal.file.fileName || "Unknown",
-                              }}
-                              fileId={journal.file.hash}
-                              className="max-h-[70vh] max-w-full object-contain"
-                            />
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">
-                            {t("ocr.no_image")}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <ZoomablePreview
+                      hasContent={!!journal.file?.hash}
+                      fallbackText={t("ocr.no_image") as string}
+                    >
+                      {journal.file?.hash && (
+                        <FilePreview
+                          file={{
+                            filename: journal.file.fileName || "Unknown",
+                          }}
+                          fileId={journal.file.hash}
+                          className="max-h-[70vh] max-w-full object-contain"
+                        />
+                      )}
+                    </ZoomablePreview>
 
                     {/* Right: Text / Edit */}
                     <div className="flex w-1/2 flex-col bg-white p-6">
@@ -282,9 +234,9 @@ export default function JournalDetailModal({
                         <button
                           type="button"
                           onClick={() => onDelete(journal)}
-                          className="flex items-center gap-2 rounded-md bg-red-100 px-4 py-2 font-medium text-red-600 transition-colors hover:bg-red-200"
+                          className="flex items-center gap-2 text-sm rounded-md bg-red-100 px-4 py-2 font-medium text-red-600 transition-colors hover:bg-red-200"
                         >
-                          <TrashIcon size={20} />
+                          <TrashIcon size={16} />
                           {t("ocr.delete")}
                         </button>
                       </div>

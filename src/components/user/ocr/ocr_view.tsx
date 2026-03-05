@@ -27,15 +27,15 @@ export default function OcrView() {
       </div>
 
       {/* Info: (20260304 - Julian) Menu */}
-      <div className="flex px-4">
+      <div className="flex gap-4 px-4">
         {/* Info: (20260304 - Julian) Upload Area */}
-        <div className="flex w-[180px] flex-col gap-2 p-4">
+        <div className="flex h-fit w-[180px] flex-col gap-2 rounded-lg border border-gray-200 bg-gray-100 p-4">
           <button
             type="button"
             className={`flex w-full items-center justify-start gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
               activeTab === "upload"
-                ? "bg-slate-200 text-slate-900 shadow-sm"
-                : "text-slate-600 hover:bg-slate-100"
+                ? "bg-white text-orange-600 shadow-sm"
+                : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => setActiveTab("upload")}
           >
@@ -46,8 +46,8 @@ export default function OcrView() {
             type="button"
             className={`flex w-full items-center justify-start gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
               activeTab === "list"
-                ? "bg-slate-200 text-slate-900 shadow-sm"
-                : "text-slate-600 hover:bg-slate-100"
+                ? "bg-white text-orange-600 shadow-sm"
+                : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => setActiveTab("list")}
           >
@@ -56,7 +56,7 @@ export default function OcrView() {
         </div>
 
         {/* Info: (20260304 - Julian) Main View */}
-        <div className="min-h-[500px] w-[calc(100vw-250px)] px-4">
+        <div className="min-h-[500px] w-[calc(100vw-250px)]">
           {renderView()}
         </div>
       </div>

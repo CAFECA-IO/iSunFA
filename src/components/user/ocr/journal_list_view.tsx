@@ -145,7 +145,7 @@ export default function JournalListView() {
     );
 
   return (
-    <div className="flex size-full flex-col gap-8">
+    <div className="flex size-full flex-col gap-4">
       {/* Info: (20260304 - Julian) Filter Area */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4">
         {/* Left Actions: Search + Date */}
