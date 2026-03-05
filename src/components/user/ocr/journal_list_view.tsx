@@ -78,7 +78,7 @@ export default function JournalListView() {
         setJournals((prev) => prev.filter((j) => j.id !== journalToDelete.id));
         setJournalToDelete(null);
 
-        // Also close detail modal if it's the same journal
+        // Info: (20260305 - Julian) Also close detail modal if it's the same journal
         if (selectedJournal?.id === journalToDelete.id) {
           setIsModalOpen(false);
           setSelectedJournal(null);
@@ -148,7 +148,7 @@ export default function JournalListView() {
     <div className="flex size-full flex-col gap-4">
       {/* Info: (20260304 - Julian) Filter Area */}
       <div className="flex flex-col items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:gap-4">
-        {/* Left Actions: Search + Date */}
+        {/* Info: (20260305 - Julian) Left Actions: Search + Date */}
         <div className="flex flex-1 flex-col items-center gap-2 sm:flex-row sm:gap-4">
           {/* Info: (20260304 - Julian) Search input */}
           <div className="relative w-full sm:w-[200px]">
@@ -203,7 +203,7 @@ export default function JournalListView() {
           </div>
         </div>
 
-        {/* Right Actions: Sort + View Mode */}
+        {/* Info: (20260305 - Julian) Right Actions: Sort + View Mode */}
         <div className="flex items-center gap-2">
           {/* Info: (20260304 - Julian) Sort by date */}
           <button
@@ -263,7 +263,7 @@ export default function JournalListView() {
       {/* Info: (20260304 - Julian) Journal List */}
       {displayLayout}
 
-      {/* Detail Modal */}
+      {/* Info: (20260305 - Julian) Detail Modal */}
       <JournalDetailModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -272,7 +272,7 @@ export default function JournalListView() {
         onDelete={handleDeleteClick}
       />
 
-      {/* Delete Confirmation Modal */}
+      {/* Info: (20260305 - Julian) Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={!!journalToDelete}
         onClose={() => setJournalToDelete(null)}
