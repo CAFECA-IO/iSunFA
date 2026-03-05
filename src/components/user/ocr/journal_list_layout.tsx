@@ -8,9 +8,11 @@ import { IJournal } from "@/interfaces/ocr";
 const JournalListItem = ({
   journal,
   onSelect,
+  onDelete,
 }: {
   journal: IJournal;
   onSelect: (j: IJournal) => void;
+  onDelete: (j: IJournal) => void;
 }) => {
   const { t } = useTranslation();
 
@@ -43,7 +45,7 @@ const JournalListItem = ({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            // Delete action
+            onDelete(journal);
           }}
           className="rounded-md p-1 text-red-600 transition-colors hover:bg-red-200"
         >
@@ -58,10 +60,12 @@ const JournalListLayout = ({
   isLoading,
   journals,
   onSelect,
+  onDelete,
 }: {
   isLoading: boolean;
   journals: IJournal[];
   onSelect: (journal: IJournal) => void;
+  onDelete: (journal: IJournal) => void;
 }) => {
   const { t } = useTranslation();
 
@@ -82,7 +86,12 @@ const JournalListLayout = ({
   );
 
   const listLayout = journals.map((journal) => (
-    <JournalListItem key={journal.id} journal={journal} onSelect={onSelect} />
+    <JournalListItem
+      key={journal.id}
+      journal={journal}
+      onSelect={onSelect}
+      onDelete={onDelete}
+    />
   ));
 
   return (
@@ -97,7 +106,7 @@ const JournalListLayout = ({
               {t("ocr.created_date")}
             </th>
             <th className="border-b border-slate-500 bg-slate-100 px-6 py-3 text-left text-base text-slate-700">
-              {t("ocr.content")}
+              {t("ocr.journal")}
             </th>
             <th
               className="border-b border-slate-500 bg-slate-100 px-6 py-3"

@@ -17,6 +17,7 @@ import {
   PencilIcon,
   SaveIcon,
   UndoIcon,
+  TrashIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
@@ -31,6 +32,7 @@ interface IJournalDetailModalProps {
   onClose: () => void;
   journal: IJournal | null;
   onUpdate: (updatedJournal: IJournal) => void;
+  onDelete: (journal: IJournal) => void;
 }
 
 export default function JournalDetailModal({
@@ -38,6 +40,7 @@ export default function JournalDetailModal({
   onClose,
   journal,
   onUpdate,
+  onDelete,
 }: IJournalDetailModalProps) {
   const { t } = useTranslation();
 
@@ -213,7 +216,7 @@ export default function JournalDetailModal({
                     <div className="flex w-1/2 flex-col bg-white p-6">
                       <div className="mb-4 flex items-center justify-between">
                         <h4 className="font-medium text-gray-700">
-                          {t("ocr.content")}
+                          {t("ocr.journal")}
                         </h4>
                         <div className="flex gap-2">
                           {isEditing ? (
@@ -263,6 +266,17 @@ export default function JournalDetailModal({
                             {journal.text}
                           </div>
                         )}
+                      </div>
+
+                      <div className="mt-4 ml-auto">
+                        <button
+                          type="button"
+                          onClick={() => onDelete(journal)}
+                          className="flex items-center gap-2 rounded-md bg-red-100 px-4 py-2 text-red-600 transition-colors hover:bg-red-200"
+                        >
+                          <TrashIcon size={20} />
+                          {t("ocr.delete")}
+                        </button>
                       </div>
                     </div>
                   </div>

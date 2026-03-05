@@ -8,9 +8,11 @@ import { IJournal } from "@/interfaces/ocr";
 const JournalGridItem = ({
   journal,
   onSelect,
+  onDelete,
 }: {
   journal: IJournal;
   onSelect: (j: IJournal) => void;
+  onDelete: (j: IJournal) => void;
 }) => {
   const { t } = useTranslation();
 
@@ -25,7 +27,7 @@ const JournalGridItem = ({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            // Delete action
+            onDelete(journal);
           }}
           className="rounded-md bg-red-100 p-1 text-red-600 transition-colors hover:bg-red-200"
         >
@@ -54,10 +56,12 @@ const JournalGridLayout = ({
   isLoading,
   journals,
   onSelect,
+  onDelete,
 }: {
   isLoading: boolean;
   journals: IJournal[];
   onSelect: (journal: IJournal) => void;
+  onDelete: (journal: IJournal) => void;
 }) => {
   const { t } = useTranslation();
 
@@ -72,7 +76,12 @@ const JournalGridLayout = ({
     </div>
   );
   const gridView = journals.map((journal) => (
-    <JournalGridItem key={journal.id} journal={journal} onSelect={onSelect} />
+    <JournalGridItem
+      key={journal.id}
+      journal={journal}
+      onSelect={onSelect}
+      onDelete={onDelete}
+    />
   ));
 
   return (

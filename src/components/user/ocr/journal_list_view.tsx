@@ -16,6 +16,8 @@ import { IJournal } from "@/interfaces/ocr";
 import JournalListLayout from "@/components/user/ocr/journal_list_layout";
 import JournalGridLayout from "@/components/user/ocr/journal_grid_layout";
 import JournalDetailModal from "@/components/user/ocr/journal_detail_modal";
+import ConfirmModal from "@/components/common/confirm_modal";
+import { ApiCode } from "@/lib/utils/status";
 
 export default function JournalListView() {
   const { t } = useTranslation();
@@ -28,6 +30,9 @@ export default function JournalListView() {
   const [selectedJournal, setSelectedJournal] = useState<IJournal | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
+  const [journalToDelete, setJournalToDelete] = useState<IJournal | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
   const handleJournalSelect = (journal: IJournal) => {
     setSelectedJournal(journal);
     setIsModalOpen(true);
@@ -37,6 +42,39 @@ export default function JournalListView() {
     setJournals((prev) =>
       prev.map((j) => (j.id === updatedJournal.id ? updatedJournal : j)),
     );
+  };
+
+  const handleDeleteClick = (journal: IJournal) => {
+    setJournalToDelete(journal);
+  };
+
+  const executeDelete = async () => {
+    if (!journalToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const data = await request<IApiResponse<null>>(
+        `/api/v1/ocr/${journalToDelete.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (data.code === ApiCode.SUCCESS) {
+        setJournals((prev) => prev.filter((j) => j.id !== journalToDelete.id));
+        setJournalToDelete(null);
+
+        // Also close detail modal if it's the same journal
+        if (selectedJournal?.id === journalToDelete.id) {
+          setIsModalOpen(false);
+          setSelectedJournal(null);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to delete journal:", error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const fetchJournals = useCallback(async () => {
@@ -65,12 +103,14 @@ export default function JournalListView() {
         isLoading={isLoading}
         journals={journals}
         onSelect={handleJournalSelect}
+        onDelete={handleDeleteClick}
       />
     ) : (
       <JournalGridLayout
         isLoading={isLoading}
         journals={journals}
         onSelect={handleJournalSelect}
+        onDelete={handleDeleteClick}
       />
     );
 
@@ -181,6 +221,22 @@ export default function JournalListView() {
         onClose={() => setIsModalOpen(false)}
         journal={selectedJournal}
         onUpdate={handleJournalUpdate}
+        onDelete={handleDeleteClick}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!journalToDelete}
+        onClose={() => setJournalToDelete(null)}
+        title={t("ocr.confirm_delete_title") as string}
+        message={t("ocr.confirm_delete_msg") as string}
+        confirmText={
+          isDeleting
+            ? (t("ocr.please_wait") as string)
+            : (t("ocr.delete") as string)
+        }
+        cancelText={t("ocr.cancel") as string}
+        onConfirm={executeDelete}
       />
     </div>
   );
