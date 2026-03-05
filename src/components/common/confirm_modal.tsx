@@ -41,7 +41,7 @@ export default function ConfirmModal({
 
   return (
     <Transition show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
+      <Dialog as="div" className="relative z-110" onClose={onClose}>
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"

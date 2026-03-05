@@ -149,9 +149,9 @@ export default function JournalListView() {
       {/* Info: (20260304 - Julian) Filter Area */}
       <div className="flex flex-col items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:gap-4">
         {/* Left Actions: Search + Date */}
-        <div className="flex w-full flex-col items-center gap-2 sm:flex-row sm:gap-4">
+        <div className="flex flex-1 flex-col items-center gap-2 sm:flex-row sm:gap-4">
           {/* Info: (20260304 - Julian) Search input */}
-          <div className="relative w-full sm:min-w-[200px]">
+          <div className="relative w-full sm:w-[200px]">
             <Search
               className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
               size={18}
@@ -213,18 +213,18 @@ export default function JournalListView() {
                 : (t("ocr.sort_desc") as string)
             }
             type="button"
-            className="flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-xs text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 active:scale-95 sm:text-base"
+            className="flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-xs whitespace-nowrap text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 active:scale-95 sm:text-base"
             onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
           >
             {sortOrder === "asc" ? (
               <div className="flex items-center gap-2">
                 <p>{t("ocr.sort_asc")}</p>
-                <ArrowDown size={18} />
+                <ArrowDown size={18} className="shrink-0" />
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <p>{t("ocr.sort_desc")}</p>
-                <ArrowUp size={18} />
+                <ArrowUp size={18} className="shrink-0" />
               </div>
             )}
           </button>

@@ -215,16 +215,16 @@ export default function JournalDetailModal({
                         </div>
                       </div>
 
-                      <div className="w-full flex-1 overflow-y-auto">
+                      <div className="flex-1 overflow-y-auto rounded-lg bg-gray-50">
                         {isEditing ? (
                           <textarea
                             aria-label={t("ocr.journal") as string}
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
-                            className="h-full w-full resize-none rounded-lg border border-orange-300 p-4 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                            className="size-full resize-none border border-orange-300 p-4 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                           />
                         ) : (
-                          <div className="h-full w-full rounded-lg border border-gray-100 bg-gray-50 p-4 whitespace-pre-wrap text-gray-700">
+                          <div className="size-full p-4 whitespace-pre-line text-gray-700">
                             {journal.text}
                           </div>
                         )}
