@@ -19,18 +19,6 @@ interface IUser {
   isVerified?: boolean;
   pubKeyX?: string;
   pubKeyY?: string;
-  hasSavedPaymentMethod?: boolean;
-  paymentMethods?: {
-    id: string;
-    provider: string;
-    data?: {
-      card4No?: string;
-      cardBrand?: string;
-      issuer?: string;
-    };
-    isDefault: boolean;
-    createdAt: string;
-  }[];
 }
 
 interface IAuthContextType {
@@ -84,30 +72,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } catch (e) {
           console.warn("Deprecate: (20260310 - Tzuhan) ", 'Failed to fetch user balance:', e);
-        }
-
-        // Info: (20260305 - Tzuhan) Fetch payment methods individually to keep auth/me clean
-        try {
-          const pmResponse = await request<{ payload: { paymentMethods: Record<string, unknown>[] } }>('/api/v1/user/payment-methods', {
-            method: 'GET',
-          });
-          if (pmResponse && pmResponse.payload && pmResponse.payload.paymentMethods) {
-            userData.paymentMethods = pmResponse.payload.paymentMethods as {
-              id: string;
-              provider: string;
-              data?: { card4No?: string; cardBrand?: string; issuer?: string; };
-              isDefault: boolean;
-              createdAt: string;
-            }[];
-            userData.hasSavedPaymentMethod = pmResponse.payload.paymentMethods.length > 0;
-          } else {
-            userData.paymentMethods = [];
-            userData.hasSavedPaymentMethod = false;
-          }
-        } catch (err) {
-          console.warn("Deprecate: (20260310 - Tzuhan) ", 'Failed to fetch payment methods:', err);
-          userData.paymentMethods = [];
-          userData.hasSavedPaymentMethod = false;
         }
 
         setUser(userData);

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { IOenCheckoutRequest, IOenOrderData } from "@/interfaces/payment";
+import { IOenOrderData } from "@/interfaces/payment";
 import { Prisma } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -17,17 +17,15 @@ export async function POST(request: NextRequest) {
             return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
         }
 
-        const { amount, credits } = (await request.json()) as IOenCheckoutRequest;
-
         const order = await prisma.order.create({
             data: {
                 userId: user.id,
                 type: "OEN_BINDING",
-                amount: amount || 0,
+                amount: 0,
                 challenge: "N/A",
                 data: {
-                    credits: credits || 0,
-                    amount: amount || 0,
+                    credits: 0,
+                    amount: 0,
                 },
             },
         });

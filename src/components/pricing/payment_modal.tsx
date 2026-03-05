@@ -14,6 +14,15 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
 import LegalModal from "@/components/common/legal_modal";
 import { IPaymentModalProps, IOenCheckoutResponse, IOrderStatusResponse } from "@/interfaces/payment";
+import { IJSONObject } from "@/validators/common";
+
+interface IPaymentMethod {
+  id: string;
+  provider: string;
+  data?: IJSONObject;
+  isDefault: boolean;
+  createdAt: string;
+}
 
 const parseCardInfo = (data: unknown) => {
   const pmData = data as Record<string, unknown> | undefined;
@@ -54,6 +63,9 @@ export default function PaymentModal({
     "terms_of_service" | "privacy_policy" | "refund_policy" | null
   >(null);
 
+  const [paymentMethods, setPaymentMethods] = useState<IPaymentMethod[]>([]);
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
+
   const wasOpen = useRef(isOpen);
 
   useEffect(() => {
@@ -67,10 +79,34 @@ export default function PaymentModal({
         setOriginalCredits(null);
       }
 
-      console.log("Deprecate: (20260310 - Tzuhan) ", "[PaymentModal] Initializing with user paymentMethods:", user?.paymentMethods);
-
       setAgreedToTerms(false);
-      setSelectedPaymentMethodId(user?.paymentMethods?.[0]?.id || "new");
+      setSelectedPaymentMethodId("new");
+
+      const fetchPaymentMethods = async () => {
+        try {
+          setLoadingPaymentMethods(true);
+          const pmResponse = await request<{ payload: { paymentMethods: IPaymentMethod[] } }>('/api/v1/user/payment-methods', {
+            method: 'GET',
+          });
+          if (pmResponse && pmResponse.payload && pmResponse.payload.paymentMethods) {
+            setPaymentMethods(pmResponse.payload.paymentMethods);
+            if (pmResponse.payload.paymentMethods.length > 0) {
+              setSelectedPaymentMethodId(pmResponse.payload.paymentMethods[0].id);
+            }
+          } else {
+            setPaymentMethods([]);
+          }
+        } catch (err) {
+          console.warn("Failed to fetch payment methods:", err);
+          setPaymentMethods([]);
+        } finally {
+          setLoadingPaymentMethods(false);
+        }
+      };
+
+      if (user) {
+        fetchPaymentMethods();
+      }
     }
     wasOpen.current = isOpen;
   }, [initialStep, isOpen, transactionHash, user]);
@@ -354,11 +390,12 @@ export default function PaymentModal({
 
                               {user && (
                                 <div className="mt-6 space-y-3">
-                                  <h4 className="text-sm font-semibold text-gray-900">
+                                  <h4 className="text-sm font-semibold text-gray-900 flex items-center">
                                     {t("pricing.credits.payment_modal.payment_method") || "付款方式"}
+                                    {loadingPaymentMethods && <Loader2 className="ml-2 h-4 w-4 animate-spin text-gray-400" />}
                                   </h4>
                                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                    {(user.paymentMethods || []).map((pm) => {
+                                    {paymentMethods.map((pm) => {
                                       const { brand, last4 } = parseCardInfo(pm.data);
                                       const isSelected = selectedPaymentMethodId === pm.id;
 
