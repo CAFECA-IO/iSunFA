@@ -8,7 +8,7 @@ import { Prisma } from "@/generated/browser";
 
 /**
  * Info: (20260304 - Julian) 將檔案傳給 AI 進行解析
- * POST /api/v1/ocr
+ * POST /api/v1/journal
  */
 
 export async function POST(request: NextRequest) {
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * Info: (20260304 - Julian) 取得全部或指定日記帳列表
- * GET /api/v1/ocr
+ * GET /api/v1/journal
  */
 export async function GET(request: NextRequest) {
   try {

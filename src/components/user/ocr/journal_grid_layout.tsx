@@ -3,7 +3,7 @@
 import { TrashIcon, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
-import { IJournal } from "@/interfaces/ocr";
+import { IJournal } from "@/interfaces/journal";
 
 const JournalGridItem = ({
   journal,

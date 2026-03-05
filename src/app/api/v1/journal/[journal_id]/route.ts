@@ -6,9 +6,9 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 
 /**
  * Info: (20260304 - Julian) 取得日記帳
- * GET /api/v1/ocr/:ocr_id
+ * GET /api/v1/journal/:journal_id
  */
-export async function GET(request: NextRequest, { params }: { params: { ocr_id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { journal_id: string } }) {
   try {
     // Info: (20260304 - Julian) Verify Token & Get User
     const authHeader = request.headers.get("Authorization");
@@ -19,14 +19,14 @@ export async function GET(request: NextRequest, { params }: { params: { ocr_id: 
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
 
-    const ocrId = params.ocr_id;
-    if (!ocrId) {
-      console.error("Missing ocrId");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "OcrId is required");
+    const journalId = params.journal_id;
+    if (!journalId) {
+      console.error("Missing journalId");
+      return jsonFail(ApiCode.VALIDATION_ERROR, "JournalId is required");
     }
 
     const journal = await prisma.journal.findUnique({
-      where: { id: ocrId },
+      where: { id: journalId },
     });
 
     if (!journal) {
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest, { params }: { params: { ocr_id: 
 
 /**
  * Info: (20260304 - Julian) 編輯日記帳
- * PUT /api/v1/ocr/:ocr_id
+ * PUT /api/v1/journal/:journal_id
  */
 export async function PUT(request: NextRequest, { params }: { params: { journal_id: string } }) {
   try {
@@ -56,7 +56,7 @@ export async function PUT(request: NextRequest, { params }: { params: { journal_
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
 
-    const journalId = params.journal_id;
+    const { journal_id: journalId } = await params;
     if (!journalId) {
       console.error("Missing journalId");
       return jsonFail(ApiCode.VALIDATION_ERROR, "JournalId is required");
@@ -85,7 +85,7 @@ export async function PUT(request: NextRequest, { params }: { params: { journal_
 
 /**
  * Info: (20260304 - Julian) 刪除日記帳
- * DELETE /api/v1/ocr/:ocr_id
+ * DELETE /api/v1/journal/:journal_id
  */
 export async function DELETE(request: NextRequest, { params }: { params: { journal_id: string } }) {
   try {
@@ -98,7 +98,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { journ
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
 
-    const journalId = params.journal_id;
+    const { journal_id: journalId } = await params;
     if (!journalId) {
       console.error("Missing journalId");
       return jsonFail(ApiCode.VALIDATION_ERROR, "JournalId is required");

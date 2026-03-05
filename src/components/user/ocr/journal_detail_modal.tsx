@@ -22,7 +22,7 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import ConfirmModal from "@/components/common/confirm_modal";
-import { IJournal } from "@/interfaces/ocr";
+import { IJournal } from "@/interfaces/journal";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -93,7 +93,7 @@ export default function JournalDetailModal({
     setIsSaving(true);
     try {
       const data = await request<IApiResponse<{ journal: IJournal }>>(
-        `/api/v1/ocr/${journal.id}`,
+        `/api/v1/journal/${journal.id}`,
         {
           method: "PUT",
           body: JSON.stringify({ text: editText }),

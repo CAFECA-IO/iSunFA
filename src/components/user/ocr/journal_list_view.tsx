@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
-import { IJournal } from "@/interfaces/ocr";
+import { IJournal } from "@/interfaces/journal";
 import JournalListLayout from "@/components/user/ocr/journal_list_layout";
 import JournalGridLayout from "@/components/user/ocr/journal_grid_layout";
 import JournalDetailModal from "@/components/user/ocr/journal_detail_modal";
@@ -54,7 +54,7 @@ export default function JournalListView() {
     setIsDeleting(true);
     try {
       const data = await request<IApiResponse<null>>(
-        `/api/v1/ocr/${journalToDelete.id}`,
+        `/api/v1/journal/${journalToDelete.id}`,
         {
           method: "DELETE",
         },
@@ -81,7 +81,7 @@ export default function JournalListView() {
     setIsLoading(true);
     try {
       const data = await request<IApiResponse<{ journals: IJournal[] }>>(
-        `/api/v1/ocr?orderBy={"createdAt":"${sortOrder}"}`,
+        `/api/v1/journal?orderBy={"createdAt":"${sortOrder}"}`,
       );
       if (data.payload?.journals) {
         setJournals(data.payload.journals);
