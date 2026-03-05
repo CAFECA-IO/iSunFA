@@ -899,7 +899,7 @@ export const en = {
     sort_asc: "Oldest to Newest",
     list_view: "List View",
     grid_view: "Grid View",
-    file: "File",
+    file: "Receipt",
     created_date: "Created Date",
     journal: "Journal",
     action: "Action",

@@ -895,7 +895,7 @@ export const zhTw = {
     sort_asc: "由舊到新排序",
     list_view: "列表檢視",
     grid_view: "網格檢視",
-    file: "外觀",
+    file: "憑證",
     created_date: "建立時間",
     journal: "日記帳",
     action: "操作",

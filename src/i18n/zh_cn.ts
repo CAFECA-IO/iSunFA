@@ -649,7 +649,7 @@ export const zhCn = {
     sort_asc: "从旧到新排序",
     list_view: "列表视图",
     grid_view: "网格视图",
-    file: "外观",
+    file: "凭证",
     created_date: "创建时间",
     journal: "日记账",
     action: "操作",

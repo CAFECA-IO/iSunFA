@@ -660,7 +660,7 @@ export const ko = {
     sort_asc: "오래된순 정렬",
     list_view: "목록 보기",
     grid_view: "그리드 보기",
-    file: "파일 보기",
+    file: "증명서",
     created_date: "생성일",
     journal: "일기장",
     action: "작업",

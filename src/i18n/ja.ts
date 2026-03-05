@@ -670,7 +670,7 @@ export const ja = {
     sort_asc: "古い順",
     list_view: "リストビュー",
     grid_view: "グリッドビュー",
-    file: "外観",
+    file: "仕訳帳",
     created_date: "作成日",
     journal: "仕訳帳",
     action: "操作",
