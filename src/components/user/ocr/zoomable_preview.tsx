@@ -99,10 +99,10 @@ export default function ZoomablePreview({
       </div>
 
       <div
+        role="presentation"
         className={`flex flex-1 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white p-4 ${
           scale > 1 ? (isDragging ? "cursor-grabbing" : "cursor-grab") : ""
         }`}
-         
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

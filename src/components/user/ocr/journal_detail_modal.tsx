@@ -234,9 +234,9 @@ export default function JournalDetailModal({
                         <button
                           type="button"
                           onClick={() => onDelete(journal)}
-                          className="flex items-center gap-2 text-sm rounded-md bg-red-100 px-4 py-2 font-medium text-red-600 transition-colors hover:bg-red-200"
+                          className="flex items-center gap-2 rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-200"
                         >
-                          <TrashIcon size={16} />
+                          <TrashIcon size={14} />
                           {t("ocr.delete")}
                         </button>
                       </div>
