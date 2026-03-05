@@ -31,13 +31,16 @@ export async function POST(request: NextRequest) {
       return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
     }
 
-    const author = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
+    // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
+    const accountbookId = "";
+
+    const accountbook = await prisma.accountbook.findUnique({
+      where: { id: accountbookId },
     });
 
-    if (!author) {
-      console.error("Author not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Author not found");
+    if (!accountbook) {
+      console.error("Accountbook not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
 
     // Info: (20260304 - Julian) 使用 AI 生成日記帳
@@ -53,10 +56,15 @@ export async function POST(request: NextRequest) {
     const chatService = new ChatService(apiKey);
 
     // Info: (20260304 - Julian) 整理圖片資料發給 AI
-    const imagesForAi = file.base64 && file.mimeType ? [{
-      data: file.base64,
-      mimeType: file.mimeType,
-    }] : [];
+    const imagesForAi =
+      file.base64 && file.mimeType
+        ? [
+            {
+              data: file.base64,
+              mimeType: file.mimeType,
+            },
+          ]
+        : [];
 
     const { text } = await chatService.analyzeJournal(imagesForAi);
 
@@ -72,7 +80,7 @@ export async function POST(request: NextRequest) {
     const journal = await prisma.journal.create({
       data: {
         fileId: dbFile.id,
-        userId: author.id,
+        accountbookId: accountbook.id,
         text: text,
       },
     });
@@ -108,16 +116,32 @@ export async function GET(request: NextRequest) {
       return jsonFail(ApiCode.NOT_FOUND, "Author not found");
     }
 
+    // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
+    const accountbookId = "";
+
+    const accountbook = await prisma.accountbook.findUnique({
+      where: { id: accountbookId },
+    });
+
+    if (!accountbook) {
+      console.error("Accountbook not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const keyWord = searchParams.get("keyWord");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
-    const page = searchParams.get("page") ? parseInt(searchParams.get("page")!) : undefined;
-    const pageSize = searchParams.get("pageSize") ? parseInt(searchParams.get("pageSize")!) : undefined;
+    const page = searchParams.get("page")
+      ? parseInt(searchParams.get("page")!)
+      : undefined;
+    const pageSize = searchParams.get("pageSize")
+      ? parseInt(searchParams.get("pageSize")!)
+      : undefined;
     const orderByParams = searchParams.get("orderBy");
 
     const filteredConditions: Prisma.JournalFindManyArgs = {
-      where: { userId: author.id },
+      where: { accountbookId: accountbook.id },
       include: { file: true },
     };
 
@@ -148,7 +172,7 @@ export async function GET(request: NextRequest) {
       try {
         filteredConditions.orderBy = JSON.parse(orderByParams);
       } catch {
-         console.warn("Invalid orderBy param format, ignoring");
+        console.warn("Invalid orderBy param format, ignoring");
       }
     }
 

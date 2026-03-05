@@ -22,6 +22,18 @@ export async function GET(
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
 
+    // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
+    const accountbookId = "";
+
+    const accountbook = await prisma.accountbook.findUnique({
+      where: { id: accountbookId },
+    });
+
+    if (!accountbook) {
+      console.error("Accountbook not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+    }
+
     const { journal_id: journalId } = await params;
     if (!journalId) {
       console.error("Missing journalId");
@@ -60,6 +72,18 @@ export async function PUT(
     if (!sessionUser) {
       console.error("User not found");
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
+    }
+
+    // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
+    const accountbookId = "";
+
+    const accountbook = await prisma.accountbook.findUnique({
+      where: { id: accountbookId },
+    });
+
+    if (!accountbook) {
+      console.error("Accountbook not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
 
     const { journal_id: journalId } = await params;
@@ -111,6 +135,18 @@ export async function DELETE(
     if (!journalId) {
       console.error("Missing journalId");
       return jsonFail(ApiCode.VALIDATION_ERROR, "JournalId is required");
+    }
+
+    // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
+    const accountbookId = "";
+
+    const accountbook = await prisma.accountbook.findUnique({
+      where: { id: accountbookId },
+    });
+
+    if (!accountbook) {
+      console.error("Accountbook not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
 
     // Info: (20260304 - Julian) Delete journal
