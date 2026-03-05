@@ -40,6 +40,7 @@ model User {
   reactions           Reaction[]
   paymentMethods      PaymentMethod[]
   paymentTransactions PaymentTransaction[]
+  accountbooks        Accountbook[]
   journals            Journal[]
 
   @@index([address])
@@ -292,9 +293,29 @@ model Journal {
   fileId String @unique @map("file_id")
   file   File   @relation(fields: [fileId], references: [id])
 
-  // Info: (20260304 - Julian) 上傳者
+  // Info: (20260305 - Julian) 隸屬的帳本
+  accountbookId String      @map("accountbook_id")
+  accountbook   Accountbook @relation(fields: [accountbookId], references: [id])
+  user          User?       @relation(fields: [userId], references: [id])
+  userId        String?
+
+  @@map("journal")
+}
+
+// Info: (20260305 - Julian) 帳本
+// ToDo: (20260305 - Julian) 未來會擴充欄位
+model Accountbook {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Info: (20260305 - Julian) 帳本所屬的使用者
   userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id])
 
-  @@map("journal")
+  // Info: (20260305 - Julian) 一個帳本可以有多個憑證
+  journals Journal[]
+
+  @@map("accountbook")
 }
