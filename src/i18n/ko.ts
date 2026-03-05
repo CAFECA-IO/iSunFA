@@ -680,6 +680,7 @@ export const ko = {
     unsaved_changes_msg: "저장되지 않은 변경 사항이 있습니다. 나가시겠습니까?",
     confirm_save_title: "저장 확인",
     confirm_save_msg: "변경 사항을 저장하시겠습니까?",
+    confirm_leave_title: "나가기",
     zoom_in: "확대",
     zoom_out: "축소",
     zoom_reset: "초기화",

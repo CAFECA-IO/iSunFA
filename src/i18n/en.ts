@@ -920,6 +920,7 @@ export const en = {
       "You have unsaved changes. Are you sure you want to leave?",
     confirm_save_title: "Confirm Save",
     confirm_save_msg: "Are you sure you want to save changes?",
+    confirm_leave_title: "Leave",
     zoom_in: "Zoom In",
     zoom_out: "Zoom Out",
     zoom_reset: "Reset Zoom",

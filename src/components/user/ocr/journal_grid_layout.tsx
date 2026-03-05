@@ -29,7 +29,7 @@ const JournalGridItem = ({
             e.stopPropagation();
             onDelete(journal);
           }}
-          className="rounded-md bg-red-100 p-1 text-red-600 transition-colors hover:bg-red-200"
+          className="rounded-md bg-red-100 p-1 text-red-600 shadow-sm transition-colors hover:bg-red-200"
         >
           <TrashIcon size={24} />
         </button>

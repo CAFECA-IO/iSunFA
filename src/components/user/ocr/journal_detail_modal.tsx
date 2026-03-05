@@ -44,28 +44,28 @@ export default function JournalDetailModal({
 }: IJournalDetailModalProps) {
   const { t } = useTranslation();
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editText, setEditText] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [editText, setEditText] = useState<string>("");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // zoom state
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState<number>(1);
   const handleZoomIn = () => setScale((s) => Math.min(s + 0.25, 3));
   const handleZoomOut = () => setScale((s) => Math.max(s - 0.25, 0.5));
   const handleZoomReset = () => setScale(1);
 
   // confirm conditions
-  const [showConfirmClose, setShowConfirmClose] = useState(false);
-  const [showConfirmSave, setShowConfirmSave] = useState(false);
+  const [showConfirmClose, setShowConfirmClose] = useState<boolean>(false);
+  const [showConfirmSave, setShowConfirmSave] = useState<boolean>(false);
 
   useEffect(() => {
-    if (journal && !isOpen) {
-      // Setup when closed or just passing journal
+    if (isOpen && journal) {
       setEditText(journal.text);
       setIsEditing(false);
       setScale(1);
     }
-  }, [journal, isOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, journal?.id]);
 
   if (!journal) return null;
 
@@ -168,23 +168,29 @@ export default function JournalDetailModal({
                       {/* Zoom Controls */}
                       <div className="absolute top-6 right-6 z-10 flex gap-2 rounded-lg bg-white/90 p-1 shadow-sm backdrop-blur">
                         <button
+                          type="button"
                           onClick={handleZoomOut}
+                          disabled={scale <= 1}
                           title={t("ocr.zoom_out") as string}
-                          className="rounded p-1.5 hover:bg-gray-200"
+                          className="enable:hover:bg-gray-200 rounded p-1.5 disabled:opacity-50"
                         >
                           <ZoomOut size={16} />
                         </button>
                         <button
+                          type="button"
                           onClick={handleZoomReset}
+                          disabled={scale === 1}
                           title={t("ocr.zoom_reset") as string}
-                          className="rounded p-1.5 hover:bg-gray-200"
+                          className="enable:hover:bg-gray-200 rounded p-1.5 disabled:opacity-50"
                         >
                           <Maximize size={16} />
                         </button>
                         <button
+                          type="button"
                           onClick={handleZoomIn}
+                          disabled={scale >= 3}
                           title={t("ocr.zoom_in") as string}
-                          className="rounded p-1.5 hover:bg-gray-200"
+                          className="enable:hover:bg-gray-200 rounded p-1.5 disabled:opacity-50"
                         >
                           <ZoomIn size={16} />
                         </button>
@@ -244,7 +250,10 @@ export default function JournalDetailModal({
                           ) : (
                             <button
                               type="button"
-                              onClick={() => setIsEditing(true)}
+                              onClick={() => {
+                                setEditText(journal.text);
+                                setIsEditing(true);
+                              }}
                               className="flex items-center gap-1 rounded border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
                             >
                               <PencilIcon size={14} />
@@ -257,6 +266,7 @@ export default function JournalDetailModal({
                       <div className="w-full flex-1 overflow-y-auto">
                         {isEditing ? (
                           <textarea
+                            aria-label={t("ocr.journal") as string}
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
                             className="h-full w-full resize-none rounded-lg border border-orange-300 p-4 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
@@ -272,7 +282,7 @@ export default function JournalDetailModal({
                         <button
                           type="button"
                           onClick={() => onDelete(journal)}
-                          className="flex items-center gap-2 rounded-md bg-red-100 px-4 py-2 text-red-600 transition-colors hover:bg-red-200"
+                          className="flex items-center gap-2 rounded-md bg-red-100 px-4 py-2 font-medium text-red-600 transition-colors hover:bg-red-200"
                         >
                           <TrashIcon size={20} />
                           {t("ocr.delete")}
@@ -310,7 +320,7 @@ export default function JournalDetailModal({
         onClose={() => setShowConfirmClose(false)}
         title={t("ocr.unsaved_changes_title") as string}
         message={t("ocr.unsaved_changes_msg") as string}
-        confirmText={"ok" as string}
+        confirmText={t("ocr.confirm_leave_title") as string}
         cancelText={t("ocr.cancel") as string}
         onConfirm={() => {
           setShowConfirmClose(false);

@@ -668,6 +668,7 @@ export const zhCn = {
     unsaved_changes_msg: "您有尚未保存的更改，确定要离开吗？",
     confirm_save_title: "确认保存",
     confirm_save_msg: "确定要保存更改吗？",
+    confirm_leave_title: "离开",
     zoom_in: "放大",
     zoom_out: "缩小",
     zoom_reset: "重置",

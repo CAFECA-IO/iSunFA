@@ -690,6 +690,7 @@ export const ja = {
     unsaved_changes_msg: "未保存の変更があります。終了してもよろしいですか？",
     confirm_save_title: "保存してよろしいですか？",
     confirm_save_msg: "変更を保存してもよろしいですか？",
+    confirm_leave_title: "終了",
     zoom_in: "拡大",
     zoom_out: "縮小",
     zoom_reset: "リセット",

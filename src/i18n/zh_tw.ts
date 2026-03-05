@@ -914,6 +914,7 @@ export const zhTw = {
     unsaved_changes_msg: "您有尚未儲存的變更，確定要離開嗎？",
     confirm_save_title: "確認儲存",
     confirm_save_msg: "確定要儲存變更嗎？",
+    confirm_leave_title: "離開",
     zoom_in: "放大",
     zoom_out: "縮小",
     zoom_reset: "重置",
