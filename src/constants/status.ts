@@ -27,3 +27,17 @@ export const PAYMENT_TRANSACTION_STATUS = {
   SUCCESS: 'SUCCESS',
   FAILED: 'FAILED',
 } as const;
+
+export const PAYMENT_STATUS = {
+  SUCCESS: 'SUCCESS',
+  FAILED: 'FAILED',
+} as const;
+
+export const ORDER_TYPE = {
+  OEN_BINDING: 'OEN_BINDING',
+  OEN_PAYMENT: 'OEN_PAYMENT',
+} as const;
+
+export const PAYMENT_PROVIDER = {
+  OEN_CALLBACK: 'OEN_CALLBACK',
+} as const;

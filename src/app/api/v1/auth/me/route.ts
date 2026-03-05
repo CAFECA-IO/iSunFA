@@ -5,6 +5,7 @@ import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
 // import { DEFAULT_PLAN } from '@/constants/plans';
 import { MODULES } from '@/constants/modules';
+import { ORDER_STATUS, ORDER_TYPE } from '@/constants/status';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,8 +22,8 @@ export async function GET(request: NextRequest) {
     const pendingOrders = await prisma.order.findMany({
       where: {
         userId: user.id,
-        status: { in: ['PENDING', 'MINT_FAILED'] },
-        type: 'OEN_PAYMENT',
+        status: { in: [ORDER_STATUS.PENDING, ORDER_STATUS.MINT_FAILED] },
+        type: ORDER_TYPE.OEN_PAYMENT,
         paymentTransactions: {
           some: {
             status: 'SUCCESS'

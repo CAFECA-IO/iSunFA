@@ -5,6 +5,7 @@ import { Prisma } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
+import { ORDER_TYPE } from "@/constants/status";
 
 const OEN_ACCESS_TOKEN = process.env.OEN_ACCESS_TOKEN;
 
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
         const order = await prisma.order.create({
             data: {
                 userId: user.id,
-                type: "OEN_BINDING",
+                type: ORDER_TYPE.OEN_BINDING,
                 amount: 0,
                 challenge: "N/A",
                 data: {

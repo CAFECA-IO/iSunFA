@@ -3,9 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/client";
 import { mintToAddress } from "@/services/token.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
-
 import { IOenCallbackPayload, IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
-import { ORDER_STATUS } from "@/constants/status";
+import { ORDER_STATUS, PAYMENT_STATUS, ORDER_TYPE, PAYMENT_PROVIDER, PAYMENT_TRANSACTION_STATUS } from "@/constants/status";
 
 export async function POST(request: NextRequest) {
     try {
@@ -43,7 +42,7 @@ export async function POST(request: NextRequest) {
 
         const token = body.token || body.data?.token;
         const status =
-            body.status || body.data?.status || body.success ? "SUCCESS" : "";
+            body.status || body.data?.status || body.success ? PAYMENT_STATUS.SUCCESS : "";
 
         if (!customId) {
             return NextResponse.json(
@@ -96,14 +95,14 @@ export async function POST(request: NextRequest) {
                 }
             }
 
-            const isPaymentSuccess = status === "SUCCESS" || body.success === true || (token && typeof token === "string");
+            const isPaymentSuccess = status === PAYMENT_STATUS.SUCCESS || body.success === true || (token && typeof token === "string");
 
-            if (isPaymentSuccess && order.status === "PENDING") {
-                if (order.type === "OEN_BINDING") {
+            if (isPaymentSuccess && order.status === ORDER_STATUS.PENDING) {
+                if (order.type === ORDER_TYPE.OEN_BINDING) {
                     await tx.order.update({
                         where: { id: order.id },
                         data: {
-                            status: "COMPLETED",
+                            status: ORDER_STATUS.COMPLETED,
                             data: {
                                 ...(order.data as IOenOrderData),
                                 card4no: String((body.data?.card4no || body.card4no || "")) || undefined,
@@ -111,7 +110,7 @@ export async function POST(request: NextRequest) {
                             } as Prisma.InputJsonObject
                         },
                     });
-                } else if (order.type === "OEN_PAYMENT") {
+                } else if (order.type === ORDER_TYPE.OEN_PAYMENT) {
                     const dbReceipt = await tx.receipt.create({
                         data: {
                             orderId: order.id,
@@ -122,13 +121,13 @@ export async function POST(request: NextRequest) {
 
                     await tx.paymentTransaction.updateMany({
                         where: { orderId: order.id },
-                        data: { status: "SUCCESS", rawData: body as unknown as Prisma.InputJsonValue }
+                        data: { status: PAYMENT_TRANSACTION_STATUS.SUCCESS, rawData: body as unknown as Prisma.InputJsonValue }
                     });
 
                     await tx.order.update({
                         where: { id: order.id },
                         data: {
-                            status: "PAID",
+                            status: ORDER_STATUS.PAID,
                             data: {
                                 ...(order.data as IOenOrderData),
                                 checkoutResponse: body,
@@ -141,15 +140,15 @@ export async function POST(request: NextRequest) {
                     creditsToMint = (order.data as IOenOrderData)?.credits || 0;
                     amountPaid = order.amount;
                 }
-            } else if (!isPaymentSuccess && order.status === "PENDING") {
+            } else if (!isPaymentSuccess && order.status === ORDER_STATUS.PENDING) {
                 await tx.paymentTransaction.updateMany({
                     where: { orderId: order.id },
-                    data: { status: "FAILED", rawData: body as unknown as Prisma.InputJsonValue, errorMessage: "Payment failed via OEN Callback" }
+                    data: { status: PAYMENT_TRANSACTION_STATUS.FAILED, rawData: body as unknown as Prisma.InputJsonValue, errorMessage: "Payment failed via OEN Callback" }
                 });
                 await tx.order.update({
                     where: { id: order.id },
                     data: {
-                        status: "FAILED",
+                        status: ORDER_STATUS.FAILED,
                         data: { ...(order.data as IOenOrderData), checkoutResponse: body } as Prisma.InputJsonObject,
                     },
                 });
@@ -157,7 +156,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (shouldMint && creditsToMint > 0) {
-            const memo = JSON.stringify({ provider: "OEN_CALLBACK", orderId: order.id, amount: amountPaid });
+            const memo = JSON.stringify({ provider: PAYMENT_PROVIDER.OEN_CALLBACK, orderId: order.id, amount: amountPaid });
             const mintResult = await mintToAddress(CONTRACT_ADDRESSES.NTD_TOKEN, order.user.address, creditsToMint, memo);
 
             if (!mintResult.success) {
@@ -175,7 +174,7 @@ export async function POST(request: NextRequest) {
                 await prisma.order.update({
                     where: { id: order.id },
                     data: {
-                        status: "COMPLETED",
+                        status: ORDER_STATUS.COMPLETED,
                         transactionHash: txHash,
                     },
                 });
