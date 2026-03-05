@@ -17,18 +17,6 @@ export async function GET(request: NextRequest) {
       return jsonFail(ApiCode.UNAUTHORIZED, 'Invalid or missing device token');
     }
 
-    // Info: (20260302 - Tzuhan) [流程 6-1: 檢查綁卡狀態] 每次前端請求使用者資料時，取得該使用者所有的 OEN 綁定紀錄，供前端 PaymentModal 選擇
-    const paymentMethods = await prisma.paymentMethod.findMany({
-      where: { userId: user.id, provider: 'OEN' },
-      select: {
-        id: true,
-        provider: true,
-        data: true,
-        isDefault: true,
-        createdAt: true,
-      }
-    });
-
     // Info: (20260302 - Tzuhan) [機制: 處理中點數] 找出所有已扣款成功但還未上鏈的訂單點數加總，讓前端介面能顯示「處理中」，避免使用者誤以為扣款失敗
     const pendingOrders = await prisma.order.findMany({
       where: {
@@ -83,10 +71,6 @@ export async function GET(request: NextRequest) {
       modules: MODULES.filter((m) => m.basic).map((m) => m.key),
       isAdmin: user.role === 'ADMIN',
       identityAddress: user.identityAddress,
-      paymentMethods: paymentMethods.map(pm => ({
-        ...pm,
-        createdAt: pm.createdAt.toISOString()
-      })),
       pendingCredits,
     });
   } catch (error) {

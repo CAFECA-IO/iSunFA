@@ -1,5 +1,6 @@
 export const ORDER_STATUS = {
   PENDING: 'PENDING',
+  PAID: 'PAID',
   COMPLETED: 'COMPLETED',
   FAILED: 'FAILED',
 } as const;
