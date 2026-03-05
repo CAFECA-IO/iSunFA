@@ -45,29 +45,32 @@ export async function POST(request: NextRequest) {
       return jsonFail(ApiCode.NOT_FOUND, "Payment method not found or missing token");
     }
 
-    const order = await prisma.order.create({
-      data: {
-        userId: user.id,
-        type: "OEN_PAYMENT",
-        amount: amount,
-        challenge: "N/A",
+    const { order, paymentTransaction } = await prisma.$transaction(async (tx) => {
+      const order = await tx.order.create({
         data: {
-          credits,
-          amount,
-          previousCredits,
+          userId: user.id,
+          type: "OEN_PAYMENT",
+          amount: amount,
+          challenge: "N/A",
+          data: {
+            credits,
+            amount,
+            previousCredits,
+          },
         },
-      },
-    });
+      });
 
-    const paymentTransaction = await prisma.paymentTransaction.create({
-      data: {
-        userId: user.id,
-        paymentMethodId: oenPaymentMethod.id,
-        orderId: order.id,
-        provider: "OEN",
-        amount: amount,
-        status: "PENDING",
-      }
+      const paymentTransaction = await tx.paymentTransaction.create({
+        data: {
+          userId: user.id,
+          paymentMethodId: oenPaymentMethod.id,
+          orderId: order.id,
+          provider: "OEN",
+          amount: amount,
+          status: "PENDING",
+        }
+      });
+      return { order, paymentTransaction };
     });
 
     const oenRes = await fetch(
@@ -102,23 +105,25 @@ export async function POST(request: NextRequest) {
     const oenData = await oenRes.json();
 
     if (oenData.code === "S0000" || oenRes.ok) {
-      const dbReceipt = await prisma.receipt.create({
-        data: {
-          orderId: order.id,
-          amount: amount,
-          data: oenData
-        }
-      });
-      await prisma.paymentTransaction.update({
-        where: { id: paymentTransaction.id },
-        data: { status: "SUCCESS", rawData: oenData }
-      });
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          status: "PAID",
-          data: { ...(order.data as IOenOrderData), checkoutResponse: oenData, receiptId: dbReceipt.id } as Prisma.InputJsonObject,
-        },
+      await prisma.$transaction(async (tx) => {
+        const dbReceipt = await tx.receipt.create({
+          data: {
+            orderId: order.id,
+            amount: amount,
+            data: oenData
+          }
+        });
+        await tx.paymentTransaction.update({
+          where: { id: paymentTransaction.id },
+          data: { status: "SUCCESS", rawData: oenData }
+        });
+        await tx.order.update({
+          where: { id: order.id },
+          data: {
+            status: "PAID",
+            data: { ...(order.data as IOenOrderData), checkoutResponse: oenData, receiptId: dbReceipt.id } as Prisma.InputJsonObject,
+          },
+        });
       });
 
       const memo = JSON.stringify({ provider: "OEN", orderId: order.id, amount });
@@ -151,17 +156,19 @@ export async function POST(request: NextRequest) {
         txHash: txHash,
       });
     } else {
-      await prisma.paymentTransaction.update({
-        where: { id: paymentTransaction.id },
-        data: { status: "FAILED", rawData: oenData, errorMessage: "Payment failed via OEN" }
-      });
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          status: "FAILED",
-          data: { ...(order.data as IOenOrderData), checkoutResponse: oenData } as Prisma.InputJsonObject,
-        },
-      });
+      await prisma.$transaction([
+        prisma.paymentTransaction.update({
+          where: { id: paymentTransaction.id },
+          data: { status: "FAILED", rawData: oenData, errorMessage: "Payment failed via OEN" }
+        }),
+        prisma.order.update({
+          where: { id: order.id },
+          data: {
+            status: "FAILED",
+            data: { ...(order.data as IOenOrderData), checkoutResponse: oenData } as Prisma.InputJsonObject,
+          },
+        })
+      ]);
       return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Payment failed via OEN", oenData);
     }
   } catch {

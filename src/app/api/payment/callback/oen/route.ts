@@ -60,50 +60,52 @@ export async function POST(request: NextRequest) {
 
 
 
-        if (token && typeof token === "string") {
-            const existingMethod = await prisma.paymentMethod.findFirst({
-                where: {
-                    userId: order.userId,
-                    provider: "OEN",
-                    token: token,
-                }
-            });
-
-            if (!existingMethod) {
-                const rawBody = body as Record<string, unknown>;
-                const mergedData: IOenCallbackData = body.data ? { ...body.data } : {};
-
-                if (rawBody.card4no) mergedData.card4no = String(rawBody.card4no);
-                if (rawBody.cardBrand) mergedData.cardBrand = String(rawBody.cardBrand);
-                if (rawBody.issuer) mergedData.issuer = String(rawBody.issuer);
-
-                await prisma.paymentMethod.create({
-                    data: {
+        await prisma.$transaction(async (tx) => {
+            if (token && typeof token === "string") {
+                const existingMethod = await tx.paymentMethod.findFirst({
+                    where: {
                         userId: order.userId,
                         provider: "OEN",
                         token: token,
-                        data: (Object.keys(mergedData).length > 0 ? mergedData : Prisma.DbNull) as Prisma.InputJsonValue,
+                    }
+                });
+
+                if (!existingMethod) {
+                    const rawBody = body as Record<string, unknown>;
+                    const mergedData: IOenCallbackData = body.data ? { ...body.data } : {};
+
+                    if (rawBody.card4no) mergedData.card4no = String(rawBody.card4no);
+                    if (rawBody.cardBrand) mergedData.cardBrand = String(rawBody.cardBrand);
+                    if (rawBody.issuer) mergedData.issuer = String(rawBody.issuer);
+
+                    await tx.paymentMethod.create({
+                        data: {
+                            userId: order.userId,
+                            provider: "OEN",
+                            token: token,
+                            data: (Object.keys(mergedData).length > 0 ? mergedData : Prisma.DbNull) as Prisma.InputJsonValue,
+                        },
+                    });
+                }
+            }
+
+            const isPaymentSuccess = status === "SUCCESS" || body.success === true || (token && typeof token === "string");
+            const isBindingOrder = order.status === "PENDING" && order.type === "OEN_BINDING";
+
+            if (isPaymentSuccess && isBindingOrder) {
+                await tx.order.update({
+                    where: { id: order.id },
+                    data: {
+                        status: "COMPLETED",
+                        data: {
+                            ...(order.data as IOenOrderData),
+                            card4no: String((body.data?.card4no || body.card4no || "")) || undefined,
+                            issuer: String((body.data?.issuer || body.issuer || "")) || undefined,
+                        } as Prisma.InputJsonObject
                     },
                 });
             }
-        }
-
-        const isPaymentSuccess = status === "SUCCESS" || body.success === true || (token && typeof token === "string");
-        const isBindingOrder = order.status === "PENDING" && order.type === "OEN_BINDING";
-
-        if (isPaymentSuccess && isBindingOrder) {
-            await prisma.order.update({
-                where: { id: order.id },
-                data: {
-                    status: "COMPLETED",
-                    data: {
-                        ...(order.data as IOenOrderData),
-                        card4no: String((body.data?.card4no || body.card4no || "")) || undefined,
-                        issuer: String((body.data?.issuer || body.issuer || "")) || undefined,
-                    } as Prisma.InputJsonObject
-                },
-            });
-        }
+        });
 
         return NextResponse.json({ message: "OK" });
     } catch (err) {

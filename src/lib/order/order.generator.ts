@@ -79,20 +79,22 @@ export class OrderGenerator {
   }
 
   async completeOrder(orderId: string, signature: string, transactionHash?: string) {
-    const order = await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        status: ORDER_STATUS.COMPLETED,
-        signature: signature,
-        transactionHash: transactionHash
-      }
-    });
+    await prisma.$transaction(async (tx) => {
+      const order = await tx.order.update({
+        where: { id: orderId },
+        data: {
+          status: ORDER_STATUS.COMPLETED,
+          signature: signature,
+          transactionHash: transactionHash
+        }
+      });
 
-    await prisma.receipt.create({
-      data: {
-        orderId: order.id,
-        amount: order.amount,
-      }
+      await tx.receipt.create({
+        data: {
+          orderId: order.id,
+          amount: order.amount,
+        }
+      });
     });
   }
 
