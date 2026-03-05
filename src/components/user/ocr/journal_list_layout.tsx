@@ -5,11 +5,20 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import { IJournal } from "@/interfaces/ocr";
 
-const JournalListItem = ({ journal }: { journal: IJournal }) => {
+const JournalListItem = ({
+  journal,
+  onSelect,
+}: {
+  journal: IJournal;
+  onSelect: (j: IJournal) => void;
+}) => {
   const { t } = useTranslation();
 
   return (
-    <tr className="border-b border-slate-200 last:border-0 odd:bg-slate-50 even:bg-white hover:bg-orange-100">
+    <tr
+      className="cursor-pointer border-b border-slate-200 last:border-0 odd:bg-slate-50 even:bg-white hover:bg-orange-100"
+      onClick={() => onSelect(journal)}
+    >
       <td className="w-32 px-6 py-2 align-middle text-sm text-slate-700">
         <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-1">
           {journal.file?.hash ? (
@@ -32,6 +41,10 @@ const JournalListItem = ({ journal }: { journal: IJournal }) => {
       <td className="px-6 py-2 text-right">
         <button
           type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            // Delete action
+          }}
           className="rounded-md p-1 text-red-600 transition-colors hover:bg-red-200"
         >
           <TrashIcon size={24} />
@@ -44,9 +57,11 @@ const JournalListItem = ({ journal }: { journal: IJournal }) => {
 const JournalListLayout = ({
   isLoading,
   journals,
+  onSelect,
 }: {
   isLoading: boolean;
   journals: IJournal[];
+  onSelect: (journal: IJournal) => void;
 }) => {
   const { t } = useTranslation();
 
@@ -67,7 +82,7 @@ const JournalListLayout = ({
   );
 
   const listLayout = journals.map((journal) => (
-    <JournalListItem key={journal.id} journal={journal} />
+    <JournalListItem key={journal.id} journal={journal} onSelect={onSelect} />
   ));
 
   return (
@@ -84,7 +99,10 @@ const JournalListLayout = ({
             <th className="border-b border-slate-500 bg-slate-100 px-6 py-3 text-left text-base text-slate-700">
               {t("ocr.content")}
             </th>
-            <th className="border-b border-slate-500 bg-slate-100 px-6 py-3" aria-label="actions"></th>
+            <th
+              className="border-b border-slate-500 bg-slate-100 px-6 py-3"
+              aria-label="actions"
+            ></th>
           </tr>
           {isLoading
             ? loadingView

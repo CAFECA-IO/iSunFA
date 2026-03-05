@@ -5,14 +5,28 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import { IJournal } from "@/interfaces/ocr";
 
-const JournalGridItem = ({ journal }: { journal: IJournal }) => {
+const JournalGridItem = ({
+  journal,
+  onSelect,
+}: {
+  journal: IJournal;
+  onSelect: (j: IJournal) => void;
+}) => {
   const { t } = useTranslation();
 
   return (
-    <div className="relative flex size-72 flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border border-gray-300 bg-gray-100 p-2 hover:cursor-pointer hover:bg-orange-100">
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+    <div
+      className="relative flex size-72 flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border border-gray-300 bg-gray-100 p-2 hover:cursor-pointer hover:bg-orange-100"
+      onClick={() => onSelect(journal)}
+    >
       <div className="absolute top-2 right-2 flex items-center gap-2">
         <button
           type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            // Delete action
+          }}
           className="rounded-md bg-red-100 p-1 text-red-600 transition-colors hover:bg-red-200"
         >
           <TrashIcon size={24} />
@@ -39,9 +53,11 @@ const JournalGridItem = ({ journal }: { journal: IJournal }) => {
 const JournalGridLayout = ({
   isLoading,
   journals,
+  onSelect,
 }: {
   isLoading: boolean;
   journals: IJournal[];
+  onSelect: (journal: IJournal) => void;
 }) => {
   const { t } = useTranslation();
 
@@ -56,7 +72,7 @@ const JournalGridLayout = ({
     </div>
   );
   const gridView = journals.map((journal) => (
-    <JournalGridItem key={journal.id} journal={journal} />
+    <JournalGridItem key={journal.id} journal={journal} onSelect={onSelect} />
   ));
 
   return (

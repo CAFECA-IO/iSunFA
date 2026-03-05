@@ -1,0 +1,309 @@
+"use client";
+
+import { Fragment, useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Transition,
+  TransitionChild,
+} from "@headlessui/react";
+import {
+  X,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  Loader2,
+  PencilIcon,
+  SaveIcon,
+  UndoIcon,
+} from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
+import { FilePreview } from "@/components/common/file_preview";
+import ConfirmModal from "@/components/common/confirm_modal";
+import { IJournal } from "@/interfaces/ocr";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
+
+interface IJournalDetailModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  journal: IJournal | null;
+  onUpdate: (updatedJournal: IJournal) => void;
+}
+
+export default function JournalDetailModal({
+  isOpen,
+  onClose,
+  journal,
+  onUpdate,
+}: IJournalDetailModalProps) {
+  const { t } = useTranslation();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // zoom state
+  const [scale, setScale] = useState(1);
+  const handleZoomIn = () => setScale((s) => Math.min(s + 0.25, 3));
+  const handleZoomOut = () => setScale((s) => Math.max(s - 0.25, 0.5));
+  const handleZoomReset = () => setScale(1);
+
+  // confirm conditions
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+  const [showConfirmSave, setShowConfirmSave] = useState(false);
+
+  useEffect(() => {
+    if (journal && !isOpen) {
+      // Setup when closed or just passing journal
+      setEditText(journal.text);
+      setIsEditing(false);
+      setScale(1);
+    }
+  }, [journal, isOpen]);
+
+  if (!journal) return null;
+
+  const hasUnsavedChanges = isEditing && editText !== journal.text;
+
+  const requestClose = () => {
+    if (hasUnsavedChanges) {
+      setShowConfirmClose(true);
+    } else {
+      setIsEditing(false);
+      onClose();
+    }
+  };
+
+  const handleSaveAttempt = () => {
+    if (editText === journal.text) {
+      setIsEditing(false);
+      return;
+    }
+    setShowConfirmSave(true);
+  };
+
+  const executeSave = async () => {
+    setShowConfirmSave(false);
+    setIsSaving(true);
+    try {
+      const data = await request<IApiResponse<{ journal: IJournal }>>(
+        `/api/v1/ocr/${journal.id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ text: editText }),
+        },
+      );
+      if (data.code === ApiCode.SUCCESS && data.payload?.journal) {
+        // Must merge the new data because the PUT api might not return the associated file object
+        const newJournal = {
+          ...journal,
+          ...data.payload.journal,
+          file: journal.file,
+        };
+        onUpdate(newJournal);
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error("Failed to update journal", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <Transition show={isOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-40" onClose={requestClose}>
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" />
+          </TransitionChild>
+
+          <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+              <TransitionChild
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                enterTo="opacity-100 translate-y-0 sm:scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              >
+                <DialogPanel className="relative flex h-[85vh] w-full max-w-6xl transform flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all">
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                    <DialogTitle
+                      as="h3"
+                      className="text-xl font-semibold text-gray-900"
+                    >
+                      {t("ocr.detail_title")}
+                    </DialogTitle>
+                    <button
+                      type="button"
+                      className="rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
+                      onClick={requestClose}
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  {/* Body Content */}
+                  <div className="flex flex-1 overflow-hidden bg-gray-50">
+                    {/* Left: Preview */}
+                    <div className="relative flex w-1/2 flex-col border-r border-gray-200 bg-gray-100 p-4">
+                      {/* Zoom Controls */}
+                      <div className="absolute top-6 right-6 z-10 flex gap-2 rounded-lg bg-white/90 p-1 shadow-sm backdrop-blur">
+                        <button
+                          onClick={handleZoomOut}
+                          title={t("ocr.zoom_out") as string}
+                          className="rounded p-1.5 hover:bg-gray-200"
+                        >
+                          <ZoomOut size={16} />
+                        </button>
+                        <button
+                          onClick={handleZoomReset}
+                          title={t("ocr.zoom_reset") as string}
+                          className="rounded p-1.5 hover:bg-gray-200"
+                        >
+                          <Maximize size={16} />
+                        </button>
+                        <button
+                          onClick={handleZoomIn}
+                          title={t("ocr.zoom_in") as string}
+                          className="rounded p-1.5 hover:bg-gray-200"
+                        >
+                          <ZoomIn size={16} />
+                        </button>
+                      </div>
+
+                      <div className="flex flex-1 items-center justify-center overflow-auto rounded-lg border border-gray-200 bg-white p-4">
+                        {journal.file?.hash ? (
+                          <div
+                            className="origin-center transition-transform duration-200"
+                            style={{ transform: `scale(${scale})` }}
+                          >
+                            <FilePreview
+                              file={{
+                                filename: journal.file.fileName || "Unknown",
+                              }}
+                              fileId={journal.file.hash}
+                              className="max-h-[70vh] max-w-full object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">
+                            {t("ocr.no_image")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right: Text / Edit */}
+                    <div className="flex w-1/2 flex-col bg-white p-6">
+                      <div className="mb-4 flex items-center justify-between">
+                        <h4 className="font-medium text-gray-700">
+                          {t("ocr.content")}
+                        </h4>
+                        <div className="flex gap-2">
+                          {isEditing ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditText(journal.text);
+                                  setIsEditing(false);
+                                }}
+                                className="flex items-center gap-1 rounded bg-gray-100 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-200"
+                              >
+                                <UndoIcon size={14} />
+                                {t("ocr.cancel")}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleSaveAttempt}
+                                className="flex items-center gap-1 rounded bg-orange-500 px-3 py-1.5 text-sm text-white hover:bg-orange-600"
+                              >
+                                <SaveIcon size={14} />
+                                {t("ocr.save")}
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setIsEditing(true)}
+                              className="flex items-center gap-1 rounded border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                            >
+                              <PencilIcon size={14} />
+                              {t("ocr.edit")}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="w-full flex-1 overflow-y-auto">
+                        {isEditing ? (
+                          <textarea
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            className="h-full w-full resize-none rounded-lg border border-orange-300 p-4 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                          />
+                        ) : (
+                          <div className="h-full w-full rounded-lg border border-gray-100 bg-gray-50 p-4 whitespace-pre-wrap text-gray-700">
+                            {journal.text}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {isSaving && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm">
+                      <Loader2 className="h-10 w-10 animate-spin text-orange-500" />
+                    </div>
+                  )}
+                </DialogPanel>
+              </TransitionChild>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* Confirm Save Modal */}
+      <ConfirmModal
+        isOpen={showConfirmSave}
+        onClose={() => setShowConfirmSave(false)}
+        title={t("ocr.confirm_save_title") as string}
+        message={t("ocr.confirm_save_msg") as string}
+        confirmText={t("ocr.save") as string}
+        cancelText={t("ocr.cancel") as string}
+        onConfirm={executeSave}
+      />
+
+      {/* Confirm Close Modal */}
+      <ConfirmModal
+        isOpen={showConfirmClose}
+        onClose={() => setShowConfirmClose(false)}
+        title={t("ocr.unsaved_changes_title") as string}
+        message={t("ocr.unsaved_changes_msg") as string}
+        confirmText={"ok" as string}
+        cancelText={t("ocr.cancel") as string}
+        onConfirm={() => {
+          setShowConfirmClose(false);
+          setIsEditing(false);
+          onClose();
+        }}
+      />
+    </>
+  );
+}

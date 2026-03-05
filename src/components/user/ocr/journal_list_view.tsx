@@ -15,6 +15,7 @@ import { IApiResponse } from "@/lib/utils/response";
 import { IJournal } from "@/interfaces/ocr";
 import JournalListLayout from "@/components/user/ocr/journal_list_layout";
 import JournalGridLayout from "@/components/user/ocr/journal_grid_layout";
+import JournalDetailModal from "@/components/user/ocr/journal_detail_modal";
 
 export default function JournalListView() {
   const { t } = useTranslation();
@@ -23,6 +24,20 @@ export default function JournalListView() {
   const [displayType, setDisplayType] = useState<"grid" | "list">("list");
   const [journals, setJournals] = useState<IJournal[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const [selectedJournal, setSelectedJournal] = useState<IJournal | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+  const handleJournalSelect = (journal: IJournal) => {
+    setSelectedJournal(journal);
+    setIsModalOpen(true);
+  };
+
+  const handleJournalUpdate = (updatedJournal: IJournal) => {
+    setJournals((prev) =>
+      prev.map((j) => (j.id === updatedJournal.id ? updatedJournal : j)),
+    );
+  };
 
   const fetchJournals = useCallback(async () => {
     setIsLoading(true);
@@ -46,9 +61,17 @@ export default function JournalListView() {
 
   const displayLayout =
     displayType === "list" ? (
-      <JournalListLayout isLoading={isLoading} journals={journals} />
+      <JournalListLayout
+        isLoading={isLoading}
+        journals={journals}
+        onSelect={handleJournalSelect}
+      />
     ) : (
-      <JournalGridLayout isLoading={isLoading} journals={journals} />
+      <JournalGridLayout
+        isLoading={isLoading}
+        journals={journals}
+        onSelect={handleJournalSelect}
+      />
     );
 
   return (
@@ -151,6 +174,14 @@ export default function JournalListView() {
       </div>
       {/* Info: (20260304 - Julian) Journal List */}
       {displayLayout}
+
+      {/* Detail Modal */}
+      <JournalDetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        journal={selectedJournal}
+        onUpdate={handleJournalUpdate}
+      />
     </div>
   );
 }
