@@ -17,7 +17,7 @@ export default function ZoomablePreview({
 }: IZoomablePreviewProps) {
   const { t } = useTranslation();
 
-  // zoom & drag state
+  // Info: (20260305 - Julian) zoom & drag state
   const [scale, setScale] = useState<number>(1);
   const [position, setPosition] = useState<{ x: number; y: number }>({
     x: 0,
@@ -44,8 +44,8 @@ export default function ZoomablePreview({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (scale <= 1) return; // Only allow drag when zoomed in
-    e.preventDefault(); // Prevent native image drag & text selection
+    if (scale <= 1) return; // Info: (20260305 - Julian) Only allow drag when zoomed in
+    e.preventDefault(); // Info: (20260305 - Julian) Prevent native image drag & text selection
     setIsDragging(true);
     dragStart.current = {
       x: e.clientX - position.x,
@@ -69,7 +69,7 @@ export default function ZoomablePreview({
 
   return (
     <div className="relative flex w-1/2 flex-col border-r border-gray-200 bg-gray-100 p-4">
-      {/* Zoom Controls */}
+      {/* Info: (20260305 - Julian) Zoom Controls */}
       <div className="absolute top-6 right-6 z-10 flex gap-2 rounded-lg bg-white/90 p-1 shadow-sm backdrop-blur">
         <button
           type="button"
@@ -120,7 +120,7 @@ export default function ZoomablePreview({
             className="origin-center transition-transform duration-200 will-change-transform"
             style={{
               transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-              // Disable transition during drag for smoothness
+              // Info: (20260305 - Julian) Disable transition during drag for smoothness
               transitionDuration: isDragging ? "0ms" : "200ms",
             }}
           >
