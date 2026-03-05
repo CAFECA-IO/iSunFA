@@ -19,7 +19,7 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import ConfirmModal from "@/components/common/confirm_modal";
-import ZoomablePreview from "@/components/user/ocr/zoomable_preview";
+import ZoomablePreview from "@/components/common/zoomable_preview";
 import { IJournal } from "@/interfaces/journal";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
