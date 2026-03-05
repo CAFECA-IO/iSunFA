@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
           throw new Error('Transaction is not bound to this Order ID');
         }
 
-        // Check if the UserOperation actually succeeded on-chain
+        // Info: (20260305 - Tzuhan) Check if the UserOperation actually succeeded on-chain
         const receipt = await publicClient.getTransactionReceipt({ hash: txHash as `0x${string}` });
         if (!receipt) {
           throw new Error('Transaction receipt not found');
