@@ -190,17 +190,24 @@ export default function PaymentModal({
 
       // Info: (20260302 - Tzuhan) [流程 2-2: 呼叫後端結帳 API] 若本身已有 KYC (或上方剛建立完畢)，直接發送請求至後端建立訂單
       // Info: (20260302 - Tzuhan) 取得應援科技(OEN)結帳頁面 URL 或是直接扣款結果
+      const isNewCard = selectedPaymentMethodId === "new";
+      const endpoint = isNewCard ? "/api/v1/payment/oen/bind" : "/api/v1/payment/oen/checkout";
+      const payloadBody = isNewCard ? {
+        amount,
+        credits,
+      } : {
+        amount,
+        credits,
+        previousCredits: originalCredits,
+        paymentMethodId: selectedPaymentMethodId,
+      };
+
       const response = await request<{
         message?: string;
         payload?: IOenCheckoutResponse;
-      }>("/api/v1/payment/oen/checkout", {
+      }>(endpoint, {
         method: "POST",
-        body: JSON.stringify({
-          amount,
-          credits,
-          previousCredits: originalCredits,
-          paymentMethodId: selectedPaymentMethodId !== "new" ? selectedPaymentMethodId : null,
-        }),
+        body: JSON.stringify(payloadBody),
       });
 
       if (
