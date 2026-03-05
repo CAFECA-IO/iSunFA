@@ -32,6 +32,7 @@ export const ABIS = {
     'function getUserOpHash(UserOperation userOp) external view returns (bytes32)',
     'function getSenderAddress(bytes calldata initCode) external view returns (address)',
     'error FailedOp(uint256 opIndex, string reason)',
+    'event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)'
   ]),
 
   // Info: (20251230 - Tzuhan) --- SCW Factory ---

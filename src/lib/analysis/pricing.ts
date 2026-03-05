@@ -3,6 +3,8 @@ export interface IOrderParams {
   periodType: string;
   periodValue: string;
   year: number;
+  country?: string;
+  keyword?: string;
 }
 
 /**

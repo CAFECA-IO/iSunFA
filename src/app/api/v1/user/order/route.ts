@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { category, periodType, periodValue, year } = body;
+    const { category, periodType, periodValue, year, country, keyword } = body;
 
     // Info: (20260128 - Luphia) Validate required analysis parameters
     if (!category || !periodType) {
@@ -31,7 +31,9 @@ export async function POST(request: NextRequest) {
       category,
       periodType,
       periodValue,
-      year
+      year,
+      country,
+      keyword
     });
 
     return jsonOk(result);
