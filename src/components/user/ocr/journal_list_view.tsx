@@ -27,6 +27,19 @@ export default function JournalListView() {
   const [journals, setJournals] = useState<IJournal[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  const [keyWord, setKeyWord] = useState<string>("");
+  const [debouncedKeyWord, setDebouncedKeyWord] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
+  useEffect(() => {
+    // Info: (20260305 - Julian) 設置緩衝，避免過度請求
+    const timer = setTimeout(() => {
+      setDebouncedKeyWord(keyWord);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [keyWord]);
+
   const [selectedJournal, setSelectedJournal] = useState<IJournal | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
@@ -42,6 +55,7 @@ export default function JournalListView() {
     setJournals((prev) =>
       prev.map((j) => (j.id === updatedJournal.id ? updatedJournal : j)),
     );
+    setSelectedJournal(updatedJournal);
   };
 
   const handleDeleteClick = (journal: IJournal) => {
@@ -80,8 +94,24 @@ export default function JournalListView() {
   const fetchJournals = useCallback(async () => {
     setIsLoading(true);
     try {
+      const params = new URLSearchParams();
+      params.append("orderBy", `{"createdAt":"${sortOrder}"}`);
+      if (debouncedKeyWord) params.append("keyWord", debouncedKeyWord);
+
+      if (startDate) {
+        const [y, m, d] = startDate.split("-").map(Number);
+        const start = new Date(y, m - 1, d, 0, 0, 0, 0);
+        params.append("startDate", start.toISOString());
+      }
+
+      if (endDate) {
+        const [y, m, d] = endDate.split("-").map(Number);
+        const end = new Date(y, m - 1, d, 23, 59, 59, 999);
+        params.append("endDate", end.toISOString());
+      }
+
       const data = await request<IApiResponse<{ journals: IJournal[] }>>(
-        `/api/v1/journal?orderBy={"createdAt":"${sortOrder}"}`,
+        `/api/v1/journal?${params.toString()}`,
       );
       if (data.payload?.journals) {
         setJournals(data.payload.journals);
@@ -91,7 +121,7 @@ export default function JournalListView() {
     } finally {
       setIsLoading(false);
     }
-  }, [sortOrder]);
+  }, [sortOrder, debouncedKeyWord, startDate, endDate]);
 
   useEffect(() => {
     fetchJournals();
@@ -129,6 +159,8 @@ export default function JournalListView() {
             <input
               aria-label="Search journals"
               type="text"
+              value={keyWord}
+              onChange={(e) => setKeyWord(e.target.value)}
               className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pr-4 pl-10 text-sm transition-all outline-none placeholder:text-gray-400 focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500"
               placeholder={t("ocr.search_placeholder") as string}
             />
@@ -143,12 +175,18 @@ export default function JournalListView() {
               <input
                 type="date"
                 aria-label="Start Date"
+                value={startDate}
+                max={endDate || undefined}
+                onChange={(e) => setStartDate(e.target.value)}
                 className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-gray-700 transition-colors outline-none focus:border-orange-500 focus:bg-white"
               />
               <span className="text-gray-400">-</span>
               <input
                 type="date"
                 aria-label="End Date"
+                value={endDate}
+                min={startDate || undefined}
+                onChange={(e) => setEndDate(e.target.value)}
                 className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-gray-700 transition-colors outline-none focus:border-orange-500 focus:bg-white"
               />
             </div>
