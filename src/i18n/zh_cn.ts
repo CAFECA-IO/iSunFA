@@ -647,6 +647,8 @@ export const zhCn = {
     search_placeholder: "搜索凭证内容...",
     sort_desc: "从新到旧排序",
     sort_asc: "从旧到新排序",
+    start_date: "开始日期",
+    end_date: "结束日期",
     list_view: "列表视图",
     grid_view: "网格视图",
     file: "凭证",

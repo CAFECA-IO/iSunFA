@@ -668,6 +668,8 @@ export const ja = {
     search_placeholder: "領収書の内容を検索...",
     sort_desc: "新しい順",
     sort_asc: "古い順",
+    start_date: "開始日",
+    end_date: "終了日",
     list_view: "リストビュー",
     grid_view: "グリッドビュー",
     file: "仕訳帳",

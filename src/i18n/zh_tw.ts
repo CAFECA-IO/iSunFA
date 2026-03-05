@@ -893,6 +893,8 @@ export const zhTw = {
     search_placeholder: "搜尋憑證內容...",
     sort_desc: "由新到舊排序",
     sort_asc: "由舊到新排序",
+    start_date: "開始日期",
+    end_date: "結束日期",
     list_view: "列表檢視",
     grid_view: "網格檢視",
     file: "憑證",

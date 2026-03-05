@@ -19,9 +19,12 @@ export default function ZoomablePreview({
 
   // zoom & drag state
   const [scale, setScale] = useState<number>(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
   const [isDragging, setIsDragging] = useState<boolean>(false);
-  const dragStart = useRef({ x: 0, y: 0 });
+  const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const handleZoomIn = () => setScale((s) => Math.min(s + 0.25, 3));
 
@@ -57,9 +60,7 @@ export default function ZoomablePreview({
     });
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+  const handleMouseUp = () => setIsDragging(false);
 
   const handleMouseLeave = () => {
     if (isDragging) setIsDragging(false);

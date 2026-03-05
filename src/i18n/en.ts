@@ -897,6 +897,8 @@ export const en = {
     search_placeholder: "Search receipt contents...",
     sort_desc: "Newest to Oldest",
     sort_asc: "Oldest to Newest",
+    start_date: "Start Date",
+    end_date: "End Date",
     list_view: "List View",
     grid_view: "Grid View",
     file: "Receipt",

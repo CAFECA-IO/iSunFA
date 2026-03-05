@@ -147,11 +147,11 @@ export default function JournalListView() {
   return (
     <div className="flex size-full flex-col gap-4">
       {/* Info: (20260304 - Julian) Filter Area */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4">
+      <div className="flex flex-col items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:gap-4">
         {/* Left Actions: Search + Date */}
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex w-full flex-col items-center gap-2 sm:flex-row sm:gap-4">
           {/* Info: (20260304 - Julian) Search input */}
-          <div className="relative min-w-[200px]">
+          <div className="relative w-full sm:min-w-[200px]">
             <Search
               className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
               size={18}
@@ -170,25 +170,35 @@ export default function JournalListView() {
 
           {/* Info: (20260304 - Julian) Date Picker */}
           <div className="flex items-center gap-2">
-            <Calendar className="text-gray-400" size={18} />
-            <div className="flex items-center gap-2 text-sm">
-              <input
-                type="date"
-                aria-label="Start Date"
-                value={startDate}
-                max={endDate || undefined}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-gray-700 transition-colors outline-none focus:border-orange-500 focus:bg-white"
-              />
-              <span className="text-gray-400">-</span>
-              <input
-                type="date"
-                aria-label="End Date"
-                value={endDate}
-                min={startDate || undefined}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-gray-700 transition-colors outline-none focus:border-orange-500 focus:bg-white"
-              />
+            <Calendar className="hidden text-gray-400 sm:block" size={18} />
+            <div className="flex flex-col items-center gap-2 text-sm sm:flex-row">
+              <div className="flex items-center gap-2">
+                <p className="block text-gray-700 sm:hidden">
+                  {t("ocr.start_date")}
+                </p>
+                <input
+                  type="date"
+                  aria-label="Start Date"
+                  value={startDate}
+                  max={endDate || undefined}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-gray-700 transition-colors outline-none focus:border-orange-500 focus:bg-white"
+                />
+              </div>
+              <span className="hidden text-gray-400 sm:block">-</span>
+              <div className="flex items-center gap-2">
+                <p className="block text-gray-700 sm:hidden">
+                  {t("ocr.end_date")}
+                </p>
+                <input
+                  type="date"
+                  aria-label="End Date"
+                  value={endDate}
+                  min={startDate || undefined}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-gray-700 transition-colors outline-none focus:border-orange-500 focus:bg-white"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -203,7 +213,7 @@ export default function JournalListView() {
                 : (t("ocr.sort_desc") as string)
             }
             type="button"
-            className="flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 active:scale-95"
+            className="flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-xs text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 active:scale-95 sm:text-base"
             onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
           >
             {sortOrder === "asc" ? (

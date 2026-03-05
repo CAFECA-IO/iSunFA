@@ -658,6 +658,8 @@ export const ko = {
     search_placeholder: "영수증 내용 검색...",
     sort_desc: "최신순 정렬",
     sort_asc: "오래된순 정렬",
+    start_date: "시작일",
+    end_date: "종료일",
     list_view: "목록 보기",
     grid_view: "그리드 보기",
     file: "증명서",
