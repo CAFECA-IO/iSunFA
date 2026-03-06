@@ -141,7 +141,7 @@ export async function POST(
                         data: {
                             ...(order.data as IOenOrderData),
                             checkoutResponse: oenData,
-                            fidoAuthentication: authentication // Save FIDO payload for potential manual retry later by admin
+                            fidoAuthentication: authentication // Info: (20260305 - Tzuhan) Save FIDO payload for potential manual retry later by admin
                         } as Prisma.InputJsonObject,
                     },
                 })
