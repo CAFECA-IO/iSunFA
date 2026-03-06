@@ -149,7 +149,7 @@ model File {
   thread   Thread? @relation(fields: [threadId], references: [id])
   threadId String? @map("thread_id")
 
-  journal Journal?
+  journals Journal[]
 
   @@map("file")
 }
