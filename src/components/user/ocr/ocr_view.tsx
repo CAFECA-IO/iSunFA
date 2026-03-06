@@ -59,10 +59,11 @@ export default function OcrView() {
         </div>
 
         {/* Info: (20260304 - Julian) Main View */}
-        <div className="min-h-[500px] w-[calc(100vw-250px)] flex flex-col gap-2 px-4">
+        <div className="flex min-h-[500px] w-[calc(100vw-250px)] flex-col gap-2 px-4">
           {/* Info: (20260306 - Julian) Current Accountbook */}
-          <div className="text-sm ml-auto font-medium text-gray-800">
-            目前帳簿： <span className="text-orange-600">{currentAccountbook}</span>
+          <div className="ml-auto text-sm font-medium text-gray-800">
+            目前帳簿：{" "}
+            <span className="text-orange-600">{currentAccountbook}</span>
           </div>
           {renderView()}
         </div>
