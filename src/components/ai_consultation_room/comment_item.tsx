@@ -30,7 +30,7 @@ export const CommentItem = ({
   const initial = comment.authorName.slice(0, 1).toUpperCase();
 
   const isShowProTag = comment.isProfessional && (
-    <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+    <div className="absolute top-0 right-0 p-4 opacity-0 transition-opacity group-hover:opacity-100">
       <span className="text-xs text-gray-400">
         {t("ai_consultation_room.pro_feedback")}
       </span>
@@ -38,13 +38,13 @@ export const CommentItem = ({
   );
 
   const isShowVerifiedTag = comment.isVerified && (
-    <span className="text-[10px] bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
+    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-700 uppercase">
       {t("ai_consultation_room.certified")}
     </span>
   );
 
   const isShowVerifiedIcon = comment.isVerified && (
-    <div className="absolute -bottom-1 -right-1 bg-white p-0.5 rounded-full border border-gray-50">
+    <div className="absolute -right-1 -bottom-1 rounded-full border border-gray-50 bg-white p-0.5">
       <CheckCircle2 size={16} className="text-blue-500" fill="currentColor" />
     </div>
   );
@@ -93,7 +93,7 @@ export const CommentItem = ({
         return (
           <span
             key={index}
-            className="text-blue-600 bg-gray-100 p-1 rounded font-medium"
+            className="rounded bg-gray-100 p-1 font-medium text-blue-600"
           >
             {part}
           </span>
@@ -105,10 +105,10 @@ export const CommentItem = ({
 
   return (
     <div className={`space-y-4 ${isReply ? "ml-14" : ""}`}>
-      <div className="group relative flex gap-5 p-6 rounded-3xl bg-white border border-gray-100 hover:border-orange-300 transition-all">
+      <div className="group relative flex gap-5 rounded-3xl border border-gray-100 bg-white p-6 transition-all hover:border-orange-300">
         {isShowProTag}
 
-        <div className="w-14 h-14 bg-blue-100 rounded-2xl shrink-0 flex items-center justify-center text-blue-600 font-bold text-xl relative">
+        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-xl font-bold text-blue-600">
           {initial}
           {isShowVerifiedIcon}
         </div>
@@ -123,9 +123,9 @@ export const CommentItem = ({
               {formatTime(comment.createdAt, now)}
             </span>
           </div>
-          <p className="text-gray-700 leading-relaxed pr-20">
+          <p className="pr-20 leading-relaxed text-gray-700">
             {comment.replyToUserName && (
-              <span className="text-blue-500 font-semibold mr-1">
+              <span className="mr-1 font-semibold text-blue-500">
                 @{comment.replyToUserName}
               </span>
             )}
@@ -134,7 +134,7 @@ export const CommentItem = ({
           <div className="flex items-center gap-4 pt-2">
             <button
               onClick={toggleReplies}
-              className="text-xs font-bold text-gray-400 hover:text-orange-500 transition-colors"
+              className="text-xs font-bold text-gray-400 transition-colors hover:text-orange-500"
             >
               {t("ai_consultation_room.reply")}
               {hasReplies ? `(${comment.replies.length})` : ""}
@@ -143,12 +143,12 @@ export const CommentItem = ({
         </div>
 
         {/* Info: (20260206 - Julian) Like/Dislike Buttons in bottom right */}
-        <div className="absolute bottom-6 right-6 flex items-center gap-4">
+        <div className="absolute right-6 bottom-6 flex items-center gap-4">
           <button
             onClick={handleLike}
             disabled={!user}
             title={!user ? t("ai_consultation_room.login_to_react") : ""}
-            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
               reaction === "LIKE"
                 ? "text-orange-500"
                 : "text-gray-400 hover:text-gray-600"
@@ -164,7 +164,7 @@ export const CommentItem = ({
             onClick={handleDislike}
             disabled={!user}
             title={!user ? t("ai_consultation_room.login_to_react") : ""}
-            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
               reaction === "DISLIKE"
                 ? "text-orange-500"
                 : "text-gray-400 hover:text-gray-600"

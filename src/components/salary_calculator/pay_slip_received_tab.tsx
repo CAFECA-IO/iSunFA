@@ -35,7 +35,7 @@ const ReceivedItem: React.FC<{
       onKeyDown={keyDownHandler}
       role="button"
       tabIndex={0}
-      className="table-row h-[50px] hover:cursor-pointer hover:bg-surface-brand-primary-30"
+      className="hover:bg-surface-brand-primary-30 table-row h-[50px] hover:cursor-pointer"
     >
       {/* Info: (20250723 - Julian) Pay Period */}
       <div className={cellStyle}>
@@ -115,7 +115,7 @@ const ReceivedTab: React.FC<{
 
   return (
     <>
-      <div className="table w-full text-sm font-medium text-text-neutral-secondary">
+      <div className="text-text-neutral-secondary table w-full text-sm font-medium">
         {/* Info: (20250723 - Julian) Table Header */}
         <div className="table-header-group">
           <div className="table-row">
@@ -136,7 +136,7 @@ const ReceivedTab: React.FC<{
               />
             </div>
             <div
-              className={`${cellStyle} w-[50px] text-center text-text-neutral-primary`}
+              className={`${cellStyle} text-text-neutral-primary w-[50px] text-center`}
             >
               Action
             </div>

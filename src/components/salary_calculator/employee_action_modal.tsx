@@ -113,30 +113,30 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
-      <div className="relative flex w-90vw flex-col rounded-sm bg-surface-neutral-surface-lv2 md:w-450px">
+    <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+      <div className="w-90vw bg-surface-neutral-surface-lv2 md:w-450px relative flex flex-col rounded-sm">
         {/* Info: (20250715 - Julian) Modal Header */}
-        <div className="relative flex items-start justify-center px-40px py-16px">
-          <h2 className="text-lg font-bold text-card-text-primary">
+        <div className="px-40px py-16px relative flex items-start justify-center">
+          <h2 className="text-card-text-primary text-lg font-bold">
             {titleStr}
           </h2>
           <button
             type="button"
             onClick={modalVisibleHandler}
-            className="absolute right-20px"
+            className="right-20px absolute"
           >
             <X scale={24} />
           </button>
         </div>
         {/* Info: (20250715 - Julian) Modal Body */}
-        <div className="flex flex-col gap-24px px-40px py-24px">
+        <div className="gap-24px px-40px py-24px flex flex-col">
           {/* Info: (20250715 - Julian) Employee Name Input */}
-          <div className="flex flex-col gap-8px">
-            <p className="text-sm font-semibold text-input-text-primary">
+          <div className="gap-8px flex flex-col">
+            <p className="text-input-text-primary text-sm font-semibold">
               {t("calculator.employee_list.name")}{" "}
               <span className="text-text-state-error">*</span>
             </p>
-            <div className="flex items-center rounded-sm border border-input-stroke-input">
+            <div className="border-input-stroke-input flex items-center rounded-sm border">
               <div className="p-10px text-text-neutral-tertiary">
                 <User size={16} />
               </div>
@@ -145,29 +145,29 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
                 aria-label={t("calculator.employee_list.name")}
                 value={nameInput}
                 onChange={changeNameHandler}
-                className="flex-1 bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
+                className="px-12px py-10px placeholder:text-input-text-input-placeholder flex-1 bg-transparent outline-none"
                 placeholder={t("calculator.employee_list.name_placeholder")}
               />
             </div>
           </div>
           {/* Info: (20250715 - Julian) Employee Number Input */}
-          <div className="flex flex-col gap-8px">
-            <p className="text-sm font-semibold text-input-text-primary">
+          <div className="gap-8px flex flex-col">
+            <p className="text-input-text-primary text-sm font-semibold">
               {t("calculator.employee_list.number")}
             </p>
-            <div className="flex items-center rounded-sm border border-input-stroke-input">
+            <div className="border-input-stroke-input flex items-center rounded-sm border">
               <input
                 type="text"
                 aria-label={t("calculator.employee_list.number")}
                 value={numberInput}
                 onChange={changeNumberHandler}
-                className="flex-1 bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
+                className="px-12px py-10px placeholder:text-input-text-input-placeholder flex-1 bg-transparent outline-none"
                 placeholder={t("calculator.employee_list.number_placeholder")}
               />
             </div>
           </div>
           {/* Info: (20250715 - Julian) Base Salary Input */}
-          <div className="flex flex-col gap-8px">
+          <div className="gap-8px flex flex-col">
             <AmountInput
               title={t("calculator.base_pay_form.base_salary")}
               value={baseSalaryInput}
@@ -177,7 +177,7 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
             />
           </div>
           {/* Info: (20250715 - Julian) Meal Allowance Input */}
-          <div className="flex flex-col gap-8px">
+          <div className="gap-8px flex flex-col">
             <AmountInput
               title={t("calculator.base_pay_form.meal_allowance")}
               value={mealAllowanceInput}
@@ -186,8 +186,8 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
             />
           </div>
           {/* Info: (20250715 - Julian) Email Input */}
-          <div className="flex flex-col gap-8px">
-            <p className="text-sm font-semibold text-input-text-primary">
+          <div className="gap-8px flex flex-col">
+            <p className="text-input-text-primary text-sm font-semibold">
               {t("calculator.employee_list.email")}{" "}
               <span className="text-text-state-error">*</span>
             </p>
@@ -199,19 +199,19 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
                 aria-label={t("calculator.employee_list.email")}
                 value={emailInput}
                 onChange={changeEmailHandler}
-                className="flex-1 bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
+                className="px-12px py-10px placeholder:text-input-text-input-placeholder flex-1 bg-transparent outline-none"
                 placeholder={t("calculator.employee_list.email_placeholder")}
               />
             </div>
             <p
-              className={`text-right text-sm font-medium text-text-state-error ${isEmailValid ? "opacity-0" : "opacity-100"}`}
+              className={`text-text-state-error text-right text-sm font-medium ${isEmailValid ? "opacity-0" : "opacity-100"}`}
             >
               {t("calculator.employee_list.email_valid")}
             </p>
           </div>
         </div>
         {/* Info: (20250715 - Julian) Modal Footer */}
-        <div className="flex items-center gap-12px px-20px py-16px">
+        <div className="gap-12px px-20px py-16px flex items-center">
           <button className="w-full" onClick={modalVisibleHandler}>
             {t("common.cancel")}
           </button>

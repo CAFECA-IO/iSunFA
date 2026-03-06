@@ -189,4 +189,48 @@ export class ChatService {
       return { answer: "AI 暫時無法回答，請稍後再試。", tags: ["錯誤"] };
     }
   }
+
+  /**
+   * Info: (20260304 - Julian) 將憑證圖片轉換為日記帳
+   */
+  async analyzeJournal(
+    images: { data: string; mimeType: string }[] = [],
+  ): Promise<{ text: string }> {
+    // ToDo: (20260304 - Julian) 將來可能移除第 3 點
+    const prompt = `
+      請將用戶傳來的憑證（檔案/圖片）整理成日記帳，以純文字記錄。
+      1. 欄位應包含日期、會計科目、借方金額、貸方金額、摘要。
+      2. 如果無法解析成日記帳或非發票憑證，請直接回覆字串「上傳內容無法解析狀態」。
+      3. 純文字輸出即可，不要有額外的 Markdown 格式（例如不需要 \`\`\` ）。
+    `;
+
+    try {
+      const model = this.genAI.getGenerativeModel({ model: this.modelName });
+      const parts: Part[] = [{ text: prompt }];
+
+      if (images && images.length > 0) {
+        images.forEach((img) => {
+          parts.push({
+            inlineData: {
+              data: img.data,
+              mimeType: img.mimeType,
+            },
+          });
+        });
+      }
+
+      const result = await model.generateContent(parts);
+      const response = await result.response;
+      const text = response.text().trim();
+
+      if (text.includes("上傳內容無法解析狀態")) {
+        return { text: "上傳內容無法解析，請重新上傳或手動調整" };
+      }
+
+      return { text };
+    } catch (error) {
+      console.error("[ChatService] Error in analyzeJournal:", error);
+      return { text: "AI 暫時無法解析，請稍後再試或手動調整" };
+    }
+  }
 }

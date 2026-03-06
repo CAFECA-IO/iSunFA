@@ -31,11 +31,11 @@ const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
-      <div className="relative flex w-[90vw] flex-col rounded-sm bg-surface-neutral-surface-lv2 md:w-fit">
+    <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+      <div className="bg-surface-neutral-surface-lv2 relative flex w-[90vw] flex-col rounded-sm md:w-fit">
         {/* Info: (20250723 - Julian) Modal Header */}
         <div className="relative flex items-start justify-center px-10 py-4">
-          <h2 className="text-lg font-bold text-card-text-primary">
+          <h2 className="text-card-text-primary text-lg font-bold">
             {t("calculator.sending_pay_slip_modal.title")}
           </h2>
           <button
@@ -48,7 +48,7 @@ const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
         </div>
         {/* Info: (20250723 - Julian) Modal Content */}
         <div className="flex flex-col gap-2.5 px-5 py-2">
-          <p className="text-sm font-normal text-card-text-secondary">
+          <p className="text-card-text-secondary text-sm font-normal">
             {t("calculator.sending_pay_slip_modal.content_1")}
             <span className="font-semibold">
               {/* Info: (20250723 - Julian) 匯入月份 */}
@@ -65,7 +65,7 @@ const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
             </span>
           </p>
           <div
-            className={`flex items-center divide-x rounded-sm border bg-input-surface-input-background ${isValidEmail ? "divide-input-stroke-input border-input-stroke-input" : "divide-input-stroke-error border-input-stroke-error"}`}
+            className={`bg-input-surface-input-background flex items-center divide-x rounded-sm border ${isValidEmail ? "divide-input-stroke-input border-input-stroke-input" : "divide-input-stroke-error border-input-stroke-error"}`}
           >
             <div className="flex items-center gap-2 px-3 py-2.5">
               <Mail
@@ -91,7 +91,7 @@ const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
           </div>
           {/* Info: (20250723 - Julian) Invalid Email Message */}
           {!isValidEmail && (
-            <div className="text-right text-sm font-medium text-text-state-error">
+            <div className="text-text-state-error text-right text-sm font-medium">
               {t("calculator.sending_pay_slip_modal.invalid_email_hint")}
             </div>
           )}

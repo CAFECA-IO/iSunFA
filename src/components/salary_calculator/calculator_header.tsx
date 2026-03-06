@@ -8,7 +8,7 @@ import { ISUNFA_ROUTE } from "@/constants/url";
 import LanguageSelector from "@/components/header/language_selector";
 import BrandLogo from "@/components/header/brand_logo";
 import UserActions from "@/components/header/user_actions";
-import HeaderNav from '@/components/header/header_nav';
+import HeaderNav from "@/components/header/header_nav";
 // import { useAuth } from "@/contexts/auth_context";
 
 const CalculatorHeader: React.FC = () => {
@@ -21,14 +21,14 @@ const CalculatorHeader: React.FC = () => {
   // const isSlip = pathname === ISUNFA_ROUTE.PAY_SLIP;
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-xl shadow-sm ring-1 ring-gray-900/5">
+    <header className="sticky top-0 z-50 w-full bg-white/90 shadow-sm ring-1 ring-gray-900/5 backdrop-blur-xl">
       <nav
         className="flex items-center justify-between p-3 lg:px-8"
         aria-label="Global"
       >
         <div className="flex items-center gap-x-6">
           <BrandLogo />
-          <div className="hidden lg:flex items-center gap-x-4">
+          <div className="hidden items-center gap-x-4 lg:flex">
             <Link
               href={ISUNFA_ROUTE.SALARY_CALCULATOR}
               className={`text-sm font-medium transition-colors hover:text-orange-600 ${isCalc ? "text-orange-600" : "text-gray-600"}`}

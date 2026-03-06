@@ -40,6 +40,8 @@ model User {
   reactions           Reaction[]
   paymentMethods      PaymentMethod[]
   paymentTransactions PaymentTransaction[]
+  accountbooks        Accountbook[]
+  journals            Journal[]
 
   @@index([address])
   @@map("user")
@@ -146,6 +148,8 @@ model File {
 
   thread   Thread? @relation(fields: [threadId], references: [id])
   threadId String? @map("thread_id")
+
+  journals Journal[]
 
   @@map("file")
 }
@@ -276,4 +280,41 @@ model PaymentTransaction {
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
   @@map("payment_transaction")
+}
+
+// Info: (20260304 - Julian) 憑證/日記帳
+model Journal {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  text      String   @db.Text // Info: (20260304 - Julian) AI 辨識出的文字結果
+
+  fileId String @map("file_id")
+  file   File   @relation(fields: [fileId], references: [id])
+
+  // Info: (20260305 - Julian) 隸屬的帳本
+  accountbookId String      @map("accountbook_id")
+  accountbook   Accountbook @relation(fields: [accountbookId], references: [id])
+  user          User?       @relation(fields: [userId], references: [id])
+  userId        String?
+
+  @@map("journal")
+}
+
+// Info: (20260305 - Julian) 帳本
+// ToDo: (20260305 - Julian) 未來會擴充欄位
+model Accountbook {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Info: (20260305 - Julian) 帳本所屬的使用者
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Info: (20260305 - Julian) 一個帳本可以有多個憑證
+  journals Journal[]
+
+  @@map("accountbook")
 }

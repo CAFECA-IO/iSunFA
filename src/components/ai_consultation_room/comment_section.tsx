@@ -49,7 +49,7 @@ export const CommentSection = () => {
 
   const displayedComments =
     comments.length > 0 ? (
-      <div className="space-y-6 mt-6">
+      <div className="mt-6 space-y-6">
         {/* Info: (20260206 - Julian) 會計師評論範例 */}
         {comments.map((comment) => (
           <CommentItem
@@ -60,26 +60,26 @@ export const CommentSection = () => {
         ))}
 
         {/* Info: (20260206 - Julian) 更多留言載入 */}
-        <button className="w-full py-4 border-2 border-dashed border-gray-100 rounded-2xl text-gray-300 font-bold hover:border-orange-200 hover:text-orange-400 transition-all">
+        <button className="w-full rounded-2xl border-2 border-dashed border-gray-100 py-4 font-bold text-gray-300 transition-all hover:border-orange-200 hover:text-orange-400">
           {t("ai_consultation_room.load_more")}
         </button>
       </div>
     ) : (
-      <div className="flex mt-6 items-center justify-center h-20 text-gray-400">
+      <div className="mt-6 flex h-20 items-center justify-center text-gray-400">
         {t("ai_consultation_room.no_discussions")}
       </div>
     );
 
   return (
     <section className="pt-20">
-      <div className="flex items-center justify-between mb-8">
-        <h3 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
+      <div className="mb-8 flex items-center justify-between">
+        <h3 className="flex items-center gap-2 text-2xl font-extrabold text-gray-900">
           {t("ai_consultation_room.discussion_title")}{" "}
-          <span className="text-gray-300 font-normal">{comments.length}</span>
+          <span className="font-normal text-gray-300">{comments.length}</span>
         </h3>
         <button
           onClick={openInputHandler}
-          className="text-sm font-semibold text-orange-600 hover:text-orange-700 flex items-center gap-1 transition-colors"
+          className="flex items-center gap-1 text-sm font-semibold text-orange-600 transition-colors hover:text-orange-700"
         >
           <MessageSquare size={16} />
           {isShowInput

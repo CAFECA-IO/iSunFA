@@ -24,7 +24,7 @@ const SalaryCalculatorPageBody: React.FC = () => {
   const paySlipClickHandler = () => setCurrentTab(CalcTab.PAY_SLIP);
 
   return (
-    <main className="min-h-screen bg-white overflow-x-hidden">
+    <main className="min-h-screen overflow-x-hidden bg-white">
       {/* Info: (20250708 - Julian) Header */}
       <CalculatorHeader />
 
@@ -43,7 +43,7 @@ const SalaryCalculatorPageBody: React.FC = () => {
           <button
             type="button"
             onClick={calculatorClickHandler}
-            className={`${isCalculatorTab ? "border-orange-600 text-orange-900" : "border-gray-200 text-gray-500"} flex items-center justify-center gap-2 border-b-2 px-3 py-2 text-base font-medium hover:border-orange-600 hover:text-orange-900 transition-colors duration-200`}
+            className={`${isCalculatorTab ? "border-orange-600 text-orange-900" : "border-gray-200 text-gray-500"} flex items-center justify-center gap-2 border-b-2 px-3 py-2 text-base font-medium transition-colors duration-200 hover:border-orange-600 hover:text-orange-900`}
           >
             <Image
               src="/icons/calculator_tab.svg"
@@ -56,7 +56,7 @@ const SalaryCalculatorPageBody: React.FC = () => {
           <button
             type="button"
             onClick={paySlipClickHandler}
-            className={`${isPaySlipTab ? "border-orange-600 text-orange-900" : "border-gray-200 text-gray-500"} flex items-center justify-center gap-2 border-b-2 px-3 py-2 text-base font-medium hover:border-orange-600 hover:text-orange-900 transition-colors duration-200`}
+            className={`${isPaySlipTab ? "border-orange-600 text-orange-900" : "border-gray-200 text-gray-500"} flex items-center justify-center gap-2 border-b-2 px-3 py-2 text-base font-medium transition-colors duration-200 hover:border-orange-600 hover:text-orange-900`}
           >
             <Image
               src="/icons/pay_slip_tab.svg"

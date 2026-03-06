@@ -65,10 +65,10 @@ const OperatingMechanismContent: React.FC = () => {
     <div className="flex flex-col items-stretch p-5 lg:p-[80px]">
       {/* Info: (20251112 - Julian) Title & Version */}
       <div className="flex flex-col items-center gap-1">
-        <h1 className="text-center text-xl font-semibold text-text-neutral-primary">
+        <h1 className="text-text-neutral-primary text-center text-xl font-semibold">
           {t("calculator.operating_mechanism.main_title")}
         </h1>
-        <p className="text-xs font-normal text-text-neutral-tertiary">
+        <p className="text-text-neutral-tertiary text-xs font-normal">
           {subtitle}
         </p>
       </div>
@@ -81,7 +81,7 @@ const OperatingMechanismContent: React.FC = () => {
 
 const OperatingMechanismPageBody: React.FC = () => {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-surface-neutral-main-background">
+    <main className="bg-surface-neutral-main-background min-h-screen overflow-x-hidden">
       {/* Info: (20251112 - Julian) Header */}
       <CalculatorHeader />
 
