@@ -16,7 +16,6 @@ export interface IPaymentOrderParams {
   amount: number;
   credits: number;
   paymentMethodId: string;
-  previousCredits: number;
 }
 
 export class OrderGenerator {

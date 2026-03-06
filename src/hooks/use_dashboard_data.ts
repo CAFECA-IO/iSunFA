@@ -52,6 +52,7 @@ export const useDashboardData = () => {
     };
 
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeUnit, refreshTrigger]);
 
   // Info: (20260118 - Luphia) Auto-refresh interval (10s)

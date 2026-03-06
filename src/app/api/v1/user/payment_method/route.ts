@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { IOenOrderData } from "@/interfaces/payment";
 import { Prisma } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -94,7 +93,7 @@ export async function POST(request: NextRequest) {
 
             await prisma.order.update({
                 where: { id: order.id },
-                data: { data: { ...(order.data as IOenOrderData), paymentId: paymentId } as Prisma.InputJsonObject },
+                data: { data: { paymentId: paymentId } as Prisma.InputJsonObject },
             });
 
             return jsonOk({

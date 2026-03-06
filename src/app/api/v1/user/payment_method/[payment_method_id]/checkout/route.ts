@@ -14,7 +14,7 @@ const OEN_ACCESS_TOKEN = process.env.OEN_ACCESS_TOKEN;
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { payment_method_id: string } }
+    { params }: { params: Promise<{ payment_method_id: string }> }
 ) {
     try {
         const authHeader = request.headers.get("Authorization");
@@ -24,7 +24,7 @@ export async function POST(
             return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
         }
 
-        const paymentMethodId = params.payment_method_id;
+        const paymentMethodId = (await params).payment_method_id;
         if (!paymentMethodId) {
             return jsonFail(ApiCode.VALIDATION_ERROR, "paymentMethodId is required");
         }
@@ -60,7 +60,7 @@ export async function POST(
             return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid or expired order");
         }
 
-        const orderData = order.data as unknown as { amount: number, credits: number, previousCredits: number };
+        const orderData = order.data as IOenOrderData;
         const { amount, credits } = orderData;
 
         // Info: (20260305 - Tzuhan) 驗證 FIDO2 簽名
@@ -115,7 +115,7 @@ export async function POST(
 
         const oenData = await oenRes.json();
 
-        // ======= 扣款失敗 =======
+        // Info: (20260306 - Tzuhan) ======= 扣款失敗 =======
         if (oenData.code !== "S0000" && !oenRes.ok) {
             await prisma.$transaction([
                 prisma.paymentTransaction.update({
@@ -138,7 +138,7 @@ export async function POST(
             return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Payment failed via OEN", oenData);
         }
 
-        // ======= 扣款成功，開始鑄造代幣 =======
+        // Info: (20260306 - Tzuhan) ======= 扣款成功，開始鑄造代幣 =======
         let dbReceiptId: string;
         await prisma.$transaction(async (tx) => {
             const dbReceipt = await tx.receipt.create({
@@ -169,11 +169,11 @@ export async function POST(
             });
         });
 
-        // 呼叫鑄造代幣合約
+        // Info: (20260306 - Tzuhan) 呼叫鑄造代幣合約
         const memo = JSON.stringify({ provider: "OEN", orderId: order.id, amount });
         const mintResult = await mintToAddress(CONTRACT_ADDRESSES.NTD_TOKEN, user.address, credits, memo);
 
-        // ======= 鑄造代幣失敗 =======
+        // Info: (20260306 - Tzuhan) ======= 鑄造代幣失敗 =======
         if (!mintResult.success) {
             await prisma.order.update({
                 where: { id: order.id },
@@ -190,7 +190,7 @@ export async function POST(
             return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Payment succeeded but minting failed: " + mintResult.message);
         }
 
-        // ======= 全部成功 =======
+        // Info: (20260306 - Tzuhan) ======= 全部成功 =======
         const txHash = (mintResult.data as { tx: string })?.tx;
 
         await prisma.order.update({

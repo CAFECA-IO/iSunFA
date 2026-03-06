@@ -14,8 +14,8 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
 import LegalModal from "@/components/common/legal_modal";
 import { fido2ClientService } from '@/lib/auth/fido2_client';
-import { encodeWebAuthnSignature, hexToBase64Url } from '@/lib/auth/crypto_utils';
-import { IPaymentModalProps, IOenCheckoutResponse, IOrderStatusResponse } from "@/interfaces/payment";
+import { encodeWebAuthnSignature } from '@/lib/auth/crypto_utils';
+import { IPaymentModalProps, IOenCheckoutResponse, IOrderStatusResponse, PaymentStep, IOenCallbackData } from "@/interfaces/payment";
 import { ORDER_STATUS } from "@/constants/status";
 import { IJSONObject } from "@/validators/common";
 
@@ -27,10 +27,9 @@ interface IPaymentMethod {
   createdAt: string;
 }
 
-const parseCardInfo = (data: unknown) => {
-  const pmData = data as Record<string, unknown> | undefined;
-  const brand = pmData?.cardBrand || pmData?.issuer ? String(pmData.cardBrand || pmData.issuer) : "信用卡";
-  const last4 = pmData?.card4no ? String(pmData.card4no) : "****";
+const parseCardInfo = (data: IOenCallbackData) => {
+  const brand = "信用卡";
+  const last4 = data?.paymentInfo ? String(data.paymentInfo) : "****";
   return { brand, last4 };
 };
 
@@ -53,8 +52,8 @@ export default function PaymentModal({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [step, setStep] = useState<"confirm" | "processing" | "success" | "error">(
-    initialStep || "confirm",
+  const [step, setStep] = useState<PaymentStep>(
+    initialStep || PaymentStep.confirm,
   );
   const [originalCredits, setOriginalCredits] = useState<number | null>(null);
   const [txHash, setTxHash] = useState<string | null>(transactionHash || null);
@@ -73,12 +72,12 @@ export default function PaymentModal({
 
   useEffect(() => {
     if (isOpen && !wasOpen.current) {
-      setStep(initialStep || "confirm");
+      setStep(initialStep || PaymentStep.confirm);
       setError(null);
       setLoading(false);
       setTxHash(transactionHash || null);
 
-      if (initialStep !== "success") {
+      if (initialStep !== PaymentStep.success) {
         setOriginalCredits(null);
       }
 
@@ -146,30 +145,27 @@ export default function PaymentModal({
           `/api/v1/user/order/${orderId}`
         );
 
+        console.log(`[PaymentModal] pollOrderStatus: ${orderId}, IOrderStatusResponse res:`, res);
+
         // Info: (20260303 - Tzuhan) 防禦：如果等待 API 期間使用者關閉了彈窗（元件卸載），不應繼續更新 State
         if (!mounted) return;
 
         if (res?.payload) {
-          const { status, transactionHash: tHash, errorMessage, data } = res.payload;
+          const { status, transactionHash: tHash, errorMessage } = res.payload;
 
           if (status === ORDER_STATUS.COMPLETED) {
             // Info: (20260302 - Tzuhan) [流程 5-6a: 訂單完成]
             await refreshAuth();
             if (tHash) setTxHash(tHash);
 
-            // Info: (20260303 - Tzuhan) Extract `previousCredits` from order metadata as original credits.
-            if (data?.previousCredits !== undefined) {
-              setOriginalCredits(data.previousCredits);
-            }
-
-            setStep("success");
+            setStep(PaymentStep.success);
             if (tHash) onSuccess(tHash);
             return; // Info: (20260303 - Tzuhan) 成功即終止，不再呼叫 setTimeout
 
           } else if (status === ORDER_STATUS.FAILED || status === ORDER_STATUS.PAYMENT_FAILED || status === ORDER_STATUS.MINT_FAILED) {
             // Info: (20260302 - Tzuhan) [流程 5-6b: 訂單失敗]
             setError(errorMessage || t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。");
-            setStep("error");
+            setStep(PaymentStep.error);
             return; // Info: (20260303 - Tzuhan) 失敗即終止，不再呼叫 setTimeout
           }
         }
@@ -213,6 +209,7 @@ export default function PaymentModal({
       }>("/api/v1/user/payment_method", {
         method: "POST",
       });
+      console.log(`[PaymentModal] handleBindNewCard response:`, response)
       if (response.payload?.requireBinding && response.payload.redirectUrl) {
         window.location.href = response.payload.redirectUrl;
         onClose();
@@ -223,7 +220,7 @@ export default function PaymentModal({
     } catch (err) {
       console.error("Binding failed:", err);
       setError(t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。");
-      setStep("error");
+      setStep(PaymentStep.error);
     } finally {
       setLoading(false);
     }
@@ -267,7 +264,6 @@ export default function PaymentModal({
           amount,
           credits,
           paymentMethodId: selectedPaymentMethodId,
-          previousCredits: originalCredits || 0
         })
       });
 
@@ -279,9 +275,8 @@ export default function PaymentModal({
         throw new Error("Missing public keys. Please re-login.");
       }
 
-      const challengeBase64 = hexToBase64Url(challenge);
       const transferAuth = await fido2ClientService.startLogin({
-        challenge: challengeBase64,
+        challenge: challenge,
         timeout: 60000,
         userVerification: 'required',
         allowCredentials: [],
@@ -307,6 +302,7 @@ export default function PaymentModal({
           }
         }),
       });
+      console.log(`[PaymentModal] handleBindNewCard response:`, response)
 
       if (
         !response.payload?.requireBinding &&
@@ -315,7 +311,7 @@ export default function PaymentModal({
         // Info: (20260303 - Tzuhan) [流程 2-3b: 直接扣款成功] 若選擇使用已綁定的卡片，後端會直接發動扣款並鑄造代幣。前端取得成功的 txHash 後更新畫面為「付款成功」
         await refreshAuth();
         setTxHash(response.payload.txHash);
-        setStep("success");
+        setStep(PaymentStep.success);
         onSuccess(response.payload.txHash);
       } else {
         throw new Error(response.message || "Payment failed");
@@ -331,7 +327,7 @@ export default function PaymentModal({
       } else {
         setError(t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。");
       }
-      setStep("error");
+      setStep(PaymentStep.error);
     } finally {
       setIsInitializingKyc(false);
       setLoading(false);
@@ -453,7 +449,7 @@ export default function PaymentModal({
                                   </h4>
                                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                     {paymentMethods.map((pm) => {
-                                      const { brand, last4 } = parseCardInfo(pm.data);
+                                      const { brand, last4 } = parseCardInfo(pm.data as IOenCallbackData);
                                       const isSelected = selectedPaymentMethodId === pm.id;
 
                                       return (
@@ -496,9 +492,11 @@ export default function PaymentModal({
                                       );
                                     })}
 
-                                    <div
+                                    <button
+                                      type="button"
                                       onClick={handleBindNewCard}
-                                      className="relative flex cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all duration-200 border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/30"
+                                      aria-label={t("pricing.credits.payment_modal.bind_new_card") || "綁定新信用卡"}
+                                      className="relative flex w-full cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all duration-200 border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/30 text-left"
                                     >
                                       <div className="flex w-full items-center justify-between">
                                         <div className="flex items-center gap-3">
@@ -512,7 +510,7 @@ export default function PaymentModal({
                                           </span>
                                         </div>
                                       </div>
-                                    </div>
+                                    </button>
                                   </div>
                                 </div>
                               )}
@@ -572,7 +570,7 @@ export default function PaymentModal({
                                 <div className="mt-6 sm:flex sm:flex-row-reverse">
                                   <button
                                     type="submit"
-                                    disabled={loading || !agreedToTerms}
+                                    disabled={loading || !agreedToTerms || paymentMethods.length <= 0}
                                     className="inline-flex w-full justify-center rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:from-orange-500 hover:to-orange-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto items-center gap-2"
                                   >
                                     {loading && (
@@ -754,7 +752,7 @@ export default function PaymentModal({
                                 <button
                                   type="button"
                                   className="mt-3 inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto sm:mt-0"
-                                  onClick={() => setStep("confirm")}
+                                  onClick={() => setStep(PaymentStep.confirm)}
                                 >
                                   {t("pricing.credits.payment_modal.retry_btn") ||
                                     "返回重試"}

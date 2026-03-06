@@ -3,13 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/client";
 import { mintToAddress } from "@/services/token.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
-import { IOenCallbackPayload, IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
+import { IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
 import { ORDER_STATUS, PAYMENT_STATUS, ORDER_TYPE, PAYMENT_PROVIDER, PAYMENT_TRANSACTION_STATUS } from "@/constants/status";
 
 export async function POST(request: NextRequest) {
     try {
         let bodyText = "";
-        let body: IOenCallbackPayload = {};
+        let body: IOenCallbackData;
         try {
             if (
                 request.headers
@@ -40,9 +40,9 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        const token = body.token || body.data?.token;
+        const { token } = body;
         const status =
-            body.status || body.data?.status || body.success ? PAYMENT_STATUS.SUCCESS : "";
+            body.success ? PAYMENT_STATUS.SUCCESS : PAYMENT_STATUS.FAILED;
 
         if (!customId) {
             return NextResponse.json(
@@ -77,19 +77,13 @@ export async function POST(request: NextRequest) {
                 });
 
                 if (!existingMethod) {
-                    const rawBody = body as Record<string, unknown>;
-                    const mergedData: IOenCallbackData = body.data ? { ...body.data } : {};
-
-                    if (rawBody.card4no) mergedData.card4no = String(rawBody.card4no);
-                    if (rawBody.cardBrand) mergedData.cardBrand = String(rawBody.cardBrand);
-                    if (rawBody.issuer) mergedData.issuer = String(rawBody.issuer);
-
+                    const rawBody = body as IOenCallbackData;
                     await tx.paymentMethod.create({
                         data: {
                             userId: order.userId,
                             provider: "OEN",
                             token: token,
-                            data: (Object.keys(mergedData).length > 0 ? mergedData : Prisma.DbNull) as Prisma.InputJsonValue,
+                            data: (Object.keys(rawBody).length > 0 ? rawBody : Prisma.DbNull) as Prisma.InputJsonValue,
                         },
                     });
                 }
@@ -105,8 +99,6 @@ export async function POST(request: NextRequest) {
                             status: ORDER_STATUS.COMPLETED,
                             data: {
                                 ...(order.data as IOenOrderData),
-                                card4no: String((body.data?.card4no || body.card4no || "")) || undefined,
-                                issuer: String((body.data?.issuer || body.issuer || "")) || undefined,
                             } as Prisma.InputJsonObject
                         },
                     });
