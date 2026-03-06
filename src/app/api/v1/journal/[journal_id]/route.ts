@@ -23,13 +23,13 @@ export async function GET(
     }
 
     // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
-    const accountbookId = "1";
+    const accountBookId = "1";
 
-    const accountbook = await prisma.accountbook.findUnique({
-      where: { id: accountbookId },
+    const accountBook = await prisma.accountBook.findUnique({
+      where: { id: accountBookId },
     });
 
-    if (!accountbook) {
+    if (!accountBook) {
       console.error("Accountbook not found");
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
@@ -75,13 +75,13 @@ export async function PUT(
     }
 
     // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
-    const accountbookId = "1";
+    const accountBookId = "1";
 
-    const accountbook = await prisma.accountbook.findUnique({
-      where: { id: accountbookId },
+    const accountBook = await prisma.accountBook.findUnique({
+      where: { id: accountBookId },
     });
 
-    if (!accountbook) {
+    if (!accountBook) {
       console.error("Accountbook not found");
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
@@ -138,13 +138,13 @@ export async function DELETE(
     }
 
     // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
-    const accountbookId = "1";
+    const accountBookId = "1";
 
-    const accountbook = await prisma.accountbook.findUnique({
-      where: { id: accountbookId },
+    const accountBook = await prisma.accountBook.findUnique({
+      where: { id: accountBookId },
     });
 
-    if (!accountbook) {
+    if (!accountBook) {
       console.error("Accountbook not found");
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
