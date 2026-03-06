@@ -22,7 +22,7 @@ export default function JournalMainView() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-80px)] w-full flex-col bg-gray-50">
+    <div className="flex w-full flex-col bg-gray-50">
       <div className="flex justify-between px-8 py-6">
         <h1 className="font-sans text-2xl font-bold text-slate-800">
           憑證管理
@@ -59,7 +59,7 @@ export default function JournalMainView() {
         </div>
 
         {/* Info: (20260304 - Julian) Main View */}
-        <div className="flex min-h-[500px] w-[calc(100vw-250px)] flex-col gap-2 px-4">
+        <div className="flex w-full lg:w-[calc(100vw-250px)] flex-col gap-2 px-4">
           {/* Info: (20260306 - Julian) Current Accountbook */}
           <div className="ml-auto text-sm font-medium text-gray-800">
             目前帳簿：{" "}
