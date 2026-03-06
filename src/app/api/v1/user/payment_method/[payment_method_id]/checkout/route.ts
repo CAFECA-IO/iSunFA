@@ -71,17 +71,28 @@ export async function POST(
             return jsonFail(ApiCode.UNAUTHORIZED, "FIDO2 Signature verification failed");
         }
 
-        // Info: (20260305 - Tzuhan) Create an initial transaction record, marking it PENDING
-        const paymentTransaction = await prisma.paymentTransaction.create({
-            data: {
-                userId: user.id,
-                paymentMethodId: oenPaymentMethod.id,
-                orderId: order.id,
-                provider: "OEN",
-                amount: amount,
-                status: PAYMENT_TRANSACTION_STATUS.PENDING,
-            }
-        });
+        // Info: (20260305 - Tzuhan) Create an initial transaction record, marking it PENDING, and save FIDO payload
+        const [paymentTransaction] = await prisma.$transaction([
+            prisma.paymentTransaction.create({
+                data: {
+                    userId: user.id,
+                    paymentMethodId: oenPaymentMethod.id,
+                    orderId: order.id,
+                    provider: "OEN",
+                    amount: amount,
+                    status: PAYMENT_TRANSACTION_STATUS.PENDING,
+                }
+            }),
+            prisma.order.update({
+                where: { id: order.id },
+                data: {
+                    data: {
+                        ...(order.data as object),
+                        fidoAuthentication: authentication
+                    } as Prisma.InputJsonObject
+                }
+            })
+        ]);
 
         // Info: (20260305 - Tzuhan) 準備打給應援科技的扣款請求
         const oenRes = await fetch(
@@ -139,7 +150,7 @@ export async function POST(
         }
 
         // Info: (20260306 - Tzuhan) ======= 扣款成功，開始鑄造代幣 =======
-        let dbReceiptId: string;
+        let dbReceiptId: string = "";
         await prisma.$transaction(async (tx) => {
             const dbReceipt = await tx.receipt.create({
                 data: {
@@ -193,6 +204,8 @@ export async function POST(
                     status: ORDER_STATUS.MINT_FAILED,
                     data: {
                         ...(order.data as object),
+                        checkoutResponse: oenData,
+                        receiptId: dbReceiptId,
                         error: mintResult.message,
                         fidoAuthentication: authentication
                     },

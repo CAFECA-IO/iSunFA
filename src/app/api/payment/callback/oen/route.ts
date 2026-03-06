@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
                     where: { id: order.id },
                     data: {
                         status: ORDER_STATUS.MINT_FAILED,
-                        data: { ...(order.data as object), oenResponse: body, error: mintResult.message },
+                        data: { ...(order.data as object), checkoutResponse: body, error: mintResult.message },
                     },
                 });
                 // We don't return 500 here because the webhook itself is technically processed successfully up to minting.

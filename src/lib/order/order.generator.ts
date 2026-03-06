@@ -4,7 +4,7 @@ import { getAnalysisCost, IOrderParams } from '@/lib/analysis/pricing';
 import { ApiCode } from '@/lib/utils/status';
 import { AppError } from '@/lib/utils/error';
 
-import { ORDER_STATUS } from '@/constants/status';
+import { ORDER_STATUS, ORDER_TYPE } from '@/constants/status';
 
 export interface IOrderResult {
   orderId: string;
@@ -44,8 +44,7 @@ export class OrderGenerator {
         type: 'ANALYSIS',
         amount: cost,
         // Info: (20260128 - Luphia) Store the full data object including timestamp
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data: orderData as any,
+        data: orderData,
         status: ORDER_STATUS.PENDING,
         challenge: challenge,
       },
@@ -77,10 +76,9 @@ export class OrderGenerator {
     const order = await prisma.order.create({
       data: {
         userId,
-        type: 'PAYMENT',
+        type: ORDER_TYPE.OEN_PAYMENT,
         amount: params.amount,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data: orderData as any,
+        data: orderData,
         status: ORDER_STATUS.PENDING,
         challenge: challenge,
       },
