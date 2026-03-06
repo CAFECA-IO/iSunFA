@@ -1,3 +1,5 @@
+import { AI_CONSULTATION_ROOM_PROMPT } from '@/constants/prompts/ai_consultation_room';
+import { JOURNAL_PROMPT } from '@/constants/prompts/journal';
 import { GoogleGenerativeAI, Part } from '@google/generative-ai';
 
 export class ChatService {
@@ -138,21 +140,7 @@ export class ChatService {
     message: string,
     images: { data: string; mimeType: string }[] = [],
   ): Promise<{ answer: string; tags: string[] }> {
-    const prompt = `
-      你是一位專業的會計師。請針對以下問題提供詳細、專業且親切的回答（使用台灣繁體中文）。
-      同時，請根據問題內容建議 1-3 個相關的會計標籤（例如：稅法, 記帳, 財務報表, 創業, 勞健保, 營業稅, 所得稅）。
-
-      使用者問題： "${message}"
-
-      輸出要求：
-      請僅輸出包含以下欄位的 JSON 格式，不要包含任何開場白或導言：
-      {
-        "answer": "你的回答內容（支援 Markdown 格式）",
-        "tags": ["標籤1", "標籤2"]
-      }
-
-      請確保輸出是合法的 JSON 格式。
-    `;
+    const prompt = AI_CONSULTATION_ROOM_PROMPT.replace('{{message}}', message);
 
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
@@ -196,17 +184,9 @@ export class ChatService {
   async analyzeJournal(
     images: { data: string; mimeType: string }[] = [],
   ): Promise<{ text: string }> {
-    // ToDo: (20260304 - Julian) 將來可能移除第 3 點
-    const prompt = `
-      請將用戶傳來的憑證（檔案/圖片）整理成日記帳，以純文字記錄。
-      1. 欄位應包含日期、會計科目、借方金額、貸方金額、摘要。
-      2. 如果無法解析成日記帳或非發票憑證，請直接回覆字串「上傳內容無法解析狀態」。
-      3. 純文字輸出即可，不要有額外的 Markdown 格式（例如不需要 \`\`\` ）。
-    `;
-
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
-      const parts: Part[] = [{ text: prompt }];
+      const parts: Part[] = [{ text: JOURNAL_PROMPT }];
 
       if (images && images.length > 0) {
         images.forEach((img) => {

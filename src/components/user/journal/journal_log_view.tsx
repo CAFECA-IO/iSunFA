@@ -1,0 +1,179 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
+import { Loader2 } from "lucide-react";
+
+interface IAuditLog {
+  id: string;
+  createdAt: string;
+  action: "CREATE" | "UPDATE" | "DELETE";
+  dataType: string;
+  dataId: string;
+  user: {
+    id: string;
+    name: string | null;
+    address: string;
+  };
+}
+
+export default function JournalLogView() {
+  const [logs, setLogs] = useState<IAuditLog[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    fetchLogs();
+  }, []);
+
+  const fetchLogs = async () => {
+    setIsLoading(true);
+    try {
+      const data = await request<IApiResponse<{ logs: IAuditLog[] }>>(
+        "/api/v1/audit_log?dataType=JOURNAL",
+      );
+      if (data.code === ApiCode.SUCCESS && data.payload?.logs) {
+        setLogs(data.payload.logs);
+      }
+    } catch (error) {
+      console.error("Failed to fetch logs", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  const getActionLabel = (action: string) => {
+    switch (action) {
+      case "CREATE":
+        return "新增";
+      case "UPDATE":
+        return "更新";
+      case "DELETE":
+        return "刪除";
+      default:
+        return action;
+    }
+  };
+
+  const getActionColor = (action: string) => {
+    switch (action) {
+      case "CREATE":
+        return "text-emerald-700 bg-emerald-100 border-emerald-200";
+      case "UPDATE":
+        return "text-blue-700 bg-blue-100 border-blue-200";
+      case "DELETE":
+        return "text-red-700 bg-red-100 border-red-200";
+      default:
+        return "text-gray-700 bg-gray-100 border-gray-200";
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="flex items-center justify-between">
+        <h2 className="font-sans text-xl font-semibold text-gray-800">
+          憑證異動紀錄
+        </h2>
+        <button
+          type="button"
+          onClick={fetchLogs}
+          disabled={isLoading}
+          className="rounded-lg bg-orange-50 px-4 py-2 text-sm font-medium text-orange-600 transition-colors hover:bg-orange-100 hover:text-orange-700 disabled:opacity-50"
+        >
+          重新整理
+        </button>
+      </div>
+
+      <div className="relative mt-2 overflow-x-auto rounded-lg border border-gray-200">
+        <table className="w-full text-left font-sans text-sm text-gray-600">
+          <thead className="bg-gray-50 text-xs font-semibold uppercase text-gray-600">
+            <tr>
+              <th scope="col" className="px-6 py-4">
+                紀錄時間
+              </th>
+              <th scope="col" className="px-6 py-4">
+                操作類型
+              </th>
+              <th scope="col" className="px-6 py-4">
+                操作人員
+              </th>
+              <th scope="col" className="px-6 py-4">
+                憑證 ID
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td colSpan={4} className="h-40 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2 text-orange-500">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <span className="text-sm font-medium">載入中...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : logs.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="h-40 text-center text-gray-500">
+                  暫無異動紀錄
+                </td>
+              </tr>
+            ) : (
+              logs.map((log) => (
+                <tr
+                  key={log.id}
+                  className="border-b border-gray-100 bg-white transition-colors hover:bg-orange-50/50"
+                >
+                  <td className="px-6 py-4 font-medium text-gray-900">
+                    {new Date(log.createdAt).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getActionColor(
+                        log.action,
+                      )}`}
+                    >
+                      {getActionLabel(log.action)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium text-gray-800">
+                        {log.user.name || "未命名使用者"}
+                      </span>
+                      <button 
+                        type="button" 
+                        onClick={() => copyToClipboard(log.user.address)} 
+                        aria-label={`點擊複製地址: ${log.user.address}`}
+                        title="點擊複製地址"
+                        className="font-mono text-xs text-slate-500 hover:text-orange-600"
+                      >
+                        {log.user.address}
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 font-mono text-xs text-slate-500">
+                    <button 
+                      type="button" 
+                      onClick={() => copyToClipboard(log.dataId)} 
+                      aria-label={`點擊複製憑證 ID: ${log.dataId}`}
+                      title="點擊複製憑證 ID"
+                      className="rounded bg-gray-100 px-2 py-1 font-mono hover:bg-gray-200"
+                    >
+                      {log.dataId}
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

@@ -15,7 +15,7 @@ export default function UserLayout({
       <div className="flex flex-col min-h-screen bg-gray-50">
         <UserHeader />
         <div className="flex flex-1">
-          <main className="flex-grow p-4 lg:p-8">
+          <main className="grow lg:max-w-[calc(100vw-15px)] p-4 lg:p-8">
             {children}
           </main>
         </div>
