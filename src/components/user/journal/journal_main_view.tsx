@@ -3,21 +3,30 @@
 import { useState } from "react";
 import JournalUploadView from "@/components/user/journal/journal_upload_view";
 import JournalListView from "@/components/user/journal/journal_list_view";
+import JournalLogView from "@/components/user/journal/journal_log_view";
+
+enum EJournalTab {
+  UPLOAD = "upload",
+  LIST = "list",
+  LOG = "log",
+}
 
 export default function JournalMainView() {
-  const [activeTab, setActiveTab] = useState<"upload" | "list">("upload");
+  const [activeTab, setActiveTab] = useState<EJournalTab>(EJournalTab.UPLOAD);
 
   // ToDo: (20260306 - Julian) 補上取得帳簿的邏輯
   const currentAccountbook = "My Accountbook";
 
   const renderView = () => {
     switch (activeTab) {
-      case "upload":
+      case EJournalTab.UPLOAD:
         return (
-          <JournalUploadView onUploadComplete={() => setActiveTab("list")} />
+          <JournalUploadView onUploadComplete={() => setActiveTab(EJournalTab.LIST)} />
         );
-      case "list":
+      case EJournalTab.LIST:
         return <JournalListView />;
+      case "log":
+        return <JournalLogView />;
     }
   };
 
@@ -36,11 +45,11 @@ export default function JournalMainView() {
           <button
             type="button"
             className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${
-              activeTab === "upload"
+              activeTab === EJournalTab.UPLOAD
                 ? "bg-white text-orange-600 shadow-sm"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
-            onClick={() => setActiveTab("upload")}
+            onClick={() => setActiveTab(EJournalTab.UPLOAD)}
           >
             上傳憑證
           </button>
@@ -48,18 +57,30 @@ export default function JournalMainView() {
           <button
             type="button"
             className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${
-              activeTab === "list"
+              activeTab === EJournalTab.LIST
                 ? "bg-white text-orange-600 shadow-sm"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
-            onClick={() => setActiveTab("list")}
+            onClick={() => setActiveTab(EJournalTab.LIST)}
           >
             憑證列表
+          </button>
+          {/* Info: (20260306 - Julian) View Audit Logs */}
+          <button
+            type="button"
+            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${
+              activeTab === EJournalTab.LOG
+                ? "bg-white text-orange-600 shadow-sm"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+            onClick={() => setActiveTab(EJournalTab.LOG)}
+          >
+            異動紀錄
           </button>
         </div>
 
         {/* Info: (20260304 - Julian) Main View */}
-        <div className="flex w-full lg:w-[calc(100vw-250px)] flex-col gap-2 px-4">
+        <div className="flex w-full flex-col gap-2 px-4 lg:w-[calc(100vw-250px)]">
           {/* Info: (20260306 - Julian) Current Accountbook */}
           <div className="ml-auto text-sm font-medium text-gray-800">
             目前帳簿：{" "}
