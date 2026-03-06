@@ -256,7 +256,7 @@ export default function PaymentModal({
         return;
       }
 
-      // 1. Request Payment Order to get challenge
+      // Info: (20260306 - Tzuhan) 1. Request Payment Order to get challenge
       const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
         method: 'POST',
         body: JSON.stringify({
@@ -270,7 +270,7 @@ export default function PaymentModal({
       if (!orderRes?.payload) throw new Error('Failed to create payment order');
       const { orderId, challenge } = orderRes.payload;
 
-      // 2. FIDO Signature
+      // Info: (20260306 - Tzuhan) 2. FIDO Signature
       if (!user?.pubKeyX || !user?.pubKeyY) {
         throw new Error("Missing public keys. Please re-login.");
       }
@@ -288,7 +288,7 @@ export default function PaymentModal({
         BigInt(user.pubKeyY)
       );
 
-      // 3. Submit Checkout
+      // Info: (20260306 - Tzuhan) 3. Submit Checkout
       const response = await request<{
         message?: string;
         payload?: IOenCheckoutResponse;
