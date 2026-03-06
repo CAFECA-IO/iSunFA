@@ -5,6 +5,7 @@ export const ORDER_STATUS = {
 } as const;
 
 export const MISSION_STATUS = {
+  UPLOADING: 'UPLOADING',
   PENDING: 'PENDING',
   RUNNING: 'RUNNING',
   COMPLETED: 'COMPLETED',

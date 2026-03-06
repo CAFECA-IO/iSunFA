@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@/generated/client';
+import { MISSION_STATUS } from '@/constants/status';
 
 export class AnalysisRepository {
   async create(params: {
@@ -8,6 +9,7 @@ export class AnalysisRepository {
     orderId: string;
     category: string;
     missionName: string;
+    status?: string;
     missionData: Prisma.InputJsonValue;
     tasks?: { type: string; order: number; data: Prisma.InputJsonValue }[];
   }) {
@@ -16,6 +18,7 @@ export class AnalysisRepository {
       data: {
         userId: params.userId,
         name: params.missionName,
+        status: params.status || MISSION_STATUS.PENDING,
         data: params.missionData,
         tasks: params.tasks ? {
           create: params.tasks.map(t => ({
@@ -61,6 +64,30 @@ export class AnalysisRepository {
       include: {
         mission: true,
         order: true
+      }
+    });
+  }
+
+  async updateMissionUploadSuccess(missionId: string, planHash: string) {
+    const mission = await prisma.mission.findUnique({ where: { id: missionId } });
+    if (!mission) return null;
+
+    const mData = (mission.data as Record<string, unknown>) || {};
+    return prisma.mission.update({
+      where: { id: missionId },
+      data: {
+        status: MISSION_STATUS.PENDING,
+        data: { ...mData, planHash }
+      }
+    });
+  }
+
+  async updateMissionUploadFailed(missionId: string, errorReason: string) {
+    return prisma.mission.update({
+      where: { id: missionId },
+      data: {
+        status: MISSION_STATUS.FAILED,
+        result: errorReason
       }
     });
   }

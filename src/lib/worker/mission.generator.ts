@@ -14,6 +14,8 @@ export interface IMissionParams {
   periodType: string;
   periodValue: string;
   year: number;
+  country?: string;
+  keyword?: string;
 }
 
 export interface IMissionDefinition {
@@ -26,7 +28,10 @@ export class MissionGenerator {
   generateMission(params: IMissionParams): IMissionDefinition | null {
     if (params.category === 'irsc') {
       const taskGenerator = new TaskGenerator();
-      const targetInfo = `Target Company: ${params.periodValue} (Fiscal Year: ${params.year})`;
+      let targetInfo = `Target Company: ${params.periodValue} (Fiscal Year: ${params.year})`;
+      if (params.country || params.keyword) {
+        targetInfo = `Target External: ${params.keyword || 'Company'} / Country: ${params.country || 'N/A'} / Period: ${params.periodValue} (Year: ${params.year})`;
+      }
       const tasks: ITaskDefinition[] = [];
 
       const promptMap = [
@@ -53,6 +58,20 @@ export class MissionGenerator {
 
       return {
         name: `IRSC Analysis - ${params.periodValue}`,
+        tasks
+      };
+    }
+
+    if (['market_trends', 'industry_development', 'financial_product_rating'].includes(params.category)) {
+      const taskGenerator = new TaskGenerator();
+      const targetInfo = `Target: ${params.keyword || 'General'} / Country: ${params.country || 'N/A'} / Period: ${params.periodValue} (Year: ${params.year})`;
+      const tasks: ITaskDefinition[] = [];
+
+      tasks.push(taskGenerator.generateTask('EXTERNAL_DATA_GATHERING', 'Gather external data based on target information and selected category.', targetInfo, 0));
+      tasks.push(taskGenerator.generateTask('FINAL', FINAL, targetInfo, 1));
+
+      return {
+        name: `External Analysis - ${params.category} - ${params.periodValue}`,
         tasks
       };
     }

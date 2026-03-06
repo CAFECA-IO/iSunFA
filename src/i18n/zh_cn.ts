@@ -515,7 +515,7 @@ export const zhCn = {
     purchase: "购买",
   },
   analysis: {
-    title: "代币分析",
+    title: "财务分析",
     internal_analysis: "内部数据分析",
     external_analysis: "外部数据分析",
     history_reports: "历史报告",

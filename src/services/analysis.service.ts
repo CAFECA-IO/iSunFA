@@ -1,10 +1,11 @@
 import { mkdir } from 'fs/promises';
+import { promises as fs } from 'fs';
 import path from 'path';
 import { getAnalysisCost } from '@/lib/analysis/pricing';
 import { storageService } from '@/services/storage.service';
 import { analysisRepo } from '@/repositories/analysis.repo';
-import { promises as fs } from 'fs';
 import { missionGenerator, IMissionDefinition } from '@/lib/worker/mission.generator';
+import { MISSION_STATUS } from '@/constants/status';
 
 
 export interface IGenerateAnalysisParams {
@@ -13,6 +14,8 @@ export interface IGenerateAnalysisParams {
   periodValue: string;
   year: number;
   orderId?: string;
+  country?: string;
+  keyword?: string;
 }
 
 export class AnalysisService {
@@ -48,7 +51,9 @@ export class AnalysisService {
         category: params.category,
         periodType: params.periodType,
         periodValue: params.periodValue,
-        year: params.year
+        year: params.year,
+        country: params.country,
+        keyword: params.keyword
       });
 
       if (missionDef) {
@@ -69,16 +74,8 @@ export class AnalysisService {
       result: analysisResult
     };
 
-    // Info: (20260128 - Luphia) Generate UUID (Hash) by uploading to Storage (Laria)
-    let reportId: string;
-    try {
-      const planFile = new File([JSON.stringify(planContent)], 'plan.json', { type: 'application/json' });
-      reportId = await storageService.uploadLaria(planFile);
-      console.log(`[AnalysisService] Plan uploaded, hash (ID): ${reportId}`);
-    } catch (error) {
-      console.error(`[AnalysisService] Failed to upload plan:`, error);
-      throw new Error('Failed to upload analysis plan');
-    }
+    // Info: (20260304 - Tzuhan) Create an instant UUID for reportId instead of waiting 15s for Laria Hash
+    const reportId = crypto.randomUUID();
 
     const reportDir = path.join(process.cwd(), 'reports', reportId);
 
@@ -95,32 +92,63 @@ export class AnalysisService {
       throw new Error('Failed to initialize report storage');
     }
 
-    // Info: (20260128 - Luphia) Save Analysis to Database
+    let createdMissionId: string | undefined;
+
+    // Info: (20260128 - Luphia) Save Analysis to Database *immediately*
     if (params.orderId) {
       try {
-        await analysisRepo.create({
+        const result = await analysisRepo.create({
           reportId,
           userId,
           orderId: params.orderId,
           category: params.category,
           missionName: missionDef ? missionDef.name : `Analysis-${params.category}-${params.periodType}`,
+          status: MISSION_STATUS.UPLOADING,
           missionData: {
             cost,
             remainingBalance: 9500,
             generatedAt: new Date().toISOString(),
-            planHash: reportId,
+            planHash: null,
             periodType: params.periodType,
             periodValue: params.periodValue,
-            year: params.year
+            year: params.year,
+            country: params.country,
+            keyword: params.keyword
           },
-          tasks: missionDef ? missionDef.tasks : undefined // Info: (20260130 - Luphia) Save tasks to DB
+          tasks: missionDef ? missionDef.tasks : undefined
         });
+        createdMissionId = result.missionId || undefined;
       } catch (error) {
         console.error(`[AnalysisService] Failed to save report to DB:`, error);
         throw new Error('Failed to save report metadata');
       }
     }
-    // Info: (20260120 - Luphia) Mock Response
+
+    const planFile = new File([JSON.stringify(planContent)], 'plan.json', { type: 'application/json' });
+
+    storageService.uploadLaria(planFile).then(async (hash) => {
+      console.log(`[Info: (20260304 - Tzuhan)] BACKGROUND Plan uploaded, hash: ${hash} for Mission ${createdMissionId}`);
+      if (createdMissionId) {
+        try {
+          await analysisRepo.updateMissionUploadSuccess(createdMissionId, hash);
+          console.log(`[Info: (20260304 - Tzuhan)] BACKGROUND Mission ${createdMissionId} updated with planHash and set to PENDING`);
+        } catch (e) {
+          console.error(`[Info: (20260304 - Tzuhan)] BACKGROUND Failed to update mission with planHash:`, e);
+        }
+      }
+    }).catch(async (error) => {
+      console.error(`[Info: (20260304 - Tzuhan)] BACKGROUND Failed to upload plan:`, error);
+      if (createdMissionId) {
+        try {
+          await analysisRepo.updateMissionUploadFailed(createdMissionId, 'File Upload Failed. Please contact support.');
+          console.log(`[Info: (20260304 - Tzuhan)] BACKGROUND Mission ${createdMissionId} marked as FAILED due to upload error`);
+        } catch (e) {
+          console.error(`[Info: (20260304 - Tzuhan)] BACKGROUND Failed to mark mission as FAILED:`, e);
+        }
+      }
+    });
+
+    // Info: (20260120 - Luphia) Mock Response returned instantly
     return {
       success: true,
       message: 'Analysis generated successfully',
