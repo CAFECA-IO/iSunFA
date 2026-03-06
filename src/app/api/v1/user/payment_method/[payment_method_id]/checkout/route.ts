@@ -145,7 +145,18 @@ export async function POST(
                 data: {
                     orderId: order.id,
                     amount: amount,
-                    data: oenData
+                    data: {
+                        ...(oenData as Record<string, unknown>),
+                        receiptDetails: {
+                            amount: order.amount,
+                            credits,
+                            transactionTime: new Date().toISOString(),
+                            buyerId: user.id,
+                            buyerName: dbUser?.name || "Unknown",
+                            itemDescription: `iSunFA Credits - ${credits}`,
+                            gatewayTxId: oenData?.data?.id || oenData?.id || "",
+                        }
+                    } as Prisma.InputJsonObject
                 }
             });
             dbReceiptId = dbReceipt.id;
@@ -170,7 +181,7 @@ export async function POST(
         });
 
         // Info: (20260306 - Tzuhan) 呼叫鑄造代幣合約
-        const memo = JSON.stringify({ provider: "OEN", orderId: order.id, amount });
+        const memo = JSON.stringify({ provider: "OEN", orderId: order.id, amount, credits, paymentMethodId });
         const mintResult = await mintToAddress(CONTRACT_ADDRESSES.NTD_TOKEN, user.address, credits, memo);
 
         // Info: (20260306 - Tzuhan) ======= 鑄造代幣失敗 =======
@@ -183,7 +194,7 @@ export async function POST(
                     data: {
                         ...(order.data as object),
                         error: mintResult.message,
-                        fidoAuthentication: authentication // Already saved, but redefining just in case
+                        fidoAuthentication: authentication
                     },
                 },
             });

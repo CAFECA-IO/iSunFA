@@ -8,6 +8,8 @@ export type IOenCallbackData = {
     paymentInfo?: string;
     token?: string;
     id?: string;
+    code?: string,
+    data?: { id: string, authCode: string },
 };
 
 

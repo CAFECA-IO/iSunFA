@@ -103,11 +103,23 @@ export async function POST(request: NextRequest) {
                         },
                     });
                 } else if (order.type === ORDER_TYPE.OEN_PAYMENT) {
+                    const _creditsToMint = (order.data as IOenOrderData)?.credits || 0;
                     const dbReceipt = await tx.receipt.create({
                         data: {
                             orderId: order.id,
                             amount: order.amount,
-                            data: body as unknown as Prisma.InputJsonValue
+                            data: {
+                                ...(body),
+                                receiptDetails: {
+                                    amount: order.amount,
+                                    credits: creditsToMint,
+                                    transactionTime: new Date().toISOString(),
+                                    buyerId: order.userId,
+                                    buyerName: order.user?.name || "Unknown",
+                                    itemDescription: `iSunFA Credits - ${_creditsToMint}`,
+                                    gatewayTxId: body?.data?.id,
+                                }
+                            } as Prisma.InputJsonObject
                         }
                     });
 
