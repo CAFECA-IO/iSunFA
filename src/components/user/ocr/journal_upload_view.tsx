@@ -77,7 +77,7 @@ export default function JournalUploadView({
 
     setIsAnalyzing(true);
     try {
-      const data = await request<IApiResponse<object>>("/api/v1/ocr", {
+      const data = await request<IApiResponse<object>>("/api/v1/journal", {
         method: "POST",
         body: JSON.stringify({
           file: {

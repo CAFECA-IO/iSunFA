@@ -28,7 +28,7 @@ export default function JournalListView() {
     setIsLoading(true);
     try {
       const data = await request<IApiResponse<{ journals: IJournal[] }>>(
-        `/api/v1/ocr?orderBy={"createdAt":"${sortOrder}"}`,
+        `/api/v1/journal?orderBy={"createdAt":"${sortOrder}"}`,
       );
       if (data.payload?.journals) {
         setJournals(data.payload.journals);

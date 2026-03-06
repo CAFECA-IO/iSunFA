@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
-    const accountbookId = "";
+    const accountbookId = "1";
 
     const accountbook = await prisma.accountbook.findUnique({
       where: { id: accountbookId },
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
     }
 
     // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
-    const accountbookId = "";
+    const accountbookId = "1";
 
     const accountbook = await prisma.accountbook.findUnique({
       where: { id: accountbookId },
