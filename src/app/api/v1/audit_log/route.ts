@@ -20,12 +20,26 @@ export async function GET(request: NextRequest) {
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
 
+    // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
+    const accountbookId = "1";
+
+    const accountbook = await prisma.accountbook.findUnique({
+      where: { id: accountbookId },
+    });
+
+    if (!accountbook) {
+      console.error("Accountbook not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+    }
+
     const { searchParams } = new URL(request.url);
-    const take = searchParams.get("take") ? parseInt(searchParams.get("take")!, 10) : 100;
+    const take = searchParams.get("take")
+      ? parseInt(searchParams.get("take")!, 10)
+      : 100;
     const dataType = searchParams.get("dataType") as AuditLogDataType;
 
     const logs = await prisma.auditLog.findMany({
-      where: { dataType },
+      where: { dataType, accountbookId: accountbook.id },
       orderBy: { createdAt: "desc" },
       take,
       include: {
