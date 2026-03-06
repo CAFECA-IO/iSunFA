@@ -42,7 +42,7 @@ model User {
   paymentTransactions PaymentTransaction[]
   accountbooks        Accountbook[]
   journals            Journal[]
-  editRecords         EditRecord[]
+  auditLogs           AuditLog[]
 
   @@index([address])
   @@map("user")
@@ -320,22 +320,34 @@ model Accountbook {
   @@map("accountbook")
 }
 
-// Info: (20260306 - Julian) 編輯記錄
-model EditRecord {
+// Info: (20260306 - Julian) 資料編輯 log
+enum AuditLogDataType {
+  JOURNAL
+  VOUCHER
+  CARBON
+}
+
+enum AuditLogAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+model AuditLog {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now()) @map("created_at")
 
   // Info: (20260306 - Julian) 編輯的資料類型
-  dataType String @map("data_type") // Info: (20260306 - Julian) journal / voucher / carbon
+  dataType AuditLogDataType @map("data_type") // Info: (20260306 - Julian) journal / voucher / carbon
   // Info: (20260306 - Julian) 編輯的資料
-  dataId   String @map("data_id") // Info: (20260306 - Julian) journalId / voucherId / carbonId
+  dataId   String           @map("data_id") // Info: (20260306 - Julian) journalId / voucherId / carbonId
 
-  // Info: (20260306 - Julian) 編輯者的身份
-  editorRole String @map("editor_role") // Info: (20260306 - Julian) 建立者 creator / 更新者 updater
+  // Info: (20260306 - Julian) 編輯的動作
+  action AuditLogAction @map("action") // Info: (20260306 - Julian) 建立 / 更新 / 刪除
 
   // Info: (20260306 - Julian) 編輯者的使用者
   userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id])
 
-  @@map("edit_record")
+  @@map("audit_log")
 }

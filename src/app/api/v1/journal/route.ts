@@ -22,6 +22,16 @@ export async function POST(request: NextRequest) {
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
 
+    // Info: (20260306 - Julian) 驗證建立人員
+    const creator = await prisma.user.findUnique({
+      where: { address: sessionUser.address },
+    });
+
+    if (!creator) {
+      console.error("Creator not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Creator not found");
+    }
+
     const body = await request.json();
     const { file } = body;
 
@@ -82,6 +92,16 @@ export async function POST(request: NextRequest) {
         fileId: dbFile.id,
         accountbookId: accountbook.id,
         text: text,
+      },
+    });
+
+    // Info: (20260306 - Julian) 新增 log
+    await prisma.auditLog.create({
+      data: {
+        userId: creator.id,
+        dataType: "JOURNAL",
+        dataId: journal.id,
+        action: "CREATE",
       },
     });
 
