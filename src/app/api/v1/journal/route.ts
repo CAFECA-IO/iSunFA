@@ -101,6 +101,7 @@ export async function POST(request: NextRequest) {
         userId: creator.id,
         dataType: "JOURNAL",
         dataId: journal.id,
+        accountbookId: accountbook.id,
         action: "CREATE",
       },
     });
@@ -165,9 +166,12 @@ export async function GET(request: NextRequest) {
       include: { file: true },
     };
 
-    // Info: (20260304 - Julian) 關鍵字篩選
+    // Info: (20260304 - Julian) 關鍵字篩選：支援 text 與 ID 搜尋
     if (keyWord) {
-      filteredConditions.where!.text = { contains: keyWord };
+      filteredConditions.where!.OR = [
+        { text: { contains: keyWord } },
+        { id: { contains: keyWord } },
+      ];
     }
 
     // Info: (20260304 - Julian) 建立時間區間篩選

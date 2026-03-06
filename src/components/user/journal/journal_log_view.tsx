@@ -46,6 +46,10 @@ export default function JournalLogView() {
     }
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
   const getActionLabel = (action: string) => {
     switch (action) {
       case "CREATE":
@@ -140,19 +144,19 @@ export default function JournalLogView() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex flex-col">
+                    <div className="flex flex-col items-start">
                       <span className="font-medium text-gray-800">
                         {log.user.name || "未命名使用者"}
                       </span>
-                      <span className="font-mono text-xs text-slate-500 hover:text-orange-600">
+                      <button type="button" onClick={()=>copyToClipboard(log.user.address)} className="font-mono text-xs text-slate-500 hover:text-orange-600">
                         {log.user.address}
-                      </span>
+                      </button>
                     </div>
                   </td>
                   <td className="px-6 py-4 font-mono text-xs text-slate-500">
-                    <span className="rounded bg-gray-100 px-2 py-1 font-mono hover:bg-gray-200">
+                    <button type="button" onClick={()=>copyToClipboard(log.dataId)} className="rounded bg-gray-100 px-2 py-1 font-mono hover:bg-gray-200">
                       {log.dataId}
-                    </span>
+                    </button>
                   </td>
                 </tr>
               ))

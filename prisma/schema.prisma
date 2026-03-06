@@ -317,6 +317,9 @@ model Accountbook {
   // Info: (20260305 - Julian) 一個帳本可以有多個憑證
   journals Journal[]
 
+  // Info: (20260306 - Julian) 一個帳本可以有多個編輯紀錄
+  auditLogs AuditLog[]
+
   @@map("accountbook")
 }
 
@@ -341,6 +344,10 @@ model AuditLog {
   dataType AuditLogDataType @map("data_type") // Info: (20260306 - Julian) journal / voucher / carbon
   // Info: (20260306 - Julian) 編輯的資料
   dataId   String           @map("data_id") // Info: (20260306 - Julian) journalId / voucherId / carbonId
+
+  // Info: (20260306 - Julian) 編輯資料所屬的帳本
+  accountbookId String      @map("accountbook_id")
+  accountbook   Accountbook @relation(fields: [accountbookId], references: [id])
 
   // Info: (20260306 - Julian) 編輯的動作
   action AuditLogAction @map("action") // Info: (20260306 - Julian) 建立 / 更新 / 刪除
