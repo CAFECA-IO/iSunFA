@@ -1,44 +1,25 @@
-import { IJSONObject } from "@/validators/common";
-
 export type IOenCallbackData = {
+    success?: boolean;
+    purpose?: string;
+    merchantId?: string;
+    transactionId?: string;
+    message?: string | null;
+    customId?: string;
+    paymentInfo?: string;
     token?: string;
-    status?: string;
-    card4no?: string;
-    cardBrand?: string;
-    issuer?: string;
+    id?: string;
+    code?: string,
+    data?: { id: string, authCode: string },
 };
 
-export type IOenCallbackPayload = {
-    customId?: string;
-    token?: string;
-    status?: string;
-    success?: boolean;
-    card4no?: string;
-    cardBrand?: string;
-    issuer?: string;
-    data?: IOenCallbackData;
-};
 
 export type IOenOrderData = {
-    credits?: number;
-    previousCredits?: number;
-    issuer?: string;
-    amount?: number;
-    paymentId?: string;
-    bindingOrderId?: string;
-    checkoutResponse?: IJSONObject;
-    oenResponse?: IJSONObject;
-    chargeResponse?: IJSONObject;
-    callbackBody?: IOenCallbackPayload;
-    error?: string;
-};
-
-export interface IOenCheckoutRequest {
-    amount: number;
-    previousCredits: number;
     credits: number;
-    paymentMethodId?: string | null;
-}
+    amount: number;
+    paymentId?: string;
+    paymentMethodId?: string;
+    timestamp?: string;
+};
 
 export interface IOenCheckoutResponse {
     requireBinding: boolean;
@@ -55,6 +36,13 @@ export interface IOrderStatusResponse {
     data?: Partial<IOenOrderData>;
 }
 
+export enum PaymentStep {
+    confirm = "confirm",
+    processing = "processing",
+    success = "success",
+    error = "error"
+}
+
 export interface IPaymentModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -64,7 +52,7 @@ export interface IPaymentModalProps {
     baseCredits: number;
     bonusCredits: number;
     displayPrice?: string;
-    initialStep?: "confirm" | "processing" | "success" | "error";
+    initialStep?: PaymentStep;
     transactionHash?: string;
     orderId?: string | null;
 }

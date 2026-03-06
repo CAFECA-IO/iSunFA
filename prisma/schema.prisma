@@ -64,6 +64,7 @@ model Order {
 
   analysis            Analysis[]
   paymentTransactions PaymentTransaction[]
+  receipt             Receipt?
 
   @@map("order")
 }
@@ -281,6 +282,18 @@ model PaymentTransaction {
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
   @@map("payment_transaction")
+}
+
+model Receipt {
+  id        String   @id @default(uuid())
+  orderId   String   @unique @map("order_id")
+  order     Order    @relation(fields: [orderId], references: [id])
+  amount    Int
+  data      Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("receipt")
 }
 
 // Info: (20260304 - Julian) 憑證/日記帳

@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/client";
 import { mintToAddress } from "@/services/token.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
-import { Prisma } from "@/generated/client";
-
-const OEN_ACCESS_TOKEN = process.env.OEN_ACCESS_TOKEN;
-
-import { IOenCallbackPayload, IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
+import { IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
+import { ORDER_STATUS, PAYMENT_STATUS, ORDER_TYPE, PAYMENT_PROVIDER, PAYMENT_TRANSACTION_STATUS } from "@/constants/status";
 
 export async function POST(request: NextRequest) {
     try {
-        // Info: (20260302 - Tzuhan) [流程 4-1: 接收應援科技(OEN) Webhook] 使用者在 OEN 結帳頁面完成綁卡/授權後，OEN 伺服器會在背景呼叫此 API (Callback) 傳遞結果
         let bodyText = "";
-        let body: IOenCallbackPayload = {};
+        let body: IOenCallbackData;
         try {
             if (
                 request.headers
@@ -26,285 +23,171 @@ export async function POST(request: NextRequest) {
                 bodyText = await request.text();
                 body = JSON.parse(bodyText);
             }
-        } catch (e) {
-            console.error("Deprecate: (20260310 - Tzuhan) ", "[OEN Callback] Failed to parse payload:", e);
+        } catch (err) {
+            console.warn("Deprecate: (20260310 - Tzuhan) ", "[OEN Callback] Failed to parse payload:", err);
             return NextResponse.json(
                 { message: "Invalid payload format" },
                 { status: 400 },
             );
         }
 
-        console.log("Deprecate: (20260310 - Tzuhan) ", "[OEN Callback] Received payload:",
-            JSON.stringify(body, null, 2),
-        );
-
         let customId = body.customId;
         if (typeof customId === "string" && customId.startsWith("{")) {
             try {
                 customId = JSON.parse(customId).orderId || customId;
-            } catch (e) {
-                console.warn("Deprecate: (20260310 - Tzuhan) ", "[OEN Callback] Failed to parse customId as JSON:", e);
+            } catch (err) {
+                console.warn("Deprecate: (20260310 - Tzuhan) ", "[OEN Callback] Failed to parse customId as JSON:", err);
             }
         }
-        console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Parsed customId (orderId): ${customId}`);
 
-
-        const token = body.token || body.data?.token;
+        const { token } = body;
         const status =
-            body.status || body.data?.status || body.success ? "SUCCESS" : "";
-        console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Extracted token: ${token ? "yes" : "no"}, status: ${status}`,
-        );
+            body.success ? PAYMENT_STATUS.SUCCESS : PAYMENT_STATUS.FAILED;
 
         if (!customId) {
-            console.error("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] No customId provided in payload`);
             return NextResponse.json(
                 { message: "No customId provided" },
                 { status: 400 },
             );
         }
 
-        // Info: (20260302 - Tzuhan) [流程 4-2: 找出對應訂單] 透過 OEN 回傳的 customId (對應我們自己的 order.id) 尋找 PENDING 狀態的 OEN_BINDING 訂單
         const order = await prisma.order.findUnique({
             where: { id: customId },
             include: { user: true },
         });
 
         if (!order) {
-            console.error("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Order not found for customId: ${customId}`);
             return NextResponse.json({ message: "Order not found" }, { status: 404 });
         }
-        console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Found order: id=${order.id}, type=${order.type}, status=${order.status}, userId=${order.userId}`,
-        );
 
 
-        let paymentMethodId: string | undefined;
 
-        if (token && typeof token === "string") {
-            // Info: (20260302 - Tzuhan) [流程 4-3: 儲存信用卡 Token] 如果回傳內容包含 token，表示綁卡成功，將此 token 存入 PaymentMethod，未來即可進行免跳轉的直接扣款
-            const existingMethod = await prisma.paymentMethod.findFirst({
-                where: {
-                    userId: order.userId,
-                    provider: "OEN",
-                    token: token,
-                }
-            });
+        let shouldMint = false;
+        let creditsToMint = 0;
+        let amountPaid = 0;
 
-            if (existingMethod) {
-                paymentMethodId = existingMethod.id;
-                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Token already exists for user ${order.userId}`);
-            } else {
-                const rawBody = body as Record<string, unknown>;
-                const mergedData: IOenCallbackData = body.data ? { ...body.data } : {};
-
-                if (rawBody.card4no) mergedData.card4no = String(rawBody.card4no);
-                if (rawBody.cardBrand) mergedData.cardBrand = String(rawBody.cardBrand);
-                if (rawBody.issuer) mergedData.issuer = String(rawBody.issuer);
-
-                const paymentMethod = await prisma.paymentMethod.create({
-                    data: {
+        await prisma.$transaction(async (tx) => {
+            if (token && typeof token === "string") {
+                const existingMethod = await tx.paymentMethod.findFirst({
+                    where: {
                         userId: order.userId,
                         provider: "OEN",
                         token: token,
-                        data: (Object.keys(mergedData).length > 0 ? mergedData : Prisma.DbNull) as Prisma.InputJsonValue,
-                    },
-                });
-                paymentMethodId = paymentMethod.id;
-                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Saved token for user ${order.userId} in PaymentMethod`);
-            }
-        }
-
-
-        const isPaymentSuccess = status === "SUCCESS" || body.success === true || (token && typeof token === "string");
-        const isBindingOrder = order.status === "PENDING" && order.type === "OEN_BINDING";
-
-        if (isPaymentSuccess && isBindingOrder) {
-            // Info: (20260302 - Tzuhan) [流程 4-4: 發動正式扣款] 確認綁卡成功且原始訂單為發起綁卡狀態，則進入正式扣款流程
-            const orderData = order.data as IOenOrderData;
-            console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Processing successful binding for order ${order.id}, credits=${orderData.credits}, amount=${orderData.amount}`,
-            );
-
-            if (orderData.credits && orderData.amount && token) {
-
-                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Charging bound token for order ${order.id}...`,
-                );
-
-                // Info: (20260302 - Tzuhan) [流程 4-5: 建立 OEN_PAYMENT 扣款訂單]
-                const chargeOrder = await prisma.order.create({
-                    data: {
-                        userId: order.userId,
-                        type: "OEN_PAYMENT",
-                        amount: orderData.amount,
-                        challenge: "N/A",
-                        data: {
-                            credits: orderData.credits,
-                            amount: orderData.amount,
-                            previousCredits: orderData.previousCredits,
-                            card4no: String((body.data?.card4no || body.card4no || "")) || undefined,
-                            issuer: String((body.data?.issuer || body.issuer || "")) || undefined,
-                            bindingOrderId: order.id,
-                        },
-                    },
-                });
-                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Created OEN_PAYMENT chargeOrder: ${chargeOrder.id}`,
-                );
-
-                // Info: (20260302 - Tzuhan) 建立 Transaction 紀錄，與訂單及信用卡綁定
-                const paymentTransaction = await prisma.paymentTransaction.create({
-                    data: {
-                        userId: order.userId,
-                        paymentMethodId: paymentMethodId,
-                        orderId: chargeOrder.id,
-                        provider: "OEN",
-                        amount: orderData.amount,
-                        status: "PENDING",
                     }
                 });
-                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Created payment transaction: ${paymentTransaction.id}`);
 
-                // Info: (20260302 - Tzuhan) [流程 4-6: 更新原始綁卡訂單] 綁卡階段已結束，將其標示為 COMPLETED
-                await prisma.order.update({
-                    where: { id: order.id },
-                    data: {
-                        status: "COMPLETED",
+                if (!existingMethod) {
+                    const rawBody = body as IOenCallbackData;
+                    await tx.paymentMethod.create({
                         data: {
-                            ...(order.data as IOenOrderData),
-                            card4no: String((body.data?.card4no || body.card4no || "")) || undefined,
-                            issuer: String((body.data?.issuer || body.issuer || "")) || undefined,
-                        } as Prisma.InputJsonObject
-                    },
-                });
-                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Marked binding order ${order.id} as COMPLETED`,
-                );
-
-                // Info: (20260302 - Tzuhan) [流程 4-7: 呼叫 OEN API 進行扣款] (與流程 3-6a 相同)，使用剛剛取得的 token 進行請款
-                const oenRes = await fetch(
-                    "https://payment-api.testing.oen.tw/token/transactions",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${OEN_ACCESS_TOKEN}`,
-                        },
-                        body: JSON.stringify({
-                            merchantId: process.env.OEN_MERCHANT_ID || "mermer",
-                            amount: orderData.amount,
-                            currency: "TWD",
+                            userId: order.userId,
+                            provider: "OEN",
                             token: token,
-                            orderId: chargeOrder.id,
-                            userName: order.user.name || "Unknown",
-                            userEmail: `${order.user.id}@isunfa.tw`,
-                            productDetails: [
-                                {
-                                    productionCode: "ISUNFA-CREDITS",
-                                    description: `iSunFA Credits - ${orderData.credits}`,
-                                    quantity: 1,
-                                    unit: "pcs",
-                                    unitPrice: orderData.amount,
-                                },
-                            ],
-                        }),
-                    },
-                );
-
-                const oenData = await oenRes.json();
-
-                if (oenData.code === "S0000" || oenRes.ok) {
-                    // Info: (20260302 - Tzuhan) [流程 4-8: 扣款成功，鑄造代幣] (同流程 3-7a) 發行點數至用戶錢包
-                    console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Charge successful for order ${chargeOrder.id}, proceeding to mint points.`,
-                    );
-
-                    // Info: (20260302 - Tzuhan) 將實體交易紀錄標示為成功
-                    await prisma.paymentTransaction.update({
-                        where: { id: paymentTransaction.id },
-                        data: {
-                            status: "SUCCESS",
-                            rawData: oenData
-                        }
-                    });
-
-                    const memo = JSON.stringify({
-                        provider: "OEN",
-                        orderId: chargeOrder.id,
-                        amount: orderData.amount,
-                    });
-                    const mintResult = await mintToAddress(
-                        CONTRACT_ADDRESSES.NTD_TOKEN,
-                        order.user.address,
-                        orderData.credits,
-                        memo,
-                    );
-
-                    if (mintResult.success) {
-                        // Info: (20260302 - Tzuhan) [流程 4-9: 更新扣款訂單完成] 將剛剛建立的 OEN_PAYMENT 更新為 COMPLETED，並儲存 transactionHash
-                        const txHash = (mintResult.data as { tx: string })?.tx;
-                        await prisma.order.update({
-                            where: { id: chargeOrder.id },
-                            data: {
-                                status: "COMPLETED",
-                                transactionHash: txHash,
-                                data: {
-                                    ...orderData,
-                                    callbackBody: body,
-                                    chargeResponse: oenData,
-                                } as Prisma.InputJsonObject,
-                            },
-                        });
-                        console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Order ${chargeOrder.id} completed, minted ${orderData.credits} credits. txHash: ${txHash}`,
-                        );
-                    } else {
-                        await prisma.order.update({
-                            where: { id: chargeOrder.id },
-                            data: {
-                                status: "MINT_FAILED",
-                                data: {
-                                    ...orderData,
-                                    callbackBody: body,
-                                    chargeResponse: oenData,
-                                    error: mintResult.message,
-                                } as Prisma.InputJsonObject,
-                            },
-                        });
-                        console.error("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Mint failed for order ${chargeOrder.id}: ${mintResult.message}`,
-                        );
-                    }
-                } else {
-                    console.error("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] Charge failed for order ${chargeOrder.id}:`,
-                        oenData,
-                    );
-
-                    // Info: (20260302 - Tzuhan) 將實體交易紀錄標示為失敗
-                    await prisma.paymentTransaction.update({
-                        where: { id: paymentTransaction.id },
-                        data: {
-                            status: "FAILED",
-                            rawData: oenData,
-                            errorMessage: "Charge failed via OEN"
-                        }
-                    });
-
-                    await prisma.order.update({
-                        where: { id: chargeOrder.id },
-                        data: {
-                            status: "FAILED",
-                            data: {
-                                ...orderData,
-                                callbackBody: body,
-                                chargeResponse: oenData,
-                                error: "Charge failed via OEN",
-                            } as Prisma.InputJsonObject,
+                            data: (Object.keys(rawBody).length > 0 ? rawBody : Prisma.DbNull) as Prisma.InputJsonValue,
                         },
                     });
                 }
-            } else if (!token) {
-                console.log("Deprecate: (20260310 - Tzuhan) ", `[OEN Callback] No token received for order ${order.id}, cannot charge.`,
-                );
+            }
 
+            const isPaymentSuccess = status === PAYMENT_STATUS.SUCCESS || body.success === true || (token && typeof token === "string");
+
+            if (isPaymentSuccess && order.status === ORDER_STATUS.PENDING) {
+                if (order.type === ORDER_TYPE.OEN_BINDING) {
+                    await tx.order.update({
+                        where: { id: order.id },
+                        data: {
+                            status: ORDER_STATUS.COMPLETED,
+                            data: {
+                                ...(order.data as IOenOrderData),
+                            } as Prisma.InputJsonObject
+                        },
+                    });
+                } else if (order.type === ORDER_TYPE.OEN_PAYMENT) {
+                    const _creditsToMint = (order.data as IOenOrderData)?.credits || 0;
+                    const dbReceipt = await tx.receipt.create({
+                        data: {
+                            orderId: order.id,
+                            amount: order.amount,
+                            data: {
+                                ...(body),
+                                receiptDetails: {
+                                    amount: order.amount,
+                                    credits: creditsToMint,
+                                    transactionTime: new Date().toISOString(),
+                                    buyerId: order.userId,
+                                    buyerName: order.user?.name || "Unknown",
+                                    itemDescription: `iSunFA Credits - ${_creditsToMint}`,
+                                    gatewayTxId: body?.data?.id,
+                                }
+                            } as Prisma.InputJsonObject
+                        }
+                    });
+
+                    await tx.paymentTransaction.updateMany({
+                        where: { orderId: order.id },
+                        data: { status: PAYMENT_TRANSACTION_STATUS.SUCCESS, rawData: body as unknown as Prisma.InputJsonValue }
+                    });
+
+                    await tx.order.update({
+                        where: { id: order.id },
+                        data: {
+                            status: ORDER_STATUS.PAID,
+                            data: {
+                                ...(order.data as IOenOrderData),
+                                checkoutResponse: body,
+                                receiptId: dbReceipt.id
+                            } as Prisma.InputJsonObject,
+                        },
+                    });
+
+                    shouldMint = true;
+                    creditsToMint = (order.data as IOenOrderData)?.credits || 0;
+                    amountPaid = order.amount;
+                }
+            } else if (!isPaymentSuccess && order.status === ORDER_STATUS.PENDING) {
+                await tx.paymentTransaction.updateMany({
+                    where: { orderId: order.id },
+                    data: { status: PAYMENT_TRANSACTION_STATUS.FAILED, rawData: body as unknown as Prisma.InputJsonValue, errorMessage: "Payment failed via OEN Callback" }
+                });
+                await tx.order.update({
+                    where: { id: order.id },
+                    data: {
+                        status: ORDER_STATUS.FAILED,
+                        data: { ...(order.data as IOenOrderData), checkoutResponse: body } as Prisma.InputJsonObject,
+                    },
+                });
+            }
+        });
+
+        if (shouldMint && creditsToMint > 0) {
+            const memo = JSON.stringify({ provider: PAYMENT_PROVIDER.OEN_CALLBACK, orderId: order.id, amount: amountPaid });
+            const mintResult = await mintToAddress(CONTRACT_ADDRESSES.NTD_TOKEN, order.user.address, creditsToMint, memo);
+
+            if (!mintResult.success) {
+                await prisma.order.update({
+                    where: { id: order.id },
+                    data: {
+                        status: ORDER_STATUS.MINT_FAILED,
+                        data: { ...(order.data as object), checkoutResponse: body, error: mintResult.message },
+                    },
+                });
+                // We don't return 500 here because the webhook itself is technically processed successfully up to minting.
+            } else {
+                const txHash = (mintResult.data as { tx: string })?.tx;
+
+                await prisma.order.update({
+                    where: { id: order.id },
+                    data: {
+                        status: ORDER_STATUS.COMPLETED,
+                        transactionHash: txHash,
+                    },
+                });
             }
         }
 
         return NextResponse.json({ message: "OK" });
-    } catch (error) {
-        console.error("Deprecate: (20260310 - Tzuhan) ", "[OEN Callback] Error processing webhook:", error);
+    } catch (err) {
+        console.warn("Deprecate: (20260310 - Tzuhan) ", "[OEN Callback] Error processing webhook:", err);
         return NextResponse.json(
             { message: "Internal Server Error" },
             { status: 500 },
