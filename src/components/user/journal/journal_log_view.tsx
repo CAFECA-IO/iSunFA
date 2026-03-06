@@ -1,8 +1,6 @@
-/* eslint-disable jsx-a11y/control-has-associated-label */
 "use client";
 
 import { useEffect, useState } from "react";
-// import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -22,7 +20,6 @@ interface IAuditLog {
 }
 
 export default function JournalLogView() {
-  // const { t } = useTranslation();
   const [logs, setLogs] = useState<IAuditLog[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -83,6 +80,7 @@ export default function JournalLogView() {
           憑證異動紀錄
         </h2>
         <button
+          type="button"
           onClick={fetchLogs}
           disabled={isLoading}
           className="rounded-lg bg-orange-50 px-4 py-2 text-sm font-medium text-orange-600 transition-colors hover:bg-orange-100 hover:text-orange-700 disabled:opacity-50"
@@ -93,18 +91,18 @@ export default function JournalLogView() {
 
       <div className="relative mt-2 overflow-x-auto rounded-lg border border-gray-200">
         <table className="w-full text-left font-sans text-sm text-gray-600">
-          <thead className="bg-gray-50 text-xs text-gray-600 uppercase">
+          <thead className="bg-gray-50 text-xs font-semibold uppercase text-gray-600">
             <tr>
-              <th scope="col" className="px-6 py-4 font-semibold">
+              <th scope="col" className="px-6 py-4">
                 紀錄時間
               </th>
-              <th scope="col" className="px-6 py-4 font-semibold">
+              <th scope="col" className="px-6 py-4">
                 操作類型
               </th>
-              <th scope="col" className="px-6 py-4 font-semibold">
+              <th scope="col" className="px-6 py-4">
                 操作人員
               </th>
-              <th scope="col" className="px-6 py-4 font-semibold">
+              <th scope="col" className="px-6 py-4">
                 憑證 ID
               </th>
             </tr>
@@ -148,13 +146,25 @@ export default function JournalLogView() {
                       <span className="font-medium text-gray-800">
                         {log.user.name || "未命名使用者"}
                       </span>
-                      <button type="button" onClick={()=>copyToClipboard(log.user.address)} className="font-mono text-xs text-slate-500 hover:text-orange-600">
+                      <button 
+                        type="button" 
+                        onClick={() => copyToClipboard(log.user.address)} 
+                        aria-label={`點擊複製地址: ${log.user.address}`}
+                        title="點擊複製地址"
+                        className="font-mono text-xs text-slate-500 hover:text-orange-600"
+                      >
                         {log.user.address}
                       </button>
                     </div>
                   </td>
                   <td className="px-6 py-4 font-mono text-xs text-slate-500">
-                    <button type="button" onClick={()=>copyToClipboard(log.dataId)} className="rounded bg-gray-100 px-2 py-1 font-mono hover:bg-gray-200">
+                    <button 
+                      type="button" 
+                      onClick={() => copyToClipboard(log.dataId)} 
+                      aria-label={`點擊複製憑證 ID: ${log.dataId}`}
+                      title="點擊複製憑證 ID"
+                      className="rounded bg-gray-100 px-2 py-1 font-mono hover:bg-gray-200"
+                    >
                       {log.dataId}
                     </button>
                   </td>
