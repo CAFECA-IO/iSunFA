@@ -4,12 +4,18 @@ import { getAnalysisCost, IOrderParams } from '@/lib/analysis/pricing';
 import { ApiCode } from '@/lib/utils/status';
 import { AppError } from '@/lib/utils/error';
 
-import { ORDER_STATUS } from '@/constants/status';
+import { ORDER_STATUS, ORDER_TYPE } from '@/constants/status';
 
 export interface IOrderResult {
   orderId: string;
   challenge: string;
   cost: number;
+}
+
+export interface IPaymentOrderParams {
+  amount: number;
+  credits: number;
+  paymentMethodId: string;
 }
 
 export class OrderGenerator {
@@ -38,8 +44,7 @@ export class OrderGenerator {
         type: 'ANALYSIS',
         amount: cost,
         // Info: (20260128 - Luphia) Store the full data object including timestamp
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data: orderData as any,
+        data: orderData,
         status: ORDER_STATUS.PENDING,
         challenge: challenge,
       },
@@ -49,6 +54,40 @@ export class OrderGenerator {
       orderId: order.id,
       challenge: challenge,
       cost,
+    };
+  }
+
+  // Info: (20260305 - Tzuhan) Generate an order for points purchase and return the challenge string to be signed.
+  async generatePaymentOrder(userId: string, params: IPaymentOrderParams): Promise<IOrderResult> {
+    const orderData = {
+      ...params,
+      timestamp: new Date().toISOString()
+    };
+
+    // Info: (20260305 - Tzuhan) Create challenge from hashed JSON data
+    const jsonString = JSON.stringify(orderData);
+    const hash = createHash('sha256').update(jsonString);
+    const challenge = hash.digest('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    // Info: (20260305 - Tzuhan) Create PENDING order
+    const order = await prisma.order.create({
+      data: {
+        userId,
+        type: ORDER_TYPE.OEN_PAYMENT,
+        amount: params.amount,
+        data: orderData,
+        status: ORDER_STATUS.PENDING,
+        challenge: challenge,
+      },
+    });
+
+    return {
+      orderId: order.id,
+      challenge: challenge,
+      cost: params.amount,
     };
   }
 
@@ -79,14 +118,23 @@ export class OrderGenerator {
   }
 
   async completeOrder(orderId: string, signature: string, transactionHash?: string) {
-    await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        status: ORDER_STATUS.COMPLETED,
-        signature: signature,
-        transactionHash: transactionHash
-      }
-    })
+    await prisma.$transaction(async (tx) => {
+      const order = await tx.order.update({
+        where: { id: orderId },
+        data: {
+          status: ORDER_STATUS.COMPLETED,
+          signature: signature,
+          transactionHash: transactionHash
+        }
+      });
+
+      await tx.receipt.create({
+        data: {
+          orderId: order.id,
+          amount: order.amount,
+        }
+      });
+    });
   }
 
   async failOrder(orderId: string, reason: string) {

@@ -18,7 +18,7 @@ const RAW_TAGS = [
   'salary',
   'audit',
   'esg',
-  'ocr',
+  'journal',
   'tax',
   'financial_report',
   'analysis',

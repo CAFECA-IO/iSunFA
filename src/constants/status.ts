@@ -1,7 +1,10 @@
 export const ORDER_STATUS = {
   PENDING: 'PENDING',
+  PAID: 'PAID',
   COMPLETED: 'COMPLETED',
   FAILED: 'FAILED',
+  PAYMENT_FAILED: 'PAYMENT_FAILED',
+  MINT_FAILED: 'MINT_FAILED',
 } as const;
 
 export const MISSION_STATUS = {
@@ -18,4 +21,24 @@ export const TASK_STATUS = {
   COMPLETED: 'COMPLETED',
   FAILED: 'FAILED',
   SKIPPED: 'SKIPPED',
+} as const;
+
+export const PAYMENT_TRANSACTION_STATUS = {
+  PENDING: 'PENDING',
+  SUCCESS: 'SUCCESS',
+  FAILED: 'FAILED',
+} as const;
+
+export const PAYMENT_STATUS = {
+  SUCCESS: 'SUCCESS',
+  FAILED: 'FAILED',
+} as const;
+
+export const ORDER_TYPE = {
+  OEN_BINDING: 'OEN_BINDING',
+  OEN_PAYMENT: 'OEN_PAYMENT',
+} as const;
+
+export const PAYMENT_PROVIDER = {
+  OEN_CALLBACK: 'OEN_CALLBACK',
 } as const;

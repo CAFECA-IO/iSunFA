@@ -15,6 +15,7 @@ import { Check, Minus, Plus, Lock, Loader2 } from "lucide-react";
 import ConfirmModal from "@/components/common/confirm_modal";
 import AuthModal from "@/components/auth/auth_modal";
 import PaymentModal from "@/components/pricing/payment_modal";
+import { PaymentStep } from "@/interfaces/payment";
 
 export default function PricingPage() {
   const { t, language } = useTranslation();
@@ -44,8 +45,8 @@ export default function PricingPage() {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [modalInitialStep, setModalInitialStep] = useState<
-    "confirm" | "processing" | "success" | "error"
-  >("confirm");
+    PaymentStep
+  >(PaymentStep.confirm);
   const [pendingAmount, setPendingAmount] = useState(0);
   const [pendingCredits, setPendingCredits] = useState(0);
   const [pendingBaseCredits, setPendingBaseCredits] = useState(0);
@@ -140,13 +141,13 @@ export default function PricingPage() {
       setPendingBonusCredits(estimatedBonus);
 
       // Info: (20260302 - Tzuhan) [流程 5-3: 開啟處理中彈窗] 確認收到應援科技回傳後，重置瀏覽器 URL 並開啟付款處理中彈窗，並傳入 orderId 給 modal 進行輪詢
-      setModalInitialStep("processing");
+      setModalInitialStep(PaymentStep.processing);
       setPaymentModalOpen(true);
 
       router.replace(pathname, { scroll: false });
     } else if (paymentFailure === "true") {
       // Info: (20260302 - Tzuhan) [流程 5-4: 處理失敗跳轉] 如果付款失敗，開啟付款失敗的彈窗
-      setModalInitialStep("error");
+      setModalInitialStep(PaymentStep.error);
       setPaymentModalOpen(true);
 
       router.replace(pathname, { scroll: false });
@@ -632,7 +633,7 @@ export default function PricingPage() {
 
                           // Info: (20260302 - Tzuhan) 移除直接在此處檢查 isVerified 的邏輯，改由 PaymentModal 進行。
                           // Info: (20260302 - Tzuhan) [流程 1-4: 開啟付款彈窗] 使用者點擊後直接開啟 PaymentModal，讓使用者先看到明細與條款
-                          setModalInitialStep("confirm");
+                          setModalInitialStep(PaymentStep.confirm);
                           setPaymentModalOpen(true);
                         }}
                         className={`mt-8 block w-full rounded-md px-3 py-2 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 flex items-center justify-center gap-2 ${popular

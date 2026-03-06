@@ -19,18 +19,6 @@ interface IUser {
   isVerified?: boolean;
   pubKeyX?: string;
   pubKeyY?: string;
-  hasSavedPaymentMethod?: boolean;
-  paymentMethods?: {
-    id: string;
-    provider: string;
-    data?: {
-      card4No?: string;
-      cardBrand?: string;
-      issuer?: string;
-    };
-    isDefault: boolean;
-    createdAt: string;
-  }[];
 }
 
 interface IAuthContextType {
@@ -85,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (e) {
           console.warn("Deprecate: (20260310 - Tzuhan) ", 'Failed to fetch user balance:', e);
         }
+
         setUser(userData);
       } else {
         setUser(null);

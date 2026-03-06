@@ -13,12 +13,23 @@ import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
 import LegalModal from "@/components/common/legal_modal";
-import { IPaymentModalProps, IOenCheckoutResponse, IOrderStatusResponse } from "@/interfaces/payment";
+import { fido2ClientService } from '@/lib/auth/fido2_client';
+import { encodeWebAuthnSignature } from '@/lib/auth/crypto_utils';
+import { IPaymentModalProps, IOenCheckoutResponse, IOrderStatusResponse, PaymentStep, IOenCallbackData } from "@/interfaces/payment";
+import { ORDER_STATUS } from "@/constants/status";
+import { IJSONObject } from "@/validators/common";
 
-const parseCardInfo = (data: unknown) => {
-  const pmData = data as Record<string, unknown> | undefined;
-  const brand = pmData?.cardBrand || pmData?.issuer ? String(pmData.cardBrand || pmData.issuer) : "信用卡";
-  const last4 = pmData?.card4no ? String(pmData.card4no) : "****";
+interface IPaymentMethod {
+  id: string;
+  provider: string;
+  data?: IJSONObject;
+  isDefault: boolean;
+  createdAt: string;
+}
+
+const parseCardInfo = (data: IOenCallbackData) => {
+  const brand = "信用卡";
+  const last4 = data?.paymentInfo ? String(data.paymentInfo) : "****";
   return { brand, last4 };
 };
 
@@ -41,8 +52,8 @@ export default function PaymentModal({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [step, setStep] = useState<"confirm" | "processing" | "success" | "error">(
-    initialStep || "confirm",
+  const [step, setStep] = useState<PaymentStep>(
+    initialStep || PaymentStep.confirm,
   );
   const [originalCredits, setOriginalCredits] = useState<number | null>(null);
   const [txHash, setTxHash] = useState<string | null>(transactionHash || null);
@@ -54,23 +65,50 @@ export default function PaymentModal({
     "terms_of_service" | "privacy_policy" | "refund_policy" | null
   >(null);
 
+  const [paymentMethods, setPaymentMethods] = useState<IPaymentMethod[]>([]);
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
+
   const wasOpen = useRef(isOpen);
 
   useEffect(() => {
     if (isOpen && !wasOpen.current) {
-      setStep(initialStep || "confirm");
+      setStep(initialStep || PaymentStep.confirm);
       setError(null);
       setLoading(false);
       setTxHash(transactionHash || null);
 
-      if (initialStep !== "success") {
+      if (initialStep !== PaymentStep.success) {
         setOriginalCredits(null);
       }
 
-      console.log("Deprecate: (20260310 - Tzuhan) ", "[PaymentModal] Initializing with user paymentMethods:", user?.paymentMethods);
-
       setAgreedToTerms(false);
-      setSelectedPaymentMethodId(user?.paymentMethods?.[0]?.id || "new");
+      setSelectedPaymentMethodId("new");
+
+      const fetchPaymentMethods = async () => {
+        try {
+          setLoadingPaymentMethods(true);
+          const pmResponse = await request<{ payload: { paymentMethods: IPaymentMethod[] } }>('/api/v1/user/payment_method', {
+            method: 'GET',
+          });
+          if (pmResponse && pmResponse.payload && pmResponse.payload.paymentMethods) {
+            setPaymentMethods(pmResponse.payload.paymentMethods);
+            if (pmResponse.payload.paymentMethods.length > 0) {
+              setSelectedPaymentMethodId(pmResponse.payload.paymentMethods[0].id);
+            }
+          } else {
+            setPaymentMethods([]);
+          }
+        } catch (err) {
+          console.warn("Failed to fetch payment methods:", err);
+          setPaymentMethods([]);
+        } finally {
+          setLoadingPaymentMethods(false);
+        }
+      };
+
+      if (user) {
+        fetchPaymentMethods();
+      }
     }
     wasOpen.current = isOpen;
   }, [initialStep, isOpen, transactionHash, user]);
@@ -107,30 +145,27 @@ export default function PaymentModal({
           `/api/v1/user/order/${orderId}`
         );
 
+        console.log(`[PaymentModal] pollOrderStatus: ${orderId}, IOrderStatusResponse res:`, res);
+
         // Info: (20260303 - Tzuhan) 防禦：如果等待 API 期間使用者關閉了彈窗（元件卸載），不應繼續更新 State
         if (!mounted) return;
 
         if (res?.payload) {
-          const { status, transactionHash: tHash, errorMessage, data } = res.payload;
+          const { status, transactionHash: tHash, errorMessage } = res.payload;
 
-          if (status === "COMPLETED") {
+          if (status === ORDER_STATUS.COMPLETED) {
             // Info: (20260302 - Tzuhan) [流程 5-6a: 訂單完成]
             await refreshAuth();
             if (tHash) setTxHash(tHash);
 
-            // Info: (20260303 - Tzuhan) Extract `previousCredits` from order metadata as original credits.
-            if (data?.previousCredits !== undefined) {
-              setOriginalCredits(data.previousCredits);
-            }
-
-            setStep("success");
+            setStep(PaymentStep.success);
             if (tHash) onSuccess(tHash);
             return; // Info: (20260303 - Tzuhan) 成功即終止，不再呼叫 setTimeout
 
-          } else if (status === "FAILED" || status === "MINT_FAILED") {
+          } else if (status === ORDER_STATUS.FAILED || status === ORDER_STATUS.PAYMENT_FAILED || status === ORDER_STATUS.MINT_FAILED) {
             // Info: (20260302 - Tzuhan) [流程 5-6b: 訂單失敗]
             setError(errorMessage || t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。");
-            setStep("error");
+            setStep(PaymentStep.error);
             return; // Info: (20260303 - Tzuhan) 失敗即終止，不再呼叫 setTimeout
           }
         }
@@ -164,6 +199,33 @@ export default function PaymentModal({
     };
   }, [t, step, orderId, refreshAuth, onSuccess]);
 
+  const handleBindNewCard = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await request<{
+        message?: string;
+        payload?: IOenCheckoutResponse;
+      }>("/api/v1/user/payment_method", {
+        method: "POST",
+      });
+      console.log(`[PaymentModal] handleBindNewCard response:`, response)
+      if (response.payload?.requireBinding && response.payload.redirectUrl) {
+        window.location.href = response.payload.redirectUrl;
+        onClose();
+        return;
+      } else {
+        throw new Error(response.message || "Binding failed");
+      }
+    } catch (err) {
+      console.error("Binding failed:", err);
+      setError(t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。");
+      setStep(PaymentStep.error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Info: (20260303 - Tzuhan) [流程 2-1: 確認付款] 使用者在付款彈窗中勾選同意條款並點擊確認付款
@@ -188,20 +250,59 @@ export default function PaymentModal({
         setIsInitializingKyc(false);
       }
 
-      // Info: (20260302 - Tzuhan) [流程 2-2: 呼叫後端結帳 API] 若本身已有 KYC (或上方剛建立完畢)，直接發送請求至後端建立訂單
-      // Info: (20260302 - Tzuhan) 取得應援科技(OEN)結帳頁面 URL 或是直接扣款結果
+      // Info: (20260305 - Tzuhan) 如果是新卡，應在選擇時就跳轉，這裡為防呆保護
+      if (selectedPaymentMethodId === "new") {
+        await handleBindNewCard();
+        return;
+      }
+
+      // Info: (20260306 - Tzuhan) 1. Request Payment Order to get challenge
+      const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'PAYMENT',
+          amount,
+          credits,
+          paymentMethodId: selectedPaymentMethodId,
+        })
+      });
+
+      if (!orderRes?.payload) throw new Error('Failed to create payment order');
+      const { orderId, challenge } = orderRes.payload;
+
+      // Info: (20260306 - Tzuhan) 2. FIDO Signature
+      if (!user?.pubKeyX || !user?.pubKeyY) {
+        throw new Error("Missing public keys. Please re-login.");
+      }
+
+      const transferAuth = await fido2ClientService.startLogin({
+        challenge: challenge,
+        timeout: 60000,
+        userVerification: 'required',
+        allowCredentials: [],
+      });
+
+      const encodedSignature = encodeWebAuthnSignature(
+        transferAuth,
+        BigInt(user.pubKeyX),
+        BigInt(user.pubKeyY)
+      );
+
+      // Info: (20260306 - Tzuhan) 3. Submit Checkout
       const response = await request<{
         message?: string;
         payload?: IOenCheckoutResponse;
-      }>("/api/v1/payment/oen/checkout", {
+      }>(`/api/v1/user/payment_method/${selectedPaymentMethodId}/checkout`, {
         method: "POST",
         body: JSON.stringify({
-          amount,
-          credits,
-          previousCredits: originalCredits,
-          paymentMethodId: selectedPaymentMethodId !== "new" ? selectedPaymentMethodId : null,
+          orderId,
+          authentication: {
+            ...transferAuth,
+            signature: encodedSignature
+          }
         }),
       });
+      console.log(`[PaymentModal] handleBindNewCard response:`, response)
 
       if (
         !response.payload?.requireBinding &&
@@ -210,13 +311,8 @@ export default function PaymentModal({
         // Info: (20260303 - Tzuhan) [流程 2-3b: 直接扣款成功] 若選擇使用已綁定的卡片，後端會直接發動扣款並鑄造代幣。前端取得成功的 txHash 後更新畫面為「付款成功」
         await refreshAuth();
         setTxHash(response.payload.txHash);
-        setStep("success");
+        setStep(PaymentStep.success);
         onSuccess(response.payload.txHash);
-      } else if (response.payload?.requireBinding && response.payload.redirectUrl) {
-        // Info: (20260303 - Tzuhan) [流程 2-3a: 需要導向應援科技金流] 若使用者選擇綁定新卡或尚未綁卡，後端會回傳 OEN 的結帳頁面 URL，前端將畫面導向該位址進行刷卡
-        window.location.href = response.payload.redirectUrl;
-        onClose();
-        return;
       } else {
         throw new Error(response.message || "Payment failed");
       }
@@ -231,7 +327,7 @@ export default function PaymentModal({
       } else {
         setError(t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。");
       }
-      setStep("error");
+      setStep(PaymentStep.error);
     } finally {
       setIsInitializingKyc(false);
       setLoading(false);
@@ -347,12 +443,13 @@ export default function PaymentModal({
 
                               {user && (
                                 <div className="mt-6 space-y-3">
-                                  <h4 className="text-sm font-semibold text-gray-900">
+                                  <h4 className="text-sm font-semibold text-gray-900 flex items-center">
                                     {t("pricing.credits.payment_modal.payment_method") || "付款方式"}
+                                    {loadingPaymentMethods && <Loader2 className="ml-2 h-4 w-4 animate-spin text-gray-400" />}
                                   </h4>
                                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                    {(user.paymentMethods || []).map((pm) => {
-                                      const { brand, last4 } = parseCardInfo(pm.data);
+                                    {paymentMethods.map((pm) => {
+                                      const { brand, last4 } = parseCardInfo(pm.data as IOenCallbackData);
                                       const isSelected = selectedPaymentMethodId === pm.id;
 
                                       return (
@@ -395,36 +492,25 @@ export default function PaymentModal({
                                       );
                                     })}
 
-                                    <label
-                                      htmlFor="pm-new"
-                                      className={`relative flex cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all duration-200 ${selectedPaymentMethodId === "new"
-                                        ? "border-orange-500 bg-orange-50 ring-1 ring-orange-500"
-                                        : "border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/30"
-                                        }`}
+                                    <button
+                                      type="button"
+                                      onClick={handleBindNewCard}
+                                      aria-label={t("pricing.credits.payment_modal.bind_new_card") || "綁定新信用卡"}
+                                      className="relative flex w-full cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all duration-200 border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/30 text-left"
                                     >
-                                      <input
-                                        id="pm-new"
-                                        type="radio"
-                                        name="paymentMethod"
-                                        value="new"
-                                        checked={selectedPaymentMethodId === "new"}
-                                        onChange={() => setSelectedPaymentMethodId("new")}
-                                        className="sr-only"
-                                        aria-label={t("pricing.credits.payment_modal.bind_new_card") || "綁定新信用卡"}
-                                      />
                                       <div className="flex w-full items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                          <div className={`flex h-8 w-8 items-center justify-center rounded-full border border-dashed ${selectedPaymentMethodId === "new" ? "border-orange-400 bg-orange-100/50" : "border-gray-300 bg-gray-50"}`}>
-                                            <svg className={`h-4 w-4 ${selectedPaymentMethodId === "new" ? "text-orange-600" : "text-gray-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-gray-300 bg-gray-50">
+                                            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                             </svg>
                                           </div>
-                                          <span className={`text-sm font-semibold ${selectedPaymentMethodId === "new" ? "text-orange-900" : "text-gray-900"}`}>
+                                          <span className="text-sm font-semibold text-gray-900">
                                             {t("pricing.credits.payment_modal.bind_new_card") || "綁定新信用卡"}
                                           </span>
                                         </div>
                                       </div>
-                                    </label>
+                                    </button>
                                   </div>
                                 </div>
                               )}
@@ -484,7 +570,7 @@ export default function PaymentModal({
                                 <div className="mt-6 sm:flex sm:flex-row-reverse">
                                   <button
                                     type="submit"
-                                    disabled={loading || !agreedToTerms}
+                                    disabled={loading || !agreedToTerms || paymentMethods.length <= 0}
                                     className="inline-flex w-full justify-center rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:from-orange-500 hover:to-orange-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto items-center gap-2"
                                   >
                                     {loading && (
@@ -666,7 +752,7 @@ export default function PaymentModal({
                                 <button
                                   type="button"
                                   className="mt-3 inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto sm:mt-0"
-                                  onClick={() => setStep("confirm")}
+                                  onClick={() => setStep(PaymentStep.confirm)}
                                 >
                                   {t("pricing.credits.payment_modal.retry_btn") ||
                                     "返回重試"}

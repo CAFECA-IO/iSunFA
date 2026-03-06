@@ -42,6 +42,7 @@ model User {
   paymentTransactions PaymentTransaction[]
   journals            Journal[]
   teamMembers         TeamMember[]
+  auditLogs           AuditLog[]
 
   @@index([address])
   @@map("user")
@@ -87,6 +88,7 @@ model Order {
 
   analysis            Analysis[]
   paymentTransactions PaymentTransaction[]
+  receipt             Receipt?
 
   @@map("order")
 }
@@ -306,6 +308,18 @@ model PaymentTransaction {
   @@map("payment_transaction")
 }
 
+model Receipt {
+  id        String   @id @default(uuid())
+  orderId   String   @unique @map("order_id")
+  order     Order    @relation(fields: [orderId], references: [id])
+  amount    Int
+  data      Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("receipt")
+}
+
 // Info: (20260304 - Julian) 憑證/日記帳
 model Journal {
   id        String   @id @default(uuid())
@@ -343,5 +357,44 @@ model AccountBook {
   // Info: (20260305 - Julian) 一個帳本可以有多個憑證
   journals Journal[]
 
+  // Info: (20260306 - Julian) 一個帳本可以有多個編輯紀錄
+  auditLogs AuditLog[]
+
   @@map("account_book")
+}
+
+// Info: (20260306 - Julian) 資料編輯 log
+enum AuditLogDataType {
+  JOURNAL
+  VOUCHER
+  CARBON
+}
+
+enum AuditLogAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Info: (20260306 - Julian) 編輯的資料類型
+  dataType AuditLogDataType @map("data_type") // Info: (20260306 - Julian) journal / voucher / carbon
+  // Info: (20260306 - Julian) 編輯的資料
+  dataId   String           @map("data_id") // Info: (20260306 - Julian) journalId / voucherId / carbonId
+
+  // Info: (20260306 - Julian) 編輯資料所屬的帳本
+  accountbookId String      @map("accountbook_id")
+  accountbook   Accountbook @relation(fields: [accountbookId], references: [id])
+
+  // Info: (20260306 - Julian) 編輯的動作
+  action AuditLogAction @map("action") // Info: (20260306 - Julian) 建立 / 更新 / 刪除
+
+  // Info: (20260306 - Julian) 編輯者的使用者
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("audit_log")
 }

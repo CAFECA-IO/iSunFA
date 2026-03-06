@@ -3,6 +3,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
+import { ORDER_STATUS } from "@/constants/status";
 
 export async function GET(
     request: NextRequest,
@@ -43,7 +44,7 @@ export async function GET(
 
         // Info: (20260302 - Tzuhan) [流程 4-3: 判斷失敗狀態並附帶錯誤] 如果狀態是失敗，嘗試從其 data 欄位把詳細的 Error 摘要帶回前端
         let errorMessage = null;
-        if (order.status === "FAILED" || order.status === "MINT_FAILED") {
+        if (order.status === ORDER_STATUS.FAILED || order.status === ORDER_STATUS.MINT_FAILED || order.status === ORDER_STATUS.PAYMENT_FAILED) {
             errorMessage = (order.data as { error?: string })?.error || "Payment processing failed";
         }
 

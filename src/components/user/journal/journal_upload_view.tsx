@@ -146,7 +146,7 @@ export default function JournalUploadView({
 
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
-        className={`flex h-[calc(100vh-250px)] flex-col items-center justify-center rounded-2xl border-2 p-[100px] transition-colors ${
+        className={`flex h-full flex-col items-center justify-center rounded-2xl border-2 p-20 transition-colors lg:h-[calc(100vh-250px)] lg:p-[100px] ${
           uploadedFile
             ? "border-transparent bg-white shadow-[0_0_15px_rgba(0,0,0,0.05)]"
             : isDragging
