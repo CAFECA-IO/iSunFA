@@ -472,7 +472,7 @@ export const ja = {
       salary: "給与管理",
       audit: "スマート監査",
       esg: "温室効果ガス算定",
-      ocr: "AI OCR",
+      journal: "請求書管理",
       tax: "税務申告",
       financial_report: "財務諸表",
       analysis: "財務分析",

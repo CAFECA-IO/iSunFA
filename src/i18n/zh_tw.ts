@@ -476,7 +476,7 @@ export const zhTw = {
       salary: "薪資管理",
       audit: "智能稽核",
       esg: "碳排核算",
-      ocr: "憑證管理",
+      journal: "憑證管理",
       tax: "稅務申報",
       financial_report: "會計報表",
       analysis: "財務分析",

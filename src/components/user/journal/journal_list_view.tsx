@@ -13,9 +13,9 @@ import {
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { IJournal } from "@/interfaces/journal";
-import JournalListLayout from "@/components/user/ocr/journal_list_layout";
-import JournalGridLayout from "@/components/user/ocr/journal_grid_layout";
-import JournalDetailModal from "@/components/user/ocr/journal_detail_modal";
+import JournalListLayout from "@/components/user/journal/journal_list_layout";
+import JournalGridLayout from "@/components/user/journal/journal_grid_layout";
+import JournalDetailModal from "@/components/user/journal/journal_detail_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { ApiCode } from "@/lib/utils/status";
 

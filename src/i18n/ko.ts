@@ -463,7 +463,7 @@ export const ko = {
       salary: "급여 관리",
       audit: "스마트 감사",
       esg: "온실가스 산정",
-      ocr: "AI OCR",
+      journal: "청구서 관리",
       tax: "세금 신고",
       financial_report: "재무 보고서",
       analysis: "재무 분석",

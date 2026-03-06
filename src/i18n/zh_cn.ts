@@ -466,7 +466,7 @@ export const zhCn = {
       salary: "薪资管理",
       audit: "智能稽核",
       esg: "碳排核算",
-      ocr: "凭证管理",
+      journal: "凭证管理",
       tax: "税务申报",
       financial_report: "会计报表",
       analysis: "财务分析",

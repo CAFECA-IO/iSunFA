@@ -471,7 +471,7 @@ export const en = {
       salary: "Payroll Management",
       audit: "Smart Audit",
       esg: "GHG Accounting",
-      ocr: "Smart Receipt Recognition",
+      journal: "Invoice Management",
       tax: "Tax Filing",
       financial_report: "Financial Reports",
       analysis: "Financial Analysis",

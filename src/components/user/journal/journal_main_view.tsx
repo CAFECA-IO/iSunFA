@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import JournalUploadView from "@/components/user/ocr/journal_upload_view";
-import JournalListView from "@/components/user/ocr/journal_list_view";
+import JournalUploadView from "@/components/user/journal/journal_upload_view";
+import JournalListView from "@/components/user/journal/journal_list_view";
 
-export default function OcrView() {
+export default function JournalMainView() {
   const [activeTab, setActiveTab] = useState<"upload" | "list">("upload");
 
   // ToDo: (20260306 - Julian) 補上取得帳簿的邏輯
