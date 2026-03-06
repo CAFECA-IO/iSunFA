@@ -64,9 +64,10 @@ export async function buildTransferUserOp(
     /** Info: (20260130 - Tzuhan) 
      * 4. Gas Estimation (Simplified)
      * In a real bundler, we might use eth_estimateUserOperationGas
-     * Here we use safe defaults for a token transfer
+     * Here we use safe defaults for a token transfer.
+     * Bumped from 200_000 to 500_000 to support complex ERC-3643 Token transfer logic.
     */
-    const callGasLimit = BigInt(200_000); // Info: (20260130 - Tzuhan) Token transfer + overhead
+    const callGasLimit = BigInt(500_000); // Info: (20260304 - Tzuhan) Token transfer + ERC-3643 compliance overhead
     const verificationGasLimit = BigInt(1_000_000); // Info: (20260130 - Tzuhan) Signature verification (P-256 is heavy, bumping significantly)
     const preVerificationGas = BigInt(300_000); // Info: (20260130 - Tzuhan) Bumped for safety with large signatures
     const maxFeePerGas = BigInt(0);

@@ -12,8 +12,8 @@ const EmployeeListPageBody: React.FC = () => {
       <CalculatorHeader />
 
       {/* Info: (20250715 - Julian) Main Content */}
-      <div className="flex flex-col items-stretch gap-56px px-240px py-56px">
-        <h1 className="text-center text-32px font-bold text-text-brand-primary-lv1">
+      <div className="gap-56px px-240px py-56px flex flex-col items-stretch">
+        <h1 className="text-32px text-text-brand-primary-lv1 text-center font-bold">
           {t("calculator.employee_list.main_title")}
         </h1>
 

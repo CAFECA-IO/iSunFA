@@ -29,12 +29,12 @@ const HourCounter: React.FC<IHourCounterProps> = ({
   return (
     <div className="flex flex-col gap-2">
       <p className="text-sm font-semibold text-gray-700">{title}</p>
-      <div className="flex w-full items-center overflow-hidden rounded-lg bg-white ring-1 ring-gray-300 transition-all ">
+      <div className="flex w-full items-center overflow-hidden rounded-lg bg-white ring-1 ring-gray-300 transition-all">
         <button
           type="button"
           disabled={minusDisabled}
           onClick={minusClickHandler}
-          className="flex h-12 items-center justify-center bg-gray-100 px-4 transition-colors enabled:hover:bg-orange-100 enabled:hover:text-orange-500 disabled:opacity-30 enabled:active:bg-orange-200 disabled:hover:bg-gray-50 text-gray-400"
+          className="flex h-12 items-center justify-center bg-gray-100 px-4 text-gray-400 transition-colors enabled:hover:bg-orange-100 enabled:hover:text-orange-500 enabled:active:bg-orange-200 disabled:opacity-30 disabled:hover:bg-gray-50"
         >
           <Minus size={20} />
         </button>
@@ -49,7 +49,7 @@ const HourCounter: React.FC<IHourCounterProps> = ({
           type="button"
           disabled={plusDisabled}
           onClick={plusClickHandler}
-          className="flex h-12 items-center justify-center bg-gray-100 px-4 transition-colors enabled:hover:bg-orange-100 enabled:hover:text-orange-500 disabled:opacity-30 enabled:active:bg-orange-200 disabled:hover:bg-gray-50 text-gray-400"
+          className="flex h-12 items-center justify-center bg-gray-100 px-4 text-gray-400 transition-colors enabled:hover:bg-orange-100 enabled:hover:text-orange-500 enabled:active:bg-orange-200 disabled:opacity-30 disabled:hover:bg-gray-50"
         >
           <Plus size={20} />
         </button>

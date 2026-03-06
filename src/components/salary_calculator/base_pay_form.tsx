@@ -51,7 +51,7 @@ const BasePayForm: React.FC = () => {
           value={otherAllowanceWithoutTax}
           setValue={setOtherAllowanceWithoutTax}
         />
-        <p className="text-xs font-medium text-gray-500 pl-1">
+        <p className="pl-1 text-xs font-medium text-gray-500">
           {t("calculator.base_pay_form.additional_information")}
         </p>
       </div>

@@ -37,7 +37,9 @@ export default function HistorySection() {
     async function fetchHistory() {
       try {
         setLoading(true);
-        const result = await request<{ code: string; message: string; payload: IHistoryItem[] }>('/api/v1/user/analysis');
+        const result = await request<{ code: string; message: string; payload: IHistoryItem[] }>('/api/v1/user/analysis', {
+          cache: 'no-store'
+        });
 
         if (result.code === 'SUCCESS') {
           setHistory(result.payload);
@@ -98,6 +100,7 @@ export default function HistorySection() {
     switch (s) {
       case 'processing':
       case 'pending':
+      case 'uploading':
       case 'doing':
         return (
           <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">

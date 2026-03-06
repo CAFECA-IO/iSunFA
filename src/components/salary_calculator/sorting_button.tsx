@@ -36,7 +36,7 @@ const SortingButton: React.FC<{
     <button
       type="button"
       onClick={clickHandler}
-      className={`flex items-center gap-8px ${className}`}
+      className={`gap-8px flex items-center ${className}`}
     >
       <p
         className={

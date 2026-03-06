@@ -45,7 +45,7 @@ const OthersForm: React.FC = () => {
             aria-label={`${i * 100}%`}
             checked={isChecked}
             onChange={changeVpc}
-            className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-gray-300 bg-white transition-all checked:border-orange-400 outline-none"
+            className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-gray-300 bg-white transition-all outline-none checked:border-orange-400"
           />
           <div className="absolute h-2.5 w-2.5 scale-0 rounded-full bg-orange-400 transition-transform peer-checked:scale-100" />
         </div>
@@ -58,11 +58,11 @@ const OthersForm: React.FC = () => {
     <form className="flex flex-col gap-8">
       {/* Info: (20250806 - Julian) 勞保投保狀態 */}
       <div className="flex flex-col gap-3">
-        <p className="text-sm font-bold text-gray-900 flex items-center gap-2">
+        <p className="flex items-center gap-2 text-sm font-bold text-gray-900">
           <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
           {t("calculator.others_form.labor_coverage_status")}
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {/* Info: (20250806 - Julian) 勞保是否勾選 */}
           <ToggleSwitch
             isOn={isLaborInsurance}
@@ -105,7 +105,7 @@ const OthersForm: React.FC = () => {
       />
       {/* Info: (20250710 - Julian) 自提勞退 */}
       <div className="flex flex-col gap-4">
-        <p className="text-sm font-bold text-gray-900 flex items-center gap-2">
+        <p className="flex items-center gap-2 text-sm font-bold text-gray-900">
           <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
           {t("calculator.others_form.voluntary_pension_contribution")}
         </p>

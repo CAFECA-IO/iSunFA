@@ -1,3 +1,5 @@
+import { AI_CONSULTATION_ROOM_PROMPT } from '@/constants/prompts/ai_consultation_room';
+import { JOURNAL_PROMPT } from '@/constants/prompts/journal';
 import { GoogleGenerativeAI, Part } from '@google/generative-ai';
 
 export class ChatService {
@@ -138,21 +140,7 @@ export class ChatService {
     message: string,
     images: { data: string; mimeType: string }[] = [],
   ): Promise<{ answer: string; tags: string[] }> {
-    const prompt = `
-      你是一位專業的會計師。請針對以下問題提供詳細、專業且親切的回答（使用台灣繁體中文）。
-      同時，請根據問題內容建議 1-3 個相關的會計標籤（例如：稅法, 記帳, 財務報表, 創業, 勞健保, 營業稅, 所得稅）。
-
-      使用者問題： "${message}"
-
-      輸出要求：
-      請僅輸出包含以下欄位的 JSON 格式，不要包含任何開場白或導言：
-      {
-        "answer": "你的回答內容（支援 Markdown 格式）",
-        "tags": ["標籤1", "標籤2"]
-      }
-
-      請確保輸出是合法的 JSON 格式。
-    `;
+    const prompt = AI_CONSULTATION_ROOM_PROMPT.replace('{{message}}', message);
 
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
@@ -187,6 +175,42 @@ export class ChatService {
     } catch (error) {
       console.error("[ChatService] Error in askAccountTalk:", error);
       return { answer: "AI 暫時無法回答，請稍後再試。", tags: ["錯誤"] };
+    }
+  }
+
+  /**
+   * Info: (20260304 - Julian) 將憑證圖片轉換為日記帳
+   */
+  async analyzeJournal(
+    images: { data: string; mimeType: string }[] = [],
+  ): Promise<{ text: string }> {
+    try {
+      const model = this.genAI.getGenerativeModel({ model: this.modelName });
+      const parts: Part[] = [{ text: JOURNAL_PROMPT }];
+
+      if (images && images.length > 0) {
+        images.forEach((img) => {
+          parts.push({
+            inlineData: {
+              data: img.data,
+              mimeType: img.mimeType,
+            },
+          });
+        });
+      }
+
+      const result = await model.generateContent(parts);
+      const response = await result.response;
+      const text = response.text().trim();
+
+      if (text.includes("上傳內容無法解析狀態")) {
+        return { text: "上傳內容無法解析，請重新上傳或手動調整" };
+      }
+
+      return { text };
+    } catch (error) {
+      console.error("[ChatService] Error in analyzeJournal:", error);
+      return { text: "AI 暫時無法解析，請稍後再試或手動調整" };
     }
   }
 }

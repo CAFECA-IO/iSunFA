@@ -358,3 +358,18 @@ export const downloadFromMetadata = async (metadata: ILariaMetadata, callbacks: 
     }
   }
 };
+
+/**
+ * Info: (20260304 - Julian) 將 File 轉換為 Base64，以供 AI 處理 (不含 data:image/jpeg;base64,)
+ */
+export const fileToBase64 = (f: File | Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(f);
+    reader.onload = () => {
+      let encoded = reader.result?.toString() || "";
+      encoded = encoded.replace(/^data:(.*,)?/, "");
+      resolve(encoded);
+    };
+    reader.onerror = (error) => reject(error);
+  });

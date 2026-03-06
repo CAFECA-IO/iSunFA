@@ -78,7 +78,7 @@ export const CommentPostInput = ({
     <button
       onClick={handleSubmit}
       disabled={!value.trim() || isSubmitting}
-      className="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 enabled:hover:bg-orange-500 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-md shadow-orange-200"
+      className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 font-bold text-white shadow-md shadow-orange-200 transition-all active:scale-95 enabled:hover:bg-orange-500 disabled:opacity-50 disabled:active:scale-100"
     >
       {isSubmitting ? (
         <Loader2 size={16} className="animate-spin" />
@@ -93,10 +93,10 @@ export const CommentPostInput = ({
 
   return (
     <div
-      className={`transition-all duration-300 overflow-hidden ${isShowInput ? "max-h-60 opacity-100 mb-6" : "max-h-0 opacity-0 mb-0"}`}
+      className={`overflow-hidden transition-all duration-300 ${isShowInput ? "mb-6 max-h-60 opacity-100" : "mb-0 max-h-0 opacity-0"}`}
     >
-      <div className="flex gap-4 p-6 rounded-4xl bg-orange-50/50 border border-orange-100 shadow-inner">
-        <div className="w-12 h-12 bg-white rounded-2xl shrink-0 flex items-center justify-center text-orange-200 border border-orange-50 shadow-sm">
+      <div className="flex gap-4 rounded-4xl border border-orange-100 bg-orange-50/50 p-6 shadow-inner">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-orange-50 bg-white text-orange-200 shadow-sm">
           <User size={24} />
         </div>
         <div className="flex-1 space-y-3">
@@ -107,7 +107,7 @@ export const CommentPostInput = ({
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t("ai_consultation_room.comment_placeholder")}
-            className="w-full bg-white border border-orange-100 rounded-2xl p-4 text-sm focus:outline-none focus:border-orange-500 transition-all placeholder:text-gray-300 min-h-[100px] resize-none shadow-sm"
+            className="min-h-[100px] w-full resize-none rounded-2xl border border-orange-100 bg-white p-4 text-sm shadow-sm transition-all placeholder:text-gray-300 focus:border-orange-500 focus:outline-none"
           />
           <div className="flex justify-end">{displayedSubmit}</div>
         </div>

@@ -34,25 +34,25 @@ const SentItem: React.FC<{
       onKeyDown={keyDownHandler}
       role="button"
       tabIndex={0}
-      className="table-row h-50px hover:cursor-pointer hover:bg-surface-brand-primary-30"
+      className="h-50px hover:bg-surface-brand-primary-30 table-row hover:cursor-pointer"
     >
       {/* Info: (20250723 - Julian) Pay Period */}
       <div className={cellStyle}>
-        <div className="flex items-center gap-8px">
+        <div className="gap-8px flex items-center">
           <Calendar size={16} className="text-text-neutral-tertiary" />
           <p>{periodStr}</p>
         </div>
       </div>
       {/* Info: (20250723 - Julian) From */}
       <div className={cellStyle}>
-        <div className="flex items-center gap-8px">
+        <div className="gap-8px flex items-center">
           <User size={16} className="text-text-neutral-tertiary" />
           <p>{toEmail}</p>
         </div>
       </div>
       {/* Info: (20250723 - Julian) Net Pay */}
       <div className={cellStyle}>
-        <div className="flex items-center gap-8px">
+        <div className="gap-8px flex items-center">
           <Send size={16} className="text-text-neutral-tertiary" />
           <p>{timestampToString(issuedDate).dateWithSlash}</p>
         </div>
@@ -105,7 +105,7 @@ const SentTab: React.FC<{
 
   return (
     <>
-      <div className="table w-full text-sm font-medium text-text-neutral-secondary">
+      <div className="text-text-neutral-secondary table w-full text-sm font-medium">
         {/* Info: (20250723 - Julian) Table Header */}
         <div className="table-header-group">
           <div className="table-row">

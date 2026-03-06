@@ -227,23 +227,23 @@ const PaySlip: React.FC<IPaySlipProps> = ({
   return (
     <div
       id="payslip-download"
-      className={`relative flex flex-col gap-6 rounded-2xl bg-white p-6 shadow-xl border border-gray-200 overflow-hidden ${className}`}
+      className={`relative flex flex-col gap-6 overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-xl ${className}`}
     >
-      <div className="absolute top-0 left-0 w-full h-1" />
+      <div className="absolute top-0 left-0 h-1 w-full" />
       {/* Info: (20250708 - Julian) Title */}
       <div className="grid grid-cols-1 gap-3 text-gray-900 lg:grid-cols-2">
         {/* Info: (20250708 - Julian) 姓名和日期 */}
         <div className="flex flex-col items-start gap-2">
-          <p className="text-xs font-medium text-text-brand-primary-lv1 lg:text-base lg:font-semibold">
+          <p className="text-text-brand-primary-lv1 text-xs font-medium lg:text-base lg:font-semibold">
             {formattedDate}
           </p>
-          <div className="flex items-baseline gap-2 text-2xl font-bold text-text-neutral-primary lg:text-[28px]">
+          <div className="text-text-neutral-primary flex items-baseline gap-2 text-2xl font-bold lg:text-[28px]">
             {showingName}
             <span className="block text-xs font-medium lg:hidden">
               {showingNumber}
             </span>
           </div>
-          <p className="hidden text-xs font-medium text-text-neutral-primary lg:block">
+          <p className="text-text-neutral-primary hidden text-xs font-medium lg:block">
             {showingNumber}
           </p>
         </div>
@@ -254,23 +254,23 @@ const PaySlip: React.FC<IPaySlipProps> = ({
         </div> */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase ">
+            <p className="text-xs font-semibold uppercase">
               {t("calculator.result.reported")}
             </p>
-            <div className="text-2xl font-bold text-text-brand-primary-lv2">
+            <div className="text-text-brand-primary-lv2 text-2xl font-bold">
               {numberWithCommas(totalSalaryTaxable)}{" "}
-              <span className="text-base font-semibold text-text-neutral-tertiary">
+              <span className="text-text-neutral-tertiary text-base font-semibold">
                 NTD
               </span>
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase ">
+            <p className="text-xs font-semibold uppercase">
               {t("calculator.result.paid")}
             </p>
-            <div className="text-2xl font-bold text-text-brand-primary-lv2">
+            <div className="text-text-brand-primary-lv2 text-2xl font-bold">
               {numberWithCommas(totalPayment)}{" "}
-              <span className="text-base font-semibold text-text-neutral-tertiary">
+              <span className="text-text-neutral-tertiary text-base font-semibold">
                 NTD
               </span>
             </div>

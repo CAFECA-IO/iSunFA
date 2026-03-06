@@ -51,25 +51,25 @@ const EmployeeItem: React.FC<{
     <div className="table-row">
       {/* Info: (20250715 - Julian) Name */}
       <div className={`${cellStyle}`}>
-        <div className="flex items-center gap-8px">
+        <div className="gap-8px flex items-center">
           <User size={16} className="text-text-neutral-tertiary" /> {name}
         </div>
       </div>
       {/* Info: (20250715 - Julian) Number */}
       <div className={`${cellStyle}`}>
-        <div className="flex items-center gap-8px">
+        <div className="gap-8px flex items-center">
           <Hash size={16} className="text-text-neutral-tertiary" /> {number}
         </div>
       </div>
       {/* Info: (20250715 - Julian) Email */}
       <div className={`${cellStyle}`}>
-        <div className="flex items-center gap-8px">
+        <div className="gap-8px flex items-center">
           <Mail size={16} className="text-text-neutral-tertiary" /> {email}
         </div>
       </div>
       {/* Info: (20250715 - Julian) Action buttons */}
       <div className={`${cellStyle} w-100px`}>
-        <div className="flex items-center gap-8px">
+        <div className="gap-8px flex items-center">
           {/* Info: (20250715 - Julian) Edit button */}
           <button
             type="button"
@@ -138,10 +138,10 @@ const EmployeeList: React.FC = () => {
 
   return (
     <>
-      <div className="flex flex-col items-center gap-24px">
-        <div className="flex w-full items-center gap-40px">
+      <div className="gap-24px flex flex-col items-center">
+        <div className="gap-40px flex w-full items-center">
           {/* Info: (20250715 - Julian) Search bar */}
-          <div className="flex flex-1 items-center rounded-sm border border-input-stroke-input">
+          <div className="border-input-stroke-input flex flex-1 items-center rounded-sm border">
             <div className="px-12px py-10px text-icon-surface-single-color-primary">
               <Search size={16} />
             </div>
@@ -151,7 +151,7 @@ const EmployeeList: React.FC = () => {
               value={keyword}
               onChange={changeKeyword}
               placeholder={t("calculator.employee_list.search_placeholder")}
-              className="flex-1 bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
+              className="px-12px py-10px placeholder:text-input-text-input-placeholder flex-1 bg-transparent outline-none"
             />
           </div>
 
@@ -163,7 +163,7 @@ const EmployeeList: React.FC = () => {
         </div>
 
         {/* Info: (20250715 - Julian) Employee List */}
-        <div className="table w-full bg-surface-neutral-surface-lv2 text-sm font-medium text-text-neutral-secondary">
+        <div className="bg-surface-neutral-surface-lv2 text-text-neutral-secondary table w-full text-sm font-medium">
           <div className="table-header-group">
             <div className="table-row">
               <div className={`${cellStyle}`}>

@@ -50,12 +50,12 @@ const WorkHoursForm: React.FC = () => {
       {/* Info: (20250709 - Julian) 加班時數（免稅） */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center border-b border-gray-100 pb-2">
-          <h2 className="flex-1 text-sm font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="flex flex-1 items-center gap-2 text-sm font-bold text-gray-900">
             <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
             {t("calculator.work_hours_form.overtime_hour_without_tax")}
           </h2>
           <p
-            className={`text-lg font-black font-mono ${totalNonTaxableHours >= 46 ? "text-red-500" : "text-gray-900"}`}
+            className={`font-mono text-lg font-black ${totalNonTaxableHours >= 46 ? "text-red-500" : "text-gray-900"}`}
           >
             {totalNonTaxableHours}{" "}
             <span className="text-xs font-bold text-gray-400">HRS</span>
@@ -108,12 +108,12 @@ const WorkHoursForm: React.FC = () => {
       {/* Info: (20250709 - Julian) 加班時數（應稅） */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center border-b border-gray-100 pb-2">
-          <h2 className="flex-1 text-sm font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="flex flex-1 items-center gap-2 text-sm font-bold text-gray-900">
             <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
             {t("calculator.work_hours_form.overtime_hour_with_tax")}
           </h2>
           <p
-            className={`text-lg font-black font-mono ${totalTaxableHours >= 46 ? "text-red-500" : "text-gray-900"}`}
+            className={`font-mono text-lg font-black ${totalTaxableHours >= 46 ? "text-red-500" : "text-gray-900"}`}
           >
             {totalTaxableHours}{" "}
             <span className="text-xs font-bold text-gray-400">HRS</span>
@@ -166,7 +166,7 @@ const WorkHoursForm: React.FC = () => {
       {/* Info: (20250709 - Julian) 休假時數 */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center border-b border-gray-100 pb-2">
-          <h2 className="flex-1 text-sm font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="flex flex-1 items-center gap-2 text-sm font-bold text-gray-900">
             <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
             {t("calculator.work_hours_form.leave_hour")}
           </h2>

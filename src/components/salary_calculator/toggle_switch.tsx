@@ -15,7 +15,7 @@ const ToggleSwitch: React.FC<IToggleSwitchProps> = ({
     <button
       type="button"
       onClick={handleToggle}
-      className="flex items-center gap-3 group relative hover:cursor-pointer"
+      className="group relative flex items-center gap-3 hover:cursor-pointer"
     >
       {/* Info: (20250806 - Julian) Toggle Switch */}
       <div

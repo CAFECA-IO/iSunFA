@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { IThread, IFile} from "@/interfaces/ai_talk";
+import { IThread, IFile } from "@/interfaces/ai_talk";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { ChatService } from "@/services/chat.service";
@@ -135,11 +135,7 @@ export async function POST(request: NextRequest) {
     const chatService = new ChatService(apiKey);
 
     // Info: (20260213 - Julian) 整理圖片資料發給 AI (直接從 body 取得，不經由 DB)
-    const imagesForAi = files
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .filter((f: any) => f.base64 && f.mimeType)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((f: any) => ({
+    const imagesForAi = files.map((f: IFile) => ({
         data: f.base64,
         mimeType: f.mimeType,
       }));

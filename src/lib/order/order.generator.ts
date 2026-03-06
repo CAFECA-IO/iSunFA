@@ -138,11 +138,14 @@ export class OrderGenerator {
   }
 
   async failOrder(orderId: string, reason: string) {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    const existingData = order?.data ? (order.data as Record<string, unknown>) : {};
+
     await prisma.order.update({
       where: { id: orderId },
       data: {
         status: ORDER_STATUS.FAILED,
-        data: { reason } // Info: (20260128 - Luphia) Basic way to append data? Or just status.
+        data: { ...existingData, failureReason: reason } // Info: (20260304 - Tzuhan) Merge data, don't overwrite
       }
     })
   }

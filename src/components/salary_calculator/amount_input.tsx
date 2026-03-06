@@ -38,7 +38,7 @@ const AmountInput: React.FC<IAmountInputProps> = ({
           hasComma
           required={required}
         />
-        <div className="flex h-full items-center gap-2 bg-gray-50 border-l border-gray-200 px-4 py-2 text-xs font-bold text-gray-500">
+        <div className="flex h-full items-center gap-2 border-l border-gray-200 bg-gray-50 px-4 py-2 text-xs font-bold text-gray-500">
           <Image
             src="/currencies/twd.svg"
             width={16}

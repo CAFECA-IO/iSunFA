@@ -66,7 +66,7 @@ const ResendingPaySlipModal: React.FC<IResendingPaySlipModalProps> = ({
   ) : (
     <>
       {/* Info: (20250723 - Julian) Modal Content */}
-      <div className="px-5 py-2 text-card-text-secondary">
+      <div className="text-card-text-secondary px-5 py-2">
         {t("calculator.MESSAGE.RESEND_PAY_SLIP_CONTENT_1")}
         <span className="font-bold">
           {t("calculator.MESSAGE.RESEND_PAY_SLIP_CONTENT_BOLD_1", {
@@ -94,11 +94,11 @@ const ResendingPaySlipModal: React.FC<IResendingPaySlipModalProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
-      <div className="relative flex min-h-[200px] w-[90vw] flex-col rounded-sm bg-surface-neutral-surface-lv2 md:w-[350px]">
+    <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+      <div className="bg-surface-neutral-surface-lv2 relative flex min-h-[200px] w-[90vw] flex-col rounded-sm md:w-[350px]">
         {/* Info: (20250723 - Julian) Modal Header */}
         <div className="relative flex items-start justify-center px-10 py-4">
-          <h2 className="text-lg font-bold text-card-text-primary">
+          <h2 className="text-card-text-primary text-lg font-bold">
             {t("calculator.MESSAGE.RESEND_PAY_SLIP_TITLE")}
           </h2>
           <button

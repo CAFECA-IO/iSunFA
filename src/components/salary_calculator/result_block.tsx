@@ -15,8 +15,8 @@ const ResultBlock: React.FC<IResultBlockProps> = ({
   const totalItem = rowItems.slice(-1)[0];
   const displayTotalRowItem = totalItem && (
     <div className="flex items-center justify-between">
-      <p className="text-xs text-text-neutral-secondary">{totalItem.label}</p>
-      <p className="text-lg font-bold text-text-neutral-primary">
+      <p className="text-text-neutral-secondary text-xs">{totalItem.label}</p>
+      <p className="text-text-neutral-primary text-lg font-bold">
         NT ${numberWithCommas(totalItem.value)}
       </p>
     </div>
@@ -54,10 +54,10 @@ const ResultBlock: React.FC<IResultBlockProps> = ({
 
   return (
     <div
-      className={`flex flex-col text-gray-700 rounded-xl p-4 ${backgroundColor}`}
+      className={`flex flex-col rounded-xl p-4 text-gray-700 ${backgroundColor}`}
     >
       {/* Info: (20250708 - Julian) 項目 */}
-      <div className="flex flex-1 flex-col gap-2.5 text-xs font-medium text-text-neutral-secondary">
+      <div className="text-text-neutral-secondary flex flex-1 flex-col gap-2.5 text-xs font-medium">
         {displayRowItems}
       </div>
       {/* Info: (20250708 - Julian) 分界線 */}

@@ -26,16 +26,16 @@ const ProgressBar: React.FC = () => {
       <div className="flex w-full items-end gap-6">
         <div className="flex flex-1 flex-col items-start gap-2">
           <div className="flex w-full items-center justify-between">
-            <p className="text-xs font-bold text-green-600 uppercase tracking-widest">
+            <p className="text-xs font-bold tracking-widest text-green-600 uppercase">
               {t("calculator.tabs.completed")}
             </p>
-            <p className="text-sm font-black font-mono text-gray-900">
+            <p className="font-mono text-sm font-black text-gray-900">
               {progress}%
             </p>
           </div>
-          <div className="relative h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+          <div className="relative h-2 w-full overflow-hidden rounded-full bg-gray-100">
             <div
-              className="absolute h-full rounded-full bg-linear-to-r transition-all duration-200 from-green-400 to-green-600 shadow-[0_0_8px_rgba(34,197,94,0.4)]"
+              className="absolute h-full rounded-full bg-linear-to-r from-green-400 to-green-600 shadow-[0_0_8px_rgba(34,197,94,0.4)] transition-all duration-200"
               style={{
                 width: `${progress}%`,
                 transition: "width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
@@ -47,7 +47,7 @@ const ProgressBar: React.FC = () => {
         <button
           type="button"
           onClick={modalVisibleHandler}
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-gray-500 transition-colors hover:text-orange-600 group"
+          className="group flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-gray-500 transition-colors hover:text-orange-600"
         >
           <RefreshCw
             size={14}
@@ -59,13 +59,13 @@ const ProgressBar: React.FC = () => {
 
       {/* Info: (20250723 - Julian) 重置提示 Modal */}
       {isShowModal && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm">
           <div className="relative flex w-full max-w-md flex-col rounded-3xl bg-white p-8 shadow-2xl ring-1 ring-gray-900/5">
             {/* Info: (20250723 - Julian) Close Button */}
             <button
               type="button"
               onClick={modalVisibleHandler}
-              className="absolute right-6 top-6 rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              className="absolute top-6 right-6 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
             >
               <X size={20} />
             </button>
@@ -80,7 +80,7 @@ const ProgressBar: React.FC = () => {
               <h2 className="mb-2 text-2xl font-black text-gray-900">
                 {t("calculator.reset_modal.title")}
               </h2>
-              <p className="text-sm font-medium leading-relaxed text-gray-500">
+              <p className="text-sm leading-relaxed font-medium text-gray-500">
                 {t("calculator.reset_modal.content")}
               </p>
             </div>
@@ -89,7 +89,7 @@ const ProgressBar: React.FC = () => {
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
-                className="flex-1 rounded-xl px-5 py-3 text-sm font-bold text-gray-500 transition-colors hover:bg-gray-200 bg-gray-100"
+                className="flex-1 rounded-xl bg-gray-100 px-5 py-3 text-sm font-bold text-gray-500 transition-colors hover:bg-gray-200"
                 onClick={modalVisibleHandler}
               >
                 {t("common.cancel")}
