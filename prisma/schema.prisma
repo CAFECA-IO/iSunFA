@@ -150,7 +150,7 @@ model File {
   thread   Thread? @relation(fields: [threadId], references: [id])
   threadId String? @map("thread_id")
 
-  journal Journal?
+  journals Journal[]
 
   @@map("file")
 }
@@ -290,8 +290,7 @@ model Journal {
   updatedAt DateTime @updatedAt @map("updated_at")
   text      String   @db.Text // Info: (20260304 - Julian) AI 辨識出的文字結果
 
-  // Info: (20260304 - Julian) 一個憑證只會對應一個檔案
-  fileId String @unique @map("file_id")
+  fileId String @map("file_id")
   file   File   @relation(fields: [fileId], references: [id])
 
   // Info: (20260305 - Julian) 隸屬的帳本
