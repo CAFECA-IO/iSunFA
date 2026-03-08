@@ -782,6 +782,11 @@ export const zhTw = {
       reported: "扣繳憑單金額",
       paid: "實際發放金額",
     },
+    warnings: {
+      title: "警示訊息",
+      salary_below_minimum: "基本薪資低於法定最低薪資 ({{minimumWage}}元)",
+      overtime_exceeded: "單月加班時數合計超過 46 小時法定上限",
+    },
     login_modal: {
       title: "請先登入",
       content: "請先登入以使用這項功能。",

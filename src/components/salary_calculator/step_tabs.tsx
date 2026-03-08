@@ -77,16 +77,7 @@ const StepTabs: React.FC = () => {
         case 2:
           // Info: (20250714 - Julian) 第二步（基本薪資）的檢查條件
           if (isWageError) {
-            // Info: (20250714 - Julian) 如果薪資小於最小值，則不允許切換到下一步，且顯示錯誤訊息
-            // messageModalDataHandler({
-            //   messageType: MessageType.ERROR,
-            //   title: t('calculator:MESSAGE.SALARY_ERROR_TITLE'),
-            //   content: t('calculator:MESSAGE.SALARY_ERROR_CONTENT'),
-            //   submitBtnStr: t('common:COMMON.CLOSE'),
-            //   submitBtnFunction: messageModalVisibilityHandler,
-            // });
-            // messageModalVisibilityHandler();
-            return;
+            // Info: (20260308 - Luphia) 如果薪資小於最小值，則顯示錯誤訊息，仍可切換至下一步
           }
           // Info: (20250714 - Julian) 如果基本薪資正確，則切換到下一步
           switchStep(index + 1);

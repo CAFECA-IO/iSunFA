@@ -782,6 +782,11 @@ export const en = {
       reported: "Reported",
       paid: "Paid",
     },
+    warnings: {
+      title: "Warning Message",
+      salary_below_minimum: "Base salary is below the statutory minimum wage ({{minimumWage}})",
+      overtime_exceeded: "Total overtime hours in a single month exceed the 46-hour statutory limit",
+    },
     login_modal: {
       title: "Please Login in",
       content: "You need to log in first before using this function.",
