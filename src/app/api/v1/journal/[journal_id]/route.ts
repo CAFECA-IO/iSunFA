@@ -122,7 +122,7 @@ export async function PUT(
         userId: updater.id,
         dataType: "JOURNAL",
         dataId: updatedJournal.id,
-        accountbookId: accountbook.id,
+        accountBookId: accountBook.id,
         action: "UPDATE",
       },
     });
@@ -196,7 +196,7 @@ export async function DELETE(
         userId: deleter.id,
         dataType: "JOURNAL",
         dataId: deletedJournal.id,
-        accountbookId: accountbook.id,
+        accountBookId: accountBook.id,
         action: "DELETE",
       },
     });

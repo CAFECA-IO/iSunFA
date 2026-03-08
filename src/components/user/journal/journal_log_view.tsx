@@ -109,6 +109,7 @@ export default function JournalLogView() {
           </thead>
           <tbody>
             {isLoading ? (
+              // eslint-disable-next-line jsx-a11y/control-has-associated-label
               <tr>
                 <td colSpan={4} className="h-40 text-center">
                   <div className="flex flex-col items-center justify-center gap-2 text-orange-500">
@@ -146,9 +147,9 @@ export default function JournalLogView() {
                       <span className="font-medium text-gray-800">
                         {log.user.name || "未命名使用者"}
                       </span>
-                      <button 
-                        type="button" 
-                        onClick={() => copyToClipboard(log.user.address)} 
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(log.user.address)}
                         aria-label={`點擊複製地址: ${log.user.address}`}
                         title="點擊複製地址"
                         className="font-mono text-xs text-slate-500 hover:text-orange-600"
@@ -158,9 +159,9 @@ export default function JournalLogView() {
                     </div>
                   </td>
                   <td className="px-6 py-4 font-mono text-xs text-slate-500">
-                    <button 
-                      type="button" 
-                      onClick={() => copyToClipboard(log.dataId)} 
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(log.dataId)}
                       aria-label={`點擊複製憑證 ID: ${log.dataId}`}
                       title="點擊複製憑證 ID"
                       className="rounded bg-gray-100 px-2 py-1 font-mono hover:bg-gray-200"

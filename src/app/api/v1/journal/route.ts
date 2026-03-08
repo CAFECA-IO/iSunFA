@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
         userId: creator.id,
         dataType: "JOURNAL",
         dataId: journal.id,
-        accountbookId: accountbook.id,
+        accountBookId: accountBook.id,
         action: "CREATE",
       },
     });

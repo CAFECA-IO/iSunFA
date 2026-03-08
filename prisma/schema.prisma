@@ -386,8 +386,8 @@ model AuditLog {
   dataId   String           @map("data_id") // Info: (20260306 - Julian) journalId / voucherId / carbonId
 
   // Info: (20260306 - Julian) 編輯資料所屬的帳本
-  accountbookId String      @map("accountbook_id")
-  accountbook   Accountbook @relation(fields: [accountbookId], references: [id])
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
 
   // Info: (20260306 - Julian) 編輯的動作
   action AuditLogAction @map("action") // Info: (20260306 - Julian) 建立 / 更新 / 刪除
