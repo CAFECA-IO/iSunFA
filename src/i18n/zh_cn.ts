@@ -159,17 +159,17 @@ export const zhCn = {
     description:
       "搭配人工智能识别自动入录，整合传票管理、薪资、税务与温室气体核算，定期生成报表与分析摘要，助企业高效达成专业合规，精准掌控运营数据。",
     items: {
+      dashboard: {
+        title: "资讯情报",
+        desc: "统整财务分析与碳盘查关键数据，提供实时决策与应对支持。",
+      },
       bookkeeping: {
         title: "传票管理",
         desc: "AI 自动生成会计分录，账本质量媲美资深会计师实务。",
       },
-      adjustment: {
-        title: "智能出纳",
-        desc: "整合预算、审核与转账流程，全面提升财务作业效率。",
-      },
       cashier: {
-        title: "智能收款",
-        desc: "串接虚拟账户与电子发票，即时对账并消除作业时差。",
+        title: "智能钱包",
+        desc: "整合预算、审核与转账流程，全面提升财务作业效率。",
       },
       analysis: {
         title: "财务分析",
@@ -191,7 +191,7 @@ export const zhCn = {
         title: "会计报表",
         desc: "一键生成三大专业财务报表，即时掌握企业营运现况。",
       },
-      ocr: {
+      journal: {
         title: "凭证管理",
         desc: "自动提取单据信息并分类归档，免除手动输入作业负担。",
       },
@@ -460,9 +460,10 @@ export const zhCn = {
   },
   chat: {
     tags: {
+      dashboard: "资讯战情室",
       bookkeeping: "传票管理",
       adjustment: "智能出纳",
-      cashier: "智能收款",
+      cashier: "智能钱包",
       salary: "薪资管理",
       audit: "智能稽核",
       esg: "碳排核算",
@@ -502,11 +503,17 @@ export const zhCn = {
     hours: "周一至周五，10:00 - 17:00 国定假日休业",
     rights_reserved: "All rights reserved.",
   },
+  account_book_selection: {
+    title: "选择账簿",
+    subtitle: "请选择一个账簿以进入管理后台。",
+    empty_title: "无可用账簿",
+    empty_desc: "您目前没有可存取的账簿，或已被移除权限。",
+    role: "角色",
+  },
   sidebar: {
     modules: "功能模块",
     system: "系统设置",
     billing: "购买与账单",
-    dashboard: "资讯战情室",
     team: "团队管理",
     settings: "设置",
   },

@@ -11,9 +11,10 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { getMinimumWage } from "@/lib/utils/salary_calculator";
 
 const SalaryFormSection: React.FC = () => {
-  const { 
+  const {
     currentStep,
     baseSalary,
+    mealAllowance,
     selectedYear,
     totalTaxableHours,
     totalNonTaxableHours
@@ -21,7 +22,7 @@ const SalaryFormSection: React.FC = () => {
   const { t } = useTranslation();
 
   const minimumWage = getMinimumWage(parseInt(selectedYear));
-  const isSalaryBelowMinimum = baseSalary < minimumWage;
+  const isSalaryBelowMinimum = (baseSalary + mealAllowance) < minimumWage;
   const isOvertimeExceeded = (totalTaxableHours + totalNonTaxableHours) > 46;
 
   const showWarning = isSalaryBelowMinimum || isOvertimeExceeded;

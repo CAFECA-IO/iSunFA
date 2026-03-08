@@ -82,7 +82,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: IAuthModalProp
       onClose();
       // Info: (20260118 - Luphia) Redirect to dashboard if at /
       if (pathname === "/") {
-        router.push('/user/main');
+        router.push('/user/account_book/');
       }
     } catch (err: unknown) {
       console.error("Login error:", err);
@@ -122,7 +122,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: IAuthModalProp
       onClose();
       // Info: (20260118 - Luphia) Redirect to dashboard if at /
       if (pathname === "/") {
-        router.push('/user/main');
+        router.push('/user/account_book/');
       }
     } catch (err: unknown) {
       console.error("Registration error:", err);

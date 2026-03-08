@@ -159,17 +159,17 @@ export const ja = {
     description:
       "AI認識による自動入力を活用し、伝票管理、給与、税務、温室効果ガス算定を統合。定期的にレポートと分析サマリーを生成し、企業の効率的な専門コンプライアンス達成と運営データの正確な把握を支援します。",
     items: {
+      dashboard: {
+        title: "情報戦略室",
+        desc: "財務分析とカーボンフットプリントの主要データを統合し、リアルタイムな意思決定と対応支援を提供します。",
+      },
       bookkeeping: {
         title: "伝票管理",
         desc: "AIが会計仕訳を自動生成し、ベテラン会計士の実務に匹敵する帳簿品質を実現します。",
       },
-      adjustment: {
-        title: "スマート出納",
-        desc: "予算、承認、振込プロセスを統合し、財務業務の効率を全面的に向上させます。",
-      },
       cashier: {
-        title: "スマート入金管理",
-        desc: "仮想口座と電子請求書を連携し、リアルタイムでの照合を実現して作業のタイムラグを解消します。",
+        title: "スマートウォレット",
+        desc: "予算、承認、振込プロセスを統合し、財務業務の効率を全面的に向上させます。",
       },
       analysis: {
         title: "財務分析",
@@ -191,7 +191,7 @@ export const ja = {
         title: "財務諸表",
         desc: "ワンクリックで主要な3つの財務諸表を作成し、企業の経営状況を即座に把握できます。",
       },
-      ocr: {
+      journal: {
         title: "AI OCR",
         desc: "領収書の情報を自動的に抽出・分類・アーカイブし、手動入力の負担を排除します。",
       },
@@ -466,9 +466,10 @@ export const ja = {
   },
   chat: {
     tags: {
+      dashboard: "情報戦略室",
       bookkeeping: "伝票管理",
       adjustment: "スマート出納",
-      cashier: "スマート入金管理",
+      cashier: "スマートウォレット",
       salary: "給与管理",
       audit: "スマート監査",
       esg: "温室効果ガス算定",
@@ -510,11 +511,17 @@ export const ja = {
     hours: "月〜金 10:00 - 17:00 (祝日休業)",
     rights_reserved: "All rights reserved.",
   },
+  account_book_selection: {
+    title: "帳簿を選択",
+    subtitle: "管理ダッシュボードにアクセスする帳簿を選択してください。",
+    empty_title: "利用可能な帳簿がありません",
+    empty_desc: "現在アクセス可能な帳簿がないか、アクセス権が削除されています。",
+    role: "役割",
+  },
   sidebar: {
     modules: "機能モジュール",
     system: "システム設定",
     billing: "購入と請求",
-    dashboard: "情報戦略室",
     team: "チーム管理",
     settings: "設定",
   },

@@ -159,17 +159,17 @@ export const ko = {
     description:
       "AI 인식을 통한 자동 입력을 활용하여 전표 관리, 급여, 세무 및 온실가스 산정을 통합합니다. 정기적으로 보고서와 분석 요약을 생성하여 기업이 전문 규정 준수를 효율적으로 달성하고 운영 데이터를 정밀하게 제어할 수 있도록 지원합니다.",
     items: {
+      dashboard: {
+        title: "정보 상황실",
+        desc: "재무 분석과 카본 플루트프린트의 주요 데이터를 통합하여 즉시 결정과 대응 지원을 제공합니다.",
+      },
       bookkeeping: {
         title: "전표 관리",
         desc: "AI가 회계 분개를 자동 생성하여, 숙련된 회계사의 실무에 버금가는 장부 품질을 제공합니다.",
       },
-      adjustment: {
-        title: "스마트 자금 관리",
-        desc: "예산, 승인 및 이체 프로세스를 통합하여 재무 업무 효율성을 종합적으로 향상시킵니다.",
-      },
       cashier: {
-        title: "스마트 수금",
-        desc: "가상 계좌와 전자 세금 계산서를 연동하여 실시간 대사 및 업무 시차를 해소합니다.",
+        title: "스마트 지갑",
+        desc: "예산, 승인 및 이체 프로세스를 통합하여 재무 업무 효율성을 종합적으로 향상시킵니다.",
       },
       analysis: {
         title: "재무 분석",
@@ -191,7 +191,7 @@ export const ko = {
         title: "재무 보고서",
         desc: "클릭 한 번으로 3대 주요 재무 제표를 생성하여 기업의 운영 현황을 즉시 파악할 수 있습니다.",
       },
-      ocr: {
+      journal: {
         title: "AI OCR",
         desc: "영수증 정보를 자동으로 추출하고 분류하여 아카이빙함으로써 수기 입력 업무의 부담을 없앱니다.",
       },
@@ -457,9 +457,10 @@ export const ko = {
   },
   chat: {
     tags: {
+      dashboard: "정보 상황실",
       bookkeeping: "전표 관리",
       adjustment: "스마트 자금 관리",
-      cashier: "스마트 수금",
+      cashier: "스마트 지갑",
       salary: "급여 관리",
       audit: "스마트 감사",
       esg: "온실가스 산정",
@@ -501,11 +502,17 @@ export const ko = {
     hours: "월 - 금, 10:00 - 17:00 국경일 휴무",
     rights_reserved: "All rights reserved.",
   },
+  account_book_selection: {
+    title: "장부 선택",
+    subtitle: "관리 대시보드에 액세스할 장부를 선택하세요.",
+    empty_title: "사용 가능한 장부 없음",
+    empty_desc: "현재 액세스할 수 있는 장부가 없거나 권한이 제거되었습니다.",
+    role: "역할",
+  },
   sidebar: {
     modules: "기능 모듈",
     system: "시스템 설정",
     billing: "구매 및 청구",
-    dashboard: "정보 상황실",
     team: "팀 관리",
     settings: "설정",
   },

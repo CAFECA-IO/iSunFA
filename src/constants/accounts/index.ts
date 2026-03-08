@@ -24,6 +24,15 @@ export const COUNTRY = {
   US: 'US',
 }
 
+export const CURRENCY = {
+  CN: 'CNY',
+  HK: 'HKD',
+  JP: 'JPY',
+  KR: 'KRW',
+  TW: 'TWD',
+  US: 'USD',
+}
+
 export const RULE = {
   IFRS: 'IFRS',
   HKFRS: 'HKFRS',

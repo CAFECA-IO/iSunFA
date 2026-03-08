@@ -48,7 +48,7 @@ export default function Hero() {
             <button
               onClick={() => {
                 if (user) {
-                  router.push('/user/main');
+                  router.push('/user/account_book/');
                 } else {
                   setAuthModalOpen(true);
                 }

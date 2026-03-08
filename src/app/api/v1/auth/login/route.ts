@@ -3,6 +3,8 @@ import { webAuthnService } from '@/services/webauthn.service';
 import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
 import { AppError } from '@/lib/utils/error';
+import { createTeamForUsersWithoutTeam } from '@/services/team.services';
+import { createAccountBookForTeamsWithoutOne } from '@/services/account_book.service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +21,10 @@ export async function POST(request: NextRequest) {
     } else {
       throw new AppError(ApiCode.VALIDATION_ERROR, 'Missing login parameters');
     }
+
+    // Info: (20260308 - Luphia) 為沒有團隊的使用者建立一個團隊與帳簿
+    await createTeamForUsersWithoutTeam();
+    await createAccountBookForTeamsWithoutOne();
 
     // Info: (20251223 - Tzuhan) result 包含 { dewt, user }
     return jsonOk(result);

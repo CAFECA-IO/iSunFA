@@ -16,7 +16,6 @@ import {
   Settings,
   CreditCard,
   Users,
-  LayoutDashboard,
 } from "lucide-react";
 import { MODULES } from "@/constants/modules";
 import { useAuth } from "@/contexts/auth_context";
@@ -36,6 +35,11 @@ export default function UserActions() {
   if (!user) {
     return <LoginButton />;
   }
+
+  // Info: (20260309 - Luphia) 根據路徑取得目前 accountBookId
+  const currentPath = window.location.pathname;
+  const currentAccountBookId = currentPath.split("/account_book/").pop()?.split('/')[0] || 'default';
+  const accountBookPath = `/user/account_book/${currentAccountBookId}`;
 
   return (
     <Menu as="div" className="relative">
@@ -104,7 +108,7 @@ export default function UserActions() {
                       {({ focus }) =>
                         active ? (
                           <Link
-                            href={`/user/${module.key}`}
+                            href={`${accountBookPath}/${module.key}`}
                             className={`
                                 ${focus ? "bg-orange-50 ring-1 ring-orange-200" : "bg-white hover:bg-gray-50 ring-1 ring-gray-100"}
                                 group flex flex-col items-center justify-center p-2 md:p-3 rounded-lg transition-all duration-200 h-full w-full
@@ -139,21 +143,7 @@ export default function UserActions() {
               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 md:mb-3 px-1 md:px-2">
                 {t("sidebar.system")}
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                <MenuItem as={Fragment}>
-                  {({ focus }) => (
-                    <Link
-                      href="/user/main"
-                      className={`
-                            ${focus ? "bg-gray-50 text-gray-900" : "text-gray-600"}
-                            group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50 h-full w-full
-                          `}
-                    >
-                      <LayoutDashboard className="h-5 w-5 mb-1 text-gray-400 group-hover:text-gray-600" />
-                      {t("sidebar.dashboard")}
-                    </Link>
-                  )}
-                </MenuItem>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <MenuItem as={Fragment}>
                   {({ focus }) => (
                     <Link
