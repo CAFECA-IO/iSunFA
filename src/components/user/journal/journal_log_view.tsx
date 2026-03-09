@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -20,6 +21,10 @@ interface IAuditLog {
 }
 
 export default function JournalLogView() {
+  const params = useParams();
+  // Info: (20260309 - Julian) 從 URL 取得帳簿 ID 
+  const accountBookId = params?.account_book_id as string;
+
   const [logs, setLogs] = useState<IAuditLog[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -31,7 +36,7 @@ export default function JournalLogView() {
     setIsLoading(true);
     try {
       const data = await request<IApiResponse<{ logs: IAuditLog[] }>>(
-        "/api/v1/audit_log?dataType=JOURNAL",
+        `/api/v1/account_book/${accountBookId}/audit_log?dataType=JOURNAL`,
       );
       if (data.code === ApiCode.SUCCESS && data.payload?.logs) {
         setLogs(data.payload.logs);

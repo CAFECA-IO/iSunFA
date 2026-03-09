@@ -7,9 +7,9 @@ import { AuditLogDataType } from "@/generated/enums";
 
 /**
  * Info: (20260306 - Julian) 取得日記帳的異動紀錄
- * GET /api/v1/audit_log
+ * GET /api/v1/account_book/:account_book_id/audit_log
  */
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ account_book_id: string }> }) {
   try {
     // Info: (20260306 - Julian) 驗證 session user
     const authHeader = request.headers.get("Authorization");
@@ -20,9 +20,8 @@ export async function GET(request: NextRequest) {
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
 
-    // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
-    const accountBookId = "1";
-
+    // Info: (20260309 - Julian) 取得帳簿
+    const { account_book_id: accountBookId } = await params;
     const accountBook = await prisma.accountBook.findUnique({
       where: { id: accountBookId },
     });

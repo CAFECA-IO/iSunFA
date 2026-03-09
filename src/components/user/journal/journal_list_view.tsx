@@ -126,7 +126,7 @@ export default function JournalListView() {
     } finally {
       setIsLoading(false);
     }
-  }, [sortOrder, debouncedKeyWord, startDate, endDate]);
+  }, [sortOrder, debouncedKeyWord, startDate, endDate, accountBookId]);
 
   useEffect(() => {
     fetchJournals();
