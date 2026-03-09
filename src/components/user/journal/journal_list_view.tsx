@@ -22,6 +22,9 @@ import { ApiCode } from "@/lib/utils/status";
 export default function JournalListView() {
   const { t } = useTranslation();
 
+  // ToDo: (20260309 - Julian) 補上取得帳簿 ID 的邏輯
+  const accountBookId = "1";
+
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [displayType, setDisplayType] = useState<"grid" | "list">("list");
   const [journals, setJournals] = useState<IJournal[]>([]);
@@ -68,7 +71,7 @@ export default function JournalListView() {
     setIsDeleting(true);
     try {
       const data = await request<IApiResponse<null>>(
-        `/api/v1/journal/${journalToDelete.id}`,
+        `/api/v1/account_book/${accountBookId}/journal/${journalToDelete.id}`,
         {
           method: "DELETE",
         },
@@ -111,7 +114,7 @@ export default function JournalListView() {
       }
 
       const data = await request<IApiResponse<{ journals: IJournal[] }>>(
-        `/api/v1/journal?${params.toString()}`,
+        `/api/v1/account_book/${accountBookId}/journal?${params.toString()}`,
       );
       if (data.payload?.journals) {
         setJournals(data.payload.journals);

@@ -21,7 +21,9 @@ export default function JournalMainView() {
     switch (activeTab) {
       case EJournalTab.UPLOAD:
         return (
-          <JournalUploadView onUploadComplete={() => setActiveTab(EJournalTab.LIST)} />
+          <JournalUploadView
+            onUploadComplete={() => setActiveTab(EJournalTab.LIST)}
+          />
         );
       case EJournalTab.LIST:
         return <JournalListView />;

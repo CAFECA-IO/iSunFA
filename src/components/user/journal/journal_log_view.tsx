@@ -91,7 +91,7 @@ export default function JournalLogView() {
 
       <div className="relative mt-2 overflow-x-auto rounded-lg border border-gray-200">
         <table className="w-full text-left font-sans text-sm text-gray-600">
-          <thead className="bg-gray-50 text-xs font-semibold uppercase text-gray-600">
+          <thead className="bg-gray-50 text-xs font-semibold text-gray-600 uppercase">
             <tr>
               <th scope="col" className="px-6 py-4">
                 紀錄時間

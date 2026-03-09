@@ -21,6 +21,9 @@ export default function JournalUploadView({
 }) {
   const { t } = useTranslation();
 
+  // ToDo: (20260309 - Julian) 補上取得帳簿 ID 的邏輯
+  const accountBookId = "1";
+
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -77,17 +80,20 @@ export default function JournalUploadView({
 
     setIsAnalyzing(true);
     try {
-      const data = await request<IApiResponse<object>>("/api/v1/journal", {
-        method: "POST",
-        body: JSON.stringify({
-          file: {
-            hash: uploadedFile.hash,
-            fileName: uploadedFile.file.name,
-            mimeType: uploadedFile.file.type,
-            base64: uploadedFile.base64,
-          },
-        }),
-      });
+      const data = await request<IApiResponse<object>>(
+        `/api/v1/account_book/${accountBookId}/journal`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            file: {
+              hash: uploadedFile.hash,
+              fileName: uploadedFile.file.name,
+              mimeType: uploadedFile.file.type,
+              base64: uploadedFile.base64,
+            },
+          }),
+        },
+      );
 
       if (data.code === ApiCode.SUCCESS) {
         onUploadComplete?.();
