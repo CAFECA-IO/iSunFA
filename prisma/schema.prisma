@@ -40,12 +40,37 @@ model User {
   reactions           Reaction[]
   paymentMethods      PaymentMethod[]
   paymentTransactions PaymentTransaction[]
-  accountbooks        Accountbook[]
   journals            Journal[]
+  teamMembers         TeamMember[]
   auditLogs           AuditLog[]
 
   @@index([address])
   @@map("user")
+}
+
+model Team {
+  id           String        @id @default(uuid())
+  name         String
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  deletedAt    DateTime?     @map("deleted_at")
+  teamMembers  TeamMember[]
+  accountBooks AccountBook[]
+
+  @@map("team")
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  teamId    String   @map("team_id")
+  team      Team     @relation(fields: [teamId], references: [id])
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  role      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("team_member")
 }
 
 model Order {
@@ -307,8 +332,8 @@ model Journal {
   file   File   @relation(fields: [fileId], references: [id])
 
   // Info: (20260305 - Julian) 隸屬的帳本
-  accountbookId String      @map("accountbook_id")
-  accountbook   Accountbook @relation(fields: [accountbookId], references: [id])
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
   user          User?       @relation(fields: [userId], references: [id])
   userId        String?
 
@@ -316,16 +341,19 @@ model Journal {
 }
 
 // Info: (20260305 - Julian) 帳本
-// ToDo: (20260305 - Julian) 未來會擴充欄位
-model Accountbook {
-  id        String   @id @default(uuid())
+model AccountBook {
+  id        String    @id @default(uuid())
   name      String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  country   String
+  currency  String
+  rule      String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
-  // Info: (20260305 - Julian) 帳本所屬的使用者
-  userId String @map("user_id")
-  user   User   @relation(fields: [userId], references: [id])
+  // Info: (20260306 - Luphia) 帳本所屬的團隊
+  teamId String @map("team_id")
+  team   Team   @relation(fields: [teamId], references: [id])
 
   // Info: (20260305 - Julian) 一個帳本可以有多個憑證
   journals Journal[]
@@ -333,7 +361,7 @@ model Accountbook {
   // Info: (20260306 - Julian) 一個帳本可以有多個編輯紀錄
   auditLogs AuditLog[]
 
-  @@map("accountbook")
+  @@map("account_book")
 }
 
 // Info: (20260306 - Julian) 資料編輯 log
@@ -359,8 +387,8 @@ model AuditLog {
   dataId   String           @map("data_id") // Info: (20260306 - Julian) journalId / voucherId / carbonId
 
   // Info: (20260306 - Julian) 編輯資料所屬的帳本
-  accountbookId String      @map("accountbook_id")
-  accountbook   Accountbook @relation(fields: [accountbookId], references: [id])
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
 
   // Info: (20260306 - Julian) 編輯的動作
   action AuditLogAction @map("action") // Info: (20260306 - Julian) 建立 / 更新 / 刪除

@@ -160,17 +160,17 @@ export const en = {
     description:
       "Leveraging AI for automated data entry, integrating voucher management, payroll, tax, and GHG accounting, while generating periodic reports and analytics to help businesses efficiently achieve compliance and master operational data.",
     items: {
+      dashboard: {
+        title: "Dashboard",
+        desc: "Integrates financial analysis and carbon footprint key data to provide real-time decision-making and response support.",
+      },
       bookkeeping: {
         title: "Voucher Management",
         desc: "AI auto-generates accounting entries with quality comparable to senior accountant practices.",
       },
-      adjustment: {
-        title: "Smart Treasury",
-        desc: "Integrates budget, approval, and transfer processes to comprehensively enhance financial operational efficiency.",
-      },
       cashier: {
-        title: "Smart Collection",
-        desc: "Connects virtual accounts and E-invoices for real-time reconciliation and elimination of operational time lags.",
+        title: "Smart Wallet",
+        desc: "Integrates budget, approval, and transfer processes to comprehensively enhance financial operational efficiency.",
       },
       analysis: {
         title: "Financial Analysis",
@@ -192,7 +192,7 @@ export const en = {
         title: "Financial Reports",
         desc: "One-click generation of the three major professional financial statements to instantly grasp the company's operational status.",
       },
-      ocr: {
+      journal: {
         title: "Smart Receipt Recognition",
         desc: "Automatically extracts and archives receipt information, eliminating the burden of manual data entry.",
       },
@@ -465,9 +465,10 @@ export const en = {
   },
   chat: {
     tags: {
+      dashboard: "Information War Room",
       bookkeeping: "Voucher Management",
       adjustment: "Smart Treasury",
-      cashier: "Smart Collection",
+      cashier: "Smart Wallet",
       salary: "Payroll Management",
       audit: "Smart Audit",
       esg: "GHG Accounting",
@@ -511,11 +512,17 @@ export const en = {
     hours: "Mon - Fri, 10:00 - 17:00 Closed on National Holidays",
     rights_reserved: "All rights reserved.",
   },
+  account_book_selection: {
+    title: "Select Account Book",
+    subtitle: "Please select an account book to enter the management dashboard.",
+    empty_title: "No Available Account Books",
+    empty_desc: "You currently have no accessible account books, or your access has been removed.",
+    role: "Role",
+  },
   sidebar: {
     modules: "Modules",
     system: "System",
     billing: "Purchase & Billing",
-    dashboard: "Information War Room",
     team: "Team Management",
     settings: "Settings",
   },
@@ -781,6 +788,11 @@ export const en = {
       total_employer_cost: "Total Employer Cost",
       reported: "Reported",
       paid: "Paid",
+    },
+    warnings: {
+      title: "Warning Message",
+      salary_below_minimum: "Base salary is below the statutory minimum wage ({{minimumWage}})",
+      overtime_exceeded: "Total overtime hours in a single month exceed the 46-hour statutory limit",
     },
     login_modal: {
       title: "Please Login in",

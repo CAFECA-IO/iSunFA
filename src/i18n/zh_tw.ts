@@ -169,17 +169,17 @@ export const zhTw = {
     description:
       "搭配人工智能辨識自動入錄，整合傳票管理、薪資、稅務與溫室氣體核算，定期生成報表與分析摘要，助企業高效達成專業合規，精準掌控營運數據。",
     items: {
+      dashboard: {
+        title: "資訊情報",
+        desc: "統整財務分析與碳盤查關鍵數據，提供即時決策與應對支持。",
+      },
       bookkeeping: {
         title: "傳票管理",
         desc: "AI 自動生成會計分錄，帳本品質媲美資深會計師實務。",
       },
-      adjustment: {
-        title: "智能出納",
-        desc: "整合預算、審核與轉帳流程，全面提升財務作業效率。",
-      },
       cashier: {
-        title: "智能收款",
-        desc: "串接虛擬帳戶與電子憑證，即時對帳並消除作業時差。",
+        title: "智能錢包",
+        desc: "整合預算、審核與轉帳流程，全面提升財務作業效率。",
       },
       analysis: {
         title: "財務分析",
@@ -201,7 +201,7 @@ export const zhTw = {
         title: "會計報表",
         desc: "一鍵生成三大專業財務報表，即時掌握企業營運現況。",
       },
-      ocr: {
+      journal: {
         title: "憑證管理",
         desc: "自動提取單據資訊並分類歸檔，免除手動輸入作業負擔。",
       },
@@ -470,9 +470,10 @@ export const zhTw = {
   },
   chat: {
     tags: {
+      dashboard: "資訊戰情室",
       bookkeeping: "傳票管理",
       adjustment: "智能出納",
-      cashier: "智能收款",
+      cashier: "智能錢包",
       salary: "薪資管理",
       audit: "智能稽核",
       esg: "碳排核算",
@@ -512,11 +513,17 @@ export const zhTw = {
     hours: "週一至週五，10:00 - 17:00 國定假日休業",
     rights_reserved: "All rights reserved.",
   },
+  account_book_selection: {
+    title: "選擇帳簿",
+    subtitle: "請選擇一個帳簿以進入管理後台。",
+    empty_title: "無可用帳簿",
+    empty_desc: "您目前沒有可存取的帳簿，或已被移除權限。",
+    role: "角色",
+  },
   sidebar: {
     modules: "功能模組",
     system: "系統設定",
     billing: "購買與帳單",
-    dashboard: "資訊戰情室",
     team: "團隊管理",
     settings: "設定",
   },
@@ -781,6 +788,11 @@ export const zhTw = {
       total_employer_cost: "公司總負擔",
       reported: "扣繳憑單金額",
       paid: "實際發放金額",
+    },
+    warnings: {
+      title: "警示訊息",
+      salary_below_minimum: "基本薪資低於法定最低薪資 ({{minimumWage}}元)",
+      overtime_exceeded: "單月加班時數合計超過 46 小時法定上限",
     },
     login_modal: {
       title: "請先登入",

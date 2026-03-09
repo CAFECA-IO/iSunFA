@@ -1,14 +1,6 @@
-export interface IIFRAccount {
-  code: string;
-  name: string;
-  description: string;
-  type: string;
-  level: number;
-  parentCode: string;
-  debit: boolean;
-}
+import { IAccount } from "@/constants/accounts";
 
-export const IFRS_ACCOUNTS: IIFRAccount[] = [
+export const HK_ACCOUNTS: IAccount[] = [
   {
     code: '1100',
     name: '現金及約當現金',

@@ -1,8 +1,17 @@
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@/generated/client';
+import { Prisma, Mission, Task } from '@/generated/client';
 import { MISSION_STATUS, TASK_STATUS } from '@/constants/status';
 
-export class TaskRepository {
+export interface ITaskRepository {
+  findNextPendingTask(): Promise<{ task: Task, mission: Mission } | null>;
+  findNextTaskInMission(mission: Prisma.MissionGetPayload<{ include: { tasks: true } }>): Promise<Task | null>;
+  getTasksByOrder(missionId: string, order: number): Promise<Task[]>;
+  updateStatus(taskId: string, status: string, result?: Prisma.InputJsonValue): Promise<Task>;
+  completeMission(missionId: string, status: string, result?: Prisma.InputJsonValue): Promise<Mission>;
+  checkMissionCompletion(missionId: string): Promise<boolean>;
+}
+
+export class TaskRepository implements ITaskRepository {
   /**
    * Info: (20260130 - Luphia) Find the next pending task.
    * Logic:
@@ -32,7 +41,7 @@ export class TaskRepository {
 
     if (!mission) return null;
 
-    const task = this.findNextTaskInMission(mission);
+    const task = await this.findNextTaskInMission(mission);
     if (!task) return null;
 
     return { task, mission };
@@ -44,7 +53,7 @@ export class TaskRepository {
    * Let's group tasks by order.
    * Since they are ordered by 'order', we can iterate.
    */
-  findNextTaskInMission(mission: Prisma.MissionGetPayload<{ include: { tasks: true } }>) {
+  async findNextTaskInMission(mission: Prisma.MissionGetPayload<{ include: { tasks: true } }>) {
     const tasksByOrder = new Map<number, typeof mission.tasks>();
 
     for (const task of mission.tasks) {

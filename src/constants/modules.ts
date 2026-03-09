@@ -1,6 +1,5 @@
 import {
   BookOpen,
-  Sliders,
   Wallet,
   PieChart,
   Landmark,
@@ -10,17 +9,18 @@ import {
   ScanLine,
   Network,
   Leaf,
-  BadgeCheck
+  BadgeCheck,
+  LayoutDashboard,
 } from 'lucide-react';
 
 export const MODULES = [
+  { key: 'dashboard', icon: LayoutDashboard, basic: true },
   { key: 'journal', icon: ScanLine, basic: true },
   { key: 'bookkeeping', icon: BookOpen, basic: true },
   { key: 'esg', icon: Leaf, basic: true },
   { key: 'financial_report', icon: FileText, basic: true },
   { key: 'analysis', icon: PieChart, basic: true },
   { key: 'signing', icon: FileSignature, basic: true },
-  { key: 'adjustment', icon: Sliders, basic: false },
   { key: 'cashier', icon: Wallet, basic: false },
   { key: 'tax', icon: Landmark, basic: false },
   { key: 'salary', icon: Users, basic: false },

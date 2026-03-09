@@ -42,13 +42,13 @@ export async function POST(request: NextRequest) {
     }
 
     // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
-    const accountbookId = "1";
+    const accountBookId = "1";
 
-    const accountbook = await prisma.accountbook.findUnique({
-      where: { id: accountbookId },
+    const accountBook = await prisma.accountBook.findUnique({
+      where: { id: accountBookId },
     });
 
-    if (!accountbook) {
+    if (!accountBook) {
       console.error("Accountbook not found");
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
@@ -69,11 +69,11 @@ export async function POST(request: NextRequest) {
     const imagesForAi =
       file.base64 && file.mimeType
         ? [
-            {
-              data: file.base64,
-              mimeType: file.mimeType,
-            },
-          ]
+          {
+            data: file.base64,
+            mimeType: file.mimeType,
+          },
+        ]
         : [];
 
     const { text } = await chatService.analyzeJournal(imagesForAi);
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     const journal = await prisma.journal.create({
       data: {
         fileId: dbFile.id,
-        accountbookId: accountbook.id,
+        accountBookId: accountBook.id,
         text: text,
       },
     });
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
         userId: creator.id,
         dataType: "JOURNAL",
         dataId: journal.id,
-        accountbookId: accountbook.id,
+        accountBookId: accountBook.id,
         action: "CREATE",
       },
     });
@@ -138,13 +138,13 @@ export async function GET(request: NextRequest) {
     }
 
     // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
-    const accountbookId = "1";
+    const accountBookId = "1";
 
-    const accountbook = await prisma.accountbook.findUnique({
-      where: { id: accountbookId },
+    const accountBook = await prisma.accountBook.findUnique({
+      where: { id: accountBookId },
     });
 
-    if (!accountbook) {
+    if (!accountBook) {
       console.error("Accountbook not found");
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
     const orderByParams = searchParams.get("orderBy");
 
     const filteredConditions: Prisma.JournalFindManyArgs = {
-      where: { accountbookId: accountbook.id },
+      where: { accountBookId: accountBook.id },
       include: { file: true },
     };
 

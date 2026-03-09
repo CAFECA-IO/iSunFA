@@ -137,7 +137,7 @@ class WebAuthnService {
 
       // Info: (20260123 - Tzuhan) 如果 DB 寫入失敗 (連線拒絕)，回傳一個「臨時物件」讓流程繼續
       try {
-        return await this.repo.upsertUser({
+        const user = await this.repo.upsertUser({
           address: address,
           pubKeyX: pubKeyX.toString(),
           pubKeyY: pubKeyY.toString(),
@@ -145,6 +145,7 @@ class WebAuthnService {
           name: name || `User ${address.slice(0, 6)}`,
           imageUrl: imageUrl,
         });
+        return user;
       } catch (dbError) {
         console.warn('[Sync] DB Write Failed (Offline Mode). Returning ephemeral user.', dbError);
         return {

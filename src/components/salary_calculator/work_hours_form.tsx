@@ -1,11 +1,7 @@
 import React from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
-import {
-  MIN_WORK_HOURS,
-  MAX_OVERWORK_HOURS,
-  MAX_LEAVE_HOURS,
-} from "@/constants/salary_calculator";
+import { MIN_WORK_HOURS, MAX_LEAVE_HOURS } from "@/constants/salary_calculator";
 import HourCounter from "@/components/salary_calculator/hour_counter";
 
 const WorkHoursForm: React.FC = () => {
@@ -67,7 +63,6 @@ const WorkHoursForm: React.FC = () => {
             title="1.33 x"
             value={oneAndOneThirdsHoursForNonTax}
             setValue={setOneAndOneThirdsHoursForNonTax}
-            maxValue={MAX_OVERWORK_HOURS}
             minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 1.66 小時 */}
@@ -75,7 +70,6 @@ const WorkHoursForm: React.FC = () => {
             title="1.66 x"
             value={oneAndTwoThirdsHoursForNonTax}
             setValue={setOneAndTwoThirdsHoursForNonTax}
-            maxValue={MAX_OVERWORK_HOURS}
             minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 2 小時 */}
@@ -83,7 +77,6 @@ const WorkHoursForm: React.FC = () => {
             title="2.00 x"
             value={twoHoursForNonTax}
             setValue={setTwoHoursForNonTax}
-            maxValue={MAX_OVERWORK_HOURS}
             minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 2.33 小時 */}
@@ -91,7 +84,6 @@ const WorkHoursForm: React.FC = () => {
             title="2.33 x"
             value={twoAndOneThirdsHoursForNonTax}
             setValue={setTwoAndOneThirdsHoursForNonTax}
-            maxValue={MAX_OVERWORK_HOURS}
             minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 2.66 小時 */}
@@ -99,7 +91,6 @@ const WorkHoursForm: React.FC = () => {
             title="2.66 x"
             value={twoAndTwoThirdsHoursForNonTax}
             setValue={setTwoAndTwoThirdsHoursForNonTax}
-            maxValue={MAX_OVERWORK_HOURS}
             minValue={MIN_WORK_HOURS}
           />
         </div>
@@ -125,7 +116,6 @@ const WorkHoursForm: React.FC = () => {
             title="1.33 x"
             value={oneAndOneThirdHoursForTaxable}
             setValue={setOneAndOneThirdsHoursForTaxable}
-            maxValue={MAX_OVERWORK_HOURS}
             minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 1.66 小時 */}
@@ -133,7 +123,6 @@ const WorkHoursForm: React.FC = () => {
             title="1.66 x"
             value={oneAndTwoThirdsHoursForTaxable}
             setValue={setOneAndTwoThirdsHoursForTaxable}
-            maxValue={MAX_OVERWORK_HOURS}
             minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 2 小時 */}
@@ -141,7 +130,6 @@ const WorkHoursForm: React.FC = () => {
             title="2.00 x"
             value={twoHoursForTaxable}
             setValue={setTwoHoursForTaxable}
-            maxValue={MAX_OVERWORK_HOURS}
             minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 2.33 小時 */}
@@ -149,7 +137,6 @@ const WorkHoursForm: React.FC = () => {
             title="2.33 x"
             value={twoAndOneThirdsHoursForTaxable}
             setValue={setTwoAndOneThirdsHoursForTaxable}
-            maxValue={MAX_OVERWORK_HOURS}
             minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 2.66 小時 */}
@@ -157,7 +144,6 @@ const WorkHoursForm: React.FC = () => {
             title="2.66 x"
             value={twoAndTwoThirdsHoursForTaxable}
             setValue={setTwoAndTwoThirdsHoursForTaxable}
-            maxValue={MAX_OVERWORK_HOURS}
             minValue={MIN_WORK_HOURS}
           />
         </div>

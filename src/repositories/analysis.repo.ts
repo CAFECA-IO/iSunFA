@@ -1,8 +1,25 @@
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@/generated/client';
+import { Prisma, Analysis, Mission } from '@/generated/client';
 import { MISSION_STATUS } from '@/constants/status';
 
-export class AnalysisRepository {
+export interface IAnalysisRepository {
+  create(params: {
+    reportId: string;
+    userId: string;
+    orderId: string;
+    category: string;
+    missionName: string;
+    status?: string;
+    missionData: Prisma.InputJsonValue;
+    tasks?: { type: string; order: number; data: Prisma.InputJsonValue }[];
+  }): Promise<Analysis>;
+  findByUserId(userId: string): Promise<Analysis[]>;
+  findById(id: string): Promise<Analysis | null>;
+  updateMissionUploadSuccess(missionId: string, planHash: string): Promise<Mission | null>;
+  updateMissionUploadFailed(missionId: string, errorReason: string): Promise<Mission>;
+}
+
+export class AnalysisRepository implements IAnalysisRepository {
   async create(params: {
     reportId: string;
     userId: string;

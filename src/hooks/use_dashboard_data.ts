@@ -38,7 +38,9 @@ export const useDashboardData = () => {
       if (!apiData) setLoading(true);
 
       try {
-        const response = await request<{ payload: IDashboardResponse }>('/api/v1/user/dashboard', {
+        // Info: (20260309 - Luphia) 根據目前路徑取得 account_book_id
+        const accountBookId = window.location.pathname.split('/account_book/').pop()?.split('/')[0] || 'default';
+        const response = await request<{ payload: IDashboardResponse }>('/api/v1/user/account_book/' + accountBookId + '/dashboard', {
           query: { timeUnit }
         });
         if (response && response.payload) {
@@ -52,7 +54,8 @@ export const useDashboardData = () => {
     };
 
     fetchData();
-  }, [timeUnit, refreshTrigger, apiData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeUnit, refreshTrigger]);
 
   // Info: (20260118 - Luphia) Auto-refresh interval (10s)
   useEffect(() => {
