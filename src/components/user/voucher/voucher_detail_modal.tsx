@@ -78,7 +78,7 @@ const JournalRow = ({ voucher }: { voucher: IVoucher }) => {
           {renderIcon(voucher.tradingType)} {voucher.tradingType}
         </span>
       </td>
-      <td className="px-3 py-4 sm:px-6">
+      <td className="px-3 py-4 sm:px-6" aria-label="Source">
         <div className="flex items-baseline gap-1.5">
           <span className="text-xs font-semibold text-slate-400">
             {voucher.sourceId}
@@ -88,7 +88,7 @@ const JournalRow = ({ voucher }: { voucher: IVoucher }) => {
           </span>
         </div>
       </td>
-      <td className="px-3 py-4 sm:px-6">
+      <td className="px-3 py-4 sm:px-6" aria-label="Reason">
         <div className="flex items-baseline gap-1.5">
           <span className="text-xs font-semibold text-slate-400">
             {voucher.reasonId}
@@ -346,6 +346,7 @@ export default function VoucherDetailModal({
                           <div className="relative w-full shadow-sm">
                             <input
                               id="invoiceIssueDate"
+                              aria-label="Invoice Issue Date"
                               type="text"
                               defaultValue="2024-02-01"
                               placeholder="YYYY-MM-DD"
@@ -367,6 +368,7 @@ export default function VoucherDetailModal({
                           <div className="relative w-full shadow-sm">
                             <input
                               id="payingDate"
+                              aria-label="Paying Date"
                               type="text"
                               defaultValue="2024-02-01"
                               placeholder="YYYY-MM-DD"
@@ -381,6 +383,7 @@ export default function VoucherDetailModal({
                         <label className="flex cursor-pointer items-center gap-2 pb-3.5">
                           <input
                             type="checkbox"
+                            aria-label="Same as invoice date"
                             className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500"
                           />
                           <span className="text-sm font-medium whitespace-nowrap text-slate-500">
@@ -400,6 +403,7 @@ export default function VoucherDetailModal({
                         <div className="relative flex w-full rounded-xl border border-slate-300 bg-white shadow-sm focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
                           <input
                             id="payingReason"
+                            aria-label="Paying Reason"
                             type="text"
                             className="w-full rounded-l-xl px-4 py-3 text-sm text-slate-700 focus:outline-none"
                           />
@@ -420,6 +424,7 @@ export default function VoucherDetailModal({
                         <div className="relative mb-6 flex w-full items-center overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
                           <input
                             id="amount"
+                            aria-label="Amount"
                             type="number"
                             defaultValue="0"
                             className="w-full appearance-none px-4 py-3 pr-[100px] text-right text-sm text-slate-700 focus:outline-none"
@@ -483,6 +488,7 @@ export default function VoucherDetailModal({
                         </label>
                         <input
                           id="note"
+                          aria-label="Note"
                           type="text"
                           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                         />

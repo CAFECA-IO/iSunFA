@@ -66,7 +66,7 @@ const VoucherRow = ({
           {renderIcon(voucher.tradingType)} {voucher.tradingType}
         </span>
       </td>
-      <td className="px-3 py-4 sm:px-6">
+      <td className="px-3 py-4 sm:px-6" aria-label="Source">
         <div className="flex items-baseline gap-1.5">
           <span className="text-xs font-semibold text-slate-400">
             {voucher.sourceId}
@@ -76,7 +76,7 @@ const VoucherRow = ({
           </span>
         </div>
       </td>
-      <td className="px-3 py-4 sm:px-6">
+      <td className="px-3 py-4 sm:px-6" aria-label="Reason">
         <div className="flex items-baseline gap-1.5">
           <span className="text-xs font-semibold text-slate-400">
             {voucher.reasonId}
