@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/i18n/i18n_context";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -21,6 +22,7 @@ interface IAuditLog {
 }
 
 const LogItem = ({ log }: { log: IAuditLog }) => {
+  const { t } = useTranslation();
   const formattedDate = new Date(log.createdAt).toLocaleString();
   const formattedDateSplit = formattedDate.split(" ");
 
@@ -41,11 +43,11 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
   const getActionLabel = (action: string) => {
     switch (action) {
       case "CREATE":
-        return "新增";
+        return t("journal.log_view.action_create");
       case "UPDATE":
-        return "更新";
+        return t("journal.log_view.action_update");
       case "DELETE":
-        return "刪除";
+        return t("journal.log_view.action_delete");
       default:
         return action;
     }
@@ -65,7 +67,7 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
   };
 
   return (
-    <tr className="border-b border-gray-100 bg-white">
+    <tr className="border-b border-gray-100 odd:bg-white even:bg-slate-50">
       <td className="px-3 py-4 text-xs font-medium text-gray-900 sm:px-6 sm:text-sm">
         {dateStrForDesktop}
         {dateStrForMobile}
@@ -82,13 +84,17 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
       <td className="px-3 py-4 sm:px-6">
         <div className="flex flex-col items-start">
           <span className="font-medium text-gray-800">
-            {log.user.name || "未命名使用者"}
+            {log.user.name || t("journal.log_view.unnamed_user")}
           </span>
           <button
             type="button"
             onClick={() => copyToClipboard(log.user.address)}
-            aria-label={`點擊複製地址: ${log.user.address}`}
-            title="點擊複製地址"
+            aria-label={t("journal.log_view.copy_address", {
+              address: log.user.address,
+            })}
+            title={t("journal.log_view.copy_address", {
+              address: log.user.address,
+            })}
             className="font-mono text-[10px] break-all text-slate-500 hover:text-orange-600 sm:text-sm"
           >
             {log.user.address}
@@ -99,8 +105,8 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
         <button
           type="button"
           onClick={() => copyToClipboard(log.dataId)}
-          aria-label={`點擊複製憑證 ID: ${log.dataId}`}
-          title="點擊複製憑證 ID"
+          aria-label={t("journal.log_view.copy_id", { id: log.dataId })}
+          title={t("journal.log_view.copy_id", { id: log.dataId })}
           className="rounded bg-gray-100 px-2 py-1 font-mono text-[10px] break-all hover:bg-gray-200 sm:text-sm"
         >
           {log.dataId}
@@ -111,6 +117,7 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
 };
 
 export default function JournalLogView() {
+  const { t } = useTranslation();
   const params = useParams();
   // Info: (20260309 - Julian) 從 URL 取得帳簿 ID
   const accountBookId = params?.account_book_id as string;
@@ -143,7 +150,7 @@ export default function JournalLogView() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="font-sans text-xl font-semibold text-gray-800">
-          憑證異動紀錄
+          {t("journal.log_view.title")}
         </h2>
         <button
           type="button"
@@ -151,25 +158,25 @@ export default function JournalLogView() {
           disabled={isLoading}
           className="rounded-lg border border-orange-300 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-600 transition-colors hover:bg-orange-100 hover:text-orange-700 disabled:opacity-50"
         >
-          重新整理
+          {t("journal.log_view.refresh")}
         </button>
       </div>
 
       <div className="relative mt-2 overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
         <table className="w-full text-left font-sans text-sm text-gray-600">
-          <thead className="bg-gray-50 text-xs font-semibold text-gray-600 uppercase sm:text-base">
+          <thead className="bg-slate-100 text-xs font-semibold text-gray-600 uppercase sm:text-base">
             <tr>
               <th scope="col" className="px-3 py-4 sm:px-6">
-                紀錄時間
+                {t("journal.log_view.record_time")}
               </th>
               <th scope="col" className="px-3 py-4 sm:px-6">
-                操作類型
+                {t("journal.log_view.action_type")}
               </th>
               <th scope="col" className="px-3 py-4 sm:px-6">
-                操作人員
+                {t("journal.log_view.operator")}
               </th>
               <th scope="col" className="px-3 py-4 sm:px-6">
-                憑證 ID
+                {t("journal.log_view.journal_id")}
               </th>
             </tr>
           </thead>
@@ -180,14 +187,16 @@ export default function JournalLogView() {
                 <td colSpan={4} className="h-40 text-center">
                   <div className="flex flex-col items-center justify-center gap-2 text-orange-500">
                     <Loader2 className="h-8 w-8 animate-spin" />
-                    <span className="text-sm font-medium">載入中...</span>
+                    <span className="text-sm font-medium">
+                      {t("common.loading")}
+                    </span>
                   </div>
                 </td>
               </tr>
             ) : logs.length === 0 ? (
               <tr>
                 <td colSpan={4} className="h-40 text-center text-gray-500">
-                  暫無異動紀錄
+                  {t("journal.log_view.empty")}
                 </td>
               </tr>
             ) : (

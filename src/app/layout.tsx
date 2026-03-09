@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { GoogleAnalytics } from '@next/third-parties/google';
 import "@/app/globals.css";
 import { I18nProvider } from "@/i18n/i18n_context";
 import { AuthProvider } from "@/contexts/auth_context";
@@ -53,12 +54,14 @@ export default async function RootLayout({
 
   const privacyPolicyPath = path.join(process.cwd(), 'documents/privacy_policy.md');
   const privacyPolicyContent = await fs.readFile(privacyPolicyPath, 'utf8');
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-XXXXXXXXXX";
 
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <GoogleAnalytics gaId={gaId} />
         <I18nProvider>
           <AuthProvider>
             <AiContextProvider>

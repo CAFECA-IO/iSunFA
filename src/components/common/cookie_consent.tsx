@@ -15,7 +15,16 @@ interface ICookieConsentProps {
   privacyPolicyContent?: string;
 }
 
-function Toggle({ checked, onChange, disabled = false }: { checked: boolean; onChange?: (checked: boolean) => void; disabled?: boolean }) {
+// Info: (20260309 - Luphia) 定義 GA4 同意模式的輔助函數
+const updateGA4Consent = (analyticsGranted: boolean) => {
+  if (typeof window !== 'undefined' && ('gtag' in window)) {
+    (window as unknown as { gtag: (command: string, action: string, params: Record<string, string>) => void }).gtag('consent', 'update', {
+      'analytics_storage': analyticsGranted ? 'granted' : 'denied'
+    });
+  }
+};
+
+const Toggle = ({ checked, onChange, disabled = false }: { checked: boolean; onChange?: (checked: boolean) => void; disabled?: boolean }) => {
   return (
     <button
       type="button"
@@ -41,48 +50,44 @@ function Toggle({ checked, onChange, disabled = false }: { checked: boolean; onC
   );
 }
 
-export default function CookieConsent({ privacyPolicyContent = '' }: ICookieConsentProps) {
+const CookieConsent = ({ privacyPolicyContent = '' }: ICookieConsentProps) => {
   const { t } = useTranslation();
   const [showConsent, setShowConsent] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+
+  // Info: (20260309 - Luphia) GDPR 預設必須為 false (Opt-in 原則)
   const [preferences, setPreferences] = useState<ICookiePreferences>({
     necessary: true,
     security: true,
-    analytics: true,
+    analytics: false,
   });
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const consent = localStorage.getItem('cookie_consent');
-      if (!consent) {
-        setShowConsent(true);
-      } else {
-        try {
-          const parsed = JSON.parse(consent);
-          if (parsed && typeof parsed === 'object') {
-            // Info: (20260104 - Luphia) We could restore perfs here if we wanted to allow editing
-            setPreferences(parsed);
-          }
-        } catch {
-          // Info: (20260104 - Luphia) ignore
-        }
+    const consent = localStorage.getItem('cookie_consent');
+    if (!consent) {
+      setTimeout(() => setShowConsent(true), 0);
+      // Info: (20260309 - Luphia) 如果完全沒設定過，預設 GA 是 denied
+      updateGA4Consent(false);
+    } else {
+      try {
+        const parsed = JSON.parse(consent);
+        setTimeout(() => setPreferences(parsed), 0);
+        // Info: (20260309 - Luphia) 根據儲存的設定更新 GA 狀態
+        updateGA4Consent(parsed.analytics);
+      } catch {
+        setTimeout(() => setShowConsent(true), 0);
       }
-    }, 0);
-    return () => clearTimeout(timer);
+    }
 
-    const handleOpenSettings = () => {
-      setShowPreferences(true);
-    };
-
+    const handleOpenSettings = () => setShowPreferences(true);
     window.addEventListener('openCookieSettings', handleOpenSettings);
-    return () => {
-      window.removeEventListener('openCookieSettings', handleOpenSettings);
-    };
+    return () => window.removeEventListener('openCookieSettings', handleOpenSettings);
   }, []);
 
   const saveConsent = (prefs: ICookiePreferences) => {
     localStorage.setItem('cookie_consent', JSON.stringify(prefs));
+    updateGA4Consent(prefs.analytics);
     setShowConsent(false);
     setShowPreferences(false);
   };
@@ -223,3 +228,5 @@ export default function CookieConsent({ privacyPolicyContent = '' }: ICookieCons
     </div>
   );
 }
+
+export default CookieConsent;

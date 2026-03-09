@@ -164,7 +164,7 @@ export const en = {
         title: "Dashboard",
         desc: "Integrates financial analysis and carbon footprint key data to provide real-time decision-making and response support.",
       },
-      bookkeeping: {
+      voucher: {
         title: "Voucher Management",
         desc: "AI auto-generates accounting entries with quality comparable to senior accountant practices.",
       },
@@ -466,7 +466,7 @@ export const en = {
   chat: {
     tags: {
       dashboard: "Information War Room",
-      bookkeeping: "Voucher Management",
+      voucher: "Voucher Management",
       adjustment: "Smart Treasury",
       cashier: "Smart Wallet",
       salary: "Payroll Management",
@@ -938,5 +938,28 @@ export const en = {
     zoom_in: "Zoom In",
     zoom_out: "Zoom Out",
     zoom_reset: "Reset Zoom",
+  },
+  journal: {
+    main_view: {
+      title: "Journal Management",
+      upload: "Upload Journal",
+      list: "Journal List",
+      log: "Audit Logs",
+    },
+    log_view: {
+      title: "Journal Audit Logs",
+      refresh: "Refresh",
+      record_time: "Record Time",
+      action_type: "Action Type",
+      operator: "Operator",
+      journal_id: "Journal ID",
+      empty: "No audit logs found",
+      action_create: "Create",
+      action_update: "Update",
+      action_delete: "Delete",
+      unnamed_user: "Unnamed User",
+      copy_address: "Click to copy address: {{address}}",
+      copy_id: "Click to copy Journal ID: {{id}}",
+    },
   },
 };
