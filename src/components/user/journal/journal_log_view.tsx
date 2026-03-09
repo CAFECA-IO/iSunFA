@@ -67,7 +67,7 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
   };
 
   return (
-    <tr className="border-b border-gray-100 bg-white">
+    <tr className="border-b border-gray-100 odd:bg-white even:bg-slate-50">
       <td className="px-3 py-4 text-xs font-medium text-gray-900 sm:px-6 sm:text-sm">
         {dateStrForDesktop}
         {dateStrForMobile}
@@ -89,8 +89,12 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
           <button
             type="button"
             onClick={() => copyToClipboard(log.user.address)}
-            aria-label={t("journal.log_view.copy_address", { address: log.user.address })}
-            title={t("journal.log_view.copy_address", { address: log.user.address })}
+            aria-label={t("journal.log_view.copy_address", {
+              address: log.user.address,
+            })}
+            title={t("journal.log_view.copy_address", {
+              address: log.user.address,
+            })}
             className="font-mono text-[10px] break-all text-slate-500 hover:text-orange-600 sm:text-sm"
           >
             {log.user.address}
@@ -160,7 +164,7 @@ export default function JournalLogView() {
 
       <div className="relative mt-2 overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
         <table className="w-full text-left font-sans text-sm text-gray-600">
-          <thead className="bg-gray-50 text-xs font-semibold text-gray-600 uppercase sm:text-base">
+          <thead className="bg-slate-100 text-xs font-semibold text-gray-600 uppercase sm:text-base">
             <tr>
               <th scope="col" className="px-3 py-4 sm:px-6">
                 {t("journal.log_view.record_time")}
@@ -183,7 +187,9 @@ export default function JournalLogView() {
                 <td colSpan={4} className="h-40 text-center">
                   <div className="flex flex-col items-center justify-center gap-2 text-orange-500">
                     <Loader2 className="h-8 w-8 animate-spin" />
-                    <span className="text-sm font-medium">{t("common.loading")}</span>
+                    <span className="text-sm font-medium">
+                      {t("common.loading")}
+                    </span>
                   </div>
                 </td>
               </tr>
