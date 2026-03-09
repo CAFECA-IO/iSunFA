@@ -29,7 +29,7 @@ import { timestampToString } from "@/lib/utils/common";
 interface IVoucherDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  voucherId?: string; // Standard optional voucher prop for edits
+  voucherId?: string; // Info: (20260309 - Julian) Standard optional voucher prop for edits
   voucher?: IVoucher;
 }
 
@@ -256,9 +256,9 @@ export default function VoucherDetailModal({
                 </div>
 
                 <div className="flex max-h-[80vh] w-full flex-col overflow-y-auto shadow-inner">
-                  {/* Top Section: Split Layout */}
+                  {/* Info: (20260309 - Julian) Top Section: Split Layout */}
                   <div className="grid w-full grid-cols-5">
-                    {/* Left: File Preview */}
+                    {/* Info: (20260309 - Julian) Left: File Preview */}
                     <ZoomablePreview
                       hasContent={!!voucher?.file?.hash}
                       fallbackText="No file available"
@@ -273,9 +273,9 @@ export default function VoucherDetailModal({
                         />
                       )}
                     </ZoomablePreview>
-                    {/* Right: Form */}
+                    {/* Info: (20260309 - Julian) Right: Form */}
                     <div className="col-span-3 flex w-full flex-col gap-6 p-8">
-                      {/* Trading Type */}
+                      {/* Info: (20260309 - Julian) Trading Type */}
                       <div>
                         <div className="mb-2 block text-sm font-semibold text-slate-700">
                           Trading Type <span className="text-red-500">*</span>
@@ -283,7 +283,7 @@ export default function VoucherDetailModal({
                         <div className="flex gap-4">{tradingTypeOptions}</div>
                       </div>
 
-                      {/* Pay from */}
+                      {/* Info: (20260309 - Julian) Pay from */}
                       <div>
                         <label
                           htmlFor="payFrom"
@@ -306,7 +306,7 @@ export default function VoucherDetailModal({
                         </div>
                       </div>
 
-                      {/* Trading Partner */}
+                      {/* Info: (20260309 - Julian) Trading Partner */}
                       <div>
                         <div className="mb-2 block text-sm font-semibold text-slate-700">
                           Trading Partner
@@ -333,7 +333,7 @@ export default function VoucherDetailModal({
                         </div>
                       </div>
 
-                      {/* Dates */}
+                      {/* Info: (20260309 - Julian) Dates */}
                       <div className="flex flex-col gap-6 sm:flex-row sm:items-end">
                         <div className="flex-1">
                           <label
@@ -392,7 +392,7 @@ export default function VoucherDetailModal({
                         </label>
                       </div>
 
-                      {/* Paying Reason */}
+                      {/* Info: (20260309 - Julian) Paying Reason */}
                       <div>
                         <label
                           htmlFor="payingReason"
@@ -413,7 +413,7 @@ export default function VoucherDetailModal({
                         </div>
                       </div>
 
-                      {/* Amount and Toggles */}
+                      {/* Info: (20260309 - Julian) Amount and Toggles */}
                       <div>
                         <label
                           htmlFor="amount"
@@ -478,7 +478,7 @@ export default function VoucherDetailModal({
                         </div>
                       </div>
 
-                      {/* Note */}
+                      {/* Info: (20260309 - Julian) Note */}
                       <div>
                         <label
                           htmlFor="note"
@@ -496,10 +496,10 @@ export default function VoucherDetailModal({
                     </div>
                   </div>
 
-                  {/* Divider and Journal List */}
+                  {/* Info: (20260309 - Julian) Divider and Journal List */}
                   <JournalList />
 
-                  {/* Save Button */}
+                  {/* Info: (20260309 - Julian) Save Button */}
                   <div className="flex flex-1 items-end justify-end px-8 pb-8">
                     <button className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-[#ffb732] px-10 py-3 font-bold text-slate-800 shadow-sm transition-colors hover:bg-[#ffaa1a] lg:w-auto">
                       Save <Save size={18} />
