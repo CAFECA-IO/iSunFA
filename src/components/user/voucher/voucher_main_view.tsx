@@ -157,9 +157,9 @@ export default function VoucherMainView() {
       </div>
 
       <div className="flex w-full flex-col gap-4 px-4">
-        {/* Main View Container */}
+        {/* Info: (20260309 - Julian) Main View Container */}
         <div className="mx-auto w-full max-w-[1400px]">
-          {/* Table Container */}
+          {/* Info: (20260309 - Julian) Table Container */}
           <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
             <table className="w-full text-left text-sm text-gray-600">
               <thead className="bg-slate-100 text-xs font-semibold text-gray-600 sm:text-base">
