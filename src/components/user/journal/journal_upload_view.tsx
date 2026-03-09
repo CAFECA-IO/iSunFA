@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   UploadCloud,
@@ -20,9 +21,10 @@ export default function JournalUploadView({
   onUploadComplete?: () => void;
 }) {
   const { t } = useTranslation();
+  const params = useParams();
 
-  // ToDo: (20260309 - Julian) 補上取得帳簿 ID 的邏輯
-  const accountBookId = "1";
+  // Info: (20260309 - Julian) 從 URL 取得帳簿 ID 
+  const accountBookId = params?.account_book_id as string;
 
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);

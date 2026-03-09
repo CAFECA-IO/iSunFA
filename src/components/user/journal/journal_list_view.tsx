@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useParams } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   Search,
@@ -21,9 +22,10 @@ import { ApiCode } from "@/lib/utils/status";
 
 export default function JournalListView() {
   const { t } = useTranslation();
+  const params = useParams();
 
-  // ToDo: (20260309 - Julian) 補上取得帳簿 ID 的邏輯
-  const accountBookId = "1";
+  // Info: (20260309 - Julian) 從 URL 取得帳簿 ID 
+  const accountBookId = params?.account_book_id as string;
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [displayType, setDisplayType] = useState<"grid" | "list">("list");

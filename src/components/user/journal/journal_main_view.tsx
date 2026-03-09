@@ -14,9 +14,6 @@ enum EJournalTab {
 export default function JournalMainView() {
   const [activeTab, setActiveTab] = useState<EJournalTab>(EJournalTab.UPLOAD);
 
-  // ToDo: (20260306 - Julian) 補上取得帳簿的邏輯
-  const currentAccountbook = "My Accountbook";
-
   const renderView = () => {
     switch (activeTab) {
       case EJournalTab.UPLOAD:
@@ -82,12 +79,7 @@ export default function JournalMainView() {
         </div>
 
         {/* Info: (20260304 - Julian) Main View */}
-        <div className="flex w-full flex-col gap-2 px-4 lg:w-[calc(100vw-250px)]">
-          {/* Info: (20260306 - Julian) Current Accountbook */}
-          <div className="ml-auto text-sm font-medium text-gray-800">
-            目前帳簿：{" "}
-            <span className="text-orange-600">{currentAccountbook}</span>
-          </div>
+        <div className="w-full px-4 lg:w-[calc(100vw-250px)]">
           {renderView()}
         </div>
       </div>
