@@ -8,10 +8,13 @@ import { Prisma } from "@/generated/browser";
 
 /**
  * Info: (20260304 - Julian) 將檔案傳給 AI 進行解析
- * POST /api/v1/journal
+ * POST /api/v1/account_book/:account_book_id/journal
  */
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ account_book_id: string }> },
+) {
   try {
     // Info: (20260304 - Julian) Verify Token & Get User
     const authHeader = request.headers.get("Authorization");
@@ -41,9 +44,8 @@ export async function POST(request: NextRequest) {
       return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
     }
 
-    // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
-    const accountBookId = "1";
-
+    // Info: (20260309 - Julian) 取得帳簿
+    const { account_book_id: accountBookId } = await params;
     const accountBook = await prisma.accountBook.findUnique({
       where: { id: accountBookId },
     });
@@ -68,12 +70,7 @@ export async function POST(request: NextRequest) {
     // Info: (20260304 - Julian) 整理圖片資料發給 AI
     const imagesForAi =
       file.base64 && file.mimeType
-        ? [
-          {
-            data: file.base64,
-            mimeType: file.mimeType,
-          },
-        ]
+        ? [{ data: file.base64, mimeType: file.mimeType }]
         : [];
 
     const { text } = await chatService.analyzeJournal(imagesForAi);
@@ -115,9 +112,12 @@ export async function POST(request: NextRequest) {
 
 /**
  * Info: (20260304 - Julian) 取得全部或指定日記帳列表
- * GET /api/v1/journal
+ * GET /api/v1/account_book/:account_book_id/journal
  */
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ account_book_id: string }> },
+) {
   try {
     // Info: (20260304 - Julian) Verify Token & Get User
     const authHeader = request.headers.get("Authorization");
@@ -137,9 +137,8 @@ export async function GET(request: NextRequest) {
       return jsonFail(ApiCode.NOT_FOUND, "Author not found");
     }
 
-    // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
-    const accountBookId = "1";
-
+    // Info: (20260309 - Julian) 取得帳簿
+    const { account_book_id: accountBookId } = await params;
     const accountBook = await prisma.accountBook.findUnique({
       where: { id: accountBookId },
     });
