@@ -16,7 +16,7 @@ import {
 export const MODULES = [
   { key: 'dashboard', icon: LayoutDashboard, basic: true },
   { key: 'journal', icon: ScanLine, basic: true },
-  { key: 'bookkeeping', icon: BookOpen, basic: true },
+  { key: 'voucher', icon: BookOpen, basic: true },
   { key: 'esg', icon: Leaf, basic: true },
   { key: 'financial_report', icon: FileText, basic: true },
   { key: 'analysis', icon: PieChart, basic: true },

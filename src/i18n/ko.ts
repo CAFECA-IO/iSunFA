@@ -163,7 +163,7 @@ export const ko = {
         title: "정보 상황실",
         desc: "재무 분석과 카본 플루트프린트의 주요 데이터를 통합하여 즉시 결정과 대응 지원을 제공합니다.",
       },
-      bookkeeping: {
+      voucher: {
         title: "전표 관리",
         desc: "AI가 회계 분개를 자동 생성하여, 숙련된 회계사의 실무에 버금가는 장부 품질을 제공합니다.",
       },
@@ -458,7 +458,7 @@ export const ko = {
   chat: {
     tags: {
       dashboard: "정보 상황실",
-      bookkeeping: "전표 관리",
+      voucher: "전표 관리",
       adjustment: "스마트 자금 관리",
       cashier: "스마트 지갑",
       salary: "급여 관리",
@@ -886,5 +886,28 @@ export const ko = {
     zoom_in: "확대",
     zoom_out: "축소",
     zoom_reset: "초기화",
+  },
+  journal: {
+    main_view: {
+      title: "전표 관리",
+      upload: "전표 업로드",
+      list: "전표 목록",
+      log: "변경 내역",
+    },
+    log_view: {
+      title: "전표 변경 내역",
+      refresh: "새로고침",
+      record_time: "기록 시간",
+      action_type: "작업 유형",
+      operator: "작업자",
+      journal_id: "전표 ID",
+      empty: "변경 내역이 없습니다",
+      action_create: "생성",
+      action_update: "업데이트",
+      action_delete: "삭제",
+      unnamed_user: "익명 사용자",
+      copy_address: "클릭하여 주소 복사: {{address}}",
+      copy_id: "클릭하여 전표 ID 복사: {{id}}",
+    },
   },
 };
