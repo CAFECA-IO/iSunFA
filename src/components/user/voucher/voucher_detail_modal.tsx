@@ -9,7 +9,6 @@ import {
 } from "@headlessui/react";
 import {
   X,
-  Plus,
   Download,
   Upload,
   ArrowRightLeft,
@@ -21,22 +20,197 @@ import {
   Info,
   BookOpen,
 } from "lucide-react";
+import { DialogTitle } from "@headlessui/react";
+import { IVoucher, TradingType, mockVouchers } from "@/interfaces/voucher";
+import { FilePreview } from "@/components/common/file_preview";
+import ZoomablePreview from "@/components/common/zoomable_preview";
+import { timestampToString } from "@/lib/utils/common";
 
 interface IVoucherDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   voucherId?: string; // Standard optional voucher prop for edits
+  voucher?: IVoucher;
 }
+
+const JournalRow = ({ voucher }: { voucher: IVoucher }) => {
+  const renderIcon = (type: TradingType) => {
+    switch (type) {
+      case TradingType.INCOME:
+        return <Download size={14} className="stroke-[2.5]" />;
+      case TradingType.OUTCOME:
+        return <Upload size={14} className="stroke-[2.5]" />;
+      case TradingType.TRANSFER:
+        return <ArrowRightLeft size={14} className="stroke-[2.5]" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTypeClasses = (style: TradingType) => {
+    switch (style) {
+      case TradingType.OUTCOME:
+        return "bg-emerald-200 text-emerald-600";
+      case TradingType.INCOME:
+        return "bg-red-200 text-red-500";
+      case TradingType.TRANSFER:
+        return "bg-slate-200 text-slate-500";
+      default:
+        return "bg-slate-100 text-slate-600";
+    }
+  };
+
+  return (
+    <tr
+      key={voucher.id}
+      className="border-b border-gray-100 transition-colors last:border-0 odd:bg-slate-50 even:bg-white hover:bg-orange-100"
+    >
+      <td className="relative px-3 py-4 text-xs font-medium text-gray-900 sm:px-6 sm:text-sm">
+        {voucher.hasRead && (
+          <div className="absolute top-1/2 -left-1 z-10 -mt-1 h-2 w-2 rounded-full bg-red-500 sm:left-2" />
+        )}
+        {timestampToString(voucher.tradingDate).dateAndTime}
+      </td>
+      <td className="px-3 py-4 sm:px-6">
+        <span
+          className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap ${getTypeClasses(voucher.tradingType)}`}
+        >
+          {renderIcon(voucher.tradingType)} {voucher.tradingType}
+        </span>
+      </td>
+      <td className="px-3 py-4 sm:px-6">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-xs font-semibold text-slate-400">
+            {voucher.sourceId}
+          </span>
+          <span className="text-[13px] font-bold whitespace-nowrap text-slate-700">
+            {voucher.sourceName}
+          </span>
+        </div>
+      </td>
+      <td className="px-3 py-4 sm:px-6">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-xs font-semibold text-slate-400">
+            {voucher.reasonId}
+          </span>
+          <span className="text-[13px] font-bold whitespace-nowrap text-slate-700">
+            {voucher.reasonName}
+          </span>
+        </div>
+      </td>
+      <td className="px-3 py-4 sm:px-6">
+        <div className="flex flex-col gap-0.5">
+          {voucher.partnerId && (
+            <span className="text-[11px] font-semibold text-slate-400">
+              {voucher.partnerId}
+            </span>
+          )}
+          {voucher.partnerName && (
+            <span className="mt-0.5 text-[13px] leading-none font-bold whitespace-nowrap text-slate-600">
+              {voucher.partnerName}
+            </span>
+          )}
+        </div>
+      </td>
+      <td className="flex items-baseline gap-1 px-3 py-4 text-left align-middle text-base font-black whitespace-nowrap text-slate-700 sm:px-6">
+        {voucher.amount}{" "}
+        <span className="text-[11px] font-bold text-slate-400">
+          {voucher.currency}
+        </span>
+      </td>
+      <td className="max-w-[250px] px-3 py-4 text-xs font-medium text-slate-400 sm:px-6">
+        <div className="w-full truncate" title={voucher.note}>
+          {voucher.note}
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+const JournalList = () => {
+  return (
+    <div className="w-full p-8">
+      <div className="mb-6 flex items-center gap-3 px-1 text-lg font-bold text-slate-700">
+        <div className="rounded-lg bg-slate-800 p-1.5 text-[#ffb732] shadow-sm">
+          <BookOpen size={20} />
+        </div>
+        <span>Journal List</span>
+      </div>
+
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+        <table className="w-full text-left text-sm text-gray-600">
+          <thead className="bg-slate-100 text-xs font-semibold text-gray-600 sm:text-base">
+            <tr>
+              <th scope="col" className="w-[160px] px-3 py-3 sm:px-6">
+                Trading Date
+              </th>
+              <th scope="col" className="px-3 py-3 sm:px-6">
+                Trading Type
+              </th>
+              <th scope="col" className="px-3 py-3 sm:px-6">
+                Source
+              </th>
+              <th scope="col" className="px-3 py-3 sm:px-6">
+                Reason
+              </th>
+              <th scope="col" className="px-3 py-3 sm:px-6">
+                Trading Partner
+              </th>
+              <th scope="col" className="w-[180px] px-3 py-3 sm:px-6">
+                Amount
+              </th>
+              <th scope="col" className="min-w-[200px] px-3 py-3 sm:px-6">
+                Note
+              </th>
+            </tr>
+          </thead>
+          <tbody className="align-middle text-sm">
+            {mockVouchers.map((v) => (
+              <JournalRow key={v.id} voucher={v} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
 
 export default function VoucherDetailModal({
   isOpen,
   onClose,
+  voucher,
 }: IVoucherDetailModalProps) {
-  const [tradingType, setTradingType] = useState<
-    "income" | "outcome" | "transfer"
-  >("outcome");
-  const [businessTax, setBusinessTax] = useState(false);
-  const [fee, setFee] = useState(false);
+  const [tradingType, setTradingType] = useState<TradingType>(
+    voucher?.tradingType || TradingType.OUTCOME,
+  );
+  const [businessTax, setBusinessTax] = useState(voucher?.businessTax || false);
+  const [fee, setFee] = useState(voucher?.fee || false);
+
+  const tradingTypeOptions = Object.values(TradingType).map((type) => {
+    const icon =
+      type === TradingType.INCOME ? (
+        <Download size={18} />
+      ) : TradingType.OUTCOME ? (
+        <Upload size={18} />
+      ) : (
+        <ArrowRightLeft size={18} />
+      );
+
+    return (
+      <button
+        key={type}
+        type="button"
+        onClick={() => setTradingType(type)}
+        className={`transition-color flex flex-1 items-center justify-center gap-2 rounded-lg border px-4 py-3 text-base font-semibold ${
+          tradingType === type
+            ? "border-orange-500 bg-orange-100 text-orange-600 shadow-sm"
+            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+        }`}
+      >
+        {icon} <span>{type}</span>
+      </button>
+    );
+  });
 
   return (
     <Transition show={isOpen} as={Fragment}>
@@ -53,8 +227,8 @@ export default function VoucherDetailModal({
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" />
         </TransitionChild>
 
-        <div className="fixed inset-0 z-101 w-screen overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
+        <div className="fixed inset-0 z-101 flex w-screen items-center justify-center">
+          <div className="flex max-h-[90vh] items-center justify-center p-4 text-center sm:p-6">
             <TransitionChild
               as={Fragment}
               enter="ease-out duration-300"
@@ -64,83 +238,64 @@ export default function VoucherDetailModal({
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <DialogPanel className="relative flex w-full max-w-6xl transform flex-col rounded-2xl bg-slate-50 text-left shadow-2xl transition-all">
-                {/* Header Actions */}
-                <button
-                  type="button"
-                  className="absolute top-4 right-4 z-10 rounded-full bg-slate-200 p-2 text-slate-500 hover:bg-slate-300 hover:text-slate-700"
-                  onClick={onClose}
-                >
-                  <X size={20} />
-                </button>
+              <DialogPanel className="relative flex w-full max-w-6xl transform flex-col rounded-2xl bg-slate-50 text-left shadow-2xl transition-all duration-200 ease-in-out">
+                <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                  <DialogTitle
+                    as="h3"
+                    className="text-xl font-semibold text-gray-900"
+                  >
+                    傳票詳情
+                  </DialogTitle>
+                  <button
+                    type="button"
+                    className="rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
+                    onClick={onClose}
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
 
-                <div className="flex h-[90vh] w-full flex-col overflow-y-auto p-8 shadow-inner">
+                <div className="flex max-h-[80vh] w-full flex-col overflow-y-auto shadow-inner">
                   {/* Top Section: Split Layout */}
-                  <div className="mb-8 flex w-full flex-col gap-8 lg:flex-row">
-                    {/* Left: Invoice Preview/Upload Box */}
-                    <div className="w-full shrink-0 lg:w-1/3">
-                      <div className="group flex aspect-3/4 w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-white text-slate-400 transition-colors hover:border-orange-400 hover:bg-orange-50">
-                        <Plus
-                          size={32}
-                          className="mb-2 group-hover:text-orange-500"
+                  <div className="grid w-full grid-cols-5">
+                    {/* Left: File Preview */}
+                    <ZoomablePreview
+                      hasContent={!!voucher?.file?.hash}
+                      fallbackText="No file available"
+                      className="col-span-2 h-full"
+                    >
+                      {voucher?.file?.hash && (
+                        <FilePreview
+                          file={{
+                            filename: voucher.file.fileName || "Unknown",
+                          }}
+                          fileId={voucher.file.hash}
                         />
-                        <span className="font-medium group-hover:text-orange-500">
-                          Invoice
-                        </span>
-                      </div>
-                    </div>
-
+                      )}
+                    </ZoomablePreview>
                     {/* Right: Form */}
-                    <div className="flex w-full flex-col gap-6 lg:w-2/3">
+                    <div className="col-span-3 flex w-full flex-col gap-6 p-8">
                       {/* Trading Type */}
                       <div>
                         <div className="mb-2 block text-sm font-semibold text-slate-700">
                           Trading Type <span className="text-red-500">*</span>
                         </div>
-                        <div className="flex gap-4">
-                          <button
-                            type="button"
-                            onClick={() => setTradingType("income")}
-                            className={`flex flex-1 items-center justify-center gap-2 rounded-full border-[1.5px] px-4 py-3 font-medium transition-colors ${
-                              tradingType === "income"
-                                ? "border-emerald-300 bg-emerald-50 text-emerald-600 shadow-sm"
-                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                            }`}
-                          >
-                            <Download size={18} /> Income
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setTradingType("outcome")}
-                            className={`flex flex-1 items-center justify-center gap-2 rounded-full border-[1.5px] px-4 py-3 font-medium transition-colors ${
-                              tradingType === "outcome"
-                                ? "border-orange-400 bg-orange-100/50 text-orange-500 shadow-sm"
-                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                            }`}
-                          >
-                            <Upload size={18} /> Outcome
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setTradingType("transfer")}
-                            className={`flex flex-1 items-center justify-center gap-2 rounded-full border-[1.5px] px-4 py-3 font-medium transition-colors ${
-                              tradingType === "transfer"
-                                ? "border-slate-300 bg-slate-100 text-slate-700 shadow-sm"
-                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                            }`}
-                          >
-                            <ArrowRightLeft size={18} /> Transfer
-                          </button>
-                        </div>
+                        <div className="flex gap-4">{tradingTypeOptions}</div>
                       </div>
 
                       {/* Pay from */}
                       <div>
-                        <label htmlFor="payFrom" className="mb-2 block text-sm font-semibold text-slate-700">
+                        <label
+                          htmlFor="payFrom"
+                          className="mb-2 block text-sm font-semibold text-slate-700"
+                        >
                           Pay from <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
-                          <select id="payFrom" className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-3 pr-10 text-sm text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none">
+                          <select
+                            id="payFrom"
+                            className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-3 pr-10 text-sm text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                          >
                             <option>1101 Cash on hand</option>
                             <option>1104 Cash in banks</option>
                           </select>
@@ -181,7 +336,10 @@ export default function VoucherDetailModal({
                       {/* Dates */}
                       <div className="flex flex-col gap-6 sm:flex-row sm:items-end">
                         <div className="flex-1">
-                          <label htmlFor="invoiceIssueDate" className="mb-2 block text-sm font-semibold text-slate-700">
+                          <label
+                            htmlFor="invoiceIssueDate"
+                            className="mb-2 block text-sm font-semibold text-slate-700"
+                          >
                             Invoice Issue Date{" "}
                             <span className="text-red-500">*</span>
                           </label>
@@ -200,7 +358,10 @@ export default function VoucherDetailModal({
                           </div>
                         </div>
                         <div className="flex-1">
-                          <label htmlFor="payingDate" className="mb-2 block text-sm font-semibold text-slate-700">
+                          <label
+                            htmlFor="payingDate"
+                            className="mb-2 block text-sm font-semibold text-slate-700"
+                          >
                             Paying Date <span className="text-red-500">*</span>
                           </label>
                           <div className="relative w-full shadow-sm">
@@ -217,7 +378,7 @@ export default function VoucherDetailModal({
                             />
                           </div>
                         </div>
-                        <label className="flex items-center gap-2 pb-3.5 cursor-pointer">
+                        <label className="flex cursor-pointer items-center gap-2 pb-3.5">
                           <input
                             type="checkbox"
                             className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500"
@@ -230,7 +391,10 @@ export default function VoucherDetailModal({
 
                       {/* Paying Reason */}
                       <div>
-                        <label htmlFor="payingReason" className="mb-2 block text-sm font-semibold text-slate-700">
+                        <label
+                          htmlFor="payingReason"
+                          className="mb-2 block text-sm font-semibold text-slate-700"
+                        >
                           Paying Reason <span className="text-red-500">*</span>
                         </label>
                         <div className="relative flex w-full rounded-xl border border-slate-300 bg-white shadow-sm focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
@@ -247,7 +411,10 @@ export default function VoucherDetailModal({
 
                       {/* Amount and Toggles */}
                       <div>
-                        <label htmlFor="amount" className="mb-2 block text-sm font-semibold text-slate-700">
+                        <label
+                          htmlFor="amount"
+                          className="mb-2 block text-sm font-semibold text-slate-700"
+                        >
                           Amount <span className="text-red-500">*</span>
                         </label>
                         <div className="relative mb-6 flex w-full items-center overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
@@ -267,7 +434,7 @@ export default function VoucherDetailModal({
                         <div className="flex items-center gap-8">
                           <div className="flex items-center gap-3">
                             <button
-                               aria-label="Toggle Business tax"
+                              aria-label="Toggle Business tax"
                               type="button"
                               onClick={() => setBusinessTax(!businessTax)}
                               className={`relative h-6 w-11 rounded-full transition-colors ${businessTax ? "bg-orange-500" : "bg-slate-200"}`}
@@ -286,7 +453,7 @@ export default function VoucherDetailModal({
                           </div>
                           <div className="flex items-center gap-3">
                             <button
-                               aria-label="Toggle Fee"
+                              aria-label="Toggle Fee"
                               type="button"
                               onClick={() => setFee(!fee)}
                               className={`relative h-6 w-11 rounded-full transition-colors ${fee ? "bg-orange-500" : "bg-slate-200"}`}
@@ -308,7 +475,10 @@ export default function VoucherDetailModal({
 
                       {/* Note */}
                       <div>
-                        <label htmlFor="note" className="mb-2 block text-sm font-semibold text-slate-700">
+                        <label
+                          htmlFor="note"
+                          className="mb-2 block text-sm font-semibold text-slate-700"
+                        >
                           Note
                         </label>
                         <input
@@ -317,366 +487,17 @@ export default function VoucherDetailModal({
                           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                         />
                       </div>
-
-                      {/* Save Button */}
-                      <div className="flex flex-1 items-end justify-end pt-4 pb-2">
-                        <button className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-[#ffb732] px-10 py-3 font-bold text-slate-800 shadow-sm transition-colors hover:bg-[#ffaa1a] lg:w-auto">
-                          Save <Save size={18} />
-                        </button>
-                      </div>
                     </div>
                   </div>
 
                   {/* Divider and Journal List */}
-                  <div className="w-full pt-8 pb-4">
-                    <div className="mb-6 flex items-center gap-3 px-1 text-lg font-bold text-slate-700">
-                      <div className="rounded-lg bg-slate-800 p-1.5 text-[#ffb732] shadow-sm">
-                        <BookOpen size={20} />
-                      </div>
-                      <span>Journal List</span>
-                    </div>
+                  <JournalList />
 
-                    <div className="w-full overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-                      <table className="w-full min-w-[1000px]">
-                        <thead>
-                          <tr className="border-b border-slate-200/60 bg-white text-left text-xs text-slate-500">
-                            <th className="w-[120px] border-r border-slate-100 px-6 py-5 text-center font-semibold">
-                              Trading Date{" "}
-                              <span className="ml-1 text-slate-300">#</span>
-                            </th>
-                            <th className="border-r border-slate-100 px-6 py-5 font-semibold">
-                              Trading Type
-                            </th>
-                            <th className="border-r border-slate-100 px-6 py-5 font-semibold">
-                              Source
-                            </th>
-                            <th className="border-r border-slate-100 px-6 py-5 font-semibold">
-                              Reason
-                            </th>
-                            <th className="border-r border-slate-100 px-6 py-5 font-semibold">
-                              Trading Partner
-                            </th>
-                            <th className="w-[180px] border-r border-slate-100 px-6 py-5 font-semibold">
-                              Amount{" "}
-                              <span className="ml-1 text-slate-300">#</span>
-                            </th>
-                            <th className="px-6 py-5 font-semibold">Note</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100/80 align-middle text-sm">
-                          {/* Row 1 */}
-                          <tr className="transition-colors hover:bg-slate-50/50">
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="mx-auto flex w-14 flex-col items-center justify-center overflow-hidden rounded-xl border-[1.5px] border-slate-300 bg-white p-1.5 shadow-sm">
-                                <div className="text-[10px] font-medium text-slate-500">
-                                  2024
-                                </div>
-                                <div className="mt-1 mb-0.5 text-xs leading-none font-black text-[#ffb732]">
-                                  Feb
-                                </div>
-                                <div className="text-xl leading-tight font-extrabold text-slate-800">
-                                  1
-                                </div>
-                              </div>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <span className="inline-flex items-center gap-2 rounded-full bg-red-100/80 px-3.5 py-1.5 text-xs font-bold whitespace-nowrap text-red-500">
-                                <Upload size={14} className="stroke-[2.5]" />{" "}
-                                Outcome
-                              </span>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-medium text-slate-400">
-                                  1101
-                                </span>
-                                <span className="text-sm font-bold whitespace-nowrap text-slate-700">
-                                  Cash on hand
-                                </span>
-                              </div>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-medium text-slate-400">
-                                  4110
-                                </span>
-                                <span className="text-sm font-bold whitespace-nowrap text-slate-700">
-                                  Sales revenue
-                                </span>
-                              </div>
-                            </td>
-                            <td className="flex flex-col gap-0.5 border-r border-slate-100/50 px-6 py-4">
-                              <span className="pt-1.5 text-xs font-medium text-slate-400">
-                                59373022
-                              </span>
-                              <span className="mb-1 text-sm font-bold whitespace-nowrap text-slate-600">
-                                PX Mart
-                              </span>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="text-right text-base font-extrabold whitespace-nowrap text-slate-800">
-                                1,785,000{" "}
-                                <span className="ml-1 text-xs font-bold text-slate-400">
-                                  TWD
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-xs font-medium text-slate-400">
-                              Buy a printer
-                            </td>
-                          </tr>
-
-                          {/* Row 2 */}
-                          <tr className="transition-colors hover:bg-slate-50/50">
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="mx-auto flex w-14 flex-col items-center justify-center overflow-hidden rounded-xl border-[1.5px] border-slate-300 bg-white p-1.5 shadow-sm">
-                                <div className="text-[10px] font-medium text-slate-500">
-                                  2024
-                                </div>
-                                <div className="mt-1 mb-0.5 text-xs leading-none font-black text-emerald-500">
-                                  Apr
-                                </div>
-                                <div className="text-xl leading-tight font-extrabold text-slate-800">
-                                  3
-                                </div>
-                              </div>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100/80 px-4 py-1.5 text-xs font-bold whitespace-nowrap text-emerald-600">
-                                <Download size={14} className="stroke-[2.5]" />{" "}
-                                Income
-                              </span>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-medium text-slate-400">
-                                  1101
-                                </span>
-                                <span className="text-sm font-bold whitespace-nowrap text-slate-700">
-                                  Cash on hand
-                                </span>
-                              </div>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-medium text-slate-400">
-                                  4650
-                                </span>
-                                <span className="text-sm font-bold whitespace-nowrap text-slate-700">
-                                  Technical Service I...
-                                </span>
-                              </div>
-                            </td>
-                            <td className="flex flex-col gap-0.5 border-r border-slate-100/50 px-6 py-4">
-                              <span className="pt-1.5 text-xs font-medium text-slate-400">
-                                59373024
-                              </span>
-                              <span className="mb-1 text-sm font-bold whitespace-nowrap text-slate-600">
-                                PX Mart
-                              </span>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="text-right text-base font-extrabold whitespace-nowrap text-slate-800">
-                                1,500,000{" "}
-                                <span className="ml-1 text-xs font-bold text-slate-400">
-                                  TWD
-                                </span>
-                              </div>
-                            </td>
-                            <td className="max-w-[150px] truncate px-6 py-4 text-xs font-medium text-slate-400">
-                              This is where you can put note
-                            </td>
-                          </tr>
-
-                          {/* Row 3 */}
-                          <tr className="transition-colors hover:bg-slate-50/50">
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="mx-auto flex w-14 flex-col items-center justify-center overflow-hidden rounded-xl border-[1.5px] border-slate-300 bg-white p-1.5 shadow-sm">
-                                <div className="text-[10px] font-medium text-slate-500">
-                                  2024
-                                </div>
-                                <div className="mt-1 mb-0.5 text-xs leading-none font-black text-emerald-500">
-                                  Apr
-                                </div>
-                                <div className="text-xl leading-tight font-extrabold text-slate-800">
-                                  3
-                                </div>
-                              </div>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100/80 px-3 py-1.5 text-xs font-bold whitespace-nowrap text-emerald-600">
-                                <Download size={14} className="stroke-[2.5]" />{" "}
-                                Receivable
-                              </span>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-medium text-slate-400">
-                                  1101
-                                </span>
-                                <span className="text-sm font-bold whitespace-nowrap text-slate-700">
-                                  Cash on hand
-                                </span>
-                              </div>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-medium text-slate-400">
-                                  4110
-                                </span>
-                                <span className="text-sm font-bold whitespace-nowrap text-slate-700">
-                                  Sales revenue
-                                </span>
-                              </div>
-                            </td>
-                            <td className="flex flex-col gap-0.5 border-r border-slate-100/50 px-6 py-4">
-                              <span className="pt-1.5 text-xs font-medium text-slate-400">
-                                59373024
-                              </span>
-                              <span className="mb-1 text-sm font-bold whitespace-nowrap text-slate-600">
-                                PX Mart
-                              </span>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="text-right text-base font-extrabold whitespace-nowrap text-slate-800">
-                                1,500,000{" "}
-                                <span className="ml-1 text-xs font-bold text-slate-400">
-                                  TWD
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-xs font-medium text-slate-400"></td>
-                          </tr>
-
-                          {/* Row 4 */}
-                          <tr className="transition-colors hover:bg-slate-50/50">
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="mx-auto flex w-14 flex-col items-center justify-center overflow-hidden rounded-xl border-[1.5px] border-slate-300 bg-white p-1.5 shadow-sm">
-                                <div className="text-[10px] font-medium text-slate-500">
-                                  2024
-                                </div>
-                                <div className="mt-1 mb-0.5 text-xs leading-none font-black text-orange-400">
-                                  May
-                                </div>
-                                <div className="text-xl leading-tight font-extrabold text-slate-800">
-                                  4
-                                </div>
-                              </div>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <span className="inline-flex items-center gap-2 rounded-full bg-red-100/80 px-3.5 py-1.5 text-xs font-bold whitespace-nowrap text-red-500">
-                                <Upload size={14} className="stroke-[2.5]" />{" "}
-                                Temp. Payment
-                              </span>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-medium text-slate-400">
-                                  1104
-                                </span>
-                                <span className="text-sm font-bold whitespace-nowrap text-slate-700">
-                                  Cash in banks
-                                </span>
-                              </div>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-medium text-slate-400">
-                                  6000
-                                </span>
-                                <span className="text-sm font-bold whitespace-nowrap text-slate-700">
-                                  Net Profit
-                                </span>
-                              </div>
-                            </td>
-                            <td className="flex flex-col gap-0.5 border-r border-slate-100/50 px-6 py-4">
-                              <span className="pt-1.5 text-xs font-medium text-slate-400">
-                                59373025
-                              </span>
-                              <span className="mb-1 text-sm font-bold whitespace-nowrap text-slate-600">
-                                PX Mart
-                              </span>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="text-right text-base font-extrabold whitespace-nowrap text-slate-800">
-                                1,200,000{" "}
-                                <span className="ml-1 text-xs font-bold text-slate-400">
-                                  TWD
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-xs font-medium text-slate-400">
-                              Buy snacks
-                            </td>
-                          </tr>
-
-                          {/* Row 5 */}
-                          <tr className="transition-colors hover:bg-slate-50/50">
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="mx-auto flex w-14 flex-col items-center justify-center overflow-hidden rounded-xl border-[1.5px] border-slate-300 bg-white p-1.5 shadow-sm">
-                                <div className="text-[10px] font-medium text-slate-500">
-                                  2024
-                                </div>
-                                <div className="mt-1 mb-0.5 text-xs leading-none font-black text-slate-400">
-                                  Jun
-                                </div>
-                                <div className="text-xl leading-tight font-extrabold text-slate-800">
-                                  5
-                                </div>
-                              </div>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <span className="inline-flex items-center gap-2 rounded-full bg-slate-200 px-3.5 py-1.5 text-xs font-bold whitespace-nowrap text-slate-500">
-                                <ArrowRightLeft
-                                  size={14}
-                                  className="stroke-[2.5]"
-                                />{" "}
-                                Transfer
-                              </span>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-medium text-slate-400">
-                                  1104
-                                </span>
-                                <span className="text-sm font-bold whitespace-nowrap text-slate-700">
-                                  Cash in banks
-                                </span>
-                              </div>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-medium text-slate-400">
-                                  1101
-                                </span>
-                                <span className="text-sm font-bold whitespace-nowrap text-slate-700">
-                                  Cash on hand
-                                </span>
-                              </div>
-                            </td>
-                            <td className="flex flex-col gap-0.5 border-r border-slate-100/50 px-6 py-4">
-                              <span className="pt-1.5 text-xs font-medium text-slate-400">
-                                59373026
-                              </span>
-                              <span className="mb-1 text-sm font-bold whitespace-nowrap text-slate-600">
-                                PX Mart
-                              </span>
-                            </td>
-                            <td className="border-r border-slate-100/50 px-6 py-4">
-                              <div className="text-right text-base font-extrabold whitespace-nowrap text-slate-800">
-                                800,000{" "}
-                                <span className="ml-1 text-xs font-bold text-slate-400">
-                                  TWD
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-xs font-medium text-slate-400">
-                              Withdraw money
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                  {/* Save Button */}
+                  <div className="flex flex-1 items-end justify-end px-8 pb-8">
+                    <button className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-[#ffb732] px-10 py-3 font-bold text-slate-800 shadow-sm transition-colors hover:bg-[#ffaa1a] lg:w-auto">
+                      Save <Save size={18} />
+                    </button>
                   </div>
                 </div>
               </DialogPanel>

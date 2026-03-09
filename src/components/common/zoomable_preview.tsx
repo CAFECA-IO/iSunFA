@@ -8,12 +8,14 @@ interface IZoomablePreviewProps {
   children: ReactNode;
   fallbackText?: string;
   hasContent: boolean;
+  className?: string;
 }
 
 export default function ZoomablePreview({
   children,
   fallbackText,
   hasContent,
+  className,
 }: IZoomablePreviewProps) {
   const { t } = useTranslation();
 
@@ -68,7 +70,8 @@ export default function ZoomablePreview({
   };
 
   return (
-    <div className="relative flex w-1/2 flex-col border-r border-gray-200 bg-gray-100 p-4">
+<div className={className}>
+      <div className="relative size-full flex flex-col border-r border-gray-200 bg-gray-100 p-4">
       {/* Info: (20260305 - Julian) Zoom Controls */}
       <div className="absolute top-6 right-6 z-10 flex gap-2 rounded-lg bg-white/90 p-1 shadow-sm backdrop-blur">
         <button
@@ -131,5 +134,6 @@ export default function ZoomablePreview({
         )}
       </div>
     </div>
+</div>
   );
 }
