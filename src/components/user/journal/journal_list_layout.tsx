@@ -17,7 +17,6 @@ const JournalListItem = ({
   const { t } = useTranslation();
 
   const formattedDate = new Date(journal.createdAt).toLocaleString();
-
   const formattedDateSplit = formattedDate.split(" ");
 
   const dateStrForDesktop = (
@@ -48,7 +47,7 @@ const JournalListItem = ({
           )}
         </div>
       </td>
-      <td className="w-1/4 px-3 py-2 align-middle whitespace-nowrap text-slate-700 sm:px-6">
+      <td className="w-1/4 px-3 py-2 align-middle font-medium whitespace-nowrap text-slate-700 sm:px-6">
         {dateStrForDesktop}
         {dateStrForMobile}
       </td>
@@ -112,7 +111,7 @@ const JournalListLayout = ({
   ));
 
   return (
-    <div className="overflow-x-auto rounded-md border border-slate-500 bg-white">
+    <div className="overflow-x-auto rounded-md border border-slate-500 bg-white shadow-sm">
       <table className="w-full">
         <tbody>
           <tr>

@@ -79,7 +79,7 @@ export default function JournalMainView() {
         </div>
 
         {/* Info: (20260304 - Julian) Main View */}
-        <div className="w-full px-4 lg:w-[calc(100vw-250px)]">
+        <div className="w-full lg:w-[calc(100vw-250px)] lg:px-4">
           {renderView()}
         </div>
       </div>

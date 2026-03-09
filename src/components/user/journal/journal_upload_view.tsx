@@ -23,7 +23,7 @@ export default function JournalUploadView({
   const { t } = useTranslation();
   const params = useParams();
 
-  // Info: (20260309 - Julian) 從 URL 取得帳簿 ID 
+  // Info: (20260309 - Julian) 從 URL 取得帳簿 ID
   const accountBookId = params?.account_book_id as string;
 
   const [isUploading, setIsUploading] = useState<boolean>(false);
