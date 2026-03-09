@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import {
   Dialog,
   DialogPanel,
@@ -41,6 +42,10 @@ export default function JournalDetailModal({
   onDelete,
 }: IJournalDetailModalProps) {
   const { t } = useTranslation();
+  const params = useParams();
+
+  // Info: (20260309 - Julian) 從 URL 取得帳簿 ID
+  const accountBookId = params?.account_book_id as string;
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editText, setEditText] = useState<string>("");
@@ -84,7 +89,7 @@ export default function JournalDetailModal({
     setIsSaving(true);
     try {
       const data = await request<IApiResponse<{ journal: IJournal }>>(
-        `/api/v1/journal/${journal.id}`,
+        `/api/v1/account_book/${accountBookId}/journal/${journal.id}`,
         {
           method: "PUT",
           body: JSON.stringify({ text: editText }),

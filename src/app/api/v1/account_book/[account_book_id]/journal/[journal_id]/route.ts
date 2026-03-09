@@ -6,11 +6,13 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 
 /**
  * Info: (20260304 - Julian) 取得日記帳
- * GET /api/v1/journal/:journal_id
+ * GET /api/v1/account_book/:account_book_id/journal/:journal_id
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ journal_id: string }> },
+  {
+    params,
+  }: { params: Promise<{ account_book_id: string; journal_id: string }> },
 ) {
   try {
     // Info: (20260304 - Julian) Verify Token & Get User
@@ -22,9 +24,8 @@ export async function GET(
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
 
-    // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
-    const accountBookId = "1";
-
+    // Info: (20260309 - Julian) 取得帳簿
+    const { account_book_id: accountBookId } = await params;
     const accountBook = await prisma.accountBook.findUnique({
       where: { id: accountBookId },
     });
@@ -34,6 +35,7 @@ export async function GET(
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
 
+    // Info: (20260309 - Julian) 取得日記帳
     const { journal_id: journalId } = await params;
     if (!journalId) {
       console.error("Missing journalId");
@@ -58,11 +60,13 @@ export async function GET(
 
 /**
  * Info: (20260304 - Julian) 編輯日記帳
- * PUT /api/v1/journal/:journal_id
+ * PUT /api/v1/account_book/:account_book_id/journal/:journal_id
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ journal_id: string }> },
+  {
+    params,
+  }: { params: Promise<{ account_book_id: string; journal_id: string }> },
 ) {
   try {
     // Info: (20260304 - Julian) Verify Token & Get User
@@ -84,9 +88,8 @@ export async function PUT(
       return jsonFail(ApiCode.NOT_FOUND, "Updater not found");
     }
 
-    // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
-    const accountBookId = "1";
-
+    // Info: (20260309 - Julian) 取得帳簿
+    const { account_book_id: accountBookId } = await params;
     const accountBook = await prisma.accountBook.findUnique({
       where: { id: accountBookId },
     });
@@ -96,6 +99,7 @@ export async function PUT(
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
 
+    // Info: (20260309 - Julian) 取得日記帳
     const { journal_id: journalId } = await params;
     if (!journalId) {
       console.error("Missing journalId");
@@ -136,11 +140,13 @@ export async function PUT(
 
 /**
  * Info: (20260304 - Julian) 刪除日記帳
- * DELETE /api/v1/journal/:journal_id
+ * DELETE /api/v1/account_book/:account_book_id/journal/:journal_id
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ journal_id: string }> },
+  {
+    params,
+  }: { params: Promise<{ account_book_id: string; journal_id: string }> },
 ) {
   try {
     // Info: (20260304 - Julian) Verify Token & Get User
@@ -168,9 +174,8 @@ export async function DELETE(
       return jsonFail(ApiCode.VALIDATION_ERROR, "JournalId is required");
     }
 
-    // ToDo: (20260305 - Julian) 補上取得帳簿 ID 的邏輯
-    const accountBookId = "1";
-
+    // Info: (20260309 - Julian) 取得帳簿
+    const { account_book_id: accountBookId } = await params;
     const accountBook = await prisma.accountBook.findUnique({
       where: { id: accountBookId },
     });
@@ -180,7 +185,7 @@ export async function DELETE(
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
 
-    // Info: (20260304 - Julian) Delete journal
+    // Info: (20260304 - Julian) 刪除日記帳
     const deletedJournal = await prisma.journal.delete({
       where: { id: journalId },
     });

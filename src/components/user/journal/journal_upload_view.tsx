@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   UploadCloud,
@@ -20,6 +21,10 @@ export default function JournalUploadView({
   onUploadComplete?: () => void;
 }) {
   const { t } = useTranslation();
+  const params = useParams();
+
+  // Info: (20260309 - Julian) 從 URL 取得帳簿 ID
+  const accountBookId = params?.account_book_id as string;
 
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
@@ -77,17 +82,20 @@ export default function JournalUploadView({
 
     setIsAnalyzing(true);
     try {
-      const data = await request<IApiResponse<object>>("/api/v1/journal", {
-        method: "POST",
-        body: JSON.stringify({
-          file: {
-            hash: uploadedFile.hash,
-            fileName: uploadedFile.file.name,
-            mimeType: uploadedFile.file.type,
-            base64: uploadedFile.base64,
-          },
-        }),
-      });
+      const data = await request<IApiResponse<object>>(
+        `/api/v1/account_book/${accountBookId}/journal`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            file: {
+              hash: uploadedFile.hash,
+              fileName: uploadedFile.file.name,
+              mimeType: uploadedFile.file.type,
+              base64: uploadedFile.base64,
+            },
+          }),
+        },
+      );
 
       if (data.code === ApiCode.SUCCESS) {
         onUploadComplete?.();

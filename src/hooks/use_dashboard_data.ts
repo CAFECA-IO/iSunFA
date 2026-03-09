@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { request } from '@/lib/utils/request';
+import { useParams } from 'next/navigation';
 
 export type TimeUnit = '24h' | '7d' | '30d' | '3m' | '1y';
 export type GasType = 'co2' | 'ch4' | 'n2o' | 'f_gases';
@@ -21,6 +22,7 @@ export interface IDashboardResponse {
 }
 
 export const useDashboardData = () => {
+  const params = useParams();
   const [timeUnit, setTimeUnit] = useState<TimeUnit>('24h');
   const [gasType, setGasType] = useState<GasType>('co2');
   const [apiData, setApiData] = useState<IDashboardResponse | null>(null);
@@ -39,7 +41,7 @@ export const useDashboardData = () => {
 
       try {
         // Info: (20260309 - Luphia) 根據目前路徑取得 account_book_id
-        const accountBookId = window.location.pathname.split('/account_book/').pop()?.split('/')[0] || 'default';
+        const accountBookId = params?.account_book_id as string || 'default';
         const response = await request<{ payload: IDashboardResponse }>('/api/v1/user/account_book/' + accountBookId + '/dashboard', {
           query: { timeUnit }
         });

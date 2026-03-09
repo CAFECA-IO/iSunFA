@@ -21,10 +21,12 @@ import { MODULES } from "@/constants/modules";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
 import LoginButton from "@/components/common/login_button";
+import { useParams } from "next/navigation";
 
 export default function UserActions() {
   const { user, logout, refreshAuth } = useAuth();
   const { t } = useTranslation();
+  const params = useParams();
 
   // Info: (20260118 - Luphia) Check if a module is active for the current user
   const isModuleActive = (moduleKey: string) => {
@@ -36,10 +38,9 @@ export default function UserActions() {
     return <LoginButton />;
   }
 
-  // Info: (20260309 - Luphia) 根據路徑取得目前 accountBookId
-  const currentPath = window.location.pathname;
-  const currentAccountBookId = currentPath.split("/account_book/").pop()?.split('/')[0] || 'default';
-  const accountBookPath = `/user/account_book/${currentAccountBookId}`;
+  // Info: (20260309 - Luphia) 根據目前路徑取得 account_book_id
+  const accountBookId = params?.account_book_id as string || 'default';
+  const accountBookPath = `/user/account_book/${accountBookId}`;
 
   return (
     <Menu as="div" className="relative">

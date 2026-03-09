@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useParams } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   Search,
@@ -21,6 +22,10 @@ import { ApiCode } from "@/lib/utils/status";
 
 export default function JournalListView() {
   const { t } = useTranslation();
+  const params = useParams();
+
+  // Info: (20260309 - Julian) 從 URL 取得帳簿 ID
+  const accountBookId = params?.account_book_id as string;
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [displayType, setDisplayType] = useState<"grid" | "list">("list");
@@ -68,7 +73,7 @@ export default function JournalListView() {
     setIsDeleting(true);
     try {
       const data = await request<IApiResponse<null>>(
-        `/api/v1/journal/${journalToDelete.id}`,
+        `/api/v1/account_book/${accountBookId}/journal/${journalToDelete.id}`,
         {
           method: "DELETE",
         },
@@ -111,7 +116,7 @@ export default function JournalListView() {
       }
 
       const data = await request<IApiResponse<{ journals: IJournal[] }>>(
-        `/api/v1/journal?${params.toString()}`,
+        `/api/v1/account_book/${accountBookId}/journal?${params.toString()}`,
       );
       if (data.payload?.journals) {
         setJournals(data.payload.journals);
@@ -121,7 +126,7 @@ export default function JournalListView() {
     } finally {
       setIsLoading(false);
     }
-  }, [sortOrder, debouncedKeyWord, startDate, endDate]);
+  }, [sortOrder, debouncedKeyWord, startDate, endDate, accountBookId]);
 
   useEffect(() => {
     fetchJournals();
