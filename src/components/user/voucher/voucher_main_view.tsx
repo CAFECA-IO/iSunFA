@@ -146,6 +146,8 @@ const VoucherRow = ({
 export default function VoucherMainView() {
   const pathname = usePathname();
 
+  const currencyUnit = "TWD"; // ToDo: (20260310 - Julian) 先固定使用 TWD
+
   const [filteredType, setFilteredType] = useState<TradingType | "all">("all");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -188,10 +190,10 @@ export default function VoucherMainView() {
         <h1 className="text-2xl font-bold text-slate-800">傳票管理</h1>
       </div>
 
-      <div className="flex w-full flex-col gap-4 gap-x-12 px-8 pb-10">
+      <div className="flex w-full flex-col gap-4 gap-x-12 px-0 sm:px-8 pb-10">
         <div className="mx-auto w-full max-w-[1400px]">
           {/* Info: (20260310 - Julian) Top Controls */}
-          <div className="mb-6 flex gap-4">
+          <div className="mb-6 flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <label
                 htmlFor="typeSelect"
@@ -293,12 +295,12 @@ export default function VoucherMainView() {
             </div> */}
           </div>
 
-          <div className="mb-2 text-right text-xs font-bold tracking-wider text-slate-400">
-            CURRENCY: TWD
+          <div className="mb-2 text-right text-xs uppercase font-bold tracking-wider text-slate-400">
+            CURRENCY: {currencyUnit}
           </div>
 
           {/* Info: (20260310 - Julian) Table Container */}
-          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+          <div className="overflow-x-auto max-w-[90vw] rounded-lg border border-gray-200 bg-white shadow-sm">
             <table className="w-full text-left text-sm text-gray-600">
               <tbody>
                 <tr>

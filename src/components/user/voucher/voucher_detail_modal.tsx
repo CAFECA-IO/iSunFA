@@ -38,7 +38,7 @@ const VoucherRow = ({
   removeRow: (id: string) => void;
 }) => {
   return (
-    <div className="grid grid-cols-13 gap-4">
+    <div className="grid grid-cols-13 gap-2">
       {/* Info: (20260310 - Julian) Accounting */}
       <div className="col-span-3 flex h-[46px] flex-3 items-center overflow-hidden rounded-xl bg-white focus-within:ring-2 focus-within:ring-orange-500">
         <select
@@ -168,14 +168,17 @@ export default function VoucherDetailModal({
   const checkHasChanges = () => {
     if (!activeVoucher) return true;
 
+    // Info: (20260310 - Julian) 檢查日期和分錄類別
     if (inputDate !== (activeVoucher.tradingDate ?? 0)) return true;
     if (voucherType !== (activeVoucher.tradingType ?? TradingType.INCOME))
       return true;
     if (note !== (activeVoucher.note || "")) return true;
 
+    // Info: (20260310 - Julian) 檢查分錄數量
     const originalRows = activeVoucher.lineItems.lines || [];
     if (rows.length !== originalRows.length) return true;
 
+    // Info: (20260310 - Julian) 檢查分錄內容
     return rows.some((row, i) => {
       const orig = originalRows[i];
       if (row.accounting?.code !== orig.accounting?.code) return true;
@@ -309,7 +312,7 @@ export default function VoucherDetailModal({
                         type="date"
                         value={
                           inputDate
-                            ? new Date(inputDate).toISOString().split("T")[0]
+                            ? new Date(inputDate*1000).toISOString().split("T")[0]
                             : ""
                         }
                         onChange={(e) =>
@@ -401,21 +404,19 @@ export default function VoucherDetailModal({
                   {/* Info: (20260310 - Julian) Table Box */}
                   <div className="mt-8 rounded-2xl bg-slate-600 p-6 shadow-sm">
                     {/* Info: (20260310 - Julian) Headers */}
-                    <div className="mb-3 flex gap-4 px-1">
-                      <div className="flex-3 text-sm font-semibold text-white">
+                    <div className="mb-3 grid grid-cols-13 gap-2">
+                      <div className="col-span-3 text-sm font-semibold text-white">
                         Accounting
                       </div>
-                      <div className="flex-3 text-sm font-semibold text-white">
+                      <div className="col-span-3 text-sm font-semibold text-white">
                         Particulars
                       </div>
-                      <div className="flex-2 text-sm font-semibold text-white">
+                      <div className="col-span-3 text-sm font-semibold text-white">
                         Debit
                       </div>
-                      <div className="flex-2 text-sm font-semibold text-white">
+                      <div className="col-span-3 text-sm font-semibold text-white">
                         Credit
                       </div>
-                      <div className="w-8"></div>{" "}
-                      {/* Info: (20260310 - Julian) spacer for trash icon */}
                     </div>
 
                     {/* Info: (20260310 - Julian) Rows */}
@@ -430,7 +431,7 @@ export default function VoucherDetailModal({
                       ))}
 
                       {/* Info: (20260310 - Julian) Subtotals */}
-                      <div className="grid grid-cols-13 gap-4">
+                      <div className="grid grid-cols-13 gap-2">
                         <div
                           className={`col-start-7 col-end-10 text-right text-sm font-bold ${isTotalBalanced ? "text-emerald-400" : "text-red-400"}`}
                         >
