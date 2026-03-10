@@ -209,11 +209,13 @@ export default function VoucherDetailModal({
 
   const isTotalBalanced = totalCredit === totalDebit;
 
-  // Info: (20260310 - Julian) 以下情況不允許儲存
-  // 1. 日期或分錄類別為空
-  // 2. 借貸不平衡
-  // 3. 分錄為空
-  // 4. 有分錄的會計科目或金額為空
+  /**
+   * Info: (20260310 - Julian) 以下情況不允許儲存
+   * 1. 日期或分錄類別為空
+   * 2. 借貸不平衡
+   * 3. 分錄為空
+   * 4. 有分錄的會計科目或金額為空
+   */
   const disabledSaveButton =
     inputDate === 0 ||
     voucherType == null ||
@@ -315,7 +317,7 @@ export default function VoucherDetailModal({
                         type="date"
                         value={
                           inputDate
-                            ? new Date(inputDate*1000).toISOString().split("T")[0]
+                            ? new Date(inputDate * 1000).toISOString().split("T")[0]
                             : ""
                         }
                         onChange={(e) =>

@@ -46,6 +46,16 @@ export class AccountBookRepository {
     return teamMembers;
   }
 
+  async getAccountBookById(accountBookId: string) {
+    const accountBook = await prisma.accountBook.findUnique({
+      where: {
+        id: accountBookId,
+        deletedAt: null
+      }
+    });
+    return accountBook;
+  }
+
   async listTeamsAccountBooksByTeamId(teamId: string) {
     // Info: (20260306 - Luphia) 查詢特定團隊時過濾掉已刪除帳本
     const accountBooks = await prisma.accountBook.findMany({

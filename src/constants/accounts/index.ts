@@ -62,7 +62,7 @@ export const ACCOUNTS = {
   US: US_ACCOUNTS,
 };
 
-export const mockAccounts:IAccount[] = [
+export const mockAccounts: IAccount[] = [
   {
     code: "1101",
     name: "Cash on hand",
@@ -72,7 +72,7 @@ export const mockAccounts:IAccount[] = [
     parentCode: "",
     isDebit: true,
   },
- {
+  {
     code: "4110",
     name: "Sales Revenue",
     description: "Sales Revenue",
@@ -81,4 +81,4 @@ export const mockAccounts:IAccount[] = [
     parentCode: "",
     isDebit: false,
   },
-]
+];

@@ -62,6 +62,11 @@ export const createAccountBook = async (data: Prisma.AccountBookCreateInput): Pr
   return AccountBookRepo.create(data);
 };
 
+// Info: (20260308 - Luphia) 取得一個帳簿
+export const getAccountBookById = async (accountBookId: string): Promise<IAccountBook | null> => {
+  return AccountBookRepo.getAccountBookById(accountBookId);
+};
+
 // Info: (20260308 - Luphia) 編輯帳簿
 export const updateAccountBook = async (accountBookId: string, data: Prisma.AccountBookUpdateInput): Promise<IAccountBook> => {
   return AccountBookRepo.updateAccountBook(accountBookId, data);
