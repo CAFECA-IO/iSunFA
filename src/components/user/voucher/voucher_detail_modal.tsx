@@ -68,7 +68,7 @@ const VoucherRow = ({
       <div className="col-span-3 h-[46px] flex-3">
         <input
           type="text"
-          aria-label="Particulars"
+          aria-label="Particular"
           value={row.particular}
           onChange={(e) =>
             updateRow(row.id, { ...row, particular: e.target.value })
@@ -409,7 +409,7 @@ export default function VoucherDetailModal({
                         Accounting
                       </div>
                       <div className="col-span-3 text-sm font-semibold text-white">
-                        Particulars
+                        Particular
                       </div>
                       <div className="col-span-3 text-sm font-semibold text-white">
                         Debit

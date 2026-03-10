@@ -43,6 +43,7 @@ model User {
   journals            Journal[]
   teamMembers         TeamMember[]
   auditLogs           AuditLog[]
+  vouchers            Voucher[]
 
   @@index([address])
   @@map("user")
@@ -177,6 +178,7 @@ model File {
   threadId String? @map("thread_id")
 
   journals Journal[]
+  vouchers Voucher[]
 
   @@map("file")
 }
@@ -358,6 +360,9 @@ model AccountBook {
   // Info: (20260305 - Julian) 一個帳本可以有多個憑證
   journals Journal[]
 
+  // Info: (20260310 - Julian) 一個帳本可以有多個傳票
+  vouchers Voucher[]
+
   // Info: (20260306 - Julian) 一個帳本可以有多個編輯紀錄
   auditLogs AuditLog[]
 
@@ -398,4 +403,56 @@ model AuditLog {
   user   User   @relation(fields: [userId], references: [id])
 
   @@map("audit_log")
+}
+
+// Info: (20260310 - Julian) 傳票
+model Voucher {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  tradingDate DateTime @map("trading_date") // 交易日期
+  tradingType String   @map("trading_type") // 交易類別: income, outcome, transfer
+  note        String   @db.Text // 備註
+  issuerName  String   @map("issuer_name") // 開立人名稱
+  currency    String   @default("TWD") // 幣別
+
+  // 關聯檔案 (如附件)
+  fileId String? @map("file_id")
+  file   File?   @relation(fields: [fileId], references: [id])
+
+  // 隸屬的帳本
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  // 建立此傳票的 User
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id])
+
+  // 包含的分錄
+  lines VoucherLine[]
+
+  @@map("voucher")
+}
+
+// Info: (20260310 - Julian) 傳票分錄
+model VoucherLine {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 隸屬的傳票
+  voucherId String  @map("voucher_id")
+  voucher   Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+
+  // 會計項目 (前端使用 IAccount)
+  accountingCode String @map("accounting_code") // 科目代碼
+  accountingName String @map("accounting_name") // 科目名稱
+
+  particular String  @db.Text // 摘要
+  amount     Int // 金額
+  isDebit    Boolean @map("is_debit") // 是否為借方 (true=借方/Debit, false=貸方/Credit)
+
+  @@map("voucher_line")
 }
