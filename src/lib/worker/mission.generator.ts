@@ -8,6 +8,14 @@ import { COMPANY as SRR } from '@/constants/prompts/company/srr';
 import { COMPANY as TPM } from '@/constants/prompts/company/tpm';
 import { COMPANY as UEE } from '@/constants/prompts/company/uee';
 import { COMPANY as FINAL } from '@/constants/prompts/company/final';
+import {
+  STEP_1_EVENT_COLLECTION_PROMPT,
+  STEP_2_TAG_EXTRACTION_PROMPT,
+  STEP_3_SUMMARY_AND_ANALYSIS_PROMPT,
+  STEP_4_MARKET_REACTION_PROMPT,
+  STEP_5_FORMATTED_OUTPUT_PROMPT
+} from '@/constants/prompts/market_analysis';
+import { getPeriodDateRange } from '@/lib/analysis/period';
 
 export interface IMissionParams {
   category: string;
@@ -22,6 +30,14 @@ export interface IMissionDefinition {
   name: string;
   tasks: ITaskDefinition[];
 }
+
+const COUNTRY_MAPPING: Record<string, string> = {
+  'tw': '台灣',
+  'us': '美國',
+  'cn': '中國',
+  'jp': '日本',
+  'eu': '歐洲',
+};
 
 export class MissionGenerator {
   // Info: (20260130 - Luphia) Remove async as it's just structural generation
@@ -63,12 +79,83 @@ export class MissionGenerator {
     }
 
     if (['market_trends', 'industry_development', 'financial_product_rating'].includes(params.category)) {
-      const taskGenerator = new TaskGenerator();
-      const targetInfo = `Target: ${params.keyword || 'General'} / Country: ${params.country || 'N/A'} / Period: ${params.periodValue} (Year: ${params.year})`;
+      const countryName = params.country ? (COUNTRY_MAPPING[params.country] || params.country) : '台灣';
+      let startDateStr = 'N/A';
+      let endDateStr = 'N/A';
+
+      try {
+        const { start, end } = getPeriodDateRange(params.periodType, params.year, params.periodValue);
+        startDateStr = start;
+        endDateStr = end;
+      } catch (e) {
+        console.warn('Failed to parse date range for mission generator:', e);
+      }
+
+      const targetInfo = JSON.stringify({
+        startDate: startDateStr,
+        endDate: endDateStr,
+        marketName: countryName,
+        target: params.keyword || 'General',
+        period: params.periodValue,
+        year: params.year
+      });
+
       const tasks: ITaskDefinition[] = [];
 
-      tasks.push(taskGenerator.generateTask('EXTERNAL_DATA_GATHERING', 'Gather external data based on target information and selected category.', targetInfo, 0));
-      tasks.push(taskGenerator.generateTask('FINAL', FINAL, targetInfo, 1));
+      // Info: (20260310 - Tzuhan) Step 1: Event Collection
+      tasks.push({
+        type: 'MARKET_EVENT_COLLECTION',
+        order: 0,
+        data: {
+          key: 'STEP_1',
+          prompt: STEP_1_EVENT_COLLECTION_PROMPT,
+          context: targetInfo
+        }
+      });
+
+      // Info: (20260310 - Tzuhan) Step 2: Tag Extraction
+      tasks.push({
+        type: 'MARKET_TAG_EXTRACTION',
+        order: 1,
+        data: {
+          key: 'STEP_2',
+          prompt: STEP_2_TAG_EXTRACTION_PROMPT,
+          context: targetInfo
+        }
+      });
+
+      // Info: (20260310 - Tzuhan) Step 3: Summary and Analysis
+      tasks.push({
+        type: 'MARKET_SUMMARY_ANALYSIS',
+        order: 2,
+        data: {
+          key: 'STEP_3',
+          prompt: STEP_3_SUMMARY_AND_ANALYSIS_PROMPT,
+          context: targetInfo
+        }
+      });
+
+      // Info: (20260310 - Tzuhan) Step 4: Market Reaction
+      tasks.push({
+        type: 'MARKET_REACTION_PREDICTION',
+        order: 3,
+        data: {
+          key: 'STEP_4',
+          prompt: STEP_4_MARKET_REACTION_PROMPT,
+          context: targetInfo
+        }
+      });
+
+      // Info: (20260310 - Tzuhan)Step 5: Formatted Output
+      tasks.push({
+        type: 'MARKET_FORMATTED_OUTPUT',
+        order: 4,
+        data: {
+          key: 'STEP_5',
+          prompt: STEP_5_FORMATTED_OUTPUT_PROMPT,
+          context: targetInfo
+        }
+      });
 
       return {
         name: `External Analysis - ${params.category} - ${params.periodValue}`,

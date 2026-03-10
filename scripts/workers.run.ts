@@ -1,3 +1,5 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 import { taskService } from '../src/services/task.service';
 
