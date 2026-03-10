@@ -1,7 +1,4 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
-
-import { taskService } from '../src/services/task.service';
+import { taskService } from '@/services/task.service';
 
 /**
  * Info: (20260130 - Luphia)

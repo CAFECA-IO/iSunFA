@@ -32,7 +32,7 @@ export interface IMissionDefinition {
 }
 
 const COUNTRY_MAPPING: Record<string, string> = {
-  'tw': '台灣',
+  'tw': '臺灣',
   'us': '美國',
   'cn': '中國',
   'jp': '日本',

@@ -94,7 +94,7 @@ export class TaskRepository implements ITaskRepository {
           const stuckTask = tasks.find(t => {
             if (t.status === TASK_STATUS.RUNNING && t.updatedAt) {
               const diffMs = new Date().getTime() - t.updatedAt.getTime();
-              return diffMs > 10 * 60 * 1000; // 10 minutes timeout
+              return diffMs > 10 * 60 * 1000; // Info: (20260310 - Tzuhan) 10 minutes timeout
             }
             return false;
           });
