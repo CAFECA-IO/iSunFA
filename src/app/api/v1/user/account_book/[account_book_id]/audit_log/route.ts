@@ -7,7 +7,7 @@ import { AuditLogDataType } from "@/generated/enums";
 
 /**
  * Info: (20260306 - Julian) 取得日記帳的異動紀錄
- * GET /api/v1/account_book/:account_book_id/audit_log
+ * GET /api/v1/user/account_book/:account_book_id/audit_log
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ account_book_id: string }> }) {
   try {

@@ -134,7 +134,7 @@ export default function JournalLogView() {
     setIsLoading(true);
     try {
       const data = await request<IApiResponse<{ logs: IAuditLog[] }>>(
-        `/api/v1/account_book/${accountBookId}/audit_log?dataType=JOURNAL`,
+        `/api/v1/user/account_book/${accountBookId}/audit_log?dataType=JOURNAL`,
       );
       if (data.code === ApiCode.SUCCESS && data.payload?.logs) {
         setLogs(data.payload.logs);

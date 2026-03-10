@@ -7,7 +7,7 @@ import { Prisma } from "@/generated/browser";
 
 /**
  * Info: (20260310 - Julian) 新增傳票
- * POST /api/v1/account_book/:account_book_id/voucher
+ * POST /api/v1/user/account_book/:account_book_id/voucher
  */
 export async function POST(
   request: NextRequest,
@@ -77,7 +77,7 @@ export async function POST(
 
 /**
  * Info: (20260310 - Julian) 取得全部或指定範圍傳票
- * GET /api/v1/account_book/:account_book_id/voucher
+ * GET /api/v1/user/account_book/:account_book_id/voucher
  */
 export async function GET(
   request: NextRequest,

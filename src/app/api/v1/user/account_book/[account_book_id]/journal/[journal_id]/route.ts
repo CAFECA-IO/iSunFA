@@ -6,7 +6,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 
 /**
  * Info: (20260304 - Julian) 取得日記帳
- * GET /api/v1/account_book/:account_book_id/journal/:journal_id
+ * GET /api/v1/user/account_book/:account_book_id/journal/:journal_id
  */
 export async function GET(
   request: NextRequest,
@@ -60,7 +60,7 @@ export async function GET(
 
 /**
  * Info: (20260304 - Julian) 編輯日記帳
- * PUT /api/v1/account_book/:account_book_id/journal/:journal_id
+ * PUT /api/v1/user/account_book/:account_book_id/journal/:journal_id
  */
 export async function PUT(
   request: NextRequest,
@@ -140,7 +140,7 @@ export async function PUT(
 
 /**
  * Info: (20260304 - Julian) 刪除日記帳
- * DELETE /api/v1/account_book/:account_book_id/journal/:journal_id
+ * DELETE /api/v1/user/account_book/:account_book_id/journal/:journal_id
  */
 export async function DELETE(
   request: NextRequest,

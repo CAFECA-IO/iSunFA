@@ -89,7 +89,7 @@ export default function JournalDetailModal({
     setIsSaving(true);
     try {
       const data = await request<IApiResponse<{ journal: IJournal }>>(
-        `/api/v1/account_book/${accountBookId}/journal/${journal.id}`,
+        `/api/v1/user/account_book/${accountBookId}/journal/${journal.id}`,
         {
           method: "PUT",
           body: JSON.stringify({ text: editText }),
