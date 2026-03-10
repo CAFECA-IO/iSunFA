@@ -992,10 +992,7 @@ export const en = {
       }
     },
     "detail_modal": {
-      "titles": {
-        "new_voucher": "New Voucher",
-        "edit_voucher": "Edit Voucher {id}"
-      },
+      "title": 'Edit Voucher ',
       "fields": {
         "voucher_date": "Voucher Date",
         "voucher_type": "Voucher Type",

@@ -9,6 +9,7 @@ import {
   TransitionChild,
 } from "@headlessui/react";
 import { X, ChevronDown, BookOpen, Trash2, Plus, Save } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
 import { mockVouchers, TradingType } from "@/interfaces/voucher";
 import { IAccount, mockAccounts } from "@/constants/accounts";
 import { numberWithCommas } from "@/lib/utils/common";
@@ -37,6 +38,7 @@ const VoucherRow = ({
   updateRow: (id: string, newRow: IVoucherLineUI) => void;
   removeRow: (id: string) => void;
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-13 gap-2">
       {/* Info: (20260310 - Julian) Accounting */}
@@ -52,7 +54,7 @@ const VoucherRow = ({
           className="w-full appearance-none rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none"
         >
           <option value="" disabled>
-            Select
+            {t("voucher.detail_modal.fields.accounting_select")}
           </option>
           {mockAccounts.map((acc) => (
             <option key={acc.code} value={acc.code}>
@@ -68,7 +70,7 @@ const VoucherRow = ({
       <div className="col-span-3 h-[46px] flex-3">
         <input
           type="text"
-          aria-label="Particular"
+          aria-label={t("voucher.detail_modal.fields.particular")}
           value={row.particular}
           onChange={(e) =>
             updateRow(row.id, { ...row, particular: e.target.value })
@@ -80,7 +82,7 @@ const VoucherRow = ({
       <div className="col-span-3 h-[46px] flex-2">
         <input
           type="number"
-          aria-label="Debit"
+          aria-label={t("voucher.detail_modal.fields.debit")}
           placeholder="0"
           value={row.isDebit === true ? row.amount || "" : ""}
           disabled={row.isDebit === false}
@@ -101,7 +103,7 @@ const VoucherRow = ({
       <div className="col-span-3 h-[46px] flex-2">
         <input
           type="number"
-          aria-label="Credit"
+          aria-label={t("voucher.detail_modal.fields.credit")}
           placeholder="0"
           value={row.isDebit === false ? row.amount || "" : ""}
           disabled={row.isDebit === true}
@@ -142,6 +144,7 @@ export default function VoucherDetailModal({
   onClose,
   voucherId,
 }: IVoucherDetailModalProps) {
+  const { t } = useTranslation();
   const activeVoucher = mockVouchers.find((v) => v.id === voucherId);
 
   const [inputDate, setInputDate] = useState<number>(
@@ -281,7 +284,7 @@ export default function VoucherDetailModal({
                     as="h3"
                     className="text-xl font-bold text-slate-800"
                   >
-                    {voucherId ? `Edit Voucher ${voucherId}` : "New Voucher"}
+                    {t("voucher.detail_modal.title")} {voucherId}
                   </DialogTitle>
                   <button
                     type="button"
@@ -303,12 +306,12 @@ export default function VoucherDetailModal({
                         htmlFor="voucherDate"
                         className="mb-2 block text-sm font-bold text-slate-500"
                       >
-                        Voucher Date
+                        {t("voucher.detail_modal.fields.voucher_date")}
                         <span className="ml-0.5 text-red-500">*</span>
                       </label>
                       <input
                         id="voucherDate"
-                        aria-label="Voucher Date"
+                        aria-label={t("voucher.detail_modal.fields.voucher_date")}
                         type="date"
                         value={
                           inputDate
@@ -333,7 +336,7 @@ export default function VoucherDetailModal({
                         htmlFor="voucherType"
                         className="mb-2 block text-sm font-bold text-slate-500"
                       >
-                        Voucher Type
+                        {t("voucher.detail_modal.fields.voucher_type")}
                         <span className="ml-0.5 text-red-500">*</span>
                       </label>
                       <div className="relative">
@@ -345,9 +348,9 @@ export default function VoucherDetailModal({
                           }
                           className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                         >
-                          <option value={TradingType.INCOME}>Payment</option>
-                          <option value={TradingType.OUTCOME}>Receipt</option>
-                          <option value={TradingType.TRANSFER}>Transfer</option>
+                          <option value={TradingType.INCOME}>{t("voucher.main_view.filters.type_options.payment")}</option>
+                          <option value={TradingType.OUTCOME}>{t("voucher.main_view.filters.type_options.receipt")}</option>
+                          <option value={TradingType.TRANSFER}>{t("voucher.main_view.filters.type_options.transfer")}</option>
                         </select>
                         <ChevronDown
                           size={18}
@@ -363,11 +366,11 @@ export default function VoucherDetailModal({
                       htmlFor="noteField"
                       className="mb-2 block text-sm font-bold text-slate-500"
                     >
-                      Note
+                      {t("voucher.detail_modal.fields.note")}
                     </label>
                     <input
                       id="noteField"
-                      aria-label="Note"
+                      aria-label={t("voucher.detail_modal.fields.note")}
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                       type="text"
@@ -406,16 +409,16 @@ export default function VoucherDetailModal({
                     {/* Info: (20260310 - Julian) Headers */}
                     <div className="mb-3 grid grid-cols-13 gap-2">
                       <div className="col-span-3 text-sm font-semibold text-white">
-                        Accounting
+                        {t("voucher.detail_modal.fields.accounting")}
                       </div>
                       <div className="col-span-3 text-sm font-semibold text-white">
-                        Particular
+                        {t("voucher.detail_modal.fields.particular")}
                       </div>
                       <div className="col-span-3 text-sm font-semibold text-white">
-                        Debit
+                        {t("voucher.detail_modal.fields.debit")}
                       </div>
                       <div className="col-span-3 text-sm font-semibold text-white">
-                        Credit
+                        {t("voucher.detail_modal.fields.credit")}
                       </div>
                     </div>
 
@@ -465,7 +468,7 @@ export default function VoucherDetailModal({
                       onClick={() => setIsClearModalOpen(true)}
                       className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-100"
                     >
-                      Clear All
+                      {t("voucher.detail_modal.actions.clear_all")}
                     </button>
                     <button
                       type="button"
@@ -473,7 +476,7 @@ export default function VoucherDetailModal({
                       onClick={saveVoucher}
                       className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-3 text-sm font-bold text-white shadow-none hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
                     >
-                      Save Voucher <Save size={18} />
+                      {t("voucher.detail_modal.actions.save_voucher")} <Save size={18} />
                     </button>
                   </div>
                 </div>
@@ -487,10 +490,10 @@ export default function VoucherDetailModal({
       <ConfirmModal
         isOpen={isClearModalOpen}
         onClose={() => setIsClearModalOpen(false)}
-        title="Clear all"
-        message="Are you sure you want to clear all data?"
-        confirmText="Confirm"
-        cancelText="Cancel"
+        title={t("voucher.detail_modal.confirm_modals.clear_all.title")}
+        message={t("voucher.detail_modal.confirm_modals.clear_all.message")}
+        confirmText={t("voucher.detail_modal.actions.confirm")}
+        cancelText={t("voucher.detail_modal.actions.cancel")}
         onConfirm={() => {
           setRows([]);
           setInputDate(0);
@@ -504,10 +507,10 @@ export default function VoucherDetailModal({
       <ConfirmModal
         isOpen={isCloseModalOpen}
         onClose={() => setIsCloseModalOpen(false)}
-        title="Leave without saving"
-        message="Are you sure you want to discard your changes and leave?"
-        confirmText="Confirm"
-        cancelText="Cancel"
+        title={t("voucher.detail_modal.confirm_modals.leave_without_saving.title")}
+        message={t("voucher.detail_modal.confirm_modals.leave_without_saving.message")}
+        confirmText={t("voucher.detail_modal.actions.confirm")}
+        cancelText={t("voucher.detail_modal.actions.cancel")}
         onConfirm={() => {
           onClose();
         }}
@@ -517,10 +520,10 @@ export default function VoucherDetailModal({
       <ConfirmModal
         isOpen={isSaveModalOpen}
         onClose={() => setIsSaveModalOpen(false)}
-        title="Save Voucher"
-        message="Are you sure you want to save this voucher?"
-        confirmText="Confirm"
-        cancelText="Cancel"
+        title={t("voucher.detail_modal.confirm_modals.save_voucher.title")}
+        message={t("voucher.detail_modal.confirm_modals.save_voucher.message")}
+        confirmText={t("voucher.detail_modal.actions.confirm")}
+        cancelText={t("voucher.detail_modal.actions.cancel")}
         onConfirm={() => {
           onClose();
         }}

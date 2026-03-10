@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Search,
 } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
 import { timestampToString, numberWithCommas } from "@/lib/utils/common";
 import VoucherDetailModal from "@/components/user/voucher/voucher_detail_modal";
 import { IVoucher, TradingType, mockVouchers } from "@/interfaces/voucher";
@@ -22,6 +23,7 @@ const VoucherRow = ({
   voucher: IVoucher;
   onClick: () => void;
 }) => {
+  const { t } = useTranslation();
   const lineItems = voucher.lineItems.lines;
 
   const renderIcon = (type: TradingType) => {
@@ -75,7 +77,7 @@ const VoucherRow = ({
         {voucher.isDeleted && (
           <div className="mt-2">
             <span className="inline-block rounded-full bg-orange-200 px-2 py-0.5 text-[10px] font-bold text-orange-500">
-              Deleted
+              {t("voucher.main_view.table.status_deleted")}
             </span>
           </div>
         )}
@@ -145,6 +147,7 @@ const VoucherRow = ({
 
 export default function VoucherMainView() {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   const currencyUnit = "TWD"; // ToDo: (20260310 - Julian) 先固定使用 TWD
 
@@ -156,14 +159,38 @@ export default function VoucherMainView() {
     null,
   );
   const [vouchers /* , setVouchers */] = useState<IVoucher[]>(mockVouchers);
+  const [sorting,setSorting] = useState<string>('')
   const [hideDeleted, setHideDeleted] = useState<boolean>(false);
 
   // Info: (20260309 - Julian) 連接到 Journal
   const journalLink = pathname.replace("voucher", "journal");
 
+  const clickDateSort = () => setSorting(prev => prev === "date_desc" ? "date_asc" : "date_desc");
+  const clickDebitSort = () => setSorting(prev => prev === "debit_desc" ? "debit_asc" : "debit_desc");
+  const clickCreditSort = () => setSorting(prev => prev === "credit_desc" ? "credit_asc" : "credit_desc");
+
+  const sortedVouchers = [...vouchers].sort((a, b) => {
+    if (sorting === "date_desc") return b.tradingDate - a.tradingDate;
+    if (sorting === "date_asc") return a.tradingDate - b.tradingDate;
+    
+    if (sorting.startsWith("debit_")) {
+      const aDebit = a.lineItems.lines.filter(l => l.isDebit).reduce((sum, l) => sum + l.amount, 0);
+      const bDebit = b.lineItems.lines.filter(l => l.isDebit).reduce((sum, l) => sum + l.amount, 0);
+      return sorting === "debit_desc" ? bDebit - aDebit : aDebit - bDebit;
+    }
+    
+    if (sorting.startsWith("credit_")) {
+      const aCredit = a.lineItems.lines.filter(l => l.isDebit === false).reduce((sum, l) => sum + l.amount, 0);
+      const bCredit = b.lineItems.lines.filter(l => l.isDebit === false).reduce((sum, l) => sum + l.amount, 0);
+      return sorting === "credit_desc" ? bCredit - aCredit : aCredit - bCredit;
+    }
+
+    return 0;
+  });
+
   const displayedVoucher =
-    vouchers.length > 0 ? (
-      vouchers.map((v) => (
+    sortedVouchers.length > 0 ? (
+      sortedVouchers.map((v) => (
         <VoucherRow
           key={v.id}
           voucher={v}
@@ -176,9 +203,9 @@ export default function VoucherMainView() {
     ) : (
       <tr>
         <td colSpan={7} className="px-3 py-4 text-center sm:px-6">
-          目前尚無傳票，請
+          {t("voucher.main_view.empty_message_prefix")}{" "}
           <Link href={journalLink} className="text-blue-600 hover:underline">
-            在此上傳檔案
+            {t("voucher.main_view.empty_upload_link")}
           </Link>
         </td>
       </tr>
@@ -187,7 +214,7 @@ export default function VoucherMainView() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-slate-50/50">
       <div className="flex justify-between px-8 py-6">
-        <h1 className="text-2xl font-bold text-slate-800">傳票管理</h1>
+        <h1 className="text-2xl font-bold text-slate-800">{t("voucher.main_view.title")}</h1>
       </div>
 
       <div className="flex w-full flex-col gap-4 gap-x-12 px-0 sm:px-8 pb-10">
@@ -199,7 +226,7 @@ export default function VoucherMainView() {
                 htmlFor="typeSelect"
                 className="mb-2 block text-xs font-semibold text-slate-700"
               >
-                Type
+                {t("voucher.main_view.filters.type")}
               </label>
               <select
                 id="typeSelect"
@@ -209,15 +236,15 @@ export default function VoucherMainView() {
                 }
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
               >
-                <option value="all">All</option>
-                <option value={TradingType.INCOME}>Payment</option>
-                <option value={TradingType.OUTCOME}>Receipt</option>
-                <option value={TradingType.TRANSFER}>Transfer</option>
+                <option value="all">{t("voucher.main_view.filters.type_options.all")}</option>
+                <option value={TradingType.INCOME}>{t("voucher.main_view.filters.type_options.payment")}</option>
+                <option value={TradingType.OUTCOME}>{t("voucher.main_view.filters.type_options.receipt")}</option>
+                <option value={TradingType.TRANSFER}>{t("voucher.main_view.filters.type_options.transfer")}</option>
               </select>
             </div>
             <div className="flex-[1.5]">
               <div className="mb-2 block text-xs font-semibold text-slate-700">
-                Period
+                {t("voucher.main_view.filters.period")}
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -244,14 +271,14 @@ export default function VoucherMainView() {
                 htmlFor="searchField"
                 className="mb-2 block text-xs font-semibold text-transparent select-none"
               >
-                Search
+                {t("voucher.main_view.filters.search")}
               </label>
               <div className="relative">
                 <input
                   id="searchField"
-                  aria-label="Search"
+                  aria-label={t("voucher.main_view.filters.search")}
                   type="text"
-                  placeholder="Search"
+                  placeholder={t("voucher.main_view.filters.search")}
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-10 text-sm font-semibold text-slate-700 shadow-sm placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
                 <Search
@@ -282,9 +309,10 @@ export default function VoucherMainView() {
                 htmlFor="hideDeletedToggle"
                 className="cursor-pointer text-sm font-semibold text-slate-600"
               >
-                Hide deleted vouchers and their reversals.
+                {t("voucher.main_view.filters.hide_deleted")}
               </label>
             </div>
+            {/* ToDo: (20260310 - Julian) 先隱藏 */}
             {/* <div className="flex items-center gap-4">
               <button className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                 <Download size={16} /> Export Voucher
@@ -296,7 +324,7 @@ export default function VoucherMainView() {
           </div>
 
           <div className="mb-2 text-right text-xs uppercase font-bold tracking-wider text-slate-400">
-            CURRENCY: {currencyUnit}
+            {t("voucher.main_view.filters.currency").replace("{currency}", currencyUnit)}
           </div>
 
           {/* Info: (20260310 - Julian) Table Container */}
@@ -305,49 +333,51 @@ export default function VoucherMainView() {
               <tbody>
                 <tr>
                   <th className="w-[120px] bg-slate-100 px-3 py-4 text-left text-xs text-slate-700 sm:w-[180px] sm:px-6 sm:text-base">
-                    <button type="button" className="flex items-center gap-1">
-                      Issued Date
+                    <button type="button" onClick={clickDateSort} className="flex items-center gap-1">
+                      {t("voucher.main_view.table.issued_date")}
                       <div className="-gap-[2px] flex shrink-0 flex-col px-2">
-                        <ChevronUp size={14} className="translate-y-[2px]" />
-                        <ChevronDown size={14} className="-translate-y-[2px]" />
+                        <ChevronUp size={14} className={`translate-y-[2px] transition-colors ${sorting === 'date_asc' ? 'text-orange-500' : 'text-slate-400'}`} />
+                        <ChevronDown size={14} className={`-translate-y-[2px] transition-colors ${sorting === 'date_desc' ? 'text-orange-500' : 'text-slate-400'}`} />
                       </div>
                     </button>
                   </th>
                   <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
-                    Voucher No.
+                    {t("voucher.main_view.table.voucher_no")}
                   </th>
                   <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
-                    Note
+                    {t("voucher.main_view.table.note")}
                   </th>
                   <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
-                    Accounting
+                    {t("voucher.main_view.table.accounting")}
                   </th>
                   <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
                     <button
                       type="button"
+                      onClick={clickDebitSort}
                       className="mx-auto flex items-center justify-center gap-1"
                     >
-                      Debit
+                      {t("voucher.main_view.table.debit")}
                       <div className="-gap-[2px] flex shrink-0 flex-col px-2">
-                        <ChevronUp size={14} className="translate-y-[2px]" />
-                        <ChevronDown size={14} className="-translate-y-[2px]" />
+                        <ChevronUp size={14} className={`translate-y-[2px] transition-colors ${sorting === 'debit_asc' ? 'text-orange-500' : 'text-slate-400'}`} />
+                        <ChevronDown size={14} className={`-translate-y-[2px] transition-colors ${sorting === 'debit_desc' ? 'text-orange-500' : 'text-slate-400'}`} />
                       </div>
                     </button>
                   </th>
                   <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
                     <button
                       type="button"
+                      onClick={clickCreditSort}
                       className="mx-auto flex items-center justify-center gap-1"
                     >
-                      Credit
+                      {t("voucher.main_view.table.credit")}
                       <div className="-gap-[2px] flex shrink-0 flex-col px-2">
-                        <ChevronUp size={14} className="translate-y-[2px]" />
-                        <ChevronDown size={14} className="-translate-y-[2px]" />
+                        <ChevronUp size={14} className={`translate-y-[2px] transition-colors ${sorting === 'credit_asc' ? 'text-orange-500' : 'text-slate-400'}`} />
+                        <ChevronDown size={14} className={`-translate-y-[2px] transition-colors ${sorting === 'credit_desc' ? 'text-orange-500' : 'text-slate-400'}`} />
                       </div>
                     </button>
                   </th>
                   <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
-                    Issuer
+                    {t("voucher.main_view.table.issuer")}
                   </th>
                 </tr>
                 {displayedVoucher}

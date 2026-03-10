@@ -986,10 +986,7 @@ export const zhTw = {
       }
     },
     "detail_modal": {
-      "titles": {
-        "new_voucher": "新增傳票",
-        "edit_voucher": "編輯傳票 {id}"
-      },
+      "title": '編輯傳票',
       "fields": {
         "voucher_date": "傳票日期",
         "voucher_type": "傳票類型",
