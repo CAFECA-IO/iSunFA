@@ -956,4 +956,70 @@ export const zhTw = {
       copy_id: "點擊複製憑證 ID: {{id}}",
     },
   },
+   "voucher": {
+    "main_view": {
+      "title": "傳票管理",
+      "empty_message_prefix": "目前尚無傳票，請",
+      "empty_upload_link": "在此上傳檔案",
+      "filters": {
+        "type": "欄位類型",
+        "type_options": {
+          "all": "全部",
+          "payment": "付款",
+          "receipt": "收款",
+          "transfer": "轉帳"
+        },
+        "period": "期間",
+        "search": "搜尋",
+        "hide_deleted": "隱藏已刪除的傳票及其沖銷紀錄",
+        "currency": "幣別: {currency}"
+      },
+      "table": {
+        "issued_date": "開立日期",
+        "voucher_no": "傳票號碼",
+        "note": "備註",
+        "accounting": "會計科目",
+        "debit": "借方",
+        "credit": "貸方",
+        "issuer": "開立人",
+        "status_deleted": "已刪除"
+      }
+    },
+    "detail_modal": {
+      "titles": {
+        "new_voucher": "新增傳票",
+        "edit_voucher": "編輯傳票 {id}"
+      },
+      "fields": {
+        "voucher_date": "傳票日期",
+        "voucher_type": "傳票類型",
+        "note": "備註",
+        "accounting": "會計科目",
+        "accounting_select": "請選擇",
+        "particular": "摘要",
+        "debit": "借方",
+        "credit": "貸方"
+      },
+      "actions": {
+        "clear_all": "全部清除",
+        "save_voucher": "儲存傳票",
+        "confirm": "確認",
+        "cancel": "取消"
+      },
+      "confirm_modals": {
+        "clear_all": {
+          "title": "全部清除",
+          "message": "您確定要清除所有資料嗎？"
+        },
+        "leave_without_saving": {
+          "title": "離開且不儲存",
+          "message": "您確定要放棄在此的變更並離開嗎？"
+        },
+        "save_voucher": {
+          "title": "儲存傳票",
+          "message": "您確定要儲存此傳票嗎？"
+        }
+      }
+    }
+  }
 };

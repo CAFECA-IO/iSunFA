@@ -8,7 +8,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1101',
@@ -17,7 +17,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1102',
@@ -26,7 +26,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1103',
@@ -35,7 +35,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1105',
@@ -44,7 +44,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1107',
@@ -53,7 +53,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1110',
@@ -62,7 +62,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1111',
@@ -71,7 +71,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1110',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1112',
@@ -80,7 +80,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1110',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1113',
@@ -89,7 +89,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1110',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1114',
@@ -98,7 +98,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1110',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1120',
@@ -107,7 +107,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1121',
@@ -116,7 +116,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1120',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1122',
@@ -125,7 +125,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1120',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1123',
@@ -134,7 +134,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1120',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1124',
@@ -143,7 +143,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1120',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1136',
@@ -152,7 +152,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1137',
@@ -161,7 +161,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1136',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1138',
@@ -170,7 +170,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1136',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1139',
@@ -179,7 +179,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1140',
@@ -188,7 +188,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1141',
@@ -197,7 +197,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1140',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1142',
@@ -206,7 +206,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1140',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1150',
@@ -215,7 +215,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1151',
@@ -224,7 +224,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1150',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1152',
@@ -233,7 +233,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1150',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1153',
@@ -242,7 +242,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1150',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1159',
@@ -251,7 +251,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1150',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1160',
@@ -260,7 +260,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1161',
@@ -269,7 +269,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1160',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1162',
@@ -278,7 +278,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1160',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1163',
@@ -287,7 +287,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1160',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1169',
@@ -296,7 +296,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1160',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1170',
@@ -305,7 +305,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1171',
@@ -314,7 +314,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1170',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1172',
@@ -323,7 +323,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1170',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1173',
@@ -332,7 +332,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1170',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1174',
@@ -341,7 +341,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1170',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1175',
@@ -350,7 +350,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1170',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1176',
@@ -359,7 +359,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1170',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1177',
@@ -368,7 +368,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1170',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1178',
@@ -377,7 +377,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1170',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1179',
@@ -386,7 +386,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1170',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1180',
@@ -395,7 +395,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1181',
@@ -404,7 +404,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1180',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1182',
@@ -413,7 +413,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1180',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1183',
@@ -422,7 +422,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1180',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1184',
@@ -431,7 +431,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1180',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1185',
@@ -440,7 +440,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1180',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1186',
@@ -449,7 +449,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1180',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1189',
@@ -458,7 +458,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1180',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1190',
@@ -467,7 +467,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1195',
@@ -476,7 +476,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1196',
@@ -485,7 +485,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1197',
@@ -494,7 +494,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1198',
@@ -503,7 +503,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1199',
@@ -512,7 +512,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '119A',
@@ -521,7 +521,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1196',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '119B',
@@ -530,7 +530,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1196',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '119C',
@@ -539,7 +539,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1197',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '119D',
@@ -548,7 +548,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1197',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '119E',
@@ -557,7 +557,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1197',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '119F',
@@ -566,7 +566,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1198',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '119G',
@@ -575,7 +575,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1198',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '119H',
@@ -584,7 +584,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1199',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '119I',
@@ -593,7 +593,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1199',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '119J',
@@ -602,7 +602,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1199',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '11XX',
@@ -611,7 +611,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 1,
     parentCode: '1XXX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1200',
@@ -620,7 +620,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1201',
@@ -629,7 +629,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1202',
@@ -638,7 +638,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1203',
@@ -647,7 +647,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1204',
@@ -656,7 +656,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1205',
@@ -665,7 +665,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1206',
@@ -674,7 +674,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1209',
@@ -683,7 +683,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1210',
@@ -692,7 +692,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1211',
@@ -701,7 +701,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1210',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1212',
@@ -710,7 +710,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1210',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1219',
@@ -719,7 +719,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1210',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1220',
@@ -728,7 +728,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1221',
@@ -737,7 +737,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1220',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1222',
@@ -746,7 +746,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1220',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1300',
@@ -755,7 +755,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '130X',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1301',
@@ -764,7 +764,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1302',
@@ -773,7 +773,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1308',
@@ -782,7 +782,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1309',
@@ -791,7 +791,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '130X',
@@ -800,7 +800,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1310',
@@ -809,7 +809,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '130X',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1311',
@@ -818,7 +818,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1310',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1312',
@@ -827,7 +827,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1310',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1313',
@@ -836,7 +836,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1310',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1314',
@@ -845,7 +845,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1310',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1315',
@@ -854,7 +854,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1310',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1316',
@@ -863,7 +863,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1310',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1318',
@@ -872,7 +872,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1310',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1319',
@@ -881,7 +881,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1320',
@@ -890,7 +890,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '130X',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1321',
@@ -899,7 +899,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1320',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1322',
@@ -908,7 +908,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1320',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1323',
@@ -917,7 +917,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1320',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1324',
@@ -926,7 +926,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1320',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1325',
@@ -935,7 +935,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1320',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1326',
@@ -944,7 +944,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1320',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1328',
@@ -953,7 +953,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1320',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1329',
@@ -962,7 +962,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1320',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1330',
@@ -971,7 +971,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '130X',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1331',
@@ -980,7 +980,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1330',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1332',
@@ -989,7 +989,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1330',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1333',
@@ -998,7 +998,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1330',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1338',
@@ -1007,7 +1007,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1330',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1339',
@@ -1016,7 +1016,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1330',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1340',
@@ -1025,7 +1025,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '130X',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1350',
@@ -1034,7 +1034,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '130X',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1351',
@@ -1043,7 +1043,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1350',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1352',
@@ -1052,7 +1052,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1350',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1353',
@@ -1061,7 +1061,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1350',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1354',
@@ -1070,7 +1070,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1350',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1355',
@@ -1079,7 +1079,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1350',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1356',
@@ -1088,7 +1088,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1350',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1357',
@@ -1097,7 +1097,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1350',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1400',
@@ -1106,7 +1106,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1401',
@@ -1115,7 +1115,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1400',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1402',
@@ -1124,7 +1124,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1403',
@@ -1133,7 +1133,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1404',
@@ -1142,7 +1142,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1405',
@@ -1151,7 +1151,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1400',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1406',
@@ -1160,7 +1160,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1407',
@@ -1169,7 +1169,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1408',
@@ -1178,7 +1178,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1410',
@@ -1187,7 +1187,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1411',
@@ -1196,7 +1196,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1412',
@@ -1205,7 +1205,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1413',
@@ -1214,7 +1214,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1414',
@@ -1223,7 +1223,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1415',
@@ -1232,7 +1232,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1416',
@@ -1241,7 +1241,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1419',
@@ -1250,7 +1250,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1421',
@@ -1259,7 +1259,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1422',
@@ -1268,7 +1268,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1423',
@@ -1277,7 +1277,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1423-1',
@@ -1286,7 +1286,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1423',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1423-2',
@@ -1295,7 +1295,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1423',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1423-3',
@@ -1304,7 +1304,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1423',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1423-4',
@@ -1313,7 +1313,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1423',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1423-5',
@@ -1322,7 +1322,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1423',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1423-6',
@@ -1331,7 +1331,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1423',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1423-7',
@@ -1340,7 +1340,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1423',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1423-8',
@@ -1349,7 +1349,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1423',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1423-9',
@@ -1358,7 +1358,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1423',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1424',
@@ -1367,7 +1367,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1429',
@@ -1376,7 +1376,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1450',
@@ -1385,7 +1385,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1451',
@@ -1394,7 +1394,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1450',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1452',
@@ -1403,7 +1403,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1450',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1460',
@@ -1412,7 +1412,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1461',
@@ -1421,7 +1421,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1460',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1462',
@@ -1430,7 +1430,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1460',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1470',
@@ -1439,7 +1439,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '11XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1471',
@@ -1448,7 +1448,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1470',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1472',
@@ -1457,7 +1457,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1470',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1473',
@@ -1466,7 +1466,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1470',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1475',
@@ -1475,7 +1475,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1470',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1476',
@@ -1484,7 +1484,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1470',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1478',
@@ -1493,7 +1493,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1470',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1479',
@@ -1502,7 +1502,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1470',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1480',
@@ -1511,7 +1511,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1470',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1481',
@@ -1520,7 +1520,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1470',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1482',
@@ -1529,7 +1529,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1470',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '148A',
@@ -1538,7 +1538,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1480',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '148B',
@@ -1547,7 +1547,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1480',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '148C',
@@ -1556,7 +1556,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1482',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '148D',
@@ -1565,7 +1565,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1482',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1510',
@@ -1574,7 +1574,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1511',
@@ -1583,7 +1583,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1510',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1512',
@@ -1592,7 +1592,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1510',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1513',
@@ -1601,7 +1601,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1510',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1514',
@@ -1610,7 +1610,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1510',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1517',
@@ -1619,7 +1619,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1518',
@@ -1628,7 +1628,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1517',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1519',
@@ -1637,7 +1637,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1517',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1521',
@@ -1646,7 +1646,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1517',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1522',
@@ -1655,7 +1655,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1517',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1535',
@@ -1664,7 +1664,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1536',
@@ -1673,7 +1673,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1535',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1537',
@@ -1682,7 +1682,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1535',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1538',
@@ -1691,7 +1691,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1550',
@@ -1700,7 +1700,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1551',
@@ -1709,7 +1709,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1550',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1553',
@@ -1718,7 +1718,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1550',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1560',
@@ -1727,7 +1727,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1561',
@@ -1736,7 +1736,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1560',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1562',
@@ -1745,7 +1745,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1560',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '15XX',
@@ -1754,7 +1754,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 1,
     parentCode: '1XXX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1600',
@@ -1763,7 +1763,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1601',
@@ -1772,7 +1772,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1602',
@@ -1781,7 +1781,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1601',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1603',
@@ -1790,7 +1790,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1601',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1604',
@@ -1799,7 +1799,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1601',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1605',
@@ -1808,7 +1808,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1606',
@@ -1817,7 +1817,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1605',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1607',
@@ -1826,7 +1826,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1605',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1608',
@@ -1835,7 +1835,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1605',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1609',
@@ -1844,7 +1844,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1605',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1610',
@@ -1853,7 +1853,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1611',
@@ -1862,7 +1862,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1610',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1612',
@@ -1871,7 +1871,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1610',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1613',
@@ -1880,7 +1880,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1614',
@@ -1889,7 +1889,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1615',
@@ -1898,7 +1898,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1616',
@@ -1907,7 +1907,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1615',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1617',
@@ -1916,7 +1916,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1615',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1618',
@@ -1925,7 +1925,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1615',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1619',
@@ -1934,7 +1934,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1615',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1620',
@@ -1943,7 +1943,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1621',
@@ -1952,7 +1952,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1620',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1622',
@@ -1961,7 +1961,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1620',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1623',
@@ -1970,7 +1970,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1620',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1624',
@@ -1979,7 +1979,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1620',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1625',
@@ -1988,7 +1988,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1626',
@@ -1997,7 +1997,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1625',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1627',
@@ -2006,7 +2006,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1625',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1628',
@@ -2015,7 +2015,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1625',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1629',
@@ -2024,7 +2024,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1625',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1630',
@@ -2033,7 +2033,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1631',
@@ -2042,7 +2042,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1630',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1632',
@@ -2051,7 +2051,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1630',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1633',
@@ -2060,7 +2060,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1630',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1634',
@@ -2069,7 +2069,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1630',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1635',
@@ -2078,7 +2078,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1636',
@@ -2087,7 +2087,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1635',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1637',
@@ -2096,7 +2096,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1635',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1638',
@@ -2105,7 +2105,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1635',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1639',
@@ -2114,7 +2114,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1635',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1640',
@@ -2123,7 +2123,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1641',
@@ -2132,7 +2132,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1640',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1642',
@@ -2141,7 +2141,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1640',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1643',
@@ -2150,7 +2150,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1640',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1644',
@@ -2159,7 +2159,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1640',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1645',
@@ -2168,7 +2168,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1646',
@@ -2177,7 +2177,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1645',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1647',
@@ -2186,7 +2186,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1645',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1648',
@@ -2195,7 +2195,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1645',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1649',
@@ -2204,7 +2204,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1645',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1650',
@@ -2213,7 +2213,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1651',
@@ -2222,7 +2222,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1650',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1652',
@@ -2231,7 +2231,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1650',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1653',
@@ -2240,7 +2240,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1650',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1654',
@@ -2249,7 +2249,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1650',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1655',
@@ -2258,7 +2258,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1656',
@@ -2267,7 +2267,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1655',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1657',
@@ -2276,7 +2276,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1655',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1658',
@@ -2285,7 +2285,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1655',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1659',
@@ -2294,7 +2294,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1655',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1660',
@@ -2303,7 +2303,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1661',
@@ -2312,7 +2312,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1660',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1662',
@@ -2321,7 +2321,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1660',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1663',
@@ -2330,7 +2330,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1660',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1664',
@@ -2339,7 +2339,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1660',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1665',
@@ -2348,7 +2348,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1666',
@@ -2357,7 +2357,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1665',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1667',
@@ -2366,7 +2366,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1665',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1668',
@@ -2375,7 +2375,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1665',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1669',
@@ -2384,7 +2384,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1665',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1670',
@@ -2393,7 +2393,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1671',
@@ -2402,7 +2402,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1670',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1672',
@@ -2411,7 +2411,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1670',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1673',
@@ -2420,7 +2420,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1670',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1674',
@@ -2429,7 +2429,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1670',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1675',
@@ -2438,7 +2438,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1676',
@@ -2447,7 +2447,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1675',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1677',
@@ -2456,7 +2456,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1675',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1678',
@@ -2465,7 +2465,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1675',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1679',
@@ -2474,7 +2474,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1675',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1680',
@@ -2483,7 +2483,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1681',
@@ -2492,7 +2492,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1680',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1682',
@@ -2501,7 +2501,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1680',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1683',
@@ -2510,7 +2510,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1680',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1684',
@@ -2519,7 +2519,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1680',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1685',
@@ -2528,7 +2528,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1686',
@@ -2537,7 +2537,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1685',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1687',
@@ -2546,7 +2546,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1685',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1688',
@@ -2555,7 +2555,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1685',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1689',
@@ -2564,7 +2564,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1685',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1690',
@@ -2573,7 +2573,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1691',
@@ -2582,7 +2582,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1690',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1692',
@@ -2591,7 +2591,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1690',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1693',
@@ -2600,7 +2600,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1690',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1694',
@@ -2609,7 +2609,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1690',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1695',
@@ -2618,7 +2618,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1696',
@@ -2627,7 +2627,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1695',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1697',
@@ -2636,7 +2636,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1695',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1698',
@@ -2645,7 +2645,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1695',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1699',
@@ -2654,7 +2654,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1695',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1700',
@@ -2663,7 +2663,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1701',
@@ -2672,7 +2672,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1700',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1702',
@@ -2681,7 +2681,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1700',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1703',
@@ -2690,7 +2690,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1700',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1704',
@@ -2699,7 +2699,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1700',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1705',
@@ -2708,7 +2708,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1706',
@@ -2717,7 +2717,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1705',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1707',
@@ -2726,7 +2726,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1705',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1708',
@@ -2735,7 +2735,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1705',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1709',
@@ -2744,7 +2744,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1705',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1710',
@@ -2753,7 +2753,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1711',
@@ -2762,7 +2762,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1710',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1712',
@@ -2771,7 +2771,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1710',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1713',
@@ -2780,7 +2780,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1710',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1714',
@@ -2789,7 +2789,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1710',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1715',
@@ -2798,7 +2798,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1716',
@@ -2807,7 +2807,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1715',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1717',
@@ -2816,7 +2816,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1715',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1718',
@@ -2825,7 +2825,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1715',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1719',
@@ -2834,7 +2834,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1715',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1720',
@@ -2843,7 +2843,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1721',
@@ -2852,7 +2852,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1720',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1722',
@@ -2861,7 +2861,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1720',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1723',
@@ -2870,7 +2870,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1720',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1724',
@@ -2879,7 +2879,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1720',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1725',
@@ -2888,7 +2888,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1726',
@@ -2897,7 +2897,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1725',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1727',
@@ -2906,7 +2906,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1725',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1728',
@@ -2915,7 +2915,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1725',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1729',
@@ -2924,7 +2924,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1725',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1730',
@@ -2933,7 +2933,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1731',
@@ -2942,7 +2942,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1730',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1732',
@@ -2951,7 +2951,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1730',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1733',
@@ -2960,7 +2960,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1730',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1734',
@@ -2969,7 +2969,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1730',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1735',
@@ -2978,7 +2978,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1736',
@@ -2987,7 +2987,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1735',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1737',
@@ -2996,7 +2996,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1735',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1738',
@@ -3005,7 +3005,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1735',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1739',
@@ -3014,7 +3014,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1735',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1740',
@@ -3023,7 +3023,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1745',
@@ -3032,7 +3032,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1746',
@@ -3041,7 +3041,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1745',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1747',
@@ -3050,7 +3050,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1745',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1748',
@@ -3059,7 +3059,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1745',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1749',
@@ -3068,7 +3068,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1745',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1750',
@@ -3077,7 +3077,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1751',
@@ -3086,7 +3086,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1750',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1752',
@@ -3095,7 +3095,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1750',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1753',
@@ -3104,7 +3104,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1750',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1754',
@@ -3113,7 +3113,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1750',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1755',
@@ -3122,7 +3122,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '175A',
@@ -3131,7 +3131,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1755',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '175B',
@@ -3140,7 +3140,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1755',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '175C',
@@ -3149,7 +3149,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1755',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '175D',
@@ -3158,7 +3158,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1755',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '175E',
@@ -3167,7 +3167,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1755',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '175F',
@@ -3176,7 +3176,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1755',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '175G',
@@ -3185,7 +3185,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1755',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1760',
@@ -3194,7 +3194,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1761',
@@ -3203,7 +3203,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176A',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1762',
@@ -3212,7 +3212,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176A',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1763',
@@ -3221,7 +3221,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176A',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1764',
@@ -3230,7 +3230,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176A',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1765',
@@ -3239,7 +3239,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176B',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1766',
@@ -3248,7 +3248,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176B',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1767',
@@ -3257,7 +3257,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176B',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1768',
@@ -3266,7 +3266,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176B',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1769',
@@ -3275,7 +3275,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176B',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '176A',
@@ -3284,7 +3284,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1760',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '176B',
@@ -3293,7 +3293,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1760',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '176C',
@@ -3302,7 +3302,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1760',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '176D',
@@ -3311,7 +3311,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1760',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '176E',
@@ -3320,7 +3320,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1760',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1771',
@@ -3329,7 +3329,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176C',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1772',
@@ -3338,7 +3338,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176C',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1773',
@@ -3347,7 +3347,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176E',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1774',
@@ -3356,7 +3356,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176E',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1775',
@@ -3365,7 +3365,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176E',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1776',
@@ -3374,7 +3374,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176D',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1777',
@@ -3383,7 +3383,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176D',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1778',
@@ -3392,7 +3392,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176D',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1779',
@@ -3401,7 +3401,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '176D',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1780',
@@ -3410,7 +3410,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1781',
@@ -3419,7 +3419,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1780',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1782',
@@ -3428,7 +3428,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1781',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1783',
@@ -3437,7 +3437,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1781',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1784',
@@ -3446,7 +3446,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1781',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1785',
@@ -3455,7 +3455,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1780',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1786',
@@ -3464,7 +3464,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1785',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1787',
@@ -3473,7 +3473,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1785',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1788',
@@ -3482,7 +3482,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1785',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1791',
@@ -3491,7 +3491,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1780',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1792',
@@ -3500,7 +3500,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1791',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1793',
@@ -3509,7 +3509,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1791',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1794',
@@ -3518,7 +3518,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1791',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1795',
@@ -3527,7 +3527,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1780',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1796',
@@ -3536,7 +3536,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1795',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1797',
@@ -3545,7 +3545,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1795',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1798',
@@ -3554,7 +3554,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1795',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17AA',
@@ -3563,7 +3563,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175A',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17AB',
@@ -3572,7 +3572,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175A',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17AC',
@@ -3581,7 +3581,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175A',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17AD',
@@ -3590,7 +3590,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175A',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17AE',
@@ -3599,7 +3599,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175A',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17BA',
@@ -3608,7 +3608,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175B',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17BB',
@@ -3617,7 +3617,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175B',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17BC',
@@ -3626,7 +3626,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175B',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17BD',
@@ -3635,7 +3635,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175B',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17BE',
@@ -3644,7 +3644,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175B',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17CA',
@@ -3653,7 +3653,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175C',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17CB',
@@ -3662,7 +3662,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175C',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17CC',
@@ -3671,7 +3671,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175C',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17CD',
@@ -3680,7 +3680,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175C',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17CE',
@@ -3689,7 +3689,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175C',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17DA',
@@ -3698,7 +3698,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175D',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17DB',
@@ -3707,7 +3707,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175D',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17DC',
@@ -3716,7 +3716,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175D',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17DD',
@@ -3725,7 +3725,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175D',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17DE',
@@ -3734,7 +3734,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175D',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17EA',
@@ -3743,7 +3743,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175E',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17EB',
@@ -3752,7 +3752,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175E',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17EC',
@@ -3761,7 +3761,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175E',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17ED',
@@ -3770,7 +3770,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175E',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17EE',
@@ -3779,7 +3779,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175E',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17FA',
@@ -3788,7 +3788,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175F',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17FB',
@@ -3797,7 +3797,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175F',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17FC',
@@ -3806,7 +3806,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175F',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17FD',
@@ -3815,7 +3815,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175F',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17FE',
@@ -3824,7 +3824,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175F',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17GA',
@@ -3833,7 +3833,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175G',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17GB',
@@ -3842,7 +3842,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175G',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17GC',
@@ -3851,7 +3851,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175G',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '17GD',
@@ -3860,7 +3860,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175G',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '17GE',
@@ -3869,7 +3869,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '175G',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1801',
@@ -3878,7 +3878,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1780',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1802',
@@ -3887,7 +3887,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1801',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1803',
@@ -3896,7 +3896,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1801',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1804',
@@ -3905,7 +3905,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1801',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1805',
@@ -3914,7 +3914,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1780',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1811',
@@ -3923,7 +3923,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1780',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1812',
@@ -3932,7 +3932,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1811',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1813',
@@ -3941,7 +3941,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1811',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1814',
@@ -3950,7 +3950,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1811',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1821',
@@ -3959,7 +3959,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1780',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1822',
@@ -3968,7 +3968,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1821',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1823',
@@ -3977,7 +3977,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1821',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1824',
@@ -3986,7 +3986,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1821',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1825',
@@ -3995,7 +3995,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1780',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1826',
@@ -4004,7 +4004,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1825',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1827',
@@ -4013,7 +4013,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1825',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1830',
@@ -4022,7 +4022,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1831',
@@ -4031,7 +4031,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1830',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1832',
@@ -4040,7 +4040,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1830',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1833',
@@ -4049,7 +4049,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1830',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1834',
@@ -4058,7 +4058,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1830',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1835',
@@ -4067,7 +4067,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1830',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1836',
@@ -4076,7 +4076,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1830',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1837',
@@ -4085,7 +4085,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1830',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1838',
@@ -4094,7 +4094,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1830',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1840',
@@ -4103,7 +4103,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1900',
@@ -4112,7 +4112,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 2,
     parentCode: '15XX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1905',
@@ -4121,7 +4121,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1906',
@@ -4130,7 +4130,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1905',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1907',
@@ -4139,7 +4139,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1905',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1908',
@@ -4148,7 +4148,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1905',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1909',
@@ -4157,7 +4157,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1905',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1910',
@@ -4166,7 +4166,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1911',
@@ -4175,7 +4175,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1910',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1912',
@@ -4184,7 +4184,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1910',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1914',
@@ -4193,7 +4193,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1910',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1915',
@@ -4202,7 +4202,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1920',
@@ -4211,7 +4211,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1930',
@@ -4220,7 +4220,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1931',
@@ -4229,7 +4229,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1930',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1932',
@@ -4238,7 +4238,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1930',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1933',
@@ -4247,7 +4247,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1930',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1934',
@@ -4256,7 +4256,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1930',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1935',
@@ -4265,7 +4265,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1930',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1936',
@@ -4274,7 +4274,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1930',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1937',
@@ -4283,7 +4283,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1930',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1939',
@@ -4292,7 +4292,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1930',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1940',
@@ -4301,7 +4301,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1941',
@@ -4310,7 +4310,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1940',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1942',
@@ -4319,7 +4319,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1940',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1943',
@@ -4328,7 +4328,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1940',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1944',
@@ -4337,7 +4337,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1940',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1945',
@@ -4346,7 +4346,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1940',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1946',
@@ -4355,7 +4355,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1940',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1947',
@@ -4364,7 +4364,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1940',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1949',
@@ -4373,7 +4373,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1940',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '194A',
@@ -4382,7 +4382,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '194B',
@@ -4391,7 +4391,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '194A',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '194C',
@@ -4400,7 +4400,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '194A',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '194D',
@@ -4409,7 +4409,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '194E',
@@ -4418,7 +4418,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '194D',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '194F',
@@ -4427,7 +4427,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '194D',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '194G',
@@ -4436,7 +4436,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '194D',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '194H',
@@ -4445,7 +4445,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '194I',
@@ -4454,7 +4454,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '194H',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '194J',
@@ -4463,7 +4463,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '194H',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '194K',
@@ -4472,7 +4472,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '194L',
@@ -4481,7 +4481,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '194K',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '194M',
@@ -4490,7 +4490,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '194K',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '194N',
@@ -4499,7 +4499,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '194K',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1950',
@@ -4508,7 +4508,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1951',
@@ -4517,7 +4517,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1950',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1952',
@@ -4526,7 +4526,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1950',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1953',
@@ -4535,7 +4535,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1950',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1955',
@@ -4544,7 +4544,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1956',
@@ -4553,7 +4553,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1955',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1957',
@@ -4562,7 +4562,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1955',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1960',
@@ -4571,7 +4571,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1965',
@@ -4580,7 +4580,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1966',
@@ -4589,7 +4589,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1967',
@@ -4598,7 +4598,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1966',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1968',
@@ -4607,7 +4607,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1966',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1970',
@@ -4616,7 +4616,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1971',
@@ -4625,7 +4625,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1970',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1972',
@@ -4634,7 +4634,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1970',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '1975',
@@ -4643,7 +4643,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1980',
@@ -4652,7 +4652,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1981',
@@ -4661,7 +4661,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1980',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1984',
@@ -4670,7 +4670,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1980',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1985',
@@ -4679,7 +4679,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1990',
@@ -4688,7 +4688,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 3,
     parentCode: '1900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1992',
@@ -4697,7 +4697,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1990',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1993',
@@ -4706,7 +4706,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1990',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1995',
@@ -4715,7 +4715,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1990',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1996',
@@ -4724,7 +4724,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 4,
     parentCode: '1990',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '1XXX',
@@ -4733,7 +4733,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'asset',
     level: 0,
     parentCode: '1XXX',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '2100',
@@ -4742,7 +4742,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2101',
@@ -4751,7 +4751,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2102',
@@ -4760,7 +4760,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2108',
@@ -4769,7 +4769,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2110',
@@ -4778,7 +4778,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2111',
@@ -4787,7 +4787,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2110',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2116',
@@ -4796,7 +4796,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2110',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2119',
@@ -4805,7 +4805,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2110',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2120',
@@ -4814,7 +4814,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2121',
@@ -4823,7 +4823,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2120',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2122',
@@ -4832,7 +4832,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2120',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2123',
@@ -4841,7 +4841,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2120',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2124',
@@ -4850,7 +4850,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2120',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2126',
@@ -4859,7 +4859,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2128',
@@ -4868,7 +4868,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2130',
@@ -4877,7 +4877,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2131',
@@ -4886,7 +4886,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2130',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2132',
@@ -4895,7 +4895,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2130',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2133',
@@ -4904,7 +4904,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2130',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2139',
@@ -4913,7 +4913,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2130',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2150',
@@ -4922,7 +4922,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2151',
@@ -4931,7 +4931,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2150',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2152',
@@ -4940,7 +4940,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2150',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2160',
@@ -4949,7 +4949,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2161',
@@ -4958,7 +4958,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2160',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2162',
@@ -4967,7 +4967,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2160',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2170',
@@ -4976,7 +4976,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2171',
@@ -4985,7 +4985,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2170',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2172',
@@ -4994,7 +4994,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2170',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2180',
@@ -5003,7 +5003,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2181',
@@ -5012,7 +5012,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2180',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2182',
@@ -5021,7 +5021,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2180',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2190',
@@ -5030,7 +5030,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2195',
@@ -5039,7 +5039,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '21XX',
@@ -5048,7 +5048,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 1,
     parentCode: '2XXX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2200',
@@ -5057,7 +5057,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2201',
@@ -5066,7 +5066,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2202',
@@ -5075,7 +5075,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2203',
@@ -5084,7 +5084,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2204',
@@ -5093,7 +5093,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2205',
@@ -5102,7 +5102,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2206',
@@ -5111,7 +5111,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2207',
@@ -5120,7 +5120,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2209',
@@ -5129,7 +5129,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2211',
@@ -5138,7 +5138,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2212',
@@ -5147,7 +5147,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2213',
@@ -5156,7 +5156,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2214',
@@ -5165,7 +5165,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2214-1',
@@ -5174,7 +5174,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2214',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2214-10',
@@ -5183,7 +5183,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2214',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2214-11',
@@ -5192,7 +5192,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2214',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2214-12',
@@ -5201,7 +5201,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2214',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2214-2',
@@ -5210,7 +5210,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2214',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '2214-3',
@@ -5219,7 +5219,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2214',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2214-4',
@@ -5228,7 +5228,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2214',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '2214-5',
@@ -5237,7 +5237,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2214',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '2214-7',
@@ -5246,7 +5246,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2214',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2214-8',
@@ -5255,7 +5255,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2214',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2214-9',
@@ -5264,7 +5264,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2214',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2215',
@@ -5273,7 +5273,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2216',
@@ -5282,7 +5282,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2219',
@@ -5291,7 +5291,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2220',
@@ -5300,7 +5300,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2230',
@@ -5309,7 +5309,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2250',
@@ -5318,7 +5318,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2251',
@@ -5327,7 +5327,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2250',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2252',
@@ -5336,7 +5336,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2250',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2253',
@@ -5345,7 +5345,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2250',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2254',
@@ -5354,7 +5354,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2250',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2255',
@@ -5363,7 +5363,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2250',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2256',
@@ -5372,7 +5372,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2250',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2257',
@@ -5381,7 +5381,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2250',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '2259',
@@ -5390,7 +5390,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2250',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2260',
@@ -5399,7 +5399,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2265',
@@ -5408,7 +5408,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2270',
@@ -5417,7 +5417,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2280',
@@ -5426,7 +5426,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2281',
@@ -5435,7 +5435,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2280',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2282',
@@ -5444,7 +5444,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2280',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2300',
@@ -5453,7 +5453,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '21XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2305',
@@ -5462,7 +5462,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2310',
@@ -5471,7 +5471,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2313',
@@ -5480,7 +5480,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2314',
@@ -5489,7 +5489,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2315',
@@ -5498,7 +5498,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2320',
@@ -5507,7 +5507,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2321',
@@ -5516,7 +5516,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2320',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2322',
@@ -5525,7 +5525,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2320',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2323',
@@ -5534,7 +5534,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2320',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2324',
@@ -5543,7 +5543,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2320',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2325',
@@ -5552,7 +5552,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2330',
@@ -5561,7 +5561,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2335',
@@ -5570,7 +5570,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2350',
@@ -5579,7 +5579,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2355',
@@ -5588,7 +5588,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2360',
@@ -5597,7 +5597,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2365',
@@ -5606,7 +5606,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2370',
@@ -5615,7 +5615,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2399',
@@ -5624,7 +5624,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2500',
@@ -5633,7 +5633,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '25XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2501',
@@ -5642,7 +5642,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2500',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2502',
@@ -5651,7 +5651,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2500',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2503',
@@ -5660,7 +5660,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2500',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2504',
@@ -5669,7 +5669,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2500',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2511',
@@ -5678,7 +5678,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '25XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2520',
@@ -5687,7 +5687,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '25XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2527',
@@ -5696,7 +5696,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '25XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2530',
@@ -5705,7 +5705,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '25XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2531',
@@ -5714,7 +5714,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2530',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2532',
@@ -5723,7 +5723,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2530',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2540',
@@ -5732,7 +5732,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '25XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2541',
@@ -5741,7 +5741,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2540',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2542',
@@ -5750,7 +5750,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2540',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2543',
@@ -5759,7 +5759,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2540',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2550',
@@ -5768,7 +5768,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '25XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2551',
@@ -5777,7 +5777,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2550',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2552',
@@ -5786,7 +5786,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2550',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2553',
@@ -5795,7 +5795,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2550',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2554',
@@ -5804,7 +5804,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2550',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2555',
@@ -5813,7 +5813,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2550',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2556',
@@ -5822,7 +5822,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2550',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2559',
@@ -5831,7 +5831,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2550',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2560',
@@ -5840,7 +5840,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '25XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2570',
@@ -5849,7 +5849,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '25XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2571',
@@ -5858,7 +5858,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2570',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2572',
@@ -5867,7 +5867,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2570',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2573',
@@ -5876,7 +5876,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2570',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2580',
@@ -5885,7 +5885,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '25XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2581',
@@ -5894,7 +5894,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2580',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2582',
@@ -5903,7 +5903,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2580',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '25XX',
@@ -5912,7 +5912,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 1,
     parentCode: '2XXX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2600',
@@ -5921,7 +5921,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 2,
     parentCode: '25XX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2610',
@@ -5930,7 +5930,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2611',
@@ -5939,7 +5939,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2612',
@@ -5948,7 +5948,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2613',
@@ -5957,7 +5957,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2614',
@@ -5966,7 +5966,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2620',
@@ -5975,7 +5975,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2621',
@@ -5984,7 +5984,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2620',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2622',
@@ -5993,7 +5993,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2620',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2623',
@@ -6002,7 +6002,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2620',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2624',
@@ -6011,7 +6011,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 4,
     parentCode: '2620',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2630',
@@ -6020,7 +6020,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2635',
@@ -6029,7 +6029,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2640',
@@ -6038,7 +6038,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2645',
@@ -6047,7 +6047,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2650',
@@ -6056,7 +6056,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2655',
@@ -6065,7 +6065,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2665',
@@ -6074,7 +6074,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2670',
@@ -6083,7 +6083,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2675',
@@ -6092,7 +6092,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2680',
@@ -6101,7 +6101,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2690',
@@ -6110,7 +6110,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 3,
     parentCode: '2600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '2XXX',
@@ -6119,7 +6119,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 0,
     parentCode: '2XXX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3100',
@@ -6128,7 +6128,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 1,
     parentCode: '3XXX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3110',
@@ -6137,7 +6137,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3120',
@@ -6146,7 +6146,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3130',
@@ -6155,7 +6155,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3140',
@@ -6164,7 +6164,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3150',
@@ -6173,7 +6173,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3160',
@@ -6182,7 +6182,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3170',
@@ -6191,7 +6191,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3190',
@@ -6200,7 +6200,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: '3100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3199',
@@ -6209,7 +6209,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 1,
     parentCode: '3XXX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3200',
@@ -6218,7 +6218,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 1,
     parentCode: '3XXX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3210',
@@ -6227,7 +6227,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3211',
@@ -6236,7 +6236,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3210',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3212',
@@ -6245,7 +6245,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3210',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3213',
@@ -6254,7 +6254,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3210',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3220',
@@ -6263,7 +6263,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3225',
@@ -6272,7 +6272,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3230',
@@ -6281,7 +6281,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3235',
@@ -6290,7 +6290,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3240',
@@ -6299,7 +6299,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3250',
@@ -6308,7 +6308,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3251',
@@ -6317,7 +6317,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3250',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3252',
@@ -6326,7 +6326,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3250',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3260',
@@ -6335,7 +6335,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3265',
@@ -6344,7 +6344,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3270',
@@ -6353,7 +6353,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3271',
@@ -6362,7 +6362,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3272',
@@ -6371,7 +6371,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3273',
@@ -6380,7 +6380,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3280',
@@ -6389,7 +6389,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3300',
@@ -6398,7 +6398,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 1,
     parentCode: '3XXX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3310',
@@ -6407,7 +6407,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3320',
@@ -6416,7 +6416,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3350',
@@ -6425,7 +6425,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3351',
@@ -6434,7 +6434,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3350',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3352',
@@ -6443,7 +6443,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3350',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3353',
@@ -6452,7 +6452,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3350',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3400',
@@ -6461,7 +6461,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 1,
     parentCode: '3XXX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3410',
@@ -6470,7 +6470,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3411',
@@ -6479,7 +6479,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3410',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3412',
@@ -6488,7 +6488,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3410',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3413',
@@ -6497,7 +6497,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3410',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '341A',
@@ -6506,7 +6506,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3410',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '341B',
@@ -6515,7 +6515,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3410',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '341C',
@@ -6524,7 +6524,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3410',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3420',
@@ -6533,7 +6533,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3421',
@@ -6542,7 +6542,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3420',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3422',
@@ -6551,7 +6551,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3420',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3423',
@@ -6560,7 +6560,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3420',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3424',
@@ -6569,7 +6569,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3420',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3425',
@@ -6578,7 +6578,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: '3400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '342A',
@@ -6587,7 +6587,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3420',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '342B',
@@ -6596,7 +6596,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3420',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '342C',
@@ -6605,7 +6605,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3420',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '342D',
@@ -6614,7 +6614,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3420',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '342E',
@@ -6623,7 +6623,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3420',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '3430',
@@ -6632,7 +6632,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: '3400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3435',
@@ -6641,7 +6641,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: '3400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3440',
@@ -6650,7 +6650,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3441',
@@ -6659,7 +6659,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3440',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3442',
@@ -6668,7 +6668,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3440',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3443',
@@ -6677,7 +6677,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3440',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3445',
@@ -6686,7 +6686,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3446',
@@ -6695,7 +6695,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3445',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3447',
@@ -6704,7 +6704,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3445',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3448',
@@ -6713,7 +6713,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3445',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3450',
@@ -6722,7 +6722,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3451',
@@ -6731,7 +6731,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3450',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3452',
@@ -6740,7 +6740,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3450',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3453',
@@ -6749,7 +6749,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3450',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345A',
@@ -6758,7 +6758,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3451',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345B',
@@ -6767,7 +6767,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3451',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345C',
@@ -6776,7 +6776,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3451',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345D',
@@ -6785,7 +6785,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3451',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345E',
@@ -6794,7 +6794,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3451',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345F',
@@ -6803,7 +6803,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3451',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345G',
@@ -6812,7 +6812,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3451',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345H',
@@ -6821,7 +6821,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3451',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345I',
@@ -6830,7 +6830,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3452',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345J',
@@ -6839,7 +6839,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3452',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345K',
@@ -6848,7 +6848,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3452',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345L',
@@ -6857,7 +6857,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3452',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345M',
@@ -6866,7 +6866,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3452',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345N',
@@ -6875,7 +6875,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3452',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345O',
@@ -6884,7 +6884,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3452',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345P',
@@ -6893,7 +6893,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3452',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345Q',
@@ -6902,7 +6902,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3453',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345R',
@@ -6911,7 +6911,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3453',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345S',
@@ -6920,7 +6920,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3453',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345T',
@@ -6929,7 +6929,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3453',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345U',
@@ -6938,7 +6938,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3453',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345V',
@@ -6947,7 +6947,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3453',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345W',
@@ -6956,7 +6956,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3453',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '345X',
@@ -6965,7 +6965,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 4,
     parentCode: '3453',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3460',
@@ -6974,7 +6974,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3461',
@@ -6983,7 +6983,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3460',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3462',
@@ -6992,7 +6992,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3460',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3463',
@@ -7001,7 +7001,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3460',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3470',
@@ -7010,7 +7010,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3471',
@@ -7019,7 +7019,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3470',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3472',
@@ -7028,7 +7028,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3470',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3473',
@@ -7037,7 +7037,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3470',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3480',
@@ -7046,7 +7046,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3481',
@@ -7055,7 +7055,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3480',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3482',
@@ -7064,7 +7064,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3480',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3483',
@@ -7073,7 +7073,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3480',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3485',
@@ -7082,7 +7082,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: '3400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3490',
@@ -7091,7 +7091,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 2,
     parentCode: '3400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3491',
@@ -7100,7 +7100,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3490',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3499',
@@ -7109,7 +7109,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 3,
     parentCode: '3490',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3500',
@@ -7118,7 +7118,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 1,
     parentCode: '3XXX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '355X',
@@ -7127,7 +7127,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 1,
     parentCode: '3XXX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '35XX',
@@ -7136,7 +7136,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 1,
     parentCode: '3XXX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3997',
@@ -7145,7 +7145,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'other',
     level: 0,
     parentCode: '3997',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '3X2X',
@@ -7154,7 +7154,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'liability',
     level: 0,
     parentCode: '3X2X',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '3XXX',
@@ -7163,7 +7163,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'equity',
     level: 0,
     parentCode: '3XXX',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4000',
@@ -7172,7 +7172,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 0,
     parentCode: '4000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4100',
@@ -7181,7 +7181,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 1,
     parentCode: '4000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4110',
@@ -7190,7 +7190,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4111',
@@ -7199,7 +7199,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4110',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4112',
@@ -7208,7 +7208,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4110',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4120',
@@ -7217,7 +7217,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4130',
@@ -7226,7 +7226,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4170',
@@ -7235,7 +7235,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4190',
@@ -7244,7 +7244,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4200',
@@ -7253,7 +7253,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 1,
     parentCode: '4000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4210',
@@ -7262,7 +7262,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4220',
@@ -7271,7 +7271,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4221',
@@ -7280,7 +7280,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4220',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4222',
@@ -7289,7 +7289,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4220',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4223',
@@ -7298,7 +7298,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4220',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4230',
@@ -7307,7 +7307,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4240',
@@ -7316,7 +7316,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4250',
@@ -7325,7 +7325,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4260',
@@ -7334,7 +7334,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4300',
@@ -7343,7 +7343,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 1,
     parentCode: '4000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4310',
@@ -7352,7 +7352,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4330',
@@ -7361,7 +7361,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4400',
@@ -7370,7 +7370,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 1,
     parentCode: '4000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4410',
@@ -7379,7 +7379,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4411',
@@ -7388,7 +7388,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4410',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4412',
@@ -7397,7 +7397,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4410',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4413',
@@ -7406,7 +7406,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4410',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4418',
@@ -7415,7 +7415,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4410',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4419',
@@ -7424,7 +7424,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4420',
@@ -7433,7 +7433,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4421',
@@ -7442,7 +7442,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4420',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4422',
@@ -7451,7 +7451,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4420',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4423',
@@ -7460,7 +7460,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4420',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4429',
@@ -7469,7 +7469,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4420',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4500',
@@ -7478,7 +7478,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 1,
     parentCode: '4000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4510',
@@ -7487,7 +7487,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4500',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4511',
@@ -7496,7 +7496,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4510',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4519',
@@ -7505,7 +7505,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4510',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4520',
@@ -7514,7 +7514,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4500',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4521',
@@ -7523,7 +7523,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4520',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4529',
@@ -7532,7 +7532,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4520',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4600',
@@ -7541,7 +7541,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 1,
     parentCode: '4000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4610',
@@ -7550,7 +7550,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4611',
@@ -7559,7 +7559,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4612',
@@ -7568,7 +7568,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4613',
@@ -7577,7 +7577,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4614',
@@ -7586,7 +7586,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4615',
@@ -7595,7 +7595,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4616',
@@ -7604,7 +7604,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4617',
@@ -7613,7 +7613,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4618',
@@ -7622,7 +7622,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4610',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4619',
@@ -7631,7 +7631,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4610',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4620',
@@ -7640,7 +7640,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4621',
@@ -7649,7 +7649,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4620',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4622',
@@ -7658,7 +7658,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4620',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4623',
@@ -7667,7 +7667,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4620',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4629',
@@ -7676,7 +7676,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4620',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4630',
@@ -7685,7 +7685,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4640',
@@ -7694,7 +7694,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4641',
@@ -7703,7 +7703,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4640',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4649',
@@ -7712,7 +7712,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4640',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4650',
@@ -7721,7 +7721,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4651',
@@ -7730,7 +7730,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4650',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4659',
@@ -7739,7 +7739,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4650',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4660',
@@ -7748,7 +7748,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4661',
@@ -7757,7 +7757,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4660',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4669',
@@ -7766,7 +7766,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4660',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4670',
@@ -7775,7 +7775,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4671',
@@ -7784,7 +7784,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4670',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4679',
@@ -7793,7 +7793,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4670',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4680',
@@ -7802,7 +7802,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4600',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4681',
@@ -7811,7 +7811,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4680',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4689',
@@ -7820,7 +7820,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 3,
     parentCode: '4680',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4800',
@@ -7829,7 +7829,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 1,
     parentCode: '4000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4881',
@@ -7838,7 +7838,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4800',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '4889',
@@ -7847,7 +7847,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'revenue',
     level: 2,
     parentCode: '4800',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '4XXX',
@@ -7856,7 +7856,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'E00240',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '5000',
@@ -7865,7 +7865,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 0,
     parentCode: '5000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5110',
@@ -7874,7 +7874,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 1,
     parentCode: '5000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5111',
@@ -7883,7 +7883,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5110',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5112',
@@ -7892,7 +7892,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5110',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5120',
@@ -7901,7 +7901,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 1,
     parentCode: '5000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5200',
@@ -7910,7 +7910,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 1,
     parentCode: '5000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5260',
@@ -7919,7 +7919,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5300',
@@ -7928,7 +7928,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 1,
     parentCode: '5000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5310',
@@ -7937,7 +7937,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5330',
@@ -7946,7 +7946,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5340',
@@ -7955,7 +7955,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5400',
@@ -7964,7 +7964,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 1,
     parentCode: '5000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5410',
@@ -7973,7 +7973,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5400',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5411',
@@ -7982,7 +7982,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5412',
@@ -7991,7 +7991,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5413',
@@ -8000,7 +8000,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5418',
@@ -8009,7 +8009,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5410',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5420',
@@ -8018,7 +8018,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5400',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5421',
@@ -8027,7 +8027,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5420',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5422',
@@ -8036,7 +8036,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5420',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5423',
@@ -8045,7 +8045,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5420',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5500',
@@ -8054,7 +8054,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 1,
     parentCode: '5000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5510',
@@ -8063,7 +8063,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5500',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5520',
@@ -8072,7 +8072,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5500',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5600',
@@ -8081,7 +8081,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 1,
     parentCode: '5000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5610',
@@ -8090,7 +8090,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5611',
@@ -8099,7 +8099,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5610',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5618',
@@ -8108,7 +8108,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5610',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5620',
@@ -8117,7 +8117,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5621',
@@ -8126,7 +8126,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5620',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5622',
@@ -8135,7 +8135,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5620',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5623',
@@ -8144,7 +8144,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5620',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5624',
@@ -8153,7 +8153,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5620',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5625',
@@ -8162,7 +8162,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5620',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5630',
@@ -8171,7 +8171,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5640',
@@ -8180,7 +8180,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5650',
@@ -8189,7 +8189,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5660',
@@ -8198,7 +8198,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5670',
@@ -8207,7 +8207,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5680',
@@ -8216,7 +8216,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5600',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5700',
@@ -8225,7 +8225,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 1,
     parentCode: '5000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5710',
@@ -8234,7 +8234,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5700',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5711',
@@ -8243,7 +8243,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5710',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5712',
@@ -8252,7 +8252,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5710',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5720',
@@ -8261,7 +8261,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5700',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5721',
@@ -8270,7 +8270,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5720',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5722',
@@ -8279,7 +8279,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5720',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5730',
@@ -8288,7 +8288,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 2,
     parentCode: '5700',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5731',
@@ -8297,7 +8297,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5730',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5732',
@@ -8306,7 +8306,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5730',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5733',
@@ -8315,7 +8315,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 3,
     parentCode: '5730',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5800',
@@ -8324,7 +8324,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cost',
     level: 1,
     parentCode: '5000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5850',
@@ -8333,7 +8333,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 0,
     parentCode: '5850',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '5860',
@@ -8342,7 +8342,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 0,
     parentCode: '5860',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '5900',
@@ -8351,7 +8351,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 0,
     parentCode: '5900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5910',
@@ -8360,7 +8360,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 0,
     parentCode: '5910',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5920',
@@ -8369,7 +8369,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 0,
     parentCode: '5920',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '5950',
@@ -8378,7 +8378,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 0,
     parentCode: '5950',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6000',
@@ -8387,7 +8387,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 0,
     parentCode: '6000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6100',
@@ -8396,7 +8396,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 1,
     parentCode: '6000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6110',
@@ -8405,7 +8405,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6111',
@@ -8414,7 +8414,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6112',
@@ -8423,7 +8423,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6113',
@@ -8432,7 +8432,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6114',
@@ -8441,7 +8441,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6115',
@@ -8450,7 +8450,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6116',
@@ -8459,7 +8459,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6117',
@@ -8468,7 +8468,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6118',
@@ -8477,7 +8477,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6119',
@@ -8486,7 +8486,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6120',
@@ -8495,7 +8495,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6121',
@@ -8504,7 +8504,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6122',
@@ -8513,7 +8513,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6124',
@@ -8522,7 +8522,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6125',
@@ -8531,7 +8531,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6127',
@@ -8540,7 +8540,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6128',
@@ -8549,7 +8549,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6130',
@@ -8558,7 +8558,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6131',
@@ -8567,7 +8567,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6132',
@@ -8576,7 +8576,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6151',
@@ -8585,7 +8585,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6153',
@@ -8594,7 +8594,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6188',
@@ -8603,7 +8603,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6200',
@@ -8612,7 +8612,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 1,
     parentCode: '6000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6210',
@@ -8621,7 +8621,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6211',
@@ -8630,7 +8630,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6212',
@@ -8639,7 +8639,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6213',
@@ -8648,7 +8648,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6214',
@@ -8657,7 +8657,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6215',
@@ -8666,7 +8666,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6216',
@@ -8675,7 +8675,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6217',
@@ -8684,7 +8684,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6218',
@@ -8693,7 +8693,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6219',
@@ -8702,7 +8702,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6220',
@@ -8711,7 +8711,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6221',
@@ -8720,7 +8720,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6222',
@@ -8729,7 +8729,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6224',
@@ -8738,7 +8738,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6225',
@@ -8747,7 +8747,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6227',
@@ -8756,7 +8756,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6228',
@@ -8765,7 +8765,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6229',
@@ -8774,7 +8774,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6231',
@@ -8783,7 +8783,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6232',
@@ -8792,7 +8792,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6233',
@@ -8801,7 +8801,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6288',
@@ -8810,7 +8810,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6300',
@@ -8819,7 +8819,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 1,
     parentCode: '6000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6310',
@@ -8828,7 +8828,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6311',
@@ -8837,7 +8837,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6312',
@@ -8846,7 +8846,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6313',
@@ -8855,7 +8855,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6314',
@@ -8864,7 +8864,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6315',
@@ -8873,7 +8873,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6316',
@@ -8882,7 +8882,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6318',
@@ -8891,7 +8891,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6319',
@@ -8900,7 +8900,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6320',
@@ -8909,7 +8909,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6321',
@@ -8918,7 +8918,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6322',
@@ -8927,7 +8927,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6324',
@@ -8936,7 +8936,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6325',
@@ -8945,7 +8945,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6327',
@@ -8954,7 +8954,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6328',
@@ -8963,7 +8963,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6329',
@@ -8972,7 +8972,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6331',
@@ -8981,7 +8981,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6388',
@@ -8990,7 +8990,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 2,
     parentCode: '6300',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6400',
@@ -8999,7 +8999,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 1,
     parentCode: '6000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6450',
@@ -9008,7 +9008,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'expense',
     level: 1,
     parentCode: '6000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6500',
@@ -9017,7 +9017,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 0,
     parentCode: '6500',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '6510',
@@ -9026,7 +9026,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 1,
     parentCode: '6500',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '6511',
@@ -9035,7 +9035,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '6510',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '6512',
@@ -9044,7 +9044,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '6510',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '6513',
@@ -9053,7 +9053,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '6510',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '6514',
@@ -9062,7 +9062,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '6510',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '6520',
@@ -9071,7 +9071,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '6510',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '6550',
@@ -9080,7 +9080,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 1,
     parentCode: '6500',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '6551',
@@ -9089,7 +9089,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '6550',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6552',
@@ -9098,7 +9098,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '6550',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6553',
@@ -9107,7 +9107,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '6550',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6554',
@@ -9116,7 +9116,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '6550',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '6560',
@@ -9125,7 +9125,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '6550',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '6900',
@@ -9134,7 +9134,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 0,
     parentCode: '6900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7000',
@@ -9143,7 +9143,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 0,
     parentCode: '7000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7010',
@@ -9152,7 +9152,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 1,
     parentCode: '7000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7020',
@@ -9161,7 +9161,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 1,
     parentCode: '7000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7030',
@@ -9170,7 +9170,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 1,
     parentCode: '7000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7050',
@@ -9179,7 +9179,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 1,
     parentCode: '7000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7055',
@@ -9188,7 +9188,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 1,
     parentCode: '7000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7060',
@@ -9197,7 +9197,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 1,
     parentCode: '7000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7080',
@@ -9206,7 +9206,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 1,
     parentCode: '7000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7081',
@@ -9215,7 +9215,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 1,
     parentCode: '7000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7100',
@@ -9224,7 +9224,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 1,
     parentCode: '7000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7101',
@@ -9233,7 +9233,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7102',
@@ -9242,7 +9242,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7105',
@@ -9251,7 +9251,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7106',
@@ -9260,7 +9260,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7107',
@@ -9269,7 +9269,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7110',
@@ -9278,7 +9278,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7120',
@@ -9287,7 +9287,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7130',
@@ -9296,7 +9296,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7140',
@@ -9305,7 +9305,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7150',
@@ -9314,7 +9314,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7151',
@@ -9323,7 +9323,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7150',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7152',
@@ -9332,7 +9332,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7150',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7153',
@@ -9341,7 +9341,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7150',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7159',
@@ -9350,7 +9350,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7150',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7160',
@@ -9359,7 +9359,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7170',
@@ -9368,7 +9368,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7175',
@@ -9377,7 +9377,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7180',
@@ -9386,7 +9386,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7190',
@@ -9395,7 +9395,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7210',
@@ -9404,7 +9404,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7215',
@@ -9413,7 +9413,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7220',
@@ -9422,7 +9422,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7225',
@@ -9431,7 +9431,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7226',
@@ -9440,7 +9440,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7227',
@@ -9449,7 +9449,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7228',
@@ -9458,7 +9458,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7229',
@@ -9467,7 +9467,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7230',
@@ -9476,7 +9476,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7235',
@@ -9485,7 +9485,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7240',
@@ -9494,7 +9494,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7245',
@@ -9503,7 +9503,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7250',
@@ -9512,7 +9512,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7255',
@@ -9521,7 +9521,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7260',
@@ -9530,7 +9530,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7265',
@@ -9539,7 +9539,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7270',
@@ -9548,7 +9548,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7271',
@@ -9557,7 +9557,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7270',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7272',
@@ -9566,7 +9566,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7270',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7273',
@@ -9575,7 +9575,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7270',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7274',
@@ -9584,7 +9584,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7270',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7275',
@@ -9593,7 +9593,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7270',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7276',
@@ -9602,7 +9602,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7270',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7277',
@@ -9611,7 +9611,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7270',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7278',
@@ -9620,7 +9620,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7270',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7279',
@@ -9629,7 +9629,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7270',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '727A',
@@ -9638,7 +9638,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7270',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7299',
@@ -9647,7 +9647,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7050',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7300',
@@ -9656,7 +9656,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7050',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '730A',
@@ -9665,7 +9665,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '730B',
@@ -9674,7 +9674,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '730C',
@@ -9683,7 +9683,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '730D',
@@ -9692,7 +9692,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '730E',
@@ -9701,7 +9701,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '730F',
@@ -9710,7 +9710,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7350',
@@ -9719,7 +9719,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7030',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7360',
@@ -9728,7 +9728,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7080',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7361',
@@ -9737,7 +9737,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7081',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7370',
@@ -9746,7 +9746,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7060',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7380',
@@ -9755,7 +9755,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7055',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7510',
@@ -9764,7 +9764,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7050',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7520',
@@ -9773,7 +9773,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7050',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7530',
@@ -9782,7 +9782,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7531',
@@ -9791,7 +9791,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7530',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7532',
@@ -9800,7 +9800,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7530',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7533',
@@ -9809,7 +9809,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7530',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7540',
@@ -9818,7 +9818,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7550',
@@ -9827,7 +9827,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7560',
@@ -9836,7 +9836,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7580',
@@ -9845,7 +9845,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7590',
@@ -9854,7 +9854,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7610',
@@ -9863,7 +9863,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7615',
@@ -9872,7 +9872,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7620',
@@ -9881,7 +9881,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7625',
@@ -9890,7 +9890,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7626',
@@ -9899,7 +9899,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7627',
@@ -9908,7 +9908,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7628',
@@ -9917,7 +9917,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7630',
@@ -9926,7 +9926,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7635',
@@ -9935,7 +9935,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7640',
@@ -9944,7 +9944,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7645',
@@ -9953,7 +9953,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7650',
@@ -9962,7 +9962,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7655',
@@ -9971,7 +9971,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7660',
@@ -9980,7 +9980,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7665',
@@ -9989,7 +9989,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7670',
@@ -9998,7 +9998,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7020',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7671',
@@ -10007,7 +10007,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7670',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7672',
@@ -10016,7 +10016,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7670',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7673',
@@ -10025,7 +10025,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7670',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7674',
@@ -10034,7 +10034,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7670',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7675',
@@ -10043,7 +10043,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7670',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7676',
@@ -10052,7 +10052,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7670',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7677',
@@ -10061,7 +10061,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7670',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7678',
@@ -10070,7 +10070,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7670',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7679',
@@ -10079,7 +10079,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7670',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '767A',
@@ -10088,7 +10088,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7670',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7700',
@@ -10097,7 +10097,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7050',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '770A',
@@ -10106,7 +10106,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7700',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '770B',
@@ -10115,7 +10115,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7700',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '770C',
@@ -10124,7 +10124,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7700',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '770D',
@@ -10133,7 +10133,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7700',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '770E',
@@ -10142,7 +10142,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7700',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '770F',
@@ -10151,7 +10151,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 3,
     parentCode: '7700',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7750',
@@ -10160,7 +10160,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7030',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7760',
@@ -10169,7 +10169,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7080',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7761',
@@ -10178,7 +10178,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7081',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7770',
@@ -10187,7 +10187,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7060',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7880',
@@ -10196,7 +10196,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 2,
     parentCode: '7055',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7900',
@@ -10205,7 +10205,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 0,
     parentCode: '7900',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '7950',
@@ -10214,7 +10214,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 0,
     parentCode: '7950',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7951',
@@ -10223,7 +10223,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 1,
     parentCode: '7950',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '7952',
@@ -10232,7 +10232,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'income',
     level: 1,
     parentCode: '7950',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8000',
@@ -10241,7 +10241,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 0,
     parentCode: '8000',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '8100',
@@ -10250,7 +10250,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 0,
     parentCode: '8100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '8101',
@@ -10259,7 +10259,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 1,
     parentCode: '8100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '8102',
@@ -10268,7 +10268,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 1,
     parentCode: '8100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '8103',
@@ -10277,7 +10277,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 1,
     parentCode: '8100',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '8160',
@@ -10286,7 +10286,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 0,
     parentCode: '8160',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '8200',
@@ -10295,7 +10295,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 0,
     parentCode: '8200',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '8300',
@@ -10304,7 +10304,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 0,
     parentCode: '8300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8310',
@@ -10313,7 +10313,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 1,
     parentCode: '8300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8311',
@@ -10322,7 +10322,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8312',
@@ -10331,7 +10331,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8313',
@@ -10340,7 +10340,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8314',
@@ -10349,7 +10349,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8315',
@@ -10358,7 +10358,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8316',
@@ -10367,7 +10367,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8317',
@@ -10376,7 +10376,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '831A',
@@ -10385,7 +10385,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8317',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '831B',
@@ -10394,7 +10394,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8317',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '831C',
@@ -10403,7 +10403,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8317',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '831D',
@@ -10412,7 +10412,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8317',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8320',
@@ -10421,7 +10421,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8321',
@@ -10430,7 +10430,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8320',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8322',
@@ -10439,7 +10439,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8320',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8323',
@@ -10448,7 +10448,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8320',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8324',
@@ -10457,7 +10457,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8320',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8325',
@@ -10466,7 +10466,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8320',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8326',
@@ -10475,7 +10475,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8320',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8327',
@@ -10484,7 +10484,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8320',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '832A',
@@ -10493,7 +10493,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8327',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '832B',
@@ -10502,7 +10502,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8327',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '832C',
@@ -10511,7 +10511,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8327',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '832D',
@@ -10520,7 +10520,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8327',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8341',
@@ -10529,7 +10529,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8349',
@@ -10538,7 +10538,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8310',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8360',
@@ -10547,7 +10547,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 1,
     parentCode: '8300',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8361',
@@ -10556,7 +10556,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8360',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8365',
@@ -10565,7 +10565,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8360',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8366',
@@ -10574,7 +10574,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8360',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8367',
@@ -10583,7 +10583,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8360',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8368',
@@ -10592,7 +10592,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8360',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '836A',
@@ -10601,7 +10601,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8367',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '836B',
@@ -10610,7 +10610,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8367',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '836C',
@@ -10619,7 +10619,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8368',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '836D',
@@ -10628,7 +10628,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8368',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '836E',
@@ -10637,7 +10637,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8368',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '836F',
@@ -10646,7 +10646,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8368',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '836G',
@@ -10655,7 +10655,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8368',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '836H',
@@ -10664,7 +10664,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8368',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '836I',
@@ -10673,7 +10673,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8368',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '836J',
@@ -10682,7 +10682,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8368',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '836K',
@@ -10691,7 +10691,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8361',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '836L',
@@ -10700,7 +10700,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8361',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8370',
@@ -10709,7 +10709,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8360',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8371',
@@ -10718,7 +10718,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8370',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8375',
@@ -10727,7 +10727,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8370',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8376',
@@ -10736,7 +10736,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8370',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8377',
@@ -10745,7 +10745,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8370',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8378',
@@ -10754,7 +10754,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 3,
     parentCode: '8370',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '837A',
@@ -10763,7 +10763,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8377',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '837B',
@@ -10772,7 +10772,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8377',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '837C',
@@ -10781,7 +10781,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8378',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '837D',
@@ -10790,7 +10790,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8378',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '837E',
@@ -10799,7 +10799,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8378',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '837F',
@@ -10808,7 +10808,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8378',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '837G',
@@ -10817,7 +10817,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8378',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '837H',
@@ -10826,7 +10826,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8378',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '837I',
@@ -10835,7 +10835,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8378',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '837J',
@@ -10844,7 +10844,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8378',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '837K',
@@ -10853,7 +10853,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8371',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '837L',
@@ -10862,7 +10862,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 4,
     parentCode: '8371',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8391',
@@ -10871,7 +10871,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8360',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8399',
@@ -10880,7 +10880,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 2,
     parentCode: '8360',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8400',
@@ -10889,7 +10889,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 0,
     parentCode: '8400',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '8500',
@@ -10898,7 +10898,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'otherComprehensiveIncome',
     level: 0,
     parentCode: '8500',
-    debit: false,
+    isDebit: false,
   },
   {
     code: '9710',
@@ -10907,7 +10907,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 1,
     parentCode: '9750',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '9720',
@@ -10916,7 +10916,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 1,
     parentCode: '9750',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '9750',
@@ -10925,7 +10925,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'other',
     level: 0,
     parentCode: '9750',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '9810',
@@ -10934,7 +10934,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 1,
     parentCode: '9850',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '9820',
@@ -10943,7 +10943,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'gainOrLoss',
     level: 1,
     parentCode: '9850',
-    debit: true,
+    isDebit: true,
   },
   {
     code: '9850',
@@ -10952,7 +10952,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'other',
     level: 0,
     parentCode: '9850',
-    debit: true,
+    isDebit: true,
   },
   {
     code: 'A00010',
@@ -10961,7 +10961,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A00020',
@@ -10970,7 +10970,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A1',
@@ -10979,7 +10979,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A10000',
@@ -10988,7 +10988,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A20000',
@@ -10997,7 +10997,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A20010',
@@ -11006,7 +11006,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'A20000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A20100',
@@ -11015,7 +11015,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A20200',
@@ -11024,7 +11024,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A20300',
@@ -11033,7 +11033,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A20400',
@@ -11042,7 +11042,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A20900',
@@ -11051,7 +11051,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A21000',
@@ -11060,7 +11060,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A21100',
@@ -11069,7 +11069,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A21200',
@@ -11078,7 +11078,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A21300',
@@ -11087,7 +11087,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A21900',
@@ -11096,7 +11096,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A22000',
@@ -11105,7 +11105,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A22300',
@@ -11114,7 +11114,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A22500',
@@ -11123,7 +11123,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A22600',
@@ -11132,7 +11132,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A22700',
@@ -11141,7 +11141,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A22800',
@@ -11150,7 +11150,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A22900',
@@ -11159,7 +11159,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A23000',
@@ -11168,7 +11168,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A23100',
@@ -11177,7 +11177,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A23200',
@@ -11186,7 +11186,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A23500',
@@ -11195,7 +11195,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: true,
+    isDebit: true,
   },
   {
     code: 'A23600',
@@ -11204,7 +11204,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A23700',
@@ -11213,7 +11213,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: true,
+    isDebit: true,
   },
   {
     code: 'A23800',
@@ -11222,7 +11222,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A23900',
@@ -11231,7 +11231,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A24000',
@@ -11240,7 +11240,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A24100',
@@ -11249,7 +11249,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A24200',
@@ -11258,7 +11258,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A24500',
@@ -11267,7 +11267,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A24600',
@@ -11276,7 +11276,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: true,
+    isDebit: true,
   },
   {
     code: 'A29900',
@@ -11285,7 +11285,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A20010',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A3',
@@ -11294,7 +11294,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A30000',
@@ -11303,7 +11303,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'A20000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31000',
@@ -11312,7 +11312,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A30000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31115',
@@ -11321,7 +11321,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31120',
@@ -11330,7 +11330,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31125',
@@ -11339,7 +11339,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31130',
@@ -11348,7 +11348,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31140',
@@ -11357,7 +11357,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31150',
@@ -11366,7 +11366,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31160',
@@ -11375,7 +11375,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31180',
@@ -11384,7 +11384,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31190',
@@ -11393,7 +11393,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31200',
@@ -11402,7 +11402,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31210',
@@ -11411,7 +11411,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31220',
@@ -11420,7 +11420,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31230',
@@ -11429,7 +11429,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31240',
@@ -11438,7 +11438,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31250',
@@ -11447,7 +11447,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31260',
@@ -11456,7 +11456,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31270',
@@ -11465,7 +11465,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31280',
@@ -11474,7 +11474,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A31990',
@@ -11483,7 +11483,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A31000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32000',
@@ -11492,7 +11492,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 3,
     parentCode: 'A30000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32110',
@@ -11501,7 +11501,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32120',
@@ -11510,7 +11510,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32125',
@@ -11519,7 +11519,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32130',
@@ -11528,7 +11528,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32140',
@@ -11537,7 +11537,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32150',
@@ -11546,7 +11546,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32160',
@@ -11555,7 +11555,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32180',
@@ -11564,7 +11564,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32190',
@@ -11573,7 +11573,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32200',
@@ -11582,7 +11582,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32210',
@@ -11591,7 +11591,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32220',
@@ -11600,7 +11600,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32230',
@@ -11609,7 +11609,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32240',
@@ -11618,7 +11618,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32250',
@@ -11627,7 +11627,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A32990',
@@ -11636,7 +11636,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 4,
     parentCode: 'A32000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A33000',
@@ -11645,7 +11645,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A33100',
@@ -11654,7 +11654,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A33200',
@@ -11663,7 +11663,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A33300',
@@ -11672,7 +11672,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A33400',
@@ -11681,7 +11681,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A33500',
@@ -11690,7 +11690,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A4',
@@ -11699,7 +11699,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'A5',
@@ -11708,7 +11708,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AA0000',
@@ -11717,7 +11717,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA1',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AA0100',
@@ -11726,7 +11726,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'AA0000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AA0200',
@@ -11735,7 +11735,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'AA0000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AA0300',
@@ -11744,7 +11744,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'AA0000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AA0400',
@@ -11753,7 +11753,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'AA0000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AA0600',
@@ -11762,7 +11762,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'AA0000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AA0700',
@@ -11771,7 +11771,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'AA0000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AAAA',
@@ -11780,7 +11780,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 0,
     parentCode: 'AAAA',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AAAA0',
@@ -11789,7 +11789,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 0,
     parentCode: 'AAAA0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AAAA1',
@@ -11798,7 +11798,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 0,
     parentCode: 'AAAA1',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AB0000',
@@ -11807,7 +11807,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA1',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AB0100',
@@ -11816,7 +11816,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'AB0000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AB0200',
@@ -11825,7 +11825,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'AB0000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AB0300',
@@ -11834,7 +11834,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'AB0000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AB0400',
@@ -11843,7 +11843,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'AB0000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AB0600',
@@ -11852,7 +11852,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'AB0000',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AC0100',
@@ -11861,7 +11861,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA1',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AC0200',
@@ -11870,7 +11870,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA1',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AC0300',
@@ -11879,7 +11879,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA1',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AC0400',
@@ -11888,7 +11888,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA1',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AC0500',
@@ -11897,7 +11897,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA1',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'AC0600',
@@ -11906,7 +11906,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'AAAA1',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B0',
@@ -11915,7 +11915,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B00010',
@@ -11924,7 +11924,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B00020',
@@ -11933,7 +11933,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B00030',
@@ -11942,7 +11942,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: true,
+    isDebit: true,
   },
   {
     code: 'B00040',
@@ -11951,7 +11951,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B00050',
@@ -11960,7 +11960,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B00060',
@@ -11969,7 +11969,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B00100',
@@ -11978,7 +11978,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B00200',
@@ -11987,7 +11987,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B01500',
@@ -11996,7 +11996,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B01600',
@@ -12005,7 +12005,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B01700',
@@ -12014,7 +12014,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B01800',
@@ -12023,7 +12023,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B01900',
@@ -12032,7 +12032,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B02000',
@@ -12041,7 +12041,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B02100',
@@ -12050,7 +12050,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B02200',
@@ -12059,7 +12059,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B02300',
@@ -12068,7 +12068,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B02400',
@@ -12077,7 +12077,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: true,
+    isDebit: true,
   },
   {
     code: 'B02500',
@@ -12086,7 +12086,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B02600',
@@ -12095,7 +12095,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B02700',
@@ -12104,7 +12104,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B02800',
@@ -12113,7 +12113,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B02900',
@@ -12122,7 +12122,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B03000',
@@ -12131,7 +12131,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B03700',
@@ -12140,7 +12140,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B03800',
@@ -12149,7 +12149,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B04100',
@@ -12158,7 +12158,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B04200',
@@ -12167,7 +12167,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B04300',
@@ -12176,7 +12176,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B04400',
@@ -12185,7 +12185,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B04500',
@@ -12194,7 +12194,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B04600',
@@ -12203,7 +12203,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B04900',
@@ -12212,7 +12212,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B05000',
@@ -12221,7 +12221,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B05100',
@@ -12230,7 +12230,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B05350',
@@ -12239,7 +12239,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B05400',
@@ -12248,7 +12248,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B05500',
@@ -12257,7 +12257,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B05800',
@@ -12266,7 +12266,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B05900',
@@ -12275,7 +12275,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B06000',
@@ -12284,7 +12284,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B06100',
@@ -12293,7 +12293,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B06500',
@@ -12302,7 +12302,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B06600',
@@ -12311,7 +12311,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B06700',
@@ -12320,7 +12320,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B06800',
@@ -12329,7 +12329,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B07100',
@@ -12338,7 +12338,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B07200',
@@ -12347,7 +12347,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B07300',
@@ -12356,7 +12356,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B07400',
@@ -12365,7 +12365,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B07500',
@@ -12374,7 +12374,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B07600',
@@ -12383,7 +12383,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B07700',
@@ -12392,7 +12392,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B09900',
@@ -12401,7 +12401,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B1',
@@ -12410,7 +12410,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'B0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B11',
@@ -12419,7 +12419,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'B0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B13',
@@ -12428,7 +12428,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'B0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B15',
@@ -12437,7 +12437,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'B0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B17',
@@ -12446,7 +12446,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'B0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B3',
@@ -12455,7 +12455,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'B0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B5',
@@ -12464,7 +12464,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'B0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B7',
@@ -12473,7 +12473,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'B0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B8',
@@ -12482,7 +12482,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'B0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'B9',
@@ -12491,7 +12491,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'B0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'BBBB',
@@ -12500,7 +12500,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 0,
     parentCode: 'BBBB',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C0',
@@ -12509,7 +12509,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C00100',
@@ -12518,7 +12518,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C00200',
@@ -12527,7 +12527,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C00500',
@@ -12536,7 +12536,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C00600',
@@ -12545,7 +12545,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C00900',
@@ -12554,7 +12554,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C01000',
@@ -12563,7 +12563,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C01100',
@@ -12572,7 +12572,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C01200',
@@ -12581,7 +12581,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C01300',
@@ -12590,7 +12590,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C01600',
@@ -12599,7 +12599,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C01700',
@@ -12608,7 +12608,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C01800',
@@ -12617,7 +12617,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C01900',
@@ -12626,7 +12626,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C02000',
@@ -12635,7 +12635,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C02100',
@@ -12644,7 +12644,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C02200',
@@ -12653,7 +12653,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C02300',
@@ -12662,7 +12662,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C02400',
@@ -12671,7 +12671,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C02500',
@@ -12680,7 +12680,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C02800',
@@ -12689,7 +12689,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C02900',
@@ -12698,7 +12698,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C03000',
@@ -12707,7 +12707,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C03100',
@@ -12716,7 +12716,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C03200',
@@ -12725,7 +12725,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C03500',
@@ -12734,7 +12734,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C03600',
@@ -12743,7 +12743,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C03700',
@@ -12752,7 +12752,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C03800',
@@ -12761,7 +12761,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C03900',
@@ -12770,7 +12770,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C04000',
@@ -12779,7 +12779,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C04020',
@@ -12788,7 +12788,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C04100',
@@ -12797,7 +12797,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C04200',
@@ -12806,7 +12806,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C04300',
@@ -12815,7 +12815,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C04400',
@@ -12824,7 +12824,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C04500',
@@ -12833,7 +12833,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C04600',
@@ -12842,7 +12842,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C04650',
@@ -12851,7 +12851,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C04700',
@@ -12860,7 +12860,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C04800',
@@ -12869,7 +12869,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C04900',
@@ -12878,7 +12878,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C04950',
@@ -12887,7 +12887,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C05000',
@@ -12896,7 +12896,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C05100',
@@ -12905,7 +12905,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C05200',
@@ -12914,7 +12914,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C05300',
@@ -12923,7 +12923,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C05400',
@@ -12932,7 +12932,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C05500',
@@ -12941,7 +12941,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C05600',
@@ -12950,7 +12950,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C05700',
@@ -12959,7 +12959,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C09900',
@@ -12968,7 +12968,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C1',
@@ -12977,7 +12977,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'C0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C11',
@@ -12986,7 +12986,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'C0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C13',
@@ -12995,7 +12995,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'C0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C15',
@@ -13004,7 +13004,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'C0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C17',
@@ -13013,7 +13013,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'C0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C3',
@@ -13022,7 +13022,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'C0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C5',
@@ -13031,7 +13031,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'C0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'C7',
@@ -13040,7 +13040,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 2,
     parentCode: 'C0',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'CCCC',
@@ -13049,7 +13049,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 0,
     parentCode: 'CCCC',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'D1',
@@ -13058,7 +13058,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'D3',
@@ -13067,7 +13067,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'D5',
@@ -13076,7 +13076,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'DDDD',
@@ -13085,7 +13085,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 0,
     parentCode: 'DDDD',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'E00100',
@@ -13094,7 +13094,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 0,
     parentCode: 'E00100',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'E00200',
@@ -13103,7 +13103,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 0,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'E00210',
@@ -13112,7 +13112,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'E00212',
@@ -13121,7 +13121,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'E00214',
@@ -13130,7 +13130,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'E00240',
@@ -13139,7 +13139,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'E1',
@@ -13148,7 +13148,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'E2',
@@ -13157,7 +13157,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'E3',
@@ -13166,7 +13166,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'EEEE',
@@ -13175,7 +13175,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 0,
     parentCode: 'EEEE',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'F1',
@@ -13184,7 +13184,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'F3',
@@ -13193,7 +13193,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'H1',
@@ -13202,7 +13202,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'H3',
@@ -13211,7 +13211,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'I1',
@@ -13220,7 +13220,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'I3',
@@ -13229,7 +13229,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'J1',
@@ -13238,7 +13238,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'J3',
@@ -13247,7 +13247,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'J5',
@@ -13256,7 +13256,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'K1',
@@ -13265,7 +13265,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'L1',
@@ -13274,7 +13274,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'L3',
@@ -13283,7 +13283,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'L4',
@@ -13292,7 +13292,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'L5',
@@ -13301,7 +13301,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'L7',
@@ -13310,7 +13310,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'M1',
@@ -13319,7 +13319,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'M3',
@@ -13328,7 +13328,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'M5',
@@ -13337,7 +13337,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'M7',
@@ -13346,7 +13346,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'N1',
@@ -13355,7 +13355,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'P1',
@@ -13364,7 +13364,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'Q1',
@@ -13373,7 +13373,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'T1',
@@ -13382,7 +13382,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'Y1',
@@ -13391,7 +13391,7 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
   {
     code: 'Z1',
@@ -13400,6 +13400,6 @@ export const JP_ACCOUNTS: IAccount[] = [
     type: 'cashFlow',
     level: 1,
     parentCode: 'E00200',
-    debit: false,
+    isDebit: false,
   },
 ];

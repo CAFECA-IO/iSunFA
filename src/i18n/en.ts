@@ -962,4 +962,70 @@ export const en = {
       copy_id: "Click to copy Journal ID: {{id}}",
     },
   },
+  "voucher": {
+    "main_view": {
+      "title": "Voucher Management",
+      "empty_message_prefix": "No vouchers currently available, please ",
+      "empty_upload_link": "upload files here",
+      "filters": {
+        "type": "Type",
+        "type_options": {
+          "all": "All",
+          "payment": "Payment",
+          "receipt": "Receipt",
+          "transfer": "Transfer"
+        },
+        "period": "Period",
+        "search": "Search",
+        "hide_deleted": "Hide deleted vouchers and their reversals.",
+        "currency": "CURRENCY: {currency}"
+      },
+      "table": {
+        "issued_date": "Issued Date",
+        "voucher_no": "Voucher No.",
+        "note": "Note",
+        "accounting": "Accounting",
+        "debit": "Debit",
+        "credit": "Credit",
+        "issuer": "Issuer",
+        "status_deleted": "Deleted"
+      }
+    },
+    "detail_modal": {
+      "titles": {
+        "new_voucher": "New Voucher",
+        "edit_voucher": "Edit Voucher {id}"
+      },
+      "fields": {
+        "voucher_date": "Voucher Date",
+        "voucher_type": "Voucher Type",
+        "note": "Note",
+        "accounting": "Accounting",
+        "accounting_select": "Select",
+        "particular": "Particular",
+        "debit": "Debit",
+        "credit": "Credit"
+      },
+      "actions": {
+        "clear_all": "Clear All",
+        "save_voucher": "Save Voucher",
+        "confirm": "Confirm",
+        "cancel": "Cancel"
+      },
+      "confirm_modals": {
+        "clear_all": {
+          "title": "Clear all",
+          "message": "Are you sure you want to clear all data?"
+        },
+        "leave_without_saving": {
+          "title": "Leave without saving",
+          "message": "Are you sure you want to discard your changes and leave?"
+        },
+        "save_voucher": {
+          "title": "Save Voucher",
+          "message": "Are you sure you want to save this voucher?"
+        }
+      }
+    }
+  }
 };
