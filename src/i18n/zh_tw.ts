@@ -173,7 +173,7 @@ export const zhTw = {
         title: "資訊情報",
         desc: "統整財務分析與碳盤查關鍵數據，提供即時決策與應對支持。",
       },
-      bookkeeping: {
+      voucher: {
         title: "傳票管理",
         desc: "AI 自動生成會計分錄，帳本品質媲美資深會計師實務。",
       },
@@ -471,7 +471,7 @@ export const zhTw = {
   chat: {
     tags: {
       dashboard: "資訊戰情室",
-      bookkeeping: "傳票管理",
+      voucher: "傳票管理",
       adjustment: "智能出納",
       cashier: "智能錢包",
       salary: "薪資管理",
@@ -932,5 +932,28 @@ export const zhTw = {
     zoom_in: "放大",
     zoom_out: "縮小",
     zoom_reset: "重置",
+  },
+  journal: {
+    main_view: {
+      title: "憑證管理",
+      upload: "上傳憑證",
+      list: "憑證列表",
+      log: "異動紀錄",
+    },
+    log_view: {
+      title: "憑證異動紀錄",
+      refresh: "重新整理",
+      record_time: "紀錄時間",
+      action_type: "操作類型",
+      operator: "操作人員",
+      journal_id: "憑證 ID",
+      empty: "暫無異動紀錄",
+      action_create: "新增",
+      action_update: "更新",
+      action_delete: "刪除",
+      unnamed_user: "未命名使用者",
+      copy_address: "點擊複製地址: {{address}}",
+      copy_id: "點擊複製憑證 ID: {{id}}",
+    },
   },
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "@/i18n/i18n_context";
 import JournalUploadView from "@/components/user/journal/journal_upload_view";
 import JournalListView from "@/components/user/journal/journal_list_view";
 import JournalLogView from "@/components/user/journal/journal_log_view";
@@ -12,6 +13,7 @@ enum EJournalTab {
 }
 
 export default function JournalMainView() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<EJournalTab>(EJournalTab.UPLOAD);
 
   const renderView = () => {
@@ -33,7 +35,7 @@ export default function JournalMainView() {
     <div className="flex w-full flex-col bg-gray-50">
       <div className="flex justify-between px-8 py-6">
         <h1 className="font-sans text-2xl font-bold text-slate-800">
-          憑證管理
+          {t("journal.main_view.title")}
         </h1>
       </div>
 
@@ -50,7 +52,7 @@ export default function JournalMainView() {
             }`}
             onClick={() => setActiveTab(EJournalTab.UPLOAD)}
           >
-            上傳憑證
+            {t("journal.main_view.upload")}
           </button>
           {/* Info: (20260304 - Julian) View Logs */}
           <button
@@ -62,7 +64,7 @@ export default function JournalMainView() {
             }`}
             onClick={() => setActiveTab(EJournalTab.LIST)}
           >
-            憑證列表
+            {t("journal.main_view.list")}
           </button>
           {/* Info: (20260306 - Julian) View Audit Logs */}
           <button
@@ -74,7 +76,7 @@ export default function JournalMainView() {
             }`}
             onClick={() => setActiveTab(EJournalTab.LOG)}
           >
-            異動紀錄
+            {t("journal.main_view.log")}
           </button>
         </div>
 

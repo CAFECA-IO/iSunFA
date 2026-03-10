@@ -163,6 +163,7 @@ export default function JournalDetailModal({
                     <ZoomablePreview
                       hasContent={!!journal.file?.hash}
                       fallbackText={t("ocr.no_image") as string}
+                      className="w-1/2"
                     >
                       {journal.file?.hash && (
                         <FilePreview

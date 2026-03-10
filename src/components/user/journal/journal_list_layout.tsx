@@ -31,7 +31,7 @@ const JournalListItem = ({
 
   return (
     <tr
-      className="cursor-pointer border-b border-slate-200 last:border-0 odd:bg-slate-50 even:bg-white hover:bg-orange-100"
+      className="cursor-pointer last:border-0 odd:bg-slate-50 even:bg-white hover:bg-orange-100"
       onClick={() => onSelect(journal)}
     >
       <td className="w-16 px-3 py-2 align-middle text-slate-700 sm:w-32 sm:px-6">
@@ -111,21 +111,21 @@ const JournalListLayout = ({
   ));
 
   return (
-    <div className="overflow-x-auto rounded-md border border-slate-500 bg-white shadow-sm">
+    <div className="overflow-x-auto rounded-md border border-gray-200 bg-white shadow-sm">
       <table className="w-full">
         <tbody>
           <tr>
-            <th className="w-16 border-b border-slate-500 bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:w-32 sm:px-6 sm:text-base">
+            <th className="w-16 bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:w-32 sm:px-6 sm:text-base">
               {t("ocr.file")}
             </th>
-            <th className="border-b border-slate-500 bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:px-6 sm:text-left sm:text-base">
+            <th className="bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:px-6 sm:text-left sm:text-base">
               {t("ocr.created_date")}
             </th>
-            <th className="border-b border-slate-500 bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">
+            <th className="bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">
               {t("ocr.journal")}
             </th>
             <th
-              className="w-12 border-b border-slate-500 bg-slate-100 px-3 py-3 sm:px-6"
+              className="w-12 bg-slate-100 px-3 py-3 sm:px-6"
               aria-label="actions"
             ></th>
           </tr>

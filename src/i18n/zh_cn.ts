@@ -163,7 +163,7 @@ export const zhCn = {
         title: "资讯情报",
         desc: "统整财务分析与碳盘查关键数据，提供实时决策与应对支持。",
       },
-      bookkeeping: {
+      voucher: {
         title: "传票管理",
         desc: "AI 自动生成会计分录，账本质量媲美资深会计师实务。",
       },
@@ -461,7 +461,7 @@ export const zhCn = {
   chat: {
     tags: {
       dashboard: "资讯战情室",
-      bookkeeping: "传票管理",
+      voucher: "传票管理",
       adjustment: "智能出纳",
       cashier: "智能钱包",
       salary: "薪资管理",
@@ -874,5 +874,28 @@ export const zhCn = {
     zoom_in: "放大",
     zoom_out: "缩小",
     zoom_reset: "重置",
+  },
+  journal: {
+    main_view: {
+      title: "凭证管理",
+      upload: "上传凭证",
+      list: "凭证列表",
+      log: "变动记录",
+    },
+    log_view: {
+      title: "凭证变动记录",
+      refresh: "刷新",
+      record_time: "记录时间",
+      action_type: "操作类型",
+      operator: "操作人员",
+      journal_id: "凭证 ID",
+      empty: "暂无变动记录",
+      action_create: "新增",
+      action_update: "更新",
+      action_delete: "删除",
+      unnamed_user: "未命名用户",
+      copy_address: "点击复制地址: {{address}}",
+      copy_id: "点击复制凭证 ID: {{id}}",
+    },
   },
 };

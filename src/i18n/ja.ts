@@ -163,7 +163,7 @@ export const ja = {
         title: "情報戦略室",
         desc: "財務分析とカーボンフットプリントの主要データを統合し、リアルタイムな意思決定と対応支援を提供します。",
       },
-      bookkeeping: {
+      voucher: {
         title: "伝票管理",
         desc: "AIが会計仕訳を自動生成し、ベテラン会計士の実務に匹敵する帳簿品質を実現します。",
       },
@@ -467,7 +467,7 @@ export const ja = {
   chat: {
     tags: {
       dashboard: "情報戦略室",
-      bookkeeping: "伝票管理",
+      voucher: "伝票管理",
       adjustment: "スマート出納",
       cashier: "スマートウォレット",
       salary: "給与管理",
@@ -896,5 +896,28 @@ export const ja = {
     zoom_in: "拡大",
     zoom_out: "縮小",
     zoom_reset: "リセット",
+  },
+  journal: {
+    main_view: {
+      title: "伝票管理",
+      upload: "伝票をアップロード",
+      list: "伝票リスト",
+      log: "変更履歴",
+    },
+    log_view: {
+      title: "伝票変更履歴",
+      refresh: "更新",
+      record_time: "記録時間",
+      action_type: "操作タイプ",
+      operator: "操作者",
+      journal_id: "伝票 ID",
+      empty: "変更履歴はありません",
+      action_create: "作成",
+      action_update: "更新",
+      action_delete: "削除",
+      unnamed_user: "名無しのユーザー",
+      copy_address: "クリックしてアドレスをコピー: {{address}}",
+      copy_id: "クリックして伝票 ID をコピー: {{id}}",
+    },
   },
 };

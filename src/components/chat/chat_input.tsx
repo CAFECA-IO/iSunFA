@@ -12,7 +12,7 @@ interface IChatInputProps {
 }
 
 const RAW_TAGS = [
-  'bookkeeping',
+  'voucher',
   'adjustment',
   'cashier',
   'salary',
