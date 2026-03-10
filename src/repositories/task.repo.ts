@@ -89,6 +89,21 @@ export class TaskRepository implements ITaskRepository {
           }
         }
 
+        // Info: (20260310 - Tzuhan) Detect and recover stuck RUNNING tasks (e.g. timeout after 10 mins)
+        if (hasRunning) {
+          const stuckTask = tasks.find(t => {
+            if (t.status === TASK_STATUS.RUNNING && t.updatedAt) {
+              const diffMs = new Date().getTime() - t.updatedAt.getTime();
+              return diffMs > 10 * 60 * 1000; // 10 minutes timeout
+            }
+            return false;
+          });
+          if (stuckTask) {
+            console.log(`[TaskRepo] Recovering stuck task: ${stuckTask.id}`);
+            return stuckTask;
+          }
+        }
+
         if (hasPending) {
           const pendingTask = tasks.find(t => t.status === TASK_STATUS.PENDING);
           if (pendingTask) {
@@ -96,7 +111,7 @@ export class TaskRepository implements ITaskRepository {
           }
         }
 
-        // Info: (20260130 - Luphia) If only RUNNING tasks exist in this order, we wait.
+        // Info: (20260130 - Luphia) If only RUNNING tasks exist in this order and none are stuck, we wait.
         return null;
       }
 
