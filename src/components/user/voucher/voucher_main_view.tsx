@@ -358,8 +358,7 @@ export default function VoucherMainView() {
         key={selectedVoucherId || "new"}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        voucherId={selectedVoucherId?.toString()}
-        voucher={vouchers.find((v) => v.id === selectedVoucherId)}
+        voucherId={selectedVoucherId?.toString()??''}
       />
     </div>
   );

@@ -9,7 +9,7 @@ import {
   TransitionChild,
 } from "@headlessui/react";
 import { X, ChevronDown, BookOpen, Trash2, Plus, Save } from "lucide-react";
-import { IVoucher, mockVouchers, TradingType } from "@/interfaces/voucher";
+import { mockVouchers, TradingType } from "@/interfaces/voucher";
 import { IAccount, mockAccounts } from "@/constants/accounts";
 import { numberWithCommas } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
@@ -17,8 +17,7 @@ import ConfirmModal from "@/components/common/confirm_modal";
 interface IVoucherDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  voucherId?: string;
-  voucher?: IVoucher;
+  voucherId: string;
 }
 
 interface IVoucherLineUI {
@@ -31,29 +30,38 @@ interface IVoucherLineUI {
 
 const VoucherRow = ({
   row,
+  updateRow,
   removeRow,
 }: {
   row: IVoucherLineUI;
-  removeRow: () => void;
+  updateRow: (id: string, newRow: IVoucherLineUI) => void;
+  removeRow: (id: string) => void;
 }) => {
   return (
     <div className="grid grid-cols-13 gap-4">
       {/* Info: (20260310 - Julian) Accounting */}
       <div className="col-span-3 flex h-[46px] flex-3 items-center overflow-hidden rounded-xl bg-white focus-within:ring-2 focus-within:ring-orange-500">
         <select
-          id="accounting"
-          value={row.accounting?.name}
-          // onChange={(e) => }
+          id={`accounting-${row.id}`}
+          value={row.accounting?.code || ""}
+          onChange={(e) => {
+            const acc =
+              mockAccounts.find((a) => a.code === e.target.value) || null;
+            updateRow(row.id, { ...row, accounting: acc });
+          }}
           className="w-full appearance-none rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none"
         >
+          <option value="" disabled>
+            Select
+          </option>
           {mockAccounts.map((acc) => (
             <option key={acc.code} value={acc.code}>
               {acc.code} - {acc.name}
             </option>
           ))}
         </select>
-        <div className="pr-2">
-          <BookOpen size={20} />
+        <div className="bg-white pr-2">
+          <BookOpen size={20} className="text-slate-500" />
         </div>
       </div>
       {/* Info: (20260310 - Julian) Particular */}
@@ -61,6 +69,10 @@ const VoucherRow = ({
         <input
           type="text"
           aria-label="Particulars"
+          value={row.particular}
+          onChange={(e) =>
+            updateRow(row.id, { ...row, particular: e.target.value })
+          }
           className="h-full w-full rounded-xl bg-white px-4 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-500 focus:outline-none"
         />
       </div>
@@ -70,7 +82,19 @@ const VoucherRow = ({
           type="number"
           aria-label="Debit"
           placeholder="0"
-          className="h-full w-full appearance-none rounded-xl bg-white px-4 text-right text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+          value={row.isDebit === true ? row.amount || "" : ""}
+          disabled={row.isDebit === false}
+          min={0} // Info: (20260310 - Julian) 應為正數
+          onWheel={(e) => e.currentTarget.blur()} // Info: (20260310 - Julian) 避免滾輪調整數值
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === "") {
+              updateRow(row.id, { ...row, isDebit: null, amount: 0 });
+            } else {
+              updateRow(row.id, { ...row, isDebit: true, amount: Number(val) });
+            }
+          }}
+          className="h-full w-full appearance-none rounded-xl bg-white px-4 text-right text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:bg-slate-300 disabled:text-slate-500"
         />
       </div>
       {/* Info: (20260310 - Julian) Credit */}
@@ -79,7 +103,23 @@ const VoucherRow = ({
           type="number"
           aria-label="Credit"
           placeholder="0"
-          className="h-full w-full appearance-none rounded-xl bg-white px-4 text-right text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+          value={row.isDebit === false ? row.amount || "" : ""}
+          disabled={row.isDebit === true}
+          min={0} // Info: (20260310 - Julian) 應為正數
+          onWheel={(e) => e.currentTarget.blur()} // Info: (20260310 - Julian) 避免滾輪調整數值
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === "") {
+              updateRow(row.id, { ...row, isDebit: null, amount: 0 });
+            } else {
+              updateRow(row.id, {
+                ...row,
+                isDebit: false,
+                amount: Number(val),
+              });
+            }
+          }}
+          className="h-full w-full appearance-none rounded-xl bg-white px-4 text-right text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:bg-slate-300 disabled:text-slate-500"
         />
       </div>
       {/* Info: (20260310 - Julian) Trash */}
@@ -87,8 +127,8 @@ const VoucherRow = ({
         <button
           type="button"
           aria-label="Delete row"
-          onClick={removeRow}
-          className="text-slate-300 transition-colors hover:text-white"
+          onClick={() => removeRow(row.id)}
+          className="text-slate-300 transition-colors hover:text-red-500"
         >
           <Trash2 size={20} />
         </button>
@@ -102,24 +142,58 @@ export default function VoucherDetailModal({
   onClose,
   voucherId,
 }: IVoucherDetailModalProps) {
-  const voucher = mockVouchers.find((v) => v.id === voucherId);
+  const activeVoucher = mockVouchers.find((v) => v.id === voucherId);
 
-  const [inputDate, setInputDate] = useState<number>(voucher?.tradingDate ?? 0);
+  const [inputDate, setInputDate] = useState<number>(
+    activeVoucher?.tradingDate ?? 0,
+  );
   const [voucherType, setVoucherType] = useState<TradingType>(
-    voucher?.tradingType ?? TradingType.INCOME,
+    activeVoucher?.tradingType ?? TradingType.INCOME,
   );
-  const [note, setNote] = useState<string>(voucher?.note ?? "");
+  const [note, setNote] = useState<string>(activeVoucher?.note ?? "");
   const [rows, setRows] = useState<IVoucherLineUI[]>(
-    voucher?.lineItems.lines ?? [],
+    activeVoucher?.lineItems.lines ?? [],
   );
-  const [isRecurring, setIsRecurring] = useState<boolean>(false);
+  // const [isRecurring, setIsRecurring] = useState<boolean>(false);
   const [isClearModalOpen, setIsClearModalOpen] = useState<boolean>(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState<boolean>(false);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
 
-  // Info: (20260310 - Julian) If no voucher, return null
-  if (!voucher) {
+  // Info: (20260310 - Julian) 如果找不到 voucher 就 return null
+  if (voucherId && !activeVoucher) {
     return null;
   }
+
+  // Info: (20260310 - Julian) 檢查內容是否有變更
+  const checkHasChanges = () => {
+    if (!activeVoucher) return true;
+
+    if (inputDate !== (activeVoucher.tradingDate ?? 0)) return true;
+    if (voucherType !== (activeVoucher.tradingType ?? TradingType.INCOME))
+      return true;
+    if (note !== (activeVoucher.note || "")) return true;
+
+    const originalRows = activeVoucher.lineItems.lines || [];
+    if (rows.length !== originalRows.length) return true;
+
+    return rows.some((row, i) => {
+      const orig = originalRows[i];
+      if (row.accounting?.code !== orig.accounting?.code) return true;
+      if (row.particular !== orig.particular) return true;
+      if (row.amount !== orig.amount) return true;
+      if (row.isDebit !== orig.isDebit) return true;
+      return false;
+    });
+  };
+
+  // Info: (20260310 - Julian) 處理關閉視窗
+  const handleAttemptClose = () => {
+    if (checkHasChanges()) {
+      setIsCloseModalOpen(true);
+    } else {
+      onClose();
+    }
+  };
 
   const creditRow = rows.filter((row) => row.isDebit === false);
   const debitRow = rows.filter((row) => row.isDebit === true);
@@ -128,6 +202,18 @@ export default function VoucherDetailModal({
   const totalDebit = debitRow.reduce((total, row) => total + row.amount, 0);
 
   const isTotalBalanced = totalCredit === totalDebit;
+
+  // Info: (20260310 - Julian) 以下情況不允許儲存
+  // 1. 日期或分錄類別為空
+  // 2. 借貸不平衡
+  // 3. 分錄為空
+  // 4. 有分錄的會計科目或金額為空
+  const disabledSaveButton =
+    inputDate === 0 ||
+    voucherType == null ||
+    !isTotalBalanced ||
+    rows.length === 0 ||
+    rows.some((row) => row.accounting === null || row.amount === 0);
 
   const addRow = () => {
     setRows([
@@ -146,13 +232,22 @@ export default function VoucherDetailModal({
     setRows(rows.filter((r) => r.id !== id));
   };
 
+  const updateRow = (id: string, newRow: IVoucherLineUI) => {
+    setRows(rows.map((r) => (r.id === id ? newRow : r)));
+  };
+
+  const saveVoucher = () => {
+    console.log("saveVoucher");
+    setIsSaveModalOpen(true);
+  };
+
   return (
     <>
       <Transition show={isOpen} as={Fragment}>
         <Dialog
           as="div"
           className="relative z-100"
-          onClose={() => setIsCloseModalOpen(true)}
+          onClose={handleAttemptClose}
         >
           <TransitionChild
             as={Fragment}
@@ -188,7 +283,7 @@ export default function VoucherDetailModal({
                   <button
                     type="button"
                     aria-label="Close"
-                    onClick={() => setIsCloseModalOpen(true)}
+                    onClick={handleAttemptClose}
                     className="rounded-full bg-slate-100 p-2 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800"
                   >
                     <X size={20} className="stroke-[2.5]" />
@@ -212,8 +307,18 @@ export default function VoucherDetailModal({
                         id="voucherDate"
                         aria-label="Voucher Date"
                         type="date"
-                        value={inputDate}
-                        onChange={(e) => setInputDate(e.target.valueAsNumber)}
+                        value={
+                          inputDate
+                            ? new Date(inputDate).toISOString().split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) =>
+                          setInputDate(
+                            isNaN(e.target.valueAsNumber)
+                              ? 0
+                              : e.target.valueAsNumber,
+                          )
+                        }
                         placeholder="YYYY-MM-DD"
                         className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                       />
@@ -268,7 +373,8 @@ export default function VoucherDetailModal({
                   </div>
 
                   {/* Info: (20260310 - Julian) Recurring Toggle */}
-                  <div className="mt-6 flex items-center gap-3">
+                  {/* ToDo: (20260310 - Julian) 先隱藏 */}
+                  {/* <div className="mt-6 flex items-center gap-3">
                     <button
                       id="recurringToggle"
                       type="button"
@@ -290,7 +396,7 @@ export default function VoucherDetailModal({
                     >
                       Recurring Entry
                     </label>
-                  </div>
+                  </div> */}
 
                   {/* Info: (20260310 - Julian) Table Box */}
                   <div className="mt-8 rounded-2xl bg-slate-600 p-6 shadow-sm">
@@ -318,16 +424,21 @@ export default function VoucherDetailModal({
                         <VoucherRow
                           key={row.id}
                           row={row}
-                          removeRow={() => removeRow(row.id)}
+                          updateRow={updateRow}
+                          removeRow={removeRow}
                         />
                       ))}
 
                       {/* Info: (20260310 - Julian) Subtotals */}
                       <div className="grid grid-cols-13 gap-4">
-                        <div className={`col-start-7 col-end-10 text-right text-sm font-bold ${isTotalBalanced ?'text-emerald-400':'text-red-400'}`}>
+                        <div
+                          className={`col-start-7 col-end-10 text-right text-sm font-bold ${isTotalBalanced ? "text-emerald-400" : "text-red-400"}`}
+                        >
                           {numberWithCommas(totalDebit)}
                         </div>
-                        <div className={`col-start-10 col-end-13 text-right text-sm font-bold ${isTotalBalanced ?'text-emerald-400':'text-red-400'}`}>
+                        <div
+                          className={`col-start-10 col-end-13 text-right text-sm font-bold ${isTotalBalanced ? "text-emerald-400" : "text-red-400"}`}
+                        >
                           {numberWithCommas(totalCredit)}
                         </div>
                       </div>
@@ -351,16 +462,17 @@ export default function VoucherDetailModal({
                     <button
                       type="button"
                       onClick={() => setIsClearModalOpen(true)}
-                      className="rounded-lg bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-100"
+                      className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-100"
                     >
                       Clear All
                     </button>
                     <button
                       type="button"
-                      disabled
-                      className="flex cursor-not-allowed items-center gap-2 rounded-lg bg-[#E2E8F0] px-6 py-3 text-sm font-bold text-[#94A3B8] shadow-none"
+                      disabled={disabledSaveButton}
+                      onClick={saveVoucher}
+                      className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-3 text-sm font-bold text-white shadow-none hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
                     >
-                      Save Voucher <Save size={18} className="stroke-[2.5]" />
+                      Save Voucher <Save size={18} />
                     </button>
                   </div>
                 </div>
@@ -370,6 +482,7 @@ export default function VoucherDetailModal({
         </Dialog>
       </Transition>
 
+      {/* Info: (20260310 - Julian) Clear Modal */}
       <ConfirmModal
         isOpen={isClearModalOpen}
         onClose={() => setIsClearModalOpen(false)}
@@ -382,15 +495,29 @@ export default function VoucherDetailModal({
           setInputDate(0);
           setVoucherType(TradingType.INCOME);
           setNote("");
-          setIsRecurring(false);
+          // setIsRecurring(false);
         }}
       />
 
+      {/* Info: (20260310 - Julian) Close Modal */}
       <ConfirmModal
         isOpen={isCloseModalOpen}
         onClose={() => setIsCloseModalOpen(false)}
         title="Leave without saving"
         message="Are you sure you want to discard your changes and leave?"
+        confirmText="Confirm"
+        cancelText="Cancel"
+        onConfirm={() => {
+          onClose();
+        }}
+      />
+
+      {/* Info: (20260310 - Julian) Save Modal */}
+      <ConfirmModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        title="Save Voucher"
+        message="Are you sure you want to save this voucher?"
         confirmText="Confirm"
         cancelText="Cancel"
         onConfirm={() => {
