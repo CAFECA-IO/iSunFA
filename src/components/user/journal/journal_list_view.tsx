@@ -73,7 +73,7 @@ export default function JournalListView() {
     setIsDeleting(true);
     try {
       const data = await request<IApiResponse<null>>(
-        `/api/v1/account_book/${accountBookId}/journal/${journalToDelete.id}`,
+        `/api/v1/user/account_book/${accountBookId}/journal/${journalToDelete.id}`,
         {
           method: "DELETE",
         },
@@ -116,7 +116,7 @@ export default function JournalListView() {
       }
 
       const data = await request<IApiResponse<{ journals: IJournal[] }>>(
-        `/api/v1/account_book/${accountBookId}/journal?${params.toString()}`,
+        `/api/v1/user/account_book/${accountBookId}/journal?${params.toString()}`,
       );
       if (data.payload?.journals) {
         setJournals(data.payload.journals);
@@ -241,11 +241,10 @@ export default function JournalListView() {
             <button
               title={t("ocr.list_view") as string}
               type="button"
-              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
-                displayType === "list"
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${displayType === "list"
                   ? "bg-white text-orange-600 shadow-sm"
                   : "text-gray-400 hover:text-gray-600"
-              }`}
+                }`}
               onClick={() => setDisplayType("list")}
             >
               <ListIcon size={16} />
@@ -253,11 +252,10 @@ export default function JournalListView() {
             <button
               title={t("ocr.grid_view") as string}
               type="button"
-              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
-                displayType === "grid"
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${displayType === "grid"
                   ? "bg-white text-orange-600 shadow-sm"
                   : "text-gray-400 hover:text-gray-600"
-              }`}
+                }`}
               onClick={() => setDisplayType("grid")}
             >
               <LayoutGrid size={16} />

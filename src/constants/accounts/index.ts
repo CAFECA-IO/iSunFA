@@ -12,7 +12,7 @@ export interface IAccount {
   type: string;
   level: number;
   parentCode: string;
-  debit: boolean;
+  isDebit: boolean;
 }
 
 export const COUNTRY = {
@@ -61,3 +61,24 @@ export const ACCOUNTS = {
   TW: TW_ACCOUNTS,
   US: US_ACCOUNTS,
 };
+
+export const mockAccounts: IAccount[] = [
+  {
+    code: "1101",
+    name: "Cash on hand",
+    description: "Cash on hand",
+    type: "asset",
+    level: 1,
+    parentCode: "",
+    isDebit: true,
+  },
+  {
+    code: "4110",
+    name: "Sales Revenue",
+    description: "Sales Revenue",
+    type: "revenue",
+    level: 1,
+    parentCode: "",
+    isDebit: false,
+  },
+];
