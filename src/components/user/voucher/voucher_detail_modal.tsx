@@ -34,8 +34,8 @@ export default function VoucherDetailModal({
   const [voucherType, setVoucherType] = useState("Payment");
   const [isRecurring, setIsRecurring] = useState(false);
   const [rows, setRows] = useState([
-    { id: "row-1", accounting: "", particulars: "", debit: "", credit: "" },
-    { id: "row-2", accounting: "", particulars: "", debit: "", credit: "" },
+    { id: "row-1", accounting: "", particular: "", debit: "", credit: "" },
+    { id: "row-2", accounting: "", particular: "", debit: "", credit: "" },
   ]);
 
   const addRow = () => {
@@ -44,7 +44,7 @@ export default function VoucherDetailModal({
       {
         id: `row-${Date.now()}`,
         accounting: "",
-        particulars: "",
+        particular: "",
         debit: "",
         credit: "",
       },
@@ -303,7 +303,7 @@ export default function VoucherDetailModal({
                 <div className="mt-10 flex justify-end gap-4">
                   <button
                     type="button"
-                    className="rounded-lg border-2 border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-100"
+                    className="rounded-lg bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-100"
                   >
                     Clear All
                   </button>

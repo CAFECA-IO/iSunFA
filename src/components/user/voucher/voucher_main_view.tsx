@@ -43,7 +43,7 @@ const VoucherRow = ({
       case TradingType.INCOME:
         return "bg-emerald-200 text-emerald-600";
       case TradingType.TRANSFER:
-        return "bg-slate-200 text-slate-500";
+        return "bg-slate-200 text-slate-700";
       default:
         return "bg-slate-100 text-slate-600";
     }
@@ -51,86 +51,90 @@ const VoucherRow = ({
 
   const getPillLabel = (v: IVoucher) => {
     if (v.tradingType === TradingType.TRANSFER) return "Transfer";
-    if (v.tradingType === TradingType.INCOME && v.hasRead === false)
+    if (v.tradingType === TradingType.INCOME && v.isDeleted === false)
       return "Income";
-    return "240201-001";
+    return v.id;
   };
-
-  // Mock double entry accounting lines
-  const line1Credit =
-    voucher.tradingType === TradingType.OUTCOME ? voucher.amount : "0";
-  const line1Debit =
-    voucher.tradingType !== TradingType.OUTCOME ? voucher.amount : "0";
-
-  const line2Credit =
-    voucher.tradingType !== TradingType.OUTCOME ? voucher.amount : "0";
-  const line2Debit =
-    voucher.tradingType === TradingType.OUTCOME ? voucher.amount : "0";
 
   return (
     <tr
       key={voucher.id}
       onClick={onClick}
-      className="cursor-pointer border-b border-gray-100 transition-colors last:border-0 odd:bg-slate-50 even:bg-white hover:bg-orange-100"
+      className="cursor-pointer transition-colors last:border-0 odd:bg-slate-50 even:bg-white hover:bg-orange-100"
     >
-      <td className="px-3 py-4 align-top text-xs sm:px-6">
+      <td className="px-3 py-4 align-middle text-xs sm:px-6">
         <div className="font-bold">
           {timestampToString(voucher.tradingDate).dateAndTime}
         </div>
       </td>
-      <td className="px-3 py-4 align-top sm:px-6">
+      <td className="px-3 py-4 align-middle sm:px-6">
         <span
           className={`flex items-center justify-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap ${getTypeClasses(voucher.tradingType)}`}
         >
           {renderIcon(voucher.tradingType)} {getPillLabel(voucher)}
         </span>
-        {!voucher.hasRead && (
+        {voucher.isDeleted && (
           <div className="mt-2">
-            <span className="inline-block rounded-full bg-orange-200 px-2 py-0.5 text-[10px] font-bold text-orange-600">
+            <span className="inline-block rounded-full bg-orange-200 px-2 py-0.5 text-[10px] font-bold text-orange-500">
               Deleted
             </span>
           </div>
         )}
       </td>
-      <td className="px-3 py-4 align-top text-xs font-bold text-slate-700 sm:px-6">
+      <td className="px-3 py-4 align-middle text-xs font-bold text-slate-700 sm:px-6">
         {voucher.note || "Printer-0001"}
       </td>
       <td aria-label="Accounting" className="px-3 py-4 align-top sm:px-6">
-        <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">{voucher.sourceId}</span>
-            <span>{voucher.sourceName}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">{voucher.reasonId}</span>
-            <span>{voucher.reasonName}</span>
-          </div>
+        <div className="flex flex-col gap-2 text-xs font-semibold text-slate-700">
+          {voucher.lineItems?.lines.map((line) => (
+            <div key={line.id} className="flex items-center gap-2">
+              <span className="text-slate-400">{line.accounting.code}</span>
+              <span>{line.accounting.name}</span>
+            </div>
+          ))}
         </div>
       </td>
-      <td aria-label="Credit" className="pl-3 py-4 align-top text-right text-xs font-bold text-slate-600 sm:pl-6">
+      <td
+        aria-label="Credit"
+        className="py-4 pl-3 text-right align-top text-xs font-bold sm:pl-6"
+      >
+        <div className="flex flex-col items-end gap-2 border-b border-slate-300 px-2 pb-2">
+          {voucher.lineItems.lines.map((line) => (
+            <div
+              key={line.id}
+              className={`flex items-center gap-2 text-right ${line.isDebit ? "text-slate-300" : "text-slate-600"}`}
+            >
+              <span>{line.isDebit ? 0 : line.amount}</span>
+            </div>
+          ))}
+        </div>
+      </td>
+      <td
+        aria-label="Debit"
+        className="py-4 pr-3 text-right align-top text-xs font-bold text-slate-600 sm:pr-6"
+      >
         <div className="flex flex-col gap-2">
-          <div>{line1Credit}</div>
-          <div>{line2Credit}</div>
-          <div className="mt-2 border-t border-slate-200 pt-2 text-slate-700">
-            {voucher.amount}
+          <div className="flex flex-col items-end gap-2 border-b border-slate-300 px-2 pb-2">
+            {voucher.lineItems.lines.map((line) => (
+              <div
+                key={line.id}
+                className={`flex items-center gap-2 text-right ${line.isDebit ? "text-slate-600" : "text-slate-300"}`}
+              >
+                <span>{line.isDebit ? line.amount : 0}</span>
+              </div>
+            ))}
           </div>
+            <div className="text-right px-2">{voucher.lineItems.totalAmount}</div>
         </div>
       </td>
-      <td aria-label="Debit" className="pr-3 py-4 align-top text-right text-xs font-bold text-slate-600 sm:pr-6">
-        <div className="flex flex-col gap-2">
-          <div>{line1Debit}</div>
-          <div>{line2Debit}</div>
-          <div className="mt-2 border-t border-slate-200 pt-2 text-slate-700">
-            {voucher.amount}
-          </div>
-        </div>
-      </td>
-      <td aria-label="Issuer" className="px-3 py-4 align-top sm:px-6">
+      <td aria-label="Issuer" className="px-3 py-4 align-middle sm:px-6">
         <div className="flex items-center justify-center gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold text-white">
-            JD
+            {voucher.issuerName.substring(0, 2).toUpperCase()}
           </div>
-          <span className="text-xs font-bold text-slate-700">Jodie</span>
+          <span className="text-xs font-bold text-slate-700">
+            {voucher.issuerName}
+          </span>
         </div>
       </td>
     </tr>
@@ -179,20 +183,20 @@ export default function VoucherMainView() {
         <h1 className="text-2xl font-bold text-slate-800">傳票管理</h1>
       </div>
 
-      <div className="flex w-full flex-col gap-4 px-8 pb-10 gap-x-12">
+      <div className="flex w-full flex-col gap-4 gap-x-12 px-8 pb-10">
         <div className="mx-auto w-full max-w-[1400px]">
           {/* Top Controls */}
           <div className="mb-6 flex gap-4">
             <div className="flex-1">
               <label
                 htmlFor="typeSelect"
-                className="mb-2 block text-xs font-semibold text-slate-500"
+                className="mb-2 block text-xs font-semibold text-slate-700"
               >
                 Type
               </label>
               <select
                 id="typeSelect"
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
               >
                 <option>All</option>
               </select>
@@ -200,7 +204,7 @@ export default function VoucherMainView() {
             <div className="flex-1">
               <label
                 htmlFor="periodInput"
-                className="mb-2 block text-xs font-semibold text-slate-500"
+                className="mb-2 block text-xs font-semibold text-slate-700"
               >
                 Period
               </label>
@@ -210,10 +214,10 @@ export default function VoucherMainView() {
                   aria-label="Period"
                   type="text"
                   placeholder="Start Date - End Date"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 placeholder:text-slate-400 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
                 <Calendar
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  className="absolute top-1/2 right-4 -translate-y-1/2 text-slate-400"
                   size={18}
                 />
               </div>
@@ -221,7 +225,7 @@ export default function VoucherMainView() {
             <div className="flex-2">
               <label
                 htmlFor="searchField"
-                className="mb-2 block text-xs font-semibold select-none text-transparent"
+                className="mb-2 block text-xs font-semibold text-transparent select-none"
               >
                 Search
               </label>
@@ -231,10 +235,10 @@ export default function VoucherMainView() {
                   aria-label="Search"
                   type="text"
                   placeholder="Search"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-10 text-sm font-semibold text-slate-700 placeholder:text-slate-400 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-10 text-sm font-semibold text-slate-700 shadow-sm placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
                 <Search
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  className="absolute top-1/2 right-4 -translate-y-1/2 text-slate-400"
                   size={18}
                 />
               </div>
@@ -257,7 +261,10 @@ export default function VoucherMainView() {
                   className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${hideDeleted ? "translate-x-5.5" : "translate-x-0.5"}`}
                 />
               </button>
-              <label htmlFor="hideDeletedToggle" className="text-sm font-semibold text-slate-600 cursor-pointer">
+              <label
+                htmlFor="hideDeletedToggle"
+                className="cursor-pointer text-sm font-semibold text-slate-600"
+              >
                 Hide deleted vouchers and their reversals.
               </label>
             </div>
@@ -280,43 +287,49 @@ export default function VoucherMainView() {
             <table className="w-full text-left text-sm text-gray-600">
               <tbody>
                 <tr>
-                  <th className="w-[120px] bg-slate-100 px-3 py-4 text-left text-xs font-bold text-slate-400 sm:px-6">
-                    <div className="flex items-center gap-1">
+                  <th className="w-[120px] bg-slate-100 px-3 py-4 text-left text-xs text-slate-700 sm:w-[180px] sm:px-6 sm:text-base">
+                    <button type="button" className="flex items-center gap-1">
                       Issued Date
-                      <div className="-gap-[2px] flex scale-75 flex-col opacity-80">
+                      <div className="-gap-[2px] flex shrink-0 flex-col px-2">
                         <ChevronUp size={14} className="translate-y-[2px]" />
                         <ChevronDown size={14} className="-translate-y-[2px]" />
                       </div>
-                    </div>
+                    </button>
                   </th>
-                  <th className="bg-slate-100 px-3 py-4 text-center text-xs font-bold text-slate-400 sm:px-6">
+                  <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
                     Voucher No.
                   </th>
-                  <th className="bg-slate-100 px-3 py-4 text-center text-xs font-bold text-slate-400 sm:px-6">
+                  <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
                     Note
                   </th>
-                  <th className="bg-slate-100 px-3 py-4 text-center text-xs font-bold text-slate-400 sm:px-6">
+                  <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
                     Accounting
                   </th>
-                  <th className="bg-slate-100 px-3 py-4 text-right text-xs font-bold text-slate-400 sm:px-6">
-                    <div className="flex items-center justify-end gap-1">
+                  <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
+                    <button
+                      type="button"
+                      className="mx-auto flex items-center justify-center gap-1"
+                    >
                       Credit
-                      <div className="-gap-[2px] flex scale-75 flex-col opacity-60">
+                      <div className="-gap-[2px] flex shrink-0 flex-col px-2">
                         <ChevronUp size={14} className="translate-y-[2px]" />
                         <ChevronDown size={14} className="-translate-y-[2px]" />
                       </div>
-                    </div>
+                    </button>
                   </th>
-                  <th className="bg-slate-100 px-3 py-4 text-right text-xs font-bold text-slate-400 sm:px-6">
-                    <div className="flex items-center justify-end gap-1">
+                  <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
+                    <button
+                      type="button"
+                      className="mx-auto flex items-center justify-center gap-1"
+                    >
                       Debit
-                      <div className="-gap-[2px] flex scale-75 flex-col opacity-60">
+                      <div className="-gap-[2px] flex shrink-0 flex-col px-2">
                         <ChevronUp size={14} className="translate-y-[2px]" />
                         <ChevronDown size={14} className="-translate-y-[2px]" />
                       </div>
-                    </div>
+                    </button>
                   </th>
-                  <th className="bg-slate-100 px-3 py-4 text-center text-xs font-bold text-slate-400 sm:px-6">
+                  <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
                     Issuer
                   </th>
                 </tr>
