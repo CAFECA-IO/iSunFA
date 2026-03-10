@@ -49,6 +49,13 @@ export class MissionService {
 
     // Info: (20260130 - Luphia) 4. Update Mission
     await taskRepo.completeMission(missionId, MISSION_STATUS.COMPLETED, finalResult);
+
+    // Info: (20260310 - Tzuhan) Update Analysis result when mission completes
+    await prisma.analysis.updateMany({
+      where: { missionId },
+      data: { result: finalResult }
+    });
+
     console.log(`[MissionService] Mission ${missionId} Completed.`);
 
     return true;
