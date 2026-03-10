@@ -333,7 +333,7 @@ export default function VoucherMainView() {
               <tbody>
                 <tr>
                   <th className="w-[120px] bg-slate-100 px-3 py-4 text-left text-xs text-slate-700 sm:w-[180px] sm:px-6 sm:text-base">
-                    <button type="button" onClick={clickDateSort} className="flex items-center gap-1">
+                    <button type="button" aria-label={t("voucher.main_view.table.issued_date")} onClick={clickDateSort} className="flex items-center gap-1">
                       <span className={sorting === 'date_asc' ? 'text-orange-500' : 'text-slate-700'}>{t("voucher.main_view.table.issued_date")}</span>
                       <div className="-gap-[2px] flex shrink-0 flex-col px-2">
                         <ChevronUp size={14} className={`translate-y-[2px] transition-colors ${sorting === 'date_asc' ? 'text-orange-500' : 'text-slate-700'}`} />
@@ -353,6 +353,7 @@ export default function VoucherMainView() {
                   <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
                     <button
                       type="button"
+                      aria-label={t("voucher.main_view.table.debit")}
                       onClick={clickDebitSort}
                       className="mx-auto flex items-center justify-center gap-1"
                     >
@@ -366,6 +367,7 @@ export default function VoucherMainView() {
                   <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
                     <button
                       type="button"
+                      aria-label={t("voucher.main_view.table.credit")}
                       onClick={clickCreditSort}
                       className="mx-auto flex items-center justify-center gap-1"
                     >
