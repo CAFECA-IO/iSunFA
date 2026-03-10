@@ -8,16 +8,10 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import {
-  X,
-  Calendar,
-  ChevronDown,
-  BookOpen,
-  Trash2,
-  Plus,
-  Save,
-} from "lucide-react";
-import { IVoucher } from "@/interfaces/voucher";
+import { X, ChevronDown, BookOpen, Trash2, Plus, Save } from "lucide-react";
+import { IVoucher, mockVouchers, TradingType } from "@/interfaces/voucher";
+import { IAccount } from "@/constants/accounts";
+import { numberWithCommas } from "@/lib/utils/common";
 
 interface IVoucherDetailModalProps {
   isOpen: boolean;
@@ -26,27 +20,51 @@ interface IVoucherDetailModalProps {
   voucher?: IVoucher;
 }
 
+interface IVoucherLineUI {
+  id: string;
+  accounting: IAccount | null;
+  particular: string;
+  amount: number;
+  isDebit: boolean | null;
+}
+
 export default function VoucherDetailModal({
   isOpen,
   onClose,
   voucherId,
 }: IVoucherDetailModalProps) {
-  const [voucherType, setVoucherType] = useState("Payment");
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [rows, setRows] = useState([
-    { id: "row-1", accounting: "", particular: "", debit: "", credit: "" },
-    { id: "row-2", accounting: "", particular: "", debit: "", credit: "" },
-  ]);
+  const voucher = mockVouchers.find((v) => v.id === voucherId);
+
+  const [inputDate, setInputDate] = useState<number>(voucher?.tradingDate ?? 0);
+  const [voucherType, setVoucherType] = useState<TradingType>(
+    voucher?.tradingType ?? TradingType.INCOME,
+  );
+  const [note, setNote] = useState<string>(voucher?.note ?? "");
+  const [rows, setRows] = useState<IVoucherLineUI[]>(
+    voucher?.lineItems.lines ?? [],
+  );
+  const [isRecurring, setIsRecurring] = useState<boolean>(false);
+
+  // Info: (20260310 - Julian) If no voucher, return null
+  if (!voucher) {
+    return null;
+  }
+
+  const creditRow = rows.filter((row) => row.isDebit === false);
+  const debitRow = rows.filter((row) => row.isDebit === true);
+
+  const totalCredit = creditRow.reduce((total, row) => total + row.amount, 0);
+  const totalDebit = debitRow.reduce((total, row) => total + row.amount, 0);
 
   const addRow = () => {
     setRows([
       ...rows,
       {
         id: `row-${Date.now()}`,
-        accounting: "",
+        accounting: null,
         particular: "",
-        debit: "",
-        credit: "",
+        amount: 0,
+        isDebit: null,
       },
     ]);
   };
@@ -80,8 +98,8 @@ export default function VoucherDetailModal({
             leaveFrom="opacity-100 scale-100 translate-y-0"
             leaveTo="opacity-0 scale-95 translate-y-4"
           >
-            <DialogPanel className="relative flex w-full max-w-4xl max-h-[90vh] transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
-              {/* Header */}
+            <DialogPanel className="relative flex max-h-[90vh] w-full max-w-4xl transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
+              {/* Info: (20260310 - Julian) Header */}
               <div className="flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-8 py-5 shadow-sm">
                 <DialogTitle
                   as="h3"
@@ -99,11 +117,11 @@ export default function VoucherDetailModal({
                 </button>
               </div>
 
-              {/* Body */}
+              {/* Info: (20260310 - Julian) Body */}
               <div className="flex w-full flex-col overflow-y-auto px-8 py-8">
-                {/* Top Fields */}
+                {/* Info: (20260310 - Julian) Top Fields */}
                 <div className="grid grid-cols-2 gap-8">
-                  {/* Left: Date */}
+                  {/* Info: (20260310 - Julian) Left: Date */}
                   <div>
                     <label
                       htmlFor="voucherDate"
@@ -112,22 +130,18 @@ export default function VoucherDetailModal({
                       Voucher Date
                       <span className="ml-0.5 text-red-500">*</span>
                     </label>
-                    <div className="relative">
-                      <input
-                        id="voucherDate"
-                        aria-label="Voucher Date"
-                        type="text"
-                        placeholder="YYYY-MM-DD"
-                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm placeholder:text-slate-400 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                      />
-                      <Calendar
-                        size={18}
-                        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"
-                      />
-                    </div>
+                    <input
+                      id="voucherDate"
+                      aria-label="Voucher Date"
+                      type="date"
+                      value={inputDate}
+                      onChange={(e) => setInputDate(e.target.valueAsNumber)}
+                      placeholder="YYYY-MM-DD"
+                      className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                    />
                   </div>
 
-                  {/* Right: Type */}
+                  {/* Info: (20260310 - Julian) Right: Type */}
                   <div>
                     <label
                       htmlFor="voucherType"
@@ -140,22 +154,24 @@ export default function VoucherDetailModal({
                       <select
                         id="voucherType"
                         value={voucherType}
-                        onChange={(e) => setVoucherType(e.target.value)}
-                        className="appearance-none w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                        onChange={(e) =>
+                          setVoucherType(e.target.value as TradingType)
+                        }
+                        className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                       >
-                        <option value="Payment">Payment</option>
-                        <option value="Receipt">Receipt</option>
-                        <option value="Transfer">Transfer</option>
+                        <option value={TradingType.INCOME}>Payment</option>
+                        <option value={TradingType.OUTCOME}>Receipt</option>
+                        <option value={TradingType.TRANSFER}>Transfer</option>
                       </select>
                       <ChevronDown
                         size={18}
-                        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 stroke-[2.5] text-slate-500"
+                        className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 stroke-[2.5] text-slate-500"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Note Field */}
+                {/* Info: (20260310 - Julian) Note Field */}
                 <div className="mt-6">
                   <label
                     htmlFor="noteField"
@@ -166,12 +182,14 @@ export default function VoucherDetailModal({
                   <input
                     id="noteField"
                     aria-label="Note"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
                     type="text"
-                    className="w-full rounded-xl bg-white border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                   />
                 </div>
 
-                {/* Recurring Toggle */}
+                {/* Info: (20260310 - Julian) Recurring Toggle */}
                 <div className="mt-6 flex items-center gap-3">
                   <button
                     id="recurringToggle"
@@ -196,9 +214,9 @@ export default function VoucherDetailModal({
                   </label>
                 </div>
 
-                {/* Table Box */}
+                {/* Info: (20260310 - Julian) Table Box */}
                 <div className="mt-8 rounded-2xl bg-[#344865] p-6 shadow-sm">
-                  {/* Headers */}
+                  {/* Info: (20260310 - Julian) Headers */}
                   <div className="mb-3 flex gap-4 px-1">
                     <div className="flex-3 text-sm font-semibold text-white">
                       Accounting
@@ -212,15 +230,16 @@ export default function VoucherDetailModal({
                     <div className="flex-2 text-sm font-semibold text-white">
                       Credit
                     </div>
-                    <div className="w-8"></div> {/* spacer for trash icon */}
+                    <div className="w-8"></div>{" "}
+                    {/* Info: (20260310 - Julian) spacer for trash icon */}
                   </div>
 
-                  {/* Rows */}
+                  {/* Info: (20260310 - Julian) Rows */}
                   <div className="flex flex-col gap-3">
                     {rows.map((row) => (
                       <div key={row.id} className="grid grid-cols-13 gap-4">
-                        {/* Accounting */}
-                        <div className="flex col-span-3 h-[46px] flex-3 overflow-hidden rounded-xl bg-white focus-within:ring-2 focus-within:ring-orange-500">
+                        {/* Info: (20260310 - Julian) Accounting */}
+                        <div className="col-span-3 flex h-[46px] flex-3 overflow-hidden rounded-xl bg-white focus-within:ring-2 focus-within:ring-orange-500">
                           <input
                             type="text"
                             aria-label="Accounting"
@@ -234,33 +253,33 @@ export default function VoucherDetailModal({
                             <BookOpen size={18} />
                           </button>
                         </div>
-                        {/* Particulars */}
-                        <div className="h-[46px] col-span-3 flex-3">
+                        {/* Info: (20260310 - Julian) Particular */}
+                        <div className="col-span-3 h-[46px] flex-3">
                           <input
                             type="text"
                             aria-label="Particulars"
-                            className="h-full w-full rounded-xl bg-white px-4 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            className="h-full w-full rounded-xl bg-white px-4 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-500 focus:outline-none"
                           />
                         </div>
-                        {/* Debit */}
-                        <div className="h-[46px] col-span-3 flex-2">
+                        {/* Info: (20260310 - Julian) Debit */}
+                        <div className="col-span-3 h-[46px] flex-2">
                           <input
                             type="number"
                             aria-label="Debit"
                             placeholder="0"
-                            className="appearance-none h-full w-full bg-white rounded-xl px-4 text-right text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            className="h-full w-full appearance-none rounded-xl bg-white px-4 text-right text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-500 focus:outline-none"
                           />
                         </div>
-                        {/* Credit */}
-                        <div className="h-[46px] col-span-3 flex-2">
+                        {/* Info: (20260310 - Julian) Credit */}
+                        <div className="col-span-3 h-[46px] flex-2">
                           <input
                             type="number"
                             aria-label="Credit"
                             placeholder="0"
-                            className="appearance-none h-full w-full bg-white rounded-xl px-4 text-right text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            className="h-full w-full appearance-none rounded-xl bg-white px-4 text-right text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-500 focus:outline-none"
                           />
                         </div>
-                        {/* Trash */}
+                        {/* Info: (20260310 - Julian) Trash */}
                         <div className="flex h-[46px] w-8 items-center justify-center">
                           <button
                             type="button"
@@ -273,20 +292,19 @@ export default function VoucherDetailModal({
                         </div>
                       </div>
                     ))}
+
+                    {/* Info: (20260310 - Julian) Subtotals */}
+                    <div className="grid grid-cols-13 gap-4">
+                      <div className="col-start-7 col-end-10 text-right text-sm font-bold text-emerald-400">
+                        {numberWithCommas(totalDebit)}
+                      </div>
+                      <div className="col-start-10 col-end-13 text-right text-sm font-bold text-emerald-400">
+                        {numberWithCommas(totalCredit)}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Subtotals */}
-                  <div className="mt-3 flex items-center gap-4 pr-[52px]">
-                    <div className="flex-6" />
-                    <div className="flex-2 pr-1 text-right text-sm font-bold text-[#4ADE80]">
-                      0
-                    </div>
-                    <div className="flex-2 pr-1 text-right text-sm font-bold text-[#4ADE80]">
-                      0
-                    </div>
-                  </div>
-
-                  {/* Add Row Button */}
+                  {/* Info: (20260310 - Julian) Add Row Button */}
                   <div className="mt-6 flex justify-center">
                     <button
                       type="button"
@@ -299,7 +317,7 @@ export default function VoucherDetailModal({
                   </div>
                 </div>
 
-                {/* Bottom Actions */}
+                {/* Info: (20260310 - Julian) Bottom Actions */}
                 <div className="mt-10 flex justify-end gap-4">
                   <button
                     type="button"

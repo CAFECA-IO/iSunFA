@@ -9,10 +9,9 @@ import {
   ArrowRightLeft,
   ChevronUp,
   ChevronDown,
-  Calendar,
   Search,
 } from "lucide-react";
-import { timestampToString } from "@/lib/utils/common";
+import { timestampToString, numberWithCommas } from "@/lib/utils/common";
 import VoucherDetailModal from "@/components/user/voucher/voucher_detail_modal";
 import { IVoucher, TradingType, mockVouchers } from "@/interfaces/voucher";
 
@@ -23,6 +22,8 @@ const VoucherRow = ({
   voucher: IVoucher;
   onClick: () => void;
 }) => {
+  const lineItems = voucher.lineItems.lines;
+
   const renderIcon = (type: TradingType) => {
     switch (type) {
       case TradingType.INCOME:
@@ -51,8 +52,6 @@ const VoucherRow = ({
 
   const getPillLabel = (v: IVoucher) => {
     if (v.tradingType === TradingType.TRANSFER) return "Transfer";
-    if (v.tradingType === TradingType.INCOME && v.isDeleted === false)
-      return "Income";
     return v.id;
   };
 
@@ -62,14 +61,14 @@ const VoucherRow = ({
       onClick={onClick}
       className="cursor-pointer transition-colors last:border-0 odd:bg-slate-50 even:bg-white hover:bg-orange-100"
     >
-      <td className="px-3 py-4 align-middle text-xs sm:px-6">
+      <td className="px-3 py-4 align-middle text-xs sm:px-6 sm:text-sm">
         <div className="font-bold">
           {timestampToString(voucher.tradingDate).dateAndTime}
         </div>
       </td>
       <td className="px-3 py-4 align-middle sm:px-6">
         <span
-          className={`flex items-center justify-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap ${getTypeClasses(voucher.tradingType)}`}
+          className={`flex items-center justify-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap sm:text-sm ${getTypeClasses(voucher.tradingType)}`}
         >
           {renderIcon(voucher.tradingType)} {getPillLabel(voucher)}
         </span>
@@ -81,12 +80,12 @@ const VoucherRow = ({
           </div>
         )}
       </td>
-      <td className="px-3 py-4 align-middle text-xs font-bold text-slate-700 sm:px-6">
-        {voucher.note || "Printer-0001"}
+      <td className="px-3 py-4 align-middle text-xs font-bold text-slate-700 sm:px-6 sm:text-sm">
+        <div className="line-clamp-3">{voucher.note || "-"}</div>
       </td>
       <td aria-label="Accounting" className="px-3 py-4 align-top sm:px-6">
         <div className="flex flex-col gap-2 text-xs font-semibold text-slate-700">
-          {voucher.lineItems?.lines.map((line) => (
+          {lineItems.map((line) => (
             <div key={line.id} className="flex items-center gap-2">
               <span className="text-slate-400">{line.accounting.code}</span>
               <span>{line.accounting.name}</span>
@@ -95,36 +94,39 @@ const VoucherRow = ({
         </div>
       </td>
       <td
-        aria-label="Credit"
-        className="py-4 pl-3 text-right align-top text-xs font-bold sm:pl-6"
+        aria-label="Debit"
+        className="py-4 pl-3 text-right align-top text-xs font-bold text-slate-600 sm:pl-6"
       >
         <div className="flex flex-col items-end gap-2 border-b border-slate-300 px-2 pb-2">
-          {voucher.lineItems.lines.map((line) => (
+          {lineItems.map((line) => (
             <div
               key={line.id}
-              className={`flex items-center gap-2 text-right ${line.isDebit ? "text-slate-300" : "text-slate-600"}`}
+              className={`flex items-center gap-2 text-right ${line.isDebit ? "text-slate-600" : "text-slate-300"}`}
             >
-              <span>{line.isDebit ? 0 : line.amount}</span>
+              <span>{line.isDebit ? numberWithCommas(line.amount) : 0}</span>
             </div>
           ))}
         </div>
       </td>
+
       <td
-        aria-label="Debit"
-        className="py-4 pr-3 text-right align-top text-xs font-bold text-slate-600 sm:pr-6"
+        aria-label="Credit"
+        className="py-4 pr-3 text-right align-top text-xs font-bold sm:pr-6"
       >
         <div className="flex flex-col gap-2">
           <div className="flex flex-col items-end gap-2 border-b border-slate-300 px-2 pb-2">
-            {voucher.lineItems.lines.map((line) => (
+            {lineItems.map((line) => (
               <div
                 key={line.id}
-                className={`flex items-center gap-2 text-right ${line.isDebit ? "text-slate-600" : "text-slate-300"}`}
+                className={`flex items-center gap-2 text-right ${line.isDebit ? "text-slate-300" : "text-slate-600"}`}
               >
-                <span>{line.isDebit ? line.amount : 0}</span>
+                <span>{line.isDebit ? 0 : numberWithCommas(line.amount)}</span>
               </div>
             ))}
           </div>
-            <div className="text-right px-2">{voucher.lineItems.totalAmount}</div>
+          <div className="px-2 text-right">
+            {numberWithCommas(voucher.lineItems.totalAmount)}
+          </div>
         </div>
       </td>
       <td aria-label="Issuer" className="px-3 py-4 align-middle sm:px-6">
@@ -144,12 +146,15 @@ const VoucherRow = ({
 export default function VoucherMainView() {
   const pathname = usePathname();
 
+  const [filteredType, setFilteredType] = useState<TradingType | "all">("all");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
     null,
   );
   const [vouchers /* , setVouchers */] = useState<IVoucher[]>(mockVouchers);
-  const [hideDeleted, setHideDeleted] = useState(false);
+  const [hideDeleted, setHideDeleted] = useState<boolean>(false);
 
   // Info: (20260309 - Julian) 連接到 Journal
   const journalLink = pathname.replace("voucher", "journal");
@@ -185,7 +190,7 @@ export default function VoucherMainView() {
 
       <div className="flex w-full flex-col gap-4 gap-x-12 px-8 pb-10">
         <div className="mx-auto w-full max-w-[1400px]">
-          {/* Top Controls */}
+          {/* Info: (20260310 - Julian) Top Controls */}
           <div className="mb-6 flex gap-4">
             <div className="flex-1">
               <label
@@ -196,29 +201,39 @@ export default function VoucherMainView() {
               </label>
               <select
                 id="typeSelect"
+                value={filteredType}
+                onChange={(e) =>
+                  setFilteredType(e.target.value as TradingType | "all")
+                }
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
               >
-                <option>All</option>
+                <option value="all">All</option>
+                <option value={TradingType.INCOME}>Payment</option>
+                <option value={TradingType.OUTCOME}>Receipt</option>
+                <option value={TradingType.TRANSFER}>Transfer</option>
               </select>
             </div>
-            <div className="flex-1">
-              <label
-                htmlFor="periodInput"
-                className="mb-2 block text-xs font-semibold text-slate-700"
-              >
+            <div className="flex-[1.5]">
+              <div className="mb-2 block text-xs font-semibold text-slate-700">
                 Period
-              </label>
-              <div className="relative">
+              </div>
+              <div className="flex items-center gap-2">
                 <input
-                  id="periodInput"
-                  aria-label="Period"
-                  type="text"
-                  placeholder="Start Date - End Date"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                  aria-label="Start Date"
+                  type="date"
+                  value={startDate}
+                  max={endDate || undefined}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-[14px] py-[10.5px] text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
-                <Calendar
-                  className="absolute top-1/2 right-4 -translate-y-1/2 text-slate-400"
-                  size={18}
+                <span className="text-slate-400">-</span>
+                <input
+                  aria-label="End Date"
+                  type="date"
+                  value={endDate}
+                  min={startDate || undefined}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-[14px] py-[10.5px] text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -268,21 +283,21 @@ export default function VoucherMainView() {
                 Hide deleted vouchers and their reversals.
               </label>
             </div>
-            <div className="flex items-center gap-4">
+            {/* <div className="flex items-center gap-4">
               <button className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                 <Download size={16} /> Export Voucher
               </button>
               <button className="text-sm font-bold text-blue-600 hover:text-blue-700">
                 Select
               </button>
-            </div>
+            </div> */}
           </div>
 
           <div className="mb-2 text-right text-xs font-bold tracking-wider text-slate-400">
             CURRENCY: TWD
           </div>
 
-          {/* Table Container */}
+          {/* Info: (20260310 - Julian) Table Container */}
           <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
             <table className="w-full text-left text-sm text-gray-600">
               <tbody>
@@ -310,7 +325,7 @@ export default function VoucherMainView() {
                       type="button"
                       className="mx-auto flex items-center justify-center gap-1"
                     >
-                      Credit
+                      Debit
                       <div className="-gap-[2px] flex shrink-0 flex-col px-2">
                         <ChevronUp size={14} className="translate-y-[2px]" />
                         <ChevronDown size={14} className="-translate-y-[2px]" />
@@ -322,7 +337,7 @@ export default function VoucherMainView() {
                       type="button"
                       className="mx-auto flex items-center justify-center gap-1"
                     >
-                      Debit
+                      Credit
                       <div className="-gap-[2px] flex shrink-0 flex-col px-2">
                         <ChevronUp size={14} className="translate-y-[2px]" />
                         <ChevronDown size={14} className="-translate-y-[2px]" />
