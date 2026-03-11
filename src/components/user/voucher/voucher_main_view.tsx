@@ -88,7 +88,7 @@ const VoucherRow = ({
         <div className="line-clamp-3">{voucher.note || "-"}</div>
       </td>
       <td aria-label="Accounting" className="px-3 py-4 align-top sm:px-6">
-        <div className="flex flex-col gap-2 text-xs font-semibold text-slate-700">
+        <div className="flex flex-col gap-2 text-[10px] font-semibold whitespace-nowrap text-slate-700 sm:text-xs">
           {lineItems.map((line) => (
             <div key={line.id} className="flex items-center gap-2">
               <span className="text-slate-400">{line.accounting.code}</span>
@@ -207,6 +207,16 @@ export default function VoucherMainView() {
         searchParams.append("endDate", end.toISOString());
       }
 
+      if (filteredType !== "all") {
+        searchParams.append("type", filteredType);
+      }
+      if (hideDeleted) {
+        searchParams.append("hideDeleted", "true");
+      }
+      if (sorting) {
+        searchParams.append("sorting", sorting);
+      }
+
       const data = await request<IApiResponse<{ result: IVoucher[] }>>(
         `/api/v1/user/account_book/${accountBookId}/voucher?${searchParams.toString()}`,
       );
@@ -218,7 +228,15 @@ export default function VoucherMainView() {
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedKeyWord, startDate, endDate, accountBookId]);
+  }, [
+    debouncedKeyWord,
+    startDate,
+    endDate,
+    filteredType,
+    hideDeleted,
+    sorting,
+    accountBookId,
+  ]);
 
   useEffect(() => {
     if (accountBookId) {
@@ -257,39 +275,6 @@ export default function VoucherMainView() {
         : VoucherSorting.CREDIT_DESC,
     );
 
-  const filteredVouchers = vouchers.filter((v) => {
-    if (hideDeleted && v.isDeleted) return false;
-    if (filteredType !== "all" && v.tradingType !== filteredType) return false;
-    return true;
-  });
-
-  const sortedVouchers = [...filteredVouchers].sort((a, b) => {
-    if (isDateDesc) return b.tradingDate - a.tradingDate;
-    if (isDateAsc) return a.tradingDate - b.tradingDate;
-
-    if (sorting.startsWith("debit_")) {
-      const aDebit = a.lineItems.lines
-        .filter((l) => l.isDebit)
-        .reduce((sum, l) => sum + l.amount, 0);
-      const bDebit = b.lineItems.lines
-        .filter((l) => l.isDebit)
-        .reduce((sum, l) => sum + l.amount, 0);
-      return isDebitDesc ? bDebit - aDebit : aDebit - bDebit;
-    }
-
-    if (sorting.startsWith("credit_")) {
-      const aCredit = a.lineItems.lines
-        .filter((l) => l.isDebit === false)
-        .reduce((sum, l) => sum + l.amount, 0);
-      const bCredit = b.lineItems.lines
-        .filter((l) => l.isDebit === false)
-        .reduce((sum, l) => sum + l.amount, 0);
-      return isCreditDesc ? bCredit - aCredit : aCredit - bCredit;
-    }
-
-    return 0;
-  });
-
   const displayedVoucher = isLoading ? (
     <tr>
       <td colSpan={7} className="px-3 py-4 text-center sm:px-6">
@@ -298,27 +283,27 @@ export default function VoucherMainView() {
         </div>
       </td>
     </tr>
-  ) : sortedVouchers.length > 0 ? (
-      sortedVouchers.map((v) => (
-        <VoucherRow
-          key={v.id}
-          voucher={v}
-          onClick={() => {
-            setSelectedVoucherId(v.id);
-            setIsModalOpen(true);
-          }}
-        />
-      ))
-    ) : (
-      <tr>
-        <td colSpan={7} className="px-3 py-4 text-center sm:px-6">
-          {t("voucher.main_view.empty_message_prefix")}{" "}
-          <Link href={journalLink} className="text-blue-600 hover:underline">
-            {t("voucher.main_view.empty_upload_link")}
-          </Link>
-        </td>
-      </tr>
-    );
+  ) : vouchers.length > 0 ? (
+    vouchers.map((v) => (
+      <VoucherRow
+        key={v.id}
+        voucher={v}
+        onClick={() => {
+          setSelectedVoucherId(v.id);
+          setIsModalOpen(true);
+        }}
+      />
+    ))
+  ) : (
+    <tr>
+      <td colSpan={7} className="px-3 py-4 text-center sm:px-6">
+        {t("voucher.main_view.empty_message_prefix")}{" "}
+        <Link href={journalLink} className="text-blue-600 hover:underline">
+          {t("voucher.main_view.empty_upload_link")}
+        </Link>
+      </td>
+    </tr>
+  );
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-slate-50/50">
@@ -456,7 +441,7 @@ export default function VoucherMainView() {
             <table className="w-full text-left text-sm text-gray-600">
               <tbody>
                 <tr>
-                  <th className="w-[120px] bg-slate-100 px-3 py-4 text-left text-xs sm:w-[180px] sm:px-6 sm:text-base">
+                  <th className="bg-slate-100 px-3 py-4 text-left text-xs whitespace-nowrap sm:w-[180px] sm:px-6 sm:text-base">
                     <button
                       type="button"
                       aria-label={t("voucher.main_view.table.issued_date")}
@@ -484,16 +469,16 @@ export default function VoucherMainView() {
                       </div>
                     </button>
                   </th>
-                  <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
+                  <th className="bg-slate-100 px-3 py-4 text-center text-xs whitespace-nowrap text-slate-700 sm:px-6 sm:text-base">
                     {t("voucher.main_view.table.voucher_no")}
                   </th>
-                  <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
+                  <th className="bg-slate-100 px-3 py-4 text-center text-xs whitespace-nowrap text-slate-700 sm:px-6 sm:text-base">
                     {t("voucher.main_view.table.note")}
                   </th>
-                  <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
+                  <th className="bg-slate-100 px-3 py-4 text-center text-xs whitespace-nowrap text-slate-700 sm:px-6 sm:text-base">
                     {t("voucher.main_view.table.accounting")}
                   </th>
-                  <th className="bg-slate-100 px-3 py-4 text-center text-xs sm:px-6 sm:text-base">
+                  <th className="bg-slate-100 px-3 py-4 text-center text-xs whitespace-nowrap sm:px-6 sm:text-base">
                     <button
                       type="button"
                       aria-label={t("voucher.main_view.table.debit")}
@@ -521,7 +506,7 @@ export default function VoucherMainView() {
                       </div>
                     </button>
                   </th>
-                  <th className="bg-slate-100 px-3 py-4 text-center text-xs sm:px-6 sm:text-base">
+                  <th className="bg-slate-100 px-3 py-4 text-center text-xs whitespace-nowrap sm:px-6 sm:text-base">
                     <button
                       type="button"
                       aria-label={t("voucher.main_view.table.credit")}
@@ -549,7 +534,7 @@ export default function VoucherMainView() {
                       </div>
                     </button>
                   </th>
-                  <th className="bg-slate-100 px-3 py-4 text-center text-xs text-slate-700 sm:px-6 sm:text-base">
+                  <th className="bg-slate-100 px-3 py-4 text-center text-xs whitespace-nowrap text-slate-700 sm:px-6 sm:text-base">
                     {t("voucher.main_view.table.issuer")}
                   </th>
                 </tr>

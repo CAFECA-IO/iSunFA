@@ -126,29 +126,33 @@ export async function GET(
       ? parseInt(searchParams.get("pageSize")!)
       : undefined;
     const orderByParams = searchParams.get("orderBy");
+    const type = searchParams.get("type");
+    const hideDeleted = searchParams.get("hideDeleted") === "true";
+    const sorting = searchParams.get("sorting");
 
     const filteredConditions: Prisma.VoucherFindManyArgs = {
       where: { accountBookId: accountBook.id },
       include: { file: true },
     };
 
-    // Info: (20260304 - Julian) 關鍵字篩選：id /note /
-    // ToDo: (20260304 - Julian) 加入篩選 particular of voucher line
+    // Info: (20260304 - Julian) 關鍵字篩選：id / note / particular / accountingName
     if (keyWord) {
       filteredConditions.where!.OR = [
         { id: { contains: keyWord } },
         { note: { contains: keyWord } },
+        { lines: { some: { particular: { contains: keyWord } } } },
+        { lines: { some: { accountingName: { contains: keyWord } } } },
       ];
     }
 
     // Info: (20260310 - Julian) 建立時間區間篩選
     if (startDate || endDate) {
-      filteredConditions.where!.createdAt = {};
+      filteredConditions.where!.tradingDate = {};
       if (startDate) {
-        filteredConditions.where!.createdAt.gte = new Date(startDate);
+        filteredConditions.where!.tradingDate.gte = new Date(startDate);
       }
       if (endDate) {
-        filteredConditions.where!.createdAt.lte = new Date(endDate);
+        filteredConditions.where!.tradingDate.lte = new Date(endDate);
       }
     }
 
@@ -158,13 +162,21 @@ export async function GET(
       filteredConditions.take = pageSize;
     }
 
-    // Info: (20260310 - Julian) 排序
+    // Info: (20260310 - Julian) 排序 (保留欄位排序功能，但如果提供 sorting，則在最後再重新排序)
     if (orderByParams) {
       try {
         filteredConditions.orderBy = JSON.parse(orderByParams);
       } catch {
         console.warn("Invalid orderBy param format, ignoring");
       }
+    }
+
+    if (type && type !== "all") {
+      filteredConditions.where!.tradingType = type.toUpperCase() as "INCOME" | "OUTCOME" | "TRANSFER";
+    }
+
+    if (hideDeleted) {
+      filteredConditions.where!.deletedAt = null;
     }
 
     // Info: (20260310 - Julian) 取得日記帳列表
@@ -203,7 +215,7 @@ export async function GET(
 
       return {
         id: v.id,
-        tradingDate: v.tradingDate.getTime() / 1000,
+        tradingDate: Math.floor(v.tradingDate.getTime() / 1000),
         tradingType: v.tradingType.toLowerCase() as TradingType,
         note: v.note,
         isDeleted: !!v.deletedAt,
@@ -215,6 +227,36 @@ export async function GET(
         issuerName: v.issuerName,
       };
     });
+
+    // Info: (20260311 - Julian) 排序邏輯
+    if (sorting) {
+      result.sort((a, b) => {
+        if (sorting === "date_desc") return b.tradingDate - a.tradingDate;
+        if (sorting === "date_asc") return a.tradingDate - b.tradingDate;
+
+        if (sorting.startsWith("debit_")) {
+          const aDebit = a.lineItems.lines
+            .filter((l) => l.isDebit)
+            .reduce((sum, l) => sum + l.amount, 0);
+          const bDebit = b.lineItems.lines
+            .filter((l) => l.isDebit)
+            .reduce((sum, l) => sum + l.amount, 0);
+          return sorting === "debit_desc" ? bDebit - aDebit : aDebit - bDebit;
+        }
+
+        if (sorting.startsWith("credit_")) {
+          const aCredit = a.lineItems.lines
+            .filter((l) => !l.isDebit)
+            .reduce((sum, l) => sum + l.amount, 0);
+          const bCredit = b.lineItems.lines
+            .filter((l) => !l.isDebit)
+            .reduce((sum, l) => sum + l.amount, 0);
+          return sorting === "credit_desc" ? bCredit - aCredit : aCredit - bCredit;
+        }
+
+        return 0;
+      });
+    }
 
     return jsonOk({ result });
   } catch (error) {
