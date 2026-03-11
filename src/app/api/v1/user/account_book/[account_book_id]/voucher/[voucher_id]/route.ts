@@ -151,15 +151,15 @@ export async function PUT(
       return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid input data");
     }
 
-    // Info: (20260304 - Julian) Update voucher
+    // Info: (20260311 - Julian) Update voucher
     const updatedVoucher = await prisma.voucher.update({
       where: { id: voucherId },
-      data: {
-        tradingDate: new Date(inputDate * 1000),
+      data: { 
+        tradingDate: new Date(inputDate), 
         tradingType: voucherType.toUpperCase(),
         note: note || "",
         lines: {
-          deleteMany: {},
+          deleteMany: {}, // Info: (20260311 - Julian) 刪除所有 line 再重新加入
           create: rows.map((row) => ({
             accountingCode: row.accounting?.code || "",
             particular: row.particular || "",

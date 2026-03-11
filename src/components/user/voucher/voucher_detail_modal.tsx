@@ -39,7 +39,7 @@ const VoucherRow = ({
   // ToDo: (20260311 - Julian) 未來需要開發 Account selector
 
   // Info: (20260311 - Julian) 目前以 TW 為主
-const accountOptions = ACCOUNTS.TW
+  const accountOptions = ACCOUNTS.TW
 
   return (
     <div className="grid grid-cols-13 gap-2">
@@ -178,7 +178,7 @@ export default function VoucherDetailModal({
           if (res.payload?.result) {
             const v = res.payload.result;
             setActiveVoucher(v);
-            setInputDate(v.tradingDate);
+            setInputDate(v.tradingDate*1000);
             setVoucherType(v.tradingType);
             setNote(v.note || "");
             setRows(v.lineItems.lines || []);
