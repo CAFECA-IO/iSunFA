@@ -1,4 +1,5 @@
 import { taskService } from '@/services/task.service';
+import { taskRepo } from '@/repositories/task.repo';
 
 /**
  * Info: (20260130 - Luphia)
@@ -8,6 +9,15 @@ import { taskService } from '@/services/task.service';
 async function runWorker() {
   console.log('[Worker] Starting Analysis Task Worker...');
   console.log('[Worker] Press Ctrl+C to stop.');
+
+  try {
+    const updated = await taskRepo.resetAllRunningTasks();
+    if (updated.count > 0) {
+      console.log(`[Worker] Recovered ${updated.count} interrupted RUNNING tasks back to PENDING for smooth continuation.`);
+    }
+  } catch (err) {
+    console.error('[Worker] Failed to reset running tasks on startup:', err);
+  }
 
   let isRunning = true;
 

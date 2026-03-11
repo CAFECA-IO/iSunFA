@@ -15,15 +15,32 @@ import { prepareTransferUserOp, submitSignedUserOp } from '@/services/token.serv
 import { getAnalysisCost } from '@/lib/analysis/pricing';
 import { getPeriodDateRange } from '@/lib/analysis/period';
 import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES } from '@/constants/analysis';
-
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { AuthenticationJSON } from '@passwordless-id/webauthn/dist/esm/types';
 
 export default function AnalysisView() {
   const { t } = useTranslation();
   const { user, refreshAuth } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
 
-  const [activeTab, setActiveTab] = useState<'internal' | 'external' | 'history'>('internal');
+  const [activeTab, setActiveTab] = useState<'internal' | 'external' | 'history'>(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'internal' || tabParam === 'external' || tabParam === 'history') {
+      return tabParam as 'internal' | 'external' | 'history';
+    }
+    return 'internal';
+  });
+
+  useEffect(() => {
+    const currentTabParam = searchParams.get('tab');
+    if (currentTabParam !== activeTab) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('tab', activeTab);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  }, [activeTab, pathname, router, searchParams]);
   const [category, setCategory] = useState<string>(INTERNAL_CATEGORIES[0]);
   const [periodType, setPeriodType] = useState<string>(PERIOD_TYPES[2]);
 
@@ -213,6 +230,50 @@ export default function AnalysisView() {
         throw new Error(t('analysis.error.user_address_missing') || 'User address not found');
       }
 
+      // =====================================================================
+      // Info: (20260311 - Tzuhan)
+      // [TESTING BACKDOOR] 測試用後門：取消註解以下區塊，即可針對特定帳號繞過付款
+      // =====================================================================
+      /*
+      if (user.address.toLowerCase() === '0x9e604a5c15dff17cb12346f028c1f31776a54b64'.toLowerCase() && activeTab === 'external') {
+        const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
+          method: 'POST',
+          body: JSON.stringify({ category, periodType, year: selectedYear, periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue, txHash: null, country, keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : undefined })
+        });
+        if (!orderRes?.payload) throw new Error('Failed to create order');
+
+        setWorkflowStatus('signing_payment');
+        if (!user.pubKeyX || !user.pubKeyY) throw new Error('User public keys missing. Please re-login.');
+
+        const transferAuth = await fido2ClientService.startLogin({
+          challenge: orderRes.payload.challenge,
+          timeout: 60000,
+          userVerification: 'required',
+          allowCredentials: [],
+        });
+
+        setWorkflowStatus('payment_success');
+        await request('/api/v1/user/analysis', {
+          method: 'POST',
+          body: JSON.stringify({
+            category, periodType, year: selectedYear, periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
+            country, keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : undefined,
+            authentication: { orderId: orderRes.payload.orderId, ...transferAuth }
+          })
+        });
+
+        await refreshAuth();
+        setTimeout(() => {
+          setIsPaymentModalOpen(false);
+          setActiveTab('history');
+          setShowSuccessNotification(true);
+        }, 2000);
+        setIsLoading(false);
+        return;
+      }
+      */
+      // =====================================================================
+
       // Info: (20260209 - Tzuhan) Check user credits
       if ((user.credits || 0) < calculatedCost) {
         setInsufficientCreditsModal(true);
@@ -230,7 +291,7 @@ export default function AnalysisView() {
           periodType,
           year: selectedYear,
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-          txHash: null, // Info: (20260209 - Tzuhan) No txHash yet
+          txHash: null,
           country,
           keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : undefined
         })
@@ -238,6 +299,9 @@ export default function AnalysisView() {
 
       if (!orderRes?.payload) throw new Error('Failed to create order');
       const { orderId } = orderRes.payload; // Info: (20260209 - Tzuhan) We don't need the random challenge for *this* signature, we sign the UserOp.
+
+      let transactionHash = undefined;
+      let transferAuth: AuthenticationJSON | null = null;
 
       // Info: (20260209 - Tzuhan) 2. 準備轉帳 UserOp
       const prepRes = await prepareTransferUserOp(user.address, calculatedCost, orderId);
@@ -254,7 +318,7 @@ export default function AnalysisView() {
       }
 
       const challengeBase64 = hexToBase64Url(userOpHash);
-      const transferAuth = await fido2ClientService.startLogin({
+      transferAuth = await fido2ClientService.startLogin({
         challenge: challengeBase64,
         timeout: 60000,
         userVerification: 'required',
@@ -279,7 +343,7 @@ export default function AnalysisView() {
         throw new Error(submitRes.message || 'Token transfer failed');
       }
 
-      const transactionHash = (submitRes.data as { tx: string })?.tx;
+      transactionHash = (submitRes.data as { tx: string })?.tx;
       setTxHash(transactionHash);
 
       // Info: (20260209 - Tzuhan) 6. 提交分析請求

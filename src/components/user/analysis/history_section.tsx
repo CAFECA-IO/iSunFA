@@ -16,14 +16,42 @@ interface IHistoryItem {
   period: string;
   status: string;
   reportId: string;
+  country?: string;
+  keyword?: string;
 }
 
 export default function HistorySection() {
   const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const [history, setHistory] = useState<IHistoryItem[]>([]);
+
+  // Info: (20260311 - Tzuhan) Dynamically adjust items per page based on window height
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const calculateItemsPerPage = () => {
+      const nonTableHeight = 500;
+      const rowHeight = 80;
+
+      const availableHeight = window.innerHeight - nonTableHeight;
+      const calculatedItems = Math.max(5, Math.floor(availableHeight / rowHeight));
+      setItemsPerPage(calculatedItems);
+    };
+
+    calculateItemsPerPage();
+    window.addEventListener('resize', calculateItemsPerPage);
+    return () => window.removeEventListener('resize', calculateItemsPerPage);
+  }, []);
+
+  // Info: (20260311 - Tzuhan) Sync current page if total pages become less than current page
+  useEffect(() => {
+    const totalPages = Math.ceil(history.length / itemsPerPage);
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [itemsPerPage, history.length, currentPage]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -182,7 +210,23 @@ export default function HistorySection() {
                   <tr key={item.id}>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.generatedAt}</td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">
-                      {t(`analysis.categories.${item.category}`)}
+                      <div className="flex flex-col gap-1">
+                        <span>{t(`analysis.categories.${item.category}`)}</span>
+                        {(item.country || item.keyword) && (
+                          <div className="flex items-center gap-2">
+                            {item.country && (
+                              <span className="inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700 ring-1 ring-inset ring-orange-600/20">
+                                {t(`analysis.countries.${item.country}`)}
+                              </span>
+                            )}
+                            {item.keyword && (
+                              <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-600/20 max-w-[120px] truncate" title={item.keyword}>
+                                {item.keyword}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                       <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 mr-2">
@@ -220,12 +264,28 @@ export default function HistorySection() {
                 <div key={item.id} className="bg-gray-50 rounded-lg p-4 border border-gray-100 flex flex-col gap-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-semibold text-gray-900">{t(`analysis.categories.${item.category}`)}</h3>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex flex-col gap-1">
+                        <h3 className="font-semibold text-gray-900">{t(`analysis.categories.${item.category}`)}</h3>
+                        {(item.country || item.keyword) && (
+                          <div className="flex items-center gap-2">
+                            {item.country && (
+                              <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                                {t(`analysis.countries.${item.country}`)}
+                              </span>
+                            )}
+                            {item.keyword && (
+                              <span className="inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10 max-w-[120px] truncate" title={item.keyword}>
+                                {item.keyword}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
                         <span className="inline-flex items-center rounded-md bg-white px-2 py-0.5 text-xs font-medium text-gray-600 border border-gray-200">
                           {item.periodType && item.periodType !== 'unknown' ? t(`analysis.time_units.${item.periodType}`) : '-'}
                         </span>
-                        <span className="text-sm text-gray-500">{item.period}</span>
+                        <span className="text-sm text-gray-500 break-words">{item.period}</span>
                       </div>
                     </div>
                     {renderStatus(item.status)}

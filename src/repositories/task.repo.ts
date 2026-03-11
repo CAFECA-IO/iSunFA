@@ -6,9 +6,11 @@ export interface ITaskRepository {
   findNextPendingTask(): Promise<{ task: Task, mission: Mission } | null>;
   findNextTaskInMission(mission: Prisma.MissionGetPayload<{ include: { tasks: true } }>): Promise<Task | null>;
   getTasksByOrder(missionId: string, order: number): Promise<Task[]>;
+  getTasksBeforeOrder(missionId: string, currentOrder: number): Promise<Task[]>;
   updateStatus(taskId: string, status: string, result?: Prisma.InputJsonValue): Promise<Task>;
   completeMission(missionId: string, status: string, result?: Prisma.InputJsonValue): Promise<Mission>;
   checkMissionCompletion(missionId: string): Promise<boolean>;
+  resetAllRunningTasks(): Promise<{ count: number }>;
 }
 
 export class TaskRepository implements ITaskRepository {
@@ -41,6 +43,7 @@ export class TaskRepository implements ITaskRepository {
 
     if (!mission) return null;
 
+    console.log(`\n[TaskRepo] Evaluating active Mission: ${mission.id}`);
     const task = await this.findNextTaskInMission(mission);
     if (!task) return null;
 
@@ -85,6 +88,7 @@ export class TaskRepository implements ITaskRepository {
              * This shouldn't happen if we process strictly, but handled here.
              * Wait for previous order
              */
+            console.log(`[TaskRepo] Mission ${mission.id}: Waiting for order ${order - 1} to complete. Cannot start order ${order}.`);
             return null;
           }
         }
@@ -99,7 +103,9 @@ export class TaskRepository implements ITaskRepository {
             return false;
           });
           if (stuckTask) {
-            console.log(`[TaskRepo] Recovering stuck task: ${stuckTask.id}`);
+            const dataPreview = stuckTask.data ? JSON.stringify(stuckTask.data) : '{}';
+            console.log(`[TaskRepo] Mission ${mission.id}: Recovering stuck task [${stuckTask.id}] (Order: ${order}, Type: ${stuckTask.type})`);
+            console.log(`[TaskRepo] -> Task Content: ${dataPreview.substring(0, 300)}...`);
             return stuckTask;
           }
         }
@@ -107,11 +113,20 @@ export class TaskRepository implements ITaskRepository {
         if (hasPending) {
           const pendingTask = tasks.find(t => t.status === TASK_STATUS.PENDING);
           if (pendingTask) {
+            const dataPreview = pendingTask.data ? JSON.stringify(pendingTask.data) : '{}';
+            console.log(`[TaskRepo] Mission ${mission.id}: Found next task [${pendingTask.id}] (Order: ${order}, Type: ${pendingTask.type})`);
+            console.log(`[TaskRepo] -> Task Content: ${dataPreview.substring(0, 300)}...`);
             return pendingTask;
           }
         }
 
         // Info: (20260130 - Luphia) If only RUNNING tasks exist in this order and none are stuck, we wait.
+        console.log(`[TaskRepo] Mission ${mission.id}: Order ${order} currently has RUNNING tasks. Waiting for them to finish...`);
+        tasks.filter(t => t.status === TASK_STATUS.RUNNING).forEach(t => {
+          const dataPreview = t.data ? JSON.stringify(t.data) : '{}';
+          console.log(`[TaskRepo] -> Blocking Task [${t.id}] (Type: ${t.type}) running since ${t.updatedAt?.toLocaleString('zh-TW', { hour12: false })}`);
+          console.log(`[TaskRepo] -> Content: ${dataPreview.substring(0, 150)}...`);
+        });
         return null;
       }
 
@@ -126,6 +141,20 @@ export class TaskRepository implements ITaskRepository {
       where: {
         missionId,
         order
+      }
+    });
+  }
+
+  async getTasksBeforeOrder(missionId: string, currentOrder: number) {
+    return prisma.task.findMany({
+      where: {
+        missionId,
+        order: {
+          lt: currentOrder
+        }
+      },
+      orderBy: {
+        order: 'asc'
       }
     });
   }
@@ -149,6 +178,13 @@ export class TaskRepository implements ITaskRepository {
         result: result ?? undefined,
         updatedAt: new Date()
       }
+    });
+  }
+
+  async resetAllRunningTasks() {
+    return prisma.task.updateMany({
+      where: { status: TASK_STATUS.RUNNING },
+      data: { status: TASK_STATUS.PENDING }
     });
   }
 
