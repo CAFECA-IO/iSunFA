@@ -14,6 +14,14 @@ export interface IVoucherLine {
   isDebit: boolean;
 }
 
+export interface IVoucherLineUI {
+  id: string;
+  accounting: IAccount | null;
+  particular: string;
+  amount: number;
+  isDebit: boolean | null;
+}
+
 export interface IVoucher {
   id: string;
   tradingDate: number;
@@ -27,7 +35,7 @@ export interface IVoucher {
     fileName: string;
   };
   lineItems: {
-    lines: IVoucherLine[];
+    lines: IVoucherLineUI[];
     totalAmount: number;
   };
   issuerName: string;

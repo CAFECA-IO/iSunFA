@@ -10,8 +10,8 @@ import {
 } from "@headlessui/react";
 import { X, ChevronDown, BookOpen, Trash2, Plus, Save } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { mockVouchers, TradingType } from "@/interfaces/voucher";
-import { IAccount, mockAccounts } from "@/constants/accounts";
+import { mockVouchers, TradingType,IVoucherLineUI } from "@/interfaces/voucher";
+import {  mockAccounts } from "@/constants/accounts";
 import { numberWithCommas } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
 
@@ -19,14 +19,6 @@ interface IVoucherDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   voucherId: string;
-}
-
-interface IVoucherLineUI {
-  id: string;
-  accounting: IAccount | null;
-  particular: string;
-  amount: number;
-  isDebit: boolean | null;
 }
 
 const VoucherRow = ({

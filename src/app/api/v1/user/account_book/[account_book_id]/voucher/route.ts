@@ -4,7 +4,18 @@ import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/browser";
-import { IVoucher, IVoucherLine, TradingType } from "@/interfaces/voucher";
+import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
+import { ACCOUNTS, IAccount } from "@/constants/accounts";
+
+// Info: (20260311 - Julian) 從 accounting code 找到會計科目
+function getAccountByCode(code: string | number): IAccount | null {
+  if (!code) {
+    return null;
+  }
+  // Info: (20260311 - Julian) 目前以 TW 為主
+  const result = ACCOUNTS.TW.find((acc) => acc.code === code) || null;
+  return result;
+}
 
 /**
  * Info: (20260310 - Julian) 新增傳票
@@ -132,16 +143,16 @@ export async function GET(
 
     const filteredConditions: Prisma.VoucherFindManyArgs = {
       where: { accountBookId: accountBook.id },
-      include: { file: true },
+      include: { file: true, user: true },
     };
 
-    // Info: (20260304 - Julian) 關鍵字篩選：id / note / particular / accountingName
+    // Info: (20260304 - Julian) 關鍵字篩選：id / note / particular / accountingCode
     if (keyWord) {
       filteredConditions.where!.OR = [
         { id: { contains: keyWord } },
         { note: { contains: keyWord } },
         { lines: { some: { particular: { contains: keyWord } } } },
-        { lines: { some: { accountingName: { contains: keyWord } } } },
+        { lines: { some: { accountingCode: { contains: keyWord } } } },
       ];
     }
 
@@ -172,7 +183,10 @@ export async function GET(
     }
 
     if (type && type !== "all") {
-      filteredConditions.where!.tradingType = type.toUpperCase() as "INCOME" | "OUTCOME" | "TRANSFER";
+      filteredConditions.where!.tradingType = type.toUpperCase() as
+        | "INCOME"
+        | "OUTCOME"
+        | "TRANSFER";
     }
 
     if (hideDeleted) {
@@ -188,21 +202,13 @@ export async function GET(
     // Info: (20260311 - Julian) 組合成前端所需的格式
     const result: IVoucher[] = vouchers.map((v) => {
       // Info: (20260311 - Julian) 取得個別分錄
-      const voucherLines = lines.filter(l=> l.voucherId === v.id)
-      
-      const voucherLineItems: IVoucherLine[] =voucherLines.map((l) => {
+      const voucherLines = lines.filter((l) => l.voucherId === v.id);
+
+      const voucherLineItems: IVoucherLineUI[] = voucherLines.map((l) => {
         return {
           id: l.id,
-          accounting: {
-            code: l.accountingCode,
-            name: l.accountingName,
-            description: "",
-            type: "",
-            level: 1,
-            parentCode: "",
-            isDebit: true,
-          },
-          particular: l.particular,
+          accounting: getAccountByCode(l.accountingCode),
+          particular: l.particular ?? "",
           amount: l.amount,
           isDebit: l.isDebit,
         };
@@ -217,14 +223,15 @@ export async function GET(
         id: v.id,
         tradingDate: Math.floor(v.tradingDate.getTime() / 1000),
         tradingType: v.tradingType.toLowerCase() as TradingType,
-        note: v.note,
+        note: v.note ?? "",
         isDeleted: !!v.deletedAt,
         fileId: v.fileId ?? "",
         lineItems: {
           lines: voucherLineItems,
           totalAmount: totalAmount,
         },
-        issuerName: v.issuerName,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        issuerName: (v as any).user?.name ?? "",
       };
     });
 
@@ -251,7 +258,9 @@ export async function GET(
           const bCredit = b.lineItems.lines
             .filter((l) => !l.isDebit)
             .reduce((sum, l) => sum + l.amount, 0);
-          return sorting === "credit_desc" ? bCredit - aCredit : aCredit - bCredit;
+          return sorting === "credit_desc"
+            ? bCredit - aCredit
+            : aCredit - bCredit;
         }
 
         return 0;

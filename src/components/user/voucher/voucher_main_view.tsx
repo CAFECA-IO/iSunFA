@@ -91,8 +91,8 @@ const VoucherRow = ({
         <div className="flex flex-col gap-2 text-[10px] font-semibold whitespace-nowrap text-slate-700 sm:text-xs">
           {lineItems.map((line) => (
             <div key={line.id} className="flex items-center gap-2">
-              <span className="text-slate-400">{line.accounting.code}</span>
-              <span>{line.accounting.name}</span>
+              <span className="text-slate-400">{line.accounting?.code}</span>
+              <span>{line.accounting?.name}</span>
             </div>
           ))}
         </div>
