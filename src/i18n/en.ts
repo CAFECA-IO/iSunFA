@@ -660,7 +660,7 @@ export const en = {
     view_image: "View Image: {name}",
     download_original: "Download Original File",
     login_to_react: "Please login to react",
-    ai_name: "AccounTalk AI",
+    ai_name: "FAITH",
     q_label: "Q",
     ai_label: "AI",
   },
