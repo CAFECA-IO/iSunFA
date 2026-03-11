@@ -114,11 +114,11 @@ const downloadSingleFile = (cid: string): Promise<Blob> => {
 export const uploadFile = async (file: File, callbacks: IUploadCallbacks) => {
   try {
     const originalFileSize = file.size;
-    
+
     // Info: (20260311 - Luphia) Always split into exactly DATA_SHARDS (5 data + 3 parity = 8 parts)
     const currentShardSize = Math.max(1, Math.ceil(originalFileSize / DATA_SHARDS));
     const dataStripeSize = DATA_SHARDS * currentShardSize;
-    
+
     // Info: (20260311 - Luphia) Since we always use 5 data shards for the whole file, there's exactly 1 stripe
     const totalStripes = 1;
 
@@ -248,10 +248,10 @@ export const downloadFile = async (cid: string, callbacks: IDownloadCallbacks) =
       try {
         const initialText = await initialBlob.text();
         const parsed = JSON.parse(initialText);
-        
+
         // Info: (20260302 - Julian) Handle standard IApiResponse wrapping
-        const data = (parsed && typeof parsed === 'object' && 'success' in parsed && 'payload' in parsed) 
-          ? parsed.payload 
+        const data = (parsed && typeof parsed === 'object' && 'success' in parsed && 'payload' in parsed)
+          ? parsed.payload
           : parsed;
 
         if (isLariaMetadata(data)) {
@@ -310,7 +310,7 @@ export const downloadFromMetadata = async (metadata: ILariaMetadata, callbacks: 
 
           downloadedBytes += currentShardSize;
           if (callbacks.onProgress) {
-            callbacks.onProgress((downloadedBytes / totalExpectedDownload) * 90); // Up to 90%
+            callbacks.onProgress((downloadedBytes / totalExpectedDownload) * 90); // Info: (20260113 - Luphia) Up to 90%
           }
         } catch {
           // Info: (20260113 - Luphia) Missing shard

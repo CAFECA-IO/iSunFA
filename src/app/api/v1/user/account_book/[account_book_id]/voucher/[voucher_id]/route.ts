@@ -55,7 +55,6 @@ export async function GET(
       return jsonFail(ApiCode.NOT_FOUND, "Voucher not found");
     }
 
-    //
     const lineItems: IVoucherLineUI[] = voucher.lines.map((l) => {
       return {
         id: l.id,
