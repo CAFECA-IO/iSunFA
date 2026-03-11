@@ -130,7 +130,7 @@ const VoucherRow = ({
           type="button"
           aria-label="Delete row"
           onClick={() => removeRow(row.id)}
-          className="text-slate-300 transition-colors hover:text-red-500"
+          className="text-slate-300 transition-colors hover:text-red-400"
         >
           <Trash2 size={20} />
         </button>

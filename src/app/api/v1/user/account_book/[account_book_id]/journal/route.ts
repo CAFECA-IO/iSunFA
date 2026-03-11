@@ -10,7 +10,6 @@ import { Prisma } from "@/generated/browser";
  * Info: (20260304 - Julian) 將檔案傳給 AI 進行解析
  * POST /api/v1/user/account_book/:account_book_id/journal
  */
-
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ account_book_id: string }> },
