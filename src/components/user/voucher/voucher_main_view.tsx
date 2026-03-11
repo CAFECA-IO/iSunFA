@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   Download,
@@ -13,8 +13,10 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { timestampToString, numberWithCommas } from "@/lib/utils/common";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
 import VoucherDetailModal from "@/components/user/voucher/voucher_detail_modal";
-import { IVoucher, TradingType, mockVouchers } from "@/interfaces/voucher";
+import { IVoucher, TradingType } from "@/interfaces/voucher";
 
 const VoucherRow = ({
   voucher,
@@ -155,23 +157,74 @@ enum VoucherSorting {
 }
 
 export default function VoucherMainView() {
+  const params = useParams();
   const pathname = usePathname();
   const { t } = useTranslation();
+
+  const accountBookId = params?.account_book_id as string;
 
   const currencyUnit = "TWD"; // ToDo: (20260310 - Julian) 先固定使用 TWD
 
   const [filteredType, setFilteredType] = useState<TradingType | "all">("all");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [keyWord, setKeyWord] = useState<string>("");
+  const [debouncedKeyWord, setDebouncedKeyWord] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
     null,
   );
-  const [vouchers /* , setVouchers */] = useState<IVoucher[]>(mockVouchers);
+  const [vouchers, setVouchers] = useState<IVoucher[]>([]);
   const [sorting, setSorting] = useState<VoucherSorting>(
     VoucherSorting.DATE_DESC,
   );
   const [hideDeleted, setHideDeleted] = useState<boolean>(false);
+
+  // Info: (20260311 - Julian) 設定輸入延遲，避免頻繁打 API
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedKeyWord(keyWord);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [keyWord]);
+
+  const fetchVouchers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const searchParams = new URLSearchParams();
+      if (debouncedKeyWord) searchParams.append("keyWord", debouncedKeyWord);
+
+      if (startDate) {
+        const [y, m, d] = startDate.split("-").map(Number);
+        const start = new Date(y, m - 1, d, 0, 0, 0, 0);
+        searchParams.append("startDate", start.toISOString());
+      }
+
+      if (endDate) {
+        const [y, m, d] = endDate.split("-").map(Number);
+        const end = new Date(y, m - 1, d, 23, 59, 59, 999);
+        searchParams.append("endDate", end.toISOString());
+      }
+
+      const data = await request<IApiResponse<{ result: IVoucher[] }>>(
+        `/api/v1/user/account_book/${accountBookId}/voucher?${searchParams.toString()}`,
+      );
+      if (data.payload?.result) {
+        setVouchers(data.payload.result);
+      }
+    } catch (error) {
+      console.error("Failed to fetch vouchers:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [debouncedKeyWord, startDate, endDate, accountBookId]);
+
+  useEffect(() => {
+    if (accountBookId) {
+      fetchVouchers();
+    }
+  }, [fetchVouchers, accountBookId]);
 
   // Info: (20260309 - Julian) 連接到 Journal
   const journalLink = pathname.replace("voucher", "journal");
@@ -204,7 +257,13 @@ export default function VoucherMainView() {
         : VoucherSorting.CREDIT_DESC,
     );
 
-  const sortedVouchers = [...vouchers].sort((a, b) => {
+  const filteredVouchers = vouchers.filter((v) => {
+    if (hideDeleted && v.isDeleted) return false;
+    if (filteredType !== "all" && v.tradingType !== filteredType) return false;
+    return true;
+  });
+
+  const sortedVouchers = [...filteredVouchers].sort((a, b) => {
     if (isDateDesc) return b.tradingDate - a.tradingDate;
     if (isDateAsc) return a.tradingDate - b.tradingDate;
 
@@ -231,8 +290,15 @@ export default function VoucherMainView() {
     return 0;
   });
 
-  const displayedVoucher =
-    sortedVouchers.length > 0 ? (
+  const displayedVoucher = isLoading ? (
+    <tr>
+      <td colSpan={7} className="px-3 py-4 text-center sm:px-6">
+        <div className="flex justify-center p-4">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-500 border-t-transparent"></div>
+        </div>
+      </td>
+    </tr>
+  ) : sortedVouchers.length > 0 ? (
       sortedVouchers.map((v) => (
         <VoucherRow
           key={v.id}
@@ -331,6 +397,8 @@ export default function VoucherMainView() {
                   id="searchField"
                   aria-label={t("voucher.main_view.filters.search")}
                   type="text"
+                  value={keyWord}
+                  onChange={(e) => setKeyWord(e.target.value)}
                   placeholder={t("voucher.main_view.filters.search")}
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-10 text-sm font-semibold text-slate-700 shadow-sm placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />

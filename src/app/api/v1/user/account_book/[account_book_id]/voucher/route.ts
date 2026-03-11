@@ -4,6 +4,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/browser";
+import { IVoucher, IVoucherLine, TradingType } from "@/interfaces/voucher";
 
 /**
  * Info: (20260310 - Julian) 新增傳票
@@ -169,7 +170,53 @@ export async function GET(
     // Info: (20260310 - Julian) 取得日記帳列表
     const vouchers = await prisma.voucher.findMany(filteredConditions);
 
-    return jsonOk({ vouchers });
+    // Info: (20260311 - Julian) 取得分錄
+    const lines = await prisma.voucherLine.findMany();
+
+    // Info: (20260311 - Julian) 組合成前端所需的格式
+    const result: IVoucher[] = vouchers.map((v) => {
+      // Info: (20260311 - Julian) 取得個別分錄
+      const voucherLines = lines.filter(l=> l.voucherId === v.id)
+      
+      const voucherLineItems: IVoucherLine[] =voucherLines.map((l) => {
+        return {
+          id: l.id,
+          accounting: {
+            code: l.accountingCode,
+            name: l.accountingName,
+            description: "",
+            type: "",
+            level: 1,
+            parentCode: "",
+            isDebit: true,
+          },
+          particular: l.particular,
+          amount: l.amount,
+          isDebit: l.isDebit,
+        };
+      });
+
+      // Info: (20260311 - Julian) 計算 debit 總和
+      const totalAmount = voucherLines
+        .filter((l) => l.isDebit)
+        .reduce((sum, l) => sum + l.amount, 0);
+
+      return {
+        id: v.id,
+        tradingDate: v.tradingDate.getTime() / 1000,
+        tradingType: v.tradingType.toLowerCase() as TradingType,
+        note: v.note,
+        isDeleted: !!v.deletedAt,
+        fileId: v.fileId ?? "",
+        lineItems: {
+          lines: voucherLineItems,
+          totalAmount: totalAmount,
+        },
+        issuerName: v.issuerName,
+      };
+    });
+
+    return jsonOk({ result });
   } catch (error) {
     console.error("Get vouchers failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get vouchers failed");
