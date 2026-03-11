@@ -115,7 +115,7 @@ export class TaskService {
   private async getPreviousOrderResults(missionId: string, currentOrder: number): Promise<Map<string, string>> {
     if (currentOrder <= 0) return new Map();
 
-    const prevTasks = await taskRepo.getTasksByOrder(missionId, currentOrder - 1);
+    const prevTasks = await taskRepo.getTasksBeforeOrder(missionId, currentOrder);
     const results = new Map<string, string>();
 
     prevTasks.forEach(pt => {
@@ -180,7 +180,7 @@ export class TaskService {
     if (taskData.context) {
       try {
         const parsedContext = JSON.parse(taskData.context);
-        const targetString = `Target: ${parsedContext.target} / Country: ${parsedContext.marketName} / Period: ${parsedContext.period} (Year: ${parsedContext.year})`;
+        const targetString = `Category: ${parsedContext.category || 'N/A'} / Keyword: ${parsedContext.target} / Country: ${parsedContext.marketName} / Period: ${parsedContext.period} (Year: ${parsedContext.year})`;
         fullPrompt = `${targetString}\n\n${interpolatedPrompt}`;
       } catch (e) {
         console.warn('[TaskService] Could not parse task context for target string', e);

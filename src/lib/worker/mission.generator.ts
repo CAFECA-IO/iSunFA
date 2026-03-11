@@ -92,6 +92,7 @@ export class MissionGenerator {
       }
 
       const targetInfo = JSON.stringify({
+        category: params.category,
         startDate: startDateStr,
         endDate: endDateStr,
         marketName: countryName,

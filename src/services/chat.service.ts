@@ -1,6 +1,6 @@
 import { AI_CONSULTATION_ROOM_PROMPT } from '@/constants/prompts/ai_consultation_room';
 import { JOURNAL_PROMPT } from '@/constants/prompts/journal';
-import { DynamicRetrievalMode, GoogleGenerativeAI, Part } from '@google/generative-ai';
+import { GoogleGenerativeAI, Part, Tool } from '@google/generative-ai';
 
 export class ChatService {
   private genAI: GoogleGenerativeAI;
@@ -127,16 +127,27 @@ export class ChatService {
   }
 
   async generateRaw(prompt: string): Promise<string> {
-    const model = this.genAI.getGenerativeModel({ model: this.modelName });
+    const model = this.genAI.getGenerativeModel({
+      model: this.modelName,
+      generationConfig: {
+        temperature: 0.2,
+      }
+    });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text();
   }
 
   async generateRawWithSearch(prompt: string): Promise<string> {
+    // Info: (20260311 - Tzuhan) Use explicitly typed googleSearch tool for Gemini Grounding
+    const searchTool = { googleSearch: {} } as Tool & { googleSearch: unknown };
+
     const model = this.genAI.getGenerativeModel({
       model: this.modelName,
-      tools: [{ googleSearchRetrieval: { dynamicRetrievalConfig: { mode: DynamicRetrievalMode.MODE_DYNAMIC, dynamicThreshold: 0.3 } } }],
+      generationConfig: {
+        temperature: 0.2, // Info: (20260311 - Tzuhan) Strict temperature for financial analysis
+      },
+      tools: [searchTool],
     });
     const result = await model.generateContent(prompt);
     const response = await result.response;
