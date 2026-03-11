@@ -154,8 +154,8 @@ export async function PUT(
     // Info: (20260311 - Julian) Update voucher
     const updatedVoucher = await prisma.voucher.update({
       where: { id: voucherId },
-      data: { 
-        tradingDate: new Date(inputDate), 
+      data: {
+        tradingDate: new Date(inputDate),
         tradingType: voucherType.toUpperCase(),
         note: note || "",
         lines: {

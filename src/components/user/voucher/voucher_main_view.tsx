@@ -64,7 +64,9 @@ const VoucherRow = ({
       key={voucher.id}
       onClick={voucher.isDeleted ? undefined : onClick}
       className={`transition-colors last:border-0 odd:bg-slate-50 even:bg-white ${
-        voucher.isDeleted ? "cursor-not-allowed" : "cursor-pointer hover:bg-orange-100"
+        voucher.isDeleted
+          ? "cursor-not-allowed"
+          : "cursor-pointer hover:bg-orange-100"
       }`}
     >
       <td className="px-3 py-4 align-middle text-xs sm:px-6 sm:text-sm">
@@ -73,11 +75,14 @@ const VoucherRow = ({
         </div>
       </td>
       <td className="px-3 py-4 align-middle sm:px-6">
-        <span
-          className={`flex items-center justify-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap sm:text-sm ${getTypeClasses(voucher.tradingType)}`}
+        <div
+          className={`flex max-w-[120px] items-center justify-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-bold sm:text-sm ${getTypeClasses(voucher.tradingType)}`}
         >
-          {renderIcon(voucher.tradingType)} {getPillLabel(voucher)}
-        </span>
+          <span>{renderIcon(voucher.tradingType)}</span>
+          <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+            {getPillLabel(voucher)}
+          </span>
+        </div>
         {voucher.isDeleted && (
           <div className="mt-2">
             <span className="inline-block rounded-full bg-orange-200 px-2 py-0.5 text-[10px] font-bold text-orange-500">
@@ -285,7 +290,11 @@ export default function VoucherMainView() {
 
   const displayedVoucher = isLoading ? (
     <tr aria-label="Loading vouchers">
-      <td aria-label="Loading vouchers" colSpan={7} className="px-3 py-4 text-center sm:px-6">
+      <td
+        aria-label="Loading vouchers"
+        colSpan={7}
+        className="px-3 py-4 text-center sm:px-6"
+      >
         <div className="flex justify-center p-4">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-500 border-t-transparent"></div>
         </div>

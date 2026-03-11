@@ -1,5 +1,7 @@
 import { AI_CONSULTATION_ROOM_PROMPT } from '@/constants/prompts/ai_consultation_room';
 import { JOURNAL_PROMPT } from '@/constants/prompts/journal';
+import { VOUCHER_PROMPT } from '@/constants/prompts/voucher';
+import { IParsedVoucher } from '@/interfaces/voucher';
 import { DynamicRetrievalMode, GoogleGenerativeAI, Part } from '@google/generative-ai';
 
 export class ChatService {
@@ -221,6 +223,44 @@ export class ChatService {
     } catch (error) {
       console.error("[ChatService] Error in analyzeJournal:", error);
       return { text: "AI 暫時無法解析，請稍後再試或手動調整" };
+    }
+  }
+
+  /**
+   * Info: (20260311 - Julian) 將憑證圖片轉換為傳票 JSON
+   */
+  async analyzeVoucher(
+    images: { data: string; mimeType: string }[] = [],
+  ): Promise<{ data: IParsedVoucher | null; error?: string }> {
+    try {
+      const model = this.genAI.getGenerativeModel({ model: this.modelName });
+      const parts: Part[] = [{ text: VOUCHER_PROMPT }];
+
+      if (images && images.length > 0) {
+        images.forEach((img) => {
+          parts.push({
+            inlineData: {
+              data: img.data,
+              mimeType: img.mimeType,
+            },
+          });
+        });
+      }
+
+      const result = await model.generateContent(parts);
+      const response = await result.response;
+      const text = response.text().trim();
+
+      // Info: (20260311 - Julian) 尋找 JSON 區塊
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return { data: JSON.parse(jsonMatch[0]) };
+      }
+
+      return { data: null, error: "無法從 AI 回應中解析出有效的 JSON 格式" };
+    } catch (error) {
+      console.error("[ChatService] Error in analyzeVoucher:", error);
+      return { data: null, error: "AI 解析傳票失敗，請稍後再試" };
     }
   }
 }

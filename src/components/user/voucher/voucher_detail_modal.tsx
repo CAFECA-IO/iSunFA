@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState,useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import {
   Dialog,
   DialogPanel,
@@ -39,7 +39,7 @@ const VoucherRow = ({
   // ToDo: (20260311 - Julian) 未來需要開發 Account selector
 
   // Info: (20260311 - Julian) 目前以 TW 為主
-  const accountOptions = ACCOUNTS.TW
+  const accountOptions = ACCOUNTS.TW;
 
   return (
     <div className="grid grid-cols-13 gap-2">
@@ -178,7 +178,7 @@ export default function VoucherDetailModal({
           if (res.payload?.result) {
             const v = res.payload.result;
             setActiveVoucher(v);
-            setInputDate(v.tradingDate*1000);
+            setInputDate(v.tradingDate * 1000);
             setVoucherType(v.tradingType);
             setNote(v.note || "");
             setRows(v.lineItems.lines || []);
@@ -209,14 +209,14 @@ export default function VoucherDetailModal({
   }
 
   // Info: (20260311 - Julian) 已刪除傳票不可編輯
-    if (activeVoucher?.isDeleted) return null
+  if (activeVoucher?.isDeleted) return null;
 
   // Info: (20260310 - Julian) 檢查內容是否有變更
   const checkHasChanges = () => {
     if (!activeVoucher) return true;
 
     // Info: (20260310 - Julian) 檢查日期和分錄類別
-    if (inputDate !== (activeVoucher.tradingDate ?? 0)) return true;
+    if (inputDate / 1000 !== (activeVoucher.tradingDate ?? 0)) return true;
     if (voucherType !== (activeVoucher.tradingType ?? TradingType.INCOME))
       return true;
     if (note !== (activeVoucher.note || "")) return true;
@@ -290,7 +290,7 @@ export default function VoucherDetailModal({
 
   const saveVoucher = () => setIsSaveModalOpen(true);
 
-  // Info: (20260311 - Julian) 更新傳票 
+  // Info: (20260311 - Julian) 更新傳票
   const executeSaveVoucher = async () => {
     setIsSaving(true);
     try {

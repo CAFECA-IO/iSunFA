@@ -3,7 +3,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { ChatService } from "@/services/chat.service";
+// import { ChatService } from "@/services/chat.service";
 import { Prisma } from "@/generated/browser";
 
 /**
@@ -64,15 +64,16 @@ export async function POST(
       );
     }
 
-    const chatService = new ChatService(apiKey);
+    // ToDo: 建立分析 Journal 的 Mission 和 Task
+    // const chatService = new ChatService(apiKey);
 
     // Info: (20260304 - Julian) 整理圖片資料發給 AI
-    const imagesForAi =
-      file.base64 && file.mimeType
-        ? [{ data: file.base64, mimeType: file.mimeType }]
-        : [];
+    // const imagesForAi =
+    //   file.base64 && file.mimeType
+    //     ? [{ data: file.base64, mimeType: file.mimeType }]
+    //     : [];
 
-    const { text } = await chatService.analyzeJournal(imagesForAi);
+    // const { text } = await chatService.analyzeJournal(imagesForAi);
 
     // Info: (20260304 - Julian) 建立上傳檔案 DB 紀錄
     const dbFile = await prisma.file.create({
@@ -82,12 +83,13 @@ export async function POST(
       },
     });
 
-    // Info: (20260304 - Julian) 建立憑證(日記帳)紀錄
+    // Info: (20260304 - Julian) 先建立空白的日記帳
+    const journalText = ''
     const journal = await prisma.journal.create({
       data: {
         fileId: dbFile.id,
         accountBookId: accountBook.id,
-        text: text,
+        text:journalText,
       },
     });
 
@@ -102,7 +104,10 @@ export async function POST(
       },
     });
 
-    return jsonOk({ journalId: journal.id, text });
+    return jsonOk({ 
+      journalId: journal.id, 
+      text :journalText
+    });
   } catch (error) {
     console.error("Upload failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Upload failed");

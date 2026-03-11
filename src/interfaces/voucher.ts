@@ -40,3 +40,17 @@ export interface IVoucher {
   };
   issuerName: string;
 }
+
+export interface IParsedVoucherLine {
+  accountingCode: string;
+  particular: string;
+  amount: number;
+  isDebit: boolean;
+}
+
+export interface IParsedVoucher {
+  tradingDate: string;
+  tradingType: "INCOME" | "OUTCOME" | "TRANSFER";
+  note: string;
+  lines: IParsedVoucherLine[];
+}
