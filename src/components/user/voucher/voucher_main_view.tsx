@@ -284,8 +284,8 @@ export default function VoucherMainView() {
   };
 
   const displayedVoucher = isLoading ? (
-    <tr>
-      <td colSpan={7} className="px-3 py-4 text-center sm:px-6">
+    <tr aria-label="Loading vouchers">
+      <td aria-label="Loading vouchers" colSpan={7} className="px-3 py-4 text-center sm:px-6">
         <div className="flex justify-center p-4">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-500 border-t-transparent"></div>
         </div>

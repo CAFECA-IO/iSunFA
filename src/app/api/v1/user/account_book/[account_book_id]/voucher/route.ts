@@ -185,16 +185,18 @@ export async function GET(
     }
 
     // Info: (20260310 - Julian) 取得日記帳列表
-    const vouchers = await prisma.voucher.findMany(filteredConditions);
+    const vouchers = (await prisma.voucher.findMany(
+      filteredConditions,
+    )) as Prisma.VoucherGetPayload<{
+      include: { file: true; user: true; lines: true };
+    }>[];
 
     // Info: (20260311 - Julian) 組合成前端所需的格式
     const result: IVoucher[] = vouchers.map((v) => {
       // Info: (20260311 - Julian) 取得個別分錄
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const voucherLines = (v as any).lines.filter((l:any) => l.voucherId === v.id);
+      const voucherLines = v.lines.filter((l) => l.voucherId === v.id);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const voucherLineItems: IVoucherLineUI[] = voucherLines.map((l:any) => {
+      const voucherLineItems: IVoucherLineUI[] = voucherLines.map((l) => {
         return {
           id: l.id,
           accounting: getAccountByCode(l.accountingCode),
@@ -206,10 +208,8 @@ export async function GET(
 
       // Info: (20260311 - Julian) 計算 debit 總和
       const totalAmount = voucherLines
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .filter((l:any) => l.isDebit)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .reduce((sum:number, l:any) => sum + l.amount, 0);
+        .filter((l) => l.isDebit)
+        .reduce((sum, l) => sum + l.amount, 0);
 
       return {
         id: v.id,
@@ -222,8 +222,7 @@ export async function GET(
           lines: voucherLineItems,
           totalAmount: totalAmount,
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        issuerName: (v as any).user?.name ?? "",
+        issuerName: v.user?.name ?? "",
       };
     });
 

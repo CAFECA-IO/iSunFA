@@ -11,13 +11,13 @@ import {
 import { X, ChevronDown, BookOpen, Trash2, Plus, Save } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { IVoucher, TradingType, IVoucherLineUI } from "@/interfaces/voucher";
-import { mockAccounts } from "@/constants/accounts";
 import { numberWithCommas } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { useParams } from "next/navigation";
+import { ACCOUNTS } from "@/constants/accounts";
 
 interface IVoucherDetailModalProps {
   isOpen: boolean;
@@ -35,6 +35,12 @@ const VoucherRow = ({
   removeRow: (id: string) => void;
 }) => {
   const { t } = useTranslation();
+
+  // ToDo: (20260311 - Julian) 未來需要開發 Account selector
+
+  // Info: (20260311 - Julian) 目前以 TW 為主
+const accountOptions = ACCOUNTS.TW
+
   return (
     <div className="grid grid-cols-13 gap-2">
       {/* Info: (20260310 - Julian) Accounting */}
@@ -44,7 +50,7 @@ const VoucherRow = ({
           value={row.accounting?.code || ""}
           onChange={(e) => {
             const acc =
-              mockAccounts.find((a) => a.code === e.target.value) || null;
+              accountOptions.find((a) => a.code === e.target.value) || null;
             updateRow(row.id, { ...row, accounting: acc });
           }}
           className="w-full appearance-none rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none"
@@ -52,7 +58,7 @@ const VoucherRow = ({
           <option value="" disabled>
             {t("voucher.detail_modal.fields.accounting_select")}
           </option>
-          {mockAccounts.map((acc) => (
+          {accountOptions.map((acc) => (
             <option key={acc.code} value={acc.code}>
               {acc.code} - {acc.name}
             </option>
@@ -377,13 +383,7 @@ export default function VoucherDetailModal({
                           "voucher.detail_modal.fields.voucher_date",
                         )}
                         type="date"
-                        value={
-                          inputDate
-                            ? new Date(inputDate * 1000)
-                                .toISOString()
-                                .split("T")[0]
-                            : ""
-                        }
+                        value={new Date(inputDate).toISOString().split("T")[0]}
                         onChange={(e) =>
                           setInputDate(
                             isNaN(e.target.valueAsNumber)

@@ -83,8 +83,7 @@ export async function GET(
         lines: lineItems,
         totalAmount: lineTotalAmount,
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      issuerName: (voucher as any).user?.name,
+      issuerName: voucher.user?.name ?? "",
     };
 
     return jsonOk({ result });
@@ -144,7 +143,8 @@ export async function PUT(
 
     // Info: (20260311 - Julian) 取得更新的內容
     const body = await request.json();
-    const { inputDate, voucherType, note, rows } = body;
+    const { inputDate, voucherType, note } = body;
+    const rows = body.rows as IVoucherLineUI[];
 
     if (!inputDate || !voucherType || !rows || !Array.isArray(rows)) {
       console.error("Invalid input data");
@@ -160,8 +160,7 @@ export async function PUT(
         note: note || "",
         lines: {
           deleteMany: {},
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          create: rows.map((row: any) => ({
+          create: rows.map((row) => ({
             accountingCode: row.accounting?.code || "",
             particular: row.particular || "",
             amount: row.amount || 0,
