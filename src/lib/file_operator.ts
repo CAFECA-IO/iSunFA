@@ -16,8 +16,7 @@ export interface IDownloadCallbacks {
 const DATA_SHARDS = 5;
 const PARITY_SHARDS = 3;
 const TOTAL_SHARDS = DATA_SHARDS + PARITY_SHARDS;
-const SHARD_SIZE = 4 * 1024 * 1024;
-const DATA_STRIPE_SIZE = DATA_SHARDS * SHARD_SIZE;
+const DEFAULT_SHARD_SIZE = 4 * 1024 * 1024;
 
 // Info: (20251028 - Luphia) Mock Reed-Solomon Implementation
 class ReedSolomonErasure {
@@ -36,12 +35,12 @@ class ReedSolomonErasure {
     }
   }
 
-  async reconstruct(shards: (Uint8Array | null)[]): Promise<void> {
+  async reconstruct(shards: (Uint8Array | null)[], fallbackShardSize: number): Promise<void> {
     /**
      * Info: (20251028 - Luphia) Mock reconstruction: just fill missing with zeros
      * In real RS, this would use the available shards to rebuild missing ones.
      */
-    const len = shards.find(s => s !== null)?.length || SHARD_SIZE;
+    const len = shards.find(s => s !== null)?.length || fallbackShardSize;
     for (let i = 0; i < shards.length; i++) {
       if (shards[i] === null) {
         shards[i] = new Uint8Array(len);
@@ -115,23 +114,29 @@ const downloadSingleFile = (cid: string): Promise<Blob> => {
 export const uploadFile = async (file: File, callbacks: IUploadCallbacks) => {
   try {
     const originalFileSize = file.size;
-    const totalStripes = Math.ceil(originalFileSize / DATA_STRIPE_SIZE);
+    
+    // Info: (20260311 - Luphia) Always split into exactly DATA_SHARDS (5 data + 3 parity = 8 parts)
+    const currentShardSize = Math.max(1, Math.ceil(originalFileSize / DATA_SHARDS));
+    const dataStripeSize = DATA_SHARDS * currentShardSize;
+    
+    // Info: (20260311 - Luphia) Since we always use 5 data shards for the whole file, there's exactly 1 stripe
+    const totalStripes = 1;
 
-    const totalUploadSize = totalStripes * TOTAL_SHARDS * SHARD_SIZE;
+    const totalUploadSize = totalStripes * TOTAL_SHARDS * currentShardSize;
     let totalBytesUploaded = 0;
 
     const shardCids: string[] = [];
 
     for (let stripeIndex = 0; stripeIndex < totalStripes; stripeIndex++) {
-      const start = stripeIndex * DATA_STRIPE_SIZE;
-      const end = Math.min(start + DATA_STRIPE_SIZE, originalFileSize);
+      const start = stripeIndex * dataStripeSize;
+      const end = Math.min(start + dataStripeSize, originalFileSize);
 
       const chunkBlob = file.slice(start, end);
       const chunkBuffer = new Uint8Array(await chunkBlob.arrayBuffer());
 
       let dataStripe: Uint8Array;
-      if (chunkBuffer.length < DATA_STRIPE_SIZE) {
-        dataStripe = new Uint8Array(DATA_STRIPE_SIZE);
+      if (chunkBuffer.length < dataStripeSize) {
+        dataStripe = new Uint8Array(dataStripeSize);
         dataStripe.set(chunkBuffer);
       } else {
         dataStripe = chunkBuffer;
@@ -139,12 +144,12 @@ export const uploadFile = async (file: File, callbacks: IUploadCallbacks) => {
 
       const shards: Uint8Array[] = [];
       for (let i = 0; i < DATA_SHARDS; i++) {
-        const shardStart = i * SHARD_SIZE;
-        const shardEnd = (i + 1) * SHARD_SIZE;
+        const shardStart = i * currentShardSize;
+        const shardEnd = (i + 1) * currentShardSize;
         shards.push(dataStripe.slice(shardStart, shardEnd));
       }
       for (let i = 0; i < PARITY_SHARDS; i++) {
-        shards.push(new Uint8Array(SHARD_SIZE));
+        shards.push(new Uint8Array(currentShardSize));
       }
 
       await rse.encode(shards);
@@ -158,7 +163,7 @@ export const uploadFile = async (file: File, callbacks: IUploadCallbacks) => {
           const cid = await uploadSingleFile(shardBlob, shardName);
           shardCids.push(cid);
 
-          totalBytesUploaded += SHARD_SIZE;
+          totalBytesUploaded += currentShardSize;
           if (callbacks.onProgress) {
             const progress = (totalBytesUploaded / totalUploadSize) * 100;
             callbacks.onProgress(Math.min(progress, 99));
@@ -177,7 +182,7 @@ export const uploadFile = async (file: File, callbacks: IUploadCallbacks) => {
       algorithm: {
         k: DATA_SHARDS,
         m: PARITY_SHARDS,
-        shardSize: SHARD_SIZE
+        shardSize: currentShardSize
       }
     };
 
@@ -280,13 +285,14 @@ export const downloadFile = async (cid: string, callbacks: IDownloadCallbacks) =
 export const downloadFromMetadata = async (metadata: ILariaMetadata, callbacks: IDownloadCallbacks) => {
   try {
     // Info: (20260113 - Luphia) --- Laria Reconstruction ---
-    const { originalFileSize, shards: shardCids, filename } = metadata;
+    const { originalFileSize, shards: shardCids, filename, algorithm } = metadata;
+    const currentShardSize = algorithm?.shardSize || DEFAULT_SHARD_SIZE;
 
     const totalShards = shardCids.length;
     const shardsPerStripe = TOTAL_SHARDS;
     const totalStripes = Math.ceil(totalShards / shardsPerStripe);
     let downloadedBytes = 0;
-    const totalExpectedDownload = totalShards * SHARD_SIZE;
+    const totalExpectedDownload = totalShards * currentShardSize;
 
     const reconstructedStripes: Uint8Array[] = [];
 
@@ -302,7 +308,7 @@ export const downloadFromMetadata = async (metadata: ILariaMetadata, callbacks: 
           const buffer = await blob.arrayBuffer();
           shards[localIdx] = new Uint8Array(buffer);
 
-          downloadedBytes += SHARD_SIZE;
+          downloadedBytes += currentShardSize;
           if (callbacks.onProgress) {
             callbacks.onProgress((downloadedBytes / totalExpectedDownload) * 90); // Up to 90%
           }
@@ -319,18 +325,18 @@ export const downloadFromMetadata = async (metadata: ILariaMetadata, callbacks: 
         throw new Error(`Insufficient shards to reconstruct stripe ${stripeIdx}. Needed ${DATA_SHARDS}, got ${validShardsCount}.`);
       }
 
-      await rse.reconstruct(shards);
+      await rse.reconstruct(shards, currentShardSize);
 
       // Info: (20260113 - Luphia) Collect data shards
       const dataShards = shards.slice(0, DATA_SHARDS) as Uint8Array[];
 
       // Info: (20260113 - Luphia) Concat data shards for this stripe
-      // Info: (20260113 - Luphia) Calculate size: each shard is SHARD_SIZE
-      const stripeSize = DATA_SHARDS * SHARD_SIZE;
+      // Info: (20260113 - Luphia) Calculate size: each shard is currentShardSize
+      const stripeSize = DATA_SHARDS * currentShardSize;
       const stripeBuffer = new Uint8Array(stripeSize);
 
       for (let i = 0; i < DATA_SHARDS; i++) {
-        stripeBuffer.set(dataShards[i], i * SHARD_SIZE);
+        stripeBuffer.set(dataShards[i], i * currentShardSize);
       }
 
       reconstructedStripes.push(stripeBuffer);
