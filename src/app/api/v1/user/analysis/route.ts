@@ -248,6 +248,14 @@ export async function GET(request: NextRequest) {
           console.warn('Failed to calc date range', e);
         }
       }
+      // Info: (20260311 - Tzuhan) Extract country and keyword if they exist
+      const country = typeof missionData?.country === 'string'
+        ? missionData.country
+        : (typeof orderData?.country === 'string' ? orderData.country : undefined);
+
+      const keyword = typeof missionData?.keyword === 'string'
+        ? missionData.keyword
+        : (typeof orderData?.keyword === 'string' ? orderData.keyword : undefined);
 
       return {
         id: analysis.id,
@@ -258,7 +266,9 @@ export async function GET(request: NextRequest) {
         year,
         periodValue: pValue,
         status: status,
-        reportId: analysis.id
+        reportId: analysis.id,
+        country,
+        keyword
       };
     });
 
