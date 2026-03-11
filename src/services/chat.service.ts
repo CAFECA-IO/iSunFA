@@ -2,7 +2,7 @@ import { AI_CONSULTATION_ROOM_PROMPT } from '@/constants/prompts/ai_consultation
 import { JOURNAL_PROMPT } from '@/constants/prompts/journal';
 import { VOUCHER_PROMPT } from '@/constants/prompts/voucher';
 import { IParsedVoucher } from '@/interfaces/voucher';
-import { DynamicRetrievalMode, GoogleGenerativeAI, Part, Tool } from '@google/generative-ai';
+import { GoogleGenerativeAI, Part, Tool } from '@google/generative-ai';
 
 export class ChatService {
   private genAI: GoogleGenerativeAI;
