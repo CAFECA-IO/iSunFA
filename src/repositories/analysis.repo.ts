@@ -17,6 +17,7 @@ export interface IAnalysisRepository {
   findById(id: string): Promise<Analysis | null>;
   updateMissionUploadSuccess(missionId: string, planHash: string): Promise<Mission | null>;
   updateMissionUploadFailed(missionId: string, errorReason: string): Promise<Mission>;
+  getGlobalTopTags(limit?: number): Promise<string[]>;
 }
 
 export class AnalysisRepository implements IAnalysisRepository {
@@ -107,6 +108,32 @@ export class AnalysisRepository implements IAnalysisRepository {
         result: errorReason
       }
     });
+  }
+
+  async getGlobalTopTags(limit: number = 20): Promise<string[]> {
+    const topTags = await prisma.analysisTag.groupBy({
+      by: ['tagId'],
+      _count: {
+        tagId: true,
+      },
+      orderBy: {
+        _count: {
+          tagId: 'desc',
+        },
+      },
+      take: limit,
+    });
+
+    if (topTags.length === 0) return [];
+
+    const tagIds = topTags.map(t => t.tagId);
+    const tags = await prisma.tag.findMany({
+      where: { id: { in: tagIds } },
+    });
+
+    // Create a map to ensure the returned tag strings are ordered by the count
+    const tagMap = new Map(tags.map(t => [t.id, t.name]));
+    return topTags.map(t => tagMap.get(t.tagId)).filter((name): name is string => !!name);
   }
 }
 

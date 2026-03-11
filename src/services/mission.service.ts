@@ -56,6 +56,59 @@ export class MissionService {
       data: { result: finalResult }
     });
 
+    // Info: (20260311 - Tzuhan) Extract tags from MARKET_TAG_EXTRACTION task and link to Analysis
+    const tagTask = tasks.find(t => t.type === 'MARKET_TAG_EXTRACTION');
+    if (tagTask && tagTask.result) {
+      const resultStr = typeof tagTask.result === 'string' ? tagTask.result : JSON.stringify(tagTask.result);
+      // Info: (20260311 - Tzuhan) Extract the list of tags
+      const match = resultStr.match(/最終決定的標籤清單：\[(.*?)\]/);
+      if (match && match[1]) {
+        const rawTagsString = match[1];
+        // Info: (20260311 - Tzuhan) Sanitization: replace full-width comma, split, trim, and remove leading #
+        const extractedTags = rawTagsString
+          .replace(/，/g, ',')
+          .split(',')
+          .map(t => t.trim().replace(/^#/, ''))
+          .filter(t => t.length > 0);
+
+        if (extractedTags.length > 0) {
+          console.log(`[MissionService] Extracting ${extractedTags.length} tags for Mission ${missionId}:`, extractedTags);
+          const analysesContext = await prisma.analysis.findMany({ where: { missionId } });
+          
+          if (analysesContext.length > 0) {
+            // Because there can be multiple analyses for a mission (rare but possible), we loop them
+            for (const analysis of analysesContext) {
+              await prisma.$transaction(async (tx) => {
+                for (const tagName of extractedTags) {
+                  // Ensure tag exists
+                  const tag = await tx.tag.upsert({
+                    where: { name: tagName },
+                    update: {},
+                    create: { name: tagName }
+                  });
+
+                  // Ensure relation exists
+                  await tx.analysisTag.upsert({
+                    where: {
+                      analysisId_tagId: {
+                        analysisId: analysis.id,
+                        tagId: tag.id
+                      }
+                    },
+                    update: {},
+                    create: {
+                      analysisId: analysis.id,
+                      tagId: tag.id
+                    }
+                  });
+                }
+              });
+            }
+          }
+        }
+      }
+    }
+
     console.log(`[MissionService] Mission ${missionId} Completed.`);
 
     return true;

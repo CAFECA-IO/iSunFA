@@ -1,4 +1,5 @@
 import { taskRepo } from '@/repositories/task.repo';
+import { analysisRepo } from '@/repositories/analysis.repo';
 import { ChatService } from '@/services/chat.service';
 import { TASK_STATUS } from '@/constants/status';
 import { missionService } from '@/services/mission.service';
@@ -158,7 +159,19 @@ export class TaskService {
       .replace(/\{Period_End\}/g, endDate)
       .replace(/\{Market_Name\}/g, marketName)
       .replace(/\{Current_Date\}/g, currentDate)
-      .replace(/\{Historical_Tags_List\}/g, mData.historicalTags ? mData.historicalTags.join(', ') : '無歷史標籤');
+    if (task.type === 'MARKET_TAG_EXTRACTION') {
+      try {
+        const topTags = await analysisRepo.getGlobalTopTags(20);
+        const tagsString = topTags.length > 0 ? topTags.join(', ') : '無歷史標籤';
+        interpolatedPrompt = interpolatedPrompt.replace(/\{Historical_Tags_List\}/g, tagsString);
+      } catch(e) {
+        console.warn('[TaskService] Failed to load global top tags:', e);
+        interpolatedPrompt = interpolatedPrompt.replace(/\{Historical_Tags_List\}/g, '無歷史標籤');
+      }
+    } else {
+        // Fallback for other tasks if they somehow have this variable, or if mission data provides it
+        interpolatedPrompt = interpolatedPrompt.replace(/\{Historical_Tags_List\}/g, mData.historicalTags ? mData.historicalTags.join(', ') : '無歷史標籤');
+    }
 
     if (task.order > 0) {
       // Info: (20260130 - Luphia) Fetch results from previous order
