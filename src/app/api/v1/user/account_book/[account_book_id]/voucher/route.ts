@@ -5,17 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/browser";
 import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
-import { ACCOUNTS, IAccount } from "@/constants/accounts";
-
-// Info: (20260311 - Julian) 從 accounting code 找到會計科目
-function getAccountByCode(code: string | number): IAccount | null {
-  if (!code) {
-    return null;
-  }
-  // Info: (20260311 - Julian) 目前以 TW 為主
-  const result = ACCOUNTS.TW.find((acc) => acc.code === code) || null;
-  return result;
-}
+import { getAccountByCode } from "@/lib/utils/account";
 
 /**
  * Info: (20260310 - Julian) 新增傳票
@@ -143,10 +133,11 @@ export async function GET(
 
     const filteredConditions: Prisma.VoucherFindManyArgs = {
       where: { accountBookId: accountBook.id },
-      include: { file: true, user: true },
+      // Info: (20260311 - Julian) 將關聯的 file, user, lines 一併取出
+      include: { file: true, user: true, lines: true },
     };
 
-    // Info: (20260304 - Julian) 關鍵字篩選：id / note / particular / accountingCode
+    // Info: (20260311 - Julian) 關鍵字篩選：id / note / particular / accountingCode
     if (keyWord) {
       filteredConditions.where!.OR = [
         { id: { contains: keyWord } },
@@ -196,15 +187,14 @@ export async function GET(
     // Info: (20260310 - Julian) 取得日記帳列表
     const vouchers = await prisma.voucher.findMany(filteredConditions);
 
-    // Info: (20260311 - Julian) 取得分錄
-    const lines = await prisma.voucherLine.findMany();
-
     // Info: (20260311 - Julian) 組合成前端所需的格式
     const result: IVoucher[] = vouchers.map((v) => {
       // Info: (20260311 - Julian) 取得個別分錄
-      const voucherLines = lines.filter((l) => l.voucherId === v.id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const voucherLines = (v as any).lines.filter((l:any) => l.voucherId === v.id);
 
-      const voucherLineItems: IVoucherLineUI[] = voucherLines.map((l) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const voucherLineItems: IVoucherLineUI[] = voucherLines.map((l:any) => {
         return {
           id: l.id,
           accounting: getAccountByCode(l.accountingCode),
@@ -216,8 +206,10 @@ export async function GET(
 
       // Info: (20260311 - Julian) 計算 debit 總和
       const totalAmount = voucherLines
-        .filter((l) => l.isDebit)
-        .reduce((sum, l) => sum + l.amount, 0);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .filter((l:any) => l.isDebit)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .reduce((sum:number, l:any) => sum + l.amount, 0);
 
       return {
         id: v.id,

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useState,useEffect } from "react";
 import {
   Dialog,
   DialogPanel,
@@ -10,10 +10,14 @@ import {
 } from "@headlessui/react";
 import { X, ChevronDown, BookOpen, Trash2, Plus, Save } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { mockVouchers, TradingType,IVoucherLineUI } from "@/interfaces/voucher";
-import {  mockAccounts } from "@/constants/accounts";
+import { IVoucher, TradingType, IVoucherLineUI } from "@/interfaces/voucher";
+import { mockAccounts } from "@/constants/accounts";
 import { numberWithCommas } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
+import { useParams } from "next/navigation";
 
 interface IVoucherDetailModalProps {
   isOpen: boolean;
@@ -137,27 +141,69 @@ export default function VoucherDetailModal({
   voucherId,
 }: IVoucherDetailModalProps) {
   const { t } = useTranslation();
-  const activeVoucher = mockVouchers.find((v) => v.id === voucherId);
+  const params = useParams();
+  const accountBookId = params?.account_book_id as string;
 
-  const [inputDate, setInputDate] = useState<number>(
-    activeVoucher?.tradingDate ?? 0,
-  );
+  const [activeVoucher, setActiveVoucher] = useState<IVoucher | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  const [inputDate, setInputDate] = useState<number>(0);
   const [voucherType, setVoucherType] = useState<TradingType>(
-    activeVoucher?.tradingType ?? TradingType.INCOME,
+    TradingType.INCOME,
   );
-  const [note, setNote] = useState<string>(activeVoucher?.note ?? "");
-  const [rows, setRows] = useState<IVoucherLineUI[]>(
-    activeVoucher?.lineItems.lines ?? [],
-  );
+  const [note, setNote] = useState<string>("");
+  const [rows, setRows] = useState<IVoucherLineUI[]>([]);
   // const [isRecurring, setIsRecurring] = useState<boolean>(false);
+
   const [isClearModalOpen, setIsClearModalOpen] = useState<boolean>(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState<boolean>(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
 
-  // Info: (20260310 - Julian) 如果找不到 voucher 就 return null
-  if (voucherId && !activeVoucher) {
-    return null;
+  // Info: (20260311 - Julian) 從 API 取得傳票
+  useEffect(() => {
+    if (isOpen && voucherId && accountBookId) {
+      const fetchVoucher = async () => {
+        setIsLoading(true);
+        try {
+          const res = await request<IApiResponse<{ result: IVoucher }>>(
+            `/api/v1/user/account_book/${accountBookId}/voucher/${voucherId}`,
+          );
+          if (res.payload?.result) {
+            const v = res.payload.result;
+            setActiveVoucher(v);
+            setInputDate(v.tradingDate);
+            setVoucherType(v.tradingType);
+            setNote(v.note || "");
+            setRows(v.lineItems.lines || []);
+          }
+        } catch (error) {
+          console.error("Failed to fetch voucher details:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchVoucher();
+    }
+  }, [isOpen, voucherId, accountBookId]);
+
+  // Info: (20260311 - Julian) 顯示 Loading
+  if (voucherId && (!activeVoucher || isLoading)) {
+    return (
+      <Transition show={isOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-100" onClose={() => {}}>
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" />
+          <div className="fixed inset-0 z-101 flex items-center justify-center p-4">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-500 border-t-transparent"></div>
+          </div>
+        </Dialog>
+      </Transition>
+    );
   }
+
+  // Info: (20260311 - Julian) 已刪除傳票不可編輯
+    if (activeVoucher?.isDeleted) return null
 
   // Info: (20260310 - Julian) 檢查內容是否有變更
   const checkHasChanges = () => {
@@ -236,9 +282,31 @@ export default function VoucherDetailModal({
     setRows(rows.map((r) => (r.id === id ? newRow : r)));
   };
 
-  const saveVoucher = () => {
-    console.log("saveVoucher");
-    setIsSaveModalOpen(true);
+  const saveVoucher = () => setIsSaveModalOpen(true);
+
+  // Info: (20260311 - Julian) 更新傳票 
+  const executeSaveVoucher = async () => {
+    setIsSaving(true);
+    try {
+      const payload = { inputDate, voucherType, note, rows };
+      const res = await request<IApiResponse<{ voucher: IVoucher }>>(
+        `/api/v1/user/account_book/${accountBookId}/voucher/${voucherId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        },
+      );
+      if (res.code === ApiCode.SUCCESS || res.payload?.voucher) {
+        setIsSaveModalOpen(false);
+        onClose();
+      } else {
+        console.error("Failed to save voucher:", res.message);
+      }
+    } catch (error) {
+      console.error("Save voucher error:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -305,11 +373,15 @@ export default function VoucherDetailModal({
                       </label>
                       <input
                         id="voucherDate"
-                        aria-label={t("voucher.detail_modal.fields.voucher_date")}
+                        aria-label={t(
+                          "voucher.detail_modal.fields.voucher_date",
+                        )}
                         type="date"
                         value={
                           inputDate
-                            ? new Date(inputDate * 1000).toISOString().split("T")[0]
+                            ? new Date(inputDate * 1000)
+                                .toISOString()
+                                .split("T")[0]
                             : ""
                         }
                         onChange={(e) =>
@@ -342,9 +414,21 @@ export default function VoucherDetailModal({
                           }
                           className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                         >
-                          <option value={TradingType.INCOME}>{t("voucher.main_view.filters.type_options.payment")}</option>
-                          <option value={TradingType.OUTCOME}>{t("voucher.main_view.filters.type_options.receipt")}</option>
-                          <option value={TradingType.TRANSFER}>{t("voucher.main_view.filters.type_options.transfer")}</option>
+                          <option value={TradingType.INCOME}>
+                            {t(
+                              "voucher.main_view.filters.type_options.payment",
+                            )}
+                          </option>
+                          <option value={TradingType.OUTCOME}>
+                            {t(
+                              "voucher.main_view.filters.type_options.receipt",
+                            )}
+                          </option>
+                          <option value={TradingType.TRANSFER}>
+                            {t(
+                              "voucher.main_view.filters.type_options.transfer",
+                            )}
+                          </option>
                         </select>
                         <ChevronDown
                           size={18}
@@ -466,11 +550,14 @@ export default function VoucherDetailModal({
                     </button>
                     <button
                       type="button"
-                      disabled={disabledSaveButton}
+                      disabled={disabledSaveButton || isSaving}
                       onClick={saveVoucher}
-                      className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-3 text-sm font-bold text-white shadow-none hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+                      className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-3 text-sm font-bold text-white shadow-none transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
                     >
-                      {t("voucher.detail_modal.actions.save_voucher")} <Save size={18} />
+                      {isSaving
+                        ? "Saving..."
+                        : t("voucher.detail_modal.actions.save_voucher")}{" "}
+                      <Save size={18} />
                     </button>
                   </div>
                 </div>
@@ -501,8 +588,12 @@ export default function VoucherDetailModal({
       <ConfirmModal
         isOpen={isCloseModalOpen}
         onClose={() => setIsCloseModalOpen(false)}
-        title={t("voucher.detail_modal.confirm_modals.leave_without_saving.title")}
-        message={t("voucher.detail_modal.confirm_modals.leave_without_saving.message")}
+        title={t(
+          "voucher.detail_modal.confirm_modals.leave_without_saving.title",
+        )}
+        message={t(
+          "voucher.detail_modal.confirm_modals.leave_without_saving.message",
+        )}
         confirmText={t("voucher.detail_modal.actions.confirm")}
         cancelText={t("voucher.detail_modal.actions.cancel")}
         onConfirm={() => {
@@ -516,11 +607,11 @@ export default function VoucherDetailModal({
         onClose={() => setIsSaveModalOpen(false)}
         title={t("voucher.detail_modal.confirm_modals.save_voucher.title")}
         message={t("voucher.detail_modal.confirm_modals.save_voucher.message")}
-        confirmText={t("voucher.detail_modal.actions.confirm")}
+        confirmText={
+          isSaving ? "Saving..." : t("voucher.detail_modal.actions.confirm")
+        }
         cancelText={t("voucher.detail_modal.actions.cancel")}
-        onConfirm={() => {
-          onClose();
-        }}
+        onConfirm={executeSaveVoucher}
       />
     </>
   );

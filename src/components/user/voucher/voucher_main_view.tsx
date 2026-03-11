@@ -62,8 +62,10 @@ const VoucherRow = ({
   return (
     <tr
       key={voucher.id}
-      onClick={onClick}
-      className="cursor-pointer transition-colors last:border-0 odd:bg-slate-50 even:bg-white hover:bg-orange-100"
+      onClick={voucher.isDeleted ? undefined : onClick}
+      className={`transition-colors last:border-0 odd:bg-slate-50 even:bg-white ${
+        voucher.isDeleted ? "cursor-not-allowed" : "cursor-pointer hover:bg-orange-100"
+      }`}
     >
       <td className="px-3 py-4 align-middle text-xs sm:px-6 sm:text-sm">
         <div className="font-bold">
@@ -274,6 +276,12 @@ export default function VoucherMainView() {
         ? VoucherSorting.CREDIT_ASC
         : VoucherSorting.CREDIT_DESC,
     );
+
+  // Info: (20260311 - Julian) 重新 fetch 列表並關閉 Modal
+  const onModalClose = () => {
+    fetchVouchers();
+    setIsModalOpen(false);
+  };
 
   const displayedVoucher = isLoading ? (
     <tr>
@@ -547,7 +555,7 @@ export default function VoucherMainView() {
       <VoucherDetailModal
         key={selectedVoucherId || "new"}
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={onModalClose}
         voucherId={selectedVoucherId?.toString() ?? ""}
       />
     </div>
