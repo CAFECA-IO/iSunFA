@@ -16,7 +16,11 @@ export default function EsgMainView() {
             自動分析進項憑證，為您提供即時的碳中和進度與各項排放維度分析。
           </p>
         </div>
-        <button className="flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
+        <button
+          type="button"
+          disabled
+          className="flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-colors enabled:hover:bg-slate-300 disabled:cursor-not-allowed disabled:text-slate-400"
+        >
           <Download className="mr-2 h-4 w-4" />
           匯出 ESG 申報表
         </button>

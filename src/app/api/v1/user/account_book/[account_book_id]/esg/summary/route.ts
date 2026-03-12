@@ -25,11 +25,19 @@ export async function GET(
     // Info: (20260312 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
     const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId, team: { teamMembers: { some: { user: { address: sessionUser.address } } } } },
+      where: {
+        id: accountBookId,
+        team: {
+          teamMembers: { some: { user: { address: sessionUser.address } } },
+        },
+      },
     });
 
     if (!accountBook) {
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found or no permission");
+      return jsonFail(
+        ApiCode.NOT_FOUND,
+        "Accountbook not found or no permission",
+      );
     }
 
     // Info: (20260312 - Julian) 取得摘要
@@ -112,6 +120,9 @@ export async function GET(
     return jsonOk(dashboardSummary);
   } catch (error) {
     console.error("Error fetching ESG summary:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Failed to fetch ESG summary");
+    return jsonFail(
+      ApiCode.INTERNAL_SERVER_ERROR,
+      "Failed to fetch ESG summary",
+    );
   }
 }

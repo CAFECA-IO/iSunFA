@@ -4,7 +4,12 @@ import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { EsgScope, EsgIntensity, EsgStatus } from "@/generated/client";
-import { IEsgRecord, EsgScope as ClientEsgScope, EsgIntensity as ClientEsgIntensity, EsgStatus as ClientEsgStatus } from "@/interfaces/esg";
+import {
+  IEsgRecord,
+  EsgScope as ClientEsgScope,
+  EsgIntensity as ClientEsgIntensity,
+  EsgStatus as ClientEsgStatus,
+} from "@/interfaces/esg";
 
 /**
  * Info: (20260312 - Julian) 取得單一 ESG 紀錄

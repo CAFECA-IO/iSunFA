@@ -1,42 +1,68 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Cloud, BarChart3, Target, TrendingUp, Loader2 } from "lucide-react";
 import { IEsgDashboardSummary, EsgScope } from "@/interfaces/esg";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 
 export default function EsgSummary() {
   const params = useParams();
+  const pathname = usePathname();
   const accountBookId = params?.account_book_id as string;
 
   const [summaryData, setSummaryData] = useState<IEsgDashboardSummary | null>(
     null,
   );
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Info: (20260312 - Julian) 連接到 Journal
+  const journalLink = pathname.replace("esg", "journal");
 
   useEffect(() => {
     if (accountBookId) {
       const fetchSummary = async () => {
         try {
-          const res = await request<IApiResponse<IEsgDashboardSummary>>(
-            `/api/v1/user/account_book/${accountBookId}/esg/summary`,
-          );
-          if (res.payload) {
-            setSummaryData(res.payload);
-          }
+          setIsLoading(true);
+            const res = await request<IApiResponse<IEsgDashboardSummary>>(
+              `/api/v1/user/account_book/${accountBookId}/esg/summary`,
+            );
+            if (res.payload) {
+              setSummaryData(res.payload);
+            }
         } catch (error) {
           console.error("Failed to fetch ESG summary:", error);
+        } finally {
+          setIsLoading(false);
         }
       };
       fetchSummary();
+    } else {
+      setIsLoading(false);
     }
   }, [accountBookId]);
 
-  if (!summaryData) {
+  if (isLoading) {
     return (
       <div className="flex h-32 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
         <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  if (!summaryData) {
+    return (
+      <div className="flex h-72 w-full flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm">
+        <Cloud className="mb-2 h-8 w-8 text-slate-300" />
+        <span className="text-sm font-bold">
+          目前無這份帳本的 ESG 數據，請先
+          <Link href={journalLink} className="text-blue-600 hover:underline">
+            上傳憑證
+          </Link>
+          產生碳排紀錄
+        </span>
       </div>
     );
   }

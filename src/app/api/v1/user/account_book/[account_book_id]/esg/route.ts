@@ -3,7 +3,11 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-
+import { Prisma } from "@/generated/client";
+import {
+  EsgScope as ClientEsgScope,
+  EsgIntensity as ClientEsgIntensity,
+} from "@/interfaces/esg";
 /**
  * Info: (20260312 - Julian) 新增 ESG 紀錄
  * POST /api/v1/user/account_book/:account_book_id/esg
@@ -86,7 +90,7 @@ export async function POST(
       },
     });
 
-    return jsonOk({esgRecordId: newRecord.id});
+    return jsonOk({ esgRecordId: newRecord.id });
   } catch (error) {
     console.error("Error creating esg record:", error);
     return jsonFail(
@@ -136,11 +140,34 @@ export async function GET(
     }
 
     // Info: (20260312 - Julian) 取得 ESG 紀錄
+    const { searchParams } = new URL(request.url);
+    const searchParam = searchParams.get("search");
+    const intensity = searchParams.get("intensity");
+    const scope = searchParams.get("scope");
+    const sort = searchParams.get("sort") === "asc" ? "asc" : "desc";
+
+    // Info: (20260312 - Julian) 整理查詢條件
+    const whereClause: Prisma.EsgRecordWhereInput = {
+      accountBookId: accountBook.id,
+      ...(searchParam && {
+        OR: [
+          { vendor: { contains: searchParam, mode: "insensitive" } },
+          { activityType: { contains: searchParam, mode: "insensitive" } },
+        ],
+      }),
+      ...(intensity && { intensity: intensity as ClientEsgIntensity }),
+      ...(scope && { scope: scope as ClientEsgScope }),
+    };
+
     const esgRecords = await prisma.esgRecord.findMany({
-      where: { accountBookId: accountBook.id },
+      where: whereClause,
+      orderBy: { dateTimestamp: sort },
     });
 
-    return jsonOk(esgRecords);
+    return jsonOk({
+      esgRecords,
+      recordCount: esgRecords.length,
+    });
   } catch (error) {
     console.error("Error fetching esg records:", error);
     return jsonFail(

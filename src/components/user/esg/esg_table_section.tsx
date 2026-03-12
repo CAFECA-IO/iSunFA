@@ -9,6 +9,8 @@ import {
   Zap,
   Truck,
   Cloud,
+  ArrowDown,
+  ArrowUp,
 } from "lucide-react";
 import { timestampToString } from "@/lib/utils/common";
 import {
@@ -170,30 +172,51 @@ export default function EsgTableSection() {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [intensityFilter, setIntensityFilter] = useState<string>("ALL");
+  const [scopeFilter, setScopeFilter] = useState<string>("ALL");
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState<boolean>(false);
   const [selectedEsgId, setSelectedEsgId] = useState<string | null>(null);
   const [records, setRecords] = useState<IEsgRecord[]>([]);
+  const [recordCount, setRecordCount] = useState<number>(0);
+  const [dateSort, setDateSort] = useState<"desc" | "asc">("desc");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fetchRecords = useCallback(async () => {
     if (!accountBookId) return;
     setIsLoading(true);
     try {
-      const res = await request<IApiResponse<IEsgRecord[]>>(
-        `/api/v1/user/account_book/${accountBookId}/esg`,
-      );
+      const queryParams = new URLSearchParams();
+      if (searchTerm) queryParams.append("search", searchTerm);
+      if (intensityFilter && intensityFilter !== "ALL")
+        queryParams.append("intensity", intensityFilter);
+      if (scopeFilter && scopeFilter !== "ALL")
+        queryParams.append("scope", scopeFilter);
+      queryParams.append("sort", dateSort);
+
+      const queryString = queryParams.toString()
+        ? `?${queryParams.toString()}`
+        : "";
+
+      const res = await request<
+        IApiResponse<{ esgRecords: IEsgRecord[]; recordCount: number }>
+      >(`/api/v1/user/account_book/${accountBookId}/esg${queryString}`);
       if (res.payload) {
-        setRecords(res.payload);
+        setRecords(res.payload.esgRecords);
+        setRecordCount(res.payload.recordCount);
       }
     } catch (error) {
       console.error("Failed to fetch ESG records:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [accountBookId]);
+  }, [accountBookId, searchTerm, intensityFilter, scopeFilter, dateSort]);
 
+  // Info: (20260312 - Julian) 延遲 300ms 執行，避免過度請求
   useEffect(() => {
-    fetchRecords();
+    const timer = setTimeout(() => {
+      fetchRecords();
+    }, 300);
+    return () => clearTimeout(timer);
   }, [fetchRecords]);
 
   const handleVerifyOpen = (record: IEsgRecord) => {
@@ -241,22 +264,43 @@ export default function EsgTableSection() {
         <div className="flex items-center gap-3">
           <select
             aria-label="依強度篩選"
+            value={intensityFilter}
+            onChange={(e) => setIntensityFilter(e.target.value)}
             className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-bold text-slate-600 focus:outline-none"
           >
-            <option>全部強度</option>
-            <option>高強度</option>
-            <option>中強度</option>
-            <option>低強度</option>
+            <option value="ALL">全部強度</option>
+            <option value={EsgIntensity.HIGH}>高強度</option>
+            <option value={EsgIntensity.MEDIUM}>中強度</option>
+            <option value={EsgIntensity.LOW}>低強度</option>
           </select>
           <select
             aria-label="依範疇篩選"
+            value={scopeFilter}
+            onChange={(e) => setScopeFilter(e.target.value)}
             className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-bold text-slate-600 focus:outline-none"
           >
-            <option>全部範疇 (Scope 1-3)</option>
+            <option value="ALL">全部範疇 (Scope 1-3)</option>
+            <option value={EsgScope.SCOPE_1}>範疇一</option>
+            <option value={EsgScope.SCOPE_2}>範疇二</option>
+            <option value={EsgScope.SCOPE_3}>範疇三</option>
           </select>
           <button
             type="button"
+            aria-label="切換日期排序"
+            onClick={() => setDateSort(dateSort === "desc" ? "asc" : "desc")}
+            className="flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50"
+          >
+            {dateSort === "desc" ? "由新至舊" : "由舊至新"}
+            {dateSort === "desc" ? (
+              <ArrowDown className="ml-1 h-4 w-4" />
+            ) : (
+              <ArrowUp className="ml-1 h-4 w-4" />
+            )}
+          </button>
+          <button
+            type="button"
             aria-label="篩選"
+            onClick={fetchRecords}
             className="flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50"
           >
             <Filter className="mr-2 h-4 w-4" />
@@ -331,7 +375,7 @@ export default function EsgTableSection() {
       {/* Info: (20260312 - Julian) Footer */}
       <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50/50 px-4 py-3">
         <span className="text-xs font-bold text-slate-500">
-          顯示 {records.length} 筆碳排分析紀錄
+          顯示 {recordCount} 筆碳排分析紀錄
         </span>
         <span className="flex items-center text-xs font-bold text-slate-500">
           <Info className="mr-1 h-3.5 w-3.5" />
