@@ -74,20 +74,20 @@ export class MissionService {
         if (extractedTags.length > 0) {
           console.log(`[MissionService] Extracting ${extractedTags.length} tags for Mission ${missionId}:`, extractedTags);
           const analysesContext = await prisma.analysis.findMany({ where: { missionId } });
-          
+
           if (analysesContext.length > 0) {
-            // Because there can be multiple analyses for a mission (rare but possible), we loop them
+            // Info: (20260312 - Tzuhan) Because there can be multiple analyses for a mission (rare but possible), we loop them
             for (const analysis of analysesContext) {
               await prisma.$transaction(async (tx) => {
                 for (const tagName of extractedTags) {
-                  // Ensure tag exists
+                  // Info: (20260312 - Tzuhan) Ensure tag exists
                   const tag = await tx.tag.upsert({
                     where: { name: tagName },
                     update: {},
                     create: { name: tagName }
                   });
 
-                  // Ensure relation exists
+                  // Info: (20260312 - Tzuhan) Ensure relation exists
                   await tx.analysisTag.upsert({
                     where: {
                       analysisId_tagId: {

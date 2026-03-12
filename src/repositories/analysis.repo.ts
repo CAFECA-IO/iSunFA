@@ -131,7 +131,7 @@ export class AnalysisRepository implements IAnalysisRepository {
       where: { id: { in: tagIds } },
     });
 
-    // Create a map to ensure the returned tag strings are ordered by the count
+    // Info: (20260312 - Tzuhan) Create a map to ensure the returned tag strings are ordered by the count
     const tagMap = new Map(tags.map(t => [t.id, t.name]));
     return topTags.map(t => tagMap.get(t.tagId)).filter((name): name is string => !!name);
   }
