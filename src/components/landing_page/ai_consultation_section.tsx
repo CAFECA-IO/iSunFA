@@ -52,7 +52,7 @@ export default function AIConsultationSection() {
                     <Bot size={18} className="text-orange-600" />
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-gray-800">{t('ai_consultation_section.ai_name')}</div>
+                    <div className="text-sm font-bold text-gray-800">{t('ai_consultation_room.ai_name')}</div>
                     <div className="text-xs text-green-500 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                       Online
@@ -70,7 +70,7 @@ export default function AIConsultationSection() {
                   </div>
                   <div className="flex flex-col gap-1 w-full max-w-[240px]">
                     <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                      <span className="text-sm font-semibold text-gray-900">{t('ai_consultation_section.ai_name')}</span>
+                      <span className="text-sm font-semibold text-gray-900">{t('ai_consultation_room.ai_name')}</span>
                       <span className="text-xs font-normal text-gray-500">10:00 AM</span>
                     </div>
                     <div className="flex flex-col leading-1.5 p-4 border-gray-200 bg-white rounded-e-xl rounded-es-xl shadow-sm">
@@ -106,7 +106,7 @@ export default function AIConsultationSection() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                      <span className="text-sm font-semibold text-gray-900">{t('ai_consultation_section.ai_name')}</span>
+                      <span className="text-sm font-semibold text-gray-900">{t('ai_consultation_room.ai_name')}</span>
                     </div>
                     <div className="flex items-center gap-1 p-3 bg-white rounded-e-xl rounded-es-xl shadow-sm w-16">
                       <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>

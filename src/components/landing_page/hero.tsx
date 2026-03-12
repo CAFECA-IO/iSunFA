@@ -41,6 +41,9 @@ export default function Hero() {
                 t('hero.subtitle_line1'),
                 t('hero.subtitle_line2'),
                 t('hero.subtitle_line3'),
+                t('hero.subtitle_line4'),
+                t('hero.subtitle_line5'),
+                t('hero.subtitle_line6'),
               ]}
             />
           </p>

@@ -421,6 +421,12 @@ model AuditLog {
 }
 
 // Info: (20260310 - Julian) 傳票
+enum VoucherTradingType {
+  INCOME
+  OUTCOME
+  TRANSFER
+}
+
 model Voucher {
   id        String    @id @default(uuid())
   createdAt DateTime  @default(now()) @map("created_at")
@@ -431,16 +437,13 @@ model Voucher {
   tradingDate DateTime @map("trading_date")
 
   // Info: (20260310 - Julian) 交易類別: income, outcome, transfer
-  tradingType String   @map("trading_type")
+  tradingType VoucherTradingType @map("trading_type")
 
   // Info: (20260310 - Julian) 備註
-  note        String   @db.Text
-
-  // Info: (20260310 - Julian) 開立人名稱
-  issuerName  String   @map("issuer_name")
+  note String? @db.Text
 
   // Info: (20260310 - Julian) 幣別
-  currency    String   @default("TWD")
+  currency String @default("TWD")
 
   // Info: (20260310 - Julian) 關聯檔案 (如附件)
   fileId String? @map("file_id")
@@ -450,7 +453,7 @@ model Voucher {
   accountBookId String      @map("account_book_id")
   accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
 
-  // Info: (20260310 - Julian) 建立此傳票的 User
+  // Info: (20260310 - Julian) 開立此傳票的 User
   userId String? @map("user_id")
   user   User?   @relation(fields: [userId], references: [id])
 
@@ -470,16 +473,11 @@ model VoucherLine {
   voucherId String  @map("voucher_id")
   voucher   Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
 
-  // Info: (20260310 - Julian) 會計項目 (前端使用 IAccount)
-
-  // Info: (20260310 - Julian) 科目代碼
+  // Info: (20260310 - Julian) 會計項目代碼
   accountingCode String @map("accounting_code")
 
-  // Info: (20260310 - Julian) 科目名稱
-  accountingName String @map("accounting_name")
-
   // Info: (20260310 - Julian) 摘要
-  particular String @db.Text
+  particular String? @db.Text
 
   // Info: (20260310 - Julian) 金額
   amount Int

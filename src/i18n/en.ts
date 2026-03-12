@@ -158,7 +158,7 @@ export const en = {
     title: "Smarter Financial Management",
     subtitle: "Core Advantages of iSunFA",
     description:
-      "Leveraging AI for automated data entry, integrating voucher management, payroll, tax, and GHG accounting, while generating periodic reports and analytics to help businesses efficiently achieve compliance and master operational data.",
+      "Born for green finance, it leverages artificial intelligence to implement advanced carbon accounting technology, breaking down traditional operational barriers, and automating the entry of corporate activities into accounting ledgers and carbon calculation data. This helps you precisely grasp your entire operation on a foundation of professional compliance. It is not just an accounting tool, but a strategic partner for corporate digital transformation and sustainable operations.",
     items: {
       dashboard: {
         title: "Dashboard",
@@ -241,7 +241,7 @@ export const en = {
       "Integrating cutting-edge encryption and AI technologies to build the most trusted automated accounting platform.",
     items: {
       zkp: {
-        title: "BOLT Zero-Knowledge Proofs & Homomorphic Encryption",
+        title: "Alohomora Zero-Knowledge Proofs & Homomorphic Encryption",
         desc: "Verify and compute without decrypting data, effectively protecting privacy and establishing consensus trust.",
       },
       faith: {
@@ -494,6 +494,14 @@ export const en = {
       "Providing professional financial statement compilation, financial auditing, and auditing services for clients.",
     subtitle_line3:
       "Automatically recognizing documents and system data, organizing them for accounting and GHG calculations.",
+    subtitle_line4:
+      "Generate organizational greenhouse gas, greenhouse gas inventory, and supply chain carbon emission calculations in real-time through corporate activity data.",
+    subtitle_line5:
+      "Establish a base year and management procedures for carbon inventory, disclose carbon assets and liabilities in financial statements, and realize carbon accounting.",
+    subtitle_line6:
+      "Intelligent carbon health check, continuously analyze enterprise carbon reduction potential and evaluate the benefits of green process introduction.",
+    subtitle_line7:
+      "Provide green finance solutions to help enterprises achieve sustainable development goals.",
     pricing_link: "Pricing",
     free_trial: "Free Trial",
   },
@@ -652,7 +660,7 @@ export const en = {
     view_image: "View Image: {name}",
     download_original: "Download Original File",
     login_to_react: "Please login to react",
-    ai_name: "AccounTalk AI",
+    ai_name: "FAITH",
     q_label: "Q",
     ai_label: "AI",
   },

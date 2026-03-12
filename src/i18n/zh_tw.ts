@@ -167,7 +167,7 @@ export const zhTw = {
     title: "更聰明的財務管理",
     subtitle: "iSunFA 核心優勢",
     description:
-      "搭配人工智能辨識自動入錄，整合傳票管理、薪資、稅務與溫室氣體核算，定期生成報表與分析摘要，助企業高效達成專業合規，精準掌控營運數據。",
+      "為綠色金融而生，運用人工智能實現先進的碳會計技術，打破傳統作業壁壘，實現將企業活動自動化入錄會計帳與碳核算數據，助您在專業合規的基礎上，精準掌握營運全貌。不僅是會計工具，更是企業數位轉型與永續經營的戰略夥伴。",
     items: {
       dashboard: {
         title: "資訊情報",
@@ -249,7 +249,7 @@ export const zhTw = {
     description: "整合最前沿的加密與 AI 技術，打造最值得信賴的自動化會計平台。",
     items: {
       zkp: {
-        title: "BOLT 零知識證明與同態加密",
+        title: "Alohomora 零知識證明與同態加密",
         desc: "在不解密資料的情況下完成驗證與計算，有效保護隱私，滿足隱私需求，建立共識信任。",
       },
       faith: {
@@ -496,6 +496,14 @@ export const zhTw = {
     subtitle_line2: "為客戶提供專業的會計報表編製、財務審計及審計服務。",
     subtitle_line3:
       "自動化辨識各項文件與系統資料，整理為會計與溫室氣體核算數據。",
+    subtitle_line4:
+      "透過企業活動數據即時生成組織溫室氣體、組織溫室氣體盤查與供應鏈碳排放數據核算。",
+    subtitle_line5:
+      "建立碳盤查基準年與管理程序，揭露財務報表中的碳資產與負債，實現碳會計。",
+    subtitle_line6:
+      "智能碳健檢，持續分析企業減碳潛力與綠色製程導入效益評估。",
+    subtitle_line7:
+      "提供綠色金融解決方案，協助企業實現永續發展目標。",
     pricing_link: "收費模式",
     free_trial: "免費試用",
   },
@@ -956,7 +964,7 @@ export const zhTw = {
       copy_id: "點擊複製憑證 ID: {{id}}",
     },
   },
-   "voucher": {
+  "voucher": {
     "main_view": {
       "title": "傳票管理",
       "empty_message_prefix": "目前尚無傳票，請",

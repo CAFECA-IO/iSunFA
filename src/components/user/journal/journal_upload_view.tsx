@@ -82,7 +82,7 @@ export default function JournalUploadView({
 
     setIsAnalyzing(true);
     try {
-      const data = await request<IApiResponse<object>>(
+      const dataJournal = await request<IApiResponse<object>>(
         `/api/v1/user/account_book/${accountBookId}/journal`,
         {
           method: "POST",
@@ -97,7 +97,22 @@ export default function JournalUploadView({
         },
       );
 
-      if (data.code === ApiCode.SUCCESS) {
+      const dataVoucher = await request<IApiResponse<object>>(
+        `/api/v1/user/account_book/${accountBookId}/voucher`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            file: {
+              hash: uploadedFile.hash,
+              fileName: uploadedFile.file.name,
+              mimeType: uploadedFile.file.type,
+              base64: uploadedFile.base64,
+            },
+          }),
+        },
+      );
+
+      if (dataJournal.code === ApiCode.SUCCESS && dataVoucher) {
         onUploadComplete?.();
       }
     } catch (error) {
