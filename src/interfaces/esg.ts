@@ -54,8 +54,14 @@ export const mockDashboardSummary: IEsgDashboardSummary = {
   },
 };
 
+export enum ESGScope {
+  SCOPE1 = "scope1",
+  SCOPE2 = "scope2",
+  SCOPE3 = "scope3",
+}
+
 export interface IEsgRecord {
-  id: number;
+  id: string;
   dateTimestamp: number;
    fileId:string;
      file?: {
@@ -63,7 +69,7 @@ export interface IEsgRecord {
     hash: string;
     fileName: string;
   };
-  scope: number;
+  scope: ESGScope;
   activityType: string;
   vendor: string;
   rawActivityData: string;
@@ -76,10 +82,10 @@ export interface IEsgRecord {
 
 export const mockRecords: IEsgRecord[] = [
   {
-    id: 1,
+    id: '1',
     dateTimestamp: 1700000000,
     fileId:'123',
-    scope: 2,
+    scope: ESGScope.SCOPE2,
     activityType: "電力使用",
     vendor: "新新小鎮有限公司 (電力採購)",
     rawActivityData: "2,435",
@@ -90,10 +96,10 @@ export const mockRecords: IEsgRecord[] = [
     status: "verified",
   },
   {
-    id: 2,
+    id: '2',
     dateTimestamp: 1740000000,
       fileId:'abc',
-    scope: 1,
+    scope: ESGScope.SCOPE1,
     activityType: "移動源燃燒",
     vendor: "中油股份有限公司 (公務車加油)",
     rawActivityData: "18.5",
@@ -104,10 +110,10 @@ export const mockRecords: IEsgRecord[] = [
     status: "manual",
   },
   {
-    id: 3,
+    id: '3',
     dateTimestamp: 1780000000,
       fileId:'456',
-    scope: 3,
+    scope: ESGScope.SCOPE3,
     activityType: "委外物流",
     vendor: "物流運送服務",
     rawActivityData: "450",

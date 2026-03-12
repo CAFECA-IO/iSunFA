@@ -129,6 +129,11 @@ export async function POST(
       },
     });
 
+    if(!newVoucher) {
+      console.error("Voucher creation failed");
+      return jsonFail(ApiCode.NOT_FOUND, "Voucher creation failed");
+    }
+
     // Info: (20260311 - Julian) 新增 AuditLog
     await prisma.auditLog.create({
       data: {

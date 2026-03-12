@@ -11,14 +11,24 @@ import {
   Cloud,
 } from "lucide-react";
 import { timestampToString } from "@/lib/utils/common";
-import { mockRecords, IEsgRecord } from "@/interfaces/esg";
+import { mockRecords, IEsgRecord, ESGScope } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
+import EsgVerifyModal from "@/components/user/esg/esg_verify_modal";
+import { request } from "@/lib/utils/request";
+import { useParams } from "next/navigation";
+import { IApiResponse } from "@/lib/utils/response";
 
-const EsgRow = ({ record }: { record: IEsgRecord }) => {
-const handleVerifyClick = () => {
-  // ToDo: (20260312 - Julian) Open Verify Modal
-}
-  
+const EsgRow = ({
+  record,
+  onVerifyClick,
+}: {
+  record: IEsgRecord;
+  onVerifyClick: (record: IEsgRecord) => void;
+}) => {
+  const handleVerifyClick = () => {
+    onVerifyClick(record);
+  };
+
   const renderIntensity = (intensity: string) => {
     switch (intensity) {
       case "high":
@@ -44,19 +54,19 @@ const handleVerifyClick = () => {
     }
   };
 
-  const renderScope = (scope: number) => {
+  const renderScope = (scope: ESGScope) => {
     switch (scope) {
-      case 1:
+      case ESGScope.SCOPE1:
         return {
           text: "範疇一",
           icon: <Zap className="mr-1.5 h-4 w-4 text-amber-500" />,
         };
-      case 2:
+      case ESGScope.SCOPE2:
         return {
           text: "範疇二",
           icon: <Truck className="mr-1.5 h-4 w-4 text-blue-500" />,
         };
-      case 3:
+      case ESGScope.SCOPE3:
         return {
           text: "範疇三",
           icon: <Cloud className="mr-1.5 h-4 w-4 text-green-500" />,
@@ -72,7 +82,7 @@ const handleVerifyClick = () => {
   return (
     <tr>
       <td className="px-6 py-4">
-        <div className="flex mx-auto h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-1 sm:h-20 sm:w-20">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-1 sm:h-20 sm:w-20">
           {/* Info: (20260312 - Julian) File Preview */}
           {record.file ? (
             <FilePreview
@@ -101,7 +111,7 @@ const handleVerifyClick = () => {
       </td>
       <td className="px-6 py-4 text-center whitespace-nowrap">
         <span className="text-[15px] font-bold text-slate-800">
-          {record.rawActivityData}{' '}
+          {record.rawActivityData}{" "}
         </span>
         <span className="text-xs font-bold text-slate-500">{record.unit}</span>
       </td>
@@ -136,9 +146,11 @@ const handleVerifyClick = () => {
           </div>
         ) : (
           <div className="flex justify-center">
-            <button type="button"
-            onClick={handleVerifyClick}
-             className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm hover:bg-orange-600">
+            <button
+              type="button"
+              onClick={handleVerifyClick}
+              className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm hover:bg-orange-600"
+            >
               人工核對
             </button>
           </div>
@@ -149,7 +161,38 @@ const handleVerifyClick = () => {
 };
 
 export default function EsgTableSection() {
+  const params = useParams();
+  const accountBookId = params?.account_book_id as string;
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState<boolean>(false);
+  const [selectedEsgId, setSelectedEsgId] = useState<string | null>(null);
+
+  const handleVerifyOpen = (record: IEsgRecord) => {
+    setSelectedEsgId(record.id);
+    setIsVerifyModalOpen(true);
+  };
+
+  const handleVerifySave = async (updatedRecord: IEsgRecord) => {
+    try {
+      if (accountBookId && updatedRecord.id) {
+        const res = await request<IApiResponse<IEsgRecord>>(
+          `/api/v1/user/account_book/${accountBookId}/esg/${updatedRecord.id}`,
+          {
+            method: "PUT",
+            body: JSON.stringify(updatedRecord),
+          },
+        );
+        if (res.payload) {
+          // TODO: Refresh or update local state list. For now just closing.
+          console.log("Saved ESG record API response: ", res.payload);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to update ESG record", err);
+    } finally {
+      setIsVerifyModalOpen(false);
+    }
+  };
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -222,7 +265,11 @@ export default function EsgTableSection() {
           <tbody className="divide-y divide-slate-100">
             {mockRecords.length > 0 ? (
               mockRecords.map((record) => (
-                <EsgRow key={record.id} record={record} />
+                <EsgRow
+                  key={record.id}
+                  record={record}
+                  onVerifyClick={handleVerifyOpen}
+                />
               ))
             ) : (
               <tr>
@@ -248,6 +295,13 @@ export default function EsgTableSection() {
           數據引用：IPCC 第六次評估報告排放係數
         </span>
       </div>
+
+      <EsgVerifyModal
+        isOpen={isVerifyModalOpen}
+        onClose={() => setIsVerifyModalOpen(false)}
+        esgId={selectedEsgId}
+        onSave={handleVerifySave}
+      />
     </div>
   );
 }
