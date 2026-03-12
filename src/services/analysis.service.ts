@@ -113,7 +113,8 @@ export class AnalysisService {
             periodValue: params.periodValue,
             year: params.year,
             country: params.country,
-            keyword: params.keyword
+            keyword: params.keyword,
+            historicalTags: await analysisRepo.getGlobalTopTags(20)
           },
           tasks: missionDef ? missionDef.tasks : undefined
         });

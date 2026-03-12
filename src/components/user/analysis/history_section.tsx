@@ -18,12 +18,14 @@ interface IHistoryItem {
   reportId: string;
   country?: string;
   keyword?: string;
+  tags?: string[];
 }
 
 export default function HistorySection() {
   const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   const [history, setHistory] = useState<IHistoryItem[]>([]);
 
@@ -116,11 +118,18 @@ export default function HistorySection() {
     setSelectedReport(null);
   };
 
-  const totalPages = Math.ceil(history.length / itemsPerPage);
-  const currentData = history.slice(
+  const filteredHistory = selectedTag
+    ? history.filter(item => item.tags?.includes(selectedTag))
+    : history;
+
+  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
+  const currentData = filteredHistory.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  // Info: (20260311 - Tzuhan) Collect all unique tags for the filter
+  const allTags = Array.from(new Set(history.flatMap(item => item.tags || []))).sort();
 
   // Info: (20260120 - Luphia) Helper to render status badge
   const renderStatus = (status: string) => {
@@ -177,7 +186,31 @@ export default function HistorySection() {
 
   return (
     <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 p-6">
-      <h2 className="text-lg font-bold text-gray-900 mb-4">{t('analysis.history.title')}</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h2 className="text-lg font-bold text-gray-900">{t('analysis.history.title')}</h2>
+        
+        {/* Info: (20260311 - Tzuhan) Tag Filter UI */}
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-gray-500">{t('common.filter') || 'Filter:'}</span>
+            <button
+              onClick={() => setSelectedTag(null)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${selectedTag === null ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              All
+            </button>
+            {allTags.map(tag => (
+              <button
+                key={tag}
+                onClick={() => setSelectedTag(tag)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${selectedTag === tag ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 ring-1 ring-inset ring-purple-700/10'}`}
+              >
+                #{tag}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="overflow-x-auto">
         {history.length === 0 ? (
@@ -224,6 +257,16 @@ export default function HistorySection() {
                                 {item.keyword}
                               </span>
                             )}
+                          </div>
+                        )}
+                        {/* Info: (20260311 - Tzuhan) Display Tags */}
+                        {item.tags && item.tags.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1 mt-1">
+                            {item.tags.map((tag, idx) => (
+                              <span key={idx} className="inline-flex items-center rounded-md bg-purple-50 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 ring-1 ring-inset ring-purple-600/20">
+                                #{tag}
+                              </span>
+                            ))}
                           </div>
                         )}
                       </div>
@@ -278,6 +321,16 @@ export default function HistorySection() {
                                 {item.keyword}
                               </span>
                             )}
+                          </div>
+                        )}
+                        {/* Info: (20260311 - Tzuhan) Display Tags - Mobile View */}
+                        {item.tags && item.tags.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1 mt-1">
+                            {item.tags.map((tag, idx) => (
+                              <span key={idx} className="inline-flex items-center rounded-md bg-purple-50 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 ring-1 ring-inset ring-purple-600/20">
+                                #{tag}
+                              </span>
+                            ))}
                           </div>
                         )}
                       </div>

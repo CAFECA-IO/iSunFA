@@ -110,6 +110,8 @@ model Analysis {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  tags      AnalysisTag[]
+
   @@map("analysis")
 }
 
@@ -214,6 +216,7 @@ model Tag {
   id      String      @id @default(uuid())
   name    String      @unique
   threads ThreadTag[]
+  analyses AnalysisTag[]
 
   @@map("tag")
 }
@@ -273,6 +276,18 @@ model ThreadTag {
   // Info: (20260212 - Julian) 討論串和標籤是多對多的關係
   @@id([threadId, tagId])
   @@map("thread_tag")
+}
+
+// Info: (20260311 - Tzuhan) Analysis - Tags
+model AnalysisTag {
+  analysisId String   @map("analysis_id")
+  analysis   Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  tagId      String   @map("tag_id")
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@id([analysisId, tagId])
+  @@map("analysis_tag")
 }
 
 model PaymentMethod {

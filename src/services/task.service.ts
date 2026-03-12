@@ -158,7 +158,10 @@ export class TaskService {
       .replace(/\{Period_End\}/g, endDate)
       .replace(/\{Market_Name\}/g, marketName)
       .replace(/\{Current_Date\}/g, currentDate)
-      .replace(/\{Historical_Tags_List\}/g, mData.historicalTags ? mData.historicalTags.join(', ') : '無歷史標籤');
+    const tagsString = mData.historicalTags && mData.historicalTags.length > 0
+      ? mData.historicalTags.join(', ')
+      : '無歷史標籤';
+    interpolatedPrompt = interpolatedPrompt.replace(/\{Historical_Tags_List\}/g, tagsString);
 
     if (task.order > 0) {
       // Info: (20260130 - Luphia) Fetch results from previous order
