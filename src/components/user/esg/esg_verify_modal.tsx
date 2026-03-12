@@ -13,7 +13,12 @@ import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import ConfirmModal from "@/components/common/confirm_modal";
-import { IEsgRecord, ESGScope } from "@/interfaces/esg";
+import {
+  IEsgRecord,
+  EsgScope,
+  EsgStatus,
+  EsgIntensity,
+} from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
 
 interface IEsgVerifyModalProps {
@@ -58,7 +63,6 @@ export default function EsgVerifyModal({
         }
       };
 
-       
       fetchEsgRecord();
     }
   }, [isOpen, esgId, accountBookId]);
@@ -83,7 +87,7 @@ export default function EsgVerifyModal({
   const handleSaveConfirmed = () => {
     if (formData) {
       // Info: (20260312 - Julian) Upon saving, the status becomes 'verified'
-      onSave?.({ ...formData, status: "verified" });
+      onSave?.({ ...formData, status: EsgStatus.VERIFIED });
     }
     setIsSaveModalOpen(false);
     onClose();
@@ -246,18 +250,18 @@ export default function EsgVerifyModal({
                           onChange={(e) =>
                             setFormData({
                               ...formData,
-                              scope: e.target.value as ESGScope,
+                              scope: e.target.value as EsgScope,
                             })
                           }
                           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                         >
-                          <option value={ESGScope.SCOPE1}>
+                          <option value={EsgScope.SCOPE_1}>
                             範疇一 (直接排放)
                           </option>
-                          <option value={ESGScope.SCOPE2}>
+                          <option value={EsgScope.SCOPE_2}>
                             範疇二 (能源間接排放)
                           </option>
-                          <option value={ESGScope.SCOPE3}>
+                          <option value={EsgScope.SCOPE_3}>
                             範疇三 (其他間接排放)
                           </option>
                         </select>
@@ -386,14 +390,14 @@ export default function EsgVerifyModal({
                           onChange={(e) =>
                             setFormData({
                               ...formData,
-                              intensity: e.target.value,
+                              intensity: e.target.value as EsgIntensity,
                             })
                           }
                           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                         >
-                          <option value="low">低強度</option>
-                          <option value="medium">中強度</option>
-                          <option value="high">高強度</option>
+                          <option value={EsgIntensity.LOW}>低強度</option>
+                          <option value={EsgIntensity.MEDIUM}>中強度</option>
+                          <option value={EsgIntensity.HIGH}>高強度</option>
                         </select>
                       </div>
                     </div>

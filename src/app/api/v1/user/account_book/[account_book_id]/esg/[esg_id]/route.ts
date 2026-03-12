@@ -4,7 +4,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { EsgScope, EsgIntensity, EsgStatus } from "@/generated/client";
-import { IEsgRecord, ESGScope } from "@/interfaces/esg";
+import { IEsgRecord, EsgScope as ClientEsgScope, EsgIntensity as ClientEsgIntensity, EsgStatus as ClientEsgStatus } from "@/interfaces/esg";
 
 /**
  * Info: (20260312 - Julian) 取得單一 ESG 紀錄
@@ -59,15 +59,15 @@ export async function GET(
       id: esgRecord.id,
       dateTimestamp: esgRecord.dateTimestamp,
       fileId: esgRecord.fileId ?? "",
-      scope: esgRecord.scope.toLowerCase() as ESGScope,
+      scope: esgRecord.scope as unknown as ClientEsgScope,
       activityType: esgRecord.activityType,
       vendor: esgRecord.vendor,
       rawActivityData: esgRecord.rawActivityData,
       unit: esgRecord.unit,
       emissions: esgRecord.emissions.toString(),
-      intensity: esgRecord.intensity.toLowerCase(),
+      intensity: esgRecord.intensity as unknown as ClientEsgIntensity,
       confidence: esgRecord.confidence,
-      status: esgRecord.status.toLowerCase(),
+      status: esgRecord.status as unknown as ClientEsgStatus,
     };
 
     return jsonOk(formattedRecord);
@@ -162,15 +162,15 @@ export async function PUT(
       id: updatedRecord.id,
       dateTimestamp: updatedRecord.dateTimestamp,
       fileId: updatedRecord.fileId ?? "",
-      scope: updatedRecord.scope.toLowerCase() as ESGScope,
+      scope: updatedRecord.scope as unknown as ClientEsgScope,
       activityType: updatedRecord.activityType,
       vendor: updatedRecord.vendor,
       rawActivityData: updatedRecord.rawActivityData,
       unit: updatedRecord.unit,
       emissions: updatedRecord.emissions.toString(),
-      intensity: updatedRecord.intensity.toLowerCase(),
+      intensity: updatedRecord.intensity as unknown as ClientEsgIntensity,
       confidence: updatedRecord.confidence,
-      status: updatedRecord.status.toLowerCase(),
+      status: updatedRecord.status as unknown as ClientEsgStatus,
     };
 
     if (!formattedRecord) {

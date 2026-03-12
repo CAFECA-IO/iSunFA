@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Search,
   Filter,
@@ -11,7 +11,12 @@ import {
   Cloud,
 } from "lucide-react";
 import { timestampToString } from "@/lib/utils/common";
-import { mockRecords, IEsgRecord, ESGScope } from "@/interfaces/esg";
+import {
+  IEsgRecord,
+  EsgScope,
+  EsgIntensity,
+  EsgStatus,
+} from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
 import EsgVerifyModal from "@/components/user/esg/esg_verify_modal";
 import { request } from "@/lib/utils/request";
@@ -29,19 +34,19 @@ const EsgRow = ({
     onVerifyClick(record);
   };
 
-  const renderIntensity = (intensity: string) => {
+  const renderIntensity = (intensity: EsgIntensity) => {
     switch (intensity) {
-      case "high":
+      case EsgIntensity.HIGH:
         return {
           text: "高強度",
           style: "border-red-300 bg-red-100 text-red-600",
         };
-      case "medium":
+      case EsgIntensity.MEDIUM:
         return {
           text: "中強度",
           style: "border-amber-300 bg-amber-100 text-amber-600",
         };
-      case "low":
+      case EsgIntensity.LOW:
         return {
           text: "低強度",
           style: "border-green-300 bg-green-100 text-green-600",
@@ -54,19 +59,19 @@ const EsgRow = ({
     }
   };
 
-  const renderScope = (scope: ESGScope) => {
+  const renderScope = (scope: EsgScope) => {
     switch (scope) {
-      case ESGScope.SCOPE1:
+      case EsgScope.SCOPE_1:
         return {
           text: "範疇一",
           icon: <Zap className="mr-1.5 h-4 w-4 text-amber-500" />,
         };
-      case ESGScope.SCOPE2:
+      case EsgScope.SCOPE_2:
         return {
           text: "範疇二",
           icon: <Truck className="mr-1.5 h-4 w-4 text-blue-500" />,
         };
-      case ESGScope.SCOPE3:
+      case EsgScope.SCOPE_3:
         return {
           text: "範疇三",
           icon: <Cloud className="mr-1.5 h-4 w-4 text-green-500" />,
@@ -125,7 +130,7 @@ const EsgRow = ({
           {renderIntensity(record.intensity).text}
         </span>
       </td>
-      <td className="px-6 py-4 text-center">
+      <td aria-label="準確度" className="px-6 py-4 text-center">
         <div className="flex items-center justify-center gap-3">
           <div className="h-2 w-24 shrink-0 overflow-hidden rounded-full bg-slate-200">
             <div
@@ -139,7 +144,7 @@ const EsgRow = ({
         </div>
       </td>
       <td className="px-6 py-4 text-center">
-        {record.status === "verified" ? (
+        {record.status === EsgStatus.VERIFIED ? (
           <div className="flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 className="h-5 w-5" />
             <span className="text-sm font-bold">已核對</span>
@@ -148,6 +153,7 @@ const EsgRow = ({
           <div className="flex justify-center">
             <button
               type="button"
+              aria-label="人工核對"
               onClick={handleVerifyClick}
               className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm hover:bg-orange-600"
             >
@@ -166,6 +172,29 @@ export default function EsgTableSection() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState<boolean>(false);
   const [selectedEsgId, setSelectedEsgId] = useState<string | null>(null);
+  const [records, setRecords] = useState<IEsgRecord[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const fetchRecords = useCallback(async () => {
+    if (!accountBookId) return;
+    setIsLoading(true);
+    try {
+      const res = await request<IApiResponse<IEsgRecord[]>>(
+        `/api/v1/user/account_book/${accountBookId}/esg`,
+      );
+      if (res.payload) {
+        setRecords(res.payload);
+      }
+    } catch (error) {
+      console.error("Failed to fetch ESG records:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accountBookId]);
+
+  useEffect(() => {
+    fetchRecords();
+  }, [fetchRecords]);
 
   const handleVerifyOpen = (record: IEsgRecord) => {
     setSelectedEsgId(record.id);
@@ -183,8 +212,8 @@ export default function EsgTableSection() {
           },
         );
         if (res.payload) {
-          // TODO: Refresh or update local state list. For now just closing.
-          console.log("Saved ESG record API response: ", res.payload);
+          // Info: (20260312 - Julian) Refresh local state list
+          await fetchRecords();
         }
       }
     } catch (err) {
@@ -203,6 +232,7 @@ export default function EsgTableSection() {
           <input
             type="text"
             placeholder="搜尋供應商、活動類型..."
+            aria-label="搜尋供應商、活動類型"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-400 focus:outline-none"
@@ -224,7 +254,11 @@ export default function EsgTableSection() {
           >
             <option>全部範疇 (Scope 1-3)</option>
           </select>
-          <button className="flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50">
+          <button
+            type="button"
+            aria-label="篩選"
+            className="flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50"
+          >
             <Filter className="mr-2 h-4 w-4" />
             篩選
           </button>
@@ -263,8 +297,17 @@ export default function EsgTableSection() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {mockRecords.length > 0 ? (
-              mockRecords.map((record) => (
+            {isLoading ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="px-6 py-4 text-center text-sm font-bold text-slate-500"
+                >
+                  載入中...
+                </td>
+              </tr>
+            ) : records.length > 0 ? (
+              records.map((record) => (
                 <EsgRow
                   key={record.id}
                   record={record}
@@ -288,7 +331,7 @@ export default function EsgTableSection() {
       {/* Info: (20260312 - Julian) Footer */}
       <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50/50 px-4 py-3">
         <span className="text-xs font-bold text-slate-500">
-          顯示 {mockRecords.length} 筆碳排分析紀錄
+          顯示 {records.length} 筆碳排分析紀錄
         </span>
         <span className="flex items-center text-xs font-bold text-slate-500">
           <Info className="mr-1 h-3.5 w-3.5" />
