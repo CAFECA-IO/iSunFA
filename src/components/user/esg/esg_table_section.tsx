@@ -15,6 +15,10 @@ import { mockRecords, IEsgRecord } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
 
 const EsgRow = ({ record }: { record: IEsgRecord }) => {
+const handleVerifyClick = () => {
+  // ToDo: (20260312 - Julian) Open Verify Modal
+}
+  
   const renderIntensity = (intensity: string) => {
     switch (intensity) {
       case "high":
@@ -132,9 +136,11 @@ const EsgRow = ({ record }: { record: IEsgRecord }) => {
           </div>
         ) : (
           <div className="flex justify-center">
-            <span className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm">
+            <button type="button"
+            onClick={handleVerifyClick}
+             className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm hover:bg-orange-600">
               人工核對
-            </span>
+            </button>
           </div>
         )}
       </td>

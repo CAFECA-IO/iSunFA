@@ -51,24 +51,24 @@ export async function POST(
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
 
-    const body = await request.json();
-    const { file } = body;
+    // const body = await request.json();
+    // const { file } = body;
 
-    // Info: (20260311 - Julian) 驗證 file 參數
-    if (!file || !file.hash) {
-      console.error("Missing file or file hash");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
-    }
+    // // Info: (20260311 - Julian) 驗證 file 參數
+    // if (!file || !file.hash) {
+    //   console.error("Missing file or file hash");
+    //   return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
+    // }
 
-    // Info: (20260311 - Julian) 使用 AI 分析發票/憑證資料
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error("Missing GEMINI_API_KEY");
-      return jsonFail(
-        ApiCode.INTERNAL_SERVER_ERROR,
-        "Server configuration error",
-      );
-    }
+    // // Info: (20260311 - Julian) 使用 AI 分析發票/憑證資料
+    // const apiKey = process.env.GEMINI_API_KEY;
+    // if (!apiKey) {
+    //   console.error("Missing GEMINI_API_KEY");
+    //   return jsonFail(
+    //     ApiCode.INTERNAL_SERVER_ERROR,
+    //     "Server configuration error",
+    //   );
+    // }
 
     // ToDo: 建立分析 Voucher 的 Mission 和 Task
     // const chatService = new ChatService(apiKey);
@@ -85,12 +85,12 @@ export async function POST(
     // }
 
     // Info: (20260311 - Julian) 建立上傳檔案 DB 紀錄
-    const dbFile = await prisma.file.create({
-      data: {
-        hash: file.hash,
-        fileName: file.fileName,
-      },
-    });
+    // const dbFile = await prisma.file.create({
+    //   data: {
+    //     hash: file.hash,
+    //     fileName: file.fileName,
+    //   },
+    // });
 
     // const parsedLines: IParsedVoucherLine[] = Array.isArray(voucherData.lines) ? voucherData.lines : [];
 
@@ -118,7 +118,7 @@ export async function POST(
     const newVoucher = await prisma.voucher.create({
       data: {
         accountBookId: accountBook.id,
-        fileId: dbFile.id,
+        fileId: "",
         userId: creator.id,
         tradingDate: new Date(),
         tradingType: "INCOME",

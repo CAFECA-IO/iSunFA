@@ -44,6 +44,7 @@ model User {
   teamMembers         TeamMember[]
   auditLogs           AuditLog[]
   vouchers            Voucher[]
+  esgRecords          EsgRecord[]
 
   @@index([address])
   @@map("user")
@@ -177,8 +178,9 @@ model File {
   thread   Thread? @relation(fields: [threadId], references: [id])
   threadId String? @map("thread_id")
 
-  journals Journal[]
-  vouchers Voucher[]
+  journals   Journal[]
+  vouchers   Voucher[]
+  esgRecords EsgRecord[]
 
   @@map("file")
 }
@@ -366,6 +368,12 @@ model AccountBook {
   // Info: (20260306 - Julian) 一個帳本可以有多個編輯紀錄
   auditLogs AuditLog[]
 
+  // Info: (20260312 - Julian) 帳本對應的 ESG 紀錄
+  esgRecords EsgRecord[]
+
+  // Info: (20260312 - Julian) 帳本對應的唯一的 ESG 儀表板總結
+  esgDashboardSummary EsgDashboardSummary?
+
   @@map("account_book")
 }
 
@@ -373,7 +381,7 @@ model AccountBook {
 enum AuditLogDataType {
   JOURNAL
   VOUCHER
-  CARBON
+  ESG_RECORD
 }
 
 enum AuditLogAction {
@@ -471,4 +479,91 @@ model VoucherLine {
   isDebit Boolean @map("is_debit")
 
   @@map("voucher_line")
+}
+
+// Info: (20260312 - Julian) ESG 分析紀錄
+enum EsgScope {
+  SCOPE_1
+  SCOPE_2
+  SCOPE_3
+}
+
+enum EsgIntensity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum EsgStatus {
+  VERIFIED
+  MANUAL
+}
+
+model EsgRecord {
+  id              String       @id @default(uuid())
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+  deletedAt       DateTime?    @map("deleted_at")
+  dateTimestamp   Int          @map("date_timestamp") // Info: (20260312 - Julian) 日期時間戳
+  scope           EsgScope // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
+  activityType    String       @map("activity_type") // Info: (20260312 - Julian) 活動類型
+  vendor          String // Info: (20260312 - Julian) 供應商與對象
+  rawActivityData String       @map("raw_activity_data") // Info: (20260312 - Julian) 原始活動數據
+  unit            String // Info: (20260312 - Julian) 單位
+  emissions       Decimal // Info: (20260312 - Julian) 排放量 (KGCO2E)
+  intensity       EsgIntensity // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
+  confidence      Int // Info: (20260312 - Julian) AI 信心度
+  status          EsgStatus // Info: (20260312 - Julian) 狀態 (VERIFIED, MANUAL)
+
+  // Info: (20260312 - Julian) 關聯檔案憑證
+  fileId String? @map("file_id")
+  file   File?   @relation(fields: [fileId], references: [id])
+
+  // Info: (20260312 - Julian) 隸屬的帳本
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  // Info: (20260312 - Julian) 建立者
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@map("esg_record")
+}
+
+// Info: (20260312 - Julian) ESG 儀表板摘要(唯一一份)
+model EsgDashboardSummary {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Info: (20260312 - Julian) 隸屬的帳本 (一對一)
+  accountBookId String      @unique @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  // Info: (20260312 - Julian) 本月總排放量
+  totalEmissions Decimal @map("total_emissions")
+  emissionsUnit  String  @default("kgCO2e") @map("emissions_unit")
+
+  // Info: (20260312 - Julian) 預估月底總排放量
+  estimatedEndOfMonth Decimal @map("estimated_end_of_month")
+
+  // Info: (20260312 - Julian) 營收 (用來計算強度)
+  revenue Decimal
+
+  // Info: (20260312 - Julian) 碳排放強度
+  emissionIntensity Decimal @map("emission_intensity")
+  intensityUnit     String  @default("kg / 萬元營收") @map("intensity_unit")
+
+  // Info: (20260312 - Julian) 產業平均碳排強度
+  industryAverage Decimal @map("industry_average")
+
+  // Info: (20260312 - Julian) 各範疇排放量總和
+  scope1Emissions Decimal @map("scope1_emissions")
+  scope2Emissions Decimal @map("scope2_emissions")
+  scope3Emissions Decimal @map("scope3_emissions")
+
+  // Info: (20260312 - Julian) 年度/週期目標排放量百分比
+  goalPercentage Decimal @map("goal_percentage")
+
+  @@map("esg_dashboard_summary")
 }
