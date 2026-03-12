@@ -76,20 +76,19 @@ export async function POST(
     // const { text } = await chatService.analyzeJournal(imagesForAi);
 
     // Info: (20260304 - Julian) 建立上傳檔案 DB 紀錄
-    const dbFile = await prisma.file.create({
-      data: {
-        hash: file.hash,
-        fileName: file.fileName,
-      },
-    });
+    // const dbFile = await prisma.file.create({
+    //   data: {
+    //     hash: file.hash,
+    //     fileName: file.fileName,
+    //   },
+    // });
 
     // Info: (20260304 - Julian) 先建立空白的日記帳
-    const journalText = ''
     const journal = await prisma.journal.create({
       data: {
-        fileId: dbFile.id,
         accountBookId: accountBook.id,
-        text:journalText,
+        fileId: "",
+        text: "",
       },
     });
 
@@ -104,10 +103,7 @@ export async function POST(
       },
     });
 
-    return jsonOk({ 
-      journalId: journal.id, 
-      text :journalText
-    });
+    return jsonOk({ journalId: journal.id });
   } catch (error) {
     console.error("Upload failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Upload failed");

@@ -928,4 +928,94 @@ export const ja = {
       copy_id: "クリックして伝票 ID をコピー: {{id}}",
     },
   },
+  "esg_summary": {
+    "no_data_prefix": "現在この帳簿のESGデータはありません。まずは",
+    "upload_link": "伝票をアップロード",
+    "no_data_suffix": "して炭素排出記録を作成してください",
+    "total_emissions": "今月の総排出量",
+    "estimate_eom": "月末予想: ",
+    "emission_intensity": "炭素排出原単位",
+    "better_than_industry": "業界平均より優れています ({{average}})",
+    "scope_distribution": "スコープ分布 (SCOPE)",
+    "annual_goal_progress": "年間目標の進捗"
+  },
+  "esg_table": {
+    "intensity": {
+      "high": "高強度",
+      "medium": "中強度",
+      "low": "低強度"
+    },
+    "scope": {
+      "scope_1": "スコープ1",
+      "scope_2": "スコープ2",
+      "scope_3": "スコープ3"
+    },
+    "no_file": "ファイルなし",
+    "verified": "確認済",
+    "manual_verify": "手動確認",
+    "search_placeholder": "業者、活動を検索...",
+    "search_aria": "業者、活動を検索",
+    "filter_intensity_aria": "強度で絞り込み",
+    "filter_intensity_all": "全て",
+    "filter_scope_aria": "スコープで絞り込み",
+    "filter_scope_all": "全て (Scope 1-3)",
+    "sort_date_aria": "日付で並べ替え",
+    "sort_newest": "新しい順",
+    "sort_oldest": "古い順",
+    "filter_btn": "フィルター",
+    "header": {
+      "voucher": "伝票",
+      "date": "日付",
+      "activity_target": "活動と対象",
+      "raw_data": "基本データ",
+      "emissions": "排出量 (KGCO2E)",
+      "intensity_label": "強度",
+      "ai_confidence": "AI信頼度",
+      "status": "ステータス"
+    },
+    "loading": "ロード中...",
+    "no_records": "記録がありません",
+    "footer": {
+      "record_count": "{{count}} 件の記録表示",
+      "data_citation": "データ: IPCC 第6次評価報告書 排出係数"
+    }
+  },
+  "esg_verify": {
+    "title": "手動確認",
+    "preview": "プレビュー",
+    "ai_confidence": "AI 信頼度",
+    "no_image": "画像なし",
+    "form": {
+      "date": "日付",
+      "scope": "スコープ",
+      "scope_1": "スコープ1 (直接排出)",
+      "scope_2": "スコープ2 (間接排出)",
+      "scope_3": "スコープ3 (その他)",
+      "activity_type": "活動タイプ",
+      "vendor": "業者 / 対象",
+      "raw_data": "基本データ",
+      "unit": "単位",
+      "emissions": "排出量 (kgCO2e)",
+      "intensity": "強度",
+      "intensity_low": "低強度",
+      "intensity_medium": "中強度",
+      "intensity_high": "高強度"
+    },
+    "actions": {
+      "cancel": "キャンセル",
+      "save_and_verify": "保存して確認"
+    },
+    "close_confirm": {
+      "title": "保存せずに閉じますか？",
+      "message": "未保存の変更は失われます。続行しますか？",
+      "confirm": "終了",
+      "cancel": "キャンセル"
+    },
+    "save_confirm": {
+      "title": "変更を保存しますか？",
+      "message": "変更を保存しようとしています。続行しますか？",
+      "confirm": "保存",
+      "cancel": "キャンセル"
+    }
+  }
 };

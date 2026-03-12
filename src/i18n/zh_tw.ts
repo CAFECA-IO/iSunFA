@@ -1026,5 +1026,95 @@ export const zhTw = {
         }
       }
     }
+  },
+  "esg_summary": {
+    "no_data_prefix": "目前無這份帳本的 ESG 數據，請先",
+    "upload_link": "上傳憑證",
+    "no_data_suffix": "產生碳排紀錄",
+    "total_emissions": "本月總排放量",
+    "estimate_eom": "預估月底: ",
+    "emission_intensity": "碳排放強度",
+    "better_than_industry": "優於產業平均 ({{average}})",
+    "scope_distribution": "各範疇分布 (SCOPE)",
+    "annual_goal_progress": "年度目標進度"
+  },
+  "esg_table": {
+    "intensity": {
+      "high": "高強度",
+      "medium": "中強度",
+      "low": "低強度"
+    },
+    "scope": {
+      "scope_1": "範疇一",
+      "scope_2": "範疇二",
+      "scope_3": "範疇三"
+    },
+    "no_file": "無檔案",
+    "verified": "已核對",
+    "manual_verify": "人工核對",
+    "search_placeholder": "搜尋供應商、活動類型...",
+    "search_aria": "搜尋供應商、活動類型",
+    "filter_intensity_aria": "依強度篩選",
+    "filter_intensity_all": "全部強度",
+    "filter_scope_aria": "依範疇篩選",
+    "filter_scope_all": "全部範疇 (Scope 1-3)",
+    "sort_date_aria": "切換日期排序",
+    "sort_newest": "由新至舊",
+    "sort_oldest": "由舊至新",
+    "filter_btn": "篩選",
+    "header": {
+      "voucher": "憑證",
+      "date": "日期",
+      "activity_target": "活動類型與對象",
+      "raw_data": "原始活動數據",
+      "emissions": "排放量 (KGCO2E)",
+      "intensity_label": "排放強度標籤",
+      "ai_confidence": "AI 信心度",
+      "status": "狀態"
+    },
+    "loading": "載入中...",
+    "no_records": "無碳排分析紀錄",
+    "footer": {
+      "record_count": "顯示 {{count}} 筆碳排分析紀錄",
+      "data_citation": "數據引用：IPCC 第六次評估報告排放係數"
+    }
+  },
+  "esg_verify": {
+    "title": "人工核對碳排紀錄",
+    "preview": "憑證預覽",
+    "ai_confidence": "AI 信心度",
+    "no_image": "無圖檔可預覽",
+    "form": {
+      "date": "日期",
+      "scope": "排放範疇",
+      "scope_1": "範疇一 (直接排放)",
+      "scope_2": "範疇二 (能源間接排放)",
+      "scope_3": "範疇三 (其他間接排放)",
+      "activity_type": "活動類型",
+      "vendor": "供應商名稱 / 排放對象",
+      "raw_data": "原始活動數據",
+      "unit": "單位",
+      "emissions": "計算排放量 (kgCO2e)",
+      "intensity": "排放強度分級",
+      "intensity_low": "低強度",
+      "intensity_medium": "中強度",
+      "intensity_high": "高強度"
+    },
+    "actions": {
+      "cancel": "取消",
+      "save_and_verify": "儲存並完成核對"
+    },
+    "close_confirm": {
+      "title": "確認關閉？",
+      "message": "您的變更尚未儲存，確認離開將會失去所有變更。確認要關閉嗎？",
+      "confirm": "確認離開",
+      "cancel": "取消"
+    },
+    "save_confirm": {
+      "title": "確認儲存？",
+      "message": "即將儲存您所做出的 ESG 紀錄核對變更。請確認資料是否無誤？",
+      "confirm": "確認儲存",
+      "cancel": "取消"
+    }
   }
 };

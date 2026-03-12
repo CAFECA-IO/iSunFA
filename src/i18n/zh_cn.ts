@@ -904,6 +904,96 @@ export const zhCn = {
       unnamed_user: "未命名用户",
       copy_address: "点击复制地址: {{address}}",
       copy_id: "点击复制凭证 ID: {{id}}",
-    },
+    }
   },
+  "esg_summary": {
+    "no_data_prefix": "目前无这份账本的 ESG 数据，请先",
+    "upload_link": "上传凭证",
+    "no_data_suffix": "产生碳排纪录",
+    "total_emissions": "本月总排放量",
+    "estimate_eom": "预估月底: ",
+    "emission_intensity": "碳排放强度",
+    "better_than_industry": "优于产业平均 ({{average}})",
+    "scope_distribution": "各范畴分布 (SCOPE)",
+    "annual_goal_progress": "年度目标进度"
+  },
+  "esg_table": {
+    "intensity": {
+      "high": "高强度",
+      "medium": "中强度",
+      "low": "低强度"
+    },
+    "scope": {
+      "scope_1": "范畴一",
+      "scope_2": "范畴二",
+      "scope_3": "范畴三"
+    },
+    "no_file": "无档案",
+    "verified": "已核对",
+    "manual_verify": "人工核对",
+    "search_placeholder": "搜索供应商、活动类型...",
+    "search_aria": "搜索供应商、活动类型",
+    "filter_intensity_aria": "依强度筛选",
+    "filter_intensity_all": "全部强度",
+    "filter_scope_aria": "依范畴筛选",
+    "filter_scope_all": "全部范畴 (Scope 1-3)",
+    "sort_date_aria": "切换日期排序",
+    "sort_newest": "由新至旧",
+    "sort_oldest": "由旧至新",
+    "filter_btn": "筛选",
+    "header": {
+      "voucher": "凭证",
+      "date": "日期",
+      "activity_target": "活动类型与对象",
+      "raw_data": "原始活动数据",
+      "emissions": "排放量 (KGCO2E)",
+      "intensity_label": "排放强度标签",
+      "ai_confidence": "AI 信心度",
+      "status": "状态"
+    },
+    "loading": "载入中...",
+    "no_records": "无碳排分析纪录",
+    "footer": {
+      "record_count": "显示 {{count}} 笔碳排分析纪录",
+      "data_citation": "数据引用：IPCC 第六次评估报告排放系数"
+    }
+  },
+  "esg_verify": {
+    "title": "人工核对碳排纪录",
+    "preview": "凭证预览",
+    "ai_confidence": "AI 信心度",
+    "no_image": "无图档可预览",
+    "form": {
+      "date": "日期",
+      "scope": "排放范畴",
+      "scope_1": "范畴一 (直接排放)",
+      "scope_2": "范畴二 (能源间接排放)",
+      "scope_3": "范畴三 (其他间接排放)",
+      "activity_type": "活动类型",
+      "vendor": "供应商名称 / 排放对象",
+      "raw_data": "原始活动数据",
+      "unit": "单位",
+      "emissions": "计算排放量 (kgCO2e)",
+      "intensity": "排放强度分级",
+      "intensity_low": "低强度",
+      "intensity_medium": "中强度",
+      "intensity_high": "高强度"
+    },
+    "actions": {
+      "cancel": "取消",
+      "save_and_verify": "保存并完成核对"
+    },
+    "close_confirm": {
+      "title": "确认关闭？",
+      "message": "您的变更尚未保存，确认离开将会失去所有变更。确认要关闭吗？",
+      "confirm": "确认离开",
+      "cancel": "取消"
+    },
+    "save_confirm": {
+      "title": "确认保存？",
+      "message": "即将保存您所做出 ESG 纪录核对变更。请确认数据是否无误？",
+      "confirm": "确认保存",
+      "cancel": "取消"
+    }
+  }
 };

@@ -918,4 +918,94 @@ export const ko = {
       copy_id: "클릭하여 전표 ID 복사: {{id}}",
     },
   },
+  "esg_summary": {
+    "no_data_prefix": "현재 이 장부의 ESG 데이터가 없습니다. 먼저 ",
+    "upload_link": "전표를 업로드",
+    "no_data_suffix": "하여 탄소 배출 기록을 생성하십시오",
+    "total_emissions": "이번 달 총 배출량",
+    "estimate_eom": "월말 예상: ",
+    "emission_intensity": "탄소 배출 집약도",
+    "better_than_industry": "업계 평균보다 우수함 ({{average}})",
+    "scope_distribution": "스코프 분포 (SCOPE)",
+    "annual_goal_progress": "연간 목표 진행률"
+  },
+  "esg_table": {
+    "intensity": {
+      "high": "고강도",
+      "medium": "중강도",
+      "low": "저강도"
+    },
+    "scope": {
+      "scope_1": "스코프 1",
+      "scope_2": "스코프 2",
+      "scope_3": "스코프 3"
+    },
+    "no_file": "파일 없음",
+    "verified": "확인됨",
+    "manual_verify": "수동 확인",
+    "search_placeholder": "공급업체, 활동 유형 검색...",
+    "search_aria": "공급업체, 활동 유형 검색",
+    "filter_intensity_aria": "강도 필터링",
+    "filter_intensity_all": "전체 강도",
+    "filter_scope_aria": "스코프 필터링",
+    "filter_scope_all": "전체 스코프 (Scope 1-3)",
+    "sort_date_aria": "날짜 정렬 전환",
+    "sort_newest": "최신순",
+    "sort_oldest": "오래된순",
+    "filter_btn": "필터",
+    "header": {
+      "voucher": "전표",
+      "date": "날짜",
+      "activity_target": "활동 유형 및 대상",
+      "raw_data": "원시 데이터",
+      "emissions": "배출량 (KGCO2E)",
+      "intensity_label": "강도",
+      "ai_confidence": "AI 신뢰도",
+      "status": "상태"
+    },
+    "loading": "로딩 중...",
+    "no_records": "탄소 배출 분석 기록 없음",
+    "footer": {
+      "record_count": "{{count}}건의 기록 표시",
+      "data_citation": "데이터 출처: IPCC 제6차 평가보고서 배출 계수"
+    }
+  },
+  "esg_verify": {
+    "title": "수동 확인",
+    "preview": "미리보기",
+    "ai_confidence": "AI 신뢰도",
+    "no_image": "미리보기 이미지 없음",
+    "form": {
+      "date": "날짜",
+      "scope": "스코프",
+      "scope_1": "스코프 1 (직접 배출)",
+      "scope_2": "스코프 2 (간접 배출)",
+      "scope_3": "스코프 3 (기타 간접 배출)",
+      "activity_type": "활동 유형",
+      "vendor": "공급업체 / 대상",
+      "raw_data": "원시 활동 데이터",
+      "unit": "단위",
+      "emissions": "계산된 배출량 (kgCO2e)",
+      "intensity": "강도 분류",
+      "intensity_low": "저강도",
+      "intensity_medium": "중강도",
+      "intensity_high": "고강도"
+    },
+    "actions": {
+      "cancel": "취소",
+      "save_and_verify": "저장 및 확인"
+    },
+    "close_confirm": {
+      "title": "저장하지 않고 닫으시겠습니까?",
+      "message": "저장되지 않은 변경 사항이 손실됩니다. 계속하시겠습니까?",
+      "confirm": "나가기",
+      "cancel": "취소"
+    },
+    "save_confirm": {
+      "title": "저장하시겠습니까?",
+      "message": "ESG 기록 확인 변경 사항을 저장하려고 합니다. 데이터가 올바른지 확인하십시오.",
+      "confirm": "저장",
+      "cancel": "취소"
+    }
+  }
 };
