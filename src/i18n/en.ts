@@ -1032,5 +1032,95 @@ export const en = {
         }
       }
     }
+  },
+  "esg_summary": {
+    "no_data_prefix": "Currently no ESG data for this account book, please ",
+    "upload_link": "upload vouchers",
+    "no_data_suffix": " to generate carbon emission records",
+    "total_emissions": "Total Monthly Emissions",
+    "estimate_eom": "Est. EOM: ",
+    "emission_intensity": "Emission Intensity",
+    "better_than_industry": "Better than industry average ({{average}})",
+    "scope_distribution": "Scope Distribution (SCOPE)",
+    "annual_goal_progress": "Annual Goal Progress"
+  },
+  "esg_table": {
+    "intensity": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "scope": {
+      "scope_1": "Scope 1",
+      "scope_2": "Scope 2",
+      "scope_3": "Scope 3"
+    },
+    "no_file": "No File",
+    "verified": "Verified",
+    "manual_verify": "Manual Verify",
+    "search_placeholder": "Search vendor, activity...",
+    "search_aria": "Search vendor, activity",
+    "filter_intensity_aria": "Filter by Intensity",
+    "filter_intensity_all": "All",
+    "filter_scope_aria": "Filter by Scope",
+    "filter_scope_all": "All (Scope 1-3)",
+    "sort_date_aria": "Sort by Date",
+    "sort_newest": "Newest",
+    "sort_oldest": "Oldest",
+    "filter_btn": "Filter",
+    "header": {
+      "voucher": "Voucher",
+      "date": "Date",
+      "activity_target": "Activity & Target",
+      "raw_data": "Raw Data",
+      "emissions": "Emissions (KGCO2E)",
+      "intensity_label": "Intensity",
+      "ai_confidence": "AI Confidence",
+      "status": "Status"
+    },
+    "loading": "Loading...",
+    "no_records": "No ESG Records",
+    "footer": {
+      "record_count": "Showing {{count}} records",
+      "data_citation": "Data: IPCC AR6 Emission Factors"
+    }
+  },
+  "esg_verify": {
+    "title": "Manual Verification",
+    "preview": "Voucher Preview",
+    "ai_confidence": "AI Conf.",
+    "no_image": "No Image",
+    "form": {
+      "date": "Date",
+      "scope": "Scope",
+      "scope_1": "Scope 1 (Direct)",
+      "scope_2": "Scope 2 (Indirect)",
+      "scope_3": "Scope 3 (Other)",
+      "activity_type": "Activity Type",
+      "vendor": "Vendor / Target",
+      "raw_data": "Raw Data",
+      "unit": "Unit",
+      "emissions": "Emissions (kgCO2e)",
+      "intensity": "Intensity",
+      "intensity_low": "Low",
+      "intensity_medium": "Medium",
+      "intensity_high": "High"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "save_and_verify": "Save & Verify"
+    },
+    "close_confirm": {
+      "title": "Close without saving?",
+      "message": "You have unsaved changes. These will be lost. Proceed?",
+      "confirm": "Leave",
+      "cancel": "Cancel"
+    },
+    "save_confirm": {
+      "title": "Save changes?",
+      "message": "You are about to save the verification changes. Proceed?",
+      "confirm": "Save",
+      "cancel": "Cancel"
+    }
   }
 };

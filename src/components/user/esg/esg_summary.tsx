@@ -7,11 +7,13 @@ import { IEsgDashboardSummary, EsgScope } from "@/interfaces/esg";
 import { useParams, usePathname } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
+import { useTranslation } from "@/i18n/i18n_context";
 
 export default function EsgSummary() {
   const params = useParams();
   const pathname = usePathname();
   const accountBookId = params?.account_book_id as string;
+  const { t } = useTranslation();
 
   const [summaryData, setSummaryData] = useState<IEsgDashboardSummary | null>(
     null,
@@ -57,11 +59,11 @@ export default function EsgSummary() {
       <div className="flex h-72 w-full flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm">
         <Cloud className="mb-2 h-8 w-8 text-slate-300" />
         <span className="text-sm font-bold">
-          目前無這份帳本的 ESG 數據，請先
-          <Link href={journalLink} className="text-blue-600 hover:underline">
-            上傳憑證
+          {t("esg_summary.no_data_prefix")}
+          <Link href={journalLink} className="text-blue-600 hover:underline mx-1">
+            {t("esg_summary.upload_link")}
           </Link>
-          產生碳排紀錄
+          {t("esg_summary.no_data_suffix")}
         </span>
       </div>
     );
@@ -116,7 +118,7 @@ export default function EsgSummary() {
         <div>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-bold text-slate-500">
-              本月總排放量
+              {t("esg_summary.total_emissions")}
             </span>
             <Cloud className="h-5 w-5 text-green-400" />
           </div>
@@ -132,7 +134,7 @@ export default function EsgSummary() {
         <div className="mt-8">
           <div className="inline-flex items-center rounded-full border border-green-100 bg-green-50 px-3 py-1.5 text-xs font-bold text-green-700">
             <TrendingUp className="mr-1 h-3.5 w-3.5" />
-            預估月底:{" "}
+            {t("esg_summary.estimate_eom")}{" "}
             {summaryData.totalEmissions.estimatedEndOfMonth.toLocaleString()}{" "}
             {summaryData.totalEmissions.estimatedUnit}
           </div>
@@ -143,7 +145,7 @@ export default function EsgSummary() {
       <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-500">碳排放強度</span>
+            <span className="text-sm font-bold text-slate-500">{t("esg_summary.emission_intensity")}</span>
             <BarChart3 className="h-5 w-5 text-amber-400" />
           </div>
           <div className="flex items-baseline gap-1.5">
@@ -158,14 +160,14 @@ export default function EsgSummary() {
           </div>
         </div>
         <div className="mt-8 text-xs font-bold text-slate-500">
-          優於產業平均 ({summaryData.emissionIntensity.industryAverage})
+          {t("esg_summary.better_than_industry", { average: summaryData.emissionIntensity.industryAverage })}
         </div>
       </div>
 
       {/* Info: (20260312 - Julian) 各範疇分布 */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5 text-center text-sm font-bold text-slate-500">
-          各範疇分布 (SCOPE)
+          {t("esg_summary.scope_distribution")}
         </div>
         <div className="flex flex-col gap-2">
           {renderScopeProgress(EsgScope.SCOPE_1)}
@@ -179,7 +181,7 @@ export default function EsgSummary() {
         <div>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-bold text-slate-500">
-              年度目標進度
+              {t("esg_summary.annual_goal_progress")}
             </span>
             <Target className="h-5 w-5 text-red-500" />
           </div>

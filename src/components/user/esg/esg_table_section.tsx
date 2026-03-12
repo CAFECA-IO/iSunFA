@@ -24,6 +24,7 @@ import EsgVerifyModal from "@/components/user/esg/esg_verify_modal";
 import { request } from "@/lib/utils/request";
 import { useParams } from "next/navigation";
 import { IApiResponse } from "@/lib/utils/response";
+import { useTranslation } from "@/i18n/i18n_context";
 
 const EsgRow = ({
   record,
@@ -32,6 +33,8 @@ const EsgRow = ({
   record: IEsgRecord;
   onVerifyClick: (record: IEsgRecord) => void;
 }) => {
+  const { t } = useTranslation();
+
   const handleVerifyClick = () => {
     onVerifyClick(record);
   };
@@ -40,17 +43,17 @@ const EsgRow = ({
     switch (intensity) {
       case EsgIntensity.HIGH:
         return {
-          text: "高強度",
+          text: t("esg_table.intensity.high"),
           style: "border-red-300 bg-red-100 text-red-600",
         };
       case EsgIntensity.MEDIUM:
         return {
-          text: "中強度",
+          text: t("esg_table.intensity.medium"),
           style: "border-amber-300 bg-amber-100 text-amber-600",
         };
       case EsgIntensity.LOW:
         return {
-          text: "低強度",
+          text: t("esg_table.intensity.low"),
           style: "border-green-300 bg-green-100 text-green-600",
         };
       default:
@@ -65,17 +68,17 @@ const EsgRow = ({
     switch (scope) {
       case EsgScope.SCOPE_1:
         return {
-          text: "範疇一",
+          text: t("esg_table.scope.scope_1"),
           icon: <Zap className="mr-1.5 h-4 w-4 text-amber-500" />,
         };
       case EsgScope.SCOPE_2:
         return {
-          text: "範疇二",
+          text: t("esg_table.scope.scope_2"),
           icon: <Truck className="mr-1.5 h-4 w-4 text-blue-500" />,
         };
       case EsgScope.SCOPE_3:
         return {
-          text: "範疇三",
+          text: t("esg_table.scope.scope_3"),
           icon: <Cloud className="mr-1.5 h-4 w-4 text-green-500" />,
         };
       default:
@@ -99,7 +102,7 @@ const EsgRow = ({
             />
           ) : (
             <div className="flex h-12 w-12 items-center justify-center bg-gray-50 p-1 sm:h-20 sm:w-20">
-              <span className="text-xs font-bold text-slate-500">無檔案</span>
+              <span className="text-xs font-bold text-slate-500">{t("esg_table.no_file")}</span>
             </div>
           )}
         </div>
@@ -149,17 +152,17 @@ const EsgRow = ({
         {record.status === EsgStatus.VERIFIED ? (
           <div className="flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 className="h-5 w-5" />
-            <span className="text-sm font-bold">已核對</span>
+            <span className="text-sm font-bold">{t("esg_table.verified")}</span>
           </div>
         ) : (
           <div className="flex justify-center">
             <button
               type="button"
-              aria-label="人工核對"
+              aria-label={t("esg_table.manual_verify")}
               onClick={handleVerifyClick}
               className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm hover:bg-orange-600"
             >
-              人工核對
+              {t("esg_table.manual_verify")}
             </button>
           </div>
         )}
@@ -180,6 +183,7 @@ export default function EsgTableSection() {
   const [recordCount, setRecordCount] = useState<number>(0);
   const [dateSort, setDateSort] = useState<"desc" | "asc">("desc");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { t } = useTranslation();
 
   const fetchRecords = useCallback(async () => {
     if (!accountBookId) return;
@@ -254,8 +258,8 @@ export default function EsgTableSection() {
           <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="搜尋供應商、活動類型..."
-            aria-label="搜尋供應商、活動類型"
+            placeholder={t("esg_table.search_placeholder")}
+            aria-label={t("esg_table.search_aria")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-400 focus:outline-none"
@@ -263,34 +267,34 @@ export default function EsgTableSection() {
         </div>
         <div className="flex items-center gap-3">
           <select
-            aria-label="依強度篩選"
+            aria-label={t("esg_table.filter_intensity_aria")}
             value={intensityFilter}
             onChange={(e) => setIntensityFilter(e.target.value)}
             className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-bold text-slate-600 focus:outline-none"
           >
-            <option value="ALL">全部強度</option>
-            <option value={EsgIntensity.HIGH}>高強度</option>
-            <option value={EsgIntensity.MEDIUM}>中強度</option>
-            <option value={EsgIntensity.LOW}>低強度</option>
+            <option value="ALL">{t("esg_table.filter_intensity_all")}</option>
+            <option value={EsgIntensity.HIGH}>{t("esg_table.intensity.high")}</option>
+            <option value={EsgIntensity.MEDIUM}>{t("esg_table.intensity.medium")}</option>
+            <option value={EsgIntensity.LOW}>{t("esg_table.intensity.low")}</option>
           </select>
           <select
-            aria-label="依範疇篩選"
+            aria-label={t("esg_table.filter_scope_aria")}
             value={scopeFilter}
             onChange={(e) => setScopeFilter(e.target.value)}
             className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-bold text-slate-600 focus:outline-none"
           >
-            <option value="ALL">全部範疇 (Scope 1-3)</option>
-            <option value={EsgScope.SCOPE_1}>範疇一</option>
-            <option value={EsgScope.SCOPE_2}>範疇二</option>
-            <option value={EsgScope.SCOPE_3}>範疇三</option>
+            <option value="ALL">{t("esg_table.filter_scope_all")}</option>
+            <option value={EsgScope.SCOPE_1}>{t("esg_table.scope.scope_1")}</option>
+            <option value={EsgScope.SCOPE_2}>{t("esg_table.scope.scope_2")}</option>
+            <option value={EsgScope.SCOPE_3}>{t("esg_table.scope.scope_3")}</option>
           </select>
           <button
             type="button"
-            aria-label="切換日期排序"
+            aria-label={t("esg_table.sort_date_aria")}
             onClick={() => setDateSort(dateSort === "desc" ? "asc" : "desc")}
             className="flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50"
           >
-            {dateSort === "desc" ? "由新至舊" : "由舊至新"}
+            {dateSort === "desc" ? t("esg_table.sort_newest") : t("esg_table.sort_oldest")}
             {dateSort === "desc" ? (
               <ArrowDown className="ml-1 h-4 w-4" />
             ) : (
@@ -299,12 +303,12 @@ export default function EsgTableSection() {
           </button>
           <button
             type="button"
-            aria-label="篩選"
+            aria-label={t("esg_table.filter_btn")}
             onClick={fetchRecords}
             className="flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50"
           >
             <Filter className="mr-2 h-4 w-4" />
-            篩選
+            {t("esg_table.filter_btn")}
           </button>
         </div>
       </div>
@@ -315,28 +319,28 @@ export default function EsgTableSection() {
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50/70">
               <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
-                憑證
+                {t("esg_table.header.voucher")}
               </th>
               <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
-                日期
+                {t("esg_table.header.date")}
               </th>
               <th className="px-6 py-4 text-xs font-black tracking-wider text-slate-500 uppercase">
-                活動類型與對象
+                {t("esg_table.header.activity_target")}
               </th>
               <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
-                原始活動數據
+                {t("esg_table.header.raw_data")}
               </th>
               <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
-                排放量 (KGCO2E)
+                {t("esg_table.header.emissions")}
               </th>
               <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
-                排放強度標籤
+                {t("esg_table.header.intensity_label")}
               </th>
               <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
-                AI 信心度
+                {t("esg_table.header.ai_confidence")}
               </th>
               <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
-                狀態
+                {t("esg_table.header.status")}
               </th>
             </tr>
           </thead>
@@ -347,7 +351,7 @@ export default function EsgTableSection() {
                   colSpan={8}
                   className="px-6 py-4 text-center text-sm font-bold text-slate-500"
                 >
-                  載入中...
+                  {t("esg_table.loading")}
                 </td>
               </tr>
             ) : records.length > 0 ? (
@@ -364,7 +368,7 @@ export default function EsgTableSection() {
                   colSpan={8}
                   className="px-6 py-4 text-center text-sm font-bold text-slate-500"
                 >
-                  無碳排分析紀錄
+                  {t("esg_table.no_records")}
                 </td>
               </tr>
             )}
@@ -375,11 +379,11 @@ export default function EsgTableSection() {
       {/* Info: (20260312 - Julian) Footer */}
       <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50/50 px-4 py-3">
         <span className="text-xs font-bold text-slate-500">
-          顯示 {recordCount} 筆碳排分析紀錄
+          {t("esg_table.footer.record_count", { count: recordCount })}
         </span>
         <span className="flex items-center text-xs font-bold text-slate-500">
           <Info className="mr-1 h-3.5 w-3.5" />
-          數據引用：IPCC 第六次評估報告排放係數
+          {t("esg_table.footer.data_citation")}
         </span>
       </div>
 
