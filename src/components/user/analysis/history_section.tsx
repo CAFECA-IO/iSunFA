@@ -187,27 +187,32 @@ export default function HistorySection() {
   return (
     <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-lg font-bold text-gray-900">{t('analysis.history.title')}</h2>
+        <h2 className="text-lg font-bold text-gray-900 shrink-0">{t('analysis.history.title')}</h2>
         
         {/* Info: (20260311 - Tzuhan) Tag Filter UI */}
         {allTags.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-gray-500">{t('common.filter') || 'Filter:'}</span>
-            <button
-              onClick={() => setSelectedTag(null)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${selectedTag === null ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-            >
-              All
-            </button>
-            {allTags.map(tag => (
+          <div className="flex items-center w-full min-w-0">
+            <div className="flex items-center gap-3 shrink-0 pr-4 border-r border-gray-200">
+              <span className="text-sm font-medium text-gray-500">{t('common.filter')}</span>
               <button
-                key={tag}
-                onClick={() => setSelectedTag(tag)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${selectedTag === tag ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 ring-1 ring-inset ring-purple-700/10'}`}
+                onClick={() => setSelectedTag(null)}
+                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${selectedTag === null ? 'bg-gray-900 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
               >
-                #{tag}
+                All
               </button>
-            ))}
+            </div>
+            
+            <div className="flex items-center gap-2.5 overflow-x-auto pl-4 pb-0 flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {allTags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedTag(tag)}
+                  className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${selectedTag === tag ? 'bg-gray-900 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 ring-1 ring-inset ring-gray-900/5'}`}
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -261,9 +266,9 @@ export default function HistorySection() {
                         )}
                         {/* Info: (20260311 - Tzuhan) Display Tags */}
                         {item.tags && item.tags.length > 0 && (
-                          <div className="flex flex-wrap items-center gap-1 mt-1">
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                             {item.tags.map((tag, idx) => (
-                              <span key={idx} className="inline-flex items-center rounded-md bg-purple-50 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 ring-1 ring-inset ring-purple-600/20">
+                              <span key={idx} className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
                                 #{tag}
                               </span>
                             ))}
@@ -325,9 +330,9 @@ export default function HistorySection() {
                         )}
                         {/* Info: (20260311 - Tzuhan) Display Tags - Mobile View */}
                         {item.tags && item.tags.length > 0 && (
-                          <div className="flex flex-wrap items-center gap-1 mt-1">
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                             {item.tags.map((tag, idx) => (
-                              <span key={idx} className="inline-flex items-center rounded-md bg-purple-50 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 ring-1 ring-inset ring-purple-600/20">
+                              <span key={idx} className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
                                 #{tag}
                               </span>
                             ))}
