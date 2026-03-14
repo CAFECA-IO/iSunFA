@@ -187,23 +187,23 @@ export default function HistorySection() {
   // Info: (20260313 - Tzuhan) Deterministic generic color classification based on tag hash for UI mapping
   const getTagColorClass = (tagStr: string, isSelected: boolean) => {
     const colors = [
-      { // Blue
+      { // Info: (20260313 - Tzuhan) Blue
         selected: 'bg-blue-600 text-white shadow-sm ring-1 ring-inset ring-blue-700/20',
         unselected: 'bg-blue-50 text-blue-700 hover:bg-blue-100 ring-1 ring-inset ring-blue-700/10'
       },
-      { // Emerald
+      { // Info: (20260313 - Tzuhan) Emerald
         selected: 'bg-emerald-600 text-white shadow-sm ring-1 ring-inset ring-emerald-700/20',
         unselected: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 ring-1 ring-inset ring-emerald-700/10'
       },
-      { // Violet
+      { // Info: (20260313 - Tzuhan) Violet
         selected: 'bg-violet-600 text-white shadow-sm ring-1 ring-inset ring-violet-700/20',
         unselected: 'bg-violet-50 text-violet-700 hover:bg-violet-100 ring-1 ring-inset ring-violet-700/10'
       },
-      { // Amber
+      { // Info: (20260313 - Tzuhan) Amber
         selected: 'bg-amber-600 text-white shadow-sm ring-1 ring-inset ring-amber-700/20',
         unselected: 'bg-amber-50 text-amber-700 hover:bg-amber-100 ring-1 ring-inset ring-amber-700/10'
       },
-      { // Rose
+      { // Info: (20260313 - Tzuhan) Rose
         selected: 'bg-rose-600 text-white shadow-sm ring-1 ring-inset ring-rose-700/20',
         unselected: 'bg-rose-50 text-rose-700 hover:bg-rose-100 ring-1 ring-inset ring-rose-700/10'
       },
@@ -214,7 +214,7 @@ export default function HistorySection() {
       hash = tagStr.charCodeAt(i) + ((hash << 5) - hash);
     }
     const colorIndex = Math.abs(hash) % colors.length;
-    
+
     return isSelected ? colors[colorIndex].selected : colors[colorIndex].unselected;
   };
 
@@ -222,7 +222,7 @@ export default function HistorySection() {
     <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h2 className="text-lg font-bold text-gray-900 shrink-0">{t('analysis.history.title')}</h2>
-        
+
         {/* Info: (20260311 - Tzuhan) Tag Filter UI */}
         {allTags.length > 0 && (
           <div className="flex items-center w-full min-w-0 mt-2">
@@ -235,7 +235,7 @@ export default function HistorySection() {
                 All
               </button>
             </div>
-            
+
             <div className="flex items-center gap-2.5 overflow-x-auto pl-4 pb-0 flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {allTags.map(tag => {
                 const isSelected = selectedTag === tag;
