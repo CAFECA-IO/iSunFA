@@ -8,13 +8,9 @@ import { COMPANY as SRR } from '@/constants/prompts/company/srr';
 import { COMPANY as TPM } from '@/constants/prompts/company/tpm';
 import { COMPANY as UEE } from '@/constants/prompts/company/uee';
 import { COMPANY as FINAL } from '@/constants/prompts/company/final';
-import {
-  STEP_1_EVENT_COLLECTION_PROMPT,
-  STEP_2_TAG_EXTRACTION_PROMPT,
-  STEP_3_SUMMARY_AND_ANALYSIS_PROMPT,
-  STEP_4_MARKET_REACTION_PROMPT,
-  STEP_5_FORMATTED_OUTPUT_PROMPT
-} from '@/constants/prompts/market_analysis';
+import * as MarketAnalysisPrompts from '@/constants/prompts/market_analysis';
+import * as FinancialProductRatingPrompts from '@/constants/prompts/financial_product_rating';
+import * as IndustryDevelopmentPrompts from '@/constants/prompts/industry_development';
 import { getPeriodDateRange } from '@/lib/analysis/period';
 
 export interface IMissionParams {
@@ -103,13 +99,20 @@ export class MissionGenerator {
 
       const tasks: ITaskDefinition[] = [];
 
+      let promptSet: Record<string, string> = MarketAnalysisPrompts;
+      if (params.category === 'financial_product_rating') {
+        promptSet = FinancialProductRatingPrompts;
+      } else if (params.category === 'industry_development') {
+        promptSet = IndustryDevelopmentPrompts;
+      }
+
       // Info: (20260310 - Tzuhan) Step 1: Event Collection
       tasks.push({
         type: 'MARKET_EVENT_COLLECTION',
         order: 0,
         data: {
           key: 'STEP_1',
-          prompt: STEP_1_EVENT_COLLECTION_PROMPT,
+          prompt: promptSet.STEP_1_EVENT_COLLECTION_PROMPT,
           context: targetInfo
         }
       });
@@ -120,7 +123,7 @@ export class MissionGenerator {
         order: 1,
         data: {
           key: 'STEP_2',
-          prompt: STEP_2_TAG_EXTRACTION_PROMPT,
+          prompt: promptSet.STEP_2_TAG_EXTRACTION_PROMPT,
           context: targetInfo
         }
       });
@@ -131,7 +134,7 @@ export class MissionGenerator {
         order: 2,
         data: {
           key: 'STEP_3',
-          prompt: STEP_3_SUMMARY_AND_ANALYSIS_PROMPT,
+          prompt: promptSet.STEP_3_SUMMARY_AND_ANALYSIS_PROMPT,
           context: targetInfo
         }
       });
@@ -142,7 +145,7 @@ export class MissionGenerator {
         order: 3,
         data: {
           key: 'STEP_4',
-          prompt: STEP_4_MARKET_REACTION_PROMPT,
+          prompt: promptSet.STEP_4_MARKET_REACTION_PROMPT,
           context: targetInfo
         }
       });
@@ -153,7 +156,7 @@ export class MissionGenerator {
         order: 4,
         data: {
           key: 'STEP_5',
-          prompt: STEP_5_FORMATTED_OUTPUT_PROMPT,
+          prompt: promptSet.STEP_5_FORMATTED_OUTPUT_PROMPT,
           context: targetInfo
         }
       });

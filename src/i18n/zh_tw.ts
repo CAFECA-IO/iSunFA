@@ -7,6 +7,7 @@ export const zhTw = {
     close: "關閉",
     coming_soon_message: "即將推出",
     agree: "同意",
+    filter: "篩選",
     pagination: {
       prev: "上一頁",
       next: "下一頁",

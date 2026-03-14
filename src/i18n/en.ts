@@ -7,6 +7,7 @@ export const en = {
     close: "Close",
     coming_soon_message: "Coming Soon",
     agree: "Agree",
+    filter: "Filter",
     pagination: {
       prev: "Previous",
       next: "Next",
