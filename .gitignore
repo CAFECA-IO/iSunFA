@@ -45,3 +45,8 @@ next-env.d.ts
 # lock files
 package-lock.json
 yarn.lock
+
+# hardhat
+/cache
+/artifacts
+/typechain-types
