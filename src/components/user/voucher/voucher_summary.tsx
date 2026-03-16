@@ -13,15 +13,9 @@ import {
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
+import {IVoucherDashboardSummary,mockVoucherDashboardSummary} from '@/interfaces/voucher'
 // import { useTranslation } from "@/i18n/i18n_context";
 import { numberWithCommas } from "@/lib/utils/common";
-
-interface IVoucherDashboardSummary {
-  todayVoucherCount: number;
-  monthTotalAmount: number;
-  pendingVoucherCount: number;
-  aiAverageConfidence: number;
-}
 
 export default function VoucherSummary() {
   const params = useParams();
@@ -29,7 +23,7 @@ export default function VoucherSummary() {
   // const { t } = useTranslation();
 
   const [summaryData, setSummaryData] =
-    useState<IVoucherDashboardSummary | null>(null);
+    useState<IVoucherDashboardSummary | null>(mockVoucherDashboardSummary);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Info: (20260316 - Julian) 新增傳票

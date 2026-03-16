@@ -7,7 +7,8 @@ import { Prisma } from "@/generated/browser";
 import {
   IVoucher,
   IVoucherLineUI,
-  TradingType /* IParsedVoucherLine */,
+  TradingType, /* IParsedVoucherLine */
+  VoucherStatus,
 } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
 // import { ChatService } from "@/services/chat.service";
@@ -126,6 +127,8 @@ export async function POST(
         lines: {
           create: [],
         },
+        confidence: 0,
+        status: VoucherStatus.MANUAL,
       },
     });
 
@@ -301,6 +304,8 @@ export async function GET(
           totalAmount: totalAmount,
         },
         issuerName: v.user?.name ?? "",
+        confidence: v.confidence,
+        status: v.status as VoucherStatus,
       };
     });
 

@@ -6,6 +6,25 @@ export enum TradingType {
   TRANSFER = "transfer",
 }
 
+export enum VoucherStatus {
+  VERIFIED = "VERIFIED",
+  MANUAL = "MANUAL",
+}
+
+export interface IVoucherDashboardSummary {
+  todayVoucherCount: number;
+  monthTotalAmount: number;
+  pendingVoucherCount: number;
+  aiAverageConfidence: number;
+}
+
+export const mockVoucherDashboardSummary: IVoucherDashboardSummary = {
+  todayVoucherCount: 10,
+  monthTotalAmount: 10000.342,
+  pendingVoucherCount: 5,
+  aiAverageConfidence: 85,
+};
+
 export interface IVoucherLine {
   id: string;
   accounting: IAccount;
@@ -39,6 +58,8 @@ export interface IVoucher {
     totalAmount: number;
   };
   issuerName: string;
+  confidence: number;
+  status: VoucherStatus;
 }
 
 export interface IParsedVoucherLine {

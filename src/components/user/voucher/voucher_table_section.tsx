@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, usePathname } from "next/navigation";
-import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
   ArrowUpRight,
   ArrowDownLeft,
@@ -85,7 +84,6 @@ const VoucherRow = ({
   return (
     <tr
       key={voucher.id}
-      // onClick={voucher.isDeleted ? undefined : onClick}
       className={`border-b border-slate-300 bg-white text-sm transition-colors last:border-0 ${voucher.isDeleted ? "opacity-50" : ""}`}
     >
       {/* Info: (20260316 - Julian) File */}
@@ -116,7 +114,7 @@ const VoucherRow = ({
         )}
       </td>
       {/* Info: (20260316 - Julian) Type */}
-      <td className="px-3 py-4 text-center align-middle sm:px-6">
+      <td aria-label="Type" className="px-3 py-4 text-center align-middle sm:px-6">
         <div className="flex flex-col items-center justify-center gap-2">
           <div
             className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold whitespace-nowrap ${getTypeClasses(voucher.tradingType)}`}
@@ -215,7 +213,8 @@ const VoucherRow = ({
             <button
               type="button"
               onClick={onClick}
-              className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm hover:bg-orange-600"
+              disabled={voucher.isDeleted}
+              className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm disabled:bg-slate-300 enabled:hover:bg-orange-600"
             >
               人工核對
             </button>
@@ -237,7 +236,6 @@ enum VoucherSorting {
 
 export default function VoucherTableSection() {
   const params = useParams();
-  const pathname = usePathname();
   const { t } = useTranslation();
 
   const accountBookId = params?.account_book_id as string;
@@ -324,9 +322,6 @@ export default function VoucherTableSection() {
     }
   }, [fetchVouchers, accountBookId]);
 
-  // Info: (20260309 - Julian) 連接到 Journal
-  const journalLink = pathname.replace("voucher", "journal");
-
   // Info: (20260311 - Julian) 排序狀態
   const isDateAsc = sorting === VoucherSorting.DATE_ASC;
   const isDateDesc = sorting === VoucherSorting.DATE_DESC;
@@ -391,10 +386,7 @@ export default function VoucherTableSection() {
   ) : (
     <tr>
       <td colSpan={7} className="px-3 py-4 text-center sm:px-6">
-        {t("voucher.main_view.empty_message_prefix")}{" "}
-        <Link href={journalLink} className="text-blue-600 hover:underline">
-          {t("voucher.main_view.empty_upload_link")}
-        </Link>
+       目前無傳票資料
       </td>
     </tr>
   );
