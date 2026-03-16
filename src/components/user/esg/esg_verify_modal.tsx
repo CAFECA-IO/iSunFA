@@ -167,9 +167,9 @@ export default function EsgVerifyModal({
                 </div>
 
                 {/* Info: (20260312 - Julian) Body */}
-                <div className="flex w-full overflow-y-auto">
+                <div className="flex overflow-hidden">
                   {/* Info: (20260312 - Julian) Left Side: File Preview */}
-                  <div className="w-1/2 border-r border-slate-200 bg-slate-50 p-8">
+                  <div className="w-1/2 border-r border-slate-200 bg-slate-50 p-6 overflow-y-auto">
                     <div className="mb-4 flex items-center justify-between">
                       <h4 className="text-sm font-bold text-slate-500">
                         {t("esg_verify.preview")}
@@ -213,8 +213,8 @@ export default function EsgVerifyModal({
                   </div>
 
                   {/* Info: (20260312 - Julian) Right Side: Form */}
-                  <div className="flex w-1/2 flex-col p-8">
-                    <div className="grid flex-1 grid-cols-2 gap-4 space-y-5">
+                  <div className="flex w-1/2 flex-col p-6">
+                    <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto">
                       {/* Info: (20260312 - Julian) Date */}
                       <div>
                         <label
@@ -405,7 +405,7 @@ export default function EsgVerifyModal({
                     </div>
 
                     {/* Info: (20260312 - Julian) Actions */}
-                    <div className="mt-8 flex justify-end gap-3 border-t border-slate-200 pt-6">
+                    <div className="mt-4 flex justify-end gap-3 border-t border-slate-200 pt-4">
                       <button
                         type="button"
                         onClick={handleAttemptClose}
