@@ -1,8 +1,13 @@
+"use client";
+
 import { Plus, Download } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
 import VoucherSummary from "@/components/user/voucher/voucher_summary";
 import VoucherTableSection from "@/components/user/voucher/voucher_table_section";
 
 export default function VoucherMainView() {
+  const { t } = useTranslation();
+
   // Info: (20260316 - Julian) 新增傳票
   const createVoucher = async () => {
     // ToDo: (20260316 - Julian) 建立傳票邏輯
@@ -14,10 +19,10 @@ export default function VoucherMainView() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="flex items-center text-2xl font-bold text-slate-800">
-            智能傳票管理
+            {t("智能傳票管理")}
           </h1>
           <p className="mt-2 text-sm font-medium text-slate-500">
-            AI 已根據您的憑證辨識結果自動產生對應的會計分錄。
+            {t("AI 已根據您的憑證辨識結果自動產生對應的會計分錄。")}
           </p>
         </div>
         <div className="flex items-center gap-2">

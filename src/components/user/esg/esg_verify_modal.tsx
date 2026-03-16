@@ -169,7 +169,7 @@ export default function EsgVerifyModal({
                 {/* Info: (20260312 - Julian) Body */}
                 <div className="flex overflow-hidden">
                   {/* Info: (20260312 - Julian) Left Side: File Preview */}
-                  <div className="w-1/2 border-r border-slate-200 bg-slate-50 p-6 overflow-y-auto">
+                  <div className="w-1/2 overflow-y-auto border-r border-slate-200 bg-slate-50 p-6">
                     <div className="mb-4 flex items-center justify-between">
                       <h4 className="text-sm font-bold text-slate-500">
                         {t("esg_verify.preview")}
@@ -397,9 +397,15 @@ export default function EsgVerifyModal({
                           }
                           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                         >
-                          <option value={EsgIntensity.LOW}>{t("esg_verify.form.intensity_low")}</option>
-                          <option value={EsgIntensity.MEDIUM}>{t("esg_verify.form.intensity_medium")}</option>
-                          <option value={EsgIntensity.HIGH}>{t("esg_verify.form.intensity_high")}</option>
+                          <option value={EsgIntensity.LOW}>
+                            {t("esg_verify.form.intensity_low")}
+                          </option>
+                          <option value={EsgIntensity.MEDIUM}>
+                            {t("esg_verify.form.intensity_medium")}
+                          </option>
+                          <option value={EsgIntensity.HIGH}>
+                            {t("esg_verify.form.intensity_high")}
+                          </option>
                         </select>
                       </div>
                     </div>
