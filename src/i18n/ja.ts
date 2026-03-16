@@ -7,6 +7,7 @@ export const ja = {
     close: "閉じる",
     coming_soon_message: "まもなく登場",
     agree: "同意",
+    filter: "フィルター",
     pagination: {
       prev: "前へ",
       next: "次へ",

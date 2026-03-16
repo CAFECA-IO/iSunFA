@@ -7,6 +7,7 @@ export const zhCn = {
     close: "关闭",
     coming_soon_message: "即将推出",
     agree: "同意",
+    filter: "筛选",
     pagination: {
       prev: "上一页",
       next: "下一页",

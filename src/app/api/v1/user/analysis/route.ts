@@ -8,11 +8,18 @@ import { ApiCode } from '@/lib/utils/status';
 import { analysisService } from '@/services/analysis.service';
 import { webAuthnService } from '@/services/webauthn.service';
 import { AppError } from '@/lib/utils/error';
-import { analysisRepo } from '@/repositories/analysis.repo';
 import { orderGenerator } from '@/lib/order/order.generator';
 import { getPeriodDateRange } from '@/lib/analysis/period';
 import { publicClient } from '@/lib/viem_public';
 import { ABIS } from '@/config/contracts';
+import { prisma } from '@/lib/prisma';
+import { Analysis, Mission, Order, Tag, AnalysisTag } from '@/generated/client';
+
+type FullAnalysis = Analysis & {
+  mission: Mission | null;
+  order: Order | null;
+  tags: (AnalysisTag & { tag: Tag })[];
+};
 
 export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
@@ -199,11 +206,21 @@ export async function GET(request: NextRequest) {
       return jsonFail(ApiCode.UNAUTHORIZED, 'Invalid or expired token');
     }
 
-    // Info: (20260128 - Luphia) Fetch analyses with related mission data
-    const analyses = await analysisRepo.findByUserId(user.id);
+    // Info: (20260311 - Tzuhan) Fetch associated tags and related mission data
+    const fullAnalyses = await prisma.analysis.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        mission: true,
+        order: true,
+        tags: {
+          include: { tag: true }
+        }
+      }
+    });
 
     // Info: (20260128 - Luphia) Map DB result to response format
-    const history = analyses.map(analysis => {
+    const history = fullAnalyses.map((analysis: FullAnalysis) => {
       const status = analysis.mission?.status?.toLowerCase() || 'unknown';
       let periodType = 'unknown';
 
@@ -257,6 +274,8 @@ export async function GET(request: NextRequest) {
         ? missionData.keyword
         : (typeof orderData?.keyword === 'string' ? orderData.keyword : undefined);
 
+      const tags = analysis.tags?.map(t => t.tag.name) || [];
+
       return {
         id: analysis.id,
         generatedAt,
@@ -268,7 +287,8 @@ export async function GET(request: NextRequest) {
         status: status,
         reportId: analysis.id,
         country,
-        keyword
+        keyword,
+        tags
       };
     });
 

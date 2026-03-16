@@ -7,6 +7,7 @@ export const ko = {
     close: "닫기",
     coming_soon_message: "오픈 예정",
     agree: "동의",
+    filter: "필터",
     pagination: {
       prev: "이전",
       next: "다음",

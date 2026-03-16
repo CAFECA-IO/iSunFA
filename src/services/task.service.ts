@@ -139,6 +139,7 @@ export class TaskService {
     let startDate = mData.startDate || 'N/A';
     let endDate = mData.endDate || 'N/A';
     let marketName = '台灣';
+    let targetKeyword = 'General';
 
     if (taskData.context) {
       try {
@@ -146,6 +147,7 @@ export class TaskService {
         startDate = parsedContext.startDate || startDate;
         endDate = parsedContext.endDate || endDate;
         marketName = parsedContext.marketName || marketName;
+        targetKeyword = parsedContext.target || targetKeyword;
       } catch (e) {
         console.warn('[TaskService] Could not parse task context for date validation', e);
         startDate = mData.startDate || 'N/A';
@@ -158,7 +160,11 @@ export class TaskService {
       .replace(/\{Period_End\}/g, endDate)
       .replace(/\{Market_Name\}/g, marketName)
       .replace(/\{Current_Date\}/g, currentDate)
-      .replace(/\{Historical_Tags_List\}/g, mData.historicalTags ? mData.historicalTags.join(', ') : '無歷史標籤');
+      .replace(/\{Target_Keyword\}/g, targetKeyword);
+    const tagsString = mData.historicalTags && mData.historicalTags.length > 0
+      ? mData.historicalTags.join(', ')
+      : '無歷史標籤';
+    interpolatedPrompt = interpolatedPrompt.replace(/\{Historical_Tags_List\}/g, tagsString);
 
     if (task.order > 0) {
       // Info: (20260130 - Luphia) Fetch results from previous order
