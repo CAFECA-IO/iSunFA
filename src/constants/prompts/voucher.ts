@@ -11,6 +11,8 @@ export const VOUCHER_PROMPT = `
         "particular": "string", // 分錄摘要
         "amount": 100, // 金額 (數字)
         "isDebit": true // 是否為借方 (true = 借方, false = 貸方)
+        "confidence": 85 // AI 分析的信心度 (數字)
+        "isVerified": true // 超過 90% 信心度為 true，否則為 false
       }
     ]
   }

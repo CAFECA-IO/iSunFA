@@ -13,7 +13,7 @@ import {
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
-import {IVoucherDashboardSummary,mockVoucherDashboardSummary} from '@/interfaces/voucher'
+import {IVoucherDashboardSummary} from '@/interfaces/voucher'
 // import { useTranslation } from "@/i18n/i18n_context";
 import { numberWithCommas } from "@/lib/utils/common";
 
@@ -23,7 +23,7 @@ export default function VoucherSummary() {
   // const { t } = useTranslation();
 
   const [summaryData, setSummaryData] =
-    useState<IVoucherDashboardSummary | null>(mockVoucherDashboardSummary);
+    useState<IVoucherDashboardSummary | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Info: (20260316 - Julian) 新增傳票
