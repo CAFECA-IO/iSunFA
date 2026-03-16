@@ -99,7 +99,7 @@ contract TaskBoard {
 
         // 6. Deploy & Init Token
         Token t = new Token();
-        t.init(address(ir), address(mc), "TaskBoard Reward", "TBR", 18, address(0));
+        t.init(address(ir), address(mc), "Wrapped iSunCoin", "wISC", 18, address(0));
 
         // 7. Bind dependencies
         irs.bindIdentityRegistry(address(ir));
