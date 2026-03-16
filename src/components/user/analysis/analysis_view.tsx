@@ -234,7 +234,7 @@ export default function AnalysisView() {
       // Info: (20260311 - Tzuhan)
       // [TESTING BACKDOOR] 測試用後門：取消註解以下區塊，即可針對特定帳號繞過付款
       // =====================================================================
-      /*
+
       if (user.address.toLowerCase() === '0x9e604a5c15dff17cb12346f028c1f31776a54b64'.toLowerCase() && activeTab === 'external') {
         const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
           method: 'POST',
@@ -271,7 +271,7 @@ export default function AnalysisView() {
         setIsLoading(false);
         return;
       }
-      */
+
       // =====================================================================
 
       // Info: (20260209 - Tzuhan) Check user credits
