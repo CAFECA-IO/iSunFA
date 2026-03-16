@@ -3,7 +3,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
+import { IVoucher, IVoucherLineUI, TradingType, VoucherStatus } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
 
 /**
@@ -83,6 +83,9 @@ export async function GET(
         totalAmount: lineTotalAmount,
       },
       issuerName: voucher.user?.name ?? "",
+      confidence: voucher.confidence,
+      status: voucher.status as VoucherStatus,
+
     };
 
     return jsonOk({ result });

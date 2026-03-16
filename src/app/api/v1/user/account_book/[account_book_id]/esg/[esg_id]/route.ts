@@ -3,7 +3,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { EsgScope, EsgIntensity, EsgStatus } from "@/generated/client";
+import { EsgScope, EsgIntensity, AIAnalysisStatus } from "@/generated/client";
 import {
   IEsgRecord,
   EsgScope as ClientEsgScope,
@@ -158,7 +158,7 @@ export async function PUT(
           confidence: reqBody.confidence,
         }),
         ...(reqBody.status && {
-          status: reqBody.status.toUpperCase() as EsgStatus,
+          status: reqBody.status.toUpperCase() as AIAnalysisStatus,
         }),
       },
     });
