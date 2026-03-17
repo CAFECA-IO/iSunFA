@@ -62,10 +62,12 @@ export class MissionGenerator {
         tasks.push(taskGenerator.generateTask(item.key, item.prompt, targetInfo, 0));
       });
 
-      // Info: (20260130 - Luphia) 2. Final Synthesis Task (Order 1)
-      // Info: (20260316 - Tzuhan) The prompt for FINAL depends on the inputs of previous tasks. 
-      // Info: (20260316 - Tzuhan) Since we are not executing here, we save the raw template. 
-      // Info: (20260316 - Tzuhan) The Executor will need to handle the prompt interpolation using results from Order 0 tasks.
+      /**
+       * Info: (20260316 - Tzuhan) 2. Final Synthesis Task (Order 1)
+       * The prompt for FINAL depends on the inputs of previous tasks. 
+       * Since we are not executing here, we save the raw template. 
+       * The Executor will need to handle the prompt interpolation using results from Order 0 tasks.
+       */
       tasks.push(taskGenerator.generateTask('FINAL', FINAL, targetInfo, 1));
 
       return {
