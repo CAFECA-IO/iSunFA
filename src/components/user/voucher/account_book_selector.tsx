@@ -155,7 +155,7 @@ export default function AccountBookSelector({
                   </div>
                 ) : (
                   <div className="flex flex-1 overflow-hidden">
-                    {/* Left Side: Types */}
+                    {/* Info: (20260317 - Julian) Left Side: Types */}
                     <div className="w-1/3 border-r border-slate-100 flex flex-col overflow-y-auto p-4 bg-slate-50/50">
                       <button
                         onClick={() => setSelectedType(null)}
