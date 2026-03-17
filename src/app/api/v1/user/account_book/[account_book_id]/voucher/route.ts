@@ -7,7 +7,7 @@ import { Prisma } from "@/generated/browser";
 import {
   IVoucher,
   IVoucherLineUI,
-  TradingType, /* IParsedVoucherLine */
+  TradingType /* IParsedVoucherLine */,
   VoucherStatus,
 } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
@@ -133,7 +133,7 @@ export async function POST(
       },
     });
 
-    if(!newVoucher) {
+    if (!newVoucher) {
       console.error("Voucher creation failed");
       return jsonFail(ApiCode.NOT_FOUND, "Voucher creation failed");
     }

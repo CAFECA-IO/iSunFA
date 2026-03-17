@@ -39,9 +39,13 @@ export async function GET(
         "Accountbook not found or no permission",
       );
     }
-    
+
     const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     // Info: (20260316 - Julian) 取得今日傳票數量
@@ -72,7 +76,9 @@ export async function GET(
       where: { accountBookId },
       _avg: { confidence: true },
     });
-    const aiAverageConfidence = Math.round(aiAverageConfidenceAggr._avg.confidence || 0);
+    const aiAverageConfidence = Math.round(
+      aiAverageConfidenceAggr._avg.confidence || 0,
+    );
 
     // Info: (20260316 - Julian) 組合 response
     const dashboardSummary: IVoucherDashboardSummary = {

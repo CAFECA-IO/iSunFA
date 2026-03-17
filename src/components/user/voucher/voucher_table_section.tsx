@@ -445,10 +445,10 @@ export default function VoucherTableSection() {
 
             {/* Info: (20260316 - Julian) Filter Content */}
             <div
-              className={`grid border-b border-slate-200 bg-slate-50 shadow-inner transition-all duration-300 ease-in-out ${showFilters ? "grid-rows-[1fr] p-6 opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+              className={`grid border-b border-slate-200 bg-slate-50 shadow-inner transition-all duration-300 ease-in-out ${showFilters ? "grid-rows-[1fr] p-4 opacity-100 lg:p-6" : "grid-rows-[0fr] opacity-0"}`}
             >
               <div
-                className={`flex flex-col gap-6 overflow-hidden lg:flex-row`}
+                className={`flex flex-col gap-2 overflow-hidden lg:flex-row lg:gap-6`}
               >
                 <div className="w-[300px]">
                   <label
@@ -483,7 +483,7 @@ export default function VoucherTableSection() {
                   <div className="mb-2 block text-xs font-semibold text-slate-700">
                     {t("voucher.main_view.filters.period")}
                   </div>
-                  <div className="flex w-[300px] items-center gap-4">
+                  <div className="flex w-[300px] items-center gap-2 lg:gap-4">
                     <input
                       aria-label="Start Date"
                       type="date"
@@ -506,7 +506,7 @@ export default function VoucherTableSection() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between bg-white p-2 lg:px-6 lg:py-4">
+            <div className="flex items-center justify-between bg-white px-2 py-4 lg:px-6">
               <div className="flex cursor-pointer items-center gap-3">
                 <button
                   type="button"
@@ -524,7 +524,7 @@ export default function VoucherTableSection() {
                 </button>
                 <label
                   htmlFor="hideDeletedToggle"
-                  className="cursor-pointer text-sm font-semibold text-slate-600"
+                  className="cursor-pointer text-xs font-semibold text-slate-600 lg:text-sm"
                 >
                   {t("voucher.main_view.filters.hide_deleted")}
                 </label>

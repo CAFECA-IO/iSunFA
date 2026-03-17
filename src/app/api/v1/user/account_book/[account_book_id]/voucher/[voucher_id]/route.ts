@@ -3,7 +3,12 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { IVoucher, IVoucherLineUI, TradingType, VoucherStatus } from "@/interfaces/voucher";
+import {
+  IVoucher,
+  IVoucherLineUI,
+  TradingType,
+  VoucherStatus,
+} from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
 
 /**
@@ -85,7 +90,6 @@ export async function GET(
       issuerName: voucher.user?.name ?? "",
       confidence: voucher.confidence,
       status: voucher.status as VoucherStatus,
-
     };
 
     return jsonOk({ result });
@@ -145,7 +149,7 @@ export async function PUT(
 
     // Info: (20260311 - Julian) 取得更新的內容
     const body = await request.json();
-    const { inputDate, voucherType, note } = body;
+    const { id, inputDate, voucherType, note } = body;
     const rows = body.rows as IVoucherLineUI[];
 
     if (!inputDate || !voucherType || !rows || !Array.isArray(rows)) {
@@ -157,6 +161,7 @@ export async function PUT(
     const updatedVoucher = await prisma.voucher.update({
       where: { id: voucherId },
       data: {
+        id,
         tradingDate: new Date(inputDate),
         tradingType: voucherType.toUpperCase(),
         note: note || "",

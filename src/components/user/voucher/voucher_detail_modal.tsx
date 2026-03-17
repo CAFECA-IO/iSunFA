@@ -17,6 +17,7 @@ import {
   FileText,
   DollarSign,
   CheckCircle2,
+  Hash
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
@@ -177,6 +178,7 @@ export default function VoucherDetailModal({
     TradingType.INCOME,
   );
   const [note, setNote] = useState<string>("");
+  const [editedVoucherId, setEditedVoucherId] = useState<string>("");
   const [rows, setRows] = useState<IVoucherLineUI[]>([]);
   // const [isRecurring, setIsRecurring] = useState<boolean>(false);
 
@@ -200,6 +202,7 @@ export default function VoucherDetailModal({
             setInputDate(v.tradingDate * 1000);
             setVoucherType(v.tradingType);
             setNote(v.note || "");
+            setEditedVoucherId(v.id);
             setRows(v.lineItems.lines || []);
           }
         } catch (error) {
@@ -242,6 +245,7 @@ export default function VoucherDetailModal({
     if (voucherType !== (activeVoucher.tradingType ?? TradingType.INCOME))
       return true;
     if (note !== (activeVoucher.note || "")) return true;
+    if (editedVoucherId !== activeVoucher.id) return true;
 
     // Info: (20260310 - Julian) 檢查分錄數量
     const originalRows = activeVoucher.lineItems.lines || [];
@@ -283,6 +287,7 @@ export default function VoucherDetailModal({
    * 4. 有分錄的會計科目或金額為空
    */
   const disabledSaveButton =
+    !editedVoucherId.trim() ||
     inputDate === 0 ||
     voucherType == null ||
     !isTotalBalanced ||
@@ -319,7 +324,14 @@ export default function VoucherDetailModal({
   const executeSaveVoucher = async () => {
     setIsSaving(true);
     try {
-      const payload = { inputDate, voucherType, note, rows, targetStatus };
+      const payload = {
+        id: editedVoucherId,
+        inputDate,
+        voucherType,
+        note,
+        rows,
+        targetStatus,
+      };
       const res = await request<IApiResponse<{ voucher: IVoucher }>>(
         `/api/v1/user/account_book/${accountBookId}/voucher/${voucherId}`,
         {
@@ -520,12 +532,25 @@ export default function VoucherDetailModal({
                         </div>
 
                         <div className="col-span-2">
-                          <div className="mb-2 block text-xs font-bold text-slate-600">
+                          <label
+                            htmlFor="voucherIdInput"
+                            className="mb-2 block text-xs font-bold text-slate-600"
+                          >
                             傳票編號
-                          </div>
-                          <div className="flex h-[42px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 shadow-sm">
-                            <span className="text-slate-400">#</span>
-                            {voucherId}
+                          </label>
+                          <div className="flex h-[42px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold shadow-sm focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
+                            <Hash size={20} className="text-slate-400" />
+                            <input
+                              id="voucherIdInput"
+                              aria-label="傳票編號"
+                              type="text"
+                              value={editedVoucherId}
+                              onChange={(e) =>
+                                setEditedVoucherId(e.target.value)
+                              }
+                              className="w-full bg-transparent text-slate-800 outline-none placeholder:font-normal placeholder:text-slate-300"
+                              placeholder="輸入傳票編號"
+                            />
                           </div>
                         </div>
                       </div>
