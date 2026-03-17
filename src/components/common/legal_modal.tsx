@@ -55,7 +55,7 @@ export default function LegalModal({ isOpen, onClose, documentType }: ILegalModa
 
   return (
     <Transition show={isOpen}>
-      <Dialog className="relative z-[60]" onClose={onClose}>
+      <Dialog className="relative z-60" onClose={onClose}>
         <TransitionChild
           enter="ease-out duration-300"
           enterFrom="opacity-0"
@@ -123,7 +123,7 @@ export default function LegalModal({ isOpen, onClose, documentType }: ILegalModa
                       disabled={!hasScrolledToBottom}
                       className={`flex-1 w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm transition-all group
                         ${hasScrolledToBottom
-                          ? 'bg-orange-600 hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600'
+                          ? 'bg-orange-600 hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600'
                           : 'bg-gray-300 cursor-not-allowed'}
                       `}
                       onClick={onClose}

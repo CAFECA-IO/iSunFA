@@ -32,8 +32,8 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { useParams } from "next/navigation";
-import { ACCOUNTS } from "@/constants/accounts";
 import { FilePreview } from "@/components/common/file_preview";
+import AccountBookSelector from "@/components/user/voucher/account_book_selector";
 
 interface IVoucherDetailModalProps {
   isOpen: boolean;
@@ -45,40 +45,28 @@ const VoucherRow = ({
   row,
   updateRow,
   removeRow,
+  onOpenSelector,
 }: {
   row: IVoucherLineUI;
   updateRow: (id: string, newRow: IVoucherLineUI) => void;
   removeRow: (id: string) => void;
+  onOpenSelector: (rowId: string) => void;
 }) => {
   const { t } = useTranslation();
-  const accountOptions = ACCOUNTS.TW;
 
   return (
     <div className="mb-4 flex items-start gap-2">
       <div className="flex flex-1 flex-col gap-2">
         {/* Info: (20260317 - Julian) Accounting Code Select */}
         <div className="relative flex h-[42px] items-center overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
-          <select
-            id={`accounting-${row.id}`}
-            value={row.accounting?.code || ""}
-            onChange={(e) => {
-              const acc =
-                accountOptions.find((a) => a.code === e.target.value) || null;
-              updateRow(row.id, { ...row, accounting: acc });
-            }}
-            className="w-full appearance-none bg-transparent px-4 py-2 text-sm font-semibold text-slate-700 outline-none"
+          <button
+            type="button"
+            className="w-full text-left appearance-none bg-transparent px-4 py-2 text-sm font-semibold text-slate-700 outline-none truncate"
+            onClick={() => onOpenSelector(row.id)}
           >
-            <option value="" disabled>
-              {t("voucher.detail_modal.fields.accounting_select") ||
-                "選擇會計科目"}
-            </option>
-            {accountOptions.map((acc) => (
-              <option key={acc.code} value={acc.code}>
-                {acc.code} - {acc.name}
-              </option>
-            ))}
-          </select>
-          <div className="bg-white pr-3">
+            {row.accounting ? `${row.accounting.code} - ${row.accounting.name}` : (t("voucher.detail_modal.fields.accounting_select") || "選擇會計科目")}
+          </button>
+          <div className="bg-white pr-3 pointer-events-none">
             <ChevronDown size={16} className="text-slate-400" />
           </div>
         </div>
@@ -186,6 +174,9 @@ export default function VoucherDetailModal({
   const [isCloseModalOpen, setIsCloseModalOpen] = useState<boolean>(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
   const [targetStatus, setTargetStatus] = useState<VoucherStatus>();
+  
+  const [isAccountBookSelectorOpen, setIsAccountBookSelectorOpen] = useState(false);
+  const [selectorTargetRowId, setSelectorTargetRowId] = useState<string | null>(null);
 
   // Info: (20260311 - Julian) 從 API 取得傳票
   useEffect(() => {
@@ -594,6 +585,10 @@ export default function VoucherDetailModal({
                             row={row}
                             updateRow={updateRow}
                             removeRow={removeRow}
+                            onOpenSelector={(rowId) => {
+                              setSelectorTargetRowId(rowId);
+                              setIsAccountBookSelectorOpen(true);
+                            }}
                           />
                         ))}
                       </div>
@@ -718,6 +713,21 @@ export default function VoucherDetailModal({
         }
         cancelText={t("voucher.detail_modal.actions.cancel")}
         onConfirm={executeSaveVoucher}
+      />
+
+      {/* Info: (20260317 - Julian) Account Book Selector */}
+      <AccountBookSelector
+        isOpen={isAccountBookSelectorOpen}
+        onClose={() => setIsAccountBookSelectorOpen(false)}
+        accountBookId={accountBookId}
+        onSelect={(account) => {
+          if (selectorTargetRowId) {
+            const targetRow = rows.find(r => r.id === selectorTargetRowId);
+            if (targetRow) {
+              updateRow(selectorTargetRowId, { ...targetRow, accounting: account });
+            }
+          }
+        }}
       />
     </>
   );

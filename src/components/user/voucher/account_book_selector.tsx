@@ -1,0 +1,194 @@
+'use client';
+
+import { Fragment, useState, useEffect, useMemo } from "react";
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Transition,
+  TransitionChild,
+} from "@headlessui/react";
+import { useTranslation } from "@/i18n/i18n_context";
+import { X, Search, Loader2 } from "lucide-react";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
+import { ACCOUNTS } from "@/constants/accounts";
+
+// Info: (20260317 - Julian) IAccount interface type
+export interface IAccount {
+  code: string;
+  name: string;
+  description: string;
+  type: string;
+  level: number;
+  parentCode: string;
+  isDebit: boolean;
+}
+
+interface IAccountBook {
+  id: string;
+  name: string;
+  country: string;
+  currency: string;
+  rule: string;
+}
+
+interface IAccountBookSelectorProps {
+  isOpen: boolean;
+  onClose: () => void;
+  accountBookId: string;
+  onSelect: (account: IAccount) => void;
+}
+
+export default function AccountBookSelector({
+  isOpen,
+  onClose,
+  accountBookId,
+  onSelect,
+}: IAccountBookSelectorProps) {
+  const { t } = useTranslation();
+  const [keyword, setKeyword] = useState<string>("");
+  const [accountBook, setAccountBook] = useState<IAccountBook | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (isOpen && accountBookId) {
+      if (accountBook?.id !== accountBookId) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setIsLoading(true);
+        request<IApiResponse<IAccountBook>>(`/api/v1/user/account_book/${accountBookId}`)
+          .then((res) => {
+            if (res.payload) {
+              setAccountBook(res.payload);
+            }
+          })
+          .finally(() => setIsLoading(false));
+      }
+    } else {
+      setKeyword("");
+      setIsLoading(true);
+    }
+  }, [isOpen, accountBookId, accountBook?.id]);
+
+  // Info: (20260317 - Julian) Determine options by matching country code
+  const accountOptions = useMemo(() => {
+    if (!accountBook?.country) return ACCOUNTS.TW;
+    const countryKey = accountBook.country as keyof typeof ACCOUNTS;
+    return ACCOUNTS[countryKey] || ACCOUNTS.TW;
+  }, [accountBook?.country]);
+
+  // Info: (20260317 - Julian) Computed list based on keyword search
+  const filteredAccounts = useMemo(() => {
+    if (!keyword.trim()) return accountOptions;
+    const lowerKeyword = keyword.toLowerCase();
+    return accountOptions.filter(
+      (acc) =>
+        acc.code.toLowerCase().includes(lowerKeyword) ||
+        acc.name.toLowerCase().includes(lowerKeyword)
+    );
+  }, [keyword, accountOptions]);
+
+  return (
+    <Transition show={isOpen} as={Fragment}>
+      <Dialog className="relative z-100" onClose={onClose}>
+        <TransitionChild
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" />
+        </TransitionChild>
+
+        <div className="fixed inset-0 z-101 w-screen overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <TransitionChild
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enterTo="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >
+              <DialogPanel className="relative transform flex flex-col h-[70vh] bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg rounded-2xl overflow-hidden">
+                {/* Info: (20260317 - Julian) Header */}
+                <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                  <DialogTitle
+                    as="h3"
+                    className="text-lg font-bold text-slate-800"
+                  >
+                    {t("voucher.detail_modal.fields.accounting_select") || "請選擇會計科目"}
+                  </DialogTitle>
+                  <button
+                    type="button"
+                    aria-label="Close"
+                    onClick={onClose}
+                    className="rounded-full bg-slate-100 p-2 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800"
+                  >
+                    <X size={18} className="stroke-[2.5]" />
+                  </button>
+                </div>
+                
+                {/* Info: (20260317 - Julian) Body Content */}
+                {isLoading ? (
+                  <div className="flex flex-1 items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col flex-1 overflow-hidden">
+                    <div className="p-4 border-b border-slate-100">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          aria-label="Search"
+                          value={keyword}
+                          onChange={(e) => setKeyword(e.target.value)}
+                          placeholder="搜尋科目代碼或名稱..."
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto p-2">
+                      {filteredAccounts.length > 0 ? (
+                        <div className="flex flex-col gap-1">
+                          {filteredAccounts.map((acc) => (
+                            <button
+                              key={acc.code}
+                              onClick={() => {
+                                onSelect(acc);
+                                onClose();
+                              }}
+                              className="w-full rounded-xl p-3 text-left transition-colors hover:bg-slate-50 disabled:opacity-50 flex items-center gap-3 group"
+                            >
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors">
+                                {acc.code}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-sm font-bold text-slate-700">{acc.name}</span>
+                                <span className="text-xs font-medium text-slate-400 mt-0.5">{acc.type}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex h-32 flex-col items-center justify-center text-slate-400">
+                          <p className="text-sm font-semibold">找不到符合的會計科目</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </div>
+      </Dialog>
+    </Transition>
+  );
+}
