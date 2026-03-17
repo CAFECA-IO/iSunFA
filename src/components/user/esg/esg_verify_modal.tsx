@@ -167,9 +167,9 @@ export default function EsgVerifyModal({
                 </div>
 
                 {/* Info: (20260312 - Julian) Body */}
-                <div className="flex w-full overflow-y-auto">
+                <div className="flex overflow-hidden">
                   {/* Info: (20260312 - Julian) Left Side: File Preview */}
-                  <div className="w-1/2 border-r border-slate-200 bg-slate-50 p-8">
+                  <div className="w-1/2 overflow-y-auto border-r border-slate-200 bg-slate-50 p-6">
                     <div className="mb-4 flex items-center justify-between">
                       <h4 className="text-sm font-bold text-slate-500">
                         {t("esg_verify.preview")}
@@ -213,8 +213,8 @@ export default function EsgVerifyModal({
                   </div>
 
                   {/* Info: (20260312 - Julian) Right Side: Form */}
-                  <div className="flex w-1/2 flex-col p-8">
-                    <div className="grid flex-1 grid-cols-2 gap-4 space-y-5">
+                  <div className="flex w-1/2 flex-col p-6">
+                    <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto">
                       {/* Info: (20260312 - Julian) Date */}
                       <div>
                         <label
@@ -397,15 +397,21 @@ export default function EsgVerifyModal({
                           }
                           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                         >
-                          <option value={EsgIntensity.LOW}>{t("esg_verify.form.intensity_low")}</option>
-                          <option value={EsgIntensity.MEDIUM}>{t("esg_verify.form.intensity_medium")}</option>
-                          <option value={EsgIntensity.HIGH}>{t("esg_verify.form.intensity_high")}</option>
+                          <option value={EsgIntensity.LOW}>
+                            {t("esg_verify.form.intensity_low")}
+                          </option>
+                          <option value={EsgIntensity.MEDIUM}>
+                            {t("esg_verify.form.intensity_medium")}
+                          </option>
+                          <option value={EsgIntensity.HIGH}>
+                            {t("esg_verify.form.intensity_high")}
+                          </option>
                         </select>
                       </div>
                     </div>
 
                     {/* Info: (20260312 - Julian) Actions */}
-                    <div className="mt-8 flex justify-end gap-3 border-t border-slate-200 pt-6">
+                    <div className="mt-4 flex justify-end gap-3 border-t border-slate-200 pt-4">
                       <button
                         type="button"
                         onClick={handleAttemptClose}

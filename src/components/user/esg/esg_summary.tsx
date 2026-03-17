@@ -28,12 +28,12 @@ export default function EsgSummary() {
       const fetchSummary = async () => {
         try {
           setIsLoading(true);
-            const res = await request<IApiResponse<IEsgDashboardSummary>>(
-              `/api/v1/user/account_book/${accountBookId}/esg/summary`,
-            );
-            if (res.payload) {
-              setSummaryData(res.payload);
-            }
+          const res = await request<IApiResponse<IEsgDashboardSummary>>(
+            `/api/v1/user/account_book/${accountBookId}/esg/summary`,
+          );
+          if (res.payload) {
+            setSummaryData(res.payload);
+          }
         } catch (error) {
           console.error("Failed to fetch ESG summary:", error);
         } finally {
@@ -60,7 +60,10 @@ export default function EsgSummary() {
         <Cloud className="mb-2 h-8 w-8 text-slate-300" />
         <span className="text-sm font-bold">
           {t("esg_summary.no_data_prefix")}
-          <Link href={journalLink} className="text-blue-600 hover:underline mx-1">
+          <Link
+            href={journalLink}
+            className="mx-1 text-blue-600 hover:underline"
+          >
             {t("esg_summary.upload_link")}
           </Link>
           {t("esg_summary.no_data_suffix")}
@@ -145,7 +148,9 @@ export default function EsgSummary() {
       <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-500">{t("esg_summary.emission_intensity")}</span>
+            <span className="text-sm font-bold text-slate-500">
+              {t("esg_summary.emission_intensity")}
+            </span>
             <BarChart3 className="h-5 w-5 text-amber-400" />
           </div>
           <div className="flex items-baseline gap-1.5">
@@ -160,7 +165,9 @@ export default function EsgSummary() {
           </div>
         </div>
         <div className="mt-8 text-xs font-bold text-slate-500">
-          {t("esg_summary.better_than_industry", { average: summaryData.emissionIntensity.industryAverage })}
+          {t("esg_summary.better_than_industry", {
+            average: summaryData.emissionIntensity.industryAverage,
+          })}
         </div>
       </div>
 

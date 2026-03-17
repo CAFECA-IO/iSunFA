@@ -11,6 +11,7 @@ import {
   Cloud,
   ArrowDown,
   ArrowUp,
+  FileQuestion,
 } from "lucide-react";
 import { timestampToString } from "@/lib/utils/common";
 import {
@@ -92,7 +93,7 @@ const EsgRow = ({
   return (
     <tr>
       <td className="px-6 py-4">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-1 sm:h-20 sm:w-20">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
           {/* Info: (20260312 - Julian) File Preview */}
           {record.file ? (
             <FilePreview
@@ -101,8 +102,8 @@ const EsgRow = ({
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-12 w-12 items-center justify-center bg-gray-50 p-1 sm:h-20 sm:w-20">
-              <span className="text-xs font-bold text-slate-500">{t("esg_table.no_file")}</span>
+            <div className="flex h-full w-full items-center justify-center rounded-lg bg-slate-100 p-1">
+              <FileQuestion className="h-6 w-6 text-slate-300" />
             </div>
           )}
         </div>
@@ -273,9 +274,15 @@ export default function EsgTableSection() {
             className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-bold text-slate-600 focus:outline-none"
           >
             <option value="ALL">{t("esg_table.filter_intensity_all")}</option>
-            <option value={EsgIntensity.HIGH}>{t("esg_table.intensity.high")}</option>
-            <option value={EsgIntensity.MEDIUM}>{t("esg_table.intensity.medium")}</option>
-            <option value={EsgIntensity.LOW}>{t("esg_table.intensity.low")}</option>
+            <option value={EsgIntensity.HIGH}>
+              {t("esg_table.intensity.high")}
+            </option>
+            <option value={EsgIntensity.MEDIUM}>
+              {t("esg_table.intensity.medium")}
+            </option>
+            <option value={EsgIntensity.LOW}>
+              {t("esg_table.intensity.low")}
+            </option>
           </select>
           <select
             aria-label={t("esg_table.filter_scope_aria")}
@@ -284,9 +291,15 @@ export default function EsgTableSection() {
             className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-bold text-slate-600 focus:outline-none"
           >
             <option value="ALL">{t("esg_table.filter_scope_all")}</option>
-            <option value={EsgScope.SCOPE_1}>{t("esg_table.scope.scope_1")}</option>
-            <option value={EsgScope.SCOPE_2}>{t("esg_table.scope.scope_2")}</option>
-            <option value={EsgScope.SCOPE_3}>{t("esg_table.scope.scope_3")}</option>
+            <option value={EsgScope.SCOPE_1}>
+              {t("esg_table.scope.scope_1")}
+            </option>
+            <option value={EsgScope.SCOPE_2}>
+              {t("esg_table.scope.scope_2")}
+            </option>
+            <option value={EsgScope.SCOPE_3}>
+              {t("esg_table.scope.scope_3")}
+            </option>
           </select>
           <button
             type="button"
@@ -294,7 +307,9 @@ export default function EsgTableSection() {
             onClick={() => setDateSort(dateSort === "desc" ? "asc" : "desc")}
             className="flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50"
           >
-            {dateSort === "desc" ? t("esg_table.sort_newest") : t("esg_table.sort_oldest")}
+            {dateSort === "desc"
+              ? t("esg_table.sort_newest")
+              : t("esg_table.sort_oldest")}
             {dateSort === "desc" ? (
               <ArrowDown className="ml-1 h-4 w-4" />
             ) : (

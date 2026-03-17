@@ -7,10 +7,10 @@ import { Prisma } from "@/generated/browser";
 import {
   IVoucher,
   IVoucherLineUI,
-  TradingType /* IParsedVoucherLine */,
+  TradingType,
+  VoucherStatus,
 } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
-// import { ChatService } from "@/services/chat.service";
 
 /**
  * Info: (20260310 - Julian) 新增傳票：將 AI 解析出的傳票存入 DB
@@ -78,7 +78,7 @@ export async function POST(
     //     ? [{ data: file.base64, mimeType: file.mimeType }]
     //     : [];
 
-    // const { data: voucherData, error: aiError } = await chatService.analyzeVoucher(imagesForAi);
+    // const { data: voucherData, error: aiError } = await chatService.analyzeVoucher(imagesForAi, accountBook.country);
 
     // if (aiError || !voucherData) {
     //   return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, aiError || "Failed to parse voucher");
@@ -95,6 +95,7 @@ export async function POST(
     // const parsedLines: IParsedVoucherLine[] = Array.isArray(voucherData.lines) ? voucherData.lines : [];
 
     // Info: (20260311 - Julian) 將 AI 解析結果存入 DB
+    // ToDo: (20260317 - Julian) confidence > 80 -> isVerified = true, else false
     // const newVoucher = await prisma.voucher.create({
     //   data: {
     //     accountBookId: accountBook.id,
@@ -126,6 +127,8 @@ export async function POST(
         lines: {
           create: [],
         },
+        confidence: 0,
+        status: VoucherStatus.MANUAL,
       },
     });
 
@@ -301,6 +304,8 @@ export async function GET(
           totalAmount: totalAmount,
         },
         issuerName: v.user?.name ?? "",
+        confidence: v.confidence,
+        status: v.status as VoucherStatus,
       };
     });
 

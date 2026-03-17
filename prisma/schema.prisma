@@ -428,6 +428,12 @@ model AuditLog {
   @@map("audit_log")
 }
 
+// Info: (20260316 - Julian) AI 分析狀態
+enum AIAnalysisStatus {
+  VERIFIED
+  MANUAL
+}
+
 // Info: (20260310 - Julian) 傳票
 enum VoucherTradingType {
   INCOME
@@ -465,7 +471,13 @@ model Voucher {
   userId String? @map("user_id")
   user   User?   @relation(fields: [userId], references: [id])
 
-  // 包含的分錄
+  // Info: (20260316 - Julian) AI 信心度
+  confidence Int @map("confidence")
+
+  // Info: (20260316 - Julian) AI 分析狀態 (VERIFIED, MANUAL)
+  status AIAnalysisStatus @map("status")
+
+  // Info: (20260316 - Julian) 包含的分錄
   lines VoucherLine[]
 
   @@map("voucher")
@@ -509,26 +521,21 @@ enum EsgIntensity {
   HIGH
 }
 
-enum EsgStatus {
-  VERIFIED
-  MANUAL
-}
-
 model EsgRecord {
-  id              String       @id @default(uuid())
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
-  deletedAt       DateTime?    @map("deleted_at")
-  dateTimestamp   Int          @map("date_timestamp") // Info: (20260312 - Julian) 日期時間戳
+  id              String           @id @default(uuid())
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  deletedAt       DateTime?        @map("deleted_at")
+  dateTimestamp   Int              @map("date_timestamp") // Info: (20260312 - Julian) 日期時間戳
   scope           EsgScope // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
-  activityType    String       @map("activity_type") // Info: (20260312 - Julian) 活動類型
+  activityType    String           @map("activity_type") // Info: (20260312 - Julian) 活動類型
   vendor          String // Info: (20260312 - Julian) 供應商與對象
-  rawActivityData String       @map("raw_activity_data") // Info: (20260312 - Julian) 原始活動數據
+  rawActivityData String           @map("raw_activity_data") // Info: (20260312 - Julian) 原始活動數據
   unit            String // Info: (20260312 - Julian) 單位
   emissions       Decimal // Info: (20260312 - Julian) 排放量 (KGCO2E)
   intensity       EsgIntensity // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
   confidence      Int // Info: (20260312 - Julian) AI 信心度
-  status          EsgStatus // Info: (20260312 - Julian) 狀態 (VERIFIED, MANUAL)
+  status          AIAnalysisStatus // Info: (20260316 - Julian) AI 分析狀態 (VERIFIED, MANUAL)
 
   // Info: (20260312 - Julian) 關聯檔案憑證
   fileId String? @map("file_id")

@@ -1,4 +1,8 @@
-export const VOUCHER_PROMPT = `
+import { ACCOUNTS } from "@/constants/accounts";
+
+export const getVoucherPrompt = (country: string = "TW") => {
+  const accountsStr = JSON.stringify(ACCOUNTS[country as keyof typeof ACCOUNTS] || ACCOUNTS["TW"]);
+  return `
   請將用戶上傳的憑證（檔案/圖片）解析出可以寫入會計傳票的資料。
   請務必回傳一個 JSON 格式，包含以下欄位（不要加入任何額外的文字，也不要包裝在 markdown 程式碼區塊中，直接回傳 JSON 字串）：
   {
@@ -11,7 +15,12 @@ export const VOUCHER_PROMPT = `
         "particular": "string", // 分錄摘要
         "amount": 100, // 金額 (數字)
         "isDebit": true // 是否為借方 (true = 借方, false = 貸方)
+        "confidence": 85 // AI 分析的信心度 (數字)
       }
     ]
   }
+
+  可以使用的會計科目如下（請優先使用這些會計科目的代碼與名稱，不要自己發明）：
+  ${accountsStr}
 `;
+};
