@@ -7,11 +7,10 @@ import { Prisma } from "@/generated/browser";
 import {
   IVoucher,
   IVoucherLineUI,
-  TradingType, /* IParsedVoucherLine */
+  TradingType,
   VoucherStatus,
 } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
-// import { ChatService } from "@/services/chat.service";
 
 /**
  * Info: (20260310 - Julian) 新增傳票：將 AI 解析出的傳票存入 DB
