@@ -87,7 +87,7 @@ const VoucherRow = ({
       className={`border-b border-slate-300 bg-white text-sm transition-colors last:border-0 ${voucher.isDeleted ? "opacity-50" : ""}`}
     >
       {/* Info: (20260316 - Julian) File */}
-      <td className="px-3 py-4 text-center sm:px-6">
+      <td className="p-2 text-center lg:px-6 lg:py-4">
         <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
           {voucher.file ? (
             <FilePreview
@@ -103,8 +103,10 @@ const VoucherRow = ({
         </div>
       </td>
       {/* Info: (20260316 - Julian) Trading Date */}
-      <td className="px-3 py-4 text-center align-middle font-bold whitespace-nowrap text-slate-800 sm:px-6">
-        {timestampToString(voucher.tradingDate).dateWithDash}
+      <td className="p-2 text-center align-middle font-bold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4">
+        <p className="text-xs lg:text-sm">
+          {timestampToString(voucher.tradingDate).dateWithDash}
+        </p>
         {voucher.isDeleted && (
           <div className="mt-2 text-center">
             <span className="inline-block rounded-full bg-orange-200 px-2 py-0.5 text-[10px] font-bold text-orange-500">
@@ -116,7 +118,7 @@ const VoucherRow = ({
       {/* Info: (20260316 - Julian) Type */}
       <td
         aria-label="Type"
-        className="px-3 py-4 text-center align-middle sm:px-6"
+        className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
         <div className="flex flex-col items-center justify-center gap-2">
           <div
@@ -131,7 +133,10 @@ const VoucherRow = ({
         </div>
       </td>
       {/* Info: (20260316 - Julian) Accounting */}
-      <td aria-label="Accounting" className="py-4 pl-3 align-middle sm:pl-6">
+      <td
+        aria-label="Accounting"
+        className="py-2 pl-2 align-middle lg:py-4 lg:pl-6"
+      >
         <div className="flex flex-col whitespace-nowrap">
           {lineItems.map((line) => (
             <div
@@ -143,11 +148,11 @@ const VoucherRow = ({
               </span>
               {/* Info: (20260316 - Julian) 借方靠左，貸方靠右 */}
               <span
-                className={
+                className={`${
                   line.isDebit
                     ? "font-bold text-slate-800"
                     : "ml-4 font-medium text-slate-700"
-                }
+                } text-xs lg:text-sm`}
               >
                 {line.accounting?.name}
               </span>
@@ -158,9 +163,9 @@ const VoucherRow = ({
       {/* Info: (20260316 - Julian) Debit */}
       <td
         aria-label="Debit"
-        className="py-4 text-right align-middle font-semibold text-slate-700"
+        className="py-2 text-right align-middle font-semibold text-slate-700 lg:py-4"
       >
-        <div className="flex flex-col text-sm">
+        <div className="flex flex-col text-xs lg:text-sm">
           {lineItems.map((line) => (
             <div
               key={line.id}
@@ -174,9 +179,9 @@ const VoucherRow = ({
       {/* Info: (20260316 - Julian) Credit */}
       <td
         aria-label="Credit"
-        className="py-4 pr-3 text-right align-middle font-semibold sm:pr-6"
+        className="py-2 pr-2 text-right align-middle font-semibold lg:py-4 lg:pr-6"
       >
-        <div className="flex flex-col text-sm">
+        <div className="flex flex-col text-xs lg:text-sm">
           {lineItems.map((line) => (
             <div
               key={line.id}
@@ -190,9 +195,9 @@ const VoucherRow = ({
       {/* Info: (20260316 - Julian) Confidence */}
       <td
         aria-label="Confidence"
-        className="px-6 py-4 text-center align-middle"
+        className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex flex-col-reverse items-center justify-center gap-x-3 gap-y-1 lg:flex-row">
           <div className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-slate-200">
             <div
               className={`h-full rounded-full ${mockConfidence >= 90 ? "bg-emerald-400" : "bg-orange-500"}`}
@@ -205,7 +210,10 @@ const VoucherRow = ({
         </div>
       </td>
       {/* Info: (20260316 - Julian) Status */}
-      <td aria-label="Status" className="px-6 py-4 text-center align-middle">
+      <td
+        aria-label="Status"
+        className="p-2 text-center align-middle lg:px-6 lg:py-4"
+      >
         {mockStatus === "verified" ? (
           <div className="flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 className="h-5 w-5" />
@@ -368,7 +376,7 @@ export default function VoucherTableSection() {
       <td
         aria-label="Loading vouchers"
         colSpan={7}
-        className="px-3 py-4 text-center sm:px-6"
+        className="p-2 text-center lg:px-6 lg:py-4"
       >
         <div className="flex justify-center p-4">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-500 border-t-transparent"></div>
@@ -388,7 +396,7 @@ export default function VoucherTableSection() {
     ))
   ) : (
     <tr>
-      <td colSpan={7} className="px-3 py-4 text-center sm:px-6">
+      <td colSpan={7} className="p-2 text-center lg:px-6 lg:py-4">
         目前無傳票資料
       </td>
     </tr>
@@ -400,7 +408,7 @@ export default function VoucherTableSection() {
         <div className="mx-auto w-full max-w-[1400px]">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             {/* Info: (20260316 - Julian) Toolbar */}
-            <div className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
+            <div className="flex flex-col items-center justify-between gap-4 border-b border-slate-200 p-4 lg:flex-row">
               <div className="relative max-w-[400px] flex-1">
                 <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
@@ -498,7 +506,7 @@ export default function VoucherTableSection() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between bg-white px-6 py-4">
+            <div className="flex items-center justify-between bg-white p-2 lg:px-6 lg:py-4">
               <div className="flex cursor-pointer items-center gap-3">
                 <button
                   type="button"
@@ -535,10 +543,10 @@ export default function VoucherTableSection() {
               <table className="w-full min-w-[1000px] border-collapse text-left text-sm text-gray-600">
                 <thead className="border-b border-slate-200 bg-slate-100">
                   <tr>
-                    <th className="px-6 py-4 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase">
+                    <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
                       憑證
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-black tracking-wider whitespace-nowrap">
+                    <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap lg:px-6 lg:py-4">
                       <button
                         type="button"
                         aria-label="傳票日期"
@@ -566,13 +574,13 @@ export default function VoucherTableSection() {
                         </div>
                       </button>
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase">
+                    <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
                       種類/編號
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase">
+                    <th className="p-2 text-left text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
                       會計科目分錄
                     </th>
-                    <th className="px-6 py-4 text-right text-xs font-black tracking-wider whitespace-nowrap">
+                    <th className="p-2 text-right text-xs font-black tracking-wider whitespace-nowrap lg:px-6 lg:py-4">
                       <button
                         type="button"
                         aria-label="借方金額"
@@ -600,7 +608,7 @@ export default function VoucherTableSection() {
                         </div>
                       </button>
                     </th>
-                    <th className="px-6 py-4 text-right text-xs font-black tracking-wider whitespace-nowrap">
+                    <th className="p-2 text-right text-xs font-black tracking-wider whitespace-nowrap lg:px-6 lg:py-4">
                       <button
                         type="button"
                         aria-label="貸方金額"
@@ -628,10 +636,10 @@ export default function VoucherTableSection() {
                         </div>
                       </button>
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase">
+                    <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
                       AI 信心度
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase">
+                    <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
                       狀態
                     </th>
                   </tr>

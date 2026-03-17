@@ -81,10 +81,10 @@ export default function VoucherSummary() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-2 lg:grid-cols-4 lg:gap-4">
       {/* Info: (20260316 - Julian) 今日產生傳票 */}
-      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-        <div className="shrink-0 px-4 text-blue-500">
+      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
+        <div className="shrink-0 px-2 text-blue-500 lg:px-4">
           <FileSpreadsheet size={24} />
         </div>
         <div className="flex flex-col px-2">
@@ -96,8 +96,8 @@ export default function VoucherSummary() {
       </div>
 
       {/* Info: (20260316 - Julian) 本月累計金額 */}
-      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-        <div className="shrink-0 px-4 text-green-500">
+      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
+        <div className="shrink-0 px-2 text-green-500 lg:px-4">
           <CircleDollarSign size={24} />
         </div>
         <div className="flex flex-col px-2">
@@ -109,8 +109,8 @@ export default function VoucherSummary() {
       </div>
 
       {/* Info: (20260316 - Julian) 待核對 */}
-      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-        <div className="shrink-0 px-4 text-orange-500">
+      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
+        <div className="shrink-0 px-2 text-orange-500 lg:px-4">
           <CircleAlert size={24} />
         </div>
         <div className="flex flex-col px-2">
@@ -122,8 +122,8 @@ export default function VoucherSummary() {
       </div>
 
       {/* Info: (20260316 - Julian) AI 平均信心度 */}
-      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-        <div className="shrink-0 px-4 text-purple-500">
+      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
+        <div className="shrink-0 px-2 text-purple-500 lg:px-4">
           <Zap size={24} />
         </div>
         <div className="flex flex-col px-2">
