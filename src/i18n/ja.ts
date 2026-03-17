@@ -1019,4 +1019,94 @@ export const ja = {
       "cancel": "キャンセル"
     }
   }
+,
+  "voucher": {
+    "main_view": {
+      "title": "スマート伝票管理",
+      "subtitle": "AIは領収書認識結果に基づき自動的に仕訳を作成しました。",
+      "actions": {
+        "export": "エクスポート",
+        "add": "伝票を追加"
+      },
+      "filters": {
+        "type": "項目の種類",
+        "type_options": {
+          "all": "すべて",
+          "payment": "支払い",
+          "receipt": "入金",
+          "transfer": "振替"
+        },
+        "period": "期間",
+        "search": "伝票番号、科目コードを検索...",
+        "hide_deleted": "削除済みの伝票と取消記録を隠す",
+        "currency": "通貨: {currency}"
+      },
+      "table": {
+        "types": {
+          "outcome": "出金伝票",
+          "income": "入金伝票",
+          "transfer": "振替伝票",
+          "unknown": "不明な伝票"
+        },
+        "status": {
+          "verified": "確認済",
+          "manual": "手動確認",
+          "deleted": "削除済"
+        },
+        "headers": {
+          "receipt": "領収書",
+          "voucher_date": "伝票日付",
+          "voucher_type_id": "伝票種類及び番号",
+          "accounting_entries": "仕訳",
+          "debit": "借方金額",
+          "credit": "貸方金額",
+          "confidence": "AI信頼度",
+          "status": "ステータス"
+        },
+        "no_file": "ファイルなし",
+        "filter_btn": "フィルター",
+        "verify_all": "すべての伝票を確認"
+      }
+    },
+    "summary": {
+      "empty_prefix": "伝票データがありません。まず",
+      "empty_link": "伝票を追加",
+      "today_count": "本日の伝票数",
+      "unit": " 件",
+      "month_total": "今月の累計金額",
+      "pending": "確認待ち",
+      "ai_confidence": "AI平均信頼度"
+    },
+    "detail_modal": {
+      "title": "伝票の編集",
+      "fields": {
+        "voucher_date": "伝票日付",
+        "voucher_type": "伝票の種類",
+        "accounting_select": "勘定科目を選択",
+        "particular": "摘要",
+        "debit": "借方",
+        "credit": "貸方"
+      },
+      "actions": {
+        "clear_all": "すべてクリア",
+        "save_voucher": "伝票を保存",
+        "confirm": "確認",
+        "cancel": "キャンセル"
+      },
+      "confirm_modals": {
+        "clear_all": {
+          "title": "すべてクリア",
+          "message": "すべてのデータをクリアしてもよろしいですか？"
+        },
+        "leave_without_saving": {
+          "title": "保存せずに退出",
+          "message": "変更を破棄して終了してもよろしいですか？"
+        },
+        "save_voucher": {
+          "title": "伝票を保存",
+          "message": "この伝票を保存してもよろしいですか？"
+        }
+      }
+    }
+  }
 };

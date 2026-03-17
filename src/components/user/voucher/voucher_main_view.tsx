@@ -19,10 +19,10 @@ export default function VoucherMainView() {
       <div className="flex flex-col items-center justify-start gap-4 lg:flex-row lg:justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="flex items-center text-base font-bold text-slate-800 lg:text-2xl">
-            {t("智能傳票管理")}
+            {t("voucher.main_view.title")}
           </h1>
           <p className="text-xs font-medium text-slate-500 lg:text-sm">
-            {t("AI 已根據您的憑證辨識結果自動產生對應的會計分錄。")}
+            {t("voucher.main_view.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -32,7 +32,7 @@ export default function VoucherMainView() {
             className="flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-colors enabled:hover:bg-slate-300 disabled:cursor-not-allowed disabled:text-slate-400"
           >
             <Download className="mr-2 h-4 w-4" />
-            匯出傳票
+            {t("voucher.main_view.actions.export")}
           </button>
           <button
             type="button"
@@ -41,7 +41,7 @@ export default function VoucherMainView() {
             className="flex items-center rounded-lg border border-amber-500 bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors enabled:hover:border-amber-600 enabled:hover:bg-amber-600 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:text-slate-400"
           >
             <Plus className="mr-2 h-4 w-4" />
-            新增傳票
+            {t("voucher.main_view.actions.add")}
           </button>
         </div>
       </div>

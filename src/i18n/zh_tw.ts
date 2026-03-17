@@ -967,9 +967,12 @@ export const zhTw = {
   },
   "voucher": {
     "main_view": {
-      "title": "傳票管理",
-      "empty_message_prefix": "目前尚無傳票，請",
-      "empty_upload_link": "在此上傳檔案",
+      "title": "智能傳票管理",
+      "subtitle": "AI 已根據您的憑證辨識結果自動產生對應的會計分錄。",
+      "actions": {
+        "export": "匯出傳票",
+        "add": "新增傳票"
+      },
       "filters": {
         "type": "欄位類型",
         "type_options": {
@@ -979,29 +982,52 @@ export const zhTw = {
           "transfer": "轉帳"
         },
         "period": "期間",
-        "search": "搜尋",
+        "search": "搜尋傳票編號、科目編號...",
         "hide_deleted": "隱藏已刪除的傳票及其沖銷紀錄",
         "currency": "幣別: {currency}"
       },
       "table": {
-        "issued_date": "開立日期",
-        "voucher_no": "傳票號碼",
-        "note": "備註",
-        "accounting": "會計科目",
-        "debit": "借方",
-        "credit": "貸方",
-        "issuer": "開立人",
-        "status_deleted": "已刪除"
+        "types": {
+          "outcome": "支出傳票",
+          "income": "收入傳票",
+          "transfer": "轉帳傳票",
+          "unknown": "未知傳票"
+        },
+        "status": {
+          "verified": "已核對",
+          "manual": "人工核對",
+          "deleted": "已刪除"
+        },
+        "headers": {
+          "receipt": "憑證",
+          "voucher_date": "傳票日期",
+          "voucher_type_id": "傳票種類及編號",
+          "accounting_entries": "會計科目分錄",
+          "debit": "借方金額",
+          "credit": "貸方金額",
+          "confidence": "AI 信心度",
+          "status": "狀態"
+        },
+        "no_file": "無檔案",
+        "filter_btn": "篩選條件",
+        "verify_all": "一鍵核對所有傳票"
       }
     },
+    "summary": {
+      "empty_prefix": "目前無傳票資料，請先",
+      "empty_link": "新增傳票",
+      "today_count": "今日產生傳票",
+      "unit": "張",
+      "month_total": "本月累計金額",
+      "pending": "待核對",
+      "ai_confidence": "AI 平均信心度"
+    },
     "detail_modal": {
-      "title": '編輯傳票',
+      "title": "編輯傳票",
       "fields": {
         "voucher_date": "傳票日期",
         "voucher_type": "傳票類型",
-        "note": "備註",
-        "accounting": "會計科目",
-        "accounting_select": "請選擇",
+        "accounting_select": "請選擇會計科目",
         "particular": "摘要",
         "debit": "借方",
         "credit": "貸方"

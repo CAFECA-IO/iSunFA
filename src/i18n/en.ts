@@ -973,11 +973,14 @@ export const en = {
   },
   "voucher": {
     "main_view": {
-      "title": "Voucher Management",
-      "empty_message_prefix": "No vouchers currently available, please ",
-      "empty_upload_link": "upload files here",
+      "title": "Smart Voucher Management",
+      "subtitle": "AI has automatically generated corresponding accounting entries based on your receipt recognition results.",
+      "actions": {
+        "export": "Export Vouchers",
+        "add": "Add Voucher"
+      },
       "filters": {
-        "type": "Type",
+        "type": "Field Type",
         "type_options": {
           "all": "All",
           "payment": "Payment",
@@ -985,30 +988,53 @@ export const en = {
           "transfer": "Transfer"
         },
         "period": "Period",
-        "search": "Search",
-        "hide_deleted": "Hide deleted vouchers and their reversals.",
-        "currency": "CURRENCY: {currency}"
+        "search": "Search voucher no, account code...",
+        "hide_deleted": "Hide deleted vouchers and reversed records",
+        "currency": "Currency: {currency}"
       },
       "table": {
-        "issued_date": "Issued Date",
-        "voucher_no": "Voucher No.",
-        "note": "Note",
-        "accounting": "Accounting",
-        "debit": "Debit",
-        "credit": "Credit",
-        "issuer": "Issuer",
-        "status_deleted": "Deleted"
+        "types": {
+          "outcome": "Payment Voucher",
+          "income": "Receipt Voucher",
+          "transfer": "Transfer Voucher",
+          "unknown": "Unknown Voucher"
+        },
+        "status": {
+          "verified": "Verified",
+          "manual": "Manual Verification",
+          "deleted": "Deleted"
+        },
+        "headers": {
+          "receipt": "Receipt",
+          "voucher_date": "Voucher Date",
+          "voucher_type_id": "Voucher Type & No.",
+          "accounting_entries": "Accounting Entries",
+          "debit": "Debit Amount",
+          "credit": "Credit Amount",
+          "confidence": "AI Confidence",
+          "status": "Status"
+        },
+        "no_file": "No File",
+        "filter_btn": "Filters",
+        "verify_all": "Verify All Vouchers"
       }
     },
+    "summary": {
+      "empty_prefix": "No voucher records yet, please ",
+      "empty_link": "add a voucher",
+      "today_count": "Vouchers Today",
+      "unit": " sheets",
+      "month_total": "Monthly Total",
+      "pending": "Pending Verification",
+      "ai_confidence": "AI Average Confidence"
+    },
     "detail_modal": {
-      "title": 'Edit Voucher ',
+      "title": "Edit Voucher",
       "fields": {
         "voucher_date": "Voucher Date",
         "voucher_type": "Voucher Type",
-        "note": "Note",
-        "accounting": "Accounting",
-        "accounting_select": "Select",
-        "particular": "Particular",
+        "accounting_select": "Select Account",
+        "particular": "Particulars",
         "debit": "Debit",
         "credit": "Credit"
       },
@@ -1020,12 +1046,12 @@ export const en = {
       },
       "confirm_modals": {
         "clear_all": {
-          "title": "Clear all",
+          "title": "Clear All",
           "message": "Are you sure you want to clear all data?"
         },
         "leave_without_saving": {
           "title": "Leave without saving",
-          "message": "Are you sure you want to discard your changes and leave?"
+          "message": "Are you sure you want to discard changes and leave?"
         },
         "save_voucher": {
           "title": "Save Voucher",

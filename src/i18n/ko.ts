@@ -1009,4 +1009,94 @@ export const ko = {
       "cancel": "취소"
     }
   }
+,
+  "voucher": {
+    "main_view": {
+      "title": "스마트 전표 관리",
+      "subtitle": "AI가 영수증 인식 결과를 바탕으로 회계 분개를 자동 생성했습니다.",
+      "actions": {
+        "export": "전표 내보내기",
+        "add": "전표 추가"
+      },
+      "filters": {
+        "type": "항목 유형",
+        "type_options": {
+          "all": "전체",
+          "payment": "지불",
+          "receipt": "수취",
+          "transfer": "이체"
+        },
+        "period": "기간",
+        "search": "전표 번호, 계정 코드 검색...",
+        "hide_deleted": "삭제된 전표 및 취소 기록 숨기기",
+        "currency": "통화: {currency}"
+      },
+      "table": {
+        "types": {
+          "outcome": "출금 전표",
+          "income": "입금 전표",
+          "transfer": "이체 전표",
+          "unknown": "알 수 없는 전표"
+        },
+        "status": {
+          "verified": "확인됨",
+          "manual": "수동 확인",
+          "deleted": "삭제됨"
+        },
+        "headers": {
+          "receipt": "영수증",
+          "voucher_date": "전표일자",
+          "voucher_type_id": "전표 유형 및 번호",
+          "accounting_entries": "회계 분개",
+          "debit": "차변 금액",
+          "credit": "대변 금액",
+          "confidence": "AI 신뢰도",
+          "status": "상태"
+        },
+        "no_file": "파일 없음",
+        "filter_btn": "필터",
+        "verify_all": "모든 전표 확인"
+      }
+    },
+    "summary": {
+      "empty_prefix": "현재 전표 데이터가 없습니다. 먼저 ",
+      "empty_link": "전표 추가",
+      "today_count": "오늘 생성된 전표",
+      "unit": " 건",
+      "month_total": "당월 누적 금액",
+      "pending": "확인 대기 중",
+      "ai_confidence": "AI 평균 신뢰도"
+    },
+    "detail_modal": {
+      "title": "전표 편집",
+      "fields": {
+        "voucher_date": "전표 일자",
+        "voucher_type": "전표 유형",
+        "accounting_select": "계정 선택",
+        "particular": "적요",
+        "debit": "차변",
+        "credit": "대변"
+      },
+      "actions": {
+        "clear_all": "모두 지우기",
+        "save_voucher": "전표 저장",
+        "confirm": "확인",
+        "cancel": "취소"
+      },
+      "confirm_modals": {
+        "clear_all": {
+          "title": "모두 지우기",
+          "message": "모든 데이터를 지우시겠습니까?"
+        },
+        "leave_without_saving": {
+          "title": "저장하지 않고 종료",
+          "message": "변경 사항을 삭제하고 종료하시겠습니까?"
+        },
+        "save_voucher": {
+          "title": "전표 저장",
+          "message": "전표를 저장하시겠습니까?"
+        }
+      }
+    }
+  }
 };

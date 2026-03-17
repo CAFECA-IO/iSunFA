@@ -71,13 +71,13 @@ const VoucherRow = ({
   const getTypeName = (style: TradingType) => {
     switch (style) {
       case TradingType.OUTCOME:
-        return "支出傳票";
+        return t("voucher.main_view.table.types.outcome") || "支出傳票";
       case TradingType.INCOME:
-        return "收入傳票";
+        return t("voucher.main_view.table.types.income") || "收入傳票";
       case TradingType.TRANSFER:
-        return "轉帳傳票";
+        return t("voucher.main_view.table.types.transfer") || "轉帳傳票";
       default:
-        return "未知傳票";
+        return t("voucher.main_view.table.types.unknown") || "未知傳票";
     }
   };
 
@@ -96,8 +96,11 @@ const VoucherRow = ({
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center rounded-lg bg-slate-100 p-1">
-              <FileQuestion className="h-6 w-6 text-slate-300" />
+            <div className="flex h-full w-full flex-col justify-center items-center rounded-lg bg-slate-100 p-1">
+              <FileQuestion className="mb-1 h-5 w-5 text-slate-300" />
+              <span className="text-[10px] font-bold text-slate-400 leading-none">
+                {t("voucher.main_view.table.no_file")}
+              </span>
             </div>
           )}
         </div>
@@ -110,7 +113,7 @@ const VoucherRow = ({
         {voucher.isDeleted && (
           <div className="mt-2 text-center">
             <span className="inline-block rounded-full bg-orange-200 px-2 py-0.5 text-[10px] font-bold text-orange-500">
-              {t("voucher.main_view.table.status_deleted")}
+              {t("voucher.main_view.table.status.deleted")}
             </span>
           </div>
         )}
@@ -152,7 +155,7 @@ const VoucherRow = ({
                   line.isDebit
                     ? "font-bold text-slate-800"
                     : "ml-4 font-medium text-slate-700"
-                } text-xs lg:text-sm`}
+                } text-xs lg:text-sm truncate lg:max-w-[250px]`}
               >
                 {line.accounting?.name}
               </span>
@@ -217,7 +220,7 @@ const VoucherRow = ({
         {mockStatus === "verified" ? (
           <div className="flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 className="h-5 w-5" />
-            <span className="text-xs font-bold whitespace-nowrap">已核對</span>
+            <span className="text-xs font-bold whitespace-nowrap">{t("voucher.main_view.table.status.verified")}</span>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-1.5 text-orange-500">
@@ -227,7 +230,7 @@ const VoucherRow = ({
               disabled={voucher.isDeleted}
               className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:bg-slate-300"
             >
-              人工核對
+              {t("voucher.main_view.table.status.manual")}
             </button>
           </div>
         )}
@@ -397,7 +400,7 @@ export default function VoucherTableSection() {
   ) : (
     <tr>
       <td colSpan={7} className="p-2 text-center lg:px-6 lg:py-4">
-        目前無傳票資料
+        {t("voucher.main_view.table.no_data")}
       </td>
     </tr>
   );
@@ -417,7 +420,7 @@ export default function VoucherTableSection() {
                   type="text"
                   value={keyWord}
                   onChange={(e) => setKeyWord(e.target.value)}
-                  placeholder={t("搜尋傳票編號、科目編號...")}
+                  placeholder={t("voucher.main_view.filters.search")}
                   className="w-full rounded-full border border-slate-300 py-2.5 pr-4 pl-11 text-sm font-semibold text-slate-700 shadow-sm placeholder:font-medium placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
               </div>
@@ -428,8 +431,12 @@ export default function VoucherTableSection() {
                   onClick={() => setShowFilters(!showFilters)}
                   className={`flex items-center rounded-lg border px-4 py-2 text-sm font-bold transition-colors ${showFilters ? "border-orange-500 bg-orange-50 text-orange-600" : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"}`}
                 >
-                  <Filter className="mr-2 h-4 w-4" />
-                  篩選條件
+                  {showFilters ? (
+                    <ChevronUp className="mr-2 h-4 w-4" />
+                  ) : (
+                    <Filter className="mr-2 h-4 w-4" />
+                  )}
+                  {t("voucher.main_view.table.filter_btn")}
                 </button>
                 <button
                   type="button"
@@ -438,7 +445,7 @@ export default function VoucherTableSection() {
                   className="flex items-center rounded-lg bg-green-500 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-400"
                 >
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  一鍵核對所有傳票
+                  {t("voucher.main_view.table.verify_all")}
                 </button>
               </div>
             </div>
@@ -544,12 +551,12 @@ export default function VoucherTableSection() {
                 <thead className="border-b border-slate-200 bg-slate-100">
                   <tr>
                     <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
-                      憑證
+                      {t("voucher.main_view.table.headers.receipt")}
                     </th>
                     <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap lg:px-6 lg:py-4">
                       <button
                         type="button"
-                        aria-label="傳票日期"
+                        aria-label={t("voucher.main_view.table.headers.voucher_date")}
                         onClick={clickDateSort}
                         className="group mx-auto flex w-full items-center justify-center gap-1"
                       >
@@ -560,7 +567,7 @@ export default function VoucherTableSection() {
                               : "text-slate-500 group-hover:text-orange-500"
                           }`}
                         >
-                          傳票日期
+                          {t("voucher.main_view.table.headers.voucher_date")}
                         </span>
                         <div className="-gap-[2px] flex shrink-0 flex-col px-2">
                           <ChevronUp
@@ -574,18 +581,22 @@ export default function VoucherTableSection() {
                         </div>
                       </button>
                     </th>
-                    <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
-                      種類/編號
+                    <th className="p-2 text-left text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
+                      <div className="flex items-center">
+                        {t("voucher.main_view.table.headers.voucher_type_id")}
+                      </div>
                     </th>
                     <th className="p-2 text-left text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
-                      會計科目分錄
+                      <div className="flex w-[250px] items-center">
+                        {t("voucher.main_view.table.headers.accounting_entries")}
+                      </div>
                     </th>
                     <th className="p-2 text-right text-xs font-black tracking-wider whitespace-nowrap lg:px-6 lg:py-4">
                       <button
                         type="button"
-                        aria-label="借方金額"
+                        aria-label={t("voucher.main_view.table.headers.debit")}
                         onClick={clickDebitSort}
-                        className="group ml-auto flex items-center justify-end gap-1"
+                        className="group ml-auto flex items-center justify-end gap-1 uppercase"
                       >
                         <span
                           className={`transition-colors ease-in-out ${
@@ -594,7 +605,7 @@ export default function VoucherTableSection() {
                               : "text-slate-500 group-hover:text-orange-500"
                           }`}
                         >
-                          借方金額
+                          {t("voucher.main_view.table.headers.debit")}
                         </span>
                         <div className="-gap-[2px] flex shrink-0 flex-col pl-2">
                           <ChevronUp
@@ -611,9 +622,9 @@ export default function VoucherTableSection() {
                     <th className="p-2 text-right text-xs font-black tracking-wider whitespace-nowrap lg:px-6 lg:py-4">
                       <button
                         type="button"
-                        aria-label="貸方金額"
+                        aria-label={t("voucher.main_view.table.headers.credit")}
                         onClick={clickCreditSort}
-                        className="group ml-auto flex items-center justify-end gap-1"
+                        className="group ml-auto flex items-center justify-end gap-1 uppercase"
                       >
                         <span
                           className={`transition-colors ease-in-out ${
@@ -622,7 +633,7 @@ export default function VoucherTableSection() {
                               : "text-slate-500 group-hover:text-orange-500"
                           }`}
                         >
-                          貸方金額
+                          {t("voucher.main_view.table.headers.credit")}
                         </span>
                         <div className="-gap-[2px] flex shrink-0 flex-col pl-2">
                           <ChevronUp
@@ -637,10 +648,10 @@ export default function VoucherTableSection() {
                       </button>
                     </th>
                     <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
-                      AI 信心度
+                      {t("voucher.main_view.table.headers.confidence")}
                     </th>
                     <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
-                      狀態
+                      {t("voucher.main_view.table.headers.status")}
                     </th>
                   </tr>
                 </thead>
