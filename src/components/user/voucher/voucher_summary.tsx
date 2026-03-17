@@ -13,7 +13,7 @@ import {
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
-import {IVoucherDashboardSummary} from '@/interfaces/voucher'
+import { IVoucherDashboardSummary } from "@/interfaces/voucher";
 // import { useTranslation } from "@/i18n/i18n_context";
 import { numberWithCommas } from "@/lib/utils/common";
 

@@ -114,7 +114,10 @@ const VoucherRow = ({
         )}
       </td>
       {/* Info: (20260316 - Julian) Type */}
-      <td aria-label="Type" className="px-3 py-4 text-center align-middle sm:px-6">
+      <td
+        aria-label="Type"
+        className="px-3 py-4 text-center align-middle sm:px-6"
+      >
         <div className="flex flex-col items-center justify-center gap-2">
           <div
             className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold whitespace-nowrap ${getTypeClasses(voucher.tradingType)}`}
@@ -214,7 +217,7 @@ const VoucherRow = ({
               type="button"
               onClick={onClick}
               disabled={voucher.isDeleted}
-              className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm disabled:bg-slate-300 enabled:hover:bg-orange-600"
+              className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:bg-slate-300"
             >
               人工核對
             </button>
@@ -386,7 +389,7 @@ export default function VoucherTableSection() {
   ) : (
     <tr>
       <td colSpan={7} className="px-3 py-4 text-center sm:px-6">
-       目前無傳票資料
+        目前無傳票資料
       </td>
     </tr>
   );
@@ -433,8 +436,12 @@ export default function VoucherTableSection() {
             </div>
 
             {/* Info: (20260316 - Julian) Filter Content */}
-            {showFilters && (
-              <div className="flex flex-col gap-6 border-b border-slate-200 bg-slate-50 p-6 shadow-inner lg:flex-row">
+            <div
+              className={`grid border-b border-slate-200 bg-slate-50 shadow-inner transition-all duration-300 ease-in-out ${showFilters ? "grid-rows-[1fr] p-6 opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+            >
+              <div
+                className={`flex flex-col gap-6 overflow-hidden lg:flex-row`}
+              >
                 <div className="w-[300px]">
                   <label
                     htmlFor="typeSelect"
@@ -489,7 +496,7 @@ export default function VoucherTableSection() {
                   </div>
                 </div>
               </div>
-            )}
+            </div>
 
             <div className="flex items-center justify-between bg-white px-6 py-4">
               <div className="flex cursor-pointer items-center gap-3">

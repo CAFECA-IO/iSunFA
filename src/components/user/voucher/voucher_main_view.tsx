@@ -38,7 +38,7 @@ export default function VoucherMainView() {
             type="button"
             disabled
             onClick={createVoucher}
-            className="flex items-center rounded-lg border border-amber-500 bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors enabled:hover:border-amber-600 enabled:hover:bg-amber-600 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-white disabled:text-slate-400"
+            className="flex items-center rounded-lg border border-amber-500 bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors enabled:hover:border-amber-600 enabled:hover:bg-amber-600 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:text-slate-400"
           >
             <Plus className="mr-2 h-4 w-4" />
             新增傳票
