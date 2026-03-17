@@ -8,17 +8,7 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import {
-  X,
-  ChevronDown,
-  Trash2,
-  Plus,
-  Save,
-  FileText,
-  DollarSign,
-  CheckCircle2,
-  Hash
-} from "lucide-react";
+import { X, Hash, Plus, ChevronDown, Trash2, FileText, Scale, Save, CheckCircle2, DollarSign } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   IVoucher,
@@ -64,7 +54,7 @@ const VoucherRow = ({
             className="w-[250px] flex-1 text-left appearance-none bg-transparent px-4 py-2 text-sm font-semibold text-slate-700 outline-none truncate"
             onClick={() => onOpenSelector(row.id)}
           >
-            {row.accounting ? `${row.accounting.code} - ${row.accounting.name}` : (t("voucher.detail_modal.fields.accounting_select") || "選擇會計科目")}
+            {row.accounting ? `${row.accounting.code} - ${row.accounting.name}` : (t("voucher.detail_modal.fields.accounting_select"))}
           </button>
           <div className="bg-white pr-3 pointer-events-none">
             <ChevronDown size={16} className="text-slate-400" />
@@ -76,7 +66,7 @@ const VoucherRow = ({
             type="text"
             aria-label={t("voucher.detail_modal.fields.particular")}
             value={row.particular}
-            placeholder={t("voucher.detail_modal.fields.particular") || "摘要"}
+            placeholder={t("voucher.detail_modal.fields.particular")}
             onChange={(e) =>
               updateRow(row.id, { ...row, particular: e.target.value })
             }
@@ -385,12 +375,12 @@ export default function VoucherDetailModal({
                     </DialogTitle>
                     {activeVoucher?.status === "MANUAL" && (
                       <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
-                        待核對
+                        {t("voucher.detail_modal.status.pending")}
                       </span>
                     )}
                     {activeVoucher?.status === "VERIFIED" && (
                       <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
-                        已核對
+                        {t("voucher.detail_modal.status.verified")}
                       </span>
                     )}
                   </div>
@@ -410,11 +400,11 @@ export default function VoucherDetailModal({
                   <div className="w-1/2 overflow-y-auto border-r border-slate-200 bg-slate-50 p-6">
                     <div className="mb-4 flex items-center justify-between">
                       <h4 className="text-sm font-bold text-slate-500">
-                        憑證預覽
+                        {t("voucher.detail_modal.sections.preview")}
                       </h4>
                       <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
                         <span className="text-xs font-bold text-slate-500">
-                          AI 信心度
+                            {t("voucher.detail_modal.fields.confidence")}
                         </span>
                         <div className="flex items-center gap-1.5">
                           <div className="h-2 w-16 overflow-hidden rounded-full bg-slate-200">
@@ -457,7 +447,7 @@ export default function VoucherDetailModal({
                       <div className="mb-3 flex items-center gap-2 border-b border-slate-200 pb-1">
                         <FileText size={20} className="text-blue-900" />
                         <h4 className="text-base font-bold text-blue-900">
-                          傳票基礎資訊
+                          {t("voucher.detail_modal.sections.basic_info")}
                         </h4>
                       </div>
 
@@ -506,13 +496,13 @@ export default function VoucherDetailModal({
                               className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                             >
                               <option value={TradingType.INCOME}>
-                                收入傳票
+                                {t("voucher.main_view.table.types.income")}
                               </option>
                               <option value={TradingType.OUTCOME}>
-                                支出傳票
+                                {t("voucher.main_view.table.types.outcome")}
                               </option>
                               <option value={TradingType.TRANSFER}>
-                                轉帳傳票
+                                {t("voucher.main_view.table.types.transfer")}
                               </option>
                             </select>
                             <ChevronDown
@@ -527,20 +517,20 @@ export default function VoucherDetailModal({
                             htmlFor="voucherIdInput"
                             className="mb-2 block text-xs font-bold text-slate-600"
                           >
-                            傳票編號
+                            {t("voucher.detail_modal.fields.voucher_no")}
                           </label>
                           <div className="flex h-[42px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold shadow-sm focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
                             <Hash size={20} className="text-slate-400" />
                             <input
                               id="voucherIdInput"
-                              aria-label="傳票編號"
+                              aria-label={t("voucher.detail_modal.fields.voucher_no")}
                               type="text"
                               value={editedVoucherId}
                               onChange={(e) =>
                                 setEditedVoucherId(e.target.value)
                               }
                               className="w-full bg-transparent text-slate-800 outline-none placeholder:font-normal placeholder:text-slate-300"
-                              placeholder="輸入傳票編號"
+                              placeholder={t("voucher.detail_modal.fields.voucher_no_placeholder")}
                             />
                           </div>
                         </div>
@@ -551,7 +541,7 @@ export default function VoucherDetailModal({
                         <div className="flex items-center gap-2">
                           <DollarSign size={20} className="text-blue-900" />
                           <h4 className="text-base font-bold text-blue-900">
-                            會計科目分錄
+                            {t("voucher.detail_modal.sections.accounting_entries")}
                           </h4>
                         </div>
                         <button
@@ -560,20 +550,20 @@ export default function VoucherDetailModal({
                           className="flex items-center gap-1 text-sm font-bold text-orange-500 transition-colors hover:text-orange-600"
                         >
                           <Plus size={16} className="stroke-3" />
-                          新增分錄
+                          {t("voucher.detail_modal.actions.add_row")}
                         </button>
                       </div>
 
                       {/* Info: (20260317 - Julian) Header Row */}
                       <div className="mb-2 flex items-center pr-10">
                         <div className="flex-1 text-xs font-bold text-slate-600">
-                          科目代碼 / 名稱
+                          {t("voucher.detail_modal.fields.account_code_name")}
                         </div>
                         <div className="w-[100px] pr-2 text-right text-xs font-bold text-slate-600">
-                          借方
+                          {t("voucher.detail_modal.fields.debit")}
                         </div>
                         <div className="w-[100px] pr-2 text-right text-xs font-bold text-slate-600">
-                          貸方
+                          {t("voucher.detail_modal.fields.credit")}
                         </div>
                       </div>
 
@@ -598,19 +588,29 @@ export default function VoucherDetailModal({
                         className={`rounded-xl border p-5 ${isTotalBalanced ? "border-emerald-200 bg-emerald-50/50" : "border-red-200 bg-red-50/50"}`}
                       >
                         <div className="mb-4 flex items-center justify-between">
-                          <span className="text-sm font-bold text-slate-700">
-                            借貸平衡檢查
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <Scale
+                              size={18}
+                              className={
+                                isTotalBalanced
+                                  ? "text-emerald-500"
+                                  : "text-red-500"
+                              }
+                            />
+                            <h4 className="font-bold text-slate-700">
+                              {t("voucher.detail_modal.balance_check.title")}
+                            </h4>
+                          </div>
                           <div
                             className={`flex items-center gap-1.5 text-sm font-bold ${isTotalBalanced ? "text-emerald-500" : "text-red-500"}`}
                           >
                             {isTotalBalanced ? (
                               <>
-                                <CheckCircle2 size={18} /> 已平衡
+                                <CheckCircle2 size={18} /> {t("voucher.detail_modal.balance_check.balanced")}
                               </>
                             ) : (
                               <>
-                                <X size={18} /> 未平衡
+                                <X size={18} /> {t("voucher.detail_modal.balance_check.unbalanced")}
                               </>
                             )}
                           </div>
@@ -618,7 +618,7 @@ export default function VoucherDetailModal({
                         <div className="my-4 border-t border-dashed border-slate-300"></div>
                         <div className="flex items-end justify-between">
                           <span className="text-sm font-bold text-slate-500">
-                            總計金額 (Voucher Total)
+                            {t("voucher.detail_modal.fields.total_amount")}
                           </span>
                           <span className="text-2xl font-black tracking-tight text-slate-800">
                             ${" "}
@@ -637,7 +637,7 @@ export default function VoucherDetailModal({
                         onClick={() => setIsClearModalOpen(true)}
                         className="text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
                       >
-                        取消修改
+                        {t("voucher.detail_modal.actions.cancel_edit")}
                       </button>
                       <div className="flex items-center gap-3">
                         <button
@@ -647,7 +647,7 @@ export default function VoucherDetailModal({
                           className="flex h-10 items-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:bg-slate-300"
                         >
                           <CheckCircle2 size={16} className="stroke-3" />
-                          核對並存檔
+                          {t("voucher.detail_modal.actions.verify_save")}
                         </button>
                         <button
                           type="button"
@@ -656,7 +656,7 @@ export default function VoucherDetailModal({
                           className="flex h-10 items-center gap-2 rounded-xl bg-orange-500 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 disabled:bg-slate-300"
                         >
                           <Save size={16} className="stroke-3" />
-                          僅儲存修改
+                          {t("voucher.detail_modal.actions.save_only")}
                         </button>
                       </div>
                     </div>

@@ -1002,7 +1002,35 @@ export const ja = {
       "intensity_medium": "中強度",
       "intensity_high": "高強度"
     },
+    "messages": {
+        "fetch_error": "伝票の取得に失敗しました",
+        "deleted_warning": "削除済みの伝票は編集できません"
+      },
+      "status": {
+        "pending": "確認待ち",
+        "verified": "確認済"
+      },
+      "sections": {
+        "preview": "領収書のプレビュー",
+        "basic_info": "基本情報",
+        "accounting_entries": "仕訳"
+      },
+      "validation": {
+        "empty_fields": "日付または種類が空です",
+        "unbalanced": "貸借が一致しません",
+        "empty_rows": "仕訳が空です",
+        "incomplete_row": "空の科目または金額が含まれています"
+      },
+      "balance_check": {
+        "title": "貸借一致チェック",
+        "balanced": "一致",
+        "unbalanced": "不一致"
+      },
     "actions": {
+      "cancel_edit": "編集をキャンセル",
+      "verify_save": "確認して保存",
+      "save_only": "変更のみ保存",
+      "add_row": "仕訳を追加",
       "cancel": "キャンセル",
       "save_and_verify": "保存して確認"
     },
@@ -1021,6 +1049,12 @@ export const ja = {
   }
 ,
   "voucher": {
+    "account_book_selector": {
+      "title": "勘定科目を選択",
+      "all": "すべて",
+      "search_placeholder": "科目コードや名前を検索...",
+      "no_results": "一致する勘定科目がありません"
+    },
     "main_view": {
       "title": "スマート伝票管理",
       "subtitle": "AIは領収書認識結果に基づき自動的に仕訳を作成しました。",
@@ -1065,7 +1099,8 @@ export const ja = {
         },
         "no_file": "ファイルなし",
         "filter_btn": "フィルター",
-        "verify_all": "すべての伝票を確認"
+        "verify_all": "すべての伝票を確認",
+        "no_data": "伝票データがありません。まず"
       }
     },
     "summary": {
@@ -1079,7 +1114,25 @@ export const ja = {
     },
     "detail_modal": {
       "title": "伝票の編集",
+      "messages": {
+        "fetch_error": "伝票の取得に失敗しました",
+        "deleted_warning": "削除済みの伝票は編集できません"
+      },
+      "status": {
+        "pending": "確認待ち",
+        "verified": "確認済"
+      },
+      "sections": {
+        "preview": "領収書のプレビュー",
+        "basic_info": "基本情報",
+        "accounting_entries": "仕訳"
+      },
       "fields": {
+        "confidence": "AI信頼度",
+        "voucher_no": "伝票番号",
+        "voucher_no_placeholder": "伝票番号を入力",
+        "account_code_name": "科目コード / 名前",
+        "total_amount": "合計金額",
         "voucher_date": "伝票日付",
         "voucher_type": "伝票の種類",
         "accounting_select": "勘定科目を選択",
@@ -1087,7 +1140,22 @@ export const ja = {
         "debit": "借方",
         "credit": "貸方"
       },
+      "validation": {
+        "empty_fields": "日付または種類が空です",
+        "unbalanced": "貸借が一致しません",
+        "empty_rows": "仕訳が空です",
+        "incomplete_row": "空の科目または金額が含まれています"
+      },
+      "balance_check": {
+        "title": "貸借一致チェック",
+        "balanced": "一致",
+        "unbalanced": "不一致"
+      },
       "actions": {
+        "cancel_edit": "編集をキャンセル",
+        "verify_save": "確認して保存",
+        "save_only": "変更のみ保存",
+        "add_row": "仕訳を追加",
         "clear_all": "すべてクリア",
         "save_voucher": "伝票を保存",
         "confirm": "確認",

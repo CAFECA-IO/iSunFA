@@ -980,7 +980,35 @@ export const zhCn = {
       "intensity_medium": "中强度",
       "intensity_high": "高强度"
     },
+    "messages": {
+        "fetch_error": "获取凭证失败",
+        "deleted_warning": "已删除凭证不可编辑"
+      },
+      "status": {
+        "pending": "待核对",
+        "verified": "已核对"
+      },
+      "sections": {
+        "preview": "发票预览",
+        "basic_info": "凭证基础信息",
+        "accounting_entries": "会计科目分录"
+      },
+      "validation": {
+        "empty_fields": "日期或分录类别为空",
+        "unbalanced": "借贷不平衡",
+        "empty_rows": "分录为空",
+        "incomplete_row": "有分录的会计科目或金额为空"
+      },
+      "balance_check": {
+        "title": "借贷平衡检查",
+        "balanced": "已平衡",
+        "unbalanced": "未平衡"
+      },
     "actions": {
+      "cancel_edit": "取消修改",
+      "verify_save": "核对并保存",
+      "save_only": "仅保存修改",
+      "add_row": "新增分录",
       "cancel": "取消",
       "save_and_verify": "保存并完成核对"
     },
@@ -999,6 +1027,12 @@ export const zhCn = {
   }
 ,
   "voucher": {
+    "account_book_selector": {
+      "title": "请选择会计科目",
+      "all": "全部",
+      "search_placeholder": "搜索科目代码或名称...",
+      "no_results": "找不到符合的会计科目"
+    },
     "main_view": {
       "title": "智能凭证管理",
       "subtitle": "AI 已根据您的凭证识别结果自动产生对应的会计分录。",
@@ -1043,7 +1077,8 @@ export const zhCn = {
         },
         "no_file": "无文件",
         "filter_btn": "筛选条件",
-        "verify_all": "一键核对所有凭证"
+        "verify_all": "一键核对所有凭证",
+        "no_data": "目前无凭证数据，请先"
       }
     },
     "summary": {
@@ -1057,7 +1092,25 @@ export const zhCn = {
     },
     "detail_modal": {
       "title": "编辑凭证",
+      "messages": {
+        "fetch_error": "获取凭证失败",
+        "deleted_warning": "已删除凭证不可编辑"
+      },
+      "status": {
+        "pending": "待核对",
+        "verified": "已核对"
+      },
+      "sections": {
+        "preview": "发票预览",
+        "basic_info": "凭证基础信息",
+        "accounting_entries": "会计科目分录"
+      },
       "fields": {
+        "confidence": "AI 信心度",
+        "voucher_no": "凭证编号",
+        "voucher_no_placeholder": "输入凭证编号",
+        "account_code_name": "科目代码 / 名称",
+        "total_amount": "总计金额",
         "voucher_date": "凭证日期",
         "voucher_type": "凭证类型",
         "accounting_select": "请选择会计科目",
@@ -1065,7 +1118,22 @@ export const zhCn = {
         "debit": "借方",
         "credit": "贷方"
       },
+      "validation": {
+        "empty_fields": "日期或分录类别为空",
+        "unbalanced": "借贷不平衡",
+        "empty_rows": "分录为空",
+        "incomplete_row": "有分录的会计科目或金额为空"
+      },
+      "balance_check": {
+        "title": "借贷平衡检查",
+        "balanced": "已平衡",
+        "unbalanced": "未平衡"
+      },
       "actions": {
+        "cancel_edit": "取消修改",
+        "verify_save": "核对并保存",
+        "save_only": "仅保存修改",
+        "add_row": "新增分录",
         "clear_all": "全部清除",
         "save_voucher": "保存凭证",
         "confirm": "确认",

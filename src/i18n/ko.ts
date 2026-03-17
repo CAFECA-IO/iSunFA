@@ -992,7 +992,35 @@ export const ko = {
       "intensity_medium": "중강도",
       "intensity_high": "고강도"
     },
+    "messages": {
+        "fetch_error": "전표를 가져오지 못했습니다",
+        "deleted_warning": "삭제된 전표는 편집할 수 없습니다"
+      },
+      "status": {
+        "pending": "확인 대기 중",
+        "verified": "확인됨"
+      },
+      "sections": {
+        "preview": "영수증 미리보기",
+        "basic_info": "기본 정보",
+        "accounting_entries": "회계 분개"
+      },
+      "validation": {
+        "empty_fields": "날짜 또는 유형이 비어 있습니다",
+        "unbalanced": "대차가 일치하지 않습니다",
+        "empty_rows": "분개가 비어 있습니다",
+        "incomplete_row": "비어 있는 계정이나 금액이 있습니다"
+      },
+      "balance_check": {
+        "title": "대차 대조 확인",
+        "balanced": "일치함",
+        "unbalanced": "불일치"
+      },
     "actions": {
+      "cancel_edit": "편집 취소",
+      "verify_save": "확인 및 저장",
+      "save_only": "수정 내용만 저장",
+      "add_row": "분개 추가",
       "cancel": "취소",
       "save_and_verify": "저장 및 확인"
     },
@@ -1011,6 +1039,12 @@ export const ko = {
   }
 ,
   "voucher": {
+    "account_book_selector": {
+      "title": "계정 선택",
+      "all": "전체",
+      "search_placeholder": "계정 코드나 이름을 검색하세요...",
+      "no_results": "일치하는 계정이 없습니다"
+    },
     "main_view": {
       "title": "스마트 전표 관리",
       "subtitle": "AI가 영수증 인식 결과를 바탕으로 회계 분개를 자동 생성했습니다.",
@@ -1055,7 +1089,8 @@ export const ko = {
         },
         "no_file": "파일 없음",
         "filter_btn": "필터",
-        "verify_all": "모든 전표 확인"
+        "verify_all": "모든 전표 확인",
+        "no_data": "현재 전표 데이터가 없습니다. 먼저 "
       }
     },
     "summary": {
@@ -1069,7 +1104,25 @@ export const ko = {
     },
     "detail_modal": {
       "title": "전표 편집",
+      "messages": {
+        "fetch_error": "전표를 가져오지 못했습니다",
+        "deleted_warning": "삭제된 전표는 편집할 수 없습니다"
+      },
+      "status": {
+        "pending": "확인 대기 중",
+        "verified": "확인됨"
+      },
+      "sections": {
+        "preview": "영수증 미리보기",
+        "basic_info": "기본 정보",
+        "accounting_entries": "회계 분개"
+      },
       "fields": {
+        "confidence": "AI 신뢰도",
+        "voucher_no": "전표 번호",
+        "voucher_no_placeholder": "전표 번호 입력",
+        "account_code_name": "계정 코드 / 이름",
+        "total_amount": "총 금액",
         "voucher_date": "전표 일자",
         "voucher_type": "전표 유형",
         "accounting_select": "계정 선택",
@@ -1077,7 +1130,22 @@ export const ko = {
         "debit": "차변",
         "credit": "대변"
       },
+      "validation": {
+        "empty_fields": "날짜 또는 유형이 비어 있습니다",
+        "unbalanced": "대차가 일치하지 않습니다",
+        "empty_rows": "분개가 비어 있습니다",
+        "incomplete_row": "비어 있는 계정이나 금액이 있습니다"
+      },
+      "balance_check": {
+        "title": "대차 대조 확인",
+        "balanced": "일치함",
+        "unbalanced": "불일치"
+      },
       "actions": {
+        "cancel_edit": "편집 취소",
+        "verify_save": "확인 및 저장",
+        "save_only": "수정 내용만 저장",
+        "add_row": "분개 추가",
         "clear_all": "모두 지우기",
         "save_voucher": "전표 저장",
         "confirm": "확인",

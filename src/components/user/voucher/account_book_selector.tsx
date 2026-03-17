@@ -8,8 +8,8 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-// import { useTranslation } from "@/i18n/i18n_context";
-import { X, Search, Loader2 } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
+import { X, Search, SearchX, Loader2 } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ACCOUNTS } from "@/constants/accounts";
@@ -46,7 +46,7 @@ export default function AccountBookSelector({
   accountBookId,
   onSelect,
 }: IAccountBookSelectorProps) {
-//   const { t } = useTranslation();
+  const { t } = useTranslation();
   const [keyword, setKeyword] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [accountBook, setAccountBook] = useState<IAccountBook | null>(null);
@@ -136,7 +136,7 @@ export default function AccountBookSelector({
                     as="h3"
                     className="text-lg font-bold text-slate-800"
                   >
-                  請選擇會計科目
+                  {t("voucher.account_book_selector.title")}
                   </DialogTitle>
                   <button
                     type="button"
@@ -165,7 +165,7 @@ export default function AccountBookSelector({
                             : "text-slate-600 hover:bg-slate-100"
                         }`}
                       >
-                        全部
+                        {t("voucher.account_book_selector.all")}
                       </button>
                       {accountTypes.map((type) => (
                         <button
@@ -192,7 +192,7 @@ export default function AccountBookSelector({
                             aria-label="Search"
                             value={keyword}
                             onChange={(e) => setKeyword(e.target.value)}
-                            placeholder="搜尋科目代碼或名稱..."
+                            placeholder={t("voucher.account_book_selector.search_placeholder")}
                             className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
                           />
                         </div>
@@ -221,9 +221,10 @@ export default function AccountBookSelector({
                             ))}
                           </div>
                         ) : (
-                          <div className="flex h-32 flex-col items-center justify-center text-slate-400">
-                            <p className="text-sm font-semibold">找不到符合的會計科目</p>
-                          </div>
+                          <div className="flex h-32 flex-col items-center justify-center gap-2 text-slate-400">
+                          <SearchX className="h-8 w-8 text-slate-300" />
+                          <p className="text-sm font-semibold">{t("voucher.account_book_selector.no_results")}</p>
+                        </div>
                         )}
                       </div>
                     </div>

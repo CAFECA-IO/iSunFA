@@ -966,6 +966,12 @@ export const zhTw = {
     },
   },
   "voucher": {
+    "account_book_selector": {
+      "title": "請選擇會計科目",
+      "all": "全部",
+      "search_placeholder": "搜尋科目代碼或名稱...",
+      "no_results": "找不到符合的會計科目"
+    },
     "main_view": {
       "title": "智能傳票管理",
       "subtitle": "AI 已根據您的憑證辨識結果自動產生對應的會計分錄。",
@@ -1010,7 +1016,8 @@ export const zhTw = {
         },
         "no_file": "無檔案",
         "filter_btn": "篩選條件",
-        "verify_all": "一鍵核對所有傳票"
+        "verify_all": "一鍵核對所有傳票",
+        "no_data": "目前無傳票資料，請先"
       }
     },
     "summary": {
@@ -1024,7 +1031,25 @@ export const zhTw = {
     },
     "detail_modal": {
       "title": "編輯傳票",
+      "messages": {
+        "fetch_error": "取得傳票失敗",
+        "deleted_warning": "已刪除傳票不可編輯"
+      },
+      "status": {
+        "pending": "待核對",
+        "verified": "已核對"
+      },
+      "sections": {
+        "preview": "憑證預覽",
+        "basic_info": "傳票基礎資訊",
+        "accounting_entries": "會計科目分錄"
+      },
       "fields": {
+        "confidence": "AI 信心度",
+        "voucher_no": "傳票編號",
+        "voucher_no_placeholder": "輸入傳票編號",
+        "account_code_name": "科目代碼 / 名稱",
+        "total_amount": "總計金額",
         "voucher_date": "傳票日期",
         "voucher_type": "傳票類型",
         "accounting_select": "請選擇會計科目",
@@ -1032,7 +1057,22 @@ export const zhTw = {
         "debit": "借方",
         "credit": "貸方"
       },
+      "validation": {
+        "empty_fields": "日期或分錄類別為空",
+        "unbalanced": "借貸不平衡",
+        "empty_rows": "分錄為空",
+        "incomplete_row": "有分錄的會計科目或金額為空"
+      },
+      "balance_check": {
+        "title": "借貸平衡檢查",
+        "balanced": "已平衡",
+        "unbalanced": "未平衡"
+      },
       "actions": {
+        "cancel_edit": "取消修改",
+        "verify_save": "核對並存檔",
+        "save_only": "僅儲存修改",
+        "add_row": "新增分錄",
         "clear_all": "全部清除",
         "save_voucher": "儲存傳票",
         "confirm": "確認",
