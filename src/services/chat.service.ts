@@ -1,6 +1,6 @@
 import { AI_CONSULTATION_ROOM_PROMPT } from '@/constants/prompts/ai_consultation_room';
 import { JOURNAL_PROMPT } from '@/constants/prompts/journal';
-import { VOUCHER_PROMPT } from '@/constants/prompts/voucher';
+import { getVoucherPrompt } from '@/constants/prompts/voucher';
 import { IParsedVoucher } from '@/interfaces/voucher';
 import { GoogleGenerativeAI, Part, Tool } from '@google/generative-ai';
 
@@ -242,10 +242,12 @@ export class ChatService {
    */
   async analyzeVoucher(
     images: { data: string; mimeType: string }[] = [],
+    region: string = "TW",
   ): Promise<{ data: IParsedVoucher | null; error?: string }> {
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
-      const parts: Part[] = [{ text: VOUCHER_PROMPT }];
+      const promptText = getVoucherPrompt(region);
+      const parts: Part[] = [{ text: promptText }];
 
       if (images && images.length > 0) {
         images.forEach((img) => {

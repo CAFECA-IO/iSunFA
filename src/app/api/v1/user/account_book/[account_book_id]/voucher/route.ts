@@ -79,7 +79,7 @@ export async function POST(
     //     ? [{ data: file.base64, mimeType: file.mimeType }]
     //     : [];
 
-    // const { data: voucherData, error: aiError } = await chatService.analyzeVoucher(imagesForAi);
+    // const { data: voucherData, error: aiError } = await chatService.analyzeVoucher(imagesForAi, accountBook.country);
 
     // if (aiError || !voucherData) {
     //   return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, aiError || "Failed to parse voucher");
