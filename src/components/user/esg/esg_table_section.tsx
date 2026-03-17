@@ -92,7 +92,7 @@ const EsgRow = ({
 
   return (
     <tr>
-      <td className="px-6 py-4">
+      <td className="p-2 lg:px-6 lg:py-4">
         <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
           {/* Info: (20260312 - Julian) File Preview */}
           {record.file ? (
@@ -108,35 +108,35 @@ const EsgRow = ({
           )}
         </div>
       </td>
-      <td className="px-6 py-4 text-center text-sm font-bold whitespace-nowrap text-slate-800">
+      <td className="p-2 text-center text-xs font-bold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4 lg:text-sm">
         {timestampToString(record.dateTimestamp).dateWithDash}
       </td>
-      <td className="px-6 py-4">
-        <div className="mb-1 flex items-center text-sm font-bold text-slate-800">
+      <td className="p-2 lg:px-6 lg:py-4">
+        <div className="mb-1 flex items-center text-xs font-bold text-slate-800 lg:text-sm">
           <div className="shrink-0">{renderScope(record.scope).icon}</div>
           {renderScope(record.scope).text}：{record.activityType}
         </div>
-        <div className="text-xs font-medium text-slate-500">
+        <div className="text-[10px] font-medium text-slate-500 lg:text-xs">
           {record.vendor}
         </div>
       </td>
-      <td className="px-6 py-4 text-center whitespace-nowrap">
+      <td className="p-2 text-center whitespace-nowrap lg:px-6 lg:py-4">
         <span className="text-[15px] font-bold text-slate-800">
           {record.rawActivityData}{" "}
         </span>
         <span className="text-xs font-bold text-slate-500">{record.unit}</span>
       </td>
-      <td className="px-6 py-4 text-center text-[15px] font-bold whitespace-nowrap text-slate-800">
+      <td className="p-2 text-center text-[15px] font-bold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4">
         {record.emissions}
       </td>
-      <td className="px-6 py-4 text-center">
+      <td className="p-2 text-center lg:px-6 lg:py-4">
         <span
           className={`inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-bold whitespace-nowrap transition-colors ${renderIntensity(record.intensity).style}`}
         >
           {renderIntensity(record.intensity).text}
         </span>
       </td>
-      <td aria-label="準確度" className="px-6 py-4 text-center">
+      <td aria-label="準確度" className="p-2 text-center lg:px-6 lg:py-4">
         <div className="flex items-center justify-center gap-3">
           <div className="h-2 w-24 shrink-0 overflow-hidden rounded-full bg-slate-200">
             <div
@@ -149,7 +149,7 @@ const EsgRow = ({
           </span>
         </div>
       </td>
-      <td className="px-6 py-4 text-center">
+      <td className="p-2 text-center lg:px-6 lg:py-4">
         {record.status === EsgStatus.VERIFIED ? (
           <div className="flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 className="h-5 w-5" />
@@ -254,7 +254,7 @@ export default function EsgTableSection() {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       {/* Info: (20260312 - Julian) Toolbar */}
-      <div className="flex items-center justify-between border-b border-slate-200 p-4">
+      <div className="flex flex-col items-center justify-between gap-2 border-b border-slate-200 p-4 lg:flex-row">
         <div className="relative w-full max-w-sm">
           <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -266,12 +266,12 @@ export default function EsgTableSection() {
             className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-400 focus:outline-none"
           />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm">
           <select
             aria-label={t("esg_table.filter_intensity_aria")}
             value={intensityFilter}
             onChange={(e) => setIntensityFilter(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-bold text-slate-600 focus:outline-none"
+            className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-bold text-slate-600 focus:outline-none"
           >
             <option value="ALL">{t("esg_table.filter_intensity_all")}</option>
             <option value={EsgIntensity.HIGH}>
@@ -288,7 +288,7 @@ export default function EsgTableSection() {
             aria-label={t("esg_table.filter_scope_aria")}
             value={scopeFilter}
             onChange={(e) => setScopeFilter(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-bold text-slate-600 focus:outline-none"
+            className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-bold text-slate-600 focus:outline-none"
           >
             <option value="ALL">{t("esg_table.filter_scope_all")}</option>
             <option value={EsgScope.SCOPE_1}>
@@ -305,7 +305,7 @@ export default function EsgTableSection() {
             type="button"
             aria-label={t("esg_table.sort_date_aria")}
             onClick={() => setDateSort(dateSort === "desc" ? "asc" : "desc")}
-            className="flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50"
+            className="flex items-center rounded-lg border border-slate-300 px-4 py-2 font-bold text-slate-600 transition-colors hover:bg-slate-50"
           >
             {dateSort === "desc"
               ? t("esg_table.sort_newest")
@@ -320,7 +320,7 @@ export default function EsgTableSection() {
             type="button"
             aria-label={t("esg_table.filter_btn")}
             onClick={fetchRecords}
-            className="flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50"
+            className="flex items-center rounded-lg border border-slate-300 px-4 py-2 font-bold text-slate-600 transition-colors hover:bg-slate-50"
           >
             <Filter className="mr-2 h-4 w-4" />
             {t("esg_table.filter_btn")}
@@ -333,28 +333,28 @@ export default function EsgTableSection() {
         <table className="w-full min-w-[800px] border-collapse text-left">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50/70">
-              <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
+              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.voucher")}
               </th>
-              <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
+              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.date")}
               </th>
-              <th className="px-6 py-4 text-xs font-black tracking-wider text-slate-500 uppercase">
+              <th className="p-2 text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.activity_target")}
               </th>
-              <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
+              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.raw_data")}
               </th>
-              <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
+              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.emissions")}
               </th>
-              <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
+              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.intensity_label")}
               </th>
-              <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
+              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.ai_confidence")}
               </th>
-              <th className="px-6 py-4 text-center text-xs font-black tracking-wider text-slate-500 uppercase">
+              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.status")}
               </th>
             </tr>
@@ -364,7 +364,7 @@ export default function EsgTableSection() {
               <tr>
                 <td
                   colSpan={8}
-                  className="px-6 py-4 text-center text-sm font-bold text-slate-500"
+                  className="p-2 text-center text-sm font-bold text-slate-500 lg:px-6 lg:py-4"
                 >
                   {t("esg_table.loading")}
                 </td>
@@ -381,7 +381,7 @@ export default function EsgTableSection() {
               <tr>
                 <td
                   colSpan={8}
-                  className="px-6 py-4 text-center text-sm font-bold text-slate-500"
+                  className="p-2 text-center text-sm font-bold text-slate-500 lg:px-6 lg:py-4"
                 >
                   {t("esg_table.no_records")}
                 </td>
@@ -392,7 +392,7 @@ export default function EsgTableSection() {
       </div>
 
       {/* Info: (20260312 - Julian) Footer */}
-      <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50/50 px-4 py-3">
+      <div className="flex flex-col items-center justify-between gap-2 border-t border-slate-200 bg-slate-50/50 px-4 py-3 lg:flex-row">
         <span className="text-xs font-bold text-slate-500">
           {t("esg_table.footer.record_count", { count: recordCount })}
         </span>

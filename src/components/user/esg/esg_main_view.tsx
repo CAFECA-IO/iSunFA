@@ -4,15 +4,15 @@ import EsgTableSection from "@/components/user/esg/esg_table_section";
 
 export default function EsgMainView() {
   return (
-    <div className="flex w-full flex-col space-y-6 px-12">
+    <div className="flex max-w-[calc(100vw-30px)] flex-col space-y-6 px-0 md:px-12">
       {/* Info: (20260312 - Julian) Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="flex items-center text-2xl font-bold text-slate-800">
+      <div className="flex flex-col items-center justify-start gap-4 lg:flex-row lg:justify-between">
+        <div className="flex flex-col">
+          <h1 className="flex items-center text-base font-bold text-slate-800 lg:text-2xl">
             <Leaf className="mr-2 h-6 w-6 text-green-500" strokeWidth={2.5} />
             碳排管理與 ESG 分析
           </h1>
-          <p className="mt-2 text-sm font-medium text-slate-500">
+          <p className="mt-2 text-xs font-medium text-slate-500 lg:text-sm">
             自動分析進項憑證，為您提供即時的碳中和進度與各項排放維度分析。
           </p>
         </div>
