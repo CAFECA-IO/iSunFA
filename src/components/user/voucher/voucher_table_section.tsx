@@ -409,7 +409,7 @@ export default function VoucherTableSection() {
                   type="text"
                   value={keyWord}
                   onChange={(e) => setKeyWord(e.target.value)}
-                  placeholder={t("搜尋傳票編號、科目名稱...")}
+                  placeholder={t("搜尋傳票編號、科目編號...")}
                   className="w-full rounded-full border border-slate-300 py-2.5 pr-4 pl-11 text-sm font-semibold text-slate-700 shadow-sm placeholder:font-medium placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
               </div>
