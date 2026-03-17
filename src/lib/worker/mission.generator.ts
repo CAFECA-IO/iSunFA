@@ -62,10 +62,12 @@ export class MissionGenerator {
         tasks.push(taskGenerator.generateTask(item.key, item.prompt, targetInfo, 0));
       });
 
-      // Info: (20260130 - Luphia) 2. Final Synthesis Task (Order 1)
-      // Note: The prompt for FINAL depends on the inputs of previous tasks. 
-      // Since we are not executing here, we save the raw template. 
-      // The Executor will need to handle the prompt interpolation using results from Order 0 tasks.
+      /**
+       * Info: (20260316 - Tzuhan) 2. Final Synthesis Task (Order 1)
+       * The prompt for FINAL depends on the inputs of previous tasks. 
+       * Since we are not executing here, we save the raw template. 
+       * The Executor will need to handle the prompt interpolation using results from Order 0 tasks.
+       */
       tasks.push(taskGenerator.generateTask('FINAL', FINAL, targetInfo, 1));
 
       return {
@@ -99,64 +101,61 @@ export class MissionGenerator {
 
       const tasks: ITaskDefinition[] = [];
 
-      let promptSet: Record<string, string> = MarketAnalysisPrompts;
-      if (params.category === 'financial_product_rating') {
-        promptSet = FinancialProductRatingPrompts;
-      } else if (params.category === 'industry_development') {
-        promptSet = IndustryDevelopmentPrompts;
-      }
+      // Info: (20260316 - Tzuhan) Dynamically dispatch prompts based on external analysis category
+      const promptMap: Record<string, typeof MarketAnalysisPrompts> = {
+        'market_trends': MarketAnalysisPrompts,
+        'industry_development': IndustryDevelopmentPrompts,
+        'financial_product_rating': FinancialProductRatingPrompts,
+      };
+      const selectedPrompts = promptMap[params.category] || MarketAnalysisPrompts;
 
-      // Info: (20260310 - Tzuhan) Step 1: Event Collection
+      // Info: (20260316 - Tzuhan) Build sequential analysis tasks using the selected prompt matrix
       tasks.push({
         type: 'MARKET_EVENT_COLLECTION',
         order: 0,
         data: {
           key: 'STEP_1',
-          prompt: promptSet.STEP_1_EVENT_COLLECTION_PROMPT,
+          prompt: selectedPrompts.STEP_1_EVENT_COLLECTION_PROMPT,
           context: targetInfo
         }
       });
 
-      // Info: (20260310 - Tzuhan) Step 2: Tag Extraction
       tasks.push({
         type: 'MARKET_TAG_EXTRACTION',
         order: 1,
         data: {
           key: 'STEP_2',
-          prompt: promptSet.STEP_2_TAG_EXTRACTION_PROMPT,
+          prompt: selectedPrompts.STEP_2_TAG_EXTRACTION_PROMPT,
           context: targetInfo
         }
       });
 
-      // Info: (20260310 - Tzuhan) Step 3: Summary and Analysis
       tasks.push({
         type: 'MARKET_SUMMARY_ANALYSIS',
         order: 2,
         data: {
           key: 'STEP_3',
-          prompt: promptSet.STEP_3_SUMMARY_AND_ANALYSIS_PROMPT,
+          prompt: selectedPrompts.STEP_3_SUMMARY_AND_ANALYSIS_PROMPT,
           context: targetInfo
         }
       });
 
-      // Info: (20260310 - Tzuhan) Step 4: Market Reaction
       tasks.push({
         type: 'MARKET_REACTION_PREDICTION',
         order: 3,
         data: {
           key: 'STEP_4',
-          prompt: promptSet.STEP_4_MARKET_REACTION_PROMPT,
+          prompt: selectedPrompts.STEP_4_MARKET_REACTION_PROMPT,
           context: targetInfo
         }
       });
 
-      // Info: (20260310 - Tzuhan)Step 5: Formatted Output
       tasks.push({
         type: 'MARKET_FORMATTED_OUTPUT',
         order: 4,
         data: {
           key: 'STEP_5',
-          prompt: promptSet.STEP_5_FORMATTED_OUTPUT_PROMPT,
+          prompt: selectedPrompts.STEP_5_FORMATTED_OUTPUT_PROMPT,
           context: targetInfo
         }
       });
