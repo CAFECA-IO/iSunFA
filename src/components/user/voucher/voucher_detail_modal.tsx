@@ -61,7 +61,7 @@ const VoucherRow = ({
         <div className="relative flex h-[42px] items-center overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
           <button
             type="button"
-            className="w-full text-left appearance-none bg-transparent px-4 py-2 text-sm font-semibold text-slate-700 outline-none truncate"
+            className="w-[250px] flex-1 text-left appearance-none bg-transparent px-4 py-2 text-sm font-semibold text-slate-700 outline-none truncate"
             onClick={() => onOpenSelector(row.id)}
           >
             {row.accounting ? `${row.accounting.code} - ${row.accounting.name}` : (t("voucher.detail_modal.fields.accounting_select") || "選擇會計科目")}

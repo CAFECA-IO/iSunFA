@@ -143,7 +143,7 @@ const VoucherRow = ({
               key={line.id}
               className="flex h-[30px] items-center gap-2 border-dashed border-slate-300 not-last:border-b"
             >
-              <span className="w-[45px] rounded bg-slate-200 px-1.5 py-0.5 text-center text-xs font-semibold text-slate-700">
+              <span className="w-[55px] rounded bg-slate-200 px-1.5 py-0.5 text-center text-xs font-semibold text-slate-700">
                 {line.accounting?.code}
               </span>
               {/* Info: (20260316 - Julian) 借方靠左，貸方靠右 */}

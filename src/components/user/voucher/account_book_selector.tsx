@@ -8,7 +8,7 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { useTranslation } from "@/i18n/i18n_context";
+// import { useTranslation } from "@/i18n/i18n_context";
 import { X, Search, Loader2 } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -46,8 +46,9 @@ export default function AccountBookSelector({
   accountBookId,
   onSelect,
 }: IAccountBookSelectorProps) {
-  const { t } = useTranslation();
+//   const { t } = useTranslation();
   const [keyword, setKeyword] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<string | null>(null);
   const [accountBook, setAccountBook] = useState<IAccountBook | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -56,6 +57,7 @@ export default function AccountBookSelector({
       if (accountBook?.id !== accountBookId) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsLoading(true);
+        setSelectedType(null);
         request<IApiResponse<IAccountBook>>(`/api/v1/user/account_book/${accountBookId}`)
           .then((res) => {
             if (res.payload) {
@@ -63,10 +65,12 @@ export default function AccountBookSelector({
             }
           })
           .finally(() => setIsLoading(false));
+      } else {
+        setIsLoading(false);
       }
     } else {
       setKeyword("");
-      setIsLoading(true);
+      setSelectedType(null);
     }
   }, [isOpen, accountBookId, accountBook?.id]);
 
@@ -77,16 +81,27 @@ export default function AccountBookSelector({
     return ACCOUNTS[countryKey] || ACCOUNTS.TW;
   }, [accountBook?.country]);
 
-  // Info: (20260317 - Julian) Computed list based on keyword search
+  // Info: (20260317 - Julian) Uniq account types
+  const accountTypes = useMemo(() => {
+    return Array.from(new Set(accountOptions.map((acc) => acc.type)));
+  }, [accountOptions]);
+
+  // Info: (20260317 - Julian) Computed list based on keyword search and selected type
   const filteredAccounts = useMemo(() => {
-    if (!keyword.trim()) return accountOptions;
-    const lowerKeyword = keyword.toLowerCase();
-    return accountOptions.filter(
-      (acc) =>
-        acc.code.toLowerCase().includes(lowerKeyword) ||
-        acc.name.toLowerCase().includes(lowerKeyword)
-    );
-  }, [keyword, accountOptions]);
+    let list = accountOptions;
+    if (selectedType) {
+      list = list.filter((acc) => acc.type === selectedType);
+    }
+    if (keyword.trim()) {
+      const lowerKeyword = keyword.toLowerCase();
+      list = list.filter(
+        (acc) =>
+          acc.code.toLowerCase().includes(lowerKeyword) ||
+          acc.name.toLowerCase().includes(lowerKeyword)
+      );
+    }
+    return list;
+  }, [keyword, accountOptions, selectedType]);
 
   return (
     <Transition show={isOpen} as={Fragment}>
@@ -114,14 +129,14 @@ export default function AccountBookSelector({
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <DialogPanel className="relative transform flex flex-col h-[70vh] bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg rounded-2xl overflow-hidden">
+              <DialogPanel className="relative transform flex flex-col h-[70vh] bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl rounded-2xl overflow-hidden">
                 {/* Info: (20260317 - Julian) Header */}
                 <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
                   <DialogTitle
                     as="h3"
                     className="text-lg font-bold text-slate-800"
                   >
-                    {t("voucher.detail_modal.fields.accounting_select") || "請選擇會計科目"}
+                  請選擇會計科目
                   </DialogTitle>
                   <button
                     type="button"
@@ -139,48 +154,78 @@ export default function AccountBookSelector({
                     <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
                   </div>
                 ) : (
-                  <div className="flex flex-col flex-1 overflow-hidden">
-                    <div className="p-4 border-b border-slate-100">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <input
-                          type="text"
-                          aria-label="Search"
-                          value={keyword}
-                          onChange={(e) => setKeyword(e.target.value)}
-                          placeholder="搜尋科目代碼或名稱..."
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
-                        />
-                      </div>
+                  <div className="flex flex-1 overflow-hidden">
+                    {/* Left Side: Types */}
+                    <div className="w-1/3 border-r border-slate-100 flex flex-col overflow-y-auto p-4 bg-slate-50/50">
+                      <button
+                        onClick={() => setSelectedType(null)}
+                        className={`w-full rounded-xl p-3 text-left transition-colors text-sm font-bold mb-1 ${
+                          selectedType === null
+                            ? "bg-orange-100 text-orange-600"
+                            : "text-slate-600 hover:bg-slate-100"
+                        }`}
+                      >
+                        全部
+                      </button>
+                      {accountTypes.map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => setSelectedType(type)}
+                          className={`w-full rounded-xl p-3 text-left transition-colors text-sm font-bold mb-1 ${
+                            selectedType === type
+                              ? "bg-orange-100 text-orange-600"
+                              : "text-slate-600 hover:bg-slate-100"
+                          }`}
+                        >
+                          {type}
+                        </button>
+                      ))}
                     </div>
-                    
-                    <div className="flex-1 overflow-y-auto p-2">
-                      {filteredAccounts.length > 0 ? (
-                        <div className="flex flex-col gap-1">
-                          {filteredAccounts.map((acc) => (
-                            <button
-                              key={acc.code}
-                              onClick={() => {
-                                onSelect(acc);
-                                onClose();
-                              }}
-                              className="w-full rounded-xl p-3 text-left transition-colors hover:bg-slate-50 disabled:opacity-50 flex items-center gap-3 group"
-                            >
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors">
-                                {acc.code}
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-sm font-bold text-slate-700">{acc.name}</span>
-                                <span className="text-xs font-medium text-slate-400 mt-0.5">{acc.type}</span>
-                              </div>
-                            </button>
-                          ))}
+
+                    {/* Info: (20260317 - Julian) Right Side: Search & List */}
+                    <div className="w-2/3 flex flex-col">
+                      <div className="p-4 border-b border-slate-100">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                          <input
+                            type="text"
+                            aria-label="Search"
+                            value={keyword}
+                            onChange={(e) => setKeyword(e.target.value)}
+                            placeholder="搜尋科目代碼或名稱..."
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                          />
                         </div>
-                      ) : (
-                        <div className="flex h-32 flex-col items-center justify-center text-slate-400">
-                          <p className="text-sm font-semibold">找不到符合的會計科目</p>
-                        </div>
-                      )}
+                      </div>
+                      
+                      <div className="flex-1 overflow-y-auto p-4">
+                        {filteredAccounts.length > 0 ? (
+                          <div className="flex flex-col gap-1">
+                            {filteredAccounts.map((acc) => (
+                              <button
+                                key={acc.code}
+                                onClick={() => {
+                                  onSelect(acc);
+                                  onClose();
+                                }}
+                                className="w-full rounded-xl p-3 text-left transition-colors hover:bg-slate-50 disabled:opacity-50 flex items-center gap-3 group border border-transparent hover:border-slate-200"
+                              >
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors">
+                                  {acc.code}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-bold text-slate-700">{acc.name}</span>
+                                  <span className="text-xs font-medium text-slate-400 mt-0.5">{acc.type}</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex h-32 flex-col items-center justify-center text-slate-400">
+                            <p className="text-sm font-semibold">找不到符合的會計科目</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
