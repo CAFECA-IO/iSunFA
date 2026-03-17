@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { request } from "@/lib/utils/request";
-import { uploadFile, ILariaMetadata, fileToBase64 } from "@/lib/file_operator";
+import { uploadFile, ILariaMetadata, fileToBase64 } from "@/lib/laria.client";
 import {
   PlusIcon,
   MinusIcon,

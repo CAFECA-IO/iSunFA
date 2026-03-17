@@ -147,6 +147,7 @@ model Task {
   order     Int      @default(0)
   data      Json?
   result    Json?
+  contract  String?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

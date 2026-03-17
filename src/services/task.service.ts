@@ -54,14 +54,18 @@ export class TaskService {
     }
   }
 
-  async executeTask(task: Task, mission: Mission) {
-    console.log(`[TaskService] Processing Task: ${task.id} (Mission: ${mission.id}, Order: ${task.order})`);
+  async executeTask(task: Task | { id: string, data: unknown, type?: string, order?: number }, mission?: Mission | null) {
+    console.log(`[TaskService] Processing Task: ${task.id} (Mission: ${mission?.id || 'Detached/SmartContract'}, Order: ${task.order || 0})`);
 
-    // Info: (20260130 - Luphia) Mark as RUNNING
-    await taskRepo.updateStatus(task.id, TASK_STATUS.RUNNING);
+    // Info: (20260130 - Luphia) Mark as RUNNING if not a detached smart contract task
+    if (mission) {
+      await taskRepo.updateStatus(task.id, TASK_STATUS.RUNNING);
+    }
 
-    // Info: (20260130 - Luphia) 2. Prepare Context
-    // Info: (20260310 - Tzuhan) Pass mission object to buildTaskPrompt instead of just missionId
+    /**
+     * Info: (20260310 - Tzuhan) 2. Prepare Context
+     * Pass mission object to buildTaskPrompt instead of just missionId
+     */
     const fullPrompt = await this.buildTaskPrompt(task, mission);
 
     // Info: (20260130 - Luphia) 3. Execute
@@ -105,11 +109,15 @@ export class TaskService {
      * Info: (20260130 - Luphia) 4. Save
      * Save raw string result directly? Or wrap in object? AnalysisService uses JSON. Let's start with raw, or { content: result }?
      */
-    await taskRepo.updateStatus(task.id, TASK_STATUS.COMPLETED, result);
-    console.log(`[TaskService] Task ${task.id} Completed.`);
+    if (mission) {
+      await taskRepo.updateStatus(task.id, TASK_STATUS.COMPLETED, result);
+      console.log(`[TaskService] Task ${task.id} Completed.`);
 
-    // Info: (20260130 - Luphia) 5. Check Mission Completion
-    await missionService.tryCompleteMission(mission.id);
+      // Info: (20260130 - Luphia) 5. Check Mission Completion
+      await missionService.tryCompleteMission(mission.id);
+    } else {
+      console.log(`[TaskService] Smart Contract Task ${task.id} Executed with result length: ${result.length}`);
+    }
   }
 
   private async getPreviousOrderResults(missionId: string, currentOrder: number): Promise<Map<string, string>> {
@@ -130,11 +138,11 @@ export class TaskService {
     return results;
   }
 
-  private async buildTaskPrompt(task: Task, mission: Mission): Promise<string> {
+  private async buildTaskPrompt(task: Task | { id: string, data: unknown, type?: string, order?: number }, mission?: Mission | null): Promise<string> {
     const taskData = task.data as unknown as ITaskData;
-    let interpolatedPrompt = taskData.prompt;
+    let interpolatedPrompt = taskData.prompt || "Execute this task";
 
-    const mData = (mission.data as unknown as IMissionData) || {};
+    const mData = (mission?.data as unknown as IMissionData) || {};
     const currentDate = new Date().toISOString().split('T')[0];
     let startDate = mData.startDate || 'N/A';
     let endDate = mData.endDate || 'N/A';
@@ -166,7 +174,7 @@ export class TaskService {
       : '無歷史標籤';
     interpolatedPrompt = interpolatedPrompt.replace(/\{Historical_Tags_List\}/g, tagsString);
 
-    if (task.order > 0) {
+    if (task.order && task.order > 0 && mission) {
       // Info: (20260130 - Luphia) Fetch results from previous order
       const prevResults = await this.getPreviousOrderResults(mission.id, task.order);
 

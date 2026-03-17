@@ -10,7 +10,7 @@ import {
   Wand2,
   File as FileIcon,
 } from "lucide-react";
-import { uploadFile, fileToBase64 } from "@/lib/file_operator";
+import { uploadFile, fileToBase64 } from "@/lib/laria.client";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";

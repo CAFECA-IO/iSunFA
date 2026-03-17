@@ -1,3 +1,5 @@
+'use server';
+
 import { promises as fs, createReadStream, type ReadStream, Stats } from 'fs';
 import type { FileHandle } from 'fs/promises';
 import path from 'path';
@@ -259,3 +261,237 @@ export async function recoverFile(shardsDir: string, outputFilePath: string): Pr
     await Promise.all(readerHandles.map(handle => handle && handle.close()));
   }
 }
+
+/**
+ * Info: (20251028 - Luphia) Helper to upload a single file buffer to the backend storage
+ */
+async function uploadSingleFile(buffer: Buffer, fileName: string): Promise<string> {
+  const storageDomain = process.env.STORAGE_DOMAIN || '';
+  if (!storageDomain) {
+    console.warn('[laria.server] STORAGE_DOMAIN is not set.');
+  }
+
+  const formData = new FormData();
+  formData.append('file', new Blob([buffer as unknown as BlobPart]), fileName || 'upload.bin');
+
+  const domain = storageDomain.replace(/\/$/, '');
+  const url = `${domain}/api/v1/file`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Upload failed: ${response.status} ${errorText}`);
+  }
+
+  const result = await response.json();
+  if (result.code !== 'SUCCESS' && result.code !== 'OK' && result.success !== true && !result.payload?.hash) {
+    throw new Error(result.message || 'Storage upload failed w/o message');
+  }
+
+  const hash = result.payload?.hash || result.hash;
+  if (!hash) {
+    throw new Error('Storage upload response missing hash');
+  }
+
+  return hash;
+}
+
+/**
+ * Info: (20251028 - Luphia) Helper to download a single file by CID from the backend storage
+ */
+async function downloadSingleFile(cid: string): Promise<Buffer> {
+  const storageDomain = process.env.STORAGE_DOMAIN || '';
+  const domain = storageDomain.replace(/\/$/, '');
+  
+  const response = await fetch(`${domain}/api/v1/file/${cid}`);
+  if (!response.ok) {
+    throw new Error(`Download failed: ${response.status}`);
+  }
+  
+  const arrayBuffer = await response.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}
+
+export interface ILariaMetadata {
+  filename: string;
+  originalFileSize: number;
+  mimeType: string;
+  shards: string[];
+  algorithm: {
+    k: number;
+    m: number;
+    shardSize: number;
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isLariaMetadata(obj: any): obj is ILariaMetadata {
+  return obj
+    && typeof obj.filename === 'string'
+    && typeof obj.originalFileSize === 'number'
+    && Array.isArray(obj.shards);
+}
+
+/**
+ * Info: (20260317 - Luphia) Server-side Core Upload Function using Laria split logic
+ */
+export const uploadFile = async (
+  buffer: Buffer,
+  filename: string,
+  mimeType: string = 'application/octet-stream'
+): Promise<{ metadataHash: string, metadata: ILariaMetadata }> => {
+  const originalFileSize = buffer.length;
+
+  const currentShardSize = Math.max(1, Math.ceil(originalFileSize / DATA_SHARDS));
+  const dataStripeSize = DATA_SHARDS * currentShardSize;
+  const totalStripes = 1; // Always 1 stripe based on the frontend logic
+
+  const shardCids: string[] = [];
+
+  for (let stripeIndex = 0; stripeIndex < totalStripes; stripeIndex++) {
+    const start = stripeIndex * dataStripeSize;
+    const end = Math.min(start + dataStripeSize, originalFileSize);
+
+    const chunkBuffer = buffer.subarray(start, end);
+
+    let dataStripe: Buffer;
+    if (chunkBuffer.length < dataStripeSize) {
+      dataStripe = Buffer.alloc(dataStripeSize);
+      chunkBuffer.copy(dataStripe);
+    } else {
+      dataStripe = chunkBuffer;
+    }
+
+    const shards: Buffer[] = [];
+    for (let i = 0; i < DATA_SHARDS; i++) {
+      const shardStart = i * currentShardSize;
+      const shardEnd = (i + 1) * currentShardSize;
+      shards.push(dataStripe.subarray(shardStart, shardEnd));
+    }
+    for (let i = 0; i < PARITY_SHARDS; i++) {
+      shards.push(Buffer.alloc(currentShardSize));
+    }
+
+    await rse.encode(shards);
+
+    for (let i = 0; i < TOTAL_SHARDS; i++) {
+       const shardName = `${filename}.part${stripeIndex * TOTAL_SHARDS + i}`;
+       const cid = await uploadSingleFile(shards[i], shardName);
+       shardCids.push(cid);
+    }
+  }
+
+  const metadata: ILariaMetadata = {
+    filename,
+    originalFileSize,
+    mimeType,
+    shards: shardCids,
+    algorithm: {
+      k: DATA_SHARDS,
+      m: PARITY_SHARDS,
+      shardSize: currentShardSize
+    }
+  };
+
+  const metadataBuffer = Buffer.from(JSON.stringify(metadata), 'utf-8');
+  const metadataCid = await uploadSingleFile(metadataBuffer, `${filename}.meta.json`);
+
+  return { metadataHash: metadataCid, metadata };
+};
+
+/**
+ * Info: (20260317 - Luphia) Server-side Download file from Laria Metadata
+ */
+export const downloadFromMetadata = async (metadata: ILariaMetadata): Promise<{ buffer: Buffer, filename: string }> => {
+  const { originalFileSize, shards: shardCids, filename, algorithm } = metadata;
+  const currentShardSize = algorithm?.shardSize || SHARD_SIZE;
+
+  const totalShards = shardCids.length;
+  const shardsPerStripe = TOTAL_SHARDS;
+  const totalStripes = Math.ceil(totalShards / shardsPerStripe);
+
+  const reconstructedStripes: Buffer[] = [];
+
+  for (let stripeIdx = 0; stripeIdx < totalStripes; stripeIdx++) {
+    const stripeShardsCids = shardCids.slice(stripeIdx * shardsPerStripe, (stripeIdx + 1) * shardsPerStripe);
+
+    const shards: (Buffer | null)[] = new Array(TOTAL_SHARDS).fill(null);
+
+    await Promise.all(stripeShardsCids.map(async (shardCid, localIdx) => {
+      try {
+        const buffer = await downloadSingleFile(shardCid);
+        shards[localIdx] = buffer;
+      } catch {
+        shards[localIdx] = null;
+      }
+    }));
+
+    const validShardsCount = shards.filter(s => s !== null).length;
+    if (validShardsCount < DATA_SHARDS) {
+      throw new Error(`Insufficient shards to reconstruct stripe ${stripeIdx}. Needed ${DATA_SHARDS}, got ${validShardsCount}.`);
+    }
+
+    await rse.reconstruct(shards);
+
+    const dataShards = shards.slice(0, DATA_SHARDS) as Buffer[];
+    const stripeSize = DATA_SHARDS * currentShardSize;
+    const stripeBuffer = Buffer.alloc(stripeSize);
+
+    for (let i = 0; i < DATA_SHARDS; i++) {
+        dataShards[i].copy(stripeBuffer, i * currentShardSize, 0, currentShardSize);
+    }
+
+    reconstructedStripes.push(stripeBuffer);
+  }
+
+  const finalBufferLength = reconstructedStripes.reduce((acc, curr) => acc + curr.length, 0);
+  const finalBuffer = Buffer.alloc(finalBufferLength);
+
+  let offset = 0;
+  for (const stripe of reconstructedStripes) {
+    stripe.copy(finalBuffer, offset);
+    offset += stripe.length;
+  }
+
+  const truncated = finalBuffer.subarray(0, originalFileSize);
+
+  return { buffer: truncated, filename };
+};
+
+/**
+ * Info: (20260317 - Luphia) Server-side Core Download Function
+ */
+export const downloadFile = async (cid: string): Promise<{ buffer: Buffer, filename: string }> => {
+  const initialBuffer = await downloadSingleFile(cid);
+
+  let isMetadata = false;
+  let metadata: ILariaMetadata | null = null;
+
+  if (initialBuffer.length < 10 * 1024 * 1024) {
+    try {
+      const initialText = initialBuffer.toString('utf-8');
+      const parsed = JSON.parse(initialText);
+
+      const data = (parsed && typeof parsed === 'object' && 'success' in parsed && 'payload' in parsed)
+        ? parsed.payload
+        : parsed;
+
+      if (isLariaMetadata(data)) {
+        isMetadata = true;
+        metadata = data;
+      }
+    } catch {
+      isMetadata = false;
+    }
+  }
+
+  if (isMetadata && metadata) {
+    return downloadFromMetadata(metadata);
+  }
+
+  return { buffer: initialBuffer, filename: `file_${cid}` };
+};

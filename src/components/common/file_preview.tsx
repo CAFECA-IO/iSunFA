@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ILariaMetadata, downloadFile } from '@/lib/file_operator';
+import { ILariaMetadata, downloadFile } from '@/lib/laria.client';
 
 export const getExtension = (filename: string) => {
   return filename.split('.').pop()?.toLowerCase() || '';

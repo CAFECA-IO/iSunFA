@@ -16,6 +16,13 @@ export default function ContractDashboard() {
     totalSupply: string;
   } | null>(null);
 
+  const [boardInfo, setBoardInfo] = useState<{
+    address: string;
+    baseFee: string;
+    defaultTimeout: number;
+    symbol: string;
+  } | null>(null);
+
   const [tasks, setTasks] = useState<{
     id: string;
     publisher: string;
@@ -23,6 +30,8 @@ export default function ContractDashboard() {
     deadline: number;
     status: number;
   }[]>([]);
+
+
 
   useEffect(() => {
     const fetchContractData = async () => {
@@ -51,8 +60,8 @@ export default function ContractDashboard() {
         if (tokenAddress && tokenAddress !== ethers.ZeroAddress) {
           const tokenContract = new ethers.Contract(tokenAddress, ERC3643_TOKEN_ABI, provider);
 
-          let name = 'NTD Token';
-          let symbol = 'NTD';
+          let name = 'ISC Token';
+          let symbol = 'ISC';
           let decimals = 2;
           let totalSupplyStr = '0';
 
@@ -75,6 +84,24 @@ export default function ContractDashboard() {
             totalSupply: totalSupplyStr,
           });
         }
+
+        // Info: (20260317 - Luphia) Fetch Board Constants
+        let baseFeeStr = '1';
+        let defaultTimeout = 300;
+        try {
+          const fetchedBaseFee = await taskBoard.BASE_FEE();
+          baseFeeStr = ethers.formatUnits(fetchedBaseFee, decimalsToUse);
+          defaultTimeout = Number(await taskBoard.DEFAULT_TIMEOUT());
+        } catch (e) {
+          console.error("Failed to fetch TaskBoard constants", e);
+        }
+
+        setBoardInfo({
+          address: taskBoardAddress,
+          baseFee: baseFeeStr,
+          defaultTimeout: defaultTimeout,
+          symbol: tokenInfo?.symbol || 'ISC'
+        });
 
         // Info: (20260316 - Luphia) Fetch Tasks
         const allTaskIds = await taskBoard.listTask();
@@ -101,7 +128,10 @@ export default function ContractDashboard() {
     };
 
     fetchContractData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+
 
   if (loading) {
     return (
@@ -123,8 +153,9 @@ export default function ContractDashboard() {
   const getStatusString = (status: number) => {
     switch (status) {
       case 0: return 'Open';
-      case 1: return 'Closed';
+      case 1: return 'Evaluating';
       case 2: return 'Settled';
+      case 3: return 'Cancelled';
       default: return 'Unknown';
     }
   };
@@ -134,6 +165,7 @@ export default function ContractDashboard() {
       case 0: return 'bg-green-500/10 text-green-500 border-green-500/20';
       case 1: return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
       case 2: return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      case 3: return 'bg-red-500/10 text-red-500 border-red-500/20';
       default: return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
     }
   };
@@ -210,10 +242,22 @@ export default function ContractDashboard() {
               <span className="text-gray-400">Active Tasks</span>
               <span className="text-white font-medium">{tasks.filter(t => t.status === 0).length}</span>
             </div>
-            <div className="flex justify-between items-center py-2">
+            <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
               <span className="text-gray-400">Settled Tasks</span>
               <span className="text-white font-medium">{tasks.filter(t => t.status === 2).length}</span>
             </div>
+            {boardInfo && (
+              <>
+                <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                  <span className="text-gray-400">Base Fee</span>
+                  <span className="text-white font-medium">{boardInfo.baseFee} {boardInfo.symbol}</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-400">Default Timeout</span>
+                  <span className="text-white font-medium">{boardInfo.defaultTimeout} seconds</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -239,27 +283,34 @@ export default function ContractDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {tasks.map((task) => (
-                  <tr key={task.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition-colors">
-                    <td className="px-6 py-4 font-medium text-white truncate max-w-[150px]" title={task.id}>
-                      {task.id}
-                    </td>
-                    <td className="px-6 py-4 font-mono text-gray-300">
-                      {task.publisher.substring(0, 6)}...{task.publisher.substring(38)}
-                    </td>
-                    <td className="px-6 py-4 text-white">
-                      {task.rewardAmount} <span className="text-xs text-gray-500">{tokenInfo?.symbol || 'NTD'}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {new Date(task.deadline * 1000).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusColor(task.status)}`}>
-                        {getStatusString(task.status)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {tasks.map((task) => {
+                  const isExpired = (Date.now() / 1000) > task.deadline;
+                  const isOpen = task.status === 0;
+
+                  return (
+                    <tr key={task.id} className="border-b border-gray-700 hover:bg-gray-700/30 transition-colors">
+                      <td className="px-6 py-4 font-medium text-white truncate max-w-[150px]" title={task.id}>
+                        {task.id}
+                      </td>
+                      <td className="px-6 py-4 font-mono text-gray-300">
+                        {task.publisher.substring(0, 6)}...{task.publisher.substring(38)}
+                      </td>
+                      <td className="px-6 py-4 text-white">
+                        {task.rewardAmount} <span className="text-xs text-gray-500">{tokenInfo?.symbol}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {new Date(task.deadline * 1000).toLocaleString()}
+                        {isExpired && isOpen && <span className="block text-xs text-red-400 mt-1">Expired</span>}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusColor(task.status)}`}>
+                          {getStatusString(task.status)}
+                        </span>
+                      </td>
+
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -3,7 +3,7 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
-import { encodeFile } from '@/lib/laria';
+import { encodeFile } from '@/lib/laria.server';
 
 export interface IStorageUploadResponse {
   hash: string;
@@ -195,7 +195,7 @@ export class StorageService {
       }
 
       // Info: (20260213 - Julian) 3. Recover
-      const { recoverFile } = await import("@/lib/laria");
+      const { recoverFile } = await import("@/lib/laria.server");
       await recoverFile(outputDir, recoveredPath);
 
       // Info: (20260213 - Julian) 4. Read restored data

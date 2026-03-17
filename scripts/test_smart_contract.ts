@@ -70,9 +70,9 @@ async function main() {
     console.log("✔ TaskBoard is already verified.");
   }
 
-  // Info: (20260316 - Luphia) Wrapping ETH to get Tokens
-  const depositAmount = ethers.parseEther("0.1");
-  console.log(`\nWrapping ${ethers.formatEther(depositAmount)} ETH to Tokens...`);
+  // Info: (20260316 - Luphia) Wrapping ISC to get Tokens
+  const depositAmount = ethers.parseEther("5");
+  console.log(`\nWrapping ${ethers.formatEther(depositAmount)} ISC to Tokens...`);
   try {
     const txDeposit = await taskBoard.deposit({ value: depositAmount });
     await txDeposit.wait();
@@ -102,10 +102,8 @@ async function main() {
 
   // Info: (20260316 - Luphia) Creating a Task
   const taskCid = "QmTestTaskCid" + Date.now();
-  const rewardAmount = ethers.parseEther("0.05");
-  const duration = 3600;
 
-  console.log(`\nCreating Task ${taskCid} with reward ${ethers.formatEther(rewardAmount)} Tokens...`);
+  console.log(`\nCreating Task ${taskCid} with base reward 1 Token...`);
 
   // Info: (20260316 - Luphia) Approve tokens for escrow
   console.log("Approving tokens for TaskBoard...");
@@ -120,9 +118,15 @@ async function main() {
 
   // Info: (20260316 - Luphia) Create Task
   console.log("Sending createTask tx...");
-  const txCreate = await taskBoard.createTask(taskCid, rewardAmount, duration);
+  const txCreate = await taskBoard.createTask(taskCid);
   await txCreate.wait();
   console.log("✔ Task created successfully.");
+
+  // Info: (20260317 - Luphia) Extending Task
+  console.log(`\nExtending Task ${taskCid} to add 1 Token reward and 300s duration...`);
+  const txExtend = await taskBoard.extendTask(taskCid);
+  await txExtend.wait();
+  console.log("✔ Task extended successfully.");
 
   // Info: (20260316 - Luphia) Submitting Work
   const workCid = "QmTestWorkCid" + Date.now();
@@ -141,6 +145,25 @@ async function main() {
   console.log("\nSettling task and distributing rewards...");
   const txSettle = await taskBoard.settlement(taskCid);
   await txSettle.wait();
+
+  // Info: (20260317 - Luphia) Testing Task Cancellation
+  const cancelTaskCid = "QmCancelTask" + Date.now();
+  console.log(`\nTesting Task Cancellation on ${cancelTaskCid} (Expecting Failure due to 300s timeout constraint)...`);
+  const txCancelCreate = await taskBoard.createTask(cancelTaskCid);
+  await txCancelCreate.wait();
+
+  try {
+    const txCancel = await taskBoard.cancelTask(cancelTaskCid);
+    await txCancel.wait();
+    console.error("❌ Task cancellation succeeded unexpectedly (should be blocked by timeout).");
+  } catch (err: unknown) {
+    const error = err as Error;
+    if (error.message.includes("Task deadline has not passed") || error.message.includes("revert")) {
+      console.log("✔ Task cancellation blocked correctly because deadline hasn't passed.");
+    } else {
+      console.error("Unexpected error during cancel attempt:", error.message);
+    }
+  }
 
   const finalBalance = await token.balanceOf(wallet.address);
   console.log("✔ Task settled successfully.");

@@ -27,11 +27,16 @@ contract TaskBoard {
     ITrustedIssuersRegistry public trustedIssuersRegistry;
     IModularCompliance public compliance;
 
+    // --- Constants ---
+    uint256 public constant DEFAULT_TIMEOUT = 300;
+    uint256 public constant BASE_FEE = 10**18;
+
     // --- Enums and Structs ---
     enum TaskStatus {
         Open,
         Evaluating,
-        Settled
+        Settled,
+        Cancelled
     }
 
     struct Task {
@@ -57,6 +62,8 @@ contract TaskBoard {
 
     // --- Events ---
     event TaskCreated(string taskId, address indexed publisher, uint256 rewardAmount, uint256 deadline);
+    event TaskExtended(string taskId, address indexed publisher, uint256 newRewardAmount, uint256 newDeadline);
+    event TaskCancelled(string taskId, address indexed publisher);
     event WorkSubmitted(string taskId, address indexed submitter, string workCid);
     event WorkApproved(string taskId, address[] winners);
     event TaskSettled(string taskId, uint256 totalReward, uint256 totalWinners);
@@ -135,7 +142,7 @@ contract TaskBoard {
 
     // --- Token Wrapping Mechanism (WETH10 Mode) ---
 
-    // Deposit ISC/ETH to mint Wrapped Tokens 1:1
+    // Deposit ISC to mint Wrapped Tokens 1:1
     function deposit() external payable onlyVerified(msg.sender) {
         require(msg.value > 0, "Deposit amount must be > 0");
         
@@ -145,7 +152,7 @@ contract TaskBoard {
         emit EthWrapped(msg.sender, msg.value);
     }
 
-    // Withdraw Wrapped Tokens to receive ISC/ETH 1:1
+    // Withdraw Wrapped Tokens to receive ISC 1:1
     function withdraw(uint256 amount) external onlyVerified(msg.sender) {
         require(amount > 0, "Withdraw amount must be > 0");
         require(token.balanceOf(msg.sender) >= amount, "Insufficient token balance");
@@ -153,31 +160,57 @@ contract TaskBoard {
         // Burn tokens
         token.burn(msg.sender, amount);
 
-        // Transfer raw ETH to user
+        // Transfer raw ISC to user
         (bool success, ) = msg.sender.call{value: amount}("");
-        require(success, "ETH Transfer failed");
+        require(success, "ISC Transfer failed");
 
         emit EthUnwrapped(msg.sender, amount);
     }
 
     // --- Task Core Functionalities ---
 
-    function createTask(string memory _cid, uint256 _reward, uint256 _duration) external onlyVerified(msg.sender) {
-        require(_reward > 0, "Reward must be > 0");
-        require(_duration > 0, "Duration must be > 0");
+    function createTask(string memory _cid) external onlyVerified(msg.sender) {
         require(tasks[_cid].publisher == address(0), "Task with this CID already exists");
 
         // Transfer reward tokens from user to this contract (Escrow)
-        require(token.transferFrom(msg.sender, address(this), _reward), "Token escrow failed");
+        require(token.transferFrom(msg.sender, address(this), BASE_FEE), "Token escrow failed");
 
         tasks[_cid].publisher = msg.sender;
-        tasks[_cid].rewardAmount = _reward;
-        tasks[_cid].deadline = block.timestamp + _duration;
+        tasks[_cid].rewardAmount = BASE_FEE;
+        tasks[_cid].deadline = block.timestamp + DEFAULT_TIMEOUT;
         tasks[_cid].status = TaskStatus.Open;
         
         allTaskIds.push(_cid);
 
-        emit TaskCreated(_cid, msg.sender, _reward, tasks[_cid].deadline);
+        emit TaskCreated(_cid, msg.sender, BASE_FEE, tasks[_cid].deadline);
+    }
+
+    function extendTask(string memory _taskId) external {
+        Task storage taskInst = tasks[_taskId];
+        require(taskInst.publisher == msg.sender, "Not publisher");
+        require(taskInst.status == TaskStatus.Open, "Task is not open");
+        
+        require(token.transferFrom(msg.sender, address(this), BASE_FEE), "Token escrow failed");
+        
+        taskInst.deadline += DEFAULT_TIMEOUT;
+        taskInst.rewardAmount += BASE_FEE;
+        
+        emit TaskExtended(_taskId, msg.sender, taskInst.rewardAmount, taskInst.deadline);
+    }
+
+    function cancelTask(string memory _taskId) external {
+        Task storage taskInst = tasks[_taskId];
+        require(taskInst.publisher == msg.sender, "Not publisher");
+        require(taskInst.status == TaskStatus.Open, "Task is not open");
+        require(block.timestamp > taskInst.deadline, "Task deadline has not passed");
+        
+        taskInst.status = TaskStatus.Cancelled;
+        uint256 refundAmount = taskInst.rewardAmount;
+        taskInst.rewardAmount = 0;
+        
+        require(token.transfer(msg.sender, refundAmount), "Refund failed");
+        
+        emit TaskCancelled(_taskId, msg.sender);
     }
 
     function listTask() external view returns (string[] memory) {

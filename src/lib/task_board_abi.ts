@@ -56,6 +56,25 @@ export const TASK_BOARD_ABI = [
         "internalType": "address",
         "name": "publisher",
         "type": "address"
+      }
+    ],
+    "name": "TaskCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "taskId",
+        "type": "string"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "publisher",
+        "type": "address"
       },
       {
         "indexed": false,
@@ -71,6 +90,37 @@ export const TASK_BOARD_ABI = [
       }
     ],
     "name": "TaskCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "taskId",
+        "type": "string"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "publisher",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newRewardAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newDeadline",
+        "type": "uint256"
+      }
+    ],
+    "name": "TaskExtended",
     "type": "event"
   },
   {
@@ -143,6 +193,32 @@ export const TASK_BOARD_ABI = [
     "type": "event"
   },
   {
+    "inputs": [],
+    "name": "BASE_FEE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "DEFAULT_TIMEOUT",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -203,6 +279,19 @@ export const TASK_BOARD_ABI = [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_taskId",
+        "type": "string"
+      }
+    ],
+    "name": "cancelTask",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "claimTopicsRegistry",
     "outputs": [
@@ -234,16 +323,6 @@ export const TASK_BOARD_ABI = [
         "internalType": "string",
         "name": "_cid",
         "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_reward",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_duration",
-        "type": "uint256"
       }
     ],
     "name": "createTask",
@@ -269,6 +348,19 @@ export const TASK_BOARD_ABI = [
     "name": "deposit",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_taskId",
+        "type": "string"
+      }
+    ],
+    "name": "extendTask",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
