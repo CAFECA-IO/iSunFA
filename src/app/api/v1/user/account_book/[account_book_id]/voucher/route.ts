@@ -96,6 +96,7 @@ export async function POST(
     // const parsedLines: IParsedVoucherLine[] = Array.isArray(voucherData.lines) ? voucherData.lines : [];
 
     // Info: (20260311 - Julian) 將 AI 解析結果存入 DB
+    // ToDo: (20260317 - Julian) confidence > 80 -> isVerified = true, else false
     // const newVoucher = await prisma.voucher.create({
     //   data: {
     //     accountBookId: accountBook.id,
