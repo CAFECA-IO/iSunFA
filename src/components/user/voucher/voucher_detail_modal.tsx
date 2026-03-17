@@ -8,9 +8,9 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { X, ChevronDown, BookOpen, Trash2, Plus, Save } from "lucide-react";
+import { X, ChevronDown, Trash2, Plus, Save, FileText, DollarSign, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { IVoucher, TradingType, IVoucherLineUI } from "@/interfaces/voucher";
+import { IVoucher, TradingType, IVoucherLineUI, VoucherStatus } from "@/interfaces/voucher";
 import { numberWithCommas } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { request } from "@/lib/utils/request";
@@ -18,6 +18,7 @@ import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { useParams } from "next/navigation";
 import { ACCOUNTS } from "@/constants/accounts";
+import { FilePreview } from "@/components/common/file_preview";
 
 interface IVoucherDetailModalProps {
   isOpen: boolean;
@@ -35,61 +36,58 @@ const VoucherRow = ({
   removeRow: (id: string) => void;
 }) => {
   const { t } = useTranslation();
-
-  // ToDo: (20260311 - Julian) 未來需要開發 Account selector
-
-  // Info: (20260311 - Julian) 目前以 TW 為主
   const accountOptions = ACCOUNTS.TW;
 
   return (
-    <div className="grid grid-cols-13 gap-2">
-      {/* Info: (20260310 - Julian) Accounting */}
-      <div className="col-span-3 flex h-[46px] flex-3 items-center overflow-hidden rounded-xl bg-white focus-within:ring-2 focus-within:ring-orange-500">
-        <select
-          id={`accounting-${row.id}`}
-          value={row.accounting?.code || ""}
-          onChange={(e) => {
-            const acc =
-              accountOptions.find((a) => a.code === e.target.value) || null;
-            updateRow(row.id, { ...row, accounting: acc });
-          }}
-          className="w-full appearance-none rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none"
-        >
-          <option value="" disabled>
-            {t("voucher.detail_modal.fields.accounting_select")}
-          </option>
-          {accountOptions.map((acc) => (
-            <option key={acc.code} value={acc.code}>
-              {acc.code} - {acc.name}
+    <div className="flex items-start gap-2 mb-4">
+      <div className="flex-1 flex flex-col gap-2">
+        {/* Info: (20260317 - Julian) Accounting Code Select */}
+        <div className="relative flex h-[42px] items-center overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
+          <select
+            id={`accounting-${row.id}`}
+            value={row.accounting?.code || ""}
+            onChange={(e) => {
+              const acc = accountOptions.find((a) => a.code === e.target.value) || null;
+              updateRow(row.id, { ...row, accounting: acc });
+            }}
+            className="w-full appearance-none bg-transparent px-4 py-2 text-sm font-semibold text-slate-700 outline-none"
+          >
+            <option value="" disabled>
+              {t("voucher.detail_modal.fields.accounting_select") || "選擇會計科目"}
             </option>
-          ))}
-        </select>
-        <div className="bg-white pr-2">
-          <BookOpen size={20} className="text-slate-500" />
+            {accountOptions.map((acc) => (
+              <option key={acc.code} value={acc.code}>
+                {acc.code} - {acc.name}
+              </option>
+            ))}
+          </select>
+          <div className="bg-white pr-3">
+            <ChevronDown size={16} className="text-slate-400" />
+          </div>
+        </div>
+        {/* Info: (20260317 - Julian) Particular Input */}
+        <div className="h-[42px]">
+          <input
+            type="text"
+            aria-label={t("voucher.detail_modal.fields.particular")}
+            value={row.particular}
+            placeholder={t("voucher.detail_modal.fields.particular") || "摘要"}
+            onChange={(e) => updateRow(row.id, { ...row, particular: e.target.value })}
+            className="h-full w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+          />
         </div>
       </div>
-      {/* Info: (20260310 - Julian) Particular */}
-      <div className="col-span-3 h-[46px] flex-3">
-        <input
-          type="text"
-          aria-label={t("voucher.detail_modal.fields.particular")}
-          value={row.particular}
-          onChange={(e) =>
-            updateRow(row.id, { ...row, particular: e.target.value })
-          }
-          className="h-full w-full rounded-xl bg-white px-4 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-        />
-      </div>
-      {/* Info: (20260310 - Julian) Debit */}
-      <div className="col-span-3 h-[46px] flex-2">
+      
+      {/* Info: (20260317 - Julian) Debit */}
+      <div className="h-[42px] w-[100px]">
         <input
           type="number"
           aria-label={t("voucher.detail_modal.fields.debit")}
           placeholder="0"
           value={row.isDebit === true ? row.amount || "" : ""}
           disabled={row.isDebit === false}
-          min={0} // Info: (20260310 - Julian) 應為正數
-          onWheel={(e) => e.currentTarget.blur()} // Info: (20260310 - Julian) 避免滾輪調整數值
+          min={0}
+          onWheel={(e) => e.currentTarget.blur()}
           onChange={(e) => {
             const val = e.target.value;
             if (val === "") {
@@ -98,43 +96,41 @@ const VoucherRow = ({
               updateRow(row.id, { ...row, isDebit: true, amount: Number(val) });
             }
           }}
-          className="h-full w-full appearance-none rounded-xl bg-white px-4 text-right text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:bg-slate-300 disabled:text-slate-500"
+          className="h-full w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 text-right text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
         />
       </div>
-      {/* Info: (20260310 - Julian) Credit */}
-      <div className="col-span-3 h-[46px] flex-2">
+
+      {/* Info: (20260317 - Julian) Credit */}
+      <div className="h-[42px] w-[100px]">
         <input
           type="number"
           aria-label={t("voucher.detail_modal.fields.credit")}
           placeholder="0"
           value={row.isDebit === false ? row.amount || "" : ""}
           disabled={row.isDebit === true}
-          min={0} // Info: (20260310 - Julian) 應為正數
-          onWheel={(e) => e.currentTarget.blur()} // Info: (20260310 - Julian) 避免滾輪調整數值
+          min={0}
+          onWheel={(e) => e.currentTarget.blur()}
           onChange={(e) => {
             const val = e.target.value;
             if (val === "") {
               updateRow(row.id, { ...row, isDebit: null, amount: 0 });
             } else {
-              updateRow(row.id, {
-                ...row,
-                isDebit: false,
-                amount: Number(val),
-              });
+              updateRow(row.id, { ...row, isDebit: false, amount: Number(val) });
             }
           }}
-          className="h-full w-full appearance-none rounded-xl bg-white px-4 text-right text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:bg-slate-300 disabled:text-slate-500"
+          className="h-full w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 text-right text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
         />
       </div>
-      {/* Info: (20260310 - Julian) Trash */}
-      <div className="flex h-[46px] w-8 items-center justify-center">
+
+      {/* Info: (20260317 - Julian) Trash Button */}
+      <div className="flex h-[42px] p-2 items-center justify-center">
         <button
           type="button"
           aria-label="Delete row"
           onClick={() => removeRow(row.id)}
-          className="text-slate-300 transition-colors hover:text-red-400"
+          className="text-slate-300 transition-colors hover:text-red-500"
         >
-          <Trash2 size={20} />
+          <Trash2 size={18} />
         </button>
       </div>
     </div>
@@ -165,6 +161,7 @@ export default function VoucherDetailModal({
   const [isClearModalOpen, setIsClearModalOpen] = useState<boolean>(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState<boolean>(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
+  const [targetStatus, setTargetStatus] = useState<VoucherStatus>();
 
   // Info: (20260311 - Julian) 從 API 取得傳票
   useEffect(() => {
@@ -288,13 +285,16 @@ export default function VoucherDetailModal({
     setRows(rows.map((r) => (r.id === id ? newRow : r)));
   };
 
-  const saveVoucher = () => setIsSaveModalOpen(true);
+  const saveVoucher = (status?: VoucherStatus) => {
+    setTargetStatus(status);
+    setIsSaveModalOpen(true);
+  };
 
   // Info: (20260311 - Julian) 更新傳票
   const executeSaveVoucher = async () => {
     setIsSaving(true);
     try {
-      const payload = { inputDate, voucherType, note, rows };
+      const payload = { inputDate, voucherType, note, rows, targetStatus };
       const res = await request<IApiResponse<{ voucher: IVoucher }>>(
         `/api/v1/user/account_book/${accountBookId}/voucher/${voucherId}`,
         {
@@ -345,15 +345,27 @@ export default function VoucherDetailModal({
               leaveFrom="opacity-100 scale-100 translate-y-0"
               leaveTo="opacity-0 scale-95 translate-y-4"
             >
-              <DialogPanel className="relative flex max-h-[90vh] w-full max-w-4xl transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
-                {/* Info: (20260310 - Julian) Header */}
-                <div className="flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-8 py-5 shadow-sm">
-                  <DialogTitle
-                    as="h3"
-                    className="text-xl font-bold text-slate-800"
-                  >
-                    {t("voucher.detail_modal.title")} {voucherId}
-                  </DialogTitle>
+              <DialogPanel className="relative flex max-h-[90vh] w-full max-w-6xl transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
+                {/* Info: (20260317 - Julian) Header */}
+                <div className="flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-8 py-5">
+                  <div className="flex items-center gap-3">
+                    <DialogTitle
+                      as="h3"
+                      className="text-xl font-bold text-slate-800"
+                    >
+                      {t("voucher.detail_modal.title")}
+                    </DialogTitle>
+                    {activeVoucher?.status === "MANUAL" && (
+                      <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
+                        待核對
+                      </span>
+                    )}
+                    {activeVoucher?.status === "VERIFIED" && (
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
+                        已核對
+                      </span>
+                    )}
+                  </div>
                   <button
                     type="button"
                     aria-label="Close"
@@ -364,201 +376,193 @@ export default function VoucherDetailModal({
                   </button>
                 </div>
 
-                {/* Info: (20260310 - Julian) Body */}
-                <div className="flex w-full flex-col overflow-y-auto px-8 py-8">
-                  {/* Info: (20260310 - Julian) Top Fields */}
-                  <div className="grid grid-cols-2 gap-8">
-                    {/* Info: (20260310 - Julian) Left: Date */}
-                    <div>
-                      <label
-                        htmlFor="voucherDate"
-                        className="mb-2 block text-sm font-bold text-slate-500"
-                      >
-                        {t("voucher.detail_modal.fields.voucher_date")}
-                        <span className="ml-0.5 text-red-500">*</span>
-                      </label>
-                      <input
-                        id="voucherDate"
-                        aria-label={t(
-                          "voucher.detail_modal.fields.voucher_date",
-                        )}
-                        type="date"
-                        value={new Date(inputDate).toISOString().split("T")[0]}
-                        onChange={(e) =>
-                          setInputDate(
-                            isNaN(e.target.valueAsNumber)
-                              ? 0
-                              : e.target.valueAsNumber,
-                          )
-                        }
-                        placeholder="YYYY-MM-DD"
-                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                      />
+                {/* Info: (20260317 - Julian) Body Content */}
+                <div className="flex flex-1 overflow-hidden">
+                  {/* Info: (20260317 - Julian) Left Side: File Preview */}
+                  <div className="relative flex w-1/2 flex-col overflow-y-auto border-r border-slate-200 bg-slate-50 p-6">
+                    <div className="absolute top-6 left-6 z-10 w-fit rounded-sm bg-slate-600 px-2 py-1 text-xs font-bold text-white opacity-80 shadow-sm">
+                      Preview
+                    </div>
+                    
+                    <div className="mb-4 mt-2 flex items-center justify-center">
+                       <div className="rounded-full bg-white px-4 py-1.5 text-sm font-bold text-slate-600 shadow-sm">
+                         原始憑證影像
+                       </div>
                     </div>
 
-                    {/* Info: (20260310 - Julian) Right: Type */}
-                    <div>
-                      <label
-                        htmlFor="voucherType"
-                        className="mb-2 block text-sm font-bold text-slate-500"
-                      >
-                        {t("voucher.detail_modal.fields.voucher_type")}
-                        <span className="ml-0.5 text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <select
-                          id="voucherType"
-                          value={voucherType}
-                          onChange={(e) =>
-                            setVoucherType(e.target.value as TradingType)
-                          }
-                          className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                        >
-                          <option value={TradingType.INCOME}>
-                            {t(
-                              "voucher.main_view.filters.type_options.payment",
-                            )}
-                          </option>
-                          <option value={TradingType.OUTCOME}>
-                            {t(
-                              "voucher.main_view.filters.type_options.receipt",
-                            )}
-                          </option>
-                          <option value={TradingType.TRANSFER}>
-                            {t(
-                              "voucher.main_view.filters.type_options.transfer",
-                            )}
-                          </option>
-                        </select>
-                        <ChevronDown
-                          size={18}
-                          className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 stroke-[2.5] text-slate-500"
+                    <div className="flex flex-1 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm">
+                      {activeVoucher?.file ? (
+                        <FilePreview
+                          file={{
+                            filename: activeVoucher.file.fileName || "Unknown",
+                          }}
+                          fileId={activeVoucher.file.hash}
+                          className="h-full w-full object-contain"
                         />
-                      </div>
+                      ) : (
+                        <span className="text-sm font-bold text-slate-400">
+                          {t("voucher.detail_modal.no_image")}
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Info: (20260310 - Julian) Note Field */}
-                  <div className="mt-6">
-                    <label
-                      htmlFor="noteField"
-                      className="mb-2 block text-sm font-bold text-slate-500"
-                    >
-                      {t("voucher.detail_modal.fields.note")}
-                    </label>
-                    <input
-                      id="noteField"
-                      aria-label={t("voucher.detail_modal.fields.note")}
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      type="text"
-                      className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                    />
-                  </div>
+                  {/* Info: (20260317 - Julian) Right Side: Form */}
+                  <div className="flex w-1/2 flex-col bg-white">
+                    <div className="flex-1 overflow-y-auto p-6">
+                      {/* Info: (20260317 - Julian) Section 1: Basic Info */}
+                      <div className="pb-1 mb-3 flex border-b border-slate-200 items-center gap-2">
+                        <FileText size={20} className="text-blue-900" />
+                        <h4 className="text-base font-bold text-blue-900">傳票基礎資訊</h4>
+                      </div>
 
-                  {/* Info: (20260310 - Julian) Recurring Toggle */}
-                  {/* ToDo: (20260310 - Julian) 先隱藏 */}
-                  {/* <div className="mt-6 flex items-center gap-3">
-                    <button
-                      id="recurringToggle"
-                      type="button"
-                      aria-label="Toggle recurring entry"
-                      onClick={() => setIsRecurring(!isRecurring)}
-                      className={`relative h-6 w-11 rounded-full p-0.5 transition-colors ${
-                        isRecurring ? "bg-orange-500" : "bg-slate-300"
-                      }`}
-                    >
-                      <div
-                        className={`h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
-                          isRecurring ? "translate-x-5" : "translate-x-0"
-                        }`}
-                      />
-                    </button>
-                    <label
-                      htmlFor="recurringToggle"
-                      className="cursor-pointer text-sm font-bold text-slate-600"
-                    >
-                      Recurring Entry
-                    </label>
-                  </div> */}
+                      <div className="mb-8 grid grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            htmlFor="voucherDate"
+                            className="mb-2 block text-xs font-bold text-slate-600"
+                          >
+                            {t("voucher.detail_modal.fields.voucher_date")}
+                          </label>
+                          <input
+                            id="voucherDate"
+                            aria-label={t("voucher.detail_modal.fields.voucher_date")}
+                            type="date"
+                            value={new Date(inputDate).toISOString().split("T")[0]}
+                            onChange={(e) =>
+                              setInputDate(
+                                isNaN(e.target.valueAsNumber)
+                                  ? 0
+                                  : e.target.valueAsNumber,
+                              )
+                            }
+                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                          />
+                        </div>
 
-                  {/* Info: (20260310 - Julian) Table Box */}
-                  <div className="mt-8 rounded-2xl bg-slate-600 p-6 shadow-sm">
-                    {/* Info: (20260310 - Julian) Headers */}
-                    <div className="mb-3 grid grid-cols-13 gap-2">
-                      <div className="col-span-3 text-sm font-semibold text-white">
-                        {t("voucher.detail_modal.fields.accounting")}
+                        <div>
+                          <label
+                            htmlFor="voucherType"
+                            className="mb-2 block text-xs font-bold text-slate-600"
+                          >
+                            {t("voucher.detail_modal.fields.voucher_type")}
+                          </label>
+                          <div className="relative">
+                            <select
+                              id="voucherType"
+                              value={voucherType}
+                              onChange={(e) =>
+                                setVoucherType(e.target.value as TradingType)
+                              }
+                              className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                            >
+                              <option value={TradingType.INCOME}>收入傳票</option>
+                              <option value={TradingType.OUTCOME}>支出傳票</option>
+                              <option value={TradingType.TRANSFER}>轉帳傳票</option>
+                            </select>
+                            <ChevronDown
+                              size={18}
+                              className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 stroke-[2.5] text-slate-400"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="col-span-2">
+                          <div className="mb-2 block text-xs font-bold text-slate-600">
+                            傳票編號
+                          </div>
+                          <div className="flex h-[42px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 shadow-sm">
+                            <span className="text-slate-400">#</span>
+                            {voucherId}
+                          </div>
+                        </div>
                       </div>
-                      <div className="col-span-3 text-sm font-semibold text-white">
-                        {t("voucher.detail_modal.fields.particular")}
+
+                      {/* Info: (20260317 - Julian) Section 2: Accounting Entries */}
+                      <div className="pb-1 mb-3 flex items-center justify-between border-b border-slate-200">
+                        <div className="flex items-center gap-2">
+                          <DollarSign size={20} className="text-blue-900" />
+                          <h4 className="text-base font-bold text-blue-900">會計科目分錄</h4>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={addRow}
+                          className="flex items-center gap-1 text-sm font-bold text-orange-500 transition-colors hover:text-orange-600"
+                        >
+                          <Plus size={16} className="stroke-3" />
+                          新增分錄
+                        </button>
                       </div>
-                      <div className="col-span-3 text-sm font-semibold text-white">
-                        {t("voucher.detail_modal.fields.debit")}
+
+                      {/* Info: (20260317 - Julian) Header Row */}
+                      <div className="mb-2 flex items-center pr-10">
+                        <div className="flex-1 text-xs font-bold text-slate-600">科目代碼 / 名稱</div>
+                        <div className="w-[100px] text-right text-xs font-bold text-slate-600 pr-2">借方</div>
+                        <div className="w-[100px] text-right text-xs font-bold text-slate-600 pr-2">貸方</div>
                       </div>
-                      <div className="col-span-3 text-sm font-semibold text-white">
-                        {t("voucher.detail_modal.fields.credit")}
+
+                      {/* Info: (20260317 - Julian) Rows container */}
+                      <div className="flex flex-col">
+                        {rows.map((row) => (
+                          <VoucherRow
+                            key={row.id}
+                            row={row}
+                            updateRow={updateRow}
+                            removeRow={removeRow}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Info: (20260317 - Julian) Balance Check */}
+                      <div className={`rounded-xl border p-5 ${isTotalBalanced ? 'border-emerald-200 bg-emerald-50/50' : 'border-red-200 bg-red-50/50'}`}>
+                         <div className="flex items-center justify-between mb-4">
+                           <span className="text-sm font-bold text-slate-700">借貸平衡檢查</span>
+                           <div className={`flex items-center gap-1.5 text-sm font-bold ${isTotalBalanced ? 'text-emerald-500' : 'text-red-500'}`}>
+                             {isTotalBalanced ? (
+                               <><CheckCircle2 size={18} /> 已平衡</>
+                             ) : (
+                               <><X size={18} /> 未平衡</>
+                             )}
+                           </div>
+                         </div>
+                         <div className="border-t border-dashed border-slate-300 my-4"></div>
+                         <div className="flex items-end justify-between">
+                            <span className="text-sm font-bold text-slate-500">總計金額 (Voucher Total)</span>
+                            <span className="text-2xl font-black tracking-tight text-slate-800">$ {numberWithCommas(Math.max(totalDebit, totalCredit))}</span>
+                         </div>
                       </div>
                     </div>
 
-                    {/* Info: (20260310 - Julian) Rows */}
-                    <div className="flex flex-col gap-3">
-                      {rows.map((row) => (
-                        <VoucherRow
-                          key={row.id}
-                          row={row}
-                          updateRow={updateRow}
-                          removeRow={removeRow}
-                        />
-                      ))}
-
-                      {/* Info: (20260310 - Julian) Subtotals */}
-                      <div className="grid grid-cols-13 gap-2">
-                        <div
-                          className={`col-start-7 col-end-10 text-right text-sm font-bold ${isTotalBalanced ? "text-emerald-400" : "text-red-400"}`}
-                        >
-                          {numberWithCommas(totalDebit)}
-                        </div>
-                        <div
-                          className={`col-start-10 col-end-13 text-right text-sm font-bold ${isTotalBalanced ? "text-emerald-400" : "text-red-400"}`}
-                        >
-                          {numberWithCommas(totalCredit)}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Info: (20260310 - Julian) Add Row Button */}
-                    <div className="mt-6 flex justify-center">
+                    {/* Info: (20260317 - Julian) Footer Actions */}
+                    <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-8 py-5">
                       <button
                         type="button"
-                        aria-label="Add Row"
-                        onClick={addRow}
-                        className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-300 text-slate-900 shadow-sm transition-colors hover:bg-orange-400"
+                        onClick={() => setIsClearModalOpen(true)}
+                        className="text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
                       >
-                        <Plus size={22} className="stroke-[2.5]" />
+                        取消修改
                       </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          disabled={disabledSaveButton || isSaving}
+                          onClick={() => saveVoucher(VoucherStatus.VERIFIED)}
+                          className="flex h-10 items-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:bg-slate-300"
+                        >
+                          <CheckCircle2 size={16} className="stroke-3" />
+                          核對並存檔
+                        </button>
+                        <button
+                          type="button"
+                          disabled={disabledSaveButton || isSaving}
+                          onClick={() => saveVoucher()}
+                          className="flex h-10 items-center gap-2 rounded-xl bg-orange-500 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 disabled:bg-slate-300"
+                        >
+                          <Save size={16} className="stroke-3" />
+                          僅儲存修改
+                        </button>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Info: (20260310 - Julian) Bottom Actions */}
-                  <div className="mt-10 flex justify-end gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setIsClearModalOpen(true)}
-                      className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-100"
-                    >
-                      {t("voucher.detail_modal.actions.clear_all")}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={disabledSaveButton || isSaving}
-                      onClick={saveVoucher}
-                      className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-3 text-sm font-bold text-white shadow-none transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
-                    >
-                      {isSaving
-                        ? "Saving..."
-                        : t("voucher.detail_modal.actions.save_voucher")}{" "}
-                      <Save size={18} />
-                    </button>
                   </div>
                 </div>
               </DialogPanel>
