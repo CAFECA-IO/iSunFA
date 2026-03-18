@@ -32,7 +32,7 @@ const JournalListItem = ({
 
   if (journal.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
-      <tr className="border-b last:border-0 odd:bg-slate-50 even:bg-white text-slate-400">
+      <tr className="border-b last:border-0 border-slate-300 odd:bg-slate-50 even:bg-white text-slate-400">
         <td className="w-16 px-3 py-2 align-middle sm:w-32 sm:px-6">
           <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50 p-1 sm:h-20 sm:w-20">
             <Loader2 className="h-4 w-4 animate-spin text-orange-400 sm:h-6 sm:w-6" />
