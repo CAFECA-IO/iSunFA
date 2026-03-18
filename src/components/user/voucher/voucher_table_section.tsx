@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   FileQuestion,
   Filter,
+  Loader2,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { timestampToString, numberWithCommas } from "@/lib/utils/common";
@@ -20,6 +21,7 @@ import { IApiResponse } from "@/lib/utils/response";
 import { FilePreview } from "@/components/common/file_preview";
 import VoucherDetailModal from "@/components/user/voucher/voucher_detail_modal";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
+import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
 
 const VoucherRow = ({
   voucher,
@@ -80,6 +82,44 @@ const VoucherRow = ({
         return t("voucher.main_view.table.types.unknown") || "未知傳票";
     }
   };
+
+  if (voucher.analysisStatus === AIAnalysisStatus.PENDING) {
+    return (
+      <tr className="border-b border-slate-300 bg-slate-50 text-sm transition-colors last:border-0 opacity-80">
+        {/* Info: (20260318) File Preview loading */}
+        <td className="p-2 text-center lg:px-6 lg:py-4">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
+            <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
+          </div>
+        </td>
+        {/* Info: (20260318) Trading Date (still showing the created date conceptually) */}
+        <td className="p-2 text-center align-middle font-bold whitespace-nowrap text-slate-400 lg:px-6 lg:py-4">
+          <p className="text-xs lg:text-sm">
+            {timestampToString(voucher.tradingDate).dateWithDash}
+          </p>
+        </td>
+        {/* Info: (20260318) Colspan the rest of the parsing info to show a generic loading center */}
+        <td colSpan={5} className="p-2 align-middle text-center lg:px-6 lg:py-4">
+          <span className="flex items-center justify-center gap-2 text-sm font-medium italic text-orange-500">
+            <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
+            AI Analyzing...
+          </span>
+        </td>
+        {/* Info: (20260318) Status action (Disabled) */}
+        <td aria-label="Status" className="p-2 text-center align-middle lg:px-6 lg:py-4">
+          <div className="flex flex-col items-center justify-center gap-1.5 ">
+            <button
+              type="button"
+              disabled
+              className="inline-flex cursor-not-allowed items-center justify-center rounded-xl bg-slate-200 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-slate-400 shadow-sm"
+            >
+              Pending
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  }
 
   return (
     <tr
