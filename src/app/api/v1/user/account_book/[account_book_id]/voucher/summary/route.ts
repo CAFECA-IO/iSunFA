@@ -4,6 +4,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IVoucherDashboardSummary } from "@/interfaces/voucher";
+import { AIAnalysisStatus } from "@/generated/enums";
 
 /**
  * Info: (20260316 - Julian) 取得傳票儀表板摘要
@@ -68,7 +69,7 @@ export async function GET(
 
     // Info: (20260316 - Julian) 取得待處理傳票數量
     const pendingVoucherCount = await prisma.voucher.count({
-      where: { accountBookId, status: "MANUAL" },
+      where: { accountBookId, analysisStatus: AIAnalysisStatus.PENDING },
     });
 
     // Info: (20260316 - Julian) 取得 AI 平均信心指數
@@ -90,10 +91,10 @@ export async function GET(
 
     return jsonOk(dashboardSummary);
   } catch (error) {
-    console.error("Error fetching ESG summary:", error);
+    console.error("Error fetching Voucher summary:", error);
     return jsonFail(
       ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to fetch ESG summary",
+      "Failed to fetch Voucher summary",
     );
   }
 }

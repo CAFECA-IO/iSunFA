@@ -75,7 +75,7 @@ export async function POST(
         emissions: 0,
         intensity: "LOW",
         confidence: 0,
-        status: "VERIFIED",
+        isVerified: false,
       },
     });
 
