@@ -1,3 +1,5 @@
+import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+
 export enum EsgScope {
   SCOPE_1 = "SCOPE_1",
   SCOPE_2 = "SCOPE_2",
@@ -8,11 +10,6 @@ export enum EsgIntensity {
   LOW = "LOW",
   MEDIUM = "MEDIUM",
   HIGH = "HIGH",
-}
-
-export enum EsgStatus {
-  VERIFIED = "VERIFIED",
-  MANUAL = "MANUAL",
 }
 
 export interface IEsgTotalEmissions {
@@ -88,5 +85,6 @@ export interface IEsgRecord {
   emissions: string;
   intensity: EsgIntensity;
   confidence: number;
-  status: EsgStatus;
+  isVerified: boolean;
+  analysisStatus: AIAnalysisStatus;
 }

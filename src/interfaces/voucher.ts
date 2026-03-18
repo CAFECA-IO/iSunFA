@@ -1,14 +1,10 @@
 import { IAccount } from "@/constants/accounts";
+import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
 
 export enum TradingType {
   INCOME = "income",
   OUTCOME = "outcome",
   TRANSFER = "transfer",
-}
-
-export enum VoucherStatus {
-  VERIFIED = "VERIFIED",
-  MANUAL = "MANUAL",
 }
 
 export interface IVoucherDashboardSummary {
@@ -52,7 +48,8 @@ export interface IVoucher {
   };
   issuerName: string;
   confidence: number;
-  status: VoucherStatus;
+  isVerified: boolean;
+  analysisStatus: AIAnalysisStatus
 }
 
 export interface IParsedVoucherLine {

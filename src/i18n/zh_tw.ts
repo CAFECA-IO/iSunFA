@@ -1017,7 +1017,7 @@ export const zhTw = {
         "no_file": "無檔案",
         "filter_btn": "篩選條件",
         "verify_all": "一鍵核對所有傳票",
-        "no_data": "目前無傳票資料，請先"
+        "no_data": "目前無傳票資料"
       }
     },
     "summary": {

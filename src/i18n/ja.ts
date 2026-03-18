@@ -1105,7 +1105,7 @@ export const ja = {
         "no_file": "ファイルなし",
         "filter_btn": "フィルター",
         "verify_all": "すべての伝票を確認",
-        "no_data": "伝票データがありません。まず"
+        "no_data": "伝票データがありません。"
       }
     },
     "summary": {

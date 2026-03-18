@@ -1023,7 +1023,7 @@ export const en = {
         "no_file": "No File",
         "filter_btn": "Filters",
         "verify_all": "Verify All Vouchers",
-        "no_data": "No voucher records yet, please "
+        "no_data": "No voucher records yet"
       }
     },
     "summary": {

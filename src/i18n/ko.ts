@@ -1095,7 +1095,7 @@ export const ko = {
         "no_file": "파일 없음",
         "filter_btn": "필터",
         "verify_all": "모든 전표 확인",
-        "no_data": "현재 전표 데이터가 없습니다. 먼저 "
+        "no_data": "현재 전표 데이터가 없습니다."
       }
     },
     "summary": {

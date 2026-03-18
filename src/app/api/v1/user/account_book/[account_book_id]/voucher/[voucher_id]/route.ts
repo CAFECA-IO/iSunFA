@@ -7,9 +7,9 @@ import {
   IVoucher,
   IVoucherLineUI,
   TradingType,
-  VoucherStatus,
 } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
+import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
 
 /**
  * Info: (20260311 - Julian) 取得傳票
@@ -89,7 +89,8 @@ export async function GET(
       },
       issuerName: voucher.user?.name ?? "",
       confidence: voucher.confidence,
-      status: voucher.status as VoucherStatus,
+      isVerified: voucher.isVerified,
+      analysisStatus: voucher.analysisStatus as AIAnalysisStatus,
     };
 
     return jsonOk({ result });
@@ -149,10 +150,10 @@ export async function PUT(
 
     // Info: (20260311 - Julian) 取得更新的內容
     const body = await request.json();
-    const { id, inputDate, voucherType, note } = body;
+    const { id, inputDate, voucherType, note, isVerified } = body;
     const rows = body.rows as IVoucherLineUI[];
 
-    if (!inputDate || !voucherType || !rows || !Array.isArray(rows)) {
+    if (!inputDate || !voucherType || !rows || !Array.isArray(rows) || isVerified === undefined) {
       console.error("Invalid input data");
       return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid input data");
     }
@@ -165,6 +166,7 @@ export async function PUT(
         tradingDate: new Date(inputDate),
         tradingType: voucherType.toUpperCase(),
         note: note || "",
+        isVerified: isVerified ?? false,
         lines: {
           deleteMany: {}, // Info: (20260311 - Julian) 刪除所有 line 再重新加入
           create: rows.map((row) => ({

@@ -18,7 +18,6 @@ import {
   IEsgRecord,
   EsgScope,
   EsgIntensity,
-  EsgStatus,
 } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
 import EsgVerifyModal from "@/components/user/esg/esg_verify_modal";
@@ -150,7 +149,7 @@ const EsgRow = ({
         </div>
       </td>
       <td className="p-2 text-center lg:px-6 lg:py-4">
-        {record.status === EsgStatus.VERIFIED ? (
+        {record.isVerified ? (
           <div className="flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 className="h-5 w-5" />
             <span className="text-sm font-bold">{t("esg_table.verified")}</span>

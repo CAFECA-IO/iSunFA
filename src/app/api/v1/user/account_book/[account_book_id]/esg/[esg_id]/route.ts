@@ -3,12 +3,12 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { EsgScope, EsgIntensity, AIAnalysisStatus } from "@/generated/client";
+import { EsgScope, EsgIntensity } from "@/generated/client";
+import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
 import {
   IEsgRecord,
   EsgScope as ClientEsgScope,
   EsgIntensity as ClientEsgIntensity,
-  EsgStatus as ClientEsgStatus,
 } from "@/interfaces/esg";
 
 /**
@@ -72,7 +72,8 @@ export async function GET(
       emissions: esgRecord.emissions.toString(),
       intensity: esgRecord.intensity as unknown as ClientEsgIntensity,
       confidence: esgRecord.confidence,
-      status: esgRecord.status as unknown as ClientEsgStatus,
+      isVerified: esgRecord.isVerified,
+      analysisStatus: esgRecord.analysisStatus as unknown as AIAnalysisStatus,
     };
 
     return jsonOk(formattedRecord);
@@ -157,8 +158,9 @@ export async function PUT(
         ...(reqBody.confidence !== undefined && {
           confidence: reqBody.confidence,
         }),
-        ...(reqBody.status && {
-          status: reqBody.status.toUpperCase() as AIAnalysisStatus,
+        ...(reqBody.isVerified !== undefined && { isVerified: reqBody.isVerified }),
+        ...(reqBody.analysisStatus && {
+          analysisStatus: reqBody.analysisStatus.toUpperCase() as AIAnalysisStatus,
         }),
       },
     });
@@ -175,7 +177,8 @@ export async function PUT(
       emissions: updatedRecord.emissions.toString(),
       intensity: updatedRecord.intensity as unknown as ClientEsgIntensity,
       confidence: updatedRecord.confidence,
-      status: updatedRecord.status as unknown as ClientEsgStatus,
+      isVerified: updatedRecord.isVerified,
+      analysisStatus: updatedRecord.analysisStatus as unknown as AIAnalysisStatus,
     };
 
     if (!formattedRecord) {

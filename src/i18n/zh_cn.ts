@@ -1083,7 +1083,7 @@ export const zhCn = {
         "no_file": "无文件",
         "filter_btn": "筛选条件",
         "verify_all": "一键核对所有凭证",
-        "no_data": "目前无凭证数据，请先"
+        "no_data": "目前无凭证数据"
       }
     },
     "summary": {

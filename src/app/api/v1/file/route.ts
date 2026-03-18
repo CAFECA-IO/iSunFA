@@ -1,5 +1,6 @@
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Info: (20260226 - Julian) 上傳檔案
@@ -48,7 +49,17 @@ export async function POST(request: Request) {
       let data;
       try {
         data = JSON.parse(responseBody);
-        // Info: (20260226 - Julian) Normalize if already an IApiResponse to avoid double-wrapping
+        
+        // Info: (20260318 - Julian) 將 file 存入 database
+        await prisma.file.create({
+          data: {
+            id: data.id,
+            hash: data.hash,
+            fileName: data.fileName,
+          }
+        });
+
+        // Info: (20260318 - Julian) 如果回傳格式是 IApiResponse，則直接回傳 payload，避免雙重包裝
         if (data && typeof data === 'object' && 'success' in data && 'payload' in data) {
           return jsonOk(data.payload, data.message);
         }

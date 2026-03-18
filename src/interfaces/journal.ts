@@ -1,3 +1,5 @@
+import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+
 export interface IJournal {
   id: string;
   createdAt: string;
@@ -8,4 +10,5 @@ export interface IJournal {
     hash: string;
     fileName: string;
   };
+  analysisStatus: AIAnalysisStatus
 }
