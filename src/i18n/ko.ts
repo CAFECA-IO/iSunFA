@@ -919,6 +919,11 @@ export const ko = {
       copy_id: "클릭하여 전표 ID 복사: {{id}}",
     },
   },
+  "esg_main": {
+    "title": "탄소 배출 관리 및 ESG 분석",
+    "description": "입력 증빙을 자동 분석하여 실시간 탄소 중립 진행 상황 및 다차원 배출 분석을 제공합니다.",
+    "export_button": "ESG 신고서 내보내기"
+  },
   "esg_summary": {
     "no_data_prefix": "현재 이 장부의 ESG 데이터가 없습니다. 먼저 ",
     "upload_link": "전표를 업로드",

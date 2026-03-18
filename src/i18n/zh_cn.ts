@@ -907,6 +907,11 @@ export const zhCn = {
       copy_id: "点击复制凭证 ID: {{id}}",
     }
   },
+  "esg_main": {
+    "title": "碳排管理与 ESG 分析",
+    "description": "自动分析进项凭证，为您提供即时的碳中和进度与各项排放维度分析。",
+    "export_button": "导出 ESG 申报表"
+  },
   "esg_summary": {
     "no_data_prefix": "目前无这份账本的 ESG 数据，请先",
     "upload_link": "上传凭证",

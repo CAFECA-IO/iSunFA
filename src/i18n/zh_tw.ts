@@ -1094,6 +1094,11 @@ export const zhTw = {
       }
     }
   },
+  "esg_main": {
+    "title": "碳排管理與 ESG 分析",
+    "description": "自動分析進項憑證，為您提供即時的碳中和進度與各項排放維度分析。",
+    "export_button": "匯出 ESG 申報表"
+  },
   "esg_summary": {
     "no_data_prefix": "目前無這份帳本的 ESG 數據，請先",
     "upload_link": "上傳憑證",
