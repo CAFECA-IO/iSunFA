@@ -980,7 +980,35 @@ export const zhCn = {
       "intensity_medium": "中强度",
       "intensity_high": "高强度"
     },
+    "messages": {
+        "fetch_error": "获取凭证失败",
+        "deleted_warning": "已删除凭证不可编辑"
+      },
+      "status": {
+        "pending": "待核对",
+        "verified": "已核对"
+      },
+      "sections": {
+        "preview": "发票预览",
+        "basic_info": "凭证基础信息",
+        "accounting_entries": "会计科目分录"
+      },
+      "validation": {
+        "empty_fields": "日期或分录类别为空",
+        "unbalanced": "借贷不平衡",
+        "empty_rows": "分录为空",
+        "incomplete_row": "有分录的会计科目或金额为空"
+      },
+      "balance_check": {
+        "title": "借贷平衡检查",
+        "balanced": "已平衡",
+        "unbalanced": "未平衡"
+      },
     "actions": {
+      "cancel_edit": "取消修改",
+      "verify_save": "核对并保存",
+      "save_only": "仅保存修改",
+      "add_row": "新增分录",
       "cancel": "取消",
       "save_and_verify": "保存并完成核对"
     },
@@ -995,6 +1023,136 @@ export const zhCn = {
       "message": "即将保存您所做出 ESG 纪录核对变更。请确认数据是否无误？",
       "confirm": "确认保存",
       "cancel": "取消"
+    }
+  }
+,
+  "voucher": {
+    "account_book_selector": {
+      "title": "请选择会计科目",
+      "all": "全部",
+      "search_placeholder": "搜索科目代码或名称...",
+      "no_results": "找不到符合的会计科目"
+    },
+    "main_view": {
+      "title": "智能凭证管理",
+      "subtitle": "AI 已根据您的凭证识别结果自动产生对应的会计分录。",
+      "actions": {
+        "export": "导出凭证",
+        "add": "新增凭证"
+      },
+      "filters": {
+        "type": "字段类型",
+        "type_options": {
+          "all": "全部",
+          "payment": "付款",
+          "receipt": "收款",
+          "transfer": "转账"
+        },
+        "period": "期间",
+        "search": "搜索凭证编号、科目编号...",
+        "hide_deleted": "隐藏已删除的凭证及其冲销纪录",
+        "currency": "币别: {currency}"
+      },
+      "table": {
+        "types": {
+          "outcome": "支出凭证",
+          "income": "收入凭证",
+          "transfer": "转账凭证",
+          "unknown": "未知凭证"
+        },
+        "status": {
+          "verified": "已核对",
+          "manual": "人工核对",
+          "deleted": "已删除"
+        },
+        "headers": {
+          "receipt": "发票",
+          "voucher_date": "传票日期",
+          "voucher_type_id": "传票种类及编号",
+          "accounting_entries": "会计科目分录",
+          "debit": "借方金额",
+          "credit": "贷方金额",
+          "confidence": "AI 信心度",
+          "status": "状态"
+        },
+        "no_file": "无文件",
+        "filter_btn": "筛选条件",
+        "verify_all": "一键核对所有凭证",
+        "no_data": "目前无凭证数据，请先"
+      }
+    },
+    "summary": {
+      "empty_prefix": "目前无凭证数据，请先",
+      "empty_link": "新增凭证",
+      "today_count": "今日产生凭证",
+      "unit": "张",
+      "month_total": "本月累计金额",
+      "pending": "待核对",
+      "ai_confidence": "AI 平均信心度"
+    },
+    "detail_modal": {
+      "title": "编辑凭证",
+      "messages": {
+        "fetch_error": "获取凭证失败",
+        "deleted_warning": "已删除凭证不可编辑"
+      },
+      "status": {
+        "pending": "待核对",
+        "verified": "已核对"
+      },
+      "sections": {
+        "preview": "发票预览",
+        "basic_info": "凭证基础信息",
+        "accounting_entries": "会计科目分录"
+      },
+      "fields": {
+        "confidence": "AI 信心度",
+        "voucher_no": "凭证编号",
+        "voucher_no_placeholder": "输入凭证编号",
+        "account_code_name": "科目代码 / 名称",
+        "total_amount": "总计金额",
+        "voucher_date": "凭证日期",
+        "voucher_type": "凭证类型",
+        "accounting_select": "请选择会计科目",
+        "particular": "摘要",
+        "debit": "借方",
+        "credit": "贷方"
+      },
+      "validation": {
+        "empty_fields": "日期或分录类别为空",
+        "unbalanced": "借贷不平衡",
+        "empty_rows": "分录为空",
+        "incomplete_row": "有分录的会计科目或金额为空"
+      },
+      "balance_check": {
+        "title": "借贷平衡检查",
+        "balanced": "已平衡",
+        "unbalanced": "未平衡"
+      },
+      "actions": {
+        "cancel_edit": "取消修改",
+        "verify_save": "核对并保存",
+        "save_only": "仅保存修改",
+        "add_row": "新增分录",
+        "clear_all": "全部清除",
+        "save_voucher": "保存凭证",
+        "confirm": "确认",
+        "cancel": "取消"
+      },
+      "confirm_modals": {
+        "clear_all": {
+          "title": "全部清除",
+          "message": "您确定要清除所有数据吗？"
+        },
+        "leave_without_saving": {
+          "title": "离开且不保存",
+          "message": "您确定要放弃在此的变更并离开吗？"
+        },
+        "save_voucher": {
+          "title": "保存凭证",
+          "message": "您确定要保存此凭证吗？"
+        }
+      }
     }
   }
 };

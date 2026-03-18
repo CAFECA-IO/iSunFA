@@ -115,9 +115,9 @@ export default function EsgSummary() {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       {/* Info: (20260312 - Julian) 本月總排放量 */}
-      <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-bold text-slate-500">
@@ -145,7 +145,7 @@ export default function EsgSummary() {
       </div>
 
       {/* Info: (20260312 - Julian) 碳排放強度 */}
-      <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-bold text-slate-500">
@@ -172,7 +172,7 @@ export default function EsgSummary() {
       </div>
 
       {/* Info: (20260312 - Julian) 各範疇分布 */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div className="mb-5 text-center text-sm font-bold text-slate-500">
           {t("esg_summary.scope_distribution")}
         </div>
@@ -184,7 +184,7 @@ export default function EsgSummary() {
       </div>
 
       {/* Info: (20260312 - Julian) 年度目標進度 */}
-      <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-bold text-slate-500">

@@ -13,14 +13,14 @@ import {
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
-import {IVoucherDashboardSummary} from '@/interfaces/voucher'
-// import { useTranslation } from "@/i18n/i18n_context";
+import { IVoucherDashboardSummary } from "@/interfaces/voucher";
+import { useTranslation } from "@/i18n/i18n_context";
 import { numberWithCommas } from "@/lib/utils/common";
 
 export default function VoucherSummary() {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
-  // const { t } = useTranslation();
+  const { t } = useTranslation();
 
   const [summaryData, setSummaryData] =
     useState<IVoucherDashboardSummary | null>(null);
@@ -67,13 +67,13 @@ export default function VoucherSummary() {
       <div className="flex h-72 w-full flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm">
         <Cloud className="mb-2 h-8 w-8 text-slate-300" />
         <span className="text-sm font-bold">
-          目前無傳票資料，請先
+          {t("voucher.summary.empty_prefix")}
           <Link
             href="#"
             onClick={createVoucher}
             className="mx-1 text-blue-600 hover:underline"
           >
-            新增傳票
+            {t("voucher.summary.empty_link")}
           </Link>
         </span>
       </div>
@@ -81,27 +81,27 @@ export default function VoucherSummary() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-2 lg:grid-cols-4 lg:gap-4">
       {/* Info: (20260316 - Julian) 今日產生傳票 */}
-      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-        <div className="shrink-0 px-4 text-blue-500">
+      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
+        <div className="shrink-0 px-2 text-blue-500 lg:px-4">
           <FileSpreadsheet size={24} />
         </div>
         <div className="flex flex-col px-2">
-          <p className="text-sm font-bold text-slate-700">今日產生傳票</p>
+          <p className="text-sm font-bold text-slate-700">{t("voucher.summary.today_count")}</p>
           <p className="text-lg font-bold text-black">
-            <span>{summaryData.todayVoucherCount}</span> 張
+            <span>{summaryData.todayVoucherCount}</span> {t("voucher.summary.unit")}
           </p>
         </div>
       </div>
 
       {/* Info: (20260316 - Julian) 本月累計金額 */}
-      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-        <div className="shrink-0 px-4 text-green-500">
+      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
+        <div className="shrink-0 px-2 text-green-500 lg:px-4">
           <CircleDollarSign size={24} />
         </div>
         <div className="flex flex-col px-2">
-          <p className="text-sm font-bold text-slate-700">本月累計金額</p>
+          <p className="text-sm font-bold text-slate-700">{t("voucher.summary.month_total")}</p>
           <p className="text-lg font-bold text-black">
             $ <span>{numberWithCommas(summaryData.monthTotalAmount)}</span>
           </p>
@@ -109,25 +109,25 @@ export default function VoucherSummary() {
       </div>
 
       {/* Info: (20260316 - Julian) 待核對 */}
-      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-        <div className="shrink-0 px-4 text-orange-500">
+      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
+        <div className="shrink-0 px-2 text-orange-500 lg:px-4">
           <CircleAlert size={24} />
         </div>
         <div className="flex flex-col px-2">
-          <p className="text-sm font-bold text-slate-700">待核對</p>
+          <p className="text-sm font-bold text-slate-700">{t("voucher.summary.pending")}</p>
           <p className="text-lg font-bold text-amber-500">
-            <span>{summaryData.pendingVoucherCount}</span> 張
+            <span>{summaryData.pendingVoucherCount}</span> {t("voucher.summary.unit")}
           </p>
         </div>
       </div>
 
       {/* Info: (20260316 - Julian) AI 平均信心度 */}
-      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-        <div className="shrink-0 px-4 text-purple-500">
+      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
+        <div className="shrink-0 px-2 text-purple-500 lg:px-4">
           <Zap size={24} />
         </div>
         <div className="flex flex-col px-2">
-          <p className="text-sm font-bold text-slate-700">AI 平均信心度</p>
+          <p className="text-sm font-bold text-slate-700">{t("voucher.summary.ai_confidence")}</p>
           <p className="text-lg font-bold text-black">
             <span>{numberWithCommas(summaryData.aiAverageConfidence)}</span> %
           </p>

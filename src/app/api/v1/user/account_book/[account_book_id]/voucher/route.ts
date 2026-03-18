@@ -132,7 +132,7 @@ export async function POST(
       },
     });
 
-    if(!newVoucher) {
+    if (!newVoucher) {
       console.error("Voucher creation failed");
       return jsonFail(ApiCode.NOT_FOUND, "Voucher creation failed");
     }
