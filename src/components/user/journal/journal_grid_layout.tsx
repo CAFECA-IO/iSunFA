@@ -1,6 +1,6 @@
 "use client";
 
-import { TrashIcon, Loader2, FileTextIcon } from "lucide-react";
+import { TrashIcon, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import { IJournal } from "@/interfaces/journal";
@@ -24,17 +24,13 @@ const JournalGridItem = ({
           <button
             type="button"
             disabled
-            className="cursor-not-allowed rounded-md p-1 text-gray-300 shadow-sm"
+            className="cursor-not-allowed rounded-md p-1 bg-gray-50 text-gray-300 shadow-sm"
           >
             <TrashIcon size={24} />
           </button>
         </div>
         <div className="relative size-[250px] shrink-0 overflow-hidden rounded-md">
-          <div className="flex size-full items-center justify-center bg-gray-100">
-            <FileTextIcon size={100} className="text-gray-200" />
-          </div>
-
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+          <div className="flex flex-col size-full items-center justify-center bg-gray-100 gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
             <span className="text-sm font-medium italic text-orange-600 drop-shadow-md pb-1 pl-2 pr-2 bg-white/70 rounded-full mt-2">
               AI Analyzing...
