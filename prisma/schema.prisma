@@ -111,7 +111,7 @@ model Analysis {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tags      AnalysisTag[]
+  tags AnalysisTag[]
 
   @@map("analysis")
 }
@@ -215,9 +215,9 @@ model Comment {
 
 // Info: (20260212 - Julian) 討論串標籤
 model Tag {
-  id      String      @id @default(uuid())
-  name    String      @unique
-  threads ThreadTag[]
+  id       String        @id @default(uuid())
+  name     String        @unique
+  threads  ThreadTag[]
   analyses AnalysisTag[]
 
   @@map("tag")
@@ -340,15 +340,23 @@ model Receipt {
   @@map("receipt")
 }
 
+enum AIAnalysisStatus {
+  PENDING // Info: (20260318 - Julian) 尚未開始
+  PROCESSING // Info: (20260318 - Julian) 正在處理
+  COMPLETED // Info: (20260318 - Julian) 已完成
+  FAILED // Info: (20260318 - Julian) 失敗
+}
+
 // Info: (20260304 - Julian) 憑證/日記帳
 model Journal {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  text      String   @db.Text // Info: (20260304 - Julian) AI 辨識出的文字結果
+  id             String           @id @default(uuid())
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  text           String           @db.Text // Info: (20260304 - Julian) AI 辨識出的文字結果
+  analysisStatus AIAnalysisStatus @default(PENDING) @map("analysis_status")
 
-  fileId String @map("file_id")
-  file   File   @relation(fields: [fileId], references: [id])
+  fileId String? @map("file_id")
+  file   File?   @relation(fields: [fileId], references: [id])
 
   // Info: (20260305 - Julian) 隸屬的帳本
   accountBookId String      @map("account_book_id")
@@ -428,12 +436,6 @@ model AuditLog {
   @@map("audit_log")
 }
 
-// Info: (20260316 - Julian) AI 分析狀態
-enum AIAnalysisStatus {
-  VERIFIED
-  MANUAL
-}
-
 // Info: (20260310 - Julian) 傳票
 enum VoucherTradingType {
   INCOME
@@ -474,8 +476,11 @@ model Voucher {
   // Info: (20260316 - Julian) AI 信心度
   confidence Int @map("confidence")
 
-  // Info: (20260316 - Julian) AI 分析狀態 (VERIFIED, MANUAL)
-  status AIAnalysisStatus @map("status")
+  // Info: (20260318 - Julian) 是否已經驗證
+  isVerified Boolean @default(false) @map("is_verified")
+
+  // Info: (20260318 - Julian) AI 分析狀態
+  analysisStatus AIAnalysisStatus @default(PENDING) @map("analysis_status")
 
   // Info: (20260316 - Julian) 包含的分錄
   lines VoucherLine[]
@@ -535,7 +540,8 @@ model EsgRecord {
   emissions       Decimal // Info: (20260312 - Julian) 排放量 (KGCO2E)
   intensity       EsgIntensity // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
   confidence      Int // Info: (20260312 - Julian) AI 信心度
-  status          AIAnalysisStatus // Info: (20260316 - Julian) AI 分析狀態 (VERIFIED, MANUAL)
+  isVerified      Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
+  analysisStatus  AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態
 
   // Info: (20260312 - Julian) 關聯檔案憑證
   fileId String? @map("file_id")

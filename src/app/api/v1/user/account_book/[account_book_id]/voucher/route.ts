@@ -8,9 +8,9 @@ import {
   IVoucher,
   IVoucherLineUI,
   TradingType,
-  VoucherStatus,
 } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
+import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
 
 /**
  * Info: (20260310 - Julian) 新增傳票：將 AI 解析出的傳票存入 DB
@@ -51,14 +51,14 @@ export async function POST(
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
 
-    // const body = await request.json();
-    // const { file } = body;
+    const body = await request.json();
+    const { fileId } = body;
 
-    // // Info: (20260311 - Julian) 驗證 file 參數
-    // if (!file || !file.hash) {
-    //   console.error("Missing file or file hash");
-    //   return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
-    // }
+    // Info: (20260311 - Julian) 驗證 file 參數
+    if (!fileId) {
+      console.error("Missing file or file hash");
+      return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
+    }
 
     // // Info: (20260311 - Julian) 使用 AI 分析發票/憑證資料
     // const apiKey = process.env.GEMINI_API_KEY;
@@ -83,14 +83,6 @@ export async function POST(
     // if (aiError || !voucherData) {
     //   return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, aiError || "Failed to parse voucher");
     // }
-
-    // Info: (20260311 - Julian) 建立上傳檔案 DB 紀錄
-    // const dbFile = await prisma.file.create({
-    //   data: {
-    //     hash: file.hash,
-    //     fileName: file.fileName,
-    //   },
-    // });
 
     // const parsedLines: IParsedVoucherLine[] = Array.isArray(voucherData.lines) ? voucherData.lines : [];
 
@@ -119,7 +111,7 @@ export async function POST(
     const newVoucher = await prisma.voucher.create({
       data: {
         accountBookId: accountBook.id,
-        fileId: "",
+        fileId: fileId,
         userId: creator.id,
         tradingDate: new Date(),
         tradingType: "INCOME",
@@ -128,7 +120,6 @@ export async function POST(
           create: [],
         },
         confidence: 0,
-        status: VoucherStatus.MANUAL,
       },
     });
 
@@ -305,7 +296,8 @@ export async function GET(
         },
         issuerName: v.user?.name ?? "",
         confidence: v.confidence,
-        status: v.status as VoucherStatus,
+        isVerified: v.isVerified,
+        analysisStatus: v.analysisStatus as AIAnalysisStatus,
       };
     });
 

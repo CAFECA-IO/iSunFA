@@ -4,6 +4,7 @@ import { TrashIcon, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import { IJournal } from "@/interfaces/journal";
+import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
 
 const JournalListItem = ({
   journal,
@@ -28,6 +29,37 @@ const JournalListItem = ({
       <span>{formattedDateSplit[1]}</span>
     </div>
   );
+
+  if (journal.analysisStatus === AIAnalysisStatus.PENDING) {
+    return (
+      <tr className="border-b last:border-0 border-slate-300 odd:bg-slate-50 even:bg-white text-slate-400">
+        <td className="w-16 px-3 py-2 align-middle sm:w-32 sm:px-6">
+          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50 p-1 sm:h-20 sm:w-20">
+            <Loader2 className="h-4 w-4 animate-spin text-orange-400 sm:h-6 sm:w-6" />
+          </div>
+        </td>
+        <td className="w-1/4 px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
+          {dateStrForDesktop}
+          {dateStrForMobile}
+        </td>
+        <td className="px-3 py-2 align-middle text-xs sm:px-6 sm:text-sm">
+          <span className="flex items-center gap-2 italic">
+            <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
+           AI Analyzing...
+          </span>
+        </td>
+        <td className="w-12 px-3 py-2 text-right sm:px-6">
+          <button
+            type="button"
+            disabled
+            className="relative cursor-not-allowed rounded-md p-1 text-gray-300 opacity-50 sm:p-1"
+          >
+            <TrashIcon size={20} />
+          </button>
+        </td>
+      </tr>
+    );
+  }
 
   return (
     <tr

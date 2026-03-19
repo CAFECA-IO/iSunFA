@@ -1017,7 +1017,7 @@ export const zhTw = {
         "no_file": "無檔案",
         "filter_btn": "篩選條件",
         "verify_all": "一鍵核對所有傳票",
-        "no_data": "目前無傳票資料，請先"
+        "no_data": "目前無傳票資料"
       }
     },
     "summary": {
@@ -1093,6 +1093,11 @@ export const zhTw = {
         }
       }
     }
+  },
+  "esg_main": {
+    "title": "碳排管理與 ESG 分析",
+    "description": "自動分析進項憑證，為您提供即時的碳中和進度與各項排放維度分析。",
+    "export_button": "匯出 ESG 申報表"
   },
   "esg_summary": {
     "no_data_prefix": "目前無這份帳本的 ESG 數據，請先",

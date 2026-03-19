@@ -1023,7 +1023,7 @@ export const en = {
         "no_file": "No File",
         "filter_btn": "Filters",
         "verify_all": "Verify All Vouchers",
-        "no_data": "No voucher records yet, please "
+        "no_data": "No voucher records yet"
       }
     },
     "summary": {
@@ -1099,6 +1099,11 @@ export const en = {
         }
       }
     }
+  },
+  "esg_main": {
+    "title": "Carbon Management & ESG Analysis",
+    "description": "Automatically analyzes input vouchers to provide real-time carbon neutrality progress and multi-dimensional emission analysis.",
+    "export_button": "Export ESG Declaration"
   },
   "esg_summary": {
     "no_data_prefix": "Currently no ESG data for this account book, please ",

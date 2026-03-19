@@ -12,13 +12,13 @@ import {
   ArrowDown,
   ArrowUp,
   FileQuestion,
+  Loader2,
 } from "lucide-react";
 import { timestampToString } from "@/lib/utils/common";
 import {
   IEsgRecord,
   EsgScope,
   EsgIntensity,
-  EsgStatus,
 } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
 import EsgVerifyModal from "@/components/user/esg/esg_verify_modal";
@@ -26,6 +26,7 @@ import { request } from "@/lib/utils/request";
 import { useParams } from "next/navigation";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
+import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
 
 const EsgRow = ({
   record,
@@ -90,6 +91,38 @@ const EsgRow = ({
     }
   };
 
+    if (record.analysisStatus === AIAnalysisStatus.PENDING) {
+      return (
+        <tr className="border-b border-slate-200 bg-slate-50 opacity-80 transition-colors last:border-0">
+          <td className="p-2 lg:px-6 lg:py-4">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
+              <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
+            </div>
+          </td>
+          <td className="p-2 text-center text-xs font-bold whitespace-nowrap text-slate-400 lg:px-6 lg:py-4 lg:text-sm">
+            {timestampToString(record.dateTimestamp).dateWithDash}
+          </td>
+          <td colSpan={5} className="p-2 text-center align-middle lg:px-6 lg:py-4">
+            <span className="flex items-center justify-center gap-2 text-sm font-medium italic text-orange-500">
+              <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
+              AI Analyzing...
+            </span>
+          </td>
+          <td aria-label="Status" className="p-2 text-center lg:px-6 lg:py-4">
+            <div className="flex justify-center">
+              <button
+                type="button"
+                disabled
+                className="inline-flex cursor-not-allowed items-center justify-center rounded-xl bg-slate-200 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-slate-400 shadow-sm"
+              >
+                Pending
+              </button>
+            </div>
+          </td>
+        </tr>
+      );
+    }
+
   return (
     <tr>
       <td className="p-2 lg:px-6 lg:py-4">
@@ -150,7 +183,7 @@ const EsgRow = ({
         </div>
       </td>
       <td className="p-2 text-center lg:px-6 lg:py-4">
-        {record.status === EsgStatus.VERIFIED ? (
+        {record.isVerified ? (
           <div className="flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 className="h-5 w-5" />
             <span className="text-sm font-bold">{t("esg_table.verified")}</span>

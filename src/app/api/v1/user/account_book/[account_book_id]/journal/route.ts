@@ -35,10 +35,10 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { file } = body;
+    const { fileId } = body;
 
     // Info: (20260304 - Julian) 驗證 file 參數
-    if (!file || !file.hash) {
+    if (!fileId) {
       console.error("Missing file or file hash");
       return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
     }
@@ -75,19 +75,11 @@ export async function POST(
 
     // const { text } = await chatService.analyzeJournal(imagesForAi);
 
-    // Info: (20260304 - Julian) 建立上傳檔案 DB 紀錄
-    // const dbFile = await prisma.file.create({
-    //   data: {
-    //     hash: file.hash,
-    //     fileName: file.fileName,
-    //   },
-    // });
-
     // Info: (20260304 - Julian) 先建立空白的日記帳
     const journal = await prisma.journal.create({
       data: {
         accountBookId: accountBook.id,
-        fileId: "",
+        fileId,
         text: "",
       },
     });

@@ -14,7 +14,6 @@ import {
   IVoucher,
   TradingType,
   IVoucherLineUI,
-  VoucherStatus,
 } from "@/interfaces/voucher";
 import { numberWithCommas } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
@@ -163,7 +162,7 @@ export default function VoucherDetailModal({
   const [isClearModalOpen, setIsClearModalOpen] = useState<boolean>(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState<boolean>(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
-  const [targetStatus, setTargetStatus] = useState<VoucherStatus>();
+  const [targetVerify, setTargetVerify] = useState<boolean>(false);
   
   const [isAccountBookSelectorOpen, setIsAccountBookSelectorOpen] = useState(false);
   const [selectorTargetRowId, setSelectorTargetRowId] = useState<string | null>(null);
@@ -296,8 +295,8 @@ export default function VoucherDetailModal({
     setRows(rows.map((r) => (r.id === id ? newRow : r)));
   };
 
-  const saveVoucher = (status?: VoucherStatus) => {
-    setTargetStatus(status);
+  const saveVoucher = (isVerified?: boolean) => {
+    setTargetVerify(!!isVerified);
     setIsSaveModalOpen(true);
   };
 
@@ -311,7 +310,7 @@ export default function VoucherDetailModal({
         voucherType,
         note,
         rows,
-        targetStatus,
+        isVerified: targetVerify,
       };
       const res = await request<IApiResponse<{ voucher: IVoucher }>>(
         `/api/v1/user/account_book/${accountBookId}/voucher/${voucherId}`,
@@ -373,14 +372,12 @@ export default function VoucherDetailModal({
                     >
                       {t("voucher.detail_modal.title")}
                     </DialogTitle>
-                    {activeVoucher?.status === "MANUAL" && (
+                    {activeVoucher.isVerified ?
+                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
+                        {t("voucher.detail_modal.status.verified")}
+                      </span>: (
                       <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
                         {t("voucher.detail_modal.status.pending")}
-                      </span>
-                    )}
-                    {activeVoucher?.status === "VERIFIED" && (
-                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
-                        {t("voucher.detail_modal.status.verified")}
                       </span>
                     )}
                   </div>
@@ -643,7 +640,7 @@ export default function VoucherDetailModal({
                         <button
                           type="button"
                           disabled={disabledSaveButton || isSaving}
-                          onClick={() => saveVoucher(VoucherStatus.VERIFIED)}
+                          onClick={() => saveVoucher(true)}
                           className="flex h-10 items-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:bg-slate-300"
                         >
                           <CheckCircle2 size={16} className="stroke-3" />

@@ -16,7 +16,6 @@ import ConfirmModal from "@/components/common/confirm_modal";
 import {
   IEsgRecord,
   EsgScope,
-  EsgStatus,
   EsgIntensity,
 } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
@@ -88,8 +87,8 @@ export default function EsgVerifyModal({
 
   const handleSaveConfirmed = () => {
     if (formData) {
-      // Info: (20260312 - Julian) Upon saving, the status becomes 'verified'
-      onSave?.({ ...formData, status: EsgStatus.VERIFIED });
+      // Info: (20260318 - Julian) 將 isVerified 設為 true
+      onSave?.({ ...formData, isVerified: true });
     }
     setIsSaveModalOpen(false);
     onClose();
