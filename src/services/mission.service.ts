@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { MISSION_STATUS } from '@/constants/status';
 import { taskRepo } from '@/repositories/task.repo';
 import { Prisma } from '@/generated/client';
+import { VoucherTradingType } from '@/generated/client';
 
 export class MissionService {
   /**
@@ -49,6 +50,80 @@ export class MissionService {
 
     // Info: (20260130 - Luphia) 4. Update Mission
     await taskRepo.completeMission(missionId, MISSION_STATUS.COMPLETED, finalResult);
+
+    // Info: (20260319 - Julian) 4.5. 處理日記帳、傳票
+    const journalTask = tasks.find(t => t.type === 'JOURNAL_PARSING');
+    const voucherTask = tasks.find(t => t.type === 'VOUCHER_PARSING');
+
+    if (journalTask || voucherTask) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const taskData = (journalTask?.data || voucherTask?.data) as any;
+        const context = JSON.parse(taskData?.context || '{}');
+        const fileId = context.fileId;
+        const accountBookId = context.accountBookId;
+
+        if (fileId && accountBookId) {
+          await prisma.$transaction(async (tx) => {
+            if (journalTask && journalTask.result && typeof journalTask.result === 'string') {
+              await tx.journal.create({
+                data: {
+                  text: journalTask.result,
+                  fileId,
+                  accountBookId,
+                  analysisStatus: 'COMPLETED'
+                }
+              });
+            }
+
+            if (voucherTask && voucherTask.result && typeof voucherTask.result === 'string') {
+              try {
+                const parsed = JSON.parse(voucherTask.result);
+                // In task.service.ts we used JSON.stringify(res) which is { data: IParsedVoucher }
+                if (parsed && typeof parsed === 'object') {
+                  // Wait, analyzeVoucher returns { data: IParsedVoucher | null, error?: string }
+                  // The data property inside parsed is our actual result
+                  const vd = parsed.data || parsed;
+                  const tradingDate = new Date(vd.tradingDate || new Date());
+                  const typeMap: Record<string, VoucherTradingType> = {
+                    'income': 'INCOME',
+                    'outcome': 'OUTCOME',
+                    'transfer': 'TRANSFER'
+                  };
+                  const trType = typeMap[String(vd.tradingType).toLowerCase()] || 'INCOME';
+
+                  await tx.voucher.create({
+                    data: {
+                      tradingDate,
+                      tradingType: trType as VoucherTradingType,
+                      note: vd.note || null,
+                      currency: vd.currency || 'TWD',
+                      fileId,
+                      accountBookId,
+                      confidence: vd.confidence || 0,
+                      analysisStatus: 'COMPLETED',
+                      lines: {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        create: (vd.lines || []).map((l: any) => ({
+                          accountingCode: l.accountingCode || '',
+                          particular: l.particular || null,
+                          amount: l.amount || 0,
+                          isDebit: l.isDebit === true
+                        }))
+                      }
+                    }
+                  });
+                }
+              } catch (e) {
+                console.error('[MissionService] Failed to parse voucher result', e);
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.error('[MissionService] Error persisting document parsing results:', e);
+      }
+    }
 
     // Info: (20260310 - Tzuhan) Update Analysis result when mission completes
     await prisma.analysis.updateMany({

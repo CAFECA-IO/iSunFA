@@ -12,6 +12,8 @@ import * as MarketAnalysisPrompts from '@/constants/prompts/market_analysis';
 import * as FinancialProductRatingPrompts from '@/constants/prompts/financial_product_rating';
 import * as IndustryDevelopmentPrompts from '@/constants/prompts/industry_development';
 import { getPeriodDateRange } from '@/lib/analysis/period';
+import { JOURNAL_PROMPT } from '@/constants/prompts/journal';
+import { getVoucherPrompt } from '@/constants/prompts/voucher';
 
 export interface IMissionParams {
   category: string;
@@ -20,6 +22,8 @@ export interface IMissionParams {
   year: number;
   country?: string;
   keyword?: string;
+  fileId?: string; // Info: (20260319 - Assistant) For Document Parsing
+  accountBookId?: string; // Info: (20260319 - Assistant) For Document Parsing
 }
 
 export interface IMissionDefinition {
@@ -162,6 +166,40 @@ export class MissionGenerator {
 
       return {
         name: `External Analysis - ${params.category} - ${params.periodValue}`,
+        tasks
+      };
+    }
+
+    if (params.category === 'document_parsing') {
+      // const taskGenerator = new TaskGenerator();
+      const tasks: ITaskDefinition[] = [];
+      const context = JSON.stringify({
+        fileId: params.fileId,
+        accountBookId: params.accountBookId
+      });
+
+      tasks.push({
+        type: 'JOURNAL_PARSING',
+        order: 0,
+        data: {
+          key: 'JOURNAL',
+          prompt: JOURNAL_PROMPT,
+          context
+        }
+      });
+
+      tasks.push({
+        type: 'VOUCHER_PARSING',
+        order: 0,
+        data: {
+          key: 'VOUCHER',
+          prompt: getVoucherPrompt(params.accountBookId),
+          context
+        }
+      });
+
+      return {
+        name: `Document Parsing - ${params.fileId}`,
         tasks
       };
     }

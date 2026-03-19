@@ -3,6 +3,7 @@ import { ChatService } from '@/services/chat.service';
 import { TASK_STATUS } from '@/constants/status';
 import { missionService } from '@/services/mission.service';
 import { Task, Mission } from '@/generated/client';
+import { prisma } from '@/lib/prisma'; // Info: (20260319 - Assistant) For fetching File record
 
 interface ITaskData {
   key: string;
@@ -76,7 +77,45 @@ export class TaskService {
     console.log(`[TaskService] Full Prompt: ${fullPrompt}`);
     let result = "";
 
-    if (task.type === 'MARKET_EVENT_COLLECTION') {
+    // Info: (20260319 - Julian) 處理日記帳、傳票
+    if (task.type === 'JOURNAL_PARSING' || task.type === 'VOUCHER_PARSING') {
+      const taskData = task.data as unknown as ITaskData;
+      let parsedContext: { fileId?: string } = {};
+      try {
+        if (taskData.context) {
+          parsedContext = JSON.parse(taskData.context);
+        }
+      } catch (e) {
+        console.warn('[TaskService] Could not parse task context for Document Parsing', e);
+      }
+
+      if (parsedContext.fileId) {
+        const fileRecord = await prisma.file.findUnique({ where: { id: parsedContext.fileId } });
+        if (!fileRecord) {
+          throw new Error(`File not found: ${parsedContext.fileId}`);
+        }
+
+        const domain = process.env.STORAGE_DOMAIN?.replace(/\/$/, '') || '';
+        const fileRes = await fetch(`${domain}/api/v1/file/${fileRecord.hash}`);
+        if (!fileRes.ok) {
+          throw new Error(`Failed to fetch file ${fileRecord.hash} from storage`);
+        }
+        const buffer = Buffer.from(await fileRes.arrayBuffer());
+        const mimeType = fileRecord.fileName?.match(/\.pdf$/i) ? 'application/pdf' : 'image/jpeg';
+        const images = [{ data: buffer.toString('base64'), mimeType }];
+
+        if (task.type === 'JOURNAL_PARSING') {
+          const res = await chatService.analyzeJournal(images);
+          result = res.text;
+        } else {
+          // VOUCHER_PARSING
+          const res = await chatService.analyzeVoucher(images, 'TW'); // Assuming TW
+          result = JSON.stringify(res);
+        }
+      } else {
+        throw new Error('No fileId provided for document parsing task');
+      }
+    } else if (task.type === 'MARKET_EVENT_COLLECTION') {
       const taskData = task.data as unknown as ITaskData;
       let needsSearch = false;
 
