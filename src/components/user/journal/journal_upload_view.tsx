@@ -86,7 +86,7 @@ export default function JournalUploadView({
         `/api/v1/user/account_book/${accountBookId}/ai_analysis`,
         {
           method: "POST",
-          body: JSON.stringify({file: uploadedFile}),
+          body: JSON.stringify({ file: uploadedFile }),
         },
       );
       // const dataJournal = await request<IApiResponse<object>>(
@@ -178,12 +178,13 @@ export default function JournalUploadView({
 
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
-        className={`flex h-full flex-col items-center justify-center rounded-2xl border-2 p-20 transition-colors lg:h-[calc(100vh-250px)] lg:p-[100px] ${uploadedFile
+        className={`flex h-full flex-col items-center justify-center rounded-2xl border-2 p-20 transition-colors lg:h-[calc(100vh-250px)] lg:p-[100px] ${
+          uploadedFile
             ? "border-transparent bg-white shadow-[0_0_15px_rgba(0,0,0,0.05)]"
             : isDragging
               ? "border-dashed border-orange-500 bg-orange-50"
               : "border-dashed border-gray-300 bg-white hover:border-orange-400 hover:bg-gray-50"
-          }`}
+        }`}
         onDragOver={!uploadedFile ? handleDragOver : undefined}
         onDragLeave={!uploadedFile ? handleDragLeave : undefined}
         onDrop={!uploadedFile ? handleDrop : undefined}

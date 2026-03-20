@@ -20,19 +20,19 @@ const JournalGridItem = ({
   if (journal.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
       <div className="relative flex size-72 flex-col items-center justify-center gap-2 justify-self-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50 p-2 opacity-90">
-        <div className="absolute right-2 top-2 z-10 flex items-center gap-2">
+        <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
           <button
             type="button"
             disabled
-            className="cursor-not-allowed rounded-md p-1 bg-gray-50 text-gray-300 shadow-sm"
+            className="cursor-not-allowed rounded-md bg-gray-50 p-1 text-gray-300 shadow-sm"
           >
             <TrashIcon size={24} />
           </button>
         </div>
         <div className="relative size-[250px] shrink-0 overflow-hidden rounded-md">
-          <div className="flex flex-col size-full items-center justify-center bg-gray-100 gap-3">
+          <div className="flex size-full flex-col items-center justify-center gap-3 bg-gray-100">
             <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-            <span className="text-sm font-medium italic text-orange-600 drop-shadow-md pb-1 pl-2 pr-2 bg-white/70 rounded-full mt-2">
+            <span className="mt-2 rounded-full bg-white/70 pr-2 pb-1 pl-2 text-sm font-medium text-orange-600 italic drop-shadow-md">
               AI Analyzing...
             </span>
           </div>

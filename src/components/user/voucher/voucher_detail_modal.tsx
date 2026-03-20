@@ -8,13 +8,20 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { X, Hash, Plus, ChevronDown, Trash2, FileText, Scale, Save, CheckCircle2, DollarSign } from "lucide-react";
-import { useTranslation } from "@/i18n/i18n_context";
 import {
-  IVoucher,
-  TradingType,
-  IVoucherLineUI,
-} from "@/interfaces/voucher";
+  X,
+  Hash,
+  Plus,
+  ChevronDown,
+  Trash2,
+  FileText,
+  Scale,
+  Save,
+  CheckCircle2,
+  DollarSign,
+} from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
+import { IVoucher, TradingType, IVoucherLineUI } from "@/interfaces/voucher";
 import { numberWithCommas } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { request } from "@/lib/utils/request";
@@ -50,12 +57,14 @@ const VoucherRow = ({
         <div className="relative flex h-[42px] items-center overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
           <button
             type="button"
-            className="w-[250px] flex-1 text-left appearance-none bg-transparent px-4 py-2 text-sm font-semibold text-slate-700 outline-none truncate"
+            className="w-[250px] flex-1 appearance-none truncate bg-transparent px-4 py-2 text-left text-sm font-semibold text-slate-700 outline-none"
             onClick={() => onOpenSelector(row.id)}
           >
-            {row.accounting ? `${row.accounting.code} - ${row.accounting.name}` : (t("voucher.detail_modal.fields.accounting_select"))}
+            {row.accounting
+              ? `${row.accounting.code} - ${row.accounting.name}`
+              : t("voucher.detail_modal.fields.accounting_select")}
           </button>
-          <div className="bg-white pr-3 pointer-events-none">
+          <div className="pointer-events-none bg-white pr-3">
             <ChevronDown size={16} className="text-slate-400" />
           </div>
         </div>
@@ -163,9 +172,12 @@ export default function VoucherDetailModal({
   const [isCloseModalOpen, setIsCloseModalOpen] = useState<boolean>(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
   const [targetVerify, setTargetVerify] = useState<boolean>(false);
-  
-  const [isAccountBookSelectorOpen, setIsAccountBookSelectorOpen] = useState(false);
-  const [selectorTargetRowId, setSelectorTargetRowId] = useState<string | null>(null);
+
+  const [isAccountBookSelectorOpen, setIsAccountBookSelectorOpen] =
+    useState(false);
+  const [selectorTargetRowId, setSelectorTargetRowId] = useState<string | null>(
+    null,
+  );
 
   // Info: (20260311 - Julian) 從 API 取得傳票
   useEffect(() => {
@@ -372,10 +384,11 @@ export default function VoucherDetailModal({
                     >
                       {t("voucher.detail_modal.title")}
                     </DialogTitle>
-                    {activeVoucher.isVerified ?
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
+                    {activeVoucher.isVerified ? (
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
                         {t("voucher.detail_modal.status.verified")}
-                      </span>: (
+                      </span>
+                    ) : (
                       <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
                         {t("voucher.detail_modal.status.pending")}
                       </span>
@@ -401,7 +414,7 @@ export default function VoucherDetailModal({
                       </h4>
                       <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
                         <span className="text-xs font-bold text-slate-500">
-                            {t("voucher.detail_modal.fields.confidence")}
+                          {t("voucher.detail_modal.fields.confidence")}
                         </span>
                         <div className="flex items-center gap-1.5">
                           <div className="h-2 w-16 overflow-hidden rounded-full bg-slate-200">
@@ -520,14 +533,18 @@ export default function VoucherDetailModal({
                             <Hash size={20} className="text-slate-400" />
                             <input
                               id="voucherIdInput"
-                              aria-label={t("voucher.detail_modal.fields.voucher_no")}
+                              aria-label={t(
+                                "voucher.detail_modal.fields.voucher_no",
+                              )}
                               type="text"
                               value={editedVoucherId}
                               onChange={(e) =>
                                 setEditedVoucherId(e.target.value)
                               }
                               className="w-full bg-transparent text-slate-800 outline-none placeholder:font-normal placeholder:text-slate-300"
-                              placeholder={t("voucher.detail_modal.fields.voucher_no_placeholder")}
+                              placeholder={t(
+                                "voucher.detail_modal.fields.voucher_no_placeholder",
+                              )}
                             />
                           </div>
                         </div>
@@ -538,7 +555,9 @@ export default function VoucherDetailModal({
                         <div className="flex items-center gap-2">
                           <DollarSign size={20} className="text-blue-900" />
                           <h4 className="text-base font-bold text-blue-900">
-                            {t("voucher.detail_modal.sections.accounting_entries")}
+                            {t(
+                              "voucher.detail_modal.sections.accounting_entries",
+                            )}
                           </h4>
                         </div>
                         <button
@@ -603,11 +622,17 @@ export default function VoucherDetailModal({
                           >
                             {isTotalBalanced ? (
                               <>
-                                <CheckCircle2 size={18} /> {t("voucher.detail_modal.balance_check.balanced")}
+                                <CheckCircle2 size={18} />{" "}
+                                {t(
+                                  "voucher.detail_modal.balance_check.balanced",
+                                )}
                               </>
                             ) : (
                               <>
-                                <X size={18} /> {t("voucher.detail_modal.balance_check.unbalanced")}
+                                <X size={18} />{" "}
+                                {t(
+                                  "voucher.detail_modal.balance_check.unbalanced",
+                                )}
                               </>
                             )}
                           </div>
@@ -719,9 +744,12 @@ export default function VoucherDetailModal({
         accountBookId={accountBookId}
         onSelect={(account) => {
           if (selectorTargetRowId) {
-            const targetRow = rows.find(r => r.id === selectorTargetRowId);
+            const targetRow = rows.find((r) => r.id === selectorTargetRowId);
             if (targetRow) {
-              updateRow(selectorTargetRowId, { ...targetRow, accounting: account });
+              updateRow(selectorTargetRowId, {
+                ...targetRow,
+                accounting: account,
+              });
             }
           }
         }}

@@ -241,10 +241,11 @@ export default function JournalListView() {
             <button
               title={t("ocr.list_view") as string}
               type="button"
-              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${displayType === "list"
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
+                displayType === "list"
                   ? "bg-white text-orange-600 shadow-sm"
                   : "text-gray-400 hover:text-gray-600"
-                }`}
+              }`}
               onClick={() => setDisplayType("list")}
             >
               <ListIcon size={16} />
@@ -252,10 +253,11 @@ export default function JournalListView() {
             <button
               title={t("ocr.grid_view") as string}
               type="button"
-              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${displayType === "grid"
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
+                displayType === "grid"
                   ? "bg-white text-orange-600 shadow-sm"
                   : "text-gray-400 hover:text-gray-600"
-                }`}
+              }`}
               onClick={() => setDisplayType("grid")}
             >
               <LayoutGrid size={16} />

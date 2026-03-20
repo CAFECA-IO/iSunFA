@@ -13,11 +13,7 @@ import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import ConfirmModal from "@/components/common/confirm_modal";
-import {
-  IEsgRecord,
-  EsgScope,
-  EsgIntensity,
-} from "@/interfaces/esg";
+import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
 import { useTranslation } from "@/i18n/i18n_context";
 

@@ -1,213 +1,20 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  Search,
-  Filter,
-  Info,
-  CheckCircle2,
-  Zap,
-  Truck,
-  Cloud,
-  ArrowDown,
-  ArrowUp,
-  FileQuestion,
-  Loader2,
-} from "lucide-react";
-import { timestampToString } from "@/lib/utils/common";
-import {
-  IEsgRecord,
-  EsgScope,
-  EsgIntensity,
-} from "@/interfaces/esg";
-import { FilePreview } from "@/components/common/file_preview";
+import { Search, Filter, Info, ArrowDown, ArrowUp } from "lucide-react";
+import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
+import { EsgRow } from "@/components/user/esg/esg_row";
 import EsgVerifyModal from "@/components/user/esg/esg_verify_modal";
 import { request } from "@/lib/utils/request";
 import { useParams } from "next/navigation";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
-
-const EsgRow = ({
-  record,
-  onVerifyClick,
-}: {
-  record: IEsgRecord;
-  onVerifyClick: (record: IEsgRecord) => void;
-}) => {
-  const { t } = useTranslation();
-
-  const handleVerifyClick = () => {
-    onVerifyClick(record);
-  };
-
-  const renderIntensity = (intensity: EsgIntensity) => {
-    switch (intensity) {
-      case EsgIntensity.HIGH:
-        return {
-          text: t("esg_table.intensity.high"),
-          style: "border-red-300 bg-red-100 text-red-600",
-        };
-      case EsgIntensity.MEDIUM:
-        return {
-          text: t("esg_table.intensity.medium"),
-          style: "border-amber-300 bg-amber-100 text-amber-600",
-        };
-      case EsgIntensity.LOW:
-        return {
-          text: t("esg_table.intensity.low"),
-          style: "border-green-300 bg-green-100 text-green-600",
-        };
-      default:
-        return {
-          text: "",
-          style: "",
-        };
-    }
-  };
-
-  const renderScope = (scope: EsgScope) => {
-    switch (scope) {
-      case EsgScope.SCOPE_1:
-        return {
-          text: t("esg_table.scope.scope_1"),
-          icon: <Zap className="mr-1.5 h-4 w-4 text-amber-500" />,
-        };
-      case EsgScope.SCOPE_2:
-        return {
-          text: t("esg_table.scope.scope_2"),
-          icon: <Truck className="mr-1.5 h-4 w-4 text-blue-500" />,
-        };
-      case EsgScope.SCOPE_3:
-        return {
-          text: t("esg_table.scope.scope_3"),
-          icon: <Cloud className="mr-1.5 h-4 w-4 text-green-500" />,
-        };
-      default:
-        return {
-          text: "",
-          icon: null,
-        };
-    }
-  };
-
-    if (record.analysisStatus === AIAnalysisStatus.PENDING) {
-      return (
-        <tr className="border-b border-slate-200 bg-slate-50 opacity-80 transition-colors last:border-0">
-          <td className="p-2 lg:px-6 lg:py-4">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
-              <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
-            </div>
-          </td>
-          <td className="p-2 text-center text-xs font-bold whitespace-nowrap text-slate-400 lg:px-6 lg:py-4 lg:text-sm">
-            {timestampToString(record.dateTimestamp).dateWithDash}
-          </td>
-          <td colSpan={5} className="p-2 text-center align-middle lg:px-6 lg:py-4">
-            <span className="flex items-center justify-center gap-2 text-sm font-medium italic text-orange-500">
-              <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
-              AI Analyzing...
-            </span>
-          </td>
-          <td aria-label="Status" className="p-2 text-center lg:px-6 lg:py-4">
-            <div className="flex justify-center">
-              <button
-                type="button"
-                disabled
-                className="inline-flex cursor-not-allowed items-center justify-center rounded-xl bg-slate-200 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-slate-400 shadow-sm"
-              >
-                Pending
-              </button>
-            </div>
-          </td>
-        </tr>
-      );
-    }
-
-  return (
-    <tr>
-      <td className="p-2 lg:px-6 lg:py-4">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
-          {/* Info: (20260312 - Julian) File Preview */}
-          {record.file ? (
-            <FilePreview
-              file={{ filename: record.file.fileName || "Unknown" }}
-              fileId={record.file.hash}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center rounded-lg bg-slate-100 p-1">
-              <FileQuestion className="h-6 w-6 text-slate-300" />
-            </div>
-          )}
-        </div>
-      </td>
-      <td className="p-2 text-center text-xs font-bold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4 lg:text-sm">
-        {timestampToString(record.dateTimestamp).dateWithDash}
-      </td>
-      <td className="p-2 lg:px-6 lg:py-4">
-        <div className="mb-1 flex items-center text-xs font-bold text-slate-800 lg:text-sm">
-          <div className="shrink-0">{renderScope(record.scope).icon}</div>
-          {renderScope(record.scope).text}：{record.activityType}
-        </div>
-        <div className="text-[10px] font-medium text-slate-500 lg:text-xs">
-          {record.vendor}
-        </div>
-      </td>
-      <td className="p-2 text-center whitespace-nowrap lg:px-6 lg:py-4">
-        <span className="text-[15px] font-bold text-slate-800">
-          {record.rawActivityData}{" "}
-        </span>
-        <span className="text-xs font-bold text-slate-500">{record.unit}</span>
-      </td>
-      <td className="p-2 text-center text-[15px] font-bold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4">
-        {record.emissions}
-      </td>
-      <td className="p-2 text-center lg:px-6 lg:py-4">
-        <span
-          className={`inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-bold whitespace-nowrap transition-colors ${renderIntensity(record.intensity).style}`}
-        >
-          {renderIntensity(record.intensity).text}
-        </span>
-      </td>
-      <td aria-label="準確度" className="p-2 text-center lg:px-6 lg:py-4">
-        <div className="flex items-center justify-center gap-3">
-          <div className="h-2 w-24 shrink-0 overflow-hidden rounded-full bg-slate-200">
-            <div
-              className={`h-full rounded-full ${record.confidence >= 90 ? "bg-emerald-400" : "bg-orange-500"}`}
-              style={{ width: `${record.confidence}%` }}
-            ></div>
-          </div>
-          <span className="text-sm font-black whitespace-nowrap text-slate-700">
-            {record.confidence}%
-          </span>
-        </div>
-      </td>
-      <td className="p-2 text-center lg:px-6 lg:py-4">
-        {record.isVerified ? (
-          <div className="flex flex-col items-center justify-center gap-1 text-emerald-500">
-            <CheckCircle2 className="h-5 w-5" />
-            <span className="text-sm font-bold">{t("esg_table.verified")}</span>
-          </div>
-        ) : (
-          <div className="flex justify-center">
-            <button
-              type="button"
-              aria-label={t("esg_table.manual_verify")}
-              onClick={handleVerifyClick}
-              className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm hover:bg-orange-600"
-            >
-              {t("esg_table.manual_verify")}
-            </button>
-          </div>
-        )}
-      </td>
-    </tr>
-  );
-};
 
 export default function EsgTableSection() {
+  const { t } = useTranslation();
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
+
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [intensityFilter, setIntensityFilter] = useState<string>("ALL");
   const [scopeFilter, setScopeFilter] = useState<string>("ALL");
@@ -217,7 +24,6 @@ export default function EsgTableSection() {
   const [recordCount, setRecordCount] = useState<number>(0);
   const [dateSort, setDateSort] = useState<"desc" | "asc">("desc");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { t } = useTranslation();
 
   const fetchRecords = useCallback(async () => {
     if (!accountBookId) return;
