@@ -88,9 +88,12 @@ export default function VoucherSummary() {
           <FileSpreadsheet size={24} />
         </div>
         <div className="flex flex-col px-2">
-          <p className="text-sm font-bold text-slate-700">{t("voucher.summary.today_count")}</p>
+          <p className="text-sm font-bold text-slate-700">
+            {t("voucher.summary.today_count")}
+          </p>
           <p className="text-lg font-bold text-black">
-            <span>{summaryData.todayVoucherCount}</span> {t("voucher.summary.unit")}
+            <span>{summaryData.todayVoucherCount}</span>{" "}
+            {t("voucher.summary.unit")}
           </p>
         </div>
       </div>
@@ -101,7 +104,9 @@ export default function VoucherSummary() {
           <CircleDollarSign size={24} />
         </div>
         <div className="flex flex-col px-2">
-          <p className="text-sm font-bold text-slate-700">{t("voucher.summary.month_total")}</p>
+          <p className="text-sm font-bold text-slate-700">
+            {t("voucher.summary.month_total")}
+          </p>
           <p className="text-lg font-bold text-black">
             $ <span>{numberWithCommas(summaryData.monthTotalAmount)}</span>
           </p>
@@ -114,9 +119,12 @@ export default function VoucherSummary() {
           <CircleAlert size={24} />
         </div>
         <div className="flex flex-col px-2">
-          <p className="text-sm font-bold text-slate-700">{t("voucher.summary.pending")}</p>
+          <p className="text-sm font-bold text-slate-700">
+            {t("voucher.summary.pending")}
+          </p>
           <p className="text-lg font-bold text-amber-500">
-            <span>{summaryData.pendingVoucherCount}</span> {t("voucher.summary.unit")}
+            <span>{summaryData.pendingVoucherCount}</span>{" "}
+            {t("voucher.summary.unit")}
           </p>
         </div>
       </div>
@@ -127,7 +135,9 @@ export default function VoucherSummary() {
           <Zap size={24} />
         </div>
         <div className="flex flex-col px-2">
-          <p className="text-sm font-bold text-slate-700">{t("voucher.summary.ai_confidence")}</p>
+          <p className="text-sm font-bold text-slate-700">
+            {t("voucher.summary.ai_confidence")}
+          </p>
           <p className="text-lg font-bold text-black">
             <span>{numberWithCommas(summaryData.aiAverageConfidence)}</span> %
           </p>

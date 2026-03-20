@@ -82,7 +82,11 @@ export async function GET(
       note: voucher.note ?? "",
       isDeleted: !!voucher.deletedAt,
       fileId: voucher.fileId ?? "",
-      //   file:voucher.file,
+      file: voucher.file ? {
+        id: voucher.file.id,
+        hash: voucher.file.hash,
+        fileName: voucher.file.fileName || "Unknown"
+      } : undefined,
       lineItems: {
         lines: lineItems,
         totalAmount: lineTotalAmount,

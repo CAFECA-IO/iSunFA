@@ -14,6 +14,9 @@ import * as IndustryDevelopmentPrompts from '@/constants/prompts/industry_develo
 import * as CarbonHealthCheckPrompts from '@/constants/prompts/carbon_health_check';
 import * as NetZeroEmissionsPrompts from '@/constants/prompts/net_zero_emissions';
 import { getPeriodDateRange } from '@/lib/analysis/period';
+import { JOURNAL_PROMPT } from '@/constants/prompts/journal';
+import { getVoucherPrompt } from '@/constants/prompts/voucher';
+import { ESG_PROMPT } from '@/constants/prompts/esg';
 
 export interface IMissionParams {
   category: string;
@@ -22,6 +25,10 @@ export interface IMissionParams {
   year: number;
   country?: string;
   keyword?: string;
+  fileId?: string; // Info: (20260320 - Julian) 用於 AI 分析日記帳、傳票和碳盤查
+  fileBase64?: string; // Info: (20260320 - Julian) 傳入檔案的 base64 字串
+  fileMimeType?: string; // Info: (20260320 - Julian) 傳入檔案的 mimeType
+  accountBookId?: string; 
   prerequisiteData?: Record<string, unknown>;
 }
 
@@ -257,6 +264,52 @@ export class MissionGenerator {
 
       return {
         name: `External Analysis - ${params.category} - ${params.periodValue}`,
+        tasks
+      };
+    }
+
+    // Info: (20260320 - Julian) AI 分析日記帳、傳票和碳盤查
+    if (params.category === 'document_parsing') {
+      const tasks: ITaskDefinition[] = [];
+      const context = JSON.stringify({
+        fileId: params.fileId,
+        fileBase64: params.fileBase64,
+        fileMimeType: params.fileMimeType,
+        accountBookId: params.accountBookId
+      });
+
+      tasks.push({
+        type: 'JOURNAL_PARSING',
+        order: 0,
+        data: {
+          key: 'JOURNAL',
+          prompt: JOURNAL_PROMPT,
+          context
+        }
+      });
+
+      tasks.push({
+        type: 'VOUCHER_PARSING',
+        order: 0,
+        data: {
+          key: 'VOUCHER',
+          prompt: getVoucherPrompt(params.accountBookId),
+          context
+        }
+      });
+
+      tasks.push({
+        type: 'ESG_PARSING',
+        order: 0,
+        data: {
+          key: 'ESG',
+          prompt: ESG_PROMPT,
+          context
+        }
+      });
+
+      return {
+        name: `Document Parsing - ${params.fileId}`,
         tasks
       };
     }

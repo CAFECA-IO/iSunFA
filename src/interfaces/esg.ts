@@ -71,8 +71,8 @@ export const mockDashboardSummary: IEsgDashboardSummary = {
 export interface IEsgRecord {
   id: string;
   dateTimestamp: number;
-   fileId:string;
-     file?: {
+  fileId: string;
+  file?: {
     id: string;
     hash: string;
     fileName: string;

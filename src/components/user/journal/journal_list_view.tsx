@@ -132,6 +132,35 @@ export default function JournalListView() {
     fetchJournals();
   }, [fetchJournals]);
 
+  // Info: (20260320 - Julian) 只針對未完成的日記帳進行個別狀態更新，減輕 DB 負擔
+  useEffect(() => {
+    const pendingJournals = journals.filter(
+      (j) =>
+        j.analysisStatus === "PENDING" || j.analysisStatus === "PROCESSING",
+    );
+
+    if (pendingJournals.length === 0) return;
+
+    const intervalId = setInterval(async () => {
+      for (const pj of pendingJournals) {
+        try {
+          const { payload } = await request<IApiResponse<{ journal: IJournal }>>(
+            `/api/v1/user/account_book/${accountBookId}/journal/${pj.id}`
+          );
+          if (payload?.journal) {
+            setJournals((prev) =>
+              prev.map((old) => (old.id === pj.id ? payload.journal : old))
+            );
+          }
+        } catch (error) {
+          console.error(`Failed to update status for journal ${pj.id}:`, error);
+        }
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [journals, accountBookId]);
+
   const displayLayout =
     displayType === "list" ? (
       <JournalListLayout
@@ -241,10 +270,11 @@ export default function JournalListView() {
             <button
               title={t("ocr.list_view") as string}
               type="button"
-              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${displayType === "list"
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
+                displayType === "list"
                   ? "bg-white text-orange-600 shadow-sm"
                   : "text-gray-400 hover:text-gray-600"
-                }`}
+              }`}
               onClick={() => setDisplayType("list")}
             >
               <ListIcon size={16} />
@@ -252,10 +282,11 @@ export default function JournalListView() {
             <button
               title={t("ocr.grid_view") as string}
               type="button"
-              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${displayType === "grid"
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
+                displayType === "grid"
                   ? "bg-white text-orange-600 shadow-sm"
                   : "text-gray-400 hover:text-gray-600"
-                }`}
+              }`}
               onClick={() => setDisplayType("grid")}
             >
               <LayoutGrid size={16} />

@@ -56,8 +56,6 @@ export async function POST(
       return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
     }
 
-    // ToDo: 建立分析 Esg 的 Mission 和 Task
-
     // Info: (20260312 - Julian) 建立空白 ESG 紀錄
     const newRecord = await prisma.esgRecord.create({
       data: {
@@ -159,10 +157,20 @@ export async function GET(
       ...(scope && { scope: scope as ClientEsgScope }),
     };
 
-    const esgRecords = await prisma.esgRecord.findMany({
+    const esgDbRecords = await prisma.esgRecord.findMany({
       where: whereClause,
+      include: { file: true },
       orderBy: { dateTimestamp: sort },
     });
+
+    const esgRecords = esgDbRecords.map((r) => ({
+      ...r,
+      file: r.file ? {
+        id: r.file.id,
+        hash: r.file.hash,
+        fileName: r.file.fileName || "Unknown"
+      } : undefined
+    }));
 
     return jsonOk({
       esgRecords,

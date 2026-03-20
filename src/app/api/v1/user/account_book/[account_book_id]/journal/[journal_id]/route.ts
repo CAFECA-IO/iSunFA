@@ -42,14 +42,24 @@ export async function GET(
       return jsonFail(ApiCode.VALIDATION_ERROR, "JournalId is required");
     }
 
-    const journal = await prisma.journal.findUnique({
+    const journalDbRecord = await prisma.journal.findUnique({
       where: { id: journalId },
+      include: { file: true },
     });
 
-    if (!journal) {
+    if (!journalDbRecord) {
       console.error("Journal not found");
       return jsonFail(ApiCode.NOT_FOUND, "Journal not found");
     }
+
+    const journal = {
+      ...journalDbRecord,
+      file: journalDbRecord.file ? {
+        id: journalDbRecord.file.id,
+        hash: journalDbRecord.file.hash,
+        fileName: journalDbRecord.file.fileName || "Unknown"
+      } : undefined
+    };
 
     return jsonOk({ journal });
   } catch (error) {
