@@ -89,38 +89,7 @@ export default function JournalUploadView({
           body: JSON.stringify({ file: uploadedFile }),
         },
       );
-      // const dataJournal = await request<IApiResponse<object>>(
-      //   `/api/v1/user/account_book/${accountBookId}/journal`,
-      //   {
-      //     method: "POST",
-      //     body: JSON.stringify({
-      //       fileId: uploadedFile,
-      //       // file: {
-      //       //   hash: uploadedFile.hash,
-      //       //   fileName: uploadedFile.file.name,
-      //       //   mimeType: uploadedFile.file.type,
-      //       //   base64: uploadedFile.base64,
-      //       // },
-      //     }),
-      //   },
-      // );
-
-      // const dataVoucher = await request<IApiResponse<object>>(
-      //   `/api/v1/user/account_book/${accountBookId}/voucher`,
-      //   {
-      //     method: "POST",
-      //     body: JSON.stringify({
-      //       fileId: uploadedFile.hash,
-      //       // file: {
-      //       //   hash: uploadedFile.hash,
-      //       //   fileName: uploadedFile.file.name,
-      //       //   mimeType: uploadedFile.file.type,
-      //       //   base64: uploadedFile.base64,
-      //       // },
-      //     }),
-      //   },
-      // );
-
+      
       if (data.code === ApiCode.SUCCESS) {
         onUploadComplete?.();
       }

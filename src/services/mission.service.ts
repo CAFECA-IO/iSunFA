@@ -2,7 +2,8 @@ import { prisma } from '@/lib/prisma';
 import { MISSION_STATUS } from '@/constants/status';
 import { taskRepo } from '@/repositories/task.repo';
 import { Prisma } from '@/generated/client';
-import { VoucherTradingType } from '@/generated/client';
+import { VoucherTradingType, AIAnalysisStatus } from '@/generated/client';
+import { IParsedVoucherLine } from '@/interfaces/voucher';
 
 export class MissionService {
   /**
@@ -48,52 +49,80 @@ export class MissionService {
       finalResult = lastOrderTasks.map(t => t.result) as unknown as Prisma.InputJsonValue;
     }
 
-    // Info: (20260130 - Luphia) 4. Update Mission
-    await taskRepo.completeMission(missionId, MISSION_STATUS.COMPLETED, finalResult);
+    // Info: (20260320 - Julian) 如果有失敗的任務，也把 Mission 標註為失敗
+    const isMissionFailed = lastOrderTasks.some(t => t.status === 'FAILED');
+    const finalMissionStatus = isMissionFailed ? 'FAILED' : MISSION_STATUS.COMPLETED;
 
-    // Info: (20260319 - Julian) 4.5. 處理日記帳、傳票
+    // Info: (20260130 - Luphia) 4. Update Mission
+    await taskRepo.completeMission(missionId, finalMissionStatus, finalResult);
+
+    // Info: (20260319 - Julian) 4.5. 處理日記帳、傳票、碳盤查
     const journalTask = tasks.find(t => t.type === 'JOURNAL_PARSING');
     const voucherTask = tasks.find(t => t.type === 'VOUCHER_PARSING');
+    const esgTask = tasks.find(t => t.type === 'ESG_PARSING');
 
-    if (journalTask || voucherTask) {
+    if (journalTask || voucherTask || esgTask) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const taskData = (journalTask?.data || voucherTask?.data) as any;
+        const taskData = (journalTask?.data || voucherTask?.data || esgTask?.data) as any;
         const context = JSON.parse(taskData?.context || '{}');
         const fileId = context.fileId;
         const accountBookId = context.accountBookId;
 
         if (fileId && accountBookId) {
           await prisma.$transaction(async (tx) => {
-            if (journalTask && journalTask.result && typeof journalTask.result === 'string') {
-              await tx.journal.create({
-                data: {
-                  text: journalTask.result,
-                  fileId,
-                  accountBookId,
-                  analysisStatus: 'COMPLETED'
-                }
-              });
+            if (journalTask) {
+              const jStatus = journalTask.status.toUpperCase() === 'FAILED' ? 'FAILED' : 'COMPLETED';
+              const textResult = typeof journalTask.result === 'string' ? journalTask.result : '';
+              const existingJournal = await tx.journal.findFirst({ where: { fileId, accountBookId } });
+              
+              // Info: (20260320 - Julian) 更新或建立日記帳
+              if (existingJournal) {
+                await tx.journal.update({
+                  where: { id: existingJournal.id },
+                  data: {
+                    text: textResult,
+                    analysisStatus: jStatus as AIAnalysisStatus
+                  }
+                });
+              } else {
+                await tx.journal.create({
+                  data: {
+                    text: textResult,
+                    fileId,
+                    accountBookId,
+                    analysisStatus: jStatus as AIAnalysisStatus
+                  }
+                });
+              }
             }
 
-            if (voucherTask && voucherTask.result && typeof voucherTask.result === 'string') {
-              try {
-                const parsed = JSON.parse(voucherTask.result);
-                // In task.service.ts we used JSON.stringify(res) which is { data: IParsedVoucher }
-                if (parsed && typeof parsed === 'object') {
-                  // Wait, analyzeVoucher returns { data: IParsedVoucher | null, error?: string }
-                  // The data property inside parsed is our actual result
-                  const vd = parsed.data || parsed;
-                  const tradingDate = new Date(vd.tradingDate || new Date());
-                  const typeMap: Record<string, VoucherTradingType> = {
-                    'income': 'INCOME',
-                    'outcome': 'OUTCOME',
-                    'transfer': 'TRANSFER'
-                  };
-                  const trType = typeMap[String(vd.tradingType).toLowerCase()] || 'INCOME';
+            // Info: (20260320 - Julian) 更新或建立傳票
+            if (voucherTask) {
+              const vStatus = voucherTask.status.toUpperCase() === 'FAILED' ? 'FAILED' : 'COMPLETED';
+              const existingVoucher = await tx.voucher.findFirst({ where: { fileId, accountBookId } });
 
-                  await tx.voucher.create({
-                    data: {
+              if (vStatus === 'FAILED') {
+                if (existingVoucher) {
+                  await tx.voucher.update({
+                    where: { id: existingVoucher.id },
+                    data: { analysisStatus: 'FAILED' as AIAnalysisStatus }
+                  });
+                }
+              } else if (voucherTask.result && typeof voucherTask.result === 'string') {
+                try {
+                  const parsed = JSON.parse(voucherTask.result);
+                  if (parsed && typeof parsed === 'object') {
+                    const vd = parsed.data || parsed;
+                    const tradingDate = new Date(vd.tradingDate || new Date());
+                    const typeMap: Record<string, VoucherTradingType> = {
+                      'income': 'INCOME',
+                      'outcome': 'OUTCOME',
+                      'transfer': 'TRANSFER'
+                    };
+                    const trType = typeMap[String(vd.tradingType).toLowerCase()] || 'INCOME';
+
+                    const dataPayload: Prisma.VoucherUncheckedCreateInput = {
                       tradingDate,
                       tradingType: trType as VoucherTradingType,
                       note: vd.note || null,
@@ -101,21 +130,87 @@ export class MissionService {
                       fileId,
                       accountBookId,
                       confidence: vd.confidence || 0,
-                      analysisStatus: 'COMPLETED',
+                      analysisStatus: 'COMPLETED' as AIAnalysisStatus,
                       lines: {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        create: (vd.lines || []).map((l: any) => ({
+                        create: (vd.lines || []).map((l: IParsedVoucherLine) => ({
                           accountingCode: l.accountingCode || '',
                           particular: l.particular || null,
                           amount: l.amount || 0,
                           isDebit: l.isDebit === true
                         }))
                       }
+                    };
+
+                    if (existingVoucher) {
+                      await tx.voucher.update({
+                        where: { id: existingVoucher.id },
+                        data: {
+                          ...dataPayload,
+                          lines: {
+                            deleteMany: {}, // Info: (20260320 - Julian) 清除舊的傳票項目
+                            create: (vd.lines || []).map((l: IParsedVoucherLine) => ({
+                              accountingCode: l.accountingCode || '',
+                              particular: l.particular || null,
+                              amount: l.amount || 0,
+                              isDebit: l.isDebit === true
+                            }))
+                          }
+                        }
+                      });
+                    } else {
+                      await tx.voucher.create({ data: dataPayload });
                     }
+                  }
+                } catch (e) {
+                  console.error('[MissionService] Failed to parse voucher result', e);
+                }
+              }
+            }
+
+            // Info: (20260320 - Julian) 更新或建立碳盤查
+            if (esgTask) {
+              const eStatus = esgTask.status.toUpperCase() === 'FAILED' ? 'FAILED' : 'COMPLETED';
+              const existingEsg = await tx.esgRecord.findFirst({ where: { fileId, accountBookId } });
+
+              if (eStatus === 'FAILED') {
+                if (existingEsg) {
+                  await tx.esgRecord.update({
+                    where: { id: existingEsg.id },
+                    data: { analysisStatus: 'FAILED' as AIAnalysisStatus }
                   });
                 }
-              } catch (e) {
-                console.error('[MissionService] Failed to parse voucher result', e);
+              } else if (esgTask.result && typeof esgTask.result === 'string') {
+                try {
+                  const match = esgTask.result.match(/\{[\s\S]*\}/);
+                  if (match) {
+                    const ed = JSON.parse(match[0]);
+                    const esgData: Prisma.EsgRecordUncheckedCreateInput = {
+                      accountBookId,
+                      fileId,
+                      dateTimestamp: ed.dateTimestamp || Math.floor(Date.now() / 1000),
+                      scope: ed.scope || 'SCOPE_1',
+                      activityType: ed.activityType || '',
+                      vendor: ed.vendor || '',
+                      rawActivityData: ed.rawActivityData || '',
+                      unit: ed.unit || '',
+                      emissions: ed.emissions || 0,
+                      intensity: ed.intensity || 'LOW',
+                      confidence: ed.confidence || 0,
+                      analysisStatus: 'COMPLETED' as AIAnalysisStatus
+                    };
+
+                    if (existingEsg) {
+                      await tx.esgRecord.update({
+                        where: { id: existingEsg.id },
+                        data: esgData
+                      });
+                    } else {
+                      await tx.esgRecord.create({ data: esgData });
+                    }
+                  }
+                } catch (e) {
+                  console.error('[MissionService] Failed to parse ESG result', e);
+                }
               }
             }
           });

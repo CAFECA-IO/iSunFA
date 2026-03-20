@@ -3,6 +3,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { missionGenerator } from "@/lib/worker/mission.generator";
 
 /**
  * Info: (20260318 - Julian) AI 分析：生成日記帳、傳票、碳排查
@@ -153,6 +154,36 @@ export async function POST(
         },
       ],
     });
+
+    // Info: (20260320 - Julian) 觸發 Mission Generator 寫入任務
+    const missionDef = missionGenerator.generateMission({
+      category: 'document_parsing',
+      periodType: 'N/A', // Info: (20260320 - Julian) 憑證解析可不用
+      periodValue: 'N/A',
+      year: new Date().getFullYear(),
+      fileId: uploadedFile.id,
+      fileHash: file.hash,
+      fileName: file.name,
+      accountBookId: accountBook.id,
+    });
+
+    if (missionDef) {
+      await prisma.mission.create({
+        data: {
+          userId: creator.id,
+          name: missionDef.name,
+          status: 'PENDING',
+          tasks: {
+            create: missionDef.tasks.map(task => ({
+              type: task.type,
+              order: task.order,
+              data: task.data,
+              status: 'PENDING'
+            }))
+          }
+        }
+      });
+    }
 
     return jsonOk({
       journalId: newJournal.id,

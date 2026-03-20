@@ -3,7 +3,6 @@ import { ChatService } from '@/services/chat.service';
 import { TASK_STATUS } from '@/constants/status';
 import { missionService } from '@/services/mission.service';
 import { Task, Mission } from '@/generated/client';
-import { prisma } from '@/lib/prisma'; // Info: (20260319 - Assistant) For fetching File record
 
 interface ITaskData {
   key: string;
@@ -61,26 +60,27 @@ export class TaskService {
     // Info: (20260130 - Luphia) Mark as RUNNING
     await taskRepo.updateStatus(task.id, TASK_STATUS.RUNNING);
 
-    // Info: (20260130 - Luphia) 2. Prepare Context
-    // Info: (20260310 - Tzuhan) Pass mission object to buildTaskPrompt instead of just missionId
-    const fullPrompt = await this.buildTaskPrompt(task, mission);
+    try {
+      // Info: (20260130 - Luphia) 2. Prepare Context
+      // Info: (20260310 - Tzuhan) Pass mission object to buildTaskPrompt instead of just missionId
+      const fullPrompt = await this.buildTaskPrompt(task, mission);
 
-    // Info: (20260130 - Luphia) 3. Execute
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('Missing GEMINI_API_KEY');
-    }
-    const chatService = new ChatService(apiKey);
+      // Info: (20260130 - Luphia) 3. Execute
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error('Missing GEMINI_API_KEY');
+      }
+      const chatService = new ChatService(apiKey);
 
-    // Info: (20260130 - Luphia) Execution
-    console.log(`[TaskService] Executing LLM for Task ${task.id}...`);
+      // Info: (20260130 - Luphia) Execution
+      console.log(`[TaskService] Executing LLM for Task ${task.id}...`);
     console.log(`[TaskService] Full Prompt: ${fullPrompt}`);
     let result = "";
 
-    // Info: (20260319 - Julian) 處理日記帳、傳票
-    if (task.type === 'JOURNAL_PARSING' || task.type === 'VOUCHER_PARSING') {
+    // Info: (20260320 - Julian) 處理文件解析任務
+    if (task.type === 'JOURNAL_PARSING' || task.type === 'VOUCHER_PARSING' || task.type === 'ESG_PARSING') {
       const taskData = task.data as unknown as ITaskData;
-      let parsedContext: { fileId?: string } = {};
+      let parsedContext: {fileHash: string, fileName: string} = {fileHash: '', fileName: ''};
       try {
         if (taskData.context) {
           parsedContext = JSON.parse(taskData.context);
@@ -89,31 +89,31 @@ export class TaskService {
         console.warn('[TaskService] Could not parse task context for Document Parsing', e);
       }
 
-      if (parsedContext.fileId) {
-        const fileRecord = await prisma.file.findUnique({ where: { id: parsedContext.fileId } });
-        if (!fileRecord) {
-          throw new Error(`File not found: ${parsedContext.fileId}`);
-        }
-
+      if (parsedContext.fileHash) {
+        const fileHash = parsedContext.fileHash;
+        const fileName = parsedContext.fileName || '';
+        
         const domain = process.env.STORAGE_DOMAIN?.replace(/\/$/, '') || '';
-        const fileRes = await fetch(`${domain}/api/v1/file/${fileRecord.hash}`);
+        const fileRes = await fetch(`${domain}/api/v1/file/${fileHash}`);
         if (!fileRes.ok) {
-          throw new Error(`Failed to fetch file ${fileRecord.hash} from storage`);
+          throw new Error(`Failed to fetch file ${fileHash} from storage`);
         }
         const buffer = Buffer.from(await fileRes.arrayBuffer());
-        const mimeType = fileRecord.fileName?.match(/\.pdf$/i) ? 'application/pdf' : 'image/jpeg';
+        const mimeType = fileName.match(/\.pdf$/i) ? 'application/pdf' : 'image/jpeg';
         const images = [{ data: buffer.toString('base64'), mimeType }];
 
         if (task.type === 'JOURNAL_PARSING') {
           const res = await chatService.analyzeJournal(images);
           result = res.text;
-        } else {
-          // VOUCHER_PARSING
-          const res = await chatService.analyzeVoucher(images, 'TW'); // Assuming TW
+        } else if (task.type === 'VOUCHER_PARSING') {
+          const res = await chatService.analyzeVoucher(images, 'TW');
           result = JSON.stringify(res);
+        } else if (task.type === 'ESG_PARSING') {
+          // Info: (20260320 - Julian) 傳送圖片與提示詞
+          result = await chatService.generateResponse(fullPrompt, [], images[0].data, images[0].mimeType);
         }
       } else {
-        throw new Error('No fileId provided for document parsing task');
+        throw new Error('No fileHash provided for document parsing task');
       }
     } else if (task.type === 'MARKET_EVENT_COLLECTION') {
       const taskData = task.data as unknown as ITaskData;
@@ -140,12 +140,19 @@ export class TaskService {
       result = await chatService.generateRaw(fullPrompt);
     }
 
-    /**
-     * Info: (20260130 - Luphia) 4. Save
-     * Save raw string result directly? Or wrap in object? AnalysisService uses JSON. Let's start with raw, or { content: result }?
-     */
-    await taskRepo.updateStatus(task.id, TASK_STATUS.COMPLETED, result);
-    console.log(`[TaskService] Task ${task.id} Completed.`);
+      /**
+       * Info: (20260130 - Luphia) 4. Save
+       * Save raw string result directly? Or wrap in object? AnalysisService uses JSON. Let's start with raw, or { content: result }?
+       */
+      await taskRepo.updateStatus(task.id, TASK_STATUS.COMPLETED, result);
+      console.log(`[TaskService] Task ${task.id} Completed.`);
+      
+    } catch (error) {
+      // Info: (20260320 - Julian) 處理任務失敗
+      console.error(`[TaskService] Execution failed for Task ${task.id}:`, error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      await taskRepo.updateStatus(task.id, TASK_STATUS.FAILED, errorMsg);
+    }
 
     // Info: (20260130 - Luphia) 5. Check Mission Completion
     await missionService.tryCompleteMission(mission.id);

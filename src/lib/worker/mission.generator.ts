@@ -14,6 +14,7 @@ import * as IndustryDevelopmentPrompts from '@/constants/prompts/industry_develo
 import { getPeriodDateRange } from '@/lib/analysis/period';
 import { JOURNAL_PROMPT } from '@/constants/prompts/journal';
 import { getVoucherPrompt } from '@/constants/prompts/voucher';
+import { ESG_PROMPT } from '@/constants/prompts/esg';
 
 export interface IMissionParams {
   category: string;
@@ -22,8 +23,10 @@ export interface IMissionParams {
   year: number;
   country?: string;
   keyword?: string;
-  fileId?: string; // Info: (20260319 - Assistant) For Document Parsing
-  accountBookId?: string; // Info: (20260319 - Assistant) For Document Parsing
+  fileId?: string; // Info: (20260320 - Julian) 用於 AI 分析日記帳、傳票和碳盤查
+  fileHash?: string; // Info: (20260320 - Julian) 用於讀取檔案
+  fileName?: string; 
+  accountBookId?: string; 
 }
 
 export interface IMissionDefinition {
@@ -170,11 +173,13 @@ export class MissionGenerator {
       };
     }
 
+    // Info: (20260320 - Julian) AI 分析日記帳、傳票和碳盤查
     if (params.category === 'document_parsing') {
-      // const taskGenerator = new TaskGenerator();
       const tasks: ITaskDefinition[] = [];
       const context = JSON.stringify({
         fileId: params.fileId,
+        fileHash: params.fileHash,
+        fileName: params.fileName,
         accountBookId: params.accountBookId
       });
 
@@ -190,10 +195,20 @@ export class MissionGenerator {
 
       tasks.push({
         type: 'VOUCHER_PARSING',
-        order: 0,
+        order: 1,
         data: {
           key: 'VOUCHER',
           prompt: getVoucherPrompt(params.accountBookId),
+          context
+        }
+      });
+
+      tasks.push({
+        type: 'ESG_PARSING',
+        order: 2,
+        data: {
+          key: 'ESG',
+          prompt: ESG_PROMPT,
           context
         }
       });
