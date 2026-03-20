@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   FileQuestion,
   Loader2,
+  CircleAlert,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { timestampToString, numberWithCommas } from "@/lib/utils/common";
@@ -24,16 +25,7 @@ export function VoucherRow({
   const { t } = useTranslation();
   const lineItems = voucher.lineItems.lines;
 
-  const getMockConfidence = (id: string) => {
-    let sum = 0;
-    for (let i = 0; i < id.length; i++) {
-      sum += id.charCodeAt(i);
-    }
-    return (sum % 15) + 85;
-  };
-  const mockConfidence = getMockConfidence(voucher.id);
-  const mockStatus =
-    parseInt(voucher.id.slice(-1), 16) % 2 === 0 ? "verified" : "manual";
+  const isAnalysisFailed = voucher.analysisStatus === AIAnalysisStatus.FAILED;
 
   const renderIcon = (type: TradingType) => {
     switch (type) {
@@ -171,11 +163,12 @@ export function VoucherRow({
 
   return (
     <tr
-      className={`border-b border-slate-300 bg-white text-sm transition-colors last:border-0 ${voucher.isDeleted ? "opacity-50" : ""}`}
+      className={`border-b border-slate-300 text-sm transition-colors last:border-0 ${isAnalysisFailed ? "bg-red-200" : "bg-white"} ${voucher.isDeleted ? "opacity-50" : ""}`}
     >
       {/* Info: (20260316 - Julian) File */}
       <td className="p-2 text-center lg:px-6 lg:py-4">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
+        <div className="relative mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
+          {/* Info: (20260320 - Julian) File Preview */}
           {voucher.file ? (
             <FilePreview
               file={{ filename: voucher.file.fileName || "Unknown" }}
@@ -188,6 +181,12 @@ export function VoucherRow({
               <span className="text-[10px] leading-none font-bold text-slate-400">
                 {t("voucher.main_view.table.no_file")}
               </span>
+            </div>
+          )}
+          {/* Info: (20260320 - Julian) Failed Icon */}
+          {isAnalysisFailed && (
+            <div className="absolute top-0 left-0 z-10 flex size-full items-center justify-center bg-red-100/50 p-1">
+              <CircleAlert size={24} className="text-red-500" />
             </div>
           )}
         </div>
@@ -290,12 +289,12 @@ export function VoucherRow({
         <div className="flex flex-col-reverse items-center justify-center gap-x-3 gap-y-1 lg:flex-row">
           <div className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-slate-200">
             <div
-              className={`h-full rounded-full ${mockConfidence >= 90 ? "bg-emerald-400" : "bg-orange-500"}`}
-              style={{ width: `${mockConfidence}%` }}
+              className={`h-full rounded-full ${voucher.confidence >= 80 ? "bg-emerald-400" : "bg-orange-500"}`}
+              style={{ width: `${voucher.confidence}%` }}
             ></div>
           </div>
           <span className="text-sm font-black whitespace-nowrap text-slate-700">
-            {mockConfidence}%
+            {voucher.confidence}%
           </span>
         </div>
       </td>
@@ -304,7 +303,7 @@ export function VoucherRow({
         aria-label="Status"
         className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
-        {mockStatus === "verified" ? (
+        {voucher.isVerified ? (
           <div className="flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 className="h-5 w-5" />
             <span className="text-xs font-bold whitespace-nowrap">

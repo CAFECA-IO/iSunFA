@@ -89,7 +89,7 @@ export default function JournalUploadView({
           body: JSON.stringify({ file: uploadedFile }),
         },
       );
-      
+
       if (data.code === ApiCode.SUCCESS) {
         onUploadComplete?.();
       }

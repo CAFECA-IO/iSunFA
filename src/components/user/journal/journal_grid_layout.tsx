@@ -1,6 +1,6 @@
 "use client";
 
-import { TrashIcon, Loader2 } from "lucide-react";
+import { TrashIcon, Loader2, CircleAlert } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import { IJournal } from "@/interfaces/journal";
@@ -16,6 +16,8 @@ const JournalGridItem = ({
   onDelete: (j: IJournal) => void;
 }) => {
   const { t } = useTranslation();
+
+  const isAnalysisFailed = journal.analysisStatus === AIAnalysisStatus.FAILED;
 
   // Info: (20260320 - Julian) 尚未開始
   if (journal.analysisStatus === AIAnalysisStatus.PENDING) {
@@ -81,10 +83,11 @@ const JournalGridItem = ({
   return (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
     <div
-      className="relative flex size-72 flex-col items-center justify-center gap-2 justify-self-center overflow-hidden rounded-lg border border-gray-300 bg-gray-100 p-2 hover:cursor-pointer hover:bg-orange-100"
+      className={`relative flex size-72 flex-col items-center justify-center gap-2 justify-self-center overflow-hidden rounded-lg border border-gray-300 p-2 hover:cursor-pointer ${isAnalysisFailed ? "bg-red-200 hover:bg-red-300" : "bg-gray-100 hover:bg-orange-100"}`}
       onClick={() => onSelect(journal)}
     >
-      <div className="absolute top-2 right-2 flex items-center gap-2">
+      {/* Info: (20260320 - Julian) Delete Button */}
+      <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
         <button
           type="button"
           onClick={(e) => {
@@ -96,7 +99,8 @@ const JournalGridItem = ({
           <TrashIcon size={24} />
         </button>
       </div>
-      <div className="size-[250px] shrink-0">
+      {/* Info: (20260320 - Julian) File Preview */}
+      <div className="relative size-[250px] shrink-0">
         {journal.file?.hash ? (
           <FilePreview
             file={{ filename: journal.file.fileName || "Unknown" }}
@@ -106,7 +110,14 @@ const JournalGridItem = ({
         ) : (
           <span className="text-xs text-gray-400">{t("ocr.no_image")}</span>
         )}
+        {/* Info: (20260320 - Julian) Failed Icon */}
+        {isAnalysisFailed && (
+          <div className="absolute top-0 left-0 z-10 flex size-full items-center justify-center bg-red-100/50 p-1">
+            <CircleAlert size={24} className="text-red-500" />
+          </div>
+        )}
       </div>
+      {/* Info: (20260320 - Julian) Trading Date */}
       <p className="text-xs text-slate-700">
         {new Date(journal.createdAt).toLocaleString()}
       </p>

@@ -7,6 +7,7 @@ import {
   Cloud,
   FileQuestion,
   Loader2,
+  CircleAlert,
 } from "lucide-react";
 import { timestampToString } from "@/lib/utils/common";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
@@ -22,6 +23,8 @@ export function EsgRow({
   onVerifyClick: (record: IEsgRecord) => void;
 }) {
   const { t } = useTranslation();
+
+  const isAnalysisFailed = record.analysisStatus === AIAnalysisStatus.FAILED;
 
   const handleVerifyClick = () => {
     onVerifyClick(record);
@@ -156,9 +159,10 @@ export function EsgRow({
   }
 
   return (
-    <tr>
+    <tr className={isAnalysisFailed ? "bg-red-200" : "bg-white"}>
+      {/* Info: (20260320 - Julian) File */}
       <td className="p-2 lg:px-6 lg:py-4">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
+        <div className="relative mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
           {/* Info: (20260312 - Julian) File Preview */}
           {record.file ? (
             <FilePreview
@@ -171,11 +175,19 @@ export function EsgRow({
               <FileQuestion className="h-6 w-6 text-slate-300" />
             </div>
           )}
+          {/* Info: (20260320 - Julian) Failed Icon */}
+          {isAnalysisFailed && (
+            <div className="absolute top-0 left-0 z-10 flex size-full items-center justify-center bg-red-100/50 p-1">
+              <CircleAlert size={24} className="text-red-500" />
+            </div>
+          )}
         </div>
       </td>
+      {/* Info: (20260320 - Julian) Date */}
       <td className="p-2 text-center text-xs font-bold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4 lg:text-sm">
         {timestampToString(record.dateTimestamp).dateWithDash}
       </td>
+      {/* Info: (20260320 - Julian) Activity Type */}
       <td className="p-2 lg:px-6 lg:py-4">
         <div className="mb-1 flex items-center text-xs font-bold text-slate-800 lg:text-sm">
           <div className="shrink-0">{renderScope(record.scope).icon}</div>
@@ -185,15 +197,18 @@ export function EsgRow({
           {record.vendor}
         </div>
       </td>
+      {/* Info: (20260320 - Julian) Activity Data */}
       <td className="p-2 text-center whitespace-nowrap lg:px-6 lg:py-4">
         <span className="text-[15px] font-bold text-slate-800">
           {record.rawActivityData}{" "}
         </span>
         <span className="text-xs font-bold text-slate-500">{record.unit}</span>
       </td>
+      {/* Info: (20260320 - Julian) Emissions */}
       <td className="p-2 text-center text-[15px] font-bold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4">
         {record.emissions}
       </td>
+      {/* Info: (20260320 - Julian) Intensity */}
       <td className="p-2 text-center lg:px-6 lg:py-4">
         <span
           className={`inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-bold whitespace-nowrap transition-colors ${renderIntensity(record.intensity).style}`}
@@ -201,7 +216,11 @@ export function EsgRow({
           {renderIntensity(record.intensity).text}
         </span>
       </td>
-      <td aria-label="準確度" className="p-2 text-center lg:px-6 lg:py-4">
+      {/* Info: (20260320 - Julian) Confidence */}
+      <td
+        aria-label="AI Confidence"
+        className="p-2 text-center lg:px-6 lg:py-4"
+      >
         <div className="flex items-center justify-center gap-3">
           <div className="h-2 w-24 shrink-0 overflow-hidden rounded-full bg-slate-200">
             <div
@@ -214,6 +233,7 @@ export function EsgRow({
           </span>
         </div>
       </td>
+      {/* Info: (20260320 - Julian) Verified */}
       <td className="p-2 text-center lg:px-6 lg:py-4">
         {record.isVerified ? (
           <div className="flex flex-col items-center justify-center gap-1 text-emerald-500">
