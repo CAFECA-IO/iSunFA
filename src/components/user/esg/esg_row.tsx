@@ -115,7 +115,44 @@ export function EsgRow({
 
   // Info: (20260320 - Julian) 處理中
   if (record.analysisStatus === AIAnalysisStatus.PROCESSING) {
-    return <tr></tr>;
+    return (
+      <tr className="border-b border-blue-200 bg-blue-50 text-sm opacity-90 transition-colors last:border-0">
+        <td className="p-2 lg:px-6 lg:py-4">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
+            <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+          </div>
+        </td>
+        <td className="p-2 text-center text-xs font-bold whitespace-nowrap text-blue-400 lg:px-6 lg:py-4 lg:text-sm">
+          {timestampToString(record.dateTimestamp).dateWithDash}
+        </td>
+        <td
+          aria-label="AI Processing"
+          colSpan={5}
+          className="p-2 text-center align-middle lg:px-6 lg:py-4"
+        >
+          <div className="mx-auto flex max-w-sm flex-col items-center justify-center gap-2">
+            <span className="flex items-center justify-center gap-2 text-sm font-bold text-blue-600 italic">
+              <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+              AI Processing...
+            </span>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
+              <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
+            </div>
+          </div>
+        </td>
+        <td aria-label="Status" className="p-2 text-center lg:px-6 lg:py-4">
+          <div className="flex justify-center">
+            <button
+              type="button"
+              disabled
+              className="inline-flex cursor-not-allowed items-center justify-center rounded-xl bg-blue-200 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-blue-500 shadow-sm"
+            >
+              Processing
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
   }
 
   return (

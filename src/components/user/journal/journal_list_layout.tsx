@@ -64,7 +64,42 @@ const JournalListItem = ({
 
   // Info: (20260320 - Julian) 處理中
   if (journal.analysisStatus === AIAnalysisStatus.PROCESSING) {
-    return <tr></tr>;
+    return (
+      <tr className="border-b border-blue-200 bg-blue-50 text-blue-500 opacity-90 last:border-0">
+        <td className="w-16 px-3 py-2 align-middle sm:w-32 sm:px-6">
+          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 sm:h-20 sm:w-20">
+            <Loader2 className="h-4 w-4 animate-spin text-blue-500 sm:h-6 sm:w-6" />
+          </div>
+        </td>
+        <td className="w-1/4 px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
+          {dateStrForDesktop}
+          {dateStrForMobile}
+        </td>
+        <td
+          aria-label="AI Processing"
+          className="px-3 py-2 align-middle text-xs sm:px-6 sm:text-sm"
+        >
+          <div className="max-w-sm flex-col gap-2">
+            <span className="mb-2 flex items-center gap-2 font-bold italic">
+              <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+              AI Processing...
+            </span>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
+              <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
+            </div>
+          </div>
+        </td>
+        <td className="w-12 px-3 py-2 text-right sm:px-6">
+          <button
+            type="button"
+            disabled
+            className="relative cursor-not-allowed rounded-md p-1 text-blue-300 opacity-50 sm:p-1"
+          >
+            <TrashIcon size={20} />
+          </button>
+        </td>
+      </tr>
+    );
   }
 
   return (
