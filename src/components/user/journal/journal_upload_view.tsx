@@ -65,6 +65,7 @@ export default function JournalUploadView({
         file:{
           ...file,
           name: file.name,
+          type: file.type,
         },
         previewUrl: file.type.startsWith("image/")
           ? URL.createObjectURL(file)

@@ -12,5 +12,4 @@ export const ESG_PROMPT = `
       intensity: "HIGH" | "MEDIUM" | "LOW"; // 排放強度
       confidence: 85; // AI 分析的信心度 (數字)
   }
-  若無法解析，請回傳 null
 `;

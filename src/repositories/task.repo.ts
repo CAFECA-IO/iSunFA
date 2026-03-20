@@ -80,7 +80,7 @@ export class TaskRepository implements ITaskRepository {
         // Info: (20260130 - Luphia) Safety check: Are all tasks from previous order completed?
         if (order > 0) {
           const prevTasks = tasksByOrder.get(order - 1) || [];
-          const prevCompleted = prevTasks.every(t => t.status === TASK_STATUS.COMPLETED || t.status === TASK_STATUS.SKIPPED);
+          const prevCompleted = prevTasks.every(t => t.status === TASK_STATUS.COMPLETED || t.status === TASK_STATUS.SKIPPED || t.status === TASK_STATUS.FAILED);
           if (!prevCompleted) {
             /**
              * Info: (20260130 - Luphia)

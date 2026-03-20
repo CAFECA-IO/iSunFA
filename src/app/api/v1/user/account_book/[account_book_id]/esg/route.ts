@@ -159,10 +159,20 @@ export async function GET(
       ...(scope && { scope: scope as ClientEsgScope }),
     };
 
-    const esgRecords = await prisma.esgRecord.findMany({
+    const esgDbRecords = await prisma.esgRecord.findMany({
       where: whereClause,
+      include: { file: true },
       orderBy: { dateTimestamp: sort },
     });
+
+    const esgRecords = esgDbRecords.map((r) => ({
+      ...r,
+      file: r.file ? {
+        id: r.file.id,
+        hash: r.file.hash,
+        fileName: r.file.fileName || "Unknown"
+      } : undefined
+    }));
 
     return jsonOk({
       esgRecords,

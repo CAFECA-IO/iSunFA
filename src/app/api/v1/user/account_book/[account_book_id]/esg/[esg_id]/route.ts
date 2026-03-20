@@ -53,6 +53,7 @@ export async function GET(
     // Info: (20260312 - Julian) 取得 ESG 紀錄
     const esgRecord = await prisma.esgRecord.findUnique({
       where: { id: esgId },
+      include: { file: true },
     });
 
     if (!esgRecord) {
@@ -64,6 +65,11 @@ export async function GET(
       id: esgRecord.id,
       dateTimestamp: esgRecord.dateTimestamp,
       fileId: esgRecord.fileId ?? "",
+      file: esgRecord.file ? {
+        id: esgRecord.file.id,
+        hash: esgRecord.file.hash,
+        fileName: esgRecord.file.fileName || "Unknown"
+      } : undefined,
       scope: esgRecord.scope as unknown as ClientEsgScope,
       activityType: esgRecord.activityType,
       vendor: esgRecord.vendor,

@@ -290,6 +290,11 @@ export async function GET(
         note: v.note ?? "",
         isDeleted: !!v.deletedAt,
         fileId: v.fileId ?? "",
+        file: v.file ? {
+          id: v.file.id,
+          hash: v.file.hash,
+          fileName: v.file.fileName || "Unknown"
+        } : undefined,
         lineItems: {
           lines: voucherLineItems,
           totalAmount: totalAmount,

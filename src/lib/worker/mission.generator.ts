@@ -195,7 +195,7 @@ export class MissionGenerator {
 
       tasks.push({
         type: 'VOUCHER_PARSING',
-        order: 1,
+        order: 0,
         data: {
           key: 'VOUCHER',
           prompt: getVoucherPrompt(params.accountBookId),
@@ -205,7 +205,7 @@ export class MissionGenerator {
 
       tasks.push({
         type: 'ESG_PARSING',
-        order: 2,
+        order: 0,
         data: {
           key: 'ESG',
           prompt: ESG_PROMPT,

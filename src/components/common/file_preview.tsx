@@ -78,10 +78,11 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
           if (isCancelled) return;
           if (filename) {
             setMeta(prev => {
-              if (!prev.filename || prev.filename === fileId) {
+              if (!prev.filename || prev.filename === fileId || prev.filename === "Unknown") {
                 return { ...prev, filename, mimeType: blob.type };
               }
-              return prev;
+              // Info: (20260320 - Assistant) Even if filename exists, always preserve the correct mimeType
+              return { ...prev, mimeType: blob.type };
             });
           }
 
@@ -179,7 +180,7 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
     }
 
     const ext = getExtension(meta.filename);
-    const supported = ['png', 'jpg', 'jpeg', 'mp4', 'mov', 'mp3', 'm3u8', 'pdf'].includes(ext);
+    const supported = ['png', 'jpg', 'jpeg', 'mp4', 'mov', 'mp3', 'm3u8', 'pdf'].includes(ext) || !!meta.mimeType;
     if (supported && loadPreview) {
       return (
         <button
@@ -201,8 +202,12 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
   }
 
   const preventContext = (e: React.MouseEvent) => e.preventDefault();
+  const isImg = isImage(meta.filename) || meta.mimeType?.startsWith('image/');
+  const isVid = isVideo(meta.filename) || meta.mimeType?.startsWith('video/');
+  const isAud = isAudio(meta.filename) || meta.mimeType?.startsWith('audio/');
+  const isPDF = isPdf(meta.filename) || meta.mimeType === 'application/pdf';
 
-  if (isImage(meta.filename)) {
+  if (isImg) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
@@ -213,7 +218,7 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
       />
     );
   }
-  if (isVideo(meta.filename)) {
+  if (isVid) {
     return (
       // eslint-disable-next-line jsx-a11y/media-has-caption
       <video
@@ -226,7 +231,7 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
       />
     );
   }
-  if (isAudio(meta.filename)) {
+  if (isAud) {
     return (
       // eslint-disable-next-line jsx-a11y/media-has-caption
       <audio
@@ -239,7 +244,7 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
       />
     );
   }
-  if (isPdf(meta.filename)) {
+  if (isPDF) {
     return (
       <iframe
         src={`${previewUrl}#toolbar=0`}
