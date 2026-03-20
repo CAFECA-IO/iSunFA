@@ -63,22 +63,34 @@ export default function EsgTableSection() {
     return () => clearTimeout(timer);
   }, [fetchRecords]);
 
-  // Info: (20260320 - Assistant) 若目前列表有 PENDING 或 PROCESSING 的狀態，開啟輪詢
+  // Info: (20260320 - Assistant) 改成只針對未完成的紀錄進行個別狀態更新，減輕 DB 負擔
   useEffect(() => {
-    const hasPendingTasks = records.some(
+    const pendingRecords = records.filter(
       (r) =>
         r.analysisStatus === "PENDING" || r.analysisStatus === "PROCESSING",
     );
 
-    if (!hasPendingTasks) return;
+    if (pendingRecords.length === 0) return;
 
-    // Info: (20260320 - Assistant) 每 5 秒重新抓取一次最新狀態
-    const intervalId = setInterval(() => {
-      fetchRecords();
+    const intervalId = setInterval(async () => {
+      for (const pr of pendingRecords) {
+        try {
+          const { payload } = await request<IApiResponse<{ esgRecord: IEsgRecord }>>(
+            `/api/v1/user/account_book/${accountBookId}/esg/${pr.id}`
+          );
+          if (payload?.esgRecord) {
+            setRecords((prev) =>
+              prev.map((old) => (old.id === pr.id ? payload.esgRecord : old))
+            );
+          }
+        } catch (error) {
+          console.error(`Failed to update status for ESG record ${pr.id}:`, error);
+        }
+      }
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [records, fetchRecords]);
+  }, [records, accountBookId]);
 
   const handleVerifyOpen = (record: IEsgRecord) => {
     setSelectedEsgId(record.id);

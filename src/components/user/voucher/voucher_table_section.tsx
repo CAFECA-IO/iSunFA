@@ -113,22 +113,34 @@ export default function VoucherTableSection() {
     }
   }, [fetchVouchers, accountBookId]);
 
-  // Info: (20260320 - Assistant) 若目前列表有 PENDING 或 PROCESSING 的狀態，開啟輪詢
+  // Info: (20260320 - Assistant) 改成只針對未完成的傳票進行個別狀態更新，減輕 DB 負擔
   useEffect(() => {
-    const hasPendingTasks = vouchers.some(
+    const pendingVouchers = vouchers.filter(
       (v) =>
         v.analysisStatus === "PENDING" || v.analysisStatus === "PROCESSING",
     );
 
-    if (!hasPendingTasks) return;
+    if (pendingVouchers.length === 0) return;
 
-    // Info: (20260320 - Assistant) 每 5 秒重新抓取一次最新狀態
-    const intervalId = setInterval(() => {
-      fetchVouchers();
+    const intervalId = setInterval(async () => {
+      for (const pv of pendingVouchers) {
+        try {
+          const { payload } = await request<IApiResponse<{ result: IVoucher }>>(
+            `/api/v1/user/account_book/${accountBookId}/voucher/${pv.id}`
+          );
+          if (payload?.result) {
+            setVouchers((prev) =>
+              prev.map((old) => (old.id === pv.id ? payload.result : old))
+            );
+          }
+        } catch (error) {
+          console.error(`Failed to update status for voucher ${pv.id}:`, error);
+        }
+      }
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [vouchers, fetchVouchers]);
+  }, [vouchers, accountBookId]);
 
   // Info: (20260311 - Julian) 排序狀態
   const isDateAsc = sorting === VoucherSorting.DATE_ASC;
