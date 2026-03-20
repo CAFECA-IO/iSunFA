@@ -31,6 +31,8 @@ const BASE_COSTS: Record<string, number> = {
   'financial_compliance': 20,
   'financial_health': 20,
   'irsc': 20,
+  'carbon_health_check': 50,
+  'net_zero_emissions': 50,
 
   // Info: (20260128 - Luphia) External
   'market_trends': 50,

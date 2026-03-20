@@ -531,6 +531,12 @@ export const zhCn = {
     purchase: "购买",
   },
   analysis: {
+    company_input: {
+      label: '企业名称或统一社会信用代码',
+      placeholder: '输入全称、简称或统一代码...',
+      searching: '搜索中...',
+      not_found: '找不到此公司，请尝试输入更完整的全称或统一代码。'
+    },
     title: "财务分析",
     internal_analysis: "内部数据分析",
     external_analysis: "外部数据分析",
@@ -574,6 +580,8 @@ export const zhCn = {
       market_trends: "交易市场趋势",
       industry_development: "产业发展",
       financial_product_rating: "金融商品评级",
+      carbon_health_check: "碳健检",
+      net_zero_emissions: "净零碳排",
     },
     history: {
       title: "历史分析报告",
