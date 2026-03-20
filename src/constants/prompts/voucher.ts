@@ -15,9 +15,9 @@ export const getVoucherPrompt = (country: string = "TW") => {
         "particular": "string", // 分錄摘要
         "amount": 100, // 金額 (數字)
         "isDebit": true // 是否為借方 (true = 借方, false = 貸方)
-        "confidence": 85 // AI 分析的信心度 (數字)
       }
-    ]
+    ],
+    "confidence": 85 // AI 分析的整體信心度 (數字 0-100)
   }
 
   可以使用的會計科目如下（請優先使用這些會計科目的代碼與名稱，不要自己發明）：

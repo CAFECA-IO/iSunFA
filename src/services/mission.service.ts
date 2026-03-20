@@ -82,10 +82,15 @@ export class MissionService {
                 journalTask.status.toUpperCase() === "FAILED"
                   ? "FAILED"
                   : "COMPLETED";
-              const textResult =
-                typeof journalTask.result === "string"
-                  ? journalTask.result
-                  : "";
+              let textResult = "";
+              if (journalTask.result && typeof journalTask.result === "string") {
+                try {
+                  const parsed = JSON.parse(journalTask.result);
+                  textResult = parsed.data || journalTask.result;
+                } catch {
+                  textResult = journalTask.result;
+                }
+              }
               const existingJournal = await tx.journal.findFirst({
                 where: { fileId, accountBookId },
               });
@@ -152,14 +157,14 @@ export class MissionService {
                       currency: vd.currency || "TWD",
                       fileId,
                       accountBookId,
-                      confidence: vd.confidence || 0,
+                      confidence: parseInt(String(vd.confidence)) || 0,
                       analysisStatus: "COMPLETED" as AIAnalysisStatus,
                       lines: {
                         create: (vd.lines || []).map(
                           (l: IParsedVoucherLine) => ({
                             accountingCode: l.accountingCode || "",
                             particular: l.particular || null,
-                            amount: l.amount || 0,
+                            amount: parseFloat(String(l.amount)) || 0,
                             isDebit: l.isDebit === true,
                           }),
                         ),
@@ -177,7 +182,7 @@ export class MissionService {
                               (l: IParsedVoucherLine) => ({
                                 accountingCode: l.accountingCode || "",
                                 particular: l.particular || null,
-                                amount: l.amount || 0,
+                                amount: parseFloat(String(l.amount)) || 0,
                                 isDebit: l.isDebit === true,
                               }),
                             ),
@@ -227,11 +232,11 @@ export class MissionService {
                       scope: ed.scope || "SCOPE_1",
                       activityType: ed.activityType || "",
                       vendor: ed.vendor || "",
-                      rawActivityData: ed.rawActivityData || "",
+                      rawActivityData: String(ed.rawActivityData || ""),
                       unit: ed.unit || "",
-                      emissions: ed.emissions || 0,
+                      emissions: parseFloat(String(ed.emissions)) || 0,
                       intensity: ed.intensity || "LOW",
-                      confidence: ed.confidence || 0,
+                      confidence: parseInt(String(ed.confidence)) || 0,
                       analysisStatus: "COMPLETED" as AIAnalysisStatus,
                     };
 

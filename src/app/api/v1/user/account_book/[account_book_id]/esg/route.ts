@@ -56,8 +56,6 @@ export async function POST(
       return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
     }
 
-    // ToDo: 建立分析 Esg 的 Mission 和 Task
-
     // Info: (20260312 - Julian) 建立空白 ESG 紀錄
     const newRecord = await prisma.esgRecord.create({
       data: {
