@@ -600,11 +600,13 @@ export default function AnalysisView() {
               {/* Info: (20260320 - Tzuhan) Internal Analysis: Company Input */}
               {needsCompanyInput && (
                 <div className="space-y-2 pt-4 border-t border-gray-100 relative">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="internalCompanyName" className="block text-sm font-medium text-gray-700">
                     {t('analysis.company_input.label')}
                   </label>
                   <div className="flex items-center">
                     <input
+                      id="internalCompanyName"
+                      aria-label={t('analysis.company_input.label')}
                       type="text"
                       value={internalCompanyName}
                       onChange={(e) => {
@@ -620,9 +622,10 @@ export default function AnalysisView() {
                   {showCompanyDropdown && companySuggestions.length > 0 && (
                     <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
                       {companySuggestions.map(c => (
-                        <div
+                        <button
                           key={c.taxId}
-                          className="px-4 py-2 hover:bg-orange-50 cursor-pointer text-sm text-gray-700 font-medium border-b border-gray-100 last:border-0"
+                          type="button"
+                          className="w-full text-left px-4 py-2 hover:bg-orange-50 cursor-pointer text-sm text-gray-700 font-medium border-b border-gray-100 last:border-0"
                           onClick={() => {
                             setSelectedCompany(c);
                             setInternalCompanyName(`${c.name} (${c.taxId})`);
@@ -630,7 +633,7 @@ export default function AnalysisView() {
                           }}
                         >
                           {c.name} <span className="text-gray-400 font-normal">({c.taxId})</span>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   )}
