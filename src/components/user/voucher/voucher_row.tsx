@@ -70,19 +70,19 @@ export function VoucherRow({
   if (voucher.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
       <tr className="border-b border-slate-300 bg-slate-50 text-sm opacity-80 transition-colors last:border-0">
-        {/* Info: (20260318) File Preview loading */}
+        {/* Info: (20260320 - Julian) File Preview loading */}
         <td className="p-2 text-center lg:px-6 lg:py-4">
           <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
             <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
           </div>
         </td>
-        {/* Info: (20260318) Trading Date (still showing the created date conceptually) */}
+        {/* Info: (20260320 - Julian) Trading Date (still showing the created date conceptually) */}
         <td className="p-2 text-center align-middle font-bold whitespace-nowrap text-slate-400 lg:px-6 lg:py-4">
           <p className="text-xs lg:text-sm">
             {timestampToString(voucher.tradingDate).dateWithDash}
           </p>
         </td>
-        {/* Info: (20260318) Colspan the rest of the parsing info to show a generic loading center */}
+        {/* Info: (20260320 - Julian) Colspan the rest of the parsing info to show a generic loading center */}
         <td
           colSpan={5}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
@@ -92,7 +92,7 @@ export function VoucherRow({
             AI Analyzing...
           </span>
         </td>
-        {/* Info: (20260318) Status action (Disabled) */}
+        {/* Info: (20260320 - Julian) Status action (Disabled) */}
         <td
           aria-label="Status"
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
@@ -115,13 +115,13 @@ export function VoucherRow({
   if (voucher.analysisStatus === AIAnalysisStatus.PROCESSING) {
     return (
       <tr className="border-b border-blue-200 bg-blue-50 text-sm opacity-90 transition-colors last:border-0">
-        {/* Info: (20260320) File Preview loading */}
+        {/* Info: (20260320 - Julian) File Preview loading */}
         <td className="p-2 text-center lg:px-6 lg:py-4">
           <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
             <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
           </div>
         </td>
-        {/* Info: (20260320) Trading Date */}
+        {/* Info: (20260320 - Julian) Trading Date */}
         <td className="p-2 text-center align-middle font-bold whitespace-nowrap text-blue-400 lg:px-6 lg:py-4">
           <p className="text-xs lg:text-sm">
             {timestampToString(voucher.tradingDate).dateWithDash}
@@ -142,7 +142,7 @@ export function VoucherRow({
             </div>
           </div>
         </td>
-        {/* Info: (20260320) Status action (Disabled) */}
+        {/* Info: (20260320 - Julian) Status action (Disabled) */}
         <td
           aria-label="Status"
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
