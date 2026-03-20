@@ -21,6 +21,43 @@ export interface IPaymentOrderParams {
 export class OrderGenerator {
   // Info: (20260128 - Luphia) Generate an order for analysis and return the challenge string to be signed.
   async generateAnalysisOrder(userId: string, params: IOrderParams): Promise<IOrderResult> {
+    // Info: (20260320 - AI) Prerequisite check: Net Zero Emissions requires Carbon Health Check
+    if (params.category === 'net_zero_emissions') {
+      if (!params.keyword) {
+        throw new AppError(ApiCode.VALIDATION_ERROR, 'Missing company info (keyword) for net_zero_emissions');
+      }
+      const prerequisite = await prisma.analysis.findFirst({
+        where: {
+          userId,
+          type: 'carbon_health_check',
+          data: {
+            path: ['keyword'],
+            equals: params.keyword,
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+      if (!prerequisite) {
+        throw new AppError(ApiCode.VALIDATION_ERROR, '必須先完成該企業的「企業碳健檢（Carbon Health Check）」分析，才能產出「淨零碳排（Net Zero Emissions）」報告。');
+      }
+
+      const latestNetZero = await prisma.analysis.findFirst({
+        where: {
+          userId,
+          type: 'net_zero_emissions',
+          data: {
+            path: ['keyword'],
+            equals: params.keyword,
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      if (latestNetZero && prerequisite.createdAt.getTime() <= latestNetZero.createdAt.getTime()) {
+        throw new AppError(ApiCode.VALIDATION_ERROR, '您的企業碳健檢資料已過期！請先針對該企業「重新生成一份最新的碳健檢報告」，再產出淨零碳排報告。');
+      }
+    }
+
     const cost = getAnalysisCost(params);
 
     const orderData = {

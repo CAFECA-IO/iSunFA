@@ -279,10 +279,18 @@ export default function AnalysisView() {
       // [TESTING BACKDOOR] 測試用後門：取消註解以下區塊，即可針對特定帳號繞過付款
       // =====================================================================
       /*
-      if (user.address.toLowerCase() === '0x9e604a5c15dff17cb12346f028c1f31776a54b64'.toLowerCase() && activeTab === 'external') {
+      if (user.address.toLowerCase() === '0x9e604a5c15dff17cb12346f028c1f31776a54b64'.toLowerCase()) {
         const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
           method: 'POST',
-          body: JSON.stringify({ category, periodType, year: selectedYear, periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue, txHash: null, country, keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : undefined })
+          body: JSON.stringify({
+            category,
+            periodType,
+            year: selectedYear,
+            periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
+            txHash: null,
+            country,
+            keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput && selectedCompany ? `${selectedCompany.name} (${selectedCompany.taxId})` : undefined)
+          })
         });
         if (!orderRes?.payload) throw new Error('Failed to create order');
 
@@ -301,7 +309,7 @@ export default function AnalysisView() {
           method: 'POST',
           body: JSON.stringify({
             category, periodType, year: selectedYear, periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-            country, keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : undefined,
+            country, keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput && selectedCompany ? `${selectedCompany.name} (${selectedCompany.taxId})` : undefined),
             authentication: { orderId: orderRes.payload.orderId, ...transferAuth }
           })
         });

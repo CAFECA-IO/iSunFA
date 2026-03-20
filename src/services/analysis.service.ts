@@ -48,13 +48,62 @@ export class AnalysisService {
     let analysisResult = "AI Analysis Content Placeholder...";
 
     try {
+      // Info: (20260320 - AI) Fetch prerequisite data for net_zero_emissions
+      let parsedPrerequisiteParams: Record<string, unknown> | undefined = undefined;
+      let prerequisiteStr = "";
+      
+      if (params.category === 'net_zero_emissions' && params.keyword) {
+        const prerequisite = await prisma.analysis.findFirst({
+          where: {
+            userId,
+            type: 'carbon_health_check',
+            data: {
+              path: ['keyword'],
+              equals: params.keyword,
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          include: { mission: true }
+        });
+
+        if (prerequisite?.mission?.result) {
+          prerequisiteStr = typeof prerequisite.mission.result === 'string' 
+            ? prerequisite.mission.result 
+            : JSON.stringify(prerequisite.mission.result);
+        } else if (prerequisite?.result) {
+          prerequisiteStr = typeof prerequisite.result === 'string' 
+            ? prerequisite.result 
+            : JSON.stringify(prerequisite.result);
+        }
+
+        if (prerequisiteStr) {
+          const carbonHealthScoreMatch = prerequisiteStr.match(/碳健檢綜合評分.*?(\d+)/) || prerequisiteStr.match(/總分.*?(\d+)/);
+          const score = carbonHealthScoreMatch ? parseInt(carbonHealthScoreMatch[1], 10) : 50;
+
+          let tier2Status = 'NONE';
+          if (prerequisiteStr.includes('雷神之鎚')) tier2Status = 'HAMMER';
+          if (prerequisiteStr.includes('免死金牌')) tier2Status = 'SHIELD';
+
+          const firstLayerMatch = prerequisiteStr.match(/第一層：物理現實([\s\S]*?)(第二層|戰略外掛|附錄)/);
+          const failedQuestionsText = firstLayerMatch ? firstLayerMatch[1].trim() : "未檢測到重大痛點";
+
+          parsedPrerequisiteParams = {
+            carbonHealthScore: score,
+            tier2Status,
+            failedQuestions: [failedQuestionsText],
+            companyIndustry: '科技製造與能源產業' // We will replace this dynamically if available, or rely on web search
+          };
+        }
+      }
+
       missionDef = missionGenerator.generateMission({
         category: params.category,
         periodType: params.periodType,
         periodValue: params.periodValue,
         year: params.year,
         country: params.country,
-        keyword: params.keyword
+        keyword: params.keyword,
+        prerequisiteData: parsedPrerequisiteParams
       });
 
       if (missionDef) {
