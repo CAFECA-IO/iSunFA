@@ -132,6 +132,23 @@ export default function JournalListView() {
     fetchJournals();
   }, [fetchJournals]);
 
+  // Info: (20260320 - Assistant) 若目前列表有 PENDING 或 PROCESSING 的狀態，開啟輪詢
+  useEffect(() => {
+    const hasPendingTasks = journals.some(
+      (j) =>
+        j.analysisStatus === "PENDING" || j.analysisStatus === "PROCESSING",
+    );
+
+    if (!hasPendingTasks) return;
+
+    // Info: (20260320 - Assistant) 每 5 秒重新抓取一次最新狀態
+    const intervalId = setInterval(() => {
+      fetchJournals();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [journals, fetchJournals]);
+
   const displayLayout =
     displayType === "list" ? (
       <JournalListLayout

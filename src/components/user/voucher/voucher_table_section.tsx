@@ -113,6 +113,23 @@ export default function VoucherTableSection() {
     }
   }, [fetchVouchers, accountBookId]);
 
+  // Info: (20260320 - Assistant) 若目前列表有 PENDING 或 PROCESSING 的狀態，開啟輪詢
+  useEffect(() => {
+    const hasPendingTasks = vouchers.some(
+      (v) =>
+        v.analysisStatus === "PENDING" || v.analysisStatus === "PROCESSING",
+    );
+
+    if (!hasPendingTasks) return;
+
+    // Info: (20260320 - Assistant) 每 5 秒重新抓取一次最新狀態
+    const intervalId = setInterval(() => {
+      fetchVouchers();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [vouchers, fetchVouchers]);
+
   // Info: (20260311 - Julian) 排序狀態
   const isDateAsc = sorting === VoucherSorting.DATE_ASC;
   const isDateDesc = sorting === VoucherSorting.DATE_DESC;

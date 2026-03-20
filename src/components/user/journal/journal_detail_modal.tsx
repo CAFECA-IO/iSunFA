@@ -171,7 +171,7 @@ export default function JournalDetailModal({
                             filename: journal.file.fileName || "Unknown",
                           }}
                           fileId={journal.file.hash}
-                          className="max-h-[70vh] max-w-full object-contain"
+                          className="object-contain size-full"
                         />
                       )}
                     </ZoomablePreview>

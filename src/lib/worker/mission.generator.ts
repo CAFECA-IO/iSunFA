@@ -24,8 +24,8 @@ export interface IMissionParams {
   country?: string;
   keyword?: string;
   fileId?: string; // Info: (20260320 - Julian) 用於 AI 分析日記帳、傳票和碳盤查
-  fileHash?: string; // Info: (20260320 - Julian) 用於讀取檔案
-  fileName?: string; 
+  fileBase64?: string; // Info: (20260320 - Assistant) Direct base64 string
+  fileMimeType?: string; // Info: (20260320 - Assistant) Direct mime type
   accountBookId?: string; 
 }
 
@@ -178,8 +178,8 @@ export class MissionGenerator {
       const tasks: ITaskDefinition[] = [];
       const context = JSON.stringify({
         fileId: params.fileId,
-        fileHash: params.fileHash,
-        fileName: params.fileName,
+        fileBase64: params.fileBase64,
+        fileMimeType: params.fileMimeType,
         accountBookId: params.accountBookId
       });
 

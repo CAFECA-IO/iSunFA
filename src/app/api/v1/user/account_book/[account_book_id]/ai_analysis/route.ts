@@ -162,8 +162,8 @@ export async function POST(
       periodValue: 'N/A',
       year: new Date().getFullYear(),
       fileId: uploadedFile.id,
-      fileHash: file.hash,
-      fileName: file.name,
+      fileBase64: file.base64,
+      fileMimeType: file.type,
       accountBookId: accountBook.id,
     });
 

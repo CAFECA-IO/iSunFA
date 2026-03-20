@@ -63,6 +63,23 @@ export default function EsgTableSection() {
     return () => clearTimeout(timer);
   }, [fetchRecords]);
 
+  // Info: (20260320 - Assistant) 若目前列表有 PENDING 或 PROCESSING 的狀態，開啟輪詢
+  useEffect(() => {
+    const hasPendingTasks = records.some(
+      (r) =>
+        r.analysisStatus === "PENDING" || r.analysisStatus === "PROCESSING",
+    );
+
+    if (!hasPendingTasks) return;
+
+    // Info: (20260320 - Assistant) 每 5 秒重新抓取一次最新狀態
+    const intervalId = setInterval(() => {
+      fetchRecords();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [records, fetchRecords]);
+
   const handleVerifyOpen = (record: IEsgRecord) => {
     setSelectedEsgId(record.id);
     setIsVerifyModalOpen(true);
