@@ -48,7 +48,7 @@ export class AnalysisService {
     let analysisResult = "AI Analysis Content Placeholder...";
 
     try {
-      // Info: (20260320 - AI) Fetch prerequisite data for net_zero_emissions
+      // Info: (20260320 - Tzuhan) Fetch prerequisite data for net_zero_emissions
       let parsedPrerequisiteParams: Record<string, unknown> | undefined = undefined;
       let prerequisiteStr = "";
       
@@ -91,7 +91,7 @@ export class AnalysisService {
             carbonHealthScore: score,
             tier2Status,
             failedQuestions: [failedQuestionsText],
-            companyIndustry: '科技製造與能源產業' // We will replace this dynamically if available, or rely on web search
+            companyIndustry: '科技製造與能源產業' // Info: (20260320 - Tzuhan) We will replace this dynamically if available, or rely on web search
           };
         }
       }
@@ -154,7 +154,7 @@ export class AnalysisService {
             name: { contains: params.category }
           },
           orderBy: { createdAt: 'desc' },
-          take: 100 // Look at recent missions
+          take: 100 // Info: (20260320 - Tzuhan) Look at recent missions
         });
 
         let cachedMissionId: string | undefined;
