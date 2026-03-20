@@ -57,7 +57,7 @@ export async function POST(
     const uploadedFile = await prisma.file.create({
       data: {
         hash: file.hash,
-        fileName: file.name,
+        fileName: file.file.name,
       },
     });
 
@@ -163,7 +163,7 @@ export async function POST(
       year: new Date().getFullYear(),
       fileId: uploadedFile.id,
       fileBase64: file.base64,
-      fileMimeType: file.type,
+      fileMimeType: file.file.type,
       accountBookId: accountBook.id,
     });
 

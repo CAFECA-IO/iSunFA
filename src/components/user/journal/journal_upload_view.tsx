@@ -60,9 +60,12 @@ export default function JournalUploadView({
       ]);
       const { hash } = hashInfo;
 
-      // Optionally handle success (e.g., switch to list view or show success message)
+      // Info: (20260320 - Julian) 儲存檔案
       setUploadedFile({
-        file,
+        file:{
+          ...file,
+          name: file.name,
+        },
         previewUrl: file.type.startsWith("image/")
           ? URL.createObjectURL(file)
           : null,
