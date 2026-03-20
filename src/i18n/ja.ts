@@ -539,6 +539,12 @@ export const ja = {
     purchase: "購入",
   },
   analysis: {
+    company_input: {
+      label: '企業名または法人番号',
+      placeholder: '正式名称、略称、または法人番号を入力...',
+      searching: '検索中...',
+      not_found: '企業が見つかりません。より完全な名称または法人番号を入力してください。'
+    },
     title: '財務分析',
     internal_analysis: '内部分析',
     external_analysis: '外部分析',
@@ -592,6 +598,8 @@ export const ja = {
       market_trends: "市場動向",
       industry_development: "産業発展",
       financial_product_rating: "金融商品評価",
+      carbon_health_check: "カーボンヘルスチェック",
+      net_zero_emissions: "ネットゼロ排出",
     },
     history: {
       title: "分析履歴",

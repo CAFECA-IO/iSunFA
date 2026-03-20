@@ -541,6 +541,12 @@ export const zhTw = {
     purchase: "購買",
   },
   analysis: {
+    company_input: {
+      label: '企業名稱或統一編號',
+      placeholder: '輸入全稱、簡稱或統編...',
+      searching: '搜尋中...',
+      not_found: '查無此公司，請嘗試輸入更完整的全名或統一編號。'
+    },
     title: "財務分析",
     internal_analysis: "內部數據分析",
     external_analysis: "外部數據分析",
@@ -591,6 +597,8 @@ export const zhTw = {
       market_trends: "交易市場趨勢",
       industry_development: "產業發展",
       financial_product_rating: "金融商品評級",
+      carbon_health_check: "碳健檢",
+      net_zero_emissions: "淨零碳排",
     },
     history: {
       title: "歷史分析報告",

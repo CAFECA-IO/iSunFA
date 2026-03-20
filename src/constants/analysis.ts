@@ -5,6 +5,8 @@ export const INTERNAL_CATEGORIES = [
   'irsc',
   'financial_compliance',
   'financial_health',
+  'carbon_health_check',
+  'net_zero_emissions',
 ] as const;
 
 export const EXTERNAL_CATEGORIES = [

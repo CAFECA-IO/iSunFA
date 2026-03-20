@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { getAnalysisCost } from '@/lib/analysis/pricing';
 import { storageService } from '@/services/storage.service';
+import { prisma } from '@/lib/prisma';
 import { analysisRepo } from '@/repositories/analysis.repo';
 import { missionGenerator, IMissionDefinition } from '@/lib/worker/mission.generator';
 import { MISSION_STATUS } from '@/constants/status';
@@ -47,13 +48,62 @@ export class AnalysisService {
     let analysisResult = "AI Analysis Content Placeholder...";
 
     try {
+      // Info: (20260320 - Tzuhan) Fetch prerequisite data for net_zero_emissions
+      let parsedPrerequisiteParams: Record<string, unknown> | undefined = undefined;
+      let prerequisiteStr = "";
+      
+      if (params.category === 'net_zero_emissions' && params.keyword) {
+        const prerequisite = await prisma.analysis.findFirst({
+          where: {
+            userId,
+            type: 'carbon_health_check',
+            data: {
+              path: ['keyword'],
+              equals: params.keyword,
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          include: { mission: true }
+        });
+
+        if (prerequisite?.mission?.result) {
+          prerequisiteStr = typeof prerequisite.mission.result === 'string' 
+            ? prerequisite.mission.result 
+            : JSON.stringify(prerequisite.mission.result);
+        } else if (prerequisite?.result) {
+          prerequisiteStr = typeof prerequisite.result === 'string' 
+            ? prerequisite.result 
+            : JSON.stringify(prerequisite.result);
+        }
+
+        if (prerequisiteStr) {
+          const carbonHealthScoreMatch = prerequisiteStr.match(/碳健檢綜合評分.*?(\d+)/) || prerequisiteStr.match(/總分.*?(\d+)/);
+          const score = carbonHealthScoreMatch ? parseInt(carbonHealthScoreMatch[1], 10) : 50;
+
+          let tier2Status = 'NONE';
+          if (prerequisiteStr.includes('雷神之鎚')) tier2Status = 'HAMMER';
+          if (prerequisiteStr.includes('免死金牌')) tier2Status = 'SHIELD';
+
+          const firstLayerMatch = prerequisiteStr.match(/第一層：物理現實([\s\S]*?)(第二層|戰略外掛|附錄)/);
+          const failedQuestionsText = firstLayerMatch ? firstLayerMatch[1].trim() : "未檢測到重大痛點";
+
+          parsedPrerequisiteParams = {
+            carbonHealthScore: score,
+            tier2Status,
+            failedQuestions: [failedQuestionsText],
+            companyIndustry: '科技製造與能源產業' // Info: (20260320 - Tzuhan) We will replace this dynamically if available, or rely on web search
+          };
+        }
+      }
+
       missionDef = missionGenerator.generateMission({
         category: params.category,
         periodType: params.periodType,
         periodValue: params.periodValue,
         year: params.year,
         country: params.country,
-        keyword: params.keyword
+        keyword: params.keyword,
+        prerequisiteData: parsedPrerequisiteParams
       });
 
       if (missionDef) {
@@ -97,6 +147,66 @@ export class AnalysisService {
     // Info: (20260128 - Luphia) Save Analysis to Database *immediately*
     if (params.orderId) {
       try {
+        // Info: (20260320 - Tzuhan) Check cache for existing report to reuse
+        const cachedMissions = await prisma.mission.findMany({
+          where: { 
+            status: MISSION_STATUS.COMPLETED,
+            name: { contains: params.category }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 100 // Info: (20260320 - Tzuhan) Look at recent missions
+        });
+
+        let cachedMissionId: string | undefined;
+        for (const m of cachedMissions) {
+          const d = m.data as Partial<IGenerateAnalysisParams>;
+          if (d && 
+              d.category === params.category &&
+              d.periodType === params.periodType &&
+              String(d.periodValue) === String(params.periodValue) &&
+              d.year === params.year &&
+              d.keyword === params.keyword) {
+            cachedMissionId = m.id;
+            break;
+          }
+        }
+
+        if (cachedMissionId) {
+          console.log(`[AnalysisService] Found cached mission ${cachedMissionId}, reusing it.`);
+          await prisma.analysis.create({
+            data: {
+              id: reportId,
+              userId,
+              orderId: params.orderId,
+              type: params.category,
+              missionId: cachedMissionId,
+              data: {
+                cost,
+                periodType: params.periodType,
+                periodValue: params.periodValue,
+                year: params.year,
+                country: params.country,
+                keyword: params.keyword,
+                category: params.category,
+                cached: true
+              }
+            }
+          });
+          return {
+            success: true,
+            message: 'Analysis generated successfully from cache',
+            data: {
+              reportId: reportId,
+              cost: cost,
+              remainingBalance: 9500,
+              generatedAt: new Date().toISOString(),
+              periodType: params.periodType,
+              periodValue: params.periodValue,
+              year: params.year
+            },
+          };
+        }
+
         const result = await analysisRepo.create({
           reportId,
           userId,
@@ -105,6 +215,7 @@ export class AnalysisService {
           missionName: missionDef ? missionDef.name : `Analysis-${params.category}-${params.periodType}`,
           status: MISSION_STATUS.UPLOADING,
           missionData: {
+            category: params.category,
             cost,
             remainingBalance: 9500,
             generatedAt: new Date().toISOString(),

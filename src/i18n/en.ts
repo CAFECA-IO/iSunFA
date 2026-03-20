@@ -540,6 +540,12 @@ export const en = {
     purchase: "Purchase",
   },
   analysis: {
+    company_input: {
+      label: 'Company Name or Tax ID',
+      placeholder: 'Enter full name, abbreviation, or Tax ID...',
+      searching: 'Searching...',
+      not_found: 'Company not found. Please try entering a more complete name or Tax ID.'
+    },
     title: 'Financial Analysis',
     internal_analysis: 'Internal Analysis',
     external_analysis: 'External Analysis',
@@ -593,6 +599,8 @@ export const en = {
       market_trends: "Market Trends",
       industry_development: "Industry Development",
       financial_product_rating: "Financial Product Rating",
+      carbon_health_check: "Carbon Health Check",
+      net_zero_emissions: "Net Zero Emissions",
     },
     history: {
       title: "Analysis History",
