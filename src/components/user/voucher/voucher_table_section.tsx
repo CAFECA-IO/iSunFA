@@ -113,7 +113,7 @@ export default function VoucherTableSection() {
     }
   }, [fetchVouchers, accountBookId]);
 
-  // Info: (20260320 - Assistant) 改成只針對未完成的傳票進行個別狀態更新，減輕 DB 負擔
+  // Info: (20260320 - Julian) 只針對未完成的傳票進行個別狀態更新，減輕 DB 負擔
   useEffect(() => {
     const pendingVouchers = vouchers.filter(
       (v) =>

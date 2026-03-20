@@ -132,7 +132,7 @@ export default function JournalListView() {
     fetchJournals();
   }, [fetchJournals]);
 
-  // Info: (20260320 - Assistant) 改成只針對未完成的日記帳進行個別狀態更新，減輕 DB 負擔
+  // Info: (20260320 - Julian) 只針對未完成的日記帳進行個別狀態更新，減輕 DB 負擔
   useEffect(() => {
     const pendingJournals = journals.filter(
       (j) =>

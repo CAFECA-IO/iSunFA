@@ -223,7 +223,8 @@ export class MissionService {
                 try {
                   const match = esgTask.result.match(/\{[\s\S]*\}/);
                   if (match) {
-                    const ed = JSON.parse(match[0]);
+                    const parsed = JSON.parse(match[0]);
+                    const ed = parsed.data || parsed;
                     const esgData: Prisma.EsgRecordUncheckedCreateInput = {
                       accountBookId,
                       fileId,

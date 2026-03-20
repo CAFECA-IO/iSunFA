@@ -81,7 +81,7 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
               if (!prev.filename || prev.filename === fileId || prev.filename === "Unknown") {
                 return { ...prev, filename, mimeType: blob.type };
               }
-              // Info: (20260320 - Assistant) Even if filename exists, always preserve the correct mimeType
+              // Info: (20260320 - Julian) 即使檔名存在，也保留正確的 mimeType
               return { ...prev, mimeType: blob.type };
             });
           }

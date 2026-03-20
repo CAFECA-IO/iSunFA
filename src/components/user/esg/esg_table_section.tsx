@@ -63,7 +63,7 @@ export default function EsgTableSection() {
     return () => clearTimeout(timer);
   }, [fetchRecords]);
 
-  // Info: (20260320 - Assistant) 改成只針對未完成的紀錄進行個別狀態更新，減輕 DB 負擔
+  // Info: (20260320 - Julian) 只針對未完成的紀錄進行個別狀態更新，減輕 DB 負擔
   useEffect(() => {
     const pendingRecords = records.filter(
       (r) =>

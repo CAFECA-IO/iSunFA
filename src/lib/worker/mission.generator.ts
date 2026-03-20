@@ -24,8 +24,8 @@ export interface IMissionParams {
   country?: string;
   keyword?: string;
   fileId?: string; // Info: (20260320 - Julian) 用於 AI 分析日記帳、傳票和碳盤查
-  fileBase64?: string; // Info: (20260320 - Assistant) Direct base64 string
-  fileMimeType?: string; // Info: (20260320 - Assistant) Direct mime type
+  fileBase64?: string; // Info: (20260320 - Julian) 傳入檔案的 base64 字串
+  fileMimeType?: string; // Info: (20260320 - Julian) 傳入檔案的 mimeType
   accountBookId?: string; 
 }
 
