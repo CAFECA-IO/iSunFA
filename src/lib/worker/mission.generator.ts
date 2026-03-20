@@ -11,6 +11,8 @@ import { COMPANY as FINAL } from '@/constants/prompts/company/final';
 import * as MarketAnalysisPrompts from '@/constants/prompts/market_analysis';
 import * as FinancialProductRatingPrompts from '@/constants/prompts/financial_product_rating';
 import * as IndustryDevelopmentPrompts from '@/constants/prompts/industry_development';
+import * as CarbonHealthCheckPrompts from '@/constants/prompts/carbon_health_check';
+import * as NetZeroEmissionsPrompts from '@/constants/prompts/net_zero_emissions';
 import { getPeriodDateRange } from '@/lib/analysis/period';
 
 export interface IMissionParams {
@@ -76,7 +78,7 @@ export class MissionGenerator {
       };
     }
 
-    if (['market_trends', 'industry_development', 'financial_product_rating'].includes(params.category)) {
+    if (['market_trends', 'industry_development', 'financial_product_rating', 'carbon_health_check', 'net_zero_emissions'].includes(params.category)) {
       const countryName = params.country ? (COUNTRY_MAPPING[params.country] || params.country) : '台灣';
       let startDateStr = 'N/A';
       let endDateStr = 'N/A';
@@ -94,18 +96,31 @@ export class MissionGenerator {
         startDate: startDateStr,
         endDate: endDateStr,
         marketName: countryName,
-        target: params.keyword || 'General',
+        target: params.keyword || (['carbon_health_check', 'net_zero_emissions'].includes(params.category) ? 'Target Company' : 'General'),
         period: params.periodValue,
         year: params.year
       });
 
       const tasks: ITaskDefinition[] = [];
 
+      interface IPromptModule {
+        STEP_1_EVENT_COLLECTION_PROMPT: string;
+        STEP_2_TAG_EXTRACTION_PROMPT: string;
+        STEP_4_MARKET_REACTION_PROMPT: string;
+        STEP_5_FORMATTED_OUTPUT_PROMPT: string;
+        STEP_3_SUMMARY_AND_ANALYSIS_PROMPT?: string;
+        STEP_3_1_SUMMARY_AND_ANALYSIS_PROMPT?: string;
+        STEP_3_2_SUMMARY_AND_ANALYSIS_PROMPT?: string;
+        STEP_3_FINAL_SUMMARY_AND_ANALYSIS_PROMPT?: string;
+      }
+
       // Info: (20260316 - Tzuhan) Dynamically dispatch prompts based on external analysis category
-      const promptMap: Record<string, typeof MarketAnalysisPrompts> = {
+      const promptMap: Record<string, IPromptModule> = {
         'market_trends': MarketAnalysisPrompts,
         'industry_development': IndustryDevelopmentPrompts,
         'financial_product_rating': FinancialProductRatingPrompts,
+        'carbon_health_check': CarbonHealthCheckPrompts,
+        'net_zero_emissions': NetZeroEmissionsPrompts,
       };
       const selectedPrompts = promptMap[params.category] || MarketAnalysisPrompts;
 
@@ -130,35 +145,89 @@ export class MissionGenerator {
         }
       });
 
-      tasks.push({
-        type: 'MARKET_SUMMARY_ANALYSIS',
-        order: 2,
-        data: {
-          key: 'STEP_3',
-          prompt: selectedPrompts.STEP_3_SUMMARY_AND_ANALYSIS_PROMPT,
-          context: targetInfo
-        }
-      });
+      if (selectedPrompts.STEP_3_1_SUMMARY_AND_ANALYSIS_PROMPT) {
+        // Info: (20260320 - AI) Dynamically split massive 100-question prompt into smaller tasks
+        tasks.push({
+          type: 'MARKET_SUMMARY_ANALYSIS',
+          order: 2,
+          data: {
+            key: 'STEP_3_1',
+            prompt: selectedPrompts.STEP_3_1_SUMMARY_AND_ANALYSIS_PROMPT!,
+            context: targetInfo
+          }
+        });
 
-      tasks.push({
-        type: 'MARKET_REACTION_PREDICTION',
-        order: 3,
-        data: {
-          key: 'STEP_4',
-          prompt: selectedPrompts.STEP_4_MARKET_REACTION_PROMPT,
-          context: targetInfo
-        }
-      });
+        tasks.push({
+          type: 'MARKET_SUMMARY_ANALYSIS',
+          order: 3,
+          data: {
+            key: 'STEP_3_2',
+            prompt: selectedPrompts.STEP_3_2_SUMMARY_AND_ANALYSIS_PROMPT!,
+            context: targetInfo
+          }
+        });
 
-      tasks.push({
-        type: 'MARKET_FORMATTED_OUTPUT',
-        order: 4,
-        data: {
-          key: 'STEP_5',
-          prompt: selectedPrompts.STEP_5_FORMATTED_OUTPUT_PROMPT,
-          context: targetInfo
-        }
-      });
+        tasks.push({
+          type: 'MARKET_SUMMARY_ANALYSIS',
+          order: 4,
+          data: {
+            key: 'STEP_3_FINAL',
+            prompt: selectedPrompts.STEP_3_FINAL_SUMMARY_AND_ANALYSIS_PROMPT!,
+            context: targetInfo
+          }
+        });
+
+        tasks.push({
+          type: 'MARKET_REACTION_PREDICTION',
+          order: 5,
+          data: {
+            key: 'STEP_4',
+            prompt: selectedPrompts.STEP_4_MARKET_REACTION_PROMPT,
+            context: targetInfo
+          }
+        });
+
+        tasks.push({
+          type: 'MARKET_FORMATTED_OUTPUT',
+          order: 6,
+          data: {
+            key: 'STEP_5',
+            prompt: selectedPrompts.STEP_5_FORMATTED_OUTPUT_PROMPT,
+            context: targetInfo
+          }
+        });
+
+      } else {
+        tasks.push({
+          type: 'MARKET_SUMMARY_ANALYSIS',
+          order: 2,
+          data: {
+            key: 'STEP_3',
+            prompt: selectedPrompts.STEP_3_SUMMARY_AND_ANALYSIS_PROMPT!,
+            context: targetInfo
+          }
+        });
+
+        tasks.push({
+          type: 'MARKET_REACTION_PREDICTION',
+          order: 3,
+          data: {
+            key: 'STEP_4',
+            prompt: selectedPrompts.STEP_4_MARKET_REACTION_PROMPT,
+            context: targetInfo
+          }
+        });
+
+        tasks.push({
+          type: 'MARKET_FORMATTED_OUTPUT',
+          order: 4,
+          data: {
+            key: 'STEP_5',
+            prompt: selectedPrompts.STEP_5_FORMATTED_OUTPUT_PROMPT,
+            context: targetInfo
+          }
+        });
+      }
 
       return {
         name: `External Analysis - ${params.category} - ${params.periodValue}`,

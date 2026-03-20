@@ -530,6 +530,12 @@ export const ko = {
     purchase: "구매",
   },
   analysis: {
+    company_input: {
+      label: '기업명 또는 사업자등록번호',
+      placeholder: '전체 이름, 약어 또는 사업자등록번호 입력...',
+      searching: '검색 중...',
+      not_found: '기업을 찾을 수 없습니다. 더 완전한 이름이나 사업자등록번호를 입력해 보세요.'
+    },
     title: '재무 분석',
     internal_analysis: '내부 분석',
     external_analysis: '외부 분석',
@@ -583,6 +589,8 @@ export const ko = {
       market_trends: "시장 동향",
       industry_development: "산업 발전",
       financial_product_rating: "금융 상품 평가",
+      carbon_health_check: "탄소 건강 검진",
+      net_zero_emissions: "넷제로 배출",
     },
     history: {
       title: "분석 기록",

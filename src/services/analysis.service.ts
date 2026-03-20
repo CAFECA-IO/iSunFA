@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { getAnalysisCost } from '@/lib/analysis/pricing';
 import { storageService } from '@/services/storage.service';
+import { prisma } from '@/lib/prisma';
 import { analysisRepo } from '@/repositories/analysis.repo';
 import { missionGenerator, IMissionDefinition } from '@/lib/worker/mission.generator';
 import { MISSION_STATUS } from '@/constants/status';
@@ -97,6 +98,66 @@ export class AnalysisService {
     // Info: (20260128 - Luphia) Save Analysis to Database *immediately*
     if (params.orderId) {
       try {
+        // Info: (20260320 - Tzuhan) Check cache for existing report to reuse
+        const cachedMissions = await prisma.mission.findMany({
+          where: { 
+            status: MISSION_STATUS.COMPLETED,
+            name: { contains: params.category }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 100 // Look at recent missions
+        });
+
+        let cachedMissionId: string | undefined;
+        for (const m of cachedMissions) {
+          const d = m.data as Partial<IGenerateAnalysisParams>;
+          if (d && 
+              d.category === params.category &&
+              d.periodType === params.periodType &&
+              String(d.periodValue) === String(params.periodValue) &&
+              d.year === params.year &&
+              d.keyword === params.keyword) {
+            cachedMissionId = m.id;
+            break;
+          }
+        }
+
+        if (cachedMissionId) {
+          console.log(`[AnalysisService] Found cached mission ${cachedMissionId}, reusing it.`);
+          await prisma.analysis.create({
+            data: {
+              id: reportId,
+              userId,
+              orderId: params.orderId,
+              type: params.category,
+              missionId: cachedMissionId,
+              data: {
+                cost,
+                periodType: params.periodType,
+                periodValue: params.periodValue,
+                year: params.year,
+                country: params.country,
+                keyword: params.keyword,
+                category: params.category,
+                cached: true
+              }
+            }
+          });
+          return {
+            success: true,
+            message: 'Analysis generated successfully from cache',
+            data: {
+              reportId: reportId,
+              cost: cost,
+              remainingBalance: 9500,
+              generatedAt: new Date().toISOString(),
+              periodType: params.periodType,
+              periodValue: params.periodValue,
+              year: params.year
+            },
+          };
+        }
+
         const result = await analysisRepo.create({
           reportId,
           userId,
@@ -105,6 +166,7 @@ export class AnalysisService {
           missionName: missionDef ? missionDef.name : `Analysis-${params.category}-${params.periodType}`,
           status: MISSION_STATUS.UPLOADING,
           missionData: {
+            category: params.category,
             cost,
             remainingBalance: 9500,
             generatedAt: new Date().toISOString(),
