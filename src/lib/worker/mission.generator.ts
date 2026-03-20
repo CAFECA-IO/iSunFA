@@ -139,7 +139,7 @@ export class MissionGenerator {
 
       // Info: (20260320 - AI) Net Zero Emissions has a special singular prompt builder
       if (params.category === 'net_zero_emissions' && selectedPrompts.buildNetZeroPrompt) {
-        // Evaluate dynamic prompt
+        // Info: (20260320 - Tzuhan) Evaluate dynamic prompt
         const p = (params.prerequisiteData as unknown as import('@/constants/prompts/net_zero_emissions').INetZeroPromptParams) || {
           carbonHealthScore: 0,
           tier2Status: 'NONE',
@@ -152,7 +152,7 @@ export class MissionGenerator {
           type: 'MARKET_FORMATTED_OUTPUT',
           order: 1,
           data: {
-            key: 'STEP_5', // Usually uses [STEP_1_CONTENT] which the engine provides automatically
+            key: 'STEP_5', // Info: (20260320 - Tzuhan) Usually uses [STEP_1_CONTENT] which the engine provides automatically
             prompt: generatedPrompt,
             context: targetInfo
           }
@@ -171,7 +171,7 @@ export class MissionGenerator {
         }
 
         if (selectedPrompts.STEP_3_1_SUMMARY_AND_ANALYSIS_PROMPT && selectedPrompts.STEP_3_2_SUMMARY_AND_ANALYSIS_PROMPT && selectedPrompts.STEP_3_FINAL_SUMMARY_AND_ANALYSIS_PROMPT && selectedPrompts.STEP_4_MARKET_REACTION_PROMPT && selectedPrompts.STEP_5_FORMATTED_OUTPUT_PROMPT) {
-          // Info: (20260320 - AI) Dynamically split massive 100-question prompt into smaller tasks
+          // Info: (20260320 - Tzuhan) Dynamically split massive 100-question prompt into smaller tasks
           tasks.push({
             type: 'MARKET_SUMMARY_ANALYSIS',
             order: 2,
