@@ -36,57 +36,109 @@ const COMMON_ABBREVIATIONS: Record<string, ICompanyData> = {
   '遠傳': { taxId: '97178125', name: '遠傳電信股份有限公司' }
 };
 
+function lookupByAbbreviation(cleanQuery: string): ICompanyData[] {
+  if (COMMON_ABBREVIATIONS[cleanQuery]) {
+    return [COMMON_ABBREVIATIONS[cleanQuery]];
+  }
+
+  const partialMatches = Object.entries(COMMON_ABBREVIATIONS)
+    .filter(([key, val]) => key.includes(cleanQuery) || val.name.includes(cleanQuery) || val.taxId.includes(cleanQuery))
+    .map(([, val]) => val);
+
+  return partialMatches.length > 0 ? partialMatches.slice(0, 5) : [];
+}
+
+async function lookupByTaxId(taxId: string): Promise<ICompanyData[]> {
+  try {
+    const url = "https://data.gcis.nat.gov.tw/od/data/api/5F64D864-61CB-4D0D-8AD9-492047CC1EA6?$format=json&$filter=Business_Accounting_NO eq " + taxId;
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map(d => ({
+          taxId: d.Business_Accounting_NO,
+          name: d.Company_Name
+        }));
+      }
+    }
+  } catch (e) {
+    console.error('Company ID lookup failed:', e);
+  }
+  return [];
+}
+
+async function lookupByDuckDuckGo(keyword: string): Promise<ICompanyData[]> {
+  // Info: (20260320 - Tzuhan) "Google-like" Semantic Search via DuckDuckGo HTML
+  try {
+    const enc = encodeURIComponent(keyword + " 統編 公司");
+    const url = "https://html.duckduckgo.com/html/?q=" + enc;
+    const r = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64 AppleWebKit/537.36)" },
+      signal: AbortSignal.timeout(4000)
+    });
+
+    if (r.ok) {
+      const html = await r.text();
+      const taxIdMatch = html.match(/(?:統一編號|統編|Business(?:_| )?Accounting(?:_| )?NO)[\s:：]*(\d{8})/i) || html.match(/\b(\d{8})\b/);
+      const nameMatch = html.match(/([^<>\s]*股份有限公司|[^<>\s]*有限公司|[^<>\s]*企業社|[^<>\s]*行|[^<>\s]*廠)/);
+
+      if (taxIdMatch && nameMatch && taxIdMatch[1] && nameMatch[1]) {
+        if (nameMatch[1].length >= 3 && nameMatch[1].length <= 30) {
+          return [{
+            taxId: taxIdMatch[1],
+            name: nameMatch[1]
+          }];
+        }
+      }
+    }
+  } catch (e) {
+    console.error('DuckDuckGo semantic lookup failed:', e);
+  }
+  return [];
+}
+
+async function lookupByNameGCIS(name: string): Promise<ICompanyData[]> {
+  try {
+    const url = "https://data.gcis.nat.gov.tw/od/data/api/F05D1060-7D57-4763-BDCE-0DAF5975AFE0?$format=json&$filter=Company_Name like " + encodeURIComponent(name);
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data.slice(0, 10).map((d: { Business_Accounting_NO: string; Company_Name: string }) => ({
+          taxId: d.Business_Accounting_NO,
+          name: d.Company_Name
+        }));
+      }
+    }
+  } catch (e) {
+    console.error('Company name lookup failed:', e);
+  }
+  return [];
+}
+
 export async function lookupCompany(query: string): Promise<ICompanyData[]> {
   const trimmed = query.trim();
   if (!trimmed) return [];
 
   const cleanTrimmed = trimmed.replace(/(股份有限公司|有限公司|公司)$/, '');
 
-  if (COMMON_ABBREVIATIONS[cleanTrimmed]) {
-    return [COMMON_ABBREVIATIONS[cleanTrimmed]];
-  }
-  
-  const partialMatches = Object.entries(COMMON_ABBREVIATIONS)
-    .filter(([key, val]) => key.includes(cleanTrimmed) || val.name.includes(cleanTrimmed) || val.taxId.includes(cleanTrimmed))
-    .map(([, val]) => val);
-  
-  if (partialMatches.length > 0) {
-    return partialMatches.slice(0, 5);
+  // Info: (20260320 - Tzuhan) 1. Check exact abbreviation or generic substring match
+  const abbrResults = lookupByAbbreviation(cleanTrimmed);
+  if (abbrResults.length > 0) {
+    return abbrResults;
   }
 
+  // Info: (20260320 - Tzuhan) 2. If it's exactly 8 digits, use strict Tax ID lookup
   if (/^\d{8}$/.test(cleanTrimmed)) {
-    try {
-      const url = "https://data.gcis.nat.gov.tw/od/data/api/5F64D864-61CB-4D0D-8AD9-492047CC1EA6?$format=json&$filter=Business_Accounting_NO eq " + cleanTrimmed;
-      const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          return data.map(d => ({
-            taxId: d.Business_Accounting_NO,
-            name: d.Company_Name
-          }));
-        }
-      }
-    } catch (e) {
-      console.error('Company ID lookup failed:', e);
-    }
-  } else {
-    try {
-      const url = "https://data.gcis.nat.gov.tw/od/data/api/F05D1060-7D57-4763-BDCE-0DAF5975AFE0?$format=json&$filter=Company_Name like " + encodeURIComponent(cleanTrimmed);
-      const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          return data.slice(0, 10).map((d: { Business_Accounting_NO: string; Company_Name: string }) => ({
-            taxId: d.Business_Accounting_NO,
-            name: d.Company_Name
-          }));
-        }
-      }
-    } catch (e) {
-      console.error('Company name lookup failed:', e);
-    }
+    return await lookupByTaxId(cleanTrimmed);
   }
 
-  return [];
+  // Info: (20260320 - Tzuhan) 3. Fallback 1: DuckDuckGo Semantic Search
+  const ddgResults = await lookupByDuckDuckGo(cleanTrimmed);
+  if (ddgResults.length > 0) {
+    return ddgResults;
+  }
+
+  // Info: (20260320 - Tzuhan) 4. Fallback 2: Strict GCIS Name Lookup
+  return await lookupByNameGCIS(cleanTrimmed);
 }
