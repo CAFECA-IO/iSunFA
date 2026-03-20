@@ -1,6 +1,6 @@
 {
   "name": "isunfa",
-  "version": "0.12.0+27",
+  "version": "0.12.0+28",
   "private": true,
   "scripts": {
     "dev": "npm run lint && prisma generate && next dev",
@@ -31,7 +31,7 @@
     "jose": "^6.1.3",
     "jszip": "^3.10.1",
     "lucide-react": "^0.577.0",
-    "next": "16.1.6",
+    "next": "16.2.0",
     "pdf-lib": "^1.17.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -48,7 +48,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "16.2.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-check-file": "^3.3.1",
     "eslint-plugin-jsx-a11y": "^6.10.2",
