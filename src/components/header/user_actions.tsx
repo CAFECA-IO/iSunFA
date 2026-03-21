@@ -16,6 +16,7 @@ import {
   Settings,
   CreditCard,
   Users,
+  Library,
 } from "lucide-react";
 import { MODULES } from "@/constants/modules";
 import { useAuth } from "@/contexts/auth_context";
@@ -144,7 +145,21 @@ export default function UserActions() {
               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 md:mb-3 px-1 md:px-2">
                 {t("sidebar.system")}
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                <MenuItem as={Fragment}>
+                  {({ focus }) => (
+                    <Link
+                      href="/user/account_book"
+                      className={`
+                            ${focus ? "bg-gray-50 text-gray-900" : "text-gray-600"}
+                            group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50 h-full w-full
+                          `}
+                    >
+                      <Library className="h-5 w-5 mb-1 text-gray-400 group-hover:text-gray-600" />
+                      {t("sidebar.account_book")}
+                    </Link>
+                  )}
+                </MenuItem>
                 <MenuItem as={Fragment}>
                   {({ focus }) => (
                     <Link

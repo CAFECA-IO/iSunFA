@@ -56,13 +56,13 @@ export function VoucherRow({
   const getTypeName = (style: TradingType) => {
     switch (style) {
       case TradingType.OUTCOME:
-        return t("voucher.main_view.table.types.outcome") || "支出傳票";
+        return t("voucher.main_view.table.types.outcome");
       case TradingType.INCOME:
-        return t("voucher.main_view.table.types.income") || "收入傳票";
+        return t("voucher.main_view.table.types.income");
       case TradingType.TRANSFER:
-        return t("voucher.main_view.table.types.transfer") || "轉帳傳票";
+        return t("voucher.main_view.table.types.transfer");
       default:
-        return t("voucher.main_view.table.types.unknown") || "未知傳票";
+        return t("voucher.main_view.table.types.unknown");
     }
   };
 
@@ -237,11 +237,10 @@ export function VoucherRow({
               </span>
               {/* Info: (20260316 - Julian) 借方靠左，貸方靠右 */}
               <span
-                className={`${
-                  line.isDebit
+                className={`${line.isDebit
                     ? "font-bold text-slate-800"
                     : "ml-4 font-medium text-slate-700"
-                } truncate text-xs lg:max-w-[250px] lg:text-sm`}
+                  } truncate text-xs lg:max-w-[250px] lg:text-sm`}
               >
                 {line.accounting?.name}
               </span>
