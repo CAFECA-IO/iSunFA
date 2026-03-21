@@ -10,6 +10,7 @@ export interface ITeamRepository {
   deleteTeamMember(id: string): Promise<TeamMember>;
   updateTeam(id: string, data: Prisma.TeamUpdateInput): Promise<Team>;
   deleteTeam(id: string): Promise<Team>;
+  getTeamMember(userId: string, teamId: string): Promise<TeamMember | null>;
 }
 
 export class TeamRepository implements ITeamRepository {
@@ -65,6 +66,13 @@ export class TeamRepository implements ITeamRepository {
       where: { id },
     });
     return team;
+  }
+
+  async getTeamMember(userId: string, teamId: string) {
+    const teamMember = await prisma.teamMember.findFirst({
+      where: { userId, teamId },
+    });
+    return teamMember;
   }
 }
 

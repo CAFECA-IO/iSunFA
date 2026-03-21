@@ -527,6 +527,18 @@ export const en = {
     empty_title: "No Available Account Books",
     empty_desc: "You currently have no accessible account books, or your access has been removed.",
     role: "Role",
+    create_button: "Create Account Book",
+    edit_button: "Edit",
+    form_create_title: "Create Account Book",
+    form_edit_title: "Edit Account Book",
+    form_name: "Name",
+    form_country: "Country / Region",
+    form_currency: "Currency",
+    form_rule: "Accounting Rule",
+    form_team: "Team",
+    form_enterprise_id: "Unified Business No. (Optional)",
+    submit: "Submit",
+    cancel: "Cancel",
   },
   sidebar: {
     modules: "Modules",
@@ -534,6 +546,7 @@ export const en = {
     billing: "Purchase & Billing",
     team: "Team Management",
     settings: "Settings",
+    account_book: "Switch Account Book",
   },
   locked: {
     title: "Function Not Activated",
@@ -914,6 +927,13 @@ export const en = {
     },
   },
   ocr: {
+    prepared_files_prefix: "Prepared ",
+    prepared_files_suffix: " files",
+    add_more_or_analyze: "You can add more files or start batch analysis.",
+    clear_all_btn: "Clear All",
+    add_more_btn: "Add More",
+    analyze_all_btn: "Analyze All",
+    multiple_files_supported: "Supports batch uploading multiple files (.jpg, .png, .pdf)",
     title: "Invoice Management",
     upload: "Upload",
     list: "List",
@@ -1192,9 +1212,10 @@ export const en = {
     },
     "close_confirm": {
       "title": "Close without saving?",
-      "message": "You have unsaved changes. These will be lost. Proceed?",
-      "confirm": "Leave",
-      "cancel": "Cancel"
+      "message": "Review the changes you've made to the ESG records. Are you sure you want to save?",
+      "confirm": "Confirm Save",
+      "cancel": "Cancel",
+      "success": "Verification data saved"
     },
     "save_confirm": {
       "title": "Save changes?",
@@ -1202,5 +1223,32 @@ export const en = {
       "confirm": "Save",
       "cancel": "Cancel"
     }
+  },
+  "esg_target": {
+    "select_industry": "Industry Category",
+    "ind_power": "Power & Electricity",
+    "ind_steel": "Steel & Metals",
+    "ind_cement": "Cement & Building Materials",
+    "ind_petro": "Petrochemicals & Plastics",
+    "ind_semiconductor": "Semiconductor",
+    "ind_transport": "Transportation & Logistics",
+    "ind_retail": "Retail & E-commerce",
+    "ind_telecom": "Telecom & Internet",
+    "btn": "Set Annual Target",
+    "title": "Annual Carbon Emission Target Setting",
+    "past_records": "Historical Carbon Emission Records",
+    "year": "Year",
+    "emissions": "Emissions (kgCO2e)",
+    "revenue": "Revenue (10k)",
+    "intensity": "Intensity",
+    "set_target_intensity": "Set Target Intensity for This Year",
+    "target_placeholder": "Enter Target Intensity",
+    "target_unit": "kgCO2e / 10k TWD Revenue",
+    "reduction_from_last_year": "Compared to Last Year",
+    "decrease": "Reduction",
+    "increase": "Increase",
+    "taiwan_ranking": "Top % in TW Enterprises",
+    "industry_ranking": "Top % in Similar Industry",
+    "save": "Save Settings"
   }
 };

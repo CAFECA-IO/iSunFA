@@ -375,8 +375,9 @@ model AccountBook {
   currency  String
   rule      String
   createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  deletedAt DateTime?  @map("deleted_at")
+  enterpriseId String? @map("enterprise_id")
 
   // Info: (20260306 - Luphia) 帳本所屬的團隊
   teamId String @map("team_id")

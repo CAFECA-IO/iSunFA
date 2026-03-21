@@ -120,7 +120,7 @@ export default function EsgTableSection() {
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       {/* Info: (20260312 - Julian) Toolbar */}
       <div className="flex flex-col items-center justify-between gap-2 border-b border-slate-200 p-4 lg:flex-row">
         <div className="relative w-full max-w-sm">
@@ -131,7 +131,7 @@ export default function EsgTableSection() {
             aria-label={t("esg_table.search_aria")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+            className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm">
@@ -201,28 +201,28 @@ export default function EsgTableSection() {
         <table className="w-full min-w-[800px] border-collapse text-left">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50/70">
-              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
+              <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.voucher")}
               </th>
-              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
+              <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.date")}
               </th>
-              <th className="p-2 text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
+              <th className="p-2 text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.activity_target")}
               </th>
-              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
+              <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.raw_data")}
               </th>
-              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
+              <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.emissions")}
               </th>
-              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
+              <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.intensity_label")}
               </th>
-              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
+              <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.ai_confidence")}
               </th>
-              <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
+              <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                 {t("esg_table.header.status")}
               </th>
             </tr>

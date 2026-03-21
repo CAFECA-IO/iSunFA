@@ -86,10 +86,10 @@ export function EsgRow({
       <tr className="border-b border-slate-200 bg-slate-50 opacity-80 transition-colors last:border-0">
         <td className="p-2 lg:px-6 lg:py-4">
           <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
-            <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
           </div>
         </td>
-        <td className="p-2 text-center text-xs font-bold whitespace-nowrap text-slate-400 lg:px-6 lg:py-4 lg:text-sm">
+        <td className="p-2 text-center text-xs font-semibold whitespace-nowrap text-slate-400 lg:px-6 lg:py-4 lg:text-sm">
           {timestampToString(record.dateTimestamp).dateWithDash}
         </td>
         <td
@@ -125,7 +125,7 @@ export function EsgRow({
             <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
           </div>
         </td>
-        <td className="p-2 text-center text-xs font-bold whitespace-nowrap text-blue-400 lg:px-6 lg:py-4 lg:text-sm">
+        <td className="p-2 text-center text-xs font-semibold whitespace-nowrap text-blue-400 lg:px-6 lg:py-4 lg:text-sm">
           {timestampToString(record.dateTimestamp).dateWithDash}
         </td>
         <td
@@ -184,7 +184,7 @@ export function EsgRow({
         </div>
       </td>
       {/* Info: (20260320 - Julian) Date */}
-      <td className="p-2 text-center text-xs font-bold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4 lg:text-sm">
+      <td className="p-2 text-center text-xs font-semibold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4 lg:text-sm">
         {timestampToString(record.dateTimestamp).dateWithDash}
       </td>
       {/* Info: (20260320 - Julian) Activity Type */}
@@ -199,19 +199,19 @@ export function EsgRow({
       </td>
       {/* Info: (20260320 - Julian) Activity Data */}
       <td className="p-2 text-center whitespace-nowrap lg:px-6 lg:py-4">
-        <span className="text-[15px] font-bold text-slate-800">
+        <span className="text-sm font-semibold text-slate-800">
           {record.rawActivityData}{" "}
         </span>
         <span className="text-xs font-bold text-slate-500">{record.unit}</span>
       </td>
       {/* Info: (20260320 - Julian) Emissions */}
-      <td className="p-2 text-center text-[15px] font-bold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4">
+      <td className="p-2 text-center text-sm font-semibold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4">
         {record.emissions}
       </td>
       {/* Info: (20260320 - Julian) Intensity */}
       <td className="p-2 text-center lg:px-6 lg:py-4">
         <span
-          className={`inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-bold whitespace-nowrap transition-colors ${renderIntensity(record.intensity).style}`}
+          className={`inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-semibold whitespace-nowrap transition-colors ${renderIntensity(record.intensity).style}`}
         >
           {renderIntensity(record.intensity).text}
         </span>
@@ -228,7 +228,7 @@ export function EsgRow({
               style={{ width: `${record.confidence}%` }}
             ></div>
           </div>
-          <span className="text-sm font-black whitespace-nowrap text-slate-700">
+          <span className="text-sm font-bold whitespace-nowrap text-slate-700">
             {record.confidence}%
           </span>
         </div>

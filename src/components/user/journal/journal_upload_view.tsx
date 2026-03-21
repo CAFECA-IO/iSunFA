@@ -9,11 +9,21 @@ import {
   RotateCcw,
   Wand2,
   File as FileIcon,
+  X,
+  Plus
 } from "lucide-react";
 import { uploadFile, fileToBase64 } from "@/lib/file_operator";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
+
+type UploadedFileData = {
+  id: string;
+  file: File;
+  previewUrl: string | null;
+  hash: string;
+  base64: string;
+};
 
 export default function JournalUploadView({
   onUploadComplete,
@@ -28,51 +38,53 @@ export default function JournalUploadView({
 
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [analyzedCount, setAnalyzedCount] = useState<number>(0);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [uploadedFile, setUploadedFile] = useState<{
-    file: File;
-    previewUrl: string | null;
-    hash: string;
-    base64: string;
-  } | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFileData[]>([]);
 
   useEffect(() => {
     return () => {
-      if (uploadedFile?.previewUrl) {
-        URL.revokeObjectURL(uploadedFile.previewUrl);
-      }
+      // Info: (20260321 - Julian) 清除 ObjectURLs 防記憶體耗盡
+      uploadedFiles.forEach((f) => {
+        if (f.previewUrl) URL.revokeObjectURL(f.previewUrl);
+      });
     };
-  }, [uploadedFile]);
+  }, [uploadedFiles]);
 
-  const processFile = async (file: File) => {
+  const processFiles = async (files: File[]) => {
     setIsUploading(true);
     try {
-      const [hashInfo, base64] = await Promise.all([
-        new Promise<{ hash: string }>((resolve, reject) => {
-          uploadFile(file, {
-            onSuccess: (hash) => resolve({ hash }),
-            onError: (error) => reject(error),
+      const newUploads: UploadedFileData[] = [];
+      // Info: (20260321 - Julian) 批次平行上傳至雲端儲存
+      await Promise.all(
+        files.map(async (file) => {
+          const [hashInfo, base64] = await Promise.all([
+            new Promise<{ hash: string }>((resolve, reject) => {
+              uploadFile(file, {
+                onSuccess: (hash) => resolve({ hash }),
+                onError: (error) => reject(error),
+              });
+            }),
+            fileToBase64(file),
+          ]);
+          newUploads.push({
+            id: crypto.randomUUID(),
+            file: {
+              ...file,
+              name: file.name,
+              type: file.type,
+            },
+            previewUrl: file.type.startsWith("image/")
+              ? URL.createObjectURL(file)
+              : null,
+            hash: hashInfo.hash,
+            base64,
           });
-        }),
-        fileToBase64(file),
-      ]);
-      const { hash } = hashInfo;
-
-      // Info: (20260320 - Julian) 儲存檔案
-      setUploadedFile({
-        file:{
-          ...file,
-          name: file.name,
-          type: file.type,
-        },
-        previewUrl: file.type.startsWith("image/")
-          ? URL.createObjectURL(file)
-          : null,
-        hash,
-        base64,
-      });
+        })
+      );
+      setUploadedFiles((prev) => [...prev, ...newUploads]);
     } catch (error) {
       console.error("Upload failed", error);
     } finally {
@@ -80,28 +92,38 @@ export default function JournalUploadView({
     }
   };
 
-  const handleAnalyze = async (e: React.MouseEvent) => {
+  const handleAnalyzeAll = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!uploadedFile) return;
+    if (uploadedFiles.length === 0) return;
 
     setIsAnalyzing(true);
+    setAnalyzedCount(0);
     try {
-      const data = await request<IApiResponse<object>>(
-        `/api/v1/user/account_book/${accountBookId}/ai_analysis`,
-        {
-          method: "POST",
-          body: JSON.stringify({ file: uploadedFile }),
-        },
-      );
-
-      if (data.code === ApiCode.SUCCESS) {
-        onUploadComplete?.();
+      // Info: (20260321 - Julian) 依序發送以避免伺服器超載
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const fileData = uploadedFiles[i];
+        const response = await request<IApiResponse<object>>(
+          `/api/v1/user/account_book/${accountBookId}/ai_analysis`,
+          {
+            method: "POST",
+            body: JSON.stringify({ file: fileData }),
+          }
+        );
+        if (response.code === ApiCode.SUCCESS) {
+          setAnalyzedCount((prev) => prev + 1);
+        }
       }
+      onUploadComplete?.();
     } catch (error) {
-      console.error("Analysis failed", error);
+      console.error("Analysis failed:", error);
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const removeFile = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setUploadedFiles((prev) => prev.filter((f) => f.id !== id));
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -118,15 +140,14 @@ export default function JournalUploadView({
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      processFile(file);
+      processFiles(Array.from(e.dataTransfer.files));
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      processFile(file);
+      processFiles(Array.from(e.target.files));
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -138,128 +159,173 @@ export default function JournalUploadView({
     <>
       {/* Info: (20260304 - Julian) Full screen loading overlay during AI analysis */}
       {isAnalyzing && (
-        <div className="fixed inset-0 z-100 flex flex-col items-center justify-center bg-white/60 backdrop-blur-md backdrop-saturate-150 transition-all duration-300">
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md backdrop-saturate-150 transition-all duration-300">
           <Loader2 className="mb-6 h-16 w-16 animate-spin text-orange-500 drop-shadow-md" />
           <p className="text-2xl font-bold tracking-wide text-slate-800 drop-shadow-sm">
-            AI 正在為您分析憑證...
+            {t("ocr.analyzing")}
           </p>
-          <p className="mt-3 text-base font-medium text-slate-500">
-            這可能需要一點時間，請稍候
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <span className="text-2xl font-black tracking-tight text-orange-600">
+              {analyzedCount}
+            </span>
+            <span className="text-xl font-bold text-slate-400">/</span>
+            <span className="text-2xl font-bold tracking-tight text-slate-600">
+              {uploadedFiles.length}
+            </span>
+          </div>
+          <p className="mt-4 text-sm font-semibold text-slate-500">
+            {t("ocr.please_wait")}
           </p>
         </div>
       )}
 
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
-        className={`flex h-full flex-col items-center justify-center rounded-2xl border-2 p-20 transition-colors lg:h-[calc(100vh-250px)] lg:p-[100px] ${
-          uploadedFile
-            ? "border-transparent bg-white shadow-[0_0_15px_rgba(0,0,0,0.05)]"
-            : isDragging
-              ? "border-dashed border-orange-500 bg-orange-50"
-              : "border-dashed border-gray-300 bg-white hover:border-orange-400 hover:bg-gray-50"
-        }`}
-        onDragOver={!uploadedFile ? handleDragOver : undefined}
-        onDragLeave={!uploadedFile ? handleDragLeave : undefined}
-        onDrop={!uploadedFile ? handleDrop : undefined}
-        onClick={!uploadedFile && !isUploading ? triggerFileInput : undefined}
+        className={`flex h-full min-h-[500px] flex-col rounded-2xl border-2 transition-colors lg:h-[calc(100vh-250px)] ${uploadedFiles.length > 0
+          ? "border-transparent bg-white shadow-[0_0_15px_rgba(0,0,0,0.05)] p-6 lg:p-10"
+          : isDragging
+            ? "items-center justify-center border-dashed border-orange-500 bg-orange-50 p-20 lg:p-[100px]"
+            : "items-center justify-center border-dashed border-slate-300 bg-white hover:border-orange-400 hover:bg-slate-50 p-20 lg:p-[100px]"
+          }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={
+          uploadedFiles.length === 0 && !isUploading
+            ? triggerFileInput
+            : undefined
+        }
         onKeyDown={(e) => {
-          if (!uploadedFile && (e.key === "Enter" || e.key === " ")) {
+          if (
+            uploadedFiles.length === 0 &&
+            (e.key === "Enter" || e.key === " ")
+          ) {
             e.preventDefault();
             if (!isUploading) triggerFileInput();
           }
         }}
-        role={!uploadedFile ? "button" : "presentation"}
-        tabIndex={!uploadedFile ? 0 : -1}
-        aria-label={
-          !uploadedFile ? (t("ocr.click_or_drag") as string) : undefined
-        }
+        role={uploadedFiles.length === 0 ? "button" : "presentation"}
+        tabIndex={uploadedFiles.length === 0 ? 0 : -1}
       >
         <input
           type="file"
+          multiple
           ref={fileInputRef}
           onChange={handleFileChange}
           className="hidden"
-          disabled={isUploading || !!uploadedFile}
-          aria-label="Upload file"
+          disabled={isUploading}
+          aria-label="Upload multiple files"
         />
-        {uploadedFile ? (
-          <div className="animate-in fade-in zoom-in flex w-full max-w-md flex-col items-center gap-6 p-8 duration-300">
-            {/* File Preview */}
-            <div className="flex w-full flex-col items-center gap-3">
-              <div className="relative flex h-48 w-full items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-gray-50 shadow-inner">
-                {uploadedFile.previewUrl ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={uploadedFile.previewUrl}
-                    alt={uploadedFile.file.name}
-                    className="h-full w-full object-contain p-2"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center text-gray-400">
-                    <FileIcon className="mb-2 h-16 w-16 text-gray-300" />
-                    <span className="text-sm font-medium">
-                      No Preview Available
-                    </span>
-                  </div>
-                )}
+
+        {uploadedFiles.length > 0 ? (
+          <div className="flex h-full w-full flex-col animate-in fade-in zoom-in duration-300">
+            {/* Info: (20260321 - Luphia) Action Bar */}
+            <div className="mb-6 flex flex-col items-start justify-between gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center">
+              <div>
+                <h3 className="text-xl font-bold text-slate-800">
+                  {t("ocr.prepared_files_prefix")}{uploadedFiles.length}{t("ocr.prepared_files_suffix")}
+                </h3>
+                <p className="mt-1 text-sm font-medium text-slate-500">{t("ocr.add_more_or_analyze")}</p>
               </div>
-              <p
-                className="w-full max-w-full truncate text-center text-sm font-medium text-gray-700"
-                title={uploadedFile.file.name}
-              >
-                {uploadedFile.file.name}
-              </p>
-            </div>
-
-            <div className="mt-2 flex w-full flex-col items-center">
-              <h3 className="mb-5 text-lg font-semibold text-gray-900">
-                {t("ocr.analyze_prompt")}
-              </h3>
-
-              <div className="flex w-full flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-orange-600 hover:shadow focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                  onClick={handleAnalyze}
-                  disabled={isAnalyzing}
-                >
-                  {isAnalyzing ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Wand2 className="h-4 w-4" />
-                  )}
-                  {t("ocr.analyze_btn")}
-                </button>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 focus:ring-2 focus:ring-gray-200 focus:ring-offset-2 focus:outline-none"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setUploadedFile(null);
+                    setUploadedFiles([]);
                   }}
+                  disabled={isAnalyzing}
                 >
                   <RotateCcw className="h-4 w-4" />
-                  {t("ocr.reupload_btn")}
+                  {t("ocr.clear_all_btn")}
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-semibold text-orange-600 shadow-sm transition-all hover:border-orange-300 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:ring-offset-2 disabled:opacity-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    triggerFileInput();
+                  }}
+                  disabled={isUploading || isAnalyzing}
+                >
+                  <Plus className="h-4 w-4" />
+                  {t("ocr.add_more_btn")}
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-orange-600 hover:shadow focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={handleAnalyzeAll}
+                  disabled={isAnalyzing || isUploading}
+                >
+                  <Wand2 className="h-4 w-4" />
+                  {t("ocr.analyze_all_btn")}
                 </button>
               </div>
+            </div>
+
+            {/* Info: (20260321 - Luphia) Grid display for uploaded files */}
+            <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200 grid flex-1 auto-rows-max grid-cols-2 gap-4 overflow-y-auto pr-2 pb-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+              {uploadedFiles.map((fileData) => (
+                <div
+                  key={fileData.id}
+                  className="group relative flex flex-col items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-all hover:border-orange-300 hover:shadow-md"
+                >
+                  <button
+                    type="button"
+                    onClick={(e) => removeFile(fileData.id, e)}
+                    className="absolute -right-2 -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 transition-all hover:text-red-500 hover:ring-red-200 hover:shadow focus:outline-none opacity-0 group-hover:opacity-100"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <div className="relative flex h-32 w-full items-center justify-center overflow-hidden rounded-lg bg-slate-50 group-hover:bg-orange-50/50 transition-colors">
+                    {fileData.previewUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={fileData.previewUrl}
+                        alt={fileData.file.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center text-slate-400 group-hover:text-orange-400">
+                        <FileIcon className="mb-2 h-8 w-8 text-current" />
+                        <span className="text-xs font-semibold">{t("ocr.no_image")}</span>
+                      </div>
+                    )}
+                  </div>
+                  <p
+                    className="w-full truncate text-center text-xs font-semibold text-slate-600 group-hover:text-slate-900"
+                    title={fileData.file.name}
+                  >
+                    {fileData.file.name}
+                  </p>
+                </div>
+              ))}
+
+              {isUploading && (
+                <div className="flex h-[182px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-orange-300 bg-orange-50/50 p-4 text-orange-500">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  <span className="text-sm font-bold">{t("ocr.uploading")}</span>
+                </div>
+              )}
             </div>
           </div>
         ) : isUploading ? (
           <div className="flex flex-col items-center gap-4 text-orange-600">
             <Loader2 className="h-12 w-12 animate-spin" />
-            <p className="text-lg font-medium">{t("ocr.uploading")}</p>
+            <p className="text-xl font-bold">{t("ocr.uploading")}</p>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4 text-gray-500">
-            <div className="rounded-full bg-orange-50 p-4 text-orange-500 transition-colors group-hover:bg-orange-100">
-              <UploadCloud className="h-10 w-10" />
+          <div className="flex flex-col items-center gap-5 text-slate-500">
+            <div className="rounded-full bg-orange-50 p-5 text-orange-500 transition-colors group-hover:bg-orange-100">
+              <UploadCloud className="h-12 w-12" />
             </div>
             <div className="text-center">
-              <p className="text-lg font-semibold text-gray-700">
+              <p className="text-xl font-bold text-slate-700">
                 {t("ocr.click_or_drag")}
               </p>
-              <p className="mt-1 text-sm text-gray-500">
-                {t("ocr.single_file_only")}
+              <p className="mt-2 text-sm font-medium text-slate-500">
+                {t("ocr.multiple_files_supported")}
               </p>
             </div>
           </div>
