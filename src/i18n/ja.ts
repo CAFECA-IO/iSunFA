@@ -886,6 +886,13 @@ export const ja = {
     button: "今すぐAIに相談",
   },
   ocr: {
+    prepared_files_prefix: "準備済み：",
+    prepared_files_suffix: " 件",
+    add_more_or_analyze: "さらに追加するか、一括分析を開始できます",
+    clear_all_btn: "すべてクリア",
+    add_more_btn: "さらに追加",
+    analyze_all_btn: "一括分析 (Analyze All)",
+    multiple_files_supported: "複数ファイルの一括アップロードに対応 (.jpg, .png, .pdf)",
     title: "請求書管理",
     upload: "アップロード",
     list: "リスト",

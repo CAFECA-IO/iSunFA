@@ -865,6 +865,13 @@ export const zhCn = {
     button: "立即咨询 AI",
   },
   ocr: {
+    prepared_files_prefix: "已准备好 ",
+    prepared_files_suffix: " 份凭证",
+    add_more_or_analyze: "您可以继续新增凭证，或一次开始批次分析",
+    clear_all_btn: "清除全部",
+    add_more_btn: "继续新增",
+    analyze_all_btn: "批次分析 (Analyze All)",
+    multiple_files_supported: "支持批次上传多个凭证文件 (.jpg, .png, .pdf)",
     title: "发票管理",
     upload: "上传发票",
     list: "发票列表",

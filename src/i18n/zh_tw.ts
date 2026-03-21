@@ -950,6 +950,13 @@ export const zhTw = {
     },
   },
   ocr: {
+    prepared_files_prefix: "已準備好 ",
+    prepared_files_suffix: " 份憑證",
+    add_more_or_analyze: "您可以繼續新增憑證，或一次開始批次分析",
+    clear_all_btn: "清除全部",
+    add_more_btn: "繼續新增",
+    analyze_all_btn: "批次分析 (Analyze All)",
+    multiple_files_supported: "支援批次上傳多個憑證檔案 (.jpg, .png, .pdf)",
     title: "憑證管理",
     upload: "上傳憑證",
     list: "憑證清單",

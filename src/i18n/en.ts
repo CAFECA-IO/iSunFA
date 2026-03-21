@@ -927,6 +927,13 @@ export const en = {
     },
   },
   ocr: {
+    prepared_files_prefix: "Prepared ",
+    prepared_files_suffix: " files",
+    add_more_or_analyze: "You can add more files or start batch analysis.",
+    clear_all_btn: "Clear All",
+    add_more_btn: "Add More",
+    analyze_all_btn: "Analyze All",
+    multiple_files_supported: "Supports batch uploading multiple files (.jpg, .png, .pdf)",
     title: "Invoice Management",
     upload: "Upload",
     list: "List",

@@ -876,6 +876,13 @@ export const ko = {
     button: "지금 AI에게 질문하기",
   },
   ocr: {
+    prepared_files_prefix: "준비 완료: ",
+    prepared_files_suffix: "건",
+    add_more_or_analyze: "파일을 추가하거나 일괄 분석을 시작할 수 있습니다",
+    clear_all_btn: "모두 지우기",
+    add_more_btn: "추가하기",
+    analyze_all_btn: "일괄 분석 (Analyze All)",
+    multiple_files_supported: "여러 파일의 일괄 업로드 지원 (.jpg, .png, .pdf)",
     title: "청구서 관리",
     upload: "업로드",
     list: "목록",
