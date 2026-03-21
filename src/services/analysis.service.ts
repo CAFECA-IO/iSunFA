@@ -81,8 +81,8 @@ export class AnalysisService {
           const score = carbonHealthScoreMatch ? parseInt(carbonHealthScoreMatch[1], 10) : 50;
 
           let tier2Status = 'NONE';
-          if (prerequisiteStr.includes('雷神之鎚')) tier2Status = 'HAMMER';
-          if (prerequisiteStr.includes('免死金牌')) tier2Status = 'SHIELD';
+          if (prerequisiteStr.includes('高碳排鎖定警示') || prerequisiteStr.includes('雷神之鎚')) tier2Status = 'HAMMER';
+          if (prerequisiteStr.includes('戰略性氣候基建') || prerequisiteStr.includes('免死金牌')) tier2Status = 'SHIELD';
 
           const firstLayerMatch = prerequisiteStr.match(/第一層：物理現實([\s\S]*?)(第二層|戰略外掛|附錄)/);
           const failedQuestionsText = firstLayerMatch ? firstLayerMatch[1].trim() : "未檢測到重大痛點";
@@ -166,6 +166,19 @@ export class AnalysisService {
               String(d.periodValue) === String(params.periodValue) &&
               d.year === params.year &&
               d.keyword === params.keyword) {
+            
+            // Info: (20260321) Invalidate cache for net zero if a newer health check exists
+            if (params.category === 'net_zero_emissions') {
+              const latestHC = await prisma.analysis.findFirst({
+                where: { userId, type: 'carbon_health_check', data: { path: ['keyword'], equals: params.keyword } },
+                orderBy: { createdAt: 'desc' }
+              });
+              if (latestHC && m.createdAt < latestHC.createdAt) {
+                console.log(`[AnalysisService] Skipping cached net zero mission ${m.id} because a newer Carbon Health Check exists. Generating fresh report...`);
+                continue;
+              }
+            }
+
             cachedMissionId = m.id;
             break;
           }

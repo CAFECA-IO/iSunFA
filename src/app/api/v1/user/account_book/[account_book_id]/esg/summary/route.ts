@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IEsgDashboardSummary } from "@/interfaces/esg";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { esgRepo } from "@/repositories/esg.repo";
 
 /**
  * Info: (20260312 - Julian) 取得 ESG 儀表板摘要
@@ -24,14 +25,10 @@ export async function GET(
 
     // Info: (20260312 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: {
-        id: accountBookId,
-        team: {
-          teamMembers: { some: { user: { address: sessionUser.address } } },
-        },
-      },
-    });
+    const accountBook = await accountBookRepo.getAccountBookByIdAndUserAddress(
+      accountBookId,
+      sessionUser.address
+    );
 
     if (!accountBook) {
       return jsonFail(
@@ -41,11 +38,7 @@ export async function GET(
     }
 
     // Info: (20260312 - Julian) 取得摘要
-    const summary = await prisma.esgDashboardSummary.findUnique({
-      where: {
-        accountBookId,
-      },
-    });
+    const summary = await esgRepo.getDashboardSummaryByAccountBookId(accountBookId);
 
     // Info: (20260312 - Julian) 組合 response
     let dashboardSummary: IEsgDashboardSummary;

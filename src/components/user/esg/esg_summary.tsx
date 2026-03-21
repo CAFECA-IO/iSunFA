@@ -117,16 +117,16 @@ export default function EsgSummary() {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       {/* Info: (20260312 - Julian) 本月總排放量 */}
-      <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
+      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-bold text-slate-500">
               {t("esg_summary.total_emissions")}
             </span>
-            <Cloud className="h-5 w-5 text-green-400" />
+            <Cloud className="h-5 w-5 text-emerald-500" />
           </div>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-[32px] font-black tracking-tight text-slate-800">
+            <span className="text-2xl font-bold tracking-tight text-slate-800">
               {summaryData.totalEmissions.value.toLocaleString()}
             </span>
             <span className="text-sm font-bold text-slate-500">
@@ -145,16 +145,16 @@ export default function EsgSummary() {
       </div>
 
       {/* Info: (20260312 - Julian) 碳排放強度 */}
-      <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
+      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-bold text-slate-500">
               {t("esg_summary.emission_intensity")}
             </span>
-            <BarChart3 className="h-5 w-5 text-amber-400" />
+            <BarChart3 className="h-5 w-5 text-orange-500" />
           </div>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-[32px] font-black tracking-tight text-slate-800">
+            <span className="text-2xl font-bold tracking-tight text-slate-800">
               {summaryData.emissionIntensity.value.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
               })}
@@ -172,7 +172,7 @@ export default function EsgSummary() {
       </div>
 
       {/* Info: (20260312 - Julian) 各範疇分布 */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div className="mb-5 text-center text-sm font-bold text-slate-500">
           {t("esg_summary.scope_distribution")}
         </div>
@@ -184,16 +184,16 @@ export default function EsgSummary() {
       </div>
 
       {/* Info: (20260312 - Julian) 年度目標進度 */}
-      <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
+      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-bold text-slate-500">
               {t("esg_summary.annual_goal_progress")}
             </span>
-            <Target className="h-5 w-5 text-red-500" />
+            <Target className="h-5 w-5 text-orange-600" />
           </div>
           <div className="mt-2 flex items-baseline gap-1">
-            <span className="text-[32px] font-black tracking-tight text-red-500">
+            <span className="text-2xl font-bold tracking-tight text-orange-600">
               {summaryData.goalProgress.percentage}%
             </span>
             <span className="text-sm font-bold text-slate-500">/ 100%</span>
@@ -202,7 +202,7 @@ export default function EsgSummary() {
         <div className="mt-8">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
-              className="h-full rounded-full bg-green-400"
+              className="h-full rounded-full bg-orange-500"
               style={{ width: `${summaryData.goalProgress.percentage}%` }}
             ></div>
           </div>
