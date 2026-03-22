@@ -251,7 +251,7 @@ export default function UserMainPage() {
                     type="text"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm text-gray-900 bg-white"
                   />
                 </div>
 
@@ -266,7 +266,7 @@ export default function UserMainPage() {
                     max="2050"
                     value={formStartYear}
                     onChange={(e) => setFormStartYear(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm text-gray-900 bg-white"
                   />
                 </div>
 
@@ -278,7 +278,7 @@ export default function UserMainPage() {
                       required
                       value={formTeamId}
                       onChange={(e) => setFormTeamId(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white text-gray-900"
                     >
                       {teams.map((t) => (
                         <option key={t.id} value={t.id}>{t.name}</option>
@@ -296,7 +296,7 @@ export default function UserMainPage() {
                     value={formEnterpriseId}
                     onChange={(e) => setFormEnterpriseId(e.target.value)}
                     placeholder="12345678"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm text-gray-900 bg-white"
                   />
                 </div>
 
@@ -306,7 +306,7 @@ export default function UserMainPage() {
                     id="form_esg_industry"
                     value={formEsgIndustryId}
                     onChange={(e) => setFormEsgIndustryId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white text-gray-900"
                   >
                     <option value="">---</option>
                     {ESG_INDUSTRY_BENCHMARKS.map((i) => (
@@ -323,7 +323,7 @@ export default function UserMainPage() {
                       required
                       value={formCountry}
                       onChange={(e) => setFormCountry(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white text-gray-900"
                     >
                       {Object.entries(COUNTRY).map(([key, val]) => (
                         <option key={key} value={val}>{key}</option>
@@ -337,7 +337,7 @@ export default function UserMainPage() {
                       required
                       value={formCurrency}
                       onChange={(e) => setFormCurrency(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white text-gray-900"
                     >
                       {Object.entries(CURRENCY).map(([key, val]) => (
                         <option key={key} value={val}>{val}</option>
@@ -353,7 +353,7 @@ export default function UserMainPage() {
                     required
                     value={formRule}
                     onChange={(e) => setFormRule(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white text-gray-900"
                   >
                     {Object.entries(RULE).map(([key, val]) => (
                       <option key={key} value={val}>{val}</option>
