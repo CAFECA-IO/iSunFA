@@ -1,9 +1,10 @@
 "use client";
 
-import { Leaf, Download, Target } from "lucide-react";
+import { Leaf, Target } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { request } from "@/lib/utils/request";
 import EsgSummary from "@/components/user/esg/esg_summary";
 import EsgTableSection from "@/components/user/esg/esg_table_section";
 import EsgTargetModal from "@/components/user/esg/esg_target_modal";
@@ -14,6 +15,44 @@ export default function EsgMainView() {
   const accountBookId = params?.account_book_id as string;
 
   const [isTargetModalOpen, setIsTargetModalOpen] = useState(false);
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState<number | "">("");
+
+  const [startYear, setStartYear] = useState<number>(currentYear);
+  const [startMonth, setStartMonth] = useState<number>(1);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [accountBook, setAccountBook] = useState<any>(null);
+
+  useEffect(() => {
+    if (accountBookId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      request(`/api/v1/user/account_book/${accountBookId}`).then((res: any) => {
+        if (res.payload) {
+          setAccountBook(res.payload);
+          if (res.payload.createdAt) {
+            const createdAt = new Date(res.payload.createdAt);
+            setStartYear(createdAt.getFullYear());
+            setStartMonth(createdAt.getMonth() + 1);
+          }
+        }
+      }).catch(err => console.error(err));
+    }
+  }, [accountBookId]);
+
+  const yearsLength = Math.max(1, currentYear - startYear + 1);
+  const years = Array.from({ length: yearsLength }, (_, i) => currentYear - i);
+
+  let months = Array.from({ length: 12 }, (_, i) => i + 1);
+  if (selectedYear === currentYear) {
+    months = months.filter(m => m <= currentMonth);
+  }
+  if (selectedYear === startYear) {
+    months = months.filter(m => m >= startMonth);
+  }
+
 
   return (
     <div className="flex max-w-[calc(100vw-30px)] flex-col space-y-6 px-0 md:px-12">
@@ -29,6 +68,29 @@ export default function EsgMainView() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y} {t("esg_main.year")}
+              </option>
+            ))}
+          </select>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value ? Number(e.target.value) : "")}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+          >
+            <option value="">{t("esg_main.all_year")}</option>
+            {months.map((m) => (
+              <option key={m} value={m}>
+                {m} {t("esg_main.month")}
+              </option>
+            ))}
+          </select>
           <button
             type="button"
             onClick={() => setIsTargetModalOpen(true)}
@@ -37,28 +99,22 @@ export default function EsgMainView() {
             <Target className="mr-2 h-4 w-4" />
             {t("esg_target.btn")}
           </button>
-          <button
-            type="button"
-            disabled
-            className="flex items-center rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-bold text-slate-500 transition-colors enabled:hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            {t("esg_main.export_button")}
-          </button>
+
         </div>
       </div>
 
       {/* Info: (20260312 - Julian) Summary */}
-      <EsgSummary />
+      <EsgSummary year={selectedYear} month={selectedMonth} />
 
       {/* Info: (20260312 - Julian) Table Section */}
-      <EsgTableSection />
+      <EsgTableSection year={selectedYear} month={selectedMonth} />
 
       {/* Info: (20260321 - Luphia) Target Modal */}
       <EsgTargetModal
         isOpen={isTargetModalOpen}
         onClose={() => setIsTargetModalOpen(false)}
         accountBookId={accountBookId}
+        esgIndustryId={accountBook?.esgIndustryId || null}
       />
     </div>
   );

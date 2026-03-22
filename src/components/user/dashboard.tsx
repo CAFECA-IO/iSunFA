@@ -11,7 +11,14 @@ import { SystemMonitoringCard } from '@/components/user/dashboard/system_monitor
 export default function Dashboard() {
   const { loading } = useAuth();
   const [mounted, setMounted] = useState(false);
-  const { timeUnit, setTimeUnit, gasType, setGasType, currentData, loading: dataLoading, refresh, autoRefresh, setAutoRefresh } = useDashboardData();
+  const { 
+    timeUnit, setTimeUnit, 
+    selectedYear, setSelectedYear, 
+    selectedMonth, setSelectedMonth, 
+    startYear, startMonth,
+    gasType, setGasType, 
+    currentData, loading: dataLoading, refresh, autoRefresh, setAutoRefresh 
+  } = useDashboardData();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -36,6 +43,12 @@ export default function Dashboard() {
         autoRefresh={autoRefresh}
         setAutoRefresh={setAutoRefresh}
         loading={dataLoading}
+        selectedYear={selectedYear}
+        setSelectedYear={setSelectedYear}
+        selectedMonth={selectedMonth}
+        setSelectedMonth={setSelectedMonth}
+        startYear={startYear}
+        startMonth={startMonth}
       />
 
       {/* Info: (20260118 - Luphia) Row 1: Key Metrics */}

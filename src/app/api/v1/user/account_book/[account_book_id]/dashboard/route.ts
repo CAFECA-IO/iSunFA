@@ -5,21 +5,44 @@ import { prisma } from '@/lib/prisma';
 import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 import { teamRepo } from '@/repositories/team.repo';
 
-type TimeUnit = '24h' | '7d' | '30d' | '3m' | '1y';
+type TimeUnit = '7d' | '30d' | '3m' | '1y' | 'custom';
 type GasType = 'co2' | 'ch4' | 'n2o' | 'f_gases';
 
-const getBucketConfig = (timeUnit: TimeUnit) => {
+const getBucketConfig = (timeUnit: TimeUnit, yearStr?: string | null, monthStr?: string | null) => {
   const end = new Date();
   const start = new Date(end);
   let bucketMs = 0;
   let count = 0;
   let labelFormat: Intl.DateTimeFormatOptions = {};
 
-  if (timeUnit === '24h') {
-    start.setHours(end.getHours() - 24);
-    bucketMs = 60 * 60 * 1000;
-    count = 24;
-    labelFormat = { hour: '2-digit', minute: '2-digit' };
+  if (timeUnit === 'custom' && yearStr) {
+    const yearNum = parseInt(yearStr, 10);
+    const monthNum = monthStr ? parseInt(monthStr, 10) : null;
+
+    if (monthNum) {
+      start.setFullYear(yearNum, monthNum - 1, 1);
+      start.setHours(0, 0, 0, 0);
+      
+      const d = new Date(start);
+      d.setMonth(d.getMonth() + 1);
+      end.setTime(d.getTime() - 1);
+      
+      const days = new Date(yearNum, monthNum, 0).getDate();
+      count = days;
+      bucketMs = 24 * 60 * 60 * 1000;
+      labelFormat = { month: 'short', day: 'numeric' };
+    } else {
+      start.setFullYear(yearNum, 0, 1);
+      start.setHours(0, 0, 0, 0);
+      
+      const d = new Date(start);
+      d.setFullYear(d.getFullYear() + 1);
+      end.setTime(d.getTime() - 1);
+      
+      count = 12;
+      bucketMs = 0;
+      labelFormat = { year: '2-digit', month: 'short' };
+    }
   } else if (timeUnit === '7d') {
     start.setDate(end.getDate() - 7);
     start.setHours(0, 0, 0, 0);
@@ -58,9 +81,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
 
     const { account_book_id: accountBookId } = await params;
     const searchParams = req.nextUrl.searchParams;
-    const timeUnit = (searchParams.get('timeUnit') as TimeUnit) || '24h';
-    const validTimeUnits: TimeUnit[] = ['24h', '7d', '30d', '3m', '1y'];
-    const unit = validTimeUnits.includes(timeUnit) ? timeUnit : '24h';
+    const timeUnit = (searchParams.get('timeUnit') as TimeUnit) || '30d';
+    const yearStr = searchParams.get('year');
+    const monthStr = searchParams.get('month');
+    const validTimeUnits: TimeUnit[] = ['7d', '30d', '3m', '1y', 'custom'];
+    const unit = validTimeUnits.includes(timeUnit) ? timeUnit : '30d';
 
     const accountBook = await prisma.accountBook.findFirst({
       where: { id: accountBookId }
@@ -71,7 +96,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
     if (!teamMember) return jsonFail(ApiCode.FORBIDDEN, 'No permission');
 
     // Info: (20260321 - Luphia) Configuration
-    const { start, end, bucketMs, count, labelFormat } = getBucketConfig(unit);
+    const { start, end, bucketMs, count, labelFormat } = getBucketConfig(unit, yearStr, monthStr);
 
     // Info: (20260321 - Luphia) Initial old data to resolve trends (e.g. comparing previous period to current period)
     const prevStart = new Date(start.getTime() - (end.getTime() - start.getTime()));
@@ -100,7 +125,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
     // Info: (20260321 - Luphia) Initialize buckets
     const initializeBuckets = () => Array.from({ length: count }, (_, i) => {
       let ts = start.getTime() + (i * bucketMs);
-      if (unit === '1y') {
+      if (unit === '1y' || (unit === 'custom' && !monthStr)) {
         const d = new Date(start);
         d.setMonth(d.getMonth() + i);
         ts = d.getTime();
@@ -135,7 +160,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
 
         const ts = v.tradingDate.getTime();
         let bIdx = Math.floor((ts - start.getTime()) / bucketMs);
-        if (unit === '1y') {
+        if (unit === '1y' || (unit === 'custom' && !monthStr)) {
           const months = (v.tradingDate.getFullYear() - start.getFullYear()) * 12 + (v.tradingDate.getMonth() - start.getMonth());
           bIdx = Math.max(0, Math.min(count - 1, months));
         } else {
@@ -167,7 +192,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
         currentGas[gasType] += em;
 
         let bIdx = Math.floor((ts - start.getTime()) / bucketMs);
-        if (unit === '1y') {
+        if (unit === '1y' || (unit === 'custom' && !monthStr)) {
           const date = new Date(ts);
           const months = (date.getFullYear() - start.getFullYear()) * 12 + (date.getMonth() - start.getMonth());
           bIdx = Math.max(0, Math.min(count - 1, months));
@@ -229,6 +254,42 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
       ],
     };
 
+    // Info: (20260322 - Luphia) Dynamic ESG Target Calculation
+    const endYear = end.getFullYear();
+    const esgTarget = await prisma.esgTarget.findFirst({
+      where: { accountBookId, year: endYear }
+    });
+    const targetValue = esgTarget?.totalEmissionTarget ? Number(esgTarget.totalEmissionTarget) : null;
+
+    const startOfYearTs = Math.floor(new Date(endYear, 0, 1).getTime() / 1000);
+    const endOfYearTs = Math.floor(new Date(endYear, 11, 31, 23, 59, 59, 999).getTime() / 1000);
+    
+    const annualAgg = await prisma.esgRecord.aggregate({
+      where: {
+        accountBookId,
+        dateTimestamp: { gte: startOfYearTs, lte: endOfYearTs },
+        isVerified: true
+      },
+      _sum: { emissions: true }
+    });
+    const annualEmissionsSum = Number(annualAgg._sum.emissions || 0);
+
+    let goalStatus = 'on_track';
+    let goalProgress = 0;
+    let goalTargetStr = 'No target set';
+
+    if (targetValue !== null && targetValue > 0) {
+      goalProgress = Math.min(100, Math.round((annualEmissionsSum / targetValue) * 100));
+      goalTargetStr = `${targetValue} tCO2e by ${endYear}`;
+      
+      const now = new Date();
+      if (now.getFullYear() > endYear) {
+        goalStatus = annualEmissionsSum <= targetValue ? 'achieved' : 'not_achieved';
+      } else {
+        goalStatus = annualEmissionsSum <= targetValue ? 'on_track' : 'not_achieved';
+      }
+    }
+
     const generateGasPayload = (gasType: GasType) => {
       const ghgData = buckets.map(b => {
         const s1 = b.scope1[gasType];
@@ -265,9 +326,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
           scope3Trend: '+0%', scope3TrendVal: 0,
           emissionsIntensity: (cGas / Math.max(1, currentIncome / 1000)).toFixed(2),
           isTop10Percent: true,
-          goalStatus: 'on_track',
-          goalProgress: 75,
-          goalTarget: '-20% by 2030',
+          goalStatus,
+          goalProgress,
+          goalTarget: goalTargetStr,
         }
       };
     };

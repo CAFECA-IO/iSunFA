@@ -3,6 +3,9 @@ export const ja = {
     loading: "読み込み中...",
     save: "保存",
     confirm: "確認",
+    verify_all: "一括確認",
+    verify_all_confirm_title: "一括確認しますか？",
+    verify_all_confirm_desc: "これにより、すべての未確認項目が確認済みとしてマークされます。",
     cancel: "キャンセル",
     close: "閉じる",
     coming_soon_message: "まもなく登場",
@@ -61,6 +64,7 @@ export const ja = {
     carbon_tax_prediction: "炭素税予測",
     total_emissions: "総排出量",
     emissions_per_revenue: "売上高排出原単位",
+    per_10k_revenue: "/ $10k 売上高",
     eco_label: "エコマーク",
     top_10_percent: "上位 10%",
     goal_achievement: "削減目標",
@@ -68,6 +72,8 @@ export const ja = {
       on_track: "順調",
       at_risk: "リスクあり",
       behind: "未達",
+      achieved: "達成済み",
+      not_achieved: "未達",
     },
     ocr_status: "OCRステータス",
     ocr_processed: "自動ファイリング",
@@ -533,9 +539,11 @@ export const ja = {
     form_name: "帳簿名",
     form_country: "国・地域",
     form_currency: "通貨",
+    form_start_year: "開始年",
     form_rule: "会計基準",
     form_team: "所属チーム",
     form_enterprise_id: "統一企業番号 (任意)",
+    form_esg_industry: "業界分類 (ESG、任意)",
     submit: "確認",
     cancel: "キャンセル",
   },
@@ -558,7 +566,7 @@ export const ja = {
       searching: '検索中...',
       not_found: '企業が見つかりません。より完全な名称または法人番号を入力してください。'
     },
-    title: '財務分析',
+    title: '分析レポート',
     internal_analysis: '内部分析',
     external_analysis: '外部分析',
     history_reports: '履歴レポート',
@@ -960,7 +968,10 @@ export const ja = {
   "esg_main": {
     "title": "炭素排出管理およびESG分析",
     "description": "入力証憑を自動分析し、リアルタイムのカーボンニュートラル進捗状況と各排出ディメンション分析を提供します。",
-    "export_button": "ESG申告書を出力"
+    "export_button": "ESG申告書を出力",
+    "year": "年",
+    "month": "月",
+    "all_year": "通年"
   },
   "esg_summary": {
     "no_data_prefix": "現在この帳簿のESGデータはありません。まずは",
@@ -1036,29 +1047,29 @@ export const ja = {
       "intensity_high": "高強度"
     },
     "messages": {
-        "fetch_error": "伝票の取得に失敗しました",
-        "deleted_warning": "削除済みの伝票は編集できません"
-      },
-      "status": {
-        "pending": "確認待ち",
-        "verified": "確認済"
-      },
-      "sections": {
-        "preview": "領収書のプレビュー",
-        "basic_info": "基本情報",
-        "accounting_entries": "仕訳"
-      },
-      "validation": {
-        "empty_fields": "日付または種類が空です",
-        "unbalanced": "貸借が一致しません",
-        "empty_rows": "仕訳が空です",
-        "incomplete_row": "空の科目または金額が含まれています"
-      },
-      "balance_check": {
-        "title": "貸借一致チェック",
-        "balanced": "一致",
-        "unbalanced": "不一致"
-      },
+      "fetch_error": "伝票の取得に失敗しました",
+      "deleted_warning": "削除済みの伝票は編集できません"
+    },
+    "status": {
+      "pending": "確認待ち",
+      "verified": "確認済"
+    },
+    "sections": {
+      "preview": "領収書のプレビュー",
+      "basic_info": "基本情報",
+      "accounting_entries": "仕訳"
+    },
+    "validation": {
+      "empty_fields": "日付または種類が空です",
+      "unbalanced": "貸借が一致しません",
+      "empty_rows": "仕訳が空です",
+      "incomplete_row": "空の科目または金額が含まれています"
+    },
+    "balance_check": {
+      "title": "貸借一致チェック",
+      "balanced": "一致",
+      "unbalanced": "不一致"
+    },
     "actions": {
       "cancel_edit": "編集をキャンセル",
       "verify_save": "確認して保存",
@@ -1092,6 +1103,12 @@ export const ja = {
     "ind_retail": "小売・生活必需品",
     "ind_telecom": "通信・インターネット",
     "btn": "年間目標の設定",
+    "industry_rank": "業界トップ {{rank}}%",
+    "global_rank": "全台トップ {{rank}}%",
+    "unsaved_changes_warning": "保存されていない変更があります。本当に終了しますか？",
+    "unsaved_changes_title": "確認",
+    "target_total_emissions": "目標総排出量",
+    "target_revenue_emissions": "目標売上高別排出量",
     "title": "年間炭素排出目標の設定",
     "past_records": "過去の炭素排出記録",
     "year": "年",
@@ -1159,7 +1176,7 @@ export const ja = {
         },
         "no_file": "ファイルなし",
         "filter_btn": "フィルター",
-        "verify_all": "すべての伝票を確認",
+        "verify_all": "一括確認",
         "no_data": "伝票データがありません。"
       }
     },
@@ -1234,6 +1251,57 @@ export const ja = {
           "title": "伝票を保存",
           "message": "この伝票を保存してもよろしいですか？"
         }
+      }
+    },
+    "esg_industry_benchmarks": {
+      "spectrum": {
+        "extremely_high": "極めて高炭素",
+        "very_high": "非常に高炭素",
+        "high": "高炭素",
+        "mid_high": "中高炭素",
+        "medium": "中程度",
+        "mid_low": "中低炭素",
+        "extremely_low": "極めて低炭素"
+      },
+      "industry_1": {
+        "name": "石油化学工業",
+        "desc": "高：フォルモサ・ペトロケミカル (3,650 kg) 差の理由：ナフサ分解と自家発電石炭プラントによる避けられない化学物質の漏出と化石燃料の燃焼。"
+      },
+      "industry_2": {
+        "name": "セメント工業",
+        "desc": "高：アジアセメント (2,883 kg) 差の理由：石灰石の高温焼成（CO2直接放出）が大部分を占め、不動産低迷による収益分母縮小の影響を受けやすい。"
+      },
+      "industry_3": {
+        "name": "電力・エネルギー",
+        "desc": "高：麦寮汽電 (2,657 kg) / 低：台湾電力 (1,068 kg) 差の理由：麦寮は100%石炭火力、台電は原子力・水力・天然ガス等の多様なエネルギー構成網で炭素集約度を希釈。"
+      },
+      "industry_4": {
+        "name": "鉄鋼工業",
+        "desc": "高：中国鋼鉄 (520 kg) / 低：東和鋼鉄 (126 kg) 差の理由：伝統的な高炉は鉄鉱石還元に石炭が必要だが、電炉はスクラップ鋼と電力で製錬し還元炭素を7割以上削減する。"
+      },
+      "industry_5": {
+        "name": "海運・運輸業",
+        "desc": "高：外洋コンテナ海運 / 低：陸路輸送・新幹線 差の理由：重油を燃やす大型船はスコープ1の巨大排出源であり運賃相場の影響を受けやすいが、鉄道は電化率が高く優秀。"
+      },
+      "industry_6": {
+        "name": "通信・ネットワーク",
+        "desc": "高：中華電信 (271.8 kg) 差の理由：「工場無し＝低炭素」は神話。24時間稼働の5G基地局とIDCデータセンターの冷却装置は極めて恐ろしい電力消費源である。"
+      },
+      "industry_7": {
+        "name": "繊維・化学繊維",
+        "desc": "低：遠東新世紀 (59.2 kg) 差の理由：伝統的染色工場は水とエネルギーを大量消費するが、PETボトル再生技術や多角化経営により重工業の宿命を好転させた。"
+      },
+      "industry_8": {
+        "name": "半導体製造",
+        "desc": "高：TSMC (50.1 kg) 差の理由：EUV装置やクリーンルームの莫大な電力消費(スコープ2)が総排出を押し上げるが、超高単価なチップと大量のグリーン電力調達で集約度を抑制。"
+      },
+      "industry_9": {
+        "name": "小売・Eコマース",
+        "desc": "高：統一超商 (37.6 kg) / 低：富邦媒 (約23 kg) 差の理由：実店舗は24時間空調と開放型冷蔵庫がネック。Eコマースは店舗不要だが大規模な物流車両と自動倉庫の炭素排出を負担。"
+      },
+      "industry_10": {
+        "name": "知識・金融 (IC設計/IT/金融)",
+        "desc": "高：銀行 (~1.5 kg) / 低：MediaTek (1.86 kg) 差の理由：頭脳と資金に頼るビジネス。MediaTekは製造を外注。金融はオフィス電力のみだが、売上炭素比に含まれない「投融資炭素排出量」が潜在。"
       }
     }
   }

@@ -6,7 +6,6 @@ import {
   ChevronUp,
   ChevronDown,
   Search,
-  CheckCircle2,
   Filter,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -14,6 +13,7 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { VoucherRow } from "@/components/user/voucher/voucher_row";
 import VoucherDetailModal from "@/components/user/voucher/voucher_detail_modal";
+import ConfirmModal from "@/components/common/confirm_modal";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
 
 enum VoucherSorting {
@@ -40,6 +40,7 @@ export default function VoucherTableSection() {
   const [debouncedKeyWord, setDebouncedKeyWord] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] = useState<boolean>(false);
   const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
     null,
   );
@@ -177,7 +178,19 @@ export default function VoucherTableSection() {
   };
 
   const verifyAllVouchers = async () => {
-    // ToDo: (20260316 - Julian) 建立一鍵核對所有傳票的邏輯
+    if (!accountBookId) return;
+    try {
+      setIsLoading(true);
+      await request(
+        `/api/v1/user/account_book/${accountBookId}/voucher/verify_all`,
+        { method: "PUT" }
+      );
+      fetchVouchers();
+    } catch (error) {
+      console.error("Failed to verify all vouchers:", error);
+      setIsLoading(false);
+      setIsVerifyAllConfirmOpen(false);
+    }
   };
 
   const displayedVoucher = isLoading ? (
@@ -246,12 +259,11 @@ export default function VoucherTableSection() {
                 </button>
                 <button
                   type="button"
-                  disabled
-                  onClick={verifyAllVouchers}
-                  className="flex items-center rounded-lg bg-green-500 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-400"
+                  disabled={isLoading}
+                  onClick={() => setIsVerifyAllConfirmOpen(true)}
+                  className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
                 >
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  {t("voucher.main_view.table.verify_all")}
+                  {t("common.verify_all")}
                 </button>
               </div>
             </div>
@@ -478,6 +490,15 @@ export default function VoucherTableSection() {
         isOpen={isModalOpen}
         onClose={onModalClose}
         voucherId={selectedVoucherId?.toString() ?? ""}
+      />
+      <ConfirmModal
+        isOpen={isVerifyAllConfirmOpen}
+        onClose={() => setIsVerifyAllConfirmOpen(false)}
+        title={t("common.verify_all_confirm_title")}
+        message={t("common.verify_all_confirm_desc")}
+        confirmText={t("common.confirm")}
+        cancelText={t("common.cancel")}
+        onConfirm={verifyAllVouchers}
       />
     </>
   );

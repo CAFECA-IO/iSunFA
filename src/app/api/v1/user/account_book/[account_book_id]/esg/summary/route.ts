@@ -1,10 +1,13 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
+import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IEsgDashboardSummary } from "@/interfaces/esg";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
+
+export const dynamic = "force-dynamic";
 
 /**
  * Info: (20260312 - Julian) 取得 ESG 儀表板摘要
@@ -37,78 +40,102 @@ export async function GET(
       );
     }
 
-    // Info: (20260312 - Julian) 取得摘要
-    const summary = await esgRepo.getDashboardSummaryByAccountBookId(accountBookId);
+    const searchParams = request.nextUrl.searchParams;
+    const yearParam = searchParams.get('year');
+    const monthParam = searchParams.get('month');
 
-    // Info: (20260312 - Julian) 組合 response
-    let dashboardSummary: IEsgDashboardSummary;
+    const currentYear = yearParam ? parseInt(yearParam, 10) : new Date().getFullYear();
+    const currentMonth = monthParam ? parseInt(monthParam, 10) : null;
 
-    if (summary) {
-      const scope1 = Number(summary.scope1Emissions);
-      const scope2 = Number(summary.scope2Emissions);
-      const scope3 = Number(summary.scope3Emissions);
-      const totalScopes = scope1 + scope2 + scope3;
+    let startDate: Date;
+    let endDate: Date;
 
-      const calcPercentage = (val: number, total: number) =>
-        total > 0 ? Number(((val / total) * 100).toFixed(1)) : 0;
-
-      dashboardSummary = {
-        totalEmissions: {
-          value: Number(summary.totalEmissions),
-          unit: summary.emissionsUnit,
-          estimatedEndOfMonth: Number(summary.estimatedEndOfMonth),
-          estimatedUnit: summary.emissionsUnit,
-        },
-        emissionIntensity: {
-          value: Number(summary.emissionIntensity),
-          unit: summary.intensityUnit,
-          industryAverage: Number(summary.industryAverage),
-        },
-        scopeDistribution: {
-          scope1: {
-            value: scope1,
-            unit: summary.emissionsUnit,
-            percentage: calcPercentage(scope1, totalScopes),
-          },
-          scope2: {
-            value: scope2,
-            unit: summary.emissionsUnit,
-            percentage: calcPercentage(scope2, totalScopes),
-          },
-          scope3: {
-            value: scope3,
-            unit: summary.emissionsUnit,
-            percentage: calcPercentage(scope3, totalScopes),
-          },
-        },
-        goalProgress: {
-          percentage: Number(summary.goalPercentage),
-        },
-      };
+    if (currentMonth) {
+      startDate = new Date(currentYear, currentMonth - 1, 1);
+      endDate = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
     } else {
-      // Info: (20260312 - Julian) 預設空值
-      dashboardSummary = {
-        totalEmissions: {
-          value: 0,
-          unit: "kgCO2e",
-          estimatedEndOfMonth: 0,
-          estimatedUnit: "kgCO2e",
-        },
-        emissionIntensity: {
-          value: 0,
-          unit: "kg / 萬元營收",
-          industryAverage: 0,
-        },
-        scopeDistribution: {
-          scope1: { value: 0, unit: "kgCO2e", percentage: 0 },
-          scope2: { value: 0, unit: "kgCO2e", percentage: 0 },
-          scope3: { value: 0, unit: "kgCO2e", percentage: 0 },
-        },
-        goalProgress: {
-          percentage: 0,
-        },
-      };
+      startDate = new Date(currentYear, 0, 1);
+      endDate = new Date(currentYear, 11, 31, 23, 59, 59, 999);
     }
+
+    const esgRecords = await prisma.esgRecord.findMany({
+      where: {
+        accountBookId,
+        dateTimestamp: {
+          gte: Math.floor(startDate.getTime() / 1000),
+          lte: Math.floor(endDate.getTime() / 1000)
+        }
+      }
+    });
+
+    const incomes = await prisma.voucher.findMany({
+      where: {
+        accountBookId,
+        tradingType: 'INCOME',
+        tradingDate: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      include: { lines: true }
+    });
+
+    let totalEmissions = 0;
+    let scope1 = 0;
+    let scope2 = 0;
+    let scope3 = 0;
+
+    esgRecords.forEach(r => {
+      const e = Number(r.emissions);
+      totalEmissions += e;
+      if (r.scope === 'SCOPE_1') scope1 += e;
+      else if (r.scope === 'SCOPE_2') scope2 += e;
+      else if (r.scope === 'SCOPE_3') scope3 += e;
+    });
+
+    let revenue = 0;
+    incomes.forEach(v => {
+      const val = v.lines.reduce((a, l) => a + l.amount, 0) / 2;
+      revenue += val;
+    });
+
+    const rev10k = revenue / 10000;
+    const intensity = rev10k > 0 ? (totalEmissions / rev10k) : 0;
+
+    const s1Pct = totalEmissions > 0 ? (scope1 / totalEmissions) * 100 : 0;
+    const s2Pct = totalEmissions > 0 ? (scope2 / totalEmissions) * 100 : 0;
+    const s3Pct = totalEmissions > 0 ? (scope3 / totalEmissions) * 100 : 0;
+
+    const targets = await esgRepo.getEsgTargetsByAccountBookId(accountBookId);
+    const target = targets.find(t => t.year === currentYear);
+
+    let goalProgress = 0;
+    if (target && target.totalEmissionTarget && Number(target.totalEmissionTarget) > 0) {
+      goalProgress = (totalEmissions / Number(target.totalEmissionTarget)) * 100;
+      if (goalProgress > 100) goalProgress = 100;
+    }
+
+    const dashboardSummary: IEsgDashboardSummary = {
+      totalEmissions: {
+        value: Number(totalEmissions.toFixed(2)),
+        unit: "kgCO2e",
+        estimatedEndOfMonth: 0,
+        estimatedUnit: "kgCO2e",
+      },
+      emissionIntensity: {
+        value: Number(intensity.toFixed(2)),
+        unit: "kgCO2e / 萬元營收",
+        industryAverage: 0,
+      },
+      scopeDistribution: {
+        scope1: { value: Number(scope1.toFixed(2)), unit: "kgCO2e", percentage: Number(s1Pct.toFixed(1)) },
+        scope2: { value: Number(scope2.toFixed(2)), unit: "kgCO2e", percentage: Number(s2Pct.toFixed(1)) },
+        scope3: { value: Number(scope3.toFixed(2)), unit: "kgCO2e", percentage: Number(s3Pct.toFixed(1)) },
+      },
+      goalProgress: {
+        percentage: Number(goalProgress.toFixed(1)),
+      },
+    };
 
     return jsonOk(dashboardSummary);
   } catch (error) {

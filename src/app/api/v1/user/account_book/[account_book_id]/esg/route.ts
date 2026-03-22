@@ -143,6 +143,28 @@ export async function GET(
     const intensity = searchParams.get("intensity");
     const scope = searchParams.get("scope");
     const sort = searchParams.get("sort") === "asc" ? "asc" : "desc";
+    const yearParam = searchParams.get("year");
+    const monthParam = searchParams.get("month");
+
+    let dateTimestampQuery: Prisma.IntFilter | undefined = undefined;
+    if (yearParam) {
+      const year = parseInt(yearParam, 10);
+      const month = monthParam ? parseInt(monthParam, 10) : null;
+      let startDate: Date;
+      let endDate: Date;
+
+      if (month) {
+        startDate = new Date(year, month - 1, 1);
+        endDate = new Date(year, month, 0, 23, 59, 59, 999);
+      } else {
+        startDate = new Date(year, 0, 1);
+        endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+      }
+      dateTimestampQuery = {
+        gte: Math.floor(startDate.getTime() / 1000),
+        lte: Math.floor(endDate.getTime() / 1000),
+      };
+    }
 
     // Info: (20260312 - Julian) 整理查詢條件
     const whereClause: Prisma.EsgRecordWhereInput = {
@@ -155,6 +177,7 @@ export async function GET(
       }),
       ...(intensity && { intensity: intensity as ClientEsgIntensity }),
       ...(scope && { scope: scope as ClientEsgScope }),
+      ...(dateTimestampQuery && { dateTimestamp: dateTimestampQuery }),
     };
 
     const esgDbRecords = await prisma.esgRecord.findMany({

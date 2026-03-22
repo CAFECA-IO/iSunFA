@@ -7,6 +7,7 @@ import { Dialog } from '@headlessui/react';
 import { IAccountBook } from '@/services/account_book.service';
 import { useTranslation } from '@/i18n/i18n_context';
 import { COUNTRY, CURRENCY, RULE } from '@/constants/accounts';
+import { ESG_INDUSTRY_BENCHMARKS } from '@/constants/esg_industry_benchmarks';
 
 export default function UserMainPage() {
   const { t } = useTranslation();
@@ -23,9 +24,11 @@ export default function UserMainPage() {
   const [formName, setFormName] = useState('');
   const [formCountry, setFormCountry] = useState(COUNTRY.TW);
   const [formCurrency, setFormCurrency] = useState(CURRENCY.TW);
+  const [formStartYear, setFormStartYear] = useState<number>(new Date().getFullYear());
   const [formRule, setFormRule] = useState(RULE.T_IFRS);
   const [formTeamId, setFormTeamId] = useState('');
   const [formEnterpriseId, setFormEnterpriseId] = useState('');
+  const [formEsgIndustryId, setFormEsgIndustryId] = useState<string>('');
 
   const fetchAccountBooks = async () => {
     try {
@@ -77,8 +80,10 @@ export default function UserMainPage() {
     setFormName('New Account Book'); // Info: (20260321 - Luphia) Default as requested by user
     setFormCountry(COUNTRY.TW);
     setFormCurrency(CURRENCY.TW);
+    setFormStartYear(new Date().getFullYear());
     setFormRule(RULE.T_IFRS);
     setFormEnterpriseId('');
+    setFormEsgIndustryId('');
     if (teams.length > 0) setFormTeamId(teams[0].id);
     setIsModalOpen(true);
   };
@@ -89,8 +94,10 @@ export default function UserMainPage() {
     setFormName(book.name);
     setFormCountry(book.country);
     setFormCurrency(book.currency);
+    setFormStartYear(book.createdAt ? new Date(book.createdAt).getFullYear() : new Date().getFullYear());
     setFormRule(book.rule);
     setFormEnterpriseId(book.enterpriseId || '');
+    setFormEsgIndustryId(book.esgIndustryId?.toString() || '');
     setFormTeamId(book.teamId || '');
     setIsModalOpen(true);
   };
@@ -116,9 +123,11 @@ export default function UserMainPage() {
           name: formName,
           country: formCountry,
           currency: formCurrency,
+          startYear: formStartYear,
           rule: formRule,
           teamId: formTeamId,
           enterpriseId: formEnterpriseId || null,
+          esgIndustryId: formEsgIndustryId ? Number(formEsgIndustryId) : null,
         }),
       });
 
@@ -234,23 +243,38 @@ export default function UserMainPage() {
 
               <form action={handleSubmit} className="space-y-4">
                 <div>
-                <label htmlFor="form_name" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_name')}</label>
-                <input
-                  id="form_name"
-                  aria-label={t('account_book_selection.form_name')}
-                  required
-                  type="text"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                />
+                  <label htmlFor="form_name" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_name')}</label>
+                  <input
+                    id="form_name"
+                    aria-label={t('account_book_selection.form_name')}
+                    required
+                    type="text"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="form_start_year" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_start_year')}</label>
+                  <input
+                    id="form_start_year"
+                    aria-label={t('account_book_selection.form_start_year')}
+                    required
+                    type="number"
+                    min="1990"
+                    max="2050"
+                    value={formStartYear}
+                    onChange={(e) => setFormStartYear(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                  />
                 </div>
 
                 {!editingBook && (
-                <div>
-                  <label htmlFor="form_team" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_team')}</label>
-                  <select
-                    id="form_team"
+                  <div>
+                    <label htmlFor="form_team" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_team')}</label>
+                    <select
+                      id="form_team"
                       required
                       value={formTeamId}
                       onChange={(e) => setFormTeamId(e.target.value)}
@@ -264,23 +288,38 @@ export default function UserMainPage() {
                 )}
 
                 <div>
-                <label htmlFor="form_enterprise_id" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_enterprise_id')}</label>
-                <input
-                  id="form_enterprise_id"
-                  aria-label={t('account_book_selection.form_enterprise_id')}
-                  type="text"
-                  value={formEnterpriseId}
-                  onChange={(e) => setFormEnterpriseId(e.target.value)}
-                  placeholder="12345678"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                />
+                  <label htmlFor="form_enterprise_id" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_enterprise_id')}</label>
+                  <input
+                    id="form_enterprise_id"
+                    aria-label={t('account_book_selection.form_enterprise_id')}
+                    type="text"
+                    value={formEnterpriseId}
+                    onChange={(e) => setFormEnterpriseId(e.target.value)}
+                    placeholder="12345678"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="form_esg_industry" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_esg_industry')}</label>
+                  <select
+                    id="form_esg_industry"
+                    value={formEsgIndustryId}
+                    onChange={(e) => setFormEsgIndustryId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white"
+                  >
+                    <option value="">---</option>
+                    {ESG_INDUSTRY_BENCHMARKS.map((i) => (
+                      <option key={i.id} value={i.id}>{t(i.industryName)}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="form_country" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_country')}</label>
-                  <select
-                    id="form_country"
+                  <div>
+                    <label htmlFor="form_country" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_country')}</label>
+                    <select
+                      id="form_country"
                       required
                       value={formCountry}
                       onChange={(e) => setFormCountry(e.target.value)}
@@ -292,9 +331,9 @@ export default function UserMainPage() {
                     </select>
                   </div>
                   <div>
-                  <label htmlFor="form_currency" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_currency')}</label>
-                  <select
-                    id="form_currency"
+                    <label htmlFor="form_currency" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_currency')}</label>
+                    <select
+                      id="form_currency"
                       required
                       value={formCurrency}
                       onChange={(e) => setFormCurrency(e.target.value)}
@@ -308,9 +347,9 @@ export default function UserMainPage() {
                 </div>
 
                 <div>
-                <label htmlFor="form_rule" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_rule')}</label>
-                <select
-                  id="form_rule"
+                  <label htmlFor="form_rule" className="block text-sm font-medium text-gray-700 mb-1">{t('account_book_selection.form_rule')}</label>
+                  <select
+                    id="form_rule"
                     required
                     value={formRule}
                     onChange={(e) => setFormRule(e.target.value)}

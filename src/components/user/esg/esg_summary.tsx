@@ -9,7 +9,12 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
 
-export default function EsgSummary() {
+interface IEsgSummaryProps {
+  year?: number;
+  month?: number | "";
+}
+
+export default function EsgSummary({ year, month }: IEsgSummaryProps) {
   const params = useParams();
   const pathname = usePathname();
   const accountBookId = params?.account_book_id as string;
@@ -28,8 +33,14 @@ export default function EsgSummary() {
       const fetchSummary = async () => {
         try {
           setIsLoading(true);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const query: any = {};
+          if (year) query.year = year;
+          if (month) query.month = month;
+
           const res = await request<IApiResponse<IEsgDashboardSummary>>(
             `/api/v1/user/account_book/${accountBookId}/esg/summary`,
+            { query }
           );
           if (res.payload) {
             setSummaryData(res.payload);
@@ -44,7 +55,7 @@ export default function EsgSummary() {
     } else {
       setIsLoading(false);
     }
-  }, [accountBookId]);
+  }, [accountBookId, year, month]);
 
   if (isLoading) {
     return (

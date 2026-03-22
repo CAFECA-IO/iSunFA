@@ -3,6 +3,9 @@ export const zhTw = {
     loading: "載入中...",
     save: "儲存",
     confirm: "確認",
+    verify_all: "一鍵核對",
+    verify_all_confirm_title: "確認一鍵核對？",
+    verify_all_confirm_desc: "這將會把所有未核對的項目標示為已核對",
     cancel: "取消",
     close: "關閉",
     coming_soon_message: "即將推出",
@@ -61,6 +64,7 @@ export const zhTw = {
     carbon_tax_prediction: "預估碳費",
     total_emissions: "總排放量",
     emissions_per_revenue: "單位營收排放量",
+    per_10k_revenue: "/ 萬元營收",
     eco_label: "環保標章",
     top_10_percent: "排名前 10%",
     goal_achievement: "減碳目標",
@@ -68,6 +72,8 @@ export const zhTw = {
       on_track: "達成中",
       at_risk: "有風險",
       behind: "未達標",
+      achieved: "已達成",
+      not_achieved: "未達成",
     },
     ocr_status: "OCR 狀態",
     ocr_processed: "自動歸檔",
@@ -231,6 +237,12 @@ export const zhTw = {
     "ind_retail": "民生零售",
     "ind_telecom": "電信與網路",
     "btn": "設定年度目標",
+    "industry_rank": "產業前 {{rank}}%",
+    "global_rank": "全台前 {{rank}}%",
+    "unsaved_changes_warning": "您有未儲存的變更，確定要離開嗎？",
+    "unsaved_changes_title": "確認關閉？",
+    "target_total_emissions": "目標總排放量",
+    "target_revenue_emissions": "目標每萬元營收排放量",
     "title": "年度碳排放目標設定",
     "past_records": "歷年碳排放紀錄",
     "year": "年份",
@@ -562,9 +574,11 @@ export const zhTw = {
     form_name: "帳簿名稱",
     form_country: "國家 / 地區",
     form_currency: "幣別",
+    form_start_year: "起始年份",
     form_rule: "會計準則",
     form_team: "所屬團隊",
     form_enterprise_id: "統一編號 (選填)",
+    form_esg_industry: "產業分類 (ESG, 選填)",
     submit: "確認",
     cancel: "取消",
   },
@@ -587,7 +601,7 @@ export const zhTw = {
       searching: '搜尋中...',
       not_found: '查無此公司，請嘗試輸入更完整的全名或統一編號。'
     },
-    title: "財務分析",
+    title: "分析報告",
     internal_analysis: "內部數據分析",
     external_analysis: "外部數據分析",
     history_reports: "歷史報告",
@@ -1071,7 +1085,7 @@ export const zhTw = {
         },
         "no_file": "無檔案",
         "filter_btn": "篩選條件",
-        "verify_all": "一鍵核對所有傳票",
+        "verify_all": "一鍵核對",
         "no_data": "目前無傳票資料"
       }
     },
@@ -1152,7 +1166,10 @@ export const zhTw = {
   "esg_main": {
     "title": "碳排管理與 ESG 分析",
     "description": "自動分析進項憑證，為您提供即時的碳中和進度與各項排放維度分析。",
-    "export_button": "匯出 ESG 申報表"
+    "export_button": "匯出 ESG 申報表",
+    "year": "年",
+    "month": "月",
+    "all_year": "全年"
   },
   "esg_summary": {
     "no_data_prefix": "目前無這份帳本的 ESG 數據，請先",
@@ -1242,6 +1259,57 @@ export const zhTw = {
       "message": "即將儲存您所做出的 ESG 紀錄核對變更。請確認資料是否無誤？",
       "confirm": "確認儲存",
       "cancel": "取消"
+    },
+    "esg_industry_benchmarks": {
+      "spectrum": {
+        "extremely_high": "極致高碳",
+        "very_high": "極高碳",
+        "high": "高碳",
+        "mid_high": "中高碳",
+        "medium": "中等",
+        "mid_low": "中低碳",
+        "extremely_low": "極低碳"
+      },
+      "industry_1": {
+        "name": "石化工業",
+        "desc": "高：台塑石化 (3,650 公斤)落差主因：基礎輕油裂解與自建燃煤汽電共生廠，伴隨無法避免的巨量化學逸散與化石燃料燃燒。"
+      },
+      "industry_2": {
+        "name": "水泥工業",
+        "desc": "高：亞洲水泥 (2,883 公斤)落差主因：高溫煆燒石灰石的物理化學反應（直接釋放二氧化碳）佔據絕大比例，且易受中國房市低迷導致營收分母縮水影響。"
+      },
+      "industry_3": {
+        "name": "發電能源業",
+        "desc": "高：麥寮汽電 (2,657 公斤) / 低：台灣電力 (1,068 公斤)落差主因：麥寮為 100% 燃煤發電；台電則因擁有核能、水力、天然氣等多元能源結構與終端輸配電網，大幅稀釋碳排密集度。"
+      },
+      "industry_4": {
+        "name": "鋼鐵工業",
+        "desc": "高：中國鋼鐵 (520 公斤) / 低：東和鋼鐵 (126 公斤)落差主因：傳統高爐（中鋼）需燒煤炭還原鐵礦砂；電爐廠（東和）則透過回收廢鋼搭配電力熔煉，直接砍掉七成以上的還原碳排。"
+      },
+      "industry_5": {
+        "name": "航運運輸業",
+        "desc": "高：遠洋貨櫃航運 / 低：陸地承攬與高鐵落差主因：燃燒重油的跨洋巨輪是範疇一排碳大戶，且極度受國際運費報價影響；而軌道運輸因電氣化程度高，表現相對優異。"
+      },
+      "industry_6": {
+        "name": "電信網通業",
+        "desc": "高：中華電信 (271.8 公斤)落差主因：打破「無工廠即低碳」迷思。全台 24 小時運轉的 5G 基地台與雲端資料中心（IDC）冰水主機，是極度可怕的吃電怪獸。"
+      },
+      "industry_7": {
+        "name": "紡織與化纖",
+        "desc": "低：遠東新世紀 (59.2 公斤)落差主因：傳統染整廠耗水耗能極高；但遠東新靠著極致的寶特瓶回收再生技術（R-PET）與控股公司多元營收，成功扭轉重工業宿命。"
+      },
+      "industry_8": {
+        "name": "半導體製造",
+        "desc": "高：台積電 (50.1 公斤)落差主因：極紫外光（EUV）機台與無塵室的龐大耗電（範疇二）推升總碳排；但靠著極高的晶片單價與海量綠電採購，硬是將密集度壓低。"
+      },
+      "industry_9": {
+        "name": "零售與電商",
+        "desc": "高：統一超商 (37.6 公斤) / 低：富邦媒 (約 23 公斤)落差主因：實體超商受限於 24 小時空調與開放式冰櫃；純電商雖無門市，但仍需負擔龐大物流車隊與自動化倉儲的碳排。"
+      },
+      "industry_10": {
+        "name": "知識與金融(IC設計/軟體/金控)",
+        "desc": "高：金融行庫 (~1.5 公斤) / 低：聯發科 (1.86 公斤)落差主因：商業模式純靠「腦力與資金」。聯發科將高耗能製造外包給代工廠；金融業僅有辦公用電，但隱含著未計入營收碳排比的龐大「投融資碳排」。"
+      }
     }
   }
 };

@@ -3,6 +3,9 @@ export const en = {
     loading: "Loading...",
     save: "Save",
     confirm: "Confirm",
+    verify_all: "Verify All",
+    verify_all_confirm_title: "Confirm Verify All?",
+    verify_all_confirm_desc: "This will mark all unverified items as verified.",
     cancel: "Cancel",
     close: "Close",
     coming_soon_message: "Coming Soon",
@@ -61,6 +64,7 @@ export const en = {
     carbon_tax_prediction: "Carbon Tax Prediction",
     total_emissions: "Total Emissions",
     emissions_per_revenue: "Emissions / Revenue",
+    per_10k_revenue: "/ $10k Revenue",
     eco_label: "Eco-label",
     top_10_percent: "Top 10%",
     goal_achievement: "Reduction Goal",
@@ -68,6 +72,8 @@ export const en = {
       on_track: "On Track",
       at_risk: "At Risk",
       behind: "Behind",
+      achieved: "Achieved",
+      not_achieved: "Not Achieved",
     },
 
     ocr_status: "OCR Status",
@@ -534,10 +540,12 @@ export const en = {
     form_name: "Name",
     form_country: "Country / Region",
     form_currency: "Currency",
+    form_start_year: "Start Year",
     form_rule: "Accounting Rule",
     form_team: "Team",
-    form_enterprise_id: "Unified Business No. (Optional)",
-    submit: "Submit",
+    form_enterprise_id: "Enterprise ID (Optional)",
+    form_esg_industry: "Industry Category (ESG, Optional)",
+    submit: "Confirm",
     cancel: "Cancel",
   },
   sidebar: {
@@ -559,7 +567,7 @@ export const en = {
       searching: 'Searching...',
       not_found: 'Company not found. Please try entering a more complete name or Tax ID.'
     },
-    title: 'Financial Analysis',
+    title: 'Analysis Report',
     internal_analysis: 'Internal Analysis',
     external_analysis: 'External Analysis',
     history_reports: 'History Reports',
@@ -1050,7 +1058,7 @@ export const en = {
         },
         "no_file": "No File",
         "filter_btn": "Filters",
-        "verify_all": "Verify All Vouchers",
+        "verify_all": "Verify All",
         "no_data": "No voucher records yet"
       }
     },
@@ -1131,7 +1139,10 @@ export const en = {
   "esg_main": {
     "title": "Carbon Management & ESG Analysis",
     "description": "Automatically analyzes input vouchers to provide real-time carbon neutrality progress and multi-dimensional emission analysis.",
-    "export_button": "Export ESG Declaration"
+    "export_button": "Export ESG Declaration",
+    "year": "Year",
+    "month": "Month",
+    "all_year": "All Year"
   },
   "esg_summary": {
     "no_data_prefix": "Currently no ESG data for this account book, please ",
@@ -1235,7 +1246,13 @@ export const en = {
     "ind_retail": "Retail & E-commerce",
     "ind_telecom": "Telecom & Internet",
     "btn": "Set Annual Target",
-    "title": "Annual Carbon Emission Target Setting",
+    "industry_rank": "Top {{rank}}% in Industry",
+    "global_rank": "Top {{rank}}% in Taiwan",
+    "unsaved_changes_warning": "You have unsaved changes. Are you sure you want to leave?",
+    "unsaved_changes_title": "Close without saving?",
+    "target_total_emissions": "Target Total Emissions",
+    "target_revenue_emissions": "Target Emission Intensity",
+    "title": "Set Annual Carbon Emission Target",
     "past_records": "Historical Carbon Emission Records",
     "year": "Year",
     "emissions": "Emissions (kgCO2e)",
@@ -1249,6 +1266,57 @@ export const en = {
     "increase": "Increase",
     "taiwan_ranking": "Top % in TW Enterprises",
     "industry_ranking": "Top % in Similar Industry",
-    "save": "Save Settings"
+    "save": "Save Settings",
+    "esg_industry_benchmarks": {
+      "spectrum": {
+        "extremely_high": "Extremely High Carbon",
+        "very_high": "Very High Carbon",
+        "high": "High Carbon",
+        "mid_high": "Mid-High Carbon",
+        "medium": "Medium",
+        "mid_low": "Mid-Low Carbon",
+        "extremely_low": "Extremely Low Carbon"
+      },
+      "industry_1": {
+        "name": "Petrochemical Industry",
+        "desc": "Highest: Formosa Petrochemical (3,650 kg). Gap reason: Naphtha cracking and self-built coal cogeneration plants lead to unavoidable chemical fugitive emissions and fossil fuel combustion."
+      },
+      "industry_2": {
+        "name": "Cement Industry",
+        "desc": "Highest: Asia Cement (2,883 kg). Gap reason: High-temperature calcination of limestone directly emits CO2, vulnerable to revenue denominator shrinkage from real estate slumps."
+      },
+      "industry_3": {
+        "name": "Power & Energy",
+        "desc": "High: Mai-Liao Power (2,657 kg) / Low: Taipower (1,068 kg). Gap reason: Mai-Liao is 100% coal-fired; Taipower benefits from diverse energy mix (nuclear, hydro, gas) diluting emission intensity."
+      },
+      "industry_4": {
+        "name": "Steel Industry",
+        "desc": "High: China Steel (520 kg) / Low: Tung Ho Steel (126 kg). Gap reason: Traditional blast furnaces require coal to reduce iron ore; electric arc furnaces melt recycled scrap steel, cutting emissions by 70%."
+      },
+      "industry_5": {
+        "name": "Shipping & Transport",
+        "desc": "High: Ocean Container Shipping / Low: High-speed rail. Gap reason: Heavy oil-burning giant ships are huge Scope 1 emitters, heavily influenced by freight rates; electrified rail performs exceptionally well."
+      },
+      "industry_6": {
+        "name": "Telecom & Networking",
+        "desc": "Highest: Chunghwa Telecom (271.8 kg). Gap reason: Breaks the 'no factory means low carbon' myth. 24/7 5G base stations and IDC cooling chillers are massive power consumers."
+      },
+      "industry_7": {
+        "name": "Textiles & Chemical Fibers",
+        "desc": "Low: Far Eastern New Century (59.2 kg). Gap reason: Traditional dyeing is highly water and energy intensive; FENC reversed this through R-PET recycling technology and diversified holdings."
+      },
+      "industry_8": {
+        "name": "Semiconductor Manufacturing",
+        "desc": "Highest: TSMC (50.1 kg). Gap reason: EUV machines and clean rooms drive massive Scope 2 power consumption, but sky-high chip prices and massive green energy purchases keep intensity low."
+      },
+      "industry_9": {
+        "name": "Retail & E-commerce",
+        "desc": "High: Uni-President (7-11) (37.6 kg) / Low: Momo (23 kg). Gap reason: Physical stores constrained by 24/7 AC and open freezers; E-commerce avoids physical stores but bears logistics fleet & automated warehouse emissions."
+      },
+      "industry_10": {
+        "name": "Knowledge & Finance (IC/Software/Banking)",
+        "desc": "High: Banks (~1.5 kg) / Low: MediaTek (1.86 kg). Gap reason: Business model relies on 'brains and capital'. MediaTek outsources manufacturing; finance has low office emissions but huge uncounted 'financed emissions'."
+      }
+    }
   }
 };

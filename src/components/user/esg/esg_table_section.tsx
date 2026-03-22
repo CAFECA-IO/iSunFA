@@ -5,12 +5,18 @@ import { Search, Filter, Info, ArrowDown, ArrowUp } from "lucide-react";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { EsgRow } from "@/components/user/esg/esg_row";
 import EsgVerifyModal from "@/components/user/esg/esg_verify_modal";
+import ConfirmModal from "@/components/common/confirm_modal";
 import { request } from "@/lib/utils/request";
 import { useParams } from "next/navigation";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
 
-export default function EsgTableSection() {
+interface IEsgTableSectionProps {
+  year?: number;
+  month?: number | "";
+}
+
+export default function EsgTableSection({ year, month }: IEsgTableSectionProps) {
   const { t } = useTranslation();
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
@@ -19,6 +25,7 @@ export default function EsgTableSection() {
   const [intensityFilter, setIntensityFilter] = useState<string>("ALL");
   const [scopeFilter, setScopeFilter] = useState<string>("ALL");
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState<boolean>(false);
+  const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] = useState<boolean>(false);
   const [selectedEsgId, setSelectedEsgId] = useState<string | null>(null);
   const [records, setRecords] = useState<IEsgRecord[]>([]);
   const [recordCount, setRecordCount] = useState<number>(0);
@@ -35,6 +42,8 @@ export default function EsgTableSection() {
         queryParams.append("intensity", intensityFilter);
       if (scopeFilter && scopeFilter !== "ALL")
         queryParams.append("scope", scopeFilter);
+      if (year) queryParams.append("year", year.toString());
+      if (month) queryParams.append("month", month.toString());
       queryParams.append("sort", dateSort);
 
       const queryString = queryParams.toString()
@@ -53,7 +62,7 @@ export default function EsgTableSection() {
     } finally {
       setIsLoading(false);
     }
-  }, [accountBookId, searchTerm, intensityFilter, scopeFilter, dateSort]);
+  }, [accountBookId, searchTerm, intensityFilter, scopeFilter, dateSort, year, month]);
 
   // Info: (20260312 - Julian) 延遲 300ms 執行，避免過度請求
   useEffect(() => {
@@ -116,6 +125,23 @@ export default function EsgTableSection() {
       console.error("Failed to update ESG record", err);
     } finally {
       setIsVerifyModalOpen(false);
+    }
+  };
+
+  const verifyAllEsgRecords = async () => {
+    if (!accountBookId) return;
+    try {
+      setIsLoading(true);
+      await request(
+        `/api/v1/user/account_book/${accountBookId}/esg/verify_all`,
+        { method: "PUT" }
+      );
+      fetchRecords();
+    } catch (error) {
+      console.error("Failed to verify all ESG records:", error);
+      setIsLoading(false);
+    } finally {
+      setIsVerifyAllConfirmOpen(false);
     }
   };
 
@@ -192,6 +218,15 @@ export default function EsgTableSection() {
           >
             <Filter className="mr-2 h-4 w-4" />
             {t("esg_table.filter_btn")}
+          </button>
+          <button
+            type="button"
+            aria-label={t("common.verify_all")}
+            onClick={() => setIsVerifyAllConfirmOpen(true)}
+            disabled={isLoading}
+            className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+          >
+            {t("common.verify_all")}
           </button>
         </div>
       </div>
@@ -275,6 +310,15 @@ export default function EsgTableSection() {
         onClose={() => setIsVerifyModalOpen(false)}
         esgId={selectedEsgId}
         onSave={handleVerifySave}
+      />
+      <ConfirmModal
+        isOpen={isVerifyAllConfirmOpen}
+        onClose={() => setIsVerifyAllConfirmOpen(false)}
+        title={t("common.verify_all_confirm_title")}
+        message={t("common.verify_all_confirm_desc")}
+        confirmText={t("common.confirm")}
+        cancelText={t("common.cancel")}
+        onConfirm={verifyAllEsgRecords}
       />
     </div>
   );

@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, country, currency, rule, teamId, enterpriseId } = body;
+    const { name, country, currency, rule, teamId, enterpriseId, startYear, esgIndustryId } = body;
 
     if (!name || !country || !currency || !rule || !teamId) {
       return jsonFail(ApiCode.VALIDATION_ERROR, "Missing required fields");
@@ -46,12 +46,16 @@ export async function POST(request: NextRequest) {
       return jsonFail(ApiCode.FORBIDDEN, "You do not belong to this team");
     }
 
+    const createdAt = startYear ? new Date(`${startYear}-01-01T00:00:00.000Z`) : undefined;
+
     const accountBook = await createAccountBook({
       name,
       country,
       currency,
       rule,
       enterpriseId,
+      esgIndustryId,
+      createdAt,
       team: { connect: { id: teamId } },
     });
 
