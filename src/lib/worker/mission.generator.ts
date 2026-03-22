@@ -106,7 +106,8 @@ export class MissionGenerator {
         marketName: countryName,
         target: params.keyword || (['carbon_health_check', 'net_zero_emissions'].includes(params.category) ? 'Target Company' : 'General'),
         period: params.periodValue,
-        year: params.year
+        year: params.year,
+        esgRecordsContext: params.category === 'carbon_health_check' ? params.prerequisiteData?.esgRecordsContext : undefined
       });
 
       const tasks: ITaskDefinition[] = [];

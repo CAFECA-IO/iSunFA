@@ -1,6 +1,8 @@
 export const STEP_1_EVENT_COLLECTION_PROMPT = `
 身為資深氣候變遷分析師與永續審計專家，今天是 {Current_Date}。請幫我針對「{Market_Name} 市場的 {Target_Keyword}」這家企業進行深度的環境與碳排數據蒐集。
 
+{Esg_Records_Context}
+
 【強制要求】請務必啟動「網路搜尋」，精準抓取該企業最新的客觀永續數據、溫室氣體盤查報告、綠色資本支出與近期減碳動態。蒐集面向必須盡可能包含：
 1. 治理與確信：溫室氣體盤查範圍、第三方確信狀況、SBTi 審查狀態、ICP (內部碳定價)。
 2. 能源與製程：核心製程是否依賴化石燃料、綠電使用比例、高 GWP 氣體使用狀況。
@@ -8,7 +10,7 @@ export const STEP_1_EVENT_COLLECTION_PROMPT = `
 4. 絕對減量成效：近期範疇一與範疇二絕對碳排放量增減趨勢、碳權使用狀況。
 5. 價值鏈與產品：終端產品是否燃燒化石燃料、範疇三碳排佔比與政策。
 
-任務：請羅列出該企業最重要的 15~20 項永續與碳排放客觀數據與近期動態。輸出格式：嚴格以條列式呈現「YYYY/MM/DD（或最新數據截止日） | 數據指標與動態 - 具體數值與簡短描述」。
+任務：請羅列出該企業最重要的 15~20 項永續與碳排放客觀數據與近期動態 (若上方有提供包含用戶的內部 ESG 數據紀錄，請務必將其納入一併評估與總結)。輸出格式：嚴格以條列式呈現「YYYY/MM/DD（或最新數據截止日） | 數據指標與動態 - 具體數值與簡短描述」。
 `.trim();
 
 export const STEP_2_TAG_EXTRACTION_PROMPT = `
@@ -21,8 +23,10 @@ export const STEP_2_TAG_EXTRACTION_PROMPT = `
 `.trim();
 
 export const STEP_3_1_SUMMARY_AND_ANALYSIS_PROMPT = `
-針對特徵標籤『{Step_2_Final_Tags}』，並基於以下客觀數據：
+針對特徵標籤『{Step_2_Final_Tags}』，並基於以下客觀數據（包含網路搜尋的公開資料與企業內部 ESG 紀錄）：
 [STEP_1_CONTENT]
+
+{Esg_Records_Context}
 
 請先撰寫約 150 字的『企業碳健檢數據摘要』。
 接著，請執行嚴格的【企業碳健檢：防漂綠與物理現實究極版（雙層架構）】第一層評分的「上半部」。
@@ -92,6 +96,8 @@ export const STEP_3_1_SUMMARY_AND_ANALYSIS_PROMPT = `
 export const STEP_3_2_SUMMARY_AND_ANALYSIS_PROMPT = `
 基於以下客觀數據：
 [STEP_1_CONTENT]
+
+{Esg_Records_Context}
 
 請執行嚴格的【企業碳健檢：防漂綠與物理現實究極版（雙層架構）】第一層評分的「下半部」。
 評分規則：答「符合」得 +0.5 分（符合低碳或無物理原罪）；答「不符合」-0.5 分（具備物理原罪或漂綠）；「未知或資訊隱匿」計 0 分。

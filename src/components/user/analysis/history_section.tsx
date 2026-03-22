@@ -7,6 +7,7 @@ import { Check, ChevronLeft, ChevronRight, Loader2, Sparkles, X } from 'lucide-r
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { Fragment } from 'react';
 import { MarkdownContent } from '@/components/common/markdown_content';
+import { downloadHtmlAsPdf } from '@/lib/utils/pdf';
 
 interface IHistoryItem {
   id: string;
@@ -61,6 +62,7 @@ export default function HistorySection() {
   const [selectedReport, setSelectedReport] = useState<{ id: string; content: string; type: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Info: (20260130 - Luphia) Fetch history from API
   useEffect(() => {
@@ -111,6 +113,46 @@ export default function HistorySection() {
     } finally {
       setLoadingReport(false);
     }
+  };
+
+  const downloadCurrentPdf = async (reportType: string) => {
+    setIsDownloading(true);
+    const el = document.getElementById('report-pdf-content');
+    if (!el) {
+      setIsDownloading(false);
+      return;
+    }
+
+    // Info: (20260322 - Tzuhan) Temporarily remove scroll boundaries to capture full PDF
+    const originalMaxHeight = el.style.maxHeight;
+    const originalOverflow = el.style.overflowY;
+    el.style.maxHeight = 'none';
+    el.style.overflowY = 'visible';
+    el.classList.remove('max-h-[70vh]', 'overflow-y-auto');
+
+    try {
+      const filename = `${reportType}_${new Date().toISOString().split('T')[0].replace(/-/g, '')}.pdf`;
+      await downloadHtmlAsPdf('report-pdf-content', filename);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+    } finally {
+      // Info: (20260322 - Tzuhan) Restore UI boundaries
+      el.classList.add('max-h-[70vh]', 'overflow-y-auto');
+      el.style.maxHeight = originalMaxHeight;
+      el.style.overflowY = originalOverflow;
+      setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadFromTable = async (item: IHistoryItem) => {
+    if (!selectedReport || selectedReport.id !== item.id) {
+      await handleViewReport(item);
+    } else if (!isModalOpen) {
+      setIsModalOpen(true);
+    }
+    setTimeout(() => {
+      downloadCurrentPdf(item.category);
+    }, 500);
   };
 
   const closeModal = () => {
@@ -334,10 +376,11 @@ export default function HistorySection() {
                         {loadingReport && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.view')}
                       </button>
                       <button
-                        className="text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
+                        className="text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+                        disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase()) || isDownloading}
+                        onClick={() => handleDownloadFromTable(item)}
                       >
-                        {t('analysis.history.download')}
+                        {isDownloading && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.download')}
                       </button>
                     </td>
                   </tr>
@@ -399,10 +442,11 @@ export default function HistorySection() {
                         {loadingReport && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.view')}
                       </button>
                       <button
-                        className="text-gray-600 disabled:opacity-50"
-                        disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
+                        className="text-gray-600 disabled:opacity-50 flex items-center gap-1"
+                        disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase()) || isDownloading}
+                        onClick={() => handleDownloadFromTable(item)}
                       >
-                        {t('analysis.history.download')}
+                        {isDownloading && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.download')}
                       </button>
                     </div>
                   </div>
@@ -470,15 +514,26 @@ export default function HistorySection() {
                     className="text-lg font-medium leading-6 text-gray-900 flex justify-between items-center mb-4"
                   >
                     <span>{selectedReport ? t(`analysis.categories.${selectedReport.type}`) : 'Report'}</span>
-                    <button
-                      type="button"
-                      className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                      onClick={closeModal}
-                    >
-                      {t('common.close')}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-orange-100 px-4 py-2 text-sm font-medium text-orange-900 hover:bg-orange-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:opacity-50"
+                        onClick={() => selectedReport && downloadCurrentPdf(selectedReport.type)}
+                        disabled={isDownloading || !selectedReport}
+                      >
+                        {isDownloading && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {t('calculator.button.download') || 'Download PDF'}
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                        onClick={closeModal}
+                      >
+                        {t('common.close')}
+                      </button>
+                    </div>
                   </DialogTitle>
-                  <div className="mt-2 text-sm text-gray-500 max-h-[70vh] overflow-y-auto prose prose-sm max-w-none">
+                  <div id="report-pdf-content" className="mt-2 text-sm text-gray-500 max-h-[70vh] overflow-y-auto prose prose-sm max-w-none bg-white p-2">
                     {selectedReport && (
                       <MarkdownContent content={selectedReport.content} theme="light" />
                     )}

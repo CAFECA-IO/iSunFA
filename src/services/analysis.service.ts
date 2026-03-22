@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { analysisRepo } from '@/repositories/analysis.repo';
 import { missionGenerator, IMissionDefinition } from '@/lib/worker/mission.generator';
 import { MISSION_STATUS } from '@/constants/status';
-
+import { getPeriodDateRange } from '@/lib/analysis/period';
 
 export interface IGenerateAnalysisParams {
   category: string;
@@ -51,7 +51,7 @@ export class AnalysisService {
       // Info: (20260320 - Tzuhan) Fetch prerequisite data for net_zero_emissions
       let parsedPrerequisiteParams: Record<string, unknown> | undefined = undefined;
       let prerequisiteStr = "";
-      
+
       if (params.category === 'net_zero_emissions' && params.keyword) {
         const prerequisite = await prisma.analysis.findFirst({
           where: {
@@ -67,12 +67,12 @@ export class AnalysisService {
         });
 
         if (prerequisite?.mission?.result) {
-          prerequisiteStr = typeof prerequisite.mission.result === 'string' 
-            ? prerequisite.mission.result 
+          prerequisiteStr = typeof prerequisite.mission.result === 'string'
+            ? prerequisite.mission.result
             : JSON.stringify(prerequisite.mission.result);
         } else if (prerequisite?.result) {
-          prerequisiteStr = typeof prerequisite.result === 'string' 
-            ? prerequisite.result 
+          prerequisiteStr = typeof prerequisite.result === 'string'
+            ? prerequisite.result
             : JSON.stringify(prerequisite.result);
         }
 
@@ -92,6 +92,29 @@ export class AnalysisService {
             tier2Status,
             failedQuestions: [failedQuestionsText],
             companyIndustry: '科技製造與能源產業' // Info: (20260320 - Tzuhan) We will replace this dynamically if available, or rely on web search
+          };
+        }
+      } else if (params.category === 'carbon_health_check') {
+        const { start, end } = getPeriodDateRange(params.periodType, params.year, params.periodValue);
+        const startTs = Math.floor(new Date(start).getTime() / 1000);
+        const endTs = Math.floor(new Date(end + 'T23:59:59.999Z').getTime() / 1000);
+
+        const esgRecords = await prisma.esgRecord.findMany({
+          where: {
+            userId,
+            dateTimestamp: { gte: startTs, lte: endTs },
+            deletedAt: null
+          },
+          orderBy: { dateTimestamp: 'asc' }
+        });
+
+        if (esgRecords.length > 0) {
+          const esgContextLines = esgRecords.map(r => {
+            const dateStr = new Date(r.dateTimestamp * 1000).toISOString().split('T')[0];
+            return `- 日期: ${dateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
+          });
+          parsedPrerequisiteParams = {
+            esgRecordsContext: `\n【用戶提供的內部 ESG 數據紀錄】:\n${esgContextLines.join('\n')}\n`
           };
         }
       }
@@ -149,7 +172,7 @@ export class AnalysisService {
       try {
         // Info: (20260320 - Tzuhan) Check cache for existing report to reuse
         const cachedMissions = await prisma.mission.findMany({
-          where: { 
+          where: {
             status: MISSION_STATUS.COMPLETED,
             name: { contains: params.category }
           },
@@ -160,13 +183,13 @@ export class AnalysisService {
         let cachedMissionId: string | undefined;
         for (const m of cachedMissions) {
           const d = m.data as Partial<IGenerateAnalysisParams>;
-          if (d && 
-              d.category === params.category &&
-              d.periodType === params.periodType &&
-              String(d.periodValue) === String(params.periodValue) &&
-              d.year === params.year &&
-              d.keyword === params.keyword) {
-            
+          if (d &&
+            d.category === params.category &&
+            d.periodType === params.periodType &&
+            String(d.periodValue) === String(params.periodValue) &&
+            d.year === params.year &&
+            d.keyword === params.keyword) {
+
             // Info: (20260321) Invalidate cache for net zero if a newer health check exists
             if (params.category === 'net_zero_emissions') {
               const latestHC = await prisma.analysis.findFirst({

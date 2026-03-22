@@ -107,7 +107,7 @@ export class TaskService {
           );
         }
 
-        let images: {data: string, mimeType: string}[] = [];
+        let images: { data: string, mimeType: string }[] = [];
         if (parsedContext.fileBase64 && parsedContext.fileMimeType) {
           images = [{ data: parsedContext.fileBase64, mimeType: parsedContext.fileMimeType }];
         } else {
@@ -115,17 +115,17 @@ export class TaskService {
           throw new Error("No fileBase64 or fileMimeType provided for document parsing task. This might be an outdated task format.");
         }
 
-          if (task.type === "JOURNAL_PARSING") {
-            const res = await chatService.analyzeJournal(images);
-            result = res.text;
-          } 
-          else if (task.type === "VOUCHER_PARSING") {
-            const res = await chatService.analyzeVoucher(images, "TW");
-            result = JSON.stringify(res);
-          } else if (task.type === "ESG_PARSING") {
-            const res = await chatService.analyzeESG(images);
-            result = JSON.stringify(res);
-          }
+        if (task.type === "JOURNAL_PARSING") {
+          const res = await chatService.analyzeJournal(images);
+          result = res.text;
+        }
+        else if (task.type === "VOUCHER_PARSING") {
+          const res = await chatService.analyzeVoucher(images, "TW");
+          result = JSON.stringify(res);
+        } else if (task.type === "ESG_PARSING") {
+          const res = await chatService.analyzeESG(images);
+          result = JSON.stringify(res);
+        }
       } else if (task.type === "MARKET_EVENT_COLLECTION") {
         const taskData = task.data as unknown as ITaskData;
         let needsSearch = false;
@@ -213,6 +213,7 @@ export class TaskService {
     let endDate = mData.endDate || "N/A";
     let marketName = "台灣";
     let targetKeyword = "General";
+    let esgRecordsContext = "";
 
     if (taskData.context) {
       try {
@@ -221,6 +222,7 @@ export class TaskService {
         endDate = parsedContext.endDate || endDate;
         marketName = parsedContext.marketName || marketName;
         targetKeyword = parsedContext.target || targetKeyword;
+        esgRecordsContext = parsedContext.esgRecordsContext || "";
       } catch (e) {
         console.warn(
           "[TaskService] Could not parse task context for date validation",
@@ -236,7 +238,8 @@ export class TaskService {
       .replace(/\{Period_End\}/g, endDate)
       .replace(/\{Market_Name\}/g, marketName)
       .replace(/\{Current_Date\}/g, currentDate)
-      .replace(/\{Target_Keyword\}/g, targetKeyword);
+      .replace(/\{Target_Keyword\}/g, targetKeyword)
+      .replace(/\{Esg_Records_Context\}/g, esgRecordsContext);
     const tagsString =
       mData.historicalTags && mData.historicalTags.length > 0
         ? mData.historicalTags.join(", ")
