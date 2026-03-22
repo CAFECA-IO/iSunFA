@@ -99,8 +99,13 @@ export async function GET(
       revenue += val;
     });
 
+    const totalEmissionsTons = totalEmissions / 1000;
+    const scope1Tons = scope1 / 1000;
+    const scope2Tons = scope2 / 1000;
+    const scope3Tons = scope3 / 1000;
+
     const rev10k = revenue / 10000;
-    const intensity = rev10k > 0 ? (totalEmissions / rev10k) : 0;
+    const intensity = rev10k > 0 ? (totalEmissionsTons / rev10k) : null;
 
     const s1Pct = totalEmissions > 0 ? (scope1 / totalEmissions) * 100 : 0;
     const s2Pct = totalEmissions > 0 ? (scope2 / totalEmissions) * 100 : 0;
@@ -111,26 +116,29 @@ export async function GET(
 
     let goalProgress = 0;
     if (target && target.totalEmissionTarget && Number(target.totalEmissionTarget) > 0) {
-      goalProgress = (totalEmissions / Number(target.totalEmissionTarget)) * 100;
-      if (goalProgress > 100) goalProgress = 100;
+      const msInYear = new Date(currentYear, 11, 31, 23, 59, 59, 999).getTime() - new Date(currentYear, 0, 1).getTime();
+      const spanMs = endDate.getTime() - startDate.getTime();
+      const proportion = Math.min(1, spanMs / msInYear);
+      const proportionalTarget = Number(target.totalEmissionTarget) * proportion;
+      goalProgress = (totalEmissions / proportionalTarget) * 100; // kg/kg
     }
 
     const dashboardSummary: IEsgDashboardSummary = {
       totalEmissions: {
-        value: Number(totalEmissions.toFixed(2)),
-        unit: "kgCO2e",
+        value: Number(totalEmissionsTons.toFixed(2)),
+        unit: "tCO2e",
         estimatedEndOfMonth: 0,
-        estimatedUnit: "kgCO2e",
+        estimatedUnit: "tCO2e",
       },
       emissionIntensity: {
-        value: Number(intensity.toFixed(2)),
-        unit: "kgCO2e / 萬元營收",
+        value: intensity !== null ? Number(intensity.toFixed(2)) : null,
+        unit: "tCO2e / 萬元營收",
         industryAverage: 0,
       },
       scopeDistribution: {
-        scope1: { value: Number(scope1.toFixed(2)), unit: "kgCO2e", percentage: Number(s1Pct.toFixed(1)) },
-        scope2: { value: Number(scope2.toFixed(2)), unit: "kgCO2e", percentage: Number(s2Pct.toFixed(1)) },
-        scope3: { value: Number(scope3.toFixed(2)), unit: "kgCO2e", percentage: Number(s3Pct.toFixed(1)) },
+        scope1: { value: Number(scope1Tons.toFixed(2)), unit: "tCO2e", percentage: Number(s1Pct.toFixed(1)) },
+        scope2: { value: Number(scope2Tons.toFixed(2)), unit: "tCO2e", percentage: Number(s2Pct.toFixed(1)) },
+        scope3: { value: Number(scope3Tons.toFixed(2)), unit: "tCO2e", percentage: Number(s3Pct.toFixed(1)) },
       },
       goalProgress: {
         percentage: Number(goalProgress.toFixed(1)),

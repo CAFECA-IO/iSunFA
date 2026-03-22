@@ -166,9 +166,11 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
           </div>
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl font-bold tracking-tight text-slate-800">
-              {summaryData.emissionIntensity.value.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {summaryData.emissionIntensity.value === null
+                ? "N/A"
+                : summaryData.emissionIntensity.value.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
             </span>
             <span className="text-sm font-bold text-slate-500">
               {summaryData.emissionIntensity.unit}
@@ -213,8 +215,8 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
         <div className="mt-8">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
-              className="h-full rounded-full bg-orange-500"
-              style={{ width: `${summaryData.goalProgress.percentage}%` }}
+              className={`h-full rounded-full ${summaryData.goalProgress.percentage > 100 ? 'bg-red-500' : 'bg-orange-500'}`}
+              style={{ width: `${Math.min(100, summaryData.goalProgress.percentage)}%` }}
             ></div>
           </div>
         </div>

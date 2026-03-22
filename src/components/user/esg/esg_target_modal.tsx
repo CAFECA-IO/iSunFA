@@ -171,6 +171,19 @@ export default function EsgTargetModal({
     onClose();
   };
 
+  const renderYoY = (currentValue: number | null | undefined, previousValue: number | null | undefined) => {
+    if (currentValue === null || currentValue === undefined || previousValue === null || previousValue === undefined || previousValue === 0) return null;
+    const diff = Number(currentValue) - Number(previousValue);
+    const percent = Math.abs((diff / Number(previousValue)) * 100).toFixed(1);
+    if (diff < 0) {
+      return <div className="mt-1.5 text-[11px] text-green-600 whitespace-nowrap justify-end w-full">{t("esg_target.yoy_reduction", { percent })}</div>;
+    } else if (diff > 0) {
+      return <div className="mt-1.5 text-[11px] text-red-500 whitespace-nowrap justify-end w-full">{t("esg_target.yoy_increase", { percent })}</div>;
+    } else {
+      return <div className="mt-1.5 text-[11px] text-slate-500 whitespace-nowrap justify-end w-full">{t("esg_target.yoy_same")}</div>;
+    }
+  };
+
   return (
     <Dialog open={isOpen} as="div" className="relative z-50" onClose={handleClose}>
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" aria-hidden="true" />
@@ -187,6 +200,16 @@ export default function EsgTargetModal({
                 <h3 className="text-lg font-semibold text-slate-800">
                   {t("esg_target.title")}
                 </h3>
+                {esgIndustryId ? (() => {
+                  const industry = ESG_INDUSTRY_BENCHMARKS.find(i => i.id === esgIndustryId);
+                  const industryName = industry ? t(industry.industryName) : "";
+                  return industryName ? (
+                    <div className="ml-3 hidden sm:inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 text-[13px] font-medium text-slate-700 border border-slate-200/60 shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-sm"></span>
+                      {t("esg_target.industry_classification", { industry: industryName })}
+                    </div>
+                  ) : null;
+                })() : null}
               </div>
               <button
                 aria-label="Close"
@@ -216,13 +239,18 @@ export default function EsgTargetModal({
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700 font-medium whitespace-nowrap">
                       {data?.history && data.history.length > 0 ? (
-                        data.history.map((h) => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        data.history.map((h: any) => {
                           const draft = draftTargets[h.year] || { totalEmissionTarget: null, revenueEmissionTarget: null };
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          const prevYearData = data.history.find((x: any) => x.year === h.year - 1);
+                          const prevTotalActual = prevYearData?.emissions ? (prevYearData.emissions / 1000) : null;
+                          const prevRevActual = (prevYearData?.emissions && prevYearData?.revenue) ? ((prevYearData.emissions / 1000) / (prevYearData.revenue / 10000)) : null;
                           return (
                             <tr key={h.year} className="hover:bg-slate-50 transition-colors">
                               <td className="px-4 py-3 text-slate-800 font-semibold">{h.year}</td>
 
-                              <td className="px-4 py-2 text-right">
+                              <td className="px-4 py-2 text-right align-top">
                                 <input
                                   type="number"
                                   aria-label="Total Emission Target"
@@ -231,8 +259,9 @@ export default function EsgTargetModal({
                                   className="w-full max-w-[160px] rounded-md border border-slate-300 px-3 py-1.5 text-right text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 placeholder:text-slate-300"
                                   placeholder="-"
                                 />
+                                {renderYoY(draft.totalEmissionTarget, prevTotalActual)}
                               </td>
-                              <td className="px-4 py-2 text-right">
+                              <td className="px-4 py-2 text-right align-top">
                                 <input
                                   type="number"
                                   aria-label="Revenue Emission Target"
@@ -241,12 +270,16 @@ export default function EsgTargetModal({
                                   className="w-full max-w-[160px] rounded-md border border-slate-300 px-3 py-1.5 text-right text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 placeholder:text-slate-300"
                                   placeholder="-"
                                 />
-                                {draft.revenueEmissionTarget !== null && esgIndustryId ? (
-                                  <div className="mt-1.5 flex flex-col items-end gap-1 text-[11px] text-slate-500 whitespace-nowrap">
-                                    <span>{t("esg_target.industry_rank", { rank: getIndustryRank(draft.revenueEmissionTarget, esgIndustryId) || 0 })}</span>
-                                    <span>{t("esg_target.global_rank", { rank: getGlobalRank(draft.revenueEmissionTarget) || 0 })}</span>
-                                  </div>
-                                ) : null}
+                                {renderYoY(draft.revenueEmissionTarget, prevRevActual)}
+                                {draft.revenueEmissionTarget !== null && esgIndustryId ? (() => {
+                                  const globalRankStr = t("esg_target.global_rank", { rank: getGlobalRank(draft.revenueEmissionTarget) || 0 });
+                                  const industryRankStr = t("esg_target.industry_rank", { rank: getIndustryRank(draft.revenueEmissionTarget, esgIndustryId) || 0 });
+                                  return (
+                                    <div className="mt-1.5 flex flex-col items-end gap-1 text-[11px] text-slate-500 whitespace-nowrap">
+                                      <span>{t("esg_target.target_estimation", { global_rank: globalRankStr, industry_rank: industryRankStr })}</span>
+                                    </div>
+                                  );
+                                })() : null}
                               </td>
                             </tr>
                           );

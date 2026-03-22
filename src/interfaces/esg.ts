@@ -20,7 +20,7 @@ export interface IEsgTotalEmissions {
 }
 
 export interface IEsgEmissionIntensity {
-  value: number;
+  value: number | null;
   unit: string;
   industryAverage: number;
 }

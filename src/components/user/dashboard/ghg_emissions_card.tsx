@@ -198,7 +198,7 @@ export const GHGEmissionsCard = ({ currentData, gasType, setGasType }: IGHGEmiss
                 <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
                   <div className={`h-full rounded-full transition-all duration-500 ${
                     currentData.metrics.goalStatus === 'not_achieved' ? 'bg-red-500' : 'bg-emerald-500'
-                  }`} style={{ width: `${currentData.metrics.goalProgress}%` }} />
+                  }`} style={{ width: `${Math.min(100, currentData.metrics.goalProgress)}%` }} />
                 </div>
                 <p className="text-[10px] text-gray-400 text-right">Target: {currentData.metrics.goalTarget}</p>
               </div>

@@ -68,8 +68,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
         emissions: data.emissions > 0 ? data.emissions : null,
         revenue: data.revenue > 0 ? data.revenue : null,
         intensity: data.emissions > 0 ? parseFloat(intensity.toFixed(2)) : null,
-        totalEmissionTarget: target?.totalEmissionTarget ? Number(target.totalEmissionTarget) : null,
-        revenueEmissionTarget: target?.revenueEmissionTarget ? Number(target.revenueEmissionTarget) : null,
+        totalEmissionTarget: target?.totalEmissionTarget ? Number(target.totalEmissionTarget) / 1000 : null,
+        revenueEmissionTarget: target?.revenueEmissionTarget ? Number(target.revenueEmissionTarget) / 1000 : null,
       });
     }
 
@@ -119,8 +119,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ acc
     const target = await esgRepo.upsertEsgTarget({
       accountBookId,
       year: Number(year),
-      totalEmissionTarget: totalEmissionTarget !== undefined ? totalEmissionTarget : null,
-      revenueEmissionTarget: revenueEmissionTarget !== undefined ? revenueEmissionTarget : null,
+      totalEmissionTarget: totalEmissionTarget !== undefined && totalEmissionTarget !== null ? totalEmissionTarget * 1000 : null,
+      revenueEmissionTarget: revenueEmissionTarget !== undefined && revenueEmissionTarget !== null ? revenueEmissionTarget * 1000 : null,
     });
 
     return jsonOk(target);

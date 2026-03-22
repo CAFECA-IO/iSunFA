@@ -261,32 +261,28 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
     });
     const targetValue = esgTarget?.totalEmissionTarget ? Number(esgTarget.totalEmissionTarget) : null;
 
-    const startOfYearTs = Math.floor(new Date(endYear, 0, 1).getTime() / 1000);
-    const endOfYearTs = Math.floor(new Date(endYear, 11, 31, 23, 59, 59, 999).getTime() / 1000);
-    
-    const annualAgg = await prisma.esgRecord.aggregate({
-      where: {
-        accountBookId,
-        dateTimestamp: { gte: startOfYearTs, lte: endOfYearTs },
-        isVerified: true
-      },
-      _sum: { emissions: true }
-    });
-    const annualEmissionsSum = Number(annualAgg._sum.emissions || 0);
+    const periodEmissionsSum = esgRecords.reduce((acc, current) => acc + Number(current.emissions || 0), 0);
 
     let goalStatus = 'on_track';
     let goalProgress = 0;
     let goalTargetStr = 'No target set';
 
     if (targetValue !== null && targetValue > 0) {
-      goalProgress = Math.min(100, Math.round((annualEmissionsSum / targetValue) * 100));
-      goalTargetStr = `${targetValue} tCO2e by ${endYear}`;
+      const yearStartMs = new Date(endYear, 0, 1).getTime();
+      const yearEndMs = new Date(endYear, 11, 31, 23, 59, 59, 999).getTime();
+      const msInYear = yearEndMs - yearStartMs;
+      const spanMs = end.getTime() - start.getTime();
+      const proportion = Math.min(1, spanMs / msInYear);
+      const proportionalTarget = targetValue * proportion; // kgCO2e
+
+      goalProgress = Math.round((periodEmissionsSum / proportionalTarget) * 100);
+      goalTargetStr = `${Math.round(proportionalTarget / 1000)} tCO2e`;
       
       const now = new Date();
-      if (now.getFullYear() > endYear) {
-        goalStatus = annualEmissionsSum <= targetValue ? 'achieved' : 'not_achieved';
+      if (now.getTime() > end.getTime()) {
+        goalStatus = periodEmissionsSum <= proportionalTarget ? 'achieved' : 'not_achieved';
       } else {
-        goalStatus = annualEmissionsSum <= targetValue ? 'on_track' : 'not_achieved';
+        goalStatus = periodEmissionsSum <= proportionalTarget ? 'on_track' : 'not_achieved';
       }
     }
 
@@ -317,14 +313,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
         metrics: {
           carbonCost: '$' + (cGas * 50).toLocaleString(undefined, { maximumFractionDigits: 0 }),
           carbonTrend: (carbonTrend > 0 ? '+' : '') + carbonTrend.toFixed(1) + '%',
-          carbonTotal: cGas.toFixed(1) + (gasType === 'co2' ? 't' : 'kg'),
-          scope1Current: currentS1.toFixed(1) + (gasType === 'co2' ? 't' : 'kg'),
+          carbonTotal: (gasType === 'co2' ? (cGas / 1000) : cGas).toFixed(1) + (gasType === 'co2' ? 't' : 'kg'),
+          scope1Current: (gasType === 'co2' ? (currentS1 / 1000) : currentS1).toFixed(1) + (gasType === 'co2' ? 't' : 'kg'),
           scope1Trend: '+0%', scope1TrendVal: 0,
-          scope2Current: currentS2.toFixed(1) + (gasType === 'co2' ? 't' : 'kg'),
+          scope2Current: (gasType === 'co2' ? (currentS2 / 1000) : currentS2).toFixed(1) + (gasType === 'co2' ? 't' : 'kg'),
           scope2Trend: '+0%', scope2TrendVal: 0,
-          scope3Current: currentS3.toFixed(1) + (gasType === 'co2' ? 't' : 'kg'),
+          scope3Current: (gasType === 'co2' ? (currentS3 / 1000) : currentS3).toFixed(1) + (gasType === 'co2' ? 't' : 'kg'),
           scope3Trend: '+0%', scope3TrendVal: 0,
-          emissionsIntensity: (cGas / Math.max(1, currentIncome / 1000)).toFixed(2),
+          emissionsIntensity: currentIncome === 0 ? "N/A" : ((gasType === 'co2' ? (cGas / 1000) : cGas) / (currentIncome / 10000)).toFixed(2),
           isTop10Percent: true,
           goalStatus,
           goalProgress,
