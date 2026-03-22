@@ -59,7 +59,7 @@ export default function HistorySection() {
   const [error, setError] = useState<string | null>(null);
 
   // Info: (20260130 - Luphia) Report View Modal State
-  const [selectedReport, setSelectedReport] = useState<{ id: string; content: string; type: string } | null>(null);
+  const [selectedReport, setSelectedReport] = useState<{ id: string; content: string; type: string; keyword?: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -101,7 +101,8 @@ export default function HistorySection() {
         setSelectedReport({
           id: result.payload.id,
           content: content || 'No content available.',
-          type: result.payload.type
+          type: result.payload.type,
+          keyword: item.keyword
         });
         setIsModalOpen(true);
       } else {
@@ -115,7 +116,7 @@ export default function HistorySection() {
     }
   };
 
-  const downloadCurrentPdf = async (reportType: string) => {
+  const downloadCurrentPdf = async (reportType: string, keyword?: string) => {
     setIsDownloading(true);
     const el = document.getElementById('report-pdf-content');
     if (!el) {
@@ -131,7 +132,18 @@ export default function HistorySection() {
     el.classList.remove('max-h-[70vh]', 'overflow-y-auto');
 
     try {
-      const filename = `${reportType}_${new Date().toISOString().split('T')[0].replace(/-/g, '')}.pdf`;
+      const localizedType = t(`analysis.categories.${reportType}`) || reportType;
+      let companyName = keyword || '';
+      if (companyName.includes('(')) {
+        companyName = companyName.split('(')[0].trim();
+      }
+      
+      let filenameStr = localizedType;
+      if (companyName) {
+        filenameStr += `-${companyName}`;
+      }
+      
+      const filename = `${filenameStr}_${new Date().toISOString().split('T')[0].replace(/-/g, '')}.pdf`;
       await downloadHtmlAsPdf('report-pdf-content', filename);
     } catch (err) {
       console.error('PDF generation failed:', err);
@@ -151,7 +163,7 @@ export default function HistorySection() {
       setIsModalOpen(true);
     }
     setTimeout(() => {
-      downloadCurrentPdf(item.category);
+      downloadCurrentPdf(item.category, item.keyword);
     }, 500);
   };
 
@@ -518,7 +530,7 @@ export default function HistorySection() {
                       <button
                         type="button"
                         className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-orange-100 px-4 py-2 text-sm font-medium text-orange-900 hover:bg-orange-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:opacity-50"
-                        onClick={() => selectedReport && downloadCurrentPdf(selectedReport.type)}
+                        onClick={() => selectedReport && downloadCurrentPdf(selectedReport.type, selectedReport.keyword)}
                         disabled={isDownloading || !selectedReport}
                       >
                         {isDownloading && <Loader2 className="h-4 w-4 animate-spin" />}
