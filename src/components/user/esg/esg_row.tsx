@@ -246,7 +246,7 @@ export function EsgRow({
               type="button"
               aria-label={t("esg_table.manual_verify")}
               onClick={handleVerifyClick}
-              className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm hover:bg-orange-600"
+              className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm hover:bg-orange-600"
             >
               {t("esg_table.manual_verify")}
             </button>

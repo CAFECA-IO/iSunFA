@@ -10,11 +10,34 @@ interface IDashboardHeaderProps {
   autoRefresh: boolean;
   setAutoRefresh: (auto: boolean) => void;
   loading: boolean;
+  selectedYear: number;
+  setSelectedYear: (year: number) => void;
+  selectedMonth: number | '';
+  setSelectedMonth: (month: number | '') => void;
+  startYear: number;
+  startMonth: number;
 }
 
-export const DashboardHeader = ({ timeUnit, setTimeUnit, refresh, autoRefresh, setAutoRefresh, loading }: IDashboardHeaderProps) => {
+export const DashboardHeader = ({ 
+  timeUnit, setTimeUnit, refresh, autoRefresh, setAutoRefresh, loading,
+  selectedYear, setSelectedYear, selectedMonth, setSelectedMonth, startYear, startMonth
+}: IDashboardHeaderProps) => {
   const { t } = useTranslation();
-  const timeUnits: TimeUnit[] = ['24h', '7d', '30d', '3m', '1y'];
+  const timeUnits: TimeUnit[] = ['7d', '30d', '3m', '1y'];
+
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+
+  const yearsLength = Math.max(1, currentYear - startYear + 1);
+  const years = Array.from({ length: yearsLength }, (_, i) => currentYear - i);
+
+  let months = Array.from({ length: 12 }, (_, i) => i + 1);
+  if (selectedYear === currentYear) {
+    months = months.filter(m => m <= currentMonth);
+  }
+  if (selectedYear === startYear) {
+    months = months.filter(m => m >= startMonth);
+  }
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -79,7 +102,40 @@ export const DashboardHeader = ({ timeUnit, setTimeUnit, refresh, autoRefresh, s
           <div className="h-6 w-px bg-gray-300 mx-1" />
         </div>
 
-        {/* Info: (20260118 - Luphia) Time Selector */}
+        {/* Info: (20260322 - Luphia) Custom Time Selector */}
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedYear}
+            onChange={(e) => {
+              setSelectedYear(Number(e.target.value));
+              setTimeUnit('custom');
+            }}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 transition-colors ${timeUnit === 'custom' ? 'bg-gray-900 border-gray-900 text-white shadow-sm' : 'bg-white border-gray-300 text-gray-700'}`}
+          >
+            {years.map((y) => (
+              <option key={y} value={y} className="bg-white text-gray-900">
+                {y}  {t("esg_main.year")}
+              </option>
+            ))}
+          </select>
+          <select
+            value={selectedMonth}
+            onChange={(e) => {
+              setSelectedMonth(e.target.value ? Number(e.target.value) : "");
+              setTimeUnit('custom');
+            }}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 transition-colors ${timeUnit === 'custom' ? 'bg-gray-900 border-gray-900 text-white shadow-sm' : 'bg-white border-gray-300 text-gray-700'}`}
+          >
+             <option value="" className="bg-white text-gray-900">{t("esg_main.all_year")}</option>
+            {months.map((m) => (
+              <option key={m} value={m} className="bg-white text-gray-900">
+                {m}  {t("esg_main.month")}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Info: (20260118 - Luphia) Preset Time Selector */}
         <div className="flex items-center gap-1 bg-white border border-gray-200 p-1 rounded-lg shadow-sm overflow-x-auto max-w-full no-scrollbar flex-1 sm:flex-none justify-between sm:justify-start">
           {timeUnits.map((unit) => (
             <button

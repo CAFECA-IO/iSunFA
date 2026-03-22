@@ -3,6 +3,9 @@ export const ko = {
     loading: "로딩 중...",
     save: "저장",
     confirm: "확인",
+    verify_all: "일괄 확인",
+    verify_all_confirm_title: "일괄 확인하시겠습니까?",
+    verify_all_confirm_desc: "이렇게 하면 확인되지 않은 모든 항목이 확인됨으로 표시됩니다.",
     cancel: "취소",
     close: "닫기",
     coming_soon_message: "오픈 예정",
@@ -61,13 +64,16 @@ export const ko = {
     carbon_tax_prediction: "예상 탄소세",
     total_emissions: "총 배출량",
     emissions_per_revenue: "매출액당 배출량",
+    per_10k_revenue: "/ $10k 매출",
     eco_label: "환경 표지",
     top_10_percent: "상위 10%",
     goal_achievement: "감축 목표",
     goal_status: {
       on_track: "진행 중",
       at_risk: "위험",
-      behind: "미달",
+      behind: "목표 미달",
+      achieved: "달성됨",
+      not_achieved: "미달성",
     },
     ocr_status: "OCR 상태",
     ocr_processed: "자동 파일링",
@@ -173,7 +179,7 @@ export const ko = {
         desc: "예산, 승인 및 이체 프로세스를 통합하여 재무 업무 효율성을 종합적으로 향상시킵니다.",
       },
       analysis: {
-        title: "재무 분석",
+        title: "데이터 분석",
         desc: "심층적인 재무 데이터 분석을 제공하여 경영진이 현명한 비즈니스 결정을 내릴 수 있도록 돕습니다.",
       },
       tax: {
@@ -468,7 +474,7 @@ export const ko = {
       journal: "청구서 관리",
       tax: "세금 신고",
       financial_report: "재무 보고서",
-      analysis: "재무 분석",
+      analysis: "데이터 분석",
       signing: "전자 서명",
       integration: "시스템 통합",
       other: "기타",
@@ -524,9 +530,11 @@ export const ko = {
     form_name: "장부 이름",
     form_country: "국가 / 지역",
     form_currency: "통화",
+    form_start_year: "시작 연도",
     form_rule: "회계 기준",
     form_team: "팀",
-    form_enterprise_id: "통일 사업자 등록 번호 (선택)",
+    form_enterprise_id: "사업자등록번호 (선택 시)",
+    form_esg_industry: "산업 분류 (ESG, 선택 시)",
     submit: "확인",
     cancel: "취소",
   },
@@ -549,9 +557,9 @@ export const ko = {
       searching: '검색 중...',
       not_found: '기업을 찾을 수 없습니다. 더 완전한 이름이나 사업자등록번호를 입력해 보세요.'
     },
-    title: '재무 분석',
-    internal_analysis: '내부 분석',
-    external_analysis: '외부 분석',
+    title: '분석 보고서',
+    internal_analysis: '내부 데이터 분석',
+    external_analysis: '외부 데이터 분석',
     history_reports: '이력 보고서',
     period_type: '시간 단위',
     select_year: '연도 선택',
@@ -950,7 +958,10 @@ export const ko = {
   "esg_main": {
     "title": "탄소 배출 관리 및 ESG 분석",
     "description": "입력 증빙을 자동 분석하여 실시간 탄소 중립 진행 상황 및 다차원 배출 분석을 제공합니다.",
-    "export_button": "ESG 신고서 내보내기"
+    "export_button": "ESG 신고서 내보내기",
+    "year": "년",
+    "month": "월",
+    "all_year": "전체 연도"
   },
   "esg_summary": {
     "no_data_prefix": "현재 이 장부의 ESG 데이터가 없습니다. 먼저 ",
@@ -1026,29 +1037,29 @@ export const ko = {
       "intensity_high": "고강도"
     },
     "messages": {
-        "fetch_error": "전표를 가져오지 못했습니다",
-        "deleted_warning": "삭제된 전표는 편집할 수 없습니다"
-      },
-      "status": {
-        "pending": "확인 대기 중",
-        "verified": "확인됨"
-      },
-      "sections": {
-        "preview": "영수증 미리보기",
-        "basic_info": "기본 정보",
-        "accounting_entries": "회계 분개"
-      },
-      "validation": {
-        "empty_fields": "날짜 또는 유형이 비어 있습니다",
-        "unbalanced": "대차가 일치하지 않습니다",
-        "empty_rows": "분개가 비어 있습니다",
-        "incomplete_row": "비어 있는 계정이나 금액이 있습니다"
-      },
-      "balance_check": {
-        "title": "대차 대조 확인",
-        "balanced": "일치함",
-        "unbalanced": "불일치"
-      },
+      "fetch_error": "전표를 가져오지 못했습니다",
+      "deleted_warning": "삭제된 전표는 편집할 수 없습니다"
+    },
+    "status": {
+      "pending": "확인 대기 중",
+      "verified": "확인됨"
+    },
+    "sections": {
+      "preview": "영수증 미리보기",
+      "basic_info": "기본 정보",
+      "accounting_entries": "회계 분개"
+    },
+    "validation": {
+      "empty_fields": "날짜 또는 유형이 비어 있습니다",
+      "unbalanced": "대차가 일치하지 않습니다",
+      "empty_rows": "분개가 비어 있습니다",
+      "incomplete_row": "비어 있는 계정이나 금액이 있습니다"
+    },
+    "balance_check": {
+      "title": "대차 대조 확인",
+      "balanced": "일치함",
+      "unbalanced": "불일치"
+    },
     "actions": {
       "cancel_edit": "편집 취소",
       "verify_save": "확인 및 저장",
@@ -1082,15 +1093,26 @@ export const ko = {
     "ind_retail": "소매 및 일상용품",
     "ind_telecom": "통신 및 인터넷",
     "btn": "연간 목표 설정",
+    "yoy_reduction": "전년 대비 {{percent}}% 감소",
+    "yoy_increase": "전년 대비 {{percent}}% 증가",
+    "yoy_same": "전년과 동일",
+    "target_estimation": "올해 목표는 대략 {{global_rank}}, {{industry_rank}} 수준입니다",
+    "industry_classification": "산업 분류: {{industry}}",
+    "industry_rank": "산업 상위 {{rank}}%",
+    "global_rank": "대만 전체 상위 {{rank}}%",
+    "unsaved_changes_warning": "저장되지 않은 변경 사항이 있습니다. 정말 나가시겠습니까?",
+    "unsaved_changes_title": "닫기 확인",
+    "target_total_emissions": "목표 총 배출량 (tCO2e)",
+    "target_revenue_emissions": "목표 매출 단위당 배출량 (tCO2e)",
     "title": "연간 탄소 배출 목표 설정",
     "past_records": "과거 탄소 배출 기록",
     "year": "연도",
-    "emissions": "배출량 (kgCO2e)",
+    "emissions": "배출량 (tCO2e)",
     "revenue": "수익 (만 원)",
     "intensity": "강도",
     "set_target_intensity": "올해 목표 강도 설정",
     "target_placeholder": "목표 강도 입력",
-    "target_unit": "kgCO2e / 만 TWD 매출",
+    "target_unit": "tCO2e / 만 TWD 매출",
     "reduction_from_last_year": "작년 대비",
     "decrease": "감축",
     "increase": "증가",
@@ -1149,7 +1171,7 @@ export const ko = {
         },
         "no_file": "파일 없음",
         "filter_btn": "필터",
-        "verify_all": "모든 전표 확인",
+        "verify_all": "일괄 확인",
         "no_data": "현재 전표 데이터가 없습니다."
       }
     },
@@ -1224,6 +1246,57 @@ export const ko = {
           "title": "전표 저장",
           "message": "전표를 저장하시겠습니까?"
         }
+      }
+    },
+    "esg_industry_benchmarks": {
+      "spectrum": {
+        "extremely_high": "극도로 높은 탄소",
+        "very_high": "매우 높은 탄소",
+        "high": "고탄소",
+        "mid_high": "중고탄소",
+        "medium": "중간",
+        "mid_low": "중저탄소",
+        "extremely_low": "극도로 낮은 탄소"
+      },
+      "industry_1": {
+        "name": "석유화학 공업",
+        "desc": "높음: 폼모사 페트로케미칼 (3,650 kg) 차이 이유: 기초 나프타 분해 및 자가 석탄 발전소로 인한 불가피한 막대한 화학 물질 누출 및 화석 연료 연소."
+      },
+      "industry_2": {
+        "name": "시멘트 공업",
+        "desc": "높음: 아시아 시멘트 (2,883 kg) 차이 이유: 석회석의 고온 소성(직접 CO2 방출)이 큰 비율을 차지하며, 부동산 침체로 인한 수익 분모 축소에 민감함."
+      },
+      "industry_3": {
+        "name": "전력 및 에너지",
+        "desc": "높음: 마일리아오 발전 (2,657 kg) / 낮음: 대만 전력 (1,068 kg) 차이 이유: 마일리아오는 100% 석탄 발전; 대만 전력은 원자력, 수력, 천연가스 등을 통해 탄소 집약도를 크게 희석함."
+      },
+      "industry_4": {
+        "name": "철강 공업",
+        "desc": "높음: 차이나 스틸 (520 kg) / 낮음: 텅호 스틸 (126 kg) 차이 이유: 전통 고로는 석탄 환원이 필요하지만 전기로는 재활용 고철을 전력으로 용해하여 환원 탄소를 70% 이상 절감함."
+      },
+      "industry_5": {
+        "name": "해운 및 운송업",
+        "desc": "높음: 원양 컨테이너 해운 / 낮음: 육상 운송 및 고속철도 차이 이유: 중유를 태우는 거대 선박은 스코프 1의 주요 배출원이며 운임 시세의 영향을 크게 받음; 철도는 전철화율이 높아 우수함."
+      },
+      "industry_6": {
+        "name": "통신 네트워크업",
+        "desc": "높음: 청화 텔레콤 (271.8 kg) 차이 이유: '공장이 없으면 저탄소'라는 신화를 깸. 24시간 가동되는 5G 기지국과 데이터 센터(IDC) 냉각기는 엄청난 전력 소비 괴물임."
+      },
+      "industry_7": {
+        "name": "섬유 및 화학 섬유",
+        "desc": "낮음: 원동 신세기 (59.2 kg) 차이 이유: 전통 염색 공장은 에너지와 물 소비가 극심하나, 페트병 재활용(R-PET) 기술과 다각적 수익으로 중공업의 숙명을 뒤집음."
+      },
+      "industry_8": {
+        "name": "반도체 제조",
+        "desc": "높음: TSMC (50.1 kg) 차이 이유: EUV 장비 및 클린룸의 막대한 전력 소비(스코프 2)가 배출량을 늘리지만, 초고가 칩 스펙과 방대한 친환경 전력 구매로 집약도를 낮춤."
+      },
+      "industry_9": {
+        "name": "소매 및 전자상거래",
+        "desc": "높음: 세븐일레븐 (37.6 kg) / 낮음: 모모 (약 23 kg) 차이 이유: 오프라인 매장은 24시간 에어컨과 개방형 냉장고로 제한됨; 이커머스는 매장이 없으나 물류 차량과 자동화 창고 배출을 부담함."
+      },
+      "industry_10": {
+        "name": "지식 및 금융 (IC설계/SW/금융)",
+        "desc": "높음: 은행 (약 1.5 kg) / 낮음: 미디어텍 (1.86 kg) 차이 이유: 두뇌와 자본에 의존. 미디어텍은 제조를 외주화함; 금융업은 사무실 전력만 쓰나, 매출 탄소 비율에 계산되지 않은 막대한 '금융 배출량'이 숨어 있음."
       }
     }
   }

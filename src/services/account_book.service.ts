@@ -13,6 +13,8 @@ export interface IAccountBook {
   teamName?: string;
   userRole?: string;
   enterpriseId?: string | null;
+  esgIndustryId?: number | null;
+  createdAt?: string | Date;
 }
 
 // Info: (20260308 - Luphia) 找出所有帳簿的團隊，使用 createAccountBook 為他建立一個

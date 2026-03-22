@@ -49,7 +49,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const body = await request.json();
-    const { name, country, currency, rule, enterpriseId } = body;
+    const { name, country, currency, rule, enterpriseId, startYear, esgIndustryId } = body;
+
+    const createdAt = startYear ? new Date(`${startYear}-01-01T00:00:00.000Z`) : undefined;
 
     const updatedAccountBook = await updateAccountBook(accountBookId, {
       name,
@@ -57,6 +59,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       currency,
       rule,
       enterpriseId,
+      esgIndustryId,
+      createdAt,
     });
 
     return jsonOk(updatedAccountBook);

@@ -2,16 +2,20 @@
 
 import { Dialog } from "@headlessui/react";
 import { useState, useEffect, useCallback } from "react";
-import { X, Target, TrendingDown, TrendingUp, Award, Building2, Loader2, Info } from "lucide-react";
+import { X, Target, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
+import ConfirmModal from "@/components/common/confirm_modal";
 import { IApiResponse } from "@/lib/utils/response";
+import { ESG_INDUSTRY_BENCHMARKS } from "@/constants/esg_industry_benchmarks";
 
 interface IHistory {
   year: number;
-  emissions: number;
-  revenue: number;
-  intensity: number;
+  emissions: number | null;
+  revenue: number | null;
+  intensity: number | null;
+  totalEmissionTarget: number | null;
+  revenueEmissionTarget: number | null;
 }
 
 interface ITargetInfo {
@@ -25,28 +29,45 @@ export default function EsgTargetModal({
   isOpen,
   onClose,
   accountBookId,
+  esgIndustryId,
 }: {
   isOpen: boolean;
   onClose: () => void;
   accountBookId: string;
+  esgIndustryId?: number | null;
 }) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ITargetInfo | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-  const [targetIntensityInput, setTargetIntensityInput] = useState<string>("");
-  const [selectedIndustryId, setSelectedIndustryId] = useState<string>("semiconductor");
+  // Local state to hold user edits
+  const [draftTargets, setDraftTargets] = useState<
+    Record<number, { totalEmissionTarget: number | null; revenueEmissionTarget: number | null }>
+  >({});
 
-  const INDUSTRY_DATA = [
-    { id: "power", min: 5, max: 3000 },
-    { id: "steel", min: 140, max: 600 },
-    { id: "cement", min: 15, max: 550 },
-    { id: "petro", min: 25, max: 350 },
-    { id: "semiconductor", min: 2, max: 80 },
-    { id: "transport", min: 25, max: 250 },
-    { id: "retail", min: 3, max: 15 },
-    { id: "telecom", min: 1, max: 32 },
-  ];
+  const getIndustryRank = (target: number | null, industryId?: number | null): number | null => {
+    if (target === null || !industryId) return null;
+    const industry = ESG_INDUSTRY_BENCHMARKS.find(i => i.id === industryId);
+    if (!industry) return null;
+    if (target <= industry.emissionPer10kMin) return 1;
+    if (target >= industry.emissionPer10kMax) return 100;
+    const rank = 1 + ((target - industry.emissionPer10kMin) / (industry.emissionPer10kMax - industry.emissionPer10kMin)) * 99;
+    return Math.max(1, Math.min(100, Math.round(rank)));
+  };
+
+  const getGlobalRank = (target: number | null): number | null => {
+    if (target === null) return null;
+    const allMins = ESG_INDUSTRY_BENCHMARKS.map(i => i.emissionPer10kMin);
+    const allMaxs = ESG_INDUSTRY_BENCHMARKS.map(i => i.emissionPer10kMax);
+    const globalMin = Math.min(...allMins);
+    const globalMax = Math.max(...allMaxs);
+    if (target <= globalMin) return 1;
+    if (target >= globalMax) return 100;
+    const rank = 1 + ((target - globalMin) / (globalMax - globalMin)) * 99;
+    return Math.max(1, Math.min(100, Math.round(rank)));
+  };
 
   const loadData = useCallback(async () => {
     try {
@@ -56,9 +77,17 @@ export default function EsgTargetModal({
       );
       if (res.payload) {
         setData(res.payload);
-        if (res.payload.suggestedTargetIntensity > 0) {
-          setTargetIntensityInput(res.payload.suggestedTargetIntensity.toFixed(2));
-        }
+        const drafts: Record<
+          number,
+          { totalEmissionTarget: number | null; revenueEmissionTarget: number | null }
+        > = {};
+        res.payload.history.forEach((h) => {
+          drafts[h.year] = {
+            totalEmissionTarget: h.totalEmissionTarget,
+            revenueEmissionTarget: h.revenueEmissionTarget,
+          };
+        });
+        setDraftTargets(drafts);
       }
     } catch (e) {
       console.error(e);
@@ -73,60 +102,97 @@ export default function EsgTargetModal({
     }
   }, [isOpen, accountBookId, loadData]);
 
-  const handleSave = async () => {
-    // Info: (20260321 - Luphia) In a real app we'd dispatch a POST save.
-    onClose();
+  const handleInputChange = (
+    year: number,
+    field: "totalEmissionTarget" | "revenueEmissionTarget",
+    value: string
+  ) => {
+    setDraftTargets((prev) => ({
+      ...prev,
+      [year]: {
+        ...prev[year],
+        [field]: value === "" ? null : parseFloat(value),
+      },
+    }));
   };
 
-  const targetIntensity = parseFloat(targetIntensityInput) || 0;
-  const lastYearIntensity = data?.lastYearData?.intensity || 0;
+  const handleSave = async () => {
+    if (!data) return;
+    try {
+      setSaving(true);
+      // Info: (20260322 - Luphia) Save all years that have changed or just save all for simplicity
+      const promises = data.history.map((h) => {
+        const draft = draftTargets[h.year];
+        if (
+          draft.totalEmissionTarget !== h.totalEmissionTarget ||
+          draft.revenueEmissionTarget !== h.revenueEmissionTarget
+        ) {
+          return request(`/api/v1/user/account_book/${accountBookId}/esg/target`, {
+            method: "POST",
+            body: JSON.stringify({
+              year: h.year,
+              totalEmissionTarget: draft.totalEmissionTarget,
+              revenueEmissionTarget: draft.revenueEmissionTarget,
+            }),
+          });
+        }
+        return Promise.resolve();
+      });
 
-  // Info: (20260321 - Luphia) Real-time calculations
-  let reductionPercent = 0;
-  let isDecrease = true;
-  if (lastYearIntensity > 0) {
-    reductionPercent = ((targetIntensity - lastYearIntensity) / lastYearIntensity) * 100;
-    isDecrease = reductionPercent <= 0;
-  }
-
-  const calculateTaiwanRank = (val: number) => {
-    if (val <= 0) return 1;
-    // Info: (20260321 - Luphia) 2024 Taiwan Average 58 kgCO2e
-    const avg = 58;
-    if (val <= avg) {
-      const rank = (val / avg) * 49 + 1;
-      return Math.max(1, Math.round(rank));
-    } else {
-      const rank = 50 + ((val - avg) / (3000 - avg)) * 49;
-      return Math.min(99, Math.round(rank));
+      await Promise.all(promises);
+      onClose();
+    } catch (e) {
+      console.error("Failed to save targets", e);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const calculateIndustryRank = (val: number) => {
-    const industry = INDUSTRY_DATA.find((i) => i.id === selectedIndustryId) || INDUSTRY_DATA[0];
-    const min = industry.min;
-    const max = industry.max;
-    if (val <= min) return 1;
-    if (val >= max) return 99;
-
-    const rank = ((val - min) / (max - min)) * 98 + 1;
-    return Math.max(1, Math.min(99, Math.round(rank)));
+  const hasUnsavedChanges = () => {
+    if (!data) return false;
+    for (const h of data.history) {
+      const draft = draftTargets[h.year];
+      if (!draft) continue;
+      if (
+        draft.totalEmissionTarget !== h.totalEmissionTarget ||
+        draft.revenueEmissionTarget !== h.revenueEmissionTarget
+      ) {
+        return true;
+      }
+    }
+    return false;
   };
 
-  const taiwanRank = calculateTaiwanRank(targetIntensity);
-  const industryRank = calculateIndustryRank(targetIntensity);
+  const handleClose = () => {
+    if (hasUnsavedChanges()) {
+      setIsConfirmOpen(true);
+      return;
+    }
+    onClose();
+  };
 
-  const currentYear = new Date().getFullYear();
+  const renderYoY = (currentValue: number | null | undefined, previousValue: number | null | undefined) => {
+    if (currentValue === null || currentValue === undefined || previousValue === null || previousValue === undefined || previousValue === 0) return null;
+    const diff = Number(currentValue) - Number(previousValue);
+    const percent = Math.abs((diff / Number(previousValue)) * 100).toFixed(1);
+    if (diff < 0) {
+      return <div className="mt-1.5 text-[11px] text-green-600 whitespace-nowrap justify-end w-full">{t("esg_target.yoy_reduction", { percent })}</div>;
+    } else if (diff > 0) {
+      return <div className="mt-1.5 text-[11px] text-red-500 whitespace-nowrap justify-end w-full">{t("esg_target.yoy_increase", { percent })}</div>;
+    } else {
+      return <div className="mt-1.5 text-[11px] text-slate-500 whitespace-nowrap justify-end w-full">{t("esg_target.yoy_same")}</div>;
+    }
+  };
 
   return (
-    <Dialog open={isOpen} as="div" className="relative z-50" onClose={onClose}>
+    <Dialog open={isOpen} as="div" className="relative z-50" onClose={handleClose}>
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" aria-hidden="true" />
 
       <div className="fixed inset-0 overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
-          <div className="w-full max-w-5xl overflow-hidden rounded-2xl bg-slate-50 text-left align-middle shadow-2xl border border-slate-200">
-            {/* Info: (20260321 - Luphia) Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-5">
+          <div className="w-full max-w-3xl overflow-hidden rounded-2xl bg-slate-50 text-left align-middle shadow-2xl border border-slate-200 flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-orange-600">
                   <Target className="h-5 w-5" />
@@ -134,178 +200,118 @@ export default function EsgTargetModal({
                 <h3 className="text-lg font-semibold text-slate-800">
                   {t("esg_target.title")}
                 </h3>
+                {esgIndustryId ? (() => {
+                  const industry = ESG_INDUSTRY_BENCHMARKS.find(i => i.id === esgIndustryId);
+                  const industryName = industry ? t(industry.industryName) : "";
+                  return industryName ? (
+                    <div className="ml-3 hidden sm:inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 text-[13px] font-medium text-slate-700 border border-slate-200/60 shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-sm"></span>
+                      {t("esg_target.industry_classification", { industry: industryName })}
+                    </div>
+                  ) : null;
+                })() : null}
               </div>
               <button
                 aria-label="Close"
-                onClick={onClose}
+                onClick={handleClose}
                 className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                disabled={saving}
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {loading ? (
-              <div className="flex h-64 items-center justify-center bg-white">
+              <div className="flex h-64 items-center justify-center bg-white flex-1">
                 <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
               </div>
             ) : (
-              <div className="p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Info: (20260321 - Luphia) Left: Historical Context */}
-                  <div className="flex flex-col gap-4">
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
-                      <h4 className="mb-4 flex items-center text-sm font-semibold text-slate-700">
-                        <Info className="mr-2 h-4 w-4 text-slate-400" />
-                        {t("esg_target.past_records")}
-                      </h4>
+              <div className="p-6 bg-white flex-1 overflow-y-auto w-full">
+                <div className="rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
+                  <table className="w-full text-left text-sm min-w-[450px]">
+                    <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider sticky top-0 z-10 shadow-sm">
+                      <tr>
+                        <th className="px-4 py-3 font-medium bg-slate-50">{t("esg_target.year")}</th>
 
-                      <div className="overflow-hidden rounded-lg border border-slate-200">
-                        <table className="w-full text-left text-sm">
-                          <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                            <tr>
-                              <th className="px-4 py-3 font-medium">{t("esg_target.year")}</th>
-                              <th className="px-4 py-3 font-medium text-right">{t("esg_target.emissions")}</th>
-                              <th className="px-4 py-3 font-medium text-right">{t("esg_target.revenue")}</th>
-                              <th className="px-4 py-3 font-medium text-right">{t("esg_target.intensity")}</th>
+                        <th className="px-4 py-3 font-medium text-right bg-slate-50">{t("esg_target.target_total_emissions")}</th>
+                        <th className="px-4 py-3 font-medium text-right bg-slate-50">{t("esg_target.target_revenue_emissions")}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700 font-medium whitespace-nowrap">
+                      {data?.history && data.history.length > 0 ? (
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        data.history.map((h: any) => {
+                          const draft = draftTargets[h.year] || { totalEmissionTarget: null, revenueEmissionTarget: null };
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          const prevYearData = data.history.find((x: any) => x.year === h.year - 1);
+                          const prevTotalActual = prevYearData?.emissions ? (prevYearData.emissions / 1000) : null;
+                          const prevRevActual = (prevYearData?.emissions && prevYearData?.revenue) ? ((prevYearData.emissions / 1000) / (prevYearData.revenue / 10000)) : null;
+                          return (
+                            <tr key={h.year} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-4 py-3 text-slate-800 font-semibold">{h.year}</td>
+
+                              <td className="px-4 py-2 text-right align-top">
+                                <input
+                                  type="number"
+                                  aria-label="Total Emission Target"
+                                  value={draft.totalEmissionTarget ?? ""}
+                                  onChange={(e) => handleInputChange(h.year, "totalEmissionTarget", e.target.value)}
+                                  className="w-full max-w-[160px] rounded-md border border-slate-300 px-3 py-1.5 text-right text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 placeholder:text-slate-300"
+                                  placeholder="-"
+                                />
+                                {renderYoY(draft.totalEmissionTarget, prevTotalActual)}
+                              </td>
+                              <td className="px-4 py-2 text-right align-top">
+                                <input
+                                  type="number"
+                                  aria-label="Revenue Emission Target"
+                                  value={draft.revenueEmissionTarget ?? ""}
+                                  onChange={(e) => handleInputChange(h.year, "revenueEmissionTarget", e.target.value)}
+                                  className="w-full max-w-[160px] rounded-md border border-slate-300 px-3 py-1.5 text-right text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 placeholder:text-slate-300"
+                                  placeholder="-"
+                                />
+                                {renderYoY(draft.revenueEmissionTarget, prevRevActual)}
+                                {draft.revenueEmissionTarget !== null && esgIndustryId ? (() => {
+                                  const globalRankStr = t("esg_target.global_rank", { rank: getGlobalRank(draft.revenueEmissionTarget) || 0 });
+                                  const industryRankStr = t("esg_target.industry_rank", { rank: getIndustryRank(draft.revenueEmissionTarget, esgIndustryId) || 0 });
+                                  return (
+                                    <div className="mt-1.5 flex flex-col items-end gap-1 text-[11px] text-slate-500 whitespace-nowrap">
+                                      <span>{t("esg_target.target_estimation", { global_rank: globalRankStr, industry_rank: industryRankStr })}</span>
+                                    </div>
+                                  );
+                                })() : null}
+                              </td>
                             </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 text-slate-700 font-medium whitespace-nowrap">
-                            {data?.history && data.history.length > 0 ? (
-                              data.history.map((h) => (
-                                <tr key={h.year} className="hover:bg-slate-50 transition-colors">
-                                  <td className="px-4 py-3">{h.year}</td>
-                                  <td className="px-4 py-3 text-right">{h.emissions.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                                  <td className="px-4 py-3 text-right">{(h.revenue / 10000).toLocaleString(undefined, { maximumFractionDigits: 1 })}</td>
-                                  <td className="px-4 py-3 text-right font-semibold text-orange-600">{h.intensity}</td>
-                                </tr>
-                              ))
-                            ) : (
-                              <tr>
-                                <td colSpan={4} className="px-4 py-8 text-center text-slate-400">
-                                  {t("esg_summary.no_data_prefix")}
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Info: (20260321 - Luphia) Right: Target Setting & Simulation */}
-                  <div className="flex flex-col gap-6">
-                    {/* Info: (20260321 - Luphia) Input block matching esg_summary style */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
-                      <label htmlFor="industry" className="mb-2 flex items-center justify-between text-sm font-medium text-slate-700">
-                        <span>{t("esg_target.select_industry")}</span>
-                      </label>
-                      <select
-                        id="industry"
-                        value={selectedIndustryId}
-                        onChange={(e) => setSelectedIndustryId(e.target.value)}
-                        className="mb-5 block w-full rounded-lg border border-slate-300 bg-slate-50 py-2.5 pl-4 pr-10 text-sm font-medium text-slate-800 focus:border-orange-500 focus:ring-orange-500 transition-colors"
-                      >
-                        {INDUSTRY_DATA.map((ind) => (
-                          <option key={ind.id} value={ind.id}>
-                            {t(`esg_target.ind_${ind.id}`)} ( {ind.min} - {ind.max} kg)
-                          </option>
-                        ))}
-                      </select>
-
-                      <label htmlFor="targetIntensity" className="mb-2 flex items-center justify-between text-sm font-medium text-slate-700">
-                        <span>{t("esg_target.set_target_intensity")} ({currentYear})</span>
-                      </label>
-                      <div className="relative flex items-center mt-1">
-                        <input
-                          type="number"
-                          id="targetIntensity"
-                          value={targetIntensityInput}
-                          onChange={(e) => setTargetIntensityInput(e.target.value)}
-                          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none block w-full rounded-lg border border-slate-300 bg-slate-50 py-3 pl-4 pr-32 text-xl font-bold tracking-tight text-slate-800 focus:border-orange-500 focus:ring-orange-500 transition-colors placeholder:font-normal placeholder:text-slate-400"
-                          placeholder={t("esg_target.target_placeholder")}
-                        />
-                        <span className="absolute right-4 text-sm font-medium text-slate-500">
-                          {t("esg_target.target_unit")}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Info: (20260321 - Luphia) Real-time Cards following esg_summary.tsx visual grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Info: (20260321 - Luphia) Reduction Card */}
-                      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-5 md:col-span-2">
-                        <div>
-                          <div className="mb-2 flex items-center justify-between">
-                            <span className="text-sm font-medium text-slate-600">
-                              {t("esg_target.reduction_from_last_year")}
-                            </span>
-                            {isDecrease ? (
-                              <TrendingDown className="h-5 w-5 text-emerald-500" />
-                            ) : (
-                              <TrendingUp className="h-5 w-5 text-red-500" />
-                            )}
-                          </div>
-                          <div className="flex items-baseline gap-1.5 mt-1">
-                            <span className={`text-2xl font-bold tracking-tight ${isDecrease ? 'text-emerald-600' : 'text-red-500'}`}>
-                              {isDecrease ? "-" : "+"}{Math.abs(reductionPercent).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
-                            </span>
-                            <span className="text-sm font-medium text-slate-500">
-                              {isDecrease ? t("esg_target.decrease") : t("esg_target.increase")}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Info: (20260321 - Luphia) Ranking Taiwan */}
-                      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-5">
-                        <div>
-                          <div className="mb-2 flex items-center justify-between">
-                            <span className="text-sm font-medium text-slate-600">
-                              {t("esg_target.taiwan_ranking")}
-                            </span>
-                            <Award className="h-5 w-5 text-amber-500" />
-                          </div>
-                          <div className="flex items-baseline gap-1.5 mt-1">
-                            <span className="text-2xl font-bold tracking-tight text-slate-800">
-                              Top {taiwanRank}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Info: (20260321 - Luphia) Ranking Industry */}
-                      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-5">
-                        <div>
-                          <div className="mb-2 flex items-center justify-between">
-                            <span className="text-sm font-medium text-slate-600">
-                              {t("esg_target.industry_ranking")}
-                            </span>
-                            <Building2 className="h-5 w-5 text-slate-400" />
-                          </div>
-                          <div className="flex items-baseline gap-1.5 mt-1">
-                            <span className="text-2xl font-bold tracking-tight text-slate-800">
-                              Top {industryRank}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={3} className="px-4 py-12 text-center text-slate-400">
+                            {t("esg_summary.no_data_prefix")}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
 
-            <div className="border-t border-slate-200 bg-white px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-2xl">
+            <div className="shrink-0 border-t border-slate-200 bg-white px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-2xl">
               <button
                 type="button"
-                className="inline-flex w-full justify-center rounded-lg bg-[#FF5A1F] px-8 py-2.5 text-sm font-medium text-white hover:bg-[#E04914] sm:ml-3 sm:w-auto transition-colors focus:outline-none"
+                className="inline-flex items-center w-full justify-center rounded-lg bg-[#FF5A1F] px-8 py-2.5 text-sm font-medium text-white hover:bg-[#E04914] sm:ml-3 sm:w-auto transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleSave}
+                disabled={saving || loading}
               >
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {t("esg_target.save")}
               </button>
               <button
                 type="button"
-                className="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-8 py-2.5 text-sm font-medium text-slate-600 border border-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors focus:outline-none"
-                onClick={onClose}
+                className="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-8 py-2.5 text-sm font-medium text-slate-600 border border-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors focus:outline-none disabled:opacity-50"
+                onClick={handleClose}
+                disabled={saving}
               >
                 {t("common.cancel")}
               </button>
@@ -313,6 +319,15 @@ export default function EsgTargetModal({
           </div>
         </div>
       </div>
-    </Dialog >
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        title={t("esg_target.unsaved_changes_title")}
+        message={t("esg_target.unsaved_changes_warning")}
+        confirmText={t("common.confirm")}
+        cancelText={t("common.cancel")}
+        onConfirm={onClose}
+      />
+    </Dialog>
   );
 }

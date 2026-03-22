@@ -170,11 +170,10 @@ export const GHGEmissionsCard = ({ currentData, gasType, setGasType }: IGHGEmiss
               </div>
               <div>
                 <span className="text-3xl font-bold text-gray-900">{currentData.metrics.emissionsIntensity}</span>
-                <span className="text-3xl font-bold text-gray-900">{currentData.metrics.emissionsIntensity}</span>
                 <span className="text-xs text-gray-400 ml-1">
                   {gasType === 'co2' ? 'tCO2e' :
                     gasType === 'ch4' ? 'kgCH4e' :
-                      gasType === 'n2o' ? 'kgN2Oe' : 'kgCO2e'} / $1k Revenue
+                      gasType === 'n2o' ? 'kgN2Oe' : 'kgCO2e'} {t('dashboard.per_10k_revenue')}
                 </span>
               </div>
 
@@ -184,7 +183,9 @@ export const GHGEmissionsCard = ({ currentData, gasType, setGasType }: IGHGEmiss
             <div className="space-y-3 pt-6 border-t border-gray-100">
               <div className="flex justify-between items-center">
                 <p className="text-sm font-bold text-gray-900">{t('dashboard.goal_achievement')}</p>
-                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                  currentData.metrics.goalStatus === 'not_achieved' ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'
+                }`}>
                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {t(`dashboard.goal_status.${currentData.metrics.goalStatus}` as any)}
                 </span>
@@ -195,7 +196,9 @@ export const GHGEmissionsCard = ({ currentData, gasType, setGasType }: IGHGEmiss
                   <span className="font-bold text-gray-900">{currentData.metrics.goalProgress}%</span>
                 </div>
                 <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${currentData.metrics.goalProgress}%` }} />
+                  <div className={`h-full rounded-full transition-all duration-500 ${
+                    currentData.metrics.goalStatus === 'not_achieved' ? 'bg-red-500' : 'bg-emerald-500'
+                  }`} style={{ width: `${Math.min(100, currentData.metrics.goalProgress)}%` }} />
                 </div>
                 <p className="text-[10px] text-gray-400 text-right">Target: {currentData.metrics.goalTarget}</p>
               </div>

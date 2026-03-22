@@ -378,6 +378,7 @@ model AccountBook {
   updatedAt DateTime   @updatedAt @map("updated_at")
   deletedAt DateTime?  @map("deleted_at")
   enterpriseId String? @map("enterprise_id")
+  esgIndustryId Int?   @map("esg_industry_id")
 
   // Info: (20260306 - Luphia) 帳本所屬的團隊
   teamId String @map("team_id")
@@ -395,8 +396,8 @@ model AccountBook {
   // Info: (20260312 - Julian) 帳本對應的 ESG 紀錄
   esgRecords EsgRecord[]
 
-  // Info: (20260312 - Julian) 帳本對應的唯一的 ESG 儀表板總結
-  esgDashboardSummary EsgDashboardSummary?
+  // Info: (20260322 - Luphia) 帳本對應的各年度 ESG 目標
+  esgTargets EsgTarget[]
 
   @@map("account_book")
 }
@@ -559,40 +560,25 @@ model EsgRecord {
   @@map("esg_record")
 }
 
-// Info: (20260312 - Julian) ESG 儀表板摘要(唯一一份)
-model EsgDashboardSummary {
+// Info: (20260322 - Luphia) ESG 各年度目標
+model EsgTarget {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  // Info: (20260312 - Julian) 隸屬的帳本 (一對一)
-  accountBookId String      @unique @map("account_book_id")
+  // Info: (20260322 - Luphia) 隸屬的帳本
+  accountBookId String      @map("account_book_id")
   accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
 
-  // Info: (20260312 - Julian) 本月總排放量
-  totalEmissions Decimal @map("total_emissions")
-  emissionsUnit  String  @default("kgCO2e") @map("emissions_unit")
+  // Info: (20260322 - Luphia) 目標年份
+  year Int
 
-  // Info: (20260312 - Julian) 預估月底總排放量
-  estimatedEndOfMonth Decimal @map("estimated_end_of_month")
+  // Info: (20260322 - Luphia) 總碳排放量目標
+  totalEmissionTarget Decimal? @map("total_emission_target")
 
-  // Info: (20260312 - Julian) 營收 (用來計算強度)
-  revenue Decimal
+  // Info: (20260322 - Luphia) 每萬元營收排放量目標
+  revenueEmissionTarget Decimal? @map("revenue_emission_target")
 
-  // Info: (20260312 - Julian) 碳排放強度
-  emissionIntensity Decimal @map("emission_intensity")
-  intensityUnit     String  @default("kg / 萬元營收") @map("intensity_unit")
-
-  // Info: (20260312 - Julian) 產業平均碳排強度
-  industryAverage Decimal @map("industry_average")
-
-  // Info: (20260312 - Julian) 各範疇排放量總和
-  scope1Emissions Decimal @map("scope1_emissions")
-  scope2Emissions Decimal @map("scope2_emissions")
-  scope3Emissions Decimal @map("scope3_emissions")
-
-  // Info: (20260312 - Julian) 年度/週期目標排放量百分比
-  goalPercentage Decimal @map("goal_percentage")
-
-  @@map("esg_dashboard_summary")
+  @@unique([accountBookId, year])
+  @@map("esg_target")
 }

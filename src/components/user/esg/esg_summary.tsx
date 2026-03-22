@@ -9,7 +9,12 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
 
-export default function EsgSummary() {
+interface IEsgSummaryProps {
+  year?: number;
+  month?: number | "";
+}
+
+export default function EsgSummary({ year, month }: IEsgSummaryProps) {
   const params = useParams();
   const pathname = usePathname();
   const accountBookId = params?.account_book_id as string;
@@ -28,8 +33,14 @@ export default function EsgSummary() {
       const fetchSummary = async () => {
         try {
           setIsLoading(true);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const query: any = {};
+          if (year) query.year = year;
+          if (month) query.month = month;
+
           const res = await request<IApiResponse<IEsgDashboardSummary>>(
             `/api/v1/user/account_book/${accountBookId}/esg/summary`,
+            { query }
           );
           if (res.payload) {
             setSummaryData(res.payload);
@@ -44,7 +55,7 @@ export default function EsgSummary() {
     } else {
       setIsLoading(false);
     }
-  }, [accountBookId]);
+  }, [accountBookId, year, month]);
 
   if (isLoading) {
     return (
@@ -155,9 +166,11 @@ export default function EsgSummary() {
           </div>
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl font-bold tracking-tight text-slate-800">
-              {summaryData.emissionIntensity.value.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {summaryData.emissionIntensity.value === null
+                ? "N/A"
+                : summaryData.emissionIntensity.value.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
             </span>
             <span className="text-sm font-bold text-slate-500">
               {summaryData.emissionIntensity.unit}
@@ -202,8 +215,8 @@ export default function EsgSummary() {
         <div className="mt-8">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
-              className="h-full rounded-full bg-orange-500"
-              style={{ width: `${summaryData.goalProgress.percentage}%` }}
+              className={`h-full rounded-full ${summaryData.goalProgress.percentage > 100 ? 'bg-red-500' : 'bg-orange-500'}`}
+              style={{ width: `${Math.min(100, summaryData.goalProgress.percentage)}%` }}
             ></div>
           </div>
         </div>

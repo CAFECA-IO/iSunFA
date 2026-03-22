@@ -315,7 +315,7 @@ export function VoucherRow({
               type="button"
               onClick={onClick}
               disabled={voucher.isDeleted}
-              className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:bg-slate-300"
+              className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:bg-slate-300"
             >
               {t("voucher.main_view.table.status.manual")}
             </button>

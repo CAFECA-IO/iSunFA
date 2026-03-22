@@ -3,6 +3,9 @@ export const zhCn = {
     loading: "载入中...",
     save: "保存",
     confirm: "确认",
+    verify_all: "一键核对",
+    verify_all_confirm_title: "确认一键核对？",
+    verify_all_confirm_desc: "这将会把所有未核对的项目标示为已核对",
     cancel: "取消",
     close: "关闭",
     coming_soon_message: "即将推出",
@@ -61,6 +64,7 @@ export const zhCn = {
     carbon_tax_prediction: "预估碳费",
     total_emissions: "总排放量",
     emissions_per_revenue: "单位营收排放量",
+    per_10k_revenue: "/ 万元营收",
     eco_label: "环保标章",
     top_10_percent: "排名前 10%",
     goal_achievement: "减碳目标",
@@ -68,6 +72,8 @@ export const zhCn = {
       on_track: "达成中",
       at_risk: "有风险",
       behind: "未达标",
+      achieved: "已达成",
+      not_achieved: "未达成",
     },
     ocr_status: "OCR 状态",
     ocr_processed: "自动归档",
@@ -173,7 +179,7 @@ export const zhCn = {
         desc: "整合预算、审核与转账流程，全面提升财务作业效率。",
       },
       analysis: {
-        title: "财务分析",
+        title: "数据分析",
         desc: "提供深度财务数据分析，协助管理层做出明智商业决策。",
       },
       tax: {
@@ -471,7 +477,7 @@ export const zhCn = {
       journal: "凭证管理",
       tax: "税务申报",
       financial_report: "会计报表",
-      analysis: "财务分析",
+      analysis: "数据分析",
       signing: "文件签核",
       integration: "系统集成",
       other: "其他",
@@ -525,9 +531,11 @@ export const zhCn = {
     form_name: "账簿名称",
     form_country: "国家 / 地区",
     form_currency: "币别",
+    form_start_year: "起始年份",
     form_rule: "会计准则",
     form_team: "所属团队",
-    form_enterprise_id: "统一编号 (选填)",
+    form_enterprise_id: "统一社会信用代码 (选填)",
+    form_esg_industry: "产业分类 (ESG, 选填)",
     submit: "确认",
     cancel: "取消",
   },
@@ -550,7 +558,7 @@ export const zhCn = {
       searching: '搜索中...',
       not_found: '找不到此公司，请尝试输入更完整的全称或统一代码。'
     },
-    title: "财务分析",
+    title: "分析报告",
     internal_analysis: "内部数据分析",
     external_analysis: "外部数据分析",
     history_reports: "历史报告",
@@ -938,7 +946,10 @@ export const zhCn = {
   "esg_main": {
     "title": "碳排管理与 ESG 分析",
     "description": "自动分析进项凭证，为您提供即时的碳中和进度与各项排放维度分析。",
-    "export_button": "导出 ESG 申报表"
+    "export_button": "导出 ESG 申报表",
+    "year": "年",
+    "month": "月",
+    "all_year": "全年"
   },
   "esg_summary": {
     "no_data_prefix": "目前无这份账本的 ESG 数据，请先",
@@ -1014,29 +1025,29 @@ export const zhCn = {
       "intensity_high": "高强度"
     },
     "messages": {
-        "fetch_error": "获取凭证失败",
-        "deleted_warning": "已删除凭证不可编辑"
-      },
-      "status": {
-        "pending": "待核对",
-        "verified": "已核对"
-      },
-      "sections": {
-        "preview": "发票预览",
-        "basic_info": "凭证基础信息",
-        "accounting_entries": "会计科目分录"
-      },
-      "validation": {
-        "empty_fields": "日期或分录类别为空",
-        "unbalanced": "借贷不平衡",
-        "empty_rows": "分录为空",
-        "incomplete_row": "有分录的会计科目或金额为空"
-      },
-      "balance_check": {
-        "title": "借贷平衡检查",
-        "balanced": "已平衡",
-        "unbalanced": "未平衡"
-      },
+      "fetch_error": "获取凭证失败",
+      "deleted_warning": "已删除凭证不可编辑"
+    },
+    "status": {
+      "pending": "待核对",
+      "verified": "已核对"
+    },
+    "sections": {
+      "preview": "发票预览",
+      "basic_info": "凭证基础信息",
+      "accounting_entries": "会计科目分录"
+    },
+    "validation": {
+      "empty_fields": "日期或分录类别为空",
+      "unbalanced": "借贷不平衡",
+      "empty_rows": "分录为空",
+      "incomplete_row": "有分录的会计科目或金额为空"
+    },
+    "balance_check": {
+      "title": "借贷平衡检查",
+      "balanced": "已平衡",
+      "unbalanced": "未平衡"
+    },
     "actions": {
       "cancel_edit": "取消修改",
       "verify_save": "核对并保存",
@@ -1070,15 +1081,26 @@ export const zhCn = {
     "ind_retail": "民生零售",
     "ind_telecom": "电信与网络",
     "btn": "设定年度目标",
+    "yoy_reduction": "较前一年减少 {{percent}}%",
+    "yoy_increase": "较前一年增加 {{percent}}%",
+    "yoy_same": "与前一年持平",
+    "target_estimation": "今年目标约为{{global_rank}}，{{industry_rank}}",
+    "industry_classification": "产业分类：{{industry}}",
+    "industry_rank": "产业前 {{rank}}%",
+    "global_rank": "全台前 {{rank}}%",
+    "unsaved_changes_warning": "您有未保存的更改，确定要离开吗？",
+    "unsaved_changes_title": "确认关闭？",
+    "target_total_emissions": "目标总排放量 (tCO2e)",
+    "target_revenue_emissions": "目标每万元营收排放量 (tCO2e)",
     "title": "年度碳排放目标设定",
     "past_records": "历年碳排放纪录",
     "year": "年份",
-    "emissions": "排放量 (kgCO2e)",
+    "emissions": "排放量 (tCO2e)",
     "revenue": "营收 (万元)",
     "intensity": "强度",
     "set_target_intensity": "设定本年度目标强度",
     "target_placeholder": "输入目标强度",
-    "target_unit": "kgCO2e / 万元营收",
+    "target_unit": "tCO2e / 万元营收",
     "reduction_from_last_year": "与去年相比",
     "decrease": "减碳",
     "increase": "增加",
@@ -1137,7 +1159,7 @@ export const zhCn = {
         },
         "no_file": "无文件",
         "filter_btn": "筛选条件",
-        "verify_all": "一键核对所有凭证",
+        "verify_all": "一键核对",
         "no_data": "目前无凭证数据"
       }
     },
@@ -1212,6 +1234,57 @@ export const zhCn = {
           "title": "保存凭证",
           "message": "您确定要保存此凭证吗？"
         }
+      }
+    },
+    "esg_industry_benchmarks": {
+      "spectrum": {
+        "extremely_high": "极致高碳",
+        "very_high": "极高碳",
+        "high": "高碳",
+        "mid_high": "中高碳",
+        "medium": "中等",
+        "mid_low": "中低碳",
+        "extremely_low": "极低碳"
+      },
+      "industry_1": {
+        "name": "石化工业",
+        "desc": "高：台塑石化 (3,650 公斤)落差主因：基础轻油裂解与自建燃煤汽电共生厂，伴随无法避免的巨量化学逸散与化石燃料燃烧。"
+      },
+      "industry_2": {
+        "name": "水泥工业",
+        "desc": "高：亚洲水泥 (2,883 公斤)落差主因：高温煅烧石灰石的物理化学反应（直接释放二氧化碳）占据绝大比例，且易受中国房市低迷导致营收分母缩水影响。"
+      },
+      "industry_3": {
+        "name": "发电能源业",
+        "desc": "高：麦寮汽电 (2,657 公斤) / 低：台湾电力 (1,068 公斤)落差主因：麦寮为 100% 燃煤发电；台电则因拥有核能、水力、天然气等多元能源结构与终端输配电网，大幅稀释碳排密集度。"
+      },
+      "industry_4": {
+        "name": "钢铁工业",
+        "desc": "高：中国钢铁 (520 公斤) / 低：东和钢铁 (126 公斤)落差主因：传统高炉（中钢）需烧煤炭还原铁矿砂；电炉厂（东和）则透过回收废钢搭配电力熔炼，直接砍掉七成以上的还原碳排。"
+      },
+      "industry_5": {
+        "name": "航运运输业",
+        "desc": "高：远洋货柜航运 / 低：陆地承揽与高铁落差主因：燃烧重油的跨洋巨轮是范畴一排碳大户，且极度受国际运费报价影响；而轨道运输因电气化程度高，表现相对优异。"
+      },
+      "industry_6": {
+        "name": "电信网通业",
+        "desc": "高：中华电信 (271.8 公斤)落差主因：打破「无工厂即低碳」迷思。全台 24 小时运转的 5G 基地台与云端资料中心（IDC）冰水主机，是极度可怕的吃电怪兽。"
+      },
+      "industry_7": {
+        "name": "纺织与化纤",
+        "desc": "低：远东新世纪 (59.2 公斤)落差主因：传统染整厂耗水耗能极高；但远东新靠着极致的宝特瓶回收再生技术（R-PET）与控股公司多元营收，成功扭转重工业宿命。"
+      },
+      "industry_8": {
+        "name": "半导体制造",
+        "desc": "高：台积电 (50.1 公斤)落差主因：极紫外光（EUV）机台与无尘室的庞大耗电（范畴二）推升总碳排；但靠着极高的芯片单价与海量绿电采购，硬是将密集度压低。"
+      },
+      "industry_9": {
+        "name": "零售与电商",
+        "desc": "高：统一超商 (37.6 公斤) / 低：富邦媒 (约 23 公斤)落差主因：实体超商受限于 24 小时空调与开放式冰柜；纯电商虽无门市，但仍需负担庞大物流车队与自动化仓储的碳排。"
+      },
+      "industry_10": {
+        "name": "知识与金融(IC设计/软体/金控)",
+        "desc": "高：金融行库 (~1.5 公斤) / 低：联发科 (1.86 公斤)落差主因：商业模式纯靠「脑力与资金」。联发科将高耗能制造外包给代工厂；金融业仅有办公用电，但隐含着未计入营收碳排比的庞大「投融资碳排」。"
       }
     }
   }
