@@ -299,7 +299,7 @@ export default function AnalysisView() {
             periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
             txHash: null,
             country,
-            keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput && selectedCompany ? `${selectedCompany.name} (${selectedCompany.taxId})` : undefined)
+            keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput ? internalCompanyName : undefined)
           })
         });
         if (!orderRes?.payload) throw new Error('Failed to create order');
@@ -355,7 +355,7 @@ export default function AnalysisView() {
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
           txHash: null,
           country,
-          keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput && selectedCompany ? `${selectedCompany.name} (${selectedCompany.taxId})` : undefined)
+          keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput ? internalCompanyName : undefined)
         })
       });
 
@@ -419,7 +419,7 @@ export default function AnalysisView() {
           year: selectedYear,
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
           country,
-          keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput && selectedCompany ? `${selectedCompany.name} (${selectedCompany.taxId})` : undefined),
+          keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput ? internalCompanyName : undefined),
           authentication: {
             orderId,
             transactionHash,
