@@ -159,7 +159,7 @@ export default function JournalUploadView({
     <>
       {/* Info: (20260304 - Julian) Full screen loading overlay during AI analysis */}
       {isAnalyzing && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md backdrop-saturate-150 transition-all duration-300">
+        <div className="fixed inset-0 z-100 flex flex-col items-center justify-center bg-white/60 backdrop-blur-md backdrop-saturate-150 transition-all duration-300">
           <Loader2 className="mb-6 h-16 w-16 animate-spin text-orange-500 drop-shadow-md" />
           <p className="text-2xl font-bold tracking-wide text-slate-800 drop-shadow-sm">
             {t("ocr.analyzing")}

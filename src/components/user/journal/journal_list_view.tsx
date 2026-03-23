@@ -145,11 +145,11 @@ export default function JournalListView() {
       for (const pj of pendingJournals) {
         try {
           const { payload } = await request<
-            IApiResponse<{ journal: IJournal }>
+            IApiResponse<IJournal>
           >(`/api/v1/user/account_book/${accountBookId}/journal/${pj.id}`);
-          if (payload?.journal) {
+          if (payload) {
             setJournals((prev) =>
-              prev.map((old) => (old.id === pj.id ? payload.journal : old)),
+              prev.map((old) => (old.id === pj.id ? payload : old)),
             );
           }
         } catch (error) {

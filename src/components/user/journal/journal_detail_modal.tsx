@@ -12,9 +12,6 @@ import {
 import {
   X,
   Loader2,
-  PencilIcon,
-  SaveIcon,
-  UndoIcon,
   CheckCircle2,
   Save,
   // TrashIcon,
@@ -49,7 +46,6 @@ export default function JournalDetailModal({
   // Info: (20260309 - Julian) 從 URL 取得帳簿 ID
   const accountBookId = params?.account_book_id as string;
 
-  const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editText, setEditText] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
@@ -57,61 +53,66 @@ export default function JournalDetailModal({
   const [showConfirmClose, setShowConfirmClose] = useState<boolean>(false);
   const [showConfirmSave, setShowConfirmSave] = useState<boolean>(false);
 
+  const [targetVerify, setTargetVerify] = useState<boolean>(false);
+  const [isUnverifyModalOpen, setIsUnverifyModalOpen] = useState<boolean>(false);
+
   useEffect(() => {
     if (isOpen && journal) {
       setEditText(journal.text);
-      setIsEditing(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, journal?.id]);
 
   if (!journal) return null;
 
-  const hasUnsavedChanges = isEditing && editText !== journal.text;
+  const hasUnsavedChanges = editText !== journal.text;
 
   const requestClose = () => {
     if (hasUnsavedChanges) {
       setShowConfirmClose(true);
     } else {
-      setIsEditing(false);
       onClose();
     }
   };
 
-  const handleSaveAttempt = () => {
-    if (editText === journal.text) {
-      setIsEditing(false);
-      return;
-    }
+  const saveJournal = (isVerified?: boolean) => {
+    setTargetVerify(!!isVerified);
     setShowConfirmSave(true);
   };
 
-  const executeSave = async () => {
+  const executeSaveJournal = async (overrideVerify: boolean | null = null) => {
     setShowConfirmSave(false);
     setIsSaving(true);
+    const finalVerify = overrideVerify !== null ? overrideVerify : targetVerify;
     try {
-      const data = await request<IApiResponse<{ journal: IJournal }>>(
+      const data = await request<IApiResponse<IJournal>>(
         `/api/v1/user/account_book/${accountBookId}/journal/${journal.id}`,
         {
           method: "PUT",
-          body: JSON.stringify({ text: editText }),
+          body: JSON.stringify({ text: editText, isVerified: finalVerify }),
         },
       );
-      if (data.code === ApiCode.SUCCESS && data.payload?.journal) {
+      if (data.code === ApiCode.SUCCESS && data.payload) {
         // Info: (20260305 - Julian) Must merge the new data because the PUT api might not return the associated file object
         const newJournal = {
           ...journal,
-          ...data.payload.journal,
+          ...data.payload,
           file: journal.file,
         };
         onUpdate(newJournal);
-        setIsEditing(false);
+        onClose();
       }
     } catch (error) {
       console.error("Failed to update journal", error);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleUnverifyConfirmed = () => {
+    setIsUnverifyModalOpen(false);
+    setTargetVerify(false);
+    executeSaveJournal(false);
   };
 
   return (
@@ -184,58 +185,15 @@ export default function JournalDetailModal({
                         <h4 className="font-medium text-gray-700">
                           {t("ocr.journal")}
                         </h4>
-                        <div className="flex gap-2">
-                          {isEditing ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditText(journal.text);
-                                  setIsEditing(false);
-                                }}
-                                className="flex items-center gap-1 rounded bg-gray-100 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-200"
-                              >
-                                <UndoIcon size={14} />
-                                {t("ocr.cancel")}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={handleSaveAttempt}
-                                className="flex items-center gap-1 rounded bg-orange-500 px-3 py-1.5 text-sm text-white hover:bg-orange-600"
-                              >
-                                <SaveIcon size={14} />
-                                {t("ocr.save")}
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditText(journal.text);
-                                setIsEditing(true);
-                              }}
-                              className="flex items-center gap-1 rounded border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                              <PencilIcon size={14} />
-                              {t("ocr.edit")}
-                            </button>
-                          )}
-                        </div>
                       </div>
 
                       <div className="flex-1 overflow-y-auto rounded-lg bg-gray-50">
-                        {isEditing ? (
-                          <textarea
-                            aria-label={t("ocr.journal") as string}
-                            value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
-                            className="size-full resize-none rounded-lg border border-orange-300 p-4 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                          />
-                        ) : (
-                          <div className="size-full rounded-lg p-4 whitespace-pre-line text-gray-700">
-                            {journal.text}
-                          </div>
-                        )}
+                        <textarea
+                          aria-label={t("ocr.journal") as string}
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          className="size-full resize-none rounded-lg border border-orange-300 p-4 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                        />
                       </div>
                       {/* ToDo: (20260323 - Julian) 先隱藏刪除按鈕 */}
                       {/* <div className="mt-4 ml-auto">
@@ -247,12 +205,11 @@ export default function JournalDetailModal({
                           <TrashIcon size={14} />
                           {t("ocr.delete")}
                         </button>
-                      </div> */}
                       {/* Info: (20260324 - Julian) Footer Actions */}
-                      <div className="flex items-center justify-between py-5">
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-4 py-2 border-t border-gray-100 pt-5">
                         <button
                           type="button"
-                          // onClick={() => setIsClearModalOpen(true)}
+                          onClick={() => setEditText(journal.text)}
                           className="px-4 text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
                         >
                           {t("voucher.detail_modal.actions.cancel_edit")}
@@ -261,8 +218,8 @@ export default function JournalDetailModal({
                           {journal.isVerified ? (
                             <button
                               type="button"
-                              // disabled={disabledSaveButton || isSaving}
-                              // onClick={() => setIsUnverifyModalOpen(true)}
+                              disabled={isSaving}
+                              onClick={() => setIsUnverifyModalOpen(true)}
                               className="flex h-10 items-center gap-2 rounded-xl bg-red-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:bg-slate-300"
                             >
                               <X size={16} className="stroke-3" />
@@ -271,8 +228,8 @@ export default function JournalDetailModal({
                           ) : (
                             <button
                               type="button"
-                              // disabled={disabledSaveButton || isSaving}
-                              // onClick={() => saveVoucher(true)}
+                              disabled={isSaving}
+                              onClick={() => saveJournal(true)}
                               className="flex h-10 items-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:bg-slate-300"
                             >
                               <CheckCircle2 size={16} className="stroke-3" />
@@ -281,8 +238,8 @@ export default function JournalDetailModal({
                           )}
                           <button
                             type="button"
-                            // disabled={disabledSaveButton || isSaving}
-                            // onClick={() => saveVoucher(activeVoucher?.isVerified)}
+                            disabled={isSaving}
+                            onClick={() => saveJournal(journal?.isVerified)}
                             className="flex h-10 items-center gap-2 rounded-xl bg-orange-500 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 disabled:bg-slate-300"
                           >
                             <Save size={16} className="stroke-3" />
@@ -313,7 +270,7 @@ export default function JournalDetailModal({
         message={t("ocr.confirm_save_msg") as string}
         confirmText={t("ocr.save") as string}
         cancelText={t("ocr.cancel") as string}
-        onConfirm={executeSave}
+        onConfirm={() => executeSaveJournal(null)}
       />
 
       {/* Info: (20260305 - Julian) Confirm Close Modal */}
@@ -326,9 +283,19 @@ export default function JournalDetailModal({
         cancelText={t("ocr.cancel") as string}
         onConfirm={() => {
           setShowConfirmClose(false);
-          setIsEditing(false);
           onClose();
         }}
+      />
+
+      {/* Info: (20260323 - Julian) Unverify Modal */}
+      <ConfirmModal
+        isOpen={isUnverifyModalOpen}
+        onClose={() => setIsUnverifyModalOpen(false)}
+        title={t("voucher.detail_modal.unverify_confirm.title")}
+        message={t("voucher.detail_modal.unverify_confirm.message")}
+        confirmText={t("voucher.detail_modal.unverify_confirm.confirm")}
+        cancelText={t("voucher.detail_modal.unverify_confirm.cancel")}
+        onConfirm={handleUnverifyConfirmed}
       />
     </>
   );

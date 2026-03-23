@@ -61,7 +61,7 @@ export async function GET(
       } : undefined
     };
 
-    return jsonOk({ journal });
+    return jsonOk(journal);
   } catch (error) {
     console.error("Get journal failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get journal failed");
@@ -117,12 +117,12 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { text } = body;
+    const { text, isVerified } = body;
 
     // Info: (20260304 - Julian) Update journal
     const updatedJournal = await prisma.journal.update({
       where: { id: journalId },
-      data: { text },
+      data: { text, isVerified: isVerified ?? false },
     });
 
     if (!updatedJournal) {
@@ -141,7 +141,7 @@ export async function PUT(
       },
     });
 
-    return jsonOk({ journal: updatedJournal });
+    return jsonOk(updatedJournal);
   } catch (error) {
     console.error("Put journal failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Put journal failed");
@@ -216,7 +216,7 @@ export async function DELETE(
       },
     });
 
-    return jsonOk({ journal: deletedJournal });
+    return jsonOk(deletedJournal);
   } catch (error) {
     console.error("Delete journal failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Delete journal failed");
