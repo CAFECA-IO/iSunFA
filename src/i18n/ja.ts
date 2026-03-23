@@ -5,7 +5,8 @@ export const ja = {
     confirm: "確認",
     verify_all: "一括確認",
     verify_all_confirm_title: "一括確認しますか？",
-    verify_all_confirm_desc: "これにより、すべての未確認項目が確認済みとしてマークされます。",
+    verify_all_confirm_desc:
+      "これにより、すべての未確認項目が確認済みとしてマークされます。",
     cancel: "キャンセル",
     close: "閉じる",
     coming_soon_message: "まもなく登場",
@@ -530,7 +531,8 @@ export const ja = {
     title: "帳簿を選択",
     subtitle: "管理ダッシュボードにアクセスする帳簿を選択してください。",
     empty_title: "利用可能な帳簿がありません",
-    empty_desc: "現在アクセス可能な帳簿がないか、アクセス権が削除されています。",
+    empty_desc:
+      "現在アクセス可能な帳簿がないか、アクセス権が削除されています。",
     role: "役割",
     create_button: "帳簿の作成",
     edit_button: "編集",
@@ -561,26 +563,27 @@ export const ja = {
   },
   analysis: {
     company_input: {
-      label: '企業名または法人番号',
-      placeholder: '正式名称、略称、または法人番号を入力...',
-      searching: '検索中...',
-      not_found: '企業が見つかりません。より完全な名称または法人番号を入力してください。'
+      label: "企業名または法人番号",
+      placeholder: "正式名称、略称、または法人番号を入力...",
+      searching: "検索中...",
+      not_found:
+        "企業が見つかりません。より完全な名称または法人番号を入力してください。",
     },
-    title: '分析レポート',
-    internal_analysis: '内部分析',
-    external_analysis: '外部分析',
-    history_reports: '履歴レポート',
-    period_type: '時間単位',
-    select_year: '年を選択',
-    select_period: '期間を選択',
-    country: '国を選択',
-    category: 'カテゴリを選択',
-    keyword: 'キーワード',
-    enter_keyword: 'キーワードを入力...',
-    period: '期間',
-    confirm_cost: 'コスト',
-    generate: 'レポート生成',
-    selected_period_desc: '{{value}} ({{type}})',
+    title: "分析レポート",
+    internal_analysis: "内部分析",
+    external_analysis: "外部分析",
+    history_reports: "履歴レポート",
+    period_type: "時間単位",
+    select_year: "年を選択",
+    select_period: "期間を選択",
+    country: "国を選択",
+    category: "カテゴリを選択",
+    keyword: "キーワード",
+    enter_keyword: "キーワードを入力...",
+    period: "期間",
+    confirm_cost: "コスト",
+    generate: "レポート生成",
+    selected_period_desc: "{{value}} ({{type}})",
     insufficient_credits: {
       title: "ポイント不足",
       message:
@@ -727,7 +730,8 @@ export const ja = {
       year: "年度",
       month: "月",
       payroll_days_base: "基準日数",
-      payroll_days_base_hint: "指定がない場合、デフォルトで30日で計算されます。",
+      payroll_days_base_hint:
+        "指定がない場合、デフォルトで30日で計算されます。",
       payroll_option_fixed: "固定30日",
       payroll_option_actual: "実際の暦日数",
       joined_this_month_1: "入社日",
@@ -818,7 +822,8 @@ export const ja = {
     },
     warnings: {
       title: "警告メッセージ",
-      salary_below_minimum: "基本給が法定最低賃金 ({{minimumWage}}元) を下回っています",
+      salary_below_minimum:
+        "基本給が法定最低賃金 ({{minimumWage}}元) を下回っています",
       overtime_exceeded: "1ヶ月の残業時間が法定上限の46時間を超えています",
     },
     login_modal: {
@@ -828,7 +833,8 @@ export const ja = {
     },
     reset_modal: {
       title: "計算機のリセット",
-      content: "計算機をリセットしてもよろしいですか？入力されたすべてのデータが消去されます。",
+      content:
+        "計算機をリセットしてもよろしいですか？入力されたすべてのデータが消去されます。",
       submit: "はい、すべてリセットします",
     },
     sending_pay_slip_modal: {
@@ -839,7 +845,8 @@ export const ja = {
       content_bold_2: " {{employeeName}} ",
       email: "Eメール",
       email_placeholder: "従業員のEメールを入力してください",
-      invalid_email_hint: "Eメールの形式が正しくありません。もう一度ご確認ください。",
+      invalid_email_hint:
+        "Eメールの形式が正しくありません。もう一度ご確認ください。",
       submit: "給与明細を送信",
     },
     my_pay_slip: {
@@ -870,7 +877,8 @@ export const ja = {
       salary_error_content:
         "基本給（課税）＋ 食事手当（非課税）＋ その他の手当（課税）＋ その他の手当（非課税）は最低賃金以上である必要があります。",
       remove_employee_title: "従業員の削除",
-      remove_employee_content: "本当に従業員リストから {{name}} を削除しますか？",
+      remove_employee_content:
+        "本当に従業員リストから {{name}} を削除しますか？",
       remove_employee_submit_btn: "はい、削除します。",
       re_send_pay_slip_title: "給与明細の再送信",
       re_send_pay_slip_content_1: "すでに",
@@ -881,7 +889,8 @@ export const ja = {
       re_send_pay_slip_cancel_btn: "いいえ、キャンセルします",
       re_send_pay_slip_submit_btn: "はい、再送信します",
       re_send_pay_slip_success_title: "送信完了！",
-      re_send_pay_slip_success_content: "給与明細が従業員のEメールに正常に送信されました。",
+      re_send_pay_slip_success_content:
+        "給与明細が従業員のEメールに正常に送信されました。",
     },
     operating_mechanism: {
       main_title: "給与計算ツールの仕組み",
@@ -900,7 +909,8 @@ export const ja = {
     clear_all_btn: "すべてクリア",
     add_more_btn: "さらに追加",
     analyze_all_btn: "一括分析 (Analyze All)",
-    multiple_files_supported: "複数ファイルの一括アップロードに対応 (.jpg, .png, .pdf)",
+    multiple_files_supported:
+      "複数ファイルの一括アップロードに対応 (.jpg, .png, .pdf)",
     title: "請求書管理",
     upload: "アップロード",
     list: "リスト",
@@ -965,349 +975,351 @@ export const ja = {
       copy_id: "クリックして伝票 ID をコピー: {{id}}",
     },
   },
-  "esg_main": {
-    "title": "炭素排出管理およびESG分析",
-    "description": "入力証憑を自動分析し、リアルタイムのカーボンニュートラル進捗状況と各排出ディメンション分析を提供します。",
-    "export_button": "ESG申告書を出力",
-    "year": "年",
-    "month": "月",
-    "all_year": "通年"
+  esg_main: {
+    title: "炭素排出管理およびESG分析",
+    description:
+      "入力証憑を自動分析し、リアルタイムのカーボンニュートラル進捗状況と各排出ディメンション分析を提供します。",
+    export_button: "ESG申告書を出力",
+    year: "年",
+    month: "月",
+    all_year: "通年",
   },
-  "esg_summary": {
-    "no_data_prefix": "現在この帳簿のESGデータはありません。まずは",
-    "upload_link": "伝票をアップロード",
-    "no_data_suffix": "して炭素排出記録を作成してください",
-    "total_emissions": "今月の総排出量",
-    "estimate_eom": "月末予想: ",
-    "emission_intensity": "炭素排出原単位",
-    "better_than_industry": "業界平均より優れています ({{average}})",
-    "scope_distribution": "スコープ分布 (SCOPE)",
-    "annual_goal_progress": "年間目標の進捗"
+  esg_summary: {
+    no_data_prefix: "現在この帳簿のESGデータはありません。まずは",
+    upload_link: "伝票をアップロード",
+    no_data_suffix: "して炭素排出記録を作成してください",
+    total_emissions: "今月の総排出量",
+    estimate_eom: "月末予想: ",
+    emission_intensity: "炭素排出原単位",
+    better_than_industry: "業界平均より優れています ({{average}})",
+    scope_distribution: "スコープ分布 (SCOPE)",
+    annual_goal_progress: "年間目標の進捗",
   },
-  "esg_table": {
-    "intensity": {
-      "high": "高強度",
-      "medium": "中強度",
-      "low": "低強度"
+  esg_table: {
+    intensity: {
+      high: "高強度",
+      medium: "中強度",
+      low: "低強度",
     },
-    "scope": {
-      "scope_1": "スコープ1",
-      "scope_2": "スコープ2",
-      "scope_3": "スコープ3"
+    scope: {
+      scope_1: "スコープ1",
+      scope_2: "スコープ2",
+      scope_3: "スコープ3",
     },
-    "no_file": "ファイルなし",
-    "verified": "確認済",
-    "manual_verify": "手動確認",
-    "search_placeholder": "業者、活動を検索...",
-    "search_aria": "業者、活動を検索",
-    "filter_intensity_aria": "強度で絞り込み",
-    "filter_intensity_all": "全て",
-    "filter_scope_aria": "スコープで絞り込み",
-    "filter_scope_all": "全て (Scope 1-3)",
-    "sort_date_aria": "日付で並べ替え",
-    "sort_newest": "新しい順",
-    "sort_oldest": "古い順",
-    "filter_btn": "フィルター",
-    "header": {
-      "voucher": "伝票",
-      "date": "日付",
-      "activity_target": "活動と対象",
-      "raw_data": "基本データ",
-      "emissions": "排出量 (KGCO2E)",
-      "intensity_label": "強度",
-      "ai_confidence": "AI信頼度",
-      "status": "ステータス"
+    no_file: "ファイルなし",
+    verified: "確認済",
+    manual_verify: "手動確認",
+    search_placeholder: "業者、活動を検索...",
+    search_aria: "業者、活動を検索",
+    filter_intensity_aria: "強度で絞り込み",
+    filter_intensity_all: "全て",
+    filter_scope_aria: "スコープで絞り込み",
+    filter_scope_all: "全て (Scope 1-3)",
+    sort_date_aria: "日付で並べ替え",
+    sort_newest: "新しい順",
+    sort_oldest: "古い順",
+    filter_btn: "フィルター",
+    header: {
+      voucher: "伝票",
+      date: "日付",
+      activity_target: "活動と対象",
+      raw_data: "基本データ",
+      emissions: "排出量 (KGCO2E)",
+      intensity_label: "強度",
+      ai_confidence: "AI信頼度",
+      status: "ステータス",
     },
-    "loading": "ロード中...",
-    "no_records": "記録がありません",
-    "footer": {
-      "record_count": "{{count}} 件の記録表示",
-      "data_citation": "データ: IPCC 第6次評価報告書 排出係数"
-    }
+    loading: "ロード中...",
+    no_records: "記録がありません",
+    footer: {
+      record_count: "{{count}} 件の記録表示",
+      data_citation: "データ: IPCC 第6次評価報告書 排出係数",
+    },
   },
-  "esg_verify": {
-    "title": "手動確認",
-    "preview": "プレビュー",
-    "ai_confidence": "AI 信頼度",
-    "no_image": "画像なし",
-    "form": {
-      "date": "日付",
-      "scope": "スコープ",
-      "scope_1": "スコープ1 (直接排出)",
-      "scope_2": "スコープ2 (間接排出)",
-      "scope_3": "スコープ3 (その他)",
-      "activity_type": "活動タイプ",
-      "vendor": "業者 / 対象",
-      "raw_data": "基本データ",
-      "unit": "単位",
-      "emissions": "排出量 (kgCO2e)",
-      "intensity": "強度",
-      "intensity_low": "低強度",
-      "intensity_medium": "中強度",
-      "intensity_high": "高強度"
+  esg_verify: {
+    title: "手動確認",
+    preview: "プレビュー",
+    ai_confidence: "AI 信頼度",
+    no_image: "画像なし",
+    form: {
+      date: "日付",
+      scope: "スコープ",
+      scope_1: "スコープ1 (直接排出)",
+      scope_2: "スコープ2 (間接排出)",
+      scope_3: "スコープ3 (その他)",
+      activity_type: "活動タイプ",
+      vendor: "業者 / 対象",
+      raw_data: "基本データ",
+      unit: "単位",
+      emissions: "排出量 (kgCO2e)",
+      intensity: "強度",
+      intensity_low: "低強度",
+      intensity_medium: "中強度",
+      intensity_high: "高強度",
     },
-    "messages": {
-      "fetch_error": "伝票の取得に失敗しました",
-      "deleted_warning": "削除済みの伝票は編集できません"
+    messages: {
+      fetch_error: "伝票の取得に失敗しました",
+      deleted_warning: "削除済みの伝票は編集できません",
     },
-    "status": {
-      "pending": "確認待ち",
-      "verified": "確認済"
+    status: {
+      pending: "確認待ち",
+      verified: "確認済",
     },
-    "sections": {
-      "preview": "領収書のプレビュー",
-      "basic_info": "基本情報",
-      "accounting_entries": "仕訳"
+    sections: {
+      preview: "領収書のプレビュー",
+      basic_info: "基本情報",
+      accounting_entries: "仕訳",
     },
-    "validation": {
-      "empty_fields": "日付または種類が空です",
-      "unbalanced": "貸借が一致しません",
-      "empty_rows": "仕訳が空です",
-      "incomplete_row": "空の科目または金額が含まれています"
+    validation: {
+      empty_fields: "日付または種類が空です",
+      unbalanced: "貸借が一致しません",
+      empty_rows: "仕訳が空です",
+      incomplete_row: "空の科目または金額が含まれています",
     },
-    "balance_check": {
-      "title": "貸借一致チェック",
-      "balanced": "一致",
-      "unbalanced": "不一致"
+    balance_check: {
+      title: "貸借一致チェック",
+      balanced: "一致",
+      unbalanced: "不一致",
     },
-    "actions": {
-      "cancel_edit": "編集をキャンセル",
-      "verify_save": "確認して保存",
-      "save_only": "変更のみ保存",
-      "add_row": "仕訳を追加",
-      "cancel": "キャンセル",
-      "save_and_verify": "保存して確認"
+    actions: {
+      cancel_edit: "編集をキャンセル",
+      save_only: "変更のみ保存",
+      save_and_verify: "保存して確認",
+      unverify: "未確認に戻す",
     },
-    "close_confirm": {
-      "title": "保存せずに閉じますか？",
-      "message": "未保存の変更は失われます。続行しますか？",
-      "confirm": "終了",
-      "cancel": "キャンセル"
+    close_confirm: {
+      title: "保存せずに閉じますか？",
+      message: "未保存の変更は失われます。続行しますか？",
+      confirm: "終了",
+      cancel: "キャンセル",
     },
-    "save_confirm": {
-      "title": "変更を保存しますか？",
-      "message": "ESG記録の確認変更を保存しようとしています。データが正しいか確認してください。",
-      "confirm": "保存を確認",
-      "cancel": "キャンセル",
-      "success": "検証データが保存されました"
-    }
+    save_confirm: {
+      title: "変更を保存しますか？",
+      message:
+        "ESG記録の確認変更を保存しようとしています。データが正しいか確認してください。",
+      confirm: "保存を確認",
+      cancel: "キャンセル",
+      success: "検証データが保存されました",
+    },
   },
-  "esg_target": {
-    "select_industry": "産業カテゴリ",
-    "ind_power": "電力・エネルギー",
-    "ind_steel": "鉄鋼・金属",
-    "ind_cement": "セメント・建材",
-    "ind_petro": "石油化学・プラスチック",
-    "ind_semiconductor": "半導体",
-    "ind_transport": "運輸・物流",
-    "ind_retail": "小売・生活必需品",
-    "ind_telecom": "通信・インターネット",
-    "btn": "年間目標の設定",
-    "yoy_reduction": "前年比 {{percent}}% 削減",
-    "yoy_increase": "前年比 {{percent}}% 増加",
-    "yoy_same": "前年比横ばい",
-    "target_estimation": "今年の目標は{{global_rank}}、{{industry_rank}}です",
-    "industry_classification": "産業分類：{{industry}}",
-    "industry_rank": "業界トップ {{rank}}%",
-    "global_rank": "全台トップ {{rank}}%",
-    "unsaved_changes_warning": "保存されていない変更があります。本当に終了しますか？",
-    "unsaved_changes_title": "確認",
-    "target_total_emissions": "目標総排出量 (tCO2e)",
-    "target_revenue_emissions": "目標売上高別排出量 (tCO2e)",
-    "title": "年間炭素排出目標の設定",
-    "past_records": "過去の炭素排出記録",
-    "year": "年",
-    "emissions": "排出量 (tCO2e)",
-    "revenue": "売上高 (万円)",
-    "intensity": "原単位",
-    "set_target_intensity": "今年の目標強度を設定",
-    "target_placeholder": "目標強度を入力",
-    "target_unit": "tCO2e / 万台湾ドル収益",
-    "reduction_from_last_year": "前年比",
-    "decrease": "削減",
-    "increase": "増加",
-    "taiwan_ranking": "台湾企業上位",
-    "industry_ranking": "同業他社上位",
-    "save": "設定を保存"
+  esg_target: {
+    select_industry: "産業カテゴリ",
+    ind_power: "電力・エネルギー",
+    ind_steel: "鉄鋼・金属",
+    ind_cement: "セメント・建材",
+    ind_petro: "石油化学・プラスチック",
+    ind_semiconductor: "半導体",
+    ind_transport: "運輸・物流",
+    ind_retail: "小売・生活必需品",
+    ind_telecom: "通信・インターネット",
+    btn: "年間目標の設定",
+    yoy_reduction: "前年比 {{percent}}% 削減",
+    yoy_increase: "前年比 {{percent}}% 増加",
+    yoy_same: "前年比横ばい",
+    target_estimation: "今年の目標は{{global_rank}}、{{industry_rank}}です",
+    industry_classification: "産業分類：{{industry}}",
+    industry_rank: "業界トップ {{rank}}%",
+    global_rank: "全台トップ {{rank}}%",
+    unsaved_changes_warning:
+      "保存されていない変更があります。本当に終了しますか？",
+    unsaved_changes_title: "確認",
+    target_total_emissions: "目標総排出量 (tCO2e)",
+    target_revenue_emissions: "目標売上高別排出量 (tCO2e)",
+    title: "年間炭素排出目標の設定",
+    past_records: "過去の炭素排出記録",
+    year: "年",
+    emissions: "排出量 (tCO2e)",
+    revenue: "売上高 (万円)",
+    intensity: "原単位",
+    set_target_intensity: "今年の目標強度を設定",
+    target_placeholder: "目標強度を入力",
+    target_unit: "tCO2e / 万台湾ドル収益",
+    reduction_from_last_year: "前年比",
+    decrease: "削減",
+    increase: "増加",
+    taiwan_ranking: "台湾企業上位",
+    industry_ranking: "同業他社上位",
+    save: "設定を保存",
   },
-  "voucher": {
-    "account_book_selector": {
-      "title": "勘定科目を選択",
-      "all": "すべて",
-      "search_placeholder": "科目コードや名前を検索...",
-      "no_results": "一致する勘定科目がありません"
+  voucher: {
+    account_book_selector: {
+      title: "勘定科目を選択",
+      all: "すべて",
+      search_placeholder: "科目コードや名前を検索...",
+      no_results: "一致する勘定科目がありません",
     },
-    "main_view": {
-      "title": "スマート伝票管理",
-      "subtitle": "AIは領収書認識結果に基づき自動的に仕訳を作成しました。",
-      "actions": {
-        "export": "エクスポート",
-        "add": "伝票を追加"
+    main_view: {
+      title: "スマート伝票管理",
+      subtitle: "AIは領収書認識結果に基づき自動的に仕訳を作成しました。",
+      actions: {
+        export: "エクスポート",
+        add: "伝票を追加",
       },
-      "filters": {
-        "type": "項目の種類",
-        "type_options": {
-          "all": "すべて",
-          "payment": "支払い",
-          "receipt": "入金",
-          "transfer": "振替"
+      filters: {
+        type: "項目の種類",
+        type_options: {
+          all: "すべて",
+          payment: "支払い",
+          receipt: "入金",
+          transfer: "振替",
         },
-        "period": "期間",
-        "search": "伝票番号、科目コードを検索...",
-        "hide_deleted": "削除済みの伝票と取消記録を隠す",
-        "currency": "通貨: {currency}"
+        period: "期間",
+        search: "伝票番号、科目コードを検索...",
+        hide_deleted: "削除済みの伝票と取消記録を隠す",
+        currency: "通貨: {currency}",
       },
-      "table": {
-        "types": {
-          "outcome": "出金伝票",
-          "income": "入金伝票",
-          "transfer": "振替伝票",
-          "unknown": "不明な伝票"
+      table: {
+        types: {
+          outcome: "出金伝票",
+          income: "入金伝票",
+          transfer: "振替伝票",
+          unknown: "不明な伝票",
         },
-        "status": {
-          "verified": "確認済",
-          "manual": "手動確認",
-          "deleted": "削除済"
+        status: {
+          verified: "確認済",
+          manual: "手動確認",
+          deleted: "削除済",
         },
-        "headers": {
-          "receipt": "領収書",
-          "voucher_date": "伝票日付",
-          "voucher_type_id": "伝票種類及び番号",
-          "accounting_entries": "仕訳",
-          "debit": "借方金額",
-          "credit": "貸方金額",
-          "confidence": "AI信頼度",
-          "status": "ステータス"
+        headers: {
+          receipt: "領収書",
+          voucher_date: "伝票日付",
+          voucher_type_id: "伝票種類及び番号",
+          accounting_entries: "仕訳",
+          debit: "借方金額",
+          credit: "貸方金額",
+          confidence: "AI信頼度",
+          status: "ステータス",
         },
-        "no_file": "ファイルなし",
-        "filter_btn": "フィルター",
-        "verify_all": "一括確認",
-        "no_data": "伝票データがありません。"
-      }
+        no_file: "ファイルなし",
+        filter_btn: "フィルター",
+        verify_all: "一括確認",
+        no_data: "伝票データがありません。",
+      },
     },
-    "summary": {
-      "empty_prefix": "伝票データがありません。まず",
-      "empty_link": "伝票を追加",
-      "today_count": "本日の伝票数",
-      "unit": " 件",
-      "month_total": "今月の累計金額",
-      "pending": "確認待ち",
-      "ai_confidence": "AI平均信頼度"
+    summary: {
+      empty_prefix: "伝票データがありません。まず",
+      empty_link: "伝票を追加",
+      today_count: "本日の伝票数",
+      unit: " 件",
+      month_total: "今月の累計金額",
+      pending: "確認待ち",
+      ai_confidence: "AI平均信頼度",
     },
-    "detail_modal": {
-      "title": "伝票の編集",
-      "messages": {
-        "fetch_error": "伝票の取得に失敗しました",
-        "deleted_warning": "削除済みの伝票は編集できません"
+    detail_modal: {
+      title: "伝票の編集",
+      messages: {
+        fetch_error: "伝票の取得に失敗しました",
+        deleted_warning: "削除済みの伝票は編集できません",
       },
-      "status": {
-        "pending": "確認待ち",
-        "verified": "確認済"
+      status: {
+        pending: "確認待ち",
+        verified: "確認済",
       },
-      "sections": {
-        "preview": "領収書のプレビュー",
-        "basic_info": "基本情報",
-        "accounting_entries": "仕訳"
+      sections: {
+        preview: "領収書のプレビュー",
+        basic_info: "基本情報",
+        accounting_entries: "仕訳",
       },
-      "fields": {
-        "confidence": "AI信頼度",
-        "voucher_no": "伝票番号",
-        "voucher_no_placeholder": "伝票番号を入力",
-        "account_code_name": "科目コード / 名前",
-        "total_amount": "合計金額",
-        "voucher_date": "伝票日付",
-        "voucher_type": "伝票の種類",
-        "accounting_select": "勘定科目を選択",
-        "particular": "摘要",
-        "debit": "借方",
-        "credit": "貸方"
+      fields: {
+        confidence: "AI信頼度",
+        voucher_no: "伝票番号",
+        voucher_no_placeholder: "伝票番号を入力",
+        account_code_name: "科目コード / 名前",
+        total_amount: "合計金額",
+        voucher_date: "伝票日付",
+        voucher_type: "伝票の種類",
+        accounting_select: "勘定科目を選択",
+        particular: "摘要",
+        debit: "借方",
+        credit: "貸方",
       },
-      "validation": {
-        "empty_fields": "日付または種類が空です",
-        "unbalanced": "貸借が一致しません",
-        "empty_rows": "仕訳が空です",
-        "incomplete_row": "空の科目または金額が含まれています"
+      validation: {
+        empty_fields: "日付または種類が空です",
+        unbalanced: "貸借が一致しません",
+        empty_rows: "仕訳が空です",
+        incomplete_row: "空の科目または金額が含まれています",
       },
-      "balance_check": {
-        "title": "貸借一致チェック",
-        "balanced": "一致",
-        "unbalanced": "不一致"
+      balance_check: {
+        title: "貸借一致チェック",
+        balanced: "一致",
+        unbalanced: "不一致",
       },
-      "actions": {
-        "cancel_edit": "編集をキャンセル",
-        "verify_save": "確認して保存",
-        "save_only": "変更のみ保存",
-        "add_row": "仕訳を追加",
-        "clear_all": "すべてクリア",
-        "save_voucher": "伝票を保存",
-        "confirm": "確認",
-        "cancel": "キャンセル"
+      actions: {
+        cancel_edit: "編集をキャンセル",
+        verify_save: "確認して保存",
+        unverify: "未確認に戻す",
+        save_only: "変更のみ保存",
+        add_row: "仕訳を追加",
+        clear_all: "すべてクリア",
+        save_voucher: "伝票を保存",
+        confirm: "確認",
+        cancel: "キャンセル",
       },
-      "confirm_modals": {
-        "clear_all": {
-          "title": "すべてクリア",
-          "message": "すべてのデータをクリアしてもよろしいですか？"
+      confirm_modals: {
+        clear_all: {
+          title: "すべてクリア",
+          message: "すべてのデータをクリアしてもよろしいですか？",
         },
-        "leave_without_saving": {
-          "title": "保存せずに退出",
-          "message": "変更を破棄して終了してもよろしいですか？"
+        leave_without_saving: {
+          title: "保存せずに退出",
+          message: "変更を破棄して終了してもよろしいですか？",
         },
-        "save_voucher": {
-          "title": "伝票を保存",
-          "message": "この伝票を保存してもよろしいですか？"
-        }
-      }
+        save_voucher: {
+          title: "伝票を保存",
+          message: "この伝票を保存してもよろしいですか？",
+        },
+      },
     },
-    "esg_industry_benchmarks": {
-      "spectrum": {
-        "extremely_high": "極めて高炭素",
-        "very_high": "非常に高炭素",
-        "high": "高炭素",
-        "mid_high": "中高炭素",
-        "medium": "中程度",
-        "mid_low": "中低炭素",
-        "extremely_low": "極めて低炭素"
+    esg_industry_benchmarks: {
+      spectrum: {
+        extremely_high: "極めて高炭素",
+        very_high: "非常に高炭素",
+        high: "高炭素",
+        mid_high: "中高炭素",
+        medium: "中程度",
+        mid_low: "中低炭素",
+        extremely_low: "極めて低炭素",
       },
-      "industry_1": {
-        "name": "石油化学工業",
-        "desc": "高：フォルモサ・ペトロケミカル (3,650 kg) 差の理由：ナフサ分解と自家発電石炭プラントによる避けられない化学物質の漏出と化石燃料の燃焼。"
+      industry_1: {
+        name: "石油化学工業",
+        desc: "高：フォルモサ・ペトロケミカル (3,650 kg) 差の理由：ナフサ分解と自家発電石炭プラントによる避けられない化学物質の漏出と化石燃料の燃焼。",
       },
-      "industry_2": {
-        "name": "セメント工業",
-        "desc": "高：アジアセメント (2,883 kg) 差の理由：石灰石の高温焼成（CO2直接放出）が大部分を占め、不動産低迷による収益分母縮小の影響を受けやすい。"
+      industry_2: {
+        name: "セメント工業",
+        desc: "高：アジアセメント (2,883 kg) 差の理由：石灰石の高温焼成（CO2直接放出）が大部分を占め、不動産低迷による収益分母縮小の影響を受けやすい。",
       },
-      "industry_3": {
-        "name": "電力・エネルギー",
-        "desc": "高：麦寮汽電 (2,657 kg) / 低：台湾電力 (1,068 kg) 差の理由：麦寮は100%石炭火力、台電は原子力・水力・天然ガス等の多様なエネルギー構成網で炭素集約度を希釈。"
+      industry_3: {
+        name: "電力・エネルギー",
+        desc: "高：麦寮汽電 (2,657 kg) / 低：台湾電力 (1,068 kg) 差の理由：麦寮は100%石炭火力、台電は原子力・水力・天然ガス等の多様なエネルギー構成網で炭素集約度を希釈。",
       },
-      "industry_4": {
-        "name": "鉄鋼工業",
-        "desc": "高：中国鋼鉄 (520 kg) / 低：東和鋼鉄 (126 kg) 差の理由：伝統的な高炉は鉄鉱石還元に石炭が必要だが、電炉はスクラップ鋼と電力で製錬し還元炭素を7割以上削減する。"
+      industry_4: {
+        name: "鉄鋼工業",
+        desc: "高：中国鋼鉄 (520 kg) / 低：東和鋼鉄 (126 kg) 差の理由：伝統的な高炉は鉄鉱石還元に石炭が必要だが、電炉はスクラップ鋼と電力で製錬し還元炭素を7割以上削減する。",
       },
-      "industry_5": {
-        "name": "海運・運輸業",
-        "desc": "高：外洋コンテナ海運 / 低：陸路輸送・新幹線 差の理由：重油を燃やす大型船はスコープ1の巨大排出源であり運賃相場の影響を受けやすいが、鉄道は電化率が高く優秀。"
+      industry_5: {
+        name: "海運・運輸業",
+        desc: "高：外洋コンテナ海運 / 低：陸路輸送・新幹線 差の理由：重油を燃やす大型船はスコープ1の巨大排出源であり運賃相場の影響を受けやすいが、鉄道は電化率が高く優秀。",
       },
-      "industry_6": {
-        "name": "通信・ネットワーク",
-        "desc": "高：中華電信 (271.8 kg) 差の理由：「工場無し＝低炭素」は神話。24時間稼働の5G基地局とIDCデータセンターの冷却装置は極めて恐ろしい電力消費源である。"
+      industry_6: {
+        name: "通信・ネットワーク",
+        desc: "高：中華電信 (271.8 kg) 差の理由：「工場無し＝低炭素」は神話。24時間稼働の5G基地局とIDCデータセンターの冷却装置は極めて恐ろしい電力消費源である。",
       },
-      "industry_7": {
-        "name": "繊維・化学繊維",
-        "desc": "低：遠東新世紀 (59.2 kg) 差の理由：伝統的染色工場は水とエネルギーを大量消費するが、PETボトル再生技術や多角化経営により重工業の宿命を好転させた。"
+      industry_7: {
+        name: "繊維・化学繊維",
+        desc: "低：遠東新世紀 (59.2 kg) 差の理由：伝統的染色工場は水とエネルギーを大量消費するが、PETボトル再生技術や多角化経営により重工業の宿命を好転させた。",
       },
-      "industry_8": {
-        "name": "半導体製造",
-        "desc": "高：TSMC (50.1 kg) 差の理由：EUV装置やクリーンルームの莫大な電力消費(スコープ2)が総排出を押し上げるが、超高単価なチップと大量のグリーン電力調達で集約度を抑制。"
+      industry_8: {
+        name: "半導体製造",
+        desc: "高：TSMC (50.1 kg) 差の理由：EUV装置やクリーンルームの莫大な電力消費(スコープ2)が総排出を押し上げるが、超高単価なチップと大量のグリーン電力調達で集約度を抑制。",
       },
-      "industry_9": {
-        "name": "小売・Eコマース",
-        "desc": "高：統一超商 (37.6 kg) / 低：富邦媒 (約23 kg) 差の理由：実店舗は24時間空調と開放型冷蔵庫がネック。Eコマースは店舗不要だが大規模な物流車両と自動倉庫の炭素排出を負担。"
+      industry_9: {
+        name: "小売・Eコマース",
+        desc: "高：統一超商 (37.6 kg) / 低：富邦媒 (約23 kg) 差の理由：実店舗は24時間空調と開放型冷蔵庫がネック。Eコマースは店舗不要だが大規模な物流車両と自動倉庫の炭素排出を負担。",
       },
-      "industry_10": {
-        "name": "知識・金融 (IC設計/IT/金融)",
-        "desc": "高：銀行 (~1.5 kg) / 低：MediaTek (1.86 kg) 差の理由：頭脳と資金に頼るビジネス。MediaTekは製造を外注。金融はオフィス電力のみだが、売上炭素比に含まれない「投融資炭素排出量」が潜在。"
-      }
-    }
-  }
+      industry_10: {
+        name: "知識・金融 (IC設計/IT/金融)",
+        desc: "高：銀行 (~1.5 kg) / 低：MediaTek (1.86 kg) 差の理由：頭脳と資金に頼るビジネス。MediaTekは製造を外注。金融はオフィス電力のみだが、売上炭素比に含まれない「投融資炭素排出量」が潜在。",
+      },
+    },
+  },
 };

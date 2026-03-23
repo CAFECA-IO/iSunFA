@@ -116,16 +116,6 @@ export async function GET(
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
 
-    // Info: (20260312 - Julian) 取得建立者
-    const creator = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
-
-    if (!creator) {
-      console.error("Creator not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Creator not found");
-    }
-
     // Info: (20260312 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
     const accountBook = await prisma.accountBook.findUnique({

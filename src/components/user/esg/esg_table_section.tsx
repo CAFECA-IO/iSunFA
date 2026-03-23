@@ -16,7 +16,10 @@ interface IEsgTableSectionProps {
   month?: number | "";
 }
 
-export default function EsgTableSection({ year, month }: IEsgTableSectionProps) {
+export default function EsgTableSection({
+  year,
+  month,
+}: IEsgTableSectionProps) {
   const { t } = useTranslation();
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
@@ -25,7 +28,8 @@ export default function EsgTableSection({ year, month }: IEsgTableSectionProps) 
   const [intensityFilter, setIntensityFilter] = useState<string>("ALL");
   const [scopeFilter, setScopeFilter] = useState<string>("ALL");
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState<boolean>(false);
-  const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] = useState<boolean>(false);
+  const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
+    useState<boolean>(false);
   const [selectedEsgId, setSelectedEsgId] = useState<string | null>(null);
   const [records, setRecords] = useState<IEsgRecord[]>([]);
   const [recordCount, setRecordCount] = useState<number>(0);
@@ -62,7 +66,15 @@ export default function EsgTableSection({ year, month }: IEsgTableSectionProps) 
     } finally {
       setIsLoading(false);
     }
-  }, [accountBookId, searchTerm, intensityFilter, scopeFilter, dateSort, year, month]);
+  }, [
+    accountBookId,
+    searchTerm,
+    intensityFilter,
+    scopeFilter,
+    dateSort,
+    year,
+    month,
+  ]);
 
   // Info: (20260312 - Julian) 延遲 300ms 執行，避免過度請求
   useEffect(() => {
@@ -84,16 +96,19 @@ export default function EsgTableSection({ year, month }: IEsgTableSectionProps) 
     const intervalId = setInterval(async () => {
       for (const pr of pendingRecords) {
         try {
-          const { payload } = await request<IApiResponse<{ esgRecord: IEsgRecord }>>(
-            `/api/v1/user/account_book/${accountBookId}/esg/${pr.id}`
-          );
+          const { payload } = await request<
+            IApiResponse<{ esgRecord: IEsgRecord }>
+          >(`/api/v1/user/account_book/${accountBookId}/esg/${pr.id}`);
           if (payload?.esgRecord) {
             setRecords((prev) =>
-              prev.map((old) => (old.id === pr.id ? payload.esgRecord : old))
+              prev.map((old) => (old.id === pr.id ? payload.esgRecord : old)),
             );
           }
         } catch (error) {
-          console.error(`Failed to update status for ESG record ${pr.id}:`, error);
+          console.error(
+            `Failed to update status for ESG record ${pr.id}:`,
+            error,
+          );
         }
       }
     }, 5000);
@@ -134,7 +149,7 @@ export default function EsgTableSection({ year, month }: IEsgTableSectionProps) 
       setIsLoading(true);
       await request(
         `/api/v1/user/account_book/${accountBookId}/esg/verify_all`,
-        { method: "PUT" }
+        { method: "PUT" },
       );
       fetchRecords();
     } catch (error) {

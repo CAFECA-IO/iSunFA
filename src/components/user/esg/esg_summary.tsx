@@ -40,7 +40,7 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
 
           const res = await request<IApiResponse<IEsgDashboardSummary>>(
             `/api/v1/user/account_book/${accountBookId}/esg/summary`,
-            { query }
+            { query },
           );
           if (res.payload) {
             setSummaryData(res.payload);
@@ -168,9 +168,12 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
             <span className="text-2xl font-bold tracking-tight text-slate-800">
               {summaryData.emissionIntensity.value === null
                 ? "N/A"
-                : summaryData.emissionIntensity.value.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                  })}
+                : summaryData.emissionIntensity.value.toLocaleString(
+                    undefined,
+                    {
+                      minimumFractionDigits: 2,
+                    },
+                  )}
             </span>
             <span className="text-sm font-bold text-slate-500">
               {summaryData.emissionIntensity.unit}
@@ -215,8 +218,10 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
         <div className="mt-8">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
-              className={`h-full rounded-full ${summaryData.goalProgress.percentage > 100 ? 'bg-red-500' : 'bg-orange-500'}`}
-              style={{ width: `${Math.min(100, summaryData.goalProgress.percentage)}%` }}
+              className={`h-full rounded-full ${summaryData.goalProgress.percentage > 100 ? "bg-red-500" : "bg-orange-500"}`}
+              style={{
+                width: `${Math.min(100, summaryData.goalProgress.percentage)}%`,
+              }}
             ></div>
           </div>
         </div>

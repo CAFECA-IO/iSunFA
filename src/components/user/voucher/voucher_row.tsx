@@ -237,10 +237,11 @@ export function VoucherRow({
               </span>
               {/* Info: (20260316 - Julian) 借方靠左，貸方靠右 */}
               <span
-                className={`${line.isDebit
+                className={`${
+                  line.isDebit
                     ? "font-bold text-slate-800"
                     : "ml-4 font-medium text-slate-700"
-                  } truncate text-xs lg:max-w-[250px] lg:text-sm`}
+                } truncate text-xs lg:max-w-[250px] lg:text-sm`}
               >
                 {line.accounting?.name}
               </span>
@@ -303,12 +304,17 @@ export function VoucherRow({
         className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
         {voucher.isVerified ? (
-          <div className="flex flex-col items-center justify-center gap-1 text-emerald-500">
+          <button
+            type="button"
+            onClick={onClick}
+            disabled={voucher.isDeleted}
+            className="group mx-auto flex cursor-pointer flex-col items-center justify-center gap-1 text-emerald-500 transition-colors hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
             <CheckCircle2 className="h-5 w-5" />
-            <span className="text-xs font-bold whitespace-nowrap">
+            <span className="text-xs font-bold whitespace-nowrap group-hover:underline">
               {t("voucher.main_view.table.status.verified")}
             </span>
-          </div>
+          </button>
         ) : (
           <div className="flex flex-col items-center justify-center gap-1.5 text-orange-500">
             <button

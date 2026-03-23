@@ -8,7 +8,7 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { X, CheckCircle2 } from "lucide-react";
+import { X, CheckCircle2, Save } from "lucide-react";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -40,6 +40,9 @@ export default function EsgVerifyModal({
 
   const [isCloseModalOpen, setIsCloseModalOpen] = useState<boolean>(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
+  const [isUnverifyModalOpen, setIsUnverifyModalOpen] =
+    useState<boolean>(false);
+  const [targetVerified, setTargetVerified] = useState<boolean>(true);
 
   useEffect(() => {
     if (isOpen && esgId && accountBookId) {
@@ -77,14 +80,22 @@ export default function EsgVerifyModal({
     }
   };
 
-  const handleAttemptSave = () => {
+  const handleAttemptSave = (isVerified: boolean) => {
+    setTargetVerified(isVerified);
     setIsSaveModalOpen(true);
+  };
+
+  const handleUnverifyConfirmed = () => {
+    if (formData) {
+      onSave?.({ ...formData, isVerified: false });
+    }
+    setIsUnverifyModalOpen(false);
+    onClose();
   };
 
   const handleSaveConfirmed = () => {
     if (formData) {
-      // Info: (20260318 - Julian) 將 isVerified 設為 true
-      onSave?.({ ...formData, isVerified: true });
+      onSave?.({ ...formData, isVerified: targetVerified });
     }
     setIsSaveModalOpen(false);
     onClose();
@@ -406,22 +417,55 @@ export default function EsgVerifyModal({
                     </div>
 
                     {/* Info: (20260312 - Julian) Actions */}
-                    <div className="mt-4 flex justify-end gap-3 border-t border-slate-200 pt-4">
+                    <div className="mt-4 flex justify-between gap-3 border-t border-slate-200 pt-4">
                       <button
                         type="button"
                         onClick={handleAttemptClose}
-                        className="rounded-lg border border-slate-300 bg-white px-6 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50"
+                        className="text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
                       >
-                        {t("esg_verify.actions.cancel")}
+                        {t("esg_verify.actions.cancel_edit")}
                       </button>
-                      <button
-                        type="button"
-                        onClick={handleAttemptSave}
-                        className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
-                      >
-                        <CheckCircle2 size={18} />
-                        {t("esg_verify.actions.save_and_verify")}
-                      </button>
+                      <div className="flex items-center gap-3">
+                        {originalData?.isVerified ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setIsUnverifyModalOpen(true)}
+                              className="flex items-center gap-2 rounded-lg bg-red-400 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500"
+                            >
+                              <X size={18} className="stroke-[2.5]" />
+                              {t("esg_verify.actions.unverify")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAttemptSave(true)}
+                              className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
+                            >
+                              <Save size={18} />
+                              {t("esg_verify.actions.save_only")}
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleAttemptSave(true)}
+                              className="flex items-center gap-2 rounded-lg bg-emerald-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-600"
+                            >
+                              <CheckCircle2 size={18} />
+                              {t("esg_verify.actions.save_and_verify")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAttemptSave(false)}
+                              className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
+                            >
+                              <Save size={18} />
+                              {t("esg_verify.actions.save_only")}
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -430,6 +474,8 @@ export default function EsgVerifyModal({
           </div>
         </Dialog>
       </Transition>
+
+      {/* Info: (20260323 - Julian) 未儲存變更視窗 */}
       <ConfirmModal
         isOpen={isCloseModalOpen}
         onClose={() => setIsCloseModalOpen(false)}
@@ -442,6 +488,8 @@ export default function EsgVerifyModal({
           onClose();
         }}
       />
+
+      {/* Info: (20260323 - Julian) 確認儲存視窗 */}
       <ConfirmModal
         isOpen={isSaveModalOpen}
         onClose={() => setIsSaveModalOpen(false)}
@@ -450,6 +498,17 @@ export default function EsgVerifyModal({
         confirmText={t("esg_verify.save_confirm.confirm")}
         cancelText={t("esg_verify.save_confirm.cancel")}
         onConfirm={handleSaveConfirmed}
+      />
+
+      {/* Info: (20260323 - Julian) 退回未核對視窗 */}
+      <ConfirmModal
+        isOpen={isUnverifyModalOpen}
+        onClose={() => setIsUnverifyModalOpen(false)}
+        title={t("esg_verify.unverify_confirm.title")}
+        message={t("esg_verify.unverify_confirm.message")}
+        confirmText={t("esg_verify.unverify_confirm.confirm")}
+        cancelText={t("esg_verify.unverify_confirm.cancel")}
+        onConfirm={handleUnverifyConfirmed}
       />
     </>
   );
