@@ -1076,7 +1076,8 @@ export const ja = {
       "save_only": "変更のみ保存",
       "add_row": "仕訳を追加",
       "cancel": "キャンセル",
-      "save_and_verify": "保存して確認"
+      "save_and_verify": "保存して確認",
+      "unverify": "未確認に戻す"
     },
     "close_confirm": {
       "title": "保存せずに閉じますか？",
@@ -1236,6 +1237,7 @@ export const ja = {
       "actions": {
         "cancel_edit": "編集をキャンセル",
         "verify_save": "確認して保存",
+        "unverify": "未確認に戻す",
         "save_only": "変更のみ保存",
         "add_row": "仕訳を追加",
         "clear_all": "すべてクリア",

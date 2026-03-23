@@ -8,7 +8,7 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { X, CheckCircle2 } from "lucide-react";
+import { X, CheckCircle2, Save } from "lucide-react";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -40,6 +40,7 @@ export default function EsgVerifyModal({
 
   const [isCloseModalOpen, setIsCloseModalOpen] = useState<boolean>(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
+  const [targetVerified, setTargetVerified] = useState<boolean>(true);
 
   useEffect(() => {
     if (isOpen && esgId && accountBookId) {
@@ -77,14 +78,14 @@ export default function EsgVerifyModal({
     }
   };
 
-  const handleAttemptSave = () => {
+  const handleAttemptSave = (isVerified: boolean) => {
+    setTargetVerified(isVerified);
     setIsSaveModalOpen(true);
   };
 
   const handleSaveConfirmed = () => {
     if (formData) {
-      // Info: (20260318 - Julian) 將 isVerified 設為 true
-      onSave?.({ ...formData, isVerified: true });
+      onSave?.({ ...formData, isVerified: targetVerified });
     }
     setIsSaveModalOpen(false);
     onClose();
@@ -414,14 +415,45 @@ export default function EsgVerifyModal({
                       >
                         {t("esg_verify.actions.cancel")}
                       </button>
-                      <button
-                        type="button"
-                        onClick={handleAttemptSave}
-                        className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
-                      >
-                        <CheckCircle2 size={18} />
-                        {t("esg_verify.actions.save_and_verify")}
-                      </button>
+                      {originalData?.isVerified ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleAttemptSave(false)}
+                            className="flex items-center gap-2 rounded-lg bg-red-400 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500"
+                          >
+                            <X size={18} className="stroke-[2.5]" />
+                            {t("esg_verify.actions.unverify")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAttemptSave(true)}
+                            className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
+                          >
+                            <CheckCircle2 size={18} />
+                            {t("esg_verify.actions.save_only")}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleAttemptSave(true)}
+                            className="flex items-center gap-2 rounded-lg bg-emerald-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-600"
+                          >
+                            <CheckCircle2 size={18} />
+                            {t("esg_verify.actions.save_and_verify")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAttemptSave(false)}
+                            className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
+                          >
+                            <Save size={18} />
+                            {t("esg_verify.actions.save_only")}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

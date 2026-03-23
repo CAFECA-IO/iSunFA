@@ -1066,7 +1066,8 @@ export const ko = {
       "save_only": "수정 내용만 저장",
       "add_row": "분개 추가",
       "cancel": "취소",
-      "save_and_verify": "저장 및 확인"
+      "save_and_verify": "저장 및 확인",
+      "unverify": "미확인 상태로 되돌리기"
     },
     "close_confirm": {
       "title": "저장하지 않고 닫으시겠습니까?",
@@ -1226,6 +1227,7 @@ export const ko = {
       "actions": {
         "cancel_edit": "편집 취소",
         "verify_save": "확인 및 저장",
+        "unverify": "미확인 상태로 되돌리기",
         "save_only": "수정 내용만 저장",
         "add_row": "분개 추가",
         "clear_all": "모두 지우기",

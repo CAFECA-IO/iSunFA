@@ -1113,6 +1113,7 @@ export const en = {
       "actions": {
         "cancel_edit": "Cancel Edit",
         "verify_save": "Verify & Save",
+        "unverify": "Unverify",
         "save_only": "Save Only",
         "add_row": "Add Entry",
         "clear_all": "Clear All",
@@ -1219,7 +1220,9 @@ export const en = {
     },
     "actions": {
       "cancel": "Cancel",
-      "save_and_verify": "Save & Verify"
+      "save_only": "Save Only",
+      "save_and_verify": "Save & Verify",
+      "unverify": "Unverify"
     },
     "close_confirm": {
       "title": "Close without saving?",

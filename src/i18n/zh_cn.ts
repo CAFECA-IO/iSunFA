@@ -1054,7 +1054,8 @@ export const zhCn = {
       "save_only": "仅保存修改",
       "add_row": "新增分录",
       "cancel": "取消",
-      "save_and_verify": "保存并完成核对"
+      "save_and_verify": "保存并完成核对",
+      "unverify": "退回未核对"
     },
     "close_confirm": {
       "title": "确认关闭？",
@@ -1214,6 +1215,7 @@ export const zhCn = {
       "actions": {
         "cancel_edit": "取消修改",
         "verify_save": "核对并保存",
+        "unverify": "退回未核对",
         "save_only": "仅保存修改",
         "add_row": "新增分录",
         "clear_all": "全部清除",

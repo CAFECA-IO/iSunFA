@@ -303,12 +303,17 @@ export function VoucherRow({
         className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
         {voucher.isVerified ? (
-          <div className="flex flex-col items-center justify-center gap-1 text-emerald-500">
+          <button
+            type="button"
+            onClick={onClick}
+            disabled={voucher.isDeleted}
+            className="flex flex-col items-center justify-center gap-1 mx-auto text-emerald-500 hover:text-emerald-600 transition-colors cursor-pointer group disabled:cursor-not-allowed disabled:opacity-50"
+          >
             <CheckCircle2 className="h-5 w-5" />
-            <span className="text-xs font-bold whitespace-nowrap">
+            <span className="text-xs font-bold whitespace-nowrap group-hover:underline">
               {t("voucher.main_view.table.status.verified")}
             </span>
-          </div>
+          </button>
         ) : (
           <div className="flex flex-col items-center justify-center gap-1.5 text-orange-500">
             <button

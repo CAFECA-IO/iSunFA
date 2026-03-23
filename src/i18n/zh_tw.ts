@@ -1145,6 +1145,7 @@ export const zhTw = {
       "actions": {
         "cancel_edit": "取消修改",
         "verify_save": "核對並存檔",
+        "unverify": "退回未核對",
         "save_only": "僅儲存修改",
         "add_row": "新增分錄",
         "clear_all": "全部清除",
@@ -1251,7 +1252,9 @@ export const zhTw = {
     },
     "actions": {
       "cancel": "取消",
-      "save_and_verify": "儲存並完成核對"
+      "save_only": "僅儲存修改",
+      "save_and_verify": "儲存並完成核對",
+      "unverify": "退回未核對"
     },
     "close_confirm": {
       "title": "確認關閉？",
