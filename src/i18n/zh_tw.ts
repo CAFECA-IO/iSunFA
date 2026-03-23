@@ -611,6 +611,8 @@ export const zhTw = {
     period_type: "時間單位",
     select_year: "選擇年份",
     select_period: "選擇區間",
+    select_account_book: "從我的帳本選擇",
+    select_from_account_books: "選擇帳本",
     country: "選擇國家 / 地區",
     category: "選擇類別",
     keyword: "關鍵字",
