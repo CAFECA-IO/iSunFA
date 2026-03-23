@@ -354,6 +354,9 @@ model Journal {
   updatedAt      DateTime         @updatedAt @map("updated_at")
   text           String           @db.Text // Info: (20260304 - Julian) AI 辨識出的文字結果
   analysisStatus AIAnalysisStatus @default(PENDING) @map("analysis_status")
+  tradingDate    DateTime         @map("trading_date")
+  confidence     Int              @default(0) @map("confidence")
+  isVerified     Boolean          @default(false) @map("is_verified")
 
   fileId String? @map("file_id")
   file   File?   @relation(fields: [fileId], references: [id])
@@ -369,16 +372,16 @@ model Journal {
 
 // Info: (20260305 - Julian) 帳本
 model AccountBook {
-  id        String    @id @default(uuid())
-  name      String
-  country   String
-  currency  String
-  rule      String
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
-  deletedAt DateTime?  @map("deleted_at")
-  enterpriseId String? @map("enterprise_id")
-  esgIndustryId Int?   @map("esg_industry_id")
+  id            String    @id @default(uuid())
+  name          String
+  country       String
+  currency      String
+  rule          String
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+  enterpriseId  String?   @map("enterprise_id")
+  esgIndustryId Int?      @map("esg_industry_id")
 
   // Info: (20260306 - Luphia) 帳本所屬的團隊
   teamId String @map("team_id")

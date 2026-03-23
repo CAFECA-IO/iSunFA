@@ -65,22 +65,12 @@ export async function POST(
       );
     }
 
-    // ToDo: 建立分析 Journal 的 Mission 和 Task
-    // const chatService = new ChatService(apiKey);
-
-    // Info: (20260304 - Julian) 整理圖片資料發給 AI
-    // const imagesForAi =
-    //   file.base64 && file.mimeType
-    //     ? [{ data: file.base64, mimeType: file.mimeType }]
-    //     : [];
-
-    // const { text } = await chatService.analyzeJournal(imagesForAi);
-
     // Info: (20260304 - Julian) 先建立空白的日記帳
     const journal = await prisma.journal.create({
       data: {
         accountBookId: accountBook.id,
         fileId,
+        tradingDate: new Date(),
         text: "",
       },
     });
@@ -201,19 +191,23 @@ export async function GET(
     const formattedJournals: IJournal[] = journals.map((j) => {
       return {
         id: j.id,
-        tradingTimestamp: Math.floor(j.createdAt.getTime()/1000),
+        tradingTimestamp: Math.floor(j.createdAt.getTime() / 1000),
         text: j.text,
-        fileId: j.fileId ?? '',
-        file: j.file ? {
-          id: j.file.id,
-          hash: j.file.hash,
-          fileName: j.file.fileName ?? "",
-        } : undefined,
+        fileId: j.fileId ?? "",
+        file: j.file
+          ? {
+              id: j.file.id,
+              hash: j.file.hash,
+              fileName: j.file.fileName ?? "",
+            }
+          : undefined,
         analysisStatus: j.analysisStatus as AIAnalysisStatus,
+        confidence: j.confidence,
+        isVerified: j.isVerified,
       };
     });
 
-    return jsonOk( formattedJournals );
+    return jsonOk(formattedJournals);
   } catch (error) {
     console.error("Get journals failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get journals failed");

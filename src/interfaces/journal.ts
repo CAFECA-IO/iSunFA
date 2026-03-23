@@ -11,4 +11,6 @@ export interface IJournal {
     fileName: string;
   };
   analysisStatus: AIAnalysisStatus
+  confidence: number;
+  isVerified: boolean;
 }

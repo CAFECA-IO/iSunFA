@@ -305,14 +305,14 @@ export function VoucherRow({
       >
         {voucher.isVerified ? (
           <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
-            <CheckCircle2 className="h-5 w-5" />
+            <CheckCircle2 size={24} />
             <span className="text-xs font-bold whitespace-nowrap">
               {t("voucher.main_view.table.status.verified")}
             </span>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-1.5 text-orange-500">
-            <FileQuestion className="h-5 w-5" />
+            <FileQuestion size={24} />
             <span className="text-xs font-bold whitespace-nowrap">
               {t("voucher.main_view.table.status.unverified")}
             </span>

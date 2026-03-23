@@ -60,53 +60,6 @@ export async function POST(
       return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
     }
 
-    // // Info: (20260311 - Julian) 使用 AI 分析發票/憑證資料
-    // const apiKey = process.env.GEMINI_API_KEY;
-    // if (!apiKey) {
-    //   console.error("Missing GEMINI_API_KEY");
-    //   return jsonFail(
-    //     ApiCode.INTERNAL_SERVER_ERROR,
-    //     "Server configuration error",
-    //   );
-    // }
-
-    // ToDo: 建立分析 Voucher 的 Mission 和 Task
-    // const chatService = new ChatService(apiKey);
-
-    // const imagesForAi =
-    //   file.base64 && file.mimeType
-    //     ? [{ data: file.base64, mimeType: file.mimeType }]
-    //     : [];
-
-    // const { data: voucherData, error: aiError } = await chatService.analyzeVoucher(imagesForAi, accountBook.country);
-
-    // if (aiError || !voucherData) {
-    //   return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, aiError || "Failed to parse voucher");
-    // }
-
-    // const parsedLines: IParsedVoucherLine[] = Array.isArray(voucherData.lines) ? voucherData.lines : [];
-
-    // Info: (20260311 - Julian) 將 AI 解析結果存入 DB
-    // ToDo: (20260317 - Julian) confidence > 80 -> isVerified = true, else false
-    // const newVoucher = await prisma.voucher.create({
-    //   data: {
-    //     accountBookId: accountBook.id,
-    //     fileId: dbFile.id,
-    //     userId: creator.id,
-    //     tradingDate: voucherData.tradingDate ? new Date(voucherData.tradingDate) : new Date(),
-    //     tradingType: voucherData.tradingType || "INCOME",
-    //     note: voucherData.note || "",
-    //     lines: {
-    //       create: parsedLines.map((line) => ({
-    //          accountingCode: line.accountingCode || "",
-    //          particular: line.particular || "",
-    //          amount: line.amount || 0,
-    //          isDebit: line.isDebit ?? true,
-    //       })),
-    //     },
-    //   },
-    // });
-
     // Info: (20260311 - Julian) 建立空白傳票
     const newVoucher = await prisma.voucher.create({
       data: {

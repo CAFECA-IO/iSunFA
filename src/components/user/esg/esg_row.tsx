@@ -85,8 +85,8 @@ export function EsgRow({
     return (
       <tr className="border-b border-slate-200 bg-slate-50 opacity-80 transition-colors last:border-0">
         <td className="p-2 lg:px-6 lg:py-4">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
-            <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+          <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white p-1 shadow-sm sm:size-16">
+            <Loader2 className="size-6 animate-spin text-orange-500" />
           </div>
         </td>
         <td className="p-2 text-center text-xs font-semibold whitespace-nowrap text-slate-400 lg:px-6 lg:py-4 lg:text-sm">
@@ -97,7 +97,7 @@ export function EsgRow({
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           <span className="flex items-center justify-center gap-2 text-sm font-medium text-orange-500 italic">
-            <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
+            <Loader2 className="size4 animate-spin text-orange-500" />
             AI Analyzing...
           </span>
         </td>
@@ -121,8 +121,8 @@ export function EsgRow({
     return (
       <tr className="border-b border-blue-200 bg-blue-50 text-sm opacity-90 transition-colors last:border-0">
         <td className="p-2 lg:px-6 lg:py-4">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+          <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 shadow-sm sm:size-16">
+            <Loader2 className="size-6 animate-spin text-blue-500" />
           </div>
         </td>
         <td className="p-2 text-center text-xs font-semibold whitespace-nowrap text-blue-400 lg:px-6 lg:py-4 lg:text-sm">
@@ -135,7 +135,7 @@ export function EsgRow({
         >
           <div className="mx-auto flex max-w-sm flex-col items-center justify-center gap-2">
             <span className="flex items-center justify-center gap-2 text-sm font-bold text-blue-600 italic">
-              <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+              <Loader2 className="size-4 animate-spin text-blue-500" />
               AI Processing...
             </span>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
@@ -165,17 +165,17 @@ export function EsgRow({
     >
       {/* Info: (20260320 - Julian) File */}
       <td className="p-2 lg:px-6 lg:py-4">
-        <div className="relative mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
+        <div className="relative mx-auto flex size14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:size-16">
           {/* Info: (20260312 - Julian) File Preview */}
           {record.file ? (
             <FilePreview
               file={{ filename: record.file.fileName || "Unknown" }}
               fileId={record.file.hash}
-              className="h-full w-full object-cover"
+              className="size-full object-cover"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center rounded-lg bg-slate-100 p-1">
-              <FileQuestion className="h-6 w-6 text-slate-300" />
+            <div className="flex size-full items-center justify-center rounded-lg bg-slate-100 p-1">
+              <FileQuestion className="size-6 text-slate-300" />
             </div>
           )}
           {/* Info: (20260320 - Julian) Failed Icon */}
@@ -240,14 +240,14 @@ export function EsgRow({
       <td className="p-2 text-center lg:px-6 lg:py-4">
         {record.isVerified ? (
           <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
-            <CheckCircle2 className="h-5 w-5" />
+            <CheckCircle2 size={24} />
             <span className="text-sm font-bold">
               {t("esg_table.verified")}
             </span>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-1 text-orange-500">
-            <FileQuestion className="h-5 w-5" />
+            <FileQuestion size={24} />
             <span className="text-sm font-bold whitespace-nowrap">
               {t("esg_table.unverified")}
             </span>

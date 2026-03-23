@@ -77,42 +77,68 @@ export class MissionService {
 
         if (fileId && accountBookId) {
           await prisma.$transaction(async (tx) => {
+            // Info: (20260323 - Julian) 更新或建立日記帳
             if (journalTask) {
               const jStatus =
                 journalTask.status.toUpperCase() === "FAILED"
                   ? "FAILED"
                   : "COMPLETED";
-              let textResult = "";
-              if (journalTask.result && typeof journalTask.result === "string") {
-                try {
-                  const parsed = JSON.parse(journalTask.result);
-                  textResult = parsed.data || journalTask.result;
-                } catch {
-                  textResult = journalTask.result;
-                }
-              }
+
               const existingJournal = await tx.journal.findFirst({
                 where: { fileId, accountBookId },
               });
 
-              // Info: (20260320 - Julian) 更新或建立日記帳
-              if (existingJournal) {
-                await tx.journal.update({
-                  where: { id: existingJournal.id },
-                  data: {
-                    text: textResult,
-                    analysisStatus: jStatus as AIAnalysisStatus,
-                  },
-                });
-              } else {
-                await tx.journal.create({
-                  data: {
-                    text: textResult,
-                    fileId,
-                    accountBookId,
-                    analysisStatus: jStatus as AIAnalysisStatus,
-                  },
-                });
+              if (jStatus === "FAILED") {
+                if (existingJournal) {
+                  await tx.journal.update({
+                    where: { id: existingJournal.id },
+                    data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                  });
+                }
+              } else if (
+                journalTask.result &&
+                typeof journalTask.result === "string"
+              ) {
+                try {
+                  const parsed = JSON.parse(journalTask.result);
+                  if (parsed && typeof parsed === "object") {
+                    const jd = parsed.data || parsed;
+                    const tradingDate = new Date(jd.tradingDate || new Date());
+                    const confidence = parseInt(String(jd.confidence)) || 0;
+
+                    const dataPayload: Prisma.JournalUncheckedCreateInput = {
+                      tradingDate,
+                      text: jd.text || null,
+                      fileId,
+                      accountBookId,
+                      analysisStatus: "COMPLETED" as AIAnalysisStatus,
+                      confidence,
+                      isVerified: confidence > 85, // Info: (20260323 - Julian) 預設 85 分以上自動驗證
+                    };
+
+                    if (existingJournal) {
+                      await tx.journal.update({
+                        where: { id: existingJournal.id },
+                        data: { ...dataPayload },
+                      });
+                    } else {
+                      await tx.journal.create({ data: dataPayload });
+                    }
+                  } else {
+                    // Info: (20260323 - Julian) 如果解析失敗，更新日記帳狀態為失敗
+                    if (existingJournal) {
+                      await tx.journal.update({
+                        where: { id: existingJournal.id },
+                        data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                      });
+                    }
+                  }
+                } catch (e) {
+                  console.error(
+                    "[MissionService] Failed to parse journal result",
+                    e,
+                  );
+                }
               }
             }
 
@@ -149,6 +175,7 @@ export class MissionService {
                     };
                     const trType =
                       typeMap[String(vd.tradingType).toLowerCase()] || "INCOME";
+                    const confidence = parseInt(String(vd.confidence)) || 0;
 
                     const dataPayload: Prisma.VoucherUncheckedCreateInput = {
                       tradingDate,
@@ -157,7 +184,8 @@ export class MissionService {
                       currency: vd.currency || "TWD",
                       fileId,
                       accountBookId,
-                      confidence: parseInt(String(vd.confidence)) || 0,
+                      confidence,
+                      isVerified: confidence > 85,
                       analysisStatus: "COMPLETED" as AIAnalysisStatus,
                       lines: {
                         create: (vd.lines || []).map(
@@ -192,6 +220,14 @@ export class MissionService {
                     } else {
                       await tx.voucher.create({ data: dataPayload });
                     }
+                  } else {
+                    // Info: (20260323 - Julian) 如果解析失敗，更新傳票狀態為失敗
+                    if (existingVoucher) {
+                      await tx.voucher.update({
+                        where: { id: existingVoucher.id },
+                        data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                      });
+                    }
                   }
                 } catch (e) {
                   console.error(
@@ -225,6 +261,7 @@ export class MissionService {
                   if (match) {
                     const parsed = JSON.parse(match[0]);
                     const ed = parsed.data || parsed;
+                    const confidence = parseInt(String(ed.confidence)) || 0;
                     const esgData: Prisma.EsgRecordUncheckedCreateInput = {
                       accountBookId,
                       fileId,
@@ -237,7 +274,8 @@ export class MissionService {
                       unit: ed.unit || "",
                       emissions: parseFloat(String(ed.emissions)) || 0,
                       intensity: ed.intensity || "LOW",
-                      confidence: parseInt(String(ed.confidence)) || 0,
+                      confidence,
+                      isVerified: confidence > 85,
                       analysisStatus: "COMPLETED" as AIAnalysisStatus,
                     };
 
@@ -248,6 +286,14 @@ export class MissionService {
                       });
                     } else {
                       await tx.esgRecord.create({ data: esgData });
+                    }
+                  } else {
+                    // Info: (20260323 - Julian) 如果解析失敗，更新碳盤查狀態為失敗
+                    if (existingEsg) {
+                      await tx.esgRecord.update({
+                        where: { id: existingEsg.id },
+                        data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                      });
                     }
                   }
                 } catch (e) {
