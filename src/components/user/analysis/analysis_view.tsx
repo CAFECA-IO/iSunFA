@@ -61,6 +61,15 @@ export default function AnalysisView() {
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
 
+  const [accountBooks, setAccountBooks] = useState<Array<{ id: string, name: string, enterpriseId?: string }>>([]);
+  useEffect(() => {
+    request<{ payload: Array<{ id: string, name: string, enterpriseId?: string }> }>('/api/v1/user/account_book')
+      .then(res => {
+        if (res?.payload) setAccountBooks(res.payload);
+      })
+      .catch(console.error);
+  }, []);
+
   const [internalCompanyName, setInternalCompanyName] = useState<string>('');
   const [selectedCompany, setSelectedCompany] = useState<{ taxId: string, name: string } | null>(null);
   const [companySuggestions, setCompanySuggestions] = useState<{ taxId: string, name: string }[]>([]);
@@ -607,49 +616,82 @@ export default function AnalysisView() {
 
               {/* Info: (20260320 - Tzuhan) Internal Analysis: Company Input */}
               {needsCompanyInput && (
-                <div className="space-y-2 pt-4 border-t border-gray-100 relative">
-                  <label htmlFor="internalCompanyName" className="block text-sm font-medium text-gray-700">
-                    {t('analysis.company_input.label')}
-                  </label>
-                  <div className="flex items-center">
-                    <input
-                      id="internalCompanyName"
-                      aria-label={t('analysis.company_input.label')}
-                      type="text"
-                      value={internalCompanyName}
-                      onChange={(e) => {
-                        setSelectedCompany(null);
-                        setInternalCompanyName(e.target.value);
-                      }}
-                      placeholder={t('analysis.company_input.placeholder')}
-                      className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                    />
-                    {isSearchingCompany && <span className="text-xs text-gray-500 ml-2">{t('analysis.company_input.searching')}</span>}
-                  </div>
+                <div className="space-y-4 pt-4 border-t border-gray-100 relative">
+                  {accountBooks.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        {t('analysis.select_account_book') || '從我的帳本選擇'}
+                      </label>
+                      <select
+                        className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                        onChange={(e) => {
+                          const ab = accountBooks.find(b => b.id === e.target.value);
+                          if (ab) {
+                            const combinedName = ab.enterpriseId ? `${ab.name} (${ab.enterpriseId})` : ab.name;
+                            setInternalCompanyName(combinedName);
+                            if (ab.enterpriseId) {
+                              setSelectedCompany({ taxId: ab.enterpriseId, name: ab.name });
+                            } else {
+                              setSelectedCompany(null);
+                            }
+                          }
+                        }}
+                        defaultValue=""
+                      >
+                        <option value="" disabled>-- {t('analysis.select_from_account_books') || '選擇帳本'} --</option>
+                        {accountBooks.map(ab => (
+                          <option key={ab.id} value={ab.id}>
+                            {ab.name} {ab.enterpriseId ? `(${ab.enterpriseId})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
-                  {showCompanyDropdown && companySuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
-                      {companySuggestions.map(c => (
-                        <button
-                          key={c.taxId}
-                          type="button"
-                          className="w-full text-left px-4 py-2 hover:bg-orange-50 cursor-pointer text-sm text-gray-700 font-medium border-b border-gray-100 last:border-0"
-                          onClick={() => {
-                            setSelectedCompany(c);
-                            setInternalCompanyName(`${c.name} (${c.taxId})`);
-                            setShowCompanyDropdown(false);
-                          }}
-                        >
-                          {c.name} <span className="text-gray-400 font-normal">({c.taxId})</span>
-                        </button>
-                      ))}
+                  <div className="space-y-2 relative">
+                    <label htmlFor="internalCompanyName" className="block text-sm font-medium text-gray-700">
+                      {t('analysis.company_input.label')}
+                    </label>
+                    <div className="flex items-center">
+                      <input
+                        id="internalCompanyName"
+                        aria-label={t('analysis.company_input.label')}
+                        type="text"
+                        value={internalCompanyName}
+                        onChange={(e) => {
+                          setSelectedCompany(null);
+                          setInternalCompanyName(e.target.value);
+                        }}
+                        placeholder={t('analysis.company_input.placeholder')}
+                        className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                      />
+                      {isSearchingCompany && <span className="text-xs text-gray-500 ml-2">{t('analysis.company_input.searching')}</span>}
                     </div>
-                  )}
-                  {showCompanyDropdown && companySuggestions.length === 0 && internalCompanyName.length >= 2 && !isSearchingCompany && (
-                    <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 p-3">
-                      <p className="text-sm text-red-500">{t('analysis.company_input.not_found')}</p>
-                    </div>
-                  )}
+
+                    {showCompanyDropdown && companySuggestions.length > 0 && (
+                      <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                        {companySuggestions.map(c => (
+                          <button
+                            key={c.taxId}
+                            type="button"
+                            className="w-full text-left px-4 py-2 hover:bg-orange-50 cursor-pointer text-sm text-gray-700 font-medium border-b border-gray-100 last:border-0"
+                            onClick={() => {
+                              setSelectedCompany(c);
+                              setInternalCompanyName(`${c.name} (${c.taxId})`);
+                              setShowCompanyDropdown(false);
+                            }}
+                          >
+                            {c.name} <span className="text-gray-400 font-normal">({c.taxId})</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {showCompanyDropdown && companySuggestions.length === 0 && internalCompanyName.length >= 2 && !isSearchingCompany && (
+                      <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 p-3">
+                        <p className="text-sm text-red-500">{t('analysis.company_input.not_found')}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

@@ -99,14 +99,37 @@ export class AnalysisService {
         const startTs = Math.floor(new Date(start).getTime() / 1000);
         const endTs = Math.floor(new Date(end + 'T23:59:59.999Z').getTime() / 1000);
 
-        const esgRecords = await prisma.esgRecord.findMany({
-          where: {
-            userId,
-            dateTimestamp: { gte: startTs, lte: endTs },
-            deletedAt: null
-          },
-          orderBy: { dateTimestamp: 'asc' }
+        const teamMembers = await prisma.teamMember.findMany({
+          where: { userId }
         });
+        const teamIds = teamMembers.map(tm => tm.teamId);
+
+        let targetAccountBookId: string | null = null;
+        if (params.keyword) {
+          const match = params.keyword.match(/\((.*?)\)/);
+          const taxId = match ? match[1] : params.keyword;
+
+          const matchedAccountBook = await prisma.accountBook.findFirst({
+            where: { 
+              teamId: { in: teamIds },
+              enterpriseId: taxId 
+            }
+          });
+          if (matchedAccountBook) {
+            targetAccountBookId = matchedAccountBook.id;
+          }
+        }
+
+        const esgRecords = targetAccountBookId
+          ? await prisma.esgRecord.findMany({
+              where: {
+                accountBookId: targetAccountBookId,
+                dateTimestamp: { gte: startTs, lte: endTs },
+                deletedAt: null
+              },
+              orderBy: { dateTimestamp: 'asc' }
+            })
+          : [];
 
         if (esgRecords.length > 0) {
           const esgContextLines = esgRecords.map(r => {
