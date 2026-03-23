@@ -26,7 +26,7 @@ export default function JournalMainView() {
         );
       case EJournalTab.LIST:
         return <JournalListView />;
-      case "log":
+      case EJournalTab.LOG:
         return <JournalLogView />;
     }
   };

@@ -115,11 +115,11 @@ export default function JournalListView() {
         params.append("endDate", end.toISOString());
       }
 
-      const data = await request<IApiResponse<{ journals: IJournal[] }>>(
+      const data = await request<IApiResponse<IJournal[]>>(
         `/api/v1/user/account_book/${accountBookId}/journal?${params.toString()}`,
       );
-      if (data.payload?.journals) {
-        setJournals(data.payload.journals);
+      if (data.payload) {
+        setJournals(data.payload);
       }
     } catch (error) {
       console.error("Failed to fetch journals:", error);

@@ -3,8 +3,9 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-// import { ChatService } from "@/services/chat.service";
 import { Prisma } from "@/generated/browser";
+import { IJournal } from "@/interfaces/journal";
+import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
 
 /**
  * Info: (20260304 - Julian) 將檔案傳給 AI 進行解析
@@ -152,7 +153,9 @@ export async function GET(
       : undefined;
     const orderByParams = searchParams.get("orderBy");
 
-    const filteredConditions: Prisma.JournalFindManyArgs = {
+    const filteredConditions: Prisma.JournalFindManyArgs & {
+      include: { file: true };
+    } = {
       where: { accountBookId: accountBook.id },
       include: { file: true },
     };
@@ -194,7 +197,23 @@ export async function GET(
     // Info: (20260304 - Julian) 取得日記帳列表
     const journals = await prisma.journal.findMany(filteredConditions);
 
-    return jsonOk({ journals });
+    // Info: (20260323 - Julian) 格式化日記帳列表
+    const formattedJournals: IJournal[] = journals.map((j) => {
+      return {
+        id: j.id,
+        tradingTimestamp: Math.floor(j.createdAt.getTime()/1000),
+        text: j.text,
+        fileId: j.fileId ?? '',
+        file: j.file ? {
+          id: j.file.id,
+          hash: j.file.hash,
+          fileName: j.file.fileName ?? "",
+        } : undefined,
+        analysisStatus: j.analysisStatus as AIAnalysisStatus,
+      };
+    });
+
+    return jsonOk( formattedJournals );
   } catch (error) {
     console.error("Get journals failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get journals failed");

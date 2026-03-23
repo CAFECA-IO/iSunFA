@@ -5,6 +5,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { timestampToString } from "@/lib/utils/common";
 
 const JournalListItem = ({
   journal,
@@ -19,18 +20,7 @@ const JournalListItem = ({
 
   const isAnalysisFailed = journal.analysisStatus === AIAnalysisStatus.FAILED;
 
-  const formattedDate = new Date(journal.createdAt).toLocaleString();
-  const formattedDateSplit = formattedDate.split(" ");
-
-  const dateStrForDesktop = (
-    <p className="hidden text-sm sm:block">{formattedDate}</p>
-  );
-  const dateStrForMobile = (
-    <div className="flex flex-col items-center text-xs sm:hidden">
-      <span>{formattedDateSplit[0]}</span>
-      <span>{formattedDateSplit[1]}</span>
-    </div>
-  );
+  const formattedDate = timestampToString(journal.tradingTimestamp).dateWithDash;
 
   // Info: (20260320 - Julian) 尚未開始
   if (journal.analysisStatus === AIAnalysisStatus.PENDING) {
@@ -42,8 +32,7 @@ const JournalListItem = ({
           </div>
         </td>
         <td className="w-1/4 px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
-          {dateStrForDesktop}
-          {dateStrForMobile}
+          {formattedDate}
         </td>
         <td className="px-3 py-2 align-middle text-xs sm:px-6 sm:text-sm">
           <span className="flex items-center gap-2 italic">
@@ -74,8 +63,7 @@ const JournalListItem = ({
           </div>
         </td>
         <td className="w-1/4 px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
-          {dateStrForDesktop}
-          {dateStrForMobile}
+          {formattedDate}
         </td>
         <td
           aria-label="AI Processing"
@@ -132,8 +120,7 @@ const JournalListItem = ({
       </td>
       {/* Info: (20260320 - Julian) Trading Date */}
       <td className="w-1/4 px-3 py-2 align-middle font-medium whitespace-nowrap text-slate-700 sm:px-6">
-        {dateStrForDesktop}
-        {dateStrForMobile}
+        {formattedDate}
       </td>
       {/* Info: (20260320 - Julian) Content */}
       <td className="px-3 py-2 align-middle text-xs text-slate-700 sm:px-6 sm:text-sm">

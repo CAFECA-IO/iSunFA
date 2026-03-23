@@ -338,7 +338,7 @@ export async function GET(
       });
     }
 
-    return jsonOk({ result });
+    return jsonOk( result );
   } catch (error) {
     console.error("Get vouchers failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get vouchers failed");
