@@ -441,7 +441,7 @@ export default function EsgVerifyModal({
                               onClick={() => handleAttemptSave(true)}
                               className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
                             >
-                              <CheckCircle2 size={18} />
+                              <Save size={18} />
                               {t("esg_verify.actions.save_only")}
                             </button>
                           </>

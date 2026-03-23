@@ -315,8 +315,9 @@ export default function VoucherDetailModal({
   };
 
   // Info: (20260311 - Julian) 更新傳票
-  const executeSaveVoucher = async () => {
+  const executeSaveVoucher = async (overrideVerify: boolean | null = null) => {
     setIsSaving(true);
+    const finalVerify = overrideVerify !== null ? overrideVerify : targetVerify;
     try {
       const payload = {
         id: editedVoucherId,
@@ -324,7 +325,7 @@ export default function VoucherDetailModal({
         voucherType,
         note,
         rows,
-        isVerified: targetVerify,
+        isVerified: finalVerify,
       };
       const res = await request<IApiResponse<{ voucher: IVoucher }>>(
         `/api/v1/user/account_book/${accountBookId}/voucher/${voucherId}`,
@@ -349,7 +350,7 @@ export default function VoucherDetailModal({
   const handleUnverifyConfirmed = () => {
     setIsUnverifyModalOpen(false);
     setTargetVerify(false);
-    executeSaveVoucher();
+    executeSaveVoucher(false);
   };
 
   return (
