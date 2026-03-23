@@ -1009,6 +1009,7 @@ export const ja = {
     no_file: "ファイルなし",
     verified: "確認済",
     manual_verify: "手動確認",
+    unverified: "未確認",
     search_placeholder: "業者、活動を検索...",
     search_aria: "業者、活動を検索",
     filter_intensity_aria: "強度で絞り込み",
@@ -1018,7 +1019,6 @@ export const ja = {
     sort_date_aria: "日付で並べ替え",
     sort_newest: "新しい順",
     sort_oldest: "古い順",
-    filter_btn: "フィルター",
     header: {
       voucher: "伝票",
       date: "日付",
@@ -1178,6 +1178,7 @@ export const ja = {
         status: {
           verified: "確認済",
           manual: "手動確認",
+          unverified: "未確認",
           deleted: "削除済",
         },
         headers: {

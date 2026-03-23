@@ -975,6 +975,7 @@ export const zhCn = {
     no_file: "无档案",
     verified: "已核对",
     manual_verify: "人工核对",
+    unverified: "尚未核对",
     search_placeholder: "搜索供应商、活动类型...",
     search_aria: "搜索供应商、活动类型",
     filter_intensity_aria: "依强度筛选",
@@ -984,7 +985,6 @@ export const zhCn = {
     sort_date_aria: "切换日期排序",
     sort_newest: "由新至旧",
     sort_oldest: "由旧至新",
-    filter_btn: "筛选",
     header: {
       voucher: "凭证",
       date: "日期",
@@ -1142,6 +1142,7 @@ export const zhCn = {
         status: {
           verified: "已核对",
           manual: "人工核对",
+          unverified: "尚未核对",
           deleted: "已删除",
         },
         headers: {

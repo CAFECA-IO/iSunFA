@@ -1074,6 +1074,7 @@ export const zhTw = {
         status: {
           verified: "已核對",
           manual: "人工核對",
+          unverified: "尚未核對",
           deleted: "已刪除",
         },
         headers: {
@@ -1208,6 +1209,7 @@ export const zhTw = {
     no_file: "無檔案",
     verified: "已核對",
     manual_verify: "人工核對",
+    unverified: "尚未核對",
     search_placeholder: "搜尋供應商、活動類型...",
     search_aria: "搜尋供應商、活動類型",
     filter_intensity_aria: "依強度篩選",
@@ -1217,7 +1219,6 @@ export const zhTw = {
     sort_date_aria: "切換日期排序",
     sort_newest: "由新至舊",
     sort_oldest: "由舊至新",
-    filter_btn: "篩選",
     header: {
       voucher: "憑證",
       date: "日期",

@@ -167,7 +167,6 @@ export default function JournalListView() {
         isLoading={isLoading}
         journals={journals}
         onSelect={handleJournalSelect}
-        onDelete={handleDeleteClick}
       />
     ) : (
       <JournalGridLayout

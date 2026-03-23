@@ -996,6 +996,7 @@ export const ko = {
     no_file: "파일 없음",
     verified: "확인됨",
     manual_verify: "수동 확인",
+    unverified: "미확인 상태",
     search_placeholder: "공급업체, 활동 유형 검색...",
     search_aria: "공급업체, 활동 유형 검색",
     filter_intensity_aria: "강도 필터링",
@@ -1005,7 +1006,6 @@ export const ko = {
     sort_date_aria: "날짜 정렬 전환",
     sort_newest: "최신순",
     sort_oldest: "오래된순",
-    filter_btn: "필터",
     header: {
       voucher: "전표",
       date: "날짜",
@@ -1167,6 +1167,7 @@ export const ko = {
         status: {
           verified: "확인됨",
           manual: "수동 확인",
+          unverified: "미확인 상태",
           deleted: "삭제됨",
         },
         headers: {

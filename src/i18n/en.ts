@@ -1051,6 +1051,7 @@ export const en = {
         status: {
           verified: "Verified",
           manual: "Manual Verification",
+          unverified: "Unverified",
           deleted: "Deleted",
         },
         headers: {
@@ -1185,6 +1186,7 @@ export const en = {
     no_file: "No File",
     verified: "Verified",
     manual_verify: "Manual Verify",
+    unverified: "Unverified",
     search_placeholder: "Search vendor, activity...",
     search_aria: "Search vendor, activity",
     filter_intensity_aria: "Filter by Intensity",
@@ -1194,7 +1196,6 @@ export const en = {
     sort_date_aria: "Sort by Date",
     sort_newest: "Newest",
     sort_oldest: "Oldest",
-    filter_btn: "Filter",
     header: {
       voucher: "Voucher",
       date: "Date",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Filter, Info, ArrowDown, ArrowUp } from "lucide-react";
+import { Search, Info, ArrowDown, ArrowUp } from "lucide-react";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { EsgRow } from "@/components/user/esg/esg_row";
 import EsgVerifyModal from "@/components/user/esg/esg_verify_modal";
@@ -224,15 +224,6 @@ export default function EsgTableSection({
             ) : (
               <ArrowUp className="ml-1 h-4 w-4" />
             )}
-          </button>
-          <button
-            type="button"
-            aria-label={t("esg_table.filter_btn")}
-            onClick={fetchRecords}
-            className="flex items-center rounded-lg border border-slate-300 px-4 py-2 font-bold text-slate-600 transition-colors hover:bg-slate-50"
-          >
-            <Filter className="mr-2 h-4 w-4" />
-            {t("esg_table.filter_btn")}
           </button>
           <button
             type="button"

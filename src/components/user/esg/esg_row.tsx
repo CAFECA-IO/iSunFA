@@ -159,7 +159,10 @@ export function EsgRow({
   }
 
   return (
-    <tr className={isAnalysisFailed ? "bg-red-200" : "bg-white"}>
+    <tr 
+      onClick={handleVerifyClick}
+      className={`cursor-pointer transition-colors ${isAnalysisFailed ? "bg-red-200 hover:bg-red-300" : "bg-white hover:bg-orange-100"}`}
+    >
       {/* Info: (20260320 - Julian) File */}
       <td className="p-2 lg:px-6 lg:py-4">
         <div className="relative mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
@@ -236,26 +239,18 @@ export function EsgRow({
       {/* Info: (20260320 - Julian) Verified */}
       <td className="p-2 text-center lg:px-6 lg:py-4">
         {record.isVerified ? (
-          <button
-            type="button"
-            onClick={handleVerifyClick}
-            className="group mx-auto flex cursor-pointer flex-col items-center justify-center gap-1 text-emerald-500 transition-colors hover:text-emerald-600"
-          >
+          <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 className="h-5 w-5" />
-            <span className="text-sm font-bold group-hover:underline">
+            <span className="text-sm font-bold">
               {t("esg_table.verified")}
             </span>
-          </button>
+          </div>
         ) : (
-          <div className="flex justify-center">
-            <button
-              type="button"
-              aria-label={t("esg_table.manual_verify")}
-              onClick={handleVerifyClick}
-              className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm hover:bg-orange-600"
-            >
-              {t("esg_table.manual_verify")}
-            </button>
+          <div className="flex flex-col items-center justify-center gap-1 text-orange-500">
+            <FileQuestion className="h-5 w-5" />
+            <span className="text-sm font-bold whitespace-nowrap">
+              {t("esg_table.unverified")}
+            </span>
           </div>
         )}
       </td>
