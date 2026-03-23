@@ -100,8 +100,9 @@ export class MissionService {
                 typeof journalTask.result === "string"
               ) {
                 try {
-                  const parsed = JSON.parse(journalTask.result);
-                  if (parsed && typeof parsed === "object") {
+                  const match = journalTask.result.match(/\{[\s\S]*\}/);
+                  if (match) {
+                    const parsed = JSON.parse(match[0]);
                     const jd = parsed.data || parsed;
                     const tradingDate = new Date(jd.tradingDate || new Date());
                     const confidence = parseInt(String(jd.confidence)) || 0;
@@ -138,6 +139,12 @@ export class MissionService {
                     "[MissionService] Failed to parse journal result",
                     e,
                   );
+                  if (existingJournal) {
+                    await tx.journal.update({
+                      where: { id: existingJournal.id },
+                      data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                    });
+                  }
                 }
               }
             }
@@ -164,8 +171,9 @@ export class MissionService {
                 typeof voucherTask.result === "string"
               ) {
                 try {
-                  const parsed = JSON.parse(voucherTask.result);
-                  if (parsed && typeof parsed === "object") {
+                  const match = voucherTask.result.match(/\{[\s\S]*\}/);
+                  if (match) {
+                    const parsed = JSON.parse(match[0]);
                     const vd = parsed.data || parsed;
                     const tradingDate = new Date(vd.tradingDate || new Date());
                     const typeMap: Record<string, VoucherTradingType> = {
@@ -234,6 +242,12 @@ export class MissionService {
                     "[MissionService] Failed to parse voucher result",
                     e,
                   );
+                  if (existingVoucher) {
+                    await tx.voucher.update({
+                      where: { id: existingVoucher.id },
+                      data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                    });
+                  }
                 }
               }
             }
@@ -301,6 +315,12 @@ export class MissionService {
                     "[MissionService] Failed to parse ESG result",
                     e,
                   );
+                  if (existingEsg) {
+                    await tx.esgRecord.update({
+                      where: { id: existingEsg.id },
+                      data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                    });
+                  }
                 }
               }
             }

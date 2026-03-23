@@ -290,10 +290,10 @@ export default function VoucherTableSection() {
                       {t("voucher.main_view.filters.type_options.all")}
                     </option>
                     <option value={TradingType.INCOME}>
-                      {t("voucher.main_view.filters.type_options.payment")}
+                      {t("voucher.main_view.filters.type_options.income")}
                     </option>
                     <option value={TradingType.OUTCOME}>
-                      {t("voucher.main_view.filters.type_options.receipt")}
+                      {t("voucher.main_view.filters.type_options.outcome")}
                     </option>
                     <option value={TradingType.TRANSFER}>
                       {t("voucher.main_view.filters.type_options.transfer")}
