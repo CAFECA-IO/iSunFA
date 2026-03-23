@@ -529,9 +529,11 @@ export const en = {
   },
   account_book_selection: {
     title: "Select Account Book",
-    subtitle: "Please select an account book to enter the management dashboard.",
+    subtitle:
+      "Please select an account book to enter the management dashboard.",
     empty_title: "No Available Account Books",
-    empty_desc: "You currently have no accessible account books, or your access has been removed.",
+    empty_desc:
+      "You currently have no accessible account books, or your access has been removed.",
     role: "Role",
     create_button: "Create Account Book",
     edit_button: "Edit",
@@ -562,26 +564,27 @@ export const en = {
   },
   analysis: {
     company_input: {
-      label: 'Company Name or Tax ID',
-      placeholder: 'Enter full name, abbreviation, or Tax ID...',
-      searching: 'Searching...',
-      not_found: 'Company not found. Please try entering a more complete name or Tax ID.'
+      label: "Company Name or Tax ID",
+      placeholder: "Enter full name, abbreviation, or Tax ID...",
+      searching: "Searching...",
+      not_found:
+        "Company not found. Please try entering a more complete name or Tax ID.",
     },
-    title: 'Analysis Report',
-    internal_analysis: 'Internal Analysis',
-    external_analysis: 'External Analysis',
-    history_reports: 'History Reports',
-    period_type: 'Time Unit',
-    select_year: 'Select Year',
-    select_period: 'Select Period',
-    country: 'Select Country',
-    category: 'Select Category',
-    keyword: 'Keyword',
-    enter_keyword: 'Enter keyword...',
-    period: 'Period',
-    confirm_cost: 'Cost',
-    generate: 'Generate Report',
-    selected_period_desc: '{{value}} ({{type}})',
+    title: "Analysis Report",
+    internal_analysis: "Internal Analysis",
+    external_analysis: "External Analysis",
+    history_reports: "History Reports",
+    period_type: "Time Unit",
+    select_year: "Select Year",
+    select_period: "Select Period",
+    country: "Select Country",
+    category: "Select Category",
+    keyword: "Keyword",
+    enter_keyword: "Enter keyword...",
+    period: "Period",
+    confirm_cost: "Cost",
+    generate: "Generate Report",
+    selected_period_desc: "{{value}} ({{type}})",
     insufficient_credits: {
       title: "Insufficient Credits",
       message:
@@ -829,8 +832,10 @@ export const en = {
     },
     warnings: {
       title: "Warning Message",
-      salary_below_minimum: "Base salary is below the statutory minimum wage ({{minimumWage}})",
-      overtime_exceeded: "Total overtime hours in a single month exceed the 46-hour statutory limit",
+      salary_below_minimum:
+        "Base salary is below the statutory minimum wage ({{minimumWage}})",
+      overtime_exceeded:
+        "Total overtime hours in a single month exceed the 46-hour statutory limit",
     },
     login_modal: {
       title: "Please Login in",
@@ -941,7 +946,8 @@ export const en = {
     clear_all_btn: "Clear All",
     add_more_btn: "Add More",
     analyze_all_btn: "Analyze All",
-    multiple_files_supported: "Supports batch uploading multiple files (.jpg, .png, .pdf)",
+    multiple_files_supported:
+      "Supports batch uploading multiple files (.jpg, .png, .pdf)",
     title: "Invoice Management",
     upload: "Upload",
     list: "List",
@@ -1007,324 +1013,342 @@ export const en = {
       copy_id: "Click to copy Journal ID: {{id}}",
     },
   },
-  "voucher": {
-    "account_book_selector": {
-      "title": "Select Account",
-      "all": "All",
-      "search_placeholder": "Search account code or name...",
-      "no_results": "No matching accounts found"
+  voucher: {
+    account_book_selector: {
+      title: "Select Account",
+      all: "All",
+      search_placeholder: "Search account code or name...",
+      no_results: "No matching accounts found",
     },
-    "main_view": {
-      "title": "Smart Voucher Management",
-      "subtitle": "AI has automatically generated corresponding accounting entries based on your receipt recognition results.",
-      "actions": {
-        "export": "Export Vouchers",
-        "add": "Add Voucher"
+    main_view: {
+      title: "Smart Voucher Management",
+      subtitle:
+        "AI has automatically generated corresponding accounting entries based on your receipt recognition results.",
+      actions: {
+        export: "Export Vouchers",
+        add: "Add Voucher",
       },
-      "filters": {
-        "type": "Field Type",
-        "type_options": {
-          "all": "All",
-          "payment": "Payment",
-          "receipt": "Receipt",
-          "transfer": "Transfer"
+      filters: {
+        type: "Field Type",
+        type_options: {
+          all: "All",
+          payment: "Payment",
+          receipt: "Receipt",
+          transfer: "Transfer",
         },
-        "period": "Period",
-        "search": "Search voucher no, account code...",
-        "hide_deleted": "Hide deleted vouchers and reversed records",
-        "currency": "Currency: {currency}"
+        period: "Period",
+        search: "Search voucher no, account code...",
+        hide_deleted: "Hide deleted vouchers and reversed records",
+        currency: "Currency: {currency}",
       },
-      "table": {
-        "types": {
-          "outcome": "Payment Voucher",
-          "income": "Receipt Voucher",
-          "transfer": "Transfer Voucher",
-          "unknown": "Unknown Voucher"
+      table: {
+        types: {
+          outcome: "Payment Voucher",
+          income: "Receipt Voucher",
+          transfer: "Transfer Voucher",
+          unknown: "Unknown Voucher",
         },
-        "status": {
-          "verified": "Verified",
-          "manual": "Manual Verification",
-          "deleted": "Deleted"
+        status: {
+          verified: "Verified",
+          manual: "Manual Verification",
+          deleted: "Deleted",
         },
-        "headers": {
-          "receipt": "Receipt",
-          "voucher_date": "Voucher Date",
-          "voucher_type_id": "Voucher Type & No.",
-          "accounting_entries": "Accounting Entries",
-          "debit": "Debit Amount",
-          "credit": "Credit Amount",
-          "confidence": "AI Confidence",
-          "status": "Status"
+        headers: {
+          receipt: "Receipt",
+          voucher_date: "Voucher Date",
+          voucher_type_id: "Voucher Type & No.",
+          accounting_entries: "Accounting Entries",
+          debit: "Debit Amount",
+          credit: "Credit Amount",
+          confidence: "AI Confidence",
+          status: "Status",
         },
-        "no_file": "No File",
-        "filter_btn": "Filters",
-        "verify_all": "Verify All",
-        "no_data": "No voucher records yet"
-      }
+        no_file: "No File",
+        filter_btn: "Filters",
+        verify_all: "Verify All",
+        no_data: "No voucher records yet",
+      },
     },
-    "summary": {
-      "empty_prefix": "No voucher records yet, please ",
-      "empty_link": "add a voucher",
-      "today_count": "Vouchers Today",
-      "unit": " sheets",
-      "month_total": "Monthly Total",
-      "pending": "Pending Verification",
-      "ai_confidence": "AI Average Confidence"
+    summary: {
+      empty_prefix: "No voucher records yet, please ",
+      empty_link: "add a voucher",
+      today_count: "Vouchers Today",
+      unit: " sheets",
+      month_total: "Monthly Total",
+      pending: "Pending Verification",
+      ai_confidence: "AI Average Confidence",
     },
-    "detail_modal": {
-      "title": "Edit Voucher",
-      "messages": {
-        "fetch_error": "Failed to fetch voucher",
-        "deleted_warning": "Deleted vouchers cannot be edited"
+    detail_modal: {
+      title: "Edit Voucher",
+      messages: {
+        fetch_error: "Failed to fetch voucher",
+        deleted_warning: "Deleted vouchers cannot be edited",
       },
-      "status": {
-        "pending": "Pending",
-        "verified": "Verified"
+      status: {
+        pending: "Pending",
+        verified: "Verified",
       },
-      "sections": {
-        "preview": "Receipt Preview",
-        "basic_info": "Basic Information",
-        "accounting_entries": "Accounting Entries"
+      sections: {
+        preview: "Receipt Preview",
+        basic_info: "Basic Information",
+        accounting_entries: "Accounting Entries",
       },
-      "fields": {
-        "confidence": "AI Confidence",
-        "voucher_no": "Voucher No.",
-        "voucher_no_placeholder": "Enter Voucher No.",
-        "account_code_name": "Account Code / Name",
-        "total_amount": "Total Amount",
-        "voucher_date": "Voucher Date",
-        "voucher_type": "Voucher Type",
-        "accounting_select": "Select Account",
-        "particular": "Particulars",
-        "debit": "Debit",
-        "credit": "Credit"
+      fields: {
+        confidence: "AI Confidence",
+        voucher_no: "Voucher No.",
+        voucher_no_placeholder: "Enter Voucher No.",
+        account_code_name: "Account Code / Name",
+        total_amount: "Total Amount",
+        voucher_date: "Voucher Date",
+        voucher_type: "Voucher Type",
+        accounting_select: "Select Account",
+        particular: "Particulars",
+        debit: "Debit",
+        credit: "Credit",
       },
-      "validation": {
-        "empty_fields": "Date or voucher type is empty",
-        "unbalanced": "Debit and credit are not balanced",
-        "empty_rows": "Entries are empty",
-        "incomplete_row": "An entry has an empty account or amount"
+      validation: {
+        empty_fields: "Date or voucher type is empty",
+        unbalanced: "Debit and credit are not balanced",
+        empty_rows: "Entries are empty",
+        incomplete_row: "An entry has an empty account or amount",
       },
-      "balance_check": {
-        "title": "Balance Check",
-        "balanced": "Balanced",
-        "unbalanced": "Unbalanced"
+      balance_check: {
+        title: "Balance Check",
+        balanced: "Balanced",
+        unbalanced: "Unbalanced",
       },
-      "actions": {
-        "cancel_edit": "Cancel Edit",
-        "verify_save": "Verify & Save",
-        "unverify": "Unverify",
-        "save_only": "Save Only",
-        "add_row": "Add Entry",
-        "clear_all": "Clear All",
-        "save_voucher": "Save Voucher",
-        "confirm": "Confirm",
-        "cancel": "Cancel"
+      actions: {
+        cancel_edit: "Cancel Edit",
+        verify_save: "Verify & Save",
+        unverify: "Unverify",
+        save_only: "Save Only",
+        add_row: "Add Entry",
+        clear_all: "Clear All",
+        save_voucher: "Save Voucher",
+        confirm: "Confirm",
+        cancel: "Cancel",
       },
-      "confirm_modals": {
-        "clear_all": {
-          "title": "Clear All",
-          "message": "Are you sure you want to clear all data?"
+      confirm_modals: {
+        clear_all: {
+          title: "Clear All",
+          message: "Are you sure you want to clear all data?",
         },
-        "leave_without_saving": {
-          "title": "Leave without saving",
-          "message": "Are you sure you want to discard changes and leave?"
+        leave_without_saving: {
+          title: "Leave without saving",
+          message: "Are you sure you want to discard changes and leave?",
         },
-        "save_voucher": {
-          "title": "Save Voucher",
-          "message": "Are you sure you want to save this voucher?"
-        }
-      }
-    }
+        save_voucher: {
+          title: "Save Voucher",
+          message: "Are you sure you want to save this voucher?",
+        },
+      },
+      unverify_confirm: {
+        title: "Confirm Unverify?",
+        message:
+          "Are you sure you want to unverify this voucher? Changes will be saved, please confirm the data is correct.",
+        confirm: "Confirm Unverify",
+        cancel: "Cancel",
+      },
+    },
   },
-  "esg_main": {
-    "title": "Carbon Management & ESG Analysis",
-    "description": "Automatically analyzes input vouchers to provide real-time carbon neutrality progress and multi-dimensional emission analysis.",
-    "export_button": "Export ESG Declaration",
-    "year": "Year",
-    "month": "Month",
-    "all_year": "All Year"
+  esg_main: {
+    title: "Carbon Management & ESG Analysis",
+    description:
+      "Automatically analyzes input vouchers to provide real-time carbon neutrality progress and multi-dimensional emission analysis.",
+    export_button: "Export ESG Declaration",
+    year: "Year",
+    month: "Month",
+    all_year: "All Year",
   },
-  "esg_summary": {
-    "no_data_prefix": "Currently no ESG data for this account book, please ",
-    "upload_link": "upload vouchers",
-    "no_data_suffix": " to generate carbon emission records",
-    "total_emissions": "Total Monthly Emissions",
-    "estimate_eom": "Est. EOM: ",
-    "emission_intensity": "Emission Intensity",
-    "better_than_industry": "Better than industry average ({{average}})",
-    "scope_distribution": "Scope Distribution (SCOPE)",
-    "annual_goal_progress": "Annual Goal Progress"
+  esg_summary: {
+    no_data_prefix: "Currently no ESG data for this account book, please ",
+    upload_link: "upload vouchers",
+    no_data_suffix: " to generate carbon emission records",
+    total_emissions: "Total Monthly Emissions",
+    estimate_eom: "Est. EOM: ",
+    emission_intensity: "Emission Intensity",
+    better_than_industry: "Better than industry average ({{average}})",
+    scope_distribution: "Scope Distribution (SCOPE)",
+    annual_goal_progress: "Annual Goal Progress",
   },
-  "esg_table": {
-    "intensity": {
-      "high": "High",
-      "medium": "Medium",
-      "low": "Low"
+  esg_table: {
+    intensity: {
+      high: "High",
+      medium: "Medium",
+      low: "Low",
     },
-    "scope": {
-      "scope_1": "Scope 1",
-      "scope_2": "Scope 2",
-      "scope_3": "Scope 3"
+    scope: {
+      scope_1: "Scope 1",
+      scope_2: "Scope 2",
+      scope_3: "Scope 3",
     },
-    "no_file": "No File",
-    "verified": "Verified",
-    "manual_verify": "Manual Verify",
-    "search_placeholder": "Search vendor, activity...",
-    "search_aria": "Search vendor, activity",
-    "filter_intensity_aria": "Filter by Intensity",
-    "filter_intensity_all": "All",
-    "filter_scope_aria": "Filter by Scope",
-    "filter_scope_all": "All (Scope 1-3)",
-    "sort_date_aria": "Sort by Date",
-    "sort_newest": "Newest",
-    "sort_oldest": "Oldest",
-    "filter_btn": "Filter",
-    "header": {
-      "voucher": "Voucher",
-      "date": "Date",
-      "activity_target": "Activity & Target",
-      "raw_data": "Raw Data",
-      "emissions": "Emissions (KGCO2E)",
-      "intensity_label": "Intensity",
-      "ai_confidence": "AI Confidence",
-      "status": "Status"
+    no_file: "No File",
+    verified: "Verified",
+    manual_verify: "Manual Verify",
+    search_placeholder: "Search vendor, activity...",
+    search_aria: "Search vendor, activity",
+    filter_intensity_aria: "Filter by Intensity",
+    filter_intensity_all: "All",
+    filter_scope_aria: "Filter by Scope",
+    filter_scope_all: "All (Scope 1-3)",
+    sort_date_aria: "Sort by Date",
+    sort_newest: "Newest",
+    sort_oldest: "Oldest",
+    filter_btn: "Filter",
+    header: {
+      voucher: "Voucher",
+      date: "Date",
+      activity_target: "Activity & Target",
+      raw_data: "Raw Data",
+      emissions: "Emissions (KGCO2E)",
+      intensity_label: "Intensity",
+      ai_confidence: "AI Confidence",
+      status: "Status",
     },
-    "loading": "Loading...",
-    "no_records": "No ESG Records",
-    "footer": {
-      "record_count": "Showing {{count}} records",
-      "data_citation": "Data: IPCC AR6 Emission Factors"
-    }
+    loading: "Loading...",
+    no_records: "No ESG Records",
+    footer: {
+      record_count: "Showing {{count}} records",
+      data_citation: "Data: IPCC AR6 Emission Factors",
+    },
   },
-  "esg_verify": {
-    "title": "Manual Verification",
-    "preview": "Voucher Preview",
-    "ai_confidence": "AI Conf.",
-    "no_image": "No Image",
-    "form": {
-      "date": "Date",
-      "scope": "Scope",
-      "scope_1": "Scope 1 (Direct)",
-      "scope_2": "Scope 2 (Indirect)",
-      "scope_3": "Scope 3 (Other)",
-      "activity_type": "Activity Type",
-      "vendor": "Vendor / Target",
-      "raw_data": "Raw Data",
-      "unit": "Unit",
-      "emissions": "Emissions (kgCO2e)",
-      "intensity": "Intensity",
-      "intensity_low": "Low",
-      "intensity_medium": "Medium",
-      "intensity_high": "High"
+  esg_verify: {
+    title: "Manual Verification",
+    preview: "Voucher Preview",
+    ai_confidence: "AI Conf.",
+    no_image: "No Image",
+    form: {
+      date: "Date",
+      scope: "Scope",
+      scope_1: "Scope 1 (Direct)",
+      scope_2: "Scope 2 (Indirect)",
+      scope_3: "Scope 3 (Other)",
+      activity_type: "Activity Type",
+      vendor: "Vendor / Target",
+      raw_data: "Raw Data",
+      unit: "Unit",
+      emissions: "Emissions (kgCO2e)",
+      intensity: "Intensity",
+      intensity_low: "Low",
+      intensity_medium: "Medium",
+      intensity_high: "High",
     },
-    "actions": {
-      "cancel": "Cancel",
-      "save_only": "Save Only",
-      "save_and_verify": "Save & Verify",
-      "unverify": "Unverify"
+    actions: {
+      cancel_edit: "Cancel Edit",
+      save_only: "Save Only",
+      save_and_verify: "Save & Verify",
+      unverify: "Unverify",
     },
-    "close_confirm": {
-      "title": "Close without saving?",
-      "message": "Review the changes you've made to the ESG records. Are you sure you want to save?",
-      "confirm": "Confirm Save",
-      "cancel": "Cancel",
-      "success": "Verification data saved"
+    close_confirm: {
+      title: "Close without saving?",
+      message:
+        "Review the changes you've made to the ESG records. Are you sure you want to save?",
+      confirm: "Confirm Save",
+      cancel: "Cancel",
+      success: "Verification data saved",
     },
-    "save_confirm": {
-      "title": "Save changes?",
-      "message": "You are about to save the verification changes. Proceed?",
-      "confirm": "Save",
-      "cancel": "Cancel"
-    }
+    save_confirm: {
+      title: "Save changes?",
+      message: "You are about to save the verification changes. Proceed?",
+      confirm: "Save",
+      cancel: "Cancel",
+    },
+    unverify_confirm: {
+      title: "Confirm Unverify?",
+      message:
+        "Are you sure you want to unverify this ESG record? Changes will be saved, please confirm the data is correct.",
+      confirm: "Confirm Unverify",
+      cancel: "Cancel",
+    },
   },
-  "esg_target": {
-    "select_industry": "Industry Category",
-    "ind_power": "Power & Electricity",
-    "ind_steel": "Steel & Metals",
-    "ind_cement": "Cement & Building Materials",
-    "ind_petro": "Petrochemicals & Plastics",
-    "ind_semiconductor": "Semiconductor",
-    "ind_transport": "Transportation & Logistics",
-    "ind_retail": "Retail & E-commerce",
-    "ind_telecom": "Telecom & Internet",
-    "btn": "Set Annual Target",
-    "yoy_reduction": "Reduced by {{percent}}% YoY",
-    "yoy_increase": "Increased by {{percent}}% YoY",
-    "yoy_same": "No YoY Change",
-    "target_estimation": "Target estimated at {{global_rank}}, {{industry_rank}}",
-    "industry_classification": "Industry Classification: {{industry}}",
-    "industry_rank": "Top {{rank}}% in Industry",
-    "global_rank": "Top {{rank}}% in Taiwan",
-    "unsaved_changes_warning": "You have unsaved changes. Are you sure you want to leave?",
-    "unsaved_changes_title": "Close without saving?",
-    "target_total_emissions": "Target Total Emissions (tCO2e)",
-    "target_revenue_emissions": "Target Emission Intensity (tCO2e)",
-    "title": "Set Annual Carbon Emission Target",
-    "past_records": "Historical Carbon Emission Records",
-    "year": "Year",
-    "emissions": "Emissions (tCO2e)",
-    "revenue": "Revenue (10k)",
-    "intensity": "Intensity",
-    "set_target_intensity": "Set Target Intensity for This Year",
-    "target_placeholder": "Enter Target Intensity",
-    "target_unit": "tCO2e / 10k TWD Revenue",
-    "reduction_from_last_year": "Compared to Last Year",
-    "decrease": "Reduction",
-    "increase": "Increase",
-    "taiwan_ranking": "Top % in TW Enterprises",
-    "industry_ranking": "Top % in Similar Industry",
-    "save": "Save Settings",
-    "esg_industry_benchmarks": {
-      "spectrum": {
-        "extremely_high": "Extremely High Carbon",
-        "very_high": "Very High Carbon",
-        "high": "High Carbon",
-        "mid_high": "Mid-High Carbon",
-        "medium": "Medium",
-        "mid_low": "Mid-Low Carbon",
-        "extremely_low": "Extremely Low Carbon"
+  esg_target: {
+    select_industry: "Industry Category",
+    ind_power: "Power & Electricity",
+    ind_steel: "Steel & Metals",
+    ind_cement: "Cement & Building Materials",
+    ind_petro: "Petrochemicals & Plastics",
+    ind_semiconductor: "Semiconductor",
+    ind_transport: "Transportation & Logistics",
+    ind_retail: "Retail & E-commerce",
+    ind_telecom: "Telecom & Internet",
+    btn: "Set Annual Target",
+    yoy_reduction: "Reduced by {{percent}}% YoY",
+    yoy_increase: "Increased by {{percent}}% YoY",
+    yoy_same: "No YoY Change",
+    target_estimation: "Target estimated at {{global_rank}}, {{industry_rank}}",
+    industry_classification: "Industry Classification: {{industry}}",
+    industry_rank: "Top {{rank}}% in Industry",
+    global_rank: "Top {{rank}}% in Taiwan",
+    unsaved_changes_warning:
+      "You have unsaved changes. Are you sure you want to leave?",
+    unsaved_changes_title: "Close without saving?",
+    target_total_emissions: "Target Total Emissions (tCO2e)",
+    target_revenue_emissions: "Target Emission Intensity (tCO2e)",
+    title: "Set Annual Carbon Emission Target",
+    past_records: "Historical Carbon Emission Records",
+    year: "Year",
+    emissions: "Emissions (tCO2e)",
+    revenue: "Revenue (10k)",
+    intensity: "Intensity",
+    set_target_intensity: "Set Target Intensity for This Year",
+    target_placeholder: "Enter Target Intensity",
+    target_unit: "tCO2e / 10k TWD Revenue",
+    reduction_from_last_year: "Compared to Last Year",
+    decrease: "Reduction",
+    increase: "Increase",
+    taiwan_ranking: "Top % in TW Enterprises",
+    industry_ranking: "Top % in Similar Industry",
+    save: "Save Settings",
+    esg_industry_benchmarks: {
+      spectrum: {
+        extremely_high: "Extremely High Carbon",
+        very_high: "Very High Carbon",
+        high: "High Carbon",
+        mid_high: "Mid-High Carbon",
+        medium: "Medium",
+        mid_low: "Mid-Low Carbon",
+        extremely_low: "Extremely Low Carbon",
       },
-      "industry_1": {
-        "name": "Petrochemical Industry",
-        "desc": "Highest: Formosa Petrochemical (3,650 kg). Gap reason: Naphtha cracking and self-built coal cogeneration plants lead to unavoidable chemical fugitive emissions and fossil fuel combustion."
+      industry_1: {
+        name: "Petrochemical Industry",
+        desc: "Highest: Formosa Petrochemical (3,650 kg). Gap reason: Naphtha cracking and self-built coal cogeneration plants lead to unavoidable chemical fugitive emissions and fossil fuel combustion.",
       },
-      "industry_2": {
-        "name": "Cement Industry",
-        "desc": "Highest: Asia Cement (2,883 kg). Gap reason: High-temperature calcination of limestone directly emits CO2, vulnerable to revenue denominator shrinkage from real estate slumps."
+      industry_2: {
+        name: "Cement Industry",
+        desc: "Highest: Asia Cement (2,883 kg). Gap reason: High-temperature calcination of limestone directly emits CO2, vulnerable to revenue denominator shrinkage from real estate slumps.",
       },
-      "industry_3": {
-        "name": "Power & Energy",
-        "desc": "High: Mai-Liao Power (2,657 kg) / Low: Taipower (1,068 kg). Gap reason: Mai-Liao is 100% coal-fired; Taipower benefits from diverse energy mix (nuclear, hydro, gas) diluting emission intensity."
+      industry_3: {
+        name: "Power & Energy",
+        desc: "High: Mai-Liao Power (2,657 kg) / Low: Taipower (1,068 kg). Gap reason: Mai-Liao is 100% coal-fired; Taipower benefits from diverse energy mix (nuclear, hydro, gas) diluting emission intensity.",
       },
-      "industry_4": {
-        "name": "Steel Industry",
-        "desc": "High: China Steel (520 kg) / Low: Tung Ho Steel (126 kg). Gap reason: Traditional blast furnaces require coal to reduce iron ore; electric arc furnaces melt recycled scrap steel, cutting emissions by 70%."
+      industry_4: {
+        name: "Steel Industry",
+        desc: "High: China Steel (520 kg) / Low: Tung Ho Steel (126 kg). Gap reason: Traditional blast furnaces require coal to reduce iron ore; electric arc furnaces melt recycled scrap steel, cutting emissions by 70%.",
       },
-      "industry_5": {
-        "name": "Shipping & Transport",
-        "desc": "High: Ocean Container Shipping / Low: High-speed rail. Gap reason: Heavy oil-burning giant ships are huge Scope 1 emitters, heavily influenced by freight rates; electrified rail performs exceptionally well."
+      industry_5: {
+        name: "Shipping & Transport",
+        desc: "High: Ocean Container Shipping / Low: High-speed rail. Gap reason: Heavy oil-burning giant ships are huge Scope 1 emitters, heavily influenced by freight rates; electrified rail performs exceptionally well.",
       },
-      "industry_6": {
-        "name": "Telecom & Networking",
-        "desc": "Highest: Chunghwa Telecom (271.8 kg). Gap reason: Breaks the 'no factory means low carbon' myth. 24/7 5G base stations and IDC cooling chillers are massive power consumers."
+      industry_6: {
+        name: "Telecom & Networking",
+        desc: "Highest: Chunghwa Telecom (271.8 kg). Gap reason: Breaks the 'no factory means low carbon' myth. 24/7 5G base stations and IDC cooling chillers are massive power consumers.",
       },
-      "industry_7": {
-        "name": "Textiles & Chemical Fibers",
-        "desc": "Low: Far Eastern New Century (59.2 kg). Gap reason: Traditional dyeing is highly water and energy intensive; FENC reversed this through R-PET recycling technology and diversified holdings."
+      industry_7: {
+        name: "Textiles & Chemical Fibers",
+        desc: "Low: Far Eastern New Century (59.2 kg). Gap reason: Traditional dyeing is highly water and energy intensive; FENC reversed this through R-PET recycling technology and diversified holdings.",
       },
-      "industry_8": {
-        "name": "Semiconductor Manufacturing",
-        "desc": "Highest: TSMC (50.1 kg). Gap reason: EUV machines and clean rooms drive massive Scope 2 power consumption, but sky-high chip prices and massive green energy purchases keep intensity low."
+      industry_8: {
+        name: "Semiconductor Manufacturing",
+        desc: "Highest: TSMC (50.1 kg). Gap reason: EUV machines and clean rooms drive massive Scope 2 power consumption, but sky-high chip prices and massive green energy purchases keep intensity low.",
       },
-      "industry_9": {
-        "name": "Retail & E-commerce",
-        "desc": "High: Uni-President (7-11) (37.6 kg) / Low: Momo (23 kg). Gap reason: Physical stores constrained by 24/7 AC and open freezers; E-commerce avoids physical stores but bears logistics fleet & automated warehouse emissions."
+      industry_9: {
+        name: "Retail & E-commerce",
+        desc: "High: Uni-President (7-11) (37.6 kg) / Low: Momo (23 kg). Gap reason: Physical stores constrained by 24/7 AC and open freezers; E-commerce avoids physical stores but bears logistics fleet & automated warehouse emissions.",
       },
-      "industry_10": {
-        "name": "Knowledge & Finance (IC/Software/Banking)",
-        "desc": "High: Banks (~1.5 kg) / Low: MediaTek (1.86 kg). Gap reason: Business model relies on 'brains and capital'. MediaTek outsources manufacturing; finance has low office emissions but huge uncounted 'financed emissions'."
-      }
-    }
-  }
+      industry_10: {
+        name: "Knowledge & Finance (IC/Software/Banking)",
+        desc: "High: Banks (~1.5 kg) / Low: MediaTek (1.86 kg). Gap reason: Business model relies on 'brains and capital'. MediaTek outsources manufacturing; finance has low office emissions but huge uncounted 'financed emissions'.",
+      },
+    },
+  },
 };

@@ -239,10 +239,12 @@ export function EsgRow({
           <button
             type="button"
             onClick={handleVerifyClick}
-            className="flex flex-col mx-auto items-center justify-center gap-1 text-emerald-500 hover:text-emerald-600 transition-colors cursor-pointer group"
+            className="group mx-auto flex cursor-pointer flex-col items-center justify-center gap-1 text-emerald-500 transition-colors hover:text-emerald-600"
           >
             <CheckCircle2 className="h-5 w-5" />
-            <span className="text-sm font-bold group-hover:underline">{t("esg_table.verified")}</span>
+            <span className="text-sm font-bold group-hover:underline">
+              {t("esg_table.verified")}
+            </span>
           </button>
         ) : (
           <div className="flex justify-center">

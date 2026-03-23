@@ -171,6 +171,8 @@ export default function VoucherDetailModal({
   const [isClearModalOpen, setIsClearModalOpen] = useState<boolean>(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState<boolean>(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
+  const [isUnverifyModalOpen, setIsUnverifyModalOpen] =
+    useState<boolean>(false);
   const [targetVerify, setTargetVerify] = useState<boolean>(false);
 
   const [isAccountBookSelectorOpen, setIsAccountBookSelectorOpen] =
@@ -342,6 +344,12 @@ export default function VoucherDetailModal({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleUnverifyConfirmed = () => {
+    setIsUnverifyModalOpen(false);
+    setTargetVerify(false);
+    executeSaveVoucher();
   };
 
   return (
@@ -666,7 +674,7 @@ export default function VoucherDetailModal({
                           <button
                             type="button"
                             disabled={disabledSaveButton || isSaving}
-                            onClick={() => saveVoucher(false)}
+                            onClick={() => setIsUnverifyModalOpen(true)}
                             className="flex h-10 items-center gap-2 rounded-xl bg-red-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:bg-slate-300"
                           >
                             <X size={16} className="stroke-3" />
@@ -731,9 +739,7 @@ export default function VoucherDetailModal({
         )}
         confirmText={t("voucher.detail_modal.actions.confirm")}
         cancelText={t("voucher.detail_modal.actions.cancel")}
-        onConfirm={() => {
-          onClose();
-        }}
+        onConfirm={() => onClose()}
       />
 
       {/* Info: (20260310 - Julian) Save Modal */}
@@ -747,6 +753,17 @@ export default function VoucherDetailModal({
         }
         cancelText={t("voucher.detail_modal.actions.cancel")}
         onConfirm={executeSaveVoucher}
+      />
+
+      {/* Info: (20260323 - Julian) Unverify Modal */}
+      <ConfirmModal
+        isOpen={isUnverifyModalOpen}
+        onClose={() => setIsUnverifyModalOpen(false)}
+        title={t("voucher.detail_modal.unverify_confirm.title")}
+        message={t("voucher.detail_modal.unverify_confirm.message")}
+        confirmText={t("voucher.detail_modal.unverify_confirm.confirm")}
+        cancelText={t("voucher.detail_modal.unverify_confirm.cancel")}
+        onConfirm={handleUnverifyConfirmed}
       />
 
       {/* Info: (20260317 - Julian) Account Book Selector */}
