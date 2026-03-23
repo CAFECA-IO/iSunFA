@@ -574,6 +574,8 @@ export const en = {
     period_type: 'Time Unit',
     select_year: 'Select Year',
     select_period: 'Select Period',
+    select_account_book: 'Choose from my account books',
+    select_from_account_books: 'Select Account Book',
     country: 'Select Country',
     category: 'Select Category',
     keyword: 'Keyword',

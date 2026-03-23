@@ -573,6 +573,8 @@ export const ja = {
     period_type: '時間単位',
     select_year: '年を選択',
     select_period: '期間を選択',
+    select_account_book: '私のアカウントブックから選択',
+    select_from_account_books: 'アカウントブックを選択',
     country: '国を選択',
     category: 'カテゴリを選択',
     keyword: 'キーワード',

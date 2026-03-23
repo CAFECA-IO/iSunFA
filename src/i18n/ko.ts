@@ -564,6 +564,8 @@ export const ko = {
     period_type: '시간 단위',
     select_year: '연도 선택',
     select_period: '기간 선택',
+    select_account_book: '내 장부에서 선택',
+    select_from_account_books: '장부 선택',
     country: '국가 선택',
     category: '카테고리 선택',
     keyword: '키워드',

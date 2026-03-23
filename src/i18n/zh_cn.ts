@@ -565,6 +565,8 @@ export const zhCn = {
     period_type: "时间单位",
     select_year: "选择年份",
     select_period: "选择区间",
+    select_account_book: "从我的账本选择",
+    select_from_account_books: "选择账本",
     country: "选择国家 / 地区",
     category: "选择类别",
     keyword: "关键字",
