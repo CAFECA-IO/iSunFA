@@ -5,7 +5,8 @@ export const ko = {
     confirm: "확인",
     verify_all: "일괄 확인",
     verify_all_confirm_title: "일괄 확인하시겠습니까?",
-    verify_all_confirm_desc: "이렇게 하면 확인되지 않은 모든 항목이 확인됨으로 표시됩니다.",
+    verify_all_confirm_desc:
+      "이렇게 하면 확인되지 않은 모든 항목이 확인됨으로 표시됩니다.",
     cancel: "취소",
     close: "닫기",
     coming_soon_message: "오픈 예정",
@@ -552,10 +553,11 @@ export const ko = {
   },
   analysis: {
     company_input: {
-      label: '기업명 또는 사업자등록번호',
-      placeholder: '전체 이름, 약어 또는 사업자등록번호 입력...',
-      searching: '검색 중...',
-      not_found: '기업을 찾을 수 없습니다. 더 완전한 이름이나 사업자등록번호를 입력해 보세요.'
+      label: "기업명 또는 사업자등록번호",
+      placeholder: "전체 이름, 약어 또는 사업자등록번호 입력...",
+      searching: "검색 중...",
+      not_found:
+        "기업을 찾을 수 없습니다. 더 완전한 이름이나 사업자등록번호를 입력해 보세요.",
     },
     title: '분석 보고서',
     internal_analysis: '내부 데이터 분석',
@@ -810,8 +812,10 @@ export const ko = {
     },
     warnings: {
       title: "경고 메시지",
-      salary_below_minimum: "기본급이 법정 최저 임금({{minimumWage}}원) 미만입니다.",
-      overtime_exceeded: "한 달 연장 근로 시간이 법정 한도인 46시간을 초과했습니다.",
+      salary_below_minimum:
+        "기본급이 법정 최저 임금({{minimumWage}}원) 미만입니다.",
+      overtime_exceeded:
+        "한 달 연장 근로 시간이 법정 한도인 46시간을 초과했습니다.",
     },
     login_modal: {
       title: "로그인해 주세요",
@@ -831,7 +835,8 @@ export const ko = {
       content_bold_2: " {{employeeName}} 님에게",
       email: "이메일",
       email_placeholder: "직원의 이메일을 입력하세요",
-      invalid_email_hint: "이메일 형식이 올바르지 않습니다. 다시 한 번 확인해 주세요.",
+      invalid_email_hint:
+        "이메일 형식이 올바르지 않습니다. 다시 한 번 확인해 주세요.",
       submit: "급여 명세서 발송",
     },
     my_pay_slip: {
@@ -857,7 +862,8 @@ export const ko = {
     },
     message: {
       name_error_title: "직원 이름 미입력",
-      name_error_content: "다음 단계로 이동하기 전에 직원 이름을 입력해 주세요.",
+      name_error_content:
+        "다음 단계로 이동하기 전에 직원 이름을 입력해 주세요.",
       salary_error_title: "급여 입력 오류",
       salary_error_content:
         "기본급(과세) + 식대(비과세) + 기타 수당(과세) + 기타 수당(비과세) 합계는 최저 임금 이상이어야 합니다.",
@@ -873,7 +879,8 @@ export const ko = {
       re_send_pay_slip_cancel_btn: "아니요, 취소합니다",
       re_send_pay_slip_submit_btn: "네, 명세서 재발송",
       re_send_pay_slip_success_title: "발송 성공!",
-      re_send_pay_slip_success_content: "급여 명세서가 직원의 이메일로 성공적으로 전송되었습니다.",
+      re_send_pay_slip_success_content:
+        "급여 명세서가 직원의 이메일로 성공적으로 전송되었습니다.",
     },
     operating_mechanism: {
       main_title: "급여 계산기의 작동 원리",
@@ -957,349 +964,353 @@ export const ko = {
       copy_id: "클릭하여 전표 ID 복사: {{id}}",
     },
   },
-  "esg_main": {
-    "title": "탄소 배출 관리 및 ESG 분석",
-    "description": "입력 증빙을 자동 분석하여 실시간 탄소 중립 진행 상황 및 다차원 배출 분석을 제공합니다.",
-    "export_button": "ESG 신고서 내보내기",
-    "year": "년",
-    "month": "월",
-    "all_year": "전체 연도"
+  esg_main: {
+    title: "탄소 배출 관리 및 ESG 분석",
+    description:
+      "입력 증빙을 자동 분석하여 실시간 탄소 중립 진행 상황 및 다차원 배출 분석을 제공합니다.",
+    export_button: "ESG 신고서 내보내기",
+    year: "년",
+    month: "월",
+    all_year: "전체 연도",
   },
-  "esg_summary": {
-    "no_data_prefix": "현재 이 장부의 ESG 데이터가 없습니다. 먼저 ",
-    "upload_link": "전표를 업로드",
-    "no_data_suffix": "하여 탄소 배출 기록을 생성하십시오",
-    "total_emissions": "이번 달 총 배출량",
-    "estimate_eom": "월말 예상: ",
-    "emission_intensity": "탄소 배출 집약도",
-    "better_than_industry": "업계 평균보다 우수함 ({{average}})",
-    "scope_distribution": "스코프 분포 (SCOPE)",
-    "annual_goal_progress": "연간 목표 진행률"
+  esg_summary: {
+    no_data_prefix: "현재 이 장부의 ESG 데이터가 없습니다. 먼저 ",
+    upload_link: "전표를 업로드",
+    no_data_suffix: "하여 탄소 배출 기록을 생성하십시오",
+    total_emissions: "이번 달 총 배출량",
+    estimate_eom: "월말 예상: ",
+    emission_intensity: "탄소 배출 집약도",
+    better_than_industry: "업계 평균보다 우수함 ({{average}})",
+    scope_distribution: "스코프 분포 (SCOPE)",
+    annual_goal_progress: "연간 목표 진행률",
   },
-  "esg_table": {
-    "intensity": {
-      "high": "고강도",
-      "medium": "중강도",
-      "low": "저강도"
+  esg_table: {
+    intensity: {
+      high: "고강도",
+      medium: "중강도",
+      low: "저강도",
     },
-    "scope": {
-      "scope_1": "스코프 1",
-      "scope_2": "스코프 2",
-      "scope_3": "스코프 3"
+    scope: {
+      scope_1: "스코프 1",
+      scope_2: "스코프 2",
+      scope_3: "스코프 3",
     },
-    "no_file": "파일 없음",
-    "verified": "확인됨",
-    "manual_verify": "수동 확인",
-    "search_placeholder": "공급업체, 활동 유형 검색...",
-    "search_aria": "공급업체, 활동 유형 검색",
-    "filter_intensity_aria": "강도 필터링",
-    "filter_intensity_all": "전체 강도",
-    "filter_scope_aria": "스코프 필터링",
-    "filter_scope_all": "전체 스코프 (Scope 1-3)",
-    "sort_date_aria": "날짜 정렬 전환",
-    "sort_newest": "최신순",
-    "sort_oldest": "오래된순",
-    "filter_btn": "필터",
-    "header": {
-      "voucher": "전표",
-      "date": "날짜",
-      "activity_target": "활동 유형 및 대상",
-      "raw_data": "원시 데이터",
-      "emissions": "배출량 (KGCO2E)",
-      "intensity_label": "강도",
-      "ai_confidence": "AI 신뢰도",
-      "status": "상태"
+    no_file: "파일 없음",
+    verified: "확인됨",
+    manual_verify: "수동 확인",
+    search_placeholder: "공급업체, 활동 유형 검색...",
+    search_aria: "공급업체, 활동 유형 검색",
+    filter_intensity_aria: "강도 필터링",
+    filter_intensity_all: "전체 강도",
+    filter_scope_aria: "스코프 필터링",
+    filter_scope_all: "전체 스코프 (Scope 1-3)",
+    sort_date_aria: "날짜 정렬 전환",
+    sort_newest: "최신순",
+    sort_oldest: "오래된순",
+    filter_btn: "필터",
+    header: {
+      voucher: "전표",
+      date: "날짜",
+      activity_target: "활동 유형 및 대상",
+      raw_data: "원시 데이터",
+      emissions: "배출량 (KGCO2E)",
+      intensity_label: "강도",
+      ai_confidence: "AI 신뢰도",
+      status: "상태",
     },
-    "loading": "로딩 중...",
-    "no_records": "탄소 배출 분석 기록 없음",
-    "footer": {
-      "record_count": "{{count}}건의 기록 표시",
-      "data_citation": "데이터 출처: IPCC 제6차 평가보고서 배출 계수"
-    }
+    loading: "로딩 중...",
+    no_records: "탄소 배출 분석 기록 없음",
+    footer: {
+      record_count: "{{count}}건의 기록 표시",
+      data_citation: "데이터 출처: IPCC 제6차 평가보고서 배출 계수",
+    },
   },
-  "esg_verify": {
-    "title": "수동 확인",
-    "preview": "미리보기",
-    "ai_confidence": "AI 신뢰도",
-    "no_image": "미리보기 이미지 없음",
-    "form": {
-      "date": "날짜",
-      "scope": "스코프",
-      "scope_1": "스코프 1 (직접 배출)",
-      "scope_2": "스코프 2 (간접 배출)",
-      "scope_3": "스코프 3 (기타 간접 배출)",
-      "activity_type": "활동 유형",
-      "vendor": "공급업체 / 대상",
-      "raw_data": "원시 활동 데이터",
-      "unit": "단위",
-      "emissions": "계산된 배출량 (kgCO2e)",
-      "intensity": "강도 분류",
-      "intensity_low": "저강도",
-      "intensity_medium": "중강도",
-      "intensity_high": "고강도"
+  esg_verify: {
+    title: "수동 확인",
+    preview: "미리보기",
+    ai_confidence: "AI 신뢰도",
+    no_image: "미리보기 이미지 없음",
+    form: {
+      date: "날짜",
+      scope: "스코프",
+      scope_1: "스코프 1 (직접 배출)",
+      scope_2: "스코프 2 (간접 배출)",
+      scope_3: "스코프 3 (기타 간접 배출)",
+      activity_type: "활동 유형",
+      vendor: "공급업체 / 대상",
+      raw_data: "원시 활동 데이터",
+      unit: "단위",
+      emissions: "계산된 배출량 (kgCO2e)",
+      intensity: "강도 분류",
+      intensity_low: "저강도",
+      intensity_medium: "중강도",
+      intensity_high: "고강도",
     },
-    "messages": {
-      "fetch_error": "전표를 가져오지 못했습니다",
-      "deleted_warning": "삭제된 전표는 편집할 수 없습니다"
+    messages: {
+      fetch_error: "전표를 가져오지 못했습니다",
+      deleted_warning: "삭제된 전표는 편집할 수 없습니다",
     },
-    "status": {
-      "pending": "확인 대기 중",
-      "verified": "확인됨"
+    status: {
+      pending: "확인 대기 중",
+      verified: "확인됨",
     },
-    "sections": {
-      "preview": "영수증 미리보기",
-      "basic_info": "기본 정보",
-      "accounting_entries": "회계 분개"
+    sections: {
+      preview: "영수증 미리보기",
+      basic_info: "기본 정보",
+      accounting_entries: "회계 분개",
     },
-    "validation": {
-      "empty_fields": "날짜 또는 유형이 비어 있습니다",
-      "unbalanced": "대차가 일치하지 않습니다",
-      "empty_rows": "분개가 비어 있습니다",
-      "incomplete_row": "비어 있는 계정이나 금액이 있습니다"
+    validation: {
+      empty_fields: "날짜 또는 유형이 비어 있습니다",
+      unbalanced: "대차가 일치하지 않습니다",
+      empty_rows: "분개가 비어 있습니다",
+      incomplete_row: "비어 있는 계정이나 금액이 있습니다",
     },
-    "balance_check": {
-      "title": "대차 대조 확인",
-      "balanced": "일치함",
-      "unbalanced": "불일치"
+    balance_check: {
+      title: "대차 대조 확인",
+      balanced: "일치함",
+      unbalanced: "불일치",
     },
-    "actions": {
-      "cancel_edit": "편집 취소",
-      "verify_save": "확인 및 저장",
-      "save_only": "수정 내용만 저장",
-      "add_row": "분개 추가",
-      "cancel": "취소",
-      "save_and_verify": "저장 및 확인"
+    actions: {
+      cancel_edit: "편집 취소",
+      save_only: "수정 내용만 저장",
+      save_and_verify: "저장 및 확인",
+      unverify: "미확인 상태로 되돌리기",
     },
-    "close_confirm": {
-      "title": "저장하지 않고 닫으시겠습니까?",
-      "message": "저장되지 않은 변경 사항이 손실됩니다. 계속하시겠습니까?",
-      "confirm": "나가기",
-      "cancel": "취소"
+    close_confirm: {
+      title: "저장하지 않고 닫으시겠습니까?",
+      message: "저장되지 않은 변경 사항이 손실됩니다. 계속하시겠습니까?",
+      confirm: "나가기",
+      cancel: "취소",
     },
-    "save_confirm": {
-      "title": "저장하시겠습니까?",
-      "message": "수행한 ESG 기록 확인 변경 사항을 저장하려고 합니다. 데이터가 올바른지 확인하십시오.",
-      "confirm": "저장 확인",
-      "cancel": "취소",
-      "success": "검증 데이터가 저장되었습니다"
-    }
+    save_confirm: {
+      title: "저장하시겠습니까?",
+      message:
+        "수행한 ESG 기록 확인 변경 사항을 저장하려고 합니다. 데이터가 올바른지 확인하십시오.",
+      confirm: "저장 확인",
+      cancel: "취소",
+      success: "검증 데이터가 저장되었습니다",
+    },
   },
-  "esg_target": {
-    "select_industry": "산업 범주",
-    "ind_power": "전력 및 에너지",
-    "ind_steel": "철강 및 금속",
-    "ind_cement": "시멘트 및 건축 자재",
-    "ind_petro": "석유화학 및 플라스틱",
-    "ind_semiconductor": "반도체",
-    "ind_transport": "운송 및 물류",
-    "ind_retail": "소매 및 일상용품",
-    "ind_telecom": "통신 및 인터넷",
-    "btn": "연간 목표 설정",
-    "yoy_reduction": "전년 대비 {{percent}}% 감소",
-    "yoy_increase": "전년 대비 {{percent}}% 증가",
-    "yoy_same": "전년과 동일",
-    "target_estimation": "올해 목표는 대략 {{global_rank}}, {{industry_rank}} 수준입니다",
-    "industry_classification": "산업 분류: {{industry}}",
-    "industry_rank": "산업 상위 {{rank}}%",
-    "global_rank": "대만 전체 상위 {{rank}}%",
-    "unsaved_changes_warning": "저장되지 않은 변경 사항이 있습니다. 정말 나가시겠습니까?",
-    "unsaved_changes_title": "닫기 확인",
-    "target_total_emissions": "목표 총 배출량 (tCO2e)",
-    "target_revenue_emissions": "목표 매출 단위당 배출량 (tCO2e)",
-    "title": "연간 탄소 배출 목표 설정",
-    "past_records": "과거 탄소 배출 기록",
-    "year": "연도",
-    "emissions": "배출량 (tCO2e)",
-    "revenue": "수익 (만 원)",
-    "intensity": "강도",
-    "set_target_intensity": "올해 목표 강도 설정",
-    "target_placeholder": "목표 강도 입력",
-    "target_unit": "tCO2e / 만 TWD 매출",
-    "reduction_from_last_year": "작년 대비",
-    "decrease": "감축",
-    "increase": "증가",
-    "taiwan_ranking": "대만 기업 상위",
-    "industry_ranking": "동종 업계 상위",
-    "save": "설정 저장"
+  esg_target: {
+    select_industry: "산업 범주",
+    ind_power: "전력 및 에너지",
+    ind_steel: "철강 및 금속",
+    ind_cement: "시멘트 및 건축 자재",
+    ind_petro: "석유화학 및 플라스틱",
+    ind_semiconductor: "반도체",
+    ind_transport: "운송 및 물류",
+    ind_retail: "소매 및 일상용품",
+    ind_telecom: "통신 및 인터넷",
+    btn: "연간 목표 설정",
+    yoy_reduction: "전년 대비 {{percent}}% 감소",
+    yoy_increase: "전년 대비 {{percent}}% 증가",
+    yoy_same: "전년과 동일",
+    target_estimation:
+      "올해 목표는 대략 {{global_rank}}, {{industry_rank}} 수준입니다",
+    industry_classification: "산업 분류: {{industry}}",
+    industry_rank: "산업 상위 {{rank}}%",
+    global_rank: "대만 전체 상위 {{rank}}%",
+    unsaved_changes_warning:
+      "저장되지 않은 변경 사항이 있습니다. 정말 나가시겠습니까?",
+    unsaved_changes_title: "닫기 확인",
+    target_total_emissions: "목표 총 배출량 (tCO2e)",
+    target_revenue_emissions: "목표 매출 단위당 배출량 (tCO2e)",
+    title: "연간 탄소 배출 목표 설정",
+    past_records: "과거 탄소 배출 기록",
+    year: "연도",
+    emissions: "배출량 (tCO2e)",
+    revenue: "수익 (만 원)",
+    intensity: "강도",
+    set_target_intensity: "올해 목표 강도 설정",
+    target_placeholder: "목표 강도 입력",
+    target_unit: "tCO2e / 만 TWD 매출",
+    reduction_from_last_year: "작년 대비",
+    decrease: "감축",
+    increase: "증가",
+    taiwan_ranking: "대만 기업 상위",
+    industry_ranking: "동종 업계 상위",
+    save: "설정 저장",
   },
-  "voucher": {
-    "account_book_selector": {
-      "title": "계정 선택",
-      "all": "전체",
-      "search_placeholder": "계정 코드나 이름을 검색하세요...",
-      "no_results": "일치하는 계정이 없습니다"
+  voucher: {
+    account_book_selector: {
+      title: "계정 선택",
+      all: "전체",
+      search_placeholder: "계정 코드나 이름을 검색하세요...",
+      no_results: "일치하는 계정이 없습니다",
     },
-    "main_view": {
-      "title": "스마트 전표 관리",
-      "subtitle": "AI가 영수증 인식 결과를 바탕으로 회계 분개를 자동 생성했습니다.",
-      "actions": {
-        "export": "전표 내보내기",
-        "add": "전표 추가"
+    main_view: {
+      title: "스마트 전표 관리",
+      subtitle:
+        "AI가 영수증 인식 결과를 바탕으로 회계 분개를 자동 생성했습니다.",
+      actions: {
+        export: "전표 내보내기",
+        add: "전표 추가",
       },
-      "filters": {
-        "type": "항목 유형",
-        "type_options": {
-          "all": "전체",
-          "payment": "지불",
-          "receipt": "수취",
-          "transfer": "이체"
+      filters: {
+        type: "항목 유형",
+        type_options: {
+          all: "전체",
+          payment: "지불",
+          receipt: "수취",
+          transfer: "이체",
         },
-        "period": "기간",
-        "search": "전표 번호, 계정 코드 검색...",
-        "hide_deleted": "삭제된 전표 및 취소 기록 숨기기",
-        "currency": "통화: {currency}"
+        period: "기간",
+        search: "전표 번호, 계정 코드 검색...",
+        hide_deleted: "삭제된 전표 및 취소 기록 숨기기",
+        currency: "통화: {currency}",
       },
-      "table": {
-        "types": {
-          "outcome": "출금 전표",
-          "income": "입금 전표",
-          "transfer": "이체 전표",
-          "unknown": "알 수 없는 전표"
+      table: {
+        types: {
+          outcome: "출금 전표",
+          income: "입금 전표",
+          transfer: "이체 전표",
+          unknown: "알 수 없는 전표",
         },
-        "status": {
-          "verified": "확인됨",
-          "manual": "수동 확인",
-          "deleted": "삭제됨"
+        status: {
+          verified: "확인됨",
+          manual: "수동 확인",
+          deleted: "삭제됨",
         },
-        "headers": {
-          "receipt": "영수증",
-          "voucher_date": "전표일자",
-          "voucher_type_id": "전표 유형 및 번호",
-          "accounting_entries": "회계 분개",
-          "debit": "차변 금액",
-          "credit": "대변 금액",
-          "confidence": "AI 신뢰도",
-          "status": "상태"
+        headers: {
+          receipt: "영수증",
+          voucher_date: "전표일자",
+          voucher_type_id: "전표 유형 및 번호",
+          accounting_entries: "회계 분개",
+          debit: "차변 금액",
+          credit: "대변 금액",
+          confidence: "AI 신뢰도",
+          status: "상태",
         },
-        "no_file": "파일 없음",
-        "filter_btn": "필터",
-        "verify_all": "일괄 확인",
-        "no_data": "현재 전표 데이터가 없습니다."
-      }
+        no_file: "파일 없음",
+        filter_btn: "필터",
+        verify_all: "일괄 확인",
+        no_data: "현재 전표 데이터가 없습니다.",
+      },
     },
-    "summary": {
-      "empty_prefix": "현재 전표 데이터가 없습니다. 먼저 ",
-      "empty_link": "전표 추가",
-      "today_count": "오늘 생성된 전표",
-      "unit": " 건",
-      "month_total": "당월 누적 금액",
-      "pending": "확인 대기 중",
-      "ai_confidence": "AI 평균 신뢰도"
+    summary: {
+      empty_prefix: "현재 전표 데이터가 없습니다. 먼저 ",
+      empty_link: "전표 추가",
+      today_count: "오늘 생성된 전표",
+      unit: " 건",
+      month_total: "당월 누적 금액",
+      pending: "확인 대기 중",
+      ai_confidence: "AI 평균 신뢰도",
     },
-    "detail_modal": {
-      "title": "전표 편집",
-      "messages": {
-        "fetch_error": "전표를 가져오지 못했습니다",
-        "deleted_warning": "삭제된 전표는 편집할 수 없습니다"
+    detail_modal: {
+      title: "전표 편집",
+      messages: {
+        fetch_error: "전표를 가져오지 못했습니다",
+        deleted_warning: "삭제된 전표는 편집할 수 없습니다",
       },
-      "status": {
-        "pending": "확인 대기 중",
-        "verified": "확인됨"
+      status: {
+        pending: "확인 대기 중",
+        verified: "확인됨",
       },
-      "sections": {
-        "preview": "영수증 미리보기",
-        "basic_info": "기본 정보",
-        "accounting_entries": "회계 분개"
+      sections: {
+        preview: "영수증 미리보기",
+        basic_info: "기본 정보",
+        accounting_entries: "회계 분개",
       },
-      "fields": {
-        "confidence": "AI 신뢰도",
-        "voucher_no": "전표 번호",
-        "voucher_no_placeholder": "전표 번호 입력",
-        "account_code_name": "계정 코드 / 이름",
-        "total_amount": "총 금액",
-        "voucher_date": "전표 일자",
-        "voucher_type": "전표 유형",
-        "accounting_select": "계정 선택",
-        "particular": "적요",
-        "debit": "차변",
-        "credit": "대변"
+      fields: {
+        confidence: "AI 신뢰도",
+        voucher_no: "전표 번호",
+        voucher_no_placeholder: "전표 번호 입력",
+        account_code_name: "계정 코드 / 이름",
+        total_amount: "총 금액",
+        voucher_date: "전표 일자",
+        voucher_type: "전표 유형",
+        accounting_select: "계정 선택",
+        particular: "적요",
+        debit: "차변",
+        credit: "대변",
       },
-      "validation": {
-        "empty_fields": "날짜 또는 유형이 비어 있습니다",
-        "unbalanced": "대차가 일치하지 않습니다",
-        "empty_rows": "분개가 비어 있습니다",
-        "incomplete_row": "비어 있는 계정이나 금액이 있습니다"
+      validation: {
+        empty_fields: "날짜 또는 유형이 비어 있습니다",
+        unbalanced: "대차가 일치하지 않습니다",
+        empty_rows: "분개가 비어 있습니다",
+        incomplete_row: "비어 있는 계정이나 금액이 있습니다",
       },
-      "balance_check": {
-        "title": "대차 대조 확인",
-        "balanced": "일치함",
-        "unbalanced": "불일치"
+      balance_check: {
+        title: "대차 대조 확인",
+        balanced: "일치함",
+        unbalanced: "불일치",
       },
-      "actions": {
-        "cancel_edit": "편집 취소",
-        "verify_save": "확인 및 저장",
-        "save_only": "수정 내용만 저장",
-        "add_row": "분개 추가",
-        "clear_all": "모두 지우기",
-        "save_voucher": "전표 저장",
-        "confirm": "확인",
-        "cancel": "취소"
+      actions: {
+        cancel_edit: "편집 취소",
+        verify_save: "확인 및 저장",
+        unverify: "미확인 상태로 되돌리기",
+        save_only: "수정 내용만 저장",
+        add_row: "분개 추가",
+        clear_all: "모두 지우기",
+        save_voucher: "전표 저장",
+        confirm: "확인",
+        cancel: "취소",
       },
-      "confirm_modals": {
-        "clear_all": {
-          "title": "모두 지우기",
-          "message": "모든 데이터를 지우시겠습니까?"
+      confirm_modals: {
+        clear_all: {
+          title: "모두 지우기",
+          message: "모든 데이터를 지우시겠습니까?",
         },
-        "leave_without_saving": {
-          "title": "저장하지 않고 종료",
-          "message": "변경 사항을 삭제하고 종료하시겠습니까?"
+        leave_without_saving: {
+          title: "저장하지 않고 종료",
+          message: "변경 사항을 삭제하고 종료하시겠습니까?",
         },
-        "save_voucher": {
-          "title": "전표 저장",
-          "message": "전표를 저장하시겠습니까?"
-        }
-      }
+        save_voucher: {
+          title: "전표 저장",
+          message: "전표를 저장하시겠습니까?",
+        },
+      },
     },
-    "esg_industry_benchmarks": {
-      "spectrum": {
-        "extremely_high": "극도로 높은 탄소",
-        "very_high": "매우 높은 탄소",
-        "high": "고탄소",
-        "mid_high": "중고탄소",
-        "medium": "중간",
-        "mid_low": "중저탄소",
-        "extremely_low": "극도로 낮은 탄소"
+    esg_industry_benchmarks: {
+      spectrum: {
+        extremely_high: "극도로 높은 탄소",
+        very_high: "매우 높은 탄소",
+        high: "고탄소",
+        mid_high: "중고탄소",
+        medium: "중간",
+        mid_low: "중저탄소",
+        extremely_low: "극도로 낮은 탄소",
       },
-      "industry_1": {
-        "name": "석유화학 공업",
-        "desc": "높음: 폼모사 페트로케미칼 (3,650 kg) 차이 이유: 기초 나프타 분해 및 자가 석탄 발전소로 인한 불가피한 막대한 화학 물질 누출 및 화석 연료 연소."
+      industry_1: {
+        name: "석유화학 공업",
+        desc: "높음: 폼모사 페트로케미칼 (3,650 kg) 차이 이유: 기초 나프타 분해 및 자가 석탄 발전소로 인한 불가피한 막대한 화학 물질 누출 및 화석 연료 연소.",
       },
-      "industry_2": {
-        "name": "시멘트 공업",
-        "desc": "높음: 아시아 시멘트 (2,883 kg) 차이 이유: 석회석의 고온 소성(직접 CO2 방출)이 큰 비율을 차지하며, 부동산 침체로 인한 수익 분모 축소에 민감함."
+      industry_2: {
+        name: "시멘트 공업",
+        desc: "높음: 아시아 시멘트 (2,883 kg) 차이 이유: 석회석의 고온 소성(직접 CO2 방출)이 큰 비율을 차지하며, 부동산 침체로 인한 수익 분모 축소에 민감함.",
       },
-      "industry_3": {
-        "name": "전력 및 에너지",
-        "desc": "높음: 마일리아오 발전 (2,657 kg) / 낮음: 대만 전력 (1,068 kg) 차이 이유: 마일리아오는 100% 석탄 발전; 대만 전력은 원자력, 수력, 천연가스 등을 통해 탄소 집약도를 크게 희석함."
+      industry_3: {
+        name: "전력 및 에너지",
+        desc: "높음: 마일리아오 발전 (2,657 kg) / 낮음: 대만 전력 (1,068 kg) 차이 이유: 마일리아오는 100% 석탄 발전; 대만 전력은 원자력, 수력, 천연가스 등을 통해 탄소 집약도를 크게 희석함.",
       },
-      "industry_4": {
-        "name": "철강 공업",
-        "desc": "높음: 차이나 스틸 (520 kg) / 낮음: 텅호 스틸 (126 kg) 차이 이유: 전통 고로는 석탄 환원이 필요하지만 전기로는 재활용 고철을 전력으로 용해하여 환원 탄소를 70% 이상 절감함."
+      industry_4: {
+        name: "철강 공업",
+        desc: "높음: 차이나 스틸 (520 kg) / 낮음: 텅호 스틸 (126 kg) 차이 이유: 전통 고로는 석탄 환원이 필요하지만 전기로는 재활용 고철을 전력으로 용해하여 환원 탄소를 70% 이상 절감함.",
       },
-      "industry_5": {
-        "name": "해운 및 운송업",
-        "desc": "높음: 원양 컨테이너 해운 / 낮음: 육상 운송 및 고속철도 차이 이유: 중유를 태우는 거대 선박은 스코프 1의 주요 배출원이며 운임 시세의 영향을 크게 받음; 철도는 전철화율이 높아 우수함."
+      industry_5: {
+        name: "해운 및 운송업",
+        desc: "높음: 원양 컨테이너 해운 / 낮음: 육상 운송 및 고속철도 차이 이유: 중유를 태우는 거대 선박은 스코프 1의 주요 배출원이며 운임 시세의 영향을 크게 받음; 철도는 전철화율이 높아 우수함.",
       },
-      "industry_6": {
-        "name": "통신 네트워크업",
-        "desc": "높음: 청화 텔레콤 (271.8 kg) 차이 이유: '공장이 없으면 저탄소'라는 신화를 깸. 24시간 가동되는 5G 기지국과 데이터 센터(IDC) 냉각기는 엄청난 전력 소비 괴물임."
+      industry_6: {
+        name: "통신 네트워크업",
+        desc: "높음: 청화 텔레콤 (271.8 kg) 차이 이유: '공장이 없으면 저탄소'라는 신화를 깸. 24시간 가동되는 5G 기지국과 데이터 센터(IDC) 냉각기는 엄청난 전력 소비 괴물임.",
       },
-      "industry_7": {
-        "name": "섬유 및 화학 섬유",
-        "desc": "낮음: 원동 신세기 (59.2 kg) 차이 이유: 전통 염색 공장은 에너지와 물 소비가 극심하나, 페트병 재활용(R-PET) 기술과 다각적 수익으로 중공업의 숙명을 뒤집음."
+      industry_7: {
+        name: "섬유 및 화학 섬유",
+        desc: "낮음: 원동 신세기 (59.2 kg) 차이 이유: 전통 염색 공장은 에너지와 물 소비가 극심하나, 페트병 재활용(R-PET) 기술과 다각적 수익으로 중공업의 숙명을 뒤집음.",
       },
-      "industry_8": {
-        "name": "반도체 제조",
-        "desc": "높음: TSMC (50.1 kg) 차이 이유: EUV 장비 및 클린룸의 막대한 전력 소비(스코프 2)가 배출량을 늘리지만, 초고가 칩 스펙과 방대한 친환경 전력 구매로 집약도를 낮춤."
+      industry_8: {
+        name: "반도체 제조",
+        desc: "높음: TSMC (50.1 kg) 차이 이유: EUV 장비 및 클린룸의 막대한 전력 소비(스코프 2)가 배출량을 늘리지만, 초고가 칩 스펙과 방대한 친환경 전력 구매로 집약도를 낮춤.",
       },
-      "industry_9": {
-        "name": "소매 및 전자상거래",
-        "desc": "높음: 세븐일레븐 (37.6 kg) / 낮음: 모모 (약 23 kg) 차이 이유: 오프라인 매장은 24시간 에어컨과 개방형 냉장고로 제한됨; 이커머스는 매장이 없으나 물류 차량과 자동화 창고 배출을 부담함."
+      industry_9: {
+        name: "소매 및 전자상거래",
+        desc: "높음: 세븐일레븐 (37.6 kg) / 낮음: 모모 (약 23 kg) 차이 이유: 오프라인 매장은 24시간 에어컨과 개방형 냉장고로 제한됨; 이커머스는 매장이 없으나 물류 차량과 자동화 창고 배출을 부담함.",
       },
-      "industry_10": {
-        "name": "지식 및 금융 (IC설계/SW/금융)",
-        "desc": "높음: 은행 (약 1.5 kg) / 낮음: 미디어텍 (1.86 kg) 차이 이유: 두뇌와 자본에 의존. 미디어텍은 제조를 외주화함; 금융업은 사무실 전력만 쓰나, 매출 탄소 비율에 계산되지 않은 막대한 '금융 배출량'이 숨어 있음."
-      }
-    }
-  }
+      industry_10: {
+        name: "지식 및 금융 (IC설계/SW/금융)",
+        desc: "높음: 은행 (약 1.5 kg) / 낮음: 미디어텍 (1.86 kg) 차이 이유: 두뇌와 자본에 의존. 미디어텍은 제조를 외주화함; 금융업은 사무실 전력만 쓰나, 매출 탄소 비율에 계산되지 않은 막대한 '금융 배출량'이 숨어 있음.",
+      },
+    },
+  },
 };

@@ -28,17 +28,19 @@ export default function EsgMainView() {
 
   useEffect(() => {
     if (accountBookId) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      request(`/api/v1/user/account_book/${accountBookId}`).then((res: any) => {
-        if (res.payload) {
-          setAccountBook(res.payload);
-          if (res.payload.createdAt) {
-            const createdAt = new Date(res.payload.createdAt);
-            setStartYear(createdAt.getFullYear());
-            setStartMonth(createdAt.getMonth() + 1);
+      request(`/api/v1/user/account_book/${accountBookId}`)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .then((res: any) => {
+          if (res.payload) {
+            setAccountBook(res.payload);
+            if (res.payload.createdAt) {
+              const createdAt = new Date(res.payload.createdAt);
+              setStartYear(createdAt.getFullYear());
+              setStartMonth(createdAt.getMonth() + 1);
+            }
           }
-        }
-      }).catch(err => console.error(err));
+        })
+        .catch((err) => console.error(err));
     }
   }, [accountBookId]);
 
@@ -47,12 +49,11 @@ export default function EsgMainView() {
 
   let months = Array.from({ length: 12 }, (_, i) => i + 1);
   if (selectedYear === currentYear) {
-    months = months.filter(m => m <= currentMonth);
+    months = months.filter((m) => m <= currentMonth);
   }
   if (selectedYear === startYear) {
-    months = months.filter(m => m >= startMonth);
+    months = months.filter((m) => m >= startMonth);
   }
-
 
   return (
     <div className="flex max-w-[calc(100vw-30px)] flex-col space-y-6 px-0 md:px-12">
@@ -71,7 +72,7 @@ export default function EsgMainView() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
           >
             {years.map((y) => (
               <option key={y} value={y}>
@@ -81,8 +82,10 @@ export default function EsgMainView() {
           </select>
           <select
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value ? Number(e.target.value) : "")}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            onChange={(e) =>
+              setSelectedMonth(e.target.value ? Number(e.target.value) : "")
+            }
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
           >
             <option value="">{t("esg_main.all_year")}</option>
             {months.map((m) => (
@@ -94,12 +97,11 @@ export default function EsgMainView() {
           <button
             type="button"
             onClick={() => setIsTargetModalOpen(true)}
-            className="flex items-center rounded-lg bg-[#FF5A1F] px-5 py-2 text-sm font-medium text-white hover:bg-[#E04914] transition-all focus:outline-none"
+            className="flex items-center rounded-lg bg-[#FF5A1F] px-5 py-2 text-sm font-medium text-white transition-all hover:bg-[#E04914] focus:outline-none"
           >
             <Target className="mr-2 h-4 w-4" />
             {t("esg_target.btn")}
           </button>
-
         </div>
       </div>
 

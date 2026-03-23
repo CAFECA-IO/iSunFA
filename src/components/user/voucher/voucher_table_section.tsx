@@ -2,12 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import {
-  ChevronUp,
-  ChevronDown,
-  Search,
-  Filter,
-} from "lucide-react";
+import { ChevronUp, ChevronDown, Search, Filter } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -40,7 +35,8 @@ export default function VoucherTableSection() {
   const [debouncedKeyWord, setDebouncedKeyWord] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] = useState<boolean>(false);
+  const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
+    useState<boolean>(false);
   const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
     null,
   );
@@ -127,11 +123,11 @@ export default function VoucherTableSection() {
       for (const pv of pendingVouchers) {
         try {
           const { payload } = await request<IApiResponse<{ result: IVoucher }>>(
-            `/api/v1/user/account_book/${accountBookId}/voucher/${pv.id}`
+            `/api/v1/user/account_book/${accountBookId}/voucher/${pv.id}`,
           );
           if (payload?.result) {
             setVouchers((prev) =>
-              prev.map((old) => (old.id === pv.id ? payload.result : old))
+              prev.map((old) => (old.id === pv.id ? payload.result : old)),
             );
           }
         } catch (error) {
@@ -183,7 +179,7 @@ export default function VoucherTableSection() {
       setIsLoading(true);
       await request(
         `/api/v1/user/account_book/${accountBookId}/voucher/verify_all`,
-        { method: "PUT" }
+        { method: "PUT" },
       );
       fetchVouchers();
     } catch (error) {
