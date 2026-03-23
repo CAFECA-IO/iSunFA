@@ -15,7 +15,9 @@ import {
   PencilIcon,
   SaveIcon,
   UndoIcon,
-  TrashIcon,
+  CheckCircle2,
+  Save,
+  // TrashIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
@@ -31,7 +33,7 @@ interface IJournalDetailModalProps {
   onClose: () => void;
   journal: IJournal | null;
   onUpdate: (updatedJournal: IJournal) => void;
-  onDelete: (journal: IJournal) => void;
+  // onDelete: (journal: IJournal) => void;
 }
 
 export default function JournalDetailModal({
@@ -39,7 +41,7 @@ export default function JournalDetailModal({
   onClose,
   journal,
   onUpdate,
-  onDelete,
+  // onDelete,
 }: IJournalDetailModalProps) {
   const { t } = useTranslation();
   const params = useParams();
@@ -171,7 +173,7 @@ export default function JournalDetailModal({
                             filename: journal.file.fileName || "Unknown",
                           }}
                           fileId={journal.file.hash}
-                          className="object-contain size-full"
+                          className="size-full object-contain"
                         />
                       )}
                     </ZoomablePreview>
@@ -235,8 +237,8 @@ export default function JournalDetailModal({
                           </div>
                         )}
                       </div>
-
-                      <div className="mt-4 ml-auto">
+                      {/* ToDo: (20260323 - Julian) 先隱藏刪除按鈕 */}
+                      {/* <div className="mt-4 ml-auto">
                         <button
                           type="button"
                           onClick={() => onDelete(journal)}
@@ -245,6 +247,48 @@ export default function JournalDetailModal({
                           <TrashIcon size={14} />
                           {t("ocr.delete")}
                         </button>
+                      </div> */}
+                      {/* Info: (20260324 - Julian) Footer Actions */}
+                      <div className="flex items-center justify-between py-5">
+                        <button
+                          type="button"
+                          // onClick={() => setIsClearModalOpen(true)}
+                          className="px-4 text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
+                        >
+                          {t("voucher.detail_modal.actions.cancel_edit")}
+                        </button>
+                        <div className="flex items-center gap-3">
+                          {journal.isVerified ? (
+                            <button
+                              type="button"
+                              // disabled={disabledSaveButton || isSaving}
+                              // onClick={() => setIsUnverifyModalOpen(true)}
+                              className="flex h-10 items-center gap-2 rounded-xl bg-red-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:bg-slate-300"
+                            >
+                              <X size={16} className="stroke-3" />
+                              {t("voucher.detail_modal.actions.unverify")}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              // disabled={disabledSaveButton || isSaving}
+                              // onClick={() => saveVoucher(true)}
+                              className="flex h-10 items-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:bg-slate-300"
+                            >
+                              <CheckCircle2 size={16} className="stroke-3" />
+                              {t("voucher.detail_modal.actions.verify_save")}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            // disabled={disabledSaveButton || isSaving}
+                            // onClick={() => saveVoucher(activeVoucher?.isVerified)}
+                            className="flex h-10 items-center gap-2 rounded-xl bg-orange-500 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 disabled:bg-slate-300"
+                          >
+                            <Save size={16} className="stroke-3" />
+                            {t("voucher.detail_modal.actions.save_only")}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

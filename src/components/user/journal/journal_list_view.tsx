@@ -144,12 +144,12 @@ export default function JournalListView() {
     const intervalId = setInterval(async () => {
       for (const pj of pendingJournals) {
         try {
-          const { payload } = await request<IApiResponse<{ journal: IJournal }>>(
-            `/api/v1/user/account_book/${accountBookId}/journal/${pj.id}`
-          );
+          const { payload } = await request<
+            IApiResponse<{ journal: IJournal }>
+          >(`/api/v1/user/account_book/${accountBookId}/journal/${pj.id}`);
           if (payload?.journal) {
             setJournals((prev) =>
-              prev.map((old) => (old.id === pj.id ? payload.journal : old))
+              prev.map((old) => (old.id === pj.id ? payload.journal : old)),
             );
           }
         } catch (error) {
@@ -302,7 +302,7 @@ export default function JournalListView() {
         onClose={() => setIsModalOpen(false)}
         journal={selectedJournal}
         onUpdate={handleJournalUpdate}
-        onDelete={handleDeleteClick}
+        // onDelete={handleDeleteClick}
       />
 
       {/* Info: (20260305 - Julian) Delete Confirmation Modal */}

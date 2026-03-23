@@ -187,11 +187,11 @@ export default function VoucherDetailModal({
       const fetchVoucher = async () => {
         setIsLoading(true);
         try {
-          const res = await request<IApiResponse<{ result: IVoucher }>>(
+          const res = await request<IApiResponse<IVoucher>>(
             `/api/v1/user/account_book/${accountBookId}/voucher/${voucherId}`,
           );
-          if (res.payload?.result) {
-            const v = res.payload.result;
+          if (res.payload) {
+            const v = res.payload;
             setActiveVoucher(v);
             setInputDate(v.tradingDate * 1000);
             setVoucherType(v.tradingType);
@@ -327,14 +327,14 @@ export default function VoucherDetailModal({
         rows,
         isVerified: finalVerify,
       };
-      const res = await request<IApiResponse<{ voucher: IVoucher }>>(
+      const res = await request<IApiResponse<IVoucher>>(
         `/api/v1/user/account_book/${accountBookId}/voucher/${voucherId}`,
         {
           method: "PUT",
           body: JSON.stringify(payload),
         },
       );
-      if (res.code === ApiCode.SUCCESS || res.payload?.voucher) {
+      if (res.code === ApiCode.SUCCESS || res.payload) {
         setIsSaveModalOpen(false);
         onClose();
       } else {

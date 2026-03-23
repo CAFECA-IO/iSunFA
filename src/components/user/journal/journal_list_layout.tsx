@@ -18,13 +18,19 @@ const JournalListItem = ({
 
   const isAnalysisFailed = journal.analysisStatus === AIAnalysisStatus.FAILED;
 
-  const formattedDate = timestampToString(journal.tradingTimestamp).dateWithDash;
-  const formattedID = <span className="w-[100px] inline-block whitespace-nowrap overflow-hidden text-ellipsis">{journal.id}</span>
+  const formattedDate = timestampToString(
+    journal.tradingTimestamp,
+  ).dateWithDash;
+  const formattedID = (
+    <span className="inline-block w-[100px] overflow-hidden text-ellipsis whitespace-nowrap">
+      {journal.id}
+    </span>
+  );
 
   // Info: (20260320 - Julian) 尚未開始
   if (journal.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
-      <tr className="border-b border-slate-300 text-slate-400 last:border-0 bg-white">
+      <tr className="border-b border-slate-300 bg-white text-slate-400 last:border-0">
         <td className="w-[150px] px-3 py-2 align-middle sm:px-6">
           <div className="flex size-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50 p-1 sm:h-20 sm:w-20">
             <Loader2 className="size-4 animate-spin text-orange-400 sm:size-6" />
@@ -36,7 +42,10 @@ const JournalListItem = ({
         <td className="px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
           {formattedID}
         </td>
-        <td colSpan={3} className="px-3 py-2 align-middle text-xs sm:px-6 sm:text-sm">
+        <td
+          colSpan={3}
+          className="px-3 py-2 align-middle text-xs sm:px-6 sm:text-sm"
+        >
           <span className="flex items-center gap-2 italic">
             <Loader2 className="size-4 animate-spin text-orange-400 sm:size-6" />
             AI Analyzing...
@@ -111,20 +120,36 @@ const JournalListItem = ({
         {formattedDate}
       </td>
       {/* Info: (20260323 - Julian) ID */}
-      <td className="px-3 py-2 align-middle font-medium whitespace-nowrap text-slate-700 sm:px-6">
+      <td
+        aria-label={t("ocr.id")}
+        className="px-3 py-2 align-middle font-medium whitespace-nowrap text-slate-700 sm:px-6"
+      >
         {formattedID}
       </td>
       {/* Info: (20260320 - Julian) Content */}
       <td className="px-3 py-2 align-middle text-xs text-slate-700 sm:px-6 sm:text-sm">
-        <pre className="line-clamp-1 whitespace-break-spaces sm:whitespace-normal">
+        <pre className="line-clamp-2 whitespace-break-spaces sm:whitespace-normal">
           {journal.text}
         </pre>
       </td>
       {/* Info: (20260323 - Julian) Confidence */}
-      <td className="px-3 py-2 text-right sm:px-6">
-        {`journal.confidence`}
+      <td
+        aria-label={t("ocr.confidence")}
+        className="px-3 py-2 text-right sm:px-6"
+      >
+        <div className="flex flex-col-reverse items-center justify-center gap-x-3 gap-y-1 lg:flex-row">
+          <div className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-slate-200">
+            <div
+              className={`h-full rounded-full ${journal.confidence >= 80 ? "bg-emerald-400" : "bg-orange-500"}`}
+              style={{ width: `${journal.confidence}%` }}
+            ></div>
+          </div>
+          <span className="text-sm font-black whitespace-nowrap text-slate-700">
+            {journal.confidence}%
+          </span>
+        </div>
       </td>
-        {/* Info: (20260316 - Julian) Status */}
+      {/* Info: (20260316 - Julian) Status */}
       <td
         aria-label="Status"
         className="p-2 text-center align-middle lg:px-6 lg:py-4"
@@ -177,11 +202,7 @@ const JournalListLayout = ({
   );
 
   const listLayout = journals.map((journal) => (
-    <JournalListItem
-      key={journal.id}
-      journal={journal}
-      onSelect={onSelect}
-    />
+    <JournalListItem key={journal.id} journal={journal} onSelect={onSelect} />
   ));
 
   return (
@@ -204,7 +225,7 @@ const JournalListLayout = ({
             <th className="bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">
               {t("ocr.confidence")}
             </th>
-               <th className="bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">
+            <th className="bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">
               {t("ocr.status")}
             </th>
           </tr>

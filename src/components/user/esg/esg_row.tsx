@@ -159,13 +159,13 @@ export function EsgRow({
   }
 
   return (
-    <tr 
+    <tr
       onClick={handleVerifyClick}
       className={`cursor-pointer transition-colors ${isAnalysisFailed ? "bg-red-200 hover:bg-red-300" : "bg-white hover:bg-orange-100"}`}
     >
       {/* Info: (20260320 - Julian) File */}
       <td className="p-2 lg:px-6 lg:py-4">
-        <div className="relative mx-auto flex size14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:size-16">
+        <div className="size14 relative mx-auto flex items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:size-16">
           {/* Info: (20260312 - Julian) File Preview */}
           {record.file ? (
             <FilePreview
@@ -241,9 +241,7 @@ export function EsgRow({
         {record.isVerified ? (
           <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 size={24} />
-            <span className="text-sm font-bold">
-              {t("esg_table.verified")}
-            </span>
+            <span className="text-sm font-bold">{t("esg_table.verified")}</span>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-1 text-orange-500">

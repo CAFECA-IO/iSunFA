@@ -10,7 +10,7 @@ import {
   Wand2,
   File as FileIcon,
   X,
-  Plus
+  Plus,
 } from "lucide-react";
 import { uploadFile, fileToBase64 } from "@/lib/file_operator";
 import { request } from "@/lib/utils/request";
@@ -82,7 +82,7 @@ export default function JournalUploadView({
             hash: hashInfo.hash,
             base64,
           });
-        })
+        }),
       );
       setUploadedFiles((prev) => [...prev, ...newUploads]);
     } catch (error) {
@@ -107,7 +107,7 @@ export default function JournalUploadView({
           {
             method: "POST",
             body: JSON.stringify({ file: fileData }),
-          }
+          },
         );
         if (response.code === ApiCode.SUCCESS) {
           setAnalyzedCount((prev) => prev + 1);
@@ -181,12 +181,13 @@ export default function JournalUploadView({
 
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
-        className={`flex h-full min-h-[500px] flex-col rounded-2xl border-2 transition-colors lg:h-[calc(100vh-250px)] ${uploadedFiles.length > 0
-          ? "border-transparent bg-white shadow-[0_0_15px_rgba(0,0,0,0.05)] p-6 lg:p-10"
-          : isDragging
-            ? "items-center justify-center border-dashed border-orange-500 bg-orange-50 p-20 lg:p-[100px]"
-            : "items-center justify-center border-dashed border-slate-300 bg-white hover:border-orange-400 hover:bg-slate-50 p-20 lg:p-[100px]"
-          }`}
+        className={`flex h-full min-h-[500px] flex-col rounded-2xl border-2 transition-colors lg:h-[calc(100vh-250px)] ${
+          uploadedFiles.length > 0
+            ? "border-transparent bg-white p-6 shadow-[0_0_15px_rgba(0,0,0,0.05)] lg:p-10"
+            : isDragging
+              ? "items-center justify-center border-dashed border-orange-500 bg-orange-50 p-20 lg:p-[100px]"
+              : "items-center justify-center border-dashed border-slate-300 bg-white p-20 hover:border-orange-400 hover:bg-slate-50 lg:p-[100px]"
+        }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -218,19 +219,23 @@ export default function JournalUploadView({
         />
 
         {uploadedFiles.length > 0 ? (
-          <div className="flex h-full w-full flex-col animate-in fade-in zoom-in duration-300">
+          <div className="animate-in fade-in zoom-in flex h-full w-full flex-col duration-300">
             {/* Info: (20260321 - Luphia) Action Bar */}
             <div className="mb-6 flex flex-col items-start justify-between gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center">
               <div>
                 <h3 className="text-xl font-bold text-slate-800">
-                  {t("ocr.prepared_files_prefix")}{uploadedFiles.length}{t("ocr.prepared_files_suffix")}
+                  {t("ocr.prepared_files_prefix")}
+                  {uploadedFiles.length}
+                  {t("ocr.prepared_files_suffix")}
                 </h3>
-                <p className="mt-1 text-sm font-medium text-slate-500">{t("ocr.add_more_or_analyze")}</p>
+                <p className="mt-1 text-sm font-medium text-slate-500">
+                  {t("ocr.add_more_or_analyze")}
+                </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   onClick={(e) => {
                     e.stopPropagation();
                     setUploadedFiles([]);
@@ -242,7 +247,7 @@ export default function JournalUploadView({
                 </button>
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-semibold text-orange-600 shadow-sm transition-all hover:border-orange-300 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:ring-offset-2 disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-semibold text-orange-600 shadow-sm transition-all hover:border-orange-300 hover:bg-orange-100 focus:ring-2 focus:ring-orange-200 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
                   onClick={(e) => {
                     e.stopPropagation();
                     triggerFileInput();
@@ -254,7 +259,7 @@ export default function JournalUploadView({
                 </button>
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-orange-600 hover:shadow focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-orange-600 hover:shadow focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   onClick={handleAnalyzeAll}
                   disabled={isAnalyzing || isUploading}
                 >
@@ -274,11 +279,11 @@ export default function JournalUploadView({
                   <button
                     type="button"
                     onClick={(e) => removeFile(fileData.id, e)}
-                    className="absolute -right-2 -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 transition-all hover:text-red-500 hover:ring-red-200 hover:shadow focus:outline-none opacity-0 group-hover:opacity-100"
+                    className="absolute -top-2 -right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-400 opacity-0 shadow-sm ring-1 ring-slate-200 transition-all group-hover:opacity-100 hover:text-red-500 hover:shadow hover:ring-red-200 focus:outline-none"
                   >
                     <X className="h-4 w-4" />
                   </button>
-                  <div className="relative flex h-32 w-full items-center justify-center overflow-hidden rounded-lg bg-slate-50 group-hover:bg-orange-50/50 transition-colors">
+                  <div className="relative flex h-32 w-full items-center justify-center overflow-hidden rounded-lg bg-slate-50 transition-colors group-hover:bg-orange-50/50">
                     {fileData.previewUrl ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
@@ -289,7 +294,9 @@ export default function JournalUploadView({
                     ) : (
                       <div className="flex flex-col items-center text-slate-400 group-hover:text-orange-400">
                         <FileIcon className="mb-2 h-8 w-8 text-current" />
-                        <span className="text-xs font-semibold">{t("ocr.no_image")}</span>
+                        <span className="text-xs font-semibold">
+                          {t("ocr.no_image")}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -305,7 +312,9 @@ export default function JournalUploadView({
               {isUploading && (
                 <div className="flex h-[182px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-orange-300 bg-orange-50/50 p-4 text-orange-500">
                   <Loader2 className="h-6 w-6 animate-spin" />
-                  <span className="text-sm font-bold">{t("ocr.uploading")}</span>
+                  <span className="text-sm font-bold">
+                    {t("ocr.uploading")}
+                  </span>
                 </div>
               )}
             </div>
