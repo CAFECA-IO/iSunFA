@@ -9,6 +9,7 @@ import { missionGenerator, IMissionDefinition } from '@/lib/worker/mission.gener
 import { MISSION_STATUS } from '@/constants/status';
 import { getPeriodDateRange } from '@/lib/analysis/period';
 
+
 export interface IGenerateAnalysisParams extends IOrderParams {
   orderId?: string;
 }
@@ -88,51 +89,65 @@ export class AnalysisService {
             companyIndustry: '科技製造與能源產業' // Info: (20260320 - Tzuhan) We will replace this dynamically if available, or rely on web search
           };
         }
-      } else if (params.category === 'carbon_health_check') {
-        const { start, end } = getPeriodDateRange(params.periodType, params.year, params.periodValue);
-        const startTs = Math.floor(new Date(start).getTime() / 1000);
-        const endTs = Math.floor(new Date(end + 'T23:59:59.999Z').getTime() / 1000);
+      } else if (['carbon_health_check', 'balance_sheet', 'cash_flow', 'income_statement', 'financial_compliance', 'financial_health', 'irsc'].includes(params.category)) {
+        if (!params.isExternal) {
+          const { start, end } = getPeriodDateRange(params.periodType, params.year, params.periodValue);
+          const startTs = Math.floor(new Date(start).getTime() / 1000);
+          const endTs = Math.floor(new Date(end + 'T23:59:59.999Z').getTime() / 1000);
 
-        const teamMembers = await prisma.teamMember.findMany({
-          where: { userId }
-        });
-        const teamIds = teamMembers.map(tm => tm.teamId);
+          const teamMembers = await prisma.teamMember.findMany({
+            where: { userId }
+          });
+          const teamIds = teamMembers.map(tm => tm.teamId);
 
-        let targetAccountBookId: string | null = null;
-        if (params.keyword) {
-          const match = params.keyword.match(/\((.*?)\)/);
-          const taxId = match ? match[1] : params.keyword;
+          let targetAccountBookId: string | null = null;
+          if (params.keyword) {
+            const match = params.keyword.match(/\((.*?)\)/);
+            const taxId = match ? match[1] : params.keyword;
 
-          const matchedAccountBook = await prisma.accountBook.findFirst({
-            where: {
-              teamId: { in: teamIds },
-              enterpriseId: taxId
+            console.log(`[ESG-DEBUG] Keyword: ${params.keyword}, Extracted Tax ID: ${taxId}`);
+
+            const matchedAccountBook = await prisma.accountBook.findFirst({
+              where: {
+                teamId: { in: teamIds },
+                enterpriseId: taxId
+              }
+            });
+            if (matchedAccountBook) {
+              targetAccountBookId = matchedAccountBook.id;
+              console.log(`[ESG-DEBUG] Matched account book ID: ${targetAccountBookId}`);
+            } else {
+              console.log(`[ESG-DEBUG] No account book matched enterpriseId: ${taxId}`);
             }
-          });
-          if (matchedAccountBook) {
-            targetAccountBookId = matchedAccountBook.id;
           }
-        }
 
-        const esgRecords = targetAccountBookId
-          ? await prisma.esgRecord.findMany({
-            where: {
-              accountBookId: targetAccountBookId,
-              dateTimestamp: { gte: startTs, lte: endTs },
-              deletedAt: null
-            },
-            orderBy: { dateTimestamp: 'asc' }
-          })
-          : [];
+          console.log(`[ESG-DEBUG] Start TS: ${startTs}, End TS: ${endTs}`);
 
-        if (esgRecords.length > 0) {
-          const esgContextLines = esgRecords.map(r => {
-            const dateStr = new Date(r.dateTimestamp * 1000).toISOString().split('T')[0];
-            return `- 日期: ${dateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
-          });
-          parsedPrerequisiteParams = {
-            esgRecordsContext: `\n【用戶提供的內部 ESG 數據紀錄】:\n${esgContextLines.join('\n')}\n`
-          };
+          const esgRecords = targetAccountBookId
+            ? await prisma.esgRecord.findMany({
+              where: {
+                accountBookId: targetAccountBookId,
+                dateTimestamp: { gte: startTs, lte: endTs },
+                deletedAt: null
+              },
+              orderBy: { dateTimestamp: 'asc' }
+            })
+            : [];
+
+          console.log(`[ESG-DEBUG] Fetched esgRecords length: ${esgRecords.length}`);
+
+          if (esgRecords.length > 0) {
+            const esgContextLines = esgRecords.map(r => {
+              const dateStr = new Date(r.dateTimestamp * 1000).toISOString().split('T')[0];
+              return `- 日期: ${dateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
+            });
+            parsedPrerequisiteParams = {
+              esgRecordsContext: `\n【用戶提供的內部 ESG 數據紀錄】:\n${esgContextLines.join('\n')}\n`
+            };
+            console.log(`[ESG-DEBUG] Parsed Context:`, parsedPrerequisiteParams.esgRecordsContext);
+          } else {
+            console.log(`[ESG-DEBUG] Esgs record length is 0`);
+          }
         }
       }
 

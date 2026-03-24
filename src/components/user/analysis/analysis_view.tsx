@@ -357,7 +357,8 @@ export default function AnalysisView() {
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
           txHash: null,
           country,
-          keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput ? internalCompanyName : undefined)
+          keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput ? internalCompanyName : undefined),
+          isExternal: activeTab === 'external'
         })
       });
 
