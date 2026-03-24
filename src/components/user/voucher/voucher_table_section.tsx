@@ -9,7 +9,9 @@ import { IApiResponse } from "@/lib/utils/response";
 import { VoucherRow } from "@/components/user/voucher/voucher_row";
 import VoucherDetailModal from "@/components/user/voucher/voucher_detail_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
+import Pagination from "@/components/common/pagination";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
+import { VerifyStatus } from "@/constants/verify_status";
 
 enum VoucherSorting {
   DATE_DESC = "date_desc",
@@ -20,6 +22,8 @@ enum VoucherSorting {
   CREDIT_ASC = "credit_asc",
 }
 
+const PAGE_SIZE = 12;
+
 export default function VoucherTableSection() {
   const params = useParams();
   const { t } = useTranslation();
@@ -29,23 +33,30 @@ export default function VoucherTableSection() {
   const currencyUnit = "TWD"; // ToDo: (20260310 - Julian) 先固定使用 TWD
 
   const [filteredType, setFilteredType] = useState<TradingType | "all">("all");
+  const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<
+    VerifyStatus | "all"
+  >("all");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [keyWord, setKeyWord] = useState<string>("");
   const [debouncedKeyWord, setDebouncedKeyWord] = useState<string>("");
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
     useState<boolean>(false);
+
   const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
     null,
   );
   const [vouchers, setVouchers] = useState<IVoucher[]>([]);
+  const [totalItems, setTotalItems] = useState<number>(0);
   const [sorting, setSorting] = useState<VoucherSorting>(
     VoucherSorting.DATE_DESC,
   );
   const [hideDeleted, setHideDeleted] = useState<boolean>(false);
   const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Info: (20260311 - Julian) 設定輸入延遲，避免頻繁打 API
   useEffect(() => {
@@ -76,6 +87,9 @@ export default function VoucherTableSection() {
       if (filteredType !== "all") {
         searchParams.append("type", filteredType);
       }
+      if (filteredVerifyStatus !== "all") {
+        searchParams.append("verifyStatus", filteredVerifyStatus);
+      }
       if (hideDeleted) {
         searchParams.append("hideDeleted", "true");
       }
@@ -83,11 +97,17 @@ export default function VoucherTableSection() {
         searchParams.append("sorting", sorting);
       }
 
-      const data = await request<IApiResponse<IVoucher[]>>(
+      searchParams.append("page", currentPage.toString());
+      searchParams.append("pageSize", PAGE_SIZE.toString());
+
+      const data = await request<
+        IApiResponse<{ data: IVoucher[]; total: number }>
+      >(
         `/api/v1/user/account_book/${accountBookId}/voucher?${searchParams.toString()}`,
       );
       if (data.payload) {
-        setVouchers(data.payload);
+        setVouchers(data.payload.data);
+        setTotalItems(data.payload.total);
       }
     } catch (error) {
       console.error("Failed to fetch vouchers:", error);
@@ -99,9 +119,11 @@ export default function VoucherTableSection() {
     startDate,
     endDate,
     filteredType,
+    filteredVerifyStatus,
     hideDeleted,
     sorting,
     accountBookId,
+    currentPage,
   ]);
 
   useEffect(() => {
@@ -109,6 +131,19 @@ export default function VoucherTableSection() {
       fetchVouchers();
     }
   }, [fetchVouchers, accountBookId]);
+
+  // Info: (20260324 - Julian) Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    debouncedKeyWord,
+    startDate,
+    endDate,
+    filteredType,
+    filteredVerifyStatus,
+    hideDeleted,
+    sorting,
+  ]);
 
   // Info: (20260320 - Julian) 只針對未完成的傳票進行個別狀態更新，減輕 DB 負擔
   useEffect(() => {
@@ -189,6 +224,18 @@ export default function VoucherTableSection() {
     }
   };
 
+  // Info: (20260324 - Julian) 計算總頁數
+  const totalPages = Math.ceil(totalItems / PAGE_SIZE) || 1;
+
+  // Info: (20260324 - Julian) Ensure currentPage is within bounds
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  const currentVouchers = vouchers;
+
   const displayedVoucher = isLoading ? (
     <tr aria-label="Loading vouchers">
       <td
@@ -201,8 +248,8 @@ export default function VoucherTableSection() {
         </div>
       </td>
     </tr>
-  ) : vouchers.length > 0 ? (
-    vouchers.map((v) => (
+  ) : currentVouchers.length > 0 ? (
+    currentVouchers.map((v) => (
       <VoucherRow
         key={v.id}
         voucher={v}
@@ -223,23 +270,45 @@ export default function VoucherTableSection() {
   return (
     <>
       <div className="flex w-full flex-col gap-4">
-        <div className="mx-auto w-full max-w-[1400px]">
+        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             {/* Info: (20260316 - Julian) Toolbar */}
             <div className="flex flex-col items-center justify-between gap-4 border-b border-slate-200 p-4 lg:flex-row">
-              <div className="relative max-w-[400px] flex-1">
-                <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  id="searchField"
-                  aria-label={t("voucher.main_view.filters.search")}
-                  type="text"
-                  value={keyWord}
-                  onChange={(e) => setKeyWord(e.target.value)}
-                  placeholder={t("voucher.main_view.filters.search")}
-                  className="w-full rounded-full border border-slate-300 py-2.5 pr-4 pl-11 text-sm font-semibold text-slate-700 shadow-sm placeholder:font-medium placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                />
+              <div className="flex items-center gap-2">
+                {/* Info: (20260324 - Julian) Searchbar */}
+                <div className="relative flex">
+                  <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    id="searchField"
+                    aria-label={t("voucher.main_view.filters.search")}
+                    type="text"
+                    value={keyWord}
+                    onChange={(e) => setKeyWord(e.target.value)}
+                    placeholder={t("voucher.main_view.filters.search")}
+                    className="w-full rounded-full border border-slate-300 py-2.5 pr-4 pl-11 text-sm font-semibold text-slate-700 shadow-sm placeholder:font-medium placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                  />
+                </div>
+                {/* Info: (20260324 - Julian) Filtered Verify Status */}
+                <select
+                  id="verifyStatusSelect"
+                  value={filteredVerifyStatus}
+                  onChange={(e) =>
+                    setFilteredVerifyStatus(
+                      e.target.value as VerifyStatus | "all",
+                    )
+                  }
+                  className="w-32 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:outline-none"
+                >
+                  <option value="all">{t("common.all")}</option>
+                  <option value={VerifyStatus.VERIFIED}>
+                    {t("verify.status.verified")}
+                  </option>
+                  <option value={VerifyStatus.UNVERIFIED}>
+                    {t("verify.status.unverified")}
+                  </option>
+                </select>
               </div>
-
+              {/* Info: (20260324 - Julian) Filter button */}
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -286,9 +355,7 @@ export default function VoucherTableSection() {
                     }
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:outline-none"
                   >
-                    <option value="all">
-                      {t("voucher.main_view.filters.type_options.all")}
-                    </option>
+                    <option value="all">{t("common.all")}</option>
                     <option value={TradingType.INCOME}>
                       {t("voucher.main_view.filters.type_options.income")}
                     </option>
@@ -328,6 +395,7 @@ export default function VoucherTableSection() {
             </div>
 
             <div className="flex items-center justify-between bg-white px-2 py-4 lg:px-6">
+              {/* Info: (20260324 - Julian) 隱藏已刪除傳票 toggle */}
               <div className="flex cursor-pointer items-center gap-3">
                 <button
                   type="button"
@@ -351,11 +419,22 @@ export default function VoucherTableSection() {
                 </label>
               </div>
 
-              <div className="text-right text-xs font-bold text-slate-400 uppercase">
-                {t("voucher.main_view.filters.currency").replace(
-                  "{currency}",
-                  currencyUnit,
-                )}
+              <div className="flex items-center gap-2 text-right text-xs font-bold text-slate-400 uppercase">
+                {/* Info: (20260324 - Julian) 總傳票數 */}
+                <p>
+                  {t("voucher.main_view.filters.total_vouchers", {
+                    count: totalItems,
+                  })}
+                </p>
+
+                <div className="hidden h-4 w-px bg-slate-200 sm:block"></div>
+
+                {/* Info: (20260324 - Julian) 幣別 */}
+                <p>
+                  {t("voucher.main_view.filters.currency", {
+                    currency: currencyUnit,
+                  })}
+                </p>
               </div>
             </div>
 
@@ -479,6 +558,13 @@ export default function VoucherTableSection() {
               </table>
             </div>
           </div>
+
+          {/* Info: (20260324 - Julian) Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
       <VoucherDetailModal

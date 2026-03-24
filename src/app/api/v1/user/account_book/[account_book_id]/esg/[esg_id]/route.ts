@@ -4,7 +4,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { EsgScope, EsgIntensity } from "@/generated/client";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import {
   IEsgRecord,
   EsgScope as ClientEsgScope,
@@ -80,6 +80,7 @@ export async function GET(
       confidence: esgRecord.confidence,
       isVerified: esgRecord.isVerified,
       analysisStatus: esgRecord.analysisStatus as unknown as AIAnalysisStatus,
+      aiNote: esgRecord.aiNote ?? "",
     };
 
     return jsonOk(formattedRecord);
@@ -185,6 +186,7 @@ export async function PUT(
       confidence: updatedRecord.confidence,
       isVerified: updatedRecord.isVerified,
       analysisStatus: updatedRecord.analysisStatus as unknown as AIAnalysisStatus,
+      aiNote: updatedRecord.aiNote ?? "",
     };
 
     if (!formattedRecord) {

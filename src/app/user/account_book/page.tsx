@@ -368,7 +368,7 @@ export default function UserMainPage() {
                     disabled={isSubmitting}
                     className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg"
                   >
-                    {t('account_book_selection.cancel')}
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"

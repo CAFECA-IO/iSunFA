@@ -9,7 +9,7 @@ import {
   EsgScope as ClientEsgScope,
   EsgIntensity as ClientEsgIntensity,
 } from "@/interfaces/esg";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 /**
  * Info: (20260312 - Julian) 新增 ESG 紀錄
@@ -77,6 +77,7 @@ export async function POST(
         intensity: "LOW",
         confidence: 0,
         isVerified: false,
+        aiNote: "",
       },
     });
 
@@ -133,11 +134,18 @@ export async function GET(
     // Info: (20260312 - Julian) 取得 ESG 紀錄
     const { searchParams } = new URL(request.url);
     const searchParam = searchParams.get("search");
+    const verifyStatus = searchParams.get("verifyStatus");
     const intensity = searchParams.get("intensity");
     const scope = searchParams.get("scope");
     const sort = searchParams.get("sort") === "asc" ? "asc" : "desc";
     const yearParam = searchParams.get("year");
     const monthParam = searchParams.get("month");
+    const page = searchParams.get("page")
+      ? parseInt(searchParams.get("page")!)
+      : undefined;
+    const pageSize = searchParams.get("pageSize")
+      ? parseInt(searchParams.get("pageSize")!)
+      : undefined;
 
     let dateTimestampQuery: Prisma.IntFilter | undefined = undefined;
     if (yearParam) {
@@ -168,25 +176,35 @@ export async function GET(
           { activityType: { contains: searchParam, mode: "insensitive" } },
         ],
       }),
+      ...(verifyStatus && { isVerified: verifyStatus === "VERIFIED" }),
       ...(intensity && { intensity: intensity as ClientEsgIntensity }),
       ...(scope && { scope: scope as ClientEsgScope }),
       ...(dateTimestampQuery && { dateTimestamp: dateTimestampQuery }),
     };
 
+    const totalEsgCount = await prisma.esgRecord.count({
+      where: whereClause,
+    });
+
     const esgDbRecords = await prisma.esgRecord.findMany({
       where: whereClause,
       include: { file: true },
       orderBy: { dateTimestamp: sort },
+      ...(page && pageSize
+        ? { skip: (page - 1) * pageSize, take: pageSize }
+        : {}),
     });
 
-    const esgRecords:IEsgRecord[] = esgDbRecords.map((r) => ({
+    const esgRecords: IEsgRecord[] = esgDbRecords.map((r) => ({
       ...r,
-      fileId: r.fileId ?? '',
-      file: r.file ? {
-        id: r.file.id,
-        hash: r.file.hash,
-        fileName: r.file.fileName || "Unknown"
-      } : undefined,
+      fileId: r.fileId ?? "",
+      file: r.file
+        ? {
+            id: r.file.id,
+            hash: r.file.hash,
+            fileName: r.file.fileName || "Unknown",
+          }
+        : undefined,
       scope: r.scope as ClientEsgScope,
       emissions: r.emissions.toString(),
       intensity: r.intensity as ClientEsgIntensity,
@@ -195,7 +213,7 @@ export async function GET(
 
     return jsonOk({
       esgRecords,
-      recordCount: esgRecords.length,
+      recordCount: totalEsgCount,
     });
   } catch (error) {
     console.error("Error fetching esg records:", error);

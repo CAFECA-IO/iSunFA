@@ -1,4 +1,10 @@
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+
+export interface IJournalDashboardSummary {
+  todayJournalCount: number;
+  pendingJournalCount: number;
+  aiAverageConfidence: number;
+}
 
 export interface IJournal {
   id: string;

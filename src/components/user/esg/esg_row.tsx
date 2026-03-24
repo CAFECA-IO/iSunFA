@@ -12,8 +12,9 @@ import {
 import { timestampToString } from "@/lib/utils/common";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
+import AiConfidenceBar from "@/components/common/ai_confidence_bar";
 import { useTranslation } from "@/i18n/i18n_context";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 export function EsgRow({
   record,
@@ -224,30 +225,22 @@ export function EsgRow({
         aria-label="AI Confidence"
         className="p-2 text-center lg:px-6 lg:py-4"
       >
-        <div className="flex items-center justify-center gap-3">
-          <div className="h-2 w-24 shrink-0 overflow-hidden rounded-full bg-slate-200">
-            <div
-              className={`h-full rounded-full ${record.confidence >= 90 ? "bg-emerald-400" : "bg-orange-500"}`}
-              style={{ width: `${record.confidence}%` }}
-            ></div>
-          </div>
-          <span className="text-sm font-bold whitespace-nowrap text-slate-700">
-            {record.confidence}%
-          </span>
-        </div>
+        <AiConfidenceBar confidence={record.confidence} />
       </td>
       {/* Info: (20260320 - Julian) Verified */}
       <td className="p-2 text-center lg:px-6 lg:py-4">
         {record.isVerified ? (
           <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 size={24} />
-            <span className="text-sm font-bold">{t("esg_table.verified")}</span>
+            <span className="text-sm font-bold">
+              {t("verify.status.verified")}
+            </span>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-1 text-orange-500">
             <FileQuestion size={24} />
             <span className="text-sm font-bold whitespace-nowrap">
-              {t("esg_table.unverified")}
+              {t("verify.status.unverified")}
             </span>
           </div>
         )}

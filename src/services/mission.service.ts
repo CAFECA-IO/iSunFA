@@ -104,7 +104,7 @@ export class MissionService {
                   if (match) {
                     const parsed = JSON.parse(match[0]);
                     const jd = parsed.data || parsed;
-                    const tradingDate = new Date(jd.tradingDate || new Date());
+                    const tradingDate = new Date(jd.tradingDate || new Date())
                     const confidence = parseInt(String(jd.confidence)) || 0;
 
                     const dataPayload: Prisma.JournalUncheckedCreateInput = {
@@ -188,12 +188,13 @@ export class MissionService {
                     const dataPayload: Prisma.VoucherUncheckedCreateInput = {
                       tradingDate,
                       tradingType: trType as VoucherTradingType,
-                      note: vd.note || null,
+                      note: vd.note ?? '-',
                       currency: vd.currency || "TWD",
                       fileId,
                       accountBookId,
                       confidence,
                       isVerified: confidence > 85,
+                      aiNote: vd.aiNote ?? "無 AI 分析備註",
                       analysisStatus: "COMPLETED" as AIAnalysisStatus,
                       lines: {
                         create: (vd.lines || []).map(
@@ -290,6 +291,7 @@ export class MissionService {
                       intensity: ed.intensity || "LOW",
                       confidence,
                       isVerified: confidence > 85,
+                      aiNote: ed.aiNote ?? "無 AI 分析備註",
                       analysisStatus: "COMPLETED" as AIAnalysisStatus,
                     };
 

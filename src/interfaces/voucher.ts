@@ -1,5 +1,5 @@
 import { IAccount } from "@/constants/accounts";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 export enum TradingType {
   INCOME = "income",
@@ -50,6 +50,7 @@ export interface IVoucher {
   confidence: number;
   isVerified: boolean;
   analysisStatus: AIAnalysisStatus
+  aiNote: string;
 }
 
 export interface IParsedVoucherLine {

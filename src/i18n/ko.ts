@@ -10,6 +10,7 @@ export const ko = {
     cancel: "취소",
     close: "닫기",
     coming_soon_message: "오픈 예정",
+    all: "전체",
     agree: "동의",
     filter: "필터",
     pagination: {
@@ -444,7 +445,6 @@ export const ko = {
         credits_unit: "{{count}} pt",
         confirm_btn: "결제 확인",
         processing: "처리 중...",
-        cancel_btn: "취소",
         payment_method: "결제 방식",
         use_saved_card: "저장된 신용카드 사용",
         bind_new_card: "새로운 신용카드 등록",
@@ -537,7 +537,6 @@ export const ko = {
     form_enterprise_id: "사업자등록번호 (선택 시)",
     form_esg_industry: "산업 분류 (ESG, 선택 시)",
     submit: "확인",
-    cancel: "취소",
   },
   sidebar: {
     modules: "기능 모듈",
@@ -595,7 +594,6 @@ export const ko = {
       "이 작업은 크레딧을 소비합니다. 아래 세부 정보를 확인하십시오:",
     confirm_balance: "결제 후 잔액",
     confirm_action: "결제 및 생성",
-    cancel: "취소",
     countries: {
       tw: "대만",
       us: "미국",
@@ -934,7 +932,6 @@ export const ko = {
     confirm_delete_title: "청구서 삭제",
     confirm_delete_msg:
       "이 청구서를 삭제하시겠습니까? 이 작업은 실행 취소할 수 없습니다.",
-    cancel: "취소",
     unsaved_changes_title: "저장되지 않은 변경 사항",
     unsaved_changes_msg: "저장되지 않은 변경 사항이 있습니다. 나가시겠습니까?",
     confirm_save_title: "저장 확인",
@@ -945,6 +942,13 @@ export const ko = {
     zoom_reset: "초기화",
   },
   journal: {
+    summary: {
+      empty: "현재 분개장 데이터가 없습니다",
+      today_count: "오늘 생성된 분개장",
+      unit: "건",
+      pending: "대조 대기",
+      ai_confidence: "AI 평균 신뢰도",
+    },
     main_view: {
       title: "전표 관리",
       upload: "전표 업로드",
@@ -999,9 +1003,6 @@ export const ko = {
       scope_3: "스코프 3",
     },
     no_file: "파일 없음",
-    verified: "확인됨",
-    manual_verify: "수동 확인",
-    unverified: "미확인 상태",
     search_placeholder: "공급업체, 활동 유형 검색...",
     search_aria: "공급업체, 활동 유형 검색",
     filter_intensity_aria: "강도 필터링",
@@ -1053,10 +1054,6 @@ export const ko = {
       fetch_error: "전표를 가져오지 못했습니다",
       deleted_warning: "삭제된 전표는 편집할 수 없습니다",
     },
-    status: {
-      pending: "확인 대기 중",
-      verified: "확인됨",
-    },
     sections: {
       preview: "영수증 미리보기",
       basic_info: "기본 정보",
@@ -1076,21 +1073,17 @@ export const ko = {
     actions: {
       cancel_edit: "편집 취소",
       save_only: "수정 내용만 저장",
-      save_and_verify: "저장 및 확인",
-      unverify: "미확인 상태로 되돌리기",
     },
     close_confirm: {
       title: "저장하지 않고 닫으시겠습니까?",
       message: "저장되지 않은 변경 사항이 손실됩니다. 계속하시겠습니까?",
       confirm: "나가기",
-      cancel: "취소",
     },
     save_confirm: {
       title: "저장하시겠습니까?",
       message:
         "수행한 ESG 기록 확인 변경 사항을 저장하려고 합니다. 데이터가 올바른지 확인하십시오.",
       confirm: "저장 확인",
-      cancel: "취소",
       success: "검증 데이터가 저장되었습니다",
     },
   },
@@ -1137,7 +1130,6 @@ export const ko = {
   voucher: {
     account_book_selector: {
       title: "계정 선택",
-      all: "전체",
       search_placeholder: "계정 코드나 이름을 검색하세요...",
       no_results: "일치하는 계정이 없습니다",
     },
@@ -1152,7 +1144,6 @@ export const ko = {
       filters: {
         type: "항목 유형",
         type_options: {
-          all: "전체",
           income: "수입",
           outcome: "지출",
           transfer: "전환",
@@ -1160,7 +1151,7 @@ export const ko = {
         period: "기간",
         search: "전표 번호, 계정 코드 검색...",
         hide_deleted: "삭제된 전표 및 취소 기록 숨기기",
-        currency: "통화: {currency}",
+        currency: "통화: {{currency}}",
       },
       table: {
         types: {
@@ -1168,12 +1159,6 @@ export const ko = {
           income: "입금 전표",
           transfer: "이체 전표",
           unknown: "알 수 없는 전표",
-        },
-        status: {
-          verified: "확인됨",
-          manual: "수동 확인",
-          unverified: "미확인 상태",
-          deleted: "삭제됨",
         },
         headers: {
           receipt: "영수증",
@@ -1205,10 +1190,6 @@ export const ko = {
       messages: {
         fetch_error: "전표를 가져오지 못했습니다",
         deleted_warning: "삭제된 전표는 편집할 수 없습니다",
-      },
-      status: {
-        pending: "확인 대기 중",
-        verified: "확인됨",
       },
       sections: {
         preview: "영수증 미리보기",
@@ -1242,13 +1223,10 @@ export const ko = {
       actions: {
         cancel_edit: "편집 취소",
         verify_save: "확인 및 저장",
-        unverify: "미확인 상태로 되돌리기",
         save_only: "수정 내용만 저장",
         add_row: "분개 추가",
         clear_all: "모두 지우기",
         save_voucher: "전표 저장",
-        confirm: "확인",
-        cancel: "취소",
       },
       confirm_modals: {
         clear_all: {
@@ -1317,4 +1295,29 @@ export const ko = {
       },
     },
   },
+  "verify":{
+      "verify_modal":{
+        title:"確認核對？",
+        message:"您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+        confirm:"確認核對",
+      },
+      "unverify_modal":{
+        title:"確認退回？",
+        message:"您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+        confirm:"確認退回",
+      },
+      status: {
+        verified: "已核對",
+        unverified: "待核對",
+      },
+      button:{
+        unverify:"退回未核對",
+        verify:"核對並存檔",
+      },
+      type:{
+        journal:"日記帳",
+        voucher:"傳票",
+        esg:"碳排紀錄",
+      }
+  }
 };

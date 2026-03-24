@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/browser";
 import { IJournal } from "@/interfaces/journal";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 /**
  * Info: (20260304 - Julian) 將檔案傳給 AI 進行解析
@@ -133,6 +133,7 @@ export async function GET(
 
     const searchParams = request.nextUrl.searchParams;
     const keyWord = searchParams.get("keyWord");
+    const verifyStatus = searchParams.get("verifyStatus");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const page = searchParams.get("page")
@@ -158,6 +159,11 @@ export async function GET(
       ];
     }
 
+    // Info: (20260324 - Julian) 建立審核狀態篩選
+    if (verifyStatus) {
+      filteredConditions.where!.isVerified = verifyStatus === "VERIFIED";
+    }
+
     // Info: (20260304 - Julian) 建立時間區間篩選
     if (startDate || endDate) {
       filteredConditions.where!.createdAt = {};
@@ -168,6 +174,11 @@ export async function GET(
         filteredConditions.where!.createdAt.lte = new Date(endDate);
       }
     }
+
+    // Info: (20260324 - Julian) 取得符合條件的總筆數
+    const totalCount = await prisma.journal.count({
+      where: filteredConditions.where,
+    });
 
     // Info: (20260304 - Julian) 分頁
     if (page && pageSize) {
@@ -191,7 +202,7 @@ export async function GET(
     const formattedJournals: IJournal[] = journals.map((j) => {
       return {
         id: j.id,
-        tradingTimestamp: Math.floor(j.createdAt.getTime() / 1000),
+        tradingTimestamp: Math.floor(j.tradingDate.getTime() / 1000),
         text: j.text,
         fileId: j.fileId ?? "",
         file: j.file
@@ -207,7 +218,7 @@ export async function GET(
       };
     });
 
-    return jsonOk(formattedJournals);
+    return jsonOk({ data: formattedJournals, total: totalCount });
   } catch (error) {
     console.error("Get journals failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get journals failed");

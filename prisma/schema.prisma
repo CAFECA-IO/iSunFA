@@ -490,6 +490,9 @@ model Voucher {
   // Info: (20260316 - Julian) 包含的分錄
   lines VoucherLine[]
 
+  // Info: (20260324 - Julian) AI 分析的備註
+  aiNote String @map("ai_note") @db.Text
+
   @@map("voucher")
 }
 
@@ -559,6 +562,9 @@ model EsgRecord {
   // Info: (20260312 - Julian) 建立者
   userId String? @map("user_id")
   user   User?   @relation(fields: [userId], references: [id])
+
+  // Info: (20260324 - Julian) AI 分析的備註
+  aiNote String @map("ai_note") @db.Text
 
   @@map("esg_record")
 }

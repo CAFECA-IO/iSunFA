@@ -9,6 +9,7 @@ export const en = {
     cancel: "Cancel",
     close: "Close",
     coming_soon_message: "Coming Soon",
+    all: "All",
     agree: "Agree",
     filter: "Filter",
     pagination: {
@@ -452,7 +453,6 @@ export const en = {
           "Authorization successful, issuing blockchain credits to your wallet. Please wait...",
         processing_failed: "Payment processing failed. Please try again.",
         syncing_status: "Syncing your account status...",
-        cancel_btn: "Cancel",
         payment_method: "Payment Method",
         use_saved_card: "Use Saved Card",
         bind_new_card: "Bind New Card",
@@ -548,7 +548,6 @@ export const en = {
     form_enterprise_id: "Enterprise ID (Optional)",
     form_esg_industry: "Industry Category (ESG, Optional)",
     submit: "Confirm",
-    cancel: "Cancel",
   },
   sidebar: {
     modules: "Modules",
@@ -606,7 +605,6 @@ export const en = {
       "This action will consume credits. Please confirm the details below:",
     confirm_balance: "Balance after payment",
     confirm_action: "Pay & Generate",
-    cancel: "Cancel",
     countries: {
       tw: "Taiwan",
       us: "United States",
@@ -984,7 +982,6 @@ export const en = {
     confirm_delete_title: "Delete Invoice",
     confirm_delete_msg:
       "Are you sure you want to delete this invoice? This action cannot be undone.",
-    cancel: "Cancel",
     unsaved_changes_title: "Unsaved Changes",
     unsaved_changes_msg:
       "You have unsaved changes. Are you sure you want to leave?",
@@ -996,6 +993,13 @@ export const en = {
     zoom_reset: "Reset Zoom",
   },
   journal: {
+    summary: {
+      empty: "No journal data available",
+      today_count: "Journals created today",
+      unit: "pcs",
+      pending: "Pending verify",
+      ai_confidence: "AI average confidence",
+    },
     main_view: {
       title: "Journal Management",
       upload: "Upload Journal",
@@ -1021,7 +1025,6 @@ export const en = {
   voucher: {
     account_book_selector: {
       title: "Select Account",
-      all: "All",
       search_placeholder: "Search account code or name...",
       no_results: "No matching accounts found",
     },
@@ -1036,7 +1039,6 @@ export const en = {
       filters: {
         type: "Field Type",
         type_options: {
-          all: "All",
           income: "Income",
           outcome: "Outcome",
           transfer: "Transfer",
@@ -1044,7 +1046,7 @@ export const en = {
         period: "Period",
         search: "Search voucher no, account code...",
         hide_deleted: "Hide deleted vouchers and reversed records",
-        currency: "Currency: {currency}",
+        currency: "Currency: {{currency}}",
       },
       table: {
         types: {
@@ -1052,12 +1054,6 @@ export const en = {
           income: "Receipt Voucher",
           transfer: "Transfer Voucher",
           unknown: "Unknown Voucher",
-        },
-        status: {
-          verified: "Verified",
-          manual: "Manual Verification",
-          unverified: "Unverified",
-          deleted: "Deleted",
         },
         headers: {
           receipt: "Receipt",
@@ -1090,10 +1086,6 @@ export const en = {
         fetch_error: "Failed to fetch voucher",
         deleted_warning: "Deleted vouchers cannot be edited",
       },
-      status: {
-        pending: "Pending",
-        verified: "Verified",
-      },
       sections: {
         preview: "Receipt Preview",
         basic_info: "Basic Information",
@@ -1125,14 +1117,11 @@ export const en = {
       },
       actions: {
         cancel_edit: "Cancel Edit",
-        verify_save: "Verify & Save",
-        unverify: "Unverify",
         save_only: "Save Only",
         add_row: "Add Entry",
         clear_all: "Clear All",
         save_voucher: "Save Voucher",
         confirm: "Confirm",
-        cancel: "Cancel",
       },
       confirm_modals: {
         clear_all: {
@@ -1147,13 +1136,6 @@ export const en = {
           title: "Save Voucher",
           message: "Are you sure you want to save this voucher?",
         },
-      },
-      unverify_confirm: {
-        title: "Confirm Unverify?",
-        message:
-          "Are you sure you want to unverify this voucher? Changes will be saved, please confirm the data is correct.",
-        confirm: "Confirm Unverify",
-        cancel: "Cancel",
       },
     },
   },
@@ -1189,9 +1171,6 @@ export const en = {
       scope_3: "Scope 3",
     },
     no_file: "No File",
-    verified: "Verified",
-    manual_verify: "Manual Verify",
-    unverified: "Unverified",
     search_placeholder: "Search vendor, activity...",
     search_aria: "Search vendor, activity",
     filter_intensity_aria: "Filter by Intensity",
@@ -1242,29 +1221,18 @@ export const en = {
     actions: {
       cancel_edit: "Cancel Edit",
       save_only: "Save Only",
-      save_and_verify: "Save & Verify",
-      unverify: "Unverify",
     },
     close_confirm: {
       title: "Close without saving?",
       message:
         "Review the changes you've made to the ESG records. Are you sure you want to save?",
       confirm: "Confirm Save",
-      cancel: "Cancel",
       success: "Verification data saved",
     },
     save_confirm: {
       title: "Save changes?",
       message: "You are about to save the verification changes. Proceed?",
       confirm: "Save",
-      cancel: "Cancel",
-    },
-    unverify_confirm: {
-      title: "Confirm Unverify?",
-      message:
-        "Are you sure you want to unverify this ESG record? Changes will be saved, please confirm the data is correct.",
-      confirm: "Confirm Unverify",
-      cancel: "Cancel",
     },
   },
   esg_target: {
@@ -1357,4 +1325,29 @@ export const en = {
       },
     },
   },
+      "verify":{
+      "verify_modal":{
+        title:"Confirm Verify?",
+        message:"Are you sure you want to verify this {{type}}? Changes will be saved, please confirm the data is correct.",
+        confirm:"Confirm Verify",
+      },
+      "unverify_modal":{
+        title:"Confirm Unverify?",
+        message:"Are you sure you want to unverify this {{type}}? Changes will be saved, please confirm the data is correct.",
+        confirm:"Confirm Unverify",
+      },
+      status: {
+        verified: "Verified",
+        unverified: "Unverified",
+      },
+      button:{
+        unverify:"Unverify",
+        verify:"Verify & Save",
+      },
+      type:{
+        journal:"Journal",
+        voucher:"Voucher",
+        esg:"ESG",
+      }
+    }
 };

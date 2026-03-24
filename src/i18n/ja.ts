@@ -10,6 +10,7 @@ export const ja = {
     cancel: "キャンセル",
     close: "閉じる",
     coming_soon_message: "まもなく登場",
+    all: "すべて",
     agree: "同意",
     filter: "フィルター",
     pagination: {
@@ -453,7 +454,6 @@ export const ja = {
         processing_failed:
           "支払いの処理に失敗しました。もう一度お試しください。",
         syncing_status: "アカウントのステータスを同期しています...",
-        cancel_btn: "キャンセル",
         payment_method: "お支払い方法",
         use_saved_card: "保存したクレジットカードを使用する",
         bind_new_card: "新しいクレジットカードを登録する",
@@ -547,7 +547,6 @@ export const ja = {
     form_enterprise_id: "統一企業番号 (任意)",
     form_esg_industry: "業界分類 (ESG、任意)",
     submit: "確認",
-    cancel: "キャンセル",
   },
   sidebar: {
     modules: "機能モジュール",
@@ -605,7 +604,6 @@ export const ja = {
       "この操作にはクレジットが必要です。以下の詳細を確認してください：",
     confirm_balance: "支払い後の残高",
     confirm_action: "支払いして生成",
-    cancel: "キャンセル",
     countries: {
       tw: "台湾",
       us: "米国",
@@ -947,7 +945,6 @@ export const ja = {
     confirm_delete_title: "請求書を削除",
     confirm_delete_msg:
       "この請求書を削除してもよろしいですか？この操作は元に戻せません。",
-    cancel: "キャンセル",
     unsaved_changes_title: "未保存の変更",
     unsaved_changes_msg: "未保存の変更があります。終了してもよろしいですか？",
     confirm_save_title: "保存してよろしいですか？",
@@ -958,6 +955,13 @@ export const ja = {
     zoom_reset: "リセット",
   },
   journal: {
+    summary: {
+      empty: "現在仕訳帳データはありません",
+      today_count: "本日作成された仕訳帳",
+      unit: "件",
+      pending: "確認待ち",
+      ai_confidence: "AI平均信頼度",
+    },
     main_view: {
       title: "伝票管理",
       upload: "伝票をアップロード",
@@ -1012,9 +1016,6 @@ export const ja = {
       scope_3: "スコープ3",
     },
     no_file: "ファイルなし",
-    verified: "確認済",
-    manual_verify: "手動確認",
-    unverified: "未確認",
     search_placeholder: "業者、活動を検索...",
     search_aria: "業者、活動を検索",
     filter_intensity_aria: "強度で絞り込み",
@@ -1066,10 +1067,6 @@ export const ja = {
       fetch_error: "伝票の取得に失敗しました",
       deleted_warning: "削除済みの伝票は編集できません",
     },
-    status: {
-      pending: "確認待ち",
-      verified: "確認済",
-    },
     sections: {
       preview: "領収書のプレビュー",
       basic_info: "基本情報",
@@ -1089,21 +1086,17 @@ export const ja = {
     actions: {
       cancel_edit: "編集をキャンセル",
       save_only: "変更のみ保存",
-      save_and_verify: "保存して確認",
-      unverify: "未確認に戻す",
     },
     close_confirm: {
       title: "保存せずに閉じますか？",
       message: "未保存の変更は失われます。続行しますか？",
       confirm: "終了",
-      cancel: "キャンセル",
     },
     save_confirm: {
       title: "変更を保存しますか？",
       message:
         "ESG記録の確認変更を保存しようとしています。データが正しいか確認してください。",
       confirm: "保存を確認",
-      cancel: "キャンセル",
       success: "検証データが保存されました",
     },
   },
@@ -1149,7 +1142,6 @@ export const ja = {
   voucher: {
     account_book_selector: {
       title: "勘定科目を選択",
-      all: "すべて",
       search_placeholder: "科目コードや名前を検索...",
       no_results: "一致する勘定科目がありません",
     },
@@ -1163,7 +1155,6 @@ export const ja = {
       filters: {
         type: "項目の種類",
         type_options: {
-          all: "すべて",
           income: "収入",
           outcome: "支出",
           transfer: "変換",
@@ -1171,7 +1162,7 @@ export const ja = {
         period: "期間",
         search: "伝票番号、科目コードを検索...",
         hide_deleted: "削除済みの伝票と取消記録を隠す",
-        currency: "通貨: {currency}",
+        currency: "通貨: {{currency}}",
       },
       table: {
         types: {
@@ -1179,12 +1170,6 @@ export const ja = {
           income: "入金伝票",
           transfer: "振替伝票",
           unknown: "不明な伝票",
-        },
-        status: {
-          verified: "確認済",
-          manual: "手動確認",
-          unverified: "未確認",
-          deleted: "削除済",
         },
         headers: {
           receipt: "領収書",
@@ -1217,10 +1202,6 @@ export const ja = {
         fetch_error: "伝票の取得に失敗しました",
         deleted_warning: "削除済みの伝票は編集できません",
       },
-      status: {
-        pending: "確認待ち",
-        verified: "確認済",
-      },
       sections: {
         preview: "領収書のプレビュー",
         basic_info: "基本情報",
@@ -1252,14 +1233,10 @@ export const ja = {
       },
       actions: {
         cancel_edit: "編集をキャンセル",
-        verify_save: "確認して保存",
-        unverify: "未確認に戻す",
         save_only: "変更のみ保存",
         add_row: "仕訳を追加",
         clear_all: "すべてクリア",
         save_voucher: "伝票を保存",
-        confirm: "確認",
-        cancel: "キャンセル",
       },
       confirm_modals: {
         clear_all: {
@@ -1328,4 +1305,29 @@ export const ja = {
       },
     },
   },
+  "verify":{
+      "verify_modal":{
+        title:"確認核對？",
+        message:"您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+        confirm:"確認核對",
+      },
+      "unverify_modal":{
+        title:"確認退回？",
+        message:"您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+        confirm:"確認退回",
+      },
+      status: {
+        verified: "已核對",
+        unverified: "待核對",
+      },
+      button:{
+        unverify:"退回未核對",
+        verify:"核對並存檔",
+      },
+      type:{
+        journal:"日記帳",
+        voucher:"傳票",
+        esg:"碳排紀錄",
+      }
+  }
 };

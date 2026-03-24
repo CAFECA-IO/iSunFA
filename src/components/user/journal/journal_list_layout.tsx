@@ -3,8 +3,9 @@
 import { Loader2, CircleAlert, CheckCircle2, FileQuestion } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
+import AiConfidenceBar from "@/components/common/ai_confidence_bar";
 import { IJournal } from "@/interfaces/journal";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { timestampToString } from "@/lib/utils/common";
 
 const JournalListItem = ({
@@ -137,17 +138,7 @@ const JournalListItem = ({
         aria-label={t("ocr.confidence")}
         className="px-3 py-2 text-right sm:px-6"
       >
-        <div className="flex flex-col-reverse items-center justify-center gap-x-3 gap-y-1 lg:flex-row">
-          <div className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-slate-200">
-            <div
-              className={`h-full rounded-full ${journal.confidence >= 80 ? "bg-emerald-400" : "bg-orange-500"}`}
-              style={{ width: `${journal.confidence}%` }}
-            ></div>
-          </div>
-          <span className="text-sm font-black whitespace-nowrap text-slate-700">
-            {journal.confidence}%
-          </span>
-        </div>
+        <AiConfidenceBar confidence={journal.confidence} />
       </td>
       {/* Info: (20260316 - Julian) Status */}
       <td
@@ -158,14 +149,14 @@ const JournalListItem = ({
           <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 size={24} />
             <span className="text-xs font-bold whitespace-nowrap">
-              {t("voucher.main_view.table.status.verified")}
+              {t("verify.status.verified")}
             </span>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-1.5 text-orange-500">
             <FileQuestion size={24} />
             <span className="text-xs font-bold whitespace-nowrap">
-              {t("voucher.main_view.table.status.unverified")}
+              {t("verify.status.unverified")}
             </span>
           </div>
         )}
@@ -187,7 +178,7 @@ const JournalListLayout = ({
 
   const loadingView = (
     <tr>
-      <td colSpan={3} className="px-3 py-8 text-center text-slate-500 sm:px-6">
+      <td colSpan={6} className="px-3 py-8 text-center text-slate-500 sm:px-6">
         <Loader2 className="mx-auto h-6 w-6 animate-spin text-orange-500" />
       </td>
     </tr>
@@ -195,7 +186,7 @@ const JournalListLayout = ({
 
   const emptyView = (
     <tr>
-      <td colSpan={4} className="px-3 py-8 text-center text-slate-500 sm:px-6">
+      <td colSpan={6} className="px-3 py-8 text-center text-slate-500 sm:px-6">
         {t("ocr.no_records")}
       </td>
     </tr>
@@ -206,7 +197,7 @@ const JournalListLayout = ({
   ));
 
   return (
-    <div className="overflow-x-auto rounded-md border border-gray-200 bg-white shadow-sm">
+    <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
       <table className="w-full">
         <tbody>
           <tr>

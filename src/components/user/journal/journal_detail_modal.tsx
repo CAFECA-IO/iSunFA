@@ -20,6 +20,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import ConfirmModal from "@/components/common/confirm_modal";
 import ZoomablePreview from "@/components/common/zoomable_preview";
+import AiConfidenceBar from "@/components/common/ai_confidence_bar";
 import { IJournal } from "@/interfaces/journal";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -54,7 +55,8 @@ export default function JournalDetailModal({
   const [showConfirmSave, setShowConfirmSave] = useState<boolean>(false);
 
   const [targetVerify, setTargetVerify] = useState<boolean>(false);
-  const [isUnverifyModalOpen, setIsUnverifyModalOpen] = useState<boolean>(false);
+  const [isUnverifyModalOpen, setIsUnverifyModalOpen] =
+    useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen && journal) {
@@ -145,12 +147,24 @@ export default function JournalDetailModal({
                 <DialogPanel className="relative flex h-[85vh] w-full max-w-[90vw] transform flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all">
                   {/* Info: (20260305 - Julian) Header */}
                   <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                    <DialogTitle
-                      as="h3"
-                      className="text-xl font-semibold text-gray-900"
-                    >
-                      {t("ocr.detail_title")}
-                    </DialogTitle>
+                    <div className="flex items-center gap-3">
+                      <DialogTitle
+                        as="h3"
+                        className="text-xl font-bold text-slate-800"
+                      >
+                        {t("ocr.detail_title")}
+                      </DialogTitle>
+                      {/* Info: (20260324 - Julian) 顯示日記帳狀態 */}
+                      {journal.isVerified ? (
+                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
+                          {t("verify.status.verified")}
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
+                          {t("verify.status.unverified")}
+                        </span>
+                      )}
+                    </div>
                     <button
                       type="button"
                       className="rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
@@ -163,21 +177,39 @@ export default function JournalDetailModal({
                   {/* Info: (20260305 - Julian) Body Content */}
                   <div className="flex flex-1 overflow-hidden bg-gray-50">
                     {/* Info: (20260305 - Julian) Left: Preview */}
-                    <ZoomablePreview
-                      hasContent={!!journal.file?.hash}
-                      fallbackText={t("ocr.no_image") as string}
-                      className="w-1/2"
-                    >
-                      {journal.file?.hash && (
-                        <FilePreview
-                          file={{
-                            filename: journal.file.fileName || "Unknown",
-                          }}
-                          fileId={journal.file.hash}
-                          className="size-full object-contain"
-                        />
-                      )}
-                    </ZoomablePreview>
+                    <div className="flex w-1/2 flex-col border-r border-gray-200 p-6">
+                      <div className="mb-4 flex items-center justify-between">
+                        <h4 className="text-sm font-bold text-gray-500">
+                          {t("ocr.file")}
+                        </h4>
+                        <div className="relative flex items-center gap-2">
+                          {/* Info: (20260324 - Julian) AI Confidence */}
+                          <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 shadow-sm">
+                            <span className="text-xs font-bold text-gray-500">
+                              {t("ocr.confidence")}
+                            </span>
+                            <AiConfidenceBar confidence={journal.confidence} />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <ZoomablePreview
+                          hasContent={!!journal.file?.hash}
+                          fallbackText={t("ocr.no_image") as string}
+                          className="h-full w-full"
+                        >
+                          {journal.file?.hash && (
+                            <FilePreview
+                              file={{
+                                filename: journal.file.fileName || "Unknown",
+                              }}
+                              fileId={journal.file.hash}
+                              className="size-full object-contain"
+                            />
+                          )}
+                        </ZoomablePreview>
+                      </div>
+                    </div>
 
                     {/* Info: (20260305 - Julian) Right: Text / Edit */}
                     <div className="flex w-1/2 flex-col bg-white p-6">
@@ -187,12 +219,12 @@ export default function JournalDetailModal({
                         </h4>
                       </div>
 
-                      <div className="flex-1 overflow-y-auto rounded-lg bg-gray-50">
+                      <div className="flex-1 overflow-y-auto rounded-lg">
                         <textarea
                           aria-label={t("ocr.journal") as string}
                           value={editText}
                           onChange={(e) => setEditText(e.target.value)}
-                          className="size-full resize-none rounded-lg border border-orange-300 p-4 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                          className="size-full resize-none rounded-lg border border-orange-300 bg-gray-50 p-4 outline-none focus:border-orange-500"
                         />
                       </div>
                       {/* ToDo: (20260323 - Julian) 先隱藏刪除按鈕 */}
@@ -206,7 +238,7 @@ export default function JournalDetailModal({
                           {t("ocr.delete")}
                         </button>
                       {/* Info: (20260324 - Julian) Footer Actions */}
-                      <div className="mt-4 flex flex-wrap items-center justify-between gap-4 py-2 border-t border-gray-100 pt-5">
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 py-2 pt-5">
                         <button
                           type="button"
                           onClick={() => setEditText(journal.text)}
@@ -223,7 +255,7 @@ export default function JournalDetailModal({
                               className="flex h-10 items-center gap-2 rounded-xl bg-red-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:bg-slate-300"
                             >
                               <X size={16} className="stroke-3" />
-                              {t("voucher.detail_modal.actions.unverify")}
+                              {t("verify.button.unverify")}
                             </button>
                           ) : (
                             <button
@@ -269,7 +301,7 @@ export default function JournalDetailModal({
         title={t("ocr.confirm_save_title") as string}
         message={t("ocr.confirm_save_msg") as string}
         confirmText={t("ocr.save") as string}
-        cancelText={t("ocr.cancel") as string}
+        cancelText={t("common.cancel") as string}
         onConfirm={() => executeSaveJournal(null)}
       />
 
@@ -280,7 +312,7 @@ export default function JournalDetailModal({
         title={t("ocr.unsaved_changes_title") as string}
         message={t("ocr.unsaved_changes_msg") as string}
         confirmText={t("ocr.confirm_leave_title") as string}
-        cancelText={t("ocr.cancel") as string}
+        cancelText={t("common.cancel") as string}
         onConfirm={() => {
           setShowConfirmClose(false);
           onClose();
@@ -291,10 +323,12 @@ export default function JournalDetailModal({
       <ConfirmModal
         isOpen={isUnverifyModalOpen}
         onClose={() => setIsUnverifyModalOpen(false)}
-        title={t("voucher.detail_modal.unverify_confirm.title")}
-        message={t("voucher.detail_modal.unverify_confirm.message")}
-        confirmText={t("voucher.detail_modal.unverify_confirm.confirm")}
-        cancelText={t("voucher.detail_modal.unverify_confirm.cancel")}
+        title={t("verify.unverify_modal.title")}
+        message={t("verify.unverify_modal.message", {
+          type: t("verify.type.journal"),
+        })}
+        confirmText={t("verify.unverify_modal.confirm")}
+        cancelText={t("common.cancel")}
         onConfirm={handleUnverifyConfirmed}
       />
     </>

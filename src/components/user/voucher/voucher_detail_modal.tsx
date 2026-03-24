@@ -24,12 +24,14 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { IVoucher, TradingType, IVoucherLineUI } from "@/interfaces/voucher";
 import { numberWithCommas } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
+import AiConfidenceBar from "@/components/common/ai_confidence_bar";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { useParams } from "next/navigation";
 import { FilePreview } from "@/components/common/file_preview";
 import AccountBookSelector from "@/components/user/voucher/account_book_selector";
+import AiNote from "@/components/common/ai_note";
 
 interface IVoucherDetailModalProps {
   isOpen: boolean;
@@ -51,8 +53,8 @@ const VoucherRow = ({
   const { t } = useTranslation();
 
   return (
-    <div className="mb-4 flex items-start gap-2">
-      <div className="flex flex-1 flex-col gap-2">
+    <>
+      <div className="col-span-4 flex flex-1 flex-col gap-2">
         {/* Info: (20260317 - Julian) Accounting Code Select */}
         <div className="relative flex h-[42px] items-center overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
           <button
@@ -84,7 +86,7 @@ const VoucherRow = ({
       </div>
 
       {/* Info: (20260317 - Julian) Debit */}
-      <div className="h-[42px] w-[100px]">
+      <div className="col-span-3 h-[42px]">
         <input
           type="number"
           aria-label={t("voucher.detail_modal.fields.debit")}
@@ -106,7 +108,7 @@ const VoucherRow = ({
       </div>
 
       {/* Info: (20260317 - Julian) Credit */}
-      <div className="h-[42px] w-[100px]">
+      <div className="col-span-3 h-[42px]">
         <input
           type="number"
           aria-label={t("voucher.detail_modal.fields.credit")}
@@ -142,7 +144,7 @@ const VoucherRow = ({
           <Trash2 size={18} />
         </button>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -393,13 +395,14 @@ export default function VoucherDetailModal({
                     >
                       {t("voucher.detail_modal.title")}
                     </DialogTitle>
+                    {/* Info: (20260324 - Julian) 顯示傳票狀態 */}
                     {activeVoucher.isVerified ? (
                       <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
-                        {t("voucher.detail_modal.status.verified")}
+                        {t("verify.status.verified")}
                       </span>
                     ) : (
                       <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
-                        {t("voucher.detail_modal.status.pending")}
+                        {t("verify.status.unverified")}
                       </span>
                     )}
                   </div>
@@ -421,24 +424,18 @@ export default function VoucherDetailModal({
                       <h4 className="text-sm font-bold text-slate-500">
                         {t("voucher.detail_modal.sections.preview")}
                       </h4>
-                      <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
-                        <span className="text-xs font-bold text-slate-500">
-                          {t("voucher.detail_modal.fields.confidence")}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <div className="h-2 w-16 overflow-hidden rounded-full bg-slate-200">
-                            <div
-                              className={`h-full rounded-full ${
-                                activeVoucher.confidence >= 90
-                                  ? "bg-emerald-400"
-                                  : "bg-orange-500"
-                              }`}
-                              style={{ width: `${activeVoucher.confidence}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-black text-slate-700">
-                            {activeVoucher.confidence}%
+                      <div className="relative flex items-center gap-2">
+                        {/* Info: (20260324 - Julian) AI Note */}
+                        <AiNote note={activeVoucher.aiNote} />
+
+                        {/* Info: (20260324 - Julian) AI Confidence */}
+                        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
+                          <span className="text-xs font-bold text-slate-500">
+                            {t("voucher.detail_modal.fields.confidence")}
                           </span>
+                          <AiConfidenceBar
+                            confidence={activeVoucher.confidence}
+                          />
                         </div>
                       </div>
                     </div>
@@ -593,7 +590,7 @@ export default function VoucherDetailModal({
                       </div>
 
                       {/* Info: (20260317 - Julian) Rows container */}
-                      <div className="flex flex-col">
+                      <div className="mb-4 grid grid-cols-11 gap-x-1 gap-y-2">
                         {rows.map((row) => (
                           <VoucherRow
                             key={row.id}
@@ -679,7 +676,7 @@ export default function VoucherDetailModal({
                             className="flex h-10 items-center gap-2 rounded-xl bg-red-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:bg-slate-300"
                           >
                             <X size={16} className="stroke-3" />
-                            {t("voucher.detail_modal.actions.unverify")}
+                            {t("verify.button.unverify")}
                           </button>
                         ) : (
                           <button
@@ -689,7 +686,7 @@ export default function VoucherDetailModal({
                             className="flex h-10 items-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:bg-slate-300"
                           >
                             <CheckCircle2 size={16} className="stroke-3" />
-                            {t("voucher.detail_modal.actions.verify_save")}
+                            {t("verify.button.verify")}
                           </button>
                         )}
                         <button
@@ -718,7 +715,7 @@ export default function VoucherDetailModal({
         title={t("voucher.detail_modal.confirm_modals.clear_all.title")}
         message={t("voucher.detail_modal.confirm_modals.clear_all.message")}
         confirmText={t("voucher.detail_modal.actions.confirm")}
-        cancelText={t("voucher.detail_modal.actions.cancel")}
+        cancelText={t("common.cancel")}
         onConfirm={() => {
           setRows([]);
           setInputDate(0);
@@ -739,7 +736,7 @@ export default function VoucherDetailModal({
           "voucher.detail_modal.confirm_modals.leave_without_saving.message",
         )}
         confirmText={t("voucher.detail_modal.actions.confirm")}
-        cancelText={t("voucher.detail_modal.actions.cancel")}
+        cancelText={t("common.cancel")}
         onConfirm={() => onClose()}
       />
 
@@ -752,7 +749,7 @@ export default function VoucherDetailModal({
         confirmText={
           isSaving ? "Saving..." : t("voucher.detail_modal.actions.confirm")
         }
-        cancelText={t("voucher.detail_modal.actions.cancel")}
+        cancelText={t("common.cancel")}
         onConfirm={executeSaveVoucher}
       />
 
@@ -760,10 +757,12 @@ export default function VoucherDetailModal({
       <ConfirmModal
         isOpen={isUnverifyModalOpen}
         onClose={() => setIsUnverifyModalOpen(false)}
-        title={t("voucher.detail_modal.unverify_confirm.title")}
-        message={t("voucher.detail_modal.unverify_confirm.message")}
-        confirmText={t("voucher.detail_modal.unverify_confirm.confirm")}
-        cancelText={t("voucher.detail_modal.unverify_confirm.cancel")}
+        title={t("verify.unverify_modal.title")}
+        message={t("verify.unverify_modal.message", {
+          type: t("verify.type.voucher"),
+        })}
+        confirmText={t("verify.unverify_modal.confirm")}
+        cancelText={t("common.cancel")}
         onConfirm={handleUnverifyConfirmed}
       />
 

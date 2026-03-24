@@ -9,6 +9,7 @@ export const zhTw = {
     cancel: "取消",
     close: "關閉",
     coming_soon_message: "即將推出",
+    all: "全部",
     agree: "同意",
     filter: "篩選",
     pagination: {
@@ -493,7 +494,6 @@ export const zhTw = {
           "授權已成功，正在發行區塊鏈點數至您的錢包，請稍候...",
         processing_failed: "付款處理失敗。請重試。",
         syncing_status: "正在同步您的帳戶狀態...",
-        cancel_btn: "取消",
         payment_method: "付款方式",
         use_saved_card: "使用已綁定的信用卡",
         bind_new_card: "綁定新信用卡",
@@ -583,7 +583,7 @@ export const zhTw = {
     form_enterprise_id: "統一編號 (選填)",
     form_esg_industry: "產業分類 (ESG, 選填)",
     submit: "確認",
-    cancel: "取消",
+
   },
   sidebar: {
     modules: "功能模組",
@@ -637,7 +637,7 @@ export const zhTw = {
     confirm_title: "確認生成分析報告",
     confirm_desc: "此操作將消耗點數，請確認詳細資訊：",
     confirm_action: "支付並生成",
-    cancel: "取消",
+
     countries: {
       tw: "台灣",
       us: "美國",
@@ -1009,7 +1009,7 @@ export const zhTw = {
     delete: "刪除憑證",
     confirm_delete_title: "刪除憑證",
     confirm_delete_msg: "確定要刪除這筆憑證嗎？此動作無法復原。",
-    cancel: "取消",
+
     unsaved_changes_title: "尚未儲存變更",
     unsaved_changes_msg: "您有尚未儲存的變更，確定要離開嗎？",
     confirm_save_title: "確認儲存",
@@ -1020,6 +1020,13 @@ export const zhTw = {
     zoom_reset: "重置",
   },
   journal: {
+    summary: {
+      empty: "目前沒有日記帳資料",
+      today_count: "今日產生日記帳",
+      unit: "張",
+      pending: "待核對",
+      ai_confidence: "AI 平均信心度",
+    },
     main_view: {
       title: "憑證管理",
       upload: "上傳憑證",
@@ -1045,7 +1052,6 @@ export const zhTw = {
   voucher: {
     account_book_selector: {
       title: "請選擇會計科目",
-      all: "全部",
       search_placeholder: "搜尋科目代碼或名稱...",
       no_results: "找不到符合的會計科目",
     },
@@ -1059,7 +1065,6 @@ export const zhTw = {
       filters: {
         type: "欄位類型",
         type_options: {
-          all: "全部",
           income: "收入",
           outcome: "支出",
           transfer: "轉換",
@@ -1067,7 +1072,8 @@ export const zhTw = {
         period: "期間",
         search: "搜尋傳票編號、科目編號...",
         hide_deleted: "隱藏已刪除的傳票及其沖銷紀錄",
-        currency: "幣別: {currency}",
+        total_vouchers: "總傳票數: {{count}} 張",
+        currency: "幣別: {{currency}}",
       },
       table: {
         types: {
@@ -1075,12 +1081,6 @@ export const zhTw = {
           income: "收入傳票",
           transfer: "轉帳傳票",
           unknown: "未知傳票",
-        },
-        status: {
-          verified: "已核對",
-          manual: "人工核對",
-          unverified: "尚未核對",
-          deleted: "已刪除",
         },
         headers: {
           receipt: "憑證",
@@ -1112,10 +1112,6 @@ export const zhTw = {
       messages: {
         fetch_error: "取得傳票失敗",
         deleted_warning: "已刪除傳票不可編輯",
-      },
-      status: {
-        pending: "待核對",
-        verified: "已核對",
       },
       sections: {
         preview: "憑證預覽",
@@ -1155,7 +1151,7 @@ export const zhTw = {
         clear_all: "全部清除",
         save_voucher: "儲存傳票",
         confirm: "確認",
-        cancel: "取消",
+
       },
       confirm_modals: {
         clear_all: {
@@ -1170,13 +1166,6 @@ export const zhTw = {
           title: "儲存傳票",
           message: "您確定要儲存此傳票嗎？",
         },
-      },
-      unverify_confirm: {
-        title: "確認退回？",
-        message:
-          "您確定要將此傳票退回未核對狀態嗎？變更的內容將會儲存，請確認資料是否無誤。",
-        confirm: "確認退回",
-        cancel: "取消",
       },
     },
   },
@@ -1212,9 +1201,6 @@ export const zhTw = {
       scope_3: "範疇三",
     },
     no_file: "無檔案",
-    verified: "已核對",
-    manual_verify: "人工核對",
-    unverified: "尚未核對",
     search_placeholder: "搜尋供應商、活動類型...",
     search_aria: "搜尋供應商、活動類型",
     filter_intensity_aria: "依強度篩選",
@@ -1265,27 +1251,18 @@ export const zhTw = {
     actions: {
       cancel_edit: "取消修改",
       save_only: "僅儲存修改",
-      save_and_verify: "儲存並完成核對",
-      unverify: "退回未核對",
     },
     close_confirm: {
       title: "確認關閉？",
       message: "您的變更尚未儲存，確認離開將會失去所有變更。確認要關閉嗎？",
       confirm: "確認離開",
-      cancel: "取消",
+
     },
     save_confirm: {
       title: "確認儲存？",
       message: "即將儲存您所做出的 ESG 紀錄核對變更。請確認資料是否無誤？",
       confirm: "確認儲存",
-      cancel: "取消",
-    },
-    unverify_confirm: {
-      title: "確認退回？",
-      message:
-        "您確定要將此 ESG 紀錄退回未核對狀態嗎？變更的內容將會儲存，請確認資料是否無誤。",
-      confirm: "確認退回",
-      cancel: "取消",
+
     },
     esg_industry_benchmarks: {
       spectrum: {
@@ -1339,4 +1316,29 @@ export const zhTw = {
       },
     },
   },
+    "verify":{
+      "verify_modal":{
+        title:"確認核對？",
+        message:"您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+        confirm:"確認核對",
+      },
+      "unverify_modal":{
+        title:"確認退回？",
+        message:"您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+        confirm:"確認退回",
+      },
+      status: {
+        verified: "已核對",
+        unverified: "待核對",
+      },
+      button:{
+        unverify:"退回未核對",
+        verify:"核對並存檔",
+      },
+      type:{
+        journal:"日記帳",
+        voucher:"傳票",
+        esg:"碳排紀錄",
+      }
+    }
 };
