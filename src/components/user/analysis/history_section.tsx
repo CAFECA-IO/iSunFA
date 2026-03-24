@@ -20,6 +20,7 @@ interface IHistoryItem {
   country?: string;
   keyword?: string;
   tags?: string[];
+  isExternal?: boolean;
 }
 
 export default function HistorySection() {
@@ -59,7 +60,7 @@ export default function HistorySection() {
   const [error, setError] = useState<string | null>(null);
 
   // Info: (20260130 - Luphia) Report View Modal State
-  const [selectedReport, setSelectedReport] = useState<{ id: string; content: string; type: string; keyword?: string } | null>(null);
+  const [selectedReport, setSelectedReport] = useState<{ id: string; content: string; type: string; keyword?: string; isExternal?: boolean } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -94,7 +95,7 @@ export default function HistorySection() {
     try {
       setLoadingReport(true);
       // Info: (20260130 - Luphia) Fetch details
-      const result = await request<{ code: string; payload: { id: string; result: string; type: string } }>(`/api/v1/user/analysis/${item.reportId}`);
+      const result = await request<{ code: string; payload: { id: string; result: string; type: string; isExternal?: boolean } }>(`/api/v1/user/analysis/${item.reportId}`);
 
       if (result.code === 'SUCCESS') {
         const content = typeof result.payload.result === 'string' ? result.payload.result : JSON.stringify(result.payload.result, null, 2);
@@ -102,7 +103,8 @@ export default function HistorySection() {
           id: result.payload.id,
           content: content || 'No content available.',
           type: result.payload.type,
-          keyword: item.keyword
+          keyword: item.keyword,
+          isExternal: result.payload.isExternal
         });
         setIsModalOpen(true);
       } else {
@@ -342,7 +344,14 @@ export default function HistorySection() {
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.generatedAt}</td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">
                       <div className="flex flex-col gap-1">
-                        <span>{t(`analysis.categories.${item.category}`)}</span>
+                        <div className="flex items-center gap-2">
+                          <span>{t(`analysis.categories.${item.category}`)}</span>
+                          {['carbon_health_check', 'net_zero_emissions'].includes(item.category) && (
+                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${item.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
+                              {item.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
+                            </span>
+                          )}
+                        </div>
                         {(item.country || item.keyword) && (
                           <div className="flex items-center gap-2">
                             {item.country && (
@@ -407,7 +416,14 @@ export default function HistorySection() {
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="flex flex-col gap-1">
-                        <h3 className="font-semibold text-gray-900">{t(`analysis.categories.${item.category}`)}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-gray-900">{t(`analysis.categories.${item.category}`)}</h3>
+                          {['carbon_health_check', 'net_zero_emissions'].includes(item.category) && (
+                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${item.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
+                              {item.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
+                            </span>
+                          )}
+                        </div>
                         {(item.country || item.keyword) && (
                           <div className="flex items-center gap-2">
                             {item.country && (
@@ -525,7 +541,14 @@ export default function HistorySection() {
                     as="h3"
                     className="text-lg font-medium leading-6 text-gray-900 flex justify-between items-center mb-4"
                   >
-                    <span>{selectedReport ? t(`analysis.categories.${selectedReport.type}`) : 'Report'}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{selectedReport ? t(`analysis.categories.${selectedReport.type}`) : 'Report'}</span>
+                      {selectedReport && ['carbon_health_check', 'net_zero_emissions'].includes(selectedReport.type) && (
+                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${selectedReport.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
+                          {selectedReport.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       <button
                         type="button"

@@ -255,7 +255,8 @@ export class AnalysisService {
                 country: params.country,
                 keyword: params.keyword,
                 category: params.category,
-                cached: true
+                cached: true,
+                isExternal: params.isExternal === true
               }
             }
           });
@@ -292,6 +293,7 @@ export class AnalysisService {
             year: params.year,
             country: params.country,
             keyword: params.keyword,
+            isExternal: params.isExternal === true,
             historicalTags: await analysisRepo.getGlobalTopTags(20)
           },
           tasks: missionDef ? missionDef.tasks : undefined

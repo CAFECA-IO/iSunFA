@@ -33,6 +33,18 @@ export async function GET(
       return jsonFail(ApiCode.FORBIDDEN, 'You do not have permission to view this analysis');
     }
 
+    const missionData = analysis.mission?.data as Record<string, unknown> | null;
+    let isExternal = false;
+    if (typeof missionData?.isExternal === 'boolean') {
+      isExternal = missionData.isExternal;
+    } else {
+      // Info: (20260324 - Tzuhan) Fallback to order data if available
+      const orderData = analysis.order?.data as Record<string, unknown> | null;
+      if (typeof orderData?.isExternal === 'boolean') {
+        isExternal = orderData.isExternal;
+      }
+    }
+
     // Info: (20260130 - Luphia) Return full details including mission result
     return jsonOk({
       id: analysis.id,
@@ -40,6 +52,7 @@ export async function GET(
       result: analysis.mission?.result,
       createdAt: analysis.createdAt,
       type: analysis.type,
+      isExternal
       // Info: (20260130 - Luphia) Include any other necessary fields
     });
 

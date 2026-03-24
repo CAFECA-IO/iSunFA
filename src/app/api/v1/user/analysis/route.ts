@@ -277,6 +277,10 @@ export async function GET(request: NextRequest) {
 
       const tags = analysis.tags?.map(t => t.tag.name) || [];
 
+      const isExternal = typeof missionData?.isExternal === 'boolean'
+        ? missionData.isExternal
+        : (typeof orderData?.isExternal === 'boolean' ? orderData.isExternal : false);
+
       return {
         id: analysis.id,
         generatedAt,
@@ -289,7 +293,8 @@ export async function GET(request: NextRequest) {
         reportId: analysis.id,
         country,
         keyword,
-        tags
+        tags,
+        isExternal
       };
     });
 

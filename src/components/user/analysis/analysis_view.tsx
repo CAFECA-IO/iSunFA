@@ -76,9 +76,9 @@ export default function AnalysisView() {
   const [isSearchingCompany, setIsSearchingCompany] = useState(false);
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
 
-  const isInternalCarbonAnalysis = activeTab === 'internal' && ['carbon_health_check', 'net_zero_emissions'].includes(category);
+  const isInternalCompanyAnalysis = activeTab === 'internal';
   const isExternalCarbonAnalysis = activeTab === 'external' && ['carbon_health_check', 'net_zero_emissions'].includes(category);
-  const needsCompanyInput = isInternalCarbonAnalysis || isExternalCarbonAnalysis;
+  const needsCompanyInput = isInternalCompanyAnalysis || isExternalCarbonAnalysis;
 
   useEffect(() => {
     if (!isExternalCarbonAnalysis || internalCompanyName.length < 2) {
@@ -266,6 +266,10 @@ export default function AnalysisView() {
     return `${start} ~ ${end}`;
   })();
 
+  const derivedKeyword = (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends')
+    ? keyword
+    : (needsCompanyInput ? internalCompanyName : undefined);
+
   // Info: (20260120 - Tzuhan) Open Payment Modal
   const handleGenerate = () => {
     setIsPaymentModalOpen(true);
@@ -300,7 +304,7 @@ export default function AnalysisView() {
             periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
             txHash: null,
             country,
-            keyword: (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends') ? keyword : (needsCompanyInput ? internalCompanyName : undefined),
+            keyword: derivedKeyword,
             isExternal: activeTab === 'external'
           })
         });
@@ -321,7 +325,8 @@ export default function AnalysisView() {
           method: 'POST',
           body: JSON.stringify({
             category, periodType, year: selectedYear, periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-            country, keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput && selectedCompany ? `${selectedCompany.name} (${selectedCompany.taxId})` : undefined),
+            country, keyword: derivedKeyword,
+            isExternal: activeTab === 'external',
             authentication: { orderId: orderRes.payload.orderId, ...transferAuth }
           })
         });
@@ -422,7 +427,7 @@ export default function AnalysisView() {
           year: selectedYear,
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
           country,
-          keyword: (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends') ? keyword : (needsCompanyInput ? internalCompanyName : undefined),
+          keyword: derivedKeyword,
           isExternal: activeTab === 'external',
           authentication: {
             orderId,
@@ -619,7 +624,7 @@ export default function AnalysisView() {
                 </div>
               </div>
               {/* Info: (20260320 - Tzuhan) Internal Analysis: Company Dropdown */}
-              {isInternalCarbonAnalysis && (
+              {isInternalCompanyAnalysis && (
                 <div className="space-y-4 pt-4 border-t border-gray-100 relative">
                   <div className="space-y-2">
                     <select
@@ -786,7 +791,7 @@ export default function AnalysisView() {
           type: t(`analysis.time_units.${periodType}`)
         })}
         country={country}
-        keyword={(activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends') ? keyword : (needsCompanyInput && selectedCompany ? `${selectedCompany.name} (${selectedCompany.taxId})` : undefined)}
+        keyword={derivedKeyword}
         isLoading={isLoading}
         status={workflowStatus}
         errorMessage={errorMessage}
