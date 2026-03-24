@@ -445,7 +445,6 @@ export const zhCn = {
           "授权已成功，正在发行区块链点数至您的钱包，请稍候...",
         processing_failed: "付款处理失败。请重试。",
         syncing_status: "正在同步您的账户状态...",
-        cancel_btn: "取消",
         payment_method: "付款方式",
         use_saved_card: "使用已绑定的信用卡",
         bind_new_card: "绑定新信用卡",
@@ -535,7 +534,6 @@ export const zhCn = {
     form_enterprise_id: "统一社会信用代码 (选填)",
     form_esg_industry: "产业分类 (ESG, 选填)",
     submit: "确认",
-    cancel: "取消",
   },
   sidebar: {
     modules: "功能模块",
@@ -590,7 +588,7 @@ export const zhCn = {
     confirm_desc: "此操作将消耗点数，请确认详细信息：",
     confirm_balance: "支付后余额",
     confirm_action: "支付并生成",
-    cancel: "取消",
+
     categories: {
       balance_sheet: "资产负债表",
       cash_flow: "现金流量表",
@@ -857,7 +855,6 @@ export const zhCn = {
       re_send_pay_slip_content_2: "发送给",
       re_send_pay_slip_content_bold_2: " {{name}}",
       re_send_pay_slip_content_3: " 了。是否要重新发送？",
-      re_send_pay_slip_cancel_btn: "取消",
       re_send_pay_slip_submit_btn: "是的，重发薪资单",
       re_send_pay_slip_success_title: "薪资单发送成功！",
       re_send_pay_slip_success_content: "薪资单已成功发送至员工的电子邮件。",
@@ -913,7 +910,6 @@ export const zhCn = {
     delete: "删除发票",
     confirm_delete_title: "删除发票",
     confirm_delete_msg: "确定要删除这笔发票吗？此操作无法撤销。",
-    cancel: "取消",
     unsaved_changes_title: "尚未保存更改",
     unsaved_changes_msg: "您有尚未保存的更改，确定要离开吗？",
     confirm_save_title: "确认保存",
@@ -1053,13 +1049,13 @@ export const zhCn = {
       title: "确认关闭？",
       message: "您的变更尚未保存，确认离开将会失去所有变更。确认要关闭吗？",
       confirm: "确认离开",
-      cancel: "取消",
+
     },
     save_confirm: {
       title: "确认保存？",
       message: "即将保存您所做出 ESG 纪录核对变更。请确认数据是否无误？",
       confirm: "确认保存",
-      cancel: "取消",
+
       success: "验证资料已保存",
     },
   },
@@ -1204,7 +1200,6 @@ export const zhCn = {
         clear_all: "全部清除",
         save_voucher: "保存凭证",
         confirm: "确认",
-        cancel: "取消",
       },
       confirm_modals: {
         clear_all: {

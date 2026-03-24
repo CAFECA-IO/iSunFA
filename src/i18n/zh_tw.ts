@@ -493,7 +493,6 @@ export const zhTw = {
           "授權已成功，正在發行區塊鏈點數至您的錢包，請稍候...",
         processing_failed: "付款處理失敗。請重試。",
         syncing_status: "正在同步您的帳戶狀態...",
-        cancel_btn: "取消",
         payment_method: "付款方式",
         use_saved_card: "使用已綁定的信用卡",
         bind_new_card: "綁定新信用卡",
@@ -583,7 +582,7 @@ export const zhTw = {
     form_enterprise_id: "統一編號 (選填)",
     form_esg_industry: "產業分類 (ESG, 選填)",
     submit: "確認",
-    cancel: "取消",
+
   },
   sidebar: {
     modules: "功能模組",
@@ -637,7 +636,7 @@ export const zhTw = {
     confirm_title: "確認生成分析報告",
     confirm_desc: "此操作將消耗點數，請確認詳細資訊：",
     confirm_action: "支付並生成",
-    cancel: "取消",
+
     countries: {
       tw: "台灣",
       us: "美國",
@@ -1009,7 +1008,7 @@ export const zhTw = {
     delete: "刪除憑證",
     confirm_delete_title: "刪除憑證",
     confirm_delete_msg: "確定要刪除這筆憑證嗎？此動作無法復原。",
-    cancel: "取消",
+
     unsaved_changes_title: "尚未儲存變更",
     unsaved_changes_msg: "您有尚未儲存的變更，確定要離開嗎？",
     confirm_save_title: "確認儲存",
@@ -1145,7 +1144,7 @@ export const zhTw = {
         clear_all: "全部清除",
         save_voucher: "儲存傳票",
         confirm: "確認",
-        cancel: "取消",
+
       },
       confirm_modals: {
         clear_all: {
@@ -1250,13 +1249,13 @@ export const zhTw = {
       title: "確認關閉？",
       message: "您的變更尚未儲存，確認離開將會失去所有變更。確認要關閉嗎？",
       confirm: "確認離開",
-      cancel: "取消",
+
     },
     save_confirm: {
       title: "確認儲存？",
       message: "即將儲存您所做出的 ESG 紀錄核對變更。請確認資料是否無誤？",
       confirm: "確認儲存",
-      cancel: "取消",
+
     },
     esg_industry_benchmarks: {
       spectrum: {

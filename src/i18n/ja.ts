@@ -453,7 +453,6 @@ export const ja = {
         processing_failed:
           "支払いの処理に失敗しました。もう一度お試しください。",
         syncing_status: "アカウントのステータスを同期しています...",
-        cancel_btn: "キャンセル",
         payment_method: "お支払い方法",
         use_saved_card: "保存したクレジットカードを使用する",
         bind_new_card: "新しいクレジットカードを登録する",
@@ -547,7 +546,6 @@ export const ja = {
     form_enterprise_id: "統一企業番号 (任意)",
     form_esg_industry: "業界分類 (ESG、任意)",
     submit: "確認",
-    cancel: "キャンセル",
   },
   sidebar: {
     modules: "機能モジュール",
@@ -605,7 +603,6 @@ export const ja = {
       "この操作にはクレジットが必要です。以下の詳細を確認してください：",
     confirm_balance: "支払い後の残高",
     confirm_action: "支払いして生成",
-    cancel: "キャンセル",
     countries: {
       tw: "台湾",
       us: "米国",
@@ -947,7 +944,6 @@ export const ja = {
     confirm_delete_title: "請求書を削除",
     confirm_delete_msg:
       "この請求書を削除してもよろしいですか？この操作は元に戻せません。",
-    cancel: "キャンセル",
     unsaved_changes_title: "未保存の変更",
     unsaved_changes_msg: "未保存の変更があります。終了してもよろしいですか？",
     confirm_save_title: "保存してよろしいですか？",
@@ -1087,14 +1083,12 @@ export const ja = {
       title: "保存せずに閉じますか？",
       message: "未保存の変更は失われます。続行しますか？",
       confirm: "終了",
-      cancel: "キャンセル",
     },
     save_confirm: {
       title: "変更を保存しますか？",
       message:
         "ESG記録の確認変更を保存しようとしています。データが正しいか確認してください。",
       confirm: "保存を確認",
-      cancel: "キャンセル",
       success: "検証データが保存されました",
     },
   },

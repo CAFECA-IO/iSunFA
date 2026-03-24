@@ -444,7 +444,6 @@ export const ko = {
         credits_unit: "{{count}} pt",
         confirm_btn: "결제 확인",
         processing: "처리 중...",
-        cancel_btn: "취소",
         payment_method: "결제 방식",
         use_saved_card: "저장된 신용카드 사용",
         bind_new_card: "새로운 신용카드 등록",
@@ -537,7 +536,6 @@ export const ko = {
     form_enterprise_id: "사업자등록번호 (선택 시)",
     form_esg_industry: "산업 분류 (ESG, 선택 시)",
     submit: "확인",
-    cancel: "취소",
   },
   sidebar: {
     modules: "기능 모듈",
@@ -595,7 +593,6 @@ export const ko = {
       "이 작업은 크레딧을 소비합니다. 아래 세부 정보를 확인하십시오:",
     confirm_balance: "결제 후 잔액",
     confirm_action: "결제 및 생성",
-    cancel: "취소",
     countries: {
       tw: "대만",
       us: "미국",
@@ -934,7 +931,6 @@ export const ko = {
     confirm_delete_title: "청구서 삭제",
     confirm_delete_msg:
       "이 청구서를 삭제하시겠습니까? 이 작업은 실행 취소할 수 없습니다.",
-    cancel: "취소",
     unsaved_changes_title: "저장되지 않은 변경 사항",
     unsaved_changes_msg: "저장되지 않은 변경 사항이 있습니다. 나가시겠습니까?",
     confirm_save_title: "저장 확인",
@@ -1074,14 +1070,12 @@ export const ko = {
       title: "저장하지 않고 닫으시겠습니까?",
       message: "저장되지 않은 변경 사항이 손실됩니다. 계속하시겠습니까?",
       confirm: "나가기",
-      cancel: "취소",
     },
     save_confirm: {
       title: "저장하시겠습니까?",
       message:
         "수행한 ESG 기록 확인 변경 사항을 저장하려고 합니다. 데이터가 올바른지 확인하십시오.",
       confirm: "저장 확인",
-      cancel: "취소",
       success: "검증 데이터가 저장되었습니다",
     },
   },

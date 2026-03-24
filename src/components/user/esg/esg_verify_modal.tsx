@@ -488,7 +488,7 @@ export default function EsgVerifyModal({
         title={t("esg_verify.close_confirm.title")}
         message={t("esg_verify.close_confirm.message")}
         confirmText={t("esg_verify.close_confirm.confirm")}
-        cancelText={t("esg_verify.close_confirm.cancel")}
+        cancelText={t("common.cancel")}
         onConfirm={() => {
           setIsCloseModalOpen(false);
           onClose();

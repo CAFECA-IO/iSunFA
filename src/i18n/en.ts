@@ -452,7 +452,6 @@ export const en = {
           "Authorization successful, issuing blockchain credits to your wallet. Please wait...",
         processing_failed: "Payment processing failed. Please try again.",
         syncing_status: "Syncing your account status...",
-        cancel_btn: "Cancel",
         payment_method: "Payment Method",
         use_saved_card: "Use Saved Card",
         bind_new_card: "Bind New Card",
@@ -548,7 +547,6 @@ export const en = {
     form_enterprise_id: "Enterprise ID (Optional)",
     form_esg_industry: "Industry Category (ESG, Optional)",
     submit: "Confirm",
-    cancel: "Cancel",
   },
   sidebar: {
     modules: "Modules",
@@ -606,7 +604,6 @@ export const en = {
       "This action will consume credits. Please confirm the details below:",
     confirm_balance: "Balance after payment",
     confirm_action: "Pay & Generate",
-    cancel: "Cancel",
     countries: {
       tw: "Taiwan",
       us: "United States",
@@ -984,7 +981,6 @@ export const en = {
     confirm_delete_title: "Delete Invoice",
     confirm_delete_msg:
       "Are you sure you want to delete this invoice? This action cannot be undone.",
-    cancel: "Cancel",
     unsaved_changes_title: "Unsaved Changes",
     unsaved_changes_msg:
       "You have unsaved changes. Are you sure you want to leave?",
@@ -1120,7 +1116,6 @@ export const en = {
         clear_all: "Clear All",
         save_voucher: "Save Voucher",
         confirm: "Confirm",
-        cancel: "Cancel",
       },
       confirm_modals: {
         clear_all: {
@@ -1226,14 +1221,12 @@ export const en = {
       message:
         "Review the changes you've made to the ESG records. Are you sure you want to save?",
       confirm: "Confirm Save",
-      cancel: "Cancel",
       success: "Verification data saved",
     },
     save_confirm: {
       title: "Save changes?",
       message: "You are about to save the verification changes. Proceed?",
       confirm: "Save",
-      cancel: "Cancel",
     },
   },
   esg_target: {
