@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { category, periodType, periodValue, year, country, keyword, authentication } = body;
+    const { category, periodType, periodValue, year, country, keyword, authentication, isExternal } = body;
 
     // Info: (20260128 - Luphia) Validate FIDO2 Signature OR Transaction Binding
     if (!authentication || !authentication.orderId) {
@@ -185,7 +185,8 @@ export async function POST(request: NextRequest) {
       year,
       country,
       keyword,
-      orderId
+      orderId,
+      isExternal
     });
 
     return jsonOk(result);
@@ -276,6 +277,10 @@ export async function GET(request: NextRequest) {
 
       const tags = analysis.tags?.map(t => t.tag.name) || [];
 
+      const isExternal = typeof missionData?.isExternal === 'boolean'
+        ? missionData.isExternal
+        : (typeof orderData?.isExternal === 'boolean' ? orderData.isExternal : false);
+
       return {
         id: analysis.id,
         generatedAt,
@@ -288,7 +293,8 @@ export async function GET(request: NextRequest) {
         reportId: analysis.id,
         country,
         keyword,
-        tags
+        tags,
+        isExternal
       };
     });
 

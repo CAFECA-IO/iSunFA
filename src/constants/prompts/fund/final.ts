@@ -59,6 +59,11 @@ Structure:
 ---
 **Disclaimer:** This report is AI-generated for informational purposes only (IRSC-Analyst v1.0.0). Not financial advice.
 
+⚠️ **【嚴格格式與語氣要求】**：
+1. **直接輸出 Markdown 報告內容**，絕不可包含任何前言、開場白（如「好的，這是一份...」）或結尾問候語。
+2. **專業客觀**：請以「專業投資分析師與會計師」的嚴謹風格撰寫。
+3. **數據導向**：重點展示具體「財務數據與關鍵分數」，避免空泛形容詞。
+
 # Input Data for Analysis:
 
 ## 1. ECQ Report

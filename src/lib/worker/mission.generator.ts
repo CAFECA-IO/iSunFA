@@ -13,6 +13,11 @@ import * as FinancialProductRatingPrompts from '@/constants/prompts/financial_pr
 import * as IndustryDevelopmentPrompts from '@/constants/prompts/industry_development';
 import * as CarbonHealthCheckPrompts from '@/constants/prompts/carbon_health_check';
 import * as NetZeroEmissionsPrompts from '@/constants/prompts/net_zero_emissions';
+import * as BalanceSheetPrompts from '@/constants/prompts/balance_sheet';
+import * as CashFlowPrompts from '@/constants/prompts/cash_flow';
+import * as IncomeStatementPrompts from '@/constants/prompts/income_statement';
+import * as FinancialCompliancePrompts from '@/constants/prompts/financial_compliance';
+import * as FinancialHealthPrompts from '@/constants/prompts/financial_health';
 import { getPeriodDateRange } from '@/lib/analysis/period';
 import { JOURNAL_PROMPT } from '@/constants/prompts/journal';
 import { getVoucherPrompt } from '@/constants/prompts/voucher';
@@ -30,6 +35,7 @@ export interface IMissionParams {
   fileMimeType?: string; // Info: (20260320 - Julian) 傳入檔案的 mimeType
   accountBookId?: string; 
   prerequisiteData?: Record<string, unknown>;
+  isExternal?: boolean;
 }
 
 export interface IMissionDefinition {
@@ -265,6 +271,98 @@ export class MissionGenerator {
 
       return {
         name: `External Analysis - ${params.category} - ${params.periodValue}`,
+        tasks
+      };
+    }
+
+    const internalParallelCategories = ['balance_sheet', 'cash_flow', 'income_statement', 'financial_compliance', 'financial_health'];
+    if (internalParallelCategories.includes(params.category)) {
+      const taskGenerator = new TaskGenerator();
+      
+      const targetObj: Record<string, unknown> = {
+        category: params.category,
+        period: params.periodValue,
+        year: params.year,
+        targetCompany: params.keyword || 'Company'
+      };
+      if (params.prerequisiteData?.esgRecordsContext) {
+        targetObj.internalDataContext = params.prerequisiteData.esgRecordsContext;
+      }
+      const targetInfo = JSON.stringify(targetObj, null, 2);
+
+      const tasks: ITaskDefinition[] = [];
+      let promptMap: { key: string, prompt: string }[] = [];
+      let finalPrompt = '';
+
+      switch (params.category) {
+        case 'balance_sheet':
+          promptMap = [
+            { key: 'LIQUIDITY', prompt: BalanceSheetPrompts.LIQUIDITY_PROMPT },
+            { key: 'SOLVENCY', prompt: BalanceSheetPrompts.SOLVENCY_PROMPT },
+            { key: 'ASSET_QUALITY', prompt: BalanceSheetPrompts.ASSET_QUALITY_PROMPT }
+          ];
+          finalPrompt = BalanceSheetPrompts.FINAL_PROMPT;
+          break;
+        case 'cash_flow':
+          promptMap = [
+            { key: 'OPERATING', prompt: CashFlowPrompts.OPERATING_PROMPT },
+            { key: 'INVESTING', prompt: CashFlowPrompts.INVESTING_PROMPT },
+            { key: 'FINANCING', prompt: CashFlowPrompts.FINANCING_PROMPT }
+          ];
+          finalPrompt = CashFlowPrompts.FINAL_PROMPT;
+          break;
+        case 'income_statement':
+          promptMap = [
+            { key: 'REVENUE', prompt: IncomeStatementPrompts.REVENUE_PROMPT },
+            { key: 'PROFITABILITY', prompt: IncomeStatementPrompts.PROFITABILITY_PROMPT },
+            { key: 'COST_STRUCTURE', prompt: IncomeStatementPrompts.COST_STRUCTURE_PROMPT }
+          ];
+          finalPrompt = IncomeStatementPrompts.FINAL_PROMPT;
+          break;
+        case 'financial_compliance':
+          promptMap = [
+            { key: 'FRAUD_DETECTION', prompt: FinancialCompliancePrompts.FRAUD_DETECTION_PROMPT },
+            { key: 'ABNORMAL_TRANSACTIONS', prompt: FinancialCompliancePrompts.ABNORMAL_TRANSACTIONS_PROMPT },
+            { key: 'REGULATORY', prompt: FinancialCompliancePrompts.REGULATORY_COMPLIANCE_PROMPT }
+          ];
+          finalPrompt = FinancialCompliancePrompts.FINAL_PROMPT;
+          break;
+        case 'financial_health':
+          promptMap = [
+            { key: 'DUPONT', prompt: FinancialHealthPrompts.DUPONT_PROMPT },
+            { key: 'GROWTH', prompt: FinancialHealthPrompts.GROWTH_PROMPT },
+            { key: 'WORKING_CAPITAL', prompt: FinancialHealthPrompts.WORKING_CAPITAL_PROMPT }
+          ];
+          finalPrompt = FinancialHealthPrompts.FINAL_PROMPT;
+          break;
+      }
+
+      const dataSourceInstruction = params.isExternal
+        ? '請強制啟動網路搜尋功能，抓取該公司最新公開的財報與數據進行深度的客觀分析。'
+        : '請嚴格基於系統提供的內部數據庫資料（包含但不限於內部財務報表、傳票、日記帳、綠色/ESG數據紀錄等），禁止使用網路搜尋獲取外部財報。請純粹判斷內部資料。';
+
+      const targetCompanyName = params.keyword || '該企業';
+      const periodName = `${params.periodType === 'yearly' ? '年度' : params.periodType === 'seasonly' ? '季度' : params.periodType === 'monthly' ? '月份' : params.periodValue}`;
+
+      promptMap.forEach(item => {
+        const injectedPrompt = item.prompt
+          .replace('{Data_Source_Instruction}', dataSourceInstruction)
+          .replace(/\{Target_Company\}/g, targetCompanyName)
+          .replace(/\{Period\}/g, periodName)
+          .replace(/\{Year\}/g, String(params.year || '未提供'));
+          
+        tasks.push(taskGenerator.generateTask(item.key, injectedPrompt, targetInfo, 0));
+      });
+
+      const injectedFinalPrompt = finalPrompt
+        .replace(/\{Target_Company\}/g, targetCompanyName)
+        .replace(/\{Period\}/g, periodName)
+        .replace(/\{Year\}/g, String(params.year || '未提供'));
+
+      tasks.push(taskGenerator.generateTask('FINAL', injectedFinalPrompt, targetInfo, 1));
+
+      return {
+        name: `Internal Analysis - ${params.category} - ${params.periodValue}`,
         tasks
       };
     }

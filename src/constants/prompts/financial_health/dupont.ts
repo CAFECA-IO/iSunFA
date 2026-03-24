@@ -1,0 +1,7 @@
+export const DUPONT_PROMPT = `
+任務：分析【{Target_Company}】在 {Period} (Year: {Year}) 的企業財務健康度「杜邦分析 (DuPont Analysis)」。
+{Data_Source_Instruction}
+1. 將股東權益報酬率 (ROE) 拆解為三大要素：淨利率、總資產週轉率、權益乘數。
+2. 評估驅動 ROE 成長或衰退的核心因素是什麼？是本業獲利提升、資產運用變高效率，還是單純依賴舉債？
+請以專業的財報分析師口吻撰寫，提供具體的數據佐證，並給出短評。
+`.trim();

@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type = 'ANALYSIS', category, periodType, periodValue, year, amount, credits, paymentMethodId, country, keyword } = body;
+    const { type = 'ANALYSIS', category, periodType, periodValue, year, amount, credits, paymentMethodId, country, keyword, isExternal } = body;
 
     // Info: (20260130 - Tzuhan) Ensure user exists in DB before creating order to avoid FK errors
     await webAuthnService.ensureUserSynced(user.address);
@@ -49,7 +49,8 @@ export async function POST(request: NextRequest) {
         periodValue,
         year,
         country,
-        keyword
+        keyword,
+        isExternal
       });
 
       return jsonOk(result);

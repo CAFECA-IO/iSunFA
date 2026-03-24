@@ -1,0 +1,8 @@
+export const COST_STRUCTURE_PROMPT = `
+任務：分析【{Target_Company}】在 {Period} (Year: {Year}) 的損益表「成本與費用結構」。
+{Data_Source_Instruction}
+1. 營業成本 (Cost of Goods Sold) 的變動是否與營收變動幅度相符？是否存在原物料上漲或內部製造成本增加的壓力？
+2. 營業費用 (Operating Expenses, SG&A及研發費用) 的控管能力如何？
+3. 內部資料顯示是否具備營業槓桿 (Operating Leverage) 規模經濟效益，即營收成長的同時，費用率逐漸下降？
+請以專業的財報分析師口吻撰寫，提供具體的數據佐證，並給出短評。
+`.trim();
