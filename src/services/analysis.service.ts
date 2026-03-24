@@ -1,7 +1,7 @@
 import { mkdir } from 'fs/promises';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { getAnalysisCost } from '@/lib/analysis/pricing';
+import { getAnalysisCost, IOrderParams } from '@/lib/analysis/pricing';
 import { storageService } from '@/services/storage.service';
 import { prisma } from '@/lib/prisma';
 import { analysisRepo } from '@/repositories/analysis.repo';
@@ -9,14 +9,8 @@ import { missionGenerator, IMissionDefinition } from '@/lib/worker/mission.gener
 import { MISSION_STATUS } from '@/constants/status';
 import { getPeriodDateRange } from '@/lib/analysis/period';
 
-export interface IGenerateAnalysisParams {
-  category: string;
-  periodType: string;
-  periodValue: string;
-  year: number;
+export interface IGenerateAnalysisParams extends IOrderParams {
   orderId?: string;
-  country?: string;
-  keyword?: string;
 }
 
 export class AnalysisService {
@@ -110,9 +104,9 @@ export class AnalysisService {
           const taxId = match ? match[1] : params.keyword;
 
           const matchedAccountBook = await prisma.accountBook.findFirst({
-            where: { 
+            where: {
               teamId: { in: teamIds },
-              enterpriseId: taxId 
+              enterpriseId: taxId
             }
           });
           if (matchedAccountBook) {
@@ -122,13 +116,13 @@ export class AnalysisService {
 
         const esgRecords = targetAccountBookId
           ? await prisma.esgRecord.findMany({
-              where: {
-                accountBookId: targetAccountBookId,
-                dateTimestamp: { gte: startTs, lte: endTs },
-                deletedAt: null
-              },
-              orderBy: { dateTimestamp: 'asc' }
-            })
+            where: {
+              accountBookId: targetAccountBookId,
+              dateTimestamp: { gte: startTs, lte: endTs },
+              deletedAt: null
+            },
+            orderBy: { dateTimestamp: 'asc' }
+          })
           : [];
 
         if (esgRecords.length > 0) {

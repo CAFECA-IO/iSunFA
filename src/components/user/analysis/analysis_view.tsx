@@ -62,7 +62,6 @@ export default function AnalysisView() {
   const [keyword, setKeyword] = useState<string>('');
 
   const [accountBooks, setAccountBooks] = useState<Array<{ id: string, name: string, enterpriseId?: string }>>([]);
-  const [companyInputMethod, setCompanyInputMethod] = useState<'accountBook' | 'manual'>('accountBook');
   useEffect(() => {
     request<{ payload: Array<{ id: string, name: string, enterpriseId?: string }> }>('/api/v1/user/account_book')
       .then(res => {
@@ -77,10 +76,12 @@ export default function AnalysisView() {
   const [isSearchingCompany, setIsSearchingCompany] = useState(false);
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
 
-  const needsCompanyInput = activeTab === 'internal' && ['carbon_health_check', 'net_zero_emissions'].includes(category);
+  const isInternalCarbonAnalysis = activeTab === 'internal' && ['carbon_health_check', 'net_zero_emissions'].includes(category);
+  const isExternalCarbonAnalysis = activeTab === 'external' && ['carbon_health_check', 'net_zero_emissions'].includes(category);
+  const needsCompanyInput = isInternalCarbonAnalysis || isExternalCarbonAnalysis;
 
   useEffect(() => {
-    if (!needsCompanyInput || internalCompanyName.length < 2) {
+    if (!isExternalCarbonAnalysis || internalCompanyName.length < 2) {
       setCompanySuggestions([]);
       setShowCompanyDropdown(false);
       return;
@@ -105,7 +106,7 @@ export default function AnalysisView() {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [internalCompanyName, needsCompanyInput, selectedCompany]);
+  }, [internalCompanyName, isExternalCarbonAnalysis, selectedCompany]);
 
   // Info: (20260320 - Tzuhan) Prevent selecting daily/weekly/monthly for carbon analysis
   useEffect(() => {
@@ -299,7 +300,8 @@ export default function AnalysisView() {
             periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
             txHash: null,
             country,
-            keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput ? internalCompanyName : undefined)
+            keyword: (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends') ? keyword : (needsCompanyInput ? internalCompanyName : undefined),
+            isExternal: activeTab === 'external'
           })
         });
         if (!orderRes?.payload) throw new Error('Failed to create order');
@@ -419,7 +421,8 @@ export default function AnalysisView() {
           year: selectedYear,
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
           country,
-          keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput ? internalCompanyName : undefined),
+          keyword: (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends') ? keyword : (needsCompanyInput ? internalCompanyName : undefined),
+          isExternal: activeTab === 'external',
           authentication: {
             orderId,
             transactionHash,
@@ -557,7 +560,7 @@ export default function AnalysisView() {
               )}
 
               {/* Info: (20260120 - Luphia) External Analysis: Country Selection */}
-              {activeTab === 'external' && (
+              {activeTab === 'external' && !isExternalCarbonAnalysis && (
                 <div className="space-y-2 pt-4 border-t border-gray-100">
                   <label className="block text-sm font-medium text-gray-700">
                     {t('analysis.country')}
@@ -614,123 +617,89 @@ export default function AnalysisView() {
                   })}
                 </div>
               </div>
-              {/* Info: (20260320 - Tzuhan) Internal Analysis: Company Input */}
-              {needsCompanyInput && (
+              {/* Info: (20260320 - Tzuhan) Internal Analysis: Company Dropdown */}
+              {isInternalCarbonAnalysis && (
                 <div className="space-y-4 pt-4 border-t border-gray-100 relative">
-                  {accountBooks.length > 0 && (
-                    <div className="inline-flex bg-gray-100 p-1 rounded-lg mb-4">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCompanyInputMethod('accountBook');
-                          setInternalCompanyName('');
-                          setSelectedCompany(null);
-                        }}
-                        className={`
-                          px-4 py-2 text-sm font-medium rounded-md transition-all
-                          ${companyInputMethod === 'accountBook'
-                            ? 'bg-white shadow-sm text-gray-900'
-                            : 'text-gray-500 hover:text-gray-700'
-                          }
-                        `}
-                      >
-                        {t('analysis.select_account_book') || '從我的帳本選擇'}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCompanyInputMethod('manual');
-                          setInternalCompanyName('');
-                          setSelectedCompany(null);
-                        }}
-                        className={`
-                          px-4 py-2 text-sm font-medium rounded-md transition-all
-                          ${companyInputMethod === 'manual'
-                            ? 'bg-white shadow-sm text-gray-900'
-                            : 'text-gray-500 hover:text-gray-700'
-                          }
-                        `}
-                      >
-                        {t('analysis.company_input.label')}
-                      </button>
-                    </div>
-                  )}
-
-                  {companyInputMethod === 'accountBook' && accountBooks.length > 0 ? (
-                    <div className="space-y-2">
-                      <select
-                        className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                        onChange={(e) => {
-                          const ab = accountBooks.find(b => b.id === e.target.value);
-                          if (ab) {
-                            const combinedName = ab.enterpriseId ? `${ab.name} (${ab.enterpriseId})` : ab.name;
-                            setInternalCompanyName(combinedName);
-                            if (ab.enterpriseId) {
-                              setSelectedCompany({ taxId: ab.enterpriseId, name: ab.name });
-                            } else {
-                              setSelectedCompany(null);
-                            }
-                          }
-                        }}
-                        value={accountBooks.find(b => internalCompanyName.startsWith(b.name))?.id || ""}
-                      >
-                        <option value="" disabled>-- {t('analysis.select_from_account_books') || '選擇帳本'} --</option>
-                        {accountBooks.map(ab => (
-                          <option key={ab.id} value={ab.id}>
-                            {ab.name} {ab.enterpriseId ? `(${ab.enterpriseId})` : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <div className="space-y-2 relative">
-                      <div className="flex items-center">
-                        <input
-                          id="internalCompanyName"
-                          aria-label={t('analysis.company_input.label')}
-                          type="text"
-                          value={internalCompanyName}
-                          onChange={(e) => {
+                  <div className="space-y-2">
+                    <select
+                      className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                      onChange={(e) => {
+                        const ab = accountBooks.find(b => b.id === e.target.value);
+                        if (ab) {
+                          const combinedName = ab.enterpriseId ? `${ab.name} (${ab.enterpriseId})` : ab.name;
+                          setInternalCompanyName(combinedName);
+                          if (ab.enterpriseId) {
+                            setSelectedCompany({ taxId: ab.enterpriseId, name: ab.name });
+                          } else {
                             setSelectedCompany(null);
-                            setInternalCompanyName(e.target.value);
-                          }}
-                          placeholder={t('analysis.company_input.placeholder')}
-                          className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                        />
-                        {isSearchingCompany && <span className="text-xs text-gray-500 ml-2">{t('analysis.company_input.searching')}</span>}
-                      </div>
+                          }
+                        }
+                      }}
+                      value={accountBooks.find(b => internalCompanyName.startsWith(b.name))?.id || ""}
+                    >
+                      <option value="" disabled>-- {t('analysis.select_from_account_books') || '選擇帳本'} --</option>
+                      {accountBooks.map(ab => (
+                        <option key={ab.id} value={ab.id}>
+                          {ab.name} {ab.enterpriseId ? `(${ab.enterpriseId})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
 
-                      {showCompanyDropdown && companySuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
-                          {companySuggestions.map(c => (
-                            <button
-                              key={c.taxId}
-                              type="button"
-                              className="w-full text-left px-4 py-2 hover:bg-orange-50 cursor-pointer text-sm text-gray-700 font-medium border-b border-gray-100 last:border-0"
-                              onClick={() => {
-                                setSelectedCompany(c);
-                                setInternalCompanyName(`${c.name} (${c.taxId})`);
-                                setShowCompanyDropdown(false);
-                              }}
-                            >
-                              {c.name} <span className="text-gray-400 font-normal">({c.taxId})</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      {showCompanyDropdown && companySuggestions.length === 0 && internalCompanyName.length >= 2 && !isSearchingCompany && (
-                        <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 p-3">
-                          <p className="text-sm text-red-500">{t('analysis.company_input.not_found')}</p>
-                        </div>
-                      )}
+              {/* Info: (20260324 - Tzuhan) External Analysis: Carbon Analysis Company Input */}
+              {isExternalCarbonAnalysis && (
+                <div className="space-y-4 pt-4 border-t border-gray-100 relative">
+                  <div className="space-y-2 relative">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {t('analysis.company_input.label')}
+                    </label>
+                    <div className="flex items-center">
+                      <input
+                        id="internalCompanyName"
+                        aria-label={t('analysis.company_input.label')}
+                        type="text"
+                        value={internalCompanyName}
+                        onChange={(e) => {
+                          setSelectedCompany(null);
+                          setInternalCompanyName(e.target.value);
+                        }}
+                        placeholder={t('analysis.company_input.placeholder')}
+                        className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                      />
+                      {isSearchingCompany && <span className="text-xs text-gray-500 ml-2">{t('analysis.company_input.searching')}</span>}
                     </div>
-                  )}
+
+                    {showCompanyDropdown && companySuggestions.length > 0 && (
+                      <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                        {companySuggestions.map(c => (
+                          <button
+                            key={c.taxId}
+                            type="button"
+                            className="w-full text-left px-4 py-2 hover:bg-orange-50 cursor-pointer text-sm text-gray-700 font-medium border-b border-gray-100 last:border-0"
+                            onClick={() => {
+                              setSelectedCompany(c);
+                              setInternalCompanyName(`${c.name} (${c.taxId})`);
+                              setShowCompanyDropdown(false);
+                            }}
+                          >
+                            {c.name} <span className="text-gray-400 font-normal">({c.taxId})</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {showCompanyDropdown && companySuggestions.length === 0 && internalCompanyName.length >= 2 && !isSearchingCompany && (
+                      <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 p-3">
+                        <p className="text-sm text-red-500">{t('analysis.company_input.not_found')}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
               {/* Info: (20260120 - Luphia) External Analysis: Keyword Input (Move to after Category) */}
-              {activeTab === 'external' && category !== 'market_trends' && (
+              {activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends' && (
                 <div className="space-y-2 pt-4 border-t border-gray-100">
                   <label className="block text-sm font-medium text-gray-700">
                     {t('analysis.keyword')}
@@ -776,8 +745,8 @@ export default function AnalysisView() {
                 onClick={handleGenerate}
                 disabled={
                   (periodType !== 'yearly' && !selectedPeriodValue) ||
-                  (activeTab === 'external' && !selectedCountry) ||
-                  (activeTab === 'external' && category !== 'market_trends' && !keyword.trim()) ||
+                  (activeTab === 'external' && !isExternalCarbonAnalysis && !selectedCountry) ||
+                  (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends' && !keyword.trim()) ||
                   (needsCompanyInput && !selectedCompany)
                 }
                 className="w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed rounded-lg bg-orange-600 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-colors"
@@ -816,7 +785,7 @@ export default function AnalysisView() {
           type: t(`analysis.time_units.${periodType}`)
         })}
         country={country}
-        keyword={activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput && selectedCompany ? `${selectedCompany.name} (${selectedCompany.taxId})` : undefined)}
+        keyword={(activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends') ? keyword : (needsCompanyInput && selectedCompany ? `${selectedCompany.name} (${selectedCompany.taxId})` : undefined)}
         isLoading={isLoading}
         status={workflowStatus}
         errorMessage={errorMessage}
