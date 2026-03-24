@@ -1,64 +1,55 @@
 "use client";
 
-import { TrashIcon, Loader2, CircleAlert } from "lucide-react";
+import { Loader2, CircleAlert, CheckCircle2, FileQuestion } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { timestampToString } from "@/lib/utils/common";
 
 const JournalListItem = ({
   journal,
   onSelect,
-  onDelete,
 }: {
   journal: IJournal;
   onSelect: (j: IJournal) => void;
-  onDelete: (j: IJournal) => void;
 }) => {
   const { t } = useTranslation();
 
   const isAnalysisFailed = journal.analysisStatus === AIAnalysisStatus.FAILED;
 
-  const formattedDate = new Date(journal.createdAt).toLocaleString();
-  const formattedDateSplit = formattedDate.split(" ");
-
-  const dateStrForDesktop = (
-    <p className="hidden text-sm sm:block">{formattedDate}</p>
-  );
-  const dateStrForMobile = (
-    <div className="flex flex-col items-center text-xs sm:hidden">
-      <span>{formattedDateSplit[0]}</span>
-      <span>{formattedDateSplit[1]}</span>
-    </div>
+  const formattedDate = timestampToString(
+    journal.tradingTimestamp,
+  ).dateWithDash;
+  const formattedID = (
+    <span className="inline-block w-[100px] overflow-hidden text-ellipsis whitespace-nowrap">
+      {journal.id}
+    </span>
   );
 
   // Info: (20260320 - Julian) 尚未開始
   if (journal.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
-      <tr className="border-b border-slate-300 text-slate-400 last:border-0 bg-white">
-        <td className="w-16 px-3 py-2 align-middle sm:w-32 sm:px-6">
-          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50 p-1 sm:h-20 sm:w-20">
-            <Loader2 className="h-4 w-4 animate-spin text-orange-400 sm:h-6 sm:w-6" />
+      <tr className="border-b border-slate-300 bg-white text-slate-400 last:border-0">
+        <td className="w-[150px] px-3 py-2 align-middle sm:px-6">
+          <div className="flex size-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50 p-1 sm:h-20 sm:w-20">
+            <Loader2 className="size-4 animate-spin text-orange-400 sm:size-6" />
           </div>
         </td>
-        <td className="w-1/4 px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
-          {dateStrForDesktop}
-          {dateStrForMobile}
+        <td className="px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
+          {formattedDate}
         </td>
-        <td className="px-3 py-2 align-middle text-xs sm:px-6 sm:text-sm">
+        <td className="px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
+          {formattedID}
+        </td>
+        <td
+          colSpan={3}
+          className="px-3 py-2 align-middle text-xs sm:px-6 sm:text-sm"
+        >
           <span className="flex items-center gap-2 italic">
-            <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
+            <Loader2 className="size-4 animate-spin text-orange-400 sm:size-6" />
             AI Analyzing...
           </span>
-        </td>
-        <td className="w-12 px-3 py-2 text-right sm:px-6">
-          <button
-            type="button"
-            disabled
-            className="relative cursor-not-allowed rounded-md p-1 text-gray-300 opacity-50 sm:p-1"
-          >
-            <TrashIcon size={20} />
-          </button>
         </td>
       </tr>
     );
@@ -68,17 +59,20 @@ const JournalListItem = ({
   if (journal.analysisStatus === AIAnalysisStatus.PROCESSING) {
     return (
       <tr className="border-b border-blue-200 bg-blue-50 text-blue-500 opacity-90 last:border-0">
-        <td className="w-16 px-3 py-2 align-middle sm:w-32 sm:px-6">
-          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 sm:h-20 sm:w-20">
-            <Loader2 className="h-4 w-4 animate-spin text-blue-500 sm:h-6 sm:w-6" />
+        <td className="w-[150px] px-3 py-2 align-middle sm:px-6">
+          <div className="flex size-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 sm:h-20 sm:w-20">
+            <Loader2 className="size-4 animate-spin text-blue-500 sm:size-6" />
           </div>
         </td>
-        <td className="w-1/4 px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
-          {dateStrForDesktop}
-          {dateStrForMobile}
+        <td className="px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
+          {formattedDate}
+        </td>
+        <td className="px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
+          {formattedID}
         </td>
         <td
           aria-label="AI Processing"
+          colSpan={3}
           className="px-3 py-2 align-middle text-xs sm:px-6 sm:text-sm"
         >
           <div className="max-w-sm flex-col gap-2">
@@ -91,15 +85,6 @@ const JournalListItem = ({
             </div>
           </div>
         </td>
-        <td className="w-12 px-3 py-2 text-right sm:px-6">
-          <button
-            type="button"
-            disabled
-            className="relative cursor-not-allowed rounded-md p-1 text-blue-300 opacity-50 sm:p-1"
-          >
-            <TrashIcon size={20} />
-          </button>
-        </td>
       </tr>
     );
   }
@@ -110,14 +95,14 @@ const JournalListItem = ({
       onClick={() => onSelect(journal)}
     >
       {/* Info: (20260320 - Julian) File */}
-      <td className="w-16 px-3 py-2 align-middle text-slate-700 sm:w-32 sm:px-6">
-        <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-1 sm:h-20 sm:w-20">
+      <td className="w-[150px] px-3 py-2 align-middle text-slate-700 sm:w-32 sm:px-6">
+        <div className="relative flex size-12 items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-1 sm:size-20">
           {/* Info: (20260320 - Julian) File Preview */}
           {journal.file?.hash ? (
             <FilePreview
               file={{ filename: journal.file.fileName || "Unknown" }}
               fileId={journal.file.hash}
-              className="h-full w-full object-cover"
+              className="size-full object-cover"
             />
           ) : (
             <span className="text-xs text-gray-400">{t("ocr.no_image")}</span>
@@ -131,28 +116,59 @@ const JournalListItem = ({
         </div>
       </td>
       {/* Info: (20260320 - Julian) Trading Date */}
-      <td className="w-1/4 px-3 py-2 align-middle font-medium whitespace-nowrap text-slate-700 sm:px-6">
-        {dateStrForDesktop}
-        {dateStrForMobile}
+      <td className="px-3 py-2 align-middle font-medium whitespace-nowrap text-slate-700 sm:px-6">
+        {formattedDate}
+      </td>
+      {/* Info: (20260323 - Julian) ID */}
+      <td
+        aria-label={t("ocr.id")}
+        className="px-3 py-2 align-middle font-medium whitespace-nowrap text-slate-700 sm:px-6"
+      >
+        {formattedID}
       </td>
       {/* Info: (20260320 - Julian) Content */}
       <td className="px-3 py-2 align-middle text-xs text-slate-700 sm:px-6 sm:text-sm">
-        <pre className="line-clamp-1 whitespace-break-spaces sm:whitespace-normal">
+        <pre className="line-clamp-2 whitespace-break-spaces sm:whitespace-normal">
           {journal.text}
         </pre>
       </td>
-      {/* Info: (20260320 - Julian) Delete Button */}
-      <td className="w-12 px-3 py-2 text-right sm:px-6">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(journal);
-          }}
-          className="relative rounded-md text-red-600 transition-colors hover:bg-red-200 sm:p-1"
-        >
-          <TrashIcon size={20} />
-        </button>
+      {/* Info: (20260323 - Julian) Confidence */}
+      <td
+        aria-label={t("ocr.confidence")}
+        className="px-3 py-2 text-right sm:px-6"
+      >
+        <div className="flex flex-col-reverse items-center justify-center gap-x-3 gap-y-1 lg:flex-row">
+          <div className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-slate-200">
+            <div
+              className={`h-full rounded-full ${journal.confidence >= 80 ? "bg-emerald-400" : "bg-orange-500"}`}
+              style={{ width: `${journal.confidence}%` }}
+            ></div>
+          </div>
+          <span className="text-sm font-black whitespace-nowrap text-slate-700">
+            {journal.confidence}%
+          </span>
+        </div>
+      </td>
+      {/* Info: (20260316 - Julian) Status */}
+      <td
+        aria-label="Status"
+        className="p-2 text-center align-middle lg:px-6 lg:py-4"
+      >
+        {journal.isVerified ? (
+          <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
+            <CheckCircle2 size={24} />
+            <span className="text-xs font-bold whitespace-nowrap">
+              {t("voucher.main_view.table.status.verified")}
+            </span>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-1.5 text-orange-500">
+            <FileQuestion size={24} />
+            <span className="text-xs font-bold whitespace-nowrap">
+              {t("voucher.main_view.table.status.unverified")}
+            </span>
+          </div>
+        )}
       </td>
     </tr>
   );
@@ -162,12 +178,10 @@ const JournalListLayout = ({
   isLoading,
   journals,
   onSelect,
-  onDelete,
 }: {
   isLoading: boolean;
   journals: IJournal[];
   onSelect: (journal: IJournal) => void;
-  onDelete: (journal: IJournal) => void;
 }) => {
   const { t } = useTranslation();
 
@@ -188,12 +202,7 @@ const JournalListLayout = ({
   );
 
   const listLayout = journals.map((journal) => (
-    <JournalListItem
-      key={journal.id}
-      journal={journal}
-      onSelect={onSelect}
-      onDelete={onDelete}
-    />
+    <JournalListItem key={journal.id} journal={journal} onSelect={onSelect} />
   ));
 
   return (
@@ -201,19 +210,24 @@ const JournalListLayout = ({
       <table className="w-full">
         <tbody>
           <tr>
-            <th className="w-16 bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:w-32 sm:px-6 sm:text-base">
+            <th className="w-[150px] bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">
               {t("ocr.file")}
             </th>
             <th className="bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:px-6 sm:text-left sm:text-base">
               {t("ocr.created_date")}
             </th>
+            <th className="bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:px-6 sm:text-left sm:text-base">
+              {t("ocr.id")}
+            </th>
             <th className="bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">
               {t("ocr.journal")}
             </th>
-            <th
-              className="w-12 bg-slate-100 px-3 py-3 sm:px-6"
-              aria-label="actions"
-            ></th>
+            <th className="bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">
+              {t("ocr.confidence")}
+            </th>
+            <th className="bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">
+              {t("ocr.status")}
+            </th>
           </tr>
           {isLoading
             ? loadingView

@@ -83,11 +83,11 @@ export default function VoucherTableSection() {
         searchParams.append("sorting", sorting);
       }
 
-      const data = await request<IApiResponse<{ result: IVoucher[] }>>(
+      const data = await request<IApiResponse<IVoucher[]>>(
         `/api/v1/user/account_book/${accountBookId}/voucher?${searchParams.toString()}`,
       );
-      if (data.payload?.result) {
-        setVouchers(data.payload.result);
+      if (data.payload) {
+        setVouchers(data.payload);
       }
     } catch (error) {
       console.error("Failed to fetch vouchers:", error);
@@ -122,12 +122,12 @@ export default function VoucherTableSection() {
     const intervalId = setInterval(async () => {
       for (const pv of pendingVouchers) {
         try {
-          const { payload } = await request<IApiResponse<{ result: IVoucher }>>(
+          const { payload } = await request<IApiResponse<IVoucher>>(
             `/api/v1/user/account_book/${accountBookId}/voucher/${pv.id}`,
           );
-          if (payload?.result) {
+          if (payload) {
             setVouchers((prev) =>
-              prev.map((old) => (old.id === pv.id ? payload.result : old)),
+              prev.map((old) => (old.id === pv.id ? payload : old)),
             );
           }
         } catch (error) {
@@ -290,10 +290,10 @@ export default function VoucherTableSection() {
                       {t("voucher.main_view.filters.type_options.all")}
                     </option>
                     <option value={TradingType.INCOME}>
-                      {t("voucher.main_view.filters.type_options.payment")}
+                      {t("voucher.main_view.filters.type_options.income")}
                     </option>
                     <option value={TradingType.OUTCOME}>
-                      {t("voucher.main_view.filters.type_options.receipt")}
+                      {t("voucher.main_view.filters.type_options.outcome")}
                     </option>
                     <option value={TradingType.TRANSFER}>
                       {t("voucher.main_view.filters.type_options.transfer")}

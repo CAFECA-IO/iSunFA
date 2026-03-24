@@ -2,7 +2,7 @@ import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
 
 export interface IJournal {
   id: string;
-  createdAt: string;
+  tradingTimestamp: number;
   text: string;
   fileId: string;
   file?: {
@@ -11,4 +11,6 @@ export interface IJournal {
     fileName: string;
   };
   analysisStatus: AIAnalysisStatus
+  confidence: number;
+  isVerified: boolean;
 }

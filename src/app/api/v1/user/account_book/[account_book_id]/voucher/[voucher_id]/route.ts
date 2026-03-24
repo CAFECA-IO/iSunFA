@@ -97,7 +97,7 @@ export async function GET(
       analysisStatus: voucher.analysisStatus as AIAnalysisStatus,
     };
 
-    return jsonOk({ result });
+    return jsonOk(result);
   } catch (error) {
     console.error("Get voucher failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get voucher failed");
@@ -200,7 +200,7 @@ export async function PUT(
       },
     });
 
-    return jsonOk({ voucher: updatedVoucher });
+    return jsonOk(updatedVoucher);
   } catch (error) {
     console.error("Put voucher failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Put voucher failed");

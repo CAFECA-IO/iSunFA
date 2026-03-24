@@ -72,6 +72,9 @@ export async function POST(
         accountBookId: accountBook.id,
         fileId: uploadedFile.id,
         text: "",
+        tradingDate:new Date(),
+        confidence: 0,
+        isVerified: false,
       },
     });
 
@@ -92,7 +95,6 @@ export async function POST(
         lines: { create: [] },
         confidence: 0,
         isVerified: false,
-        // aiAnalysisStatus: AIAnalysisStatus.PENDING,
       },
     });
 
@@ -119,7 +121,6 @@ export async function POST(
         intensity: "LOW",
         confidence: 0,
         isVerified: false,
-        // aiAnalysisStatus: AIAnalysisStatus.PENDING,
       },
     });
 

@@ -163,7 +163,8 @@ export function VoucherRow({
 
   return (
     <tr
-      className={`border-b border-slate-300 text-sm transition-colors last:border-0 ${isAnalysisFailed ? "bg-red-200" : "bg-white"} ${voucher.isDeleted ? "opacity-50" : ""}`}
+      onClick={!voucher.isDeleted ? onClick : undefined}
+      className={`border-b border-slate-300 text-sm transition-colors last:border-0 ${isAnalysisFailed ? "bg-red-200" : "bg-white"} ${voucher.isDeleted ? "opacity-50" : "cursor-pointer hover:bg-orange-100"}`}
     >
       {/* Info: (20260316 - Julian) File */}
       <td className="p-2 text-center lg:px-6 lg:py-4">
@@ -304,27 +305,18 @@ export function VoucherRow({
         className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
         {voucher.isVerified ? (
-          <button
-            type="button"
-            onClick={onClick}
-            disabled={voucher.isDeleted}
-            className="group mx-auto flex cursor-pointer flex-col items-center justify-center gap-1 text-emerald-500 transition-colors hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <CheckCircle2 className="h-5 w-5" />
-            <span className="text-xs font-bold whitespace-nowrap group-hover:underline">
+          <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
+            <CheckCircle2 size={24} />
+            <span className="text-xs font-bold whitespace-nowrap">
               {t("voucher.main_view.table.status.verified")}
             </span>
-          </button>
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-1.5 text-orange-500">
-            <button
-              type="button"
-              onClick={onClick}
-              disabled={voucher.isDeleted}
-              className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:bg-slate-300"
-            >
-              {t("voucher.main_view.table.status.manual")}
-            </button>
+            <FileQuestion size={24} />
+            <span className="text-xs font-bold whitespace-nowrap">
+              {t("voucher.main_view.table.status.unverified")}
+            </span>
           </div>
         )}
       </td>

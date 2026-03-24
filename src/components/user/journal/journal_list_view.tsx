@@ -115,11 +115,11 @@ export default function JournalListView() {
         params.append("endDate", end.toISOString());
       }
 
-      const data = await request<IApiResponse<{ journals: IJournal[] }>>(
+      const data = await request<IApiResponse<IJournal[]>>(
         `/api/v1/user/account_book/${accountBookId}/journal?${params.toString()}`,
       );
-      if (data.payload?.journals) {
-        setJournals(data.payload.journals);
+      if (data.payload) {
+        setJournals(data.payload);
       }
     } catch (error) {
       console.error("Failed to fetch journals:", error);
@@ -144,12 +144,12 @@ export default function JournalListView() {
     const intervalId = setInterval(async () => {
       for (const pj of pendingJournals) {
         try {
-          const { payload } = await request<IApiResponse<{ journal: IJournal }>>(
-            `/api/v1/user/account_book/${accountBookId}/journal/${pj.id}`
-          );
-          if (payload?.journal) {
+          const { payload } = await request<
+            IApiResponse<IJournal>
+          >(`/api/v1/user/account_book/${accountBookId}/journal/${pj.id}`);
+          if (payload) {
             setJournals((prev) =>
-              prev.map((old) => (old.id === pj.id ? payload.journal : old))
+              prev.map((old) => (old.id === pj.id ? payload : old)),
             );
           }
         } catch (error) {
@@ -167,7 +167,6 @@ export default function JournalListView() {
         isLoading={isLoading}
         journals={journals}
         onSelect={handleJournalSelect}
-        onDelete={handleDeleteClick}
       />
     ) : (
       <JournalGridLayout
@@ -303,7 +302,7 @@ export default function JournalListView() {
         onClose={() => setIsModalOpen(false)}
         journal={selectedJournal}
         onUpdate={handleJournalUpdate}
-        onDelete={handleDeleteClick}
+        // onDelete={handleDeleteClick}
       />
 
       {/* Info: (20260305 - Julian) Delete Confirmation Modal */}

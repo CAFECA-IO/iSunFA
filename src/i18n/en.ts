@@ -968,7 +968,10 @@ export const en = {
     grid_view: "Grid View",
     file: "Invoice",
     created_date: "Created Date",
+    id: "Invoice ID",
     journal: "Journal",
+    confidence: "AI Confidence",
+    status: "Status",
     action: "Action",
     no_image: "No image",
     no_records: "No records found.",
@@ -1034,8 +1037,8 @@ export const en = {
         type: "Field Type",
         type_options: {
           all: "All",
-          payment: "Payment",
-          receipt: "Receipt",
+          income: "Income",
+          outcome: "Outcome",
           transfer: "Transfer",
         },
         period: "Period",
@@ -1053,6 +1056,7 @@ export const en = {
         status: {
           verified: "Verified",
           manual: "Manual Verification",
+          unverified: "Unverified",
           deleted: "Deleted",
         },
         headers: {
@@ -1187,6 +1191,7 @@ export const en = {
     no_file: "No File",
     verified: "Verified",
     manual_verify: "Manual Verify",
+    unverified: "Unverified",
     search_placeholder: "Search vendor, activity...",
     search_aria: "Search vendor, activity",
     filter_intensity_aria: "Filter by Intensity",
@@ -1196,7 +1201,6 @@ export const en = {
     sort_date_aria: "Sort by Date",
     sort_newest: "Newest",
     sort_oldest: "Oldest",
-    filter_btn: "Filter",
     header: {
       voucher: "Voucher",
       date: "Date",

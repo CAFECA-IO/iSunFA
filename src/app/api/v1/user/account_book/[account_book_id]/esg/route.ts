@@ -5,9 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/client";
 import {
+  IEsgRecord,
   EsgScope as ClientEsgScope,
   EsgIntensity as ClientEsgIntensity,
 } from "@/interfaces/esg";
+import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+
 /**
  * Info: (20260312 - Julian) 新增 ESG 紀錄
  * POST /api/v1/user/account_book/:account_book_id/esg
@@ -176,13 +179,18 @@ export async function GET(
       orderBy: { dateTimestamp: sort },
     });
 
-    const esgRecords = esgDbRecords.map((r) => ({
+    const esgRecords:IEsgRecord[] = esgDbRecords.map((r) => ({
       ...r,
+      fileId: r.fileId ?? '',
       file: r.file ? {
         id: r.file.id,
         hash: r.file.hash,
         fileName: r.file.fileName || "Unknown"
-      } : undefined
+      } : undefined,
+      scope: r.scope as ClientEsgScope,
+      emissions: r.emissions.toString(),
+      intensity: r.intensity as ClientEsgIntensity,
+      analysisStatus: r.analysisStatus as AIAnalysisStatus,
     }));
 
     return jsonOk({

@@ -5,6 +5,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { timestampToString } from "@/lib/utils/common";
 
 const JournalGridItem = ({
   journal,
@@ -41,7 +42,7 @@ const JournalGridItem = ({
           </div>
         </div>
         <p className="text-xs text-slate-400">
-          {new Date(journal.createdAt).toLocaleString()}
+          {timestampToString(journal.tradingTimestamp).dateWithDash}
         </p>
       </div>
     );
@@ -74,7 +75,7 @@ const JournalGridItem = ({
           </div>
         </div>
         <p className="text-xs font-medium text-blue-400">
-          {new Date(journal.createdAt).toLocaleString()}
+          {timestampToString(journal.tradingTimestamp).dateWithDash}
         </p>
       </div>
     );
@@ -119,7 +120,7 @@ const JournalGridItem = ({
       </div>
       {/* Info: (20260320 - Julian) Trading Date */}
       <p className="text-xs text-slate-700">
-        {new Date(journal.createdAt).toLocaleString()}
+        {timestampToString(journal.tradingTimestamp).dateWithDash}
       </p>
     </div>
   );

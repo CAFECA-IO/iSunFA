@@ -918,7 +918,10 @@ export const ko = {
     grid_view: "그리드 보기",
     file: "청구서",
     created_date: "생성일",
+    id: "청구서 번호",
     journal: "일기장",
+    confidence: "AI 신뢰도",
+    status: "상태",
     action: "작업",
     no_image: "이미지 없음",
     no_records: "기록을 찾을 수 없습니다",
@@ -998,6 +1001,7 @@ export const ko = {
     no_file: "파일 없음",
     verified: "확인됨",
     manual_verify: "수동 확인",
+    unverified: "미확인 상태",
     search_placeholder: "공급업체, 활동 유형 검색...",
     search_aria: "공급업체, 활동 유형 검색",
     filter_intensity_aria: "강도 필터링",
@@ -1007,7 +1011,6 @@ export const ko = {
     sort_date_aria: "날짜 정렬 전환",
     sort_newest: "최신순",
     sort_oldest: "오래된순",
-    filter_btn: "필터",
     header: {
       voucher: "전표",
       date: "날짜",
@@ -1150,9 +1153,9 @@ export const ko = {
         type: "항목 유형",
         type_options: {
           all: "전체",
-          payment: "지불",
-          receipt: "수취",
-          transfer: "이체",
+          income: "수입",
+          outcome: "지출",
+          transfer: "전환",
         },
         period: "기간",
         search: "전표 번호, 계정 코드 검색...",
@@ -1169,6 +1172,7 @@ export const ko = {
         status: {
           verified: "확인됨",
           manual: "수동 확인",
+          unverified: "미확인 상태",
           deleted: "삭제됨",
         },
         headers: {

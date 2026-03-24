@@ -994,7 +994,10 @@ export const zhTw = {
     grid_view: "網格檢視",
     file: "憑證",
     created_date: "建立時間",
+    id: "憑證編號",
     journal: "日記帳",
+    confidence: "AI 信心度",
+    status: "狀態",
     action: "操作",
     no_image: "無縮圖",
     no_records: "找不到任何紀錄",
@@ -1057,9 +1060,9 @@ export const zhTw = {
         type: "欄位類型",
         type_options: {
           all: "全部",
-          payment: "付款",
-          receipt: "收款",
-          transfer: "轉帳",
+          income: "收入",
+          outcome: "支出",
+          transfer: "轉換",
         },
         period: "期間",
         search: "搜尋傳票編號、科目編號...",
@@ -1076,6 +1079,7 @@ export const zhTw = {
         status: {
           verified: "已核對",
           manual: "人工核對",
+          unverified: "尚未核對",
           deleted: "已刪除",
         },
         headers: {
@@ -1210,6 +1214,7 @@ export const zhTw = {
     no_file: "無檔案",
     verified: "已核對",
     manual_verify: "人工核對",
+    unverified: "尚未核對",
     search_placeholder: "搜尋供應商、活動類型...",
     search_aria: "搜尋供應商、活動類型",
     filter_intensity_aria: "依強度篩選",
@@ -1219,7 +1224,6 @@ export const zhTw = {
     sort_date_aria: "切換日期排序",
     sort_newest: "由新至舊",
     sort_oldest: "由舊至新",
-    filter_btn: "篩選",
     header: {
       voucher: "憑證",
       date: "日期",
