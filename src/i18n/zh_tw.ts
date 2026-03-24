@@ -1020,6 +1020,13 @@ export const zhTw = {
     zoom_reset: "重置",
   },
   journal: {
+    summary: {
+      empty: "目前沒有日記帳資料",
+      today_count: "今日產生日記帳",
+      unit: "張",
+      pending: "待核對",
+      ai_confidence: "AI 平均信心度",
+    },
     main_view: {
       title: "憑證管理",
       upload: "上傳憑證",
@@ -1065,7 +1072,8 @@ export const zhTw = {
         period: "期間",
         search: "搜尋傳票編號、科目編號...",
         hide_deleted: "隱藏已刪除的傳票及其沖銷紀錄",
-        currency: "幣別: {currency}",
+        total_vouchers: "總傳票數: {{count}} 張",
+        currency: "幣別: {{currency}}",
       },
       table: {
         types: {

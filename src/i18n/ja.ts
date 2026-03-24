@@ -955,6 +955,13 @@ export const ja = {
     zoom_reset: "リセット",
   },
   journal: {
+    summary: {
+      empty: "現在仕訳帳データはありません",
+      today_count: "本日作成された仕訳帳",
+      unit: "件",
+      pending: "確認待ち",
+      ai_confidence: "AI平均信頼度",
+    },
     main_view: {
       title: "伝票管理",
       upload: "伝票をアップロード",
@@ -1155,7 +1162,7 @@ export const ja = {
         period: "期間",
         search: "伝票番号、科目コードを検索...",
         hide_deleted: "削除済みの伝票と取消記録を隠す",
-        currency: "通貨: {currency}",
+        currency: "通貨: {{currency}}",
       },
       table: {
         types: {

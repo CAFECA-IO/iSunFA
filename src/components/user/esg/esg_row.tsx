@@ -232,7 +232,9 @@ export function EsgRow({
         {record.isVerified ? (
           <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 size={24} />
-            <span className="text-sm font-bold">{t("verify.status.verified")}</span>
+            <span className="text-sm font-bold">
+              {t("verify.status.verified")}
+            </span>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-1 text-orange-500">

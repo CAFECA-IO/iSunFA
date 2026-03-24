@@ -288,7 +288,7 @@ export function VoucherRow({
         aria-label="Confidence"
         className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
-       <AiConfidenceBar confidence={voucher.confidence} />
+        <AiConfidenceBar confidence={voucher.confidence} />
       </td>
       {/* Info: (20260316 - Julian) Status */}
       <td

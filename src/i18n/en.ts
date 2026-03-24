@@ -993,6 +993,13 @@ export const en = {
     zoom_reset: "Reset Zoom",
   },
   journal: {
+    summary: {
+      empty: "No journal data available",
+      today_count: "Journals created today",
+      unit: "pcs",
+      pending: "Pending verify",
+      ai_confidence: "AI average confidence",
+    },
     main_view: {
       title: "Journal Management",
       upload: "Upload Journal",
@@ -1039,7 +1046,7 @@ export const en = {
         period: "Period",
         search: "Search voucher no, account code...",
         hide_deleted: "Hide deleted vouchers and reversed records",
-        currency: "Currency: {currency}",
+        currency: "Currency: {{currency}}",
       },
       table: {
         types: {

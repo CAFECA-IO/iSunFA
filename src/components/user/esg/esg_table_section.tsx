@@ -10,7 +10,7 @@ import { request } from "@/lib/utils/request";
 import { useParams } from "next/navigation";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
-import { VerifyStatus } from "@/constants/verify_status"; 
+import { VerifyStatus } from "@/constants/verify_status";
 
 interface IEsgTableSectionProps {
   year?: number;
@@ -26,7 +26,9 @@ export default function EsgTableSection({
   const accountBookId = params?.account_book_id as string;
 
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [verifyStatusFilter, setVerifyStatusFilter] = useState<VerifyStatus | "all">("all");
+  const [verifyStatusFilter, setVerifyStatusFilter] = useState<
+    VerifyStatus | "all"
+  >("all");
   const [intensityFilter, setIntensityFilter] = useState<string>("all");
   const [scopeFilter, setScopeFilter] = useState<string>("all");
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState<boolean>(false);
@@ -44,7 +46,7 @@ export default function EsgTableSection({
     try {
       const queryParams = new URLSearchParams();
       if (searchTerm) queryParams.append("search", searchTerm);
-      if (verifyStatusFilter && verifyStatusFilter !== "all") 
+      if (verifyStatusFilter && verifyStatusFilter !== "all")
         queryParams.append("verifyStatus", verifyStatusFilter);
       if (intensityFilter && intensityFilter !== "all")
         queryParams.append("intensity", intensityFilter);
@@ -182,14 +184,14 @@ export default function EsgTableSection({
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm">
           <select
-            aria-label='Filter by verify status'
+            aria-label="Filter by verify status"
             value={verifyStatusFilter}
-            onChange={(e) => setVerifyStatusFilter(e.target.value as VerifyStatus| 'all')}
+            onChange={(e) =>
+              setVerifyStatusFilter(e.target.value as VerifyStatus | "all")
+            }
             className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-bold text-slate-600 focus:outline-none"
           >
-            <option value='all'>
-              {t("common.all")}
-            </option>
+            <option value="all">{t("common.all")}</option>
             <option value={VerifyStatus.VERIFIED}>
               {t("verify.status.verified")}
             </option>

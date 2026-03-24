@@ -190,6 +190,8 @@ export async function GET(
       }
     }
 
+
+
     // Info: (20260310 - Julian) 分頁
     if (page && pageSize) {
       filteredConditions.skip = (page - 1) * pageSize;
@@ -224,7 +226,7 @@ export async function GET(
     }>[];
 
     // Info: (20260311 - Julian) 組合成前端所需的格式
-    const result: IVoucher[] = vouchers.map((v) => {
+    const formattedVouchers: IVoucher[] = vouchers.map((v) => {
       // Info: (20260311 - Julian) 取得個別分錄
       const voucherLines = v.lines.filter((l) => l.voucherId === v.id);
 
@@ -271,7 +273,7 @@ export async function GET(
 
     // Info: (20260311 - Julian) 排序邏輯
     if (sorting) {
-      result.sort((a, b) => {
+      formattedVouchers.sort((a, b) => {
         if (sorting === "date_desc") return b.tradingDate - a.tradingDate;
         if (sorting === "date_asc") return a.tradingDate - b.tradingDate;
 
@@ -301,7 +303,12 @@ export async function GET(
       });
     }
 
-    return jsonOk( result );
+    // Info: (20260324 - Julian) 總筆數
+    const totalCount = await prisma.voucher.count({
+      where: filteredConditions.where,
+    });
+
+    return jsonOk({ data: formattedVouchers, total: totalCount });
   } catch (error) {
     console.error("Get vouchers failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get vouchers failed");

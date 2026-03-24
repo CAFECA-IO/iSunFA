@@ -433,7 +433,9 @@ export default function VoucherDetailModal({
                           <span className="text-xs font-bold text-slate-500">
                             {t("voucher.detail_modal.fields.confidence")}
                           </span>
-                          <AiConfidenceBar confidence={activeVoucher.confidence} />
+                          <AiConfidenceBar
+                            confidence={activeVoucher.confidence}
+                          />
                         </div>
                       </div>
                     </div>

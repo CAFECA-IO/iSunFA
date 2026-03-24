@@ -921,6 +921,13 @@ export const zhCn = {
     zoom_reset: "重置",
   },
   journal: {
+    summary: {
+      empty: "目前没有日记账资料",
+      today_count: "今日产生日记账",
+      unit: "张",
+      pending: "待核对",
+      ai_confidence: "AI 平均信心度",
+    },
     main_view: {
       title: "凭证管理",
       upload: "上传凭证",
@@ -1121,7 +1128,7 @@ export const zhCn = {
         period: "期间",
         search: "搜索凭证编号、科目编号...",
         hide_deleted: "隐藏已删除的凭证及其冲销纪录",
-        currency: "币别: {currency}",
+        currency: "币别: {{currency}}",
       },
       table: {
         types: {

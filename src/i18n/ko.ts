@@ -942,6 +942,13 @@ export const ko = {
     zoom_reset: "초기화",
   },
   journal: {
+    summary: {
+      empty: "현재 분개장 데이터가 없습니다",
+      today_count: "오늘 생성된 분개장",
+      unit: "건",
+      pending: "대조 대기",
+      ai_confidence: "AI 평균 신뢰도",
+    },
     main_view: {
       title: "전표 관리",
       upload: "전표 업로드",
@@ -1144,7 +1151,7 @@ export const ko = {
         period: "기간",
         search: "전표 번호, 계정 코드 검색...",
         hide_deleted: "삭제된 전표 및 취소 기록 숨기기",
-        currency: "통화: {currency}",
+        currency: "통화: {{currency}}",
       },
       table: {
         types: {
