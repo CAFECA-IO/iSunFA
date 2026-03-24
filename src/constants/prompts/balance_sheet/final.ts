@@ -1,11 +1,11 @@
 export const FINAL_PROMPT = `
-任務：請基於以下三份先期內部數據分析報告，撰寫【{Target_Company}】({Period}, Year: {Year}) 的「資產負債表總結報告」。
+任務：請基於以下三份先期財務分析報告，撰寫【{Target_Company}】({Period}, Year: {Year}) 的「資產負債表總結報告」。
 
 【先期分析報告】：
 [STEP_0_CONTENT]
 
 請將資訊統整為以下 Markdown 格式：
-# 🏢 【{Target_Company}】資產負債表內部查證與健康度總結報告
+# 🏢 【{Target_Company}】資產負債表健康度總結報告
 
 ## 1. 💧 流動性與短期風險
 (綜合流動性分析的結論)

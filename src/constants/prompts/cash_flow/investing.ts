@@ -1,6 +1,6 @@
 export const INVESTING_PROMPT = `
 任務：分析【{Target_Company}】在 {Period} (Year: {Year}) 的現金流量表「投資活動現金流」。
-請嚴格基於系統提供的內部數據庫資料（包含但不限於內部財務報表、傳票、日記帳、綠色/ESG數據紀錄等），禁止使用網路搜尋獲取外部財報。請判讀已有內部資料，然後根據以下面向進行深入分析：
+{Data_Source_Instruction}
 1. 資本支出 (Capital Expenditures, CapEx) 的規模與趨勢，公司是否處於擴張期？
 2. 自由現金流 (Free Cash Flow, FCF) 的健康度，營業現金流是否足以涵蓋資本支出？
 3. 其他重大投資活動 (如併購、處分資產或金融商品投資) 對現金流的影響。

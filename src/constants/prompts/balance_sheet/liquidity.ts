@@ -1,6 +1,6 @@
 export const LIQUIDITY_PROMPT = `
 任務：分析【{Target_Company}】在 {Period} (Year: {Year}) 的資產負債表「流動性與短期償債能力」。
-請嚴格基於系統提供的內部數據庫資料（包含但不限於內部財務報表、傳票、日記帳、綠色/ESG數據紀錄等），禁止使用網路搜尋獲取外部財報。請判讀已有內部資料，然後根據以下面向進行深入分析：
+{Data_Source_Instruction}
 1. 流動比率 (Current Ratio) 與速動比率 (Quick Ratio) 的數值與變化趨勢。
 2. 營運資金 (Working Capital) 是否充足，能否應付未來一年的短期負債？
 3. 現金與約當現金的佔比，是否面臨流動性枯竭風險？

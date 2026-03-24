@@ -1,11 +1,11 @@
 export const FINAL_PROMPT = `
-任務：請基於以下三份先期內部數據分析報告，撰寫【{Target_Company}】({Period}, Year: {Year}) 的「現金流量表總結報告」。
+任務：請基於以下三份先期財務分析報告，撰寫【{Target_Company}】({Period}, Year: {Year}) 的「現金流量表總結報告」。
 
 【先期分析報告】：
 [STEP_0_CONTENT]
 
 請將資訊統整為以下 Markdown 格式：
-# 🏢 【{Target_Company}】現金流量表內部查證與健康度總結報告
+# 🏢 【{Target_Company}】現金流量表健康度總結報告
 
 ## 1. ⚙️ 營業活動與盈餘品質
 (綜合營業活動現金流的結論)

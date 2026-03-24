@@ -1,11 +1,11 @@
 export const FINAL_PROMPT = `
-任務：請基於以下三份先期內部數據分析報告，撰寫【{Target_Company}】({Period}, Year: {Year}) 的「財務合規與異常檢測總結報告」。
+任務：請基於以下三份先期財務分析報告，撰寫【{Target_Company}】({Period}, Year: {Year}) 的「財務合規與異常檢測總結報告」。
 
 【先期分析報告】：
 [STEP_0_CONTENT]
 
 請將資訊統整為以下 Markdown 格式：
-# 🏢 【{Target_Company}】財務合規內部查證與總結報告
+# 🏢 【{Target_Company}】財務合規健康度總結報告
 
 ## 1. 🚨 舞弊與盈餘操縱風險
 (綜合財報舞弊風險檢測的結論)

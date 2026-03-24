@@ -1,11 +1,11 @@
 export const FINAL_PROMPT = `
-任務：請基於以下三份先期內部數據分析報告，撰寫【{Target_Company}】({Period}, Year: {Year}) 的「損益表總結報告」。
+任務：請基於以下三份先期財務分析報告，撰寫【{Target_Company}】({Period}, Year: {Year}) 的「損益表總結報告」。
 
 【先期分析報告】：
 [STEP_0_CONTENT]
 
 請將資訊統整為以下 Markdown 格式：
-# 🏢 【{Target_Company}】損益表內部查證與健康度總結報告
+# 🏢 【{Target_Company}】損益表健康度總結報告
 
 ## 1. 📈 營收成長與動能分析
 (綜合營收趨勢的結論)
