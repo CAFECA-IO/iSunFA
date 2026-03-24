@@ -24,6 +24,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { IVoucher, TradingType, IVoucherLineUI } from "@/interfaces/voucher";
 import { numberWithCommas } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
+import AiConfidenceBar from "@/components/common/ai_confidence_bar";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -431,23 +432,7 @@ export default function VoucherDetailModal({
                           <span className="text-xs font-bold text-slate-500">
                             {t("voucher.detail_modal.fields.confidence")}
                           </span>
-                          <div className="flex items-center gap-1.5">
-                            <div className="h-2 w-16 overflow-hidden rounded-full bg-slate-200">
-                              <div
-                                className={`h-full rounded-full ${
-                                  activeVoucher.confidence >= 90
-                                    ? "bg-emerald-400"
-                                    : "bg-orange-500"
-                                }`}
-                                style={{
-                                  width: `${activeVoucher.confidence}%`,
-                                }}
-                              />
-                            </div>
-                            <span className="text-sm font-black text-slate-700">
-                              {activeVoucher.confidence}%
-                            </span>
-                          </div>
+                          <AiConfidenceBar confidence={activeVoucher.confidence} />
                         </div>
                       </div>
                     </div>

@@ -12,6 +12,7 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { timestampToString, numberWithCommas } from "@/lib/utils/common";
 import { FilePreview } from "@/components/common/file_preview";
+import AiConfidenceBar from "@/components/common/ai_confidence_bar";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
 import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
 
@@ -287,17 +288,7 @@ export function VoucherRow({
         aria-label="Confidence"
         className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
-        <div className="flex flex-col-reverse items-center justify-center gap-x-3 gap-y-1 lg:flex-row">
-          <div className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-slate-200">
-            <div
-              className={`h-full rounded-full ${voucher.confidence >= 80 ? "bg-emerald-400" : "bg-orange-500"}`}
-              style={{ width: `${voucher.confidence}%` }}
-            ></div>
-          </div>
-          <span className="text-sm font-black whitespace-nowrap text-slate-700">
-            {voucher.confidence}%
-          </span>
-        </div>
+       <AiConfidenceBar confidence={voucher.confidence} />
       </td>
       {/* Info: (20260316 - Julian) Status */}
       <td

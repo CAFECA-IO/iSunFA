@@ -12,6 +12,7 @@ import {
 import { timestampToString } from "@/lib/utils/common";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
+import AiConfidenceBar from "@/components/common/ai_confidence_bar";
 import { useTranslation } from "@/i18n/i18n_context";
 import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
 
@@ -224,17 +225,7 @@ export function EsgRow({
         aria-label="AI Confidence"
         className="p-2 text-center lg:px-6 lg:py-4"
       >
-        <div className="flex items-center justify-center gap-3">
-          <div className="h-2 w-24 shrink-0 overflow-hidden rounded-full bg-slate-200">
-            <div
-              className={`h-full rounded-full ${record.confidence >= 90 ? "bg-emerald-400" : "bg-orange-500"}`}
-              style={{ width: `${record.confidence}%` }}
-            ></div>
-          </div>
-          <span className="text-sm font-bold whitespace-nowrap text-slate-700">
-            {record.confidence}%
-          </span>
-        </div>
+        <AiConfidenceBar confidence={record.confidence} />
       </td>
       {/* Info: (20260320 - Julian) Verified */}
       <td className="p-2 text-center lg:px-6 lg:py-4">

@@ -16,6 +16,7 @@ import ConfirmModal from "@/components/common/confirm_modal";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
 import AiNote from "@/components/common/ai_note";
+import AiConfidenceBar from "@/components/common/ai_confidence_bar";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IEsgVerifyModalProps {
@@ -190,23 +191,7 @@ export default function EsgVerifyModal({
                           <span className="text-xs font-bold text-slate-500">
                             {t("esg_verify.ai_confidence")}
                           </span>
-                          <div className="flex items-center gap-1.5">
-                            <div className="h-2 w-16 overflow-hidden rounded-full bg-slate-200">
-                              <div
-                                className={`h-full rounded-full ${
-                                  formData.confidence >= 90
-                                    ? "bg-emerald-400"
-                                    : "bg-orange-500"
-                                }`}
-                                style={{
-                                  width: `${formData.confidence}%`,
-                                }}
-                              />
-                            </div>
-                            <span className="text-sm font-black text-slate-700">
-                              {formData.confidence}%
-                            </span>
-                          </div>
+                         <AiConfidenceBar confidence={formData.confidence} />
                         </div>
                       </div>
                     </div>

@@ -20,6 +20,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import ConfirmModal from "@/components/common/confirm_modal";
 import ZoomablePreview from "@/components/common/zoomable_preview";
+import AiConfidenceBar from "@/components/common/ai_confidence_bar";
 import { IJournal } from "@/interfaces/journal";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -163,21 +164,39 @@ export default function JournalDetailModal({
                   {/* Info: (20260305 - Julian) Body Content */}
                   <div className="flex flex-1 overflow-hidden bg-gray-50">
                     {/* Info: (20260305 - Julian) Left: Preview */}
-                    <ZoomablePreview
-                      hasContent={!!journal.file?.hash}
-                      fallbackText={t("ocr.no_image") as string}
-                      className="w-1/2"
-                    >
-                      {journal.file?.hash && (
-                        <FilePreview
-                          file={{
-                            filename: journal.file.fileName || "Unknown",
-                          }}
-                          fileId={journal.file.hash}
-                          className="size-full object-contain"
-                        />
-                      )}
-                    </ZoomablePreview>
+                    <div className="flex w-1/2 flex-col border-r border-gray-200 p-6">
+                      <div className="mb-4 flex items-center justify-between">
+                        <h4 className="text-sm font-bold text-gray-500">
+                          {t("ocr.file")}
+                        </h4>
+                        <div className="relative flex items-center gap-2">
+                          {/* Info: (20260324 - Julian) AI Confidence */}
+                          <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 shadow-sm">
+                            <span className="text-xs font-bold text-gray-500">
+                              {t("ocr.confidence")}
+                            </span>
+                            <AiConfidenceBar confidence={journal.confidence} />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <ZoomablePreview
+                          hasContent={!!journal.file?.hash}
+                          fallbackText={t("ocr.no_image") as string}
+                          className="h-full w-full"
+                        >
+                          {journal.file?.hash && (
+                            <FilePreview
+                              file={{
+                                filename: journal.file.fileName || "Unknown",
+                              }}
+                              fileId={journal.file.hash}
+                              className="size-full object-contain"
+                            />
+                          )}
+                        </ZoomablePreview>
+                      </div>
+                    </div>
 
                     {/* Info: (20260305 - Julian) Right: Text / Edit */}
                     <div className="flex w-1/2 flex-col bg-white p-6">
