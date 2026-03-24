@@ -77,6 +77,7 @@ export default function Pagination({
             type="number"
             min={1}
             max={totalPages}
+            aria-label="Go to specific page"
             value={inputPage}
             onChange={(e) => setInputPage(e.target.value)}
             onKeyDown={handleKeyDown}

@@ -140,6 +140,12 @@ export async function GET(
     const sort = searchParams.get("sort") === "asc" ? "asc" : "desc";
     const yearParam = searchParams.get("year");
     const monthParam = searchParams.get("month");
+    const page = searchParams.get("page")
+      ? parseInt(searchParams.get("page")!)
+      : undefined;
+    const pageSize = searchParams.get("pageSize")
+      ? parseInt(searchParams.get("pageSize")!)
+      : undefined;
 
     let dateTimestampQuery: Prisma.IntFilter | undefined = undefined;
     if (yearParam) {
@@ -176,20 +182,29 @@ export async function GET(
       ...(dateTimestampQuery && { dateTimestamp: dateTimestampQuery }),
     };
 
+    const totalEsgCount = await prisma.esgRecord.count({
+      where: whereClause,
+    });
+
     const esgDbRecords = await prisma.esgRecord.findMany({
       where: whereClause,
       include: { file: true },
       orderBy: { dateTimestamp: sort },
+      ...(page && pageSize
+        ? { skip: (page - 1) * pageSize, take: pageSize }
+        : {}),
     });
 
-    const esgRecords:IEsgRecord[] = esgDbRecords.map((r) => ({
+    const esgRecords: IEsgRecord[] = esgDbRecords.map((r) => ({
       ...r,
-      fileId: r.fileId ?? '',
-      file: r.file ? {
-        id: r.file.id,
-        hash: r.file.hash,
-        fileName: r.file.fileName || "Unknown"
-      } : undefined,
+      fileId: r.fileId ?? "",
+      file: r.file
+        ? {
+            id: r.file.id,
+            hash: r.file.hash,
+            fileName: r.file.fileName || "Unknown",
+          }
+        : undefined,
       scope: r.scope as ClientEsgScope,
       emissions: r.emissions.toString(),
       intensity: r.intensity as ClientEsgIntensity,
@@ -198,7 +213,7 @@ export async function GET(
 
     return jsonOk({
       esgRecords,
-      recordCount: esgRecords.length,
+      recordCount: totalEsgCount,
     });
   } catch (error) {
     console.error("Error fetching esg records:", error);
