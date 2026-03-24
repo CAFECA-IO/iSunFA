@@ -191,7 +191,7 @@ export async function GET(
     const formattedJournals: IJournal[] = journals.map((j) => {
       return {
         id: j.id,
-        tradingTimestamp: Math.floor(j.createdAt.getTime() / 1000),
+        tradingTimestamp: Math.floor(j.tradingDate.getTime() / 1000),
         text: j.text,
         fileId: j.fileId ?? "",
         file: j.file

@@ -187,7 +187,7 @@ const JournalListLayout = ({
 
   const loadingView = (
     <tr>
-      <td colSpan={3} className="px-3 py-8 text-center text-slate-500 sm:px-6">
+      <td colSpan={6} className="px-3 py-8 text-center text-slate-500 sm:px-6">
         <Loader2 className="mx-auto h-6 w-6 animate-spin text-orange-500" />
       </td>
     </tr>
@@ -195,7 +195,7 @@ const JournalListLayout = ({
 
   const emptyView = (
     <tr>
-      <td colSpan={4} className="px-3 py-8 text-center text-slate-500 sm:px-6">
+      <td colSpan={6} className="px-3 py-8 text-center text-slate-500 sm:px-6">
         {t("ocr.no_records")}
       </td>
     </tr>
