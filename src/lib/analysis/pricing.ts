@@ -5,6 +5,7 @@ export interface IOrderParams {
   year: number;
   country?: string;
   keyword?: string;
+  isExternal?: boolean;
 }
 
 /**
