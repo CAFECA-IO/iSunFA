@@ -234,19 +234,19 @@ export class TaskService {
     }
 
     interpolatedPrompt = interpolatedPrompt
-      .replace(/\{Period_Start\}/g, startDate)
-      .replace(/\{Period_End\}/g, endDate)
-      .replace(/\{Market_Name\}/g, marketName)
-      .replace(/\{Current_Date\}/g, currentDate)
-      .replace(/\{Target_Keyword\}/g, targetKeyword)
-      .replace(/\{Esg_Records_Context\}/g, esgRecordsContext);
+      .replace(/\{Period_Start\}/g, () => startDate)
+      .replace(/\{Period_End\}/g, () => endDate)
+      .replace(/\{Market_Name\}/g, () => marketName)
+      .replace(/\{Current_Date\}/g, () => currentDate)
+      .replace(/\{Target_Keyword\}/g, () => targetKeyword)
+      .replace(/\{Esg_Records_Context\}/g, () => esgRecordsContext);
     const tagsString =
       mData.historicalTags && mData.historicalTags.length > 0
         ? mData.historicalTags.join(", ")
         : "無歷史標籤";
     interpolatedPrompt = interpolatedPrompt.replace(
       /\{Historical_Tags_List\}/g,
-      tagsString,
+      () => tagsString,
     );
 
     if (task.order > 0) {
