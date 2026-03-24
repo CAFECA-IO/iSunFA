@@ -77,6 +77,7 @@ export async function POST(
         intensity: "LOW",
         confidence: 0,
         isVerified: false,
+        aiNote: "",
       },
     });
 

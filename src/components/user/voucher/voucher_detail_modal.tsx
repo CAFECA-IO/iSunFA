@@ -30,6 +30,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { useParams } from "next/navigation";
 import { FilePreview } from "@/components/common/file_preview";
 import AccountBookSelector from "@/components/user/voucher/account_book_selector";
+import AiNote from "@/components/common/ai_note";
 
 interface IVoucherDetailModalProps {
   isOpen: boolean;
@@ -51,8 +52,8 @@ const VoucherRow = ({
   const { t } = useTranslation();
 
   return (
-    <div className="mb-4 flex items-start gap-2">
-      <div className="flex flex-1 flex-col gap-2">
+    <>
+      <div className="col-span-4 flex flex-1 flex-col gap-2">
         {/* Info: (20260317 - Julian) Accounting Code Select */}
         <div className="relative flex h-[42px] items-center overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
           <button
@@ -84,7 +85,7 @@ const VoucherRow = ({
       </div>
 
       {/* Info: (20260317 - Julian) Debit */}
-      <div className="h-[42px] w-[100px]">
+      <div className="col-span-3 h-[42px]">
         <input
           type="number"
           aria-label={t("voucher.detail_modal.fields.debit")}
@@ -106,7 +107,7 @@ const VoucherRow = ({
       </div>
 
       {/* Info: (20260317 - Julian) Credit */}
-      <div className="h-[42px] w-[100px]">
+      <div className="col-span-3 h-[42px]">
         <input
           type="number"
           aria-label={t("voucher.detail_modal.fields.credit")}
@@ -142,7 +143,7 @@ const VoucherRow = ({
           <Trash2 size={18} />
         </button>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -421,24 +422,32 @@ export default function VoucherDetailModal({
                       <h4 className="text-sm font-bold text-slate-500">
                         {t("voucher.detail_modal.sections.preview")}
                       </h4>
-                      <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
-                        <span className="text-xs font-bold text-slate-500">
-                          {t("voucher.detail_modal.fields.confidence")}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <div className="h-2 w-16 overflow-hidden rounded-full bg-slate-200">
-                            <div
-                              className={`h-full rounded-full ${
-                                activeVoucher.confidence >= 90
-                                  ? "bg-emerald-400"
-                                  : "bg-orange-500"
-                              }`}
-                              style={{ width: `${activeVoucher.confidence}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-black text-slate-700">
-                            {activeVoucher.confidence}%
+                      <div className="relative flex items-center gap-2">
+                        {/* Info: (20260324 - Julian) AI Note */}
+                        <AiNote note={activeVoucher.aiNote} />
+
+                        {/* Info: (20260324 - Julian) AI Confidence */}
+                        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
+                          <span className="text-xs font-bold text-slate-500">
+                            {t("voucher.detail_modal.fields.confidence")}
                           </span>
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-2 w-16 overflow-hidden rounded-full bg-slate-200">
+                              <div
+                                className={`h-full rounded-full ${
+                                  activeVoucher.confidence >= 90
+                                    ? "bg-emerald-400"
+                                    : "bg-orange-500"
+                                }`}
+                                style={{
+                                  width: `${activeVoucher.confidence}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="text-sm font-black text-slate-700">
+                              {activeVoucher.confidence}%
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -593,7 +602,7 @@ export default function VoucherDetailModal({
                       </div>
 
                       {/* Info: (20260317 - Julian) Rows container */}
-                      <div className="flex flex-col">
+                      <div className="mb-4 grid grid-cols-11 gap-x-1 gap-y-2">
                         {rows.map((row) => (
                           <VoucherRow
                             key={row.id}

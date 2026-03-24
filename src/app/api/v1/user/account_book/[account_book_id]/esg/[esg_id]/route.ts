@@ -80,6 +80,7 @@ export async function GET(
       confidence: esgRecord.confidence,
       isVerified: esgRecord.isVerified,
       analysisStatus: esgRecord.analysisStatus as unknown as AIAnalysisStatus,
+      aiNote: esgRecord.aiNote ?? "",
     };
 
     return jsonOk(formattedRecord);
@@ -185,6 +186,7 @@ export async function PUT(
       confidence: updatedRecord.confidence,
       isVerified: updatedRecord.isVerified,
       analysisStatus: updatedRecord.analysisStatus as unknown as AIAnalysisStatus,
+      aiNote: updatedRecord.aiNote ?? "",
     };
 
     if (!formattedRecord) {

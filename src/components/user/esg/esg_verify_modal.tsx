@@ -15,6 +15,7 @@ import { IApiResponse } from "@/lib/utils/response";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
+import AiNote from "@/components/common/ai_note";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IEsgVerifyModalProps {
@@ -180,24 +181,32 @@ export default function EsgVerifyModal({
                       <h4 className="text-sm font-bold text-slate-500">
                         {t("esg_verify.preview")}
                       </h4>
-                      <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
-                        <span className="text-xs font-bold text-slate-500">
-                          {t("esg_verify.ai_confidence")}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <div className="h-2 w-16 overflow-hidden rounded-full bg-slate-200">
-                            <div
-                              className={`h-full rounded-full ${
-                                formData.confidence >= 90
-                                  ? "bg-emerald-400"
-                                  : "bg-orange-500"
-                              }`}
-                              style={{ width: `${formData.confidence}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-black text-slate-700">
-                            {formData.confidence}%
+                      <div className="relative flex items-center gap-2">
+                        {/* Info: (20260324 - Julian) AI Note */}
+                        <AiNote note={formData.aiNote} />
+
+                        {/* Info: (20260324 - Julian) AI Confidence */}
+                        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
+                          <span className="text-xs font-bold text-slate-500">
+                            {t("esg_verify.ai_confidence")}
                           </span>
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-2 w-16 overflow-hidden rounded-full bg-slate-200">
+                              <div
+                                className={`h-full rounded-full ${
+                                  formData.confidence >= 90
+                                    ? "bg-emerald-400"
+                                    : "bg-orange-500"
+                                }`}
+                                style={{
+                                  width: `${formData.confidence}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="text-sm font-black text-slate-700">
+                              {formData.confidence}%
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>

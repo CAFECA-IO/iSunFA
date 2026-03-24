@@ -87,4 +87,5 @@ export interface IEsgRecord {
   confidence: number;
   isVerified: boolean;
   analysisStatus: AIAnalysisStatus;
+  aiNote: string;
 }

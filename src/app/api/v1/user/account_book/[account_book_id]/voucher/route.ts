@@ -73,6 +73,7 @@ export async function POST(
           create: [],
         },
         confidence: 0,
+        aiNote: "",
       },
     });
 
@@ -237,7 +238,9 @@ export async function GET(
         .reduce((sum, l) => sum + l.amount, 0);
 
       return {
-        id: v.id,
+        id:v.id,
+        accountBookId: v.accountBookId,
+        userId: v.userId,
         tradingDate: Math.floor(v.tradingDate.getTime() / 1000),
         tradingType: v.tradingType.toLowerCase() as TradingType,
         note: v.note ?? "",
@@ -256,6 +259,7 @@ export async function GET(
         confidence: v.confidence,
         isVerified: v.isVerified,
         analysisStatus: v.analysisStatus as AIAnalysisStatus,
+        aiNote: v.aiNote ?? "",
       };
     });
 

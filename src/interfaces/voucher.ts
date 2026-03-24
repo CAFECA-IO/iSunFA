@@ -50,6 +50,7 @@ export interface IVoucher {
   confidence: number;
   isVerified: boolean;
   analysisStatus: AIAnalysisStatus
+  aiNote: string;
 }
 
 export interface IParsedVoucherLine {

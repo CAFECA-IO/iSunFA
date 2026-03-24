@@ -95,6 +95,7 @@ export async function GET(
       confidence: voucher.confidence,
       isVerified: voucher.isVerified,
       analysisStatus: voucher.analysisStatus as AIAnalysisStatus,
+      aiNote: voucher.aiNote ?? "",
     };
 
     return jsonOk(result);

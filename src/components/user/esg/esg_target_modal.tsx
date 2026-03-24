@@ -66,7 +66,7 @@ export default function EsgTargetModal({
       1 +
       ((target - industry.emissionPer10kMin) /
         (industry.emissionPer10kMax - industry.emissionPer10kMin)) *
-      99;
+        99;
     return Math.max(1, Math.min(100, Math.round(rank)));
   };
 
@@ -251,21 +251,21 @@ export default function EsgTargetModal({
                 </h3>
                 {esgIndustryId
                   ? (() => {
-                    const industry = ESG_INDUSTRY_BENCHMARKS.find(
-                      (i) => i.id === esgIndustryId,
-                    );
-                    const industryName = industry
-                      ? t(industry.industryName)
-                      : "";
-                    return industryName ? (
-                      <div className="ml-3 hidden items-center gap-1.5 rounded-full border border-slate-200/60 bg-slate-50 px-3 py-1 text-[13px] font-medium text-slate-700 shadow-sm sm:inline-flex">
-                        <span className="h-1.5 w-1.5 rounded-full bg-orange-500 shadow-sm"></span>
-                        {t("esg_target.industry_classification", {
-                          industry: industryName,
-                        })}
-                      </div>
-                    ) : null;
-                  })()
+                      const industry = ESG_INDUSTRY_BENCHMARKS.find(
+                        (i) => i.id === esgIndustryId,
+                      );
+                      const industryName = industry
+                        ? t(industry.industryName)
+                        : "";
+                      return industryName ? (
+                        <div className="ml-3 hidden items-center gap-1.5 rounded-full border border-slate-200/60 bg-slate-50 px-3 py-1 text-[13px] font-medium text-slate-700 shadow-sm sm:inline-flex">
+                          <span className="h-1.5 w-1.5 rounded-full bg-orange-500 shadow-sm"></span>
+                          {t("esg_target.industry_classification", {
+                            industry: industryName,
+                          })}
+                        </div>
+                      ) : null;
+                    })()
                   : null}
               </div>
               <button
@@ -318,8 +318,8 @@ export default function EsgTargetModal({
                           const prevRevActual =
                             prevYearData?.emissions && prevYearData?.revenue
                               ? prevYearData.emissions /
-                              1000 /
-                              (prevYearData.revenue / 10000)
+                                1000 /
+                                (prevYearData.revenue / 10000)
                               : null;
                           return (
                             <tr
@@ -370,38 +370,38 @@ export default function EsgTargetModal({
                                   prevRevActual,
                                 )}
                                 {draft.revenueEmissionTarget !== null &&
-                                  esgIndustryId
+                                esgIndustryId
                                   ? (() => {
-                                    const globalRankStr = t(
-                                      "esg_target.global_rank",
-                                      {
-                                        rank:
-                                          getGlobalRank(
-                                            draft.revenueEmissionTarget,
-                                          ) || 0,
-                                      },
-                                    );
-                                    const industryRankStr = t(
-                                      "esg_target.industry_rank",
-                                      {
-                                        rank:
-                                          getIndustryRank(
-                                            draft.revenueEmissionTarget,
-                                            esgIndustryId,
-                                          ) || 0,
-                                      },
-                                    );
-                                    return (
-                                      <div className="mt-1.5 flex flex-col items-end gap-1 text-[11px] whitespace-nowrap text-slate-500">
-                                        <span>
-                                          {t("esg_target.target_estimation", {
-                                            global_rank: globalRankStr,
-                                            industry_rank: industryRankStr,
-                                          })}
-                                        </span>
-                                      </div>
-                                    );
-                                  })()
+                                      const globalRankStr = t(
+                                        "esg_target.global_rank",
+                                        {
+                                          rank:
+                                            getGlobalRank(
+                                              draft.revenueEmissionTarget,
+                                            ) || 0,
+                                        },
+                                      );
+                                      const industryRankStr = t(
+                                        "esg_target.industry_rank",
+                                        {
+                                          rank:
+                                            getIndustryRank(
+                                              draft.revenueEmissionTarget,
+                                              esgIndustryId,
+                                            ) || 0,
+                                        },
+                                      );
+                                      return (
+                                        <div className="mt-1.5 flex flex-col items-end gap-1 text-[11px] whitespace-nowrap text-slate-500">
+                                          <span>
+                                            {t("esg_target.target_estimation", {
+                                              global_rank: globalRankStr,
+                                              industry_rank: industryRankStr,
+                                            })}
+                                          </span>
+                                        </div>
+                                      );
+                                    })()
                                   : null}
                               </td>
                             </tr>
