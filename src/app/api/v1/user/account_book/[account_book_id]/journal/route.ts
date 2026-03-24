@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/browser";
 import { IJournal } from "@/interfaces/journal";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 /**
  * Info: (20260304 - Julian) 將檔案傳給 AI 進行解析

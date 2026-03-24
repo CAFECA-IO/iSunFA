@@ -5,7 +5,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import AiConfidenceBar from "@/components/common/ai_confidence_bar";
 import { IJournal } from "@/interfaces/journal";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { timestampToString } from "@/lib/utils/common";
 
 const JournalListItem = ({

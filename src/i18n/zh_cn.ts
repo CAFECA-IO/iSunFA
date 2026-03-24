@@ -9,6 +9,7 @@ export const zhCn = {
     cancel: "取消",
     close: "关闭",
     coming_soon_message: "即将推出",
+    all: "全部",
     agree: "同意",
     filter: "筛选",
     pagination: {
@@ -1100,7 +1101,6 @@ export const zhCn = {
   voucher: {
     account_book_selector: {
       title: "请选择会计科目",
-      all: "全部",
       search_placeholder: "搜索科目代码或名称...",
       no_results: "找不到符合的会计科目",
     },
@@ -1114,7 +1114,6 @@ export const zhCn = {
       filters: {
         type: "字段类型",
         type_options: {
-          all: "全部",
           income: "收入",
           outcome: "支出",
           transfer: "转换",

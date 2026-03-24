@@ -14,7 +14,7 @@ import { timestampToString, numberWithCommas } from "@/lib/utils/common";
 import { FilePreview } from "@/components/common/file_preview";
 import AiConfidenceBar from "@/components/common/ai_confidence_bar";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 export function VoucherRow({
   voucher,

@@ -10,6 +10,7 @@ export const ja = {
     cancel: "キャンセル",
     close: "閉じる",
     coming_soon_message: "まもなく登場",
+    all: "すべて",
     agree: "同意",
     filter: "フィルター",
     pagination: {
@@ -1134,7 +1135,6 @@ export const ja = {
   voucher: {
     account_book_selector: {
       title: "勘定科目を選択",
-      all: "すべて",
       search_placeholder: "科目コードや名前を検索...",
       no_results: "一致する勘定科目がありません",
     },
@@ -1148,7 +1148,6 @@ export const ja = {
       filters: {
         type: "項目の種類",
         type_options: {
-          all: "すべて",
           income: "収入",
           outcome: "支出",
           transfer: "変換",

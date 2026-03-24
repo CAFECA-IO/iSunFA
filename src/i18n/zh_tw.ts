@@ -9,6 +9,7 @@ export const zhTw = {
     cancel: "取消",
     close: "關閉",
     coming_soon_message: "即將推出",
+    all: "全部",
     agree: "同意",
     filter: "篩選",
     pagination: {
@@ -1044,7 +1045,6 @@ export const zhTw = {
   voucher: {
     account_book_selector: {
       title: "請選擇會計科目",
-      all: "全部",
       search_placeholder: "搜尋科目代碼或名稱...",
       no_results: "找不到符合的會計科目",
     },
@@ -1058,7 +1058,6 @@ export const zhTw = {
       filters: {
         type: "欄位類型",
         type_options: {
-          all: "全部",
           income: "收入",
           outcome: "支出",
           transfer: "轉換",

@@ -46,8 +46,8 @@ export default function EsgTableSection({
         queryParams.append("intensity", intensityFilter);
       if (scopeFilter && scopeFilter !== "ALL")
         queryParams.append("scope", scopeFilter);
-      if (year) queryParams.append("year", year.toString());
-      if (month) queryParams.append("month", month.toString());
+      // if (year) queryParams.append("year", year.toString());
+      // if (month) queryParams.append("month", month.toString());
       queryParams.append("sort", dateSort);
 
       const queryString = queryParams.toString()

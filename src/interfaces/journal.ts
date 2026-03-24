@@ -1,4 +1,4 @@
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 export interface IJournal {
   id: string;

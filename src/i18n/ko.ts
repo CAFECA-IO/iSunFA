@@ -10,6 +10,7 @@ export const ko = {
     cancel: "취소",
     close: "닫기",
     coming_soon_message: "오픈 예정",
+    all: "전체",
     agree: "동의",
     filter: "필터",
     pagination: {
@@ -1122,7 +1123,6 @@ export const ko = {
   voucher: {
     account_book_selector: {
       title: "계정 선택",
-      all: "전체",
       search_placeholder: "계정 코드나 이름을 검색하세요...",
       no_results: "일치하는 계정이 없습니다",
     },
@@ -1137,7 +1137,6 @@ export const ko = {
       filters: {
         type: "항목 유형",
         type_options: {
-          all: "전체",
           income: "수입",
           outcome: "지출",
           transfer: "전환",

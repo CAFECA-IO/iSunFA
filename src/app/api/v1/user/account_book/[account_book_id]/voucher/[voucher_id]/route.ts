@@ -9,7 +9,7 @@ import {
   TradingType,
 } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 /**
  * Info: (20260311 - Julian) 取得傳票

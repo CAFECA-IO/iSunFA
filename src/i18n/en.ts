@@ -9,6 +9,7 @@ export const en = {
     cancel: "Cancel",
     close: "Close",
     coming_soon_message: "Coming Soon",
+    all: "All",
     agree: "Agree",
     filter: "Filter",
     pagination: {
@@ -1017,7 +1018,6 @@ export const en = {
   voucher: {
     account_book_selector: {
       title: "Select Account",
-      all: "All",
       search_placeholder: "Search account code or name...",
       no_results: "No matching accounts found",
     },
@@ -1032,7 +1032,6 @@ export const en = {
       filters: {
         type: "Field Type",
         type_options: {
-          all: "All",
           income: "Income",
           outcome: "Outcome",
           transfer: "Transfer",

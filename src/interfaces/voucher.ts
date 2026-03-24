@@ -1,5 +1,5 @@
 import { IAccount } from "@/constants/accounts";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 export enum TradingType {
   INCOME = "income",

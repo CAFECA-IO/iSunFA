@@ -10,7 +10,7 @@ import {
   TradingType,
 } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 /**
  * Info: (20260310 - Julian) 新增傳票：將 AI 解析出的傳票存入 DB
@@ -143,6 +143,7 @@ export async function GET(
     }
 
     const searchParams = request.nextUrl.searchParams;
+    const verifyStatus = searchParams.get("verifyStatus");
     const keyWord = searchParams.get("keyWord");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
@@ -171,6 +172,11 @@ export async function GET(
         { lines: { some: { particular: { contains: keyWord } } } },
         { lines: { some: { accountingCode: { contains: keyWord } } } },
       ];
+    }
+
+    // Info: (20260324 - Julian) 建立審核狀態篩選
+    if (verifyStatus) {
+      filteredConditions.where!.isVerified = verifyStatus === "VERIFIED";
     }
 
     // Info: (20260310 - Julian) 建立時間區間篩選

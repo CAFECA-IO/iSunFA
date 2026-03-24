@@ -20,6 +20,11 @@ enum VoucherSorting {
   CREDIT_ASC = "credit_asc",
 }
 
+enum VoucherVerifyStatus {
+  VERIFIED = "VERIFIED",
+  UNVERIFIED = "UNVERIFIED",
+}
+
 export default function VoucherTableSection() {
   const params = useParams();
   const { t } = useTranslation();
@@ -29,14 +34,17 @@ export default function VoucherTableSection() {
   const currencyUnit = "TWD"; // ToDo: (20260310 - Julian) 先固定使用 TWD
 
   const [filteredType, setFilteredType] = useState<TradingType | "all">("all");
+  const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<VoucherVerifyStatus | "all">("all");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [keyWord, setKeyWord] = useState<string>("");
   const [debouncedKeyWord, setDebouncedKeyWord] = useState<string>("");
+  
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
     useState<boolean>(false);
+
   const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
     null,
   );
@@ -76,6 +84,9 @@ export default function VoucherTableSection() {
       if (filteredType !== "all") {
         searchParams.append("type", filteredType);
       }
+      if(filteredVerifyStatus !== "all") {
+        searchParams.append("verifyStatus", filteredVerifyStatus);
+      }
       if (hideDeleted) {
         searchParams.append("hideDeleted", "true");
       }
@@ -99,6 +110,7 @@ export default function VoucherTableSection() {
     startDate,
     endDate,
     filteredType,
+    filteredVerifyStatus,
     hideDeleted,
     sorting,
     accountBookId,
@@ -227,7 +239,9 @@ export default function VoucherTableSection() {
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             {/* Info: (20260316 - Julian) Toolbar */}
             <div className="flex flex-col items-center justify-between gap-4 border-b border-slate-200 p-4 lg:flex-row">
-              <div className="relative max-w-[400px] flex-1">
+              <div className="flex items-center gap-2">
+              {/* Info: (20260324 - Julian) Searchbar */}
+              <div className="relative flex">
                 <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   id="searchField"
@@ -239,7 +253,27 @@ export default function VoucherTableSection() {
                   className="w-full rounded-full border border-slate-300 py-2.5 pr-4 pl-11 text-sm font-semibold text-slate-700 shadow-sm placeholder:font-medium placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
               </div>
-
+              {/* Info: (20260324 - Julian) Filtered Verify Status */}
+              <select
+                id="verifyStatusSelect"
+                value={filteredVerifyStatus}
+                onChange={(e) =>
+                  setFilteredVerifyStatus(e.target.value as VoucherVerifyStatus | "all")
+                }
+                className="w-32 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:outline-none"
+              >
+                <option value="all">
+                  {t("common.all")}
+                </option>
+                <option value={VoucherVerifyStatus.VERIFIED}>
+                  {t("verify.status.verified")}
+                </option>
+                <option value={VoucherVerifyStatus.UNVERIFIED}>
+                  {t("verify.status.unverified")}
+                </option>
+              </select>
+            </div>
+              {/* Info: (20260324 - Julian) Filter button */}
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -287,7 +321,7 @@ export default function VoucherTableSection() {
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:outline-none"
                   >
                     <option value="all">
-                      {t("voucher.main_view.filters.type_options.all")}
+                      {t("common.all")}
                     </option>
                     <option value={TradingType.INCOME}>
                       {t("voucher.main_view.filters.type_options.income")}

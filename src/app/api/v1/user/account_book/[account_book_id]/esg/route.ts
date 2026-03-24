@@ -9,7 +9,7 @@ import {
   EsgScope as ClientEsgScope,
   EsgIntensity as ClientEsgIntensity,
 } from "@/interfaces/esg";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 /**
  * Info: (20260312 - Julian) 新增 ESG 紀錄

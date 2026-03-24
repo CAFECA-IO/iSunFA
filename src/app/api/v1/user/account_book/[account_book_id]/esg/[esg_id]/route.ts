@@ -4,7 +4,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { EsgScope, EsgIntensity } from "@/generated/client";
-import { AIAnalysisStatus } from "@/interfaces/ai_analysis_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import {
   IEsgRecord,
   EsgScope as ClientEsgScope,
