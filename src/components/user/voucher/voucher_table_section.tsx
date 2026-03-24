@@ -10,6 +10,7 @@ import { VoucherRow } from "@/components/user/voucher/voucher_row";
 import VoucherDetailModal from "@/components/user/voucher/voucher_detail_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
+import { VerifyStatus } from "@/constants/verify_status"; 
 
 enum VoucherSorting {
   DATE_DESC = "date_desc",
@@ -18,11 +19,6 @@ enum VoucherSorting {
   DEBIT_ASC = "debit_asc",
   CREDIT_DESC = "credit_desc",
   CREDIT_ASC = "credit_asc",
-}
-
-enum VoucherVerifyStatus {
-  VERIFIED = "VERIFIED",
-  UNVERIFIED = "UNVERIFIED",
 }
 
 export default function VoucherTableSection() {
@@ -34,7 +30,7 @@ export default function VoucherTableSection() {
   const currencyUnit = "TWD"; // ToDo: (20260310 - Julian) 先固定使用 TWD
 
   const [filteredType, setFilteredType] = useState<TradingType | "all">("all");
-  const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<VoucherVerifyStatus | "all">("all");
+  const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<VerifyStatus | "all">("all");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [keyWord, setKeyWord] = useState<string>("");
@@ -258,17 +254,17 @@ export default function VoucherTableSection() {
                 id="verifyStatusSelect"
                 value={filteredVerifyStatus}
                 onChange={(e) =>
-                  setFilteredVerifyStatus(e.target.value as VoucherVerifyStatus | "all")
+                  setFilteredVerifyStatus(e.target.value as VerifyStatus | "all")
                 }
                 className="w-32 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:outline-none"
               >
                 <option value="all">
                   {t("common.all")}
                 </option>
-                <option value={VoucherVerifyStatus.VERIFIED}>
+                <option value={VerifyStatus.VERIFIED}>
                   {t("verify.status.verified")}
                 </option>
-                <option value={VoucherVerifyStatus.UNVERIFIED}>
+                <option value={VerifyStatus.UNVERIFIED}>
                   {t("verify.status.unverified")}
                 </option>
               </select>

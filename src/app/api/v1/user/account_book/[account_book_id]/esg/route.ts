@@ -134,6 +134,7 @@ export async function GET(
     // Info: (20260312 - Julian) 取得 ESG 紀錄
     const { searchParams } = new URL(request.url);
     const searchParam = searchParams.get("search");
+    const verifyStatus = searchParams.get("verifyStatus");
     const intensity = searchParams.get("intensity");
     const scope = searchParams.get("scope");
     const sort = searchParams.get("sort") === "asc" ? "asc" : "desc";
@@ -169,6 +170,7 @@ export async function GET(
           { activityType: { contains: searchParam, mode: "insensitive" } },
         ],
       }),
+      ...(verifyStatus && { isVerified: verifyStatus === "VERIFIED" }),
       ...(intensity && { intensity: intensity as ClientEsgIntensity }),
       ...(scope && { scope: scope as ClientEsgScope }),
       ...(dateTimestampQuery && { dateTimestamp: dateTimestampQuery }),

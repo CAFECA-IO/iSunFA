@@ -10,6 +10,7 @@ import { request } from "@/lib/utils/request";
 import { useParams } from "next/navigation";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
+import { VerifyStatus } from "@/constants/verify_status"; 
 
 interface IEsgTableSectionProps {
   year?: number;
@@ -25,8 +26,9 @@ export default function EsgTableSection({
   const accountBookId = params?.account_book_id as string;
 
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [intensityFilter, setIntensityFilter] = useState<string>("ALL");
-  const [scopeFilter, setScopeFilter] = useState<string>("ALL");
+  const [verifyStatusFilter, setVerifyStatusFilter] = useState<VerifyStatus | "all">("all");
+  const [intensityFilter, setIntensityFilter] = useState<string>("all");
+  const [scopeFilter, setScopeFilter] = useState<string>("all");
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState<boolean>(false);
   const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
     useState<boolean>(false);
@@ -42,12 +44,14 @@ export default function EsgTableSection({
     try {
       const queryParams = new URLSearchParams();
       if (searchTerm) queryParams.append("search", searchTerm);
-      if (intensityFilter && intensityFilter !== "ALL")
+      if (verifyStatusFilter && verifyStatusFilter !== "all") 
+        queryParams.append("verifyStatus", verifyStatusFilter);
+      if (intensityFilter && intensityFilter !== "all")
         queryParams.append("intensity", intensityFilter);
-      if (scopeFilter && scopeFilter !== "ALL")
+      if (scopeFilter && scopeFilter !== "all")
         queryParams.append("scope", scopeFilter);
-      // if (year) queryParams.append("year", year.toString());
-      // if (month) queryParams.append("month", month.toString());
+      if (year) queryParams.append("year", year.toString());
+      if (month) queryParams.append("month", month.toString());
       queryParams.append("sort", dateSort);
 
       const queryString = queryParams.toString()
@@ -69,6 +73,7 @@ export default function EsgTableSection({
   }, [
     accountBookId,
     searchTerm,
+    verifyStatusFilter,
     intensityFilter,
     scopeFilter,
     dateSort,
@@ -177,12 +182,28 @@ export default function EsgTableSection({
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm">
           <select
+            aria-label='Filter by verify status'
+            value={verifyStatusFilter}
+            onChange={(e) => setVerifyStatusFilter(e.target.value as VerifyStatus| 'all')}
+            className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-bold text-slate-600 focus:outline-none"
+          >
+            <option value='all'>
+              {t("common.all")}
+            </option>
+            <option value={VerifyStatus.VERIFIED}>
+              {t("verify.status.verified")}
+            </option>
+            <option value={VerifyStatus.UNVERIFIED}>
+              {t("verify.status.unverified")}
+            </option>
+          </select>
+          <select
             aria-label={t("esg_table.filter_intensity_aria")}
             value={intensityFilter}
             onChange={(e) => setIntensityFilter(e.target.value)}
             className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-bold text-slate-600 focus:outline-none"
           >
-            <option value="ALL">{t("esg_table.filter_intensity_all")}</option>
+            <option value="all">{t("esg_table.filter_intensity_all")}</option>
             <option value={EsgIntensity.HIGH}>
               {t("esg_table.intensity.high")}
             </option>
@@ -199,7 +220,7 @@ export default function EsgTableSection({
             onChange={(e) => setScopeFilter(e.target.value)}
             className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-bold text-slate-600 focus:outline-none"
           >
-            <option value="ALL">{t("esg_table.filter_scope_all")}</option>
+            <option value="all">{t("esg_table.filter_scope_all")}</option>
             <option value={EsgScope.SCOPE_1}>
               {t("esg_table.scope.scope_1")}
             </option>

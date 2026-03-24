@@ -19,6 +19,7 @@ import JournalGridLayout from "@/components/user/journal/journal_grid_layout";
 import JournalDetailModal from "@/components/user/journal/journal_detail_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { ApiCode } from "@/lib/utils/status";
+import { VerifyStatus } from "@/constants/verify_status";
 
 export default function JournalListView() {
   const { t } = useTranslation();
@@ -29,6 +30,7 @@ export default function JournalListView() {
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [displayType, setDisplayType] = useState<"grid" | "list">("list");
+  const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<VerifyStatus | "all">("all");
   const [journals, setJournals] = useState<IJournal[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -103,6 +105,10 @@ export default function JournalListView() {
       params.append("orderBy", `{"createdAt":"${sortOrder}"}`);
       if (debouncedKeyWord) params.append("keyWord", debouncedKeyWord);
 
+      if(filteredVerifyStatus !== "all"){
+        params.append("verifyStatus", filteredVerifyStatus);
+      }
+
       if (startDate) {
         const [y, m, d] = startDate.split("-").map(Number);
         const start = new Date(y, m - 1, d, 0, 0, 0, 0);
@@ -126,7 +132,7 @@ export default function JournalListView() {
     } finally {
       setIsLoading(false);
     }
-  }, [sortOrder, debouncedKeyWord, startDate, endDate, accountBookId]);
+  }, [sortOrder, debouncedKeyWord, filteredVerifyStatus, startDate, endDate, accountBookId]);
 
   useEffect(() => {
     fetchJournals();
@@ -234,6 +240,28 @@ export default function JournalListView() {
               </div>
             </div>
           </div>
+
+           <div className="hidden h-6 w-px bg-gray-200 sm:block"></div>
+
+            {/* Info: (20260324 - Julian) Filtered Verify Status */}
+              <select
+                id="verifyStatusSelect"
+                value={filteredVerifyStatus}
+                onChange={(e) =>
+                  setFilteredVerifyStatus(e.target.value as VerifyStatus | "all")
+                }
+                className="w-32 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:outline-none"
+              >
+                <option value="all">
+                  {t("common.all")}
+                </option>
+                <option value={VerifyStatus.VERIFIED}>
+                  {t("verify.status.verified")}
+                </option>
+                <option value={VerifyStatus.UNVERIFIED}>
+                  {t("verify.status.unverified")}
+                </option>
+              </select>
         </div>
 
         {/* Info: (20260305 - Julian) Right Actions: Sort + View Mode */}

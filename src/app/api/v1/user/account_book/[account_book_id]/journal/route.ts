@@ -133,6 +133,7 @@ export async function GET(
 
     const searchParams = request.nextUrl.searchParams;
     const keyWord = searchParams.get("keyWord");
+    const verifyStatus = searchParams.get("verifyStatus");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const page = searchParams.get("page")
@@ -156,6 +157,11 @@ export async function GET(
         { text: { contains: keyWord } },
         { id: { contains: keyWord } },
       ];
+    }
+
+    // Info: (20260324 - Julian) 建立審核狀態篩選
+    if (verifyStatus) {
+      filteredConditions.where!.isVerified = verifyStatus === "VERIFIED";
     }
 
     // Info: (20260304 - Julian) 建立時間區間篩選
