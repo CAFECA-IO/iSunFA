@@ -10,11 +10,11 @@ import { timestampToString } from "@/lib/utils/common";
 const JournalGridItem = ({
   journal,
   onSelect,
-  onDelete,
+  // onDelete,
 }: {
   journal: IJournal;
   onSelect: (j: IJournal) => void;
-  onDelete: (j: IJournal) => void;
+  // onDelete: (j: IJournal) => void;
 }) => {
   const { t } = useTranslation();
 
@@ -84,11 +84,11 @@ const JournalGridItem = ({
   return (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
     <div
-      className={`relative flex size-72 flex-col items-center justify-center gap-2 justify-self-center overflow-hidden rounded-lg border border-gray-300 p-2 hover:cursor-pointer ${isAnalysisFailed ? "bg-red-200 hover:bg-red-300" : "bg-gray-100 hover:bg-orange-100"}`}
+      className={`relative flex size-72 flex-col items-center justify-center gap-2 justify-self-center overflow-hidden rounded-lg border p-2 hover:cursor-pointer ${isAnalysisFailed ? "bg-red-200 hover:bg-red-300" : ""} ${journal.isVerified ? "border-emerald-500 bg-emerald-50 hover:bg-emerald-100" : "border-orange-500 bg-orange-50 hover:bg-orange-100"}`}
       onClick={() => onSelect(journal)}
     >
-      {/* Info: (20260320 - Julian) Delete Button */}
-      <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
+      {/* ToDo: (20260324 - Julian) Hide Delete Button */}
+      {/* <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
         <button
           type="button"
           onClick={(e) => {
@@ -99,7 +99,7 @@ const JournalGridItem = ({
         >
           <TrashIcon size={24} />
         </button>
-      </div>
+      </div> */}
       {/* Info: (20260320 - Julian) File Preview */}
       <div className="relative size-[250px] shrink-0">
         {journal.file?.hash ? (
@@ -130,12 +130,12 @@ const JournalGridLayout = ({
   isLoading,
   journals,
   onSelect,
-  onDelete,
+  // onDelete,
 }: {
   isLoading: boolean;
   journals: IJournal[];
   onSelect: (journal: IJournal) => void;
-  onDelete: (journal: IJournal) => void;
+  // onDelete: (journal: IJournal) => void;
 }) => {
   const { t } = useTranslation();
 
@@ -154,7 +154,7 @@ const JournalGridLayout = ({
       key={journal.id}
       journal={journal}
       onSelect={onSelect}
-      onDelete={onDelete}
+      // onDelete={onDelete}
     />
   ));
 

@@ -55,7 +55,8 @@ export default function JournalDetailModal({
   const [showConfirmSave, setShowConfirmSave] = useState<boolean>(false);
 
   const [targetVerify, setTargetVerify] = useState<boolean>(false);
-  const [isUnverifyModalOpen, setIsUnverifyModalOpen] = useState<boolean>(false);
+  const [isUnverifyModalOpen, setIsUnverifyModalOpen] =
+    useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen && journal) {
@@ -147,23 +148,23 @@ export default function JournalDetailModal({
                   {/* Info: (20260305 - Julian) Header */}
                   <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
                     <div className="flex items-center gap-3">
-                    <DialogTitle
-                      as="h3"
-                      className="text-xl font-bold text-slate-800"
-                    >
-                    {t("ocr.detail_title")}
-                    </DialogTitle>
-                    {/* Info: (20260324 - Julian) 顯示日記帳狀態 */}
-                    {journal.isVerified ? (
-                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
-                        {t("verify.status.verified")}
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
-                        {t("verify.status.unverified")}
-                      </span>
-                    )}
-                  </div>
+                      <DialogTitle
+                        as="h3"
+                        className="text-xl font-bold text-slate-800"
+                      >
+                        {t("ocr.detail_title")}
+                      </DialogTitle>
+                      {/* Info: (20260324 - Julian) 顯示日記帳狀態 */}
+                      {journal.isVerified ? (
+                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
+                          {t("verify.status.verified")}
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
+                          {t("verify.status.unverified")}
+                        </span>
+                      )}
+                    </div>
                     <button
                       type="button"
                       className="rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
@@ -218,12 +219,12 @@ export default function JournalDetailModal({
                         </h4>
                       </div>
 
-                      <div className="flex-1 overflow-y-auto rounded-lg bg-gray-50">
+                      <div className="flex-1 overflow-y-auto rounded-lg">
                         <textarea
                           aria-label={t("ocr.journal") as string}
                           value={editText}
                           onChange={(e) => setEditText(e.target.value)}
-                          className="size-full resize-none rounded-lg border border-orange-300 p-4 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                          className="size-full resize-none rounded-lg border border-orange-300 bg-gray-50 p-4 outline-none focus:border-orange-500"
                         />
                       </div>
                       {/* ToDo: (20260323 - Julian) 先隱藏刪除按鈕 */}
@@ -237,7 +238,7 @@ export default function JournalDetailModal({
                           {t("ocr.delete")}
                         </button>
                       {/* Info: (20260324 - Julian) Footer Actions */}
-                      <div className="mt-4 flex flex-wrap items-center justify-between gap-4 py-2 border-t border-gray-100 pt-5">
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 py-2 pt-5">
                         <button
                           type="button"
                           onClick={() => setEditText(journal.text)}
@@ -323,7 +324,9 @@ export default function JournalDetailModal({
         isOpen={isUnverifyModalOpen}
         onClose={() => setIsUnverifyModalOpen(false)}
         title={t("verify.unverify_modal.title")}
-        message={t("verify.unverify_modal.message", { type: t("verify.type.journal")})}
+        message={t("verify.unverify_modal.message", {
+          type: t("verify.type.journal"),
+        })}
         confirmText={t("verify.unverify_modal.confirm")}
         cancelText={t("common.cancel")}
         onConfirm={handleUnverifyConfirmed}

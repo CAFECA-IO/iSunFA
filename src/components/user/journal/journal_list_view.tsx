@@ -20,6 +20,7 @@ import JournalDetailModal from "@/components/user/journal/journal_detail_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { ApiCode } from "@/lib/utils/status";
 import { VerifyStatus } from "@/constants/verify_status";
+import JournalSummary from "@/components/user/journal/journal_summary";
 
 export default function JournalListView() {
   const { t } = useTranslation();
@@ -30,7 +31,9 @@ export default function JournalListView() {
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [displayType, setDisplayType] = useState<"grid" | "list">("list");
-  const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<VerifyStatus | "all">("all");
+  const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<
+    VerifyStatus | "all"
+  >("all");
   const [journals, setJournals] = useState<IJournal[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -65,9 +68,9 @@ export default function JournalListView() {
     setSelectedJournal(updatedJournal);
   };
 
-  const handleDeleteClick = (journal: IJournal) => {
-    setJournalToDelete(journal);
-  };
+  // const handleDeleteClick = (journal: IJournal) => {
+  //   setJournalToDelete(journal);
+  // };
 
   const executeDelete = async () => {
     if (!journalToDelete) return;
@@ -105,7 +108,7 @@ export default function JournalListView() {
       params.append("orderBy", `{"createdAt":"${sortOrder}"}`);
       if (debouncedKeyWord) params.append("keyWord", debouncedKeyWord);
 
-      if(filteredVerifyStatus !== "all"){
+      if (filteredVerifyStatus !== "all") {
         params.append("verifyStatus", filteredVerifyStatus);
       }
 
@@ -132,7 +135,14 @@ export default function JournalListView() {
     } finally {
       setIsLoading(false);
     }
-  }, [sortOrder, debouncedKeyWord, filteredVerifyStatus, startDate, endDate, accountBookId]);
+  }, [
+    sortOrder,
+    debouncedKeyWord,
+    filteredVerifyStatus,
+    startDate,
+    endDate,
+    accountBookId,
+  ]);
 
   useEffect(() => {
     fetchJournals();
@@ -150,9 +160,9 @@ export default function JournalListView() {
     const intervalId = setInterval(async () => {
       for (const pj of pendingJournals) {
         try {
-          const { payload } = await request<
-            IApiResponse<IJournal>
-          >(`/api/v1/user/account_book/${accountBookId}/journal/${pj.id}`);
+          const { payload } = await request<IApiResponse<IJournal>>(
+            `/api/v1/user/account_book/${accountBookId}/journal/${pj.id}`,
+          );
           if (payload) {
             setJournals((prev) =>
               prev.map((old) => (old.id === pj.id ? payload : old)),
@@ -179,174 +189,175 @@ export default function JournalListView() {
         isLoading={isLoading}
         journals={journals}
         onSelect={handleJournalSelect}
-        onDelete={handleDeleteClick}
+        // onDelete={handleDeleteClick}
       />
     );
 
   return (
-    <div className="flex size-full flex-col gap-4">
-      {/* Info: (20260304 - Julian) Filter Area */}
-      <div className="flex flex-col items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:gap-4">
-        {/* Info: (20260305 - Julian) Left Actions: Search + Date */}
-        <div className="flex flex-1 flex-col items-center gap-2 sm:flex-row sm:gap-4">
-          {/* Info: (20260304 - Julian) Search input */}
-          <div className="relative w-full sm:w-[200px]">
-            <Search
-              className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
-              size={18}
-            />
-            <input
-              aria-label="Search journals"
-              type="text"
-              value={keyWord}
-              onChange={(e) => setKeyWord(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pr-4 pl-10 text-sm transition-all outline-none placeholder:text-gray-400 focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500"
-              placeholder={t("ocr.search_placeholder") as string}
-            />
-          </div>
+    <div className="flex flex-col gap-4">
+      <JournalSummary />
+      <div className="flex size-full flex-col gap-4">
+        {/* Info: (20260304 - Julian) Filter Area */}
+        <div className="flex flex-col items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:gap-4">
+          {/* Info: (20260305 - Julian) Left Actions: Search + Date */}
+          <div className="flex flex-1 flex-col items-center gap-2 sm:flex-row sm:gap-4">
+            {/* Info: (20260304 - Julian) Search input */}
+            <div className="relative w-full sm:w-[200px]">
+              <Search
+                className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
+                size={18}
+              />
+              <input
+                aria-label="Search journals"
+                type="text"
+                value={keyWord}
+                onChange={(e) => setKeyWord(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pr-4 pl-10 text-sm transition-all outline-none placeholder:text-gray-400 focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500"
+                placeholder={t("ocr.search_placeholder") as string}
+              />
+            </div>
 
-          <div className="hidden h-6 w-px bg-gray-200 sm:block"></div>
+            <div className="hidden h-6 w-px bg-gray-200 sm:block"></div>
 
-          {/* Info: (20260304 - Julian) Date Picker */}
-          <div className="flex items-center gap-2">
-            <Calendar className="hidden text-gray-400 sm:block" size={18} />
-            <div className="flex flex-col items-center gap-2 text-sm sm:flex-row">
-              <div className="flex items-center gap-2">
-                <p className="block text-gray-700 sm:hidden">
-                  {t("ocr.start_date")}
-                </p>
-                <input
-                  type="date"
-                  aria-label="Start Date"
-                  value={startDate}
-                  max={endDate || undefined}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-gray-700 transition-colors outline-none focus:border-orange-500 focus:bg-white"
-                />
-              </div>
-              <span className="hidden text-gray-400 sm:block">-</span>
-              <div className="flex items-center gap-2">
-                <p className="block text-gray-700 sm:hidden">
-                  {t("ocr.end_date")}
-                </p>
-                <input
-                  type="date"
-                  aria-label="End Date"
-                  value={endDate}
-                  min={startDate || undefined}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-gray-700 transition-colors outline-none focus:border-orange-500 focus:bg-white"
-                />
+            {/* Info: (20260304 - Julian) Date Picker */}
+            <div className="flex items-center gap-2">
+              <Calendar className="hidden text-gray-400 sm:block" size={18} />
+              <div className="flex flex-col items-center gap-2 text-sm sm:flex-row">
+                <div className="flex items-center gap-2">
+                  <p className="block text-gray-700 sm:hidden">
+                    {t("ocr.start_date")}
+                  </p>
+                  <input
+                    type="date"
+                    aria-label="Start Date"
+                    value={startDate}
+                    max={endDate || undefined}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-gray-700 transition-colors outline-none focus:border-orange-500 focus:bg-white"
+                  />
+                </div>
+                <span className="hidden text-gray-400 sm:block">-</span>
+                <div className="flex items-center gap-2">
+                  <p className="block text-gray-700 sm:hidden">
+                    {t("ocr.end_date")}
+                  </p>
+                  <input
+                    type="date"
+                    aria-label="End Date"
+                    value={endDate}
+                    min={startDate || undefined}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-gray-700 transition-colors outline-none focus:border-orange-500 focus:bg-white"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-           <div className="hidden h-6 w-px bg-gray-200 sm:block"></div>
+            <div className="hidden h-6 w-px bg-gray-200 sm:block"></div>
 
             {/* Info: (20260324 - Julian) Filtered Verify Status */}
-              <select
-                id="verifyStatusSelect"
-                value={filteredVerifyStatus}
-                onChange={(e) =>
-                  setFilteredVerifyStatus(e.target.value as VerifyStatus | "all")
-                }
-                className="w-32 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:outline-none"
+            <select
+              id="verifyStatusSelect"
+              value={filteredVerifyStatus}
+              onChange={(e) =>
+                setFilteredVerifyStatus(e.target.value as VerifyStatus | "all")
+              }
+              className="w-32 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:outline-none"
+            >
+              <option value="all">{t("common.all")}</option>
+              <option value={VerifyStatus.VERIFIED}>
+                {t("verify.status.verified")}
+              </option>
+              <option value={VerifyStatus.UNVERIFIED}>
+                {t("verify.status.unverified")}
+              </option>
+            </select>
+          </div>
+
+          {/* Info: (20260305 - Julian) Right Actions: Sort + View Mode */}
+          <div className="flex items-center gap-2">
+            {/* Info: (20260304 - Julian) Sort by date */}
+            <button
+              title={
+                sortOrder === "asc"
+                  ? (t("ocr.sort_asc") as string)
+                  : (t("ocr.sort_desc") as string)
+              }
+              type="button"
+              className="flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-xs whitespace-nowrap text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 active:scale-95 sm:text-base"
+              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+            >
+              {sortOrder === "asc" ? (
+                <div className="flex items-center gap-2">
+                  <p>{t("ocr.sort_asc")}</p>
+                  <ArrowDown size={18} className="shrink-0" />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <p>{t("ocr.sort_desc")}</p>
+                  <ArrowUp size={18} className="shrink-0" />
+                </div>
+              )}
+            </button>
+
+            <div className="mx-1 h-6 w-px bg-gray-200"></div>
+
+            {/* Info: (20260304 - Julian) Display type */}
+            <div className="flex items-center rounded-lg border border-gray-200 bg-gray-50 p-1">
+              <button
+                title={t("ocr.list_view") as string}
+                type="button"
+                className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
+                  displayType === "list"
+                    ? "bg-white text-orange-600 shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+                onClick={() => setDisplayType("list")}
               >
-                <option value="all">
-                  {t("common.all")}
-                </option>
-                <option value={VerifyStatus.VERIFIED}>
-                  {t("verify.status.verified")}
-                </option>
-                <option value={VerifyStatus.UNVERIFIED}>
-                  {t("verify.status.unverified")}
-                </option>
-              </select>
-        </div>
-
-        {/* Info: (20260305 - Julian) Right Actions: Sort + View Mode */}
-        <div className="flex items-center gap-2">
-          {/* Info: (20260304 - Julian) Sort by date */}
-          <button
-            title={
-              sortOrder === "asc"
-                ? (t("ocr.sort_asc") as string)
-                : (t("ocr.sort_desc") as string)
-            }
-            type="button"
-            className="flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-xs whitespace-nowrap text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 active:scale-95 sm:text-base"
-            onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-          >
-            {sortOrder === "asc" ? (
-              <div className="flex items-center gap-2">
-                <p>{t("ocr.sort_asc")}</p>
-                <ArrowDown size={18} className="shrink-0" />
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <p>{t("ocr.sort_desc")}</p>
-                <ArrowUp size={18} className="shrink-0" />
-              </div>
-            )}
-          </button>
-
-          <div className="mx-1 h-6 w-px bg-gray-200"></div>
-
-          {/* Info: (20260304 - Julian) Display type */}
-          <div className="flex items-center rounded-lg border border-gray-200 bg-gray-50 p-1">
-            <button
-              title={t("ocr.list_view") as string}
-              type="button"
-              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
-                displayType === "list"
-                  ? "bg-white text-orange-600 shadow-sm"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
-              onClick={() => setDisplayType("list")}
-            >
-              <ListIcon size={16} />
-            </button>
-            <button
-              title={t("ocr.grid_view") as string}
-              type="button"
-              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
-                displayType === "grid"
-                  ? "bg-white text-orange-600 shadow-sm"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
-              onClick={() => setDisplayType("grid")}
-            >
-              <LayoutGrid size={16} />
-            </button>
+                <ListIcon size={16} />
+              </button>
+              <button
+                title={t("ocr.grid_view") as string}
+                type="button"
+                className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
+                  displayType === "grid"
+                    ? "bg-white text-orange-600 shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+                onClick={() => setDisplayType("grid")}
+              >
+                <LayoutGrid size={16} />
+              </button>
+            </div>
           </div>
         </div>
+        {/* Info: (20260304 - Julian) Journal List */}
+        {displayLayout}
+
+        {/* Info: (20260305 - Julian) Detail Modal */}
+        <JournalDetailModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          journal={selectedJournal}
+          onUpdate={handleJournalUpdate}
+          // onDelete={handleDeleteClick}
+        />
+
+        {/* Info: (20260305 - Julian) Delete Confirmation Modal */}
+        <ConfirmModal
+          isOpen={!!journalToDelete}
+          onClose={() => setJournalToDelete(null)}
+          title={t("ocr.confirm_delete_title") as string}
+          message={t("ocr.confirm_delete_msg") as string}
+          confirmText={
+            isDeleting
+              ? (t("ocr.please_wait") as string)
+              : (t("ocr.delete") as string)
+          }
+          cancelText={t("common.cancel") as string}
+          onConfirm={executeDelete}
+        />
       </div>
-      {/* Info: (20260304 - Julian) Journal List */}
-      {displayLayout}
-
-      {/* Info: (20260305 - Julian) Detail Modal */}
-      <JournalDetailModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        journal={selectedJournal}
-        onUpdate={handleJournalUpdate}
-        // onDelete={handleDeleteClick}
-      />
-
-      {/* Info: (20260305 - Julian) Delete Confirmation Modal */}
-      <ConfirmModal
-        isOpen={!!journalToDelete}
-        onClose={() => setJournalToDelete(null)}
-        title={t("ocr.confirm_delete_title") as string}
-        message={t("ocr.confirm_delete_msg") as string}
-        confirmText={
-          isDeleting
-            ? (t("ocr.please_wait") as string)
-            : (t("ocr.delete") as string)
-        }
-        cancelText={t("common.cancel") as string}
-        onConfirm={executeDelete}
-      />
     </div>
   );
 }
