@@ -175,6 +175,11 @@ export async function GET(
       }
     }
 
+    // Info: (20260324 - Julian) 取得符合條件的總筆數
+    const totalCount = await prisma.journal.count({
+      where: filteredConditions.where,
+    });
+
     // Info: (20260304 - Julian) 分頁
     if (page && pageSize) {
       filteredConditions.skip = (page - 1) * pageSize;
@@ -213,7 +218,7 @@ export async function GET(
       };
     });
 
-    return jsonOk(formattedJournals);
+    return jsonOk({ data: formattedJournals, total: totalCount });
   } catch (error) {
     console.error("Get journals failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get journals failed");

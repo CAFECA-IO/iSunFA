@@ -18,7 +18,10 @@ import JournalListLayout from "@/components/user/journal/journal_list_layout";
 import JournalGridLayout from "@/components/user/journal/journal_grid_layout";
 import JournalDetailModal from "@/components/user/journal/journal_detail_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
+import Pagination from "@/components/common/pagination";
 import { ApiCode } from "@/lib/utils/status";
+
+const PAGE_SIZE = 12;
 import { VerifyStatus } from "@/constants/verify_status";
 import JournalSummary from "@/components/user/journal/journal_summary";
 
@@ -35,6 +38,8 @@ export default function JournalListView() {
     VerifyStatus | "all"
   >("all");
   const [journals, setJournals] = useState<IJournal[]>([]);
+  const [totalItems, setTotalItems] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [keyWord, setKeyWord] = useState<string>("");
@@ -124,11 +129,17 @@ export default function JournalListView() {
         params.append("endDate", end.toISOString());
       }
 
-      const data = await request<IApiResponse<IJournal[]>>(
+      params.append("page", currentPage.toString());
+      params.append("pageSize", PAGE_SIZE.toString());
+
+      const data = await request<
+        IApiResponse<{ data: IJournal[]; total: number }>
+      >(
         `/api/v1/user/account_book/${accountBookId}/journal?${params.toString()}`,
       );
       if (data.payload) {
-        setJournals(data.payload);
+        setJournals(data.payload.data);
+        setTotalItems(data.payload.total);
       }
     } catch (error) {
       console.error("Failed to fetch journals:", error);
@@ -142,7 +153,21 @@ export default function JournalListView() {
     startDate,
     endDate,
     accountBookId,
+    currentPage,
   ]);
+
+  // Info: (20260324 - Julian) Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortOrder, debouncedKeyWord, filteredVerifyStatus, startDate, endDate]);
+
+  const totalPages = Math.ceil(totalItems / PAGE_SIZE) || 1;
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   useEffect(() => {
     fetchJournals();
@@ -333,6 +358,13 @@ export default function JournalListView() {
         </div>
         {/* Info: (20260304 - Julian) Journal List */}
         {displayLayout}
+
+        {/* Info: (20260324 - Julian) Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
 
         {/* Info: (20260305 - Julian) Detail Modal */}
         <JournalDetailModal

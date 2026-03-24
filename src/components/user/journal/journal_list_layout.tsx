@@ -197,7 +197,7 @@ const JournalListLayout = ({
   ));
 
   return (
-    <div className="overflow-x-auto rounded-md border border-gray-200 bg-white shadow-sm">
+    <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
       <table className="w-full">
         <tbody>
           <tr>

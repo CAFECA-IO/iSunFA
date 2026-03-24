@@ -38,7 +38,7 @@ export default function Pagination({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-200 bg-white px-4 py-4 sm:flex-row sm:px-6">
+    <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:flex-row sm:px-6">
       {/* Info: (20260324 - Julian) 隱藏左側佔位，讓中間和右側可以平均分配 */}
       <div className="hidden flex-1 sm:block"></div>
 

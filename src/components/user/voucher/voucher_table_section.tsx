@@ -22,7 +22,7 @@ enum VoucherSorting {
   CREDIT_ASC = "credit_asc",
 }
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 
 export default function VoucherTableSection() {
   const params = useParams();
@@ -270,7 +270,7 @@ export default function VoucherTableSection() {
   return (
     <>
       <div className="flex w-full flex-col gap-4">
-        <div className="mx-auto w-full max-w-[1400px]">
+        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             {/* Info: (20260316 - Julian) Toolbar */}
             <div className="flex flex-col items-center justify-between gap-4 border-b border-slate-200 p-4 lg:flex-row">
@@ -557,14 +557,14 @@ export default function VoucherTableSection() {
                 </tbody>
               </table>
             </div>
-
-            {/* Info: (20260324 - Julian) Pagination */}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
           </div>
+
+          {/* Info: (20260324 - Julian) Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
       <VoucherDetailModal
