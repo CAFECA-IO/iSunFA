@@ -978,9 +978,6 @@ export const zhCn = {
       scope_3: "范畴三",
     },
     no_file: "无档案",
-    verified: "已核对",
-    manual_verify: "人工核对",
-    unverified: "尚未核对",
     search_placeholder: "搜索供应商、活动类型...",
     search_aria: "搜索供应商、活动类型",
     filter_intensity_aria: "依强度筛选",
@@ -1032,10 +1029,6 @@ export const zhCn = {
       fetch_error: "获取凭证失败",
       deleted_warning: "已删除凭证不可编辑",
     },
-    status: {
-      pending: "待核对",
-      verified: "已核对",
-    },
     sections: {
       preview: "发票预览",
       basic_info: "凭证基础信息",
@@ -1055,8 +1048,6 @@ export const zhCn = {
     actions: {
       cancel_edit: "取消修改",
       save_only: "仅保存修改",
-      save_and_verify: "保存并完成核对",
-      unverify: "退回未核对",
     },
     close_confirm: {
       title: "确认关闭？",
@@ -1144,12 +1135,6 @@ export const zhCn = {
           transfer: "转账凭证",
           unknown: "未知凭证",
         },
-        status: {
-          verified: "已核对",
-          manual: "人工核对",
-          unverified: "尚未核对",
-          deleted: "已删除",
-        },
         headers: {
           receipt: "发票",
           voucher_date: "传票日期",
@@ -1180,10 +1165,6 @@ export const zhCn = {
       messages: {
         fetch_error: "获取凭证失败",
         deleted_warning: "已删除凭证不可编辑",
-      },
-      status: {
-        pending: "待核对",
-        verified: "已核对",
       },
       sections: {
         preview: "发票预览",
@@ -1292,4 +1273,29 @@ export const zhCn = {
       },
     },
   },
+  "verify":{
+      "verify_modal":{
+        title:"确认核对？",
+        message:"您确定要核对此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
+        confirm:"确认核对",
+      },
+      "unverify_modal":{
+        title:"确认退回？",
+        message:"您确定要退回此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
+        confirm:"确认退回",
+      },
+      status: {
+        verified: "已核对",
+        unverified: "待核对",
+      },
+      button:{
+        unverify:"退回未核对",
+        verify:"核对并存档",
+      },
+      type:{
+        journal:"日记账",
+        voucher:"传票",
+        esg:"碳排记录",
+      }
+    }
 };

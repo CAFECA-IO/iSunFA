@@ -146,12 +146,24 @@ export default function JournalDetailModal({
                 <DialogPanel className="relative flex h-[85vh] w-full max-w-[90vw] transform flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all">
                   {/* Info: (20260305 - Julian) Header */}
                   <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                    <div className="flex items-center gap-3">
                     <DialogTitle
                       as="h3"
-                      className="text-xl font-semibold text-gray-900"
+                      className="text-xl font-bold text-slate-800"
                     >
-                      {t("ocr.detail_title")}
+                    {t("ocr.detail_title")}
                     </DialogTitle>
+                    {/* Info: (20260324 - Julian) 顯示日記帳狀態 */}
+                    {journal.isVerified ? (
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
+                        {t("verify.status.verified")}
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
+                        {t("verify.status.unverified")}
+                      </span>
+                    )}
+                  </div>
                     <button
                       type="button"
                       className="rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
@@ -242,7 +254,7 @@ export default function JournalDetailModal({
                               className="flex h-10 items-center gap-2 rounded-xl bg-red-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:bg-slate-300"
                             >
                               <X size={16} className="stroke-3" />
-                              {t("voucher.detail_modal.actions.unverify")}
+                              {t("verify.button.unverify")}
                             </button>
                           ) : (
                             <button
@@ -288,7 +300,7 @@ export default function JournalDetailModal({
         title={t("ocr.confirm_save_title") as string}
         message={t("ocr.confirm_save_msg") as string}
         confirmText={t("ocr.save") as string}
-        cancelText={t("ocr.cancel") as string}
+        cancelText={t("common.cancel") as string}
         onConfirm={() => executeSaveJournal(null)}
       />
 
@@ -299,7 +311,7 @@ export default function JournalDetailModal({
         title={t("ocr.unsaved_changes_title") as string}
         message={t("ocr.unsaved_changes_msg") as string}
         confirmText={t("ocr.confirm_leave_title") as string}
-        cancelText={t("ocr.cancel") as string}
+        cancelText={t("common.cancel") as string}
         onConfirm={() => {
           setShowConfirmClose(false);
           onClose();
@@ -310,10 +322,10 @@ export default function JournalDetailModal({
       <ConfirmModal
         isOpen={isUnverifyModalOpen}
         onClose={() => setIsUnverifyModalOpen(false)}
-        title={t("voucher.detail_modal.unverify_confirm.title")}
-        message={t("voucher.detail_modal.unverify_confirm.message")}
-        confirmText={t("voucher.detail_modal.unverify_confirm.confirm")}
-        cancelText={t("voucher.detail_modal.unverify_confirm.cancel")}
+        title={t("verify.unverify_modal.title")}
+        message={t("verify.unverify_modal.message", { type: t("verify.type.journal")})}
+        confirmText={t("verify.unverify_modal.confirm")}
+        cancelText={t("common.cancel")}
         onConfirm={handleUnverifyConfirmed}
       />
     </>

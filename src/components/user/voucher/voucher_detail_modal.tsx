@@ -395,13 +395,14 @@ export default function VoucherDetailModal({
                     >
                       {t("voucher.detail_modal.title")}
                     </DialogTitle>
+                    {/* Info: (20260324 - Julian) 顯示傳票狀態 */}
                     {activeVoucher.isVerified ? (
                       <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
-                        {t("voucher.detail_modal.status.verified")}
+                        {t("verify.status.verified")}
                       </span>
                     ) : (
                       <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
-                        {t("voucher.detail_modal.status.pending")}
+                        {t("verify.status.unverified")}
                       </span>
                     )}
                   </div>
@@ -673,7 +674,7 @@ export default function VoucherDetailModal({
                             className="flex h-10 items-center gap-2 rounded-xl bg-red-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:bg-slate-300"
                           >
                             <X size={16} className="stroke-3" />
-                            {t("voucher.detail_modal.actions.unverify")}
+                            {t("verify.button.unverify")}
                           </button>
                         ) : (
                           <button
@@ -683,7 +684,7 @@ export default function VoucherDetailModal({
                             className="flex h-10 items-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:bg-slate-300"
                           >
                             <CheckCircle2 size={16} className="stroke-3" />
-                            {t("voucher.detail_modal.actions.verify_save")}
+                            {t("verify.button.verify")}
                           </button>
                         )}
                         <button
@@ -712,7 +713,7 @@ export default function VoucherDetailModal({
         title={t("voucher.detail_modal.confirm_modals.clear_all.title")}
         message={t("voucher.detail_modal.confirm_modals.clear_all.message")}
         confirmText={t("voucher.detail_modal.actions.confirm")}
-        cancelText={t("voucher.detail_modal.actions.cancel")}
+        cancelText={t("common.cancel")}
         onConfirm={() => {
           setRows([]);
           setInputDate(0);
@@ -733,7 +734,7 @@ export default function VoucherDetailModal({
           "voucher.detail_modal.confirm_modals.leave_without_saving.message",
         )}
         confirmText={t("voucher.detail_modal.actions.confirm")}
-        cancelText={t("voucher.detail_modal.actions.cancel")}
+        cancelText={t("common.cancel")}
         onConfirm={() => onClose()}
       />
 
@@ -746,7 +747,7 @@ export default function VoucherDetailModal({
         confirmText={
           isSaving ? "Saving..." : t("voucher.detail_modal.actions.confirm")
         }
-        cancelText={t("voucher.detail_modal.actions.cancel")}
+        cancelText={t("common.cancel")}
         onConfirm={executeSaveVoucher}
       />
 
@@ -754,10 +755,12 @@ export default function VoucherDetailModal({
       <ConfirmModal
         isOpen={isUnverifyModalOpen}
         onClose={() => setIsUnverifyModalOpen(false)}
-        title={t("voucher.detail_modal.unverify_confirm.title")}
-        message={t("voucher.detail_modal.unverify_confirm.message")}
-        confirmText={t("voucher.detail_modal.unverify_confirm.confirm")}
-        cancelText={t("voucher.detail_modal.unverify_confirm.cancel")}
+        title={t("verify.unverify_modal.title")}
+        message={t("verify.unverify_modal.message", {
+          type: t("verify.type.voucher"),
+        })}
+        confirmText={t("verify.unverify_modal.confirm")}
+        cancelText={t("common.cancel")}
         onConfirm={handleUnverifyConfirmed}
       />
 

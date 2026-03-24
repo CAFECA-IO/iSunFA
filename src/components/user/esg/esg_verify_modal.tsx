@@ -158,12 +158,24 @@ export default function EsgVerifyModal({
               <DialogPanel className="relative flex max-h-[90vh] w-full max-w-5xl transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
                 {/* Info: (20260312 - Julian) Header */}
                 <div className="flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-8 py-5">
+                 <div className="flex items-center gap-3">
                   <DialogTitle
                     as="h3"
                     className="text-xl font-bold text-slate-800"
                   >
                     {t("esg_verify.title")}
                   </DialogTitle>
+                  {/* Info: (20260324 - Julian) 顯示狀態 */}
+                  {formData.isVerified ? (
+                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
+                      {t("verify.status.verified")}
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
+                      {t("verify.status.unverified")}
+                    </span>
+                  )}
+                  </div>
                   <button
                     type="button"
                     aria-label="Close"
@@ -428,7 +440,7 @@ export default function EsgVerifyModal({
                               className="flex items-center gap-2 rounded-lg bg-red-400 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500"
                             >
                               <X size={18} className="stroke-[2.5]" />
-                              {t("esg_verify.actions.unverify")}
+                              {t("verify.button.unverify")}
                             </button>
                             <button
                               type="button"
@@ -447,7 +459,7 @@ export default function EsgVerifyModal({
                               className="flex items-center gap-2 rounded-lg bg-emerald-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-600"
                             >
                               <CheckCircle2 size={18} />
-                              {t("esg_verify.actions.save_and_verify")}
+                              {t("verify.button.verify")}
                             </button>
                             <button
                               type="button"
@@ -487,10 +499,10 @@ export default function EsgVerifyModal({
       <ConfirmModal
         isOpen={isSaveModalOpen}
         onClose={() => setIsSaveModalOpen(false)}
-        title={t("esg_verify.save_confirm.title")}
-        message={t("esg_verify.save_confirm.message")}
-        confirmText={t("esg_verify.save_confirm.confirm")}
-        cancelText={t("esg_verify.save_confirm.cancel")}
+        title={t("verify.verify_modal.title")}
+        message={t("verify.verify_modal.message", { type: t("verify.type.esg") })}
+        confirmText={t("verify.verify_modal.confirm")}
+        cancelText={t("common.cancel")}
         onConfirm={handleSaveConfirmed}
       />
 
@@ -498,10 +510,10 @@ export default function EsgVerifyModal({
       <ConfirmModal
         isOpen={isUnverifyModalOpen}
         onClose={() => setIsUnverifyModalOpen(false)}
-        title={t("esg_verify.unverify_confirm.title")}
-        message={t("esg_verify.unverify_confirm.message")}
-        confirmText={t("esg_verify.unverify_confirm.confirm")}
-        cancelText={t("esg_verify.unverify_confirm.cancel")}
+        title={t("verify.unverify_modal.title")}
+        message={t("verify.unverify_modal.message", { type: t("verify.type.esg") })}
+        confirmText={t("verify.unverify_modal.confirm")}
+        cancelText={t("common.cancel")}
         onConfirm={handleUnverifyConfirmed}
       />
     </>

@@ -316,7 +316,7 @@ export default function JournalListView() {
             ? (t("ocr.please_wait") as string)
             : (t("ocr.delete") as string)
         }
-        cancelText={t("ocr.cancel") as string}
+        cancelText={t("common.cancel") as string}
         onConfirm={executeDelete}
       />
     </div>

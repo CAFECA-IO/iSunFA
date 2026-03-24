@@ -1053,12 +1053,6 @@ export const en = {
           transfer: "Transfer Voucher",
           unknown: "Unknown Voucher",
         },
-        status: {
-          verified: "Verified",
-          manual: "Manual Verification",
-          unverified: "Unverified",
-          deleted: "Deleted",
-        },
         headers: {
           receipt: "Receipt",
           voucher_date: "Voucher Date",
@@ -1089,10 +1083,6 @@ export const en = {
       messages: {
         fetch_error: "Failed to fetch voucher",
         deleted_warning: "Deleted vouchers cannot be edited",
-      },
-      status: {
-        pending: "Pending",
-        verified: "Verified",
       },
       sections: {
         preview: "Receipt Preview",
@@ -1125,8 +1115,6 @@ export const en = {
       },
       actions: {
         cancel_edit: "Cancel Edit",
-        verify_save: "Verify & Save",
-        unverify: "Unverify",
         save_only: "Save Only",
         add_row: "Add Entry",
         clear_all: "Clear All",
@@ -1147,13 +1135,6 @@ export const en = {
           title: "Save Voucher",
           message: "Are you sure you want to save this voucher?",
         },
-      },
-      unverify_confirm: {
-        title: "Confirm Unverify?",
-        message:
-          "Are you sure you want to unverify this voucher? Changes will be saved, please confirm the data is correct.",
-        confirm: "Confirm Unverify",
-        cancel: "Cancel",
       },
     },
   },
@@ -1189,9 +1170,6 @@ export const en = {
       scope_3: "Scope 3",
     },
     no_file: "No File",
-    verified: "Verified",
-    manual_verify: "Manual Verify",
-    unverified: "Unverified",
     search_placeholder: "Search vendor, activity...",
     search_aria: "Search vendor, activity",
     filter_intensity_aria: "Filter by Intensity",
@@ -1242,8 +1220,6 @@ export const en = {
     actions: {
       cancel_edit: "Cancel Edit",
       save_only: "Save Only",
-      save_and_verify: "Save & Verify",
-      unverify: "Unverify",
     },
     close_confirm: {
       title: "Close without saving?",
@@ -1257,13 +1233,6 @@ export const en = {
       title: "Save changes?",
       message: "You are about to save the verification changes. Proceed?",
       confirm: "Save",
-      cancel: "Cancel",
-    },
-    unverify_confirm: {
-      title: "Confirm Unverify?",
-      message:
-        "Are you sure you want to unverify this ESG record? Changes will be saved, please confirm the data is correct.",
-      confirm: "Confirm Unverify",
       cancel: "Cancel",
     },
   },
@@ -1357,4 +1326,29 @@ export const en = {
       },
     },
   },
+      "verify":{
+      "verify_modal":{
+        title:"Confirm Verify?",
+        message:"Are you sure you want to verify this {{type}}? Changes will be saved, please confirm the data is correct.",
+        confirm:"Confirm Verify",
+      },
+      "unverify_modal":{
+        title:"Confirm Unverify?",
+        message:"Are you sure you want to unverify this {{type}}? Changes will be saved, please confirm the data is correct.",
+        confirm:"Confirm Unverify",
+      },
+      status: {
+        verified: "Verified",
+        unverified: "Unverified",
+      },
+      button:{
+        unverify:"Unverify",
+        verify:"Verify & Save",
+      },
+      type:{
+        journal:"Journal",
+        voucher:"Voucher",
+        esg:"ESG",
+      }
+    }
 };

@@ -1,21 +1,43 @@
 "use client";
 
-import { Info } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 
-export default function AiNote({ note }: { note: string }) {
+export default function AiNote({ note }: { note?: string | null }) {
+  if (!note) return null;
+
   return (
-    <div className="relative flex flex-col">
-      <button
-        type="button"
-        className="flex items-center gap-2 rounded-lg bg-blue-400 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-500"
-      >
-        <Info size={16} strokeWidth={2.5} />
-        <span>查看 AI 備註</span>
-      </button>
+    <Popover className="relative flex flex-col items-center">
+      {({ open }) => (
+        <>
+          <PopoverButton
+            className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold shadow-sm outline-none transition-colors ${
+              open
+                ? "border-blue-300 bg-blue-50 text-blue-700"
+                : "border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+            }`}
+          >
+            <Sparkles
+              size={14}
+              className={open ? "text-blue-500" : "text-blue-400"}
+            />
+            <span>AI 備註</span>
+          </PopoverButton>
 
-      <div className="absolute top-8 z-10 w-[300px] rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm leading-relaxed shadow-2xl">
-        {note}
-      </div>
-    </div>
+          <PopoverPanel
+            transition
+            className="absolute top-full z-50 mt-2 w-[320px] origin-top-right rounded-xl border border-blue-100 bg-white p-4 shadow-xl ring-1 ring-black/5 outline-none transition duration-200 ease-out data-closed:scale-95 data-closed:opacity-0"
+          >
+            <div className="mb-2 flex items-center gap-2">
+              <Sparkles size={16} className="text-blue-500" />
+              <h4 className="text-sm font-bold text-blue-900">AI 解析備註</h4>
+            </div>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600">
+              {note}
+            </p>
+          </PopoverPanel>
+        </>
+      )}
+    </Popover>
   );
 }

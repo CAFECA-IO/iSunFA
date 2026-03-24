@@ -1012,9 +1012,6 @@ export const ja = {
       scope_3: "スコープ3",
     },
     no_file: "ファイルなし",
-    verified: "確認済",
-    manual_verify: "手動確認",
-    unverified: "未確認",
     search_placeholder: "業者、活動を検索...",
     search_aria: "業者、活動を検索",
     filter_intensity_aria: "強度で絞り込み",
@@ -1066,10 +1063,6 @@ export const ja = {
       fetch_error: "伝票の取得に失敗しました",
       deleted_warning: "削除済みの伝票は編集できません",
     },
-    status: {
-      pending: "確認待ち",
-      verified: "確認済",
-    },
     sections: {
       preview: "領収書のプレビュー",
       basic_info: "基本情報",
@@ -1089,8 +1082,6 @@ export const ja = {
     actions: {
       cancel_edit: "編集をキャンセル",
       save_only: "変更のみ保存",
-      save_and_verify: "保存して確認",
-      unverify: "未確認に戻す",
     },
     close_confirm: {
       title: "保存せずに閉じますか？",
@@ -1180,12 +1171,6 @@ export const ja = {
           transfer: "振替伝票",
           unknown: "不明な伝票",
         },
-        status: {
-          verified: "確認済",
-          manual: "手動確認",
-          unverified: "未確認",
-          deleted: "削除済",
-        },
         headers: {
           receipt: "領収書",
           voucher_date: "伝票日付",
@@ -1216,10 +1201,6 @@ export const ja = {
       messages: {
         fetch_error: "伝票の取得に失敗しました",
         deleted_warning: "削除済みの伝票は編集できません",
-      },
-      status: {
-        pending: "確認待ち",
-        verified: "確認済",
       },
       sections: {
         preview: "領収書のプレビュー",
@@ -1252,14 +1233,10 @@ export const ja = {
       },
       actions: {
         cancel_edit: "編集をキャンセル",
-        verify_save: "確認して保存",
-        unverify: "未確認に戻す",
         save_only: "変更のみ保存",
         add_row: "仕訳を追加",
         clear_all: "すべてクリア",
         save_voucher: "伝票を保存",
-        confirm: "確認",
-        cancel: "キャンセル",
       },
       confirm_modals: {
         clear_all: {
@@ -1328,4 +1305,29 @@ export const ja = {
       },
     },
   },
+  "verify":{
+      "verify_modal":{
+        title:"確認核對？",
+        message:"您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+        confirm:"確認核對",
+      },
+      "unverify_modal":{
+        title:"確認退回？",
+        message:"您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+        confirm:"確認退回",
+      },
+      status: {
+        verified: "已核對",
+        unverified: "待核對",
+      },
+      button:{
+        unverify:"退回未核對",
+        verify:"核對並存檔",
+      },
+      type:{
+        journal:"日記帳",
+        voucher:"傳票",
+        esg:"碳排紀錄",
+      }
+  }
 };

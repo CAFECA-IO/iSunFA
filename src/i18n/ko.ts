@@ -999,9 +999,6 @@ export const ko = {
       scope_3: "스코프 3",
     },
     no_file: "파일 없음",
-    verified: "확인됨",
-    manual_verify: "수동 확인",
-    unverified: "미확인 상태",
     search_placeholder: "공급업체, 활동 유형 검색...",
     search_aria: "공급업체, 활동 유형 검색",
     filter_intensity_aria: "강도 필터링",
@@ -1053,10 +1050,6 @@ export const ko = {
       fetch_error: "전표를 가져오지 못했습니다",
       deleted_warning: "삭제된 전표는 편집할 수 없습니다",
     },
-    status: {
-      pending: "확인 대기 중",
-      verified: "확인됨",
-    },
     sections: {
       preview: "영수증 미리보기",
       basic_info: "기본 정보",
@@ -1076,8 +1069,6 @@ export const ko = {
     actions: {
       cancel_edit: "편집 취소",
       save_only: "수정 내용만 저장",
-      save_and_verify: "저장 및 확인",
-      unverify: "미확인 상태로 되돌리기",
     },
     close_confirm: {
       title: "저장하지 않고 닫으시겠습니까?",
@@ -1169,12 +1160,6 @@ export const ko = {
           transfer: "이체 전표",
           unknown: "알 수 없는 전표",
         },
-        status: {
-          verified: "확인됨",
-          manual: "수동 확인",
-          unverified: "미확인 상태",
-          deleted: "삭제됨",
-        },
         headers: {
           receipt: "영수증",
           voucher_date: "전표일자",
@@ -1205,10 +1190,6 @@ export const ko = {
       messages: {
         fetch_error: "전표를 가져오지 못했습니다",
         deleted_warning: "삭제된 전표는 편집할 수 없습니다",
-      },
-      status: {
-        pending: "확인 대기 중",
-        verified: "확인됨",
       },
       sections: {
         preview: "영수증 미리보기",
@@ -1242,13 +1223,10 @@ export const ko = {
       actions: {
         cancel_edit: "편집 취소",
         verify_save: "확인 및 저장",
-        unverify: "미확인 상태로 되돌리기",
         save_only: "수정 내용만 저장",
         add_row: "분개 추가",
         clear_all: "모두 지우기",
         save_voucher: "전표 저장",
-        confirm: "확인",
-        cancel: "취소",
       },
       confirm_modals: {
         clear_all: {
@@ -1317,4 +1295,29 @@ export const ko = {
       },
     },
   },
+  "verify":{
+      "verify_modal":{
+        title:"確認核對？",
+        message:"您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+        confirm:"確認核對",
+      },
+      "unverify_modal":{
+        title:"確認退回？",
+        message:"您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+        confirm:"確認退回",
+      },
+      status: {
+        verified: "已核對",
+        unverified: "待核對",
+      },
+      button:{
+        unverify:"退回未核對",
+        verify:"核對並存檔",
+      },
+      type:{
+        journal:"日記帳",
+        voucher:"傳票",
+        esg:"碳排紀錄",
+      }
+  }
 };

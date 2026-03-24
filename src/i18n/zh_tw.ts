@@ -1076,12 +1076,6 @@ export const zhTw = {
           transfer: "轉帳傳票",
           unknown: "未知傳票",
         },
-        status: {
-          verified: "已核對",
-          manual: "人工核對",
-          unverified: "尚未核對",
-          deleted: "已刪除",
-        },
         headers: {
           receipt: "憑證",
           voucher_date: "傳票日期",
@@ -1112,10 +1106,6 @@ export const zhTw = {
       messages: {
         fetch_error: "取得傳票失敗",
         deleted_warning: "已刪除傳票不可編輯",
-      },
-      status: {
-        pending: "待核對",
-        verified: "已核對",
       },
       sections: {
         preview: "憑證預覽",
@@ -1171,13 +1161,6 @@ export const zhTw = {
           message: "您確定要儲存此傳票嗎？",
         },
       },
-      unverify_confirm: {
-        title: "確認退回？",
-        message:
-          "您確定要將此傳票退回未核對狀態嗎？變更的內容將會儲存，請確認資料是否無誤。",
-        confirm: "確認退回",
-        cancel: "取消",
-      },
     },
   },
   esg_main: {
@@ -1212,9 +1195,6 @@ export const zhTw = {
       scope_3: "範疇三",
     },
     no_file: "無檔案",
-    verified: "已核對",
-    manual_verify: "人工核對",
-    unverified: "尚未核對",
     search_placeholder: "搜尋供應商、活動類型...",
     search_aria: "搜尋供應商、活動類型",
     filter_intensity_aria: "依強度篩選",
@@ -1265,8 +1245,6 @@ export const zhTw = {
     actions: {
       cancel_edit: "取消修改",
       save_only: "僅儲存修改",
-      save_and_verify: "儲存並完成核對",
-      unverify: "退回未核對",
     },
     close_confirm: {
       title: "確認關閉？",
@@ -1278,13 +1256,6 @@ export const zhTw = {
       title: "確認儲存？",
       message: "即將儲存您所做出的 ESG 紀錄核對變更。請確認資料是否無誤？",
       confirm: "確認儲存",
-      cancel: "取消",
-    },
-    unverify_confirm: {
-      title: "確認退回？",
-      message:
-        "您確定要將此 ESG 紀錄退回未核對狀態嗎？變更的內容將會儲存，請確認資料是否無誤。",
-      confirm: "確認退回",
       cancel: "取消",
     },
     esg_industry_benchmarks: {
@@ -1339,4 +1310,29 @@ export const zhTw = {
       },
     },
   },
+    "verify":{
+      "verify_modal":{
+        title:"確認核對？",
+        message:"您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+        confirm:"確認核對",
+      },
+      "unverify_modal":{
+        title:"確認退回？",
+        message:"您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+        confirm:"確認退回",
+      },
+      status: {
+        verified: "已核對",
+        unverified: "待核對",
+      },
+      button:{
+        unverify:"退回未核對",
+        verify:"核對並存檔",
+      },
+      type:{
+        journal:"日記帳",
+        voucher:"傳票",
+        esg:"碳排紀錄",
+      }
+    }
 };
