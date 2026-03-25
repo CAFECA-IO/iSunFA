@@ -92,7 +92,7 @@ const JournalListItem = ({
 
   return (
     <tr
-      className={`cursor-pointer last:border-0 ${isAnalysisFailed ? "bg-red-200 hover:bg-red-300" : "bg-white hover:bg-orange-100"}`}
+      className={`cursor-pointer border-b border-slate-300 last:border-0 ${isAnalysisFailed ? "bg-red-200 hover:bg-red-300" : "bg-white hover:bg-orange-100"}`}
       onClick={() => onSelect(journal)}
     >
       {/* Info: (20260320 - Julian) File */}

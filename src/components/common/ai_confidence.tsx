@@ -1,0 +1,70 @@
+"use client";
+
+import { Sparkles } from "lucide-react";
+import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
+
+interface IAiConfidenceProps {
+  confidence: number;
+  note: string;
+}
+
+export default function AiConfidence({
+  confidence,
+  note,
+}: IAiConfidenceProps) {
+  return (
+    <div className="flex items-center gap-2">
+      {/* Info: (20260325 - Julian) AI 信心度 Progress Bar */}
+      <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold shadow-sm">
+        <p className="text-slate-500">AI 信心度</p>
+        <div className="flex items-center justify-center gap-2">
+          {/* Info: (20260325 - Julian) Progress Bar */}
+          <div className="h-2 w-20 shrink-0 overflow-hidden rounded-full bg-slate-200">
+            <div
+              // Info: (20260325 - Julian) 85 以上為綠色
+              className={`h-full rounded-full ${confidence >= 85 ? "bg-emerald-400" : "bg-orange-500"}`}
+              style={{ width: `${confidence}%` }}
+            />
+          </div>
+          <p className="whitespace-nowrap text-slate-700">{confidence}%</p>
+        </div>
+      </div>
+
+      {/* Info: (20260325 - Julian) AI 備註 Button */}
+      <Popover className="relative">
+        {({ open }) => (
+          <>
+            {/* Info: (20260325 - Julian) Button */}
+            <PopoverButton
+              className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] font-bold shadow-sm transition-colors outline-none ${
+                open
+                  ? "border-blue-300 bg-blue-50 text-blue-700"
+                  : "border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+              }`}
+            >
+              <Sparkles
+                size={14}
+                className={open ? "text-blue-500" : "text-blue-400"}
+              />
+              <span>AI 備註</span>
+            </PopoverButton>
+
+            {/* Info: (20260325 - Julian) Note Panel */}
+            <PopoverPanel
+              transition
+              className="absolute top-full right-0 z-50 mt-2 w-[350px] origin-top-right rounded-xl border border-blue-100 bg-white p-4 shadow-xl ring-1 ring-black/5 transition duration-200 ease-out outline-none data-closed:scale-95 data-closed:opacity-0"
+            >
+              <div className="mb-2 flex items-center gap-2">
+                <Sparkles size={16} className="text-blue-500" />
+                <h4 className="text-sm font-bold text-blue-900">AI 解析備註</h4>
+              </div>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-slate-600">
+                {note}
+              </p>
+            </PopoverPanel>
+          </>
+        )}
+      </Popover>
+    </div>
+  );
+}

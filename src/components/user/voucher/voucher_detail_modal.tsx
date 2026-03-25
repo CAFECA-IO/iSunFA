@@ -24,14 +24,13 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { IVoucher, TradingType, IVoucherLineUI } from "@/interfaces/voucher";
 import { numberWithCommas } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
-import AiConfidenceBar from "@/components/common/ai_confidence_bar";
+import AiConfidence from "@/components/common/ai_confidence";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { useParams } from "next/navigation";
 import { FilePreview } from "@/components/common/file_preview";
 import AccountBookSelector from "@/components/user/voucher/account_book_selector";
-import AiNote from "@/components/common/ai_note";
 
 interface IVoucherDetailModalProps {
   isOpen: boolean;
@@ -424,20 +423,6 @@ export default function VoucherDetailModal({
                       <h4 className="text-sm font-bold text-slate-500">
                         {t("voucher.detail_modal.sections.preview")}
                       </h4>
-                      <div className="relative flex items-center gap-2">
-                        {/* Info: (20260324 - Julian) AI Note */}
-                        <AiNote note={activeVoucher.aiNote} />
-
-                        {/* Info: (20260324 - Julian) AI Confidence */}
-                        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
-                          <span className="text-xs font-bold text-slate-500">
-                            {t("voucher.detail_modal.fields.confidence")}
-                          </span>
-                          <AiConfidenceBar
-                            confidence={activeVoucher.confidence}
-                          />
-                        </div>
-                      </div>
                     </div>
                     <div className="flex aspect-3/4 w-full items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                       {activeVoucher.file ? (
@@ -460,11 +445,14 @@ export default function VoucherDetailModal({
                   <div className="flex w-1/2 flex-col bg-white">
                     <div className="flex-1 overflow-y-auto p-6">
                       {/* Info: (20260317 - Julian) Section 1: Basic Info */}
-                      <div className="mb-3 flex items-center gap-2 border-b border-slate-200 pb-1">
-                        <FileText size={20} className="text-blue-900" />
-                        <h4 className="text-base font-bold text-blue-900">
-                          {t("voucher.detail_modal.sections.basic_info")}
-                        </h4>
+                      <div className="mb-3 border-b flex items-center justify-between border-slate-200 pb-2">
+                        <div className="flex items-center gap-2">
+                          <FileText size={20} className="text-blue-900" />
+                          <h4 className="text-base font-bold text-blue-900">
+                            {t("voucher.detail_modal.sections.basic_info")}
+                          </h4>
+                        </div>
+                        <AiConfidence confidence={activeVoucher.confidence} note={activeVoucher.aiNote} />
                       </div>
 
                       <div className="mb-8 grid grid-cols-2 gap-4">
@@ -557,7 +545,7 @@ export default function VoucherDetailModal({
                       </div>
 
                       {/* Info: (20260317 - Julian) Section 2: Accounting Entries */}
-                      <div className="mb-3 flex items-center justify-between border-b border-slate-200 pb-1">
+                      <div className="mb-3 flex items-center justify-between border-b border-slate-200 pb-2">
                         <div className="flex items-center gap-2">
                           <DollarSign size={20} className="text-blue-900" />
                           <h4 className="text-base font-bold text-blue-900">
