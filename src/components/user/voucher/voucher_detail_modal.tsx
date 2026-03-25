@@ -482,7 +482,7 @@ export default function VoucherDetailModal({
                                   : e.target.valueAsNumber,
                               )
                             }
-                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                           />
                         </div>
 
