@@ -3,7 +3,8 @@ import { ACCOUNTS } from "@/constants/accounts";
 export const getVoucherPrompt = (country: string = "TW") => {
   const accountsStr = JSON.stringify(ACCOUNTS[country as keyof typeof ACCOUNTS] || ACCOUNTS["TW"]);
   return `
-  請將用戶上傳的憑證（檔案/圖片）解析出可以寫入會計傳票的資料。並在 aiNote 欄位寫下 AI 分析傳票的邏輯。
+  請將用戶上傳的憑證（檔案/圖片）解析出可以寫入會計傳票的資料。
+  並請在 aiNote 欄位寫下 AI 分析傳票的邏輯，不需要任何標題，直接寫下分析邏輯或列點描述即可。
   請務必回傳一個 JSON 格式，包含以下欄位（不要加入任何額外的文字，也不要包裝在 markdown 程式碼區塊中，直接回傳 JSON 字串）：
   {
     "tradingDate": "YYYY-MM-DD", // 交易日期

@@ -14,6 +14,8 @@ import {
   Loader2,
   CheckCircle2,
   Save,
+  Pencil,
+  Eye,
   // TrashIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -21,6 +23,7 @@ import { FilePreview } from "@/components/common/file_preview";
 import ConfirmModal from "@/components/common/confirm_modal";
 import ZoomablePreview from "@/components/common/zoomable_preview";
 import AiConfidence from "@/components/common/ai_confidence";
+import { MarkdownContent } from "@/components/common/markdown_content";
 import { IJournal } from "@/interfaces/journal";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -48,6 +51,7 @@ export default function JournalDetailModal({
   const accountBookId = params?.account_book_id as string;
 
   const [editText, setEditText] = useState<string>("");
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // Info: (20260305 - Julian) confirm conditions
@@ -57,6 +61,13 @@ export default function JournalDetailModal({
   const [targetVerify, setTargetVerify] = useState<boolean>(false);
   const [isUnverifyModalOpen, setIsUnverifyModalOpen] =
     useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Info: (20260325 - Julian)每次打開時，重置為預覽模式
+      setIsEditMode(false);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && journal) {
@@ -167,7 +178,7 @@ export default function JournalDetailModal({
                     </div>
                     <button
                       type="button"
-                      className="rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
+                      className="rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 outline-none"
                       onClick={requestClose}
                     >
                       <X className="h-5 w-5" />
@@ -205,9 +216,32 @@ export default function JournalDetailModal({
                     {/* Info: (20260305 - Julian) Right: Text / Edit */}
                     <div className="flex w-1/2 flex-col bg-white p-6">
                       <div className="mb-4 flex items-center justify-between">
-                        <h4 className="font-medium text-gray-700">
-                          {t("ocr.journal")}
-                        </h4>
+                        <div className="flex items-center gap-3">
+                          <h4 className="font-medium text-gray-700">
+                            {t("ocr.journal")}
+                          </h4>
+                          <button
+                            type="button"
+                            onClick={() => setIsEditMode(!isEditMode)}
+                            className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold transition-colors ${
+                              isEditMode
+                                ? "border-orange-200 bg-orange-50 text-orange-600"
+                                : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-600"
+                            }`}
+                          >
+                            {isEditMode ? (
+                              <>
+                                <Eye size={14} className="text-orange-500" />
+                                {t("查看預覽")}
+                              </>
+                            ) : (
+                              <>
+                                <Pencil size={14} className="text-slate-400" />
+                                {t("編輯")}
+                              </>
+                            )}
+                          </button>
+                        </div>
                         {/* Info: (20260325 - Julian) AI Confidence */}
                         <AiConfidence
                           confidence={journal.confidence}
@@ -215,13 +249,28 @@ export default function JournalDetailModal({
                         />
                       </div>
 
-                      <div className="flex-1 overflow-y-auto rounded-lg">
-                        <textarea
-                          aria-label={t("ocr.journal") as string}
-                          value={editText}
-                          onChange={(e) => setEditText(e.target.value)}
-                          className="size-full resize-none rounded-lg border border-orange-300 bg-gray-50 p-4 outline-none focus:border-orange-500"
-                        />
+                      <div className="flex flex-1 flex-col overflow-hidden rounded-lg">
+                        {isEditMode ? (
+                          <textarea
+                            aria-label={t("ocr.journal") as string}
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            className="size-full resize-none rounded-lg border border-orange-300 bg-gray-50 p-4 outline-none"
+                          />
+                        ) : (
+                          <div className="size-full overflow-y-auto rounded-lg border border-slate-200 bg-gray-50 p-4">
+                            {editText ? (
+                              <MarkdownContent
+                                content={editText}
+                                theme="light"
+                              />
+                            ) : (
+                              <p className="text-sm text-gray-400 italic">
+                                {t("common.empty") || "Empty"}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
                       {/* ToDo: (20260323 - Julian) 先隱藏刪除按鈕 */}
                       {/* <div className="mt-4 ml-auto">
