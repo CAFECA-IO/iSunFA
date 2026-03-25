@@ -43,6 +43,7 @@ export default function EsgVerifyModal({
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
   const [isUnverifyModalOpen, setIsUnverifyModalOpen] =
     useState<boolean>(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
   const [targetVerified, setTargetVerified] = useState<boolean>(true);
 
   // Info: (20260325 - Julian) Preview Modal State
@@ -121,7 +122,7 @@ export default function EsgVerifyModal({
   if (!formData) return null;
 
   const handleDateChange = (dateString: string) => {
-    const timestamp = new Date(dateString).getTime();
+    const timestamp = new Date(dateString).getTime() / 1000;
     if (!isNaN(timestamp)) {
       setFormData({ ...formData, dateTimestamp: timestamp });
     }
@@ -203,7 +204,7 @@ export default function EsgVerifyModal({
                 <div className="flex overflow-hidden">
                   {/* Info: (20260312 - Julian) Right Side: Form */}
                   <div className="flex w-full flex-col p-6">
-                    <div className="mb-8 flex items-center justify-between">
+                    <div className="mb-4 flex items-center justify-between">
                       <h4 className="text-base font-bold text-slate-500">
                         {t("verify.type.esg")}
                       </h4>
@@ -411,14 +412,16 @@ export default function EsgVerifyModal({
 
                     {/* Info: (20260312 - Julian) Actions */}
                     <div className="mt-4 flex justify-between gap-3 border-t border-slate-200 pt-4">
-                      <button
-                        type="button"
-                        onClick={handleAttemptClose}
-                        className="text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
-                      >
-                        {t("esg_verify.actions.cancel_edit")}
-                      </button>
-                      <div className="flex items-center gap-3">
+                      {checkHasChanges() && (
+                        <button
+                          type="button"
+                          onClick={() => setIsCancelModalOpen(true)}
+                          className="text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
+                        >
+                          {t("esg_verify.actions.cancel_edit")}
+                        </button>
+                      )}
+                      <div className="ml-auto flex items-center gap-3">
                         {originalData?.isVerified ? (
                           <>
                             <button
@@ -467,6 +470,20 @@ export default function EsgVerifyModal({
           </div>
         </Dialog>
       </Transition>
+
+      {/* Info: (20260325 - Julian) 取消修改視窗 */}
+      <ConfirmModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        title={t("取消修改？")}
+        message={t("確定要取消修改嗎？資料將回到原始狀態。")}
+        confirmText={t("確定")}
+        cancelText={t("common.cancel")}
+        onConfirm={() => {
+          setFormData(originalData);
+          setIsCancelModalOpen(false);
+        }}
+      />
 
       {/* Info: (20260323 - Julian) 未儲存變更視窗 */}
       <ConfirmModal

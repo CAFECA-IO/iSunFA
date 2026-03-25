@@ -58,8 +58,9 @@ export default function JournalDetailModal({
   const [showConfirmClose, setShowConfirmClose] = useState<boolean>(false);
   const [showConfirmSave, setShowConfirmSave] = useState<boolean>(false);
 
-  // Info: (20260325 - Julian) Preview Modal State
+  // Info: (20260325 - Julian) Modal State
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
 
   const [targetVerify, setTargetVerify] = useState<boolean>(false);
   const [isUnverifyModalOpen, setIsUnverifyModalOpen] =
@@ -276,7 +277,7 @@ export default function JournalDetailModal({
                         {hasUnsavedChanges && (
                           <button
                             type="button"
-                            onClick={() => setEditText(journal.text)}
+                            onClick={() => setIsCancelModalOpen(true)}
                             className="px-4 text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
                           >
                             {t("voucher.detail_modal.actions.cancel_edit")}
@@ -329,6 +330,20 @@ export default function JournalDetailModal({
           </div>
         </Dialog>
       </Transition>
+
+      {/* Info: (20260325 - Julian) Confirm Cancel Modal */}
+      <ConfirmModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        title={t("取消修改？")}
+        message={t("確定要取消修改嗎？資料將回到原始狀態。")}
+        confirmText={t("確定")}
+        cancelText={t("common.cancel")}
+        onConfirm={() => {
+          setEditText(journal.text);
+          setIsCancelModalOpen(false);
+        }}
+      />
 
       {/* Info: (20260305 - Julian) Confirm Save Modal */}
       <ConfirmModal

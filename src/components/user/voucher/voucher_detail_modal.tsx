@@ -170,7 +170,7 @@ export default function VoucherDetailModal({
   const [rows, setRows] = useState<IVoucherLineUI[]>([]);
   // const [isRecurring, setIsRecurring] = useState<boolean>(false);
 
-  const [isClearModalOpen, setIsClearModalOpen] = useState<boolean>(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState<boolean>(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
   const [isUnverifyModalOpen, setIsUnverifyModalOpen] =
@@ -268,6 +268,18 @@ export default function VoucherDetailModal({
     } else {
       onClose();
     }
+  };
+
+  // Info: (20260325 - Julian) 處理取消修改
+  const handleCancelEdit = () => {
+    if (activeVoucher) {
+      setInputDate(activeVoucher.tradingDate * 1000);
+      setVoucherType(activeVoucher.tradingType);
+      setNote(activeVoucher.note || "");
+      setEditedVoucherId(activeVoucher.id);
+      setRows(activeVoucher.lineItems.lines || []);
+    }
+    setIsCancelModalOpen(false);
   };
 
   const creditRow = rows.filter((row) => row.isDebit === false);
@@ -645,11 +657,12 @@ export default function VoucherDetailModal({
                       {checkHasChanges() && (
                         <button
                           type="button"
-                          onClick={() => setIsClearModalOpen(true)}
+                          onClick={() => setIsCancelModalOpen(true)}
                           className="text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
                         >
                           {t("voucher.detail_modal.actions.cancel_edit")}
-                      </button>)}
+                        </button>
+                      )}
                       <div className="ml-auto flex items-center gap-3">
                         {activeVoucher?.isVerified ? (
                           <button
@@ -693,13 +706,13 @@ export default function VoucherDetailModal({
 
       {/* Info: (20260310 - Julian) Cancel Modal */}
       <ConfirmModal
-        isOpen={isClearModalOpen}
-        onClose={() => setIsClearModalOpen(false)}
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
         title={t("取消修改？")}
         message={t("確定要取消修改嗎？資料將回到原始狀態。")}
         confirmText={t("確定")}
         cancelText={t("common.cancel")}
-        onConfirm={() => {}}
+        onConfirm={handleCancelEdit}
       />
 
       {/* Info: (20260310 - Julian) Close Modal */}
