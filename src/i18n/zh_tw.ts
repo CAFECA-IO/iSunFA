@@ -1,5 +1,8 @@
 export const zhTw = {
   common: {
+    no_data: "無資料",
+    cancel_edit_title: "取消修改？",
+    cancel_edit_message: "確定要取消修改嗎？資料將回到原始狀態。",
     loading: "載入中...",
     save: "儲存",
     confirm: "確認",
@@ -984,6 +987,8 @@ export const zhTw = {
     multiple_files_supported: "支援批次上傳多個憑證檔案 (.jpg, .png, .pdf)",
     title: "憑證管理",
     upload: "上傳憑證",
+    view_file: "查看憑證檔案",
+    view_preview: "查看預覽",
     list: "憑證清單",
     uploading: "上傳中...",
     click_or_drag: "點擊或拖曳檔案至此",
@@ -1098,6 +1103,7 @@ export const zhTw = {
           confidence: "AI 信心度",
           status: "狀態",
         },
+        no_entries: "沒有分錄",
         no_file: "無檔案",
         filter_btn: "篩選條件",
         verify_all: "一鍵核對",

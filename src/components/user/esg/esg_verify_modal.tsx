@@ -8,7 +8,7 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { X, CheckCircle2, Save, Image as ImageIcon } from "lucide-react";
+import { X, CheckCircle2, Save } from "lucide-react";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -186,8 +186,7 @@ export default function EsgVerifyModal({
                       className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={!formData.file?.hash}
                     >
-                      <ImageIcon size={14} />
-                      {t("查看憑證檔案")}
+                      {t("ocr.view_file")}
                     </button>
                   </div>
                   <button
@@ -475,9 +474,9 @@ export default function EsgVerifyModal({
       <ConfirmModal
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
-        title={t("取消修改？")}
-        message={t("確定要取消修改嗎？資料將回到原始狀態。")}
-        confirmText={t("確定")}
+        title={t("common.cancel_edit_title")}
+        message={t("common.cancel_edit_message")}
+        confirmText={t("common.confirm")}
         cancelText={t("common.cancel")}
         onConfirm={() => {
           setFormData(originalData);

@@ -63,7 +63,7 @@ export function EsgRow({
           <span
             className={`inline-flex items-center justify-center rounded-full border border-gray-300 bg-gray-100 px-3 py-1 text-xs font-semibold whitespace-nowrap text-gray-600 transition-colors`}
           >
-            {t("no data")}
+            {t("common.no_data")}
           </span>
         );
     }
@@ -102,7 +102,7 @@ export function EsgRow({
         // Info: (20260325 - Julian) 如果沒有資料，就不要顯示 scope
         return (
           <div className="w-fit rounded-full border border-gray-300 bg-gray-100 px-1.5 py-1 text-gray-600">
-            no data
+            {t("common.no_data")}
           </div>
         );
     }

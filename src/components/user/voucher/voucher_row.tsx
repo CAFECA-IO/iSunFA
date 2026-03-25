@@ -235,7 +235,7 @@ export function VoucherRow({
         colSpan={3}
         className="py-2 text-center align-middle font-medium text-slate-800 lg:py-4"
       >
-        ==== 沒有分錄 ====
+        ==== {t("voucher.main_view.table.no_entries")} ====
       </td>
     );
 

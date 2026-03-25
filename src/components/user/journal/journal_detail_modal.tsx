@@ -189,7 +189,7 @@ export default function JournalDetailModal({
                         disabled={!journal.file?.hash}
                       >
                         <ImageIcon size={14} />
-                        {t("查看憑證檔案")}
+                        {t("ocr.view_file")}
                       </button>
                     </div>
                     <button
@@ -222,12 +222,12 @@ export default function JournalDetailModal({
                             {isEditMode ? (
                               <>
                                 <Eye size={14} className="text-orange-500" />
-                                {t("查看預覽")}
+                                {t("ocr.view_preview")}
                               </>
                             ) : (
                               <>
                                 <Pencil size={14} className="text-slate-400" />
-                                {t("編輯")}
+                                {t("ocr.edit")}
                               </>
                             )}
                           </button>
@@ -335,9 +335,9 @@ export default function JournalDetailModal({
       <ConfirmModal
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
-        title={t("取消修改？")}
-        message={t("確定要取消修改嗎？資料將回到原始狀態。")}
-        confirmText={t("確定")}
+        title={t("common.cancel_edit_title")}
+        message={t("common.cancel_edit_message")}
+        confirmText={t("common.confirm")}
         cancelText={t("common.cancel")}
         onConfirm={() => {
           setEditText(journal.text);
