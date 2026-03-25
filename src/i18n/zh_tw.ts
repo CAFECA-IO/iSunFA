@@ -1160,10 +1160,6 @@ export const zhTw = {
 
       },
       confirm_modals: {
-        clear_all: {
-          title: "全部清除",
-          message: "您確定要清除所有資料嗎？",
-        },
         leave_without_saving: {
           title: "離開且不儲存",
           message: "您確定要放棄在此的變更並離開嗎？",

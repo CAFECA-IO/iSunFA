@@ -1245,10 +1245,6 @@ export const ja = {
         save_voucher: "伝票を保存",
       },
       confirm_modals: {
-        clear_all: {
-          title: "すべてクリア",
-          message: "すべてのデータをクリアしてもよろしいですか？",
-        },
         leave_without_saving: {
           title: "保存せずに退出",
           message: "変更を破棄して終了してもよろしいですか？",

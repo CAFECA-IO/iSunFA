@@ -1130,10 +1130,6 @@ export const en = {
         confirm: "Confirm",
       },
       confirm_modals: {
-        clear_all: {
-          title: "Clear All",
-          message: "Are you sure you want to clear all data?",
-        },
         leave_without_saving: {
           title: "Leave without saving",
           message: "Are you sure you want to discard changes and leave?",

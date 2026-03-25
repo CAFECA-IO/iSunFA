@@ -8,13 +8,13 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { X, CheckCircle2, Save } from "lucide-react";
+import { X, CheckCircle2, Save, Image as ImageIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
-import { FilePreview } from "@/components/common/file_preview";
+import FilePreviewModal from "@/components/common/file_preview_modal";
 import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -44,6 +44,9 @@ export default function EsgVerifyModal({
   const [isUnverifyModalOpen, setIsUnverifyModalOpen] =
     useState<boolean>(false);
   const [targetVerified, setTargetVerified] = useState<boolean>(true);
+
+  // Info: (20260325 - Julian) Preview Modal State
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen && esgId && accountBookId) {
@@ -154,7 +157,7 @@ export default function EsgVerifyModal({
               leaveFrom="opacity-100 scale-100 translate-y-0"
               leaveTo="opacity-0 scale-95 translate-y-4"
             >
-              <DialogPanel className="relative flex max-h-[90vh] w-full max-w-5xl transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
+              <DialogPanel className="relative flex max-h-[90vh] w-full max-w-2xl transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
                 {/* Info: (20260312 - Julian) Header */}
                 <div className="flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-8 py-5">
                   <div className="flex items-center gap-3">
@@ -174,6 +177,17 @@ export default function EsgVerifyModal({
                         {t("verify.status.unverified")}
                       </span>
                     )}
+
+                    {/* Info: (20260325 - Julian) 開啟憑證檔案預覽 */}
+                    <button
+                      type="button"
+                      onClick={() => setIsPreviewModalOpen(true)}
+                      className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!formData.file?.hash}
+                    >
+                      <ImageIcon size={14} />
+                      {t("查看憑證檔案")}
+                    </button>
                   </div>
                   <button
                     type="button"
@@ -187,32 +201,8 @@ export default function EsgVerifyModal({
 
                 {/* Info: (20260312 - Julian) Body */}
                 <div className="flex overflow-hidden">
-                  {/* Info: (20260312 - Julian) Left Side: File Preview */}
-                  <div className="w-1/2 overflow-y-auto border-r border-slate-200 bg-slate-50 p-6">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-slate-500">
-                        {t("esg_verify.preview")}
-                      </h4>
-                    </div>
-                    <div className="flex aspect-3/4 w-full items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                      {formData.file ? (
-                        <FilePreview
-                          file={{
-                            filename: formData.file.fileName || "Unknown",
-                          }}
-                          fileId={formData.file.hash}
-                          className="h-full w-full object-contain"
-                        />
-                      ) : (
-                        <span className="text-sm font-bold text-slate-400">
-                          {t("esg_verify.no_image")}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
                   {/* Info: (20260312 - Julian) Right Side: Form */}
-                  <div className="flex w-1/2 flex-col p-6">
+                  <div className="flex w-full flex-col p-6">
                     <div className="mb-8 flex items-center justify-between">
                       <h4 className="text-base font-bold text-slate-500">
                         {t("verify.type.esg")}
@@ -516,6 +506,14 @@ export default function EsgVerifyModal({
         confirmText={t("verify.unverify_modal.confirm")}
         cancelText={t("common.cancel")}
         onConfirm={handleUnverifyConfirmed}
+      />
+
+      {/* Info: (20260325 - Julian) File Preview Modal */}
+      <FilePreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        file={formData?.file}
+        title={t("esg_verify.preview")}
       />
     </>
   );

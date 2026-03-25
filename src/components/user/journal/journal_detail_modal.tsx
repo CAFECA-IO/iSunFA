@@ -16,12 +16,12 @@ import {
   Save,
   Pencil,
   Eye,
+  Image as ImageIcon,
   // TrashIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { FilePreview } from "@/components/common/file_preview";
 import ConfirmModal from "@/components/common/confirm_modal";
-import ZoomablePreview from "@/components/common/zoomable_preview";
+import FilePreviewModal from "@/components/common/file_preview_modal";
 import AiConfidence from "@/components/common/ai_confidence";
 import { MarkdownContent } from "@/components/common/markdown_content";
 import { IJournal } from "@/interfaces/journal";
@@ -57,6 +57,9 @@ export default function JournalDetailModal({
   // Info: (20260305 - Julian) confirm conditions
   const [showConfirmClose, setShowConfirmClose] = useState<boolean>(false);
   const [showConfirmSave, setShowConfirmSave] = useState<boolean>(false);
+
+  // Info: (20260325 - Julian) Preview Modal State
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
 
   const [targetVerify, setTargetVerify] = useState<boolean>(false);
   const [isUnverifyModalOpen, setIsUnverifyModalOpen] =
@@ -156,7 +159,7 @@ export default function JournalDetailModal({
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
-                <DialogPanel className="relative flex h-[85vh] w-full max-w-[90vw] transform flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all">
+                <DialogPanel className="relative flex h-[85vh] w-full max-w-4xl transform flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all">
                   {/* Info: (20260305 - Julian) Header */}
                   <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -176,6 +179,17 @@ export default function JournalDetailModal({
                           {t("verify.status.unverified")}
                         </span>
                       )}
+
+                      {/* Info: (20260325 - Julian) 開啟憑證檔案預覽 */}
+                      <button
+                        type="button"
+                        onClick={() => setIsPreviewModalOpen(true)}
+                        className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={!journal.file?.hash}
+                      >
+                        <ImageIcon size={14} />
+                        {t("查看憑證檔案")}
+                      </button>
                     </div>
                     <button
                       type="button"
@@ -188,34 +202,8 @@ export default function JournalDetailModal({
 
                   {/* Info: (20260305 - Julian) Body Content */}
                   <div className="flex flex-1 overflow-hidden bg-gray-50">
-                    {/* Info: (20260305 - Julian) Left: Preview */}
-                    <div className="flex w-1/2 flex-col border-r border-gray-200 p-6">
-                      <div className="mb-4 flex items-center justify-between">
-                        <h4 className="text-sm font-bold text-gray-500">
-                          {t("ocr.file")}
-                        </h4>
-                      </div>
-                      <div className="flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                        <ZoomablePreview
-                          hasContent={!!journal.file?.hash}
-                          fallbackText={t("ocr.no_image") as string}
-                          className="h-full w-full"
-                        >
-                          {journal.file?.hash && (
-                            <FilePreview
-                              file={{
-                                filename: journal.file.fileName || "Unknown",
-                              }}
-                              fileId={journal.file.hash}
-                              className="size-full object-contain"
-                            />
-                          )}
-                        </ZoomablePreview>
-                      </div>
-                    </div>
-
-                    {/* Info: (20260305 - Julian) Right: Text / Edit */}
-                    <div className="flex w-1/2 flex-col bg-white p-6">
+                    {/* Info: (20260305 - Julian) Text / Edit */}
+                    <div className="flex w-full flex-col bg-white p-6">
                       <div className="mb-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <h4 className="font-medium text-gray-700">
@@ -284,7 +272,7 @@ export default function JournalDetailModal({
                           {t("ocr.delete")}
                         </button>
                       {/* Info: (20260324 - Julian) Footer Actions */}
-                      <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 py-2 pt-5">
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 pt-4">
                         {hasUnsavedChanges && (
                           <button
                             type="button"
@@ -378,6 +366,14 @@ export default function JournalDetailModal({
         confirmText={t("verify.unverify_modal.confirm")}
         cancelText={t("common.cancel")}
         onConfirm={handleUnverifyConfirmed}
+      />
+
+      {/* Info: (20260325 - Julian) File Preview Modal */}
+      <FilePreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        file={journal.file}
+        title={t("ocr.file")}
       />
     </>
   );

@@ -1214,10 +1214,6 @@ export const zhCn = {
         confirm: "确认",
       },
       confirm_modals: {
-        clear_all: {
-          title: "全部清除",
-          message: "您确定要清除所有数据吗？",
-        },
         leave_without_saving: {
           title: "离开且不保存",
           message: "您确定要放弃在此的变更并离开吗？",

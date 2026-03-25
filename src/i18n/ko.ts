@@ -1235,10 +1235,6 @@ export const ko = {
         save_voucher: "전표 저장",
       },
       confirm_modals: {
-        clear_all: {
-          title: "모두 지우기",
-          message: "모든 데이터를 지우시겠습니까?",
-        },
         leave_without_saving: {
           title: "저장하지 않고 종료",
           message: "변경 사항을 삭제하고 종료하시겠습니까?",
