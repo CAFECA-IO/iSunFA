@@ -24,8 +24,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "iSunFA - 解決財務會計大小事",
-  description: "為公司提供企業融資及政府補助申請所需的記帳與稅務解決方案。",
+  title: "iSunFA",
+  description: "專為企業數位轉型與綠色金融而生！結合前瞻 AI 技術，無縫整合財務會計與溫室氣體盤查。從單據自動辨識、碳排精準核算到產出合規報表，一站式解決企業財會與永續發展痛點，讓您無痛實現碳盤查並邁向淨零碳排！",
   icons: {
     icon: "/favicon.svg",
   },
