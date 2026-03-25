@@ -357,6 +357,7 @@ model Journal {
   tradingDate    DateTime         @map("trading_date")
   confidence     Int              @default(0) @map("confidence")
   isVerified     Boolean          @default(false) @map("is_verified")
+  aiNote         String           @map("ai_note") @db.Text // Info: (20260325 - Julian) AI 分析的備註
 
   fileId String? @map("file_id")
   file   File?   @relation(fields: [fileId], references: [id])
