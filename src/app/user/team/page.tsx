@@ -26,6 +26,13 @@ interface ITeamMember {
   };
 }
 
+interface IPendingInvitation {
+  id: string;
+  team: { id: string; name: string };
+  inviter: { name: string | null; address: string; imageUrl: string | null };
+  role: string;
+}
+
 export default function TeamManagementPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -33,6 +40,8 @@ export default function TeamManagementPage() {
   const [teams, setTeams] = useState<ITeam[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [members, setMembers] = useState<ITeamMember[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<IPendingInvitation[]>([]);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -63,9 +72,23 @@ export default function TeamManagementPage() {
     }
   }, [selectedTeamId]);
 
+  const fetchPendingInvitations = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("dewt");
+      const res = await fetch("/api/v1/user/team/invitations", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (json.success) setPendingInvitations(json.payload || []);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchTeams();
-  }, [fetchTeams]);
+    fetchPendingInvitations();
+  }, [fetchTeams, fetchPendingInvitations]);
 
   const fetchMembers = async (teamId: string) => {
     setMembersLoading(true);
@@ -132,7 +155,7 @@ export default function TeamManagementPage() {
 
       // Info: (20260325 - Tzuhan) 3. Send invitation with signature
       const token = localStorage.getItem("dewt");
-      const res = await fetch(`/api/v1/user/team/${selectedTeamId}/members`, {
+      const res = await fetch(`/api/v1/user/team/${selectedTeamId}/invitations`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -147,7 +170,7 @@ export default function TeamManagementPage() {
       const json = await res.json();
       if (json.success) {
         setInviteAddress("");
-        fetchMembers(selectedTeamId);
+        alert("Invitation sent successfully!");
       } else {
         alert(json.message);
       }
@@ -156,6 +179,37 @@ export default function TeamManagementPage() {
       alert("Error inviting member");
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleAcceptInvite = async (inviteId: string) => {
+    if (!user?.address) return;
+    setAcceptingId(inviteId);
+    try {
+      const { challenge } = await getLoginOptions(user.address);
+      const authentication = await fido2ClientService.startLogin({ challenge });
+
+      const token = localStorage.getItem("dewt");
+      const res = await fetch(`/api/v1/user/team/invitations/${inviteId}/accept`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ authentication }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        fetchPendingInvitations();
+        fetchTeams();
+      } else {
+        alert(json.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error accepting invitation");
+    } finally {
+      setAcceptingId(null);
     }
   };
 
@@ -229,6 +283,34 @@ export default function TeamManagementPage() {
           </p>
         </div>
       </div>
+
+      {pendingInvitations.length > 0 && (
+        <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6 mb-6">
+          <h2 className="text-lg font-semibold text-orange-900 mb-4">Pending Invitations</h2>
+          <div className="space-y-3">
+            {pendingInvitations.map((inv) => (
+              <div key={inv.id} className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm">
+                <div className="flex items-center space-x-4">
+                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                    <Users className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{inv.team.name}</h3>
+                    <p className="text-sm text-gray-500">Invited by {inv.inviter.name || "Unknown"} ({inv.role})</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleAcceptInvite(inv.id)}
+                  disabled={acceptingId === inv.id}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  {acceptingId === inv.id ? "Accepting..." : "Accept FIDO2"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col md:flex-row gap-6">
         {/* Info: (20260325 - Tzuhan) Left sidebar for team selection */}
