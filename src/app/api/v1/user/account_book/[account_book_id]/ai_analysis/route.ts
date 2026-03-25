@@ -91,7 +91,6 @@ export async function POST(
         fileId: uploadedFile.id,
         userId: creator.id,
         tradingDate: new Date(),
-        tradingType: "INCOME",
         note: "",
         lines: { create: [] },
         aiNote: "",

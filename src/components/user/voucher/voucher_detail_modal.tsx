@@ -162,9 +162,7 @@ export default function VoucherDetailModal({
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const [inputDate, setInputDate] = useState<number>(0);
-  const [voucherType, setVoucherType] = useState<TradingType>(
-    TradingType.INCOME,
-  );
+  const [voucherType, setVoucherType] = useState<TradingType | null>(null);
   const [note, setNote] = useState<string>("");
   const [editedVoucherId, setEditedVoucherId] = useState<string>("");
   const [rows, setRows] = useState<IVoucherLineUI[]>([]);
@@ -499,7 +497,7 @@ export default function VoucherDetailModal({
                           <div className="relative">
                             <select
                               id="voucherType"
-                              value={voucherType}
+                              value={voucherType ?? ""}
                               onChange={(e) =>
                                 setVoucherType(e.target.value as TradingType)
                               }

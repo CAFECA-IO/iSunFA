@@ -459,7 +459,7 @@ model Voucher {
   tradingDate DateTime @map("trading_date")
 
   // Info: (20260310 - Julian) 交易類別: income, outcome, transfer
-  tradingType VoucherTradingType @map("trading_type")
+  tradingType VoucherTradingType? @map("trading_type")
 
   // Info: (20260310 - Julian) 備註
   note String? @db.Text
