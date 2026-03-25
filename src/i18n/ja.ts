@@ -16,10 +16,14 @@ export const ja = {
     all: "すべて",
     agree: "同意",
     filter: "フィルター",
+    clear_filters: "すべてのフィルターをクリア",
     pagination: {
       prev: "前へ",
       next: "次へ",
       page_info: "{{current}} / {{total}} ページ",
+    },
+    testing_env_banner: {
+      message: "⚠️ この環境は開発およびデモ用のテスト環境です。データは定期的にクリアされます。本番環境としては使用しないでください。本番環境はこちらへ ",
     },
     ai_confidence: {
       title: "AI 信頼度",
@@ -46,6 +50,9 @@ export const ja = {
   },
   dashboard: {
     title: "情報戦略室",
+    empty_state_title: "データなし",
+    empty_state_desc: "選択した期間のデータはありません。別の期間を選択するか、データをアップロードしてください。",
+    empty_state_cta: "データをアップロード",
     executive_summary: "経営判断のトップ指標",
     auto_refresh: "自動更新",
     available_funds: "利用可能資金",
@@ -1047,7 +1054,11 @@ export const ja = {
       status: "ステータス",
     },
     loading: "ロード中...",
-    no_records: "記録がありません",
+    no_records: "データなし",
+    no_records_desc: "選択した期間のESG記録はありません。別の期間を選択するか、データをアップロードしてください。",
+    no_records_cta: "データをアップロード",
+    no_filter_results: "条件に一致する記録が見つかりません",
+    no_filter_results_desc: "検索キーワードまたはフィルター条件を調整してみてください",
     footer: {
       record_count: "{{count}} 件の記録表示",
       data_citation: "データ: IPCC 第6次評価報告書 排出係数",
@@ -1196,7 +1207,11 @@ export const ja = {
         no_file: "ファイルなし",
         filter_btn: "フィルター",
         verify_all: "一括確認",
-        no_data: "伝票データがありません。",
+        no_data: "データなし",
+        no_data_desc: "選択した期間の伝票データはありません。別の期間を選択するか、データをアップロードしてください。",
+        no_data_cta: "データをアップロード",
+        no_filter_results: "条件に一致する記録が見つかりません",
+        no_filter_results_desc: "検索キーワードまたはフィルター条件を調整してみてください",
       },
     },
     summary: {
@@ -1313,29 +1328,29 @@ export const ja = {
       },
     },
   },
-  "verify":{
-      "verify_modal":{
-        title:"確認核對？",
-        message:"您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
-        confirm:"確認核對",
-      },
-      "unverify_modal":{
-        title:"確認退回？",
-        message:"您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
-        confirm:"確認退回",
-      },
-      status: {
-        verified: "已核對",
-        unverified: "待核對",
-      },
-      button:{
-        unverify:"退回未核對",
-        verify:"核對並存檔",
-      },
-      type:{
-        journal:"日記帳",
-        voucher:"傳票",
-        esg:"碳排紀錄",
-      }
+  "verify": {
+    "verify_modal": {
+      title: "確認核對？",
+      message: "您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+      confirm: "確認核對",
+    },
+    "unverify_modal": {
+      title: "確認退回？",
+      message: "您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+      confirm: "確認退回",
+    },
+    status: {
+      verified: "已核對",
+      unverified: "待核對",
+    },
+    button: {
+      unverify: "退回未核對",
+      verify: "核對並存檔",
+    },
+    type: {
+      journal: "日記帳",
+      voucher: "傳票",
+      esg: "碳排紀錄",
+    }
   }
 };

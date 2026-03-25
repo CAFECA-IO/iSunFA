@@ -1,5 +1,10 @@
 import { MonthEnum } from "@/constants/month";
 
+export const isProduction = () => {
+  const result = process.env.NEXT_PUBLIC_APP_URL?.includes("isunfa.com");
+  return result;
+};
+
 export function randomPassword(length: number = 32): string {
   const chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -14,8 +19,8 @@ export function randomPassword(length: number = 32): string {
 export function timestampToString(timestamp: number | undefined) {
   if (timestamp === 0 || timestamp === undefined || timestamp === null) {
     return {
-      year:"-",
-      monthName:"-",
+      year: "-",
+      monthName: "-",
       dateWithSlash: "-",
       dateWithDash: "-",
       dateAndTime: "-",

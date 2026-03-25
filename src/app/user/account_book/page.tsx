@@ -14,6 +14,7 @@ export default function UserMainPage() {
   const [data, setData] = useState<IAccountBook[]>([]);
   const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uriQuery, setUriQuery] = useState<string>('');
 
   // Info: (20260321 - Luphia) Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -69,6 +70,10 @@ export default function UserMainPage() {
 
   useEffect(() => {
     const initData = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const query = urlParams.get('uri_query');
+      if (query) setUriQuery(query);
+
       await Promise.all([fetchAccountBooks(), fetchTeams()]);
       setLoading(false);
     };
@@ -188,7 +193,7 @@ export default function UserMainPage() {
             {allAccountBooks.map((ab) => (
               <Link
                 key={ab.id}
-                href={`/user/account_book/${ab.id}/dashboard`}
+                href={`/user/account_book/${ab.id}${uriQuery || '/dashboard'}`}
                 className="block bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md hover:border-orange-500 transition-all duration-200 group relative"
               >
                 <div className="flex items-start justify-between">
