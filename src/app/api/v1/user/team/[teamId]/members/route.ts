@@ -4,6 +4,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 import { prisma } from "@/lib/prisma";
+import { webAuthnService } from "@/services/webauthn.service";
 
 export async function GET(
   request: NextRequest,
@@ -54,11 +55,30 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { address, role } = body;
+    const { address, role, authentication } = body;
 
     if (!address || typeof address !== "string") {
       return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid address");
     }
+
+    if (!authentication) {
+      return jsonFail(ApiCode.VALIDATION_ERROR, "Missing FIDO2 signature");
+    }
+
+    // Info: (20260325 - Tzuhan) Fetch operator's current challenge
+    const operatorUser = await prisma.user.findUnique({ where: { id: sessionUser.id } });
+    if (!operatorUser || !operatorUser.currentChallenge) {
+      return jsonFail(ApiCode.UNAUTHORIZED, "Missing WebAuthn challenge. Please retry.");
+    }
+
+    // Info: (20260325 - Tzuhan) Verify FIDO2 signature
+    await webAuthnService.verifySignature(sessionUser.address, authentication, operatorUser.currentChallenge);
+
+    // Info: (20260325 - Tzuhan) Clear challenge to prevent replay
+    await prisma.user.update({
+      where: { id: sessionUser.id },
+      data: { currentChallenge: null }
+    });
 
     const assignedRole = role === "ADMIN" || role === "MEMBER" ? role : "MEMBER";
 

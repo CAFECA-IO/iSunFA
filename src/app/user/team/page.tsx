@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
 import { Users, UserCircle2, Plus, Pencil, Trash2, Check, X } from "lucide-react";
+import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
 
 import { useCallback } from "react";
 
@@ -119,10 +120,17 @@ export default function TeamManagementPage() {
   };
 
   const handleInvite = async () => {
-    if (!selectedTeamId || !inviteAddress.trim()) return;
+    if (!selectedTeamId || !inviteAddress.trim() || !user?.address) return;
 
     setInviting(true);
     try {
+      // Info: (20260325 - Tzuhan) 1. Get FIDO2 challenge for current user
+      const { challenge } = await getLoginOptions(user.address);
+
+      // Info: (20260325 - Tzuhan) 2. Perform FIDO2 signing
+      const authentication = await fido2ClientService.startLogin({ challenge });
+
+      // Info: (20260325 - Tzuhan) 3. Send invitation with signature
       const token = localStorage.getItem("dewt");
       const res = await fetch(`/api/v1/user/team/${selectedTeamId}/members`, {
         method: "POST",
@@ -130,7 +138,11 @@ export default function TeamManagementPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ address: inviteAddress.trim(), role: "MEMBER" }),
+        body: JSON.stringify({
+          address: inviteAddress.trim(),
+          role: "MEMBER",
+          authentication
+        }),
       });
       const json = await res.json();
       if (json.success) {
