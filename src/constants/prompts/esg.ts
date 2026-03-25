@@ -9,7 +9,7 @@ export const ESG_PROMPT = `
       "vendor": "心心小舖", // 供應商
       "rawActivityData": "123456789", // 原始活動數據 (字串)
       "unit": "度", // 單位
-      "emissions": 123.45, // 排放量 (數字)
+      "emissions": 123.45, // 排放量 (數字，單位為 kgCO2e)
       "intensity": "HIGH", // 排放強度 ("HIGH" | "MEDIUM" | "LOW")
       "confidence": 85, // AI 分析的整體信心度 (數字 0-100)
       "aiNote": "string", // AI 分析的備註

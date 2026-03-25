@@ -162,6 +162,83 @@ export function VoucherRow({
     );
   }
 
+  const voucherline =
+    lineItems.length > 0 ? (
+      <>
+        {/* Info: (20260316 - Julian) Accounting */}
+        <td
+          aria-label="Accounting"
+          className="py-2 pl-2 align-middle lg:py-4 lg:pl-6"
+        >
+          <div className="flex flex-col whitespace-nowrap">
+            {lineItems.map((line) => (
+              <div
+                key={line.id}
+                className="flex h-[30px] items-center gap-2 border-dashed border-slate-300 not-last:border-b"
+              >
+                <span className="w-[55px] rounded bg-slate-200 px-1.5 py-0.5 text-center text-xs font-semibold text-slate-700">
+                  {line.accounting?.code}
+                </span>
+                {/* Info: (20260316 - Julian) 借方靠左，貸方靠右 */}
+                <span
+                  className={`${
+                    line.isDebit
+                      ? "font-bold text-slate-800"
+                      : "ml-4 font-medium text-slate-700"
+                  } truncate text-xs lg:max-w-[250px] lg:text-sm`}
+                >
+                  {line.accounting?.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        </td>
+        {/* Info: (20260316 - Julian) Debit */}
+        <td
+          aria-label="Debit"
+          className="py-2 text-right align-middle font-semibold text-slate-700 lg:py-4"
+        >
+          <div className="flex flex-col text-xs lg:text-sm">
+            {lineItems.map((line) => (
+              <div
+                key={line.id}
+                className="flex h-[30px] items-center justify-end border-dashed border-slate-300 not-last:border-b"
+              >
+                <span>
+                  {line.isDebit ? numberWithCommas(line.amount) : "−"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </td>
+        {/* Info: (20260316 - Julian) Credit */}
+        <td
+          aria-label="Credit"
+          className="py-2 pr-2 text-right align-middle font-semibold lg:py-4 lg:pr-6"
+        >
+          <div className="flex flex-col text-xs lg:text-sm">
+            {lineItems.map((line) => (
+              <div
+                key={line.id}
+                className="flex h-[30px] items-center justify-end border-dashed border-slate-300 not-last:border-b"
+              >
+                <span>
+                  {!line.isDebit ? numberWithCommas(line.amount) : "−"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </td>
+      </>
+    ) : (
+      <td
+        colSpan={3}
+        className="py-2 text-center align-middle font-medium text-slate-800 lg:py-4"
+      >
+        ==== 沒有分錄 ====
+      </td>
+    );
+
   return (
     <tr
       onClick={!voucher.isDeleted ? onClick : undefined}
@@ -223,66 +300,10 @@ export function VoucherRow({
           </span>
         </div>
       </td>
-      {/* Info: (20260316 - Julian) Accounting */}
-      <td
-        aria-label="Accounting"
-        className="py-2 pl-2 align-middle lg:py-4 lg:pl-6"
-      >
-        <div className="flex flex-col whitespace-nowrap">
-          {lineItems.map((line) => (
-            <div
-              key={line.id}
-              className="flex h-[30px] items-center gap-2 border-dashed border-slate-300 not-last:border-b"
-            >
-              <span className="w-[55px] rounded bg-slate-200 px-1.5 py-0.5 text-center text-xs font-semibold text-slate-700">
-                {line.accounting?.code}
-              </span>
-              {/* Info: (20260316 - Julian) 借方靠左，貸方靠右 */}
-              <span
-                className={`${
-                  line.isDebit
-                    ? "font-bold text-slate-800"
-                    : "ml-4 font-medium text-slate-700"
-                } truncate text-xs lg:max-w-[250px] lg:text-sm`}
-              >
-                {line.accounting?.name}
-              </span>
-            </div>
-          ))}
-        </div>
-      </td>
-      {/* Info: (20260316 - Julian) Debit */}
-      <td
-        aria-label="Debit"
-        className="py-2 text-right align-middle font-semibold text-slate-700 lg:py-4"
-      >
-        <div className="flex flex-col text-xs lg:text-sm">
-          {lineItems.map((line) => (
-            <div
-              key={line.id}
-              className="flex h-[30px] items-center justify-end border-dashed border-slate-300 not-last:border-b"
-            >
-              <span>{line.isDebit ? numberWithCommas(line.amount) : "−"}</span>
-            </div>
-          ))}
-        </div>
-      </td>
-      {/* Info: (20260316 - Julian) Credit */}
-      <td
-        aria-label="Credit"
-        className="py-2 pr-2 text-right align-middle font-semibold lg:py-4 lg:pr-6"
-      >
-        <div className="flex flex-col text-xs lg:text-sm">
-          {lineItems.map((line) => (
-            <div
-              key={line.id}
-              className="flex h-[30px] items-center justify-end border-dashed border-slate-300 not-last:border-b"
-            >
-              <span>{!line.isDebit ? numberWithCommas(line.amount) : "−"}</span>
-            </div>
-          ))}
-        </div>
-      </td>
+
+      {/* Info: (20260325 - Julian) Accounting, Debit, Credit */}
+      {voucherline}
+
       {/* Info: (20260316 - Julian) Confidence */}
       <td
         aria-label="Confidence"

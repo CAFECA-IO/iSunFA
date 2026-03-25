@@ -257,7 +257,7 @@ export default function EsgVerifyModal({
                         <select
                           id="scopeSelect"
                           aria-label={t("esg_verify.form.scope")}
-                          value={formData.scope}
+                          value={formData.scope || ""}
                           onChange={(e) =>
                             setFormData({
                               ...formData,
@@ -397,7 +397,7 @@ export default function EsgVerifyModal({
                         <select
                           id="intensitySelect"
                           aria-label={t("esg_verify.form.intensity")}
-                          value={formData.intensity}
+                          value={formData.intensity || ""}
                           onChange={(e) =>
                             setFormData({
                               ...formData,

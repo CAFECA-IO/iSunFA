@@ -77,7 +77,7 @@ export interface IEsgRecord {
     hash: string;
     fileName: string;
   };
-  scope: EsgScope;
+  scope: EsgScope | null;
   activityType: string;
   vendor: string;
   rawActivityData: string;
@@ -86,6 +86,6 @@ export interface IEsgRecord {
   intensity: EsgIntensity;
   confidence: number;
   isVerified: boolean;
-  analysisStatus: AIAnalysisStatus;
+  analysisStatus: AIAnalysisStatus | null
   aiNote: string;
 }

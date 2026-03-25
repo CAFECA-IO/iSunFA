@@ -78,6 +78,7 @@ export default function JournalDetailModal({
 
   if (!journal) return null;
 
+  // Info: (20260325 - Julian) 判斷是否有未儲存的變更
   const hasUnsavedChanges = editText !== journal.text;
 
   const requestClose = () => {
@@ -178,7 +179,7 @@ export default function JournalDetailModal({
                     </div>
                     <button
                       type="button"
-                      className="rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 outline-none"
+                      className="rounded-full bg-gray-100 p-2 text-gray-500 transition-colors outline-none hover:bg-gray-200 hover:text-gray-700"
                       onClick={requestClose}
                     >
                       <X className="h-5 w-5" />
@@ -284,14 +285,16 @@ export default function JournalDetailModal({
                         </button>
                       {/* Info: (20260324 - Julian) Footer Actions */}
                       <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 py-2 pt-5">
-                        <button
-                          type="button"
-                          onClick={() => setEditText(journal.text)}
-                          className="px-4 text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
-                        >
-                          {t("voucher.detail_modal.actions.cancel_edit")}
-                        </button>
-                        <div className="flex items-center gap-3">
+                        {hasUnsavedChanges && (
+                          <button
+                            type="button"
+                            onClick={() => setEditText(journal.text)}
+                            className="px-4 text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
+                          >
+                            {t("voucher.detail_modal.actions.cancel_edit")}
+                          </button>
+                        )}
+                        <div className="ml-auto flex items-center gap-3">
                           {journal.isVerified ? (
                             <button
                               type="button"
