@@ -245,7 +245,7 @@ export default function JournalDetailModal({
                             aria-label={t("ocr.journal") as string}
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
-                            className="size-full resize-none rounded-lg border border-orange-300 bg-gray-50 p-4 outline-none"
+                            className="size-full resize-none rounded-lg border border-orange-300 bg-gray-50 p-4 outline-none text-slate-800 leading-relaxed"
                           />
                         ) : (
                           <div className="size-full overflow-y-auto rounded-lg border border-slate-200 bg-gray-50 p-4">
