@@ -162,11 +162,11 @@ export default function JournalDetailModal({
               >
                 <DialogPanel className="relative flex h-[85vh] w-full max-w-4xl transform flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all">
                   {/* Info: (20260305 - Julian) Header */}
-                  <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-start justify-between border-b border-gray-200 px-4 py-4 sm:items-center sm:px-6">
+                    <div className="flex flex-wrap items-center gap-2 pr-2 sm:gap-3">
                       <DialogTitle
                         as="h3"
-                        className="text-xl font-bold text-slate-800"
+                        className="text-lg font-bold text-slate-800 sm:text-xl"
                       >
                         {t("ocr.detail_title")}
                       </DialogTitle>
@@ -204,9 +204,9 @@ export default function JournalDetailModal({
                   {/* Info: (20260305 - Julian) Body Content */}
                   <div className="flex flex-1 overflow-hidden bg-gray-50">
                     {/* Info: (20260305 - Julian) Text / Edit */}
-                    <div className="flex w-full flex-col bg-white p-6">
-                      <div className="mb-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                    <div className="flex w-full flex-col bg-white p-4 sm:p-6">
+                      <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                           <h4 className="font-medium text-gray-700">
                             {t("ocr.journal")}
                           </h4>
@@ -283,13 +283,13 @@ export default function JournalDetailModal({
                             {t("voucher.detail_modal.actions.cancel_edit")}
                           </button>
                         )}
-                        <div className="ml-auto flex items-center gap-3">
+                        <div className="ml-auto flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
                           {journal.isVerified ? (
                             <button
                               type="button"
                               disabled={isSaving}
                               onClick={() => setIsUnverifyModalOpen(true)}
-                              className="flex h-10 items-center gap-2 rounded-xl bg-red-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:bg-slate-300"
+                              className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-red-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:bg-slate-300 sm:w-auto"
                             >
                               <X size={16} className="stroke-3" />
                               {t("verify.button.unverify")}
@@ -299,7 +299,7 @@ export default function JournalDetailModal({
                               type="button"
                               disabled={isSaving}
                               onClick={() => saveJournal(true)}
-                              className="flex h-10 items-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:bg-slate-300"
+                              className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:bg-slate-300 sm:w-auto"
                             >
                               <CheckCircle2 size={16} className="stroke-3" />
                               {t("voucher.detail_modal.actions.verify_save")}
@@ -309,7 +309,7 @@ export default function JournalDetailModal({
                             type="button"
                             disabled={isSaving}
                             onClick={() => saveJournal(journal?.isVerified)}
-                            className="flex h-10 items-center gap-2 rounded-xl bg-orange-500 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 disabled:bg-slate-300"
+                            className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 disabled:bg-slate-300 sm:w-auto"
                           >
                             <Save size={16} className="stroke-3" />
                             {t("voucher.detail_modal.actions.save_only")}

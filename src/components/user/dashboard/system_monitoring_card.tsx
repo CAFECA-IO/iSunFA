@@ -30,12 +30,12 @@ export const SystemMonitoringCard = ({ currentData }: ISystemMonitoringCardProps
 
       <div className="space-y-6 flex-1 overflow-y-auto pr-2">
         {/* Info: (20260118 - Luphia) Section 1: Anomalies */}
-        <div className="flex items-center justify-between p-3 bg-red-50/50 rounded-xl border border-red-50">
+        <div className="flex flex-col items-start justify-between gap-2 rounded-xl border border-red-50 bg-red-50/50 p-3 sm:flex-row sm:items-center">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-red-500" />
             <span className="text-xs font-bold text-gray-700">{t('dashboard.anomalies')}</span>
           </div>
-          <div className="flex gap-3">
+          <div className="flex w-full justify-between gap-3 sm:w-auto sm:justify-end">
             <div className="flex items-center gap-1.5">
               <span className="relative flex h-3 w-3 mr-1 items-center justify-center">
                 {currentData.metrics.anomaliesCritical > 0 && (
@@ -64,12 +64,12 @@ export const SystemMonitoringCard = ({ currentData }: ISystemMonitoringCardProps
         </div>
 
         {/* Info: (20260118 - Luphia) Section 2: Financial Health */}
-        <div className="flex items-center justify-between p-3 bg-blue-50/50 rounded-xl border border-blue-50">
+        <div className="flex flex-col items-start justify-between gap-2 rounded-xl border border-blue-50 bg-blue-50/50 p-3 sm:flex-row sm:items-center">
           <div className="flex items-center gap-2">
             <FileCheck className="w-4 h-4 text-blue-500" />
             <span className="text-xs font-bold text-gray-700">{t('dashboard.financial_health')}</span>
           </div>
-          <div className="flex gap-3">
+          <div className="flex w-full justify-between gap-3 sm:w-auto sm:justify-end">
             <div className="flex items-center gap-1.5">
               <CheckCircle className="w-4 h-4 text-emerald-500" />
               <span className="text-sm font-bold text-gray-900">{currentData.metrics.healthCompliant}</span>

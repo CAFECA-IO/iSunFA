@@ -211,7 +211,7 @@ export class TaskService {
     const currentDate = new Date().toISOString().split("T")[0];
     let startDate = mData.startDate || "N/A";
     let endDate = mData.endDate || "N/A";
-    let marketName = "台灣";
+    let marketName = "臺灣";
     let targetKeyword = "General";
     let esgRecordsContext = "";
 

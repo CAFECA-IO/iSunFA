@@ -152,14 +152,6 @@ export default function JournalLogView() {
         <h2 className="font-sans text-xl font-semibold text-gray-800">
           {t("journal.log_view.title")}
         </h2>
-        <button
-          type="button"
-          onClick={fetchLogs}
-          disabled={isLoading}
-          className="rounded-lg border border-orange-300 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-600 transition-colors hover:bg-orange-100 hover:text-orange-700 disabled:opacity-50"
-        >
-          {t("journal.log_view.refresh")}
-        </button>
       </div>
 
       <div className="relative mt-2 overflow-x-auto rounded-lg border border-gray-200 shadow-sm">

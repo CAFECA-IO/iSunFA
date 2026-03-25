@@ -414,7 +414,7 @@ export default function PaymentModal({
                               >
                                 {t("pricing.credits.payment_modal.title")}
                               </DialogTitle>
-                              <div className="mt-6 bg-gray-50/80 p-5 rounded-xl border border-gray-200/60 shadow-sm space-y-4">
+                              <div className="mt-6 bg-gray-50/80 p-4 sm:p-5 rounded-xl border border-gray-200/60 shadow-sm space-y-4">
                                 <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
                                   <span className="text-sm font-medium text-gray-500">
                                     {t("pricing.credits.payment_modal.amount_to_pay") || t("pricing.credits.payment_modal.amount_paid")}
@@ -423,8 +423,8 @@ export default function PaymentModal({
                                     {displayPrice || `$${amount}`}
                                   </span>
                                 </div>
-                                <div className="flex justify-between items-center px-2">
-                                  <span className="text-sm font-medium text-gray-500">
+                                <div className="flex justify-between items-start px-2">
+                                  <span className="text-sm font-medium text-gray-500 pt-1">
                                     {t("pricing.credits.payment_modal.tokens_to_receive") || t("pricing.credits.payment_modal.tokens_received")}
                                   </span>
                                   <div className="text-right flex flex-col items-end">
@@ -532,9 +532,9 @@ export default function PaymentModal({
                                   <div className="ml-3 text-sm leading-6">
                                     <label
                                       htmlFor="tos-payment"
-                                      className="font-medium text-gray-900 cursor-pointer"
+                                      className="font-medium text-gray-900 cursor-pointer flex flex-wrap items-center gap-x-1"
                                     >
-                                      {t("auth_modal.tos_agree") || "我同意"}{" "}
+                                      <span>{t("auth_modal.tos_agree") || "我同意"}</span>
                                       <button
                                         type="button"
                                         className="font-semibold text-orange-600 hover:text-orange-500 underline decoration-transparent hover:decoration-orange-500 transition-all"
@@ -545,8 +545,8 @@ export default function PaymentModal({
                                       >
                                         {t("auth_modal.tos_link") ||
                                           "使用條款 (Terms of Service)"}
-                                      </button>{" "}
-                                      {t("auth_modal.and") || "與"}{" "}
+                                      </button>
+                                      <span>{t("auth_modal.and") || "與"}</span>
                                       <button
                                         type="button"
                                         className="font-semibold text-orange-600 hover:text-orange-500 underline decoration-transparent hover:decoration-orange-500 transition-all"
@@ -567,11 +567,11 @@ export default function PaymentModal({
                                 onSubmit={handleSubmit}
                                 className="mt-6 space-y-4"
                               >
-                                <div className="mt-6 sm:flex sm:flex-row-reverse">
+                                <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-4">
                                   <button
                                     type="submit"
                                     disabled={loading || !agreedToTerms || paymentMethods.length <= 0}
-                                    className="inline-flex w-full justify-center rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:from-orange-500 hover:to-orange-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto items-center gap-2"
+                                    className="inline-flex w-full sm:w-auto flex-1 justify-center items-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:from-orange-500 hover:to-orange-400 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed sm:flex-none hover:-translate-y-0.5"
                                   >
                                     {loading && (
                                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -585,7 +585,7 @@ export default function PaymentModal({
                                   </button>
                                   <button
                                     type="button"
-                                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="inline-flex w-full sm:w-auto flex-1 justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed sm:flex-none transition-all"
                                     onClick={handleClose}
                                     disabled={loading}
                                   >
@@ -702,10 +702,10 @@ export default function PaymentModal({
                                 </div>
                               )}
 
-                              <div className="mt-6 w-full sm:flex sm:flex-row-reverse">
+                              <div className="mt-6 w-full flex justify-center sm:justify-end">
                                 <button
                                   type="button"
-                                  className="inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 sm:ml-3 sm:w-auto"
+                                  className="inline-flex w-full sm:w-auto justify-center rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:from-orange-500 hover:to-orange-400 hover:shadow-lg transition-all duration-200"
                                   onClick={handleClose}
                                 >
                                   {t("pricing.credits.payment_modal.close_btn") ||
@@ -739,10 +739,10 @@ export default function PaymentModal({
                                 </p>
                               </div>
 
-                              <div className="mt-6 mr-2 w-full sm:flex sm:flex-row-reverse">
+                              <div className="mt-6 w-full flex flex-col-reverse gap-3 sm:flex-row sm:justify-center sm:gap-4">
                                 <button
                                   type="button"
-                                  className="inline-flex w-full justify-center rounded-md bg-white ml-3 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                  className="inline-flex w-full sm:w-auto flex-1 justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-all sm:flex-none"
                                   onClick={handleClose}
                                 >
                                   {t("pricing.credits.payment_modal.close_btn") ||
@@ -751,7 +751,7 @@ export default function PaymentModal({
                                 </button>
                                 <button
                                   type="button"
-                                  className="mt-3 inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto sm:mt-0"
+                                  className="inline-flex w-full sm:w-auto flex-1 justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-red-500 transition-all sm:flex-none"
                                   onClick={() => setStep(PaymentStep.confirm)}
                                 >
                                   {t("pricing.credits.payment_modal.retry_btn") ||

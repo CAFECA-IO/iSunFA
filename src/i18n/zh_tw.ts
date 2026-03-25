@@ -652,10 +652,11 @@ export const zhTw = {
     cost_hint: "消耗: {{cost}} 點數",
     confirm_title: "確認生成分析報告",
     confirm_desc: "此操作將消耗點數，請確認詳細資訊：",
+    confirm_balance: "支付後餘額",
     confirm_action: "支付並生成",
 
     countries: {
-      tw: "台灣",
+      tw: "臺灣",
       us: "美國",
       cn: "中國",
       jp: "日本",

@@ -400,8 +400,8 @@ export default function VoucherDetailModal({
             >
               <DialogPanel className="relative flex max-h-[90vh] w-full max-w-4xl transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
                 {/* Info: (20260317 - Julian) Header */}
-                <div className="flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-8 py-5">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-start justify-between rounded-t-2xl border-b border-slate-200 bg-white px-4 py-4 sm:items-center sm:px-8 sm:py-5">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <DialogTitle
                       as="h3"
                       className="text-xl font-bold text-slate-800"
@@ -444,19 +444,21 @@ export default function VoucherDetailModal({
                 <div className="flex flex-1 overflow-hidden">
                   {/* Info: (20260317 - Julian) Form */}
                   <div className="flex w-full flex-col bg-white">
-                    <div className="flex-1 overflow-y-auto p-6">
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-6">
                       {/* Info: (20260317 - Julian) Section 1: Basic Info */}
-                      <div className="mb-3 flex items-center justify-between border-b border-slate-200 pb-2">
+                      <div className="mb-3 flex flex-col items-start justify-between gap-3 border-b border-slate-200 pb-2 sm:flex-row sm:items-center">
                         <div className="flex items-center gap-2">
                           <FileText size={20} className="text-blue-900" />
                           <h4 className="text-base font-bold text-blue-900">
                             {t("voucher.detail_modal.sections.basic_info")}
                           </h4>
                         </div>
-                        <AiConfidence
-                          confidence={activeVoucher.confidence}
-                          note={activeVoucher.aiNote}
-                        />
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                          <AiConfidence
+                            confidence={activeVoucher.confidence}
+                            note={activeVoucher.aiNote}
+                          />
+                        </div>
                       </div>
 
                       <div className="mb-8 grid grid-cols-2 gap-4">
@@ -549,7 +551,7 @@ export default function VoucherDetailModal({
                       </div>
 
                       {/* Info: (20260317 - Julian) Section 2: Accounting Entries */}
-                      <div className="mb-3 flex items-center justify-between border-b border-slate-200 pb-2">
+                      <div className="mb-3 flex flex-col items-start justify-between gap-2 border-b border-slate-200 pb-2 sm:flex-row sm:items-center">
                         <div className="flex items-center gap-2">
                           <DollarSign size={20} className="text-blue-900" />
                           <h4 className="text-base font-bold text-blue-900">
@@ -651,23 +653,23 @@ export default function VoucherDetailModal({
                     </div>
 
                     {/* Info: (20260317 - Julian) Footer Actions */}
-                    <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-8 py-5">
+                    <div className="flex flex-col-reverse justify-end gap-3 border-t border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:px-8 sm:py-5">
                       {checkHasChanges() && (
                         <button
                           type="button"
                           onClick={() => setIsCancelModalOpen(true)}
-                          className="text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
+                          className="mr-auto text-sm font-bold text-slate-500 transition-colors hover:text-slate-700 sm:m-0"
                         >
                           {t("voucher.detail_modal.actions.cancel_edit")}
                         </button>
                       )}
-                      <div className="ml-auto flex items-center gap-3">
+                      <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto sm:gap-3">
                         {activeVoucher?.isVerified ? (
                           <button
                             type="button"
                             disabled={disabledSaveButton || isSaving}
                             onClick={() => setIsUnverifyModalOpen(true)}
-                            className="flex h-10 items-center gap-2 rounded-xl bg-red-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:bg-slate-300"
+                            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-red-400 px-4 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:bg-slate-300 sm:flex-none sm:px-6 sm:text-sm"
                           >
                             <X size={16} className="stroke-3" />
                             {t("verify.button.unverify")}
@@ -677,7 +679,7 @@ export default function VoucherDetailModal({
                             type="button"
                             disabled={disabledSaveButton || isSaving}
                             onClick={() => saveVoucher(true)}
-                            className="flex h-10 items-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:bg-slate-300"
+                            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 text-xs font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:bg-slate-300 sm:flex-none sm:px-6 sm:text-sm"
                           >
                             <CheckCircle2 size={16} className="stroke-3" />
                             {t("verify.button.verify")}
@@ -687,7 +689,7 @@ export default function VoucherDetailModal({
                           type="button"
                           disabled={disabledSaveButton || isSaving}
                           onClick={() => saveVoucher(activeVoucher?.isVerified)}
-                          className="flex h-10 items-center gap-2 rounded-xl bg-orange-500 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 disabled:bg-slate-300"
+                          className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-600 disabled:bg-slate-300 sm:flex-none sm:px-6 sm:text-sm"
                         >
                           <Save size={16} className="stroke-3" />
                           {t("voucher.detail_modal.actions.save_only")}

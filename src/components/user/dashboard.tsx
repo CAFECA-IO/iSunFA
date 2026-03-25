@@ -67,10 +67,10 @@ export default function Dashboard() {
       />
 
       {!hasData ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="flex flex-col items-center justify-center px-6 py-20 text-center bg-white rounded-xl shadow-sm border border-gray-100 w-full overflow-hidden">
           <FileStack className="h-16 w-16 text-gray-300 mb-4" />
-          <h3 className="text-xl font-medium text-gray-900 mb-2">{t('dashboard.empty_state_title')}</h3>
-          <p className="text-gray-500 mb-6 max-w-sm text-center">
+          <h3 className="text-xl font-medium text-gray-900 mb-2 break-all sm:break-normal">{t('dashboard.empty_state_title')}</h3>
+          <p className="text-gray-500 mb-6 w-full max-w-sm break-words">
             {t('dashboard.empty_state_desc')}
           </p>
           <Link
