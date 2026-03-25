@@ -95,7 +95,7 @@ const SalaryResultSection: React.FC = () => {
             type="button"
             onClick={downloadPng}
             disabled={btnDisabled}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-orange-400 bg-white text-sm font-bold text-orange-500 transition-all duration-200 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             {t("calculator.button.download")} <Download size={20} />
           </button>
