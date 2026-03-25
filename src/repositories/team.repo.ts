@@ -27,6 +27,11 @@ export class TeamRepository implements ITeamRepository {
   async listTeamMember(teamId: string) {
     const teamMembers = prisma.teamMember.findMany({
       where: { teamId },
+      include: {
+        user: {
+          select: { id: true, address: true, name: true, imageUrl: true }
+        }
+      }
     });
     return teamMembers;
   }
