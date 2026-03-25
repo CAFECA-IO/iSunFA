@@ -22,6 +22,12 @@ export const ko = {
     testing_env_banner: {
       message: "⚠️ 본 환경은 개발 및 데모용 테스트 환경입니다. 데이터는 주기적으로 초기화됩니다. 프로덕션 환경으로 사용하지 마십시오. 프로덕션 환경은 다음을 방문하십시오 ",
     },
+    ai_confidence: {
+      title: "AI 신뢰도",
+      note: "AI 참고",
+      no_note: "AI 참고 없음",
+      note_title: "AI 분석 참고",
+    },
   },
   faith: {
     title: "FAITH",
@@ -1310,29 +1316,29 @@ export const ko = {
       },
     },
   },
-  "verify":{
-      "verify_modal":{
-        title:"確認核對？",
-        message:"您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
-        confirm:"確認核對",
-      },
-      "unverify_modal":{
-        title:"確認退回？",
-        message:"您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
-        confirm:"確認退回",
-      },
-      status: {
-        verified: "已核對",
-        unverified: "待核對",
-      },
-      button:{
-        unverify:"退回未核對",
-        verify:"核對並存檔",
-      },
-      type:{
-        journal:"日記帳",
-        voucher:"傳票",
-        esg:"碳排紀錄",
-      }
+  "verify": {
+    "verify_modal": {
+      title: "確認核對？",
+      message: "您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+      confirm: "確認核對",
+    },
+    "unverify_modal": {
+      title: "確認退回？",
+      message: "您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+      confirm: "確認退回",
+    },
+    status: {
+      verified: "已核對",
+      unverified: "待核對",
+    },
+    button: {
+      unverify: "退回未核對",
+      verify: "核對並存檔",
+    },
+    type: {
+      journal: "日記帳",
+      voucher: "傳票",
+      esg: "碳排紀錄",
+    }
   }
 };

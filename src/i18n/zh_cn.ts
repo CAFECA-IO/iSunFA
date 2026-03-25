@@ -21,6 +21,12 @@ export const zhCn = {
     testing_env_banner: {
       message: "⚠️ 本环境为开发与展示用测试环境，资料不定期清空，请勿用作生产环境。正式环境请前往 ",
     },
+    ai_confidence: {
+      title: "AI 信心度",
+      note: "AI 备注",
+      no_note: "无 AI 备注",
+      note_title: "AI 解析备注",
+    },
   },
   faith: {
     title: "费思",
@@ -1289,29 +1295,29 @@ export const zhCn = {
       },
     },
   },
-  "verify":{
-      "verify_modal":{
-        title:"确认核对？",
-        message:"您确定要核对此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
-        confirm:"确认核对",
-      },
-      "unverify_modal":{
-        title:"确认退回？",
-        message:"您确定要退回此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
-        confirm:"确认退回",
-      },
-      status: {
-        verified: "已核对",
-        unverified: "待核对",
-      },
-      button:{
-        unverify:"退回未核对",
-        verify:"核对并存档",
-      },
-      type:{
-        journal:"日记账",
-        voucher:"传票",
-        esg:"碳排记录",
-      }
+  "verify": {
+    "verify_modal": {
+      title: "确认核对？",
+      message: "您确定要核对此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
+      confirm: "确认核对",
+    },
+    "unverify_modal": {
+      title: "确认退回？",
+      message: "您确定要退回此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
+      confirm: "确认退回",
+    },
+    status: {
+      verified: "已核对",
+      unverified: "待核对",
+    },
+    button: {
+      unverify: "退回未核对",
+      verify: "核对并存档",
+    },
+    type: {
+      journal: "日记账",
+      voucher: "传票",
+      esg: "碳排记录",
     }
+  }
 };

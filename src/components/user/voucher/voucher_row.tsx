@@ -12,7 +12,7 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { timestampToString, numberWithCommas } from "@/lib/utils/common";
 import { FilePreview } from "@/components/common/file_preview";
-import AiConfidenceBar from "@/components/common/ai_confidence_bar";
+import AiConfidence from "@/components/common/ai_confidence";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
@@ -288,7 +288,7 @@ export function VoucherRow({
         aria-label="Confidence"
         className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
-        <AiConfidenceBar confidence={voucher.confidence} />
+        <AiConfidence confidence={voucher.confidence} barOnly />
       </td>
       {/* Info: (20260316 - Julian) Status */}
       <td

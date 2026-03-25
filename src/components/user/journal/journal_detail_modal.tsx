@@ -20,7 +20,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import ConfirmModal from "@/components/common/confirm_modal";
 import ZoomablePreview from "@/components/common/zoomable_preview";
-import AiConfidenceBar from "@/components/common/ai_confidence_bar";
+import AiConfidence from "@/components/common/ai_confidence";
 import { IJournal } from "@/interfaces/journal";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -182,15 +182,6 @@ export default function JournalDetailModal({
                         <h4 className="text-sm font-bold text-gray-500">
                           {t("ocr.file")}
                         </h4>
-                        <div className="relative flex items-center gap-2">
-                          {/* Info: (20260324 - Julian) AI Confidence */}
-                          <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 shadow-sm">
-                            <span className="text-xs font-bold text-gray-500">
-                              {t("ocr.confidence")}
-                            </span>
-                            <AiConfidenceBar confidence={journal.confidence} />
-                          </div>
-                        </div>
                       </div>
                       <div className="flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                         <ZoomablePreview
@@ -217,6 +208,11 @@ export default function JournalDetailModal({
                         <h4 className="font-medium text-gray-700">
                           {t("ocr.journal")}
                         </h4>
+                        {/* Info: (20260325 - Julian) AI Confidence */}
+                        <AiConfidence
+                          confidence={journal.confidence}
+                          note={journal.aiNote}
+                        />
                       </div>
 
                       <div className="flex-1 overflow-y-auto rounded-lg">

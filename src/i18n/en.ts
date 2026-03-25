@@ -21,6 +21,12 @@ export const en = {
     testing_env_banner: {
       message: "⚠️ This environment is for development and demonstration. Data is cleared periodically. Do not use for production. For the official environment, visit ",
     },
+    ai_confidence: {
+      title: "AI Confidence",
+      note: "AI Note",
+      no_note: "No AI Note",
+      note_title: "AI Analysis Note",
+    },
   },
   faith: {
     title: "FAITH",
@@ -1340,29 +1346,29 @@ export const en = {
       },
     },
   },
-      "verify":{
-      "verify_modal":{
-        title:"Confirm Verify?",
-        message:"Are you sure you want to verify this {{type}}? Changes will be saved, please confirm the data is correct.",
-        confirm:"Confirm Verify",
-      },
-      "unverify_modal":{
-        title:"Confirm Unverify?",
-        message:"Are you sure you want to unverify this {{type}}? Changes will be saved, please confirm the data is correct.",
-        confirm:"Confirm Unverify",
-      },
-      status: {
-        verified: "Verified",
-        unverified: "Unverified",
-      },
-      button:{
-        unverify:"Unverify",
-        verify:"Verify & Save",
-      },
-      type:{
-        journal:"Journal",
-        voucher:"Voucher",
-        esg:"ESG",
-      }
+  "verify": {
+    "verify_modal": {
+      title: "Confirm Verify?",
+      message: "Are you sure you want to verify this {{type}}? Changes will be saved, please confirm the data is correct.",
+      confirm: "Confirm Verify",
+    },
+    "unverify_modal": {
+      title: "Confirm Unverify?",
+      message: "Are you sure you want to unverify this {{type}}? Changes will be saved, please confirm the data is correct.",
+      confirm: "Confirm Unverify",
+    },
+    status: {
+      verified: "Verified",
+      unverified: "Unverified",
+    },
+    button: {
+      unverify: "Unverify",
+      verify: "Verify & Save",
+    },
+    type: {
+      journal: "Journal",
+      voucher: "Voucher",
+      esg: "ESG",
     }
+  }
 };

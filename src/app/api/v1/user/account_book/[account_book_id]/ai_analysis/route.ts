@@ -75,6 +75,7 @@ export async function POST(
         tradingDate:new Date(),
         confidence: 0,
         isVerified: false,
+        aiNote: "",
       },
     });
 
