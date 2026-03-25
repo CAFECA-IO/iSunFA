@@ -34,50 +34,77 @@ export function EsgRow({
   const renderIntensity = (intensity: EsgIntensity) => {
     switch (intensity) {
       case EsgIntensity.HIGH:
-        return {
-          text: t("esg_table.intensity.high"),
-          style: "border-red-300 bg-red-100 text-red-600",
-        };
+        return (
+          <span
+            className={`inline-flex items-center justify-center rounded-full border border-red-300 bg-red-100 px-3 py-1 text-xs font-semibold whitespace-nowrap text-red-600 transition-colors`}
+          >
+            {t("esg_table.intensity.high")}
+          </span>
+        );
       case EsgIntensity.MEDIUM:
-        return {
-          text: t("esg_table.intensity.medium"),
-          style: "border-amber-300 bg-amber-100 text-amber-600",
-        };
+        return (
+          <span
+            className={`inline-flex items-center justify-center rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-xs font-semibold whitespace-nowrap text-amber-600 transition-colors`}
+          >
+            {t("esg_table.intensity.medium")}
+          </span>
+        );
       case EsgIntensity.LOW:
-        return {
-          text: t("esg_table.intensity.low"),
-          style: "border-green-300 bg-green-100 text-green-600",
-        };
+        return (
+          <span
+            className={`inline-flex items-center justify-center rounded-full border border-green-300 bg-green-100 px-3 py-1 text-xs font-semibold whitespace-nowrap text-green-600 transition-colors`}
+          >
+            {t("esg_table.intensity.low")}
+          </span>
+        );
       default:
-        return {
-          text: "",
-          style: "",
-        };
+        // Info: (20260325 - Julian) 如果沒有資料，就不要顯示 intensity
+        return (
+          <span
+            className={`inline-flex items-center justify-center rounded-full border border-gray-300 bg-gray-100 px-3 py-1 text-xs font-semibold whitespace-nowrap text-gray-600 transition-colors`}
+          >
+            {t("common.no_data")}
+          </span>
+        );
     }
   };
 
-  const renderScope = (scope: EsgScope) => {
+  const renderScope = (scope: EsgScope | null) => {
     switch (scope) {
       case EsgScope.SCOPE_1:
-        return {
-          text: t("esg_table.scope.scope_1"),
-          icon: <Zap className="mr-1.5 h-4 w-4 text-amber-500" />,
-        };
+        return (
+          <div className="flex items-center">
+            <div className="shrink-0">
+              <Zap className="mr-1.5 h-4 w-4 text-amber-500" />
+            </div>
+            {t("esg_table.scope.scope_1")}：{record.activityType}
+          </div>
+        );
       case EsgScope.SCOPE_2:
-        return {
-          text: t("esg_table.scope.scope_2"),
-          icon: <Truck className="mr-1.5 h-4 w-4 text-blue-500" />,
-        };
+        return (
+          <div className="flex items-center">
+            <div className="shrink-0">
+              <Truck className="mr-1.5 h-4 w-4 text-blue-500" />
+            </div>
+            {t("esg_table.scope.scope_2")}：{record.activityType}
+          </div>
+        );
       case EsgScope.SCOPE_3:
-        return {
-          text: t("esg_table.scope.scope_3"),
-          icon: <Cloud className="mr-1.5 h-4 w-4 text-green-500" />,
-        };
+        return (
+          <div className="flex items-center">
+            <div className="shrink-0">
+              <Cloud className="mr-1.5 h-4 w-4 text-green-500" />
+            </div>
+            {t("esg_table.scope.scope_3")}：{record.activityType}
+          </div>
+        );
       default:
-        return {
-          text: "",
-          icon: null,
-        };
+        // Info: (20260325 - Julian) 如果沒有資料，就不要顯示 scope
+        return (
+          <div className="w-fit rounded-full border border-gray-300 bg-gray-100 px-1.5 py-1 text-gray-600">
+            {t("common.no_data")}
+          </div>
+        );
     }
   };
 
@@ -159,6 +186,18 @@ export function EsgRow({
     );
   }
 
+  const rawActivity =
+    record.rawActivityData !== "" && record.unit !== "" ? (
+      <>
+        <span className="text-sm font-semibold text-slate-800">
+          {record.rawActivityData}{" "}
+        </span>
+        <span className="text-xs font-bold text-slate-500">{record.unit}</span>
+      </>
+    ) : (
+      "-"
+    );
+
   return (
     <tr
       onClick={handleVerifyClick}
@@ -193,9 +232,8 @@ export function EsgRow({
       </td>
       {/* Info: (20260320 - Julian) Activity Type */}
       <td className="p-2 lg:px-6 lg:py-4">
-        <div className="mb-1 flex items-center text-xs font-bold text-slate-800 lg:text-sm">
-          <div className="shrink-0">{renderScope(record.scope).icon}</div>
-          {renderScope(record.scope).text}：{record.activityType}
+        <div className="mb-1 text-xs font-bold text-slate-800 lg:text-sm">
+          {renderScope(record.scope)}
         </div>
         <div className="text-[10px] font-medium text-slate-500 lg:text-xs">
           {record.vendor}
@@ -203,10 +241,7 @@ export function EsgRow({
       </td>
       {/* Info: (20260320 - Julian) Activity Data */}
       <td className="p-2 text-center whitespace-nowrap lg:px-6 lg:py-4">
-        <span className="text-sm font-semibold text-slate-800">
-          {record.rawActivityData}{" "}
-        </span>
-        <span className="text-xs font-bold text-slate-500">{record.unit}</span>
+        {rawActivity}
       </td>
       {/* Info: (20260320 - Julian) Emissions */}
       <td className="p-2 text-center text-sm font-semibold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4">
@@ -214,11 +249,7 @@ export function EsgRow({
       </td>
       {/* Info: (20260320 - Julian) Intensity */}
       <td className="p-2 text-center lg:px-6 lg:py-4">
-        <span
-          className={`inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-semibold whitespace-nowrap transition-colors ${renderIntensity(record.intensity).style}`}
-        >
-          {renderIntensity(record.intensity).text}
-        </span>
+        {renderIntensity(record.intensity)}
       </td>
       {/* Info: (20260320 - Julian) Confidence */}
       <td

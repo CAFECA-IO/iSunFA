@@ -1,5 +1,8 @@
 export const ja = {
   common: {
+    no_data: "データなし",
+    cancel_edit_title: "編集をキャンセルしますか？",
+    cancel_edit_message: "編集をキャンセルしてもよろしいですか？データは元の状態に戻ります。",
     loading: "読み込み中...",
     save: "保存",
     confirm: "確認",
@@ -926,6 +929,8 @@ export const ja = {
       "複数ファイルの一括アップロードに対応 (.jpg, .png, .pdf)",
     title: "請求書管理",
     upload: "アップロード",
+    view_file: "証憑ファイルを表示",
+    view_preview: "プレビューを表示",
     list: "リスト",
     uploading: "アップロード中...",
     click_or_drag: "ここをクリックまたはファイルをドラッグ",
@@ -1198,6 +1203,7 @@ export const ja = {
           confidence: "AI信頼度",
           status: "ステータス",
         },
+        no_entries: "仕訳なし",
         no_file: "ファイルなし",
         filter_btn: "フィルター",
         verify_all: "一括確認",
@@ -1260,10 +1266,6 @@ export const ja = {
         save_voucher: "伝票を保存",
       },
       confirm_modals: {
-        clear_all: {
-          title: "すべてクリア",
-          message: "すべてのデータをクリアしてもよろしいですか？",
-        },
         leave_without_saving: {
           title: "保存せずに退出",
           message: "変更を破棄して終了してもよろしいですか？",

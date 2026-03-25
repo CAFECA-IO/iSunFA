@@ -1,5 +1,8 @@
 export const en = {
   common: {
+    no_data: "No Data",
+    cancel_edit_title: "Cancel Edit?",
+    cancel_edit_message: "Are you sure you want to cancel the edit? Data will revert to the original state.",
     loading: "Loading...",
     save: "Save",
     confirm: "Confirm",
@@ -961,9 +964,11 @@ export const en = {
     analyze_all_btn: "Analyze All",
     multiple_files_supported:
       "Supports batch uploading multiple files (.jpg, .png, .pdf)",
-    title: "Invoice Management",
+    title: "Receipt Management",
     upload: "Upload",
-    list: "List",
+    view_file: "View Receipt File",
+    view_preview: "View Preview",
+    list: "Receipt List",
     uploading: "Uploading...",
     click_or_drag: "Click or drag file here",
     single_file_only: "Only one file can be uploaded at a time",
@@ -1078,6 +1083,7 @@ export const en = {
           confidence: "AI Confidence",
           status: "Status",
         },
+        no_entries: "No Entries",
         no_file: "No File",
         filter_btn: "Filters",
         verify_all: "Verify All",
@@ -1141,10 +1147,6 @@ export const en = {
         confirm: "Confirm",
       },
       confirm_modals: {
-        clear_all: {
-          title: "Clear All",
-          message: "Are you sure you want to clear all data?",
-        },
         leave_without_saving: {
           title: "Leave without saving",
           message: "Are you sure you want to discard changes and leave?",

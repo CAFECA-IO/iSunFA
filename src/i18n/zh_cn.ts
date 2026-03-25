@@ -1,5 +1,8 @@
 export const zhCn = {
   common: {
+    no_data: "无数据",
+    cancel_edit_title: "取消修改？",
+    cancel_edit_message: "确定要取消修改吗？数据将回到原始状态。",
     loading: "载入中...",
     save: "保存",
     confirm: "确认",
@@ -944,7 +947,9 @@ export const zhCn = {
     main_view: {
       title: "凭证管理",
       upload: "上传凭证",
-      list: "凭证列表",
+      view_file: "查看凭证文件",
+      view_preview: "查看预览",
+      list: "凭证清单",
       log: "变动记录",
     },
     log_view: {
@@ -1164,6 +1169,7 @@ export const zhCn = {
           confidence: "AI 信心度",
           status: "状态",
         },
+        no_entries: "没有分录",
         no_file: "无文件",
         filter_btn: "筛选条件",
         verify_all: "一键核对",
@@ -1229,10 +1235,6 @@ export const zhCn = {
         confirm: "确认",
       },
       confirm_modals: {
-        clear_all: {
-          title: "全部清除",
-          message: "您确定要清除所有数据吗？",
-        },
         leave_without_saving: {
           title: "离开且不保存",
           message: "您确定要放弃在此的变更并离开吗？",

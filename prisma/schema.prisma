@@ -459,7 +459,7 @@ model Voucher {
   tradingDate DateTime @map("trading_date")
 
   // Info: (20260310 - Julian) 交易類別: income, outcome, transfer
-  tradingType VoucherTradingType @map("trading_type")
+  tradingType VoucherTradingType? @map("trading_type")
 
   // Info: (20260310 - Julian) 備註
   note String? @db.Text
@@ -541,13 +541,13 @@ model EsgRecord {
   updatedAt       DateTime         @updatedAt @map("updated_at")
   deletedAt       DateTime?        @map("deleted_at")
   dateTimestamp   Int              @map("date_timestamp") // Info: (20260312 - Julian) 日期時間戳
-  scope           EsgScope // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
+  scope           EsgScope? // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
   activityType    String           @map("activity_type") // Info: (20260312 - Julian) 活動類型
   vendor          String // Info: (20260312 - Julian) 供應商與對象
   rawActivityData String           @map("raw_activity_data") // Info: (20260312 - Julian) 原始活動數據
   unit            String // Info: (20260312 - Julian) 單位
   emissions       Decimal // Info: (20260312 - Julian) 排放量 (KGCO2E)
-  intensity       EsgIntensity // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
+  intensity       EsgIntensity? // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
   confidence      Int // Info: (20260312 - Julian) AI 信心度
   isVerified      Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
   analysisStatus  AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態

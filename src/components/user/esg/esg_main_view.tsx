@@ -97,7 +97,7 @@ export default function EsgMainView() {
           <button
             type="button"
             onClick={() => setIsTargetModalOpen(true)}
-            className="flex items-center rounded-lg bg-[#FF5A1F] px-5 py-2 text-sm font-medium text-white transition-all hover:bg-[#E04914] focus:outline-none"
+            className="flex items-center rounded-lg bg-orange-500 px-5 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-orange-600 focus:outline-none"
           >
             <Target className="mr-2 h-4 w-4" />
             {t("esg_target.btn")}
