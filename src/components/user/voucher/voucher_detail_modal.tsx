@@ -445,14 +445,17 @@ export default function VoucherDetailModal({
                   <div className="flex w-1/2 flex-col bg-white">
                     <div className="flex-1 overflow-y-auto p-6">
                       {/* Info: (20260317 - Julian) Section 1: Basic Info */}
-                      <div className="mb-3 border-b flex items-center justify-between border-slate-200 pb-2">
+                      <div className="mb-3 flex items-center justify-between border-b border-slate-200 pb-2">
                         <div className="flex items-center gap-2">
                           <FileText size={20} className="text-blue-900" />
                           <h4 className="text-base font-bold text-blue-900">
                             {t("voucher.detail_modal.sections.basic_info")}
                           </h4>
                         </div>
-                        <AiConfidence confidence={activeVoucher.confidence} note={activeVoucher.aiNote} />
+                        <AiConfidence
+                          confidence={activeVoucher.confidence}
+                          note={activeVoucher.aiNote}
+                        />
                       </div>
 
                       <div className="mb-8 grid grid-cols-2 gap-4">

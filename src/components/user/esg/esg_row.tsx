@@ -12,7 +12,7 @@ import {
 import { timestampToString } from "@/lib/utils/common";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
-import AiConfidenceBar from "@/components/common/ai_confidence_bar";
+import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
@@ -225,7 +225,7 @@ export function EsgRow({
         aria-label="AI Confidence"
         className="p-2 text-center lg:px-6 lg:py-4"
       >
-        <AiConfidenceBar confidence={record.confidence} />
+        <AiConfidence confidence={record.confidence} barOnly />
       </td>
       {/* Info: (20260320 - Julian) Verified */}
       <td className="p-2 text-center lg:px-6 lg:py-4">

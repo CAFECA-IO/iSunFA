@@ -17,6 +17,12 @@ export const zhCn = {
       next: "下一页",
       page_info: "第 {{current}} 页，共 {{total}} 页",
     },
+    ai_confidence: {
+      title: "AI 信心度",
+      note: "AI 备注",
+      no_note: "无 AI 备注",
+      note_title: "AI 解析备注",
+    },
   },
   faith: {
     title: "费思",

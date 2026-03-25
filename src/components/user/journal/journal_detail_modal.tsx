@@ -209,7 +209,10 @@ export default function JournalDetailModal({
                           {t("ocr.journal")}
                         </h4>
                         {/* Info: (20260325 - Julian) AI Confidence */}
-                        <AiConfidence confidence={journal.confidence} note={journal.aiNote} />
+                        <AiConfidence
+                          confidence={journal.confidence}
+                          note={journal.aiNote}
+                        />
                       </div>
 
                       <div className="flex-1 overflow-y-auto rounded-lg">

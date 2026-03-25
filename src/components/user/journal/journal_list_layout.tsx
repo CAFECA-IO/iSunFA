@@ -3,7 +3,7 @@
 import { Loader2, CircleAlert, CheckCircle2, FileQuestion } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
-import AiConfidenceBar from "@/components/common/ai_confidence_bar";
+import AiConfidence from "@/components/common/ai_confidence";
 import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { timestampToString } from "@/lib/utils/common";
@@ -138,7 +138,7 @@ const JournalListItem = ({
         aria-label={t("ocr.confidence")}
         className="px-3 py-2 text-right sm:px-6"
       >
-        <AiConfidenceBar confidence={journal.confidence} />
+        <AiConfidence confidence={journal.confidence} barOnly />
       </td>
       {/* Info: (20260316 - Julian) Status */}
       <td

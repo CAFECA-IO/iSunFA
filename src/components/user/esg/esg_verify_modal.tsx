@@ -214,8 +214,13 @@ export default function EsgVerifyModal({
                   {/* Info: (20260312 - Julian) Right Side: Form */}
                   <div className="flex w-1/2 flex-col p-6">
                     <div className="mb-8 flex items-center justify-between">
-                      <h4 className="text-base font-bold text-slate-500">碳排紀錄</h4>
-                      <AiConfidence confidence={formData.confidence} note={formData.aiNote} />
+                      <h4 className="text-base font-bold text-slate-500">
+                        {t("verify.type.esg")}
+                      </h4>
+                      <AiConfidence
+                        confidence={formData.confidence}
+                        note={formData.aiNote}
+                      />
                     </div>
 
                     <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto">

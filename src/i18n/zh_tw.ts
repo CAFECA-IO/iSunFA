@@ -17,6 +17,12 @@ export const zhTw = {
       next: "下一頁",
       page_info: "第 {{current}} 頁，共 {{total}} 頁",
     },
+    ai_confidence: {
+      title: "AI 信心度",
+      note: "AI 備註",
+      no_note: "無 AI 備註",
+      note_title: "AI 解析備註",
+    },
   },
   faith: {
     title: "費思",

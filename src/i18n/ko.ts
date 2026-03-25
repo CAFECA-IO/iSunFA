@@ -18,6 +18,12 @@ export const ko = {
       next: "다음",
       page_info: "{{current}} / {{total}} 페이지",
     },
+    ai_confidence: {
+      title: "AI 신뢰도",
+      note: "AI 참고",
+      no_note: "AI 참고 없음",
+      note_title: "AI 분석 참고",
+    },
   },
   faith: {
     title: "FAITH",
