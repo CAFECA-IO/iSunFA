@@ -12,6 +12,7 @@ export const en = {
     all: "All",
     agree: "Agree",
     filter: "Filter",
+    clear_filters: "Clear Filters",
     pagination: {
       prev: "Previous",
       next: "Next",
@@ -39,6 +40,9 @@ export const en = {
   },
   dashboard: {
     title: "Information War Room",
+    empty_state_title: "No Data Found",
+    empty_state_desc: "No data found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
+    empty_state_cta: "Upload Data",
     executive_summary: "Executive Summary",
     auto_refresh: "Auto Refresh",
     available_funds: "Available Funds",
@@ -1071,7 +1075,11 @@ export const en = {
         no_file: "No File",
         filter_btn: "Filters",
         verify_all: "Verify All",
-        no_data: "No voucher records yet",
+        no_data: "No Data Found",
+        no_data_desc: "No voucher records found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
+        no_data_cta: "Upload Data",
+        no_filter_results: "No Results Found",
+        no_filter_results_desc: "Please adjust your search keywords or filter criteria.",
       },
     },
     summary: {
@@ -1194,7 +1202,11 @@ export const en = {
       status: "Status",
     },
     loading: "Loading...",
-    no_records: "No ESG Records",
+    no_records: "No Data Found",
+    no_records_desc: "No ESG records found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
+    no_records_cta: "Upload Data",
+    no_filter_results: "No Results Found",
+    no_filter_results_desc: "Please adjust your search keywords or filter criteria.",
     footer: {
       record_count: "Showing {{count}} records",
       data_citation: "Data: IPCC AR6 Emission Factors",

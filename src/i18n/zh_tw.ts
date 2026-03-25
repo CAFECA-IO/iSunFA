@@ -12,6 +12,7 @@ export const zhTw = {
     all: "全部",
     agree: "同意",
     filter: "篩選",
+    clear_filters: "清除所有篩選",
     pagination: {
       prev: "上一頁",
       next: "下一頁",
@@ -39,6 +40,9 @@ export const zhTw = {
   },
   dashboard: {
     title: "資訊戰情室",
+    empty_state_title: "尚無資料",
+    empty_state_desc: "在所選期間內尚無資料。您可以嘗試切換不同的時間區間，或是前往傳票模組上傳新資料。",
+    empty_state_cta: "上傳憑證/資料",
     executive_summary: "經營決策頂層指標",
     auto_refresh: "自動更新",
     available_funds: "可用資金",
@@ -1098,7 +1102,11 @@ export const zhTw = {
         no_file: "無檔案",
         filter_btn: "篩選條件",
         verify_all: "一鍵核對",
-        no_data: "目前無傳票資料",
+        no_data: "尚無資料",
+        no_data_desc: "在所選期間內尚無傳票資料。您可以嘗試切換不同的時間區間，或是前往傳票模組上傳新資料。",
+        no_data_cta: "上傳憑證/資料",
+        no_filter_results: "找不到符合條件的紀錄",
+        no_filter_results_desc: "請嘗試調整搜尋關鍵字或篩選條件",
       },
     },
     summary: {
@@ -1224,7 +1232,11 @@ export const zhTw = {
       status: "狀態",
     },
     loading: "載入中...",
-    no_records: "無碳排分析紀錄",
+    no_records: "尚無資料",
+    no_records_desc: "在所選期間內尚無ESG紀錄。您可以嘗試切換不同的時間區間，或是前往傳票模組上傳新資料。",
+    no_records_cta: "上傳憑證/資料",
+    no_filter_results: "找不到符合條件的紀錄",
+    no_filter_results_desc: "請嘗試調整搜尋關鍵字或篩選條件",
     footer: {
       record_count: "顯示 {{count}} 筆碳排分析紀錄",
       data_citation: "數據引用：IPCC 第六次評估報告排放係數",

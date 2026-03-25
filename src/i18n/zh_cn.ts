@@ -12,6 +12,7 @@ export const zhCn = {
     all: "全部",
     agree: "同意",
     filter: "筛选",
+    clear_filters: "清除所有筛选",
     pagination: {
       prev: "上一页",
       next: "下一页",
@@ -39,6 +40,9 @@ export const zhCn = {
   },
   dashboard: {
     title: "资讯战情室",
+    empty_state_title: "暂无数据",
+    empty_state_desc: "在所选期间内暂无数据。您可以尝试切换不同的时间区间，或是前往凭证模块上传新数据。",
+    empty_state_cta: "上传凭证/数据",
     executive_summary: "经营决策顶层指标",
     auto_refresh: "自动更新",
     available_funds: "可用资金",
@@ -1005,7 +1009,11 @@ export const zhCn = {
       status: "状态",
     },
     loading: "载入中...",
-    no_records: "无碳排分析纪录",
+    no_records: "暂无数据",
+    no_records_desc: "在所选期间内暂无ESG纪录。您可以尝试切换不同的时间区间，或是前往凭证模块上传新数据。",
+    no_records_cta: "上传凭证/数据",
+    no_filter_results: "找不到符合条件的纪录",
+    no_filter_results_desc: "请尝试调整搜索关键字或筛选条件",
     footer: {
       record_count: "显示 {{count}} 笔碳排分析纪录",
       data_citation: "数据引用：IPCC 第六次评估报告排放系数",
@@ -1153,7 +1161,11 @@ export const zhCn = {
         no_file: "无文件",
         filter_btn: "筛选条件",
         verify_all: "一键核对",
-        no_data: "目前无凭证数据",
+        no_data: "暂无数据",
+        no_data_desc: "在所选期间内暂无凭证数据。您可以尝试切换不同的时间区间，或是前往凭证模块上传新数据。",
+        no_data_cta: "上传凭证/数据",
+        no_filter_results: "找不到符合条件的纪录",
+        no_filter_results_desc: "请尝试调整搜索关键字或筛选条件",
       },
     },
     summary: {
