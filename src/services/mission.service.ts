@@ -115,6 +115,7 @@ export class MissionService {
                       analysisStatus: "COMPLETED" as AIAnalysisStatus,
                       confidence,
                       isVerified: confidence > 85, // Info: (20260323 - Julian) 預設 85 分以上自動驗證
+                      aiNote: jd.aiNote ?? "無 AI 分析備註",
                     };
 
                     if (existingJournal) {

@@ -18,6 +18,12 @@ export const ja = {
       next: "次へ",
       page_info: "{{current}} / {{total}} ページ",
     },
+    ai_confidence: {
+      title: "AI 信頼度",
+      note: "AI 備考",
+      no_note: "AI 備考なし",
+      note_title: "AI 解析備考",
+    },
   },
   faith: {
     title: "FAITH",

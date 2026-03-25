@@ -17,6 +17,12 @@ export const en = {
       next: "Next",
       page_info: "Page {{current}} of {{total}}",
     },
+    ai_confidence: {
+      title: "AI Confidence",
+      note: "AI Note",
+      no_note: "No AI Note",
+      note_title: "AI Analysis Note",
+    },
   },
   faith: {
     title: "FAITH",

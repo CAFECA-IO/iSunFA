@@ -72,6 +72,7 @@ export async function POST(
         fileId,
         tradingDate: new Date(),
         text: "",
+        aiNote: "",
       },
     });
 
@@ -215,6 +216,7 @@ export async function GET(
         analysisStatus: j.analysisStatus as AIAnalysisStatus,
         confidence: j.confidence,
         isVerified: j.isVerified,
+        aiNote: j.aiNote,
       };
     });
 

@@ -15,8 +15,7 @@ import { IApiResponse } from "@/lib/utils/response";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
-import AiNote from "@/components/common/ai_note";
-import AiConfidenceBar from "@/components/common/ai_confidence_bar";
+import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IEsgVerifyModalProps {
@@ -194,18 +193,6 @@ export default function EsgVerifyModal({
                       <h4 className="text-sm font-bold text-slate-500">
                         {t("esg_verify.preview")}
                       </h4>
-                      <div className="relative flex items-center gap-2">
-                        {/* Info: (20260324 - Julian) AI Note */}
-                        <AiNote note={formData.aiNote} />
-
-                        {/* Info: (20260324 - Julian) AI Confidence */}
-                        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
-                          <span className="text-xs font-bold text-slate-500">
-                            {t("esg_verify.ai_confidence")}
-                          </span>
-                          <AiConfidenceBar confidence={formData.confidence} />
-                        </div>
-                      </div>
                     </div>
                     <div className="flex aspect-3/4 w-full items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                       {formData.file ? (
@@ -226,6 +213,16 @@ export default function EsgVerifyModal({
 
                   {/* Info: (20260312 - Julian) Right Side: Form */}
                   <div className="flex w-1/2 flex-col p-6">
+                    <div className="mb-8 flex items-center justify-between">
+                      <h4 className="text-base font-bold text-slate-500">
+                        {t("verify.type.esg")}
+                      </h4>
+                      <AiConfidence
+                        confidence={formData.confidence}
+                        note={formData.aiNote}
+                      />
+                    </div>
+
                     <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto">
                       {/* Info: (20260312 - Julian) Date */}
                       <div>
