@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
             return jsonOk({
                 requireBinding: true,
                 paymentId: paymentId,
-                redirectUrl: `https://mermer.testing.oen.tw/checkout/subscription/create/${paymentId}`,
+                redirectUrl: `${OEN_BASE_URL}/checkout/subscription/create/${paymentId}`,
             });
         } else {
             return jsonFail(
