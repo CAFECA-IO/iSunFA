@@ -17,6 +17,9 @@ export const zhCn = {
       next: "下一页",
       page_info: "第 {{current}} 页，共 {{total}} 页",
     },
+    testing_env_banner: {
+      message: "⚠️ 本环境为开发与展示用测试环境，资料不定期清空，请勿用作生产环境。正式环境请前往 ",
+    },
   },
   faith: {
     title: "费思",

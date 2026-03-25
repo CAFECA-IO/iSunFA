@@ -17,6 +17,9 @@ export const zhTw = {
       next: "下一頁",
       page_info: "第 {{current}} 頁，共 {{total}} 頁",
     },
+    testing_env_banner: {
+      message: "⚠️ 本環境為開發與展示用測試環境，資料不定期清空，請勿用作生產環境。正式環境請前往 ",
+    },
   },
   faith: {
     title: "費思",

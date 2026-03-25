@@ -17,6 +17,9 @@ export const en = {
       next: "Next",
       page_info: "Page {{current}} of {{total}}",
     },
+    testing_env_banner: {
+      message: "⚠️ This environment is for development and demonstration. Data is cleared periodically. Do not use for production. For the official environment, visit ",
+    },
   },
   faith: {
     title: "FAITH",

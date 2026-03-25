@@ -10,6 +10,8 @@ import { I18nProvider } from "@/i18n/i18n_context";
 import { AuthProvider } from "@/contexts/auth_context";
 import { AiContextProvider } from "@/contexts/ai_context";
 import CookieConsent from "@/components/common/cookie_consent";
+import TestingEnvBanner from "@/components/common/testing_env_banner";
+import { isProduction } from "@/lib/utils/common";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -63,6 +65,7 @@ export default async function RootLayout({
       >
         <GoogleAnalytics gaId={gaId} />
         <I18nProvider>
+          {!isProduction() && <TestingEnvBanner />}
           <AuthProvider>
             <AiContextProvider>
               {children}

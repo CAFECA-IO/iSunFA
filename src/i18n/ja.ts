@@ -18,6 +18,9 @@ export const ja = {
       next: "次へ",
       page_info: "{{current}} / {{total}} ページ",
     },
+    testing_env_banner: {
+      message: "⚠️ この環境は開発およびデモ用のテスト環境です。データは定期的にクリアされます。本番環境としては使用しないでください。本番環境はこちらへ ",
+    },
   },
   faith: {
     title: "FAITH",

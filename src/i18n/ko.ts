@@ -18,6 +18,9 @@ export const ko = {
       next: "다음",
       page_info: "{{current}} / {{total}} 페이지",
     },
+    testing_env_banner: {
+      message: "⚠️ 본 환경은 개발 및 데모용 테스트 환경입니다. 데이터는 주기적으로 초기화됩니다. 프로덕션 환경으로 사용하지 마십시오. 프로덕션 환경은 다음을 방문하십시오 ",
+    },
   },
   faith: {
     title: "FAITH",
