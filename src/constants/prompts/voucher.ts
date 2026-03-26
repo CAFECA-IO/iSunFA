@@ -4,16 +4,18 @@ import { AccountBook } from "@/generated/client";
 export const getVoucherPrompt = (accountBook?: Partial<AccountBook> | null) => {
   // Info: (20260326 - Julian) 會計科目代碼
   const country = accountBook?.country || "TW";
-  const accountsStr = JSON.stringify(ACCOUNTS[country as keyof typeof ACCOUNTS] || ACCOUNTS["TW"]);
+  const accountsStr = JSON.stringify(
+    ACCOUNTS[country as keyof typeof ACCOUNTS] || ACCOUNTS["TW"],
+  );
 
   // Info: (20260326 - Julian) 帳本資訊
-  const accountBookInfo = accountBook 
-    ? `\n  這筆傳票預計寫入「${accountBook.name}」帳本中，會計原則國家: ${country}，本位幣: ${accountBook.currency}。請將傳票上的幣值轉換為本位幣。` 
+  const accountBookInfo = accountBook
+    ? `\n  這筆傳票預計寫入「${accountBook.name}」帳本中，會計原則國家: ${country}，本位幣: ${accountBook.currency}。請將傳票上的幣值轉換為本位幣。`
     : "";
-    
+
   // Info: (20260326 - Julian) 帳本規則
-  const rulesInstruction = accountBook?.rule 
-    ? `\n  請嚴格遵守以下帳本的特殊會計規則與偏好：\n  ${accountBook.rule}\n` 
+  const rulesInstruction = accountBook?.rule
+    ? `\n  請嚴格遵守以下帳本的特殊會計規則與偏好：\n  ${accountBook.rule}\n`
     : "";
 
   return `

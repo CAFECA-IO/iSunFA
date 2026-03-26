@@ -116,18 +116,20 @@ export class TaskService {
           throw new Error("No fileBase64 or fileMimeType provided for document parsing task. This might be an outdated task format.");
         }
 
+        // Info: (20260326 - Julian) 取得帳本資訊
+        const accountBook = parsedContext.accountBookId 
+          ? await accountBookRepo.getAccountBookById(parsedContext.accountBookId) 
+          : null;
+
         if (task.type === "JOURNAL_PARSING") {
-          const res = await chatService.analyzeJournal(images);
+          const res = await chatService.analyzeJournal(images, accountBook);
           result = res.text;
         }
         else if (task.type === "VOUCHER_PARSING") {
-          const accountBook = parsedContext.accountBookId 
-            ? await accountBookRepo.getAccountBookById(parsedContext.accountBookId) 
-            : null;
           const res = await chatService.analyzeVoucher(images, accountBook);
           result = JSON.stringify(res);
         } else if (task.type === "ESG_PARSING") {
-          const res = await chatService.analyzeESG(images);
+          const res = await chatService.analyzeESG(images, accountBook);
           result = JSON.stringify(res);
         }
       } else if (task.type === "MARKET_EVENT_COLLECTION") {
