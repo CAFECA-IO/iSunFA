@@ -262,7 +262,7 @@ export default function TeamManagementPage() {
                 <div className="flex items-center justify-between border-b pb-4 mb-6">
                   {editingName ? (
                     <div className="flex items-center space-x-2 w-full max-w-sm">
-                      <input type="text" value={tempName} onChange={(e) => setTempName(e.target.value)} className="flex-1 px-3 py-1.5 text-lg font-semibold border-b-2 border-orange-500 focus:outline-none bg-gray-50 rounded-t" />
+                      <input type="text" value={tempName} onChange={(e) => setTempName(e.target.value)} aria-label={t("teamManagement.teamName") || "Team Name"} className="flex-1 px-3 py-1.5 text-lg font-semibold border-b-2 border-orange-500 focus:outline-none bg-gray-50 rounded-t" />
                       <button onClick={handleUpdateName} className="p-1.5 text-green-600 hover:bg-green-50 rounded"><Check className="w-5 h-5" /></button>
                       <button onClick={() => setEditingName(false)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"><X className="w-5 h-5" /></button>
                     </div>
@@ -366,7 +366,7 @@ export default function TeamManagementPage() {
               <form onSubmit={handleCreateTeam} className="space-y-4">
                 <div>
                   <label htmlFor="team-name" className="block text-sm font-medium text-gray-700 mb-1">{t("teamManagement.teamName") || "Team Name"}</label>
-                  <input id="team-name" type="text" required value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} disabled={creating} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm text-gray-900 bg-white" placeholder={t("teamManagement.enterTeamName") || "Enter team name"} />
+                  <input id="team-name" type="text" required value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} disabled={creating} aria-label={t("teamManagement.teamName") || "Team Name"} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm text-gray-900 bg-white" placeholder={t("teamManagement.enterTeamName") || "Enter team name"} />
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
                   <button type="button" onClick={() => setIsCreateModalOpen(false)} disabled={creating} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg">{t("teamManagement.cancel") || "Cancel"}</button>
@@ -390,7 +390,7 @@ export default function TeamManagementPage() {
               <form onSubmit={handleInvite} className="space-y-4">
                 <div>
                   <label htmlFor="invite-address" className="block text-sm font-medium text-gray-700 mb-1">{t("teamManagement.web3Address") || "Web3 Address"}</label>
-                  <input id="invite-address" type="text" required value={inviteAddress} onChange={(e) => setInviteAddress(e.target.value)} disabled={inviting} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm text-gray-900 bg-white" placeholder="0x123..." />
+                  <input id="invite-address" type="text" required value={inviteAddress} onChange={(e) => setInviteAddress(e.target.value)} disabled={inviting} aria-label={t("teamManagement.web3Address") || "Web3 Address"} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm text-gray-900 bg-white" placeholder="0x123..." />
                 </div>
                 <div>
                   <label htmlFor="invite-role" className="block text-sm font-medium text-gray-700 mb-1">{t("teamManagement.role") || "Role"}</label>
