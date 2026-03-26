@@ -73,7 +73,7 @@ export async function PATCH(
 
     const updatedMember = await teamRepo.updateTeamMember(memberId, { role });
 
-    // Info: simulated on-chain record for role change
+    // Info: (20260325 - Tzuhan) simulated on-chain record for role change
     const team = await prisma.team.findUnique({ where: { id: teamId } });
     const operatorName = sessionUser.name || sessionUser.address;
     const targetName = targetMember.userId; // we could fetch name but userId works for simulation
