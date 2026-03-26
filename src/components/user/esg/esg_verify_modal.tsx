@@ -160,8 +160,8 @@ export default function EsgVerifyModal({
             >
               <DialogPanel className="relative flex max-h-[90vh] w-full max-w-2xl transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
                 {/* Info: (20260312 - Julian) Header */}
-                <div className="flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-8 py-5">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-start justify-between rounded-t-2xl border-b border-slate-200 bg-white px-4 py-4 sm:items-center sm:px-8 sm:py-5">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <DialogTitle
                       as="h3"
                       className="text-xl font-bold text-slate-800"
@@ -202,15 +202,17 @@ export default function EsgVerifyModal({
                 {/* Info: (20260312 - Julian) Body */}
                 <div className="flex overflow-hidden">
                   {/* Info: (20260312 - Julian) Right Side: Form */}
-                  <div className="flex w-full flex-col p-6">
-                    <div className="mb-4 flex items-center justify-between">
+                  <div className="flex w-full flex-col p-4 sm:p-6">
+                    <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                       <h4 className="text-base font-bold text-slate-500">
                         {t("verify.type.esg")}
                       </h4>
-                      <AiConfidence
-                        confidence={formData.confidence}
-                        note={formData.aiNote}
-                      />
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <AiConfidence
+                          confidence={formData.confidence}
+                          note={formData.aiNote}
+                        />
+                      </div>
                     </div>
 
                     <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto">
@@ -410,23 +412,23 @@ export default function EsgVerifyModal({
                     </div>
 
                     {/* Info: (20260312 - Julian) Actions */}
-                    <div className="mt-4 flex justify-between gap-3 border-t border-slate-200 pt-4">
+                    <div className="mt-4 flex flex-col-reverse justify-end gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center">
                       {checkHasChanges() && (
                         <button
                           type="button"
                           onClick={() => setIsCancelModalOpen(true)}
-                          className="text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
+                          className="mr-auto text-sm font-bold text-slate-500 transition-colors hover:text-slate-700 sm:m-0"
                         >
                           {t("esg_verify.actions.cancel_edit")}
                         </button>
                       )}
-                      <div className="ml-auto flex items-center gap-3">
+                      <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto sm:gap-3">
                         {originalData?.isVerified ? (
                           <>
                             <button
                               type="button"
                               onClick={() => setIsUnverifyModalOpen(true)}
-                              className="flex items-center gap-2 rounded-lg bg-red-400 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500"
+                              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-400 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-500 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
                             >
                               <X size={18} className="stroke-[2.5]" />
                               {t("verify.button.unverify")}
@@ -434,7 +436,7 @@ export default function EsgVerifyModal({
                             <button
                               type="button"
                               onClick={() => handleAttemptSave(true)}
-                              className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
+                              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-600 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
                             >
                               <Save size={18} />
                               {t("esg_verify.actions.save_only")}
@@ -445,7 +447,7 @@ export default function EsgVerifyModal({
                             <button
                               type="button"
                               onClick={() => handleAttemptSave(true)}
-                              className="flex items-center gap-2 rounded-lg bg-emerald-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-600"
+                              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-emerald-600 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
                             >
                               <CheckCircle2 size={18} />
                               {t("verify.button.verify")}
@@ -453,7 +455,7 @@ export default function EsgVerifyModal({
                             <button
                               type="button"
                               onClick={() => handleAttemptSave(false)}
-                              className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
+                              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-600 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
                             >
                               <Save size={18} />
                               {t("esg_verify.actions.save_only")}

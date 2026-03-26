@@ -65,7 +65,7 @@ export default function JournalSummary() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-2 md:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
       {/* Info: (20260324 - Julian) 今日產生日記帳 */}
       <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
         <div className="shrink-0 px-2 text-blue-500 lg:px-4">

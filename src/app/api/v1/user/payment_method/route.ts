@@ -9,6 +9,7 @@ import { isProduction } from "@/lib/utils/common";
 
 const OEN_ACCESS_TOKEN = process.env.OEN_ACCESS_TOKEN;
 const OEN_BASE_URL = isProduction() ? "https://payment-api.oen.tw" : "https://payment-api.testing.oen.tw";
+const SUBSCRIBE_URL = isProduction() ? "https://mermer.oen.tw" : "https://mermer.testing.oen.tw";
 
 // Info: (20260305 - Tzuhan) Get all payment methods for the user
 export async function GET(request: NextRequest) {
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
             return jsonOk({
                 requireBinding: true,
                 paymentId: paymentId,
-                redirectUrl: `${OEN_BASE_URL}/checkout/subscription/create/${paymentId}`,
+                redirectUrl: `${SUBSCRIBE_URL}/checkout/subscription/create/${paymentId}`,
             });
         } else {
             return jsonFail(
