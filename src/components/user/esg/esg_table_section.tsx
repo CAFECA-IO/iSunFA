@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Search, Info, ArrowDown, ArrowUp, FileStack } from "lucide-react";
-import Link from 'next/link';
+import Link from "next/link";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { EsgRow } from "@/components/user/esg/esg_row";
 import EsgVerifyModal from "@/components/user/esg/esg_verify_modal";
@@ -123,7 +123,11 @@ export default function EsgTableSection({
 
   // Info: (20260325 - Luphia) 抽取需要輪詢的 ID，避免頻繁觸發 Effect
   const pendingIds = records
-    .filter((r) => r.analysisStatus === AIAnalysisStatus.PENDING || r.analysisStatus === AIAnalysisStatus.PROCESSING)
+    .filter(
+      (r) =>
+        r.analysisStatus === AIAnalysisStatus.PENDING ||
+        r.analysisStatus === AIAnalysisStatus.PROCESSING,
+    )
     .map((r) => r.id);
   const pendingIdsJoined = pendingIds.join(",");
 
@@ -142,9 +146,9 @@ export default function EsgTableSection({
         const results = await Promise.all(
           ids.map((id) =>
             request<IApiResponse<{ esgRecord: IEsgRecord }>>(
-              `/api/v1/user/account_book/${accountBookId}/esg/${id}`
-            )
-          )
+              `/api/v1/user/account_book/${accountBookId}/esg/${id}`,
+            ),
+          ),
         );
 
         const updatedRecords = results
@@ -384,34 +388,39 @@ export default function EsgTableSection({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center lg:px-6 lg:py-16 bg-white">
+                  <td
+                    colSpan={8}
+                    className="bg-white p-8 text-center lg:px-6 lg:py-16"
+                  >
                     {/* Info: (20260325 - Luphia) 區分真的沒資料 vs 搜尋不到資料 */}
                     {isFiltering ? (
                       <div className="flex flex-col items-center justify-center">
-                        <Search className="h-12 w-12 text-slate-300 mb-4" />
-                        <h3 className="text-lg font-medium text-slate-900 mb-2">
+                        <Search className="mb-4 h-12 w-12 text-slate-300" />
+                        <h3 className="mb-2 text-lg font-medium text-slate-900">
                           {t("esg_table.no_filter_results")}
                         </h3>
-                        <p className="text-slate-500 mb-6 max-w-sm text-center">
+                        <p className="mb-6 max-w-sm text-center text-slate-500">
                           {t("esg_table.no_filter_results_desc")}
                         </p>
                         <button
                           onClick={handleClearFilters}
-                          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-bold rounded-lg text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm"
+                          className="inline-flex items-center justify-center rounded-lg border border-transparent bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-200"
                         >
                           {t("common.clear_filters")}
                         </button>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center">
-                        <FileStack className="h-12 w-12 text-slate-300 mb-4" />
-                        <h3 className="text-lg font-medium text-slate-900 mb-2">{t("esg_table.no_records")}</h3>
-                        <p className="text-slate-500 mb-6 max-w-sm text-center">
+                        <FileStack className="mb-4 h-12 w-12 text-slate-300" />
+                        <h3 className="mb-2 text-lg font-medium text-slate-900">
+                          {t("esg_table.no_records")}
+                        </h3>
+                        <p className="mb-6 max-w-sm text-center text-slate-500">
                           {t("esg_table.no_records_desc")}
                         </p>
                         <Link
                           href={`/user/account_book/${accountBookId}/journal`}
-                          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-bold rounded-lg text-white bg-orange-500 hover:bg-orange-600 transition-colors shadow-sm"
+                          className="inline-flex items-center justify-center rounded-lg border border-transparent bg-orange-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
                         >
                           {t("esg_table.no_records_cta")}
                         </Link>

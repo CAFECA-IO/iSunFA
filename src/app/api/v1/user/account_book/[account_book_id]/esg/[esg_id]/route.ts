@@ -167,7 +167,8 @@ export async function PUT(
         }),
         ...(reqBody.isVerified !== undefined && { isVerified: reqBody.isVerified }),
         ...(reqBody.analysisStatus && {
-          analysisStatus: reqBody.analysisStatus.toUpperCase() as AIAnalysisStatus,
+          // Info: (20260326 - Julian) 如果使用者手動修改，就將 analysisStatus 的 FAILED 設為 COMPLETED
+          analysisStatus: reqBody.analysisStatus === AIAnalysisStatus.FAILED ? AIAnalysisStatus.COMPLETED : reqBody.analysisStatus,
         }),
       },
     });
