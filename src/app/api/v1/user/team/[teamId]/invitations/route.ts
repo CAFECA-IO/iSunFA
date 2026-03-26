@@ -11,7 +11,7 @@ import { CONTRACT_ADDRESSES } from "@/config/contracts";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { teamId: string } }
+  { params }: { params: Promise<{ teamId: string }> }
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -21,7 +21,7 @@ export async function POST(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const teamId = params.teamId;
+    const { teamId } = await params;
 
     // Check permission (OWNER or ADMIN)
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
@@ -128,7 +128,7 @@ export async function POST(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { teamId: string } }
+  { params }: { params: Promise<{ teamId: string }> }
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -138,7 +138,7 @@ export async function GET(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid token");
     }
 
-    const teamId = params.teamId;
+    const { teamId } = await params;
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator) {
       return jsonFail(ApiCode.FORBIDDEN, "Permission denied.");

@@ -15,17 +15,17 @@ export interface ITeamRepository {
 
 export class TeamRepository implements ITeamRepository {
   async createTeam(data: Prisma.TeamCreateInput) {
-    const team = prisma.team.create({ data });
+    const team = await prisma.team.create({ data });
     return team;
   }
 
   async createTeamMember(data: Prisma.TeamMemberCreateInput) {
-    const teamMember = prisma.teamMember.create({ data });
+    const teamMember = await prisma.teamMember.create({ data });
     return teamMember;
   }
 
   async listTeamMember(teamId: string) {
-    const teamMembers = prisma.teamMember.findMany({
+    const teamMembers = await prisma.teamMember.findMany({
       where: { teamId },
       include: {
         user: {
@@ -37,8 +37,11 @@ export class TeamRepository implements ITeamRepository {
   }
 
   async listMemberTeam(userId: string) {
-    const teams = prisma.team.findMany({
+    const teams = await prisma.team.findMany({
       where: { teamMembers: { some: { userId } } },
+      include: {
+        accountBooks: true
+      }
     });
     return teams;
   }

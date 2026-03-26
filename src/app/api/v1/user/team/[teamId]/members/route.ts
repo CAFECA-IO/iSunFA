@@ -8,7 +8,7 @@ import { webAuthnService } from "@/services/webauthn.service";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { teamId: string } }
+  { params }: { params: Promise<{ teamId: string }> }
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -18,7 +18,7 @@ export async function GET(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const teamId = params.teamId;
+    const { teamId } = await params;
 
     // Info: (20260325 - Tzuhan) Verify user is in this team
     const member = await teamRepo.getTeamMember(sessionUser.id, teamId);
@@ -36,7 +36,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { teamId: string } }
+  { params }: { params: Promise<{ teamId: string }> }
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -46,7 +46,7 @@ export async function POST(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const teamId = params.teamId;
+    const { teamId } = await params;
 
     // Info: (20260325 - Tzuhan) Check permission (OWNER or ADMIN)
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);

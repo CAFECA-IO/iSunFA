@@ -7,7 +7,7 @@ import { teamRepo } from "@/repositories/team.repo";
 // Info: (20260325 - Tzuhan) Rename a team
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { teamId: string } }
+  { params }: { params: Promise<{ teamId: string }> }
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -17,7 +17,7 @@ export async function PATCH(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const teamId = params.teamId;
+    const { teamId } = await params;
     const body = await request.json();
     const { name } = body;
 

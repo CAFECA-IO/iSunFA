@@ -10,7 +10,7 @@ import { CONTRACT_ADDRESSES } from "@/config/contracts";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { inviteId: string } }
+  { params }: { params: Promise<{ inviteId: string }> }
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -20,7 +20,7 @@ export async function POST(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const { inviteId } = params;
+    const { inviteId } = await params;
     const body = await request.json();
     const { authentication } = body;
 

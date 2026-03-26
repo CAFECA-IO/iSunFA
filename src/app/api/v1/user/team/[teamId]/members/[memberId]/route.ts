@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { teamId: string, memberId: string } }
+  { params }: { params: Promise<{ teamId: string, memberId: string }> }
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -17,7 +17,7 @@ export async function PATCH(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const { teamId, memberId } = params;
+    const { teamId, memberId } = await params;
 
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator || operator.role !== "OWNER") {
@@ -58,7 +58,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { teamId: string, memberId: string } }
+  { params }: { params: Promise<{ teamId: string, memberId: string }> }
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -68,7 +68,7 @@ export async function DELETE(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const { teamId, memberId } = params;
+    const { teamId, memberId } = await params;
 
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator) {
