@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { talkRepo } from "@/repositories/talk.repo";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { IComment } from "@/interfaces/ai_talk";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 
@@ -33,15 +34,7 @@ export async function GET(
     const loginUserId = user.id;
 
     // Info: (20260212 - Julian) 一次取得該討論串所有評論及其關聯資料
-    const comments = await prisma.comment.findMany({
-      where: { threadId },
-      include: {
-        user: true,
-        replyToUser: true,
-        reactions: true,
-      },
-      orderBy: { createdAt: "asc" },
-    });
+    const comments = await talkRepo.listCommentsByThreadId(threadId);
 
     // Info: (20260212 - Julian) 格式化評論內容
     const formattedComments: IComment[] = comments.map((comment) => ({
@@ -114,9 +107,7 @@ export async function POST(
 
     const { thread_id: threadId } = await params;
 
-    const thread = await prisma.thread.findUnique({
-      where: { id: threadId },
-    });
+    const thread = await talkRepo.getThreadById(threadId);
 
     if (!thread) {
       console.error("Thread not found");
@@ -124,15 +115,11 @@ export async function POST(
     }
 
     const parentComment = parentId
-      ? await prisma.comment.findUnique({
-          where: { id: parentId },
-        })
+      ? await talkRepo.getCommentById(parentId)
       : null;
 
     const replyToUser = replyTo
-      ? await prisma.user.findFirst({
-          where: { name: replyTo },
-        })
+      ? await webAuthnRepo.findUserByName(replyTo)
       : null;
 
     // Info: (20260212 - Julian) 取得登入的使用者
@@ -143,15 +130,13 @@ export async function POST(
       parentComment?.parentCommentId || parentComment?.id || null;
 
     // Info: (20260212 - Julian) 新增評論
-    await prisma.comment.create({
-      data: {
-        userId: loginUserId,
-        threadId,
-        content,
-        isProfessional,
-        parentCommentId,
-        replyToUserId: replyToUser?.id ?? null,
-      },
+    await talkRepo.createComment({
+      userId: loginUserId,
+      threadId,
+      content,
+      isProfessional,
+      parentCommentId,
+      replyToUserId: replyToUser?.id ?? null,
     });
 
     return jsonOk({});

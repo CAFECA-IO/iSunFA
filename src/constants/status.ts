@@ -34,6 +34,12 @@ export const PAYMENT_STATUS = {
   FAILED: 'FAILED',
 } as const;
 
+export const TEAM_INVITATION_STATUS = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  REJECTED: 'REJECTED',
+} as const;
+
 export const ORDER_TYPE = {
   OEN_BINDING: 'OEN_BINDING',
   OEN_PAYMENT: 'OEN_PAYMENT',

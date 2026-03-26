@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { voucherRepo } from "@/repositories/voucher.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IEsgDashboardSummary } from "@/interfaces/esg";
 import { accountBookRepo } from "@/repositories/account_book.repo";
@@ -60,7 +60,7 @@ export async function GET(
       endDate = new Date(currentYear, 11, 31, 23, 59, 59, 999);
     }
 
-    const esgRecords = await prisma.esgRecord.findMany({
+    const esgRecords = await esgRepo.getEsgRecords({
       where: {
         accountBookId,
         dateTimestamp: {
@@ -70,7 +70,7 @@ export async function GET(
       },
     });
 
-    const incomes = await prisma.voucher.findMany({
+    const incomes = await voucherRepo.getVouchers({
       where: {
         accountBookId,
         tradingType: "INCOME",

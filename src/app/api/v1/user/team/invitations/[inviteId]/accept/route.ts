@@ -3,10 +3,12 @@ import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { prisma } from "@/lib/prisma";
+import { teamRepo } from "@/repositories/team.repo";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
 import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
+import { TEAM_INVITATION_STATUS } from "@/constants/status";
 
 export async function POST(
   request: NextRequest,
@@ -25,12 +27,9 @@ export async function POST(
     const { authentication } = body;
 
     // Info: (20260326 - Tzuhan) Validate the invitation
-    const invitation = await prisma.teamInvitation.findUnique({
-      where: { id: inviteId },
-      include: { team: true, inviter: true }
-    });
+    const invitation = await teamRepo.getInvitationByIdWithDetails(inviteId);
 
-    if (!invitation || invitation.status !== "PENDING") {
+    if (!invitation || invitation.status !== TEAM_INVITATION_STATUS.PENDING) {
       return jsonFail(ApiCode.NOT_FOUND, "Invitation not found or no longer pending");
     }
 
@@ -43,7 +42,7 @@ export async function POST(
     }
 
     // Info: (20260326 - Tzuhan) Fetch invitee's current challenge
-    const inviteeUser = await prisma.user.findUnique({ where: { id: sessionUser.id } });
+    const inviteeUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!inviteeUser || !inviteeUser.currentChallenge) {
       return jsonFail(ApiCode.UNAUTHORIZED, "Missing WebAuthn challenge. Please retry.");
     }
@@ -52,25 +51,10 @@ export async function POST(
     await webAuthnService.verifySignature(sessionUser.address, authentication, inviteeUser.currentChallenge);
 
     // Info: (20260326 - Tzuhan) Clear challenge to prevent replay
-    await prisma.user.update({
-      where: { id: sessionUser.id },
-      data: { currentChallenge: null }
-    });
+    await webAuthnRepo.clearChallenge(sessionUser.id);
 
     // Info: (20260326 - Tzuhan) Accept invitation inside a transaction
-    const [newMember] = await prisma.$transaction([
-      prisma.teamInvitation.update({
-        where: { id: inviteId },
-        data: { status: "ACCEPTED" }
-      }),
-      prisma.teamMember.create({
-        data: {
-          teamId: invitation.teamId,
-          userId: sessionUser.id,
-          role: invitation.role
-        }
-      })
-    ]);
+    const newMember = await teamRepo.acceptInvitation(inviteId, invitation.teamId, sessionUser.id, invitation.role);
 
     const inviterName = invitation.inviter.name || invitation.inviter.address;
     const inviteeName = sessionUser.name || sessionUser.address;

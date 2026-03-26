@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { talkRepo } from "@/repositories/talk.repo";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 
 /**
@@ -37,9 +38,7 @@ export async function POST(
       return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "ThreadId is required");
     }
 
-    const author = await prisma.user.findUnique({
-      where: { address: user.address },
-    });
+    const author = await webAuthnRepo.findUserByAddress(user.address);
     if (!author) {
       console.error("Author not found");
       return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Author not found");
@@ -47,11 +46,7 @@ export async function POST(
     const userId = user.id;
 
     // Info: (20260212 - Julian) 1. 尋找現有的 Reaction
-    const existing = await prisma.reaction.findUnique({
-      where: {
-        userId_threadId: { userId, threadId },
-      },
-    });
+    const existing = await talkRepo.getThreadReaction(userId, threadId);
 
     let currentReaction = reaction;
 
@@ -59,31 +54,20 @@ export async function POST(
     if (existing) {
       if (existing.type === reaction) {
         // Info: (20260212 - Julian) 情境 1：如果按了同一個按鈕，代表取消 (Delete)
-        await prisma.reaction.delete({
-          where: { id: existing.id },
-        });
+        await talkRepo.deleteReaction(existing.id);
         currentReaction = null;
       } else {
         // Info: (20260212 - Julian) 情境 2：如果按了不同按鈕，代表切換 (Update)
-        await prisma.reaction.update({
-          where: { id: existing.id },
-          data: { type: reaction },
-        });
+        await talkRepo.updateReaction(existing.id, reaction);
       }
     } else {
       // Info: (20260212 - Julian) 情境 3：不存在則建立 (Create)
-      await prisma.reaction.create({
-        data: { userId, threadId, type: reaction },
-      });
+      await talkRepo.createThreadReaction(userId, threadId, reaction);
     }
 
     // Info: (20260212 - Julian) 3. 重新計算該討論串的按讚/倒讚總數
-    const countOfLike = await prisma.reaction.count({
-      where: { threadId, type: "LIKE" },
-    });
-    const countOfDislike = await prisma.reaction.count({
-      where: { threadId, type: "DISLIKE" },
-    });
+    const countOfLike = await talkRepo.countThreadReactions(threadId, "LIKE");
+    const countOfDislike = await talkRepo.countThreadReactions(threadId, "DISLIKE");
 
     return jsonOk({
       countOfLike,

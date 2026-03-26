@@ -1,7 +1,9 @@
 import { NextRequest } from 'next/server';
 import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
-import { prisma } from '@/lib/prisma';
+import { accountBookRepo } from '@/repositories/account_book.repo';
+import { voucherRepo } from '@/repositories/voucher.repo';
+import { esgRepo } from '@/repositories/esg.repo';
 import { getIdentityFromDeWT } from '@/lib/auth/dewt';
 import { teamRepo } from '@/repositories/team.repo';
 
@@ -87,9 +89,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
     const validTimeUnits: TimeUnit[] = ['7d', '30d', '3m', '1y', 'custom'];
     const unit = validTimeUnits.includes(timeUnit) ? timeUnit : '30d';
 
-    const accountBook = await prisma.accountBook.findFirst({
-      where: { id: accountBookId }
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook) return jsonFail(ApiCode.NOT_FOUND, 'Account book not found');
 
     const teamMember = await teamRepo.getTeamMember(sessionUser.id, accountBook.teamId);
@@ -102,7 +102,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
     const prevStart = new Date(start.getTime() - (end.getTime() - start.getTime()));
 
     // Info: (20260321 - Luphia) 1. Fetch Vouchers
-    const vouchers = await prisma.voucher.findMany({
+    const vouchers = await voucherRepo.getVouchers({
       where: {
         accountBookId,
         tradingDate: { gte: prevStart, lte: end },
@@ -114,7 +114,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
     // Info: (20260321 - Luphia) 2. Fetch ESG
     const startTs = Math.floor(prevStart.getTime() / 1000);
     const endTs = Math.floor(end.getTime() / 1000);
-    const esgRecords = await prisma.esgRecord.findMany({
+    const esgRecords = await esgRepo.getEsgRecords({
       where: {
         accountBookId,
         dateTimestamp: { gte: startTs, lte: endTs },
@@ -256,9 +256,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
 
     // Info: (20260322 - Luphia) Dynamic ESG Target Calculation
     const endYear = end.getFullYear();
-    const esgTarget = await prisma.esgTarget.findFirst({
-      where: { accountBookId, year: endYear }
-    });
+    const esgTarget = await esgRepo.getEsgTargetByYear(accountBookId, endYear);
     const targetValue = esgTarget?.totalEmissionTarget ? Number(esgTarget.totalEmissionTarget) : null;
 
     const periodEmissionsSum = esgRecords.reduce((acc, current) => acc + Number(current.emissions || 0), 0);

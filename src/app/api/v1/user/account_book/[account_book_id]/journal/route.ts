@@ -1,11 +1,15 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { journalRepo } from "@/repositories/journal.repo";
+import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/browser";
 import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { VerifyStatus } from "@/constants/verify_status";
 
 /**
  * Info: (20260304 - Julian) 將檔案傳給 AI 進行解析
@@ -26,9 +30,7 @@ export async function POST(
     }
 
     // Info: (20260306 - Julian) 驗證建立人員
-    const creator = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const creator = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!creator) {
       console.error("Creator not found");
@@ -46,9 +48,7 @@ export async function POST(
 
     // Info: (20260309 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -66,25 +66,21 @@ export async function POST(
     }
 
     // Info: (20260304 - Julian) 先建立空白的日記帳
-    const journal = await prisma.journal.create({
-      data: {
-        accountBookId: accountBook.id,
-        fileId,
-        tradingDate: new Date(),
-        text: "",
-        aiNote: "",
-      },
+    const journal = await journalRepo.createJournal({
+      accountBookId: accountBook.id,
+      fileId,
+      tradingDate: new Date(),
+      text: "",
+      aiNote: "",
     });
 
     // Info: (20260306 - Julian) 新增 log
-    await prisma.auditLog.create({
-      data: {
-        userId: creator.id,
-        dataType: "JOURNAL",
-        dataId: journal.id,
-        accountBookId: accountBook.id,
-        action: "CREATE",
-      },
+    await auditLogRepo.createAuditLog({
+      userId: creator.id,
+      dataType: "JOURNAL",
+      dataId: journal.id,
+      accountBookId: accountBook.id,
+      action: "CREATE",
     });
 
     return jsonOk({ journalId: journal.id });
@@ -112,9 +108,7 @@ export async function GET(
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
 
-    const author = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const author = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!author) {
       console.error("Author not found");
@@ -123,9 +117,7 @@ export async function GET(
 
     // Info: (20260309 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -162,7 +154,7 @@ export async function GET(
 
     // Info: (20260324 - Julian) 建立審核狀態篩選
     if (verifyStatus) {
-      filteredConditions.where!.isVerified = verifyStatus === "VERIFIED";
+      filteredConditions.where!.isVerified = verifyStatus === VerifyStatus.VERIFIED;
     }
 
     // Info: (20260304 - Julian) 建立時間區間篩選
@@ -177,9 +169,7 @@ export async function GET(
     }
 
     // Info: (20260324 - Julian) 取得符合條件的總筆數
-    const totalCount = await prisma.journal.count({
-      where: filteredConditions.where,
-    });
+    const totalCount = await journalRepo.countJournals(filteredConditions.where || {});
 
     // Info: (20260304 - Julian) 分頁
     if (page && pageSize) {
@@ -197,7 +187,7 @@ export async function GET(
     }
 
     // Info: (20260304 - Julian) 取得日記帳列表
-    const journals = await prisma.journal.findMany(filteredConditions);
+    const journals = await journalRepo.getJournals(filteredConditions);
 
     // Info: (20260323 - Julian) 格式化日記帳列表
     const formattedJournals: IJournal[] = journals.map((j) => {
@@ -208,10 +198,10 @@ export async function GET(
         fileId: j.fileId ?? "",
         file: j.file
           ? {
-              id: j.file.id,
-              hash: j.file.hash,
-              fileName: j.file.fileName ?? "",
-            }
+            id: j.file.id,
+            hash: j.file.hash,
+            fileName: j.file.fileName ?? "",
+          }
           : undefined,
         analysisStatus: j.analysisStatus as AIAnalysisStatus,
         confidence: j.confidence,

@@ -4,7 +4,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
-import { prisma } from "@/lib/prisma";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
 import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
@@ -40,7 +40,7 @@ export async function PATCH(
     }
 
     // Info: (20260326 - Tzuhan) Fetch operator's current challenge
-    const operatorUser = await prisma.user.findUnique({ where: { id: sessionUser.id } });
+    const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
       return jsonFail(ApiCode.UNAUTHORIZED, "Missing WebAuthn challenge. Please retry.");
     }
@@ -49,13 +49,10 @@ export async function PATCH(
     await webAuthnService.verifySignature(sessionUser.address, authentication, operatorUser.currentChallenge);
 
     // Info: (20260326 - Tzuhan) Clear challenge to prevent replay
-    await prisma.user.update({
-      where: { id: sessionUser.id },
-      data: { currentChallenge: null }
-    });
+    await webAuthnRepo.clearChallenge(sessionUser.id);
 
     // Info: (20260325 - Tzuhan) Validate if the member exists and belongs to the team
-    const targetMember = await prisma.teamMember.findUnique({ where: { id: memberId } });
+    const targetMember = await teamRepo.getTeamMemberById(memberId);
     if (!targetMember || targetMember.teamId !== teamId) {
       return jsonFail(ApiCode.NOT_FOUND, "Member not found in this team");
     }
@@ -63,9 +60,7 @@ export async function PATCH(
     // Info: (20260325 - Tzuhan) If changing the target role to OWNER, operator might want to transfer, but typically we allow OWNER to make others OWNER.
     // Info: (20260325 - Tzuhan) However, if target is the last OWNER being changed to something else, we should prevent it.
     if (targetMember.role === "OWNER" && role !== "OWNER") {
-      const ownersCount = await prisma.teamMember.count({
-        where: { teamId, role: "OWNER" }
-      });
+      const ownersCount = await teamRepo.countTeamMembersByRole(teamId, "OWNER");
       if (ownersCount <= 1) {
         return jsonFail(ApiCode.VALIDATION_ERROR, "Cannot change role of the last OWNER. Please transfer ownership first.");
       }
@@ -74,7 +69,7 @@ export async function PATCH(
     const updatedMember = await teamRepo.updateTeamMember(memberId, { role });
 
     // Info: (20260325 - Tzuhan) simulated on-chain record for role change
-    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    const team = await teamRepo.getTeamById(teamId);
     const operatorName = sessionUser.name || sessionUser.address;
     const targetName = targetMember.userId; // we could fetch name but userId works for simulation
     const teamName = team?.name || "Unknown Team";
@@ -127,7 +122,7 @@ export async function DELETE(
       return jsonFail(ApiCode.FORBIDDEN, "Permission denied. You are not connected to this team.");
     }
 
-    const targetMember = await prisma.teamMember.findUnique({ where: { id: memberId } });
+    const targetMember = await teamRepo.getTeamMemberById(memberId);
     if (!targetMember || targetMember.teamId !== teamId) {
       return jsonFail(ApiCode.NOT_FOUND, "Member not found in this team");
     }
@@ -140,7 +135,7 @@ export async function DELETE(
     }
 
     // Info: (20260326 - Tzuhan) Fetch operator's current challenge
-    const operatorUser = await prisma.user.findUnique({ where: { id: sessionUser.id } });
+    const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
       return jsonFail(ApiCode.UNAUTHORIZED, "Missing WebAuthn challenge. Please retry.");
     }
@@ -149,10 +144,7 @@ export async function DELETE(
     await webAuthnService.verifySignature(sessionUser.address, authentication, operatorUser.currentChallenge);
 
     // Info: (20260326 - Tzuhan) Clear challenge to prevent replay
-    await prisma.user.update({
-      where: { id: sessionUser.id },
-      data: { currentChallenge: null }
-    });
+    await webAuthnRepo.clearChallenge(sessionUser.id);
 
     // Info: (20260325 - Tzuhan) Is the operator deleting themselves?
     const isSelfDelete = operator.id === targetMember.id;
@@ -172,9 +164,7 @@ export async function DELETE(
 
     // Info: (20260325 - Tzuhan) If removing an OWNER, ensure it is not the last OWNER
     if (targetMember.role === "OWNER") {
-      const ownersCount = await prisma.teamMember.count({
-        where: { teamId, role: "OWNER" }
-      });
+      const ownersCount = await teamRepo.countTeamMembersByRole(teamId, "OWNER");
       if (ownersCount <= 1) {
         return jsonFail(ApiCode.VALIDATION_ERROR, "Cannot remove the last OWNER. Please transfer ownership or delete the team entirely.");
       }
@@ -183,7 +173,7 @@ export async function DELETE(
     const deletedMember = await teamRepo.deleteTeamMember(memberId);
 
     // Info: (20260326 - Tzuhan) simulated on-chain record for member deletion
-    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    const team = await teamRepo.getTeamById(teamId);
     const operatorName = sessionUser.name || sessionUser.address;
     const targetName = targetMember.userId;
     const teamName = team?.name || "Unknown Team";

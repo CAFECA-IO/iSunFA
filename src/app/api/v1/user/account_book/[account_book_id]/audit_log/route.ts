@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { AuditLogDataType } from "@/generated/enums";
 
@@ -22,9 +23,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Info: (20260309 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -37,7 +36,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       : 100;
     const dataType = searchParams.get("dataType") as AuditLogDataType;
 
-    const logs = await prisma.auditLog.findMany({
+    const logs = await auditLogRepo.getAuditLogs({
       where: { dataType, accountBookId: accountBook.id },
       orderBy: { createdAt: "desc" },
       take,

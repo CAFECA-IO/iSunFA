@@ -1,10 +1,11 @@
 import { AI_CONSULTATION_ROOM_PROMPT } from "@/constants/prompts/ai_consultation_room";
-import { ESG_PROMPT } from "@/constants/prompts/esg";
-import { JOURNAL_PROMPT } from "@/constants/prompts/journal";
+import { getEsgPrompt } from "@/constants/prompts/esg";
+import { getJournalPrompt } from "@/constants/prompts/journal";
 import { getVoucherPrompt } from "@/constants/prompts/voucher";
 import { IEsgRecord } from "@/interfaces/esg";
 import { IParsedVoucher } from "@/interfaces/voucher";
 import { GoogleGenerativeAI, Part, Tool } from "@google/generative-ai";
+import { AccountBook } from "@/generated/client";
 
 export class ChatService {
   private genAI: GoogleGenerativeAI;
@@ -218,10 +219,12 @@ export class ChatService {
    */
   async analyzeJournal(
     images: { data: string; mimeType: string }[] = [],
+    accountBook: Partial<AccountBook> | null = null,
   ): Promise<{ text: string }> {
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
-      const parts: Part[] = [{ text: JOURNAL_PROMPT }];
+      const promptText = getJournalPrompt(accountBook);
+      const parts: Part[] = [{ text: promptText }];
 
       if (images && images.length > 0) {
         images.forEach((img) => {
@@ -254,11 +257,11 @@ export class ChatService {
    */
   async analyzeVoucher(
     images: { data: string; mimeType: string }[] = [],
-    region: string = "TW",
+    accountBook: Partial<AccountBook> | null = null,
   ): Promise<{ data: IParsedVoucher | null; error?: string }> {
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
-      const promptText = getVoucherPrompt(region);
+      const promptText = getVoucherPrompt(accountBook);
       const parts: Part[] = [{ text: promptText }];
 
       if (images && images.length > 0) {
@@ -294,10 +297,12 @@ export class ChatService {
    */
   async analyzeESG(
     images: { data: string; mimeType: string }[] = [],
+    accountBook: Partial<AccountBook> | null = null,
   ): Promise<{ data: IEsgRecord | null; error?: string }> {
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
-      const parts: Part[] = [{ text: ESG_PROMPT }];
+      const promptText = getEsgPrompt(accountBook);
+      const parts: Part[] = [{ text: promptText }];
 
       if (images && images.length > 0) {
         images.forEach((img) => {
