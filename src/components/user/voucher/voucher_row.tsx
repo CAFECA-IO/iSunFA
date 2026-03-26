@@ -64,11 +64,11 @@ export function VoucherRow({
   // Info: (20260320 - Julian) 尚未開始
   if (voucher.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
-      <tr className="border-b border-slate-300 bg-slate-50 text-sm opacity-80 transition-colors last:border-0">
+      <tr className="border-b border-slate-300 bg-slate-50 text-sm text-slate-400 opacity-80 transition-colors last:border-0">
         {/* Info: (20260320 - Julian) File Preview loading */}
         <td className="p-2 text-center lg:px-6 lg:py-4">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
-            <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
+          <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
+            <Loader2 className="size-6 animate-spin text-orange-400" />
           </div>
         </td>
         {/* Info: (20260320 - Julian) Trading Date (still showing the created date conceptually) */}
@@ -79,28 +79,13 @@ export function VoucherRow({
         </td>
         {/* Info: (20260320 - Julian) Colspan the rest of the parsing info to show a generic loading center */}
         <td
-          colSpan={5}
+          colSpan={6}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
-          <span className="flex items-center justify-center gap-2 text-sm font-medium text-orange-500 italic">
+          <span className="flex items-center justify-center gap-2 text-sm font-medium italic">
             <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
-            AI Analyzing...
+            {t("common.ai.pending")}
           </span>
-        </td>
-        {/* Info: (20260320 - Julian) Status action (Disabled) */}
-        <td
-          aria-label="Status"
-          className="p-2 text-center align-middle lg:px-6 lg:py-4"
-        >
-          <div className="flex flex-col items-center justify-center gap-1.5">
-            <button
-              type="button"
-              disabled
-              className="inline-flex cursor-not-allowed items-center justify-center rounded-xl bg-slate-200 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-slate-400 shadow-sm"
-            >
-              Pending
-            </button>
-          </div>
         </td>
       </tr>
     );
@@ -112,8 +97,8 @@ export function VoucherRow({
       <tr className="border-b border-blue-200 bg-blue-50 text-sm opacity-90 transition-colors last:border-0">
         {/* Info: (20260320 - Julian) File Preview loading */}
         <td className="p-2 text-center lg:px-6 lg:py-4">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+          <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
+            <Loader2 className="size-6 animate-spin text-blue-500" />
           </div>
         </td>
         {/* Info: (20260320 - Julian) Trading Date */}
@@ -124,33 +109,50 @@ export function VoucherRow({
         </td>
         <td
           aria-label="AI Processing"
-          colSpan={5}
+          colSpan={6}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           <div className="mx-auto flex max-w-sm flex-col items-center justify-center gap-2">
             <span className="flex items-center justify-center gap-2 text-sm font-bold text-blue-600 italic">
               <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-              AI Processing...
+              {t("voucher.main_view.table.ai.processing")}
             </span>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
               <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
             </div>
           </div>
         </td>
-        {/* Info: (20260320 - Julian) Status action (Disabled) */}
+      </tr>
+    );
+  }
+
+  // Info: (20260320 - Julian) 分析出錯
+  if (voucher.analysisStatus === AIAnalysisStatus.FAILED) {
+    return (
+      <tr
+        onClick={!voucher.isDeleted ? onClick : undefined}
+        className="border-b border-slate-300 bg-red-50 text-sm text-red-500 opacity-80 transition-colors last:border-0 hover:cursor-pointer hover:bg-red-100"
+      >
+        {/* Info: (20260320 - Julian) File Preview loading */}
+        <td className="p-2 text-center lg:px-6 lg:py-4">
+          <div className="flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white p-1 sm:size-20">
+            <CircleAlert className="size-6 text-red-500" />
+          </div>
+        </td>
+        {/* Info: (20260320 - Julian) Trading Date (still showing the created date conceptually) */}
+        <td className="p-2 text-center align-middle font-bold whitespace-nowrap lg:px-6 lg:py-4">
+          <p className="text-xs lg:text-sm">
+            {timestampToString(voucher.tradingDate).dateWithDash}
+          </p>
+        </td>
+        {/* Info: (20260320 - Julian) Colspan the rest of the parsing info to show a generic loading center */}
         <td
-          aria-label="Status"
+          colSpan={6}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
-          <div className="flex flex-col items-center justify-center gap-1.5">
-            <button
-              type="button"
-              disabled
-              className="inline-flex cursor-not-allowed items-center justify-center rounded-xl bg-blue-200 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-blue-500 shadow-sm"
-            >
-              Processing
-            </button>
-          </div>
+          <p className="font-bold text-red-500">
+            {t("voucher.main_view.table.ai.failed")}
+          </p>
         </td>
       </tr>
     );
@@ -240,7 +242,7 @@ export function VoucherRow({
     >
       {/* Info: (20260316 - Julian) File */}
       <td className="p-2 text-center lg:px-6 lg:py-4">
-        <div className="relative mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
+        <div className="relative mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
           {/* Info: (20260320 - Julian) File Preview */}
           {voucher.file ? (
             <FilePreview

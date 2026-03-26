@@ -158,7 +158,7 @@ export default function EsgVerifyModal({
               leaveFrom="opacity-100 scale-100 translate-y-0"
               leaveTo="opacity-0 scale-95 translate-y-4"
             >
-              <DialogPanel className="relative flex max-h-[90vh] w-full max-w-2xl transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
+              <DialogPanel className="relative flex max-h-[90vh] w-full max-w-2xl transform flex-col rounded-2xl bg-[#F8FAFC] shadow-2xl transition-all">
                 {/* Info: (20260312 - Julian) Header */}
                 <div className="flex items-start justify-between rounded-t-2xl border-b border-slate-200 bg-white px-4 py-4 sm:items-center sm:px-8 sm:py-5">
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -183,7 +183,7 @@ export default function EsgVerifyModal({
                     <button
                       type="button"
                       onClick={() => setIsPreviewModalOpen(true)}
-                      className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600 transition-colors enabled:hover:bg-blue-100 enabled:hover:text-blue-700 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400"
                       disabled={!formData.file?.hash}
                     >
                       {t("ocr.view_file")}
@@ -199,270 +199,267 @@ export default function EsgVerifyModal({
                   </button>
                 </div>
 
-                {/* Info: (20260312 - Julian) Body */}
-                <div className="flex overflow-hidden">
-                  {/* Info: (20260312 - Julian) Right Side: Form */}
-                  <div className="flex w-full flex-col p-4 sm:p-6">
-                    <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                      <h4 className="text-base font-bold text-slate-500">
-                        {t("verify.type.esg")}
-                      </h4>
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                        <AiConfidence
-                          confidence={formData.confidence}
-                          note={formData.aiNote}
-                        />
-                      </div>
+                {/* Info: (20260326 - Julian) Body */}
+                <div className="flex w-full flex-col overflow-y-auto">
+                  <div className="flex flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
+                    <h4 className="text-base font-bold text-slate-500">
+                      {t("verify.type.esg")}
+                    </h4>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                      <AiConfidence
+                        confidence={formData.confidence}
+                        note={formData.aiNote}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid flex-1 grid-cols-2 gap-4 px-6 py-4">
+                    {/* Info: (20260312 - Julian) Date */}
+                    <div>
+                      <label
+                        htmlFor="dateTimestamp"
+                        className="mb-1.5 block text-sm font-bold text-slate-500"
+                      >
+                        {t("esg_verify.form.date")}
+                      </label>
+                      <input
+                        id="dateTimestamp"
+                        aria-label={t("esg_verify.form.date")}
+                        type="date"
+                        value={
+                          new Date(formData.dateTimestamp * 1000)
+                            .toISOString()
+                            .split("T")[0]
+                        }
+                        onChange={(e) => handleDateChange(e.target.value)}
+                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                      />
                     </div>
 
-                    <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto">
-                      {/* Info: (20260312 - Julian) Date */}
-                      <div>
-                        <label
-                          htmlFor="dateTimestamp"
-                          className="mb-1.5 block text-sm font-bold text-slate-500"
-                        >
-                          {t("esg_verify.form.date")}
-                        </label>
-                        <input
-                          id="dateTimestamp"
-                          aria-label={t("esg_verify.form.date")}
-                          type="date"
-                          value={
-                            new Date(formData.dateTimestamp * 1000)
-                              .toISOString()
-                              .split("T")[0]
-                          }
-                          onChange={(e) => handleDateChange(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                        />
-                      </div>
-
-                      {/* Info: (20260312 - Julian) Scope */}
-                      <div>
-                        <label
-                          htmlFor="scopeSelect"
-                          className="mb-1.5 block text-sm font-bold text-slate-500"
-                        >
-                          {t("esg_verify.form.scope")}
-                        </label>
-                        <select
-                          id="scopeSelect"
-                          aria-label={t("esg_verify.form.scope")}
-                          value={formData.scope || ""}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              scope: e.target.value as EsgScope,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                        >
-                          <option value={EsgScope.SCOPE_1}>
-                            {t("esg_verify.form.scope_1")}
-                          </option>
-                          <option value={EsgScope.SCOPE_2}>
-                            {t("esg_verify.form.scope_2")}
-                          </option>
-                          <option value={EsgScope.SCOPE_3}>
-                            {t("esg_verify.form.scope_3")}
-                          </option>
-                        </select>
-                      </div>
-
-                      {/* Info: (20260312 - Julian) Activity Type */}
-                      <div className="col-span-2">
-                        <label
-                          htmlFor="activityType"
-                          className="mb-1.5 block text-sm font-bold text-slate-500"
-                        >
-                          {t("esg_verify.form.activity_type")}
-                        </label>
-                        <input
-                          id="activityType"
-                          aria-label={t("esg_verify.form.activity_type")}
-                          type="text"
-                          value={formData.activityType}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              activityType: e.target.value,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                        />
-                      </div>
-
-                      {/* Info: (20260312 - Julian) Vendor / Object */}
-                      <div className="col-span-2">
-                        <label
-                          htmlFor="vendorInput"
-                          className="mb-1.5 block text-sm font-bold text-slate-500"
-                        >
-                          {t("esg_verify.form.vendor")}
-                        </label>
-                        <input
-                          id="vendorInput"
-                          aria-label={t("esg_verify.form.vendor")}
-                          type="text"
-                          value={formData.vendor}
-                          onChange={(e) =>
-                            setFormData({ ...formData, vendor: e.target.value })
-                          }
-                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                        />
-                      </div>
-                      {/* Info: (20260312 - Julian) Raw Activity Data */}
-                      <div>
-                        <label
-                          htmlFor="rawActivityData"
-                          className="mb-1.5 block text-sm font-bold text-slate-500"
-                        >
-                          {t("esg_verify.form.raw_data")}
-                        </label>
-                        <input
-                          id="rawActivityData"
-                          aria-label={t("esg_verify.form.raw_data")}
-                          type="text"
-                          value={formData.rawActivityData}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              rawActivityData: e.target.value,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                        />
-                      </div>
-
-                      {/* Info: (20260312 - Julian) Unit */}
-                      <div>
-                        <label
-                          htmlFor="unitInput"
-                          className="mb-1.5 block text-sm font-bold text-slate-500"
-                        >
-                          {t("esg_verify.form.unit")}
-                        </label>
-                        <input
-                          id="unitInput"
-                          aria-label={t("esg_verify.form.unit")}
-                          type="text"
-                          value={formData.unit}
-                          onChange={(e) =>
-                            setFormData({ ...formData, unit: e.target.value })
-                          }
-                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                        />
-                      </div>
-
-                      {/* Info: (20260312 - Julian) Emissions */}
-                      <div>
-                        <label
-                          htmlFor="emissionsInput"
-                          className="mb-1.5 block text-sm font-bold text-slate-500"
-                        >
-                          {t("esg_verify.form.emissions")}
-                        </label>
-                        <input
-                          id="emissionsInput"
-                          aria-label={t("esg_verify.form.emissions")}
-                          type="text"
-                          value={formData.emissions}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              emissions: e.target.value,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                        />
-                      </div>
-
-                      {/* Info: (20260312 - Julian) Intensity */}
-                      <div>
-                        <label
-                          htmlFor="intensitySelect"
-                          className="mb-1.5 block text-sm font-bold text-slate-500"
-                        >
-                          {t("esg_verify.form.intensity")}
-                        </label>
-                        <select
-                          id="intensitySelect"
-                          aria-label={t("esg_verify.form.intensity")}
-                          value={formData.intensity || ""}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              intensity: e.target.value as EsgIntensity,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                        >
-                          <option value={EsgIntensity.LOW}>
-                            {t("esg_verify.form.intensity_low")}
-                          </option>
-                          <option value={EsgIntensity.MEDIUM}>
-                            {t("esg_verify.form.intensity_medium")}
-                          </option>
-                          <option value={EsgIntensity.HIGH}>
-                            {t("esg_verify.form.intensity_high")}
-                          </option>
-                        </select>
-                      </div>
+                    {/* Info: (20260312 - Julian) Scope */}
+                    <div>
+                      <label
+                        htmlFor="scopeSelect"
+                        className="mb-1.5 block text-sm font-bold text-slate-500"
+                      >
+                        {t("esg_verify.form.scope")}
+                      </label>
+                      <select
+                        id="scopeSelect"
+                        aria-label={t("esg_verify.form.scope")}
+                        value={formData.scope || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            scope: e.target.value as EsgScope,
+                          })
+                        }
+                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                      >
+                        <option value={EsgScope.SCOPE_1}>
+                          {t("esg_verify.form.scope_1")}
+                        </option>
+                        <option value={EsgScope.SCOPE_2}>
+                          {t("esg_verify.form.scope_2")}
+                        </option>
+                        <option value={EsgScope.SCOPE_3}>
+                          {t("esg_verify.form.scope_3")}
+                        </option>
+                      </select>
                     </div>
 
-                    {/* Info: (20260312 - Julian) Actions */}
-                    <div className="mt-4 flex flex-col-reverse justify-end gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center">
-                      {checkHasChanges() && (
-                        <button
-                          type="button"
-                          onClick={() => setIsCancelModalOpen(true)}
-                          className="mr-auto text-sm font-bold text-slate-500 transition-colors hover:text-slate-700 sm:m-0"
-                        >
-                          {t("esg_verify.actions.cancel_edit")}
-                        </button>
+                    {/* Info: (20260312 - Julian) Activity Type */}
+                    <div className="col-span-2">
+                      <label
+                        htmlFor="activityType"
+                        className="mb-1.5 block text-sm font-bold text-slate-500"
+                      >
+                        {t("esg_verify.form.activity_type")}
+                      </label>
+                      <input
+                        id="activityType"
+                        aria-label={t("esg_verify.form.activity_type")}
+                        type="text"
+                        value={formData.activityType}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            activityType: e.target.value,
+                          })
+                        }
+                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Info: (20260312 - Julian) Vendor / Object */}
+                    <div className="col-span-2">
+                      <label
+                        htmlFor="vendorInput"
+                        className="mb-1.5 block text-sm font-bold text-slate-500"
+                      >
+                        {t("esg_verify.form.vendor")}
+                      </label>
+                      <input
+                        id="vendorInput"
+                        aria-label={t("esg_verify.form.vendor")}
+                        type="text"
+                        value={formData.vendor}
+                        onChange={(e) =>
+                          setFormData({ ...formData, vendor: e.target.value })
+                        }
+                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                      />
+                    </div>
+                    {/* Info: (20260312 - Julian) Raw Activity Data */}
+                    <div>
+                      <label
+                        htmlFor="rawActivityData"
+                        className="mb-1.5 block text-sm font-bold text-slate-500"
+                      >
+                        {t("esg_verify.form.raw_data")}
+                      </label>
+                      <input
+                        id="rawActivityData"
+                        aria-label={t("esg_verify.form.raw_data")}
+                        type="text"
+                        value={formData.rawActivityData}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            rawActivityData: e.target.value,
+                          })
+                        }
+                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Info: (20260312 - Julian) Unit */}
+                    <div>
+                      <label
+                        htmlFor="unitInput"
+                        className="mb-1.5 block text-sm font-bold text-slate-500"
+                      >
+                        {t("esg_verify.form.unit")}
+                      </label>
+                      <input
+                        id="unitInput"
+                        aria-label={t("esg_verify.form.unit")}
+                        type="text"
+                        value={formData.unit}
+                        onChange={(e) =>
+                          setFormData({ ...formData, unit: e.target.value })
+                        }
+                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Info: (20260312 - Julian) Emissions */}
+                    <div>
+                      <label
+                        htmlFor="emissionsInput"
+                        className="mb-1.5 block text-sm font-bold text-slate-500"
+                      >
+                        {t("esg_verify.form.emissions")}
+                      </label>
+                      <input
+                        id="emissionsInput"
+                        aria-label={t("esg_verify.form.emissions")}
+                        type="text"
+                        value={formData.emissions}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            emissions: e.target.value,
+                          })
+                        }
+                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Info: (20260312 - Julian) Intensity */}
+                    <div>
+                      <label
+                        htmlFor="intensitySelect"
+                        className="mb-1.5 block text-sm font-bold text-slate-500"
+                      >
+                        {t("esg_verify.form.intensity")}
+                      </label>
+                      <select
+                        id="intensitySelect"
+                        aria-label={t("esg_verify.form.intensity")}
+                        value={formData.intensity || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            intensity: e.target.value as EsgIntensity,
+                          })
+                        }
+                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                      >
+                        <option value={EsgIntensity.LOW}>
+                          {t("esg_verify.form.intensity_low")}
+                        </option>
+                        <option value={EsgIntensity.MEDIUM}>
+                          {t("esg_verify.form.intensity_medium")}
+                        </option>
+                        <option value={EsgIntensity.HIGH}>
+                          {t("esg_verify.form.intensity_high")}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Info: (20260312 - Julian) Actions */}
+                  <div className="flex flex-col-reverse justify-end gap-3 border-t border-slate-200 p-4 sm:flex-row sm:items-center">
+                    {checkHasChanges() && (
+                      <button
+                        type="button"
+                        onClick={() => setIsCancelModalOpen(true)}
+                        className="mr-auto text-sm font-bold text-slate-500 transition-colors hover:text-slate-700 sm:m-0"
+                      >
+                        {t("esg_verify.actions.cancel_edit")}
+                      </button>
+                    )}
+                    <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto sm:gap-3">
+                      {originalData?.isVerified ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setIsUnverifyModalOpen(true)}
+                            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-400 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-500 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
+                          >
+                            <X size={18} className="stroke-[2.5]" />
+                            {t("verify.button.unverify")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAttemptSave(true)}
+                            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-600 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
+                          >
+                            <Save size={18} />
+                            {t("esg_verify.actions.save_only")}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleAttemptSave(true)}
+                            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-emerald-600 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
+                          >
+                            <CheckCircle2 size={18} />
+                            {t("verify.button.verify")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAttemptSave(false)}
+                            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-600 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
+                          >
+                            <Save size={18} />
+                            {t("esg_verify.actions.save_only")}
+                          </button>
+                        </>
                       )}
-                      <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto sm:gap-3">
-                        {originalData?.isVerified ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setIsUnverifyModalOpen(true)}
-                              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-400 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-500 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
-                            >
-                              <X size={18} className="stroke-[2.5]" />
-                              {t("verify.button.unverify")}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleAttemptSave(true)}
-                              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-600 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
-                            >
-                              <Save size={18} />
-                              {t("esg_verify.actions.save_only")}
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => handleAttemptSave(true)}
-                              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-emerald-600 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
-                            >
-                              <CheckCircle2 size={18} />
-                              {t("verify.button.verify")}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleAttemptSave(false)}
-                              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-600 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
-                            >
-                              <Save size={18} />
-                              {t("esg_verify.actions.save_only")}
-                            </button>
-                          </>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </div>

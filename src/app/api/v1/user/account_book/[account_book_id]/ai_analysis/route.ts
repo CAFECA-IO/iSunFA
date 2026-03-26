@@ -72,7 +72,7 @@ export async function POST(
         accountBookId: accountBook.id,
         fileId: uploadedFile.id,
         text: "",
-        tradingDate:new Date(),
+        tradingDate: new Date(),
         confidence: 0,
         isVerified: false,
         aiNote: "",
@@ -158,9 +158,9 @@ export async function POST(
 
     // Info: (20260320 - Julian) 觸發 Mission Generator 寫入任務
     const missionDef = missionGenerator.generateMission({
-      category: 'document_parsing',
-      periodType: 'N/A', // Info: (20260320 - Julian) 憑證解析可不用
-      periodValue: 'N/A',
+      category: "document_parsing",
+      periodType: "N/A", // Info: (20260320 - Julian) 憑證解析可不用
+      periodValue: "N/A",
       year: new Date().getFullYear(),
       fileId: uploadedFile.id,
       fileBase64: file.base64,
@@ -173,16 +173,16 @@ export async function POST(
         data: {
           userId: creator.id,
           name: missionDef.name,
-          status: 'PENDING',
+          status: "PENDING",
           tasks: {
-            create: missionDef.tasks.map(task => ({
+            create: missionDef.tasks.map((task) => ({
               type: task.type,
               order: task.order,
               data: task.data,
-              status: 'PENDING'
-            }))
-          }
-        }
+              status: "PENDING",
+            })),
+          },
+        },
       });
     }
 

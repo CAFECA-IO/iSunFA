@@ -65,11 +65,13 @@ export async function GET(
       id: esgRecord.id,
       dateTimestamp: esgRecord.dateTimestamp,
       fileId: esgRecord.fileId ?? "",
-      file: esgRecord.file ? {
-        id: esgRecord.file.id,
-        hash: esgRecord.file.hash,
-        fileName: esgRecord.file.fileName || "Unknown"
-      } : undefined,
+      file: esgRecord.file
+        ? {
+            id: esgRecord.file.id,
+            hash: esgRecord.file.hash,
+            fileName: esgRecord.file.fileName || "Unknown",
+          }
+        : undefined,
       scope: esgRecord.scope as unknown as ClientEsgScope,
       activityType: esgRecord.activityType,
       vendor: esgRecord.vendor,
@@ -165,9 +167,15 @@ export async function PUT(
         ...(reqBody.confidence !== undefined && {
           confidence: reqBody.confidence,
         }),
-        ...(reqBody.isVerified !== undefined && { isVerified: reqBody.isVerified }),
+        ...(reqBody.isVerified !== undefined && {
+          isVerified: reqBody.isVerified,
+        }),
         ...(reqBody.analysisStatus && {
-          analysisStatus: reqBody.analysisStatus.toUpperCase() as AIAnalysisStatus,
+          // Info: (20260326 - Julian) 如果使用者手動修改，就將 analysisStatus 的 FAILED 設為 COMPLETED
+          analysisStatus:
+            reqBody.analysisStatus === AIAnalysisStatus.FAILED
+              ? AIAnalysisStatus.COMPLETED
+              : reqBody.analysisStatus,
         }),
       },
     });
@@ -185,7 +193,8 @@ export async function PUT(
       intensity: updatedRecord.intensity as unknown as ClientEsgIntensity,
       confidence: updatedRecord.confidence,
       isVerified: updatedRecord.isVerified,
-      analysisStatus: updatedRecord.analysisStatus as unknown as AIAnalysisStatus,
+      analysisStatus:
+        updatedRecord.analysisStatus as unknown as AIAnalysisStatus,
       aiNote: updatedRecord.aiNote ?? "",
     };
 

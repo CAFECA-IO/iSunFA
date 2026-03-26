@@ -3,11 +3,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import {
-  IVoucher,
-  IVoucherLineUI,
-  TradingType,
-} from "@/interfaces/voucher";
+import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
@@ -82,11 +78,13 @@ export async function GET(
       note: voucher.note ?? "",
       isDeleted: !!voucher.deletedAt,
       fileId: voucher.fileId ?? "",
-      file: voucher.file ? {
-        id: voucher.file.id,
-        hash: voucher.file.hash,
-        fileName: voucher.file.fileName || "Unknown"
-      } : undefined,
+      file: voucher.file
+        ? {
+            id: voucher.file.id,
+            hash: voucher.file.hash,
+            fileName: voucher.file.fileName || "Unknown",
+          }
+        : undefined,
       lineItems: {
         lines: lineItems,
         totalAmount: lineTotalAmount,
@@ -158,7 +156,13 @@ export async function PUT(
     const { id, inputDate, voucherType, note, isVerified } = body;
     const rows = body.rows as IVoucherLineUI[];
 
-    if (!inputDate || !voucherType || !rows || !Array.isArray(rows) || isVerified === undefined) {
+    if (
+      !inputDate ||
+      !voucherType ||
+      !rows ||
+      !Array.isArray(rows) ||
+      isVerified === undefined
+    ) {
       console.error("Invalid input data");
       return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid input data");
     }
@@ -181,6 +185,7 @@ export async function PUT(
             isDebit: row.isDebit ?? false,
           })),
         },
+        analysisStatus: AIAnalysisStatus.COMPLETED, // Info: (20260326 - Julian) 更新傳票後，將 analysisStatus 設為 COMPLETED
       },
       include: { lines: true, user: true, file: true },
     });

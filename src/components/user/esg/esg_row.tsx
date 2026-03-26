@@ -27,9 +27,7 @@ export function EsgRow({
 
   const isAnalysisFailed = record.analysisStatus === AIAnalysisStatus.FAILED;
 
-  const handleVerifyClick = () => {
-    onVerifyClick(record);
-  };
+  const handleVerifyClick = () => onVerifyClick(record);
 
   const renderIntensity = (intensity: EsgIntensity) => {
     switch (intensity) {
@@ -121,24 +119,13 @@ export function EsgRow({
           {timestampToString(record.dateTimestamp).dateWithDash}
         </td>
         <td
-          colSpan={5}
+          colSpan={6}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           <span className="flex items-center justify-center gap-2 text-sm font-medium text-orange-500 italic">
             <Loader2 className="size4 animate-spin text-orange-500" />
-            AI Analyzing...
+            {t("common.ai.pending")}
           </span>
-        </td>
-        <td aria-label="Status" className="p-2 text-center lg:px-6 lg:py-4">
-          <div className="flex justify-center">
-            <button
-              type="button"
-              disabled
-              className="inline-flex cursor-not-allowed items-center justify-center rounded-xl bg-slate-200 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-slate-400 shadow-sm"
-            >
-              Pending
-            </button>
-          </div>
         </td>
       </tr>
     );
@@ -158,29 +145,45 @@ export function EsgRow({
         </td>
         <td
           aria-label="AI Processing"
-          colSpan={5}
+          colSpan={6}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           <div className="mx-auto flex max-w-sm flex-col items-center justify-center gap-2">
             <span className="flex items-center justify-center gap-2 text-sm font-bold text-blue-600 italic">
               <Loader2 className="size-4 animate-spin text-blue-500" />
-              AI Processing...
+              {t("esg_table.ai.processing")}
             </span>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
               <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
             </div>
           </div>
         </td>
-        <td aria-label="Status" className="p-2 text-center lg:px-6 lg:py-4">
-          <div className="flex justify-center">
-            <button
-              type="button"
-              disabled
-              className="inline-flex cursor-not-allowed items-center justify-center rounded-xl bg-blue-200 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-blue-500 shadow-sm"
-            >
-              Processing
-            </button>
+      </tr>
+    );
+  }
+
+  // Info: (20260320 - Julian) 分析出錯
+  if (record.analysisStatus === AIAnalysisStatus.FAILED) {
+    return (
+      <tr
+        onClick={handleVerifyClick}
+        className="border-b border-slate-200 bg-red-50 text-red-500 opacity-80 transition-colors last:border-0 hover:cursor-pointer hover:bg-red-100"
+      >
+        <td className="p-2 lg:px-6 lg:py-4">
+          <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white p-1 shadow-sm sm:size-16">
+            <CircleAlert className="size-6 text-red-500" />
           </div>
+        </td>
+        <td className="p-2 text-center text-xs font-semibold whitespace-nowrap lg:px-6 lg:py-4 lg:text-sm">
+          {timestampToString(record.dateTimestamp).dateWithDash}
+        </td>
+        <td
+          colSpan={6}
+          className="p-2 text-center align-middle lg:px-6 lg:py-4"
+        >
+          <p className="font-bold text-red-500">
+            {t("esg_table.ai.failed")}
+          </p>
         </td>
       </tr>
     );

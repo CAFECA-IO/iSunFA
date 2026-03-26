@@ -3,6 +3,8 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { IJournal } from "@/interfaces/journal";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 /**
  * Info: (20260304 - Julian) 取得日記帳
@@ -54,11 +56,13 @@ export async function GET(
 
     const journal = {
       ...journalDbRecord,
-      file: journalDbRecord.file ? {
-        id: journalDbRecord.file.id,
-        hash: journalDbRecord.file.hash,
-        fileName: journalDbRecord.file.fileName || "Unknown"
-      } : undefined
+      file: journalDbRecord.file
+        ? {
+            id: journalDbRecord.file.id,
+            hash: journalDbRecord.file.hash,
+            fileName: journalDbRecord.file.fileName || "Unknown",
+          }
+        : undefined,
     };
 
     return jsonOk(journal);
@@ -122,7 +126,12 @@ export async function PUT(
     // Info: (20260304 - Julian) Update journal
     const updatedJournal = await prisma.journal.update({
       where: { id: journalId },
-      data: { text, isVerified: isVerified ?? false },
+      data: {
+        text,
+        isVerified: isVerified ?? false,
+        analysisStatus: AIAnalysisStatus.COMPLETED, // Info: (20260326 - Julian) 用戶編輯日記帳後，將分析狀態設為已完成
+      },
+      include: { file: true },
     });
 
     if (!updatedJournal) {
@@ -141,7 +150,25 @@ export async function PUT(
       },
     });
 
-    return jsonOk(updatedJournal);
+    const formattedJournal: IJournal = {
+      id: updatedJournal.id,
+      tradingTimestamp: Math.floor(updatedJournal.tradingDate.getTime() / 1000),
+      text: updatedJournal.text,
+      fileId: updatedJournal.fileId ?? "",
+      file: updatedJournal.file
+        ? {
+            id: updatedJournal.file.id,
+            hash: updatedJournal.file.hash,
+            fileName: updatedJournal.file.fileName ?? "",
+          }
+        : undefined,
+      analysisStatus: updatedJournal.analysisStatus as AIAnalysisStatus,
+      confidence: updatedJournal.confidence,
+      isVerified: updatedJournal.isVerified,
+      aiNote: updatedJournal.aiNote,
+    };
+
+    return jsonOk(formattedJournal);
   } catch (error) {
     console.error("Put journal failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Put journal failed");
