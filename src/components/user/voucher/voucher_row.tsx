@@ -83,7 +83,7 @@ export function VoucherRow({
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           <span className="flex items-center justify-center gap-2 text-sm font-medium italic">
-            <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
+            <Loader2 className="size-4 animate-spin text-orange-500" />
             {t("common.ai.pending")}
           </span>
         </td>
@@ -114,7 +114,7 @@ export function VoucherRow({
         >
           <div className="mx-auto flex max-w-sm flex-col items-center justify-center gap-2">
             <span className="flex items-center justify-center gap-2 text-sm font-bold text-blue-600 italic">
-              <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+              <Loader2 className="size-4 animate-spin text-blue-500" />
               {t("voucher.main_view.table.ai.processing")}
             </span>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
@@ -134,8 +134,8 @@ export function VoucherRow({
         className="border-b border-slate-300 bg-red-50 text-sm text-red-500 opacity-80 transition-colors last:border-0 hover:cursor-pointer hover:bg-red-100"
       >
         {/* Info: (20260320 - Julian) File Preview loading */}
-        <td className="p-2 text-center lg:px-6 lg:py-4">
-          <div className="flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white p-1 sm:size-20">
+        <td className="p-2 lg:px-6 lg:py-4">
+          <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white p-1 shadow-sm sm:size-16">
             <CircleAlert className="size-6 text-red-500" />
           </div>
         </td>

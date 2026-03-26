@@ -64,9 +64,7 @@ export async function POST(
         userId: creator.id,
         tradingDate: new Date(),
         note: "",
-        lines: {
-          create: [],
-        },
+        lines: {create: []},
         confidence: 0,
         aiNote: "",
       },
