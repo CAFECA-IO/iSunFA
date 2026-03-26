@@ -11,6 +11,8 @@ export const ja = {
     verify_all_confirm_desc:
       "これにより、すべての未確認項目が確認済みとしてマークされます。",
     cancel: "キャンセル",
+    notification: "システム通知",
+    ok: "確認",
     close: "閉じる",
     coming_soon_message: "まもなく登場",
     all: "すべて",

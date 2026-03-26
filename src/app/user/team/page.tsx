@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/auth_context";
 import { Users, UserCircle2, Plus, Pencil, Trash2, Check, X, Book } from "lucide-react";
 import { Dialog } from "@headlessui/react";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
+import ConfirmModal from "@/components/common/confirm_modal";
 
 interface IAccountBook { id: string; name: string; country: string; currency: string; rule: string; }
 interface ITeam { id: string; name: string; accountBooks?: IAccountBook[]; }
@@ -35,6 +36,37 @@ export default function TeamManagementPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
   const [creating, setCreating] = useState(false);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    isConfirm?: boolean;
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: ""
+  });
+
+  const showAlert = (message: string, title = t("common.notification") || "Notification") => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      isConfirm: false
+    });
+  };
+
+  const showConfirm = (message: string, onConfirm: () => void, title = t("common.confirm") || "Confirm") => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      isConfirm: true,
+      onConfirm
+    });
+  };
 
   const fetchTeams = useCallback(async () => {
     try {
@@ -104,9 +136,9 @@ export default function TeamManagementPage() {
       const json = await res.json();
       if (json.success) {
         setNewTeamName(""); setIsCreateModalOpen(false); fetchTeams(); setSelectedTeamId(json.payload.id);
-        alert(t("teamManagement.alerts.createSuccess") || "Team created successfully!");
-      } else alert(json.message);
-    } catch { alert(t("teamManagement.alerts.errorCreate") || "Error creating team"); } finally { setCreating(false); }
+        showAlert(t("teamManagement.alerts.createSuccess") || "Team created successfully!");
+      } else showAlert(json.message);
+    } catch { showAlert(t("teamManagement.alerts.errorCreate") || "Error creating team"); } finally { setCreating(false); }
   };
 
   const handleUpdateName = async () => {
@@ -121,9 +153,9 @@ export default function TeamManagementPage() {
       if (json.success) {
         setTeams(teams.map((t) => (t.id === selectedTeamId ? { ...t, name: tempName } : t)));
         setEditingName(false);
-        alert(t("teamManagement.alerts.updateSuccess") || "Team name updated successfully!");
-      } else alert(json.message);
-    } catch { alert(t("teamManagement.alerts.errorUpdate") || "Error updating team name"); }
+        showAlert(t("teamManagement.alerts.updateSuccess") || "Team name updated successfully!");
+      } else showAlert(json.message);
+    } catch { showAlert(t("teamManagement.alerts.errorUpdate") || "Error updating team name"); }
   };
 
   const handleInvite = async (e: React.FormEvent) => {
@@ -143,10 +175,10 @@ export default function TeamManagementPage() {
         setInviteAddress(""); 
         setIsInviteModalOpen(false); 
         fetchSentInvitations(selectedTeamId); 
-        alert(t("teamManagement.alerts.inviteSuccess") || "Invitation sent successfully!"); 
+        showAlert(t("teamManagement.alerts.inviteSuccess") || "Invitation sent successfully!"); 
       }
-      else alert(json.message);
-    } catch { alert(t("teamManagement.alerts.errorInvite") || "Error inviting member"); } finally { setInviting(false); }
+      else showAlert(json.message);
+    } catch { showAlert(t("teamManagement.alerts.errorInvite") || "Error inviting member"); } finally { setInviting(false); }
   };
 
   const handleAcceptInvite = async (inviteId: string) => {
@@ -164,9 +196,9 @@ export default function TeamManagementPage() {
       if (json.success) { 
         fetchPendingInvitations(); 
         fetchTeams(); 
-        alert(t("teamManagement.alerts.acceptSuccess") || "Invitation accepted successfully!");
-      } else alert(json.message);
-    } catch { alert(t("teamManagement.alerts.errorAccept") || "Error accepting invitation"); } finally { setAcceptingId(null); }
+        showAlert(t("teamManagement.alerts.acceptSuccess") || "Invitation accepted successfully!");
+      } else showAlert(json.message);
+    } catch { showAlert(t("teamManagement.alerts.errorAccept") || "Error accepting invitation"); } finally { setAcceptingId(null); }
   };
 
   const handleChangeRole = async (memberId: string, newRole: string) => {
@@ -183,28 +215,33 @@ export default function TeamManagementPage() {
       const json = await res.json();
       if (json.success) {
         fetchMembers(selectedTeamId);
-        alert(t("teamManagement.alerts.roleSuccess") || "Role updated successfully!");
-      } else alert(json.message);
-    } catch { alert(t("teamManagement.alerts.errorRole") || "Error changing role"); }
+        showAlert(t("teamManagement.alerts.roleSuccess") || "Role updated successfully!");
+      } else showAlert(json.message);
+    } catch { showAlert(t("teamManagement.alerts.errorRole") || "Error changing role"); }
   };
 
-  const handleRemoveMember = async (memberId: string) => {
-    if (!selectedTeamId || !confirm(t("teamManagement.confirmRemoveLabel") || "Are you sure you want to remove this member?")) return;
-    try {
-      if (!user?.address) return;
-      const { challenge } = await getLoginOptions(user.address);
-      const authentication = await fido2ClientService.startLogin({ challenge });
-      const token = localStorage.getItem("dewt");
-      const res = await fetch(`/api/v1/user/team/${selectedTeamId}/members/${memberId}`, {
-        method: "DELETE", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ authentication })
-      });
-      const json = await res.json();
-      if (json.success) {
-        alert(t("teamManagement.alerts.removeSuccess") || "Member removed successfully!");
-        if (memberId === currentUserMember?.id) { setSelectedTeamId(null); fetchTeams(); } else fetchMembers(selectedTeamId);
-      } else alert(json.message);
-    } catch { alert(t("teamManagement.alerts.errorRemove") || "Error removing member"); }
+  const handleRemoveMember = (memberId: string) => {
+    if (!selectedTeamId) return;
+    showConfirm(
+      t("teamManagement.confirmRemoveLabel") || "Are you sure you want to remove this member?",
+      async () => {
+        try {
+          if (!user?.address) return;
+          const { challenge } = await getLoginOptions(user.address);
+          const authentication = await fido2ClientService.startLogin({ challenge });
+          const token = localStorage.getItem("dewt");
+          const res = await fetch(`/api/v1/user/team/${selectedTeamId}/members/${memberId}`, {
+            method: "DELETE", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ authentication })
+          });
+          const json = await res.json();
+          if (json.success) {
+            showAlert(t("teamManagement.alerts.removeSuccess") || "Member removed successfully!");
+            if (memberId === currentUserMember?.id) { setSelectedTeamId(null); fetchTeams(); } else fetchMembers(selectedTeamId);
+          } else showAlert(json.message);
+        } catch { showAlert(t("teamManagement.alerts.errorRemove") || "Error removing member"); }
+      }
+    );
   };
 
   if (loading) return <div className="flex h-screen items-center justify-center bg-gray-50"><div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" /></div>;
@@ -259,10 +296,10 @@ export default function TeamManagementPage() {
           {selectedTeamId && currentTeam && (
             <div className="flex-1 space-y-6">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <div className="flex items-center justify-between border-b pb-4 mb-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4 mb-6 gap-4">
                   {editingName ? (
                     <div className="flex items-center space-x-2 w-full max-w-sm">
-                      <input type="text" value={tempName} onChange={(e) => setTempName(e.target.value)} aria-label={t("teamManagement.teamName") || "Team Name"} className="flex-1 px-3 py-1.5 text-lg font-semibold border-b-2 border-orange-500 focus:outline-none bg-gray-50 rounded-t" />
+                      <input type="text" value={tempName} onChange={(e) => setTempName(e.target.value)} aria-label={t("teamManagement.teamName") || "Team Name"} className="flex-1 w-full px-3 py-1.5 text-lg font-semibold text-gray-900 border-b-2 border-orange-500 focus:outline-none bg-gray-50 rounded-t" />
                       <button onClick={handleUpdateName} className="p-1.5 text-green-600 hover:bg-green-50 rounded"><Check className="w-5 h-5" /></button>
                       <button onClick={() => setEditingName(false)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"><X className="w-5 h-5" /></button>
                     </div>
@@ -273,7 +310,7 @@ export default function TeamManagementPage() {
                     </div>
                   )}
                   {isOwnerOrAdmin && (
-                    <button onClick={() => setIsInviteModalOpen(true)} className="inline-flex items-center px-4 py-2 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors text-sm font-medium border border-orange-200">
+                    <button onClick={() => setIsInviteModalOpen(true)} className="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors text-sm font-medium border border-orange-200">
                       <Plus className="w-4 h-4 mr-2" /> {t("teamManagement.inviteMember") || "Invite Member"}
                     </button>
                   )}
@@ -368,9 +405,9 @@ export default function TeamManagementPage() {
                   <label htmlFor="team-name" className="block text-sm font-medium text-gray-700 mb-1">{t("teamManagement.teamName") || "Team Name"}</label>
                   <input id="team-name" type="text" required value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} disabled={creating} aria-label={t("teamManagement.teamName") || "Team Name"} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm text-gray-900 bg-white" placeholder={t("teamManagement.enterTeamName") || "Enter team name"} />
                 </div>
-                <div className="mt-6 flex justify-end gap-3">
-                  <button type="button" onClick={() => setIsCreateModalOpen(false)} disabled={creating} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg">{t("teamManagement.cancel") || "Cancel"}</button>
-                  <button type="submit" disabled={creating || !newTeamName.trim()} className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg disabled:opacity-50">{creating ? (t("teamManagement.creating") || "Creating...") : (t("teamManagement.createTeam") || "Create Team")}</button>
+                <div className="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-3">
+                  <button type="button" onClick={() => setIsCreateModalOpen(false)} disabled={creating} className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg text-center">{t("teamManagement.cancel") || "Cancel"}</button>
+                  <button type="submit" disabled={creating || !newTeamName.trim()} className="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg disabled:opacity-50 text-center">{creating ? (t("teamManagement.creating") || "Creating...") : (t("teamManagement.createTeam") || "Create Team")}</button>
                 </div>
               </form>
             </div>
@@ -404,15 +441,24 @@ export default function TeamManagementPage() {
                 <div className="bg-orange-50 p-3 rounded-lg border border-orange-100 flex items-start mt-2">
                   <div className="text-xs text-orange-800"><span className="font-semibold block mb-1">{t("teamManagement.fido2Requirement") || "FIDO2 Requirement:"}</span>{t("teamManagement.fido2RequirementText") || "You will be asked to authenticate via Passkey to sign this transaction on-chain."}</div>
                 </div>
-                <div className="mt-6 flex justify-end gap-3">
-                  <button type="button" onClick={() => setIsInviteModalOpen(false)} disabled={inviting} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg">{t("teamManagement.cancel") || "Cancel"}</button>
-                  <button type="submit" disabled={inviting || !inviteAddress.trim()} className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg disabled:opacity-50">{inviting ? (t("teamManagement.signing") || "Signing...") : (t("teamManagement.inviteViaFido2") || "Invite via FIDO2")}</button>
+                <div className="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-3">
+                  <button type="button" onClick={() => setIsInviteModalOpen(false)} disabled={inviting} className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg text-center">{t("teamManagement.cancel") || "Cancel"}</button>
+                  <button type="submit" disabled={inviting || !inviteAddress.trim()} className="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg disabled:opacity-50 text-center">{inviting ? (t("teamManagement.signing") || "Signing...") : (t("teamManagement.inviteViaFido2") || "Invite via FIDO2")}</button>
                 </div>
               </form>
             </div>
           </div>
         </div>
       </Dialog>
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.isConfirm ? t('common.confirm') || 'Confirm' : t('common.ok') || 'OK'}
+        cancelText={confirmModal.isConfirm ? t('common.cancel') || 'Cancel' : undefined}
+        onConfirm={confirmModal.onConfirm}
+      />
     </div>
   );
 }

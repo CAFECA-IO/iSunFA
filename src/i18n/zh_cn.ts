@@ -10,6 +10,8 @@ export const zhCn = {
     verify_all_confirm_title: "确认一键核对？",
     verify_all_confirm_desc: "这将会把所有未核对的项目标示为已核对",
     cancel: "取消",
+    notification: "系统提示",
+    ok: "确认",
     close: "关闭",
     coming_soon_message: "即将推出",
     all: "全部",

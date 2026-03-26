@@ -10,6 +10,8 @@ export const en = {
     verify_all_confirm_title: "Confirm Verify All?",
     verify_all_confirm_desc: "This will mark all unverified items as verified.",
     cancel: "Cancel",
+    notification: "Notification",
+    ok: "OK",
     close: "Close",
     coming_soon_message: "Coming Soon",
     all: "All",

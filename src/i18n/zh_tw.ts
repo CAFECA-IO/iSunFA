@@ -10,6 +10,8 @@ export const zhTw = {
     verify_all_confirm_title: "確認一鍵核對？",
     verify_all_confirm_desc: "這將會把所有未核對的項目標示為已核對",
     cancel: "取消",
+    notification: "系統提示",
+    ok: "確認",
     close: "關閉",
     coming_soon_message: "即將推出",
     all: "全部",

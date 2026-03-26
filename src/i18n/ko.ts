@@ -11,6 +11,8 @@ export const ko = {
     verify_all_confirm_desc:
       "이렇게 하면 확인되지 않은 모든 항목이 확인됨으로 표시됩니다.",
     cancel: "취소",
+    notification: "시스템 알림",
+    ok: "확인",
     close: "닫기",
     coming_soon_message: "오픈 예정",
     all: "전체",
