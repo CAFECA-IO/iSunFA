@@ -10,6 +10,7 @@ import { Prisma } from "@/generated/browser";
 import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { VerifyStatus } from "@/constants/verify_status";
 
 /**
  * Info: (20260310 - Julian) 新增傳票：將 AI 解析出的傳票存入 DB
@@ -160,7 +161,7 @@ export async function GET(
 
     // Info: (20260324 - Julian) 建立審核狀態篩選
     if (verifyStatus) {
-      filteredConditions.where!.isVerified = verifyStatus === "VERIFIED";
+      filteredConditions.where!.isVerified = verifyStatus === VerifyStatus.VERIFIED;
     }
 
     // Info: (20260310 - Julian) 建立時間區間篩選

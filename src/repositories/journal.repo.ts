@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@/generated/client';
+import { AIAnalysisStatus } from '@/constants/ai_analysis_status';
 
 export class JournalRepository {
   async createJournal(data: Prisma.JournalUncheckedCreateInput) {
@@ -48,10 +49,10 @@ export class JournalRepository {
     });
 
     const aiAverageConfidenceAggr = await prisma.journal.aggregate({
-      where: { accountBookId },
+      where: { accountBookId, analysisStatus: AIAnalysisStatus.COMPLETED },
       _avg: { confidence: true },
     });
-    
+
     const aiAverageConfidence = Math.round(aiAverageConfidenceAggr._avg.confidence || 0);
 
     return { todayJournalCount, pendingJournalCount, aiAverageConfidence };

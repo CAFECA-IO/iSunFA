@@ -13,6 +13,7 @@ import {
   EsgIntensity as ClientEsgIntensity,
 } from "@/interfaces/esg";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { VerifyStatus } from "@/constants/verify_status";
 
 /**
  * Info: (20260312 - Julian) 新增 ESG 紀錄
@@ -167,7 +168,7 @@ export async function GET(
           { activityType: { contains: searchParam, mode: "insensitive" } },
         ],
       }),
-      ...(verifyStatus && { isVerified: verifyStatus === "VERIFIED" }),
+      ...(verifyStatus && { isVerified: verifyStatus === VerifyStatus.VERIFIED }),
       ...(intensity && { intensity: intensity as ClientEsgIntensity }),
       ...(scope && { scope: scope as ClientEsgScope }),
       ...(dateTimestampQuery && { dateTimestamp: dateTimestampQuery }),
@@ -189,10 +190,10 @@ export async function GET(
       fileId: r.fileId ?? "",
       file: r.file
         ? {
-            id: r.file.id,
-            hash: r.file.hash,
-            fileName: r.file.fileName || "Unknown",
-          }
+          id: r.file.id,
+          hash: r.file.hash,
+          fileName: r.file.fileName || "Unknown",
+        }
         : undefined,
       scope: r.scope as ClientEsgScope,
       emissions: r.emissions.toString(),

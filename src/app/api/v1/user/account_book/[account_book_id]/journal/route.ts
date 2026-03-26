@@ -9,6 +9,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/browser";
 import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { VerifyStatus } from "@/constants/verify_status";
 
 /**
  * Info: (20260304 - Julian) 將檔案傳給 AI 進行解析
@@ -153,7 +154,7 @@ export async function GET(
 
     // Info: (20260324 - Julian) 建立審核狀態篩選
     if (verifyStatus) {
-      filteredConditions.where!.isVerified = verifyStatus === "VERIFIED";
+      filteredConditions.where!.isVerified = verifyStatus === VerifyStatus.VERIFIED;
     }
 
     // Info: (20260304 - Julian) 建立時間區間篩選
@@ -197,10 +198,10 @@ export async function GET(
         fileId: j.fileId ?? "",
         file: j.file
           ? {
-              id: j.file.id,
-              hash: j.file.hash,
-              fileName: j.file.fileName ?? "",
-            }
+            id: j.file.id,
+            hash: j.file.hash,
+            fileName: j.file.fileName ?? "",
+          }
           : undefined,
         analysisStatus: j.analysisStatus as AIAnalysisStatus,
         confidence: j.confidence,

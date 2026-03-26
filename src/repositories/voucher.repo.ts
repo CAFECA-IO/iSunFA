@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma, Voucher } from '@/generated/client';
+import { AIAnalysisStatus } from '@/constants/ai_analysis_status';
 
 export interface IVoucherRepository {
   verifyAllVouchers(accountBookId: string): Promise<Prisma.BatchPayload>;
@@ -89,7 +90,7 @@ export class VoucherRepository implements IVoucherRepository {
     });
 
     const aiAverageConfidenceAggr = await prisma.voucher.aggregate({
-      where: { accountBookId },
+      where: { accountBookId, analysisStatus: AIAnalysisStatus.COMPLETED },
       _avg: { confidence: true },
     });
     const aiAverageConfidence = Math.round(aiAverageConfidenceAggr._avg.confidence || 0);
