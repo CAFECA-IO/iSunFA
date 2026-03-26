@@ -954,7 +954,6 @@ export const ja = {
     action: "操作",
     no_image: "画像なし",
     no_records: "記録が見つかりません",
-    analyzing: "AIが請求書を分析しています...",
     please_wait: "しばらくお待ちください",
     detail_title: "請求書の詳細",
     edit: "編集",

@@ -991,7 +991,6 @@ export const en = {
     action: "Action",
     no_image: "No image",
     no_records: "No records found.",
-    analyzing: "AI is analyzing your invoice...",
     please_wait: "This may take a moment, please wait",
     detail_title: "Invoice Details",
     edit: "Edit",

@@ -941,7 +941,6 @@ export const ko = {
     action: "작업",
     no_image: "이미지 없음",
     no_records: "기록을 찾을 수 없습니다",
-    analyzing: "AI가 청구서를 분석하고 있습니다...",
     please_wait: "잠시만 기다려주세요",
     detail_title: "청구서 세부정보",
     edit: "편집하다",

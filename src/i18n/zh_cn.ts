@@ -919,7 +919,6 @@ export const zhCn = {
     action: "操作",
     no_image: "无预览",
     no_records: "找不到任何记录",
-    analyzing: "AI 正在为您分析发票...",
     please_wait: "这可能需要一点时间，请稍候",
     detail_title: "发票详情",
     edit: "编辑",

@@ -1020,7 +1020,6 @@ export const zhTw = {
     action: "操作",
     no_image: "無縮圖",
     no_records: "找不到任何紀錄",
-    analyzing: "AI 正在為您分析憑證...",
     please_wait: "這可能需要一點時間，請稍候",
     detail_title: "憑證詳情",
     edit: "編輯",

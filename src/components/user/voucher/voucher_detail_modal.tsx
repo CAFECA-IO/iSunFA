@@ -423,7 +423,7 @@ export default function VoucherDetailModal({
                     <button
                       type="button"
                       onClick={() => setIsPreviewModalOpen(true)}
-                      className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600 transition-colors enabled:hover:bg-blue-100 enabled:hover:text-blue-700 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200"
                       disabled={!activeVoucher.file?.hash}
                     >
                       <ImageIcon size={14} />
