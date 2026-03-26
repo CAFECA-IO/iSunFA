@@ -1,7 +1,10 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { esgRepo } from "@/repositories/esg.repo";
+import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/client";
 import {
@@ -30,9 +33,7 @@ export async function POST(
     }
 
     // Info: (20260312 - Julian) 取得建立者
-    const creator = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const creator = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!creator) {
       console.error("Creator not found");
@@ -41,9 +42,7 @@ export async function POST(
 
     // Info: (20260312 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -60,34 +59,30 @@ export async function POST(
     }
 
     // Info: (20260312 - Julian) 建立空白 ESG 紀錄
-    const newRecord = await prisma.esgRecord.create({
-      data: {
-        accountBookId: accountBook.id,
-        userId: creator.id,
-        fileId: "",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        dateTimestamp: 0,
-        activityType: "",
-        vendor: "",
-        rawActivityData: "",
-        unit: "",
-        emissions: 0,
-        confidence: 0,
-        isVerified: false,
-        aiNote: "",
-      },
+    const newRecord = await esgRepo.createEsgRecord({
+      accountBookId: accountBook.id,
+      userId: creator.id,
+      fileId: "",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      dateTimestamp: 0,
+      activityType: "",
+      vendor: "",
+      rawActivityData: "",
+      unit: "",
+      emissions: 0,
+      confidence: 0,
+      isVerified: false,
+      aiNote: "",
     });
 
     // Info: (20260312 - Julian) 新增 AuditLog
-    await prisma.auditLog.create({
-      data: {
-        userId: creator.id,
-        dataType: "ESG_RECORD",
-        dataId: newRecord.id,
-        accountBookId: accountBook.id,
-        action: "CREATE",
-      },
+    await auditLogRepo.createAuditLog({
+      userId: creator.id,
+      dataType: "ESG_RECORD",
+      dataId: newRecord.id,
+      accountBookId: accountBook.id,
+      action: "CREATE",
     });
 
     return jsonOk({ esgRecordId: newRecord.id });
@@ -120,9 +115,7 @@ export async function GET(
 
     // Info: (20260312 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -180,11 +173,9 @@ export async function GET(
       ...(dateTimestampQuery && { dateTimestamp: dateTimestampQuery }),
     };
 
-    const totalEsgCount = await prisma.esgRecord.count({
-      where: whereClause,
-    });
+    const totalEsgCount = await esgRepo.countEsgRecords(whereClause);
 
-    const esgDbRecords = await prisma.esgRecord.findMany({
+    const esgDbRecords = await esgRepo.getEsgRecords({
       where: whereClause,
       include: { file: true },
       orderBy: { dateTimestamp: sort },

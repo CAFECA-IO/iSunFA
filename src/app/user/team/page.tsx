@@ -171,11 +171,11 @@ export default function TeamManagementPage() {
         body: JSON.stringify({ address: inviteAddress.trim(), role: inviteRole, authentication }),
       });
       const json = await res.json();
-      if (json.success) { 
-        setInviteAddress(""); 
-        setIsInviteModalOpen(false); 
-        fetchSentInvitations(selectedTeamId); 
-        showAlert(t("teamManagement.alerts.inviteSuccess") || "Invitation sent successfully!"); 
+      if (json.success) {
+        setInviteAddress("");
+        setIsInviteModalOpen(false);
+        fetchSentInvitations(selectedTeamId);
+        showAlert(t("teamManagement.alerts.inviteSuccess") || "Invitation sent successfully!");
       }
       else showAlert(json.message);
     } catch { showAlert(t("teamManagement.alerts.errorInvite") || "Error inviting member"); } finally { setInviting(false); }
@@ -193,9 +193,9 @@ export default function TeamManagementPage() {
         body: JSON.stringify({ authentication }),
       });
       const json = await res.json();
-      if (json.success) { 
-        fetchPendingInvitations(); 
-        fetchTeams(); 
+      if (json.success) {
+        fetchPendingInvitations();
+        fetchTeams();
         showAlert(t("teamManagement.alerts.acceptSuccess") || "Invitation accepted successfully!");
       } else showAlert(json.message);
     } catch { showAlert(t("teamManagement.alerts.errorAccept") || "Error accepting invitation"); } finally { setAcceptingId(null); }
@@ -360,7 +360,7 @@ export default function TeamManagementPage() {
                               <p className="text-xs text-gray-400 font-mono mt-1 break-all w-32 truncate">{inv.inviteeAddress}</p>
                             </div>
                           </div>
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-600">{t("teamManagement.pending") || "PENDING"}</span>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-600">{t("teamManagement.pending")}</span>
                         </div>
                       </div>
                     ))}

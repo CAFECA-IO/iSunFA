@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { paymentRepo } from "@/repositories/payment.repo";
 import { ORDER_STATUS } from "@/constants/status";
 
 export async function GET(
@@ -25,18 +25,7 @@ export async function GET(
         }
 
         // Info: (20260302 - Tzuhan) [流程 4-2: 查詢訂單資料] 從資料庫撈取特定訂單並檢查是否屬於該使用者
-        const order = await prisma.order.findUnique({
-            where: {
-                id: orderId,
-                userId: user.id, // Info: (20260302 - Tzuhan) Ensure the user can only fetch their own order
-            },
-            select: {
-                id: true,
-                status: true,
-                transactionHash: true,
-                data: true
-            }
-        });
+        const order = await paymentRepo.getOrderByIdAndUserId(orderId, user.id);
 
         if (!order) {
             return jsonFail(ApiCode.NOT_FOUND, "Order not found");

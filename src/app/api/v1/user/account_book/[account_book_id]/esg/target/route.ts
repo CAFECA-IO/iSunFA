@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 import { esgRepo } from "@/repositories/esg.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { voucherRepo } from "@/repositories/voucher.repo";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ account_book_id: string }> }) {
   try {
@@ -13,27 +14,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ acco
     if (!sessionUser) return jsonFail(ApiCode.UNAUTHORIZED, "Unauthorized");
 
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({ where: { id: accountBookId } });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook) return jsonFail(ApiCode.NOT_FOUND, "Account book not found");
 
     const teamMember = await teamRepo.getTeamMember(sessionUser.id, accountBook.teamId);
     if (!teamMember) return jsonFail(ApiCode.FORBIDDEN, "No permission to view this account book");
 
-    const esgRecords = await prisma.esgRecord.findMany({
-      where: {
-        accountBookId,
-        isVerified: true
-      }
-    });
+    const esgRecords = await esgRepo.getVerifiedEsgRecordsByAccountBookId(accountBookId);
 
-    const incomes = await prisma.voucher.findMany({
-      where: {
-        accountBookId,
-        tradingType: 'INCOME',
-        isVerified: true
-      },
-      include: { lines: true }
-    });
+    const incomes = await voucherRepo.getVerifiedIncomesByAccountBookId(accountBookId);
 
     const yearlyData: Record<number, { emissions: number; revenue: number }> = {};
 
@@ -103,7 +92,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ acc
     if (!sessionUser) return jsonFail(ApiCode.UNAUTHORIZED, "Unauthorized");
 
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({ where: { id: accountBookId } });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook) return jsonFail(ApiCode.NOT_FOUND, "Account book not found");
 
     const teamMember = await teamRepo.getTeamMember(sessionUser.id, accountBook.teamId);

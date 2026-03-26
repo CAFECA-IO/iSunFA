@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { prisma } from "@/lib/prisma";
+import { teamRepo } from "@/repositories/team.repo";
 
 // Info: (20260325 - Tzuhan) List pending invitations for the currently logged-in user
 export async function GET(request: NextRequest) {
@@ -14,23 +14,7 @@ export async function GET(request: NextRequest) {
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const invitations = await prisma.teamInvitation.findMany({
-      where: {
-        inviteeAddress: sessionUser.address,
-        status: "PENDING"
-      },
-      include: {
-        team: true,
-        inviter: {
-          select: {
-            name: true,
-            address: true,
-            imageUrl: true
-          }
-        }
-      },
-      orderBy: { createdAt: "desc" }
-    });
+    const invitations = await teamRepo.getPendingInvitationsByAddress(sessionUser.address);
 
     return jsonOk(invitations);
   } catch (error) {

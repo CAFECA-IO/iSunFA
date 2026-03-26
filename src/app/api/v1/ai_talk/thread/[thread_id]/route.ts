@@ -1,6 +1,7 @@
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { talkRepo } from "@/repositories/talk.repo";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { IFile, IThreadDetail } from "@/interfaces/ai_talk";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 
@@ -19,12 +20,7 @@ export async function GET(
     const user = await getIdentityFromDeWT(authHeader);
 
     const { thread_id: threadId } = await params;
-    const thread = await prisma.thread.findUnique({
-      where: { id: threadId },
-      include: {
-        files: true,
-      },
-    });
+    const thread = await talkRepo.getThreadByIdWithFiles(threadId);
 
     if (!thread) {
       console.error(`Thread ${threadId} not found`);
@@ -35,22 +31,13 @@ export async function GET(
     const currentUserId = user?.id ?? "";
 
     // Info: (20260212 - Julian) 取得討論串的作者
-    const author = await prisma.user.findUnique({
-      where: { id: thread.userId },
-    });
+    const author = await webAuthnRepo.findUserById(thread.userId);
 
     // Info: (20260212 - Julian) 取得與討論串關聯的標籤
-    const tagIds = await prisma.threadTag.findMany({
-      where: { threadId: thread.id },
-    });
-    const tags = await prisma.tag.findMany({
-      where: { id: { in: tagIds.map((tagId) => tagId.tagId) } },
-    });
+    const tags = await talkRepo.getTagsByThreadId(threadId);
 
     // Info: (20260212 - Julian) 取得與討論串關聯的按讚、倒讚
-    const reaction = await prisma.reaction.findMany({
-      where: { threadId: thread.id },
-    });
+    const reaction = await talkRepo.getReactionsByThreadId(threadId);
     const likeCount = reaction.filter(
       (reaction) => reaction.type === "LIKE",
     ).length;
@@ -62,14 +49,10 @@ export async function GET(
       null;
 
     // Info: (20260212 - Julian) 取得與討論串關聯的分享數
-    const shareCount = await prisma.share.count({
-      where: { threadId: thread.id },
-    });
+    const shareCount = await talkRepo.countSharesByThreadId(threadId);
 
-    // Info: (20260212 - Julian) 取得與討論串關聯的評論
-    const commentsOfThread = await prisma.comment.findMany({
-      where: { threadId: thread.id },
-    });
+    // Info: (20260212 - Julian) 取得與討論串關聯的評論數
+    const countOfComment = await talkRepo.countCommentsByThreadId(threadId);
 
     // Info: (20260212 - Julian) 取得與討論串關聯的 File
     const formattedFiles: IFile[] = thread.files.map((file) => ({
@@ -89,7 +72,7 @@ export async function GET(
       countOfLike: likeCount,
       countOfDislike: dislikeCount,
       countOfShare: shareCount,
-      countOfComment: commentsOfThread.length,
+      countOfComment: countOfComment,
       userReaction: userReaction,
       file: formattedFiles,
     };

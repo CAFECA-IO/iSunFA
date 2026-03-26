@@ -1,7 +1,10 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { voucherRepo } from "@/repositories/voucher.repo";
+import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/browser";
 import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
@@ -27,9 +30,7 @@ export async function POST(
     }
 
     // Info: (20260310 - Julian) 取得建立者
-    const creator = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const creator = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!creator) {
       console.error("Creator not found");
@@ -38,9 +39,7 @@ export async function POST(
 
     // Info: (20260310 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -57,17 +56,15 @@ export async function POST(
     }
 
     // Info: (20260311 - Julian) 建立空白傳票
-    const newVoucher = await prisma.voucher.create({
-      data: {
-        accountBookId: accountBook.id,
-        fileId: fileId,
-        userId: creator.id,
-        tradingDate: new Date(),
-        note: "",
-        lines: {create: []},
-        confidence: 0,
-        aiNote: "",
-      },
+    const newVoucher = await voucherRepo.createVoucher({
+      accountBookId: accountBook.id,
+      fileId: fileId,
+      userId: creator.id,
+      tradingDate: new Date(),
+      note: "",
+      lines: { create: [] },
+      confidence: 0,
+      aiNote: "",
     });
 
     if (!newVoucher) {
@@ -76,14 +73,12 @@ export async function POST(
     }
 
     // Info: (20260311 - Julian) 新增 AuditLog
-    await prisma.auditLog.create({
-      data: {
-        userId: creator.id,
-        dataType: "VOUCHER",
-        dataId: newVoucher.id,
-        accountBookId: accountBook.id,
-        action: "CREATE",
-      },
+    await auditLogRepo.createAuditLog({
+      userId: creator.id,
+      dataType: "VOUCHER",
+      dataId: newVoucher.id,
+      accountBookId: accountBook.id,
+      action: "CREATE",
     });
 
     return jsonOk({
@@ -115,9 +110,7 @@ export async function GET(
     }
 
     // Info: (20260310 - Julian) 取得建立者
-    const author = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const author = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!author) {
       console.error("Author not found");
@@ -126,9 +119,7 @@ export async function GET(
 
     // Info: (20260310 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -210,11 +201,7 @@ export async function GET(
     }
 
     // Info: (20260310 - Julian) 取得日記帳列表
-    const vouchers = (await prisma.voucher.findMany(
-      filteredConditions,
-    )) as Prisma.VoucherGetPayload<{
-      include: { file: true; user: true; lines: true };
-    }>[];
+    const vouchers = await voucherRepo.getVouchers(filteredConditions);
 
     // Info: (20260311 - Julian) 組合成前端所需的格式
     const formattedVouchers: IVoucher[] = vouchers.map((v) => {
@@ -247,10 +234,10 @@ export async function GET(
         fileId: v.fileId ?? "",
         file: v.file
           ? {
-              id: v.file.id,
-              hash: v.file.hash,
-              fileName: v.file.fileName || "Unknown",
-            }
+            id: v.file.id,
+            hash: v.file.hash,
+            fileName: v.file.fileName || "Unknown",
+          }
           : undefined,
         lineItems: {
           lines: voucherLineItems,
@@ -297,9 +284,7 @@ export async function GET(
     }
 
     // Info: (20260324 - Julian) 總筆數
-    const totalCount = await prisma.voucher.count({
-      where: filteredConditions.where,
-    });
+    const totalCount = await voucherRepo.countVouchers(filteredConditions.where || {});
 
     return jsonOk({ data: formattedVouchers, total: totalCount });
   } catch (error) {

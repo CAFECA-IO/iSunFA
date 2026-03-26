@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { EsgTarget, Prisma } from '@/generated/client';
+import { EsgTarget, Prisma, EsgRecord } from '@/generated/client';
 
 export interface IEsgRepository {
   getEsgTargetsByAccountBookId(accountBookId: string): Promise<EsgTarget[]>;
@@ -9,7 +9,13 @@ export interface IEsgRepository {
     totalEmissionTarget: Prisma.Decimal | number | null;
     revenueEmissionTarget: Prisma.Decimal | number | null;
   }): Promise<EsgTarget>;
-  verifyAllEsgRecords(accountBookId: string): Promise<Prisma.BatchPayload>;
+  getVerifiedEsgRecordsByAccountBookId(accountBookId: string): Promise<EsgRecord[]>;
+  getEsgTargetByYear(accountBookId: string, year: number): Promise<EsgTarget | null>;
+  getEsgRecords(args: Prisma.EsgRecordFindManyArgs): Promise<Prisma.EsgRecordGetPayload<{ include: { file: true } }>[]>;
+  createEsgRecord(data: Prisma.EsgRecordUncheckedCreateInput): Promise<EsgRecord>;
+  countEsgRecords(where: Prisma.EsgRecordWhereInput): Promise<number>;
+  getEsgRecordById(id: string): Promise<Prisma.EsgRecordGetPayload<{ include: { file: true } }> | null>;
+  updateEsgRecord(id: string, data: Prisma.EsgRecordUpdateInput): Promise<EsgRecord | null>;
 }
 
 export class EsgRepository implements IEsgRepository {
@@ -55,6 +61,47 @@ export class EsgRepository implements IEsgRepository {
     return prisma.esgRecord.updateMany({
       where: { accountBookId, isVerified: false },
       data: { isVerified: true }
+    });
+  }
+
+  async getVerifiedEsgRecordsByAccountBookId(accountBookId: string) {
+    return prisma.esgRecord.findMany({
+      where: {
+        accountBookId,
+        isVerified: true
+      }
+    });
+  }
+
+  async getEsgTargetByYear(accountBookId: string, year: number) {
+    return prisma.esgTarget.findFirst({
+      where: { accountBookId, year }
+    });
+  }
+
+  async getEsgRecords(args: Prisma.EsgRecordFindManyArgs) {
+    return prisma.esgRecord.findMany(args) as unknown as Promise<Prisma.EsgRecordGetPayload<{ include: { file: true } }>[]>;
+  }
+
+  async createEsgRecord(data: Prisma.EsgRecordUncheckedCreateInput) {
+    return prisma.esgRecord.create({ data });
+  }
+
+  async countEsgRecords(where: Prisma.EsgRecordWhereInput) {
+    return prisma.esgRecord.count({ where });
+  }
+
+  async getEsgRecordById(id: string) {
+    return prisma.esgRecord.findUnique({
+      where: { id },
+      include: { file: true },
+    });
+  }
+
+  async updateEsgRecord(id: string, data: Prisma.EsgRecordUpdateInput) {
+    return prisma.esgRecord.update({
+      where: { id },
+      data,
     });
   }
 }
