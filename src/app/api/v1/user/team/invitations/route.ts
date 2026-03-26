@@ -4,7 +4,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { prisma } from "@/lib/prisma";
 
-// Info: (20260325 - Agent) List pending invitations for the currently logged-in user
+// Info: (20260325 - Tzuhan) List pending invitations for the currently logged-in user
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("Authorization");
