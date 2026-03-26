@@ -214,6 +214,11 @@ export const STEP_4_MARKET_REACTION_PROMPT = `
 export const STEP_5_FORMATTED_OUTPUT_PROMPT = `
 請將上述內容彙整成一份專業 Markdown 格式「企業碳健檢報告」。請嚴格遵守以下排版結構：
 
+⚠️ **【嚴格格式與語氣要求】**：
+1. **直接輸出 Markdown 報告內容**，絕不可包含任何前言、開場白（如「好的，這是一份...」）或結尾問候語。
+2. **專業客觀**：請以「極度嚴苛的氣候科學與永續審計專家」的語氣撰寫，揭露痛點不留情面。
+3. **數據導向**：避免空泛的 ESG 公關形容詞，必須嚴密對照物理現實與實質資本支出。
+
 # 🔴 企業碳健檢報告：{Target_Keyword}
 
 **🏷️ 減碳核心標籤：** {Step_2_Final_Tags}

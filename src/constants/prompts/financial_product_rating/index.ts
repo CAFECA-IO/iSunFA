@@ -47,6 +47,11 @@ export const STEP_4_MARKET_REACTION_PROMPT = `
 export const STEP_5_FORMATTED_OUTPUT_PROMPT = `
 請將上述內容彙整成一份專業 Markdown 格式量化商品評級報告。請嚴格遵守以下排版結構：
 
+⚠️ **【嚴格格式與語氣要求】**：
+1. **直接輸出 Markdown 報告內容**，絕不可包含任何前言、開場白（如「好的，這是一份...」）或結尾問候語。
+2. **專業客觀**：請以「專業量化分析師」的嚴謹風格撰寫。
+3. **數據導向**：避免空泛形容詞，必須嚴格基於量化指標給出具體且實質的評價。
+
 # [主標題：包含 {Target_Keyword} 與總評結論的主標題]
 
 **🏷️ 核心特性標籤：** {Step_2_Final_Tags}

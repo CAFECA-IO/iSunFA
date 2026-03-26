@@ -12,6 +12,13 @@ enum Role {
   ADMIN
 }
 
+enum TeamRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
 model User {
   id String @id @default(uuid())
 
@@ -42,6 +49,7 @@ model User {
   paymentTransactions PaymentTransaction[]
   journals            Journal[]
   teamMembers         TeamMember[]
+  teamInvitations     TeamInvitation[]     @relation("Inviter")
   auditLogs           AuditLog[]
   vouchers            Voucher[]
   esgRecords          EsgRecord[]
@@ -51,13 +59,14 @@ model User {
 }
 
 model Team {
-  id           String        @id @default(uuid())
-  name         String
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
-  deletedAt    DateTime?     @map("deleted_at")
-  teamMembers  TeamMember[]
-  accountBooks AccountBook[]
+  id              String           @id @default(uuid())
+  name            String
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  deletedAt       DateTime?        @map("deleted_at")
+  teamMembers     TeamMember[]
+  teamInvitations TeamInvitation[]
+  accountBooks    AccountBook[]
 
   @@map("team")
 }
@@ -68,11 +77,26 @@ model TeamMember {
   team      Team     @relation(fields: [teamId], references: [id])
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id])
-  role      String
+  role      TeamRole
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("team_member")
+}
+
+model TeamInvitation {
+  id             String   @id @default(uuid())
+  teamId         String   @map("team_id")
+  team           Team     @relation(fields: [teamId], references: [id])
+  inviterId      String   @map("inviter_id")
+  inviter        User     @relation("Inviter", fields: [inviterId], references: [id])
+  inviteeAddress String   @map("invitee_address")
+  role           TeamRole
+  status         String   @default("PENDING") // Info: (20260325 - Agent) PENDING, ACCEPTED, REJECTED
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("team_invitation")
 }
 
 model Order {
@@ -354,7 +378,7 @@ model Journal {
   updatedAt      DateTime         @updatedAt @map("updated_at")
   text           String           @db.Text // Info: (20260304 - Julian) AI 辨識出的文字結果
   analysisStatus AIAnalysisStatus @default(PENDING) @map("analysis_status")
-  tradingDate    DateTime         @map("trading_date")
+  tradingDate    DateTime         @default(now()) @map("trading_date")
   confidence     Int              @default(0) @map("confidence")
   isVerified     Boolean          @default(false) @map("is_verified")
   aiNote         String           @map("ai_note") @db.Text // Info: (20260325 - Julian) AI 分析的備註
@@ -492,7 +516,7 @@ model Voucher {
   lines VoucherLine[]
 
   // Info: (20260324 - Julian) AI 分析的備註
-  aiNote String @map("ai_note") @db.Text
+  aiNote String @default("") @map("ai_note") @db.Text
 
   @@map("voucher")
 }
@@ -565,7 +589,7 @@ model EsgRecord {
   user   User?   @relation(fields: [userId], references: [id])
 
   // Info: (20260324 - Julian) AI 分析的備註
-  aiNote String @map("ai_note") @db.Text
+  aiNote String @default("") @map("ai_note") @db.Text
 
   @@map("esg_record")
 }

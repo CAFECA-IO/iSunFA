@@ -8,6 +8,7 @@ import { IAccountBook } from '@/services/account_book.service';
 import { useTranslation } from '@/i18n/i18n_context';
 import { COUNTRY, CURRENCY, RULE } from '@/constants/accounts';
 import { ESG_INDUSTRY_BENCHMARKS } from '@/constants/esg_industry_benchmarks';
+import ConfirmModal from '@/components/common/confirm_modal';
 
 export default function UserMainPage() {
   const { t } = useTranslation();
@@ -30,6 +31,27 @@ export default function UserMainPage() {
   const [formTeamId, setFormTeamId] = useState('');
   const [formEnterpriseId, setFormEnterpriseId] = useState('');
   const [formEsgIndustryId, setFormEsgIndustryId] = useState<string>('');
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    isConfirm?: boolean;
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: ""
+  });
+
+  const showAlert = (message: string, title = t("common.notification") || "Notification") => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      isConfirm: false
+    });
+  };
 
   const fetchAccountBooks = async () => {
     try {
@@ -141,11 +163,11 @@ export default function UserMainPage() {
         setIsModalOpen(false);
         await fetchAccountBooks();
       } else {
-        alert(json.message || 'Error occurred');
+        showAlert(json.message || 'Error occurred');
       }
     } catch (err) {
       console.error(err);
-      alert('Network error');
+      showAlert('Network error');
     } finally {
       setIsSubmitting(false);
     }
@@ -388,6 +410,15 @@ export default function UserMainPage() {
           </div>
         </div>
       </Dialog>
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.isConfirm ? t('common.confirm') || 'Confirm' : t('common.ok') || 'OK'}
+        cancelText={confirmModal.isConfirm ? t('common.cancel') || 'Cancel' : undefined}
+        onConfirm={confirmModal.onConfirm}
+      />
     </div>
   );
 }
