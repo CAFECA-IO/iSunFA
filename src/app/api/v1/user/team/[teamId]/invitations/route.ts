@@ -55,7 +55,7 @@ export async function POST(
       data: { currentChallenge: null }
     });
 
-    const assignedRole = role === "ADMIN" || role === "MEMBER" ? role : "MEMBER";
+    const assignedRole = ["OWNER", "ADMIN", "EDITOR", "VIEWER"].includes(role) ? role : "VIEWER";
 
     // Validate if the address is already a member
     const targetUser = await prisma.user.findUnique({ where: { address } });
