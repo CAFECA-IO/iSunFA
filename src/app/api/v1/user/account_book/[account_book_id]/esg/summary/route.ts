@@ -129,7 +129,7 @@ export async function GET(
       const proportion = Math.min(1, spanMs / msInYear);
       const proportionalTarget =
         Number(target.totalEmissionTarget) * proportion;
-      goalProgress = (totalEmissions / proportionalTarget) * 100; // kg/kg
+      goalProgress = (totalEmissions / proportionalTarget) * 100; // Info: (20260326 - Julian) 碳排放目標達成率，單位為百分比
     }
 
     const dashboardSummary: IEsgDashboardSummary = {
