@@ -162,7 +162,7 @@ export async function DELETE(
     // Info: (20260325 - Tzuhan) 2. OWNER can delete ANY user inside the team
     // Info: (20260325 - Tzuhan) 3. ADMIN can only delete MEMBER users inside the team
     if (!isSelfDelete) {
-      if (operator.role === "MEMBER") {
+      if (operator.role === "EDITOR" || operator.role === "VIEWER") {
         return jsonFail(ApiCode.FORBIDDEN, "Permission denied");
       }
       if (operator.role === "ADMIN" && (targetMember.role === "OWNER" || targetMember.role === "ADMIN")) {

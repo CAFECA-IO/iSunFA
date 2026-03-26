@@ -1,4 +1,4 @@
-import { Prisma } from '@/generated/client';
+import { Prisma, TeamRole } from '@/generated/client';
 import { prisma } from '@/lib/prisma';
 import { teamRepo } from '@/repositories/team.repo';
 
@@ -35,7 +35,7 @@ export const getOrCreateUserTeam = async (userId: string, userName?: string) => 
   await teamRepo.createTeamMember({
     team: { connect: { id: team.id } },
     user: { connect: { id: userId } },
-    role: 'OWNER',
+    role: TeamRole.OWNER,
   });
 
   return team;
@@ -47,7 +47,7 @@ export const updateTeam = async (teamId: string, data: Prisma.TeamUpdateInput) =
 };
 
 // Info: (20260308 - Luphia) 增加一個團隊成員
-export const addTeamMember = async (teamId: string, userId: string, role: string = 'MEMBER') => {
+export const addTeamMember = async (teamId: string, userId: string, role: TeamRole = TeamRole.VIEWER) => {
   return teamRepo.createTeamMember({
     team: { connect: { id: teamId } },
     user: { connect: { id: userId } },

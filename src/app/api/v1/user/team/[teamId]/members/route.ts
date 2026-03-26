@@ -5,6 +5,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 import { prisma } from "@/lib/prisma";
 import { webAuthnService } from "@/services/webauthn.service";
+import { TeamRole } from '@/generated/client';
 
 export async function GET(
   request: NextRequest,
@@ -80,7 +81,7 @@ export async function POST(
       data: { currentChallenge: null }
     });
 
-    const assignedRole = role === "ADMIN" || role === "MEMBER" ? role : "MEMBER";
+    const assignedRole: TeamRole = role === "ADMIN" || role === "EDITOR" || role === "VIEWER" ? role : TeamRole.VIEWER;
 
     // Info: (20260325 - Tzuhan) Find the target user by address
     const targetUser = await prisma.user.findUnique({ where: { address } });
