@@ -3,7 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronUp, ChevronDown, Search, Filter, FileStack } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  Search,
+  Filter,
+  FileStack,
+} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -13,6 +19,7 @@ import ConfirmModal from "@/components/common/confirm_modal";
 import Pagination from "@/components/common/pagination";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
 import { VerifyStatus } from "@/constants/verify_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 enum VoucherSorting {
   DATE_DESC = "date_desc",
@@ -148,7 +155,11 @@ export default function VoucherTableSection() {
 
   // Info: (20260325 - Luphia) 抽取需要輪詢的 ID，避免頻繁觸發 Effect
   const pendingIds = vouchers
-    .filter((v) => v.analysisStatus === "PENDING" || v.analysisStatus === "PROCESSING")
+    .filter(
+      (v) =>
+        v.analysisStatus === AIAnalysisStatus.PENDING ||
+        v.analysisStatus === AIAnalysisStatus.PROCESSING,
+    )
     .map((v) => v.id);
   const pendingIdsJoined = pendingIds.join(",");
 
@@ -167,9 +178,9 @@ export default function VoucherTableSection() {
         const results = await Promise.all(
           ids.map((id) =>
             request<IApiResponse<IVoucher>>(
-              `/api/v1/user/account_book/${accountBookId}/voucher/${id}`
-            )
-          )
+              `/api/v1/user/account_book/${accountBookId}/voucher/${id}`,
+            ),
+          ),
         );
 
         const updatedVouchers = results
@@ -472,10 +483,11 @@ export default function VoucherTableSection() {
                         className="group mx-auto flex w-full items-center justify-center gap-1"
                       >
                         <span
-                          className={`transition-colors ease-in-out ${isDateDesc || isDateAsc
-                            ? "text-orange-500"
-                            : "text-slate-500 group-hover:text-orange-500"
-                            }`}
+                          className={`transition-colors ease-in-out ${
+                            isDateDesc || isDateAsc
+                              ? "text-orange-500"
+                              : "text-slate-500 group-hover:text-orange-500"
+                          }`}
                         >
                           {t("voucher.main_view.table.headers.voucher_date")}
                         </span>
@@ -511,10 +523,11 @@ export default function VoucherTableSection() {
                         className="group ml-auto flex items-center justify-end gap-1 uppercase"
                       >
                         <span
-                          className={`transition-colors ease-in-out ${isDebitAsc || isDebitDesc
-                            ? "text-orange-500"
-                            : "text-slate-500 group-hover:text-orange-500"
-                            }`}
+                          className={`transition-colors ease-in-out ${
+                            isDebitAsc || isDebitDesc
+                              ? "text-orange-500"
+                              : "text-slate-500 group-hover:text-orange-500"
+                          }`}
                         >
                           {t("voucher.main_view.table.headers.debit")}
                         </span>
@@ -538,10 +551,11 @@ export default function VoucherTableSection() {
                         className="group ml-auto flex items-center justify-end gap-1 uppercase"
                       >
                         <span
-                          className={`transition-colors ease-in-out ${isCreditAsc || isCreditDesc
-                            ? "text-orange-500"
-                            : "text-slate-500 group-hover:text-orange-500"
-                            }`}
+                          className={`transition-colors ease-in-out ${
+                            isCreditAsc || isCreditDesc
+                              ? "text-orange-500"
+                              : "text-slate-500 group-hover:text-orange-500"
+                          }`}
                         >
                           {t("voucher.main_view.table.headers.credit")}
                         </span>
@@ -591,35 +605,40 @@ export default function VoucherTableSection() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={8} className="p-8 text-center lg:px-6 lg:py-16 bg-white">
+                      <td
+                        colSpan={8}
+                        className="bg-white p-8 text-center lg:px-6 lg:py-16"
+                      >
                         {isFiltering ? (
                           <div className="flex flex-col items-center justify-center">
-                            <Search className="h-12 w-12 text-slate-300 mb-4" />
-                            <h3 className="text-lg font-medium text-slate-900 mb-2">
+                            <Search className="mb-4 h-12 w-12 text-slate-300" />
+                            <h3 className="mb-2 text-lg font-medium text-slate-900">
                               {t("voucher.main_view.table.no_filter_results")}
                             </h3>
-                            <p className="text-slate-500 mb-6 max-w-sm text-center">
-                              {t("voucher.main_view.table.no_filter_results_desc")}
+                            <p className="mb-6 max-w-sm text-center text-slate-500">
+                              {t(
+                                "voucher.main_view.table.no_filter_results_desc",
+                              )}
                             </p>
                             <button
                               onClick={handleClearFilters}
-                              className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-bold rounded-lg text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm"
+                              className="inline-flex items-center justify-center rounded-lg border border-transparent bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-200"
                             >
                               {t("common.clear_filters")}
                             </button>
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center">
-                            <FileStack className="h-12 w-12 text-slate-300 mb-4" />
-                            <h3 className="text-lg font-medium text-slate-900 mb-2">
+                            <FileStack className="mb-4 h-12 w-12 text-slate-300" />
+                            <h3 className="mb-2 text-lg font-medium text-slate-900">
                               {t("voucher.main_view.table.no_data")}
                             </h3>
-                            <p className="text-slate-500 mb-6 max-w-sm text-center">
+                            <p className="mb-6 max-w-sm text-center text-slate-500">
                               {t("voucher.main_view.table.no_data_desc")}
                             </p>
                             <Link
                               href={`/user/account_book/${accountBookId}/journal`}
-                              className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-bold rounded-lg text-white bg-orange-500 hover:bg-orange-600 transition-colors shadow-sm"
+                              className="inline-flex items-center justify-center rounded-lg border border-transparent bg-orange-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
                             >
                               {t("voucher.main_view.table.no_data_cta")}
                             </Link>

@@ -13,6 +13,7 @@ import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
 import { VerifyStatus } from "@/constants/verify_status";
 import Pagination from "@/components/common/pagination";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 interface IEsgTableSectionProps {
   year?: number;
@@ -122,7 +123,7 @@ export default function EsgTableSection({
 
   // Info: (20260325 - Luphia) 抽取需要輪詢的 ID，避免頻繁觸發 Effect
   const pendingIds = records
-    .filter((r) => r.analysisStatus === "PENDING" || r.analysisStatus === "PROCESSING")
+    .filter((r) => r.analysisStatus === AIAnalysisStatus.PENDING || r.analysisStatus === AIAnalysisStatus.PROCESSING)
     .map((r) => r.id);
   const pendingIdsJoined = pendingIds.join(",");
 

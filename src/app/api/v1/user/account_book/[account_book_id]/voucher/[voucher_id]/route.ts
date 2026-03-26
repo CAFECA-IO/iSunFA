@@ -181,6 +181,7 @@ export async function PUT(
             isDebit: row.isDebit ?? false,
           })),
         },
+        analysisStatus: AIAnalysisStatus.COMPLETED, // Info: (20260326 - Julian) 更新傳票後，將 analysisStatus 設為 COMPLETED
       },
       include: { lines: true, user: true, file: true },
     });
