@@ -1,5 +1,8 @@
 export const en = {
   common: {
+    no_data: "No Data",
+    cancel_edit_title: "Cancel Edit?",
+    cancel_edit_message: "Are you sure you want to cancel the edit? Data will revert to the original state.",
     loading: "Loading...",
     save: "Save",
     confirm: "Confirm",
@@ -12,10 +15,20 @@ export const en = {
     all: "All",
     agree: "Agree",
     filter: "Filter",
+    clear_filters: "Clear Filters",
     pagination: {
       prev: "Previous",
       next: "Next",
       page_info: "Page {{current}} of {{total}}",
+    },
+    testing_env_banner: {
+      message: "⚠️ This environment is for development and demonstration. Data is cleared periodically. Do not use for production. For the official environment, visit ",
+    },
+    ai_confidence: {
+      title: "AI Confidence",
+      note: "AI Note",
+      no_note: "No AI Note",
+      note_title: "AI Analysis Note",
     },
   },
   faith: {
@@ -36,6 +49,9 @@ export const en = {
   },
   dashboard: {
     title: "Information War Room",
+    empty_state_title: "No Data Found",
+    empty_state_desc: "No data found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
+    empty_state_cta: "Upload Data",
     executive_summary: "Executive Summary",
     auto_refresh: "Auto Refresh",
     available_funds: "Available Funds",
@@ -948,9 +964,11 @@ export const en = {
     analyze_all_btn: "Analyze All",
     multiple_files_supported:
       "Supports batch uploading multiple files (.jpg, .png, .pdf)",
-    title: "Invoice Management",
+    title: "Receipt Management",
     upload: "Upload",
-    list: "List",
+    view_file: "View Receipt File",
+    view_preview: "View Preview",
+    list: "Receipt List",
     uploading: "Uploading...",
     click_or_drag: "Click or drag file here",
     single_file_only: "Only one file can be uploaded at a time",
@@ -1065,10 +1083,15 @@ export const en = {
           confidence: "AI Confidence",
           status: "Status",
         },
+        no_entries: "No Entries",
         no_file: "No File",
         filter_btn: "Filters",
         verify_all: "Verify All",
-        no_data: "No voucher records yet",
+        no_data: "No Data Found",
+        no_data_desc: "No voucher records found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
+        no_data_cta: "Upload Data",
+        no_filter_results: "No Results Found",
+        no_filter_results_desc: "Please adjust your search keywords or filter criteria.",
       },
     },
     summary: {
@@ -1124,10 +1147,6 @@ export const en = {
         confirm: "Confirm",
       },
       confirm_modals: {
-        clear_all: {
-          title: "Clear All",
-          message: "Are you sure you want to clear all data?",
-        },
         leave_without_saving: {
           title: "Leave without saving",
           message: "Are you sure you want to discard changes and leave?",
@@ -1191,7 +1210,11 @@ export const en = {
       status: "Status",
     },
     loading: "Loading...",
-    no_records: "No ESG Records",
+    no_records: "No Data Found",
+    no_records_desc: "No ESG records found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
+    no_records_cta: "Upload Data",
+    no_filter_results: "No Results Found",
+    no_filter_results_desc: "Please adjust your search keywords or filter criteria.",
     footer: {
       record_count: "Showing {{count}} records",
       data_citation: "Data: IPCC AR6 Emission Factors",
@@ -1325,75 +1348,29 @@ export const en = {
       },
     },
   },
-      "verify":{
-      "verify_modal":{
-        title:"Confirm Verify?",
-        message:"Are you sure you want to verify this {{type}}? Changes will be saved, please confirm the data is correct.",
-        confirm:"Confirm Verify",
-      },
-      "unverify_modal":{
-        title:"Confirm Unverify?",
-        message:"Are you sure you want to unverify this {{type}}? Changes will be saved, please confirm the data is correct.",
-        confirm:"Confirm Unverify",
-      },
-      status: {
-        verified: "Verified",
-        unverified: "Unverified",
-      },
-      button:{
-        unverify:"Unverify",
-        verify:"Verify & Save",
-      },
-      type:{
-        journal:"Journal",
-        voucher:"Voucher",
-        esg:"ESG",
-      }
+  "verify": {
+    "verify_modal": {
+      title: "Confirm Verify?",
+      message: "Are you sure you want to verify this {{type}}? Changes will be saved, please confirm the data is correct.",
+      confirm: "Confirm Verify",
     },
-    teamManagement: {
-      title: "Team Management",
-      description: "Manage your teams and members here.",
-      createTeam: "Create Team",
-      pendingInvitations: "Pending Invitations",
-      acceptViaFido2: "Accept via FIDO2",
-      accepting: "Accepting...",
-      noTeams: "No teams available.",
-      inviteMember: "Invite Member",
-      you: "You",
-      pendingInvite: "Pending Invite",
-      pending: "PENDING",
-      accountBooks: "Account Books (Businesses)",
-      createNewTeam: "Create New Team",
-      teamName: "Team Name",
-      enterTeamName: "Enter team name",
-      cancel: "Cancel",
-      creating: "Creating...",
-      web3Address: "Web3 Address",
-      role: "Role",
-      fido2Requirement: "FIDO2 Requirement:",
-      fido2RequirementText: "You will be asked to authenticate via Passkey to sign this transaction on-chain.",
-      signing: "Signing...",
-      inviteViaFido2: "Invite via FIDO2",
-      roles: {
-        OWNER: "Owner",
-        ADMIN: "Admin",
-        EDITOR: "Editor",
-        VIEWER: "Viewer",
-      },
-      confirmRemoveLabel: "Are you sure you want to remove this member?",
-      alerts: {
-        createSuccess: "Team created successfully!",
-        updateSuccess: "Team name updated successfully!",
-        inviteSuccess: "Invitation sent successfully!",
-        acceptSuccess: "Invitation accepted successfully!",
-        roleSuccess: "Role updated successfully!",
-        removeSuccess: "Member removed successfully!",
-        errorCreate: "Error creating team",
-        errorUpdate: "Error updating team name",
-        errorInvite: "Error inviting member",
-        errorAccept: "Error accepting invitation",
-        errorRole: "Error changing role",
-        errorRemove: "Error removing member",
-      }
+    "unverify_modal": {
+      title: "Confirm Unverify?",
+      message: "Are you sure you want to unverify this {{type}}? Changes will be saved, please confirm the data is correct.",
+      confirm: "Confirm Unverify",
+    },
+    status: {
+      verified: "Verified",
+      unverified: "Unverified",
+    },
+    button: {
+      unverify: "Unverify",
+      verify: "Verify & Save",
+    },
+    type: {
+      journal: "Journal",
+      voucher: "Voucher",
+      esg: "ESG",
     }
+  }
 };

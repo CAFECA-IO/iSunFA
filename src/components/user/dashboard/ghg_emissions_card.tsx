@@ -33,7 +33,7 @@ export const GHGEmissionsCard = ({ currentData, gasType, setGasType }: IGHGEmiss
           </div>
 
           {/* Info: (20260118 - Luphia) Gas Type Switcher */}
-          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+          <div className="flex flex-wrap items-center gap-1 rounded-lg bg-gray-100 p-1 sm:flex-nowrap">
             {(['co2', 'ch4', 'n2o', 'f_gases'] as const).map((gas) => (
               <button
                 key={gas}

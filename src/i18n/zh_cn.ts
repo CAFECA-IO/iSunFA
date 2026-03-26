@@ -1,5 +1,8 @@
 export const zhCn = {
   common: {
+    no_data: "无数据",
+    cancel_edit_title: "取消修改？",
+    cancel_edit_message: "确定要取消修改吗？数据将回到原始状态。",
     loading: "载入中...",
     save: "保存",
     confirm: "确认",
@@ -12,10 +15,20 @@ export const zhCn = {
     all: "全部",
     agree: "同意",
     filter: "筛选",
+    clear_filters: "清除所有筛选",
     pagination: {
       prev: "上一页",
       next: "下一页",
       page_info: "第 {{current}} 页，共 {{total}} 页",
+    },
+    testing_env_banner: {
+      message: "⚠️ 本环境为开发与展示用测试环境，资料不定期清空，请勿用作生产环境。正式环境请前往 ",
+    },
+    ai_confidence: {
+      title: "AI 信心度",
+      note: "AI 备注",
+      no_note: "无 AI 备注",
+      note_title: "AI 解析备注",
     },
   },
   faith: {
@@ -36,6 +49,9 @@ export const zhCn = {
   },
   dashboard: {
     title: "资讯战情室",
+    empty_state_title: "暂无数据",
+    empty_state_desc: "在所选期间内暂无数据。您可以尝试切换不同的时间区间，或是前往凭证模块上传新数据。",
+    empty_state_cta: "上传凭证/数据",
     executive_summary: "经营决策顶层指标",
     auto_refresh: "自动更新",
     available_funds: "可用资金",
@@ -931,7 +947,9 @@ export const zhCn = {
     main_view: {
       title: "凭证管理",
       upload: "上传凭证",
-      list: "凭证列表",
+      view_file: "查看凭证文件",
+      view_preview: "查看预览",
+      list: "凭证清单",
       log: "变动记录",
     },
     log_view: {
@@ -1002,7 +1020,11 @@ export const zhCn = {
       status: "状态",
     },
     loading: "载入中...",
-    no_records: "无碳排分析纪录",
+    no_records: "暂无数据",
+    no_records_desc: "在所选期间内暂无ESG纪录。您可以尝试切换不同的时间区间，或是前往凭证模块上传新数据。",
+    no_records_cta: "上传凭证/数据",
+    no_filter_results: "找不到符合条件的纪录",
+    no_filter_results_desc: "请尝试调整搜索关键字或筛选条件",
     footer: {
       record_count: "显示 {{count}} 笔碳排分析纪录",
       data_citation: "数据引用：IPCC 第六次评估报告排放系数",
@@ -1147,10 +1169,15 @@ export const zhCn = {
           confidence: "AI 信心度",
           status: "状态",
         },
+        no_entries: "没有分录",
         no_file: "无文件",
         filter_btn: "筛选条件",
         verify_all: "一键核对",
-        no_data: "目前无凭证数据",
+        no_data: "暂无数据",
+        no_data_desc: "在所选期间内暂无凭证数据。您可以尝试切换不同的时间区间，或是前往凭证模块上传新数据。",
+        no_data_cta: "上传凭证/数据",
+        no_filter_results: "找不到符合条件的纪录",
+        no_filter_results_desc: "请尝试调整搜索关键字或筛选条件",
       },
     },
     summary: {
@@ -1208,10 +1235,6 @@ export const zhCn = {
         confirm: "确认",
       },
       confirm_modals: {
-        clear_all: {
-          title: "全部清除",
-          message: "您确定要清除所有数据吗？",
-        },
         leave_without_saving: {
           title: "离开且不保存",
           message: "您确定要放弃在此的变更并离开吗？",
@@ -1274,75 +1297,29 @@ export const zhCn = {
       },
     },
   },
-  "verify":{
-      "verify_modal":{
-        title:"确认核对？",
-        message:"您确定要核对此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
-        confirm:"确认核对",
-      },
-      "unverify_modal":{
-        title:"确认退回？",
-        message:"您确定要退回此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
-        confirm:"确认退回",
-      },
-      status: {
-        verified: "已核对",
-        unverified: "待核对",
-      },
-      button:{
-        unverify:"退回未核对",
-        verify:"核对并存档",
-      },
-      type:{
-        journal:"日记账",
-        voucher:"传票",
-        esg:"碳排记录",
-      }
+  "verify": {
+    "verify_modal": {
+      title: "确认核对？",
+      message: "您确定要核对此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
+      confirm: "确认核对",
     },
-    teamManagement: {
-      title: "团队管理",
-      description: "在此管理您的团队与成员。",
-      createTeam: "创建团队",
-      pendingInvitations: "待处理的邀请",
-      acceptViaFido2: "使用 FIDO2 接受邀请",
-      accepting: "处理中...",
-      noTeams: "目前没有任何团队。",
-      inviteMember: "邀请成员",
-      you: "您",
-      pendingInvite: "待接受的邀请",
-      pending: "等待中",
-      accountBooks: "关联账本 (公司)",
-      createNewTeam: "创建新团队",
-      teamName: "团队名称",
-      enterTeamName: "输入团队名称",
-      cancel: "取消",
-      creating: "创建中...",
-      web3Address: "Web3 钱包地址",
-      role: "角色",
-      fido2Requirement: "FIDO2 验证要求：",
-      fido2RequirementText: "您需要通过通行密钥 (Passkey) 进行验证并在链上签署此交易。",
-      signing: "签署中...",
-      inviteViaFido2: "使用 FIDO2 发送邀请",
-      roles: {
-        OWNER: "拥有者",
-        ADMIN: "管理员",
-        EDITOR: "编辑者",
-        VIEWER: "查看者",
-      },
-      confirmRemoveLabel: "您确定要移除该成员吗？",
-      alerts: {
-        createSuccess: "成功创建团队！",
-        updateSuccess: "成功更新团队名称！",
-        inviteSuccess: "邀请发送成功！",
-        acceptSuccess: "成功接受邀请！",
-        roleSuccess: "成功更新成员角色！",
-        removeSuccess: "成功移除成员！",
-        errorCreate: "创建团队失败",
-        errorUpdate: "更新团队名称失败",
-        errorInvite: "邀请成员失败",
-        errorAccept: "接受邀请失败",
-        errorRole: "更改角色失败",
-        errorRemove: "移除成员失败",
-      }
+    "unverify_modal": {
+      title: "确认退回？",
+      message: "您确定要退回此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
+      confirm: "确认退回",
+    },
+    status: {
+      verified: "已核对",
+      unverified: "待核对",
+    },
+    button: {
+      unverify: "退回未核对",
+      verify: "核对并存档",
+    },
+    type: {
+      journal: "日记账",
+      voucher: "传票",
+      esg: "碳排记录",
     }
+  }
 };

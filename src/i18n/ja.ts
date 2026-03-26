@@ -1,5 +1,8 @@
 export const ja = {
   common: {
+    no_data: "データなし",
+    cancel_edit_title: "編集をキャンセルしますか？",
+    cancel_edit_message: "編集をキャンセルしてもよろしいですか？データは元の状態に戻ります。",
     loading: "読み込み中...",
     save: "保存",
     confirm: "確認",
@@ -13,10 +16,20 @@ export const ja = {
     all: "すべて",
     agree: "同意",
     filter: "フィルター",
+    clear_filters: "すべてのフィルターをクリア",
     pagination: {
       prev: "前へ",
       next: "次へ",
       page_info: "{{current}} / {{total}} ページ",
+    },
+    testing_env_banner: {
+      message: "⚠️ この環境は開発およびデモ用のテスト環境です。データは定期的にクリアされます。本番環境としては使用しないでください。本番環境はこちらへ ",
+    },
+    ai_confidence: {
+      title: "AI 信頼度",
+      note: "AI 備考",
+      no_note: "AI 備考なし",
+      note_title: "AI 解析備考",
     },
   },
   faith: {
@@ -37,6 +50,9 @@ export const ja = {
   },
   dashboard: {
     title: "情報戦略室",
+    empty_state_title: "データなし",
+    empty_state_desc: "選択した期間のデータはありません。別の期間を選択するか、データをアップロードしてください。",
+    empty_state_cta: "データをアップロード",
     executive_summary: "経営判断のトップ指標",
     auto_refresh: "自動更新",
     available_funds: "利用可能資金",
@@ -913,6 +929,8 @@ export const ja = {
       "複数ファイルの一括アップロードに対応 (.jpg, .png, .pdf)",
     title: "請求書管理",
     upload: "アップロード",
+    view_file: "証憑ファイルを表示",
+    view_preview: "プレビューを表示",
     list: "リスト",
     uploading: "アップロード中...",
     click_or_drag: "ここをクリックまたはファイルをドラッグ",
@@ -1036,7 +1054,11 @@ export const ja = {
       status: "ステータス",
     },
     loading: "ロード中...",
-    no_records: "記録がありません",
+    no_records: "データなし",
+    no_records_desc: "選択した期間のESG記録はありません。別の期間を選択するか、データをアップロードしてください。",
+    no_records_cta: "データをアップロード",
+    no_filter_results: "条件に一致する記録が見つかりません",
+    no_filter_results_desc: "検索キーワードまたはフィルター条件を調整してみてください",
     footer: {
       record_count: "{{count}} 件の記録表示",
       data_citation: "データ: IPCC 第6次評価報告書 排出係数",
@@ -1181,10 +1203,15 @@ export const ja = {
           confidence: "AI信頼度",
           status: "ステータス",
         },
+        no_entries: "仕訳なし",
         no_file: "ファイルなし",
         filter_btn: "フィルター",
         verify_all: "一括確認",
-        no_data: "伝票データがありません。",
+        no_data: "データなし",
+        no_data_desc: "選択した期間の伝票データはありません。別の期間を選択するか、データをアップロードしてください。",
+        no_data_cta: "データをアップロード",
+        no_filter_results: "条件に一致する記録が見つかりません",
+        no_filter_results_desc: "検索キーワードまたはフィルター条件を調整してみてください",
       },
     },
     summary: {
@@ -1239,10 +1266,6 @@ export const ja = {
         save_voucher: "伝票を保存",
       },
       confirm_modals: {
-        clear_all: {
-          title: "すべてクリア",
-          message: "すべてのデータをクリアしてもよろしいですか？",
-        },
         leave_without_saving: {
           title: "保存せずに退出",
           message: "変更を破棄して終了してもよろしいですか？",
@@ -1305,75 +1328,29 @@ export const ja = {
       },
     },
   },
-  "verify":{
-      "verify_modal":{
-        title:"確認核對？",
-        message:"您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
-        confirm:"確認核對",
-      },
-      "unverify_modal":{
-        title:"確認退回？",
-        message:"您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
-        confirm:"確認退回",
-      },
-      status: {
-        verified: "已核對",
-        unverified: "待核對",
-      },
-      button:{
-        unverify:"退回未核對",
-        verify:"核對並存檔",
-      },
-      type:{
-        journal:"日記帳",
-        voucher:"傳票",
-        esg:"碳排紀錄",
-      }
-  },
-    teamManagement: {
-      title: "チーム管理",
-      description: "ここでチームとメンバーを管理します。",
-      createTeam: "チーム作成",
-      pendingInvitations: "保留中の招待",
-      acceptViaFido2: "FIDO2を使って受け入れる",
-      accepting: "処理中...",
-      noTeams: "チームがありません。",
-      inviteMember: "メンバーを招待",
-      you: "あなた",
-      pendingInvite: "保留中の招待",
-      pending: "保留中",
-      accountBooks: "関連帳簿 (企業)",
-      createNewTeam: "新しいチームを作成",
-      teamName: "チーム名",
-      enterTeamName: "チーム名を入力",
-      cancel: "キャンセル",
-      creating: "作成中...",
-      web3Address: "Web3アドレス",
-      role: "権限",
-      fido2Requirement: "FIDO2認証の要件:",
-      fido2RequirementText: "このトランザクションをオンチェーンで署名するには、Passkeyでの認証が必要です。",
-      signing: "署名中...",
-      inviteViaFido2: "FIDO2を使って招待",
-      roles: {
-        OWNER: "オーナー",
-        ADMIN: "管理者",
-        EDITOR: "編集者",
-        VIEWER: "閲覧者",
-      },
-      confirmRemoveLabel: "このメンバーを削除してもよろしいですか？",
-      alerts: {
-        createSuccess: "チームが正常に作成されました！",
-        updateSuccess: "チーム名が正常に更新されました！",
-        inviteSuccess: "招待が正常に送信されました！",
-        acceptSuccess: "招待を正常に受け入れました！",
-        roleSuccess: "役割が正常に更新されました！",
-        removeSuccess: "メンバーが正常に削除されました！",
-        errorCreate: "チームの作成に失敗しました",
-        errorUpdate: "チーム名の更新に失敗しました",
-        errorInvite: "メンバーの招待に失敗しました",
-        errorAccept: "招待の受け入れに失敗しました",
-        errorRole: "役割の変更に失敗しました",
-        errorRemove: "メンバーの削除に失敗しました",
-      }
+  "verify": {
+    "verify_modal": {
+      title: "確認核對？",
+      message: "您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+      confirm: "確認核對",
+    },
+    "unverify_modal": {
+      title: "確認退回？",
+      message: "您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+      confirm: "確認退回",
+    },
+    status: {
+      verified: "已核對",
+      unverified: "待核對",
+    },
+    button: {
+      unverify: "退回未核對",
+      verify: "核對並存檔",
+    },
+    type: {
+      journal: "日記帳",
+      voucher: "傳票",
+      esg: "碳排紀錄",
     }
+  }
 };

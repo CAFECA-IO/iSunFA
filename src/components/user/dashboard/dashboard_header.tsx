@@ -43,9 +43,9 @@ export const DashboardHeader = ({
     <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
       {/* Info: (20260118 - Luphia) Mobile Top Row: Title + Refresh Controls */}
       <div className="flex justify-between items-center w-full sm:w-auto">
-        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-          <Activity className="w-5 h-5 text-orange-600" />
-          {t('dashboard.title')}
+        <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900">
+          <Activity className="h-5 w-5 shrink-0 text-orange-600" />
+          <span className="truncate">{t('dashboard.title')}</span>
         </h2>
 
         {/* Info: (20260118 - Luphia) Mobile Refresh Controls */}
@@ -75,9 +75,9 @@ export const DashboardHeader = ({
       </div>
 
       {/* Info: (20260118 - Luphia) Desktop Controls + Time Selector (Always visible, full width on mobile) */}
-      <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+      <div className="flex w-full flex-col items-start gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
         {/* Info: (20260118 - Luphia) Desktop Refresh Controls */}
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="hidden items-center gap-3 sm:flex">
           <div className="flex items-center gap-2">
             <Switch
               checked={autoRefresh}
@@ -88,29 +88,29 @@ export const DashboardHeader = ({
               <span className={`${autoRefresh ? 'translate-x-6' : 'translate-x-1'
                 } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
             </Switch>
-            <span className="text-sm text-gray-600 font-medium whitespace-nowrap">{t('dashboard.auto_refresh')}</span>
+            <span className="text-sm font-medium whitespace-nowrap text-gray-600">{t('dashboard.auto_refresh')}</span>
           </div>
-          <div className="h-6 w-px bg-gray-300 mx-1" />
+          <div className="mx-1 h-6 w-px bg-gray-300" />
           <button
             onClick={refresh}
             disabled={loading}
-            className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-full p-2 text-gray-500 transition-all hover:bg-orange-50 hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
             title={t('common.refresh') || 'Refresh'}
           >
             <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           </button>
-          <div className="h-6 w-px bg-gray-300 mx-1" />
+          <div className="mx-1 h-6 w-px bg-gray-300" />
         </div>
 
         {/* Info: (20260322 - Luphia) Custom Time Selector */}
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <select
             value={selectedYear}
             onChange={(e) => {
               setSelectedYear(Number(e.target.value));
               setTimeUnit('custom');
             }}
-            className={`rounded-lg border px-3 py-1.5 text-sm font-medium focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 transition-colors ${timeUnit === 'custom' ? 'bg-gray-900 border-gray-900 text-white shadow-sm' : 'bg-white border-gray-300 text-gray-700'}`}
+            className={`flex-1 sm:flex-none rounded-lg border px-3 py-1.5 text-sm font-medium focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 transition-colors ${timeUnit === 'custom' ? 'bg-gray-900 border-gray-900 text-white shadow-sm' : 'bg-white border-gray-300 text-gray-700'}`}
           >
             {years.map((y) => (
               <option key={y} value={y} className="bg-white text-gray-900">
@@ -124,7 +124,7 @@ export const DashboardHeader = ({
               setSelectedMonth(e.target.value ? Number(e.target.value) : "");
               setTimeUnit('custom');
             }}
-            className={`rounded-lg border px-3 py-1.5 text-sm font-medium focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 transition-colors ${timeUnit === 'custom' ? 'bg-gray-900 border-gray-900 text-white shadow-sm' : 'bg-white border-gray-300 text-gray-700'}`}
+            className={`flex-1 sm:flex-none rounded-lg border px-3 py-1.5 text-sm font-medium focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 transition-colors ${timeUnit === 'custom' ? 'bg-gray-900 border-gray-900 text-white shadow-sm' : 'bg-white border-gray-300 text-gray-700'}`}
           >
              <option value="" className="bg-white text-gray-900">{t("esg_main.all_year")}</option>
             {months.map((m) => (
@@ -136,7 +136,7 @@ export const DashboardHeader = ({
         </div>
 
         {/* Info: (20260118 - Luphia) Preset Time Selector */}
-        <div className="flex items-center gap-1 bg-white border border-gray-200 p-1 rounded-lg shadow-sm overflow-x-auto max-w-full no-scrollbar flex-1 sm:flex-none justify-between sm:justify-start">
+        <div className="flex w-full flex-1 justify-between gap-1 overflow-x-auto rounded-lg border border-gray-200 bg-white p-1 shadow-sm no-scrollbar sm:w-auto sm:flex-none sm:justify-start">
           {timeUnits.map((unit) => (
             <button
               key={unit}
