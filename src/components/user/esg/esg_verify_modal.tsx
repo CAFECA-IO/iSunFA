@@ -14,9 +14,8 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
-import { FilePreview } from "@/components/common/file_preview";
-import AiNote from "@/components/common/ai_note";
-import AiConfidenceBar from "@/components/common/ai_confidence_bar";
+import FilePreviewModal from "@/components/common/file_preview_modal";
+import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IEsgVerifyModalProps {
@@ -44,7 +43,11 @@ export default function EsgVerifyModal({
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
   const [isUnverifyModalOpen, setIsUnverifyModalOpen] =
     useState<boolean>(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
   const [targetVerified, setTargetVerified] = useState<boolean>(true);
+
+  // Info: (20260325 - Julian) Preview Modal State
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen && esgId && accountBookId) {
@@ -119,7 +122,7 @@ export default function EsgVerifyModal({
   if (!formData) return null;
 
   const handleDateChange = (dateString: string) => {
-    const timestamp = new Date(dateString).getTime();
+    const timestamp = new Date(dateString).getTime() / 1000;
     if (!isNaN(timestamp)) {
       setFormData({ ...formData, dateTimestamp: timestamp });
     }
@@ -155,10 +158,10 @@ export default function EsgVerifyModal({
               leaveFrom="opacity-100 scale-100 translate-y-0"
               leaveTo="opacity-0 scale-95 translate-y-4"
             >
-              <DialogPanel className="relative flex max-h-[90vh] w-full max-w-5xl transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
+              <DialogPanel className="relative flex max-h-[90vh] w-full max-w-2xl transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
                 {/* Info: (20260312 - Julian) Header */}
-                <div className="flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-8 py-5">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-start justify-between rounded-t-2xl border-b border-slate-200 bg-white px-4 py-4 sm:items-center sm:px-8 sm:py-5">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <DialogTitle
                       as="h3"
                       className="text-xl font-bold text-slate-800"
@@ -175,6 +178,16 @@ export default function EsgVerifyModal({
                         {t("verify.status.unverified")}
                       </span>
                     )}
+
+                    {/* Info: (20260325 - Julian) 開啟憑證檔案預覽 */}
+                    <button
+                      type="button"
+                      onClick={() => setIsPreviewModalOpen(true)}
+                      className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!formData.file?.hash}
+                    >
+                      {t("ocr.view_file")}
+                    </button>
                   </div>
                   <button
                     type="button"
@@ -188,44 +201,20 @@ export default function EsgVerifyModal({
 
                 {/* Info: (20260312 - Julian) Body */}
                 <div className="flex overflow-hidden">
-                  {/* Info: (20260312 - Julian) Left Side: File Preview */}
-                  <div className="w-1/2 overflow-y-auto border-r border-slate-200 bg-slate-50 p-6">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-slate-500">
-                        {t("esg_verify.preview")}
+                  {/* Info: (20260312 - Julian) Right Side: Form */}
+                  <div className="flex w-full flex-col p-4 sm:p-6">
+                    <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+                      <h4 className="text-base font-bold text-slate-500">
+                        {t("verify.type.esg")}
                       </h4>
-                      <div className="relative flex items-center gap-2">
-                        {/* Info: (20260324 - Julian) AI Note */}
-                        <AiNote note={formData.aiNote} />
-
-                        {/* Info: (20260324 - Julian) AI Confidence */}
-                        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
-                          <span className="text-xs font-bold text-slate-500">
-                            {t("esg_verify.ai_confidence")}
-                          </span>
-                          <AiConfidenceBar confidence={formData.confidence} />
-                        </div>
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <AiConfidence
+                          confidence={formData.confidence}
+                          note={formData.aiNote}
+                        />
                       </div>
                     </div>
-                    <div className="flex aspect-3/4 w-full items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                      {formData.file ? (
-                        <FilePreview
-                          file={{
-                            filename: formData.file.fileName || "Unknown",
-                          }}
-                          fileId={formData.file.hash}
-                          className="h-full w-full object-contain"
-                        />
-                      ) : (
-                        <span className="text-sm font-bold text-slate-400">
-                          {t("esg_verify.no_image")}
-                        </span>
-                      )}
-                    </div>
-                  </div>
 
-                  {/* Info: (20260312 - Julian) Right Side: Form */}
-                  <div className="flex w-1/2 flex-col p-6">
                     <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto">
                       {/* Info: (20260312 - Julian) Date */}
                       <div>
@@ -260,7 +249,7 @@ export default function EsgVerifyModal({
                         <select
                           id="scopeSelect"
                           aria-label={t("esg_verify.form.scope")}
-                          value={formData.scope}
+                          value={formData.scope || ""}
                           onChange={(e) =>
                             setFormData({
                               ...formData,
@@ -400,7 +389,7 @@ export default function EsgVerifyModal({
                         <select
                           id="intensitySelect"
                           aria-label={t("esg_verify.form.intensity")}
-                          value={formData.intensity}
+                          value={formData.intensity || ""}
                           onChange={(e) =>
                             setFormData({
                               ...formData,
@@ -423,21 +412,23 @@ export default function EsgVerifyModal({
                     </div>
 
                     {/* Info: (20260312 - Julian) Actions */}
-                    <div className="mt-4 flex justify-between gap-3 border-t border-slate-200 pt-4">
-                      <button
-                        type="button"
-                        onClick={handleAttemptClose}
-                        className="text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
-                      >
-                        {t("esg_verify.actions.cancel_edit")}
-                      </button>
-                      <div className="flex items-center gap-3">
+                    <div className="mt-4 flex flex-col-reverse justify-end gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center">
+                      {checkHasChanges() && (
+                        <button
+                          type="button"
+                          onClick={() => setIsCancelModalOpen(true)}
+                          className="mr-auto text-sm font-bold text-slate-500 transition-colors hover:text-slate-700 sm:m-0"
+                        >
+                          {t("esg_verify.actions.cancel_edit")}
+                        </button>
+                      )}
+                      <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto sm:gap-3">
                         {originalData?.isVerified ? (
                           <>
                             <button
                               type="button"
                               onClick={() => setIsUnverifyModalOpen(true)}
-                              className="flex items-center gap-2 rounded-lg bg-red-400 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500"
+                              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-400 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-500 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
                             >
                               <X size={18} className="stroke-[2.5]" />
                               {t("verify.button.unverify")}
@@ -445,7 +436,7 @@ export default function EsgVerifyModal({
                             <button
                               type="button"
                               onClick={() => handleAttemptSave(true)}
-                              className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
+                              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-600 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
                             >
                               <Save size={18} />
                               {t("esg_verify.actions.save_only")}
@@ -456,7 +447,7 @@ export default function EsgVerifyModal({
                             <button
                               type="button"
                               onClick={() => handleAttemptSave(true)}
-                              className="flex items-center gap-2 rounded-lg bg-emerald-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-600"
+                              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-emerald-600 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
                             >
                               <CheckCircle2 size={18} />
                               {t("verify.button.verify")}
@@ -464,7 +455,7 @@ export default function EsgVerifyModal({
                             <button
                               type="button"
                               onClick={() => handleAttemptSave(false)}
-                              className="flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
+                              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-600 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
                             >
                               <Save size={18} />
                               {t("esg_verify.actions.save_only")}
@@ -480,6 +471,20 @@ export default function EsgVerifyModal({
           </div>
         </Dialog>
       </Transition>
+
+      {/* Info: (20260325 - Julian) 取消修改視窗 */}
+      <ConfirmModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        title={t("common.cancel_edit_title")}
+        message={t("common.cancel_edit_message")}
+        confirmText={t("common.confirm")}
+        cancelText={t("common.cancel")}
+        onConfirm={() => {
+          setFormData(originalData);
+          setIsCancelModalOpen(false);
+        }}
+      />
 
       {/* Info: (20260323 - Julian) 未儲存變更視窗 */}
       <ConfirmModal
@@ -519,6 +524,14 @@ export default function EsgVerifyModal({
         confirmText={t("verify.unverify_modal.confirm")}
         cancelText={t("common.cancel")}
         onConfirm={handleUnverifyConfirmed}
+      />
+
+      {/* Info: (20260325 - Julian) File Preview Modal */}
+      <FilePreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        file={formData?.file}
+        title={t("esg_verify.preview")}
       />
     </>
   );

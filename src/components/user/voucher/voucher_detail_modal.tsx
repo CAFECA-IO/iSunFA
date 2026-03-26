@@ -19,19 +19,19 @@ import {
   Save,
   CheckCircle2,
   DollarSign,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { IVoucher, TradingType, IVoucherLineUI } from "@/interfaces/voucher";
 import { numberWithCommas } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
-import AiConfidenceBar from "@/components/common/ai_confidence_bar";
+import AiConfidence from "@/components/common/ai_confidence";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { useParams } from "next/navigation";
-import { FilePreview } from "@/components/common/file_preview";
 import AccountBookSelector from "@/components/user/voucher/account_book_selector";
-import AiNote from "@/components/common/ai_note";
+import FilePreviewModal from "@/components/common/file_preview_modal";
 
 interface IVoucherDetailModalProps {
   isOpen: boolean;
@@ -162,20 +162,21 @@ export default function VoucherDetailModal({
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const [inputDate, setInputDate] = useState<number>(0);
-  const [voucherType, setVoucherType] = useState<TradingType>(
-    TradingType.INCOME,
-  );
+  const [voucherType, setVoucherType] = useState<TradingType | null>(null);
   const [note, setNote] = useState<string>("");
   const [editedVoucherId, setEditedVoucherId] = useState<string>("");
   const [rows, setRows] = useState<IVoucherLineUI[]>([]);
   // const [isRecurring, setIsRecurring] = useState<boolean>(false);
 
-  const [isClearModalOpen, setIsClearModalOpen] = useState<boolean>(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState<boolean>(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
   const [isUnverifyModalOpen, setIsUnverifyModalOpen] =
     useState<boolean>(false);
   const [targetVerify, setTargetVerify] = useState<boolean>(false);
+
+  // Info: (20260325 - Julian) Preview Modal State
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
 
   const [isAccountBookSelectorOpen, setIsAccountBookSelectorOpen] =
     useState(false);
@@ -265,6 +266,18 @@ export default function VoucherDetailModal({
     } else {
       onClose();
     }
+  };
+
+  // Info: (20260325 - Julian) 處理取消修改
+  const handleCancelEdit = () => {
+    if (activeVoucher) {
+      setInputDate(activeVoucher.tradingDate * 1000);
+      setVoucherType(activeVoucher.tradingType);
+      setNote(activeVoucher.note || "");
+      setEditedVoucherId(activeVoucher.id);
+      setRows(activeVoucher.lineItems.lines || []);
+    }
+    setIsCancelModalOpen(false);
   };
 
   const creditRow = rows.filter((row) => row.isDebit === false);
@@ -385,10 +398,10 @@ export default function VoucherDetailModal({
               leaveFrom="opacity-100 scale-100 translate-y-0"
               leaveTo="opacity-0 scale-95 translate-y-4"
             >
-              <DialogPanel className="relative flex max-h-[90vh] w-full max-w-6xl transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
+              <DialogPanel className="relative flex max-h-[90vh] w-full max-w-4xl transform flex-col rounded-2xl bg-[#F8FAFC] text-left shadow-2xl transition-all">
                 {/* Info: (20260317 - Julian) Header */}
-                <div className="flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-8 py-5">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-start justify-between rounded-t-2xl border-b border-slate-200 bg-white px-4 py-4 sm:items-center sm:px-8 sm:py-5">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <DialogTitle
                       as="h3"
                       className="text-xl font-bold text-slate-800"
@@ -405,6 +418,17 @@ export default function VoucherDetailModal({
                         {t("verify.status.unverified")}
                       </span>
                     )}
+
+                    {/* Info: (20260325 - Julian) 開啟憑證檔案預覽 */}
+                    <button
+                      type="button"
+                      onClick={() => setIsPreviewModalOpen(true)}
+                      className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!activeVoucher.file?.hash}
+                    >
+                      <ImageIcon size={14} />
+                      {t("ocr.view_file")}
+                    </button>
                   </div>
                   <button
                     type="button"
@@ -418,53 +442,23 @@ export default function VoucherDetailModal({
 
                 {/* Info: (20260317 - Julian) Body Content */}
                 <div className="flex flex-1 overflow-hidden">
-                  {/* Info: (20260317 - Julian) Left Side: File Preview */}
-                  <div className="w-1/2 overflow-y-auto border-r border-slate-200 bg-slate-50 p-6">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-slate-500">
-                        {t("voucher.detail_modal.sections.preview")}
-                      </h4>
-                      <div className="relative flex items-center gap-2">
-                        {/* Info: (20260324 - Julian) AI Note */}
-                        <AiNote note={activeVoucher.aiNote} />
-
-                        {/* Info: (20260324 - Julian) AI Confidence */}
-                        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
-                          <span className="text-xs font-bold text-slate-500">
-                            {t("voucher.detail_modal.fields.confidence")}
-                          </span>
-                          <AiConfidenceBar
+                  {/* Info: (20260317 - Julian) Form */}
+                  <div className="flex w-full flex-col bg-white">
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                      {/* Info: (20260317 - Julian) Section 1: Basic Info */}
+                      <div className="mb-3 flex flex-col items-start justify-between gap-3 border-b border-slate-200 pb-2 sm:flex-row sm:items-center">
+                        <div className="flex items-center gap-2">
+                          <FileText size={20} className="text-blue-900" />
+                          <h4 className="text-base font-bold text-blue-900">
+                            {t("voucher.detail_modal.sections.basic_info")}
+                          </h4>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                          <AiConfidence
                             confidence={activeVoucher.confidence}
+                            note={activeVoucher.aiNote}
                           />
                         </div>
-                      </div>
-                    </div>
-                    <div className="flex aspect-3/4 w-full items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                      {activeVoucher.file ? (
-                        <FilePreview
-                          file={{
-                            filename: activeVoucher.file.fileName || "Unknown",
-                          }}
-                          fileId={activeVoucher.file.hash}
-                          className="h-full w-full object-contain"
-                        />
-                      ) : (
-                        <span className="text-sm font-bold text-slate-400">
-                          {t("esg_verify.no_image")}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Info: (20260317 - Julian) Right Side: Form */}
-                  <div className="flex w-1/2 flex-col bg-white">
-                    <div className="flex-1 overflow-y-auto p-6">
-                      {/* Info: (20260317 - Julian) Section 1: Basic Info */}
-                      <div className="mb-3 flex items-center gap-2 border-b border-slate-200 pb-1">
-                        <FileText size={20} className="text-blue-900" />
-                        <h4 className="text-base font-bold text-blue-900">
-                          {t("voucher.detail_modal.sections.basic_info")}
-                        </h4>
                       </div>
 
                       <div className="mb-8 grid grid-cols-2 gap-4">
@@ -491,7 +485,7 @@ export default function VoucherDetailModal({
                                   : e.target.valueAsNumber,
                               )
                             }
-                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                           />
                         </div>
 
@@ -505,7 +499,7 @@ export default function VoucherDetailModal({
                           <div className="relative">
                             <select
                               id="voucherType"
-                              value={voucherType}
+                              value={voucherType ?? ""}
                               onChange={(e) =>
                                 setVoucherType(e.target.value as TradingType)
                               }
@@ -557,7 +551,7 @@ export default function VoucherDetailModal({
                       </div>
 
                       {/* Info: (20260317 - Julian) Section 2: Accounting Entries */}
-                      <div className="mb-3 flex items-center justify-between border-b border-slate-200 pb-1">
+                      <div className="mb-3 flex flex-col items-start justify-between gap-2 border-b border-slate-200 pb-2 sm:flex-row sm:items-center">
                         <div className="flex items-center gap-2">
                           <DollarSign size={20} className="text-blue-900" />
                           <h4 className="text-base font-bold text-blue-900">
@@ -659,21 +653,23 @@ export default function VoucherDetailModal({
                     </div>
 
                     {/* Info: (20260317 - Julian) Footer Actions */}
-                    <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-8 py-5">
-                      <button
-                        type="button"
-                        onClick={() => setIsClearModalOpen(true)}
-                        className="text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
-                      >
-                        {t("voucher.detail_modal.actions.cancel_edit")}
-                      </button>
-                      <div className="flex items-center gap-3">
+                    <div className="flex flex-col-reverse justify-end gap-3 border-t border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:px-8 sm:py-5">
+                      {checkHasChanges() && (
+                        <button
+                          type="button"
+                          onClick={() => setIsCancelModalOpen(true)}
+                          className="mr-auto text-sm font-bold text-slate-500 transition-colors hover:text-slate-700 sm:m-0"
+                        >
+                          {t("voucher.detail_modal.actions.cancel_edit")}
+                        </button>
+                      )}
+                      <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto sm:gap-3">
                         {activeVoucher?.isVerified ? (
                           <button
                             type="button"
                             disabled={disabledSaveButton || isSaving}
                             onClick={() => setIsUnverifyModalOpen(true)}
-                            className="flex h-10 items-center gap-2 rounded-xl bg-red-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:bg-slate-300"
+                            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-red-400 px-4 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:bg-slate-300 sm:flex-none sm:px-6 sm:text-sm"
                           >
                             <X size={16} className="stroke-3" />
                             {t("verify.button.unverify")}
@@ -683,7 +679,7 @@ export default function VoucherDetailModal({
                             type="button"
                             disabled={disabledSaveButton || isSaving}
                             onClick={() => saveVoucher(true)}
-                            className="flex h-10 items-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:bg-slate-300"
+                            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 text-xs font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:bg-slate-300 sm:flex-none sm:px-6 sm:text-sm"
                           >
                             <CheckCircle2 size={16} className="stroke-3" />
                             {t("verify.button.verify")}
@@ -693,7 +689,7 @@ export default function VoucherDetailModal({
                           type="button"
                           disabled={disabledSaveButton || isSaving}
                           onClick={() => saveVoucher(activeVoucher?.isVerified)}
-                          className="flex h-10 items-center gap-2 rounded-xl bg-orange-500 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-600 disabled:bg-slate-300"
+                          className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-600 disabled:bg-slate-300 sm:flex-none sm:px-6 sm:text-sm"
                         >
                           <Save size={16} className="stroke-3" />
                           {t("voucher.detail_modal.actions.save_only")}
@@ -708,21 +704,15 @@ export default function VoucherDetailModal({
         </Dialog>
       </Transition>
 
-      {/* Info: (20260310 - Julian) Clear Modal */}
+      {/* Info: (20260310 - Julian) Cancel Modal */}
       <ConfirmModal
-        isOpen={isClearModalOpen}
-        onClose={() => setIsClearModalOpen(false)}
-        title={t("voucher.detail_modal.confirm_modals.clear_all.title")}
-        message={t("voucher.detail_modal.confirm_modals.clear_all.message")}
-        confirmText={t("voucher.detail_modal.actions.confirm")}
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        title={t("common.cancel_edit_title")}
+        message={t("common.cancel_edit_message")}
+        confirmText={t("common.confirm")}
         cancelText={t("common.cancel")}
-        onConfirm={() => {
-          setRows([]);
-          setInputDate(0);
-          setVoucherType(TradingType.INCOME);
-          setNote("");
-          // setIsRecurring(false);
-        }}
+        onConfirm={handleCancelEdit}
       />
 
       {/* Info: (20260310 - Julian) Close Modal */}
@@ -782,6 +772,14 @@ export default function VoucherDetailModal({
             }
           }
         }}
+      />
+
+      {/* Info: (20260325 - Julian) File Preview Modal */}
+      <FilePreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        file={activeVoucher?.file}
+        title={t("voucher.detail_modal.sections.preview")}
       />
     </>
   );

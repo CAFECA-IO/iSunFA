@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { ChevronUp, ChevronDown, Search, Filter } from "lucide-react";
+import Link from "next/link";
+import { ChevronUp, ChevronDown, Search, Filter, FileStack } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -145,34 +146,63 @@ export default function VoucherTableSection() {
     sorting,
   ]);
 
+  // Info: (20260325 - Luphia) 抽取需要輪詢的 ID，避免頻繁觸發 Effect
+  const pendingIds = vouchers
+    .filter((v) => v.analysisStatus === "PENDING" || v.analysisStatus === "PROCESSING")
+    .map((v) => v.id);
+  const pendingIdsJoined = pendingIds.join(",");
+
   // Info: (20260320 - Julian) 只針對未完成的傳票進行個別狀態更新，減輕 DB 負擔
   useEffect(() => {
-    const pendingVouchers = vouchers.filter(
-      (v) =>
-        v.analysisStatus === "PENDING" || v.analysisStatus === "PROCESSING",
-    );
+    if (!pendingIdsJoined) return;
 
-    if (pendingVouchers.length === 0) return;
+    let isCancelled = false;
+    let timeoutId: NodeJS.Timeout;
 
-    const intervalId = setInterval(async () => {
-      for (const pv of pendingVouchers) {
-        try {
-          const { payload } = await request<IApiResponse<IVoucher>>(
-            `/api/v1/user/account_book/${accountBookId}/voucher/${pv.id}`,
-          );
-          if (payload) {
-            setVouchers((prev) =>
-              prev.map((old) => (old.id === pv.id ? payload : old)),
-            );
-          }
-        } catch (error) {
-          console.error(`Failed to update status for voucher ${pv.id}:`, error);
+    const poll = async () => {
+      if (isCancelled) return;
+      try {
+        const ids = pendingIdsJoined.split(",");
+        // Info: (20260325 - Luphia) 平行發送請求，取代 for...of 的阻塞
+        const results = await Promise.all(
+          ids.map((id) =>
+            request<IApiResponse<IVoucher>>(
+              `/api/v1/user/account_book/${accountBookId}/voucher/${id}`
+            )
+          )
+        );
+
+        const updatedVouchers = results
+          .map((res) => res.payload)
+          .filter(Boolean) as IVoucher[];
+
+        if (updatedVouchers.length > 0 && !isCancelled) {
+          setVouchers((prev) => {
+            const next = [...prev];
+            updatedVouchers.forEach((uv) => {
+              const idx = next.findIndex((v) => v.id === uv.id);
+              if (idx !== -1) next[idx] = uv;
+            });
+            return next;
+          });
         }
+      } catch (error) {
+        console.error("Failed to update pending vouchers:", error);
       }
-    }, 5000);
 
-    return () => clearInterval(intervalId);
-  }, [vouchers, accountBookId]);
+      // Info: (20260325 - Luphia) 當次請求全數完成後，才排程下一次的輪詢
+      if (!isCancelled) {
+        timeoutId = setTimeout(poll, 5000);
+      }
+    };
+
+    timeoutId = setTimeout(poll, 5000);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [pendingIdsJoined, accountBookId]);
 
   // Info: (20260311 - Julian) 排序狀態
   const isDateAsc = sorting === VoucherSorting.DATE_ASC;
@@ -211,15 +241,17 @@ export default function VoucherTableSection() {
   const verifyAllVouchers = async () => {
     if (!accountBookId) return;
     try {
-      setIsLoading(true);
+      setIsLoading(true); // Info: (20260325 - Luphia) 為 PUT 請求開啟 loading
       await request(
         `/api/v1/user/account_book/${accountBookId}/voucher/verify_all`,
         { method: "PUT" },
       );
-      fetchVouchers();
+      // Info: (20260325 - Luphia) 加入 await，讓 fetchVouchers 內部接管後續的 loading 狀態
+      await fetchVouchers();
     } catch (error) {
       console.error("Failed to verify all vouchers:", error);
-      setIsLoading(false);
+      setIsLoading(false); // Info: (20260325 - Luphia) 只有失敗時在這裡關閉 loading
+    } finally {
       setIsVerifyAllConfirmOpen(false);
     }
   };
@@ -234,38 +266,22 @@ export default function VoucherTableSection() {
     }
   }, [totalPages, currentPage]);
 
-  const currentVouchers = vouchers;
+  // Info: (20260325 - Luphia) 判斷是否有套用過濾條件 (不包含 hideDeleted)
+  const isFiltering =
+    debouncedKeyWord !== "" ||
+    filteredType !== "all" ||
+    filteredVerifyStatus !== "all" ||
+    startDate !== "" ||
+    endDate !== "";
 
-  const displayedVoucher = isLoading ? (
-    <tr aria-label="Loading vouchers">
-      <td
-        aria-label="Loading vouchers"
-        colSpan={7}
-        className="p-2 text-center lg:px-6 lg:py-4"
-      >
-        <div className="flex justify-center p-4">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-500 border-t-transparent"></div>
-        </div>
-      </td>
-    </tr>
-  ) : currentVouchers.length > 0 ? (
-    currentVouchers.map((v) => (
-      <VoucherRow
-        key={v.id}
-        voucher={v}
-        onClick={() => {
-          setSelectedVoucherId(v.id);
-          setIsModalOpen(true);
-        }}
-      />
-    ))
-  ) : (
-    <tr>
-      <td colSpan={7} className="p-2 text-center lg:px-6 lg:py-4">
-        {t("voucher.main_view.table.no_data")}
-      </td>
-    </tr>
-  );
+  const handleClearFilters = () => {
+    setKeyWord("");
+    setDebouncedKeyWord("");
+    setFilteredType("all");
+    setFilteredVerifyStatus("all");
+    setStartDate("");
+    setEndDate("");
+  };
 
   return (
     <>
@@ -456,11 +472,10 @@ export default function VoucherTableSection() {
                         className="group mx-auto flex w-full items-center justify-center gap-1"
                       >
                         <span
-                          className={`transition-colors ease-in-out ${
-                            isDateDesc || isDateAsc
-                              ? "text-orange-500"
-                              : "text-slate-500 group-hover:text-orange-500"
-                          }`}
+                          className={`transition-colors ease-in-out ${isDateDesc || isDateAsc
+                            ? "text-orange-500"
+                            : "text-slate-500 group-hover:text-orange-500"
+                            }`}
                         >
                           {t("voucher.main_view.table.headers.voucher_date")}
                         </span>
@@ -496,11 +511,10 @@ export default function VoucherTableSection() {
                         className="group ml-auto flex items-center justify-end gap-1 uppercase"
                       >
                         <span
-                          className={`transition-colors ease-in-out ${
-                            isDebitAsc || isDebitDesc
-                              ? "text-orange-500"
-                              : "text-slate-500 group-hover:text-orange-500"
-                          }`}
+                          className={`transition-colors ease-in-out ${isDebitAsc || isDebitDesc
+                            ? "text-orange-500"
+                            : "text-slate-500 group-hover:text-orange-500"
+                            }`}
                         >
                           {t("voucher.main_view.table.headers.debit")}
                         </span>
@@ -524,11 +538,10 @@ export default function VoucherTableSection() {
                         className="group ml-auto flex items-center justify-end gap-1 uppercase"
                       >
                         <span
-                          className={`transition-colors ease-in-out ${
-                            isCreditAsc || isCreditDesc
-                              ? "text-orange-500"
-                              : "text-slate-500 group-hover:text-orange-500"
-                          }`}
+                          className={`transition-colors ease-in-out ${isCreditAsc || isCreditDesc
+                            ? "text-orange-500"
+                            : "text-slate-500 group-hover:text-orange-500"
+                            }`}
                         >
                           {t("voucher.main_view.table.headers.credit")}
                         </span>
@@ -553,7 +566,68 @@ export default function VoucherTableSection() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {displayedVoucher}
+                  {isLoading ? (
+                    <tr aria-label="Loading vouchers">
+                      <td
+                        aria-label="Loading vouchers"
+                        colSpan={8}
+                        className="p-2 text-center lg:px-6 lg:py-4"
+                      >
+                        <div className="flex justify-center p-4">
+                          <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-500 border-t-transparent"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : vouchers.length > 0 ? (
+                    vouchers.map((v) => (
+                      <VoucherRow
+                        key={v.id}
+                        voucher={v}
+                        onClick={() => {
+                          setSelectedVoucherId(v.id);
+                          setIsModalOpen(true);
+                        }}
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="p-8 text-center lg:px-6 lg:py-16 bg-white">
+                        {isFiltering ? (
+                          <div className="flex flex-col items-center justify-center">
+                            <Search className="h-12 w-12 text-slate-300 mb-4" />
+                            <h3 className="text-lg font-medium text-slate-900 mb-2">
+                              {t("voucher.main_view.table.no_filter_results")}
+                            </h3>
+                            <p className="text-slate-500 mb-6 max-w-sm text-center">
+                              {t("voucher.main_view.table.no_filter_results_desc")}
+                            </p>
+                            <button
+                              onClick={handleClearFilters}
+                              className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-bold rounded-lg text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm"
+                            >
+                              {t("common.clear_filters")}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center">
+                            <FileStack className="h-12 w-12 text-slate-300 mb-4" />
+                            <h3 className="text-lg font-medium text-slate-900 mb-2">
+                              {t("voucher.main_view.table.no_data")}
+                            </h3>
+                            <p className="text-slate-500 mb-6 max-w-sm text-center">
+                              {t("voucher.main_view.table.no_data_desc")}
+                            </p>
+                            <Link
+                              href={`/user/account_book/${accountBookId}/journal`}
+                              className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-bold rounded-lg text-white bg-orange-500 hover:bg-orange-600 transition-colors shadow-sm"
+                            >
+                              {t("voucher.main_view.table.no_data_cta")}
+                            </Link>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

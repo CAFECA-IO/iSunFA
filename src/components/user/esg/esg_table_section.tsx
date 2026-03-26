@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Info, ArrowDown, ArrowUp } from "lucide-react";
+import { Search, Info, ArrowDown, ArrowUp, FileStack } from "lucide-react";
+import Link from 'next/link';
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { EsgRow } from "@/components/user/esg/esg_row";
 import EsgVerifyModal from "@/components/user/esg/esg_verify_modal";
@@ -119,37 +120,63 @@ export default function EsgTableSection({
     return () => clearTimeout(timer);
   }, [fetchRecords]);
 
+  // Info: (20260325 - Luphia) 抽取需要輪詢的 ID，避免頻繁觸發 Effect
+  const pendingIds = records
+    .filter((r) => r.analysisStatus === "PENDING" || r.analysisStatus === "PROCESSING")
+    .map((r) => r.id);
+  const pendingIdsJoined = pendingIds.join(",");
+
   // Info: (20260320 - Julian) 只針對未完成的紀錄進行個別狀態更新，減輕 DB 負擔
   useEffect(() => {
-    const pendingRecords = records.filter(
-      (r) =>
-        r.analysisStatus === "PENDING" || r.analysisStatus === "PROCESSING",
-    );
+    if (!pendingIdsJoined) return;
 
-    if (pendingRecords.length === 0) return;
+    let isCancelled = false;
+    let timeoutId: NodeJS.Timeout;
 
-    const intervalId = setInterval(async () => {
-      for (const pr of pendingRecords) {
-        try {
-          const { payload } = await request<
-            IApiResponse<{ esgRecord: IEsgRecord }>
-          >(`/api/v1/user/account_book/${accountBookId}/esg/${pr.id}`);
-          if (payload?.esgRecord) {
-            setRecords((prev) =>
-              prev.map((old) => (old.id === pr.id ? payload.esgRecord : old)),
-            );
-          }
-        } catch (error) {
-          console.error(
-            `Failed to update status for ESG record ${pr.id}:`,
-            error,
-          );
+    const poll = async () => {
+      if (isCancelled) return;
+      try {
+        const ids = pendingIdsJoined.split(",");
+        // Info: (20260325 - Luphia) 平行發送請求，取代 for...of 的阻塞
+        const results = await Promise.all(
+          ids.map((id) =>
+            request<IApiResponse<{ esgRecord: IEsgRecord }>>(
+              `/api/v1/user/account_book/${accountBookId}/esg/${id}`
+            )
+          )
+        );
+
+        const updatedRecords = results
+          .map((res) => res.payload?.esgRecord)
+          .filter(Boolean) as IEsgRecord[];
+
+        if (updatedRecords.length > 0 && !isCancelled) {
+          setRecords((prev) => {
+            const next = [...prev];
+            updatedRecords.forEach((ur) => {
+              const idx = next.findIndex((r) => r.id === ur.id);
+              if (idx !== -1) next[idx] = ur;
+            });
+            return next;
+          });
         }
+      } catch (error) {
+        console.error("Failed to update pending ESG records:", error);
       }
-    }, 5000);
 
-    return () => clearInterval(intervalId);
-  }, [records, accountBookId]);
+      // Info: (20260325 - Luphia) 當次請求全數完成後，才排程下一次的輪詢
+      if (!isCancelled) {
+        timeoutId = setTimeout(poll, 5000);
+      }
+    };
+
+    timeoutId = setTimeout(poll, 5000);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [pendingIdsJoined, accountBookId]);
 
   const handleVerifyOpen = (record: IEsgRecord) => {
     setSelectedEsgId(record.id);
@@ -186,13 +213,29 @@ export default function EsgTableSection({
         `/api/v1/user/account_book/${accountBookId}/esg/verify_all`,
         { method: "PUT" },
       );
-      fetchRecords();
+      // Info: (20260325 - Luphia) 加入 await，且讓 fetchRecords 內部接管後續的 loading 狀態
+      await fetchRecords();
     } catch (error) {
       console.error("Failed to verify all ESG records:", error);
-      setIsLoading(false);
+      setIsLoading(false); // Info: (20260325 - Luphia) 只有失敗時在這裡關閉 loading
     } finally {
       setIsVerifyAllConfirmOpen(false);
     }
+  };
+
+  // Info: (20260325 - Luphia) 判斷是否有套用過濾條件
+  const isFiltering =
+    searchTerm !== "" ||
+    verifyStatusFilter !== "all" ||
+    intensityFilter !== "all" ||
+    scopeFilter !== "all";
+
+  // Info: (20260325 - Luphia) 抽出清除條件的函式，方便後續擴充
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setVerifyStatusFilter("all");
+    setIntensityFilter("all");
+    setScopeFilter("all");
   };
 
   return (
@@ -340,11 +383,39 @@ export default function EsgTableSection({
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan={8}
-                    className="p-2 text-center text-sm font-bold text-slate-500 lg:px-6 lg:py-4"
-                  >
-                    {t("esg_table.no_records")}
+                  <td colSpan={8} className="p-8 text-center lg:px-6 lg:py-16 bg-white">
+                    {/* Info: (20260325 - Luphia) 區分真的沒資料 vs 搜尋不到資料 */}
+                    {isFiltering ? (
+                      <div className="flex flex-col items-center justify-center">
+                        <Search className="h-12 w-12 text-slate-300 mb-4" />
+                        <h3 className="text-lg font-medium text-slate-900 mb-2">
+                          {t("esg_table.no_filter_results")}
+                        </h3>
+                        <p className="text-slate-500 mb-6 max-w-sm text-center">
+                          {t("esg_table.no_filter_results_desc")}
+                        </p>
+                        <button
+                          onClick={handleClearFilters}
+                          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-bold rounded-lg text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm"
+                        >
+                          {t("common.clear_filters")}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center">
+                        <FileStack className="h-12 w-12 text-slate-300 mb-4" />
+                        <h3 className="text-lg font-medium text-slate-900 mb-2">{t("esg_table.no_records")}</h3>
+                        <p className="text-slate-500 mb-6 max-w-sm text-center">
+                          {t("esg_table.no_records_desc")}
+                        </p>
+                        <Link
+                          href={`/user/account_book/${accountBookId}/journal`}
+                          className="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-bold rounded-lg text-white bg-orange-500 hover:bg-orange-600 transition-colors shadow-sm"
+                        >
+                          {t("esg_table.no_records_cta")}
+                        </Link>
+                      </div>
+                    )}
                   </td>
                 </tr>
               )}

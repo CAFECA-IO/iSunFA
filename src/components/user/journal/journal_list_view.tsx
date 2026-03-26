@@ -219,13 +219,13 @@ export default function JournalListView() {
     );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 w-full max-w-full flex-col gap-4">
       <JournalSummary />
-      <div className="flex size-full flex-col gap-4">
+      <div className="flex size-full min-w-0 max-w-full flex-col gap-4">
         {/* Info: (20260304 - Julian) Filter Area */}
-        <div className="flex flex-col items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:gap-4">
+        <div className="flex w-full min-w-0 max-w-full flex-col items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:flex-wrap">
           {/* Info: (20260305 - Julian) Left Actions: Search + Date */}
-          <div className="flex flex-1 flex-col items-center gap-2 sm:flex-row sm:gap-4">
+          <div className="flex w-full min-w-0 max-w-full flex-1 flex-col items-stretch gap-4 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
             {/* Info: (20260304 - Julian) Search input */}
             <div className="relative w-full sm:w-[200px]">
               <Search
@@ -245,9 +245,9 @@ export default function JournalListView() {
             <div className="hidden h-6 w-px bg-gray-200 sm:block"></div>
 
             {/* Info: (20260304 - Julian) Date Picker */}
-            <div className="flex items-center gap-2">
+            <div className="flex w-full items-center gap-2 sm:w-auto">
               <Calendar className="hidden text-gray-400 sm:block" size={18} />
-              <div className="flex flex-col items-center gap-2 text-sm sm:flex-row">
+              <div className="flex w-full flex-col items-stretch gap-2 text-sm sm:flex-row sm:items-center">
                 <div className="flex items-center gap-2">
                   <p className="block text-gray-700 sm:hidden">
                     {t("ocr.start_date")}
@@ -287,7 +287,7 @@ export default function JournalListView() {
               onChange={(e) =>
                 setFilteredVerifyStatus(e.target.value as VerifyStatus | "all")
               }
-              className="w-32 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:outline-none"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:outline-none sm:w-32"
             >
               <option value="all">{t("common.all")}</option>
               <option value={VerifyStatus.VERIFIED}>
@@ -300,7 +300,7 @@ export default function JournalListView() {
           </div>
 
           {/* Info: (20260305 - Julian) Right Actions: Sort + View Mode */}
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
             {/* Info: (20260304 - Julian) Sort by date */}
             <button
               title={

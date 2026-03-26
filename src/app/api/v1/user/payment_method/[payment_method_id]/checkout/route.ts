@@ -9,8 +9,10 @@ import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { prisma } from "@/lib/prisma";
 import { webAuthnService } from "@/services/webauthn.service";
 import { ORDER_STATUS, PAYMENT_TRANSACTION_STATUS } from "@/constants/status";
+import { isProduction } from "@/lib/utils/common";
 
 const OEN_ACCESS_TOKEN = process.env.OEN_ACCESS_TOKEN;
+const OEN_BASE_URL = isProduction() ? "https://payment-api.oen.tw" : "https://payment-api.testing.oen.tw";
 
 export async function POST(
     request: NextRequest,
@@ -95,33 +97,35 @@ export async function POST(
         ]);
 
         // Info: (20260305 - Tzuhan) 準備打給應援科技的扣款請求
-        const oenRes = await fetch(
-            "https://payment-api.testing.oen.tw/token/transactions",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${OEN_ACCESS_TOKEN}`,
-                },
-                body: JSON.stringify({
-                    merchantId: "mermer",
-                    amount: amount,
-                    currency: "TWD",
-                    token: providerToken,
-                    orderId: order.id,
-                    userName: dbUser.name || "Unknown",
-                    userEmail: `${dbUser.id}@isunfa.tw`,
-                    productDetails: [
-                        {
-                            productionCode: "ISUNFA-CREDITS",
-                            description: `iSunFA Credits - ${credits}`,
-                            quantity: 1,
-                            unit: "pcs",
-                            unitPrice: amount,
-                        },
-                    ],
-                }),
+        const fetchUrl = `${OEN_BASE_URL}/token/transactions`;
+        const fetchQuery = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${OEN_ACCESS_TOKEN}`,
             },
+            body: JSON.stringify({
+                merchantId: "mermer",
+                amount: amount,
+                currency: "TWD",
+                token: providerToken,
+                orderId: order.id,
+                userName: dbUser.name || "Unknown",
+                userEmail: `${dbUser.id}@isunfa.tw`,
+                productDetails: [
+                    {
+                        productionCode: "ISUNFA-CREDITS",
+                        description: `iSunFA Credits - ${credits}`,
+                        quantity: 1,
+                        unit: "pcs",
+                        unitPrice: amount,
+                    },
+                ],
+            }),
+        };
+        const oenRes = await fetch(
+            fetchUrl,
+            fetchQuery
         );
 
         const oenData = await oenRes.json();

@@ -43,7 +43,7 @@ export default function Pagination({
       <div className="hidden flex-1 sm:block"></div>
 
       {/* Info: (20260324 - Julian) 中心：上下頁按鈕 */}
-      <div className="flex flex-1 justify-center gap-3">
+      <div className="flex w-full justify-center gap-3 sm:w-auto sm:flex-1">
         <button
           type="button"
           onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
@@ -65,7 +65,7 @@ export default function Pagination({
       </div>
 
       {/* Info: (20260324 - Julian) 右側：頁數資訊與跳轉 */}
-      <div className="flex flex-1 items-center justify-center gap-3 sm:justify-end">
+      <div className="flex w-full flex-wrap items-center justify-center gap-3 sm:w-auto sm:flex-1 sm:justify-end">
         <span className="text-sm font-semibold text-slate-600">
           {t("common.pagination.page_info", {
             current: currentPage,

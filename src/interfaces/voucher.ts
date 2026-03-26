@@ -33,7 +33,7 @@ export interface IVoucherLineUI {
 export interface IVoucher {
   id: string;
   tradingDate: number;
-  tradingType: TradingType;
+  tradingType: TradingType | null;
   note: string;
   isDeleted: boolean;
   fileId: string;

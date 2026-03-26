@@ -32,17 +32,17 @@ export default function JournalMainView() {
   };
 
   return (
-    <div className="flex w-full flex-col bg-gray-50">
-      <div className="flex justify-between px-8 py-6">
-        <h1 className="font-sans text-2xl font-bold text-slate-800">
+    <div className="flex w-full min-w-0 flex-col bg-gray-50">
+      <div className="flex justify-between px-4 py-4 md:px-8 md:py-6">
+        <h1 className="font-sans text-xl font-bold text-slate-800 md:text-2xl">
           {t("journal.main_view.title")}
         </h1>
       </div>
 
       {/* Info: (20260304 - Julian) Menu */}
-      <div className="flex flex-col gap-4 px-0 lg:flex-row lg:px-4">
+      <div className="flex flex-col min-w-0 max-w-full gap-4 px-2 sm:px-4 lg:flex-row">
         {/* Info: (20260304 - Julian) Upload Area */}
-        <div className="flex h-fit w-full flex-row gap-2 rounded-lg border border-gray-200 bg-gray-100 p-2 lg:w-[180px] lg:flex-col lg:p-4">
+        <div className="flex h-fit w-full max-w-full flex-row gap-2 overflow-x-auto rounded-lg border border-gray-200 bg-gray-100 p-2 hide-scrollbar lg:w-[180px] lg:flex-col lg:overflow-visible lg:p-4">
           <button
             type="button"
             className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${
@@ -81,7 +81,7 @@ export default function JournalMainView() {
         </div>
 
         {/* Info: (20260304 - Julian) Main View */}
-        <div className="w-full lg:w-[calc(100vw-250px)] lg:px-4">
+        <div className="min-w-0 w-full lg:w-[calc(100vw-250px)] lg:px-4">
           {renderView()}
         </div>
       </div>

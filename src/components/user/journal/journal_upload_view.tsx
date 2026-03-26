@@ -183,10 +183,10 @@ export default function JournalUploadView({
       <div
         className={`flex h-full min-h-[500px] flex-col rounded-2xl border-2 transition-colors lg:h-[calc(100vh-250px)] ${
           uploadedFiles.length > 0
-            ? "border-transparent bg-white p-6 shadow-[0_0_15px_rgba(0,0,0,0.05)] lg:p-10"
+            ? "border-transparent bg-white p-4 shadow-[0_0_15px_rgba(0,0,0,0.05)] sm:p-6 lg:p-10"
             : isDragging
-              ? "items-center justify-center border-dashed border-orange-500 bg-orange-50 p-20 lg:p-[100px]"
-              : "items-center justify-center border-dashed border-slate-300 bg-white p-20 hover:border-orange-400 hover:bg-slate-50 lg:p-[100px]"
+              ? "items-center justify-center border-dashed border-orange-500 bg-orange-50 p-10 sm:p-20 lg:p-[100px]"
+              : "items-center justify-center border-dashed border-slate-300 bg-white p-10 hover:border-orange-400 hover:bg-slate-50 sm:p-20 lg:p-[100px]"
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}

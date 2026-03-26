@@ -3,7 +3,7 @@
 import { Loader2, CircleAlert, CheckCircle2, FileQuestion } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
-import AiConfidenceBar from "@/components/common/ai_confidence_bar";
+import AiConfidence from "@/components/common/ai_confidence";
 import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { timestampToString } from "@/lib/utils/common";
@@ -32,24 +32,33 @@ const JournalListItem = ({
   if (journal.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
       <tr className="border-b border-slate-300 bg-white text-slate-400 last:border-0">
-        <td className="w-[150px] px-3 py-2 align-middle sm:px-6">
-          <div className="flex size-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50 p-1 sm:h-20 sm:w-20">
+        <td className="w-[72px] px-3 py-2 align-middle sm:w-[150px] sm:px-6">
+          <div className="flex size-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50 p-1 sm:size-20">
             <Loader2 className="size-4 animate-spin text-orange-400 sm:size-6" />
           </div>
         </td>
-        <td className="px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
+        <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium sm:w-auto sm:whitespace-nowrap sm:px-6 sm:text-sm">
           {formattedDate}
         </td>
-        <td className="px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
+        <td className="hidden px-3 py-2 align-middle font-medium whitespace-nowrap sm:table-cell sm:px-6">
           {formattedID}
         </td>
         <td
+          colSpan={2}
+          className="px-3 py-2 align-middle text-xs sm:hidden"
+        >
+          <span className="flex items-center gap-2 italic">
+            <Loader2 className="size-4 animate-spin text-orange-400" />
+            {t("ocr.analyzing")}
+          </span>
+        </td>
+        <td
           colSpan={3}
-          className="px-3 py-2 align-middle text-xs sm:px-6 sm:text-sm"
+          className="hidden px-3 py-2 align-middle sm:table-cell sm:px-6 sm:text-sm"
         >
           <span className="flex items-center gap-2 italic">
             <Loader2 className="size-4 animate-spin text-orange-400 sm:size-6" />
-            AI Analyzing...
+            {t("ocr.analyzing")}
           </span>
         </td>
       </tr>
@@ -60,26 +69,41 @@ const JournalListItem = ({
   if (journal.analysisStatus === AIAnalysisStatus.PROCESSING) {
     return (
       <tr className="border-b border-blue-200 bg-blue-50 text-blue-500 opacity-90 last:border-0">
-        <td className="w-[150px] px-3 py-2 align-middle sm:px-6">
-          <div className="flex size-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 sm:h-20 sm:w-20">
+        <td className="w-[72px] px-3 py-2 align-middle sm:w-[150px] sm:px-6">
+          <div className="flex size-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 sm:size-20">
             <Loader2 className="size-4 animate-spin text-blue-500 sm:size-6" />
           </div>
         </td>
-        <td className="px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
+        <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium sm:w-auto sm:whitespace-nowrap sm:px-6 sm:text-sm">
           {formattedDate}
         </td>
-        <td className="px-3 py-2 align-middle font-medium whitespace-nowrap sm:px-6">
+        <td className="hidden px-3 py-2 align-middle font-medium whitespace-nowrap sm:table-cell sm:px-6">
           {formattedID}
         </td>
         <td
           aria-label="AI Processing"
-          colSpan={3}
-          className="px-3 py-2 align-middle text-xs sm:px-6 sm:text-sm"
+          colSpan={2}
+          className="px-3 py-2 align-middle text-xs sm:hidden"
         >
           <div className="max-w-sm flex-col gap-2">
             <span className="mb-2 flex items-center gap-2 font-bold italic">
               <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-              AI Processing...
+              {t("ocr.analyzing")}
+            </span>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
+              <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
+            </div>
+          </div>
+        </td>
+        <td
+          aria-label="AI Processing"
+          colSpan={3}
+          className="hidden px-3 py-2 align-middle sm:table-cell sm:px-6 sm:text-sm"
+        >
+          <div className="max-w-sm flex-col gap-2">
+            <span className="mb-2 flex items-center gap-2 font-bold italic">
+              <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+              {t("ocr.analyzing")}
             </span>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
               <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
@@ -92,11 +116,11 @@ const JournalListItem = ({
 
   return (
     <tr
-      className={`cursor-pointer last:border-0 ${isAnalysisFailed ? "bg-red-200 hover:bg-red-300" : "bg-white hover:bg-orange-100"}`}
+      className={`cursor-pointer border-b border-slate-300 last:border-0 ${isAnalysisFailed ? "bg-red-200 hover:bg-red-300" : "bg-white hover:bg-orange-100"}`}
       onClick={() => onSelect(journal)}
     >
       {/* Info: (20260320 - Julian) File */}
-      <td className="w-[150px] px-3 py-2 align-middle text-slate-700 sm:w-32 sm:px-6">
+      <td className="w-[72px] px-3 py-2 align-middle text-slate-700 sm:w-[150px] sm:px-6">
         <div className="relative flex size-12 items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-1 sm:size-20">
           {/* Info: (20260320 - Julian) File Preview */}
           {journal.file?.hash ? (
@@ -117,18 +141,18 @@ const JournalListItem = ({
         </div>
       </td>
       {/* Info: (20260320 - Julian) Trading Date */}
-      <td className="px-3 py-2 align-middle font-medium whitespace-nowrap text-slate-700 sm:px-6">
+      <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium whitespace-nowrap text-slate-700 sm:w-auto sm:px-6 sm:text-sm">
         {formattedDate}
       </td>
       {/* Info: (20260323 - Julian) ID */}
       <td
         aria-label={t("ocr.id")}
-        className="px-3 py-2 align-middle font-medium whitespace-nowrap text-slate-700 sm:px-6"
+        className="hidden px-3 py-2 align-middle font-medium whitespace-nowrap text-slate-700 sm:table-cell sm:px-6"
       >
         {formattedID}
       </td>
       {/* Info: (20260320 - Julian) Content */}
-      <td className="px-3 py-2 align-middle text-xs text-slate-700 sm:px-6 sm:text-sm">
+      <td className="hidden px-3 py-2 align-middle text-xs text-slate-700 sm:table-cell sm:px-6 sm:text-sm">
         <pre className="line-clamp-2 whitespace-break-spaces sm:whitespace-normal">
           {journal.text}
         </pre>
@@ -136,9 +160,9 @@ const JournalListItem = ({
       {/* Info: (20260323 - Julian) Confidence */}
       <td
         aria-label={t("ocr.confidence")}
-        className="px-3 py-2 text-right sm:px-6"
+        className="w-[60px] px-1 py-2 text-center text-xs sm:w-auto sm:px-6 sm:text-right sm:text-sm"
       >
-        <AiConfidenceBar confidence={journal.confidence} />
+        <AiConfidence confidence={journal.confidence} barOnly />
       </td>
       {/* Info: (20260316 - Julian) Status */}
       <td
@@ -178,7 +202,10 @@ const JournalListLayout = ({
 
   const loadingView = (
     <tr>
-      <td colSpan={6} className="px-3 py-8 text-center text-slate-500 sm:px-6">
+      <td colSpan={5} className="px-3 py-8 text-center text-slate-500 sm:hidden">
+        <Loader2 className="mx-auto h-6 w-6 animate-spin text-orange-500" />
+      </td>
+      <td colSpan={6} className="hidden px-3 py-8 text-center text-slate-500 sm:table-cell sm:px-6">
         <Loader2 className="mx-auto h-6 w-6 animate-spin text-orange-500" />
       </td>
     </tr>
@@ -186,7 +213,10 @@ const JournalListLayout = ({
 
   const emptyView = (
     <tr>
-      <td colSpan={6} className="px-3 py-8 text-center text-slate-500 sm:px-6">
+      <td colSpan={5} className="px-3 py-8 text-center text-slate-500 sm:hidden">
+        {t("ocr.no_records")}
+      </td>
+      <td colSpan={6} className="hidden px-3 py-8 text-center text-slate-500 sm:table-cell sm:px-6">
         {t("ocr.no_records")}
       </td>
     </tr>
@@ -197,23 +227,23 @@ const JournalListLayout = ({
   ));
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
       <table className="w-full">
         <tbody>
           <tr>
-            <th className="w-[150px] bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">
+            <th className="w-[72px] bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:w-[150px] sm:px-6 sm:text-base">
               {t("ocr.file")}
             </th>
-            <th className="bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:px-6 sm:text-left sm:text-base">
+            <th className="w-[80px] bg-slate-100 px-1 py-3 text-center text-xs text-slate-700 sm:w-auto sm:px-6 sm:text-left sm:text-base">
               {t("ocr.created_date")}
             </th>
-            <th className="bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:px-6 sm:text-left sm:text-base">
+            <th className="hidden bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:table-cell sm:px-6 sm:text-left sm:text-base">
               {t("ocr.id")}
             </th>
-            <th className="bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">
+            <th className="hidden bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:table-cell sm:px-6 sm:text-base">
               {t("ocr.journal")}
             </th>
-            <th className="bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">
+            <th className="w-[60px] bg-slate-100 px-1 py-3 text-center text-xs text-slate-700 sm:w-auto sm:px-6 sm:text-left sm:text-base">
               {t("ocr.confidence")}
             </th>
             <th className="bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">

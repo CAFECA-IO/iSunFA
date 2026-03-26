@@ -19,4 +19,5 @@ export interface IJournal {
   analysisStatus: AIAnalysisStatus
   confidence: number;
   isVerified: boolean;
+  aiNote: string;
 }

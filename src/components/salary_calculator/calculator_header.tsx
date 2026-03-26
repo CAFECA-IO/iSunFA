@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -9,11 +9,13 @@ import LanguageSelector from "@/components/header/language_selector";
 import BrandLogo from "@/components/header/brand_logo";
 import UserActions from "@/components/header/user_actions";
 import HeaderNav from "@/components/header/header_nav";
+import MechanismModal from "@/components/salary_calculator/mechanism_modal";
 // import { useAuth } from "@/contexts/auth_context";
 
 const CalculatorHeader: React.FC = () => {
   const { t } = useTranslation();
   const pathname = usePathname();
+  const [isMechanismModalOpen, setIsMechanismModalOpen] = useState(false);
   // const { user } = useAuth();
 
   const isCalc = pathname === ISUNFA_ROUTE.SALARY_CALCULATOR;
@@ -35,13 +37,13 @@ const CalculatorHeader: React.FC = () => {
             >
               {t("calculator.header.main_title")}
             </Link>
-            {/* ToDo: (20260225 - Julian) 暫時隱藏 */}
-            {/* <Link
-              href={ISUNFA_ROUTE.OPERATING_MECHANISM}
-              className="text-xs font-semibold text-gray-500 hover:text-orange-600 transition-colors"
+            
+            <button
+              onClick={() => setIsMechanismModalOpen(true)}
+              className="text-xs font-semibold text-gray-500 hover:text-orange-600 transition-colors bg-transparent border-none cursor-pointer"
             >
               {t("calculator.header.how_it_works")}
-            </Link> */}
+            </button>
           </div>
           {/* {user && (
             <div className="hidden md:flex items-center gap-x-4">
@@ -67,6 +69,11 @@ const CalculatorHeader: React.FC = () => {
           <UserActions />
         </div>
       </nav>
+
+      <MechanismModal 
+        isOpen={isMechanismModalOpen} 
+        onClose={() => setIsMechanismModalOpen(false)} 
+      />
     </header>
   );
 };

@@ -67,7 +67,6 @@ export async function POST(
         fileId: fileId,
         userId: creator.id,
         tradingDate: new Date(),
-        tradingType: "INCOME",
         note: "",
         lines: {
           create: [],
@@ -250,7 +249,7 @@ export async function GET(
         accountBookId: v.accountBookId,
         userId: v.userId,
         tradingDate: Math.floor(v.tradingDate.getTime() / 1000),
-        tradingType: v.tradingType.toLowerCase() as TradingType,
+        tradingType: v.tradingType?.toLowerCase() as TradingType,
         note: v.note ?? "",
         isDeleted: !!v.deletedAt,
         fileId: v.fileId ?? "",

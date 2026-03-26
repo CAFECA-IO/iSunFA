@@ -33,7 +33,7 @@ export interface IMissionParams {
   fileId?: string; // Info: (20260320 - Julian) 用於 AI 分析日記帳、傳票和碳盤查
   fileBase64?: string; // Info: (20260320 - Julian) 傳入檔案的 base64 字串
   fileMimeType?: string; // Info: (20260320 - Julian) 傳入檔案的 mimeType
-  accountBookId?: string; 
+  accountBookId?: string;
   prerequisiteData?: Record<string, unknown>;
   isExternal?: boolean;
 }
@@ -93,7 +93,7 @@ export class MissionGenerator {
     }
 
     if (['market_trends', 'industry_development', 'financial_product_rating', 'carbon_health_check', 'net_zero_emissions'].includes(params.category)) {
-      const countryName = params.country ? (COUNTRY_MAPPING[params.country] || params.country) : '台灣';
+      const countryName = params.country ? (COUNTRY_MAPPING[params.country] || params.country) : '臺灣';
       let startDateStr = 'N/A';
       let endDateStr = 'N/A';
 
@@ -278,7 +278,7 @@ export class MissionGenerator {
     const internalParallelCategories = ['balance_sheet', 'cash_flow', 'income_statement', 'financial_compliance', 'financial_health'];
     if (internalParallelCategories.includes(params.category)) {
       const taskGenerator = new TaskGenerator();
-      
+
       const targetObj: Record<string, unknown> = {
         category: params.category,
         period: params.periodValue,
@@ -350,7 +350,7 @@ export class MissionGenerator {
           .replace(/\{Target_Company\}/g, targetCompanyName)
           .replace(/\{Period\}/g, periodName)
           .replace(/\{Year\}/g, String(params.year || '未提供'));
-          
+
         tasks.push(taskGenerator.generateTask(item.key, injectedPrompt, targetInfo, 0));
       });
 

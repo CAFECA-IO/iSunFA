@@ -115,12 +115,15 @@ export class MissionService {
                       analysisStatus: "COMPLETED" as AIAnalysisStatus,
                       confidence,
                       isVerified: confidence > 85, // Info: (20260323 - Julian) 預設 85 分以上自動驗證
+                      aiNote: jd.aiNote ?? "無 AI 分析備註",
                     };
 
                     if (existingJournal) {
+                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                      const { fileId: _fileId, accountBookId: _accountBookId, ...updatePayload } = dataPayload;
                       await tx.journal.update({
                         where: { id: existingJournal.id },
-                        data: { ...dataPayload },
+                        data: updatePayload,
                       });
                     } else {
                       await tx.journal.create({ data: dataPayload });
@@ -209,10 +212,12 @@ export class MissionService {
                     };
 
                     if (existingVoucher) {
+                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                      const { fileId: _fileId, accountBookId: _accountBookId, lines, ...updatePayload } = dataPayload;
                       await tx.voucher.update({
                         where: { id: existingVoucher.id },
                         data: {
-                          ...dataPayload,
+                          ...updatePayload,
                           lines: {
                             deleteMany: {}, // Info: (20260320 - Julian) 清除舊的傳票項目
                             create: (vd.lines || []).map(
@@ -296,9 +301,11 @@ export class MissionService {
                     };
 
                     if (existingEsg) {
+                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                      const { fileId: _fileId, accountBookId: _accountBookId, ...updatePayload } = esgData;
                       await tx.esgRecord.update({
                         where: { id: existingEsg.id },
-                        data: esgData,
+                        data: updatePayload,
                       });
                     } else {
                       await tx.esgRecord.create({ data: esgData });
