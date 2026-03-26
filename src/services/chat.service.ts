@@ -5,6 +5,7 @@ import { getVoucherPrompt } from "@/constants/prompts/voucher";
 import { IEsgRecord } from "@/interfaces/esg";
 import { IParsedVoucher } from "@/interfaces/voucher";
 import { GoogleGenerativeAI, Part, Tool } from "@google/generative-ai";
+import { AccountBook } from "@/generated/client";
 
 export class ChatService {
   private genAI: GoogleGenerativeAI;
@@ -254,11 +255,11 @@ export class ChatService {
    */
   async analyzeVoucher(
     images: { data: string; mimeType: string }[] = [],
-    region: string = "TW",
+    accountBook: Partial<AccountBook> | null = null,
   ): Promise<{ data: IParsedVoucher | null; error?: string }> {
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
-      const promptText = getVoucherPrompt(region);
+      const promptText = getVoucherPrompt(accountBook);
       const parts: Part[] = [{ text: promptText }];
 
       if (images && images.length > 0) {

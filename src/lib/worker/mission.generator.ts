@@ -392,7 +392,7 @@ export class MissionGenerator {
         order: 0,
         data: {
           key: 'VOUCHER',
-          prompt: getVoucherPrompt(params.accountBookId),
+          prompt: getVoucherPrompt(null),
           context
         }
       });

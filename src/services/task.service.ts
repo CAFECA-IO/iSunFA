@@ -3,6 +3,7 @@ import { ChatService } from "@/services/chat.service";
 import { TASK_STATUS } from "@/constants/status";
 import { missionService } from "@/services/mission.service";
 import { Task, Mission } from "@/generated/client";
+import { accountBookRepo } from "@/repositories/account_book.repo";
 
 interface ITaskData {
   key: string;
@@ -120,7 +121,10 @@ export class TaskService {
           result = res.text;
         }
         else if (task.type === "VOUCHER_PARSING") {
-          const res = await chatService.analyzeVoucher(images, "TW");
+          const accountBook = parsedContext.accountBookId 
+            ? await accountBookRepo.getAccountBookById(parsedContext.accountBookId) 
+            : null;
+          const res = await chatService.analyzeVoucher(images, accountBook);
           result = JSON.stringify(res);
         } else if (task.type === "ESG_PARSING") {
           const res = await chatService.analyzeESG(images);
