@@ -23,7 +23,7 @@ export async function POST(
 
     const { teamId } = await params;
 
-    // Check permission (OWNER or ADMIN)
+    // Info: (20260325 - Tzuhan) Check permission (OWNER or ADMIN)
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
       return jsonFail(ApiCode.FORBIDDEN, "Permission denied. Only OWNER or ADMIN can invite members.");
@@ -40,16 +40,16 @@ export async function POST(
       return jsonFail(ApiCode.VALIDATION_ERROR, "Missing FIDO2 signature");
     }
 
-    // Fetch operator's current challenge
+    // Info: (20260325 - Tzuhan) Fetch operator's current challenge
     const operatorUser = await prisma.user.findUnique({ where: { id: sessionUser.id } });
     if (!operatorUser || !operatorUser.currentChallenge) {
       return jsonFail(ApiCode.UNAUTHORIZED, "Missing WebAuthn challenge. Please retry.");
     }
 
-    // Verify FIDO2 signature
+    // Info: (20260325 - Tzuhan) Verify FIDO2 signature
     await webAuthnService.verifySignature(sessionUser.address, authentication, operatorUser.currentChallenge);
 
-    // Clear challenge to prevent replay
+    // Info: (20260325 - Tzuhan) Clear challenge to prevent replay
     await prisma.user.update({
       where: { id: sessionUser.id },
       data: { currentChallenge: null }
@@ -57,7 +57,7 @@ export async function POST(
 
     const assignedRole = ["OWNER", "ADMIN", "EDITOR", "VIEWER"].includes(role) ? role : "VIEWER";
 
-    // Validate if the address is already a member
+    // Info: (20260325 - Tzuhan) Validate if the address is already a member
     const targetUser = await prisma.user.findUnique({ where: { address } });
     if (targetUser) {
       const existingMember = await teamRepo.getTeamMember(targetUser.id, teamId);
@@ -66,7 +66,7 @@ export async function POST(
       }
     }
 
-    // Validate if an invitation already exists and is pending
+    // Info: (20260325 - Tzuhan) Validate if an invitation already exists and is pending
     const existingInvite = await prisma.teamInvitation.findFirst({
       where: {
         teamId,
@@ -86,8 +86,10 @@ export async function POST(
     const teamName = team?.name || "Unknown Team";
     const contractMessage = `契約: ${inviterName} 發起讓 ${inviteeName} 加入 ${teamName} 團隊`;
 
-    // Info: (20260325 - Tzuhan) [Option B] Simulate sending a UserOp to the blockchain for "Sending Invite"
-    // Since we don't have the userOpHash signed, we send a dummy signature that will revert, but catch the error.
+    /**
+     * Info: (20260325 - Tzuhan) [Option B] Simulate sending a UserOp to the blockchain for "Sending Invite"
+     * Since we don't have the userOpHash signed, we send a dummy signature that will revert, but catch the error.
+     */
     const dummyUserOp = {
       sender: sessionUser.address,
       nonce: BigInt(0),
@@ -108,7 +110,7 @@ export async function POST(
       console.info("[Simulated On-Chain] 'Send Invite' UserOp submission failed as expected for dummy UserOp:", e);
     }
 
-    // Create the TeamInvitation
+    // Info: (20260325 - Tzuhan) Create the TeamInvitation
     const newInvitation = await prisma.teamInvitation.create({
       data: {
         teamId,
