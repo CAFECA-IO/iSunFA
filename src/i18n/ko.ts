@@ -31,6 +31,9 @@ export const ko = {
       no_note: "AI 참고 없음",
       note_title: "AI 분석 참고",
     },
+    ai: {
+      pending: "잠시만 기다려주세요. AI가 처리 중입니다...",
+    },
   },
   faith: {
     title: "FAITH",

@@ -30,6 +30,9 @@ export const en = {
       no_note: "No AI Note",
       note_title: "AI Analysis Note",
     },
+    ai: {
+      pending: "Please wait, AI is processing...",
+    },
   },
   faith: {
     title: "FAITH",
@@ -993,6 +996,11 @@ export const en = {
     no_records: "No records found.",
     please_wait: "This may take a moment, please wait",
     detail_title: "Invoice Details",
+    ai: {
+      processing: "AI is analyzing your invoice...",
+      failed:
+        "AI could not analyze this invoice, please re-upload or input manually",
+    },
     edit: "Edit",
     save: "Save",
     delete: "Delete Invoice",
@@ -1090,7 +1098,13 @@ export const en = {
         no_data_desc: "No voucher records found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
         no_data_cta: "Upload Data",
         no_filter_results: "No Results Found",
-        no_filter_results_desc: "Please adjust your search keywords or filter criteria.",
+        no_filter_results_desc:
+          "Please adjust your search keywords or filter criteria.",
+        ai: {
+          processing: "AI is analyzing your voucher...",
+          failed:
+            "AI could not analyze this voucher, please re-upload or input manually",
+        },
       },
     },
     summary: {
@@ -1213,7 +1227,13 @@ export const en = {
     no_records_desc: "No ESG records found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
     no_records_cta: "Upload Data",
     no_filter_results: "No Results Found",
-    no_filter_results_desc: "Please adjust your search keywords or filter criteria.",
+    no_filter_results_desc:
+      "Please adjust your search keywords or filter criteria.",
+    ai: {
+      processing: "AI is analyzing your ESG record...",
+      failed:
+        "AI could not analyze this ESG record, please re-upload or input manually",
+    },
     footer: {
       record_count: "Showing {{count}} records",
       data_citation: "Data: IPCC AR6 Emission Factors",
@@ -1370,6 +1390,6 @@ export const en = {
       journal: "Journal",
       voucher: "Voucher",
       esg: "ESG",
-    }
-  }
+    },
+  },
 };

@@ -31,6 +31,9 @@ export const ja = {
       no_note: "AI 備考なし",
       note_title: "AI 解析備考",
     },
+    ai: {
+      pending: "少々お待ちください、AIが処理中です...",
+    },
   },
   faith: {
     title: "FAITH",

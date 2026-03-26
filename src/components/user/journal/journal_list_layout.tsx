@@ -44,7 +44,7 @@ const JournalListItem = ({
         <td colSpan={2} className="px-3 py-2 align-middle text-xs sm:hidden">
           <span className="flex items-center gap-2 italic">
             <Loader2 className="size-4 animate-spin text-orange-400" />
-            {t("請稍候，AI 正在處理中...")}
+            {t("common.ai.pending")}
           </span>
         </td>
         <td
@@ -53,7 +53,7 @@ const JournalListItem = ({
         >
           <span className="flex items-center gap-2 italic">
             <Loader2 className="size-4 animate-spin text-orange-400 sm:size-6" />
-            {t("請稍候，AI 正在處理中...")}
+            {t("common.ai.pending")}
           </span>
         </td>
       </tr>
@@ -83,7 +83,7 @@ const JournalListItem = ({
           <div className="max-w-sm flex-col gap-2">
             <span className="mb-2 flex items-center gap-2 font-bold italic">
               <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-              {t("AI 正在分析您的憑證...")}
+              {t("ocr.ai.processing")}
             </span>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
               <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
@@ -98,7 +98,7 @@ const JournalListItem = ({
           <div className="max-w-sm flex-col gap-2">
             <span className="mb-2 flex items-center gap-2 font-bold italic">
               <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-              {t("AI 正在分析您的憑證...")}
+              {t("ocr.ai.processing")}
             </span>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
               <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
@@ -133,7 +133,7 @@ const JournalListItem = ({
           className="px-3 py-2 align-middle text-xs sm:hidden"
         >
           <p className="font-bold text-red-500">
-            {t("AI 無法分析這張憑證，請重新上傳或手動輸入")}
+            {t("ocr.ai.failed")}
           </p>
         </td>
         <td
@@ -142,7 +142,7 @@ const JournalListItem = ({
           className="hidden px-3 py-2 align-middle sm:table-cell sm:px-6 sm:text-sm"
         >
           <p className="font-bold text-red-500">
-            {t("AI 無法分析這張憑證，請重新上傳或手動輸入")}
+            {t("ocr.ai.failed")}
           </p>
         </td>
       </tr>

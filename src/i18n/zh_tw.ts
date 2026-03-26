@@ -30,6 +30,11 @@ export const zhTw = {
       no_note: "無 AI 備註",
       note_title: "AI 解析備註",
     },
+    ai: {
+      pending: "請稍候，AI 正在處理中...",
+      processing: "AI 處理中...",
+      failed: "AI 處理失敗",
+    },
   },
   faith: {
     title: "費思",
@@ -599,7 +604,6 @@ export const zhTw = {
     form_enterprise_id: "統一編號 (選填)",
     form_esg_industry: "產業分類 (ESG, 選填)",
     submit: "確認",
-
   },
   sidebar: {
     modules: "功能模組",
@@ -1022,6 +1026,10 @@ export const zhTw = {
     no_records: "找不到任何紀錄",
     please_wait: "這可能需要一點時間，請稍候",
     detail_title: "憑證詳情",
+    ai: {
+      processing: "AI 正在分析您的憑證...",
+      failed: "AI 無法分析這張憑證，請重新上傳或手動輸入",
+    },
     edit: "編輯",
     save: "儲存",
     delete: "刪除憑證",
@@ -1119,6 +1127,10 @@ export const zhTw = {
         no_data_cta: "上傳憑證/資料",
         no_filter_results: "找不到符合條件的紀錄",
         no_filter_results_desc: "請嘗試調整搜尋關鍵字或篩選條件",
+        ai: {
+          processing: "AI 正在分析您的傳票...",
+          failed: "AI 無法分析這張傳票，請重新上傳或手動輸入",
+        },
       },
     },
     summary: {
@@ -1174,7 +1186,6 @@ export const zhTw = {
         clear_all: "全部清除",
         save_voucher: "儲存傳票",
         confirm: "確認",
-
       },
       confirm_modals: {
         leave_without_saving: {
@@ -1245,6 +1256,10 @@ export const zhTw = {
     no_records_cta: "上傳憑證/資料",
     no_filter_results: "找不到符合條件的紀錄",
     no_filter_results_desc: "請嘗試調整搜尋關鍵字或篩選條件",
+    ai: {
+      processing: "AI 正在分析您的碳排紀錄...",
+      failed: "AI 無法分析碳排紀錄，請重新上傳或手動輸入",
+    },
     footer: {
       record_count: "顯示 {{count}} 筆碳排分析紀錄",
       data_citation: "數據引用：IPCC 第六次評估報告排放係數",
@@ -1279,13 +1294,11 @@ export const zhTw = {
       title: "確認關閉？",
       message: "您的變更尚未儲存，確認離開將會失去所有變更。確認要關閉嗎？",
       confirm: "確認離開",
-
     },
     save_confirm: {
       title: "確認儲存？",
       message: "即將儲存您所做出的 ESG 紀錄核對變更。請確認資料是否無誤？",
       confirm: "確認儲存",
-
     },
     esg_industry_benchmarks: {
       spectrum: {
@@ -1362,6 +1375,6 @@ export const zhTw = {
       journal: "日記帳",
       voucher: "傳票",
       esg: "碳排紀錄",
-    }
-  }
+    },
+  },
 };

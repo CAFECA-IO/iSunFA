@@ -4,11 +4,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/browser";
-import {
-  IVoucher,
-  IVoucherLineUI,
-  TradingType,
-} from "@/interfaces/voucher";
+import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
@@ -189,8 +185,6 @@ export async function GET(
       }
     }
 
-
-
     // Info: (20260310 - Julian) 分頁
     if (page && pageSize) {
       filteredConditions.skip = (page - 1) * pageSize;
@@ -245,7 +239,7 @@ export async function GET(
         .reduce((sum, l) => sum + l.amount, 0);
 
       return {
-        id:v.id,
+        id: v.id,
         accountBookId: v.accountBookId,
         userId: v.userId,
         tradingDate: Math.floor(v.tradingDate.getTime() / 1000),
@@ -253,11 +247,13 @@ export async function GET(
         note: v.note ?? "",
         isDeleted: !!v.deletedAt,
         fileId: v.fileId ?? "",
-        file: v.file ? {
-          id: v.file.id,
-          hash: v.file.hash,
-          fileName: v.file.fileName || "Unknown"
-        } : undefined,
+        file: v.file
+          ? {
+              id: v.file.id,
+              hash: v.file.hash,
+              fileName: v.file.fileName || "Unknown",
+            }
+          : undefined,
         lineItems: {
           lines: voucherLineItems,
           totalAmount: totalAmount,

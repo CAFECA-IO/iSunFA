@@ -84,7 +84,7 @@ export function VoucherRow({
         >
           <span className="flex items-center justify-center gap-2 text-sm font-medium italic">
             <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
-            {t("請稍候，AI 正在處理中...")}
+            {t("common.ai.pending")}
           </span>
         </td>
       </tr>
@@ -115,7 +115,7 @@ export function VoucherRow({
           <div className="mx-auto flex max-w-sm flex-col items-center justify-center gap-2">
             <span className="flex items-center justify-center gap-2 text-sm font-bold text-blue-600 italic">
               <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-              {t("AI 正在分析您的傳票...")}
+              {t("voucher.main_view.table.ai.processing")}
             </span>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
               <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
@@ -151,7 +151,7 @@ export function VoucherRow({
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           <p className="font-bold text-red-500">
-            {t("AI 無法分析這張傳票，請重新上傳或手動輸入")}
+            {t("voucher.main_view.table.ai.failed")}
           </p>
         </td>
       </tr>
