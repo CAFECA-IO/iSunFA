@@ -1,11 +1,10 @@
 import { NextRequest } from 'next/server';
 import { getIdentityFromDeWT } from '@/lib/auth/dewt';
-import { prisma } from '@/lib/prisma';
+import { paymentRepo } from '@/repositories/payment.repo';
 import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
 // import { DEFAULT_PLAN } from '@/constants/plans';
 import { MODULES } from '@/constants/modules';
-import { ORDER_STATUS, ORDER_TYPE } from '@/constants/status';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,18 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Info: (20260302 - Tzuhan) [機制: 處理中點數] 找出所有已扣款成功但還未上鏈的訂單點數加總，讓前端介面能顯示「處理中」，避免使用者誤以為扣款失敗
-    const pendingOrders = await prisma.order.findMany({
-      where: {
-        userId: user.id,
-        status: { in: [ORDER_STATUS.PENDING, ORDER_STATUS.MINT_FAILED] },
-        type: ORDER_TYPE.OEN_PAYMENT,
-        paymentTransactions: {
-          some: {
-            status: 'SUCCESS'
-          }
-        }
-      },
-    });
+    const pendingOrders = await paymentRepo.getPendingOenOrdersByUserId(user.id);
 
     const pendingCredits = pendingOrders.reduce((sum, order) => {
       const data = order.data as { credits?: number };

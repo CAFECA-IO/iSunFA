@@ -1,8 +1,13 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { journalRepo } from "@/repositories/journal.repo";
+import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { IJournal } from "@/interfaces/journal";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 /**
  * Info: (20260304 - Julian) 取得日記帳
@@ -26,9 +31,7 @@ export async function GET(
 
     // Info: (20260309 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -42,10 +45,7 @@ export async function GET(
       return jsonFail(ApiCode.VALIDATION_ERROR, "JournalId is required");
     }
 
-    const journalDbRecord = await prisma.journal.findUnique({
-      where: { id: journalId },
-      include: { file: true },
-    });
+    const journalDbRecord = await journalRepo.getJournalById(journalId);
 
     if (!journalDbRecord) {
       console.error("Journal not found");
@@ -54,11 +54,13 @@ export async function GET(
 
     const journal = {
       ...journalDbRecord,
-      file: journalDbRecord.file ? {
-        id: journalDbRecord.file.id,
-        hash: journalDbRecord.file.hash,
-        fileName: journalDbRecord.file.fileName || "Unknown"
-      } : undefined
+      file: journalDbRecord.file
+        ? {
+            id: journalDbRecord.file.id,
+            hash: journalDbRecord.file.hash,
+            fileName: journalDbRecord.file.fileName || "Unknown",
+          }
+        : undefined,
     };
 
     return jsonOk(journal);
@@ -89,9 +91,7 @@ export async function PUT(
     }
 
     // Info: (20260306 - Julian) 驗證更新人員
-    const updater = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const updater = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!updater) {
       console.error("Updater not found");
@@ -100,9 +100,7 @@ export async function PUT(
 
     // Info: (20260309 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -120,9 +118,10 @@ export async function PUT(
     const { text, isVerified } = body;
 
     // Info: (20260304 - Julian) Update journal
-    const updatedJournal = await prisma.journal.update({
-      where: { id: journalId },
-      data: { text, isVerified: isVerified ?? false },
+    const updatedJournal = await journalRepo.updateJournal(journalId, {
+      text,
+      isVerified: isVerified ?? false,
+      analysisStatus: AIAnalysisStatus.COMPLETED, // Info: (20260326 - Julian) 用戶編輯日記帳後，將分析狀態設為已完成
     });
 
     if (!updatedJournal) {
@@ -131,17 +130,33 @@ export async function PUT(
     }
 
     // Info: (20260306 - Julian) 新增 log
-    await prisma.auditLog.create({
-      data: {
-        userId: updater.id,
-        dataType: "JOURNAL",
-        dataId: updatedJournal.id,
-        accountBookId: accountBook.id,
-        action: "UPDATE",
-      },
+    await auditLogRepo.createAuditLog({
+      userId: updater.id,
+      dataType: "JOURNAL",
+      dataId: updatedJournal.id,
+      accountBookId: accountBook.id,
+      action: "UPDATE",
     });
 
-    return jsonOk(updatedJournal);
+    const formattedJournal: IJournal = {
+      id: updatedJournal.id,
+      tradingTimestamp: Math.floor(updatedJournal.tradingDate.getTime() / 1000),
+      text: updatedJournal.text,
+      fileId: updatedJournal.fileId ?? "",
+      file: updatedJournal.file
+        ? {
+            id: updatedJournal.file.id,
+            hash: updatedJournal.file.hash,
+            fileName: updatedJournal.file.fileName ?? "",
+          }
+        : undefined,
+      analysisStatus: updatedJournal.analysisStatus as AIAnalysisStatus,
+      confidence: updatedJournal.confidence,
+      isVerified: updatedJournal.isVerified,
+      aiNote: updatedJournal.aiNote,
+    };
+
+    return jsonOk(formattedJournal);
   } catch (error) {
     console.error("Put journal failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Put journal failed");
@@ -169,9 +184,7 @@ export async function DELETE(
     }
 
     // Info: (20260306 - Julian) 驗證刪除人員
-    const deleter = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const deleter = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!deleter) {
       console.error("Deleter not found");
@@ -186,9 +199,7 @@ export async function DELETE(
 
     // Info: (20260309 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -196,9 +207,7 @@ export async function DELETE(
     }
 
     // Info: (20260304 - Julian) 刪除日記帳
-    const deletedJournal = await prisma.journal.delete({
-      where: { id: journalId },
-    });
+    const deletedJournal = await journalRepo.deleteJournal(journalId);
 
     if (!deletedJournal) {
       console.error("Journal delete failed");
@@ -206,14 +215,12 @@ export async function DELETE(
     }
 
     // Info: (20260306 - Julian) 新增 log
-    await prisma.auditLog.create({
-      data: {
-        userId: deleter.id,
-        dataType: "JOURNAL",
-        dataId: deletedJournal.id,
-        accountBookId: accountBook.id,
-        action: "DELETE",
-      },
+    await auditLogRepo.createAuditLog({
+      userId: deleter.id,
+      dataType: "JOURNAL",
+      dataId: deletedJournal.id,
+      accountBookId: accountBook.id,
+      action: "DELETE",
     });
 
     return jsonOk(deletedJournal);

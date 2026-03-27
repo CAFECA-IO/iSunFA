@@ -16,7 +16,7 @@ export interface IJournal {
     hash: string;
     fileName: string;
   };
-  analysisStatus: AIAnalysisStatus
+  analysisStatus: AIAnalysisStatus;
   confidence: number;
   isVerified: boolean;
   aiNote: string;

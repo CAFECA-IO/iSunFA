@@ -1,9 +1,17 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { fileRepo } from "@/repositories/file.repo";
+import { journalRepo } from "@/repositories/journal.repo";
+import { voucherRepo } from "@/repositories/voucher.repo";
+import { esgRepo } from "@/repositories/esg.repo";
+import { auditLogRepo } from "@/repositories/audit_log.repo";
+import { missionRepo } from "@/repositories/mission.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { missionGenerator } from "@/lib/worker/mission.generator";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 /**
  * Info: (20260318 - Julian) AI 分析：生成日記帳、傳票、碳排查
@@ -24,9 +32,7 @@ export async function POST(
     }
 
     // Info: (20260310 - Julian) 取得建立者
-    const creator = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const creator = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!creator) {
       console.error("Creator not found");
@@ -35,9 +41,7 @@ export async function POST(
 
     // Info: (20260318 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -54,11 +58,9 @@ export async function POST(
     }
 
     // Info: (20260318 - Julian) 將 file 存入 DB
-    const uploadedFile = await prisma.file.create({
-      data: {
-        hash: file.hash,
-        fileName: file.file.name,
-      },
+    const uploadedFile = await fileRepo.createFile({
+      hash: file.hash,
+      fileName: file.file.name,
     });
 
     if (!uploadedFile) {
@@ -67,16 +69,14 @@ export async function POST(
     }
 
     // Info: (20260318 - Julian) 建立日記帳
-    const newJournal = await prisma.journal.create({
-      data: {
-        accountBookId: accountBook.id,
-        fileId: uploadedFile.id,
-        text: "",
-        tradingDate:new Date(),
-        confidence: 0,
-        isVerified: false,
-        aiNote: "",
-      },
+    const newJournal = await journalRepo.createJournal({
+      accountBookId: accountBook.id,
+      fileId: uploadedFile.id,
+      text: "",
+      tradingDate: new Date(),
+      confidence: 0,
+      isVerified: false,
+      aiNote: "",
     });
 
     if (!newJournal) {
@@ -85,18 +85,16 @@ export async function POST(
     }
 
     // Info: (20260318 - Julian) 建立空白傳票
-    const newVoucher = await prisma.voucher.create({
-      data: {
-        accountBookId: accountBook.id,
-        fileId: uploadedFile.id,
-        userId: creator.id,
-        tradingDate: new Date(),
-        note: "",
-        lines: { create: [] },
-        aiNote: "",
-        confidence: 0,
-        isVerified: false,
-      },
+    const newVoucher = await voucherRepo.createVoucher({
+      accountBookId: accountBook.id,
+      fileId: uploadedFile.id,
+      userId: creator.id,
+      tradingDate: new Date(),
+      note: "",
+      lines: { create: [] },
+      aiNote: "",
+      confidence: 0,
+      isVerified: false,
     });
 
     if (!newVoucher) {
@@ -105,23 +103,21 @@ export async function POST(
     }
 
     // Info: (20260318 - Julian) 建立空白 ESG 紀錄
-    const newRecord = await prisma.esgRecord.create({
-      data: {
-        accountBookId: accountBook.id,
-        userId: creator.id,
-        fileId: uploadedFile.id,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        dateTimestamp: 0,
-        activityType: "",
-        vendor: "",
-        rawActivityData: "",
-        unit: "",
-        emissions: 0,
-        aiNote: "",
-        confidence: 0,
-        isVerified: false,
-      },
+    const newRecord = await esgRepo.createEsgRecord({
+      accountBookId: accountBook.id,
+      userId: creator.id,
+      fileId: uploadedFile.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      dateTimestamp: 0,
+      activityType: "",
+      vendor: "",
+      rawActivityData: "",
+      unit: "",
+      emissions: 0,
+      aiNote: "",
+      confidence: 0,
+      isVerified: false,
     });
 
     if (!newRecord) {
@@ -130,8 +126,7 @@ export async function POST(
     }
 
     // Info: (20260318 - Julian) 新增 AuditLog
-    await prisma.auditLog.createMany({
-      data: [
+    await auditLogRepo.createManyAuditLogs([
         {
           userId: creator.id,
           dataType: "JOURNAL",
@@ -153,14 +148,13 @@ export async function POST(
           accountBookId: accountBook.id,
           action: "CREATE",
         },
-      ],
-    });
+      ]);
 
     // Info: (20260320 - Julian) 觸發 Mission Generator 寫入任務
     const missionDef = missionGenerator.generateMission({
-      category: 'document_parsing',
-      periodType: 'N/A', // Info: (20260320 - Julian) 憑證解析可不用
-      periodValue: 'N/A',
+      category: "document_parsing",
+      periodType: "N/A", // Info: (20260320 - Julian) 憑證解析可不用
+      periodValue: "N/A",
       year: new Date().getFullYear(),
       fileId: uploadedFile.id,
       fileBase64: file.base64,
@@ -169,20 +163,18 @@ export async function POST(
     });
 
     if (missionDef) {
-      await prisma.mission.create({
-        data: {
-          userId: creator.id,
-          name: missionDef.name,
-          status: 'PENDING',
-          tasks: {
-            create: missionDef.tasks.map(task => ({
-              type: task.type,
-              order: task.order,
-              data: task.data,
-              status: 'PENDING'
-            }))
-          }
-        }
+      await missionRepo.createMission({
+        userId: creator.id,
+        name: missionDef.name,
+        status: AIAnalysisStatus.PENDING,
+        tasks: {
+          create: missionDef.tasks.map((task) => ({
+            type: task.type,
+            order: task.order,
+            data: task.data,
+            status: AIAnalysisStatus.PENDING,
+          })),
+        },
       });
     }
 

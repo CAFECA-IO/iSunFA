@@ -17,8 +17,6 @@ const JournalListItem = ({
 }) => {
   const { t } = useTranslation();
 
-  const isAnalysisFailed = journal.analysisStatus === AIAnalysisStatus.FAILED;
-
   const formattedDate = timestampToString(
     journal.tradingTimestamp,
   ).dateWithDash;
@@ -37,19 +35,16 @@ const JournalListItem = ({
             <Loader2 className="size-4 animate-spin text-orange-400 sm:size-6" />
           </div>
         </td>
-        <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium sm:w-auto sm:whitespace-nowrap sm:px-6 sm:text-sm">
+        <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium sm:w-auto sm:px-6 sm:text-sm sm:whitespace-nowrap">
           {formattedDate}
         </td>
         <td className="hidden px-3 py-2 align-middle font-medium whitespace-nowrap sm:table-cell sm:px-6">
           {formattedID}
         </td>
-        <td
-          colSpan={2}
-          className="px-3 py-2 align-middle text-xs sm:hidden"
-        >
+        <td colSpan={2} className="px-3 py-2 align-middle text-xs sm:hidden">
           <span className="flex items-center gap-2 italic">
             <Loader2 className="size-4 animate-spin text-orange-400" />
-            {t("ocr.analyzing")}
+            {t("common.ai.pending")}
           </span>
         </td>
         <td
@@ -58,7 +53,7 @@ const JournalListItem = ({
         >
           <span className="flex items-center gap-2 italic">
             <Loader2 className="size-4 animate-spin text-orange-400 sm:size-6" />
-            {t("ocr.analyzing")}
+            {t("common.ai.pending")}
           </span>
         </td>
       </tr>
@@ -74,7 +69,7 @@ const JournalListItem = ({
             <Loader2 className="size-4 animate-spin text-blue-500 sm:size-6" />
           </div>
         </td>
-        <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium sm:w-auto sm:whitespace-nowrap sm:px-6 sm:text-sm">
+        <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium sm:w-auto sm:px-6 sm:text-sm sm:whitespace-nowrap">
           {formattedDate}
         </td>
         <td className="hidden px-3 py-2 align-middle font-medium whitespace-nowrap sm:table-cell sm:px-6">
@@ -88,7 +83,7 @@ const JournalListItem = ({
           <div className="max-w-sm flex-col gap-2">
             <span className="mb-2 flex items-center gap-2 font-bold italic">
               <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-              {t("ocr.analyzing")}
+              {t("ocr.ai.processing")}
             </span>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
               <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
@@ -103,7 +98,7 @@ const JournalListItem = ({
           <div className="max-w-sm flex-col gap-2">
             <span className="mb-2 flex items-center gap-2 font-bold italic">
               <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-              {t("ocr.analyzing")}
+              {t("ocr.ai.processing")}
             </span>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
               <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
@@ -114,9 +109,49 @@ const JournalListItem = ({
     );
   }
 
+  // Info: (20260320 - Julian) 分析出錯
+  if (journal.analysisStatus === AIAnalysisStatus.FAILED) {
+    return (
+      <tr
+        onClick={() => onSelect(journal)}
+        className="border-b border-red-200 bg-red-50 text-red-500 opacity-90 last:border-0 hover:cursor-pointer hover:bg-red-100"
+      >
+        <td className="w-[72px] px-3 py-2 align-middle sm:w-[150px] sm:px-6">
+          <div className="flex size-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white p-1 sm:size-20">
+            <CircleAlert size={24} className="text-red-500" />
+          </div>
+        </td>
+        <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium sm:w-auto sm:px-6 sm:text-sm sm:whitespace-nowrap">
+          {formattedDate}
+        </td>
+        <td className="hidden px-3 py-2 align-middle font-medium whitespace-nowrap sm:table-cell sm:px-6">
+          {formattedID}
+        </td>
+        <td
+          aria-label="AI Failed"
+          colSpan={2}
+          className="px-3 py-2 align-middle text-xs sm:hidden"
+        >
+          <p className="font-bold text-red-500">
+            {t("ocr.ai.failed")}
+          </p>
+        </td>
+        <td
+          aria-label="AI Failed"
+          colSpan={3}
+          className="hidden px-3 py-2 align-middle sm:table-cell sm:px-6 sm:text-sm"
+        >
+          <p className="font-bold text-red-500">
+            {t("ocr.ai.failed")}
+          </p>
+        </td>
+      </tr>
+    );
+  }
+
   return (
     <tr
-      className={`cursor-pointer border-b border-slate-300 last:border-0 ${isAnalysisFailed ? "bg-red-200 hover:bg-red-300" : "bg-white hover:bg-orange-100"}`}
+      className="cursor-pointer border-b border-slate-300 bg-white last:border-0 hover:bg-orange-100"
       onClick={() => onSelect(journal)}
     >
       {/* Info: (20260320 - Julian) File */}
@@ -131,12 +166,6 @@ const JournalListItem = ({
             />
           ) : (
             <span className="text-xs text-gray-400">{t("ocr.no_image")}</span>
-          )}
-          {/* Info: (20260320 - Julian) Failed Icon */}
-          {isAnalysisFailed && (
-            <div className="absolute top-0 left-0 z-10 flex size-full items-center justify-center bg-red-100/50 p-1">
-              <CircleAlert size={24} className="text-red-500" />
-            </div>
           )}
         </div>
       </td>
@@ -202,10 +231,16 @@ const JournalListLayout = ({
 
   const loadingView = (
     <tr>
-      <td colSpan={5} className="px-3 py-8 text-center text-slate-500 sm:hidden">
+      <td
+        colSpan={5}
+        className="px-3 py-8 text-center text-slate-500 sm:hidden"
+      >
         <Loader2 className="mx-auto h-6 w-6 animate-spin text-orange-500" />
       </td>
-      <td colSpan={6} className="hidden px-3 py-8 text-center text-slate-500 sm:table-cell sm:px-6">
+      <td
+        colSpan={6}
+        className="hidden px-3 py-8 text-center text-slate-500 sm:table-cell sm:px-6"
+      >
         <Loader2 className="mx-auto h-6 w-6 animate-spin text-orange-500" />
       </td>
     </tr>
@@ -213,10 +248,16 @@ const JournalListLayout = ({
 
   const emptyView = (
     <tr>
-      <td colSpan={5} className="px-3 py-8 text-center text-slate-500 sm:hidden">
+      <td
+        colSpan={5}
+        className="px-3 py-8 text-center text-slate-500 sm:hidden"
+      >
         {t("ocr.no_records")}
       </td>
-      <td colSpan={6} className="hidden px-3 py-8 text-center text-slate-500 sm:table-cell sm:px-6">
+      <td
+        colSpan={6}
+        className="hidden px-3 py-8 text-center text-slate-500 sm:table-cell sm:px-6"
+      >
         {t("ocr.no_records")}
       </td>
     </tr>
@@ -227,7 +268,7 @@ const JournalListLayout = ({
   ));
 
   return (
-    <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div className="w-full max-w-full min-w-0 overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
       <table className="w-full">
         <tbody>
           <tr>

@@ -75,7 +75,7 @@ export default function AiConfidence({
               <PopoverPanel
                 transition
                 anchor="bottom start"
-                className="z-[200] flex w-[85vw] max-w-[320px] flex-col rounded-xl border border-blue-100 bg-white p-4 shadow-xl ring-1 ring-black/5 transition duration-200 ease-out outline-none data-closed:scale-95 data-closed:opacity-0 sm:w-[350px] sm:max-w-none"
+                className="z-200 flex w-[85vw] max-w-[320px] flex-col rounded-xl border border-blue-100 bg-white p-4 shadow-xl ring-1 ring-black/5 transition duration-200 ease-out outline-none data-closed:scale-95 data-closed:opacity-0 sm:w-[350px] sm:max-w-none"
               >
                 <div className="mb-2 flex items-center gap-2">
                   <Sparkles size={16} className="text-blue-500" />

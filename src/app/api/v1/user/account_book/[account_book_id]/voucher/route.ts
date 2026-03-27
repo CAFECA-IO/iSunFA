@@ -1,16 +1,16 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { voucherRepo } from "@/repositories/voucher.repo";
+import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/browser";
-import {
-  IVoucher,
-  IVoucherLineUI,
-  TradingType,
-} from "@/interfaces/voucher";
+import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { VerifyStatus } from "@/constants/verify_status";
 
 /**
  * Info: (20260310 - Julian) 新增傳票：將 AI 解析出的傳票存入 DB
@@ -31,9 +31,7 @@ export async function POST(
     }
 
     // Info: (20260310 - Julian) 取得建立者
-    const creator = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const creator = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!creator) {
       console.error("Creator not found");
@@ -42,9 +40,7 @@ export async function POST(
 
     // Info: (20260310 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -61,19 +57,15 @@ export async function POST(
     }
 
     // Info: (20260311 - Julian) 建立空白傳票
-    const newVoucher = await prisma.voucher.create({
-      data: {
-        accountBookId: accountBook.id,
-        fileId: fileId,
-        userId: creator.id,
-        tradingDate: new Date(),
-        note: "",
-        lines: {
-          create: [],
-        },
-        confidence: 0,
-        aiNote: "",
-      },
+    const newVoucher = await voucherRepo.createVoucher({
+      accountBookId: accountBook.id,
+      fileId: fileId,
+      userId: creator.id,
+      tradingDate: new Date(),
+      note: "",
+      lines: { create: [] },
+      confidence: 0,
+      aiNote: "",
     });
 
     if (!newVoucher) {
@@ -82,14 +74,12 @@ export async function POST(
     }
 
     // Info: (20260311 - Julian) 新增 AuditLog
-    await prisma.auditLog.create({
-      data: {
-        userId: creator.id,
-        dataType: "VOUCHER",
-        dataId: newVoucher.id,
-        accountBookId: accountBook.id,
-        action: "CREATE",
-      },
+    await auditLogRepo.createAuditLog({
+      userId: creator.id,
+      dataType: "VOUCHER",
+      dataId: newVoucher.id,
+      accountBookId: accountBook.id,
+      action: "CREATE",
     });
 
     return jsonOk({
@@ -121,9 +111,7 @@ export async function GET(
     }
 
     // Info: (20260310 - Julian) 取得建立者
-    const author = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const author = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!author) {
       console.error("Author not found");
@@ -132,9 +120,7 @@ export async function GET(
 
     // Info: (20260310 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -175,7 +161,7 @@ export async function GET(
 
     // Info: (20260324 - Julian) 建立審核狀態篩選
     if (verifyStatus) {
-      filteredConditions.where!.isVerified = verifyStatus === "VERIFIED";
+      filteredConditions.where!.isVerified = verifyStatus === VerifyStatus.VERIFIED;
     }
 
     // Info: (20260310 - Julian) 建立時間區間篩選
@@ -188,8 +174,6 @@ export async function GET(
         filteredConditions.where!.tradingDate.lte = new Date(endDate);
       }
     }
-
-
 
     // Info: (20260310 - Julian) 分頁
     if (page && pageSize) {
@@ -218,11 +202,7 @@ export async function GET(
     }
 
     // Info: (20260310 - Julian) 取得日記帳列表
-    const vouchers = (await prisma.voucher.findMany(
-      filteredConditions,
-    )) as Prisma.VoucherGetPayload<{
-      include: { file: true; user: true; lines: true };
-    }>[];
+    const vouchers = await voucherRepo.getVouchers(filteredConditions);
 
     // Info: (20260311 - Julian) 組合成前端所需的格式
     const formattedVouchers: IVoucher[] = vouchers.map((v) => {
@@ -245,7 +225,7 @@ export async function GET(
         .reduce((sum, l) => sum + l.amount, 0);
 
       return {
-        id:v.id,
+        id: v.id,
         accountBookId: v.accountBookId,
         userId: v.userId,
         tradingDate: Math.floor(v.tradingDate.getTime() / 1000),
@@ -253,11 +233,13 @@ export async function GET(
         note: v.note ?? "",
         isDeleted: !!v.deletedAt,
         fileId: v.fileId ?? "",
-        file: v.file ? {
-          id: v.file.id,
-          hash: v.file.hash,
-          fileName: v.file.fileName || "Unknown"
-        } : undefined,
+        file: v.file
+          ? {
+            id: v.file.id,
+            hash: v.file.hash,
+            fileName: v.file.fileName || "Unknown",
+          }
+          : undefined,
         lineItems: {
           lines: voucherLineItems,
           totalAmount: totalAmount,
@@ -303,9 +285,7 @@ export async function GET(
     }
 
     // Info: (20260324 - Julian) 總筆數
-    const totalCount = await prisma.voucher.count({
-      where: filteredConditions.where,
-    });
+    const totalCount = await voucherRepo.countVouchers(filteredConditions.where || {});
 
     return jsonOk({ data: formattedVouchers, total: totalCount });
   } catch (error) {

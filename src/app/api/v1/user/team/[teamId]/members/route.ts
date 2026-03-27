@@ -3,7 +3,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
-import { prisma } from "@/lib/prisma";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
 import { TeamRole } from '@/generated/client';
 
@@ -67,7 +67,7 @@ export async function POST(
     }
 
     // Info: (20260325 - Tzuhan) Fetch operator's current challenge
-    const operatorUser = await prisma.user.findUnique({ where: { id: sessionUser.id } });
+    const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
       return jsonFail(ApiCode.UNAUTHORIZED, "Missing WebAuthn challenge. Please retry.");
     }
@@ -76,15 +76,12 @@ export async function POST(
     await webAuthnService.verifySignature(sessionUser.address, authentication, operatorUser.currentChallenge);
 
     // Info: (20260325 - Tzuhan) Clear challenge to prevent replay
-    await prisma.user.update({
-      where: { id: sessionUser.id },
-      data: { currentChallenge: null }
-    });
+    await webAuthnRepo.clearChallenge(sessionUser.id);
 
     const assignedRole: TeamRole = role === "ADMIN" || role === "EDITOR" || role === "VIEWER" ? role : TeamRole.VIEWER;
 
     // Info: (20260325 - Tzuhan) Find the target user by address
-    const targetUser = await prisma.user.findUnique({ where: { address } });
+    const targetUser = await webAuthnRepo.findUserByAddress(address);
     if (!targetUser) {
       return jsonFail(ApiCode.NOT_FOUND, "User with this address not found");
     }

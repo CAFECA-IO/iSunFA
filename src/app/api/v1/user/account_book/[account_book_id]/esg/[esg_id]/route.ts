@@ -1,7 +1,10 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { esgRepo } from "@/repositories/esg.repo";
+import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { EsgScope, EsgIntensity } from "@/generated/client";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
@@ -30,9 +33,7 @@ export async function GET(
     }
 
     // Info: (20260312 - Julian) 取得建立者
-    const creator = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const creator = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!creator) {
       console.error("Creator not found");
@@ -41,9 +42,7 @@ export async function GET(
 
     // Info: (20260312 - Julian) 取得帳簿
     const { account_book_id: accountBookId, esg_id: esgId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -51,10 +50,7 @@ export async function GET(
     }
 
     // Info: (20260312 - Julian) 取得 ESG 紀錄
-    const esgRecord = await prisma.esgRecord.findUnique({
-      where: { id: esgId },
-      include: { file: true },
-    });
+    const esgRecord = await esgRepo.getEsgRecordById(esgId);
 
     if (!esgRecord) {
       console.error("Esg record not found");
@@ -65,11 +61,13 @@ export async function GET(
       id: esgRecord.id,
       dateTimestamp: esgRecord.dateTimestamp,
       fileId: esgRecord.fileId ?? "",
-      file: esgRecord.file ? {
-        id: esgRecord.file.id,
-        hash: esgRecord.file.hash,
-        fileName: esgRecord.file.fileName || "Unknown"
-      } : undefined,
+      file: esgRecord.file
+        ? {
+            id: esgRecord.file.id,
+            hash: esgRecord.file.hash,
+            fileName: esgRecord.file.fileName || "Unknown",
+          }
+        : undefined,
       scope: esgRecord.scope as unknown as ClientEsgScope,
       activityType: esgRecord.activityType,
       vendor: esgRecord.vendor,
@@ -112,9 +110,7 @@ export async function PUT(
     }
 
     // Info: (20260312 - Julian) 取得更新人員
-    const updater = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const updater = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!updater) {
       console.error("Creator not found");
@@ -123,9 +119,7 @@ export async function PUT(
 
     // Info: (20260312 - Julian) 取得帳簿
     const { account_book_id: accountBookId, esg_id: esgId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -133,9 +127,7 @@ export async function PUT(
     }
 
     // Info: (20260312 - Julian) 取得 ESG 紀錄
-    const esgRecord = await prisma.esgRecord.findUnique({
-      where: { id: esgId },
-    });
+    const esgRecord = await esgRepo.getEsgRecordById(esgId);
 
     if (!esgRecord) {
       console.error("Esg record not found");
@@ -145,9 +137,7 @@ export async function PUT(
     const reqBody: Partial<IEsgRecord> = await request.json();
 
     // Info: (20260312 - Julian) 更新 ESG 紀錄
-    const updatedRecord = await prisma.esgRecord.update({
-      where: { id: esgId },
-      data: {
+    const updatedRecord = await esgRepo.updateEsgRecord(esgId, {
         ...(reqBody.dateTimestamp && { dateTimestamp: reqBody.dateTimestamp }),
         ...(reqBody.scope && {
           scope: reqBody.scope.toUpperCase() as EsgScope,
@@ -165,11 +155,16 @@ export async function PUT(
         ...(reqBody.confidence !== undefined && {
           confidence: reqBody.confidence,
         }),
-        ...(reqBody.isVerified !== undefined && { isVerified: reqBody.isVerified }),
-        ...(reqBody.analysisStatus && {
-          analysisStatus: reqBody.analysisStatus.toUpperCase() as AIAnalysisStatus,
+        ...(reqBody.isVerified !== undefined && {
+          isVerified: reqBody.isVerified,
         }),
-      },
+        ...(reqBody.analysisStatus && {
+          // Info: (20260326 - Julian) 如果使用者手動修改，就將 analysisStatus 的 FAILED 設為 COMPLETED
+          analysisStatus:
+            reqBody.analysisStatus === AIAnalysisStatus.FAILED
+              ? AIAnalysisStatus.COMPLETED
+              : reqBody.analysisStatus,
+        }),
     });
 
     const formattedRecord: IEsgRecord = {
@@ -185,7 +180,8 @@ export async function PUT(
       intensity: updatedRecord.intensity as unknown as ClientEsgIntensity,
       confidence: updatedRecord.confidence,
       isVerified: updatedRecord.isVerified,
-      analysisStatus: updatedRecord.analysisStatus as unknown as AIAnalysisStatus,
+      analysisStatus:
+        updatedRecord.analysisStatus as unknown as AIAnalysisStatus,
       aiNote: updatedRecord.aiNote ?? "",
     };
 
@@ -195,14 +191,12 @@ export async function PUT(
     }
 
     // Info: (20260312 - Julian) 新增 log
-    await prisma.auditLog.create({
-      data: {
-        userId: updater.id,
-        dataType: "ESG_RECORD",
-        dataId: formattedRecord.id,
-        accountBookId: accountBook.id,
-        action: "UPDATE",
-      },
+    await auditLogRepo.createAuditLog({
+      userId: updater.id,
+      dataType: "ESG_RECORD",
+      dataId: formattedRecord.id,
+      accountBookId: accountBook.id,
+      action: "UPDATE",
     });
 
     return jsonOk(formattedRecord);

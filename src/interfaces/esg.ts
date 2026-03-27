@@ -86,6 +86,6 @@ export interface IEsgRecord {
   intensity: EsgIntensity;
   confidence: number;
   isVerified: boolean;
-  analysisStatus: AIAnalysisStatus | null
+  analysisStatus: AIAnalysisStatus | null;
   aiNote: string;
 }

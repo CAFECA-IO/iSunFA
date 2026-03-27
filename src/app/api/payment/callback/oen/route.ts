@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/generated/client";
 import { mintToAddress } from "@/services/token.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
-import { IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
-import { ORDER_STATUS, PAYMENT_STATUS, ORDER_TYPE, PAYMENT_PROVIDER, PAYMENT_TRANSACTION_STATUS } from "@/constants/status";
+import { IOenCallbackData } from "@/interfaces/payment";
+import { PAYMENT_STATUS, PAYMENT_PROVIDER } from "@/constants/status";
+import { paymentRepo } from "@/repositories/payment.repo";
 
 export async function POST(request: NextRequest) {
     try {
@@ -51,137 +50,31 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const order = await prisma.order.findUnique({
-            where: { id: customId },
-            include: { user: true },
-        });
+        const order = await paymentRepo.getOrderWithUser(customId as string);
 
         if (!order) {
             return NextResponse.json({ message: "Order not found" }, { status: 404 });
         }
 
+        const { shouldMint, creditsToMint, amountPaid } = await paymentRepo.processOenPayment(
+            order,
+            body,
+            status,
+            token as string | undefined
+        );
 
-
-        let shouldMint = false;
-        let creditsToMint = 0;
-        let amountPaid = 0;
-
-        await prisma.$transaction(async (tx) => {
-            if (token && typeof token === "string") {
-                const existingMethod = await tx.paymentMethod.findFirst({
-                    where: {
-                        userId: order.userId,
-                        provider: "OEN",
-                        token: token,
-                    }
-                });
-
-                if (!existingMethod) {
-                    const rawBody = body as IOenCallbackData;
-                    await tx.paymentMethod.create({
-                        data: {
-                            userId: order.userId,
-                            provider: "OEN",
-                            token: token,
-                            data: (Object.keys(rawBody).length > 0 ? rawBody : Prisma.DbNull) as Prisma.InputJsonValue,
-                        },
-                    });
-                }
-            }
-
-            const isPaymentSuccess = status === PAYMENT_STATUS.SUCCESS || body.success === true || (token && typeof token === "string");
-
-            if (isPaymentSuccess && order.status === ORDER_STATUS.PENDING) {
-                if (order.type === ORDER_TYPE.OEN_BINDING) {
-                    await tx.order.update({
-                        where: { id: order.id },
-                        data: {
-                            status: ORDER_STATUS.COMPLETED,
-                            data: {
-                                ...(order.data as IOenOrderData),
-                            } as Prisma.InputJsonObject
-                        },
-                    });
-                } else if (order.type === ORDER_TYPE.OEN_PAYMENT) {
-                    const _creditsToMint = (order.data as IOenOrderData)?.credits || 0;
-                    const dbReceipt = await tx.receipt.create({
-                        data: {
-                            orderId: order.id,
-                            amount: order.amount,
-                            data: {
-                                ...(body),
-                                receiptDetails: {
-                                    amount: order.amount,
-                                    credits: creditsToMint,
-                                    transactionTime: new Date().toISOString(),
-                                    buyerId: order.userId,
-                                    buyerName: order.user?.name || "Unknown",
-                                    itemDescription: `iSunFA Credits - ${_creditsToMint}`,
-                                    gatewayTxId: body?.data?.id,
-                                }
-                            } as Prisma.InputJsonObject
-                        }
-                    });
-
-                    await tx.paymentTransaction.updateMany({
-                        where: { orderId: order.id },
-                        data: { status: PAYMENT_TRANSACTION_STATUS.SUCCESS, rawData: body as unknown as Prisma.InputJsonValue }
-                    });
-
-                    await tx.order.update({
-                        where: { id: order.id },
-                        data: {
-                            status: ORDER_STATUS.PAID,
-                            data: {
-                                ...(order.data as IOenOrderData),
-                                checkoutResponse: body,
-                                receiptId: dbReceipt.id
-                            } as Prisma.InputJsonObject,
-                        },
-                    });
-
-                    shouldMint = true;
-                    creditsToMint = (order.data as IOenOrderData)?.credits || 0;
-                    amountPaid = order.amount;
-                }
-            } else if (!isPaymentSuccess && order.status === ORDER_STATUS.PENDING) {
-                await tx.paymentTransaction.updateMany({
-                    where: { orderId: order.id },
-                    data: { status: PAYMENT_TRANSACTION_STATUS.FAILED, rawData: body as unknown as Prisma.InputJsonValue, errorMessage: "Payment failed via OEN Callback" }
-                });
-                await tx.order.update({
-                    where: { id: order.id },
-                    data: {
-                        status: ORDER_STATUS.FAILED,
-                        data: { ...(order.data as IOenOrderData), checkoutResponse: body } as Prisma.InputJsonObject,
-                    },
-                });
-            }
-        });
-
-        if (shouldMint && creditsToMint > 0) {
+        if (shouldMint && creditsToMint > 0 && order.user?.address) {
             const memo = JSON.stringify({ provider: PAYMENT_PROVIDER.OEN_CALLBACK, orderId: order.id, amount: amountPaid });
             const mintResult = await mintToAddress(CONTRACT_ADDRESSES.NTD_TOKEN, order.user.address, creditsToMint, memo);
 
             if (!mintResult.success) {
-                await prisma.order.update({
-                    where: { id: order.id },
-                    data: {
-                        status: ORDER_STATUS.MINT_FAILED,
-                        data: { ...(order.data as object), checkoutResponse: body, error: mintResult.message },
-                    },
-                });
+                await paymentRepo.updateOrderMintFailed(order.id, order.data as object, body, mintResult.message);
                 // We don't return 500 here because the webhook itself is technically processed successfully up to minting.
             } else {
                 const txHash = (mintResult.data as { tx: string })?.tx;
-
-                await prisma.order.update({
-                    where: { id: order.id },
-                    data: {
-                        status: ORDER_STATUS.COMPLETED,
-                        transactionHash: txHash,
-                    },
-                });
+                if (txHash) {
+                    await paymentRepo.updateOrderCompleted(order.id, txHash);
+                }
             }
         }
 

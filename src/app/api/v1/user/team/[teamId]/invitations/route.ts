@@ -4,10 +4,11 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
-import { prisma } from "@/lib/prisma";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
 import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
+import { TEAM_INVITATION_STATUS } from "@/constants/status";
 
 export async function POST(
   request: NextRequest,
@@ -41,7 +42,7 @@ export async function POST(
     }
 
     // Info: (20260325 - Tzuhan) Fetch operator's current challenge
-    const operatorUser = await prisma.user.findUnique({ where: { id: sessionUser.id } });
+    const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
       return jsonFail(ApiCode.UNAUTHORIZED, "Missing WebAuthn challenge. Please retry.");
     }
@@ -50,15 +51,12 @@ export async function POST(
     await webAuthnService.verifySignature(sessionUser.address, authentication, operatorUser.currentChallenge);
 
     // Info: (20260325 - Tzuhan) Clear challenge to prevent replay
-    await prisma.user.update({
-      where: { id: sessionUser.id },
-      data: { currentChallenge: null }
-    });
+    await webAuthnRepo.clearChallenge(sessionUser.id);
 
     const assignedRole = ["OWNER", "ADMIN", "EDITOR", "VIEWER"].includes(role) ? role : "VIEWER";
 
     // Info: (20260325 - Tzuhan) Validate if the address is already a member
-    const targetUser = await prisma.user.findUnique({ where: { address } });
+    const targetUser = await webAuthnRepo.findUserByAddress(address);
     if (targetUser) {
       const existingMember = await teamRepo.getTeamMember(targetUser.id, teamId);
       if (existingMember) {
@@ -67,20 +65,14 @@ export async function POST(
     }
 
     // Info: (20260325 - Tzuhan) Validate if an invitation already exists and is pending
-    const existingInvite = await prisma.teamInvitation.findFirst({
-      where: {
-        teamId,
-        inviteeAddress: address,
-        status: "PENDING"
-      }
-    });
+    const existingInvite = await teamRepo.getTeamInvitation(teamId, address, TEAM_INVITATION_STATUS.PENDING);
 
     if (existingInvite) {
       return jsonFail(ApiCode.VALIDATION_ERROR, "An invitation is already pending for this address");
     }
 
     // Info: (20260325 - Tzuhan) Fetch team needed for the contract message
-    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    const team = await teamRepo.getTeamById(teamId);
     const inviterName = sessionUser.name || sessionUser.address;
     const inviteeName = targetUser?.name || address;
     const teamName = team?.name || "Unknown Team";
@@ -111,14 +103,12 @@ export async function POST(
     }
 
     // Info: (20260325 - Tzuhan) Create the TeamInvitation
-    const newInvitation = await prisma.teamInvitation.create({
-      data: {
-        teamId,
-        inviterId: sessionUser.id,
-        inviteeAddress: address,
-        role: assignedRole,
-        status: "PENDING"
-      }
+    const newInvitation = await teamRepo.createTeamInvitation({
+      teamId,
+      inviterId: sessionUser.id,
+      inviteeAddress: address,
+      role: assignedRole,
+      status: TEAM_INVITATION_STATUS.PENDING
     });
 
     return jsonOk(newInvitation);
@@ -146,10 +136,7 @@ export async function GET(
       return jsonFail(ApiCode.FORBIDDEN, "Permission denied.");
     }
 
-    const invitations = await prisma.teamInvitation.findMany({
-      where: { teamId, status: "PENDING" },
-      orderBy: { createdAt: 'desc' }
-    });
+    const invitations = await teamRepo.listTeamInvitations(teamId, TEAM_INVITATION_STATUS.PENDING);
 
     return jsonOk(invitations);
   } catch (error) {

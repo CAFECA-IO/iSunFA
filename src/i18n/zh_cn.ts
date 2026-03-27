@@ -32,6 +32,11 @@ export const zhCn = {
       no_note: "无 AI 备注",
       note_title: "AI 解析备注",
     },
+    ai: {
+      pending: "请稍候，AI 正在处理中...",
+      processing: "AI 正在处理中...",
+      failed: "AI 处理失败",
+    },
   },
   faith: {
     title: "费思",
@@ -921,9 +926,12 @@ export const zhCn = {
     action: "操作",
     no_image: "无预览",
     no_records: "找不到任何记录",
-    analyzing: "AI 正在为您分析发票...",
     please_wait: "这可能需要一点时间，请稍候",
     detail_title: "发票详情",
+    ai: {
+      processing: "AI 正在分析您的发票...",
+      failed: "AI 无法分析这张发票，请重新上传或手动输入",
+    },
     edit: "编辑",
     save: "保存",
     delete: "删除发票",
@@ -1027,6 +1035,10 @@ export const zhCn = {
     no_records_cta: "上传凭证/数据",
     no_filter_results: "找不到符合条件的纪录",
     no_filter_results_desc: "请尝试调整搜索关键字或筛选条件",
+    ai: {
+      processing: "AI 正在分析您的碳排纪录...",
+      failed: "AI 无法分析碳排纪录，请重新上传或手动输入",
+    },
     footer: {
       record_count: "显示 {{count}} 笔碳排分析纪录",
       data_citation: "数据引用：IPCC 第六次评估报告排放系数",
@@ -1081,7 +1093,6 @@ export const zhCn = {
       title: "确认关闭？",
       message: "您的变更尚未保存，确认离开将会失去所有变更。确认要关闭吗？",
       confirm: "确认离开",
-
     },
     save_confirm: {
       title: "确认保存？",
@@ -1180,6 +1191,10 @@ export const zhCn = {
         no_data_cta: "上传凭证/数据",
         no_filter_results: "找不到符合条件的纪录",
         no_filter_results_desc: "请尝试调整搜索关键字或筛选条件",
+        ai: {
+          processing: "AI 正在分析您的传票...",
+          failed: "AI 无法分析这张传票，请重新上传或手动输入",
+        },
       },
     },
     summary: {

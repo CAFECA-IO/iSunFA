@@ -1,6 +1,6 @@
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { fileRepo } from "@/repositories/file.repo";
 
 /**
  * Info: (20260226 - Julian) 取得檔案碎片
@@ -81,9 +81,7 @@ export async function DELETE(
     const { file_id: fileId } = await params;
 
     // Info: (20260213 - Julian) 檢查檔案是否存在
-    const file = await prisma.file.findUnique({
-      where: { id: fileId },
-    });
+    const file = await fileRepo.getFileById(fileId);
 
     if (!file) {
       console.error(`File ${fileId} not found`);
@@ -91,9 +89,7 @@ export async function DELETE(
     }
 
     // Info: (20260213 - Julian) 從資料庫移除記錄
-    await prisma.file.delete({
-      where: { id: fileId },
-    });
+    await fileRepo.deleteFile(fileId);
 
     // ToDo: (20260213 - Julian) 未來若需要，可在這裡同時清理 Laria 理體檔案
 

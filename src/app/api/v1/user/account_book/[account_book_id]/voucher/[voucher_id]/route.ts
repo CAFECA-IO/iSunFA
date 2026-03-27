@@ -1,13 +1,12 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { voucherRepo } from "@/repositories/voucher.repo";
+import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import {
-  IVoucher,
-  IVoucherLineUI,
-  TradingType,
-} from "@/interfaces/voucher";
+import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
@@ -33,9 +32,7 @@ export async function GET(
 
     // Info: (20260311 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -49,11 +46,7 @@ export async function GET(
       return jsonFail(ApiCode.VALIDATION_ERROR, "VoucherId is required");
     }
 
-    const voucher = await prisma.voucher.findUnique({
-      where: { id: voucherId },
-      // Info: (20260311 - Julian) 將關聯的 file, user, lines 一併取出
-      include: { file: true, user: true, lines: true },
-    });
+    const voucher = await voucherRepo.getVoucherById(voucherId);
 
     if (!voucher) {
       console.error("Voucher not found");
@@ -82,11 +75,13 @@ export async function GET(
       note: voucher.note ?? "",
       isDeleted: !!voucher.deletedAt,
       fileId: voucher.fileId ?? "",
-      file: voucher.file ? {
-        id: voucher.file.id,
-        hash: voucher.file.hash,
-        fileName: voucher.file.fileName || "Unknown"
-      } : undefined,
+      file: voucher.file
+        ? {
+            id: voucher.file.id,
+            hash: voucher.file.hash,
+            fileName: voucher.file.fileName || "Unknown",
+          }
+        : undefined,
       lineItems: {
         lines: lineItems,
         totalAmount: lineTotalAmount,
@@ -126,9 +121,7 @@ export async function PUT(
     }
 
     // Info: (20260306 - Julian) 驗證更新人員
-    const updater = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const updater = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!updater) {
       console.error("Updater not found");
@@ -137,9 +130,7 @@ export async function PUT(
 
     // Info: (20260309 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -158,31 +149,34 @@ export async function PUT(
     const { id, inputDate, voucherType, note, isVerified } = body;
     const rows = body.rows as IVoucherLineUI[];
 
-    if (!inputDate || !voucherType || !rows || !Array.isArray(rows) || isVerified === undefined) {
+    if (
+      !inputDate ||
+      !voucherType ||
+      !rows ||
+      !Array.isArray(rows) ||
+      isVerified === undefined
+    ) {
       console.error("Invalid input data");
       return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid input data");
     }
 
     // Info: (20260311 - Julian) Update voucher
-    const updatedVoucher = await prisma.voucher.update({
-      where: { id: voucherId },
-      data: {
-        id,
-        tradingDate: new Date(inputDate),
-        tradingType: voucherType.toUpperCase(),
-        note: note || "",
-        isVerified: isVerified ?? false,
-        lines: {
-          deleteMany: {}, // Info: (20260311 - Julian) 刪除所有 line 再重新加入
-          create: rows.map((row) => ({
-            accountingCode: row.accounting?.code || "",
-            particular: row.particular || "",
-            amount: row.amount || 0,
-            isDebit: row.isDebit ?? false,
-          })),
-        },
+    const updatedVoucher = await voucherRepo.updateVoucher(voucherId, {
+      id,
+      tradingDate: new Date(inputDate),
+      tradingType: voucherType.toUpperCase(),
+      note: note || "",
+      isVerified: isVerified ?? false,
+      lines: {
+        deleteMany: {}, // Info: (20260311 - Julian) 刪除所有 line 再重新加入
+        create: rows.map((row) => ({
+          accountingCode: row.accounting?.code || "",
+          particular: row.particular || "",
+          amount: row.amount || 0,
+          isDebit: row.isDebit ?? false,
+        })),
       },
-      include: { lines: true, user: true, file: true },
+      analysisStatus: AIAnalysisStatus.COMPLETED, // Info: (20260326 - Julian) 更新傳票後，將 analysisStatus 設為 COMPLETED
     });
 
     if (!updatedVoucher) {
@@ -191,14 +185,12 @@ export async function PUT(
     }
 
     // Info: (20260311 - Julian) 新增 log
-    await prisma.auditLog.create({
-      data: {
-        userId: updater.id,
-        dataType: "VOUCHER",
-        dataId: updatedVoucher.id,
-        accountBookId: accountBook.id,
-        action: "UPDATE",
-      },
+    await auditLogRepo.createAuditLog({
+      userId: updater.id,
+      dataType: "VOUCHER",
+      dataId: updatedVoucher.id,
+      accountBookId: accountBook.id,
+      action: "UPDATE",
     });
 
     return jsonOk(updatedVoucher);

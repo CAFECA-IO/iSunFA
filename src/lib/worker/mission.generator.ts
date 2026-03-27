@@ -19,9 +19,9 @@ import * as IncomeStatementPrompts from '@/constants/prompts/income_statement';
 import * as FinancialCompliancePrompts from '@/constants/prompts/financial_compliance';
 import * as FinancialHealthPrompts from '@/constants/prompts/financial_health';
 import { getPeriodDateRange } from '@/lib/analysis/period';
-import { JOURNAL_PROMPT } from '@/constants/prompts/journal';
+import { getJournalPrompt } from '@/constants/prompts/journal';
 import { getVoucherPrompt } from '@/constants/prompts/voucher';
-import { ESG_PROMPT } from '@/constants/prompts/esg';
+import { getEsgPrompt } from '@/constants/prompts/esg';
 
 export interface IMissionParams {
   category: string;
@@ -382,7 +382,7 @@ export class MissionGenerator {
         order: 0,
         data: {
           key: 'JOURNAL',
-          prompt: JOURNAL_PROMPT,
+          prompt: getJournalPrompt(null),
           context
         }
       });
@@ -392,7 +392,7 @@ export class MissionGenerator {
         order: 0,
         data: {
           key: 'VOUCHER',
-          prompt: getVoucherPrompt(params.accountBookId),
+          prompt: getVoucherPrompt(null),
           context
         }
       });
@@ -402,7 +402,7 @@ export class MissionGenerator {
         order: 0,
         data: {
           key: 'ESG',
-          prompt: ESG_PROMPT,
+          prompt: getEsgPrompt(null),
           context
         }
       });

@@ -24,6 +24,7 @@ import { ApiCode } from "@/lib/utils/status";
 const PAGE_SIZE = 12;
 import { VerifyStatus } from "@/constants/verify_status";
 import JournalSummary from "@/components/user/journal/journal_summary";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 export default function JournalListView() {
   const { t } = useTranslation();
@@ -177,7 +178,7 @@ export default function JournalListView() {
   useEffect(() => {
     const pendingJournals = journals.filter(
       (j) =>
-        j.analysisStatus === "PENDING" || j.analysisStatus === "PROCESSING",
+        j.analysisStatus === AIAnalysisStatus.PENDING || j.analysisStatus === AIAnalysisStatus.PROCESSING,
     );
 
     if (pendingJournals.length === 0) return;
