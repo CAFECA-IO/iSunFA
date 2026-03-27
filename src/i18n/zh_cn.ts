@@ -173,6 +173,13 @@ export const zhCn = {
     login_btn: "使用 Passkey 登录",
     authenticating: "验证中...",
     creating: "建立帐号中...",
+    idle: "注册.",
+    fetching_challenge: "获取挑战中...",
+    creating_passkey: "创建 Passkey 中...",
+    parsing_passkey: "解析 Passkey 中...",
+    predicting_address: "预测地址中...",
+    calculating_hash: "计算哈希中...",
+    awaiting_signature: "等待签名中...",
     create_btn: "建立帐号",
     username: "用户名",
     username_placeholder: "请输入用户名",
@@ -574,6 +581,44 @@ export const zhCn = {
     purchase: "购买",
   },
   analysis: {
+    tooltips: {
+      industry_development: {
+        title: "产业发展 (Industry Development)",
+        desc: "这个模块的分析层级是「宏观行业」与「中观供应链」，因此关键字应该围绕在产业板块、次产业、技术趋势或特定供应链。",
+        sectors_title: "大分类板块 (Sectors)：",
+        sectors_desc: "科技 (Technology)、医疗保健 (Healthcare)、金融 (Financials)、非必需消费品 (Consumer Discretionary)、能源 (Energy)。",
+        sub_title: "次产业 / 供应链节点 (Sub-industries / Supply Chains)：",
+        sub_desc: "半导体制造 (Semiconductor Manufacturing)、IC设计 (IC Design)、电动车电池 (EV Batteries)、云端基础设施 (Cloud Infrastructure)、生技制药 (Biotechnology)。",
+        trends_title: "新兴趋势 / 概念股 (Emerging Trends / Concepts)：",
+        trends_desc: "AI 服务器 (AI Servers)、硅光子 (Silicon Photonics)、固态电池 (Solid-State Batteries)、低轨卫星 (Low Earth Orbit Satellites)、ESG 绿能 (ESG Green Energy)。"
+      },
+      smart_enterprise_rating: {
+        title: "智能企业评级 (Smart Enterprise Rating)",
+        desc: "这个模块的分析层级是「微观个体」，也就是针对单一公司进行财务与信用体检。因此，关键字必须是精确的公司名称、股票代码或统一编号。",
+        us_tickers_title: "美股标的 (US Tickers / Company Names)：",
+        us_tickers_desc: "AAPL 或 Apple (苹果)\nNVDA 或 NVIDIA (英伟达)\nMSFT 或 Microsoft (微软)\nTSLA 或 Tesla (特斯拉)",
+        tw_tickers_title: "台股 / ADR 标的 (若系统支援跨国或美国存托凭证)：",
+        tw_tickers_desc: "TSM (台积电 ADR)\n2330 或 台湾积体电路制造 (若系统包含台湾数据库)",
+        fuzzy_title: "企业属性分类 (若系统支援模糊搜寻)：",
+        fuzzy_desc: "有时也可以输入「苹果供应链」、「Tier 1 车用零组件厂」来筛选出一批目标企业进行批量评级。",
+        analyst_view_title: "💡 分析师视角：",
+        analyst_view_desc: "实务上，管理层最常在这里输入「主要竞争对手」、「关键供应商」或「潜在并购标的」的代码，用以监控供应链断链风险或进行同业财务指标（如 ROE、毛利率）的 Benchmarking（标杆测试）。"
+      },
+      financial_product_rating: {
+        title: "金融商品评级 (Financial Product Rating)",
+        desc: "这个模块针对的是可交易的「金融资产」与「投资组合」，关键字应为具体的商品代码、基金名称或资产类别。",
+        etf_title: "指数型基金 / ETF (ETFs)：",
+        etf_desc: "SPY 或 VOO (追踪标普500指数)\nQQQ (追踪纳斯达克100指数)\nTLT (20年期以上美国公债 ETF)",
+        mutual_funds_title: "主动型基金 (Mutual Funds)：",
+        mutual_funds_desc: "输入特定基金公司的产品名称，例如：富达全球科技基金、联博全高收。",
+        bonds_title: "特定债券 / 固定收益商品 (Bonds)：",
+        bonds_desc: "美国十年期公债 (US 10-Year Treasury)、特定公司的公司债代码（如 Apple 2030 到期公司债）、投资级公司债 (IG Bonds)、高收益债 (High Yield Bonds / Junk Bonds)。",
+        derivatives_title: "衍生性商品或原物料 (Commodities / Derivatives)：",
+        derivatives_desc: "黄金 (Gold / GLD)、布兰特原油 (Brent Crude)、比特币 (Bitcoin / IBIT)。",
+        analyst_view_title: "💡 分析师视角：",
+        analyst_view_desc: "在这里输入关键字后，系统通常会吐出夏普值 (Sharpe Ratio)、最大回撤 (Max Drawdown) 等量化风险指标。这对于企业的「财务部」在管理闲置资金（Treasury Management）或配置避险部位时，是非常重要的决策依据。"
+      }
+    },
     company_input: {
       label: "企业名称或统一社会信用代码",
       placeholder: "输入全称、简称或统一代码...",
@@ -614,7 +659,14 @@ export const zhCn = {
     confirm_desc: "此操作将消耗点数，请确认详细信息：",
     confirm_balance: "支付后余额",
     confirm_action: "支付并生成",
-
+    countries: {
+      tw: "台湾",
+      us: "美国",
+      cn: "中国",
+      jp: "日本",
+      kr: "韩国",
+      eu: "欧洲",
+    },
     categories: {
       balance_sheet: "资产负债表",
       cash_flow: "现金流量表",
@@ -645,6 +697,14 @@ export const zhCn = {
       empty_title: "尚无分析报告",
       empty_description:
         "使用我们先进的 A​​I 工具生成您的第一份财务分析报告，开启您的旅程。",
+    },
+    steps: {
+      preparing: "准备交易中...",
+      signing_payment: "请签署支付交易",
+      submitting_payment: "支付交易上链中...",
+      payment_success: "支付成功！",
+      signing_analysis: "请签署分析请求",
+      analyzing: "正在生成分析报告...",
     },
     success: {
       title: "分析请求已提交",
@@ -1191,6 +1251,7 @@ export const zhCn = {
         period: "期间",
         search: "搜索凭证编号、科目编号...",
         hide_deleted: "隐藏已删除的凭证及其冲销纪录",
+        total_vouchers: "总凭证数: {{count}} 张",
         currency: "币别: {{currency}}",
       },
       table: {
@@ -1273,7 +1334,7 @@ export const zhCn = {
       },
       actions: {
         cancel_edit: "取消修改",
-        verify_save: "核对并保存",
+        verify_save: "核对并存档",
         unverify: "退回未核对",
         save_only: "仅保存修改",
         add_row: "新增分录",
