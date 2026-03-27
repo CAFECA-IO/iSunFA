@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
-import { Check, Calendar, Coins, FileBarChart, Globe } from 'lucide-react';
+import { Check, Calendar, Coins, FileBarChart, Globe, Info } from 'lucide-react';
 import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
 import PaymentConfirmModal, { PaymentStatus } from '@/components/common/payment_confirm_modal';
@@ -294,7 +294,7 @@ export default function AnalysisView() {
       // [TESTING BACKDOOR] 測試用後門：取消註解以下區塊，即可針對特定帳號繞過付款
       // =====================================================================
       /*
-      if (user.address.toLowerCase() === '0x9e604a5c15dff17cb12346f028c1f31776a54b64'.toLowerCase()) {
+      if (user.address.toLowerCase() === '0xC53941f85Cd6b14612d5E20E81D5dbaC579127a2'.toLowerCase()) {
         const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
           method: 'POST',
           body: JSON.stringify({
@@ -707,16 +707,75 @@ export default function AnalysisView() {
               {/* Info: (20260120 - Luphia) External Analysis: Keyword Input (Move to after Category) */}
               {activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends' && (
                 <div className="space-y-2 pt-4 border-t border-gray-100">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {t('analysis.keyword')}
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {t('analysis.keyword')}
+                    </label>
+                    {['industry_development', 'irsc', 'financial_product_rating'].includes(category) && (
+                      <div className="group relative">
+                        <Info className="h-4 w-4 text-gray-400 hover:text-orange-500 cursor-help transition-colors" />
+                        <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden group-hover:block w-[400px] bg-white text-gray-800 text-xs rounded-lg shadow-xl ring-1 ring-gray-900/5 p-4 z-50 overflow-y-auto max-h-[80vh]">
+                          <p className="font-bold text-sm mb-2 text-orange-600">{t(`analysis.tooltips.${category === 'irsc' ? 'smart_enterprise_rating' : category}.title`)}</p>
+                          <p className="mb-3 text-gray-600">{t(`analysis.tooltips.${category === 'irsc' ? 'smart_enterprise_rating' : category}.desc`)}</p>
+
+                          {category === 'industry_development' && (
+                            <>
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.industry_development.sectors_title')}</p>
+                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.industry_development.sectors_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.industry_development.sub_title')}</p>
+                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.industry_development.sub_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.industry_development.trends_title')}</p>
+                              <p className="text-gray-600">{t('analysis.tooltips.industry_development.trends_desc')}</p>
+                            </>
+                          )}
+
+                          {category === 'irsc' && (
+                            <>
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.smart_enterprise_rating.us_tickers_title')}</p>
+                              <p className="mb-2 text-gray-600 whitespace-pre-line">{t('analysis.tooltips.smart_enterprise_rating.us_tickers_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.smart_enterprise_rating.tw_tickers_title')}</p>
+                              <p className="mb-2 text-gray-600 whitespace-pre-line">{t('analysis.tooltips.smart_enterprise_rating.tw_tickers_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.smart_enterprise_rating.fuzzy_title')}</p>
+                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.smart_enterprise_rating.fuzzy_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.smart_enterprise_rating.analyst_view_title')}</p>
+                              <p className="text-gray-600">{t('analysis.tooltips.smart_enterprise_rating.analyst_view_desc')}</p>
+                            </>
+                          )}
+
+                          {category === 'financial_product_rating' && (
+                            <>
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.etf_title')}</p>
+                              <p className="mb-2 text-gray-600 whitespace-pre-line">{t('analysis.tooltips.financial_product_rating.etf_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.mutual_funds_title')}</p>
+                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.financial_product_rating.mutual_funds_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.bonds_title')}</p>
+                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.financial_product_rating.bonds_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.derivatives_title')}</p>
+                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.financial_product_rating.derivatives_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.analyst_view_title')}</p>
+                              <p className="text-gray-600">{t('analysis.tooltips.financial_product_rating.analyst_view_desc')}</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <input
                     type="text"
                     aria-label={t('analysis.keyword')}
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
                     placeholder={t('analysis.enter_keyword')}
-                    className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                    className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all relative z-10"
                   />
                 </div>
               )}

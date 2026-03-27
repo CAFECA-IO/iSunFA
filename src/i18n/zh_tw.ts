@@ -620,6 +620,44 @@ export const zhTw = {
     purchase: "購買",
   },
   analysis: {
+    tooltips: {
+      industry_development: {
+        title: "產業發展 (Industry Development)",
+        desc: "這個模組的分析層級是「宏觀行業」與「中觀供應鏈」，因此關鍵字應該圍繞在產業板塊、次產業、技術趨勢或特定供應鏈。",
+        sectors_title: "大分類板塊 (Sectors)：",
+        sectors_desc: "科技 (Technology)、醫療保健 (Healthcare)、金融 (Financials)、非必需消費品 (Consumer Discretionary)、能源 (Energy)。",
+        sub_title: "次產業 / 供應鏈節點 (Sub-industries / Supply Chains)：",
+        sub_desc: "半導體製造 (Semiconductor Manufacturing)、IC設計 (IC Design)、電動車電池 (EV Batteries)、雲端基礎設施 (Cloud Infrastructure)、生技製藥 (Biotechnology)。",
+        trends_title: "新興趨勢 / 概念股 (Emerging Trends / Concepts)：",
+        trends_desc: "AI 伺服器 (AI Servers)、矽光子 (Silicon Photonics)、固態電池 (Solid-State Batteries)、低軌衛星 (Low Earth Orbit Satellites)、ESG 綠能 (ESG Green Energy)。"
+      },
+      smart_enterprise_rating: {
+        title: "智能企業評級 (Smart Enterprise Rating)",
+        desc: "這個模組的分析層級是「微觀個體」，也就是針對單一公司進行財務與信用體檢。因此，關鍵字必須是精確的公司名稱、股票代碼或統一編號。",
+        us_tickers_title: "美股標的 (US Tickers / Company Names)：",
+        us_tickers_desc: "AAPL 或 Apple (蘋果)\nNVDA 或 NVIDIA (輝達)\nMSFT 或 Microsoft (微軟)\nTSLA 或 Tesla (特斯拉)",
+        tw_tickers_title: "台股 / ADR 標的 (若系統支援跨國或美國存託憑證)：",
+        tw_tickers_desc: "TSM (台積電 ADR)\n2330 或 台灣積體電路製造 (若系統包含台灣資料庫)",
+        fuzzy_title: "企業屬性分類 (若系統支援模糊搜尋)：",
+        fuzzy_desc: "有時也可以輸入「蘋果供應鏈」、「Tier 1 車用零組件廠」來篩選出一批目標企業進行批量評級。",
+        analyst_view_title: "💡 分析師視角：",
+        analyst_view_desc: "實務上，管理層最常在這裡輸入「主要競爭對手」、「關鍵供應商」或「潛在併購標的」的代碼，用以監控供應鏈斷鏈風險或進行同業財務指標（如 ROE、毛利率）的 Benchmarking（標竿測試）。"
+      },
+      financial_product_rating: {
+        title: "金融商品評級 (Financial Product Rating)",
+        desc: "這個模組針對的是可交易的「金融資產」與「投資組合」，關鍵字應為具體的商品代碼、基金名稱或資產類別。",
+        etf_title: "指數型基金 / ETF (ETFs)：",
+        etf_desc: "SPY 或 VOO (追蹤標普500指數)\nQQQ (追蹤納斯達克100指數)\nTLT (20年期以上美國公債 ETF)",
+        mutual_funds_title: "主動型基金 (Mutual Funds)：",
+        mutual_funds_desc: "輸入特定基金公司的產品名稱，例如：富達全球科技基金、聯博全高收。",
+        bonds_title: "特定債券 / 固定收益商品 (Bonds)：",
+        bonds_desc: "美國十年期公債 (US 10-Year Treasury)、特定公司的公司債代碼（如 Apple 2030 到期公司債）、投資級公司債 (IG Bonds)、高收益債 (High Yield Bonds / Junk Bonds)。",
+        derivatives_title: "衍生性商品或原物料 (Commodities / Derivatives)：",
+        derivatives_desc: "黃金 (Gold / GLD)、布蘭特原油 (Brent Crude)、比特幣 (Bitcoin / IBIT)。",
+        analyst_view_title: "💡 分析師視角：",
+        analyst_view_desc: "在這裡輸入關鍵字後，系統通常會吐出夏普值 (Sharpe Ratio)、最大回撤 (Max Drawdown) 等量化風險指標。這對於企業的「財務部」在管理閒置資金（Treasury Management）或配置避險部位時，是非常重要的決策依據。"
+      }
+    },
     company_input: {
       label: "企業名稱或統一編號",
       placeholder: "輸入全稱、簡稱或統編...",
@@ -660,7 +698,6 @@ export const zhTw = {
     confirm_desc: "此操作將消耗點數，請確認詳細資訊：",
     confirm_balance: "支付後餘額",
     confirm_action: "支付並生成",
-
     countries: {
       tw: "臺灣",
       us: "美國",

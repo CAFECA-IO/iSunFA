@@ -170,6 +170,13 @@ export const en = {
     login_btn: "Login with Passkey",
     authenticating: "Authenticating...",
     creating: "Creating Account...",
+    idle: "Register.",
+    fetching_challenge: "Fetching challenge...",
+    creating_passkey: "Creating Passkey...",
+    parsing_passkey: "Parsing Passkey...",
+    predicting_address: "Predicting address...",
+    calculating_hash: "Calculating hash...",
+    awaiting_signature: "Awaiting signature...",
     create_btn: "Create Account",
     username: "Username",
     username_placeholder: "Enter your username",
@@ -583,6 +590,44 @@ export const en = {
     purchase: "Purchase",
   },
   analysis: {
+    tooltips: {
+      industry_development: {
+        title: "Industry Development",
+        desc: "The analysis level of this module is 'Macro Industry' and 'Meso Supply Chain'. Therefore, keywords should revolve around industry sectors, sub-industries, technological trends, or specific supply chains.",
+        sectors_title: "Major Sectors:",
+        sectors_desc: "Technology, Healthcare, Financials, Consumer Discretionary, Energy.",
+        sub_title: "Sub-industries / Supply Chains:",
+        sub_desc: "Semiconductor Manufacturing, IC Design, EV Batteries, Cloud Infrastructure, Biotechnology.",
+        trends_title: "Emerging Trends / Concepts:",
+        trends_desc: "AI Servers, Silicon Photonics, Solid-State Batteries, Low Earth Orbit Satellites, ESG Green Energy."
+      },
+      smart_enterprise_rating: {
+        title: "Smart Enterprise Rating",
+        desc: "The analysis level of this module is 'Micro Entity', focusing on the financial and credit health check of a single company. Therefore, keywords must be exact company names, stock tickers, or specific ID numbers.",
+        us_tickers_title: "US Tickers / Company Names:",
+        us_tickers_desc: "AAPL or Apple\nNVDA or NVIDIA\nMSFT or Microsoft\nTSLA or Tesla",
+        tw_tickers_title: "TW/ADR Tickers:",
+        tw_tickers_desc: "TSM (TSMC ADR)\n2330 or Taiwan Semiconductor Manufacturing",
+        fuzzy_title: "Enterprise Attribute Classification:",
+        fuzzy_desc: "Sometimes you can also input 'Apple Supply Chain' or 'Tier 1 Auto Parts Suppliers' to filter out target companies for batch ratings.",
+        analyst_view_title: "💡 Analyst View:",
+        analyst_view_desc: "In practice, management often inputs tickers of 'main competitors', 'key suppliers', or 'potential acquisition targets' here to monitor supply chain disruption risks or benchmark financial metrics (e.g., ROE, gross margin) against peers."
+      },
+      financial_product_rating: {
+        title: "Financial Product Rating",
+        desc: "This module targets tradable 'financial assets' and 'investment portfolios'. Keywords should be specific product codes, fund names, or asset classes.",
+        etf_title: "Index Funds / ETFs:",
+        etf_desc: "SPY or VOO (S&P 500 ETF)\nQQQ (Nasdaq 100 ETF)\nTLT (20+ Year Treasury Bond ETF)",
+        mutual_funds_title: "Mutual Funds:",
+        mutual_funds_desc: "Enter specific fund product names, for example: Fidelity Global Technology Fund, AB Global High Yield.",
+        bonds_title: "Specific Bonds / Fixed Income:",
+        bonds_desc: "US 10-Year Treasury, specific corporate bond tickers (e.g., Apple 2030 Corporate Bond), Investment Grade (IG) Bonds, High Yield Bonds / Junk Bonds.",
+        derivatives_title: "Commodities / Derivatives:",
+        derivatives_desc: "Gold (GLD), Brent Crude, Bitcoin (IBIT).",
+        analyst_view_title: "💡 Analyst View:",
+        analyst_view_desc: "After inputting a keyword here, the system usually generates quantitative risk metrics such as Sharpe Ratio and Max Drawdown. This is crucial for a company's 'Treasury Department' when managing idle funds or allocating hedge positions."
+      }
+    },
     company_input: {
       label: "Company Name or Tax ID",
       placeholder: "Enter full name, abbreviation, or Tax ID...",
@@ -664,6 +709,14 @@ export const en = {
       empty_title: "No Analysis Yet",
       empty_description:
         "Start your journey by generating your first financial analysis report using our advanced AI tools.",
+    },
+    steps: {
+      preparing: "Preparing transaction...",
+      signing_payment: "Please sign the payment transaction",
+      submitting_payment: "Submitting payment to blockchain...",
+      payment_success: "Payment successful!",
+      signing_analysis: "Please sign the analysis request",
+      analyzing: "Generating analysis report...",
     },
     success: {
       title: "Analysis Request Submitted",
@@ -1073,6 +1126,7 @@ export const en = {
         period: "Period",
         search: "Search voucher no, account code...",
         hide_deleted: "Hide deleted vouchers and reversed records",
+        total_vouchers: "Total Vouchers: {{count}}",
         currency: "Currency: {{currency}}",
       },
       table: {
@@ -1155,6 +1209,7 @@ export const en = {
       },
       actions: {
         cancel_edit: "Cancel Edit",
+        verify_save: "Verify & Save",
         save_only: "Save Only",
         add_row: "Add Entry",
         clear_all: "Clear All",

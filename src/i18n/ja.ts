@@ -170,6 +170,13 @@ export const ja = {
     login_btn: "パスキーでログイン",
     authenticating: "認証中...",
     creating: "アカウント作成中...",
+    idle: "登録.",
+    fetching_challenge: "チャレンジを取得中...",
+    creating_passkey: "Passkeyを作成中...",
+    parsing_passkey: "Passkeyを解析中...",
+    predicting_address: "アドレスを予測中...",
+    calculating_hash: "ハッシュを計算中...",
+    awaiting_signature: "署名を待機中...",
     create_btn: "アカウント作成",
     username: "ユーザー名",
     username_placeholder: "ユーザー名を入力してください",
@@ -582,6 +589,45 @@ export const ja = {
     purchase: "購入",
   },
   analysis: {
+
+    tooltips: {
+      industry_development: {
+        title: "産業発展 (Industry Development)",
+        desc: "このモジュールの分析レベルは「マクロ産業」と「メソサプライチェーン」です。したがって、キーワードは産業セクター、サブ産業、技術トレンド、または特定のサプライチェーンに焦点を当てるべきです。",
+        sectors_title: "主要セクター (Sectors)：",
+        sectors_desc: "テクノロジー (Technology)、ヘルスケア (Healthcare)、金融 (Financials)、一般消費財 (Consumer Discretionary)、エネルギー (Energy)。",
+        sub_title: "サブ産業 / サプライチェーン (Sub-industries / Supply Chains)：",
+        sub_desc: "半導体製造 (Semiconductor Manufacturing)、IC設計 (IC Design)、EVバッテリー (EV Batteries)、クラウドインフラ (Cloud Infrastructure)、バイオテクノロジー (Biotechnology)。",
+        trends_title: "新興トレンド / コンセプト (Emerging Trends / Concepts)：",
+        trends_desc: "AIサーバー (AI Servers)、シリコンフォトニクス (Silicon Photonics)、全固体電池 (Solid-State Batteries)、低軌道衛星 (Low Earth Orbit Satellites)、ESGグリーンエネルギー (ESG Green Energy)。"
+      },
+      smart_enterprise_rating: {
+        title: "スマート企業格付け (Smart Enterprise Rating)",
+        desc: "このモジュールの分析レベルは「ミクロ事業体」であり、単一企業の財務および信用状態のチェックに焦点を当てています。キーワードは正確な企業名、ティッカー、または統一事業番号である必要があります。",
+        us_tickers_title: "米国株のティッカー / 企業名：",
+        us_tickers_desc: "AAPL または Apple (アップル)\nNVDA または NVIDIA (エヌビディア)\nMSFT または Microsoft (マイクロソフト)\nTSLA または Tesla (テスラ)",
+        tw_tickers_title: "台湾株 / ADR ティッカー：",
+        tw_tickers_desc: "TSM (TSMC ADR)\n2330 または 台湾積体電路製造 (データベースが対応している場合)",
+        fuzzy_title: "企業属性分類 (あいまい検索が対応している場合)：",
+        fuzzy_desc: "対象企業を絞り込んでバッチ評価を行うために、「Appleサプライチェーン」や「Tier 1 自動車部品サプライヤー」と入力することもできます。",
+        analyst_view_title: "💡 アナリストの視点：",
+        analyst_view_desc: "実務上、経営陣はここで「主要な競合他社」、「主要なサプライヤー」、「潜在的な買収対象」のティッカーを入力して、サプライチェーンの途絶リスクを監視したり、同業他社との財務指標（ROEや粗利益率など）のベンチマーキングを行ったりします。"
+      },
+      financial_product_rating: {
+        title: "金融商品格付け (Financial Product Rating)",
+        desc: "このモジュールは取引可能な「金融資産」および「投資ポートフォリオ」を対象としています。キーワードは具体的な投資信託、商品コード、ファンド名、または資産クラスである必要があります。",
+        etf_title: "インデックスファンド / ETF (ETFs)：",
+        etf_desc: "SPY または VOO (S&P 500連動)\nQQQ (ナスダック100連動)\nTLT (20年超米国債 ETF)",
+        mutual_funds_title: "アクティブファンド (Mutual Funds)：",
+        mutual_funds_desc: "特定のファンド商品名を入力します。例：Fidelity Global Technology Fund、AB Global High Yield。",
+        bonds_title: "特定債券 / 固定収益商品 (Bonds)：",
+        bonds_desc: "米国10年国債 (US 10-Year Treasury)、特定企業の社債（例：Apple 2030年満期社債）、投資適格社債 (IG Bonds)、ハイイールド債 (High Yield Bonds / Junk Bonds)。",
+        derivatives_title: "デリバティブ / コモディティ (Commodities / Derivatives)：",
+        derivatives_desc: "金 (Gold / GLD)、ブレント原油 (Brent Crude)、ビットコイン (Bitcoin / IBIT)。",
+        analyst_view_title: "💡 アナリストの視点：",
+        analyst_view_desc: "キーワードを入力すると、システムは通常、シャープレシオ (Sharpe Ratio) や最大ドローダウン (Max Drawdown) などの定量的リスク指標を生成します。これは企業の「財務部門」が遊休資金（Treasury Management）を管理したり、ヘッジポジションを配置したりする上で非常に重要です。"
+      }
+    },
     company_input: {
       label: "企業名または法人番号",
       placeholder: "正式名称、略称、または法人番号を入力...",
@@ -663,6 +709,14 @@ export const ja = {
       empty_title: "分析レポートはまだありません",
       empty_description:
         "高度なAIツールを使用して最初の財務分析レポートを作成し、旅を始めましょう。",
+    },
+    steps: {
+      preparing: "取引の準備中...",
+      signing_payment: "支払い取引に署名してください",
+      submitting_payment: "支払い取引をブロックチェーンに送信中...",
+      payment_success: "支払い成功！",
+      signing_analysis: "分析リクエストに署名してください",
+      analyzing: "分析レポートを作成中...",
     },
     success: {
       title: "分析リクエストが送信されました",
@@ -1188,6 +1242,7 @@ export const ja = {
         period: "期間",
         search: "伝票番号、科目コードを検索...",
         hide_deleted: "削除済みの伝票と取消記録を隠す",
+        total_vouchers: "総伝票数: {{count}} 枚",
         currency: "通貨: {{currency}}",
       },
       table: {
@@ -1264,6 +1319,7 @@ export const ja = {
       },
       actions: {
         cancel_edit: "編集をキャンセル",
+        verify_save: "確認して保存",
         save_only: "変更のみ保存",
         add_row: "仕訳を追加",
         clear_all: "すべてクリア",
