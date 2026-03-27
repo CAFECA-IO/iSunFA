@@ -156,7 +156,7 @@ const JournalListItem = ({
     >
       {/* Info: (20260320 - Julian) File */}
       <td className="w-[72px] px-3 py-2 align-middle text-slate-700 sm:w-[150px] sm:px-6">
-        <div className="relative flex size-12 items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-1 sm:size-20">
+        <div className="relative mx-auto flex size-12 items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-1 sm:mx-0 sm:size-20">
           {/* Info: (20260320 - Julian) File Preview */}
           {journal.file?.hash ? (
             <FilePreview
@@ -170,7 +170,7 @@ const JournalListItem = ({
         </div>
       </td>
       {/* Info: (20260320 - Julian) Trading Date */}
-      <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium whitespace-nowrap text-slate-700 sm:w-auto sm:px-6 sm:text-sm">
+      <td className="w-[80px] px-1 py-2 text-center align-middle text-xs font-medium whitespace-nowrap text-slate-700 sm:w-auto sm:px-6 sm:text-left sm:text-sm">
         {formattedDate}
       </td>
       {/* Info: (20260323 - Julian) ID */}
@@ -272,7 +272,7 @@ const JournalListLayout = ({
       <table className="w-full">
         <tbody>
           <tr>
-            <th className="w-[72px] bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:w-[150px] sm:px-6 sm:text-base">
+            <th className="w-[72px] bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:w-[150px] sm:px-6 sm:text-left sm:text-base">
               {t("ocr.file")}
             </th>
             <th className="w-[80px] bg-slate-100 px-1 py-3 text-center text-xs text-slate-700 sm:w-auto sm:px-6 sm:text-left sm:text-base">
@@ -281,13 +281,13 @@ const JournalListLayout = ({
             <th className="hidden bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:table-cell sm:px-6 sm:text-left sm:text-base">
               {t("ocr.id")}
             </th>
-            <th className="hidden bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:table-cell sm:px-6 sm:text-base">
+            <th className="hidden bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:table-cell sm:px-6 sm:text-left sm:text-base">
               {t("ocr.journal")}
             </th>
             <th className="w-[60px] bg-slate-100 px-1 py-3 text-center text-xs text-slate-700 sm:w-auto sm:px-6 sm:text-left sm:text-base">
               {t("ocr.confidence")}
             </th>
-            <th className="bg-slate-100 px-3 py-3 text-left text-xs text-slate-700 sm:px-6 sm:text-base">
+            <th className="bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:px-6 sm:text-left sm:text-base">
               {t("ocr.status")}
             </th>
           </tr>

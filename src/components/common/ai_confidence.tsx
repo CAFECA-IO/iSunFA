@@ -53,8 +53,8 @@ export default function AiConfidence({
             <PopoverButton
               disabled={!hasNote}
               className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-xs font-bold shadow-sm transition-colors outline-none disabled:cursor-not-allowed disabled:border-gray-300 disabled:bg-gray-200 disabled:text-gray-500 ${open
-                  ? "border-blue-300 bg-blue-50 text-blue-700"
-                  : "border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                ? "border-blue-300 bg-blue-50 text-blue-700"
+                : "border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
                 }`}
             >
               {hasNote && (
@@ -75,7 +75,7 @@ export default function AiConfidence({
               <PopoverPanel
                 transition
                 anchor="bottom start"
-                className="z-200 flex w-[85vw] max-w-[320px] flex-col rounded-xl border border-blue-100 bg-white p-4 shadow-xl ring-1 ring-black/5 transition duration-200 ease-out outline-none data-closed:scale-95 data-closed:opacity-0 sm:w-[350px] sm:max-w-none"
+                className="z-201 flex w-[85vw] max-w-[320px] flex-col rounded-xl border border-blue-100 bg-white p-4 shadow-xl ring-1 ring-black/5 transition duration-200 ease-out outline-none data-closed:scale-95 data-closed:opacity-0 sm:w-[350px] sm:max-w-none"
               >
                 <div className="mb-2 flex items-center gap-2">
                   <Sparkles size={16} className="text-blue-500" />

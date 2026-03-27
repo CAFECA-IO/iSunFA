@@ -79,6 +79,8 @@ export async function GET(
       isVerified: esgRecord.isVerified,
       analysisStatus: esgRecord.analysisStatus as unknown as AIAnalysisStatus,
       aiNote: esgRecord.aiNote ?? "",
+      journalId: esgRecord.journalId,
+      voucherId: esgRecord.voucherId,
     };
 
     return jsonOk(formattedRecord);
@@ -144,7 +146,7 @@ export async function PUT(
         }),
         ...(reqBody.activityType && { activityType: reqBody.activityType }),
         ...(reqBody.vendor && { vendor: reqBody.vendor }),
-        ...(reqBody.rawActivityData && {
+        ...(reqBody.rawActivityData !== undefined && {
           rawActivityData: reqBody.rawActivityData,
         }),
         ...(reqBody.unit && { unit: reqBody.unit }),
@@ -167,6 +169,11 @@ export async function PUT(
         }),
     });
 
+    if (!updatedRecord) {
+      console.error("Record update failed");
+      return jsonFail(ApiCode.NOT_FOUND, "Record update failed");
+    }
+
     const formattedRecord: IEsgRecord = {
       id: updatedRecord.id,
       dateTimestamp: updatedRecord.dateTimestamp,
@@ -183,12 +190,9 @@ export async function PUT(
       analysisStatus:
         updatedRecord.analysisStatus as unknown as AIAnalysisStatus,
       aiNote: updatedRecord.aiNote ?? "",
+      journalId: updatedRecord.journalId,
+      voucherId: updatedRecord.voucherId,
     };
-
-    if (!formattedRecord) {
-      console.error("Record update failed");
-      return jsonFail(ApiCode.NOT_FOUND, "Record update failed");
-    }
 
     // Info: (20260312 - Julian) 新增 log
     await auditLogRepo.createAuditLog({
