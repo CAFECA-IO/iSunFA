@@ -11,6 +11,10 @@ import {
   Leaf,
   BadgeCheck,
   LayoutDashboard,
+  Library,
+  CreditCard,
+  Settings,
+  LogOut,
 } from 'lucide-react';
 
 export const MODULES = [
@@ -20,10 +24,18 @@ export const MODULES = [
   { key: 'esg', icon: Leaf, basic: true },
   { key: 'financial_report', icon: FileText, basic: true },
   { key: 'analysis', icon: PieChart, basic: true },
-  { key: 'signing', icon: FileSignature, basic: true },
+  { key: 'signing', icon: FileSignature, basic: false },
   { key: 'cashier', icon: Wallet, basic: false },
   { key: 'tax', icon: Landmark, basic: false },
   { key: 'salary', icon: Users, basic: false },
   { key: 'integration', icon: Network, basic: false },
   { key: 'audit', icon: BadgeCheck, basic: false },
+];
+
+export const SYSTEM_MODULES = [
+  { id: "account_book", icon: Library, href: "/user/account_book", labelKey: "sidebar.account_book", enable: true },
+  { id: "team", icon: Users, href: "/user/team", labelKey: "sidebar.team", enable: true },
+  { id: "billing", icon: CreditCard, href: "/user/billing", labelKey: "sidebar.billing", enable: false },
+  { id: "settings", icon: Settings, href: "/user/settings", labelKey: "sidebar.settings", enable: false },
+  { id: "logout", icon: LogOut, action: "logout", labelKey: "header.logout", isDestructive: true, enable: true },
 ];
