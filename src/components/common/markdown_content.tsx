@@ -1,5 +1,6 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { MermaidChart } from '@/components/common/mermaid_chart';
 
 interface IMarkdownContentProps {
   content: string;
@@ -129,6 +130,17 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content, theme = 'da
             {children}
           </td>
         ),
+        code: ({ inline, className, children, ...props }: React.ComponentPropsWithoutRef<'code'> & { inline?: boolean }) => {
+          const match = /language-(\w+)/.exec(className || '');
+          if (!inline && match && match[1] === 'mermaid') {
+            return <MermaidChart chart={String(children).replace(/\n$/, '')} />;
+          }
+          return (
+            <code className={className} {...props}>
+              {children}
+            </code>
+          );
+        },
       }}
     >
       {content}
