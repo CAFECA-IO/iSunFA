@@ -1,0 +1,20 @@
+{
+  "apps": [
+    {
+      "name": "isunfa",
+      "script": "npm",
+      "args": "start",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    },
+    {
+      "name": "isunfa-worker",
+      "script": "npm",
+      "args": "run worker",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  ]
+}
