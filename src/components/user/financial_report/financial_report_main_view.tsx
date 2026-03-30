@@ -41,7 +41,7 @@ export default function FinancialReportMainView() {
         >
           產出報表
         </button>
-        <button
+        {/* <button
           type="button"
           onClick={() => setActiveTab("embed")}
           className={`border-b-2 px-6 py-3 font-bold transition-all duration-300 ease-in-out ${
@@ -51,7 +51,7 @@ export default function FinancialReportMainView() {
           }`}
         >
           嵌入碼管理
-        </button>
+        </button> */}
       </div>
 
       {/* Info:(20260319 - Julian) Tab Content */}
