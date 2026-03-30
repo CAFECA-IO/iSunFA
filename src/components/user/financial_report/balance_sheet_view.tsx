@@ -1,11 +1,10 @@
 "use client";
 
-import { mockBalanceSheetData } from "@/interfaces/balance_sheet";
-
-// enum ColomnType {
-//   ASSETS = "ASSETS",
-//   LIABILITIES_AND_EQUITY = "LIABILITIES_AND_EQUITY",
-// }
+import {
+  IBalanceSheetItem,
+  mockBalanceSheetData,
+} from "@/interfaces/balance_sheet";
+import { numberWithCommas } from "@/lib/utils/common";
 
 // Info: (20260330 - Julian) 關鍵指標 card
 const KeyMetricsCard = ({
@@ -34,13 +33,67 @@ const KeyMetricsCard = ({
   );
 };
 
+// Info: (20260330 - Julian) 報表項目
+const SheetItems = ({
+  titleText,
+  titleValue,
+  items,
+  total,
+  barColor,
+}: {
+  titleText: string;
+  titleValue: number;
+  items: IBalanceSheetItem[];
+  total: number;
+  barColor: string;
+}) => {
+  return (
+    <div className="mb-6">
+      {/* Info: (20260330 - Julian) 項目標題 */}
+      <div className="mb-2 flex items-center justify-between rounded-lg bg-slate-200 px-3 py-2">
+        <span className="font-bold text-slate-700">{titleText}</span>
+        <span className="font-bold text-slate-700">
+          {numberWithCommas(titleValue)}
+        </span>
+      </div>
+      {/* Info: (20260330 - Julian) 項目內容 */}
+      <div className="flex flex-col gap-1 px-3">
+        {items.map((item) => (
+          <div
+            key={item.code}
+            className="flex items-center justify-between border-b border-slate-50 py-2"
+          >
+            <div className="flex w-2/3 flex-col">
+              <span className="text-[15px] font-medium text-slate-600">
+                {item.name}
+              </span>
+              <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className={`h-full rounded-full ${barColor}`}
+                  style={{
+                    width: `${(item.amount / total) * 100}%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="font-medium text-slate-700">
+                {numberWithCommas(item.amount)}
+              </span>
+              <span className="text-[10px] font-bold text-slate-400">
+                {((item.amount / total) * 100).toFixed(1)}%
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default function BalanceSheetView() {
   // ToDo: Info: (20260330 - Julian) 串接 API
   const reportData = mockBalanceSheetData;
-
-  // Info: (20260330 - Julian) 轉換幣值
-  const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("en-US").format(val);
 
   return (
     <div className="flex flex-col gap-4">
@@ -66,7 +119,7 @@ export default function BalanceSheetView() {
         />
         <KeyMetricsCard
           title="營運資金 (Working Capital)"
-          value={formatCurrency(reportData.metrics.workingCapital)}
+          value={numberWithCommas(reportData.metrics.workingCapital)}
           description="可用於日常營運之淨資金"
           textColor="text-slate-700"
         />
@@ -83,101 +136,28 @@ export default function BalanceSheetView() {
               </span>
               <span className="text-sm font-bold text-slate-400">% 總資產</span>
             </div>
-
-            {/* Current Assets */}
-            <div className="mb-6">
-              <div className="mb-2 flex items-center justify-between rounded-lg bg-slate-200 px-3 py-2">
-                <span className="font-bold text-slate-700">流動資產</span>
-                <span className="font-bold text-slate-700">
-                  {formatCurrency(reportData.assets.current.total)}
-                </span>
-              </div>
-              <div className="flex flex-col gap-1 px-3">
-                {reportData.assets.current.items.map((item) => (
-                  <div
-                    key={item.code}
-                    className="flex items-center justify-between border-b border-slate-50 py-2"
-                  >
-                    <div className="flex w-2/3 flex-col">
-                      <span className="text-[15px] font-medium text-slate-600">
-                        {item.name}
-                      </span>
-                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className="h-full rounded-full bg-emerald-400"
-                          style={{
-                            width: `${(item.amount / reportData.assets.total) * 100}%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="font-medium text-slate-700">
-                        {formatCurrency(item.amount)}
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">
-                        {(
-                          (item.amount / reportData.assets.total) *
-                          100
-                        ).toFixed(1)}
-                        %
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Non-Current Assets */}
-            <div className="mb-2">
-              <div className="mb-2 flex items-center justify-between rounded-lg bg-slate-200 px-3 py-2">
-                <span className="font-bold text-slate-700">非流動資產</span>
-                <span className="font-bold text-slate-700">
-                  {formatCurrency(reportData.assets.nonCurrent.total)}
-                </span>
-              </div>
-              <div className="flex flex-col gap-1 px-3">
-                {reportData.assets.nonCurrent.items.map((item) => (
-                  <div
-                    key={item.code}
-                    className="flex items-center justify-between border-b border-slate-50 py-2"
-                  >
-                    <div className="flex w-2/3 flex-col">
-                      <span className="text-[15px] font-medium text-slate-600">
-                        {item.name}
-                      </span>
-                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className="h-full rounded-full bg-emerald-400"
-                          style={{
-                            width: `${(item.amount / reportData.assets.total) * 100}%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="font-medium text-slate-700">
-                        {formatCurrency(item.amount)}
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">
-                        {(
-                          (item.amount / reportData.assets.total) *
-                          100
-                        ).toFixed(1)}
-                        %
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Info: (20260330 - Julian) 流動資產 */}
+            <SheetItems
+              titleText="流動資產"
+              titleValue={reportData.assets.current.total}
+              items={reportData.assets.current.items}
+              total={reportData.assets.total}
+              barColor="bg-emerald-400"
+            />
+            {/* Info: (20260330 - Julian) 非流動資產 */}
+            <SheetItems
+              titleText="非流動資產"
+              titleValue={reportData.assets.nonCurrent.total}
+              items={reportData.assets.nonCurrent.items}
+              total={reportData.assets.total}
+              barColor="bg-emerald-400"
+            />
           </div>
-
           {/* Info: (20260330 - Julian) 資產總計 */}
           <div className="flex items-center justify-between rounded-2xl bg-emerald-500 p-6 text-white shadow-sm">
             <span className="text-lg font-black tracking-widest">資產總計</span>
             <span className="text-2xl font-black">
-              {formatCurrency(reportData.assets.total)}
+              {numberWithCommas(reportData.assets.total)}
             </span>
           </div>
         </div>
@@ -193,153 +173,39 @@ export default function BalanceSheetView() {
                 % 總負總權
               </span>
             </div>
-
-            {/* Current Liabilities */}
-            <div className="mb-6">
-              <div className="mb-2 flex items-center justify-between rounded-lg bg-slate-200 px-3 py-2">
-                <span className="font-bold text-slate-700">流動負債</span>
-                <span className="font-bold text-slate-700">
-                  {formatCurrency(reportData.liabilities.current.total)}
-                </span>
-              </div>
-              <div className="flex flex-col gap-1 px-3">
-                {reportData.liabilities.current.items.map((item) => (
-                  <div
-                    key={item.code}
-                    className="flex items-center justify-between border-b border-slate-50 py-2"
-                  >
-                    <div className="flex w-2/3 flex-col">
-                      <span className="text-[15px] font-medium text-slate-600">
-                        {item.name}
-                      </span>
-                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className="h-full rounded-full bg-indigo-400"
-                          style={{
-                            width: `${(item.amount / (reportData.liabilities.total + reportData.equity.total)) * 100}%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="font-medium text-slate-700">
-                        {formatCurrency(item.amount)}
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">
-                        {(
-                          (item.amount /
-                            (reportData.liabilities.total +
-                              reportData.equity.total)) *
-                          100
-                        ).toFixed(1)}
-                        %
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Non-Current Liabilities */}
-            <div className="mb-6">
-              <div className="mb-2 flex items-center justify-between rounded-lg bg-slate-200 px-3 py-2">
-                <span className="font-bold text-slate-700">非流動負債</span>
-                <span className="font-bold text-slate-700">
-                  {formatCurrency(reportData.liabilities.nonCurrent.total)}
-                </span>
-              </div>
-              <div className="flex flex-col gap-1 px-3">
-                {reportData.liabilities.nonCurrent.items.map((item) => (
-                  <div
-                    key={item.code}
-                    className="flex items-center justify-between border-b border-slate-50 py-2"
-                  >
-                    <div className="flex w-2/3 flex-col">
-                      <span className="text-[15px] font-medium text-slate-600">
-                        {item.name}
-                      </span>
-                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className="h-full rounded-full bg-indigo-400"
-                          style={{
-                            width: `${(item.amount / (reportData.liabilities.total + reportData.equity.total)) * 100}%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="font-medium text-slate-700">
-                        {formatCurrency(item.amount)}
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">
-                        {(
-                          (item.amount /
-                            (reportData.liabilities.total +
-                              reportData.equity.total)) *
-                          100
-                        ).toFixed(1)}
-                        %
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Equity */}
-            <div className="mb-2">
-              <div className="mb-2 flex items-center justify-between rounded-lg bg-slate-200 px-3 py-2">
-                <span className="font-bold text-slate-700">權益</span>
-                <span className="font-bold text-slate-700">
-                  {formatCurrency(reportData.equity.total)}
-                </span>
-              </div>
-              <div className="flex flex-col gap-1 px-3">
-                {reportData.equity.items.map((item) => (
-                  <div
-                    key={item.code}
-                    className="flex items-center justify-between border-b border-slate-50 py-2"
-                  >
-                    <div className="flex w-2/3 flex-col">
-                      <span className="text-[15px] font-medium text-slate-600">
-                        {item.name}
-                      </span>
-                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className="h-full rounded-full bg-amber-400"
-                          style={{
-                            width: `${(item.amount / (reportData.liabilities.total + reportData.equity.total)) * 100}%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="font-medium text-slate-700">
-                        {formatCurrency(item.amount)}
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">
-                        {(
-                          (item.amount /
-                            (reportData.liabilities.total +
-                              reportData.equity.total)) *
-                          100
-                        ).toFixed(1)}
-                        %
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Info: (20260330 - Julian) 流動負債 */}
+            <SheetItems
+              titleText="流動負債"
+              titleValue={reportData.liabilities.current.total}
+              items={reportData.liabilities.current.items}
+              total={reportData.liabilities.total + reportData.equity.total}
+              barColor="bg-indigo-400"
+            />
+            {/* Info: (20260330 - Julian) 非流動負債 */}
+            <SheetItems
+              titleText="非流動負債"
+              titleValue={reportData.liabilities.nonCurrent.total}
+              items={reportData.liabilities.nonCurrent.items}
+              total={reportData.liabilities.total + reportData.equity.total}
+              barColor="bg-indigo-400"
+            />
+            {/* Info: (20260330 - Julian) 權益 */}
+            <SheetItems
+              titleText="權益"
+              titleValue={reportData.equity.total}
+              items={reportData.equity.items}
+              total={reportData.liabilities.total + reportData.equity.total}
+              barColor="bg-amber-400"
+            />
           </div>
 
-          {/* Total Liab & Eq Summary */}
+          {/* Info: (20260330 - Julian) 負債權益總計 */}
           <div className="flex items-center justify-between rounded-2xl bg-slate-800 p-6 text-white shadow-sm">
             <span className="text-lg font-black tracking-widest">
               負債及權益總計
             </span>
             <span className="text-2xl font-black">
-              {formatCurrency(
+              {numberWithCommas(
                 reportData.liabilities.total + reportData.equity.total,
               )}
             </span>
