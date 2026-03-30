@@ -199,6 +199,8 @@ export async function GET(
       emissions: r.emissions.toString(),
       intensity: r.intensity as ClientEsgIntensity,
       analysisStatus: r.analysisStatus as AIAnalysisStatus,
+      journalId: r.journalId,
+      voucherId: r.voucherId,
     }));
 
     return jsonOk({

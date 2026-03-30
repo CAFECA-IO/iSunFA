@@ -14,7 +14,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { VoucherRow } from "@/components/user/voucher/voucher_row";
-import VoucherDetailModal from "@/components/user/voucher/voucher_detail_modal";
+import RecordTabModal from "@/components/user/common/record_tab_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
 import Pagination from "@/components/common/pagination";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
@@ -293,6 +293,8 @@ export default function VoucherTableSection() {
     setStartDate("");
     setEndDate("");
   };
+
+  const selectedVoucher = vouchers.find(v => v.id === selectedVoucherId);
 
   return (
     <>
@@ -660,11 +662,14 @@ export default function VoucherTableSection() {
           />
         </div>
       </div>
-      <VoucherDetailModal
-        key={selectedVoucherId || "new"}
+      <RecordTabModal
         isOpen={isModalOpen}
         onClose={onModalClose}
-        voucherId={selectedVoucherId?.toString() ?? ""}
+        defaultTab="voucher"
+        journalId={selectedVoucher?.journalId}
+        voucherId={selectedVoucherId}
+        esgId={selectedVoucher?.esgRecordId}
+        file={selectedVoucher?.file}
       />
       <ConfirmModal
         isOpen={isVerifyAllConfirmOpen}

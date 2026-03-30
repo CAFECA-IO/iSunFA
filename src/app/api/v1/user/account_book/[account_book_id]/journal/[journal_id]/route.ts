@@ -61,6 +61,8 @@ export async function GET(
             fileName: journalDbRecord.file.fileName || "Unknown",
           }
         : undefined,
+      voucherId: journalDbRecord.voucherId,
+      esgRecordId: journalDbRecord.esgRecordId,
     };
 
     return jsonOk(journal);
@@ -150,6 +152,8 @@ export async function PUT(
             fileName: updatedJournal.file.fileName ?? "",
           }
         : undefined,
+      voucherId: updatedJournal.voucherId,
+      esgRecordId: updatedJournal.esgRecordId,
       analysisStatus: updatedJournal.analysisStatus as AIAnalysisStatus,
       confidence: updatedJournal.confidence,
       isVerified: updatedJournal.isVerified,

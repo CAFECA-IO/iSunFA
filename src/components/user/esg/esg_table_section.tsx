@@ -5,7 +5,7 @@ import { Search, Info, ArrowDown, ArrowUp, FileStack } from "lucide-react";
 import Link from "next/link";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { EsgRow } from "@/components/user/esg/esg_row";
-import EsgVerifyModal from "@/components/user/esg/esg_verify_modal";
+import RecordTabModal from "@/components/user/common/record_tab_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { request } from "@/lib/utils/request";
 import { useParams } from "next/navigation";
@@ -188,26 +188,9 @@ export default function EsgTableSection({
     setIsVerifyModalOpen(true);
   };
 
-  const handleVerifySave = async (updatedRecord: IEsgRecord) => {
-    try {
-      if (accountBookId && updatedRecord.id) {
-        const res = await request<IApiResponse<IEsgRecord>>(
-          `/api/v1/user/account_book/${accountBookId}/esg/${updatedRecord.id}`,
-          {
-            method: "PUT",
-            body: JSON.stringify(updatedRecord),
-          },
-        );
-        if (res.payload) {
-          // Info: (20260312 - Julian) Refresh local state list
-          await fetchRecords();
-        }
-      }
-    } catch (err) {
-      console.error("Failed to update ESG record", err);
-    } finally {
-      setIsVerifyModalOpen(false);
-    }
+  const handleVerifySave = async () => {
+    await fetchRecords();
+    setIsVerifyModalOpen(false);
   };
 
   const verifyAllEsgRecords = async () => {
@@ -242,6 +225,8 @@ export default function EsgTableSection({
     setIntensityFilter("all");
     setScopeFilter("all");
   };
+
+  const selectedEsgRecord = records.find(r => r.id === selectedEsgId);
 
   return (
     <div className="flex flex-col gap-4">
@@ -453,11 +438,15 @@ export default function EsgTableSection({
       />
 
       {/* Info: (20260324 - Julian) Modal */}
-      <EsgVerifyModal
+      <RecordTabModal
         isOpen={isVerifyModalOpen}
         onClose={() => setIsVerifyModalOpen(false)}
+        defaultTab="esg"
+        journalId={selectedEsgRecord?.journalId}
+        voucherId={selectedEsgRecord?.voucherId}
         esgId={selectedEsgId}
-        onSave={handleVerifySave}
+        file={selectedEsgRecord?.file}
+        onEsgUpdate={handleVerifySave}
       />
       <ConfirmModal
         isOpen={isVerifyAllConfirmOpen}

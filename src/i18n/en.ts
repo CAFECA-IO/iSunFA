@@ -1,5 +1,7 @@
 export const en = {
   common: {
+    note: "Note",
+    optional_in_parentheses: "Optional",
     no_data: "No Data",
     cancel_edit_title: "Cancel Edit?",
     cancel_edit_message: "Are you sure you want to cancel the edit? Data will revert to the original state.",
@@ -406,9 +408,9 @@ export const en = {
         "Off-site Backup",
       ],
       user_count: "User Count (FIDO2 Key)",
-      add_user_price: "NT$ 105 / month",
+      add_user_price: "NT$ {{price}} / month",
       add_module: "Additional Module Fee",
-      add_module_price: "NT$ 1,575 / month",
+      add_module_price: "NT$ {{price}} / month",
       total_estimated: "Estimated Monthly Fee",
       selected: "Selected",
       required: "Required",
@@ -1024,9 +1026,10 @@ export const en = {
       "Supports batch uploading multiple files (.jpg, .png, .pdf)",
     title: "Receipt Management",
     upload: "Upload",
-    view_file: "View Receipt File",
+    view_file: "Voucher File",
     view_preview: "View Preview",
-    list: "Receipt List",
+    preview: "Original Voucher",
+    list: "Voucher List",
     uploading: "Uploading...",
     click_or_drag: "Click or drag file here",
     single_file_only: "Only one file can be uploaded at a time",
@@ -1073,6 +1076,9 @@ export const en = {
     zoom_reset: "Reset Zoom",
   },
   journal: {
+    detail_modal: {
+      title: "Journal",
+    },
     summary: {
       empty: "No journal data available",
       today_count: "Journals created today",
@@ -1107,6 +1113,20 @@ export const en = {
       title: "Select Account",
       search_placeholder: "Search account code or name...",
       no_results: "No matching accounts found",
+      all: "All",
+      types: {
+        asset: "Asset",
+        liability: "Liability",
+        equity: "Equity",
+        revenue: "Revenue",
+        expense: "Expense",
+        income: "Income",
+        cost: "Cost",
+        gainOrLoss: "Gain or Loss",
+        cashFlow: "Cash Flow",
+        otherComprehensiveIncome: "Other Comprehensive Income",
+        other: "Other",
+      },
     },
     main_view: {
       title: "Smart Voucher Management",
@@ -1173,7 +1193,7 @@ export const en = {
       ai_confidence: "AI Average Confidence",
     },
     detail_modal: {
-      title: "Edit Voucher",
+      title: "Voucher",
       messages: {
         fetch_error: "Failed to fetch voucher",
         deleted_warning: "Deleted vouchers cannot be edited",
@@ -1184,6 +1204,8 @@ export const en = {
         accounting_entries: "Accounting Entries",
       },
       fields: {
+        note: "Note",
+        note_placeholder: "Enter note...",
         confidence: "AI Confidence",
         voucher_no: "Voucher No.",
         voucher_no_placeholder: "Enter Voucher No.",
@@ -1297,7 +1319,7 @@ export const en = {
     },
   },
   esg_verify: {
-    title: "Manual Verification",
+    title: "Carbon Inventory",
     preview: "Voucher Preview",
     ai_confidence: "AI Conf.",
     no_image: "No Image",
@@ -1308,6 +1330,7 @@ export const en = {
       scope_2: "Scope 2 (Indirect)",
       scope_3: "Scope 3 (Other)",
       activity_type: "Activity Type",
+      activity_object: "Activity Object",
       vendor: "Vendor / Target",
       raw_data: "Raw Data",
       unit: "Unit",
@@ -1316,6 +1339,13 @@ export const en = {
       intensity_low: "Low",
       intensity_medium: "Medium",
       intensity_high: "High",
+    },
+    emissions: {
+      title: "Emissions Calculation",
+      raw_data: "Raw Data",
+      unit: "Unit",
+      total: "Total Emissions",
+      intensity: "Intensity Level",
     },
     actions: {
       cancel_edit: "Cancel Edit",
@@ -1448,6 +1478,11 @@ export const en = {
       voucher: "Voucher",
       esg: "ESG",
     }
+  },
+  esg: {
+    detail_modal: {
+      title: "Carbon Inventory",
+    },
   },
   teamManagement: {
     title: "Team Management",

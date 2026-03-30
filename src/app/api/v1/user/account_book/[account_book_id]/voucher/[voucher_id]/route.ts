@@ -91,6 +91,8 @@ export async function GET(
       isVerified: voucher.isVerified,
       analysisStatus: voucher.analysisStatus as AIAnalysisStatus,
       aiNote: voucher.aiNote ?? "",
+      journalId: voucher.journalId,
+      esgRecordId: voucher.esgRecordId,
     };
 
     return jsonOk(result);

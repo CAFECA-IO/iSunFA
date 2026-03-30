@@ -9,16 +9,8 @@ import {
   MenuItems,
   Transition,
 } from "@headlessui/react";
-import {
-  User,
-  LogOut,
-  ChevronDown,
-  Settings,
-  CreditCard,
-  Users,
-  Library,
-} from "lucide-react";
-import { MODULES } from "@/constants/modules";
+import { User, ChevronDown } from "lucide-react";
+import { MODULES, SYSTEM_MODULES } from "@/constants/modules";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
 import LoginButton from "@/components/common/login_button";
@@ -145,79 +137,41 @@ export default function UserActions() {
               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 md:mb-3 px-1 md:px-2">
                 {t("sidebar.system")}
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                <MenuItem as={Fragment}>
-                  {({ focus }) => (
-                    <Link
-                      href="/user/account_book"
-                      className={`
-                            ${focus ? "bg-gray-50 text-gray-900" : "text-gray-600"}
-                            group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50 h-full w-full
-                          `}
-                    >
-                      <Library className="h-5 w-5 mb-1 text-gray-400 group-hover:text-gray-600" />
-                      {t("sidebar.account_book")}
-                    </Link>
-                  )}
-                </MenuItem>
-                <MenuItem as={Fragment}>
-                  {({ focus }) => (
-                    <Link
-                      href="/user/team"
-                      className={`
-                            ${focus ? "bg-gray-50 text-gray-900" : "text-gray-600"}
-                            group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50 h-full w-full
-                          `}
-                    >
-                      <Users className="h-5 w-5 mb-1 text-gray-400 group-hover:text-gray-600" />
-                      {t("sidebar.team")}
-                    </Link>
-                  )}
-                </MenuItem>
-                <MenuItem as={Fragment}>
-                  {({ focus }) => (
-                    <Link
-                      href="/user/billing"
-                      className={`
-                            ${focus ? "bg-gray-50 text-gray-900" : "text-gray-600"}
-                            group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50 h-full w-full
-                          `}
-                    >
-                      <CreditCard className="h-5 w-5 mb-1 text-gray-400 group-hover:text-gray-600" />
-                      {t("sidebar.billing")}
-                    </Link>
-                  )}
-                </MenuItem>
-                <MenuItem as={Fragment}>
-                  {({ focus }) => (
-                    <Link
-                      href="/user/settings"
-                      className={`
-                            ${focus ? "bg-gray-50 text-gray-900" : "text-gray-600"}
-                            group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50 h-full w-full
-                          `}
-                    >
-                      <Settings className="h-5 w-5 mb-1 text-gray-400 group-hover:text-gray-600" />
-                      {t("sidebar.settings")}
-                    </Link>
-                  )}
-                </MenuItem>
-                <MenuItem as={Fragment}>
-                  {({ focus }) => (
-                    <button
-                      onClick={logout}
-                      className={`
-                            ${focus ? "bg-red-50 text-red-700" : "text-gray-600"}
-                            group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors hover:bg-red-50 h-full w-full
-                          `}
-                    >
-                      <LogOut
-                        className={`h-5 w-5 mb-1 ${focus ? "text-red-500" : "text-gray-400 group-hover:text-red-500"}`}
-                      />
-                      {t("header.logout")}
-                    </button>
-                  )}
-                </MenuItem>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {SYSTEM_MODULES.filter((action) => action.enable).map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <MenuItem key={action.id} as={Fragment}>
+                      {({ focus }) =>
+                        action.href ? (
+                          <Link
+                            href={action.href}
+                            className={`
+                                ${focus ? "bg-gray-50 text-gray-900" : "text-gray-600"}
+                                group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50 h-full w-full
+                              `}
+                          >
+                            <Icon className="h-5 w-5 mb-1 text-gray-400 group-hover:text-gray-600" />
+                            {t(action.labelKey)}
+                          </Link>
+                        ) : (
+                          <button
+                            onClick={action.action === "logout" ? logout : undefined}
+                            className={`
+                                ${focus ? (action.isDestructive ? "bg-red-50 text-red-700" : "bg-gray-50 text-gray-900") : "text-gray-600"}
+                                group flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-colors ${action.isDestructive ? "hover:bg-red-50" : "hover:bg-gray-50"} h-full w-full
+                              `}
+                          >
+                            <Icon
+                              className={`h-5 w-5 mb-1 ${focus ? (action.isDestructive ? "text-red-500" : "text-gray-600") : "text-gray-400 group-hover:" + (action.isDestructive ? "text-red-500" : "text-gray-600")}`}
+                            />
+                            {t(action.labelKey)}
+                          </button>
+                        )
+                      }
+                    </MenuItem>
+                  );
+                })}
               </div>
             </div>
           </div>

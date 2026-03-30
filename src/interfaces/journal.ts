@@ -20,4 +20,6 @@ export interface IJournal {
   confidence: number;
   isVerified: boolean;
   aiNote: string;
+  voucherId?: string;
+  esgRecordId?: string;
 }
