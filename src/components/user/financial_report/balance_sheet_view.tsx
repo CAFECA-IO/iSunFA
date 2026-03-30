@@ -7,7 +7,6 @@ import {
 import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
 import { numberWithCommas } from "@/lib/utils/common";
 
-// Info: (20260330 - Julian) 報表項目
 const BalanceSheetSection = ({
   titleText,
   titleValue,
@@ -70,7 +69,7 @@ export default function BalanceSheetView() {
   const reportData = mockBalanceSheetData;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex w-full flex-col gap-4">
       {/* Info: (20260330 - Julian) 關鍵指標 */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KeyMetricsCard

@@ -5,6 +5,7 @@ import { Filter } from "lucide-react";
 import EmbedGenerateModal from "@/components/user/financial_report/embed_generate_modal";
 import BalanceSheetView from "@/components/user/financial_report/balance_sheet_view";
 import CashFlowSheetView from "@/components/user/financial_report/cash_flow_statement_view";
+import IncomeStatementView from "@/components/user/financial_report/income_statement_view";
 import { numberWithCommas } from "@/lib/utils/common";
 
 enum ReportType {
@@ -27,9 +28,8 @@ export default function ReportView() {
   const [selectedReportType, setSelectedReportType] = useState<ReportType>(
     ReportType.BALANCE_SHEET,
   );
-  const [selectedReportPeriod, setSelectedReportPeriod] = useState<ReportPeriod>(
-    ReportPeriod.ALL_YEAR,
-  );
+  const [selectedReportPeriod, setSelectedReportPeriod] =
+    useState<ReportPeriod>(ReportPeriod.ALL_YEAR);
 
   // ToDo: (20260330 - Julian) 串接 API
   const countOfVerifiedVouchers = 1245;
@@ -43,7 +43,7 @@ export default function ReportView() {
       case ReportType.CASH_FLOW:
         return "現金流量表";
       case ReportType.INCOME_STATEMENT:
-        return "損益表";
+        return "綜合損益表";
       default:
         return "";
     }
@@ -101,9 +101,11 @@ export default function ReportView() {
         value={selectedReportType}
         onChange={handleReportTypeChange}
       >
-        <option value={ReportType.BALANCE_SHEET}>資產負債表</option>
-        <option value={ReportType.CASH_FLOW}>現金流量表</option>
-        <option value={ReportType.INCOME_STATEMENT}>損益表</option>
+        {Object.values(ReportType).map((type) => (
+          <option key={type} value={type}>
+            {getReportTitle(type)}
+          </option>
+        ))}
       </select>
     </div>
   );
@@ -132,16 +134,22 @@ export default function ReportView() {
   );
 
   // Info: (20260330 - Julian) 根據選擇渲染對應的報表
-  const reportView =
-    selectedReportType === ReportType.CASH_FLOW ? (
-      <CashFlowSheetView />
-    ) : (
-      <BalanceSheetView />
-    );
+  const renderReportView = () => {
+    switch (selectedReportType) {
+      case ReportType.BALANCE_SHEET:
+        return <BalanceSheetView />;
+      case ReportType.CASH_FLOW:
+        return <CashFlowSheetView />;
+      case ReportType.INCOME_STATEMENT:
+        return <IncomeStatementView />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <>
-      <div className="mt-6 flex flex-col gap-4 lg:flex-row">
+      <div className="mt-6 flex flex-col gap-8 lg:flex-row">
         {/* Info:(20260319 - Julian) 報表參數設定 */}
         <div className="flex h-fit w-full shrink-0 flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:w-72">
           <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
@@ -172,7 +180,7 @@ export default function ReportView() {
         </div>
 
         {/* Info:(20260319 - Julian) 報表內容 */}
-        <div className="mx-auto flex flex-col gap-4">
+        <div className="flex w-full flex-col gap-4">
           {/* Info: (20260330 - Julian) 報表標題 */}
           <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-sm md:p-8">
             <div className="absolute top-0 left-0 h-1 w-full bg-amber-500"></div>
@@ -188,7 +196,7 @@ export default function ReportView() {
           </div>
 
           {/* Info:(20260319 - Julian) 報表內容 */}
-          {reportView}
+          {renderReportView()}
         </div>
       </div>
 
