@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Filter } from "lucide-react";
 import EmbedGenerateModal from "@/components/user/financial_report/embed_generate_modal";
 import BalanceSheetView from "@/components/user/financial_report/balance_sheet_view";
+import CashFlowSheetView from "@/components/user/financial_report/cash_flow_statement_view";
 import { numberWithCommas } from "@/lib/utils/common";
 
 enum ReportType {
@@ -15,10 +16,10 @@ enum ReportType {
 
 enum ReportPeriod {
   ALL_YEAR = "allYear",
-  // Q1 = "q1",
-  // Q2 = "q2",
-  // Q3 = "q3",
-  // Q4 = "q4",
+  Q1 = "q1",
+  Q2 = "q2",
+  Q3 = "q3",
+  Q4 = "q4",
 }
 
 export default function ReportView() {
@@ -26,15 +27,50 @@ export default function ReportView() {
   const [selectedReportType, setSelectedReportType] = useState<ReportType>(
     ReportType.BALANCE_SHEET,
   );
-  const [selectedReportPeriod, setSelectedReportPeriod] = useState<string>(
+  const [selectedReportPeriod, setSelectedReportPeriod] = useState<ReportPeriod>(
     ReportPeriod.ALL_YEAR,
   );
 
   // ToDo: (20260330 - Julian) 串接 API
   const countOfVerifiedVouchers = 1245;
+
+  // Info: (20260330 - Julian) 報表標題
+  // ToDo: (20260330 - Julian) 翻譯檔
+  const getReportTitle = (type: ReportType) => {
+    switch (type) {
+      case ReportType.BALANCE_SHEET:
+        return "資產負債表";
+      case ReportType.CASH_FLOW:
+        return "現金流量表";
+      case ReportType.INCOME_STATEMENT:
+        return "損益表";
+      default:
+        return "";
+    }
+  };
+
+  // Info: (20260330 - Julian) 報表期間
+  // ToDo: (20260330 - Julian) 計算區間與翻譯檔
+  const getReportPeriod = (period: ReportPeriod) => {
+    switch (period) {
+      case ReportPeriod.ALL_YEAR:
+        return "2025 年度";
+      case ReportPeriod.Q1:
+        return "2025 第一季(Q1)";
+      case ReportPeriod.Q2:
+        return "2025 第二季(Q2)";
+      case ReportPeriod.Q3:
+        return "2025 第三季(Q3)";
+      case ReportPeriod.Q4:
+        return "2025 第四季(Q4)";
+      default:
+        return "";
+    }
+  };
+
   const reportData = {
-    reportTitle: "資產負債表",
-    reportPeriod: "2024-Q2",
+    reportTitle: getReportTitle(selectedReportType),
+    reportPeriod: getReportPeriod(selectedReportPeriod),
     currency: "TWD",
   };
 
@@ -65,11 +101,9 @@ export default function ReportView() {
         value={selectedReportType}
         onChange={handleReportTypeChange}
       >
-        {Object.values(ReportType).map((type) => (
-          <option key={type} value={type}>
-            {type}
-          </option>
-        ))}
+        <option value={ReportType.BALANCE_SHEET}>資產負債表</option>
+        <option value={ReportType.CASH_FLOW}>現金流量表</option>
+        <option value={ReportType.INCOME_STATEMENT}>損益表</option>
       </select>
     </div>
   );
@@ -97,8 +131,13 @@ export default function ReportView() {
     </div>
   );
 
-  // Info: (20260319 - Julian) 資產負債表的版面配置
-  const reportView = <BalanceSheetView />;
+  // Info: (20260330 - Julian) 根據選擇渲染對應的報表
+  const reportView =
+    selectedReportType === ReportType.CASH_FLOW ? (
+      <CashFlowSheetView />
+    ) : (
+      <BalanceSheetView />
+    );
 
   return (
     <>
@@ -144,7 +183,7 @@ export default function ReportView() {
               {reportData.reportTitle}
             </h3>
             <p className="mt-2 text-sm font-medium text-slate-400">
-              日期：{reportData.reportPeriod} (單位：{reportData.currency})
+              期間：{reportData.reportPeriod} (單位：{reportData.currency})
             </p>
           </div>
 

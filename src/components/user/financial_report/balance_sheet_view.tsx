@@ -4,37 +4,11 @@ import {
   IBalanceSheetItem,
   mockBalanceSheetData,
 } from "@/interfaces/balance_sheet";
+import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
 import { numberWithCommas } from "@/lib/utils/common";
 
-// Info: (20260330 - Julian) 關鍵指標 card
-const KeyMetricsCard = ({
-  title,
-  value,
-  description,
-  textColor,
-}: {
-  title: string;
-  value: string;
-  description: string;
-  textColor: string;
-}) => {
-  return (
-    <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-      <span className="mb-2 text-xs font-bold tracking-wider text-slate-500 uppercase">
-        {title}
-      </span>
-      <div className="flex items-baseline gap-2">
-        <span className={`text-3xl font-black ${textColor}`}>{value}</span>
-      </div>
-      <p className="mt-2 text-[11px] font-medium text-slate-400">
-        {description}
-      </p>
-    </div>
-  );
-};
-
 // Info: (20260330 - Julian) 報表項目
-const SheetItems = ({
+const BalanceSheetSection = ({
   titleText,
   titleValue,
   items,
@@ -137,7 +111,7 @@ export default function BalanceSheetView() {
               <span className="text-sm font-bold text-slate-400">% 總資產</span>
             </div>
             {/* Info: (20260330 - Julian) 流動資產 */}
-            <SheetItems
+            <BalanceSheetSection
               titleText="流動資產"
               titleValue={reportData.assets.current.total}
               items={reportData.assets.current.items}
@@ -145,7 +119,7 @@ export default function BalanceSheetView() {
               barColor="bg-emerald-400"
             />
             {/* Info: (20260330 - Julian) 非流動資產 */}
-            <SheetItems
+            <BalanceSheetSection
               titleText="非流動資產"
               titleValue={reportData.assets.nonCurrent.total}
               items={reportData.assets.nonCurrent.items}
@@ -174,7 +148,7 @@ export default function BalanceSheetView() {
               </span>
             </div>
             {/* Info: (20260330 - Julian) 流動負債 */}
-            <SheetItems
+            <BalanceSheetSection
               titleText="流動負債"
               titleValue={reportData.liabilities.current.total}
               items={reportData.liabilities.current.items}
@@ -182,7 +156,7 @@ export default function BalanceSheetView() {
               barColor="bg-indigo-400"
             />
             {/* Info: (20260330 - Julian) 非流動負債 */}
-            <SheetItems
+            <BalanceSheetSection
               titleText="非流動負債"
               titleValue={reportData.liabilities.nonCurrent.total}
               items={reportData.liabilities.nonCurrent.items}
@@ -190,7 +164,7 @@ export default function BalanceSheetView() {
               barColor="bg-indigo-400"
             />
             {/* Info: (20260330 - Julian) 權益 */}
-            <SheetItems
+            <BalanceSheetSection
               titleText="權益"
               titleValue={reportData.equity.total}
               items={reportData.equity.items}
