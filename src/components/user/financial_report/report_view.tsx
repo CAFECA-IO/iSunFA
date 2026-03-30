@@ -7,13 +7,7 @@ import BalanceSheetView from "@/components/user/financial_report/balance_sheet_v
 import CashFlowSheetView from "@/components/user/financial_report/cash_flow_statement_view";
 import IncomeStatementView from "@/components/user/financial_report/income_statement_view";
 import { numberWithCommas } from "@/lib/utils/common";
-
-enum ReportType {
-  BALANCE_SHEET = "balanceSheet",
-  CASH_FLOW = "cashFlow",
-  INCOME_STATEMENT = "incomeStatement",
-  // TRIAL_BALANCE = "trialBalance",
-}
+import { ReportType } from "@/constants/financial_report";
 
 enum ReportPeriod {
   ALL_YEAR = "allYear",

@@ -18,7 +18,7 @@ export interface IIncomeStatementMetrics {
   taxRate: number; // Info: (20260330 - Julian) 稅率 %
 }
 
-export interface IIncomeStatementSheet {
+export interface IIncomeStatement {
   reportPeriod: string;
   currency: string;
   sections: {
@@ -36,7 +36,7 @@ export interface IIncomeStatementSheet {
 }
 
 // Info: (20260330 - Julian) Mock Data for UI presentation
-export const mockIncomeStatementData: IIncomeStatementSheet = {
+export const mockIncomeStatementData: IIncomeStatement = {
   reportPeriod: "2024-Q2",
   currency: "TWD",
   sections: {

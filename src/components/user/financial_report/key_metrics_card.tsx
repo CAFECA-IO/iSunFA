@@ -8,7 +8,7 @@ export default function KeyMetricsCard({
   textColor,
 }: {
   title: string;
-  value: string;
+  value: number | string;
   description: string;
   textColor: string;
 }) {
