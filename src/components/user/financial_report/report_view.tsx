@@ -7,15 +7,7 @@ import BalanceSheetView from "@/components/user/financial_report/balance_sheet_v
 import CashFlowSheetView from "@/components/user/financial_report/cash_flow_statement_view";
 import IncomeStatementView from "@/components/user/financial_report/income_statement_view";
 import { numberWithCommas } from "@/lib/utils/common";
-import { ReportType } from "@/constants/financial_report";
-
-enum ReportPeriod {
-  ALL_YEAR = "allYear",
-  Q1 = "q1",
-  Q2 = "q2",
-  Q3 = "q3",
-  Q4 = "q4",
-}
+import { ReportType, ReportPeriod } from "@/constants/financial_report";
 
 export default function ReportView() {
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState<boolean>(false);
@@ -131,11 +123,11 @@ export default function ReportView() {
   const renderReportView = () => {
     switch (selectedReportType) {
       case ReportType.BALANCE_SHEET:
-        return <BalanceSheetView />;
+        return <BalanceSheetView period={selectedReportPeriod} />;
       case ReportType.CASH_FLOW:
-        return <CashFlowSheetView />;
+        return <CashFlowSheetView period={selectedReportPeriod} />;
       case ReportType.INCOME_STATEMENT:
-        return <IncomeStatementView />;
+        return <IncomeStatementView period={selectedReportPeriod} />;
       default:
         return null;
     }

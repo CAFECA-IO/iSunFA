@@ -10,7 +10,7 @@ import {
 } from "@/interfaces/cash_flow_statement";
 import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
 import { numberWithCommas } from "@/lib/utils/common";
-import { ReportType } from "@/constants/financial_report";
+import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import {
   LoadingPing,
   ReportLoadingPlaceholder,
@@ -85,7 +85,11 @@ const CashFlowSection = ({
   );
 };
 
-export default function CashFlowSheetView() {
+export default function CashFlowSheetView({
+  period,
+}: {
+  period: ReportPeriod;
+}) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
 
@@ -100,7 +104,7 @@ export default function CashFlowSheetView() {
           const res = await request<
             IApiResponse<{ report: ICashFlowStatement }>
           >(
-            `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.CASH_FLOW}`,
+            `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.CASH_FLOW}&period=${period}`,
           );
           if (res.payload) {
             setReportData(res.payload.report);
@@ -126,7 +130,7 @@ export default function CashFlowSheetView() {
     );
   }
 
-  if (!reportData) {
+  if (!reportData || Object.keys(reportData).length === 0) {
     return (
       <ReportErrorPlaceholder
         title="現金流量表生成失敗"

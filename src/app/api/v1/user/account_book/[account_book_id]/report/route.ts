@@ -6,11 +6,11 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { mockIncomeStatementData } from "@/interfaces/income_statement";
 import { mockBalanceSheetData } from "@/interfaces/balance_sheet";
 import { mockCashFlowStatementData } from "@/interfaces/cash_flow_statement";
-import { ReportType } from "@/constants/financial_report";
+import { ReportType, ReportPeriod } from "@/constants/financial_report";
 
 /**
  * Info: (20260330 - Julian) 取得財務報表
- * GET /api/v1/user/account_book/:account_book_id/report?reportType={ReportType}
+ * GET /api/v1/user/account_book/:account_book_id/report?reportType={ReportType}&period={ReportPeriod}
  */
 export async function GET(
   request: NextRequest,
@@ -37,8 +37,8 @@ export async function GET(
 
     const searchParams = request.nextUrl.searchParams;
     const reportType = searchParams.get("reportType") as ReportType;
-    // const startDate = searchParams.get("startDate");
-    // const endDate = searchParams.get("endDate");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const period = searchParams.get("period") as ReportPeriod;
 
     // Info: (20260330 - Julian) 取得報表資料
     // TODO: 串接實際的報表資料

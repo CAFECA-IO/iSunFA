@@ -11,7 +11,7 @@ import {
 } from "@/interfaces/income_statement";
 import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
 import { numberWithCommas } from "@/lib/utils/common";
-import { ReportType } from "@/constants/financial_report";
+import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import {
   LoadingPing,
   ReportLoadingPlaceholder,
@@ -85,7 +85,11 @@ const IncomeStatementSection = ({
   );
 };
 
-export default function IncomeStatementView() {
+export default function IncomeStatementView({
+  period,
+}: {
+  period: ReportPeriod;
+}) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
 
@@ -98,7 +102,7 @@ export default function IncomeStatementView() {
         try {
           setIsLoading(true);
           const res = await request<IApiResponse<{ report: IIncomeStatement }>>(
-            `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.INCOME_STATEMENT}`,
+            `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.INCOME_STATEMENT}&period=${period}`,
           );
           if (res.payload) {
             setReportData(res.payload.report);
@@ -124,7 +128,7 @@ export default function IncomeStatementView() {
     );
   }
 
-  if (!reportData) {
+  if (!reportData || Object.keys(reportData).length === 0) {
     return (
       <ReportErrorPlaceholder
         title="綜合損益表生成失敗"

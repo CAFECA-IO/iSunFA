@@ -7,7 +7,7 @@ import { IApiResponse } from "@/lib/utils/response";
 import { IBalanceSheetItem, IBalanceSheet } from "@/interfaces/balance_sheet";
 import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
 import { numberWithCommas } from "@/lib/utils/common";
-import { ReportType } from "@/constants/financial_report";
+import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import {
   LoadingPing,
   ReportLoadingPlaceholder,
@@ -71,7 +71,7 @@ const BalanceSheetSection = ({
   );
 };
 
-export default function BalanceSheetView() {
+export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
 
@@ -84,7 +84,7 @@ export default function BalanceSheetView() {
         try {
           setIsLoading(true);
           const res = await request<IApiResponse<{ report: IBalanceSheet }>>(
-            `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.BALANCE_SHEET}`,
+            `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.BALANCE_SHEET}&period=${period}`,
           );
           if (res.payload) {
             setReportData(res.payload.report);
@@ -110,7 +110,7 @@ export default function BalanceSheetView() {
     );
   }
 
-  if (!reportData) {
+  if (!reportData || Object.keys(reportData).length === 0) {
     return (
       <ReportErrorPlaceholder
         title="資產負債表生成失敗"
