@@ -1,5 +1,7 @@
 export const zhTw = {
   common: {
+    note: "備註",
+    optional_in_parentheses: "選填",
     no_data: "無資料",
     cancel_edit_title: "取消修改？",
     cancel_edit_message: "確定要取消修改嗎？資料將回到原始狀態。",
@@ -443,9 +445,9 @@ export const zhTw = {
         "設備異常保固",
       ],
       user_count: "用戶數量 (FIDO2 金鑰)",
-      add_user_price: "NT$ 105 / 月",
+      add_user_price: "NT$ {{price}} / 月",
       add_module: "加購模組費用",
-      add_module_price: "NT$ 1,575 / 月",
+      add_module_price: "NT$ {{price}} / 月",
       total_estimated: "預估月費",
       selected: "個已選",
       required: "必選",
@@ -1038,8 +1040,9 @@ export const zhTw = {
     multiple_files_supported: "支援批次上傳多個憑證檔案 (.jpg, .png, .pdf)",
     title: "憑證管理",
     upload: "上傳憑證",
-    view_file: "查看憑證檔案",
+    view_file: "憑證檔案",
     view_preview: "查看預覽",
+    preview: "原始憑證",
     list: "憑證清單",
     uploading: "上傳中...",
     click_or_drag: "點擊或拖曳檔案至此",
@@ -1085,6 +1088,9 @@ export const zhTw = {
     zoom_reset: "重置",
   },
   journal: {
+    detail_modal: {
+      title: "日記帳",
+    },
     summary: {
       empty: "目前沒有日記帳資料",
       today_count: "今日產生日記帳",
@@ -1119,6 +1125,20 @@ export const zhTw = {
       title: "請選擇會計科目",
       search_placeholder: "搜尋科目代碼或名稱...",
       no_results: "找不到符合的會計科目",
+      all: "全部",
+      types: {
+        asset: "資產",
+        liability: "負債",
+        equity: "權益",
+        revenue: "收益",
+        expense: "費損",
+        income: "收入",
+        cost: "成本",
+        gainOrLoss: "損益",
+        cashFlow: "現金流",
+        otherComprehensiveIncome: "其他綜合損益",
+        other: "其他",
+      },
     },
     main_view: {
       title: "智能傳票管理",
@@ -1182,7 +1202,7 @@ export const zhTw = {
       ai_confidence: "AI 平均信心度",
     },
     detail_modal: {
-      title: "編輯傳票",
+      title: "會計傳票",
       messages: {
         fetch_error: "取得傳票失敗",
         deleted_warning: "已刪除傳票不可編輯",
@@ -1193,6 +1213,8 @@ export const zhTw = {
         accounting_entries: "會計科目分錄",
       },
       fields: {
+        note: "備註",
+        note_placeholder: "輸入備註...",
         confidence: "AI 信心度",
         voucher_no: "傳票編號",
         voucher_no_placeholder: "輸入傳票編號",
@@ -1305,7 +1327,7 @@ export const zhTw = {
     },
   },
   esg_verify: {
-    title: "人工核對碳排紀錄",
+    title: "碳盤查",
     preview: "憑證預覽",
     ai_confidence: "AI 信心度",
     no_image: "無圖檔可預覽",
@@ -1316,6 +1338,7 @@ export const zhTw = {
       scope_2: "範疇二 (能源間接排放)",
       scope_3: "範疇三 (其他間接排放)",
       activity_type: "活動類型",
+      activity_object: "活動對象",
       vendor: "供應商名稱 / 排放對象",
       raw_data: "原始活動數據",
       unit: "單位",
@@ -1324,6 +1347,13 @@ export const zhTw = {
       intensity_low: "低強度",
       intensity_medium: "中強度",
       intensity_high: "高強度",
+    },
+    emissions: {
+      title: "排放量計算",
+      raw_data: "原始活動數據",
+      unit: "單位",
+      total: "總排放量",
+      intensity: "排放強度分級",
     },
     actions: {
       cancel_edit: "取消修改",
@@ -1415,6 +1445,11 @@ export const zhTw = {
       voucher: "傳票",
       esg: "碳排紀錄",
     }
+  },
+  esg: {
+    detail_modal: {
+      title: "碳盤查",
+    },
   },
   teamManagement: {
     title: "團隊管理",

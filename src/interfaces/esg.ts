@@ -88,4 +88,6 @@ export interface IEsgRecord {
   isVerified: boolean;
   analysisStatus: AIAnalysisStatus | null;
   aiNote: string;
+  journalId?: string;
+  voucherId?: string;
 }

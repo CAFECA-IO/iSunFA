@@ -1,5 +1,7 @@
 export const ja = {
   common: {
+    note: "備考",
+    optional_in_parentheses: "オプション",
     no_data: "データなし",
     cancel_edit_title: "編集をキャンセルしますか？",
     cancel_edit_message: "編集をキャンセルしてもよろしいですか？データは元の状態に戻ります。",
@@ -406,9 +408,9 @@ export const ja = {
         "遠隔地バックアップ",
       ],
       user_count: "ユーザー数 (FIDO2 キー)",
-      add_user_price: "NT$ 105 / 月",
+      add_user_price: "NT$ {{price}} / 月",
       add_module: "追加モジュール料金",
-      add_module_price: "NT$ 1,575 / 月",
+      add_module_price: "NT$ {{price}} / 月",
       total_estimated: "月額見積もり",
       selected: "個選択済み",
       required: "必須",
@@ -988,9 +990,10 @@ export const ja = {
       "複数ファイルの一括アップロードに対応 (.jpg, .png, .pdf)",
     title: "請求書管理",
     upload: "アップロード",
-    view_file: "証憑ファイルを表示",
+    view_file: "伝票ファイル",
     view_preview: "プレビューを表示",
-    list: "リスト",
+    preview: "オリジナル伝票",
+    list: "伝票リスト",
     uploading: "アップロード中...",
     click_or_drag: "ここをクリックまたはファイルをドラッグ",
     single_file_only: "一度にアップロードできるファイルは1つだけです",
@@ -1031,6 +1034,9 @@ export const ja = {
     zoom_reset: "リセット",
   },
   journal: {
+    detail_modal: {
+      title: "仕訳帳",
+    },
     summary: {
       empty: "現在仕訳帳データはありません",
       today_count: "本日作成された仕訳帳",
@@ -1123,7 +1129,7 @@ export const ja = {
     },
   },
   esg_verify: {
-    title: "手動確認",
+    title: "炭素インベントリ",
     preview: "プレビュー",
     ai_confidence: "AI 信頼度",
     no_image: "画像なし",
@@ -1134,6 +1140,7 @@ export const ja = {
       scope_2: "スコープ2 (間接排出)",
       scope_3: "スコープ3 (その他)",
       activity_type: "活動タイプ",
+      activity_object: "活動対象",
       vendor: "業者 / 対象",
       raw_data: "基本データ",
       unit: "単位",
@@ -1142,6 +1149,13 @@ export const ja = {
       intensity_low: "低強度",
       intensity_medium: "中強度",
       intensity_high: "高強度",
+    },
+    emissions: {
+      title: "排出量計算",
+      raw_data: "元データ",
+      unit: "単位",
+      total: "総排出量",
+      intensity: "排出強度レベル",
     },
     messages: {
       fetch_error: "伝票の取得に失敗しました",
@@ -1224,6 +1238,20 @@ export const ja = {
       title: "勘定科目を選択",
       search_placeholder: "科目コードや名前を検索...",
       no_results: "一致する勘定科目がありません",
+      all: "すべて",
+      types: {
+        asset: "資産",
+        liability: "負債",
+        equity: "純資産",
+        revenue: "収益",
+        expense: "費用",
+        income: "収入",
+        cost: "原価",
+        gainOrLoss: "損益",
+        cashFlow: "キャッシュフロー",
+        otherComprehensiveIncome: "その他の包括利益",
+        other: "その他",
+      },
     },
     main_view: {
       title: "スマート伝票管理",
@@ -1283,7 +1311,7 @@ export const ja = {
       ai_confidence: "AI平均信頼度",
     },
     detail_modal: {
-      title: "伝票の編集",
+      title: "会計伝票",
       messages: {
         fetch_error: "伝票の取得に失敗しました",
         deleted_warning: "削除済みの伝票は編集できません",
@@ -1294,6 +1322,8 @@ export const ja = {
         accounting_entries: "仕訳",
       },
       fields: {
+        note: "備考",
+        note_placeholder: "備考を入力...",
         confidence: "AI信頼度",
         voucher_no: "伝票番号",
         voucher_no_placeholder: "伝票番号を入力",
@@ -1412,6 +1442,11 @@ export const ja = {
       voucher: "傳票",
       esg: "碳排紀錄",
     }
+  },
+  esg: {
+    detail_modal: {
+      title: "炭素インベントリ",
+    },
   },
   teamManagement: {
     title: "チーム管理",

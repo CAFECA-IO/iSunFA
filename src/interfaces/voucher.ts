@@ -51,6 +51,8 @@ export interface IVoucher {
   isVerified: boolean;
   analysisStatus: AIAnalysisStatus
   aiNote: string;
+  journalId?: string;
+  esgRecordId?: string;
 }
 
 export interface IParsedVoucherLine {

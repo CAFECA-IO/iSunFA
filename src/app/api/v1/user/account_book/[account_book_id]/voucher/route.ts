@@ -249,6 +249,8 @@ export async function GET(
         isVerified: v.isVerified,
         analysisStatus: v.analysisStatus as AIAnalysisStatus,
         aiNote: v.aiNote ?? "",
+        journalId: v.journalId,
+        esgRecordId: v.esgRecordId,
       };
     });
 

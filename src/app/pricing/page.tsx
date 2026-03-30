@@ -79,7 +79,12 @@ export default function PricingPage() {
     );
   };
 
-  const totalPrice = 6825 + userCount * 105 + selectedModules.length * 1575;
+  const PRICE = {
+    MACHINE: 8500 * 1.05,
+    USER: 100 * 1.05,
+    MODULE: 1800 * 1.05,
+  };
+  const totalPrice = PRICE.MACHINE + userCount * PRICE.USER + selectedModules.length * PRICE.MODULE;
 
   const showComingSoon = () => {
     if (!user) {
@@ -400,7 +405,7 @@ export default function PricingPage() {
                                 {t("pricing.ai_adoption.user_count")}
                               </span>
                               <span className="text-sm text-gray-400 mt-1 block">
-                                {t("pricing.ai_adoption.add_user_price")}
+                                {t("pricing.ai_adoption.add_user_price", { price: PRICE.USER.toLocaleString() })}
                               </span>
                             </div>
                             <div className="flex items-center justify-between gap-x-4 bg-black/20 rounded-xl p-1.5 ring-1 ring-white/10 w-full sm:w-auto">
@@ -433,7 +438,7 @@ export default function PricingPage() {
                                   {t("pricing.ai_adoption.add_module")}
                                 </span>
                                 <span className="text-sm text-gray-400 mt-1 block">
-                                  {t("pricing.ai_adoption.add_module_price")}
+                                  {t("pricing.ai_adoption.add_module_price", { price: PRICE.MODULE.toLocaleString() })}
                                 </span>
                               </div>
                               <span className="inline-flex items-center rounded-full bg-orange-400/10 px-3 py-1 text-sm font-medium text-orange-400 ring-1 ring-inset ring-orange-400/20">

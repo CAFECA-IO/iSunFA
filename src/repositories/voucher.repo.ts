@@ -2,14 +2,16 @@ import { prisma } from '@/lib/prisma';
 import { Prisma, Voucher } from '@/generated/client';
 import { AIAnalysisStatus } from '@/constants/ai_analysis_status';
 
+export type VoucherWithRelations = Prisma.VoucherGetPayload<{ include: { file: true; user: true; lines: true } }> & { journalId?: string; esgRecordId?: string };
+
 export interface IVoucherRepository {
   verifyAllVouchers(accountBookId: string): Promise<Prisma.BatchPayload>;
   getVerifiedIncomesByAccountBookId(accountBookId: string): Promise<Prisma.VoucherGetPayload<{ include: { lines: true } }>[]>;
   createVoucher(data: Prisma.VoucherUncheckedCreateInput): Promise<Voucher>;
   countVouchers(where: Prisma.VoucherWhereInput): Promise<number>;
-  getVouchers(args: Prisma.VoucherFindManyArgs): Promise<Prisma.VoucherGetPayload<{ include: { file: true; user: true; lines: true } }>[]>;
-  getVoucherById(id: string): Promise<Prisma.VoucherGetPayload<{ include: { file: true; user: true; lines: true } }> | null>;
-  updateVoucher(id: string, data: Prisma.VoucherUpdateInput): Promise<Prisma.VoucherGetPayload<{ include: { lines: true; user: true; file: true } }> | null>;
+  getVouchers(args: Prisma.VoucherFindManyArgs): Promise<VoucherWithRelations[]>;
+  getVoucherById(id: string): Promise<VoucherWithRelations | null>;
+  updateVoucher(id: string, data: Prisma.VoucherUpdateInput): Promise<VoucherWithRelations | null>;
   getVoucherSummary(accountBookId: string): Promise<{ todayVoucherCount: number; monthTotalAmount: number; pendingVoucherCount: number; aiAverageConfidence: number; }>;
 }
 
@@ -45,23 +47,99 @@ export class VoucherRepository implements IVoucherRepository {
     return prisma.voucher.count({ where });
   }
 
-  async getVouchers(args: Prisma.VoucherFindManyArgs) {
-    return prisma.voucher.findMany(args) as unknown as Promise<Prisma.VoucherGetPayload<{ include: { file: true; user: true; lines: true } }>[]>;
+  async getVouchers(args: Prisma.VoucherFindManyArgs): Promise<VoucherWithRelations[]> {
+    const vouchers = await prisma.voucher.findMany(args) as unknown as Prisma.VoucherGetPayload<{ include: { file: true; user: true; lines: true } }>[];
+    if (vouchers.length === 0) return vouchers as VoucherWithRelations[];
+
+    const fileIds = Array.from(new Set(vouchers.map(v => v.fileId).filter(Boolean))) as string[];
+    let journals: { id: string, fileId: string | null }[] = [];
+    let esgRecords: { id: string, fileId: string | null }[] = [];
+
+    if (fileIds.length > 0) {
+      journals = await prisma.journal.findMany({
+        where: { fileId: { in: fileIds } },
+        select: { id: true, fileId: true }
+      });
+      esgRecords = await prisma.esgRecord.findMany({
+        where: { fileId: { in: fileIds } },
+        select: { id: true, fileId: true }
+      });
+    }
+
+    return vouchers.map(voucher => {
+      const journalId = journals.find(j => j.fileId === voucher.fileId)?.id;
+      const esgRecordId = esgRecords.find(e => e.fileId === voucher.fileId)?.id;
+      return {
+        ...voucher,
+        journalId,
+        esgRecordId
+      };
+    }) as VoucherWithRelations[];
   }
 
-  async getVoucherById(id: string) {
-    return prisma.voucher.findUnique({
+  async getVoucherById(id: string): Promise<VoucherWithRelations | null> {
+    const voucher = await prisma.voucher.findUnique({
       where: { id },
       include: { file: true, user: true, lines: true },
     });
+
+    if (!voucher) return null;
+
+    let journalId: string | undefined;
+    let esgRecordId: string | undefined;
+
+    if (voucher.fileId) {
+      const journal = await prisma.journal.findFirst({
+        where: { fileId: voucher.fileId, accountBookId: voucher.accountBookId },
+        select: { id: true },
+      });
+      if (journal) journalId = journal.id;
+
+      const esgRecord = await prisma.esgRecord.findFirst({
+        where: { fileId: voucher.fileId, accountBookId: voucher.accountBookId },
+        select: { id: true },
+      });
+      if (esgRecord) esgRecordId = esgRecord.id;
+    }
+
+    return {
+      ...voucher,
+      journalId,
+      esgRecordId,
+    } as VoucherWithRelations;
   }
 
-  async updateVoucher(id: string, data: Prisma.VoucherUpdateInput) {
-    return prisma.voucher.update({
+  async updateVoucher(id: string, data: Prisma.VoucherUpdateInput): Promise<VoucherWithRelations | null> {
+    const voucher = await prisma.voucher.update({
       where: { id },
       data,
-      include: { lines: true, user: true, file: true },
+      include: { file: true, user: true, lines: true },
     });
+
+    if (!voucher) return null;
+
+    let journalId: string | undefined;
+    let esgRecordId: string | undefined;
+
+    if (voucher.fileId) {
+      const journal = await prisma.journal.findFirst({
+        where: { fileId: voucher.fileId, accountBookId: voucher.accountBookId },
+        select: { id: true },
+      });
+      if (journal) journalId = journal.id;
+
+      const esgRecord = await prisma.esgRecord.findFirst({
+        where: { fileId: voucher.fileId, accountBookId: voucher.accountBookId },
+        select: { id: true },
+      });
+      if (esgRecord) esgRecordId = esgRecord.id;
+    }
+
+    return {
+      ...voucher,
+      journalId,
+      esgRecordId,
+    } as VoucherWithRelations;
   }
 
   async getVoucherSummary(accountBookId: string) {

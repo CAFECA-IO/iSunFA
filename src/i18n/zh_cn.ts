@@ -1,5 +1,7 @@
 export const zhCn = {
   common: {
+    note: "备注",
+    optional_in_parentheses: "选填",
     no_data: "无数据",
     cancel_edit_title: "取消修改？",
     cancel_edit_message: "确定要取消修改吗？数据将回到原始状态。",
@@ -402,9 +404,9 @@ export const zhCn = {
         "设备异常保固",
       ],
       user_count: "用户数量 (FIDO2 密钥)",
-      add_user_price: "NT$ 105 / 月",
+      add_user_price: "NT$ {{price}} / 月",
       add_module: "加购模块费用",
-      add_module_price: "NT$ 1,575 / 月",
+      add_module_price: "NT$ {{price}} / 月",
       total_estimated: "预估月费",
       selected: "个已选",
       required: "必选",
@@ -963,6 +965,7 @@ export const zhCn = {
     multiple_files_supported: "支持批次上传多个凭证文件 (.jpg, .png, .pdf)",
     title: "发票管理",
     upload: "上传发票",
+    preview: "原始凭证",
     list: "发票列表",
     uploading: "上传中...",
     click_or_drag: "点击或拖拽文件至此",
@@ -1007,6 +1010,9 @@ export const zhCn = {
     zoom_reset: "重置",
   },
   journal: {
+    detail_modal: {
+      title: "日记账",
+    },
     summary: {
       empty: "目前没有日记账资料",
       today_count: "今日产生日记账",
@@ -1017,7 +1023,7 @@ export const zhCn = {
     main_view: {
       title: "凭证管理",
       upload: "上传凭证",
-      view_file: "查看凭证文件",
+      view_file: "凭证文件",
       view_preview: "查看预览",
       list: "凭证清单",
       log: "变动记录",
@@ -1105,7 +1111,7 @@ export const zhCn = {
     },
   },
   esg_verify: {
-    title: "人工核对碳排纪录",
+    title: "碳盘查",
     preview: "凭证预览",
     ai_confidence: "AI 信心度",
     no_image: "无图档可预览",
@@ -1116,6 +1122,7 @@ export const zhCn = {
       scope_2: "范畴二 (能源间接排放)",
       scope_3: "范畴三 (其他间接排放)",
       activity_type: "活动类型",
+      activity_object: "活动对象",
       vendor: "供应商名称 / 排放对象",
       raw_data: "原始活动数据",
       unit: "单位",
@@ -1124,6 +1131,13 @@ export const zhCn = {
       intensity_low: "低强度",
       intensity_medium: "中强度",
       intensity_high: "高强度",
+    },
+    emissions: {
+      title: "排放量计算",
+      raw_data: "原始活动数据",
+      unit: "单位",
+      total: "总排放量",
+      intensity: "排放强度分级",
     },
     messages: {
       fetch_error: "获取凭证失败",
@@ -1205,6 +1219,20 @@ export const zhCn = {
       title: "请选择会计科目",
       search_placeholder: "搜索科目代码或名称...",
       no_results: "找不到符合的会计科目",
+      all: "全部",
+      types: {
+        asset: "资产",
+        liability: "负债",
+        equity: "权益",
+        revenue: "收益",
+        expense: "费损",
+        income: "收入",
+        cost: "成本",
+        gainOrLoss: "损益",
+        cashFlow: "现金流",
+        otherComprehensiveIncome: "其他综合收益",
+        other: "其他",
+      },
     },
     main_view: {
       title: "智能凭证管理",
@@ -1268,7 +1296,7 @@ export const zhCn = {
       ai_confidence: "AI 平均信心度",
     },
     detail_modal: {
-      title: "编辑凭证",
+      title: "会计凭证",
       messages: {
         fetch_error: "获取凭证失败",
         deleted_warning: "已删除凭证不可编辑",
@@ -1279,6 +1307,8 @@ export const zhCn = {
         accounting_entries: "会计科目分录",
       },
       fields: {
+        note: "备注",
+        note_placeholder: "输入备注...",
         confidence: "AI 信心度",
         voucher_no: "凭证编号",
         voucher_no_placeholder: "输入凭证编号",
@@ -1399,6 +1429,11 @@ export const zhCn = {
       voucher: "传票",
       esg: "碳排记录",
     }
+  },
+  esg: {
+    detail_modal: {
+      title: "碳盘查",
+    },
   },
   teamManagement: {
     title: "团队管理",

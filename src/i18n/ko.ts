@@ -1,5 +1,7 @@
 export const ko = {
   common: {
+    note: "비고",
+    optional_in_parentheses: "선택",
     no_data: "데이터 없음",
     cancel_edit_title: "편집 취소?",
     cancel_edit_message: "편집을 취소하시겠습니까? 데이터가 원래 상태로 돌아갑니다.",
@@ -403,9 +405,9 @@ export const ko = {
         "원격 백업",
       ],
       user_count: "사용자 수 (FIDO2 키)",
-      add_user_price: "NT$ 105 / 월",
+      add_user_price: "NT$ {{price}} / 월",
       add_module: "추가 모듈 비용",
-      add_module_price: "NT$ 1,575 / 월",
+      add_module_price: "NT$ {{price}} / 월",
       total_estimated: "예상 월 사용료",
       selected: "개 선택됨",
       required: "필수",
@@ -974,9 +976,10 @@ export const ko = {
     multiple_files_supported: "여러 파일의 일괄 업로드 지원 (.jpg, .png, .pdf)",
     title: "인보이스 관리",
     upload: "업로드",
-    view_file: "증빙 파일 보기",
-    view_preview: "미리보기",
-    list: "인보이스 목록",
+    view_file: "전표 파일",
+    view_preview: "미리보기 보기",
+    preview: "원본 전표",
+    list: "전표 목록",
     uploading: "업로드 중...",
     click_or_drag: "여기를 클릭하거나 파일을 드래그하세요",
     single_file_only: "한 번에 하나의 파일만 업로드할 수 있습니다",
@@ -1017,6 +1020,9 @@ export const ko = {
     zoom_reset: "초기화",
   },
   journal: {
+    detail_modal: {
+      title: "분개장",
+    },
     summary: {
       empty: "현재 분개장 데이터가 없습니다",
       today_count: "오늘 생성된 분개장",
@@ -1109,7 +1115,7 @@ export const ko = {
     },
   },
   esg_verify: {
-    title: "수동 확인",
+    title: "탄소 인벤토리",
     preview: "미리보기",
     ai_confidence: "AI 신뢰도",
     no_image: "미리보기 이미지 없음",
@@ -1120,6 +1126,7 @@ export const ko = {
       scope_2: "스코프 2 (간접 배출)",
       scope_3: "스코프 3 (기타 간접 배출)",
       activity_type: "활동 유형",
+      activity_object: "활동 대상",
       vendor: "공급업체 / 대상",
       raw_data: "원시 활동 데이터",
       unit: "단위",
@@ -1128,6 +1135,13 @@ export const ko = {
       intensity_low: "저강도",
       intensity_medium: "중강도",
       intensity_high: "고강도",
+    },
+    emissions: {
+      title: "배출량 계산",
+      raw_data: "원시 데이터",
+      unit: "단위",
+      total: "총 배출량",
+      intensity: "배출 강도 등급",
     },
     messages: {
       fetch_error: "전표를 가져오지 못했습니다",
@@ -1211,6 +1225,20 @@ export const ko = {
       title: "계정 선택",
       search_placeholder: "계정 코드나 이름을 검색하세요...",
       no_results: "일치하는 계정이 없습니다",
+      all: "전체",
+      types: {
+        asset: "자산",
+        liability: "부채",
+        equity: "자본",
+        revenue: "수익",
+        expense: "비용",
+        income: "수입",
+        cost: "원가",
+        gainOrLoss: "손익",
+        cashFlow: "현금흐름",
+        otherComprehensiveIncome: "기타포괄손익",
+        other: "기타",
+      },
     },
     main_view: {
       title: "스마트 전표 관리",
@@ -1271,7 +1299,7 @@ export const ko = {
       ai_confidence: "AI 평균 신뢰도",
     },
     detail_modal: {
-      title: "전표 편집",
+      title: "회계 전표",
       messages: {
         fetch_error: "전표를 가져오지 못했습니다",
         deleted_warning: "삭제된 전표는 편집할 수 없습니다",
@@ -1282,6 +1310,8 @@ export const ko = {
         accounting_entries: "회계 분개",
       },
       fields: {
+        note: "비고",
+        note_placeholder: "비고 입력...",
         confidence: "AI 신뢰도",
         voucher_no: "전표 번호",
         voucher_no_placeholder: "전표 번호 입력",
@@ -1400,6 +1430,11 @@ export const ko = {
       voucher: "傳票",
       esg: "碳排紀錄",
     }
+  },
+  esg: {
+    detail_modal: {
+      title: "탄소 인벤토리",
+    },
   },
   teamManagement: {
     title: "팀 관리",

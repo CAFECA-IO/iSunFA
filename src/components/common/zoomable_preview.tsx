@@ -72,8 +72,8 @@ export default function ZoomablePreview({
   return (
     <div className={className}>
       <div className="relative size-full flex flex-col border-r border-gray-200 bg-gray-100 p-4">
-      {/* Info: (20260305 - Julian) Zoom Controls */}
-        <div className="absolute top-6 right-6 z-10 flex gap-2 rounded-lg bg-white/90 p-1 shadow-sm backdrop-blur">
+        {/* Info: (20260305 - Julian) Zoom Controls */}
+        <div className="absolute top-6 right-6 z-10 flex gap-2 rounded-lg bg-white/90 p-1 shadow-sm backdrop-blur text-gray-400">
           <button
             type="button"
             onClick={handleZoomOut}
@@ -105,13 +105,12 @@ export default function ZoomablePreview({
 
         <div
           role="presentation"
-          className={`flex flex-1 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white p-4 ${
-            scale > 1
-              ? isDragging
-                ? "cursor-grabbing select-none"
-                : "cursor-grab"
-              : ""
-          }`}
+          className={`flex flex-1 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white p-4 ${scale > 1
+            ? isDragging
+              ? "cursor-grabbing select-none"
+              : "cursor-grab"
+            : ""
+            }`}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -120,7 +119,7 @@ export default function ZoomablePreview({
         >
           {hasContent ? (
             <div
-              className="origin-center transition-transform duration-200 will-change-transform"
+              className="origin-center transition-transform duration-200 will-change-transform size-full flex items-center justify-center"
               style={{
                 transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                 // Info: (20260305 - Julian) Disable transition during drag for smoothness
