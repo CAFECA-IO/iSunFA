@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, CircleAlert } from "lucide-react";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -9,6 +8,11 @@ import { IBalanceSheetItem, IBalanceSheet } from "@/interfaces/balance_sheet";
 import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
 import { numberWithCommas } from "@/lib/utils/common";
 import { ReportType } from "@/constants/financial_report";
+import {
+  LoadingPing,
+  ReportLoadingPlaceholder,
+  ReportErrorPlaceholder,
+} from "@/components/user/financial_report/report_placeholders";
 
 const BalanceSheetSection = ({
   titleText,
@@ -67,26 +71,6 @@ const BalanceSheetSection = ({
   );
 };
 
-const LoadingPing = ({ size }: { size: number }) => {
-  const circleSize = size * 1.5;
-  const pingSize = size * 1.25;
-
-  return (
-    <div className="relative flex items-center justify-center">
-      <div
-        style={{ width: pingSize, height: pingSize }}
-        className="absolute animate-ping rounded-full bg-emerald-100 opacity-60"
-      ></div>
-      <div
-        style={{ width: circleSize, height: circleSize }}
-        className="relative flex items-center justify-center rounded-full bg-emerald-50 shadow-sm ring-1 ring-emerald-100"
-      >
-        <Loader2 size={size} className="animate-spin text-emerald-500" />
-      </div>
-    </div>
-  );
-};
-
 export default function BalanceSheetView() {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
@@ -119,35 +103,19 @@ export default function BalanceSheetView() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[400px] w-full flex-col items-center justify-center gap-5 rounded-2xl border border-slate-100 bg-white/60 p-8 shadow-sm backdrop-blur-sm">
-        <LoadingPing size={40} />
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h2 className="text-xl font-black tracking-widest text-slate-800">
-            正在為您生成資產負債表
-          </h2>
-          <p className="text-sm font-medium text-slate-500">
-            系統正在結算資產、負債與權益科目，並計算相關財務指標，請稍候...
-          </p>
-        </div>
-      </div>
+      <ReportLoadingPlaceholder
+        title="正在為您生成資產負債表"
+        description="系統正在結算資產、負債與權益科目，並計算相關財務指標，請稍候..."
+      />
     );
   }
 
   if (!reportData) {
     return (
-      <div className="flex min-h-[400px] w-full flex-col items-center justify-center gap-5 rounded-2xl border border-red-50 bg-red-50/50 p-8 shadow-sm">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 shadow-sm ring-1 ring-red-200">
-          <CircleAlert className="h-8 w-8 text-red-500" />
-        </div>
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h2 className="text-xl font-black tracking-widest text-slate-800">
-            資產負債表生成失敗
-          </h2>
-          <p className="text-sm font-medium text-slate-500">
-            請確認該期間內是否有足夠的核發傳票資料，或是稍後再重新嘗試。
-          </p>
-        </div>
-      </div>
+      <ReportErrorPlaceholder
+        title="資產負債表生成失敗"
+        description="請確認該期間內是否有足夠的核發傳票資料，或是稍後再重新嘗試。"
+      />
     );
   }
 
