@@ -1,11 +1,11 @@
 import { IVoucher } from "@/interfaces/voucher";
-import { IIncomeStatementSheet, IIncomeStatementItem } from "@/interfaces/income_statement";
+import { IIncomeStatement, IIncomeStatementItem } from "@/interfaces/income_statement";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 export function generateIncomeStatement(
   vouchers: IVoucher[],
   reportDateInfo: { period: string; currency: string }
-): IIncomeStatementSheet {
+): IIncomeStatement {
   const revenueMap = new Map<string, { name: string; amount: number }>();
   const cogsMap = new Map<string, { name: string; amount: number }>();
   const opexMap = new Map<string, { name: string; amount: number }>();
