@@ -16,6 +16,11 @@ export default function ReportView() {
   );
   const [selectedReportPeriod, setSelectedReportPeriod] =
     useState<ReportPeriod>(ReportPeriod.ALL_YEAR);
+  const [generatedConfig, setGeneratedConfig] = useState<{
+    type: ReportType;
+    period: ReportPeriod;
+    currency: string;
+  } | null>(null);
 
   // ToDo: (20260330 - Julian) 串接 API
   const countOfVerifiedVouchers = 1245;
@@ -40,7 +45,7 @@ export default function ReportView() {
   const getReportPeriod = (period: ReportPeriod) => {
     switch (period) {
       case ReportPeriod.ALL_YEAR:
-        return "2025 年度";
+        return "2025 全年度";
       case ReportPeriod.Q1:
         return "2025 第一季(Q1)";
       case ReportPeriod.Q2:
@@ -54,22 +59,32 @@ export default function ReportView() {
     }
   };
 
-  const reportData = {
-    reportTitle: getReportTitle(selectedReportType),
-    reportPeriod: getReportPeriod(selectedReportPeriod),
-    currency: "TWD",
-  };
+  const reportData = generatedConfig
+    ? {
+        reportTitle: getReportTitle(generatedConfig.type),
+        reportPeriod: getReportPeriod(generatedConfig.period),
+        currency: generatedConfig.currency,
+      }
+    : null;
 
+  // Info: (20260330 - Julian) 產出報表
   const handleGenerateReport = () => {
-    console.log("Generate Report");
+    setGeneratedConfig({
+      type: selectedReportType,
+      period: selectedReportPeriod,
+      currency: "TWD",
+    });
   };
 
+  // Info: (20260330 - Julian) 關閉嵌入視窗
   const handleCloseModal = () => setIsEmbedModalOpen(false);
 
+  // Info: (20260330 - Julian) 變更報表種類
   const handleReportTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedReportType(e.target.value as ReportType);
   };
 
+  // Info: (20260330 - Julian) 變更報表期間
   const handleReportPeriodChange = (
     e: React.ChangeEvent<HTMLSelectElement>,
   ) => {
@@ -112,7 +127,7 @@ export default function ReportView() {
       >
         {Object.values(ReportPeriod).map((period) => (
           <option key={period} value={period}>
-            {period}
+            {getReportPeriod(period)}
           </option>
         ))}
       </select>
@@ -121,13 +136,15 @@ export default function ReportView() {
 
   // Info: (20260330 - Julian) 根據選擇渲染對應的報表
   const renderReportView = () => {
-    switch (selectedReportType) {
+    if (!generatedConfig) return null;
+
+    switch (generatedConfig.type) {
       case ReportType.BALANCE_SHEET:
-        return <BalanceSheetView period={selectedReportPeriod} />;
+        return <BalanceSheetView period={generatedConfig.period} />;
       case ReportType.CASH_FLOW:
-        return <CashFlowSheetView period={selectedReportPeriod} />;
+        return <CashFlowSheetView period={generatedConfig.period} />;
       case ReportType.INCOME_STATEMENT:
-        return <IncomeStatementView period={selectedReportPeriod} />;
+        return <IncomeStatementView period={generatedConfig.period} />;
       default:
         return null;
     }
@@ -167,22 +184,39 @@ export default function ReportView() {
 
         {/* Info:(20260319 - Julian) 報表內容 */}
         <div className="flex w-full flex-col gap-4">
-          {/* Info: (20260330 - Julian) 報表標題 */}
-          <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-sm md:p-8">
-            <div className="absolute top-0 left-0 h-1 w-full bg-amber-500"></div>
-            <h2 className="text-2xl font-black tracking-[0.2em] md:text-3xl">
-              ISUNFA 智慧會計系統
-            </h2>
-            <h3 className="mt-2 text-xl font-bold tracking-widest text-slate-600">
-              {reportData.reportTitle}
-            </h3>
-            <p className="mt-2 text-sm font-medium text-slate-400">
-              期間：{reportData.reportPeriod} (單位：{reportData.currency})
-            </p>
-          </div>
+          {!generatedConfig ? (
+            <div className="flex h-full min-h-[500px] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
+              <Filter
+                className="mb-4 h-12 w-12 text-slate-300"
+                strokeWidth={1.5}
+              />
+              <h3 className="text-xl font-bold tracking-widest text-slate-700">
+                尚未產出報表
+              </h3>
+              <p className="mt-2 text-sm font-medium">
+                請設定需要的報表參數，iSunFA 馬上為您產出報表
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Info: (20260330 - Julian) 報表標題 */}
+              <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-sm md:p-8">
+                <div className="absolute top-0 left-0 h-1 w-full bg-amber-500"></div>
+                <h2 className="text-2xl font-black tracking-[0.2em] md:text-3xl">
+                  ISUNFA 智慧會計系統
+                </h2>
+                <h3 className="mt-2 text-xl font-bold tracking-widest text-slate-600">
+                  {reportData?.reportTitle}
+                </h3>
+                <p className="mt-2 text-sm font-medium text-slate-400">
+                  期間：{reportData?.reportPeriod} (單位：{reportData?.currency})
+                </p>
+              </div>
 
-          {/* Info:(20260319 - Julian) 報表內容 */}
-          {renderReportView()}
+              {/* Info:(20260319 - Julian) 報表內容 */}
+              {renderReportView()}
+            </>
+          )}
         </div>
       </div>
 

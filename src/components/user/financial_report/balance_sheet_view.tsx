@@ -99,7 +99,7 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
     } else {
       setIsLoading(false);
     }
-  }, [accountBookId]);
+  }, [accountBookId, period]);
 
   if (isLoading) {
     return (

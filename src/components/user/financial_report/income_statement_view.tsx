@@ -117,7 +117,7 @@ export default function IncomeStatementView({
     } else {
       setIsLoading(false);
     }
-  }, [accountBookId]);
+  }, [accountBookId, period]);
 
   if (isLoading) {
     return (

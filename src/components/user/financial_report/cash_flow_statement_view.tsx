@@ -119,7 +119,7 @@ export default function CashFlowSheetView({
     } else {
       setIsLoading(false);
     }
-  }, [accountBookId]);
+  }, [accountBookId, period]);
 
   if (isLoading) {
     return (
