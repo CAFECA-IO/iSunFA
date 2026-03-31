@@ -129,24 +129,56 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
         value={`${metrics.currentRatio.toFixed(1)}%`}
         description="企業短期償債能力 (建議 > 200%)"
         textColor="text-emerald-600"
+        tooltip={
+          <>
+            <span className="font-bold">流動比率 = 流動資產 / 流動負債。</span>
+            <br />
+            <span>
+              衡量企業短期償債能力，建議大於 200% ，表示償債能力良好。
+            </span>
+          </>
+        }
       />
       <KeyMetricsCard
         title="負債比率 (Debt Ratio)"
         value={`${metrics.debtRatio.toFixed(1)}%`}
         description="資產由債務支應的比例"
         textColor="text-indigo-600"
+        tooltip={
+          <>
+            <span className="font-bold">負債比率 = 總負債 / 總資產。</span>
+            <br />
+            <span>衡量企業償債能力，建議小於 50% ，表示償債能力良好。</span>
+          </>
+        }
       />
       <KeyMetricsCard
         title="權益乘數 (Equity Multiplier)"
         value={`${metrics.equityMultiplier.toFixed(2)}x`}
         description="財務槓桿程度"
         textColor="text-amber-600"
+        tooltip={
+          <>
+            <span className="font-bold">權益乘數 = 總資產 / 總權益。</span>
+            <br />
+            <span>
+              衡量企業財務槓桿程度，建議小於 2 ，表示財務槓桿程度良好。
+            </span>
+          </>
+        }
       />
       <KeyMetricsCard
         title="營運資金 (Working Capital)"
         value={numberWithCommas(metrics.workingCapital)}
         description="可用於日常營運之淨資金"
         textColor="text-slate-700"
+        tooltip={
+          <>
+            <span className="font-bold">營運資金 = 流動資產 - 流動負債。</span>
+            <br />
+            <span>衡量企業短期償債能力，建議大於 0 ，表示償債能力良好。</span>
+          </>
+        }
       />
     </div>
   ) : (

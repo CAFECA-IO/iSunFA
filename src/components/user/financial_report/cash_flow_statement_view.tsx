@@ -160,24 +160,70 @@ export default function CashFlowSheetView({
         textColor={
           metrics.freeCashFlow >= 0 ? "text-emerald-600" : "text-rose-600"
         }
+        tooltip={
+          <>
+            <span className="font-bold">
+              自由現金流 = 營業現金流 - 資本支出。
+            </span>
+            <br />
+            <span>
+              衡量企業扣除資本支出後可自由運用的現金，建議大於 0
+              ，表示償債能力良好。
+            </span>
+          </>
+        }
       />
       <KeyMetricsCard
         title="營業現金流對流動負債比率"
         value={`${metrics.operatingCashFlowRatio.toFixed(1)}%`}
         description="短期償還債務的能力 (建議 > 100%)"
         textColor="text-indigo-600"
+        tooltip={
+          <>
+            <span className="font-bold">
+              營業現金流對流動負債比率 = 營業現金流 / 流動負債。
+            </span>
+            <br />
+            <span>
+              衡量企業短期償還債務的能力，建議大於 100% ，表示償債能力良好。
+            </span>
+          </>
+        }
       />
       <KeyMetricsCard
         title="現金流量允當比率"
         value={`${metrics.cashFlowAdequacyRatio.toFixed(1)}%`}
         description="營業現金是否足以支應資本支出及還債"
         textColor="text-amber-600"
+        tooltip={
+          <>
+            <span className="font-bold">
+              現金流量允當比率 = 營業現金流 / (資本支出 + 償債金額)。
+            </span>
+            <br />
+            <span>
+              衡量企業營業現金是否足以支應資本支出及還債，建議大於 100%
+              ，表示償債能力良好。
+            </span>
+          </>
+        }
       />
       <KeyMetricsCard
         title="期末現金餘額"
         value={`$${numberWithCommas(summary.endingBalance)}`}
         description="本期結束時的現金部位"
         textColor="text-slate-700"
+        tooltip={
+          <>
+            <span className="font-bold">
+              期末現金餘額 = 營業現金流 + 投資現金流 + 融資現金流。
+            </span>
+            <br />
+            <span>
+              衡量企業本期結束時的現金部位，建議大於 0 ，表示償債能力良好。
+            </span>
+          </>
+        }
       />
     </div>
   ) : (

@@ -148,24 +148,68 @@ export default function IncomeStatementView({
         value={`${metrics.grossMargin.toFixed(1)}%`}
         description="產品初始獲利能力"
         textColor="text-emerald-600"
+        tooltip={
+          <>
+            <span className="font-bold">
+              毛利率 = (營業收入 - 營業成本) / 營業收入。
+            </span>
+            <br />
+            <span>
+              衡量企業產品或服務的初始獲利能力，建議大於 50%
+              ，表示產品或服務的初始獲利能力良好。
+            </span>
+          </>
+        }
       />
       <KeyMetricsCard
         title="營益率 (Operating Margin)"
         value={`${metrics.operatingMargin.toFixed(1)}%`}
         description="本業營運獲利能力"
         textColor="text-indigo-600"
+        tooltip={
+          <>
+            <span className="font-bold">營益率 = 營業利益 / 營業收入。</span>
+            <br />
+            <span>
+              衡量企業本業營運獲利能力，建議大於 15%
+              ，表示本業營運獲利能力良好。
+            </span>
+          </>
+        }
       />
       <KeyMetricsCard
         title="淨利率 (Net Profit Margin)"
         value={`${metrics.netProfitMargin.toFixed(1)}%`}
         description="最終稅後實質獲利能力"
         textColor="text-blue-600"
+        tooltip={
+          <>
+            <span className="font-bold">淨利率 = 稅後淨利 / 營業收入。</span>
+            <br />
+            <span>
+              衡量企業最終稅後實質獲利能力，建議大於 10%
+              ，表示最終稅後實質獲利能力良好。
+            </span>
+          </>
+        }
       />
       <KeyMetricsCard
         title="EBITDA 利潤率"
         value={`${metrics.ebitdaMargin.toFixed(1)}%`}
         description="可分配之現金獲利指標"
         textColor="text-amber-600"
+        tooltip={
+          <>
+            <span className="font-bold">
+              EBITDA 利潤率 = EBITDA / 營業收入。
+            </span>
+            <br />
+            <span>
+              衡量企業可分配之現金獲利指標，建議大於 15%
+              ，表示可分配之現金獲利指標良好。
+            </span>
+          </>
+        }
       />
     </div>
   ) : (
