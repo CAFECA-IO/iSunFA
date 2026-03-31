@@ -1,9 +1,16 @@
 import { toPng } from 'html-to-image';
 import { PDFDocument, rgb } from 'pdf-lib';
 
+export interface IDownloadPdfOptions {
+  backgroundColor?: string;
+  marginColor?: [number, number, number]; // Info:(20260331 - Julian) RGB 值（介於 0.0 ~ 1.0）
+  filter?: (node: HTMLElement) => boolean;
+}
+
 export const downloadHtmlAsPdf = async (
   elementId: string,
-  filename: string
+  filename: string,
+  options?: IDownloadPdfOptions
 ) => {
   try {
     const element = document.getElementById(elementId);
@@ -17,7 +24,8 @@ export const downloadHtmlAsPdf = async (
       quality: 1.0,
       pixelRatio: 2,
       cacheBust: true,
-      backgroundColor: '#ffffff'
+      backgroundColor: options?.backgroundColor || '#ffffff',
+      filter: options?.filter,
     });
 
     const pdfDoc = await PDFDocument.create();
@@ -38,7 +46,17 @@ export const downloadHtmlAsPdf = async (
     let heightLeft = scaledHeight;
     let position = 0;
 
+    const pageColor = options?.marginColor ? rgb(...options.marginColor) : rgb(1, 1, 1);
+
     let page = pdfDoc.addPage([a4Width, a4Height]);
+    page.drawRectangle({
+      x: 0,
+      y: 0,
+      width: a4Width,
+      height: a4Height,
+      color: pageColor,
+    });
+    
     page.drawImage(pngImage, {
       x: margin,
       y: a4Height - margin - scaledHeight,
@@ -50,6 +68,14 @@ export const downloadHtmlAsPdf = async (
     while (heightLeft > 0) {
       position -= maxPdfHeight;
       page = pdfDoc.addPage([a4Width, a4Height]);
+      
+      page.drawRectangle({
+        x: 0,
+        y: 0,
+        width: a4Width,
+        height: a4Height,
+        color: pageColor,
+      });
 
       page.drawImage(pngImage, {
         x: margin,
@@ -63,13 +89,12 @@ export const downloadHtmlAsPdf = async (
 
     const pages = pdfDoc.getPages();
     pages.forEach((p) => {
-
       p.drawRectangle({
         x: 0,
         y: 0,
         width: a4Width,
         height: margin,
-        color: rgb(1, 1, 1),
+        color: pageColor,
       });
 
       p.drawRectangle({
@@ -77,7 +102,7 @@ export const downloadHtmlAsPdf = async (
         y: a4Height - margin,
         width: a4Width,
         height: margin,
-        color: rgb(1, 1, 1),
+        color: pageColor,
       });
     });
 

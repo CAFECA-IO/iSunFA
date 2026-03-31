@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+
 import { Filter, Printer, Download } from "lucide-react";
 import EmbedGenerateModal from "@/components/user/financial_report/embed_generate_modal";
 import BalanceSheetView from "@/components/user/financial_report/balance_sheet_view";
@@ -9,8 +10,8 @@ import CashFlowSheetView from "@/components/user/financial_report/cash_flow_stat
 import IncomeStatementView from "@/components/user/financial_report/income_statement_view";
 import { numberWithCommas } from "@/lib/utils/common";
 import { request } from "@/lib/utils/request";
+import { downloadHtmlAsPdf } from "@/lib/utils/pdf";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
-
 export default function ReportView() {
   const params = useParams();
   const accountBookId = params.account_book_id as string;
@@ -42,12 +43,70 @@ export default function ReportView() {
     fetchCountOfVerifiedVouchers();
   }, [accountBookId]);
 
-  const handleDownload = () => {
-    console.log("download");
+  const handleDownload = async () => {
+    // Info: (20260331 - Julian) 過濾掉需要隱藏的元素（例如工具列與重點指標 Tooltip）
+    const filter = (node: HTMLElement) => {
+      if (node?.hasAttribute && node.hasAttribute("data-html2canvas-ignore")) {
+        return false;
+      }
+      return true;
+    };
+
+    // Info: (20260331 - Julian) 設定檔名
+    const filename = `${getReportTitle(selectedReportType)}_${getReportPeriod(selectedReportPeriod)}.pdf`;
+    
+    // Info: (20260331 - Julian) 產出 PDF
+    await downloadHtmlAsPdf("report-content-to-print", filename, {filter});
   };
 
   const handlePrint = () => {
-    console.log("print");
+    const element = document.getElementById("report-content-to-print");
+    if (!element) return;
+
+    // Create a special wrapper attached to the body to isolate printing
+    const printWrapper = document.createElement("div");
+    printWrapper.id = "print-report-wrapper";
+
+    const clone = element.cloneNode(true) as HTMLElement;
+    const toolbar = clone.querySelector('[data-html2canvas-ignore]');
+    if (toolbar) toolbar.remove();
+
+    printWrapper.appendChild(clone);
+    document.body.appendChild(printWrapper);
+
+    const style = document.createElement("style");
+    style.innerHTML = `
+      @media screen {
+        #print-report-wrapper {
+          display: none;
+        }
+      }
+      @media print {
+        body > *:not(#print-report-wrapper) {
+          display: none !important;
+        }
+        #print-report-wrapper {
+          display: block;
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // window.print();
+
+    // Clean up after print dialog finishes
+    // setTimeout(() => {
+    //   if (document.body.contains(printWrapper)) {
+    //     document.body.removeChild(printWrapper);
+    //   }
+    //   if (document.head.contains(style)) {
+    //     document.head.removeChild(style);
+    //   }
+    // }, 500);
   };
 
   // Info: (20260330 - Julian) 報表標題
@@ -179,7 +238,7 @@ export default function ReportView() {
     <>
       <div className="mt-6 flex flex-col gap-8 lg:flex-row">
         {/* Info:(20260319 - Julian) 報表參數設定 */}
-        <div className="flex h-fit w-full shrink-0 flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:w-72">
+        <div className="flex h-fit w-full shrink-0 flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:w-72 print:hidden">
           <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
             <Filter className="h-5 w-5 text-slate-800" strokeWidth={2.5} />
             <h2 className="text-base font-bold text-slate-800">報表參數設定</h2>
@@ -208,7 +267,10 @@ export default function ReportView() {
         </div>
 
         {/* Info:(20260319 - Julian) 報表內容 */}
-        <div className="flex w-full flex-col gap-4">
+        <div
+          id="report-content-to-print"
+          className="flex w-full flex-col gap-4"
+        >
           {!generatedConfig ? (
             <div className="flex h-full min-h-[500px] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
               <Filter
@@ -225,7 +287,7 @@ export default function ReportView() {
           ) : (
             <>
               {/* Info: (20260331 - Julian) Toolbar */}
-              <div className="ml-auto flex items-center gap-2">
+              <div data-html2canvas-ignore className="ml-auto flex items-center gap-2 print:hidden">
                 <button
                   type="button"
                   onClick={handleDownload}

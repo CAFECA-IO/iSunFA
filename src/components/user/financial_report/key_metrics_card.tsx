@@ -30,7 +30,7 @@ export default function KeyMetricsCard({
     <div className="relative flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
       {/* Info: (20260330 - Julian) Tooltip */}
       {isShowTooltip && (
-        <div className="absolute top-2 right-2 z-10">
+        <div className="absolute top-2 right-2 z-10" data-html2canvas-ignore>
           <div
             className="p-1 text-slate-400 hover:text-blue-300"
             onMouseEnter={handleMouseEnter}
