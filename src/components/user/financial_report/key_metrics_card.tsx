@@ -42,7 +42,7 @@ export default function KeyMetricsCard({
             <Info size={20} strokeWidth={2} />
           </button>
           <div
-            className={`absolute top-6 right-0 w-max max-w-48 rounded-md bg-blue-50 p-2 text-xs shadow-md ${isExpand ? "visible opacity-100" : "invisible opacity-0"} transition-all duration-300 ease-in-out`}
+            className={`absolute top-6 text-slate-900 right-0 w-max max-w-48 rounded-md bg-blue-50 p-2 text-xs shadow-md ${isExpand ? "visible opacity-100" : "invisible opacity-0"} transition-all duration-300 ease-in-out`}
           >
             {tooltip}
           </div>
