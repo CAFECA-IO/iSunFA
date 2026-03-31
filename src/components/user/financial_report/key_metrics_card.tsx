@@ -27,17 +27,20 @@ export default function KeyMetricsCard({
   const isShowTooltip = tooltip !== null;
 
   return (
-    <div className="relative flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+    <div className="relative flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm print:w-1/4 print:p-2">
       {/* Info: (20260330 - Julian) Tooltip */}
       {isShowTooltip && (
-        <div className="absolute top-2 right-2 z-10" data-html2canvas-ignore>
-          <div
-            className="p-1 text-slate-400 hover:text-blue-300"
+        <div className="absolute top-2 right-2 z-10 print:hidden" data-html2canvas-ignore>
+          <button
+            type="button"
+            className="p-1 text-slate-400 hover:text-blue-300 focus:outline-none"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            onFocus={handleMouseEnter}
+            onBlur={handleMouseLeave}
           >
             <Info size={20} strokeWidth={2} />
-          </div>
+          </button>
           <div
             className={`absolute top-6 right-0 w-max max-w-48 rounded-md bg-blue-50 p-2 text-xs shadow-md ${isExpand ? "visible opacity-100" : "invisible opacity-0"} transition-all duration-300 ease-in-out`}
           >
@@ -53,7 +56,7 @@ export default function KeyMetricsCard({
 
       {/* Info: (20260330 - Julian) 數值 */}
       <div className="flex items-baseline gap-2">
-        <span className={`text-3xl font-black ${textColor}`}>{value}</span>
+        <span className={`text-3xl font-black ${textColor} print:text-xl`}>{value}</span>
       </div>
 
       {/* Info: (20260330 - Julian) 描述 */}

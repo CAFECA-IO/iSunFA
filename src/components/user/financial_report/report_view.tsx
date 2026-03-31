@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useReactToPrint } from "react-to-print";
 import { useParams } from "next/navigation";
-
 import { Filter, Printer, Download } from "lucide-react";
 import EmbedGenerateModal from "@/components/user/financial_report/embed_generate_modal";
 import BalanceSheetView from "@/components/user/financial_report/balance_sheet_view";
@@ -12,7 +12,9 @@ import { numberWithCommas } from "@/lib/utils/common";
 import { request } from "@/lib/utils/request";
 import { downloadHtmlAsPdf } from "@/lib/utils/pdf";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
+
 export default function ReportView() {
+  const printContentRef = useRef<HTMLDivElement>(null);
   const params = useParams();
   const accountBookId = params.account_book_id as string;
 
@@ -42,72 +44,6 @@ export default function ReportView() {
     };
     fetchCountOfVerifiedVouchers();
   }, [accountBookId]);
-
-  const handleDownload = async () => {
-    // Info: (20260331 - Julian) 過濾掉需要隱藏的元素（例如工具列與重點指標 Tooltip）
-    const filter = (node: HTMLElement) => {
-      if (node?.hasAttribute && node.hasAttribute("data-html2canvas-ignore")) {
-        return false;
-      }
-      return true;
-    };
-
-    // Info: (20260331 - Julian) 設定檔名
-    const filename = `${getReportTitle(selectedReportType)}_${getReportPeriod(selectedReportPeriod)}.pdf`;
-    
-    // Info: (20260331 - Julian) 產出 PDF
-    await downloadHtmlAsPdf("report-content-to-print", filename, {filter});
-  };
-
-  const handlePrint = () => {
-    const element = document.getElementById("report-content-to-print");
-    if (!element) return;
-
-    // Create a special wrapper attached to the body to isolate printing
-    const printWrapper = document.createElement("div");
-    printWrapper.id = "print-report-wrapper";
-
-    const clone = element.cloneNode(true) as HTMLElement;
-    const toolbar = clone.querySelector('[data-html2canvas-ignore]');
-    if (toolbar) toolbar.remove();
-
-    printWrapper.appendChild(clone);
-    document.body.appendChild(printWrapper);
-
-    const style = document.createElement("style");
-    style.innerHTML = `
-      @media screen {
-        #print-report-wrapper {
-          display: none;
-        }
-      }
-      @media print {
-        body > *:not(#print-report-wrapper) {
-          display: none !important;
-        }
-        #print-report-wrapper {
-          display: block;
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-
-    // window.print();
-
-    // Clean up after print dialog finishes
-    // setTimeout(() => {
-    //   if (document.body.contains(printWrapper)) {
-    //     document.body.removeChild(printWrapper);
-    //   }
-    //   if (document.head.contains(style)) {
-    //     document.head.removeChild(style);
-    //   }
-    // }, 500);
-  };
 
   // Info: (20260330 - Julian) 報表標題
   // ToDo: (20260330 - Julian) 翻譯檔
@@ -143,6 +79,10 @@ export default function ReportView() {
     }
   };
 
+  // Info: (20260331 - Julian) 設定下載/列印檔名
+  const filename = `${getReportTitle(selectedReportType)}_${getReportPeriod(selectedReportPeriod)}.pdf`;
+
+  // Info: (20260331 - Julian) 報表資料
   const reportData = generatedConfig
     ? {
         reportTitle: getReportTitle(generatedConfig.type),
@@ -150,6 +90,35 @@ export default function ReportView() {
         currency: generatedConfig.currency,
       }
     : null;
+
+  const handleDownload = async () => {
+    try {
+      // Info: (20260331 - Julian) 過濾掉需要隱藏的元素（例如工具列與重點指標 Tooltip）
+      const filter = (node: HTMLElement) => {
+        if (
+          node?.hasAttribute &&
+          node.hasAttribute("data-html2canvas-ignore")
+        ) {
+          return false;
+        }
+        return true;
+      };
+
+      // Info: (20260331 - Julian) 產出 PDF
+      await downloadHtmlAsPdf("report-content-to-print", filename, { filter });
+    } catch (error) {
+      // Info: (20260331 - Julian) 顯示錯誤訊息
+      console.error("Error generating PDF:", error);
+    }
+  };
+
+  const handlePrint = useReactToPrint({
+    contentRef: printContentRef,
+    documentTitle: filename,
+    onAfterPrint: () => {
+      console.log("Print completed");
+    },
+  });
 
   // Info: (20260330 - Julian) 產出報表
   const handleGenerateReport = () => {
@@ -234,6 +203,58 @@ export default function ReportView() {
     }
   };
 
+  const reportContent = !generatedConfig ? (
+    <div className="flex h-full min-h-[500px] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
+      <Filter className="mb-4 h-12 w-12 text-slate-300" strokeWidth={1.5} />
+      <h3 className="text-xl font-bold tracking-widest text-slate-700">
+        尚未產出報表
+      </h3>
+      <p className="mt-2 text-sm font-medium">
+        請設定需要的報表參數，iSunFA 馬上為您產出報表
+      </p>
+    </div>
+  ) : (
+    <>
+      {/* Info: (20260331 - Julian) Toolbar */}
+      <div
+        data-html2canvas-ignore
+        className="ml-auto flex items-center gap-2 print:hidden"
+      >
+        <button
+          type="button"
+          onClick={handleDownload}
+          className="rounded-lg bg-orange-400 p-3 text-slate-800 outline-none hover:bg-orange-500 active:bg-yellow-400"
+        >
+          <Download size={20} />
+        </button>
+        <button
+          type="button"
+          onClick={handlePrint}
+          className="rounded-lg bg-orange-400 p-3 text-slate-800 outline-none hover:bg-orange-500 active:bg-yellow-400"
+        >
+          <Printer size={20} />
+        </button>
+      </div>
+
+      {/* Info: (20260330 - Julian) 報表標題 */}
+      <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-sm md:p-8">
+        <div className="absolute top-0 left-0 h-1 w-full bg-amber-500"></div>
+        <h2 className="text-2xl font-black tracking-[0.2em] md:text-3xl">
+          ISUNFA 智慧會計系統
+        </h2>
+        <h3 className="mt-2 text-xl font-bold tracking-widest text-slate-600">
+          {reportData?.reportTitle}
+        </h3>
+        <p className="mt-2 text-sm font-medium text-slate-400">
+          期間：{reportData?.reportPeriod} (單位：{reportData?.currency})
+        </p>
+      </div>
+
+      {/* Info:(20260319 - Julian) 報表內容 */}
+      {renderReportView()}
+    </>
+  );
+
   return (
     <>
       <div className="mt-6 flex flex-col gap-8 lg:flex-row">
@@ -269,60 +290,10 @@ export default function ReportView() {
         {/* Info:(20260319 - Julian) 報表內容 */}
         <div
           id="report-content-to-print"
-          className="flex w-full flex-col gap-4"
+          ref={printContentRef}
+          className="flex w-full flex-col gap-4 print:p-4"
         >
-          {!generatedConfig ? (
-            <div className="flex h-full min-h-[500px] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
-              <Filter
-                className="mb-4 h-12 w-12 text-slate-300"
-                strokeWidth={1.5}
-              />
-              <h3 className="text-xl font-bold tracking-widest text-slate-700">
-                尚未產出報表
-              </h3>
-              <p className="mt-2 text-sm font-medium">
-                請設定需要的報表參數，iSunFA 馬上為您產出報表
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Info: (20260331 - Julian) Toolbar */}
-              <div data-html2canvas-ignore className="ml-auto flex items-center gap-2 print:hidden">
-                <button
-                  type="button"
-                  onClick={handleDownload}
-                  className="rounded-lg bg-orange-400 p-3 text-slate-800 outline-none hover:bg-orange-500 active:bg-yellow-400"
-                >
-                  <Download size={20} />
-                </button>
-                <button
-                  type="button"
-                  onClick={handlePrint}
-                  className="rounded-lg bg-orange-400 p-3 text-slate-800 outline-none hover:bg-orange-500 active:bg-yellow-400"
-                >
-                  <Printer size={20} />
-                </button>
-              </div>
-
-              {/* Info: (20260330 - Julian) 報表標題 */}
-              <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-sm md:p-8">
-                <div className="absolute top-0 left-0 h-1 w-full bg-amber-500"></div>
-                <h2 className="text-2xl font-black tracking-[0.2em] md:text-3xl">
-                  ISUNFA 智慧會計系統
-                </h2>
-                <h3 className="mt-2 text-xl font-bold tracking-widest text-slate-600">
-                  {reportData?.reportTitle}
-                </h3>
-                <p className="mt-2 text-sm font-medium text-slate-400">
-                  期間：{reportData?.reportPeriod} (單位：{reportData?.currency}
-                  )
-                </p>
-              </div>
-
-              {/* Info:(20260319 - Julian) 報表內容 */}
-              {renderReportView()}
-            </>
-          )}
+          {reportContent}
         </div>
       </div>
 

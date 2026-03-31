@@ -33,11 +33,11 @@ const IncomeStatementSection = ({
   isValueNegative?: boolean;
 }) => {
   return (
-    <div className="mb-6">
+    <div className="mb-6 print:mb-2">
       {/* Info: (20260330 - Julian) 項目標題 */}
       <div className="mb-2 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-100 px-3 py-2">
         <span className="font-bold text-slate-700">{titleText}</span>
-        <span className="font-bold text-slate-700">
+        <span className="font-bold text-slate-700 text-base print:text-sm">
           {titleValue < 0
             ? `(${numberWithCommas(Math.abs(titleValue))})`
             : numberWithCommas(titleValue)}
@@ -67,7 +67,7 @@ const IncomeStatementSection = ({
                 </div>
               </div>
               <div className="flex flex-col items-end">
-                <span className="font-medium text-slate-700">
+                <span className="font-medium text-slate-700 text-base print:text-sm">
                   {item.amount < 0 || isValueNegative
                     ? `(${numberWithCommas(Math.abs(item.amount))})`
                     : numberWithCommas(item.amount)}
@@ -142,7 +142,7 @@ export default function IncomeStatementView({
   const baseRevenue = sections.revenue.total;
 
   const keyMetricsBanner = metrics ? (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 print:flex">
       <KeyMetricsCard
         title="毛利率 (Gross Margin)"
         value={`${metrics.grossMargin.toFixed(1)}%`}
@@ -219,8 +219,8 @@ export default function IncomeStatementView({
   );
 
   const operatingSection = sections ? (
-    <div className="flex flex-col gap-4">
-      <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+    <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
+      <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4">
         <div className="mb-4 flex items-end justify-between border-b-2 border-slate-200 pb-3">
           <span className="text-lg font-black tracking-wider text-slate-800 uppercase">
             營業活動 OPERATING
@@ -334,7 +334,7 @@ export default function IncomeStatementView({
       {/* Info: (20260330 - Julian) 關鍵指標 */}
       {keyMetricsBanner}
       {/* Info: (20260330 - Julian) 營業損益 & 業外損益與稅後淨利 */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 print:flex">
         {/* Info: (20260330 - Julian) 左欄：營業損益 (本業) */}
         {operatingSection}
         {/* Info: (20260330 - Julian) 右欄：業外與稅 */}
