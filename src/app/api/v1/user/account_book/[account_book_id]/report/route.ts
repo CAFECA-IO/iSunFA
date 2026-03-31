@@ -59,7 +59,7 @@ export async function GET(
 
     return jsonOk({ report });
   } catch (error) {
-    console.error("Get journals failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get journals failed");
+    console.error("Get report failed", error);
+    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get report failed");
   }
 }

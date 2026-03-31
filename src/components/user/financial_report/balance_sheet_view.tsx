@@ -261,11 +261,6 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
         {/* Info: (20260330 - Julian) 負債權益欄 */}
         {liabilitiesAndEquitySection}
       </div>
-
-      {/* Info: (20260330 - Julian) 備註 */}
-      <div className="rounded-xl border border-blue-100 bg-blue-50/50 px-4 py-3 text-center text-xs font-semibold text-blue-800 shadow-sm">
-        這是一份涵蓋關鍵數據可讀性強化的資產負債表，包含業主權益比率、權益乘數、營運資金等重要指標，讓投資人更快速理解企業體質。
-      </div>
     </div>
   );
 }

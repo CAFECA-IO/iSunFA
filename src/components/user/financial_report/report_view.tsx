@@ -1,15 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { Filter } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { Filter, Printer, Download } from "lucide-react";
 import EmbedGenerateModal from "@/components/user/financial_report/embed_generate_modal";
 import BalanceSheetView from "@/components/user/financial_report/balance_sheet_view";
 import CashFlowSheetView from "@/components/user/financial_report/cash_flow_statement_view";
 import IncomeStatementView from "@/components/user/financial_report/income_statement_view";
 import { numberWithCommas } from "@/lib/utils/common";
+import { request } from "@/lib/utils/request";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 
 export default function ReportView() {
+  const params = useParams();
+  const accountBookId = params.account_book_id as string;
+
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState<boolean>(false);
   const [selectedReportType, setSelectedReportType] = useState<ReportType>(
     ReportType.BALANCE_SHEET,
@@ -21,9 +26,29 @@ export default function ReportView() {
     period: ReportPeriod;
     currency: string;
   } | null>(null);
+  const [countOfVerifiedVouchers, setCountOfVerifiedVouchers] =
+    useState<number>(0);
 
-  // ToDo: (20260330 - Julian) 串接 API
-  const countOfVerifiedVouchers = 1245;
+  // Info: (20260331 - Julian) 從 API 取得「已核對的傳票數目」
+  useEffect(() => {
+    const fetchCountOfVerifiedVouchers = async () => {
+      const response = await request<{ payload: { count: number } }>(
+        `/api/v1/user/account_book/${accountBookId}/report/verify_voucher`,
+      );
+      if (response.payload.count) {
+        setCountOfVerifiedVouchers(response.payload.count);
+      }
+    };
+    fetchCountOfVerifiedVouchers();
+  }, [accountBookId]);
+
+  const handleDownload = () => {
+    console.log("download");
+  };
+
+  const handlePrint = () => {
+    console.log("print");
+  };
 
   // Info: (20260330 - Julian) 報表標題
   // ToDo: (20260330 - Julian) 翻譯檔
@@ -199,6 +224,24 @@ export default function ReportView() {
             </div>
           ) : (
             <>
+              {/* Info: (20260331 - Julian) Toolbar */}
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  className="rounded-lg bg-orange-400 p-3 text-slate-800 outline-none hover:bg-orange-500 active:bg-yellow-400"
+                >
+                  <Download size={20} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="rounded-lg bg-orange-400 p-3 text-slate-800 outline-none hover:bg-orange-500 active:bg-yellow-400"
+                >
+                  <Printer size={20} />
+                </button>
+              </div>
+
               {/* Info: (20260330 - Julian) 報表標題 */}
               <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-sm md:p-8">
                 <div className="absolute top-0 left-0 h-1 w-full bg-amber-500"></div>
@@ -209,7 +252,8 @@ export default function ReportView() {
                   {reportData?.reportTitle}
                 </h3>
                 <p className="mt-2 text-sm font-medium text-slate-400">
-                  期間：{reportData?.reportPeriod} (單位：{reportData?.currency})
+                  期間：{reportData?.reportPeriod} (單位：{reportData?.currency}
+                  )
                 </p>
               </div>
 

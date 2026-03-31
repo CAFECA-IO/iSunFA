@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Lightbulb } from "lucide-react";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -296,43 +295,6 @@ export default function IncomeStatementView({
         {operatingSection}
         {/* Info: (20260330 - Julian) 右欄：業外與稅 */}
         {nonOperatingSection}
-      </div>
-
-      {/* Info: (20260330 - Julian) 讀取能力與擴充指標備註清單 */}
-      <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-5 text-sm leading-relaxed font-medium text-blue-900 shadow-sm">
-        <h4 className="mb-2 flex items-center gap-2 truncate border-b border-blue-200 pb-2 text-base font-black text-blue-800">
-          <Lightbulb size={20} />
-          <span>綜合損益表分析升級：投資人洞察數據</span>
-        </h4>
-        <p className="mb-3 text-slate-700">
-          綜合損益表除了能呈現基本的營業收入、營業毛利、營業利益、稅後淨利、每股盈餘、毛利率、營益率、淨利率外，還能透過以下進階數據強化對企業的理解：
-        </p>
-        <ul className="list-disc space-y-1.5 pl-5 text-slate-600 marker:text-blue-500">
-          <li>
-            <strong>EBITDA (稅息折舊及攤銷前利潤) 及 EBITDA利潤率：</strong>{" "}
-            排除非現金費用(折舊)影響，更貼切反映企業的核心現金創造能力。
-          </li>
-          <li>
-            <strong>利息保障倍數 (Interest Coverage Ratio)：</strong>{" "}
-            衡量企業營業利益能覆蓋利息支出的倍數，評估其債務償還能力及財務健康度。
-          </li>
-          <li>
-            <strong>營業費用率 (Operating Expense Ratio)：</strong>{" "}
-            評估企業控制推銷及管理研發成本的效率，反映經營槓桿水準。
-          </li>
-          <li>
-            <strong>業外收支佔比 (Non-Operating Ratio)：</strong>{" "}
-            檢視企業是否過度依賴非本業(如投資、匯兌)之收益而影響整體財報品質。
-          </li>
-          <li>
-            <strong>稅前淨利及有效稅率 (Effective Tax Rate)：</strong>{" "}
-            了解企業稅賦負擔情形與是否有遞延所得稅抵減。
-          </li>
-          <li>
-            <strong>各項成本/費用的結構變化與 YoY 成長率：</strong>{" "}
-            包括營收成長率與費用變化率，以進行趨勢分析(Trend Analysis)。
-          </li>
-        </ul>
       </div>
     </div>
   );

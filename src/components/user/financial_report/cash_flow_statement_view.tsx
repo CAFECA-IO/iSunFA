@@ -305,10 +305,6 @@ export default function CashFlowSheetView({
         {/* Info: (20260330 - Julian) 右側：籌資活動與現金變動摘要 */}
         {financingCashFlowSection}
       </div>
-      {/* Info: (20260330 - Julian) 備註 */}
-      <div className="rounded-xl border border-blue-100 bg-blue-50/50 px-4 py-3 text-center text-xs font-semibold text-blue-800 shadow-sm">
-        此為強化可讀性的現金流量表，除營業、投資、籌資現金流外，更提供期初與期末餘額、自由現金流、相關財務比率及利息稅務等補充揭露，協助投資人快速掌握企業資金動能。
-      </div>
     </div>
   );
 }
