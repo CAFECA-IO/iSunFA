@@ -10,35 +10,37 @@ export function generateCashFlowStatement(
   const investingItems = new Map<string, { name: string; amount: number }>();
   const financingItems = new Map<string, { name: string; amount: number }>();
 
-  // Info: (20260330 - Julian) 輔助函式：加入項目 (amount > 0 表現金流入, amount < 0 表現金流出)
+  // Info: (20260330 - Julian) 加入項目：amount > 0 表現金流入, amount < 0 表現金流出
   const addItem = (map: Map<string, { name: string; amount: number }>, name: string, amount: number) => {
     if (amount === 0) return;
     const current = map.get(name)?.amount || 0;
     map.set(name, { name, amount: current + amount });
   };
 
+  // Info: (20260330 - Julian) 關鍵指標
   let netIncome = 0;
   let depreciationAndAmortization = 0;
   let capitalExpenditure = 0;
 
+  // Info: (20260330 - Julian) 補充揭露
   let interestPaid = 0;
   let taxesPaid = 0;
 
-  let currentLiabilitiesTotal = 0; // Info: (20260330 - Julian) 用於計算營業現金流對流動負債比率
+  // Info: (20260330 - Julian) 計算營業現金流對流動負債比率
+  let currentLiabilitiesTotal = 0; 
   
-  // Info: (20260330 - Julian) 篩選有效傳票
-  const validVouchers = vouchers.filter(
+  // Info: (20260331 - Julian) 篩選「已核對」的傳票
+  const verifyVouchers = vouchers.filter(
     (v) => !v.isDeleted && v.isVerified && v.analysisStatus === AIAnalysisStatus.COMPLETED
   );
 
-  validVouchers.forEach((voucher) => {
+  verifyVouchers.forEach((voucher) => {
     voucher.lineItems.lines.forEach((line) => {
+      // Info: (20260331 - Julian) 確保有會計科目且借貸方有值
       if (!line.accounting || line.isDebit === null) return;
       
-      const code = line.accounting.code;
-      const isDebit = line.isDebit;
-      const amount = line.amount;
-      const name = line.accounting.name;
+      // Info: (20260331 - Julian) 解構
+      const { accounting: { code, name }, isDebit, amount } = line;
 
       /* Info: (20260330 - Julian)
        * 1. 資產增加(借方)代表現金流出，減少(貸方)代表現金流入
@@ -46,12 +48,12 @@ export function generateCashFlowStatement(
        * 3. 費損增加(借方)代表減少淨利
       */
       
-      const revExpImpact = isDebit ? -amount : amount; // Info: (20260330 - Julian) 收益/費損對淨利的影響
-      const assetLiabImpact = isDebit ? -amount : amount; // Info: (20260330 - Julian) 資產負債表科目對現金流的直接與間接影響 (除了現金)
+      // Info: (20260331 - Julian) 現金或淨利影響：貸方 = 現金流入/淨利增加 = 正向，借方 = 現金流出/淨利減少 = 負向
+      const impact = isDebit ? -amount : amount;
 
       // Info: (20260330 - Julian) 1. 計算應計基礎淨利 (Net Income)
       if (code.startsWith('4') || code.startsWith('5') || code.startsWith('6') || code.startsWith('7') || code.startsWith('8')) {
-        netIncome += revExpImpact;
+        netIncome += impact;
         
         // Info: (20260330 - Julian) 分離折舊與攤銷 (非現金費用加回)
         if (name.includes('折舊') || name.includes('攤銷')) {
@@ -65,21 +67,24 @@ export function generateCashFlowStatement(
 
       // Info: (20260330 - Julian) 2. 營業活動 - 營運營運資金變動
       if (code.startsWith('11') || code.startsWith('12')) {
-        if (!code.startsWith('110')) { // Info: (20260330 - Julian) 排除現金
-          addItem(operatingItems, `[營運資金] ${name}變動`, assetLiabImpact);
+        // Info: (20260331 - Julian) 排除現金
+        if (!code.startsWith('110')) { 
+          addItem(operatingItems, `[營運資金] ${name}變動`, impact);
         }
       } else if (code.startsWith('13') || code.startsWith('14')) {
-        if (code.startsWith('13')) { // 存貨
-          addItem(operatingItems, `[營運資金] ${name}變動`, assetLiabImpact);
+        // Info: (20260331 - Julian) 存貨
+        if (code.startsWith('13')) { 
+          addItem(operatingItems, `[營運資金] ${name}變動`, impact);
         }
       }
       
       // Info: (20260330 - Julian) 流動負債變動 (營業活動)
       if (code.startsWith('21') || code.startsWith('22')) {
-        if (code.startsWith('212')) { // Info: (20260330 - Julian) 短期借款歸類融資
-            addItem(financingItems, `短期借款變動`, assetLiabImpact);
+        // Info: (20260330 - Julian) 短期借款歸類融資
+        if (code.startsWith('212')) { 
+            addItem(financingItems, `短期借款變動`, impact);
         } else {
-            addItem(operatingItems, `[營運資金] ${name}變動`, assetLiabImpact);
+            addItem(operatingItems, `[營運資金] ${name}變動`, impact);
         }
         if (isDebit) currentLiabilitiesTotal -= amount;
         else currentLiabilitiesTotal += amount;
@@ -87,7 +92,6 @@ export function generateCashFlowStatement(
 
       // Info: (20260330 - Julian) 3. 投資活動
       if (code.startsWith('15') || code.startsWith('16') || code.startsWith('17') || code.startsWith('18') || code.startsWith('19')) {
-         const impact = assetLiabImpact;
          // Info: (20260330 - Julian) 粗略算資本支出 (不動產廠房設備增加=借方)
          if (isDebit && (code.startsWith('15') || code.startsWith('16'))) {
              capitalExpenditure += amount; 
@@ -96,32 +100,32 @@ export function generateCashFlowStatement(
       }
       // Info: (20260330 - Julian) 長期投資
       if (code.startsWith('14')) {
-         addItem(investingItems, `長期投資變動`, assetLiabImpact);
+         addItem(investingItems, `長期投資變動`, impact);
       }
 
       // Info: (20260330 - Julian) 4. 籌資活動 (融資)
       if (code.startsWith('25') || code.startsWith('26') || code.startsWith('28') || code.startsWith('29')) {
-         addItem(financingItems, `長期負債變動: ${name}`, assetLiabImpact);
+         addItem(financingItems, `長期負債變動: ${name}`, impact);
       }
       if (code.startsWith('3')) {
          if (code.startsWith('33')) {
-           // Info: (20260330 - Julian) 保留盈餘變動可能包含本期損益結轉及發放股利。
-           // Info: (20260330 - Julian) 這裡簡化處理：如果有名稱含"股利"，則列入融資流出
+           // Info: (20260330 - Julian) 保留盈餘變動可能包含本期損益結轉及發放股利。這裡簡化處理：如果有名稱含「股利」，則列入融資流出
            if (name.includes('股利')) {
-             addItem(financingItems, `發放股利 (${name})`, assetLiabImpact);
+             addItem(financingItems, `發放股利 (${name})`, impact);
            }
          } else {
-           addItem(financingItems, `權益變動: ${name}`, assetLiabImpact);
+           addItem(financingItems, `權益變動: ${name}`, impact);
          }
       }
     });
   });
 
-  // Info: (20260330 - Julian) 組合 Operating Items (首項為本期淨利與折舊加回)
+  // Info: (20260330 - Julian) 轉換 Map 為 ICashFlowStatementItem[] (首項為本期淨利與折舊加回)
   const mapToArray = (map: Map<string, { name: string; amount: number }>): ICashFlowStatementItem[] => {
       return Array.from(map.values()).filter(i => i.amount !== 0);
   };
 
+  // Info: (20260331 - Julian) 組合「營業項目」數據
   const finalOperatingItems: ICashFlowStatementItem[] = [];
   finalOperatingItems.push({ name: '本期稅後淨利', amount: netIncome });
   if (depreciationAndAmortization !== 0) {

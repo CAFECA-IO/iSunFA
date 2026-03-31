@@ -1,6 +1,7 @@
 import { IVoucher } from "@/interfaces/voucher";
 import { IBalanceSheet, IBalanceSheetItem } from "@/interfaces/balance_sheet";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { safeDivide } from "@/lib/utils/math";
 
 export function generateBalanceSheet(
   vouchers: IVoucher[],
@@ -10,16 +11,18 @@ export function generateBalanceSheet(
   const liabilityMap = new Map<string, { name: string; amount: number; isCurrent: boolean }>();
   const equityMap = new Map<string, { name: string; amount: number }>();
 
+  // Info: (20260331 - Julian) 總計
   let totalAssets = 0;
   let totalLiabilities = 0;
   let totalEquity = 0;
 
+  // Info: (20260331 - Julian) 「流動」與「非流動」總計
   let currentAssetsTotal = 0;
   let nonCurrentAssetsTotal = 0;
   let currentLiabilitiesTotal = 0;
   let nonCurrentLiabilitiesTotal = 0;
 
-  // Info: (20260330 - Julian) 關鍵指標計算所需變數
+  // Info: (20260331 - Julian) 關鍵指標
   let inventoryTotal = 0;
   let accountsReceivableTotal = 0;
   let cashTotal = 0;
@@ -29,33 +32,33 @@ export function generateBalanceSheet(
   let intangibleAssetsTotal = 0;
   let retainedEarningsTotal = 0;
 
-  // Info: (20260330 - Julian) 篩選有效的傳票
-  const validVouchers = vouchers.filter(
+  // Info: (20260331 - Julian) 篩選「已核對」的傳票
+  const verifyVouchers = vouchers.filter(
     (v) => !v.isDeleted && v.isVerified && v.analysisStatus === AIAnalysisStatus.COMPLETED
   );
 
-  validVouchers.forEach((voucher) => {
+  verifyVouchers.forEach((voucher) => {
     voucher.lineItems.lines.forEach((line) => {
+      // Info: (20260331 - Julian) 確保有會計科目且借貸方有值
       if (!line.accounting || !line.isDebit === null) return;
       
-      const code = line.accounting.code;
-      const isDebit = line.isDebit;
-      const amount = line.amount;
-      const name = line.accounting.name;
+      // Info: (20260331 - Julian) 解構
+      const { accounting: { code, name }, isDebit, amount } = line;
 
-      // Info: (20260330 - Julian) 根據標準臺灣會計編碼規則分組 (1: 資產, 2: 負債, 3: 權益)
+      // Info: (20260331 - Julian) 根據標準臺灣會計編碼規則分組 (1: 資產, 2: 負債, 3: 權益)
       const isAsset = code.startsWith('1');
       const isLiability = code.startsWith('2');
       const isEquity = code.startsWith('3');
 
-      // Info: (20260330 - Julian) 流動與非流動資產的進一步細分
+      // Info: (20260331 - Julian) 進一步細分「流動」與「非流動」資產
       const isCurrentAsset = isAsset && (code.startsWith('11') || code.startsWith('12') || code.startsWith('13') || code.startsWith('14'));
       const isCurrentLiability = isLiability && (code.startsWith('21') || code.startsWith('22'));
       
+      // Info: (20260331 - Julian) 借貸方向
       const impact = isDebit ? amount : -amount;
 
       if (isAsset) {
-        // Info: (20260330 - Julian) 資產增加在借方
+        // Info: (20260331 - Julian) ========= 資產增加在借方 =========
         const currentAmount = assetMap.get(code)?.amount || 0;
         assetMap.set(code, { name, amount: currentAmount + impact, isCurrent: isCurrentAsset });
         totalAssets += impact;
@@ -69,28 +72,29 @@ export function generateBalanceSheet(
         }
 
       } else if (isLiability) {
-        // Info: (20260330 - Julian) 負債增加在貸方 (透過借方邏輯產生負面影響 => 所以反轉它)
+        // Info: (20260331 - Julian) ========= 負債增加在貸方 =========
         const currentAmount = liabilityMap.get(code)?.amount || 0;
         liabilityMap.set(code, { name, amount: currentAmount - impact, isCurrent: isCurrentLiability });
         totalLiabilities -= impact;
 
-        // Info: (20260330 - Julian) 粗略估計有息負債 (短期及長期借款)
+        // Info: (20260331 - Julian) 粗略估計有息負債 (短期及長期借款)
         if (code.startsWith('212') || code.startsWith('253') || name.includes('借款') || name.includes('公司債')) {
           interestBearingDebtTotal -= impact;
         }
 
       } else if (isEquity) {
-        // Info: (20260330 - Julian) 權益增加在貸方
+        // Info: (20260331 - Julian) ========= 權益增加在貸方 ========= 
         const currentAmount = equityMap.get(code)?.amount || 0;
         equityMap.set(code, { name, amount: currentAmount - impact });
         totalEquity -= impact;
         
-        if (code.startsWith('33')) retainedEarningsTotal -= impact; // Info: (20260330 - Julian) 保留盈餘
+        // Info: (20260331 - Julian) 保留盈餘
+        if (code.startsWith('33')) retainedEarningsTotal -= impact; 
       }
     });
   });
 
-  // Info: (20260330 - Julian) 將 Map 轉換為排序後的陣列
+  // Info: (20260331 - Julian) 轉換 Map 為 IBalanceSheetItem[]
   const mapToArray = (
     map: Map<string, { name: string; amount: number; isCurrent?: boolean }>, 
     baseTotal: number,
@@ -109,21 +113,19 @@ export function generateBalanceSheet(
       .map(({ code, name, amount, percentageOfAssetOrLiabEquity }) => ({ code, name, amount, percentageOfAssetOrLiabEquity }));
   };
 
+  // Info: (20260331 - Julian) 整理資產、負債、權益數據
   const currentAssetsItems = mapToArray(assetMap, totalAssets, (item) => item.isCurrent === true);
   const nonCurrentAssetsItems = mapToArray(assetMap, totalAssets, (item) => item.isCurrent === false);
   const currentLiabilitiesItems = mapToArray(liabilityMap, totalLiabilities + totalEquity, (item) => item.isCurrent === true);
   const nonCurrentLiabilitiesItems = mapToArray(liabilityMap, totalLiabilities + totalEquity, (item) => item.isCurrent === false);
   const equityItems = mapToArray(equityMap, totalLiabilities + totalEquity);
 
+  // Info: (20260331 - Julian) 計算各項總計
   currentAssetsTotal = currentAssetsItems.reduce((acc, curr) => acc + curr.amount, 0);
   nonCurrentAssetsTotal = nonCurrentAssetsItems.reduce((acc, curr) => acc + curr.amount, 0);
   currentLiabilitiesTotal = currentLiabilitiesItems.reduce((acc, curr) => acc + curr.amount, 0);
   nonCurrentLiabilitiesTotal = nonCurrentLiabilitiesItems.reduce((acc, curr) => acc + curr.amount, 0);
-  
   longTermFundsTotal = totalEquity + nonCurrentLiabilitiesTotal;
-
-  // Info: (20260330 - Julian) 安全除法：避免除以 0
-  const safeDivide = (num: number, den: number) => (den === 0 ? 0 : num / den);
 
   // Info: (20260330 - Julian) 計算各項財務比率
   const metrics = {
@@ -134,7 +136,7 @@ export function generateBalanceSheet(
     longTermFundsToFixedAssetsRatio: safeDivide(longTermFundsTotal, fixedAssetsTotal) * 100,
     workingCapital: currentAssetsTotal - currentLiabilitiesTotal,
     cashRatio: safeDivide(cashTotal, currentLiabilitiesTotal) * 100,
-    netWorthPerShare: 0, // Info: (20260330 - Julian) 外部資料，目前預設為 0
+    netWorthPerShare: 0, // TODO: (20260330 - Julian) 外部資料，目前預設為 0
     retainedEarningsRatio: safeDivide(retainedEarningsTotal, totalEquity) * 100,
     intangibleAssetsRatio: safeDivide(intangibleAssetsTotal, totalAssets) * 100,
     equityRatio: safeDivide(totalEquity, totalAssets) * 100,
