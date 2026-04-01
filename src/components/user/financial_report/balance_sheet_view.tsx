@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
-import { Info } from "lucide-react";
 import { IBalanceSheetItem, IBalanceSheet } from "@/interfaces/balance_sheet";
 import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
+import ReportPrintNote, { IReportNote } from "@/components/user/financial_report/report_print_note";
 import { numberWithCommas } from "@/lib/utils/common";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import {
@@ -79,33 +79,6 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
   const [reportData, setReportData] = useState<IBalanceSheet | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const balanceSheetTooltip = [
-    {
-      title: "流動比率 (Current Ratio)",
-      type: "流動性",
-      description:
-        "流動比率 = 流動資產 / 流動負債。衡量企業短期償債能力，建議大於 200% ，表示償債能力良好。",
-    },
-    {
-      title: "負債比率 (Debt Ratio)",
-      type: "償債能力",
-      description:
-        "負債比率 = 總負債 / 總資產。衡量企業償債能力，建議小於 50% ，表示償債能力良好。",
-    },
-    {
-      title: "權益乘數 (Equity Multiplier)",
-      type: "償債能力",
-      description:
-        "權益乘數 = 總資產 / 總權益。衡量企業財務槓桿程度，建議小於 2 ，表示財務槓桿程度良好。",
-    },
-    {
-      title: "營運資金 (Working Capital)",
-      type: "流動性",
-      description:
-        "營運資金 = 流動資產 - 流動負債。衡量企業短期償債能力，建議大於 0 ，表示償債能力良好。",
-    },
-  ];
-
   useEffect(() => {
     if (accountBookId) {
       const fetchSummary = async () => {
@@ -150,64 +123,92 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
   // Info: (20260330 - Julian) 解構報表資料
   const { assets, liabilities, equity, metrics } = reportData;
 
+  // Info: (20260401 - Julian) 關鍵指標註解
+  const balanceSheetNotes: IReportNote[] = [
+    {
+      title: "流動比率 (Current Ratio)",
+      type: "流動性",
+      mainDesc: "流動比率 = 流動資產 / 流動負債。",
+      subDesc:
+        "衡量企業短期償債能力，建議大於 200% ，表示償債能力良好。",
+    },
+    {
+      title: "負債比率 (Debt Ratio)",
+      type: "償債能力",
+      mainDesc: "負債比率 = 總負債 / 總資產。",
+      subDesc:
+        "衡量企業償債能力，建議小於 50% ，表示償債能力良好。",
+    },
+    {
+      title: "權益乘數 (Equity Multiplier)",
+      type: "償債能力",
+      mainDesc: "權益乘數 = 總資產 / 總權益。",
+      subDesc:
+        "衡量企業財務槓桿程度，建議小於 2 ，表示財務槓桿程度良好。",
+    },
+    {
+      title: "營運資金 (Working Capital)",
+      type: "流動性",
+      mainDesc: "營運資金 = 流動資產 - 流動負債。",
+      subDesc:
+        "衡量企業短期償債能力，建議大於 0，表示償債能力良好。",
+    },
+  ]
+
+  // Info: (20260401 - Julian) 資產負債表關鍵指標
+  const balanceKeyMetricsData = [
+    {
+      title: "流動比率 (Current Ratio)",
+      value: `${metrics.currentRatio.toFixed(1)}%`,
+      description: "企業短期償債能力 (建議 > 200%)",
+      textColor: "text-cyan-600",
+      statusGood: metrics.currentRatio > 200,
+    },
+    {
+      title: "負債比率 (Debt Ratio)",
+      value: `${metrics.debtRatio.toFixed(1)}%`,
+      description: "資產由債務支應的比例",
+      textColor: "text-indigo-600",
+      statusGood: metrics.debtRatio < 0.5,
+    },
+    {
+      title: "權益乘數 (Equity Multiplier)",
+      value: `${metrics.equityMultiplier.toFixed(2)}x`,
+      description: "財務槓桿程度",
+      textColor: "text-amber-600",
+      statusGood: metrics.equityMultiplier < 2,
+    },
+    {
+      title: "營運資金 (Working Capital)",
+      value: `$${numberWithCommas(metrics.workingCapital)}`,
+      description: "企業短期償債能力",
+      textColor: "text-rose-600",
+      statusGood: metrics.workingCapital > 0,
+    },
+  ];
+
   const keyMetricsBanner = metrics ? (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 print:flex">
-      <KeyMetricsCard
-        title="流動比率 (Current Ratio)"
-        value={`${metrics.currentRatio.toFixed(1)}%`}
-        description="企業短期償債能力 (建議 > 200%)"
-        textColor="text-emerald-600"
-        tooltip={
-          <>
-            <span className="font-bold">流動比率 = 流動資產 / 流動負債。</span>
-            <br />
-            <span>
-              衡量企業短期償債能力，建議大於 200% ，表示償債能力良好。
-            </span>
-          </>
-        }
-      />
-      <KeyMetricsCard
-        title="負債比率 (Debt Ratio)"
-        value={`${metrics.debtRatio.toFixed(1)}%`}
-        description="資產由債務支應的比例"
-        textColor="text-indigo-600"
-        tooltip={
-          <>
-            <span className="font-bold">負債比率 = 總負債 / 總資產。</span>
-            <br />
-            <span>衡量企業償債能力，建議小於 50% ，表示償債能力良好。</span>
-          </>
-        }
-      />
-      <KeyMetricsCard
-        title="權益乘數 (Equity Multiplier)"
-        value={`${metrics.equityMultiplier.toFixed(2)}x`}
-        description="財務槓桿程度"
-        textColor="text-amber-600"
-        tooltip={
-          <>
-            <span className="font-bold">權益乘數 = 總資產 / 總權益。</span>
-            <br />
-            <span>
-              衡量企業財務槓桿程度，建議小於 2 ，表示財務槓桿程度良好。
-            </span>
-          </>
-        }
-      />
-      <KeyMetricsCard
-        title="營運資金 (Working Capital)"
-        value={numberWithCommas(metrics.workingCapital)}
-        description="可用於日常營運之淨資金"
-        textColor="text-slate-700"
-        tooltip={
-          <>
-            <span className="font-bold">營運資金 = 流動資產 - 流動負債。</span>
-            <br />
-            <span>衡量企業短期償債能力，建議大於 0 ，表示償債能力良好。</span>
-          </>
-        }
-      />
+      {balanceKeyMetricsData.map((metric) => {
+        const note = balanceSheetNotes.find((note) => note.title === metric.title);
+       return (
+        <KeyMetricsCard
+          key={metric.title}
+          title={metric.title}
+          value={metric.value}
+          description={metric.description}
+          textColor={metric.textColor}
+          statusGood={metric.statusGood}
+          tooltip={
+            <>
+              <span className="font-bold">{note?.mainDesc}</span>
+              <br />
+              <span>{note?.subDesc}</span>
+            </>
+          }
+        />
+      )
+      })}
     </div>
   ) : (
     <div className="flex h-[150px] w-full items-center justify-center rounded-2xl bg-white p-5">
@@ -323,28 +324,7 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
       </div>
 
       {/* Info: (20260330 - Julian) 財務指標註解與判斷標準（列印時顯示） */}
-      <div className="hidden flex-col gap-6 rounded-2xl bg-blue-100 px-6 py-4 print:my-4 print:flex print:break-before-page">
-        <div className="flex items-center gap-2 text-lg font-bold">
-          <Info size={24} className="text-blue-600" />
-          <p className="text-slate-800">財務指標註解與判斷標準</p>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          {balanceSheetTooltip.map((item) => (
-            <div
-              key={item.title}
-              className="flex flex-col gap-1 text-slate-800"
-            >
-              <div className="flex items-center gap-2 text-sm font-bold text-blue-600">
-                <p>{item.title}</p>
-                <p className="rounded-md bg-blue-200 px-1.5 py-0.5 text-xs text-slate-600">
-                  {item.type}
-                </p>
-              </div>
-              <span className="text-xs text-slate-700">{item.description}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <ReportPrintNote notes={balanceSheetNotes} />
     </div>
   );
 }

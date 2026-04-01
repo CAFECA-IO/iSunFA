@@ -9,6 +9,9 @@ import {
   ICashFlowStatement,
 } from "@/interfaces/cash_flow_statement";
 import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
+import ReportPrintNote, {
+  IReportNote,
+} from "@/components/user/financial_report/report_print_note";
 import { numberWithCommas } from "@/lib/utils/common";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import {
@@ -68,7 +71,7 @@ const CashFlowSection = ({
               </div>
               <div className="flex flex-col items-end">
                 <span
-                  className={`font-medium text-base print:text-sm ${isNegative ? "text-rose-600" : "text-slate-700"}`}
+                  className={`text-base font-medium print:text-sm ${isNegative ? "text-rose-600" : "text-slate-700"}`}
                 >
                   {isNegative ? "-" : ""}
                   {numberWithCommas(displayAmount)}
@@ -142,6 +145,68 @@ export default function CashFlowSheetView({
   // Info: (20260330 - Julian) 解構報表資料
   const { metrics, activities, summary, supplementary } = reportData;
 
+  // Info: (20260401 - Julian) 關鍵指標註解
+  const cashFlowNotes: IReportNote[] = [
+    {
+      title: "自由現金流 (Free Cash Flow)",
+      type: "流動性",
+      mainDesc: "自由現金流 = 營業現金流 - 資本支出。",
+      subDesc:
+        "衡量企業扣除資本支出後可自由運用的現金，建議大於 0，表示償債能力良好。",
+    },
+    {
+      title: "營業現金流對流動負債比率",
+      type: "償債能力",
+      mainDesc: "營業現金流對流動負債比率 = 營業現金流 / 流動負債。",
+      subDesc: "衡量企業短期償還債務的能力，建議大於 100% ，表示償債能力良好。",
+    },
+    {
+      title: "現金流量對總資產比率",
+      type: "償債能力",
+      mainDesc: "現金流量對總資產比率 = 營業現金流 / 總資產。",
+      subDesc:
+        "衡量企業營業現金是否足以支應資本支出及還債，建議大於 100%，表示償債能力良好。",
+    },
+    {
+      title: "期末現金餘額",
+      type: "償債能力",
+      mainDesc: "期末現金餘額 = 營業現金流 + 投資現金流 + 融資現金流。",
+      subDesc: "衡量企業本期結束時的現金部位，建議大於 0 ，表示償債能力良好。",
+    },
+  ];
+
+  // Info: (20260401 - Julian) 現金流量表關鍵指標
+  const cashFlowKeyMetricsData = [
+    {
+      title: "自由現金流 (Free Cash Flow)",
+      value: `$${numberWithCommas(metrics.freeCashFlow)}`,
+      description: "企業扣除資本支出後可自由運用的現金",
+      textColor: "text-cyan-600",
+      statusGood: metrics.freeCashFlow >= 0,
+    },
+    {
+      title: "營業現金流對流動負債比率",
+      value: `${metrics.operatingCashFlowRatio.toFixed(1)}%`,
+      description: "短期償還債務的能力",
+      textColor: "text-indigo-600",
+      statusGood: metrics.operatingCashFlowRatio >= 100,
+    },
+    {
+      title: "現金流量對總資產比率",
+      value: `${metrics.cashFlowAdequacyRatio.toFixed(1)}%`,
+      description: "營業現金是否足以支應資本支出及還債",
+      textColor: "text-amber-600",
+      statusGood: metrics.cashFlowAdequacyRatio >= 100,
+    },
+    {
+      title: "期末現金餘額",
+      value: `$${numberWithCommas(summary.endingBalance)}`,
+      description: "本期結束時的現金部位",
+      textColor: "text-slate-700",
+      statusGood: summary.endingBalance >= 0,
+    },
+  ];
+
   // Info: (20260330 - Julian) 計算每個活動區塊內項目的絕對值總計，用於畫進度條
   const getTotalAbsolute = (items: ICashFlowStatementItem[]) =>
     items.reduce((acc, curr) => acc + Math.abs(curr.amount), 0);
@@ -153,78 +218,26 @@ export default function CashFlowSheetView({
 
   const keyMetricsBanner = metrics ? (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 print:flex">
-      <KeyMetricsCard
-        title="自由現金流 (Free Cash Flow)"
-        value={`$${numberWithCommas(metrics.freeCashFlow)}`}
-        description="企業扣除資本支出後可自由運用的現金"
-        textColor={
-          metrics.freeCashFlow >= 0 ? "text-emerald-600" : "text-rose-600"
-        }
-        tooltip={
-          <>
-            <span className="font-bold">
-              自由現金流 = 營業現金流 - 資本支出。
-            </span>
-            <br />
-            <span>
-              衡量企業扣除資本支出後可自由運用的現金，建議大於 0
-              ，表示償債能力良好。
-            </span>
-          </>
-        }
-      />
-      <KeyMetricsCard
-        title="營業現金流對流動負債比率"
-        value={`${metrics.operatingCashFlowRatio.toFixed(1)}%`}
-        description="短期償還債務的能力 (建議 > 100%)"
-        textColor="text-indigo-600"
-        tooltip={
-          <>
-            <span className="font-bold">
-              營業現金流對流動負債比率 = 營業現金流 / 流動負債。
-            </span>
-            <br />
-            <span>
-              衡量企業短期償還債務的能力，建議大於 100% ，表示償債能力良好。
-            </span>
-          </>
-        }
-      />
-      <KeyMetricsCard
-        title="現金流量允當比率"
-        value={`${metrics.cashFlowAdequacyRatio.toFixed(1)}%`}
-        description="營業現金是否足以支應資本支出及還債"
-        textColor="text-amber-600"
-        tooltip={
-          <>
-            <span className="font-bold">
-              現金流量允當比率 = 營業現金流 / (資本支出 + 償債金額)。
-            </span>
-            <br />
-            <span>
-              衡量企業營業現金是否足以支應資本支出及還債，建議大於 100%
-              ，表示償債能力良好。
-            </span>
-          </>
-        }
-      />
-      <KeyMetricsCard
-        title="期末現金餘額"
-        value={`$${numberWithCommas(summary.endingBalance)}`}
-        description="本期結束時的現金部位"
-        textColor="text-slate-700"
-        tooltip={
-          <>
-            <span className="font-bold">
-              期末現金餘額 = 營業現金流 + 投資現金流 + 融資現金流。
-            </span>
-            <br />
-            <span>
-              衡量企業本期結束時的現金部位，建議大於 0 ，表示償債能力良好。
-            </span>
-          </>
-        }
-      />
+      {cashFlowKeyMetricsData.map((metric) => {
+        const note = cashFlowNotes.find((note) => note.title === metric.title);
+        return (
+          <KeyMetricsCard
+            key={metric.title}
+            title={metric.title}
+            value={metric.value}
+            description={metric.description}
+            textColor={metric.textColor}
+            statusGood={metric.statusGood}
+            tooltip={
+              <>
+                <span className="font-bold">{note?.mainDesc}</span>
+                <br />
+                <span>{note?.subDesc}</span>
+              </>
+            }
+          />
+        );
+      })}
     </div>
   ) : (
     <div className="flex h-[150px] w-full items-center justify-center rounded-2xl bg-white p-5">
@@ -351,6 +364,9 @@ export default function CashFlowSheetView({
         {/* Info: (20260330 - Julian) 右側：籌資活動與現金變動摘要 */}
         {financingCashFlowSection}
       </div>
+
+      {/* Info: (20260401 - Julian) 財務指標註解與判斷標準（列印時顯示） */}
+      <ReportPrintNote notes={cashFlowNotes} />
     </div>
   );
 }
