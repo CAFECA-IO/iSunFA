@@ -36,7 +36,7 @@ const CashFlowSection = ({
   isMainTotal?: boolean;
 }) => {
   return (
-    <div className={`mb-6 print:mb-2 ${isMainTotal ? "mt-4" : ""}`}>
+    <div className={`mb-6 print:mb-2 print:break-inside-avoid ${isMainTotal ? "mt-4" : ""}`}>
       <div className="mb-2 flex items-center justify-between rounded-lg bg-slate-200 px-3 py-2">
         <span className="font-bold text-slate-700">{titleText}</span>
         <span
@@ -57,7 +57,7 @@ const CashFlowSection = ({
               className="flex items-center justify-between border-b border-slate-50 py-2"
             >
               <div className="flex w-2/3 flex-col">
-                <span className="text-[15px] font-medium text-slate-600">
+                <span className="text-[15px] font-medium text-slate-600 print:text-sm">
                   {item.name}
                 </span>
                 <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
@@ -246,8 +246,8 @@ export default function CashFlowSheetView({
   );
 
   const operatingInvestingSection = activities ? (
-    <div className="flex flex-col gap-4 print:w-1/2">
-      <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4">
+    <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
+      <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4 box-decoration-clone">
         <div className="mb-4 flex items-end justify-between border-b-2 border-slate-200 pb-3">
           <span className="text-lg font-black tracking-wider text-slate-800 uppercase">
             營業與投資活動
@@ -280,8 +280,8 @@ export default function CashFlowSheetView({
 
   const financingCashFlowSection =
     activities && summary && supplementary ? (
-      <div className="flex flex-col gap-4 print:w-1/2">
-        <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4">
+      <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
+        <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4 box-decoration-clone">
           <div className="mb-4 flex items-end justify-between border-b-2 border-slate-200 pb-3">
             <span className="text-lg font-black tracking-wider text-slate-800 uppercase">
               籌資活動與現金變動
@@ -297,7 +297,7 @@ export default function CashFlowSheetView({
             barColor="bg-amber-400"
           />
 
-          <div className="mt-8 rounded-xl border border-slate-100 bg-slate-50 p-4">
+          <div className="mt-8 rounded-xl border border-slate-100 bg-slate-50 p-4 print:break-inside-avoid">
             <div className="flex items-center justify-between border-b border-slate-200 py-2">
               <span className="text-sm font-bold text-slate-500">
                 期初現金及約當現金餘額
@@ -328,7 +328,7 @@ export default function CashFlowSheetView({
           </div>
 
           {/* Info: (20260330 - Julian) 補充揭露 */}
-          <div className="mt-8 flex justify-around rounded-xl border border-indigo-100 bg-indigo-50/50 p-4">
+          <div className="mt-8 flex justify-around rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 print:break-inside-avoid">
             <div className="text-center">
               <div className="mb-1 text-xs font-bold text-indigo-400">
                 本期支付利息
@@ -358,7 +358,7 @@ export default function CashFlowSheetView({
     <div className="flex flex-col gap-4">
       {/* Info: (20260330 - Julian) 關鍵指標 */}
       {keyMetricsBanner}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 print:flex">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 print:flex print:items-start">
         {/* Info: (20260330 - Julian) 左側：營業活動與投資活動 */}
         {operatingInvestingSection}
         {/* Info: (20260330 - Julian) 右側：籌資活動與現金變動摘要 */}

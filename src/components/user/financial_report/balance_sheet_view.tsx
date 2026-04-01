@@ -29,7 +29,7 @@ const BalanceSheetSection = ({
   barColor: string;
 }) => {
   return (
-    <div className="mb-6 print:mb-2">
+    <div className="mb-6 print:mb-2 print:break-inside-avoid">
       {/* Info: (20260330 - Julian) 項目標題 */}
       <div className="mb-2 flex items-center justify-between rounded-lg bg-slate-200 px-3 py-2">
         <span className="font-bold text-slate-700">{titleText}</span>
@@ -45,7 +45,7 @@ const BalanceSheetSection = ({
             className="flex items-center justify-between border-b border-slate-50 py-2"
           >
             <div className="flex w-2/3 flex-col">
-              <span className="text-[15px] font-medium text-slate-600">
+              <span className="text-[15px] font-medium text-slate-600 print:text-sm">
                 {item.name}
               </span>
               <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
@@ -218,7 +218,7 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
 
   const assetsSection = assets ? (
     <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
-      <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4">
+      <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4 box-decoration-clone">
         <div className="mb-4 flex items-end justify-between border-b-2 border-slate-200 pb-3">
           <span className="text-lg font-black tracking-wider text-slate-800 uppercase">
             資產 ASSETS
@@ -243,7 +243,7 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
         />
       </div>
       {/* Info: (20260330 - Julian) 資產總計 */}
-      <div className="flex items-center justify-between rounded-2xl bg-emerald-500 p-6 text-white shadow-sm">
+      <div className="flex items-center justify-between rounded-2xl bg-emerald-500 p-6 text-white shadow-sm print:break-inside-avoid">
         <span className="text-lg font-black tracking-widest">資產總計</span>
         <span className="text-2xl font-black">
           {numberWithCommas(assets.total)}
@@ -259,7 +259,7 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
   const liabilitiesAndEquitySection =
     liabilities && equity ? (
       <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
-        <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4">
+        <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4 box-decoration-clone">
           <div className="mb-4 flex items-end justify-between border-b-2 border-slate-200 pb-3">
             <span className="text-lg font-black tracking-wider text-slate-800 uppercase">
               負債及權益 LIAB. & EQUITY
@@ -293,7 +293,7 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
         </div>
 
         {/* Info: (20260330 - Julian) 負債權益總計 */}
-        <div className="flex items-center justify-between rounded-2xl bg-slate-800 p-6 text-white shadow-sm">
+        <div className="flex items-center justify-between rounded-2xl bg-slate-800 p-6 text-white shadow-sm print:break-inside-avoid">
           <span className="text-lg font-black tracking-widest">
             負債及權益總計
           </span>
@@ -316,7 +316,7 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
       {keyMetricsBanner}
 
       {/* Info: (20260330 - Julian) 資產欄 & 負債權益欄 */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 print:flex">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 print:flex print:items-start">
         {/* Info: (20260330 - Julian) 資產欄 */}
         {assetsSection}
         {/* Info: (20260330 - Julian) 負債權益欄 */}
