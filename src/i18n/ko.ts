@@ -991,6 +991,7 @@ export const ko = {
     analyze_prompt: "이 청구서를 분석하시겠습니까?",
     analyze_btn: "예, AI에게 분석 맡기기",
     reupload_btn: "다시 업로드",
+    display_type: "디스플레이 방식：",
     search_placeholder: "청구서 내용 검색...",
     start_date: "시작일",
     end_date: "종료일",

@@ -1005,6 +1005,7 @@ export const ja = {
     analyze_prompt: "この請求書を分析しますか？",
     analyze_btn: "はい、AIに分析させます",
     reupload_btn: "再アップロード",
+    display_type: "表示方式：",
     search_placeholder: "請求書の内容を検索...",
     start_date: "開始日",
     end_date: "終了日",

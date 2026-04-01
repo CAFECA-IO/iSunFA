@@ -978,6 +978,7 @@ export const zhCn = {
     analyze_prompt: "是否分析此发票？",
     analyze_btn: "是的，让 AI 分析发票",
     reupload_btn: "重新上传",
+    display_type: "显示方式：",
     search_placeholder: "搜索发票内容...",
     start_date: "开始日期",
     end_date: "结束日期",

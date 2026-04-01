@@ -1041,6 +1041,7 @@ export const en = {
     analyze_prompt: "Do you want to analyze this invoice?",
     analyze_btn: "Yes, let AI analyze it",
     reupload_btn: "Re-upload",
+    display_type: "Display Type:",
     search_placeholder: "Search invoice contents...",
     start_date: "Start Date",
     end_date: "End Date",

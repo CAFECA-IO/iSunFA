@@ -3,7 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
-import { Search, ArrowDown, ArrowUp } from "lucide-react";
+import {
+  Search,
+  ArrowDown,
+  ArrowUp,
+  LayoutGrid,
+  List as ListIcon,
+} from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { IJournal } from "@/interfaces/journal";
@@ -16,8 +22,15 @@ import { ApiCode } from "@/lib/utils/status";
 import { VerifyStatus } from "@/constants/verify_status";
 import JournalSummary from "@/components/user/journal/journal_summary";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { SortOrder } from "@/constants/sort";
 
 const PAGE_SIZE = 12;
+
+enum DisplayType {
+  GRID = "grid",
+  LIST = "list",
+}
+
 export default function JournalListView() {
   const { t } = useTranslation();
   const params = useParams();
@@ -25,9 +38,8 @@ export default function JournalListView() {
   // Info: (20260309 - Julian) 從 URL 取得帳簿 ID
   const accountBookId = params?.account_book_id as string;
 
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [displayType, setDisplayType] = useState<"grid" | "list">("list");
+  const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.DESC);
+  const [displayType, setDisplayType] = useState<DisplayType>(DisplayType.LIST);
   const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<
     VerifyStatus | "all"
   >("all");
@@ -217,7 +229,7 @@ export default function JournalListView() {
   }, [journals, accountBookId]);
 
   const displayLayout =
-    displayType === "list" ? (
+    displayType === DisplayType.LIST ? (
       <JournalListLayout
         isLoading={isLoading}
         journals={journals}
@@ -236,6 +248,37 @@ export default function JournalListView() {
     <div className="flex w-full max-w-full min-w-0 flex-col gap-4">
       <JournalSummary />
       <div className="flex size-full max-w-full min-w-0 flex-col gap-4">
+        {/* Info: (20260304 - Julian) Display type */}
+        <div className="ml-auto flex items-center gap-4">
+          <p className="text-xs font-medium text-slate-600">{t('ocr.display_type')}</p>
+          <div className="flex items-center rounded-lg border border-gray-200 bg-gray-100 p-1">
+            <button
+              title={t("ocr.list_view") as string}
+              type="button"
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
+                displayType === DisplayType.LIST
+                  ? "bg-white text-orange-600 shadow-sm"
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
+              onClick={() => setDisplayType(DisplayType.LIST)}
+            >
+              <ListIcon size={16} />
+            </button>
+            <button
+              title={t("ocr.grid_view") as string}
+              type="button"
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
+                displayType === DisplayType.GRID
+                  ? "bg-white text-orange-600 shadow-sm"
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
+              onClick={() => setDisplayType(DisplayType.GRID)}
+            >
+              <LayoutGrid size={16} />
+            </button>
+          </div>
+        </div>
+
         {/* Info: (20260312 - Julian) Toolbar */}
         <div className="flex flex-col items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row">
           {/* Info: (20260401 - Julian) Search Bar */}
@@ -299,14 +342,14 @@ export default function JournalListView() {
               type="button"
               aria-label={t("common.sort.date_aria")}
               onClick={() =>
-                setSortOrder(sortOrder === "desc" ? "asc" : "desc")
+                setSortOrder(sortOrder === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC)
               }
               className="flex items-center rounded-lg border border-slate-300 px-4 py-2 font-bold text-slate-600 transition-colors hover:bg-orange-50"
             >
-              {sortOrder === "desc"
+              {sortOrder === SortOrder.DESC
                 ? t("common.sort.newest")
                 : t("common.sort.oldest")}
-              {sortOrder === "desc" ? (
+              {sortOrder === SortOrder.DESC ? (
                 <ArrowDown className="ml-1 h-4 w-4" />
               ) : (
                 <ArrowUp className="ml-1 h-4 w-4" />

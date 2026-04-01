@@ -1055,6 +1055,7 @@ export const zhTw = {
     analyze_prompt: "是否分析此憑證？",
     analyze_btn: "是的，讓 AI 分析憑證",
     reupload_btn: "重新上傳",
+    display_type: "顯示方式：",
     search_placeholder: "搜尋憑證內容...",
     start_date: "開始日期",
     end_date: "結束日期",

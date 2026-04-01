@@ -14,6 +14,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { VerifyStatus } from "@/constants/verify_status";
 import Pagination from "@/components/common/pagination";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { SortOrder } from "@/constants/sort";
 
 interface IEsgTableSectionProps {
   year?: number;
@@ -43,7 +44,7 @@ export default function EsgTableSection({
   const [records, setRecords] = useState<IEsgRecord[]>([]);
   const [recordCount, setRecordCount] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [dateSort, setDateSort] = useState<"desc" | "asc">("desc");
+  const [dateSort, setDateSort] = useState<SortOrder>(SortOrder.DESC);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fetchRecords = useCallback(async () => {
@@ -299,13 +300,13 @@ export default function EsgTableSection({
           <button
             type="button"
             aria-label={t("common.sort.date_aria")}
-            onClick={() => setDateSort(dateSort === "desc" ? "asc" : "desc")}
+            onClick={() => setDateSort(dateSort === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC)}
             className="flex items-center rounded-lg border border-slate-300 px-4 py-2 font-bold text-slate-600 transition-colors hover:bg-orange-50"
           >
-            {dateSort === "desc"
+            {dateSort === SortOrder.DESC
               ? t("common.sort.newest")
               : t("common.sort.oldest")}
-            {dateSort === "desc" ? (
+            {dateSort === SortOrder.DESC ? (
               <ArrowDown className="ml-1 h-4 w-4" />
             ) : (
               <ArrowUp className="ml-1 h-4 w-4" />
