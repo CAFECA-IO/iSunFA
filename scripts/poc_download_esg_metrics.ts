@@ -94,7 +94,7 @@ async function runMetricsPoC() {
 
     try {
         const fileContent = fs.readFileSync(dataPath, 'utf-8');
-        rawData = JSON.parse(fileContent).slice(0, 10); // 測試 10 家
+        rawData = JSON.parse(fileContent).slice(0, 10); // Info: (20260331 - Tzuhan) 測試 10 家
     } catch (error) {
         console.error(`❌ 無法讀取 JSON 檔案`, error);
         return;
