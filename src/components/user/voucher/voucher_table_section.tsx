@@ -32,7 +32,7 @@ export default function VoucherTableSection() {
 
   const accountBookId = params?.account_book_id as string;
 
-  const currencyUnit = "TWD"; // ToDo: (20260310 - Julian) 先固定使用 TWD
+  const [currencyUnit, setCurrencyUnit] = useState<string>("TWD");
 
   const [vouchers, setVouchers] = useState<IVoucher[]>([]);
   const [totalItems, setTotalItems] = useState<number>(0);
@@ -58,6 +58,19 @@ export default function VoucherTableSection() {
   const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
     null,
   );
+
+  useEffect(() => {
+    if (!accountBookId) return;
+    request<IApiResponse<{ currency: string }>>(
+      `/api/v1/user/account_book/${accountBookId}`,
+    )
+      .then((res) => {
+        if (res.payload?.currency) {
+          setCurrencyUnit(res.payload.currency);
+        }
+      })
+      .catch((error) => console.error("Failed to fetch account book:", error));
+  }, [accountBookId]);
 
   // Info: (20260311 - Julian) 設定輸入延遲，避免頻繁打 API
   useEffect(() => {
