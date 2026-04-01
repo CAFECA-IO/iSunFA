@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
+import { Info } from "lucide-react";
 import { IBalanceSheetItem, IBalanceSheet } from "@/interfaces/balance_sheet";
 import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
 import { numberWithCommas } from "@/lib/utils/common";
@@ -32,7 +33,7 @@ const BalanceSheetSection = ({
       {/* Info: (20260330 - Julian) 項目標題 */}
       <div className="mb-2 flex items-center justify-between rounded-lg bg-slate-200 px-3 py-2">
         <span className="font-bold text-slate-700">{titleText}</span>
-        <span className="font-bold text-slate-700 text-base print:text-sm">
+        <span className="text-base font-bold text-slate-700 print:text-sm">
           {numberWithCommas(titleValue)}
         </span>
       </div>
@@ -57,7 +58,7 @@ const BalanceSheetSection = ({
               </div>
             </div>
             <div className="flex flex-col items-end">
-              <span className="font-medium text-slate-700 text-base print:text-sm">
+              <span className="text-base font-medium text-slate-700 print:text-sm">
                 {numberWithCommas(item.amount)}
               </span>
               <span className="text-[10px] font-bold text-slate-400">
@@ -77,6 +78,33 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
 
   const [reportData, setReportData] = useState<IBalanceSheet | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const balanceSheetTooltip = [
+    {
+      title: "流動比率 (Current Ratio)",
+      type: "流動性",
+      description:
+        "流動比率 = 流動資產 / 流動負債。衡量企業短期償債能力，建議大於 200% ，表示償債能力良好。",
+    },
+    {
+      title: "負債比率 (Debt Ratio)",
+      type: "償債能力",
+      description:
+        "負債比率 = 總負債 / 總資產。衡量企業償債能力，建議小於 50% ，表示償債能力良好。",
+    },
+    {
+      title: "權益乘數 (Equity Multiplier)",
+      type: "償債能力",
+      description:
+        "權益乘數 = 總資產 / 總權益。衡量企業財務槓桿程度，建議小於 2 ，表示財務槓桿程度良好。",
+    },
+    {
+      title: "營運資金 (Working Capital)",
+      type: "流動性",
+      description:
+        "營運資金 = 流動資產 - 流動負債。衡量企業短期償債能力，建議大於 0 ，表示償債能力良好。",
+    },
+  ];
 
   useEffect(() => {
     if (accountBookId) {
@@ -292,6 +320,30 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
         {assetsSection}
         {/* Info: (20260330 - Julian) 負債權益欄 */}
         {liabilitiesAndEquitySection}
+      </div>
+
+      {/* Info: (20260330 - Julian) 財務指標註解與判斷標準（列印時顯示） */}
+      <div className="hidden flex-col gap-6 rounded-2xl bg-blue-100 px-6 py-4 print:my-4 print:flex print:break-before-page">
+        <div className="flex items-center gap-2 text-lg font-bold">
+          <Info size={24} className="text-blue-600" />
+          <p className="text-slate-800">財務指標註解與判斷標準</p>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {balanceSheetTooltip.map((item) => (
+            <div
+              key={item.title}
+              className="flex flex-col gap-1 text-slate-800"
+            >
+              <div className="flex items-center gap-2 text-sm font-bold text-blue-600">
+                <p>{item.title}</p>
+                <p className="rounded-md bg-blue-200 px-1.5 py-0.5 text-xs text-slate-600">
+                  {item.type}
+                </p>
+              </div>
+              <span className="text-xs text-slate-700">{item.description}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
