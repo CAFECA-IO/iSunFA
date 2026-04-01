@@ -111,14 +111,19 @@ export default function ReportView() {
     try {
       // Info: (20260331 - Julian) 過濾掉需要隱藏的元素（例如工具列與重點指標 Tooltip）
       const filter = (node: HTMLElement) => {
-        if (
-          node?.hasAttribute &&
-          node.hasAttribute("data-html2canvas-ignore")
-        ) {
+        // Info: (20260401 - Julian) 隱藏 data-html2canvas-ignore 的元素
+        if (node?.hasAttribute && node.hasAttribute("data-html2canvas-ignore")) {
           return false;
         }
         return true;
       };
+
+      // Info: (20260401 - Julian) 暫時顯示需要印出的註解
+      const noteElement = document.getElementById("report-print-note");
+      if (noteElement) {
+        noteElement.classList.remove("hidden");
+        noteElement.classList.add("flex");
+      }
 
       // Info: (20260331 - Julian) 產出 PDF
       await downloadHtmlAsPdf("report-content-to-print", filename, { filter });

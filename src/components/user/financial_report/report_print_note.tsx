@@ -11,7 +11,10 @@ export interface IReportNote {
 
 export default function ReportPrintNote({ notes }: { notes: IReportNote[] }) {
   return (
-    <div className="hidden flex-col gap-6 rounded-2xl bg-blue-100 px-6 py-4 print:my-4 print:flex print:break-before-page">
+    <div
+      id="report-print-note"
+      className="hidden flex-col gap-6 rounded-2xl bg-blue-100 px-6 py-4 print:my-4 print:flex print:break-before-page"
+    >
       <div className="flex items-center gap-2 text-lg font-bold">
         <Info size={24} className="text-blue-600" />
         <p className="text-slate-800">財務指標註解與判斷標準</p>
