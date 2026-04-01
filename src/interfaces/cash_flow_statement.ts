@@ -12,6 +12,8 @@ export interface ICashFlowStatementMetrics {
 }
 
 export interface ICashFlowStatement {
+  reportPeriod: string;
+  currency: string;
   activities: {
     operating: { items: ICashFlowStatementItem[]; total: number };
     investing: { items: ICashFlowStatementItem[]; total: number };

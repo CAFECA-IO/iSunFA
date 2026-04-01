@@ -186,6 +186,8 @@ export function generateCashFlowStatement(
     safeDivide(totalOperating, currentLiabilitiesTotal) * 100;
 
   return {
+    reportPeriod: "",
+    currency: "TWD",
     activities: {
       operating: { items: finalOperatingItems, total: totalOperating },
       investing: { items: finalInvestingItems, total: totalInvesting },
