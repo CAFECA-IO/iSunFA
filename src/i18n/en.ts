@@ -37,6 +37,11 @@ export const en = {
     ai: {
       pending: "Please wait, AI is processing...",
     },
+    sort: {
+      date_aria: "Toggle date sort",
+      newest: "Newest",
+      oldest: "Oldest",
+    }
   },
   faith: {
     title: "FAITH",
@@ -1036,9 +1041,8 @@ export const en = {
     analyze_prompt: "Do you want to analyze this invoice?",
     analyze_btn: "Yes, let AI analyze it",
     reupload_btn: "Re-upload",
+    display_type: "Display Type:",
     search_placeholder: "Search invoice contents...",
-    sort_desc: "Newest to Oldest",
-    sort_asc: "Oldest to Newest",
     start_date: "Start Date",
     end_date: "End Date",
     list_view: "List View",
@@ -1137,12 +1141,10 @@ export const en = {
         add: "Add Voucher",
       },
       filters: {
-        type: "Field Type",
-        type_options: {
-          income: "Income",
-          outcome: "Outcome",
-          transfer: "Transfer",
-        },
+        all: "All Types",
+        income: "Income",
+        outcome: "Outcome",
+        transfer: "Transfer",
         period: "Period",
         search: "Search voucher no, account code...",
         hide_deleted: "Hide deleted vouchers and reversed records",
@@ -1285,12 +1287,9 @@ export const en = {
     search_placeholder: "Search vendor, activity...",
     search_aria: "Search vendor, activity",
     filter_intensity_aria: "Filter by Intensity",
-    filter_intensity_all: "All",
+    filter_intensity_all: "All Intensity",
     filter_scope_aria: "Filter by Scope",
     filter_scope_all: "All (Scope 1-3)",
-    sort_date_aria: "Sort by Date",
-    sort_newest: "Newest",
-    sort_oldest: "Oldest",
     header: {
       voucher: "Voucher",
       date: "Date",
@@ -1466,6 +1465,7 @@ export const en = {
       confirm: "Confirm Unverify",
     },
     status: {
+      all: "All {{type}}",
       verified: "Verified",
       unverified: "Unverified",
     },
