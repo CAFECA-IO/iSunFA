@@ -38,11 +38,6 @@ export default function JournalListView() {
   // Info: (20260309 - Julian) 從 URL 取得帳簿 ID
   const accountBookId = params?.account_book_id as string;
 
-  const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.DESC);
-  const [displayType, setDisplayType] = useState<DisplayType>(DisplayType.LIST);
-  const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<
-    VerifyStatus | "all"
-  >("all");
   const [journals, setJournals] = useState<IJournal[]>([]);
   const [totalItems, setTotalItems] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -52,6 +47,11 @@ export default function JournalListView() {
   const [debouncedKeyWord, setDebouncedKeyWord] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.DESC);
+  const [displayType, setDisplayType] = useState<DisplayType>(DisplayType.LIST);
+  const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<
+    VerifyStatus | "all"
+  >("all");
 
   useEffect(() => {
     // Info: (20260305 - Julian) 設置緩衝，避免過度請求

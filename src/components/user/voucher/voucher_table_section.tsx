@@ -34,30 +34,30 @@ export default function VoucherTableSection() {
 
   const currencyUnit = "TWD"; // ToDo: (20260310 - Julian) 先固定使用 TWD
 
-  const [filteredType, setFilteredType] = useState<TradingType | "all">("all");
-  const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<
-    VerifyStatus | "all"
-  >("all");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const [keyWord, setKeyWord] = useState<string>("");
-  const [debouncedKeyWord, setDebouncedKeyWord] = useState<string>("");
-
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
-    useState<boolean>(false);
-
-  const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
-    null,
-  );
   const [vouchers, setVouchers] = useState<IVoucher[]>([]);
   const [totalItems, setTotalItems] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const [keyWord, setKeyWord] = useState<string>("");
+  const [debouncedKeyWord, setDebouncedKeyWord] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [sorting, setSorting] = useState<VoucherSorting>(
     VoucherSorting.DATE_DESC,
   );
   const [hideDeleted, setHideDeleted] = useState<boolean>(false);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [filteredType, setFilteredType] = useState<TradingType | "all">("all");
+  const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<
+    VerifyStatus | "all"
+  >("all");
+
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
+    useState<boolean>(false);
+  const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
+    null,
+  );
 
   // Info: (20260311 - Julian) 設定輸入延遲，避免頻繁打 API
   useEffect(() => {
