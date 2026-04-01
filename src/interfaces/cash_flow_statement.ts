@@ -5,10 +5,10 @@ export interface ICashFlowStatementItem {
 }
 
 export interface ICashFlowStatementMetrics {
-  freeCashFlow: number; // 自由現金流 (Free Cash Flow)
-  operatingCashFlowRatio: number; // 營業現金流量對流動負債比率 (%)
-  cashFlowAdequacyRatio: number; // 現金流量允當比率 (%)
-  cashReinvestmentRatio: number; // 現金再投資比率 (%)
+  freeCashFlow: number; // Info: (20260330 - Julian) 自由現金流 (Free Cash Flow)
+  operatingCashFlowRatio: number; // Info: (20260330 - Julian) 營業現金流量對流動負債比率 (%)
+  cashFlowAdequacyRatio: number; // Info: (20260330 - Julian) 現金流量允當比率 (%)
+  cashReinvestmentRatio: number; // Info: (20260330 - Julian) 現金再投資比率 (%)
 }
 
 export interface ICashFlowStatement {
@@ -20,11 +20,11 @@ export interface ICashFlowStatement {
     financing: { items: ICashFlowStatementItem[]; total: number };
   };
   summary: {
-    netIncreaseDecrease: number; // 本期現金增加(減少)數
-    beginningBalance: number;    // 期初現金及約當現金餘額
-    endingBalance: number;       // 期末現金及約當現金餘額
+    netIncreaseDecrease: number; // Info: (20260330 - Julian) 本期現金增加(減少)數
+    beginningBalance: number;    // Info: (20260330 - Julian) 期初現金及約當現金餘額
+    endingBalance: number;       // Info: (20260330 - Julian) 期末現金及約當現金餘額
   };
-  supplementary: {               // 補充揭露
+  supplementary: {               // Info: (20260330 - Julian) 補充揭露
     interestPaid: number;
     taxesPaid: number;
   };
@@ -72,7 +72,7 @@ export const mockCashFlowStatementData: ICashFlowStatement = {
     taxesPaid: 300000,
   },
   metrics: {
-    freeCashFlow: 850000, // 1650000 - 800000
+    freeCashFlow: 850000, // Info: (20260330 - Julian) 1650000 - 800000
     operatingCashFlowRatio: 45.3,
     cashFlowAdequacyRatio: 110.5,
     cashReinvestmentRatio: 8.5,
