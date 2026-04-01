@@ -39,6 +39,11 @@ export const zhTw = {
       processing: "AI 處理中...",
       failed: "AI 處理失敗",
     },
+    sort: {
+      date_aria: "切換日期排序",
+      newest: "由新至舊",
+      oldest: "由舊至新",
+    }
   },
   faith: {
     title: "費思",
@@ -1051,8 +1056,6 @@ export const zhTw = {
     analyze_btn: "是的，讓 AI 分析憑證",
     reupload_btn: "重新上傳",
     search_placeholder: "搜尋憑證內容...",
-    sort_desc: "由新到舊排序",
-    sort_asc: "由舊到新排序",
     start_date: "開始日期",
     end_date: "結束日期",
     list_view: "列表檢視",
@@ -1077,7 +1080,6 @@ export const zhTw = {
     delete: "刪除憑證",
     confirm_delete_title: "刪除憑證",
     confirm_delete_msg: "確定要刪除這筆憑證嗎？此動作無法復原。",
-
     unsaved_changes_title: "尚未儲存變更",
     unsaved_changes_msg: "您有尚未儲存的變更，確定要離開嗎？",
     confirm_save_title: "確認儲存",
@@ -1148,12 +1150,10 @@ export const zhTw = {
         add: "新增傳票",
       },
       filters: {
-        type: "欄位類型",
-        type_options: {
-          income: "收入",
-          outcome: "支出",
-          transfer: "轉換",
-        },
+        all: "全部類別",
+        income: "收入",
+        outcome: "支出",
+        transfer: "轉換",
         period: "期間",
         search: "搜尋傳票編號、科目編號...",
         hide_deleted: "隱藏已刪除的傳票及其沖銷紀錄",
@@ -1298,9 +1298,6 @@ export const zhTw = {
     filter_intensity_all: "全部強度",
     filter_scope_aria: "依範疇篩選",
     filter_scope_all: "全部範疇 (Scope 1-3)",
-    sort_date_aria: "切換日期排序",
-    sort_newest: "由新至舊",
-    sort_oldest: "由舊至新",
     header: {
       voucher: "憑證",
       date: "日期",
@@ -1433,6 +1430,7 @@ export const zhTw = {
       confirm: "確認退回",
     },
     status: {
+      all: "全部{{type}}",
       verified: "已核對",
       unverified: "待核對",
     },

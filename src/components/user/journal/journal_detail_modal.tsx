@@ -69,7 +69,7 @@ export default function JournalDetailModal({
     setIsLoading(true);
     try {
       const { payload } = await request<IApiResponse<IJournal>>(
-        `/api/v1/user/account_book/${accountBookId}/journal/${journalId}`
+        `/api/v1/user/account_book/${accountBookId}/journal/${journalId}`,
       );
       if (payload) {
         setFetchedJournal(payload);
@@ -152,7 +152,7 @@ export default function JournalDetailModal({
 
   return (
     <>
-      <div className="flex h-full w-full flex-col bg-[#F8FAFC] overflow-hidden">
+      <div className="flex h-full w-full flex-col overflow-hidden bg-[#F8FAFC]">
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-[10px]">
           <div className="flex shrink-0 flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -160,71 +160,69 @@ export default function JournalDetailModal({
                 {t("verify.type.journal")}
               </h4>
               {/* Info: (20260324 - Julian) 顯示日記帳狀態 */}
-            {activeJournal.isVerified ? (
-              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
-                {t("verify.status.verified")}
-              </span>
-            ) : (
-              <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
-                {t("verify.status.unverified")}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => setIsEditMode(!isEditMode)}
-              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold transition-colors ${isEditMode
-                ? "border-orange-200 bg-orange-50 text-orange-600"
-                : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-600"
+              {activeJournal.isVerified ? (
+                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
+                  {t("verify.status.verified")}
+                </span>
+              ) : (
+                <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
+                  {t("verify.status.unverified")}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsEditMode(!isEditMode)}
+                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold transition-colors ${
+                  isEditMode
+                    ? "border-orange-200 bg-orange-50 text-orange-600"
+                    : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-600"
                 }`}
-            >
-              {isEditMode ? (
-                <>
-                  <Eye size={14} className="text-orange-500" />
-                  {t("ocr.view_preview")}
-                </>
-              ) : (
-                <>
-                  <Pencil size={14} className="text-slate-400" />
-                  {t("ocr.edit")}
-                </>
-              )}
-            </button>
-          </div>
-          {/* Info: (20260325 - Julian) AI Confidence */}
-          <div className="relative">
-            <AiConfidence
-              confidence={activeJournal.confidence}
-              note={activeJournal.aiNote}
-            />
-          </div>
-        </div>
-
-        {/* Info: (20260327 - Luphia) 將原本外層的 overflow-y-auto 移除，改由內部元素自行處理滾動 */}
-        <div className="flex min-h-0 flex-1 flex-col px-6 py-4">
-          {isEditMode ? (
-            <textarea
-              aria-label={t("ocr.journal") as string}
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              // Info: (20260327 - Luphia) 加入 flex-1 讓它填滿高度，並將 resize-y 改為 resize-none 防止手動拉伸破壞版面
-              className="flex-1 resize-none rounded-xl border border-slate-300 bg-white p-4 leading-relaxed text-slate-700 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-            />
-          ) : (
-            // Info: (20260327 - Luphia) 加入 flex-1 填滿高度，並加上 overflow-y-auto 讓長文章可以在此區塊內滾動
-            <div className="flex-1 overflow-y-auto rounded-xl border border-slate-300 bg-white p-4">
-              {editText ? (
-                <MarkdownContent
-                  content={editText}
-                  theme="light"
-                />
-              ) : (
-                <p className="text-sm italic text-gray-400">
-                  {t("common.empty") || "Empty"}
-                </p>
-              )}
+              >
+                {isEditMode ? (
+                  <>
+                    <Eye size={14} className="text-orange-500" />
+                    {t("ocr.view_preview")}
+                  </>
+                ) : (
+                  <>
+                    <Pencil size={14} className="text-slate-400" />
+                    {t("ocr.edit")}
+                  </>
+                )}
+              </button>
             </div>
-          )}
-        </div>
+            {/* Info: (20260325 - Julian) AI Confidence */}
+            <div className="relative">
+              <AiConfidence
+                confidence={activeJournal.confidence}
+                note={activeJournal.aiNote}
+              />
+            </div>
+          </div>
+
+          {/* Info: (20260327 - Luphia) 將原本外層的 overflow-y-auto 移除，改由內部元素自行處理滾動 */}
+          <div className="flex min-h-0 flex-1 flex-col px-6 py-4">
+            {isEditMode ? (
+              <textarea
+                aria-label={t("ocr.journal") as string}
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                // Info: (20260327 - Luphia) 加入 flex-1 讓它填滿高度，並將 resize-y 改為 resize-none 防止手動拉伸破壞版面
+                className="flex-1 resize-none rounded-xl border border-slate-300 bg-white p-4 leading-relaxed text-slate-700 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+              />
+            ) : (
+              // Info: (20260327 - Luphia) 加入 flex-1 填滿高度，並加上 overflow-y-auto 讓長文章可以在此區塊內滾動
+              <div className="flex-1 overflow-y-auto rounded-xl border border-slate-300 bg-white p-4">
+                {editText ? (
+                  <MarkdownContent content={editText} theme="light" />
+                ) : (
+                  <p className="text-sm text-gray-400 italic">
+                    {t("common.empty") || "Empty"}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
         {/* ToDo: (20260323 - Julian) 先隱藏刪除按鈕 */}
         {/* <div className="mt-4 ml-auto">

@@ -162,10 +162,11 @@ export default function AccountBookSelector({
                     <div className="flex w-1/3 flex-col overflow-y-auto border-r border-slate-100 bg-slate-50/50 p-4">
                       <button
                         onClick={() => setSelectedType(null)}
-                        className={`mb-1 w-full rounded-xl p-3 text-left text-sm font-bold transition-colors ${selectedType === null
-                          ? "bg-orange-100 text-orange-600"
-                          : "text-slate-600 hover:bg-slate-100"
-                          }`}
+                        className={`mb-1 w-full rounded-xl p-3 text-left text-sm font-bold transition-colors ${
+                          selectedType === null
+                            ? "bg-orange-100 text-orange-600"
+                            : "text-slate-600 hover:bg-slate-100"
+                        }`}
                       >
                         {t("voucher.account_book_selector.all")}
                       </button>
@@ -173,10 +174,11 @@ export default function AccountBookSelector({
                         <button
                           key={type}
                           onClick={() => setSelectedType(type)}
-                          className={`mb-1 w-full rounded-xl p-3 text-left text-sm font-bold transition-colors ${selectedType === type
-                            ? "bg-orange-100 text-orange-600"
-                            : "text-slate-600 hover:bg-slate-100"
-                            }`}
+                          className={`mb-1 w-full rounded-xl p-3 text-left text-sm font-bold transition-colors ${
+                            selectedType === type
+                              ? "bg-orange-100 text-orange-600"
+                              : "text-slate-600 hover:bg-slate-100"
+                          }`}
                         >
                           {t(`voucher.account_book_selector.types.${type}`)}
                         </button>

@@ -3,13 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import {
-  ChevronUp,
-  ChevronDown,
-  Search,
-  Filter,
-  FileStack,
-} from "lucide-react";
+import { ChevronUp, ChevronDown, Search, FileStack } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -63,7 +57,6 @@ export default function VoucherTableSection() {
     VoucherSorting.DATE_DESC,
   );
   const [hideDeleted, setHideDeleted] = useState<boolean>(false);
-  const [showFilters, setShowFilters] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Info: (20260311 - Julian) 設定輸入延遲，避免頻繁打 API
@@ -294,137 +287,107 @@ export default function VoucherTableSection() {
     setEndDate("");
   };
 
-  const selectedVoucher = vouchers.find(v => v.id === selectedVoucherId);
+  const selectedVoucher = vouchers.find((v) => v.id === selectedVoucherId);
 
   return (
     <>
       <div className="flex w-full flex-col gap-4">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            {/* Info: (20260316 - Julian) Toolbar */}
-            <div className="flex flex-col items-center justify-between gap-4 border-b border-slate-200 p-4 lg:flex-row">
-              <div className="flex items-center gap-2">
-                {/* Info: (20260324 - Julian) Searchbar */}
-                <div className="relative flex">
-                  <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <input
-                    id="searchField"
-                    aria-label={t("voucher.main_view.filters.search")}
-                    type="text"
-                    value={keyWord}
-                    onChange={(e) => setKeyWord(e.target.value)}
-                    placeholder={t("voucher.main_view.filters.search")}
-                    className="w-full rounded-full border border-slate-300 py-2.5 pr-4 pl-11 text-sm font-semibold text-slate-700 shadow-sm placeholder:font-medium placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                  />
-                </div>
-                {/* Info: (20260324 - Julian) Filtered Verify Status */}
-                <select
-                  id="verifyStatusSelect"
-                  value={filteredVerifyStatus}
-                  onChange={(e) =>
-                    setFilteredVerifyStatus(
-                      e.target.value as VerifyStatus | "all",
-                    )
-                  }
-                  className="w-32 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:outline-none"
-                >
-                  <option value="all">{t("common.all")}</option>
-                  <option value={VerifyStatus.VERIFIED}>
-                    {t("verify.status.verified")}
-                  </option>
-                  <option value={VerifyStatus.UNVERIFIED}>
-                    {t("verify.status.unverified")}
-                  </option>
-                </select>
-              </div>
-              {/* Info: (20260324 - Julian) Filter button */}
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center rounded-lg border px-4 py-2 text-sm font-bold transition-colors ${showFilters ? "border-orange-500 bg-orange-50 text-orange-600" : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"}`}
-                >
-                  {showFilters ? (
-                    <ChevronUp className="mr-2 h-4 w-4" />
-                  ) : (
-                    <Filter className="mr-2 h-4 w-4" />
-                  )}
-                  {t("voucher.main_view.table.filter_btn")}
-                </button>
-                <button
-                  type="button"
-                  disabled={isLoading}
-                  onClick={() => setIsVerifyAllConfirmOpen(true)}
-                  className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
-                >
-                  {t("common.verify_all")}
-                </button>
-              </div>
+          {/* Info: (20260401 - Julian) Toolbar */}
+          <div className="flex flex-col items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row">
+            {/* Info: (20260401 - Julian) Searchbar */}
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder={t("voucher.main_view.filters.search")}
+                aria-label={t("voucher.main_view.filters.search")}
+                value={keyWord}
+                onChange={(e) => setKeyWord(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
             </div>
 
-            {/* Info: (20260316 - Julian) Filter Content */}
-            <div
-              className={`grid border-b border-slate-200 bg-slate-50 shadow-inner transition-all duration-300 ease-in-out ${showFilters ? "grid-rows-[1fr] p-4 opacity-100 lg:p-6" : "grid-rows-[0fr] opacity-0"}`}
-            >
-              <div
-                className={`flex flex-col gap-2 overflow-hidden lg:flex-row lg:gap-6`}
+            {/* Info: (20260401 - Julian) Filter by date */}
+            <div className="flex items-center gap-2 lg:gap-4">
+              <input
+                aria-label="Start Date"
+                type="date"
+                value={startDate}
+                max={endDate || undefined}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-[14px] py-[8.5px] text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+              <span className="text-slate-400">-</span>
+              <input
+                aria-label="End Date"
+                type="date"
+                value={endDate}
+                min={startDate || undefined}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-[14px] py-[8.5px] text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 text-xs lg:text-sm">
+              {/* Info: (20260401 - Julian) Filter by verify status */}
+              <select
+                aria-label="Filter by verify status"
+                value={filteredVerifyStatus}
+                onChange={(e) =>
+                  setFilteredVerifyStatus(
+                    e.target.value as VerifyStatus | "all",
+                  )
+                }
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
               >
-                <div className="w-[300px]">
-                  <label
-                    htmlFor="typeSelect"
-                    className="mb-2 block text-xs font-semibold text-slate-700"
-                  >
-                    {t("voucher.main_view.filters.type")}
-                  </label>
-                  <select
-                    id="typeSelect"
-                    value={filteredType}
-                    onChange={(e) =>
-                      setFilteredType(e.target.value as TradingType | "all")
-                    }
-                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:outline-none"
-                  >
-                    <option value="all">{t("common.all")}</option>
-                    <option value={TradingType.INCOME}>
-                      {t("voucher.main_view.filters.type_options.income")}
-                    </option>
-                    <option value={TradingType.OUTCOME}>
-                      {t("voucher.main_view.filters.type_options.outcome")}
-                    </option>
-                    <option value={TradingType.TRANSFER}>
-                      {t("voucher.main_view.filters.type_options.transfer")}
-                    </option>
-                  </select>
-                </div>
-                <div>
-                  <div className="mb-2 block text-xs font-semibold text-slate-700">
-                    {t("voucher.main_view.filters.period")}
-                  </div>
-                  <div className="flex w-[300px] items-center gap-2 lg:gap-4">
-                    <input
-                      aria-label="Start Date"
-                      type="date"
-                      value={startDate}
-                      max={endDate || undefined}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 bg-white px-[14px] py-[8.5px] text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:outline-none"
-                    />
-                    <span className="text-slate-400">-</span>
-                    <input
-                      aria-label="End Date"
-                      type="date"
-                      value={endDate}
-                      min={startDate || undefined}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 bg-white px-[14px] py-[8.5px] text-sm font-semibold text-slate-700 shadow-sm focus:border-orange-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
+                <option value="all">
+                  {t("verify.status.all", { type: t("verify.type.voucher") })}
+                </option>
+                <option value={VerifyStatus.VERIFIED}>
+                  {t("verify.status.verified")}
+                </option>
+                <option value={VerifyStatus.UNVERIFIED}>
+                  {t("verify.status.unverified")}
+                </option>
+              </select>
+              {/* Info: (20260401 - Julian) Filter by type */}
+              <select
+                id="typeSelect"
+                value={filteredType}
+                onChange={(e) =>
+                  setFilteredType(e.target.value as TradingType | "all")
+                }
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              >
+                <option value="all">
+                  {t("voucher.main_view.filters.all")}
+                </option>
+                <option value={TradingType.INCOME}>
+                  {t("voucher.main_view.filters.income")}
+                </option>
+                <option value={TradingType.OUTCOME}>
+                  {t("voucher.main_view.filters.outcome")}
+                </option>
+                <option value={TradingType.TRANSFER}>
+                  {t("voucher.main_view.filters.transfer")}
+                </option>
+              </select>
+              {/* Info: (20260401 - Julian) Verify All Button */}
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={() => setIsVerifyAllConfirmOpen(true)}
+                className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                {t("common.verify_all")}
+              </button>
             </div>
+          </div>
 
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            {/* Info: (20260324 - Julian) 隱藏已刪除傳票 toggle */}
             <div className="flex items-center justify-between bg-white px-2 py-4 lg:px-6">
-              {/* Info: (20260324 - Julian) 隱藏已刪除傳票 toggle */}
               <div className="flex cursor-pointer items-center gap-3">
                 <button
                   type="button"
