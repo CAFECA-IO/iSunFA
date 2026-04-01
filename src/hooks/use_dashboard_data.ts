@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { request } from '@/lib/utils/request';
 import { useParams } from 'next/navigation';
 
-export type TimeUnit = '24h' | '7d' | '30d' | '3m' | '1y';
+export type TimeUnit = '7d' | '30d' | '3m' | '1y' | 'custom';
 export type GasType = 'co2' | 'ch4' | 'n2o' | 'f_gases';
 
 export interface IDashboardMetrics { value: string | number; trend?: number }
@@ -23,7 +23,11 @@ export interface IDashboardResponse {
 
 export const useDashboardData = () => {
   const params = useParams();
-  const [timeUnit, setTimeUnit] = useState<TimeUnit>('24h');
+  const [timeUnit, setTimeUnit] = useState<TimeUnit>('30d');
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number | ''>('');
+  const [startYear, setStartYear] = useState<number>(new Date().getFullYear());
+  const [startMonth, setStartMonth] = useState<number>(1);
   const [gasType, setGasType] = useState<GasType>('co2');
   const [apiData, setApiData] = useState<IDashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,11 +46,25 @@ export const useDashboardData = () => {
       try {
         // Info: (20260309 - Luphia) 根據目前路徑取得 account_book_id
         const accountBookId = params?.account_book_id as string || 'default';
-        const response = await request<{ payload: IDashboardResponse }>('/api/v1/user/account_book/' + accountBookId + '/dashboard', {
-          query: { timeUnit }
-        });
+        const query: Record<string, string | number> = { timeUnit };
+        if (timeUnit === 'custom') {
+          query.year = selectedYear;
+          if (selectedMonth) query.month = selectedMonth;
+        }
+
+        const [response, infoRes] = await Promise.all([
+          request<{ payload: IDashboardResponse }>('/api/v1/user/account_book/' + accountBookId + '/dashboard', { query }),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          request<any>(`/api/v1/user/account_book/${accountBookId}`)
+        ]);
+
         if (response && response.payload) {
           setApiData(response.payload);
+        }
+        if (infoRes && infoRes.payload && infoRes.payload.createdAt) {
+          const createdAt = new Date(infoRes.payload.createdAt);
+          setStartYear(createdAt.getFullYear());
+          setStartMonth(createdAt.getMonth() + 1);
         }
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
@@ -57,7 +75,7 @@ export const useDashboardData = () => {
 
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeUnit, refreshTrigger]);
+  }, [timeUnit, selectedYear, selectedMonth, refreshTrigger]);
 
   // Info: (20260118 - Luphia) Auto-refresh interval (10s)
   useEffect(() => {
@@ -92,6 +110,12 @@ export const useDashboardData = () => {
   return {
     timeUnit,
     setTimeUnit,
+    selectedYear,
+    setSelectedYear,
+    selectedMonth,
+    setSelectedMonth,
+    startYear,
+    startMonth,
     gasType,
     setGasType,
     currentData,

@@ -12,6 +12,13 @@ enum Role {
   ADMIN
 }
 
+enum TeamRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
 model User {
   id String @id @default(uuid())
 
@@ -42,6 +49,7 @@ model User {
   paymentTransactions PaymentTransaction[]
   journals            Journal[]
   teamMembers         TeamMember[]
+  teamInvitations     TeamInvitation[]     @relation("Inviter")
   auditLogs           AuditLog[]
   vouchers            Voucher[]
   esgRecords          EsgRecord[]
@@ -51,13 +59,14 @@ model User {
 }
 
 model Team {
-  id           String        @id @default(uuid())
-  name         String
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
-  deletedAt    DateTime?     @map("deleted_at")
-  teamMembers  TeamMember[]
-  accountBooks AccountBook[]
+  id              String           @id @default(uuid())
+  name            String
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  deletedAt       DateTime?        @map("deleted_at")
+  teamMembers     TeamMember[]
+  teamInvitations TeamInvitation[]
+  accountBooks    AccountBook[]
 
   @@map("team")
 }
@@ -68,11 +77,26 @@ model TeamMember {
   team      Team     @relation(fields: [teamId], references: [id])
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id])
-  role      String
+  role      TeamRole
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("team_member")
+}
+
+model TeamInvitation {
+  id             String   @id @default(uuid())
+  teamId         String   @map("team_id")
+  team           Team     @relation(fields: [teamId], references: [id])
+  inviterId      String   @map("inviter_id")
+  inviter        User     @relation("Inviter", fields: [inviterId], references: [id])
+  inviteeAddress String   @map("invitee_address")
+  role           TeamRole
+  status         String   @default("PENDING") // Info: (20260325 - Agent) PENDING, ACCEPTED, REJECTED
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("team_invitation")
 }
 
 model Order {
@@ -111,7 +135,7 @@ model Analysis {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tags      AnalysisTag[]
+  tags AnalysisTag[]
 
   @@map("analysis")
 }
@@ -216,9 +240,9 @@ model Comment {
 
 // Info: (20260212 - Julian) 討論串標籤
 model Tag {
-  id      String      @id @default(uuid())
-  name    String      @unique
-  threads ThreadTag[]
+  id       String        @id @default(uuid())
+  name     String        @unique
+  threads  ThreadTag[]
   analyses AnalysisTag[]
 
   @@map("tag")
@@ -341,15 +365,27 @@ model Receipt {
   @@map("receipt")
 }
 
+enum AIAnalysisStatus {
+  PENDING // Info: (20260318 - Julian) 尚未開始
+  PROCESSING // Info: (20260318 - Julian) 正在處理
+  COMPLETED // Info: (20260318 - Julian) 已完成
+  FAILED // Info: (20260318 - Julian) 失敗
+}
+
 // Info: (20260304 - Julian) 憑證/日記帳
 model Journal {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  text      String   @db.Text // Info: (20260304 - Julian) AI 辨識出的文字結果
+  id             String           @id @default(uuid())
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  text           String           @db.Text // Info: (20260304 - Julian) AI 辨識出的文字結果
+  analysisStatus AIAnalysisStatus @default(PENDING) @map("analysis_status")
+  tradingDate    DateTime         @default(now()) @map("trading_date")
+  confidence     Int              @default(0) @map("confidence")
+  isVerified     Boolean          @default(false) @map("is_verified")
+  aiNote         String           @map("ai_note") @db.Text // Info: (20260325 - Julian) AI 分析的備註
 
-  fileId String @map("file_id")
-  file   File   @relation(fields: [fileId], references: [id])
+  fileId String? @map("file_id")
+  file   File?   @relation(fields: [fileId], references: [id])
 
   // Info: (20260305 - Julian) 隸屬的帳本
   accountBookId String      @map("account_book_id")
@@ -362,14 +398,16 @@ model Journal {
 
 // Info: (20260305 - Julian) 帳本
 model AccountBook {
-  id        String    @id @default(uuid())
-  name      String
-  country   String
-  currency  String
-  rule      String
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
+  id            String    @id @default(uuid())
+  name          String
+  country       String
+  currency      String
+  rule          String
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+  enterpriseId  String?   @map("enterprise_id")
+  esgIndustryId Int?      @map("esg_industry_id")
 
   // Info: (20260306 - Luphia) 帳本所屬的團隊
   teamId String @map("team_id")
@@ -387,8 +425,8 @@ model AccountBook {
   // Info: (20260312 - Julian) 帳本對應的 ESG 紀錄
   esgRecords EsgRecord[]
 
-  // Info: (20260312 - Julian) 帳本對應的唯一的 ESG 儀表板總結
-  esgDashboardSummary EsgDashboardSummary?
+  // Info: (20260322 - Luphia) 帳本對應的各年度 ESG 目標
+  esgTargets EsgTarget[]
 
   @@map("account_book")
 }
@@ -446,7 +484,7 @@ model Voucher {
   tradingDate DateTime @map("trading_date")
 
   // Info: (20260310 - Julian) 交易類別: income, outcome, transfer
-  tradingType VoucherTradingType @map("trading_type")
+  tradingType VoucherTradingType? @map("trading_type")
 
   // Info: (20260310 - Julian) 備註
   note String? @db.Text
@@ -466,8 +504,20 @@ model Voucher {
   userId String? @map("user_id")
   user   User?   @relation(fields: [userId], references: [id])
 
-  // 包含的分錄
+  // Info: (20260316 - Julian) AI 信心度
+  confidence Int @map("confidence")
+
+  // Info: (20260318 - Julian) 是否已經驗證
+  isVerified Boolean @default(false) @map("is_verified")
+
+  // Info: (20260318 - Julian) AI 分析狀態
+  analysisStatus AIAnalysisStatus @default(PENDING) @map("analysis_status")
+
+  // Info: (20260316 - Julian) 包含的分錄
   lines VoucherLine[]
+
+  // Info: (20260324 - Julian) AI 分析的備註
+  aiNote String @default("") @map("ai_note") @db.Text
 
   @@map("voucher")
 }
@@ -510,26 +560,22 @@ enum EsgIntensity {
   HIGH
 }
 
-enum EsgStatus {
-  VERIFIED
-  MANUAL
-}
-
 model EsgRecord {
-  id              String       @id @default(uuid())
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
-  deletedAt       DateTime?    @map("deleted_at")
-  dateTimestamp   Int          @map("date_timestamp") // Info: (20260312 - Julian) 日期時間戳
-  scope           EsgScope // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
-  activityType    String       @map("activity_type") // Info: (20260312 - Julian) 活動類型
+  id              String           @id @default(uuid())
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  deletedAt       DateTime?        @map("deleted_at")
+  dateTimestamp   Int              @map("date_timestamp") // Info: (20260312 - Julian) 日期時間戳
+  scope           EsgScope? // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
+  activityType    String           @map("activity_type") // Info: (20260312 - Julian) 活動類型
   vendor          String // Info: (20260312 - Julian) 供應商與對象
-  rawActivityData String       @map("raw_activity_data") // Info: (20260312 - Julian) 原始活動數據
+  rawActivityData String           @map("raw_activity_data") // Info: (20260312 - Julian) 原始活動數據
   unit            String // Info: (20260312 - Julian) 單位
   emissions       Decimal // Info: (20260312 - Julian) 排放量 (KGCO2E)
-  intensity       EsgIntensity // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
+  intensity       EsgIntensity? // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
   confidence      Int // Info: (20260312 - Julian) AI 信心度
-  status          EsgStatus // Info: (20260312 - Julian) 狀態 (VERIFIED, MANUAL)
+  isVerified      Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
+  analysisStatus  AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態
 
   // Info: (20260312 - Julian) 關聯檔案憑證
   fileId String? @map("file_id")
@@ -543,43 +589,31 @@ model EsgRecord {
   userId String? @map("user_id")
   user   User?   @relation(fields: [userId], references: [id])
 
+  // Info: (20260324 - Julian) AI 分析的備註
+  aiNote String @default("") @map("ai_note") @db.Text
+
   @@map("esg_record")
 }
 
-// Info: (20260312 - Julian) ESG 儀表板摘要(唯一一份)
-model EsgDashboardSummary {
+// Info: (20260322 - Luphia) ESG 各年度目標
+model EsgTarget {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  // Info: (20260312 - Julian) 隸屬的帳本 (一對一)
-  accountBookId String      @unique @map("account_book_id")
+  // Info: (20260322 - Luphia) 隸屬的帳本
+  accountBookId String      @map("account_book_id")
   accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
 
-  // Info: (20260312 - Julian) 本月總排放量
-  totalEmissions Decimal @map("total_emissions")
-  emissionsUnit  String  @default("kgCO2e") @map("emissions_unit")
+  // Info: (20260322 - Luphia) 目標年份
+  year Int
 
-  // Info: (20260312 - Julian) 預估月底總排放量
-  estimatedEndOfMonth Decimal @map("estimated_end_of_month")
+  // Info: (20260322 - Luphia) 總碳排放量目標
+  totalEmissionTarget Decimal? @map("total_emission_target")
 
-  // Info: (20260312 - Julian) 營收 (用來計算強度)
-  revenue Decimal
+  // Info: (20260322 - Luphia) 每萬元營收排放量目標
+  revenueEmissionTarget Decimal? @map("revenue_emission_target")
 
-  // Info: (20260312 - Julian) 碳排放強度
-  emissionIntensity Decimal @map("emission_intensity")
-  intensityUnit     String  @default("kg / 萬元營收") @map("intensity_unit")
-
-  // Info: (20260312 - Julian) 產業平均碳排強度
-  industryAverage Decimal @map("industry_average")
-
-  // Info: (20260312 - Julian) 各範疇排放量總和
-  scope1Emissions Decimal @map("scope1_emissions")
-  scope2Emissions Decimal @map("scope2_emissions")
-  scope3Emissions Decimal @map("scope3_emissions")
-
-  // Info: (20260312 - Julian) 年度/週期目標排放量百分比
-  goalPercentage Decimal @map("goal_percentage")
-
-  @@map("esg_dashboard_summary")
+  @@unique([accountBookId, year])
+  @@map("esg_target")
 }

@@ -1,8 +1,11 @@
-import { AI_CONSULTATION_ROOM_PROMPT } from '@/constants/prompts/ai_consultation_room';
-import { JOURNAL_PROMPT } from '@/constants/prompts/journal';
-import { VOUCHER_PROMPT } from '@/constants/prompts/voucher';
-import { IParsedVoucher } from '@/interfaces/voucher';
-import { GoogleGenerativeAI, Part, Tool } from '@google/generative-ai';
+import { AI_CONSULTATION_ROOM_PROMPT } from "@/constants/prompts/ai_consultation_room";
+import { getEsgPrompt } from "@/constants/prompts/esg";
+import { getJournalPrompt } from "@/constants/prompts/journal";
+import { getVoucherPrompt } from "@/constants/prompts/voucher";
+import { IEsgRecord } from "@/interfaces/esg";
+import { IParsedVoucher } from "@/interfaces/voucher";
+import { GoogleGenerativeAI, Part, Tool } from "@google/generative-ai";
+import { AccountBook } from "@/generated/client";
 
 export class ChatService {
   private genAI: GoogleGenerativeAI;
@@ -10,13 +13,13 @@ export class ChatService {
 
   constructor(apiKey: string) {
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.modelName = process.env.MODEL || 'gemini-1.5-flash';
+    this.modelName = process.env.MODEL || "gemini-1.5-flash";
   }
 
   private getPrompt(message: string, tags: string[] = []): string {
     const basePrompt = `
       User Input: "${message}"
-      Selected Tags: ${tags.join(', ') || 'None'}
+      Selected Tags: ${tags.join(", ") || "None"}
       
       Output Guidelines:
       - Reply in Traditional Chinese (Taiwan).
@@ -24,7 +27,7 @@ export class ChatService {
     `;
 
     // Info: (20260105 - Luphia) Tax Consultant
-    if (tags.includes('tax')) {
+    if (tags.includes("tax")) {
       return `
         You are an expert tax consultant specializing in Taiwan tax laws and regulations.
         ${basePrompt}
@@ -37,7 +40,7 @@ export class ChatService {
     }
 
     // Info: (20260105 - Luphia) Financial Analyst
-    if (tags.includes('financial_report') || tags.includes('analysis')) {
+    if (tags.includes("financial_report") || tags.includes("analysis")) {
       return `
         You are a senior financial analyst.
         ${basePrompt}
@@ -50,7 +53,12 @@ export class ChatService {
     }
 
     // Info: (20260105 - Luphia) Operational Accountant (Bookkeeping)
-    if (tags.includes('bookkeeping') || tags.includes('adjustment') || tags.includes('salary') || tags.includes('cashier')) {
+    if (
+      tags.includes("bookkeeping") ||
+      tags.includes("adjustment") ||
+      tags.includes("salary") ||
+      tags.includes("cashier")
+    ) {
       return `
         You are a meticulous operational accountant.
         ${basePrompt}
@@ -84,7 +92,7 @@ export class ChatService {
     }
 
     // Info: (20260105 - Luphia) Commercial/Company Registration (Legacy/Other)
-    if (tags.includes('commercial') || tags.includes('other')) {
+    if (tags.includes("commercial") || tags.includes("other")) {
       return `
         You are an expert in Taiwan Company Application and Commercial Law.
         ${basePrompt}
@@ -108,7 +116,12 @@ export class ChatService {
     `;
   }
 
-  async generateResponse(message: string, tags: string[] = [], file?: string, mimeType?: string): Promise<string> {
+  async generateResponse(
+    message: string,
+    tags: string[] = [],
+    file?: string,
+    mimeType?: string,
+  ): Promise<string> {
     const model = this.genAI.getGenerativeModel({ model: this.modelName });
     const prompt = this.getPrompt(message, tags);
 
@@ -118,7 +131,7 @@ export class ChatService {
       parts.push({
         inlineData: {
           data: file,
-          mimeType: mimeType || 'image/jpeg',
+          mimeType: mimeType || "image/jpeg",
         },
       });
     }
@@ -133,7 +146,7 @@ export class ChatService {
       model: this.modelName,
       generationConfig: {
         temperature: 0.2,
-      }
+      },
     });
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -163,7 +176,7 @@ export class ChatService {
     message: string,
     images: { data: string; mimeType: string }[] = [],
   ): Promise<{ answer: string; tags: string[] }> {
-    const prompt = AI_CONSULTATION_ROOM_PROMPT.replace('{{message}}', message);
+    const prompt = AI_CONSULTATION_ROOM_PROMPT.replace("{{message}}", message);
 
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
@@ -206,10 +219,12 @@ export class ChatService {
    */
   async analyzeJournal(
     images: { data: string; mimeType: string }[] = [],
+    accountBook: Partial<AccountBook> | null = null,
   ): Promise<{ text: string }> {
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
-      const parts: Part[] = [{ text: JOURNAL_PROMPT }];
+      const promptText = getJournalPrompt(accountBook);
+      const parts: Part[] = [{ text: promptText }];
 
       if (images && images.length > 0) {
         images.forEach((img) => {
@@ -242,10 +257,12 @@ export class ChatService {
    */
   async analyzeVoucher(
     images: { data: string; mimeType: string }[] = [],
+    accountBook: Partial<AccountBook> | null = null,
   ): Promise<{ data: IParsedVoucher | null; error?: string }> {
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
-      const parts: Part[] = [{ text: VOUCHER_PROMPT }];
+      const promptText = getVoucherPrompt(accountBook);
+      const parts: Part[] = [{ text: promptText }];
 
       if (images && images.length > 0) {
         images.forEach((img) => {
@@ -272,6 +289,46 @@ export class ChatService {
     } catch (error) {
       console.error("[ChatService] Error in analyzeVoucher:", error);
       return { data: null, error: "AI 解析傳票失敗，請稍後再試" };
+    }
+  }
+
+  /**
+   * Info: (20260320 - Julian) 將憑證圖片轉換為碳盤查 JSON
+   */
+  async analyzeESG(
+    images: { data: string; mimeType: string }[] = [],
+    accountBook: Partial<AccountBook> | null = null,
+  ): Promise<{ data: IEsgRecord | null; error?: string }> {
+    try {
+      const model = this.genAI.getGenerativeModel({ model: this.modelName });
+      const promptText = getEsgPrompt(accountBook);
+      const parts: Part[] = [{ text: promptText }];
+
+      if (images && images.length > 0) {
+        images.forEach((img) => {
+          parts.push({
+            inlineData: {
+              data: img.data,
+              mimeType: img.mimeType,
+            },
+          });
+        });
+      }
+
+      const result = await model.generateContent(parts);
+      const response = await result.response;
+      const text = response.text().trim();
+
+      // Info: (20260320 - Julian) 尋找 JSON 區塊
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return { data: JSON.parse(jsonMatch[0]) };
+      }
+
+      return { data: null, error: "無法從 AI 回應中解析出有效的 JSON 格式" };
+    } catch (error) {
+      console.error("[ChatService] Error in analyzeESG:", error);
+      return { data: null, error: "AI 解析碳盤查失敗，請稍後再試" };
     }
   }
 }

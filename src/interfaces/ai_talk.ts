@@ -1,4 +1,4 @@
-export type UserReaction = 'LIKE' | 'DISLIKE' | null;
+export type UserReaction = "LIKE" | "DISLIKE" | null;
 
 export interface IThread {
   id: string;
@@ -33,7 +33,6 @@ export interface IFile {
   id: string;
   hash: string; // Info: (20260226 - Julian) 上傳至 IPFS 後，檔案的 Hash 值就是檔案 id
   threadId: string; // Info: (20260226 - Julian) 檔案所屬的討論串 id
-  
   fileName?: string;
   mimeType?: string;
   metadata?: string;

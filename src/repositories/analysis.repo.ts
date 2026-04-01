@@ -2,6 +2,16 @@ import { prisma } from '@/lib/prisma';
 import { Prisma, Analysis, Mission } from '@/generated/client';
 import { MISSION_STATUS } from '@/constants/status';
 
+export type FullAnalysis = Prisma.AnalysisGetPayload<{
+  include: {
+    mission: true;
+    order: true;
+    tags: {
+      include: { tag: true };
+    };
+  };
+}>;
+
 export interface IAnalysisRepository {
   create(params: {
     reportId: string;
@@ -18,6 +28,8 @@ export interface IAnalysisRepository {
   updateMissionUploadSuccess(missionId: string, planHash: string): Promise<Mission | null>;
   updateMissionUploadFailed(missionId: string, errorReason: string): Promise<Mission>;
   getGlobalTopTags(limit?: number): Promise<string[]>;
+  findAnalysisByKeywordAndType(userId: string, type: string, keyword: string): Promise<Analysis | null>;
+  getFullAnalysisHistoryByUserId(userId: string): Promise<FullAnalysis[]>;
 }
 
 export class AnalysisRepository implements IAnalysisRepository {
@@ -134,6 +146,34 @@ export class AnalysisRepository implements IAnalysisRepository {
     // Info: (20260312 - Tzuhan) Create a map to ensure the returned tag strings are ordered by the count
     const tagMap = new Map(tags.map(t => [t.id, t.name]));
     return topTags.map(t => tagMap.get(t.tagId)).filter((name): name is string => !!name);
+  }
+
+  async findAnalysisByKeywordAndType(userId: string, type: string, keyword: string): Promise<Analysis | null> {
+    return prisma.analysis.findFirst({
+      where: {
+        userId,
+        type,
+        data: {
+          path: ['keyword'],
+          equals: keyword,
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getFullAnalysisHistoryByUserId(userId: string): Promise<FullAnalysis[]> {
+    return prisma.analysis.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        mission: true,
+        order: true,
+        tags: {
+          include: { tag: true }
+        }
+      }
+    });
   }
 }
 

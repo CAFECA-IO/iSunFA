@@ -1,17 +1,41 @@
 export const en = {
   common: {
+    note: "Note",
+    optional_in_parentheses: "Optional",
+    no_data: "No Data",
+    cancel_edit_title: "Cancel Edit?",
+    cancel_edit_message: "Are you sure you want to cancel the edit? Data will revert to the original state.",
     loading: "Loading...",
     save: "Save",
     confirm: "Confirm",
+    verify_all: "Verify All",
+    verify_all_confirm_title: "Confirm Verify All?",
+    verify_all_confirm_desc: "This will mark all unverified items as verified.",
     cancel: "Cancel",
+    notification: "Notification",
+    ok: "OK",
     close: "Close",
     coming_soon_message: "Coming Soon",
+    all: "All",
     agree: "Agree",
     filter: "Filter",
+    clear_filters: "Clear Filters",
     pagination: {
       prev: "Previous",
       next: "Next",
       page_info: "Page {{current}} of {{total}}",
+    },
+    testing_env_banner: {
+      message: "⚠️ This environment is for development and demonstration. Data is cleared periodically. Do not use for production. For the official environment, visit ",
+    },
+    ai_confidence: {
+      title: "AI Confidence",
+      note: "AI Note",
+      no_note: "No AI Note",
+      note_title: "AI Analysis Note",
+    },
+    ai: {
+      pending: "Please wait, AI is processing...",
     },
   },
   faith: {
@@ -32,6 +56,9 @@ export const en = {
   },
   dashboard: {
     title: "Information War Room",
+    empty_state_title: "No Data Found",
+    empty_state_desc: "No data found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
+    empty_state_cta: "Upload Data",
     executive_summary: "Executive Summary",
     auto_refresh: "Auto Refresh",
     available_funds: "Available Funds",
@@ -61,6 +88,7 @@ export const en = {
     carbon_tax_prediction: "Carbon Tax Prediction",
     total_emissions: "Total Emissions",
     emissions_per_revenue: "Emissions / Revenue",
+    per_10k_revenue: "/ $10k Revenue",
     eco_label: "Eco-label",
     top_10_percent: "Top 10%",
     goal_achievement: "Reduction Goal",
@@ -68,6 +96,8 @@ export const en = {
       on_track: "On Track",
       at_risk: "At Risk",
       behind: "Behind",
+      achieved: "Achieved",
+      not_achieved: "Not Achieved",
     },
 
     ocr_status: "OCR Status",
@@ -142,6 +172,13 @@ export const en = {
     login_btn: "Login with Passkey",
     authenticating: "Authenticating...",
     creating: "Creating Account...",
+    idle: "Register.",
+    fetching_challenge: "Fetching challenge...",
+    creating_passkey: "Creating Passkey...",
+    parsing_passkey: "Parsing Passkey...",
+    predicting_address: "Predicting address...",
+    calculating_hash: "Calculating hash...",
+    awaiting_signature: "Awaiting signature...",
     create_btn: "Create Account",
     username: "Username",
     username_placeholder: "Enter your username",
@@ -174,7 +211,7 @@ export const en = {
         desc: "Integrates budget, approval, and transfer processes to comprehensively enhance financial operational efficiency.",
       },
       analysis: {
-        title: "Financial Analysis",
+        title: "Data Analysis",
         desc: "Provides in-depth financial data analysis to assist management in making informed business decisions.",
       },
       tax: {
@@ -371,9 +408,9 @@ export const en = {
         "Off-site Backup",
       ],
       user_count: "User Count (FIDO2 Key)",
-      add_user_price: "NT$ 105 / month",
+      add_user_price: "NT$ {{price}} / month",
       add_module: "Additional Module Fee",
-      add_module_price: "NT$ 1,575 / month",
+      add_module_price: "NT$ {{price}} / month",
       total_estimated: "Estimated Monthly Fee",
       selected: "Selected",
       required: "Required",
@@ -446,7 +483,6 @@ export const en = {
           "Authorization successful, issuing blockchain credits to your wallet. Please wait...",
         processing_failed: "Payment processing failed. Please try again.",
         syncing_status: "Syncing your account status...",
-        cancel_btn: "Cancel",
         payment_method: "Payment Method",
         use_saved_card: "Use Saved Card",
         bind_new_card: "Bind New Card",
@@ -476,7 +512,7 @@ export const en = {
       journal: "Invoice Management",
       tax: "Tax Filing",
       financial_report: "Financial Reports",
-      analysis: "Financial Analysis",
+      analysis: "Data Analysis",
       signing: "Document Signing",
       integration: "System Integration",
       other: "Other",
@@ -523,10 +559,25 @@ export const en = {
   },
   account_book_selection: {
     title: "Select Account Book",
-    subtitle: "Please select an account book to enter the management dashboard.",
+    subtitle:
+      "Please select an account book to enter the management dashboard.",
     empty_title: "No Available Account Books",
-    empty_desc: "You currently have no accessible account books, or your access has been removed.",
+    empty_desc:
+      "You currently have no accessible account books, or your access has been removed.",
     role: "Role",
+    create_button: "Create Account Book",
+    edit_button: "Edit",
+    form_create_title: "Create Account Book",
+    form_edit_title: "Edit Account Book",
+    form_name: "Name",
+    form_country: "Country / Region",
+    form_currency: "Currency",
+    form_start_year: "Start Year",
+    form_rule: "Accounting Rule",
+    form_team: "Team",
+    form_enterprise_id: "Enterprise ID (Optional)",
+    form_esg_industry: "Industry Category (ESG, Optional)",
+    submit: "Confirm",
   },
   sidebar: {
     modules: "Modules",
@@ -534,19 +585,67 @@ export const en = {
     billing: "Purchase & Billing",
     team: "Team Management",
     settings: "Settings",
+    account_book: "Switch Account Book",
   },
   locked: {
     title: "Function Not Activated",
     purchase: "Purchase",
   },
   analysis: {
-    title: 'Financial Analysis',
+    tooltips: {
+      industry_development: {
+        title: "Industry Development",
+        desc: "The analysis level of this module is 'Macro Industry' and 'Meso Supply Chain'. Therefore, keywords should revolve around industry sectors, sub-industries, technological trends, or specific supply chains.",
+        sectors_title: "Major Sectors:",
+        sectors_desc: "Technology, Healthcare, Financials, Consumer Discretionary, Energy.",
+        sub_title: "Sub-industries / Supply Chains:",
+        sub_desc: "Semiconductor Manufacturing, IC Design, EV Batteries, Cloud Infrastructure, Biotechnology.",
+        trends_title: "Emerging Trends / Concepts:",
+        trends_desc: "AI Servers, Silicon Photonics, Solid-State Batteries, Low Earth Orbit Satellites, ESG Green Energy."
+      },
+      smart_enterprise_rating: {
+        title: "Smart Enterprise Rating",
+        desc: "The analysis level of this module is 'Micro Entity', focusing on the financial and credit health check of a single company. Therefore, keywords must be exact company names, stock tickers, or specific ID numbers.",
+        us_tickers_title: "US Tickers / Company Names:",
+        us_tickers_desc: "AAPL or Apple\nNVDA or NVIDIA\nMSFT or Microsoft\nTSLA or Tesla",
+        tw_tickers_title: "TW/ADR Tickers:",
+        tw_tickers_desc: "TSM (TSMC ADR)\n2330 or Taiwan Semiconductor Manufacturing",
+        fuzzy_title: "Enterprise Attribute Classification:",
+        fuzzy_desc: "Sometimes you can also input 'Apple Supply Chain' or 'Tier 1 Auto Parts Suppliers' to filter out target companies for batch ratings.",
+        analyst_view_title: "💡 Analyst View:",
+        analyst_view_desc: "In practice, management often inputs tickers of 'main competitors', 'key suppliers', or 'potential acquisition targets' here to monitor supply chain disruption risks or benchmark financial metrics (e.g., ROE, gross margin) against peers."
+      },
+      financial_product_rating: {
+        title: "Financial Product Rating",
+        desc: "This module targets tradable 'financial assets' and 'investment portfolios'. Keywords should be specific product codes, fund names, or asset classes.",
+        etf_title: "Index Funds / ETFs:",
+        etf_desc: "SPY or VOO (S&P 500 ETF)\nQQQ (Nasdaq 100 ETF)\nTLT (20+ Year Treasury Bond ETF)",
+        mutual_funds_title: "Mutual Funds:",
+        mutual_funds_desc: "Enter specific fund product names, for example: Fidelity Global Technology Fund, AB Global High Yield.",
+        bonds_title: "Specific Bonds / Fixed Income:",
+        bonds_desc: "US 10-Year Treasury, specific corporate bond tickers (e.g., Apple 2030 Corporate Bond), Investment Grade (IG) Bonds, High Yield Bonds / Junk Bonds.",
+        derivatives_title: "Commodities / Derivatives:",
+        derivatives_desc: "Gold (GLD), Brent Crude, Bitcoin (IBIT).",
+        analyst_view_title: "💡 Analyst View:",
+        analyst_view_desc: "After inputting a keyword here, the system usually generates quantitative risk metrics such as Sharpe Ratio and Max Drawdown. This is crucial for a company's 'Treasury Department' when managing idle funds or allocating hedge positions."
+      }
+    },
+    company_input: {
+      label: "Company Name or Tax ID",
+      placeholder: "Enter full name, abbreviation, or Tax ID...",
+      searching: "Searching...",
+      not_found:
+        "Company not found. Please try entering a more complete name or Tax ID.",
+    },
+    title: 'Analysis Report',
     internal_analysis: 'Internal Analysis',
     external_analysis: 'External Analysis',
     history_reports: 'History Reports',
     period_type: 'Time Unit',
     select_year: 'Select Year',
     select_period: 'Select Period',
+    select_account_book: 'Choose from my account books',
+    select_from_account_books: 'Select Account Book',
     country: 'Select Country',
     category: 'Select Category',
     keyword: 'Keyword',
@@ -574,7 +673,6 @@ export const en = {
       "This action will consume credits. Please confirm the details below:",
     confirm_balance: "Balance after payment",
     confirm_action: "Pay & Generate",
-    cancel: "Cancel",
     countries: {
       tw: "Taiwan",
       us: "United States",
@@ -593,6 +691,8 @@ export const en = {
       market_trends: "Market Trends",
       industry_development: "Industry Development",
       financial_product_rating: "Financial Product Rating",
+      carbon_health_check: "Carbon Health Check",
+      net_zero_emissions: "Net Zero Emissions",
     },
     history: {
       title: "Analysis History",
@@ -611,6 +711,14 @@ export const en = {
       empty_title: "No Analysis Yet",
       empty_description:
         "Start your journey by generating your first financial analysis report using our advanced AI tools.",
+    },
+    steps: {
+      preparing: "Preparing transaction...",
+      signing_payment: "Please sign the payment transaction",
+      submitting_payment: "Submitting payment to blockchain...",
+      payment_success: "Payment successful!",
+      signing_analysis: "Please sign the analysis request",
+      analyzing: "Generating analysis report...",
     },
     success: {
       title: "Analysis Request Submitted",
@@ -800,8 +908,10 @@ export const en = {
     },
     warnings: {
       title: "Warning Message",
-      salary_below_minimum: "Base salary is below the statutory minimum wage ({{minimumWage}})",
-      overtime_exceeded: "Total overtime hours in a single month exceed the 46-hour statutory limit",
+      salary_below_minimum:
+        "Base salary is below the statutory minimum wage ({{minimumWage}})",
+      overtime_exceeded:
+        "Total overtime hours in a single month exceed the 46-hour statutory limit",
     },
     login_modal: {
       title: "Please Login in",
@@ -906,9 +1016,20 @@ export const en = {
     },
   },
   ocr: {
-    title: "Invoice Management",
+    prepared_files_prefix: "Prepared ",
+    prepared_files_suffix: " files",
+    add_more_or_analyze: "You can add more files or start batch analysis.",
+    clear_all_btn: "Clear All",
+    add_more_btn: "Add More",
+    analyze_all_btn: "Analyze All",
+    multiple_files_supported:
+      "Supports batch uploading multiple files (.jpg, .png, .pdf)",
+    title: "Receipt Management",
     upload: "Upload",
-    list: "List",
+    view_file: "Voucher File",
+    view_preview: "View Preview",
+    preview: "Original Voucher",
+    list: "Voucher List",
     uploading: "Uploading...",
     click_or_drag: "Click or drag file here",
     single_file_only: "Only one file can be uploaded at a time",
@@ -924,20 +1045,26 @@ export const en = {
     grid_view: "Grid View",
     file: "Invoice",
     created_date: "Created Date",
+    id: "Invoice ID",
     journal: "Journal",
+    confidence: "AI Confidence",
+    status: "Status",
     action: "Action",
     no_image: "No image",
     no_records: "No records found.",
-    analyzing: "AI is analyzing your invoice...",
     please_wait: "This may take a moment, please wait",
     detail_title: "Invoice Details",
+    ai: {
+      processing: "AI is analyzing your invoice...",
+      failed:
+        "AI could not analyze this invoice, please re-upload or input manually",
+    },
     edit: "Edit",
     save: "Save",
     delete: "Delete Invoice",
     confirm_delete_title: "Delete Invoice",
     confirm_delete_msg:
       "Are you sure you want to delete this invoice? This action cannot be undone.",
-    cancel: "Cancel",
     unsaved_changes_title: "Unsaved Changes",
     unsaved_changes_msg:
       "You have unsaved changes. Are you sure you want to leave?",
@@ -949,6 +1076,16 @@ export const en = {
     zoom_reset: "Reset Zoom",
   },
   journal: {
+    detail_modal: {
+      title: "Journal",
+    },
+    summary: {
+      empty: "No journal data available",
+      today_count: "Journals created today",
+      unit: "pcs",
+      pending: "Pending verify",
+      ai_confidence: "AI average confidence",
+    },
     main_view: {
       title: "Journal Management",
       upload: "Upload Journal",
@@ -971,157 +1108,426 @@ export const en = {
       copy_id: "Click to copy Journal ID: {{id}}",
     },
   },
-  "voucher": {
-    "main_view": {
-      "title": "Voucher Management",
-      "empty_message_prefix": "No vouchers currently available, please ",
-      "empty_upload_link": "upload files here",
-      "filters": {
-        "type": "Type",
-        "type_options": {
-          "all": "All",
-          "payment": "Payment",
-          "receipt": "Receipt",
-          "transfer": "Transfer"
-        },
-        "period": "Period",
-        "search": "Search",
-        "hide_deleted": "Hide deleted vouchers and their reversals.",
-        "currency": "CURRENCY: {currency}"
+  voucher: {
+    account_book_selector: {
+      title: "Select Account",
+      search_placeholder: "Search account code or name...",
+      no_results: "No matching accounts found",
+      all: "All",
+      types: {
+        asset: "Asset",
+        liability: "Liability",
+        equity: "Equity",
+        revenue: "Revenue",
+        expense: "Expense",
+        income: "Income",
+        cost: "Cost",
+        gainOrLoss: "Gain or Loss",
+        cashFlow: "Cash Flow",
+        otherComprehensiveIncome: "Other Comprehensive Income",
+        other: "Other",
       },
-      "table": {
-        "issued_date": "Issued Date",
-        "voucher_no": "Voucher No.",
-        "note": "Note",
-        "accounting": "Accounting",
-        "debit": "Debit",
-        "credit": "Credit",
-        "issuer": "Issuer",
-        "status_deleted": "Deleted"
-      }
     },
-    "detail_modal": {
-      "title": 'Edit Voucher ',
-      "fields": {
-        "voucher_date": "Voucher Date",
-        "voucher_type": "Voucher Type",
-        "note": "Note",
-        "accounting": "Accounting",
-        "accounting_select": "Select",
-        "particular": "Particular",
-        "debit": "Debit",
-        "credit": "Credit"
+    main_view: {
+      title: "Smart Voucher Management",
+      subtitle:
+        "AI has automatically generated corresponding accounting entries based on your receipt recognition results.",
+      actions: {
+        export: "Export Vouchers",
+        add: "Add Voucher",
       },
-      "actions": {
-        "clear_all": "Clear All",
-        "save_voucher": "Save Voucher",
-        "confirm": "Confirm",
-        "cancel": "Cancel"
+      filters: {
+        type: "Field Type",
+        type_options: {
+          income: "Income",
+          outcome: "Outcome",
+          transfer: "Transfer",
+        },
+        period: "Period",
+        search: "Search voucher no, account code...",
+        hide_deleted: "Hide deleted vouchers and reversed records",
+        total_vouchers: "Total Vouchers: {{count}}",
+        currency: "Currency: {{currency}}",
       },
-      "confirm_modals": {
-        "clear_all": {
-          "title": "Clear all",
-          "message": "Are you sure you want to clear all data?"
+      table: {
+        types: {
+          outcome: "Payment Voucher",
+          income: "Receipt Voucher",
+          transfer: "Transfer Voucher",
+          unknown: "Unknown Voucher",
         },
-        "leave_without_saving": {
-          "title": "Leave without saving",
-          "message": "Are you sure you want to discard your changes and leave?"
+        headers: {
+          receipt: "Receipt",
+          voucher_date: "Voucher Date",
+          voucher_type_id: "Voucher Type & No.",
+          accounting_entries: "Accounting Entries",
+          debit: "Debit Amount",
+          credit: "Credit Amount",
+          confidence: "AI Confidence",
+          status: "Status",
         },
-        "save_voucher": {
-          "title": "Save Voucher",
-          "message": "Are you sure you want to save this voucher?"
-        }
-      }
+        no_entries: "No Entries",
+        no_file: "No File",
+        filter_btn: "Filters",
+        verify_all: "Verify All",
+        no_data: "No Data Found",
+        no_data_desc: "No voucher records found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
+        no_data_cta: "Upload Data",
+        no_filter_results: "No Results Found",
+        no_filter_results_desc:
+          "Please adjust your search keywords or filter criteria.",
+        ai: {
+          processing: "AI is analyzing your voucher...",
+          failed:
+            "AI could not analyze this voucher, please re-upload or input manually",
+        },
+      },
+    },
+    summary: {
+      empty_prefix: "No voucher records yet, please ",
+      empty_link: "add a voucher",
+      today_count: "Vouchers Today",
+      unit: " sheets",
+      month_total: "Monthly Total",
+      pending: "Pending Verification",
+      ai_confidence: "AI Average Confidence",
+    },
+    detail_modal: {
+      title: "Voucher",
+      messages: {
+        fetch_error: "Failed to fetch voucher",
+        deleted_warning: "Deleted vouchers cannot be edited",
+      },
+      sections: {
+        preview: "Receipt Preview",
+        basic_info: "Basic Information",
+        accounting_entries: "Accounting Entries",
+      },
+      fields: {
+        note: "Note",
+        note_placeholder: "Enter note...",
+        confidence: "AI Confidence",
+        voucher_no: "Voucher No.",
+        voucher_no_placeholder: "Enter Voucher No.",
+        account_code_name: "Account Code / Name",
+        total_amount: "Total Amount",
+        voucher_date: "Voucher Date",
+        voucher_type: "Voucher Type",
+        accounting_select: "Select Account",
+        particular: "Particulars",
+        debit: "Debit",
+        credit: "Credit",
+      },
+      validation: {
+        empty_fields: "Date or voucher type is empty",
+        unbalanced: "Debit and credit are not balanced",
+        empty_rows: "Entries are empty",
+        incomplete_row: "An entry has an empty account or amount",
+      },
+      balance_check: {
+        title: "Balance Check",
+        balanced: "Balanced",
+        unbalanced: "Unbalanced",
+      },
+      actions: {
+        cancel_edit: "Cancel Edit",
+        verify_save: "Verify & Save",
+        save_only: "Save Only",
+        add_row: "Add Entry",
+        clear_all: "Clear All",
+        save_voucher: "Save Voucher",
+        confirm: "Confirm",
+      },
+      confirm_modals: {
+        leave_without_saving: {
+          title: "Leave without saving",
+          message: "Are you sure you want to discard changes and leave?",
+        },
+        save_voucher: {
+          title: "Save Voucher",
+          message: "Are you sure you want to save this voucher?",
+        },
+      },
+    },
+  },
+  esg_main: {
+    title: "Carbon Management & ESG Analysis",
+    description:
+      "Automatically analyzes input vouchers to provide real-time carbon neutrality progress and multi-dimensional emission analysis.",
+    export_button: "Export ESG Declaration",
+    year: "Year",
+    month: "Month",
+    all_year: "All Year",
+  },
+  esg_summary: {
+    no_data_prefix: "Currently no ESG data for this account book, please ",
+    upload_link: "upload vouchers",
+    no_data_suffix: " to generate carbon emission records",
+    total_emissions: "Total Monthly Emissions",
+    estimate_eom: "Est. EOM: ",
+    emission_intensity: "Emission Intensity",
+    better_than_industry: "Better than industry average ({{average}})",
+    scope_distribution: "Scope Distribution (SCOPE)",
+    annual_goal_progress: "Annual Goal Progress",
+  },
+  esg_table: {
+    intensity: {
+      high: "High",
+      medium: "Medium",
+      low: "Low",
+    },
+    scope: {
+      scope_1: "Scope 1",
+      scope_2: "Scope 2",
+      scope_3: "Scope 3",
+    },
+    no_file: "No File",
+    search_placeholder: "Search vendor, activity...",
+    search_aria: "Search vendor, activity",
+    filter_intensity_aria: "Filter by Intensity",
+    filter_intensity_all: "All",
+    filter_scope_aria: "Filter by Scope",
+    filter_scope_all: "All (Scope 1-3)",
+    sort_date_aria: "Sort by Date",
+    sort_newest: "Newest",
+    sort_oldest: "Oldest",
+    header: {
+      voucher: "Voucher",
+      date: "Date",
+      activity_target: "Activity & Target",
+      raw_data: "Raw Data",
+      emissions: "Emissions (KGCO2E)",
+      intensity_label: "Intensity",
+      ai_confidence: "AI Confidence",
+      status: "Status",
+    },
+    loading: "Loading...",
+    no_records: "No Data Found",
+    no_records_desc: "No ESG records found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
+    no_records_cta: "Upload Data",
+    no_filter_results: "No Results Found",
+    no_filter_results_desc:
+      "Please adjust your search keywords or filter criteria.",
+    ai: {
+      processing: "AI is analyzing your ESG record...",
+      failed:
+        "AI could not analyze this ESG record, please re-upload or input manually",
+    },
+    footer: {
+      record_count: "Showing {{count}} records",
+      data_citation: "Data: IPCC AR6 Emission Factors",
+    },
+  },
+  esg_verify: {
+    title: "Carbon Inventory",
+    preview: "Voucher Preview",
+    ai_confidence: "AI Conf.",
+    no_image: "No Image",
+    form: {
+      date: "Date",
+      scope: "Scope",
+      scope_1: "Scope 1 (Direct)",
+      scope_2: "Scope 2 (Indirect)",
+      scope_3: "Scope 3 (Other)",
+      activity_type: "Activity Type",
+      activity_object: "Activity Object",
+      vendor: "Vendor / Target",
+      raw_data: "Raw Data",
+      unit: "Unit",
+      emissions: "Emissions (kgCO2e)",
+      intensity: "Intensity",
+      intensity_low: "Low",
+      intensity_medium: "Medium",
+      intensity_high: "High",
+    },
+    emissions: {
+      title: "Emissions Calculation",
+      raw_data: "Raw Data",
+      unit: "Unit",
+      total: "Total Emissions",
+      intensity: "Intensity Level",
+    },
+    actions: {
+      cancel_edit: "Cancel Edit",
+      save_only: "Save Only",
+    },
+    close_confirm: {
+      title: "Close without saving?",
+      message:
+        "Review the changes you've made to the ESG records. Are you sure you want to save?",
+      confirm: "Confirm Save",
+      success: "Verification data saved",
+    },
+    save_confirm: {
+      title: "Save changes?",
+      message: "You are about to save the verification changes. Proceed?",
+      confirm: "Save",
+    },
+  },
+  esg_target: {
+    select_industry: "Industry Category",
+    ind_power: "Power & Electricity",
+    ind_steel: "Steel & Metals",
+    ind_cement: "Cement & Building Materials",
+    ind_petro: "Petrochemicals & Plastics",
+    ind_semiconductor: "Semiconductor",
+    ind_transport: "Transportation & Logistics",
+    ind_retail: "Retail & E-commerce",
+    ind_telecom: "Telecom & Internet",
+    btn: "Set Annual Target",
+    yoy_reduction: "Reduced by {{percent}}% YoY",
+    yoy_increase: "Increased by {{percent}}% YoY",
+    yoy_same: "No YoY Change",
+    target_estimation: "Target estimated at {{global_rank}}, {{industry_rank}}",
+    industry_classification: "Industry Classification: {{industry}}",
+    industry_rank: "Top {{rank}}% in Industry",
+    global_rank: "Top {{rank}}% in Taiwan",
+    unsaved_changes_warning:
+      "You have unsaved changes. Are you sure you want to leave?",
+    unsaved_changes_title: "Close without saving?",
+    target_total_emissions: "Target Total Emissions (tCO2e)",
+    target_revenue_emissions: "Target Emission Intensity (tCO2e)",
+    title: "Set Annual Carbon Emission Target",
+    past_records: "Historical Carbon Emission Records",
+    year: "Year",
+    emissions: "Emissions (tCO2e)",
+    revenue: "Revenue (10k)",
+    intensity: "Intensity",
+    set_target_intensity: "Set Target Intensity for This Year",
+    target_placeholder: "Enter Target Intensity",
+    target_unit: "tCO2e / 10k TWD Revenue",
+    reduction_from_last_year: "Compared to Last Year",
+    decrease: "Reduction",
+    increase: "Increase",
+    taiwan_ranking: "Top % in TW Enterprises",
+    industry_ranking: "Top % in Similar Industry",
+    save: "Save Settings",
+    esg_industry_benchmarks: {
+      spectrum: {
+        extremely_high: "Extremely High Carbon",
+        very_high: "Very High Carbon",
+        high: "High Carbon",
+        mid_high: "Mid-High Carbon",
+        medium: "Medium",
+        mid_low: "Mid-Low Carbon",
+        extremely_low: "Extremely Low Carbon",
+      },
+      industry_1: {
+        name: "Petrochemical Industry",
+        desc: "Highest: Formosa Petrochemical (3,650 kg). Gap reason: Naphtha cracking and self-built coal cogeneration plants lead to unavoidable chemical fugitive emissions and fossil fuel combustion.",
+      },
+      industry_2: {
+        name: "Cement Industry",
+        desc: "Highest: Asia Cement (2,883 kg). Gap reason: High-temperature calcination of limestone directly emits CO2, vulnerable to revenue denominator shrinkage from real estate slumps.",
+      },
+      industry_3: {
+        name: "Power & Energy",
+        desc: "High: Mai-Liao Power (2,657 kg) / Low: Taipower (1,068 kg). Gap reason: Mai-Liao is 100% coal-fired; Taipower benefits from diverse energy mix (nuclear, hydro, gas) diluting emission intensity.",
+      },
+      industry_4: {
+        name: "Steel Industry",
+        desc: "High: China Steel (520 kg) / Low: Tung Ho Steel (126 kg). Gap reason: Traditional blast furnaces require coal to reduce iron ore; electric arc furnaces melt recycled scrap steel, cutting emissions by 70%.",
+      },
+      industry_5: {
+        name: "Shipping & Transport",
+        desc: "High: Ocean Container Shipping / Low: High-speed rail. Gap reason: Heavy oil-burning giant ships are huge Scope 1 emitters, heavily influenced by freight rates; electrified rail performs exceptionally well.",
+      },
+      industry_6: {
+        name: "Telecom & Networking",
+        desc: "Highest: Chunghwa Telecom (271.8 kg). Gap reason: Breaks the 'no factory means low carbon' myth. 24/7 5G base stations and IDC cooling chillers are massive power consumers.",
+      },
+      industry_7: {
+        name: "Textiles & Chemical Fibers",
+        desc: "Low: Far Eastern New Century (59.2 kg). Gap reason: Traditional dyeing is highly water and energy intensive; FENC reversed this through R-PET recycling technology and diversified holdings.",
+      },
+      industry_8: {
+        name: "Semiconductor Manufacturing",
+        desc: "Highest: TSMC (50.1 kg). Gap reason: EUV machines and clean rooms drive massive Scope 2 power consumption, but sky-high chip prices and massive green energy purchases keep intensity low.",
+      },
+      industry_9: {
+        name: "Retail & E-commerce",
+        desc: "High: Uni-President (7-11) (37.6 kg) / Low: Momo (23 kg). Gap reason: Physical stores constrained by 24/7 AC and open freezers; E-commerce avoids physical stores but bears logistics fleet & automated warehouse emissions.",
+      },
+      industry_10: {
+        name: "Knowledge & Finance (IC/Software/Banking)",
+        desc: "High: Banks (~1.5 kg) / Low: MediaTek (1.86 kg). Gap reason: Business model relies on 'brains and capital'. MediaTek outsources manufacturing; finance has low office emissions but huge uncounted 'financed emissions'.",
+      },
+    },
+  },
+  "verify": {
+    "verify_modal": {
+      title: "Confirm Verify?",
+      message: "Are you sure you want to verify this {{type}}? Changes will be saved, please confirm the data is correct.",
+      confirm: "Confirm Verify",
+    },
+    "unverify_modal": {
+      title: "Confirm Unverify?",
+      message: "Are you sure you want to unverify this {{type}}? Changes will be saved, please confirm the data is correct.",
+      confirm: "Confirm Unverify",
+    },
+    status: {
+      verified: "Verified",
+      unverified: "Unverified",
+    },
+    button: {
+      unverify: "Unverify",
+      verify: "Verify & Save",
+    },
+    type: {
+      journal: "Journal",
+      voucher: "Voucher",
+      esg: "ESG",
     }
   },
-  "esg_summary": {
-    "no_data_prefix": "Currently no ESG data for this account book, please ",
-    "upload_link": "upload vouchers",
-    "no_data_suffix": " to generate carbon emission records",
-    "total_emissions": "Total Monthly Emissions",
-    "estimate_eom": "Est. EOM: ",
-    "emission_intensity": "Emission Intensity",
-    "better_than_industry": "Better than industry average ({{average}})",
-    "scope_distribution": "Scope Distribution (SCOPE)",
-    "annual_goal_progress": "Annual Goal Progress"
+  esg: {
+    detail_modal: {
+      title: "Carbon Inventory",
+    },
   },
-  "esg_table": {
-    "intensity": {
-      "high": "High",
-      "medium": "Medium",
-      "low": "Low"
+  teamManagement: {
+    title: "Team Management",
+    description: "Manage your teams and members here.",
+    createTeam: "Create Team",
+    pendingInvitations: "Pending Invitations",
+    acceptViaFido2: "Accept via FIDO2",
+    accepting: "Accepting...",
+    noTeams: "No teams available.",
+    inviteMember: "Invite Member",
+    you: "You",
+    pendingInvite: "Pending Invite",
+    pending: "PENDING",
+    accountBooks: "Account Books (Businesses)",
+    createNewTeam: "Create New Team",
+    teamName: "Team Name",
+    enterTeamName: "Enter team name",
+    cancel: "Cancel",
+    creating: "Creating...",
+    web3Address: "Web3 Address",
+    role: "Role",
+    fido2Requirement: "FIDO2 Requirement:",
+    fido2RequirementText: "You will be asked to authenticate via Passkey to sign this transaction on-chain.",
+    signing: "Signing...",
+    inviteViaFido2: "Invite via FIDO2",
+    roles: {
+      OWNER: "Owner",
+      ADMIN: "Admin",
+      EDITOR: "Editor",
+      VIEWER: "Viewer",
     },
-    "scope": {
-      "scope_1": "Scope 1",
-      "scope_2": "Scope 2",
-      "scope_3": "Scope 3"
-    },
-    "no_file": "No File",
-    "verified": "Verified",
-    "manual_verify": "Manual Verify",
-    "search_placeholder": "Search vendor, activity...",
-    "search_aria": "Search vendor, activity",
-    "filter_intensity_aria": "Filter by Intensity",
-    "filter_intensity_all": "All",
-    "filter_scope_aria": "Filter by Scope",
-    "filter_scope_all": "All (Scope 1-3)",
-    "sort_date_aria": "Sort by Date",
-    "sort_newest": "Newest",
-    "sort_oldest": "Oldest",
-    "filter_btn": "Filter",
-    "header": {
-      "voucher": "Voucher",
-      "date": "Date",
-      "activity_target": "Activity & Target",
-      "raw_data": "Raw Data",
-      "emissions": "Emissions (KGCO2E)",
-      "intensity_label": "Intensity",
-      "ai_confidence": "AI Confidence",
-      "status": "Status"
-    },
-    "loading": "Loading...",
-    "no_records": "No ESG Records",
-    "footer": {
-      "record_count": "Showing {{count}} records",
-      "data_citation": "Data: IPCC AR6 Emission Factors"
-    }
-  },
-  "esg_verify": {
-    "title": "Manual Verification",
-    "preview": "Voucher Preview",
-    "ai_confidence": "AI Conf.",
-    "no_image": "No Image",
-    "form": {
-      "date": "Date",
-      "scope": "Scope",
-      "scope_1": "Scope 1 (Direct)",
-      "scope_2": "Scope 2 (Indirect)",
-      "scope_3": "Scope 3 (Other)",
-      "activity_type": "Activity Type",
-      "vendor": "Vendor / Target",
-      "raw_data": "Raw Data",
-      "unit": "Unit",
-      "emissions": "Emissions (kgCO2e)",
-      "intensity": "Intensity",
-      "intensity_low": "Low",
-      "intensity_medium": "Medium",
-      "intensity_high": "High"
-    },
-    "actions": {
-      "cancel": "Cancel",
-      "save_and_verify": "Save & Verify"
-    },
-    "close_confirm": {
-      "title": "Close without saving?",
-      "message": "You have unsaved changes. These will be lost. Proceed?",
-      "confirm": "Leave",
-      "cancel": "Cancel"
-    },
-    "save_confirm": {
-      "title": "Save changes?",
-      "message": "You are about to save the verification changes. Proceed?",
-      "confirm": "Save",
-      "cancel": "Cancel"
+    confirmRemoveLabel: "Are you sure you want to remove this member?",
+    alerts: {
+      createSuccess: "Team created successfully!",
+      updateSuccess: "Team name updated successfully!",
+      inviteSuccess: "Invitation sent successfully!",
+      acceptSuccess: "Invitation accepted successfully!",
+      roleSuccess: "Role updated successfully!",
+      removeSuccess: "Member removed successfully!",
+      errorCreate: "Error creating team",
+      errorUpdate: "Error updating team name",
+      errorInvite: "Error inviting member",
+      errorAccept: "Error accepting invitation",
+      errorRole: "Error changing role",
+      errorRemove: "Error removing member",
     }
   }
 };

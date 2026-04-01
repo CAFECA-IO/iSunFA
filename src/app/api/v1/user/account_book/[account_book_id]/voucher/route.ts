@@ -1,16 +1,16 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { prisma } from "@/lib/prisma";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { voucherRepo } from "@/repositories/voucher.repo";
+import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/browser";
-import {
-  IVoucher,
-  IVoucherLineUI,
-  TradingType /* IParsedVoucherLine */,
-} from "@/interfaces/voucher";
+import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
-// import { ChatService } from "@/services/chat.service";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { VerifyStatus } from "@/constants/verify_status";
 
 /**
  * Info: (20260310 - Julian) 新增傳票：將 AI 解析出的傳票存入 DB
@@ -31,9 +31,7 @@ export async function POST(
     }
 
     // Info: (20260310 - Julian) 取得建立者
-    const creator = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const creator = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!creator) {
       console.error("Creator not found");
@@ -42,107 +40,46 @@ export async function POST(
 
     // Info: (20260310 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
 
-    // const body = await request.json();
-    // const { file } = body;
+    const body = await request.json();
+    const { fileId } = body;
 
-    // // Info: (20260311 - Julian) 驗證 file 參數
-    // if (!file || !file.hash) {
-    //   console.error("Missing file or file hash");
-    //   return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
-    // }
-
-    // // Info: (20260311 - Julian) 使用 AI 分析發票/憑證資料
-    // const apiKey = process.env.GEMINI_API_KEY;
-    // if (!apiKey) {
-    //   console.error("Missing GEMINI_API_KEY");
-    //   return jsonFail(
-    //     ApiCode.INTERNAL_SERVER_ERROR,
-    //     "Server configuration error",
-    //   );
-    // }
-
-    // ToDo: 建立分析 Voucher 的 Mission 和 Task
-    // const chatService = new ChatService(apiKey);
-
-    // const imagesForAi =
-    //   file.base64 && file.mimeType
-    //     ? [{ data: file.base64, mimeType: file.mimeType }]
-    //     : [];
-
-    // const { data: voucherData, error: aiError } = await chatService.analyzeVoucher(imagesForAi);
-
-    // if (aiError || !voucherData) {
-    //   return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, aiError || "Failed to parse voucher");
-    // }
-
-    // Info: (20260311 - Julian) 建立上傳檔案 DB 紀錄
-    // const dbFile = await prisma.file.create({
-    //   data: {
-    //     hash: file.hash,
-    //     fileName: file.fileName,
-    //   },
-    // });
-
-    // const parsedLines: IParsedVoucherLine[] = Array.isArray(voucherData.lines) ? voucherData.lines : [];
-
-    // Info: (20260311 - Julian) 將 AI 解析結果存入 DB
-    // const newVoucher = await prisma.voucher.create({
-    //   data: {
-    //     accountBookId: accountBook.id,
-    //     fileId: dbFile.id,
-    //     userId: creator.id,
-    //     tradingDate: voucherData.tradingDate ? new Date(voucherData.tradingDate) : new Date(),
-    //     tradingType: voucherData.tradingType || "INCOME",
-    //     note: voucherData.note || "",
-    //     lines: {
-    //       create: parsedLines.map((line) => ({
-    //          accountingCode: line.accountingCode || "",
-    //          particular: line.particular || "",
-    //          amount: line.amount || 0,
-    //          isDebit: line.isDebit ?? true,
-    //       })),
-    //     },
-    //   },
-    // });
+    // Info: (20260311 - Julian) 驗證 file 參數
+    if (!fileId) {
+      console.error("Missing file or file hash");
+      return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
+    }
 
     // Info: (20260311 - Julian) 建立空白傳票
-    const newVoucher = await prisma.voucher.create({
-      data: {
-        accountBookId: accountBook.id,
-        fileId: "",
-        userId: creator.id,
-        tradingDate: new Date(),
-        tradingType: "INCOME",
-        note: "",
-        lines: {
-          create: [],
-        },
-      },
+    const newVoucher = await voucherRepo.createVoucher({
+      accountBookId: accountBook.id,
+      fileId: fileId,
+      userId: creator.id,
+      tradingDate: new Date(),
+      note: "",
+      lines: { create: [] },
+      confidence: 0,
+      aiNote: "",
     });
 
-    if(!newVoucher) {
+    if (!newVoucher) {
       console.error("Voucher creation failed");
       return jsonFail(ApiCode.NOT_FOUND, "Voucher creation failed");
     }
 
     // Info: (20260311 - Julian) 新增 AuditLog
-    await prisma.auditLog.create({
-      data: {
-        userId: creator.id,
-        dataType: "VOUCHER",
-        dataId: newVoucher.id,
-        accountBookId: accountBook.id,
-        action: "CREATE",
-      },
+    await auditLogRepo.createAuditLog({
+      userId: creator.id,
+      dataType: "VOUCHER",
+      dataId: newVoucher.id,
+      accountBookId: accountBook.id,
+      action: "CREATE",
     });
 
     return jsonOk({
@@ -174,9 +111,7 @@ export async function GET(
     }
 
     // Info: (20260310 - Julian) 取得建立者
-    const author = await prisma.user.findUnique({
-      where: { address: sessionUser.address },
-    });
+    const author = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!author) {
       console.error("Author not found");
@@ -185,9 +120,7 @@ export async function GET(
 
     // Info: (20260310 - Julian) 取得帳簿
     const { account_book_id: accountBookId } = await params;
-    const accountBook = await prisma.accountBook.findUnique({
-      where: { id: accountBookId },
-    });
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
       console.error("Accountbook not found");
@@ -195,6 +128,7 @@ export async function GET(
     }
 
     const searchParams = request.nextUrl.searchParams;
+    const verifyStatus = searchParams.get("verifyStatus");
     const keyWord = searchParams.get("keyWord");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
@@ -223,6 +157,11 @@ export async function GET(
         { lines: { some: { particular: { contains: keyWord } } } },
         { lines: { some: { accountingCode: { contains: keyWord } } } },
       ];
+    }
+
+    // Info: (20260324 - Julian) 建立審核狀態篩選
+    if (verifyStatus) {
+      filteredConditions.where!.isVerified = verifyStatus === VerifyStatus.VERIFIED;
     }
 
     // Info: (20260310 - Julian) 建立時間區間篩選
@@ -263,14 +202,10 @@ export async function GET(
     }
 
     // Info: (20260310 - Julian) 取得日記帳列表
-    const vouchers = (await prisma.voucher.findMany(
-      filteredConditions,
-    )) as Prisma.VoucherGetPayload<{
-      include: { file: true; user: true; lines: true };
-    }>[];
+    const vouchers = await voucherRepo.getVouchers(filteredConditions);
 
     // Info: (20260311 - Julian) 組合成前端所需的格式
-    const result: IVoucher[] = vouchers.map((v) => {
+    const formattedVouchers: IVoucher[] = vouchers.map((v) => {
       // Info: (20260311 - Julian) 取得個別分錄
       const voucherLines = v.lines.filter((l) => l.voucherId === v.id);
 
@@ -291,22 +226,37 @@ export async function GET(
 
       return {
         id: v.id,
+        accountBookId: v.accountBookId,
+        userId: v.userId,
         tradingDate: Math.floor(v.tradingDate.getTime() / 1000),
-        tradingType: v.tradingType.toLowerCase() as TradingType,
+        tradingType: v.tradingType?.toLowerCase() as TradingType,
         note: v.note ?? "",
         isDeleted: !!v.deletedAt,
         fileId: v.fileId ?? "",
+        file: v.file
+          ? {
+            id: v.file.id,
+            hash: v.file.hash,
+            fileName: v.file.fileName || "Unknown",
+          }
+          : undefined,
         lineItems: {
           lines: voucherLineItems,
           totalAmount: totalAmount,
         },
         issuerName: v.user?.name ?? "",
+        confidence: v.confidence,
+        isVerified: v.isVerified,
+        analysisStatus: v.analysisStatus as AIAnalysisStatus,
+        aiNote: v.aiNote ?? "",
+        journalId: v.journalId,
+        esgRecordId: v.esgRecordId,
       };
     });
 
     // Info: (20260311 - Julian) 排序邏輯
     if (sorting) {
-      result.sort((a, b) => {
+      formattedVouchers.sort((a, b) => {
         if (sorting === "date_desc") return b.tradingDate - a.tradingDate;
         if (sorting === "date_asc") return a.tradingDate - b.tradingDate;
 
@@ -336,7 +286,10 @@ export async function GET(
       });
     }
 
-    return jsonOk({ result });
+    // Info: (20260324 - Julian) 總筆數
+    const totalCount = await voucherRepo.countVouchers(filteredConditions.where || {});
+
+    return jsonOk({ data: formattedVouchers, total: totalCount });
   } catch (error) {
     console.error("Get vouchers failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get vouchers failed");

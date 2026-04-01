@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { IThread, IFile } from "@/interfaces/ai_talk";
-import { prisma } from "@/lib/prisma";
+import { talkRepo } from "@/repositories/talk.repo";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { ChatService } from "@/services/chat.service";
 
@@ -13,36 +14,17 @@ import { ChatService } from "@/services/chat.service";
 export async function GET() {
   try {
     // Info: (20260212 - Julian) 取得所有討論串
-    const threads = await prisma.thread.findMany({
-      orderBy: { createdAt: "desc" }, // Info: (20260212 - Julian) 依建立時間倒序
-      include: {
-        _count: {
-          select: {
-            comments: true,
-            shares: true,
-          },
-        },
-      },
-    });
+    const threads = await talkRepo.listThreadsWithCounts();
 
     // Info: (20260212 - Julian) 取得與討論串關聯的標籤
-    const tagIds = await prisma.threadTag.findMany({
-      where: { threadId: { in: threads.map((thread) => thread.id) } },
-    });
-    const tags = await prisma.tag.findMany({
-      where: { id: { in: tagIds.map((tagId) => tagId.tagId) } },
-    });
+    const tagIds = await talkRepo.getThreadTagsByThreadIds(threads.map((thread) => thread.id));
+    const tags = await talkRepo.getTagsByIds(tagIds.map((tagId) => tagId.tagId));
 
     // Info: (20260212 - Julian) 取得討論串的使用者
-    const users = await prisma.user.findMany({
-      where: { id: { in: threads.map((thread) => thread.userId) } },
-    });
+    const users = await webAuthnRepo.findUsersByIds(threads.map((thread) => thread.userId));
 
     // Info: (20260212 - Julian) 取得與討論串關聯的按讚數、倒讚數
-    const reactionCounts = await prisma.reaction.groupBy({
-      by: ["threadId", "type"],
-      _count: { _all: true },
-    });
+    const reactionCounts = await talkRepo.getReactionCounts();
     const likeCounts = reactionCounts.filter(
       (reaction) => reaction.type === "LIKE",
     );
@@ -113,9 +95,7 @@ export async function POST(request: NextRequest) {
       return jsonFail(ApiCode.VALIDATION_ERROR, "Question is required");
     }
 
-    const author = await prisma.user.findUnique({
-      where: { address: user.address },
-    });
+    const author = await webAuthnRepo.findUserByAddress(user.address);
 
     if (!author) {
       console.error("Author not found");
@@ -146,40 +126,27 @@ export async function POST(request: NextRequest) {
     );
 
     // Info: (20260212 - Julian) 建立討論串
-    const thread = await prisma.thread.create({
-      data: {
-        question,
-        userId: author.id,
-        answer: answer,
-      },
+    const thread = await talkRepo.createThread({
+      question,
+      userId: author.id,
+      answer: answer,
     });
 
     // Info: (20260226 - Julian) 建立上傳檔案並與討論串關聯
     if(files.length > 0){
-      await prisma.file.createMany({
-        data: files.map((file: IFile) => ({
-          hash: file.hash,
-          fileName: file.fileName,
-          threadId: thread.id,
-        })),
-      });
+      await talkRepo.createFiles(files.map((file: IFile) => ({
+        hash: file.hash,
+        fileName: file.fileName,
+        threadId: thread.id,
+      })));
     }
 
     // Info: (20260212 - Julian) 建立標籤並關聯
     if (tags && tags.length > 0) {
       for (const tagName of tags) {
-        const tag = await prisma.tag.upsert({
-          where: { name: tagName },
-          create: { name: tagName },
-          update: {},
-        });
+        const tag = await talkRepo.upsertTag(tagName);
 
-        await prisma.threadTag.create({
-          data: {
-            threadId: thread.id,
-            tagId: tag.id,
-          },
-        });
+        await talkRepo.createThreadTag(thread.id, tag.id);
       }
     }
 

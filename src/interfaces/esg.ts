@@ -1,3 +1,5 @@
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+
 export enum EsgScope {
   SCOPE_1 = "SCOPE_1",
   SCOPE_2 = "SCOPE_2",
@@ -10,11 +12,6 @@ export enum EsgIntensity {
   HIGH = "HIGH",
 }
 
-export enum EsgStatus {
-  VERIFIED = "VERIFIED",
-  MANUAL = "MANUAL",
-}
-
 export interface IEsgTotalEmissions {
   value: number;
   unit: string;
@@ -23,7 +20,7 @@ export interface IEsgTotalEmissions {
 }
 
 export interface IEsgEmissionIntensity {
-  value: number;
+  value: number | null;
   unit: string;
   industryAverage: number;
 }
@@ -74,13 +71,13 @@ export const mockDashboardSummary: IEsgDashboardSummary = {
 export interface IEsgRecord {
   id: string;
   dateTimestamp: number;
-   fileId:string;
-     file?: {
+  fileId: string;
+  file?: {
     id: string;
     hash: string;
     fileName: string;
   };
-  scope: EsgScope;
+  scope: EsgScope | null;
   activityType: string;
   vendor: string;
   rawActivityData: string;
@@ -88,50 +85,9 @@ export interface IEsgRecord {
   emissions: string;
   intensity: EsgIntensity;
   confidence: number;
-  status: EsgStatus;
+  isVerified: boolean;
+  analysisStatus: AIAnalysisStatus | null;
+  aiNote: string;
+  journalId?: string;
+  voucherId?: string;
 }
-
-export const mockRecords: IEsgRecord[] = [
-  {
-    id: '1',
-    dateTimestamp: 1700000000,
-    fileId:'123',
-    scope: EsgScope.SCOPE_2,
-    activityType: "電力使用",
-    vendor: "新新小鎮有限公司 (電力採購)",
-    rawActivityData: "2,435",
-    unit: "kWh",
-    emissions: "1,240.5",
-    intensity: EsgIntensity.HIGH,
-    confidence: 98,
-    status: EsgStatus.VERIFIED
-  },
-  {
-    id: '2',
-    dateTimestamp: 1740000000,
-      fileId:'abc',
-    scope: EsgScope.SCOPE_1,
-    activityType: "移動源燃燒",
-    vendor: "中油股份有限公司 (公務車加油)",
-    rawActivityData: "18.5",
-    unit: "Unit",
-    emissions: "45.2",
-    intensity: EsgIntensity.LOW,
-    confidence: 85,
-    status: EsgStatus.MANUAL
-  },
-  {
-    id: '3',
-    dateTimestamp: 1780000000,
-      fileId:'456',
-    scope: EsgScope.SCOPE_3,
-    activityType: "委外物流",
-    vendor: "物流運送服務",
-    rawActivityData: "450",
-    unit: "Unit",
-    emissions: "320.8",
-    intensity: EsgIntensity.MEDIUM,
-    confidence: 99,
-    status:EsgStatus.VERIFIED
-  },
-];

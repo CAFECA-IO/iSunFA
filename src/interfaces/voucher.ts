@@ -1,9 +1,17 @@
 import { IAccount } from "@/constants/accounts";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 export enum TradingType {
   INCOME = "income",
   OUTCOME = "outcome",
   TRANSFER = "transfer",
+}
+
+export interface IVoucherDashboardSummary {
+  todayVoucherCount: number;
+  monthTotalAmount: number;
+  pendingVoucherCount: number;
+  aiAverageConfidence: number;
 }
 
 export interface IVoucherLine {
@@ -25,7 +33,7 @@ export interface IVoucherLineUI {
 export interface IVoucher {
   id: string;
   tradingDate: number;
-  tradingType: TradingType;
+  tradingType: TradingType | null;
   note: string;
   isDeleted: boolean;
   fileId: string;
@@ -39,6 +47,12 @@ export interface IVoucher {
     totalAmount: number;
   };
   issuerName: string;
+  confidence: number;
+  isVerified: boolean;
+  analysisStatus: AIAnalysisStatus
+  aiNote: string;
+  journalId?: string;
+  esgRecordId?: string;
 }
 
 export interface IParsedVoucherLine {

@@ -1,6 +1,14 @@
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+
+export interface IJournalDashboardSummary {
+  todayJournalCount: number;
+  pendingJournalCount: number;
+  aiAverageConfidence: number;
+}
+
 export interface IJournal {
   id: string;
-  createdAt: string;
+  tradingTimestamp: number;
   text: string;
   fileId: string;
   file?: {
@@ -8,4 +16,10 @@ export interface IJournal {
     hash: string;
     fileName: string;
   };
+  analysisStatus: AIAnalysisStatus;
+  confidence: number;
+  isVerified: boolean;
+  aiNote: string;
+  voucherId?: string;
+  esgRecordId?: string;
 }

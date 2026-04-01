@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
-import { Check, Calendar, Coins, FileBarChart, Globe } from 'lucide-react';
+import { Check, Calendar, Coins, FileBarChart, Globe, Info } from 'lucide-react';
 import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
 import PaymentConfirmModal, { PaymentStatus } from '@/components/common/payment_confirm_modal';
@@ -60,6 +60,61 @@ export default function AnalysisView() {
   // Info: (20260120 - Luphia) External Analysis States
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
+
+  const [accountBooks, setAccountBooks] = useState<Array<{ id: string, name: string, enterpriseId?: string }>>([]);
+  useEffect(() => {
+    request<{ payload: Array<{ id: string, name: string, enterpriseId?: string }> }>('/api/v1/user/account_book')
+      .then(res => {
+        if (res?.payload) setAccountBooks(res.payload);
+      })
+      .catch(console.error);
+  }, []);
+
+  const [internalCompanyName, setInternalCompanyName] = useState<string>('');
+  const [selectedCompany, setSelectedCompany] = useState<{ taxId: string, name: string } | null>(null);
+  const [companySuggestions, setCompanySuggestions] = useState<{ taxId: string, name: string }[]>([]);
+  const [isSearchingCompany, setIsSearchingCompany] = useState(false);
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
+
+  const isInternalCompanyAnalysis = activeTab === 'internal';
+  const isExternalCarbonAnalysis = activeTab === 'external' && ['carbon_health_check', 'net_zero_emissions'].includes(category);
+  const needsCompanyInput = isInternalCompanyAnalysis || isExternalCarbonAnalysis;
+
+  useEffect(() => {
+    if (!isExternalCarbonAnalysis || internalCompanyName.length < 2) {
+      setCompanySuggestions([]);
+      setShowCompanyDropdown(false);
+      return;
+    }
+
+    if (selectedCompany && `${selectedCompany.name} (${selectedCompany.taxId})` === internalCompanyName) {
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingCompany(true);
+      try {
+        const res = await request<{ payload: { taxId: string, name: string }[] }>('/api/v1/company/lookup?query=' + encodeURIComponent(internalCompanyName));
+        if (res?.payload) {
+          setCompanySuggestions(res.payload);
+          setShowCompanyDropdown(true);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsSearchingCompany(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [internalCompanyName, isExternalCarbonAnalysis, selectedCompany]);
+
+  // Info: (20260320 - Tzuhan) Prevent selecting daily/weekly/monthly for carbon analysis
+  useEffect(() => {
+    if (needsCompanyInput && ['monthly', 'weekly', 'daily'].includes(periodType)) {
+      setPeriodType('yearly');
+      setSelectedPeriodValue('');
+    }
+  }, [needsCompanyInput, periodType]);
 
   // Info: (20260128 - Luphia) Calculate dynamic cost
   const calculatedCost = useMemo(() => {
@@ -211,6 +266,10 @@ export default function AnalysisView() {
     return `${start} ~ ${end}`;
   })();
 
+  const derivedKeyword = (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends')
+    ? keyword
+    : (needsCompanyInput ? internalCompanyName : undefined);
+
   // Info: (20260120 - Tzuhan) Open Payment Modal
   const handleGenerate = () => {
     setIsPaymentModalOpen(true);
@@ -235,10 +294,19 @@ export default function AnalysisView() {
       // [TESTING BACKDOOR] 測試用後門：取消註解以下區塊，即可針對特定帳號繞過付款
       // =====================================================================
       /*
-      if (user.address.toLowerCase() === '0x9e604a5c15dff17cb12346f028c1f31776a54b64'.toLowerCase() && activeTab === 'external') {
+      if (user.address.toLowerCase() === '0xC53941f85Cd6b14612d5E20E81D5dbaC579127a2'.toLowerCase()) {
         const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
           method: 'POST',
-          body: JSON.stringify({ category, periodType, year: selectedYear, periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue, txHash: null, country, keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : undefined })
+          body: JSON.stringify({
+            category,
+            periodType,
+            year: selectedYear,
+            periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
+            txHash: null,
+            country,
+            keyword: derivedKeyword,
+            isExternal: activeTab === 'external'
+          })
         });
         if (!orderRes?.payload) throw new Error('Failed to create order');
 
@@ -257,7 +325,8 @@ export default function AnalysisView() {
           method: 'POST',
           body: JSON.stringify({
             category, periodType, year: selectedYear, periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-            country, keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : undefined,
+            country, keyword: derivedKeyword,
+            isExternal: activeTab === 'external',
             authentication: { orderId: orderRes.payload.orderId, ...transferAuth }
           })
         });
@@ -293,7 +362,8 @@ export default function AnalysisView() {
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
           txHash: null,
           country,
-          keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : undefined
+          keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput ? internalCompanyName : undefined),
+          isExternal: activeTab === 'external'
         })
       });
 
@@ -357,7 +427,8 @@ export default function AnalysisView() {
           year: selectedYear,
           periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
           country,
-          keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : undefined,
+          keyword: derivedKeyword,
+          isExternal: activeTab === 'external',
           authentication: {
             orderId,
             transactionHash,
@@ -435,7 +506,7 @@ export default function AnalysisView() {
                   {t('analysis.period_type')}
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {PERIOD_TYPES.map((type) => (
+                  {PERIOD_TYPES.filter(type => !(needsCompanyInput && ['monthly', 'weekly', 'daily'].includes(type))).map((type) => (
                     <button
                       key={type}
                       onClick={() => {
@@ -495,7 +566,7 @@ export default function AnalysisView() {
               )}
 
               {/* Info: (20260120 - Luphia) External Analysis: Country Selection */}
-              {activeTab === 'external' && (
+              {activeTab === 'external' && !isExternalCarbonAnalysis && (
                 <div className="space-y-2 pt-4 border-t border-gray-100">
                   <label className="block text-sm font-medium text-gray-700">
                     {t('analysis.country')}
@@ -552,20 +623,159 @@ export default function AnalysisView() {
                   })}
                 </div>
               </div>
+              {/* Info: (20260320 - Tzuhan) Internal Analysis: Company Dropdown */}
+              {isInternalCompanyAnalysis && (
+                <div className="space-y-4 pt-4 border-t border-gray-100 relative">
+                  <div className="space-y-2">
+                    <select
+                      className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                      onChange={(e) => {
+                        const ab = accountBooks.find(b => b.id === e.target.value);
+                        if (ab) {
+                          const combinedName = ab.enterpriseId ? `${ab.name} (${ab.enterpriseId})` : ab.name;
+                          setInternalCompanyName(combinedName);
+                          if (ab.enterpriseId) {
+                            setSelectedCompany({ taxId: ab.enterpriseId, name: ab.name });
+                          } else {
+                            setSelectedCompany(null);
+                          }
+                        }
+                      }}
+                      value={accountBooks.find(b => internalCompanyName.startsWith(b.name))?.id || ""}
+                    >
+                      <option value="" disabled>-- {t('analysis.select_from_account_books') || '選擇帳本'} --</option>
+                      {accountBooks.map(ab => (
+                        <option key={ab.id} value={ab.id}>
+                          {ab.name} {ab.enterpriseId ? `(${ab.enterpriseId})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Info: (20260324 - Tzuhan) External Analysis: Carbon Analysis Company Input */}
+              {isExternalCarbonAnalysis && (
+                <div className="space-y-4 pt-4 border-t border-gray-100 relative">
+                  <div className="space-y-2 relative">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {t('analysis.company_input.label')}
+                    </label>
+                    <div className="flex items-center">
+                      <input
+                        id="internalCompanyName"
+                        aria-label={t('analysis.company_input.label')}
+                        type="text"
+                        value={internalCompanyName}
+                        onChange={(e) => {
+                          setSelectedCompany(null);
+                          setInternalCompanyName(e.target.value);
+                        }}
+                        placeholder={t('analysis.company_input.placeholder')}
+                        className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                      />
+                      {isSearchingCompany && <span className="text-xs text-gray-500 ml-2">{t('analysis.company_input.searching')}</span>}
+                    </div>
+
+                    {showCompanyDropdown && companySuggestions.length > 0 && (
+                      <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                        {companySuggestions.map(c => (
+                          <button
+                            key={c.taxId}
+                            type="button"
+                            className="w-full text-left px-4 py-2 hover:bg-orange-50 cursor-pointer text-sm text-gray-700 font-medium border-b border-gray-100 last:border-0"
+                            onClick={() => {
+                              setSelectedCompany(c);
+                              setInternalCompanyName(`${c.name} (${c.taxId})`);
+                              setShowCompanyDropdown(false);
+                            }}
+                          >
+                            {c.name} <span className="text-gray-400 font-normal">({c.taxId})</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {showCompanyDropdown && companySuggestions.length === 0 && internalCompanyName.length >= 2 && !isSearchingCompany && (
+                      <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 p-3">
+                        <p className="text-sm text-red-500">{t('analysis.company_input.not_found')}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Info: (20260120 - Luphia) External Analysis: Keyword Input (Move to after Category) */}
-              {activeTab === 'external' && category !== 'market_trends' && (
+              {activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends' && (
                 <div className="space-y-2 pt-4 border-t border-gray-100">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {t('analysis.keyword')}
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {t('analysis.keyword')}
+                    </label>
+                    {['industry_development', 'irsc', 'financial_product_rating'].includes(category) && (
+                      <div className="group relative">
+                        <Info className="h-4 w-4 text-gray-400 hover:text-orange-500 cursor-help transition-colors" />
+                        <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden group-hover:block w-[400px] bg-white text-gray-800 text-xs rounded-lg shadow-xl ring-1 ring-gray-900/5 p-4 z-50 overflow-y-auto max-h-[80vh]">
+                          <p className="font-bold text-sm mb-2 text-orange-600">{t(`analysis.tooltips.${category === 'irsc' ? 'smart_enterprise_rating' : category}.title`)}</p>
+                          <p className="mb-3 text-gray-600">{t(`analysis.tooltips.${category === 'irsc' ? 'smart_enterprise_rating' : category}.desc`)}</p>
+
+                          {category === 'industry_development' && (
+                            <>
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.industry_development.sectors_title')}</p>
+                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.industry_development.sectors_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.industry_development.sub_title')}</p>
+                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.industry_development.sub_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.industry_development.trends_title')}</p>
+                              <p className="text-gray-600">{t('analysis.tooltips.industry_development.trends_desc')}</p>
+                            </>
+                          )}
+
+                          {category === 'irsc' && (
+                            <>
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.smart_enterprise_rating.us_tickers_title')}</p>
+                              <p className="mb-2 text-gray-600 whitespace-pre-line">{t('analysis.tooltips.smart_enterprise_rating.us_tickers_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.smart_enterprise_rating.tw_tickers_title')}</p>
+                              <p className="mb-2 text-gray-600 whitespace-pre-line">{t('analysis.tooltips.smart_enterprise_rating.tw_tickers_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.smart_enterprise_rating.fuzzy_title')}</p>
+                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.smart_enterprise_rating.fuzzy_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.smart_enterprise_rating.analyst_view_title')}</p>
+                              <p className="text-gray-600">{t('analysis.tooltips.smart_enterprise_rating.analyst_view_desc')}</p>
+                            </>
+                          )}
+
+                          {category === 'financial_product_rating' && (
+                            <>
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.etf_title')}</p>
+                              <p className="mb-2 text-gray-600 whitespace-pre-line">{t('analysis.tooltips.financial_product_rating.etf_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.mutual_funds_title')}</p>
+                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.financial_product_rating.mutual_funds_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.bonds_title')}</p>
+                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.financial_product_rating.bonds_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.derivatives_title')}</p>
+                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.financial_product_rating.derivatives_desc')}</p>
+
+                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.analyst_view_title')}</p>
+                              <p className="text-gray-600">{t('analysis.tooltips.financial_product_rating.analyst_view_desc')}</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <input
                     type="text"
                     aria-label={t('analysis.keyword')}
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
                     placeholder={t('analysis.enter_keyword')}
-                    className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                    className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all relative z-10"
                   />
                 </div>
               )}
@@ -600,8 +810,9 @@ export default function AnalysisView() {
                 onClick={handleGenerate}
                 disabled={
                   (periodType !== 'yearly' && !selectedPeriodValue) ||
-                  (activeTab === 'external' && !selectedCountry) ||
-                  (activeTab === 'external' && category !== 'market_trends' && !keyword.trim())
+                  (activeTab === 'external' && !isExternalCarbonAnalysis && !selectedCountry) ||
+                  (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends' && !keyword.trim()) ||
+                  (needsCompanyInput && !selectedCompany)
                 }
                 className="w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed rounded-lg bg-orange-600 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-colors"
               >
@@ -639,7 +850,7 @@ export default function AnalysisView() {
           type: t(`analysis.time_units.${periodType}`)
         })}
         country={country}
-        keyword={activeTab === 'external' && category !== 'market_trends' ? keyword : undefined}
+        keyword={derivedKeyword}
         isLoading={isLoading}
         status={workflowStatus}
         errorMessage={errorMessage}

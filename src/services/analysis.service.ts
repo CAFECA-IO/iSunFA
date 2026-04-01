@@ -1,21 +1,17 @@
 import { mkdir } from 'fs/promises';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { getAnalysisCost } from '@/lib/analysis/pricing';
+import { getAnalysisCost, IOrderParams } from '@/lib/analysis/pricing';
 import { storageService } from '@/services/storage.service';
+import { prisma } from '@/lib/prisma';
 import { analysisRepo } from '@/repositories/analysis.repo';
 import { missionGenerator, IMissionDefinition } from '@/lib/worker/mission.generator';
 import { MISSION_STATUS } from '@/constants/status';
+import { getPeriodDateRange } from '@/lib/analysis/period';
 
 
-export interface IGenerateAnalysisParams {
-  category: string;
-  periodType: string;
-  periodValue: string;
-  year: number;
+export interface IGenerateAnalysisParams extends IOrderParams {
   orderId?: string;
-  country?: string;
-  keyword?: string;
 }
 
 export class AnalysisService {
@@ -47,13 +43,122 @@ export class AnalysisService {
     let analysisResult = "AI Analysis Content Placeholder...";
 
     try {
+      // Info: (20260320 - Tzuhan) Fetch prerequisite data for net_zero_emissions
+      let parsedPrerequisiteParams: Record<string, unknown> | undefined = undefined;
+      let prerequisiteStr = "";
+
+      if (params.category === 'net_zero_emissions' && params.keyword) {
+        const prerequisite = await prisma.analysis.findFirst({
+          where: {
+            userId,
+            type: 'carbon_health_check',
+            data: {
+              path: ['keyword'],
+              equals: params.keyword,
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          include: { mission: true }
+        });
+
+        if (prerequisite?.mission?.result) {
+          prerequisiteStr = typeof prerequisite.mission.result === 'string'
+            ? prerequisite.mission.result
+            : JSON.stringify(prerequisite.mission.result);
+        } else if (prerequisite?.result) {
+          prerequisiteStr = typeof prerequisite.result === 'string'
+            ? prerequisite.result
+            : JSON.stringify(prerequisite.result);
+        }
+
+        if (prerequisiteStr) {
+          const carbonHealthScoreMatch = prerequisiteStr.match(/碳健檢綜合評分.*?(\d+)/) || prerequisiteStr.match(/總分.*?(\d+)/);
+          const score = carbonHealthScoreMatch ? parseInt(carbonHealthScoreMatch[1], 10) : 50;
+
+          let tier2Status = 'NONE';
+          if (prerequisiteStr.includes('高碳排鎖定警示') || prerequisiteStr.includes('雷神之鎚')) tier2Status = 'HAMMER';
+          if (prerequisiteStr.includes('戰略性氣候基建') || prerequisiteStr.includes('免死金牌')) tier2Status = 'SHIELD';
+
+          const firstLayerMatch = prerequisiteStr.match(/第一層：物理現實([\s\S]*?)(第二層|戰略外掛|附錄)/);
+          const failedQuestionsText = firstLayerMatch ? firstLayerMatch[1].trim() : "未檢測到重大痛點";
+
+          parsedPrerequisiteParams = {
+            carbonHealthScore: score,
+            tier2Status,
+            failedQuestions: [failedQuestionsText],
+            companyIndustry: '科技製造與能源產業' // Info: (20260320 - Tzuhan) We will replace this dynamically if available, or rely on web search
+          };
+        }
+      } else if (['carbon_health_check', 'balance_sheet', 'cash_flow', 'income_statement', 'financial_compliance', 'financial_health', 'irsc'].includes(params.category)) {
+        if (!params.isExternal) {
+          const { start, end } = getPeriodDateRange(params.periodType, params.year, params.periodValue);
+          const startTs = Math.floor(new Date(start).getTime() / 1000);
+          const endTs = Math.floor(new Date(end + 'T23:59:59.999Z').getTime() / 1000);
+
+          const teamMembers = await prisma.teamMember.findMany({
+            where: { userId }
+          });
+          const teamIds = teamMembers.map(tm => tm.teamId);
+
+          let targetAccountBookId: string | null = null;
+          if (params.keyword) {
+            const match = params.keyword.match(/\((.*?)\)/);
+            const taxId = match ? match[1] : params.keyword;
+
+            console.log(`[ESG-DEBUG] Keyword: ${params.keyword}, Extracted Tax ID: ${taxId}`);
+
+            const matchedAccountBook = await prisma.accountBook.findFirst({
+              where: {
+                teamId: { in: teamIds },
+                enterpriseId: taxId
+              }
+            });
+            if (matchedAccountBook) {
+              targetAccountBookId = matchedAccountBook.id;
+              console.log(`[ESG-DEBUG] Matched account book ID: ${targetAccountBookId}`);
+            } else {
+              console.log(`[ESG-DEBUG] No account book matched enterpriseId: ${taxId}`);
+            }
+          }
+
+          console.log(`[ESG-DEBUG] Start TS: ${startTs}, End TS: ${endTs}`);
+
+          const esgRecords = targetAccountBookId
+            ? await prisma.esgRecord.findMany({
+              where: {
+                accountBookId: targetAccountBookId,
+                dateTimestamp: { gte: startTs, lte: endTs },
+                deletedAt: null
+              },
+              orderBy: { dateTimestamp: 'asc' }
+            })
+            : [];
+
+          console.log(`[ESG-DEBUG] Fetched esgRecords length: ${esgRecords.length}`);
+
+          if (esgRecords.length > 0) {
+            const esgContextLines = esgRecords.map(r => {
+              const dateStr = new Date(r.dateTimestamp * 1000).toISOString().split('T')[0];
+              return `- 日期: ${dateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
+            });
+            parsedPrerequisiteParams = {
+              esgRecordsContext: `\n【用戶提供的內部 ESG 數據紀錄】:\n${esgContextLines.join('\n')}\n`
+            };
+            console.log(`[ESG-DEBUG] Parsed Context:`, parsedPrerequisiteParams.esgRecordsContext);
+          } else {
+            console.log(`[ESG-DEBUG] Esgs record length is 0`);
+          }
+        }
+      }
+
       missionDef = missionGenerator.generateMission({
         category: params.category,
         periodType: params.periodType,
         periodValue: params.periodValue,
         year: params.year,
         country: params.country,
-        keyword: params.keyword
+        keyword: params.keyword,
+        prerequisiteData: parsedPrerequisiteParams
       });
 
       if (missionDef) {
@@ -94,9 +199,9 @@ export class AnalysisService {
 
     let createdMissionId: string | undefined;
 
-    // Info: (20260128 - Luphia) Save Analysis to Database *immediately*
     if (params.orderId) {
       try {
+        // Info: (20260327 - Tzuhan) Cache disabled for reports (Always generate fresh report)
         const result = await analysisRepo.create({
           reportId,
           userId,
@@ -105,6 +210,7 @@ export class AnalysisService {
           missionName: missionDef ? missionDef.name : `Analysis-${params.category}-${params.periodType}`,
           status: MISSION_STATUS.UPLOADING,
           missionData: {
+            category: params.category,
             cost,
             remainingBalance: 9500,
             generatedAt: new Date().toISOString(),
@@ -114,6 +220,7 @@ export class AnalysisService {
             year: params.year,
             country: params.country,
             keyword: params.keyword,
+            isExternal: params.isExternal === true,
             historicalTags: await analysisRepo.getGlobalTopTags(20)
           },
           tasks: missionDef ? missionDef.tasks : undefined

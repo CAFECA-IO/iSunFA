@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma, Mission, Task } from '@/generated/client';
 import { MISSION_STATUS, TASK_STATUS } from '@/constants/status';
+import { SortOrder } from '@/generated/internal/prismaNamespace';
 
 export interface ITaskRepository {
   findNextPendingTask(): Promise<{ task: Task, mission: Mission } | null>;
@@ -25,22 +26,25 @@ export class TaskRepository implements ITaskRepository {
    */
   async findNextPendingTask() {
     // Info: (20260130 - Luphia) 1. Find oldest active mission
-    const mission = await prisma.mission.findFirst({
+    const query = {
       where: {
-        status: { in: [MISSION_STATUS.PENDING, MISSION_STATUS.RUNNING] }
+        status: { in: [MISSION_STATUS.PENDING, MISSION_STATUS.RUNNING] },
+        tasks: {
+          some: {}
+        }
       },
       orderBy: {
-        createdAt: 'asc'
+        createdAt: 'asc' as SortOrder
       },
       include: {
         tasks: {
           orderBy: {
-            order: 'asc'
+            order: 'asc' as SortOrder
           }
         }
       }
-    });
-
+    };
+    const mission = await prisma.mission.findFirst(query);
     if (!mission) return null;
 
     console.log(`\n[TaskRepo] Evaluating active Mission: ${mission.id}`);
@@ -80,7 +84,7 @@ export class TaskRepository implements ITaskRepository {
         // Info: (20260130 - Luphia) Safety check: Are all tasks from previous order completed?
         if (order > 0) {
           const prevTasks = tasksByOrder.get(order - 1) || [];
-          const prevCompleted = prevTasks.every(t => t.status === TASK_STATUS.COMPLETED || t.status === TASK_STATUS.SKIPPED);
+          const prevCompleted = prevTasks.every(t => t.status === TASK_STATUS.COMPLETED || t.status === TASK_STATUS.SKIPPED || t.status === TASK_STATUS.FAILED);
           if (!prevCompleted) {
             /**
              * Info: (20260130 - Luphia)

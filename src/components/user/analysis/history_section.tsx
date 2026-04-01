@@ -7,6 +7,7 @@ import { Check, ChevronLeft, ChevronRight, Loader2, Sparkles, X } from 'lucide-r
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { Fragment } from 'react';
 import { MarkdownContent } from '@/components/common/markdown_content';
+import { downloadHtmlAsPdf } from '@/lib/utils/pdf';
 
 interface IHistoryItem {
   id: string;
@@ -19,6 +20,7 @@ interface IHistoryItem {
   country?: string;
   keyword?: string;
   tags?: string[];
+  isExternal?: boolean;
 }
 
 export default function HistorySection() {
@@ -58,9 +60,10 @@ export default function HistorySection() {
   const [error, setError] = useState<string | null>(null);
 
   // Info: (20260130 - Luphia) Report View Modal State
-  const [selectedReport, setSelectedReport] = useState<{ id: string; content: string; type: string } | null>(null);
+  const [selectedReport, setSelectedReport] = useState<{ id: string; content: string; type: string; keyword?: string; isExternal?: boolean } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Info: (20260130 - Luphia) Fetch history from API
   useEffect(() => {
@@ -92,14 +95,16 @@ export default function HistorySection() {
     try {
       setLoadingReport(true);
       // Info: (20260130 - Luphia) Fetch details
-      const result = await request<{ code: string; payload: { id: string; result: string; type: string } }>(`/api/v1/user/analysis/${item.reportId}`);
+      const result = await request<{ code: string; payload: { id: string; result: string; type: string; isExternal?: boolean } }>(`/api/v1/user/analysis/${item.reportId}`);
 
       if (result.code === 'SUCCESS') {
         const content = typeof result.payload.result === 'string' ? result.payload.result : JSON.stringify(result.payload.result, null, 2);
         setSelectedReport({
           id: result.payload.id,
           content: content || 'No content available.',
-          type: result.payload.type
+          type: result.payload.type,
+          keyword: item.keyword,
+          isExternal: result.payload.isExternal
         });
         setIsModalOpen(true);
       } else {
@@ -111,6 +116,57 @@ export default function HistorySection() {
     } finally {
       setLoadingReport(false);
     }
+  };
+
+  const downloadCurrentPdf = async (reportType: string, keyword?: string) => {
+    setIsDownloading(true);
+    const el = document.getElementById('report-pdf-content');
+    if (!el) {
+      setIsDownloading(false);
+      return;
+    }
+
+    // Info: (20260322 - Tzuhan) Temporarily remove scroll boundaries to capture full PDF
+    const originalMaxHeight = el.style.maxHeight;
+    const originalOverflow = el.style.overflowY;
+    el.style.maxHeight = 'none';
+    el.style.overflowY = 'visible';
+    el.classList.remove('max-h-[70vh]', 'overflow-y-auto');
+
+    try {
+      const localizedType = t(`analysis.categories.${reportType}`) || reportType;
+      let companyName = keyword || '';
+      if (companyName.includes('(')) {
+        companyName = companyName.split('(')[0].trim();
+      }
+      
+      let filenameStr = localizedType;
+      if (companyName) {
+        filenameStr += `-${companyName}`;
+      }
+      
+      const filename = `${filenameStr}_${new Date().toISOString().split('T')[0].replace(/-/g, '')}.pdf`;
+      await downloadHtmlAsPdf('report-pdf-content', filename);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+    } finally {
+      // Info: (20260322 - Tzuhan) Restore UI boundaries
+      el.classList.add('max-h-[70vh]', 'overflow-y-auto');
+      el.style.maxHeight = originalMaxHeight;
+      el.style.overflowY = originalOverflow;
+      setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadFromTable = async (item: IHistoryItem) => {
+    if (!selectedReport || selectedReport.id !== item.id) {
+      await handleViewReport(item);
+    } else if (!isModalOpen) {
+      setIsModalOpen(true);
+    }
+    setTimeout(() => {
+      downloadCurrentPdf(item.category, item.keyword);
+    }, 500);
   };
 
   const closeModal = () => {
@@ -288,7 +344,14 @@ export default function HistorySection() {
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.generatedAt}</td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">
                       <div className="flex flex-col gap-1">
-                        <span>{t(`analysis.categories.${item.category}`)}</span>
+                        <div className="flex items-center gap-2">
+                          <span>{t(`analysis.categories.${item.category}`)}</span>
+                          {['carbon_health_check', 'net_zero_emissions'].includes(item.category) && (
+                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${item.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
+                              {item.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
+                            </span>
+                          )}
+                        </div>
                         {(item.country || item.keyword) && (
                           <div className="flex items-center gap-2">
                             {item.country && (
@@ -334,10 +397,11 @@ export default function HistorySection() {
                         {loadingReport && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.view')}
                       </button>
                       <button
-                        className="text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
+                        className="text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+                        disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase()) || isDownloading}
+                        onClick={() => handleDownloadFromTable(item)}
                       >
-                        {t('analysis.history.download')}
+                        {isDownloading && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.download')}
                       </button>
                     </td>
                   </tr>
@@ -352,7 +416,14 @@ export default function HistorySection() {
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="flex flex-col gap-1">
-                        <h3 className="font-semibold text-gray-900">{t(`analysis.categories.${item.category}`)}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-gray-900">{t(`analysis.categories.${item.category}`)}</h3>
+                          {['carbon_health_check', 'net_zero_emissions'].includes(item.category) && (
+                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${item.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
+                              {item.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
+                            </span>
+                          )}
+                        </div>
                         {(item.country || item.keyword) && (
                           <div className="flex items-center gap-2">
                             {item.country && (
@@ -399,10 +470,11 @@ export default function HistorySection() {
                         {loadingReport && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.view')}
                       </button>
                       <button
-                        className="text-gray-600 disabled:opacity-50"
-                        disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
+                        className="text-gray-600 disabled:opacity-50 flex items-center gap-1"
+                        disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase()) || isDownloading}
+                        onClick={() => handleDownloadFromTable(item)}
                       >
-                        {t('analysis.history.download')}
+                        {isDownloading && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.download')}
                       </button>
                     </div>
                   </div>
@@ -469,16 +541,34 @@ export default function HistorySection() {
                     as="h3"
                     className="text-lg font-medium leading-6 text-gray-900 flex justify-between items-center mb-4"
                   >
-                    <span>{selectedReport ? t(`analysis.categories.${selectedReport.type}`) : 'Report'}</span>
-                    <button
-                      type="button"
-                      className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                      onClick={closeModal}
-                    >
-                      {t('common.close')}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <span>{selectedReport ? t(`analysis.categories.${selectedReport.type}`) : 'Report'}</span>
+                      {selectedReport && ['carbon_health_check', 'net_zero_emissions'].includes(selectedReport.type) && (
+                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${selectedReport.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
+                          {selectedReport.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-orange-100 px-4 py-2 text-sm font-medium text-orange-900 hover:bg-orange-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:opacity-50"
+                        onClick={() => selectedReport && downloadCurrentPdf(selectedReport.type, selectedReport.keyword)}
+                        disabled={isDownloading || !selectedReport}
+                      >
+                        {isDownloading && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {t('calculator.button.download') || 'Download PDF'}
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                        onClick={closeModal}
+                      >
+                        {t('common.close')}
+                      </button>
+                    </div>
                   </DialogTitle>
-                  <div className="mt-2 text-sm text-gray-500 max-h-[70vh] overflow-y-auto prose prose-sm max-w-none">
+                  <div id="report-pdf-content" className="mt-2 text-sm text-gray-500 max-h-[70vh] overflow-y-auto prose prose-sm max-w-none bg-white p-2">
                     {selectedReport && (
                       <MarkdownContent content={selectedReport.content} theme="light" />
                     )}

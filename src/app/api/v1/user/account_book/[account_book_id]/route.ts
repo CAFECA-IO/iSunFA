@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { getAccountBooksByUserId } from "@/services/account_book.service";
+import { getAccountBooksByUserId, updateAccountBook } from "@/services/account_book.service";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ account_book_id: string }> }) {
   try {
@@ -24,6 +24,48 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return jsonOk(accountBook);
   } catch (error) {
     console.error("[API] /account_book GET error:", error);
+    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+  }
+}
+
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ account_book_id: string }> }) {
+  try {
+    const authHeader = request.headers.get("Authorization");
+    const sessionUser = await getIdentityFromDeWT(authHeader);
+    const { account_book_id: accountBookId } = await params;
+
+    if (!sessionUser) {
+      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+    }
+
+    const accountBooks = await getAccountBooksByUserId(sessionUser.id);
+    const accountBook = accountBooks.find((ab) => ab.id === accountBookId);
+    if (!accountBook) {
+      return jsonFail(ApiCode.NOT_FOUND, "Account book not found");
+    }
+
+    if (accountBook.userRole !== 'OWNER') {
+      return jsonFail(ApiCode.FORBIDDEN, "Only the owner can edit the account book");
+    }
+
+    const body = await request.json();
+    const { name, country, currency, rule, enterpriseId, startYear, esgIndustryId } = body;
+
+    const createdAt = startYear ? new Date(`${startYear}-01-01T00:00:00.000Z`) : undefined;
+
+    const updatedAccountBook = await updateAccountBook(accountBookId, {
+      name,
+      country,
+      currency,
+      rule,
+      enterpriseId,
+      esgIndustryId,
+      createdAt,
+    });
+
+    return jsonOk(updatedAccountBook);
+  } catch (error) {
+    console.error("[API] /account_book PUT error:", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }

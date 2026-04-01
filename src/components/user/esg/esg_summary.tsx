@@ -9,7 +9,12 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
 
-export default function EsgSummary() {
+interface IEsgSummaryProps {
+  year?: number;
+  month?: number | "";
+}
+
+export default function EsgSummary({ year, month }: IEsgSummaryProps) {
   const params = useParams();
   const pathname = usePathname();
   const accountBookId = params?.account_book_id as string;
@@ -28,12 +33,18 @@ export default function EsgSummary() {
       const fetchSummary = async () => {
         try {
           setIsLoading(true);
-            const res = await request<IApiResponse<IEsgDashboardSummary>>(
-              `/api/v1/user/account_book/${accountBookId}/esg/summary`,
-            );
-            if (res.payload) {
-              setSummaryData(res.payload);
-            }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const query: any = {};
+          if (year) query.year = year;
+          if (month) query.month = month;
+
+          const res = await request<IApiResponse<IEsgDashboardSummary>>(
+            `/api/v1/user/account_book/${accountBookId}/esg/summary`,
+            { query },
+          );
+          if (res.payload) {
+            setSummaryData(res.payload);
+          }
         } catch (error) {
           console.error("Failed to fetch ESG summary:", error);
         } finally {
@@ -44,7 +55,7 @@ export default function EsgSummary() {
     } else {
       setIsLoading(false);
     }
-  }, [accountBookId]);
+  }, [accountBookId, year, month]);
 
   if (isLoading) {
     return (
@@ -60,7 +71,10 @@ export default function EsgSummary() {
         <Cloud className="mb-2 h-8 w-8 text-slate-300" />
         <span className="text-sm font-bold">
           {t("esg_summary.no_data_prefix")}
-          <Link href={journalLink} className="text-blue-600 hover:underline mx-1">
+          <Link
+            href={journalLink}
+            className="mx-1 text-blue-600 hover:underline"
+          >
             {t("esg_summary.upload_link")}
           </Link>
           {t("esg_summary.no_data_suffix")}
@@ -112,18 +126,18 @@ export default function EsgSummary() {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       {/* Info: (20260312 - Julian) 本月總排放量 */}
-      <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-bold text-slate-500">
               {t("esg_summary.total_emissions")}
             </span>
-            <Cloud className="h-5 w-5 text-green-400" />
+            <Cloud className="h-5 w-5 text-emerald-500" />
           </div>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-[32px] font-black tracking-tight text-slate-800">
+            <span className="text-2xl font-bold tracking-tight text-slate-800">
               {summaryData.totalEmissions.value.toLocaleString()}
             </span>
             <span className="text-sm font-bold text-slate-500">
@@ -142,17 +156,24 @@ export default function EsgSummary() {
       </div>
 
       {/* Info: (20260312 - Julian) 碳排放強度 */}
-      <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-500">{t("esg_summary.emission_intensity")}</span>
-            <BarChart3 className="h-5 w-5 text-amber-400" />
+            <span className="text-sm font-bold text-slate-500">
+              {t("esg_summary.emission_intensity")}
+            </span>
+            <BarChart3 className="h-5 w-5 text-orange-500" />
           </div>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-[32px] font-black tracking-tight text-slate-800">
-              {summaryData.emissionIntensity.value.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+            <span className="text-2xl font-bold tracking-tight text-slate-800">
+              {summaryData.emissionIntensity.value === null
+                ? "N/A"
+                : summaryData.emissionIntensity.value.toLocaleString(
+                    undefined,
+                    {
+                      minimumFractionDigits: 2,
+                    },
+                  )}
             </span>
             <span className="text-sm font-bold text-slate-500">
               {summaryData.emissionIntensity.unit}
@@ -160,12 +181,14 @@ export default function EsgSummary() {
           </div>
         </div>
         <div className="mt-8 text-xs font-bold text-slate-500">
-          {t("esg_summary.better_than_industry", { average: summaryData.emissionIntensity.industryAverage })}
+          {t("esg_summary.better_than_industry", {
+            average: summaryData.emissionIntensity.industryAverage,
+          })}
         </div>
       </div>
 
       {/* Info: (20260312 - Julian) 各範疇分布 */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div className="mb-5 text-center text-sm font-bold text-slate-500">
           {t("esg_summary.scope_distribution")}
         </div>
@@ -177,16 +200,16 @@ export default function EsgSummary() {
       </div>
 
       {/* Info: (20260312 - Julian) 年度目標進度 */}
-      <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-bold text-slate-500">
               {t("esg_summary.annual_goal_progress")}
             </span>
-            <Target className="h-5 w-5 text-red-500" />
+            <Target className="h-5 w-5 text-orange-600" />
           </div>
           <div className="mt-2 flex items-baseline gap-1">
-            <span className="text-[32px] font-black tracking-tight text-red-500">
+            <span className="text-2xl font-bold tracking-tight text-orange-600">
               {summaryData.goalProgress.percentage}%
             </span>
             <span className="text-sm font-bold text-slate-500">/ 100%</span>
@@ -195,8 +218,10 @@ export default function EsgSummary() {
         <div className="mt-8">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
-              className="h-full rounded-full bg-green-400"
-              style={{ width: `${summaryData.goalProgress.percentage}%` }}
+              className={`h-full rounded-full ${summaryData.goalProgress.percentage > 100 ? "bg-red-500" : "bg-orange-500"}`}
+              style={{
+                width: `${Math.min(100, summaryData.goalProgress.percentage)}%`,
+              }}
             ></div>
           </div>
         </div>

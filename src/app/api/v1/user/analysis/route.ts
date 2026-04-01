@@ -12,14 +12,7 @@ import { orderGenerator } from '@/lib/order/order.generator';
 import { getPeriodDateRange } from '@/lib/analysis/period';
 import { publicClient } from '@/lib/viem_public';
 import { ABIS } from '@/config/contracts';
-import { prisma } from '@/lib/prisma';
-import { Analysis, Mission, Order, Tag, AnalysisTag } from '@/generated/client';
-
-type FullAnalysis = Analysis & {
-  mission: Mission | null;
-  order: Order | null;
-  tags: (AnalysisTag & { tag: Tag })[];
-};
+import { analysisRepo, FullAnalysis } from '@/repositories/analysis.repo';
 
 export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
@@ -32,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { category, periodType, periodValue, year, country, keyword, authentication } = body;
+    const { category, periodType, periodValue, year, country, keyword, authentication, isExternal } = body;
 
     // Info: (20260128 - Luphia) Validate FIDO2 Signature OR Transaction Binding
     if (!authentication || !authentication.orderId) {
@@ -185,7 +178,8 @@ export async function POST(request: NextRequest) {
       year,
       country,
       keyword,
-      orderId
+      orderId,
+      isExternal
     });
 
     return jsonOk(result);
@@ -207,17 +201,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Info: (20260311 - Tzuhan) Fetch associated tags and related mission data
-    const fullAnalyses = await prisma.analysis.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        mission: true,
-        order: true,
-        tags: {
-          include: { tag: true }
-        }
-      }
-    });
+    const fullAnalyses = await analysisRepo.getFullAnalysisHistoryByUserId(user.id);
 
     // Info: (20260128 - Luphia) Map DB result to response format
     const history = fullAnalyses.map((analysis: FullAnalysis) => {
@@ -276,6 +260,10 @@ export async function GET(request: NextRequest) {
 
       const tags = analysis.tags?.map(t => t.tag.name) || [];
 
+      const isExternal = typeof missionData?.isExternal === 'boolean'
+        ? missionData.isExternal
+        : (typeof orderData?.isExternal === 'boolean' ? orderData.isExternal : false);
+
       return {
         id: analysis.id,
         generatedAt,
@@ -288,7 +276,8 @@ export async function GET(request: NextRequest) {
         reportId: analysis.id,
         country,
         keyword,
-        tags
+        tags,
+        isExternal
       };
     });
 

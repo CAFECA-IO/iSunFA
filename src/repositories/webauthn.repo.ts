@@ -1,11 +1,14 @@
-import { User } from '@/generated/client';
+import { User, Prisma } from '@/generated/client';
 import { prisma } from '@/lib/prisma';
 
 export interface IWebAuthnRepository {
   findUserByCredentialId(credentialId: string): Promise<User | null>;
   findUserByAddress(address: string): Promise<User | null>;
   findUserById(id: string): Promise<User | null>;
+  findUsersByIds(ids: string[]): Promise<User[]>;
+  findUserByName(name: string): Promise<User | null>;
   updateChallenge(address: string, challenge: string): Promise<void>;
+  clearChallenge(userId: string): Promise<void>;
   upsertUser(data: {
     address: string;
     pubKeyX: string;
@@ -35,10 +38,36 @@ class WebAuthnRepository implements IWebAuthnRepository {
     });
   }
 
+  public async findUsersByIds(ids: string[]): Promise<User[]> {
+    return prisma.user.findMany({
+      where: { id: { in: ids } },
+    });
+  }
+
+  public async findUserByName(name: string): Promise<User | null> {
+    return prisma.user.findFirst({
+      where: { name },
+    });
+  }
+
+  public async getUserWithPaymentMethods(userId: string): Promise<Prisma.UserGetPayload<{ include: { paymentMethods: true } }> | null> {
+    return prisma.user.findUnique({
+      where: { id: userId },
+      include: { paymentMethods: true },
+    });
+  }
+
   public async updateChallenge(address: string, challenge: string): Promise<void> {
     await prisma.user.update({
       where: { address },
       data: { currentChallenge: challenge },
+    });
+  }
+
+  public async clearChallenge(userId: string): Promise<void> {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { currentChallenge: null },
     });
   }
 

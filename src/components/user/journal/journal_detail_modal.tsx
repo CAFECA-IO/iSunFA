@@ -1,26 +1,21 @@
 "use client";
 
-import { Fragment, useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  Transition,
-  TransitionChild,
-} from "@headlessui/react";
 import {
   X,
   Loader2,
-  PencilIcon,
-  SaveIcon,
-  UndoIcon,
-  TrashIcon,
+  CheckCircle2,
+  Save,
+  Pencil,
+  Eye,
+  // TrashIcon,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { FilePreview } from "@/components/common/file_preview";
 import ConfirmModal from "@/components/common/confirm_modal";
-import ZoomablePreview from "@/components/common/zoomable_preview";
+import FilePreviewModal from "@/components/common/file_preview_modal";
+import AiConfidence from "@/components/common/ai_confidence";
+import { MarkdownContent } from "@/components/common/markdown_content";
 import { IJournal } from "@/interfaces/journal";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -29,17 +24,19 @@ import { ApiCode } from "@/lib/utils/status";
 interface IJournalDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  journal: IJournal | null;
+  journal?: IJournal | null;
+  journalId?: string | null;
   onUpdate: (updatedJournal: IJournal) => void;
-  onDelete: (journal: IJournal) => void;
+  // onDelete: (journal: IJournal) => void;
 }
 
 export default function JournalDetailModal({
   isOpen,
   onClose,
   journal,
+  journalId,
   onUpdate,
-  onDelete,
+  // onDelete,
 }: IJournalDetailModalProps) {
   const { t } = useTranslation();
   const params = useParams();
@@ -47,63 +44,98 @@ export default function JournalDetailModal({
   // Info: (20260309 - Julian) 從 URL 取得帳簿 ID
   const accountBookId = params?.account_book_id as string;
 
-  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [fetchedJournal, setFetchedJournal] = useState<IJournal | null>(null);
+  const activeJournal = journal || fetchedJournal;
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   const [editText, setEditText] = useState<string>("");
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // Info: (20260305 - Julian) confirm conditions
   const [showConfirmClose, setShowConfirmClose] = useState<boolean>(false);
   const [showConfirmSave, setShowConfirmSave] = useState<boolean>(false);
 
+  // Info: (20260325 - Julian) Modal State
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
+
+  const [targetVerify, setTargetVerify] = useState<boolean>(false);
+  const [isUnverifyModalOpen, setIsUnverifyModalOpen] =
+    useState<boolean>(false);
+
+  const fetchJournal = useCallback(async () => {
+    if (!journalId || journal) return;
+    setIsLoading(true);
+    try {
+      const { payload } = await request<IApiResponse<IJournal>>(
+        `/api/v1/user/account_book/${accountBookId}/journal/${journalId}`
+      );
+      if (payload) {
+        setFetchedJournal(payload);
+      }
+    } catch (error) {
+      console.error("Failed to fetch journal", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [journalId, journal, accountBookId]);
+
   useEffect(() => {
-    if (isOpen && journal) {
-      setEditText(journal.text);
-      setIsEditing(false);
+    if (isOpen) {
+      // Info: (20260325 - Julian)每次打開時，重置為預覽模式
+      setIsEditMode(false);
+      fetchJournal();
+    }
+  }, [isOpen, fetchJournal]);
+
+  useEffect(() => {
+    if (isOpen && activeJournal) {
+      setEditText(activeJournal.text);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, journal?.id]);
+  }, [isOpen, activeJournal?.id]);
 
-  if (!journal) return null;
+  if (isLoading) {
+    return (
+      <div className="flex h-full min-h-[50vh] items-center justify-center p-10 text-slate-400">
+        <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+      </div>
+    );
+  }
 
-  const hasUnsavedChanges = isEditing && editText !== journal.text;
+  if (!activeJournal) return null;
 
-  const requestClose = () => {
-    if (hasUnsavedChanges) {
-      setShowConfirmClose(true);
-    } else {
-      setIsEditing(false);
-      onClose();
-    }
-  };
+  // Info: (20260325 - Julian) 判斷是否有未儲存的變更
+  const hasUnsavedChanges = editText !== activeJournal.text;
 
-  const handleSaveAttempt = () => {
-    if (editText === journal.text) {
-      setIsEditing(false);
-      return;
-    }
+  const saveJournal = (isVerified?: boolean) => {
+    setTargetVerify(!!isVerified);
     setShowConfirmSave(true);
   };
 
-  const executeSave = async () => {
+  const executeSaveJournal = async (overrideVerify: boolean | null = null) => {
+    if (!activeJournal) return;
     setShowConfirmSave(false);
     setIsSaving(true);
+    const finalVerify = overrideVerify !== null ? overrideVerify : targetVerify;
     try {
-      const data = await request<IApiResponse<{ journal: IJournal }>>(
-        `/api/v1/user/account_book/${accountBookId}/journal/${journal.id}`,
+      const data = await request<IApiResponse<IJournal>>(
+        `/api/v1/user/account_book/${accountBookId}/journal/${activeJournal.id}`,
         {
           method: "PUT",
-          body: JSON.stringify({ text: editText }),
+          body: JSON.stringify({ text: editText, isVerified: finalVerify }),
         },
       );
-      if (data.code === ApiCode.SUCCESS && data.payload?.journal) {
+      if (data.code === ApiCode.SUCCESS && data.payload) {
         // Info: (20260305 - Julian) Must merge the new data because the PUT api might not return the associated file object
         const newJournal = {
-          ...journal,
-          ...data.payload.journal,
-          file: journal.file,
+          ...activeJournal,
+          ...data.payload,
+          file: activeJournal.file,
         };
         onUpdate(newJournal);
-        setIsEditing(false);
+        onClose();
       }
     } catch (error) {
       console.error("Failed to update journal", error);
@@ -112,131 +144,90 @@ export default function JournalDetailModal({
     }
   };
 
+  const handleUnverifyConfirmed = () => {
+    setIsUnverifyModalOpen(false);
+    setTargetVerify(false);
+    executeSaveJournal(false);
+  };
+
   return (
     <>
-      <Transition show={isOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-100" onClose={requestClose}>
-          <TransitionChild
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" />
-          </TransitionChild>
+      <div className="flex h-full w-full flex-col bg-[#F8FAFC] overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-[10px]">
+          <div className="flex shrink-0 flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h4 className="text-base font-bold text-slate-500">
+                {t("verify.type.journal")}
+              </h4>
+              {/* Info: (20260324 - Julian) 顯示日記帳狀態 */}
+            {activeJournal.isVerified ? (
+              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
+                {t("verify.status.verified")}
+              </span>
+            ) : (
+              <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
+                {t("verify.status.unverified")}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsEditMode(!isEditMode)}
+              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold transition-colors ${isEditMode
+                ? "border-orange-200 bg-orange-50 text-orange-600"
+                : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-600"
+                }`}
+            >
+              {isEditMode ? (
+                <>
+                  <Eye size={14} className="text-orange-500" />
+                  {t("ocr.view_preview")}
+                </>
+              ) : (
+                <>
+                  <Pencil size={14} className="text-slate-400" />
+                  {t("ocr.edit")}
+                </>
+              )}
+            </button>
+          </div>
+          {/* Info: (20260325 - Julian) AI Confidence */}
+          <div className="relative">
+            <AiConfidence
+              confidence={activeJournal.confidence}
+              note={activeJournal.aiNote}
+            />
+          </div>
+        </div>
 
-          <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-              <TransitionChild
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                enterTo="opacity-100 translate-y-0 sm:scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-                leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-              >
-                <DialogPanel className="relative flex h-[85vh] w-full max-w-[90vw] transform flex-col overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all">
-                  {/* Info: (20260305 - Julian) Header */}
-                  <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                    <DialogTitle
-                      as="h3"
-                      className="text-xl font-semibold text-gray-900"
-                    >
-                      {t("ocr.detail_title")}
-                    </DialogTitle>
-                    <button
-                      type="button"
-                      className="rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
-                      onClick={requestClose}
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  {/* Info: (20260305 - Julian) Body Content */}
-                  <div className="flex flex-1 overflow-hidden bg-gray-50">
-                    {/* Info: (20260305 - Julian) Left: Preview */}
-                    <ZoomablePreview
-                      hasContent={!!journal.file?.hash}
-                      fallbackText={t("ocr.no_image") as string}
-                      className="w-1/2"
-                    >
-                      {journal.file?.hash && (
-                        <FilePreview
-                          file={{
-                            filename: journal.file.fileName || "Unknown",
-                          }}
-                          fileId={journal.file.hash}
-                          className="max-h-[70vh] max-w-full object-contain"
-                        />
-                      )}
-                    </ZoomablePreview>
-
-                    {/* Info: (20260305 - Julian) Right: Text / Edit */}
-                    <div className="flex w-1/2 flex-col bg-white p-6">
-                      <div className="mb-4 flex items-center justify-between">
-                        <h4 className="font-medium text-gray-700">
-                          {t("ocr.journal")}
-                        </h4>
-                        <div className="flex gap-2">
-                          {isEditing ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditText(journal.text);
-                                  setIsEditing(false);
-                                }}
-                                className="flex items-center gap-1 rounded bg-gray-100 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-200"
-                              >
-                                <UndoIcon size={14} />
-                                {t("ocr.cancel")}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={handleSaveAttempt}
-                                className="flex items-center gap-1 rounded bg-orange-500 px-3 py-1.5 text-sm text-white hover:bg-orange-600"
-                              >
-                                <SaveIcon size={14} />
-                                {t("ocr.save")}
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditText(journal.text);
-                                setIsEditing(true);
-                              }}
-                              className="flex items-center gap-1 rounded border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                              <PencilIcon size={14} />
-                              {t("ocr.edit")}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex-1 overflow-y-auto rounded-lg bg-gray-50">
-                        {isEditing ? (
-                          <textarea
-                            aria-label={t("ocr.journal") as string}
-                            value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
-                            className="size-full resize-none rounded-lg border border-orange-300 p-4 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
-                          />
-                        ) : (
-                          <div className="size-full rounded-lg p-4 whitespace-pre-line text-gray-700">
-                            {journal.text}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-4 ml-auto">
+        {/* Info: (20260327 - Luphia) 將原本外層的 overflow-y-auto 移除，改由內部元素自行處理滾動 */}
+        <div className="flex min-h-0 flex-1 flex-col px-6 py-4">
+          {isEditMode ? (
+            <textarea
+              aria-label={t("ocr.journal") as string}
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              // Info: (20260327 - Luphia) 加入 flex-1 讓它填滿高度，並將 resize-y 改為 resize-none 防止手動拉伸破壞版面
+              className="flex-1 resize-none rounded-xl border border-slate-300 bg-white p-4 leading-relaxed text-slate-700 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+            />
+          ) : (
+            // Info: (20260327 - Luphia) 加入 flex-1 填滿高度，並加上 overflow-y-auto 讓長文章可以在此區塊內滾動
+            <div className="flex-1 overflow-y-auto rounded-xl border border-slate-300 bg-white p-4">
+              {editText ? (
+                <MarkdownContent
+                  content={editText}
+                  theme="light"
+                />
+              ) : (
+                <p className="text-sm italic text-gray-400">
+                  {t("common.empty") || "Empty"}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+        </div>
+        {/* ToDo: (20260323 - Julian) 先隱藏刪除按鈕 */}
+        {/* <div className="mt-4 ml-auto">
                         <button
                           type="button"
                           onClick={() => onDelete(journal)}
@@ -245,21 +236,72 @@ export default function JournalDetailModal({
                           <TrashIcon size={14} />
                           {t("ocr.delete")}
                         </button>
-                      </div>
-                    </div>
-                  </div>
+                      {/* Info: (20260324 - Julian) Footer Actions */}
+        <div className="flex shrink-0 flex-col-reverse justify-end gap-3 border-t border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:p-6">
+          {hasUnsavedChanges && (
+            <button
+              type="button"
+              onClick={() => setIsCancelModalOpen(true)}
+              className="mr-auto text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
+            >
+              {t("voucher.detail_modal.actions.cancel_edit")}
+            </button>
+          )}
+          <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto sm:gap-3">
+            {activeJournal.isVerified ? (
+              <button
+                type="button"
+                disabled={isSaving}
+                onClick={() => setIsUnverifyModalOpen(true)}
+                className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-red-400 px-4 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-slate-300 sm:min-w-[120px] sm:flex-none sm:px-6 sm:text-sm"
+              >
+                <X size={16} className="stroke-[2.5]" />
+                {t("verify.button.unverify")}
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={isSaving}
+                onClick={() => saveJournal(true)}
+                className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 text-xs font-bold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-slate-300 sm:min-w-[120px] sm:flex-none sm:px-6 sm:text-sm"
+              >
+                <CheckCircle2 size={16} className="stroke-[2.5]" />
+                {t("voucher.detail_modal.actions.verify_save")}
+              </button>
+            )}
 
-                  {isSaving && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm">
-                      <Loader2 className="h-10 w-10 animate-spin text-orange-500" />
-                    </div>
-                  )}
-                </DialogPanel>
-              </TransitionChild>
-            </div>
+            <button
+              type="button"
+              disabled={isSaving}
+              onClick={() => saveJournal(activeJournal?.isVerified)}
+              className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 text-xs font-bold text-white shadow-sm transition-all hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 sm:min-w-[120px] sm:flex-none sm:px-6 sm:text-sm"
+            >
+              <Save size={16} className="stroke-[2.5]" />
+              {t("voucher.detail_modal.actions.save_only")}
+            </button>
           </div>
-        </Dialog>
-      </Transition>
+        </div>
+
+        {isSaving && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm">
+            <Loader2 className="h-10 w-10 animate-spin text-orange-500" />
+          </div>
+        )}
+      </div>
+
+      {/* Info: (20260325 - Julian) Confirm Cancel Modal */}
+      <ConfirmModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        title={t("common.cancel_edit_title")}
+        message={t("common.cancel_edit_message")}
+        confirmText={t("common.confirm")}
+        cancelText={t("common.cancel")}
+        onConfirm={() => {
+          setEditText(activeJournal.text);
+          setIsCancelModalOpen(false);
+        }}
+      />
 
       {/* Info: (20260305 - Julian) Confirm Save Modal */}
       <ConfirmModal
@@ -268,8 +310,8 @@ export default function JournalDetailModal({
         title={t("ocr.confirm_save_title") as string}
         message={t("ocr.confirm_save_msg") as string}
         confirmText={t("ocr.save") as string}
-        cancelText={t("ocr.cancel") as string}
-        onConfirm={executeSave}
+        cancelText={t("common.cancel") as string}
+        onConfirm={() => executeSaveJournal(null)}
       />
 
       {/* Info: (20260305 - Julian) Confirm Close Modal */}
@@ -279,12 +321,31 @@ export default function JournalDetailModal({
         title={t("ocr.unsaved_changes_title") as string}
         message={t("ocr.unsaved_changes_msg") as string}
         confirmText={t("ocr.confirm_leave_title") as string}
-        cancelText={t("ocr.cancel") as string}
+        cancelText={t("common.cancel") as string}
         onConfirm={() => {
           setShowConfirmClose(false);
-          setIsEditing(false);
           onClose();
         }}
+      />
+
+      {/* Info: (20260323 - Julian) Unverify Modal */}
+      <ConfirmModal
+        isOpen={isUnverifyModalOpen}
+        onClose={() => setIsUnverifyModalOpen(false)}
+        title={t("verify.unverify_modal.title")}
+        message={t("verify.unverify_modal.message", {
+          type: t("verify.type.journal"),
+        })}
+        confirmText={t("verify.unverify_modal.confirm")}
+        cancelText={t("common.cancel")}
+        onConfirm={handleUnverifyConfirmed}
+      />
+
+      <FilePreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        file={activeJournal.file}
+        title={t("ocr.file")}
       />
     </>
   );
