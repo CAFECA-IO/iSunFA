@@ -15,7 +15,7 @@
     "prettier": "prettier --write .",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
     "init": "npx hardhat run scripts/deploy.ts --network isuncoin_mainnet",
-    "test-contract": "npx tsx scripts/test_smart_contract.ts"
+    "test-contract": "while true; do npx tsx scripts/test_smart_contract.ts; sleep 1; done"
   },
   "dependencies": {
     "@erc3643org/erc-3643": "^4.1.3",
