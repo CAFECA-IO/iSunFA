@@ -71,7 +71,7 @@ async function runPoC(): Promise<void> {
                 throw new Error(`❌ API 回傳格式非預期，預期為陣列。`);
             }
 
-            const sampleRecords = rawData.slice(0, 5) as IOpenApiCompanyRecord[];
+            const sampleRecords = rawData as IOpenApiCompanyRecord[];
             const formattedData: IProcessedCompanyRecord[] = sampleRecords.map((item) => ({
                 ...item,
                 marketType: source.marketType
