@@ -1,79 +1,60 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { TaskType, TaskStatus } from '@/generated/client';
 import { prisma } from '@/lib/prisma';
 
-interface ICompanyInfo {
-    stockId: string;
-    name: string;
-    marketType: 'sii' | 'otc';
-}
-
-function parseCompanyData(rawItem: Record<string, string>): ICompanyInfo {
-    const stockId = rawItem['公司代號'] || rawItem['SecuritiesCompanyCode'];
-    const name = rawItem['公司簡稱'] || rawItem['CompanyAbbreviation'];
-    const marketType = rawItem['marketType'] as 'sii' | 'otc';
-    return { stockId, name, marketType };
-}
-
 async function main() {
-    // Info: (20260401 - Tzuhan) 動態參數解析區, 預設值：2024 年，全市場
-    let targetYears: number[] = [2024];
-    let targetStockIds: string[] | 'ALL' = 'ALL';
+    let targetStockIds: string[] = [];
+    let targetYears: number[] = [];
 
-    // Info: (20260401 - Tzuhan) 讀取終端機輸入的參數 (例如: --year=2023,2024 --stockId=1101)
+    // Info: (20260402 - Tzuhan) 解析參數
     const args = process.argv.slice(2);
     for (const arg of args) {
-        if (arg.startsWith('--year=')) {
-            // Info: (20260401 - Tzuhan) 支援逗號分隔，例如 "2023,2024" -> [2023, 2024]
-            const yearStr = arg.split('=')[1];
-            targetYears = yearStr.split(',').map(y => parseInt(y.trim(), 10));
-        }
-        if (arg.startsWith('--stockId=')) {
-            // Info: (20260401 - Tzuhan) 支援逗號分隔，例如 "1101,2330" -> ['1101', '2330']
-            const stockStr = arg.split('=')[1];
-            targetStockIds = stockStr.split(',').map(s => s.trim());
-        }
+        // Info: (20260402 - Tzuhan) 支援逗號分隔，例如 "2023,2024" -> [2023, 2024]
+        if (arg.startsWith('--year=')) targetYears = arg.split('=')[1].split(',').map(Number);
+        // Info: (20260402 - Tzuhan) 支援逗號分隔，例如 "1101,2330" -> ['1101', '2330']
+        if (arg.startsWith('--stockId=')) targetStockIds = arg.split('=')[1].split(',').map(s => s.trim());
     }
 
-    console.log(`\n⚙️  任務生成設定：`);
-    console.log(`   - 目標年度: ${targetYears.join(', ')}`);
-    console.log(`   - 目標公司: ${targetStockIds === 'ALL' ? '全市場 (ALL)' : targetStockIds.join(', ')}\n`);
+    const currentYear = new Date().getFullYear();
+    const taskTypes = [TaskType.FIN_REPORT, TaskType.ESG_REPORT, TaskType.ESG_METRICS];
 
-    // Info: (20260401 - Tzuhan) 我們要抓取的三種資料
-    const requiredTaskTypes = [TaskType.FIN_REPORT, TaskType.ESG_REPORT, TaskType.ESG_METRICS];
-
-    // Info: (20260401 - Tzuhan) 讀取全市場名單
-    const dataPath = path.join(process.cwd(), 'poc_company_list.json');
-    console.log(`📂 讀取公司名單: ${dataPath}`);
-    let rawData: Record<string, string>[] = [];
-    try {
-        rawData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
-    } catch (error) {
-        console.error(`❌ 無法讀取 JSON 檔案: ${dataPath}`, error);
-        return;
-    }
+    // Info: (20260402 - Tzuhan) 撈取目標公司
+    const companies = await prisma.company.findMany({
+        where: targetStockIds.length > 0 ? { stockId: { in: targetStockIds } } : { isActive: true }
+    });
 
     const tasksToCreate = [];
 
-    // Info: (20260401 - Tzuhan) 產生任務清單
-    for (const item of rawData) {
-        const company = parseCompanyData(item);
+    for (const company of companies) {
+        let yearsToProcess = targetYears;
 
-        // Info: (20260401 - Tzuhan) 過濾公司：如果指定了 stockId，就跳過不在名單內的公司
-        if (targetStockIds !== 'ALL' && !targetStockIds.includes(company.stockId)) {
-            continue;
+        // Info: (20260402 - Tzuhan) 情境：指定公司但未指定年份 -> 從上市年份抓到現在
+        if (targetStockIds.length > 0 && targetYears.length === 0) {
+            // Info: (20260402 - Tzuhan) 解析上市年份 (假設格式 YYYYMMDD 或 YYYMMDD)
+            const listDate = company.listingDate || '';
+            let startYear = 2010; // 預設最小值，因為 MOPS 太舊的資料可能拿不到
+
+            if (listDate.length >= 4) {
+                // Info: (20260402 - Tzuhan) 判斷是民國還是西元 (OpenAPI 兩者都有可能，需額外判斷，此處假設西元前四碼)
+                const parsedYear = parseInt(listDate.substring(0, 4));
+                if (parsedYear > 1900) startYear = Math.max(startYear, parsedYear);
+            }
+
+            for (let y = startYear; y <= currentYear; y++) {
+                yearsToProcess.push(y);
+            }
         }
 
-        // Info: (20260401 - Tzuhan) 針對每個指定年份、每種任務類型產生工單
-        for (const year of targetYears) {
-            for (const tType of requiredTaskTypes) {
+        // Info: (20260402 - Tzuhan) 2024 為預設(如果什麼參數都沒給)
+        if (yearsToProcess.length === 0) yearsToProcess = [2024];
+
+        for (const year of yearsToProcess) {
+            for (const type of taskTypes) {
                 tasksToCreate.push({
                     stockId: company.stockId,
-                    companyName: company.name,
+                    companyName: company.abbreviation ?? company.name,
                     marketType: company.marketType,
-                    year: year,
-                    taskType: tType,
+                    year,
+                    taskType: type,
                     status: TaskStatus.PENDING,
                     retryCount: 0
                 });
@@ -81,26 +62,12 @@ async function main() {
         }
     }
 
-    if (tasksToCreate.length === 0) {
-        console.log(`⚠️  沒有產生任何任務，請檢查輸入的公司代號是否在 JSON 名單中。`);
-        return;
-    }
-
-    console.log(`⏳ 準備寫入 ${tasksToCreate.length} 筆任務到資料庫...`);
-
+    console.log(`🚀 準備開立 ${tasksToCreate.length} 個工單...`);
     const result = await prisma.reportDownloadTask.createMany({
         data: tasksToCreate,
-        skipDuplicates: true, // Info: (20260401 - Tzuhan) 防呆機制：重複的任務會被自動忽略
+        skipDuplicates: true,
     });
-
-    console.log(`✅ 成功！資料庫新增了 ${result.count} 筆全新的 PENDING 任務。\n`);
+    console.log(`✅ 成功建立 ${result.count} 筆新任務。`);
 }
 
-main()
-    .catch(e => {
-        console.error(e);
-        process.exit(1);
-    })
-    .finally(async () => {
-        await prisma.$disconnect();
-    });
+main().catch(console.error);
