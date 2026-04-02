@@ -1,13 +1,13 @@
 import path from 'node:path';
 
 // Info: (20260402 - Tzuhan) 匯入我們在 Day 3 打造的三個 Service 模組
-import { downloadFinancialReport } from '../src/services/download_financial_report';
-import { downloadEsgReport } from '../src/services/download_esg_report';
-import { downloadEsgMetrics } from '../src/services/download_esg_metrics';
+import { downloadFinancialReport } from '@/services/financial_report.download.service';
+import { downloadEsgReport } from '@/services/esg_report.download.service';
+import { downloadEsgMetrics } from '@/services/esg_metrics.download.service';
 
 async function runTest() {
-    // Info: (20260402 - Tzuhan) 測試目標設定 (此處以台積電 2330 作為靶機)
-    const stockId = '2330';
+    // Info: (20260402 - Tzuhan) 測試目標設定 (此處以亞洲藏壽司 2926 作為靶機)
+    const stockId = '2926';
     const marketType = 'sii';
     const year = 2024;
 
