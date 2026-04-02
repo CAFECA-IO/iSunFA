@@ -14,6 +14,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { VerifyStatus } from "@/constants/verify_status";
 import Pagination from "@/components/common/pagination";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { SortOrder } from "@/constants/sort";
 
 interface IEsgTableSectionProps {
   year?: number;
@@ -30,37 +31,39 @@ export default function EsgTableSection({
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
 
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [records, setRecords] = useState<IEsgRecord[]>([]);
+  const [recordCount, setRecordCount] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const [keyWord, setKeyWord] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.DESC);
   const [verifyStatusFilter, setVerifyStatusFilter] = useState<
     VerifyStatus | "all"
   >("all");
-  const [intensityFilter, setIntensityFilter] = useState<string>("all");
-  const [scopeFilter, setScopeFilter] = useState<string>("all");
+  const [filteredIntensity, setFilteredIntensity] = useState<string>("all");
+  const [filteredScope, setFilteredScope] = useState<string>("all");
+
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState<boolean>(false);
   const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
     useState<boolean>(false);
   const [selectedEsgId, setSelectedEsgId] = useState<string | null>(null);
-  const [records, setRecords] = useState<IEsgRecord[]>([]);
-  const [recordCount, setRecordCount] = useState<number>(0);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [dateSort, setDateSort] = useState<"desc" | "asc">("desc");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fetchRecords = useCallback(async () => {
     if (!accountBookId) return;
     setIsLoading(true);
     try {
       const queryParams = new URLSearchParams();
-      if (searchTerm) queryParams.append("search", searchTerm);
+      if (keyWord) queryParams.append("search", keyWord);
       if (verifyStatusFilter && verifyStatusFilter !== "all")
         queryParams.append("verifyStatus", verifyStatusFilter);
-      if (intensityFilter && intensityFilter !== "all")
-        queryParams.append("intensity", intensityFilter);
-      if (scopeFilter && scopeFilter !== "all")
-        queryParams.append("scope", scopeFilter);
+      if (filteredIntensity && filteredIntensity !== "all")
+        queryParams.append("intensity", filteredIntensity);
+      if (filteredScope && filteredScope !== "all")
+        queryParams.append("scope", filteredScope);
       if (year) queryParams.append("year", year.toString());
       if (month) queryParams.append("month", month.toString());
-      queryParams.append("sort", dateSort);
+      queryParams.append("sort", sortOrder);
       queryParams.append("page", currentPage.toString());
       queryParams.append("pageSize", PAGE_SIZE.toString());
 
@@ -82,11 +85,11 @@ export default function EsgTableSection({
     }
   }, [
     accountBookId,
-    searchTerm,
+    keyWord,
     verifyStatusFilter,
-    intensityFilter,
-    scopeFilter,
-    dateSort,
+    filteredIntensity,
+    filteredScope,
+    sortOrder,
     year,
     month,
     currentPage,
@@ -96,11 +99,11 @@ export default function EsgTableSection({
   useEffect(() => {
     setCurrentPage(1);
   }, [
-    searchTerm,
+    keyWord,
     verifyStatusFilter,
-    intensityFilter,
-    scopeFilter,
-    dateSort,
+    filteredIntensity,
+    filteredScope,
+    sortOrder,
     year,
     month,
   ]);
@@ -213,115 +216,118 @@ export default function EsgTableSection({
 
   // Info: (20260325 - Luphia) 判斷是否有套用過濾條件
   const isFiltering =
-    searchTerm !== "" ||
+    keyWord !== "" ||
     verifyStatusFilter !== "all" ||
-    intensityFilter !== "all" ||
-    scopeFilter !== "all";
+    filteredIntensity !== "all" ||
+    filteredScope !== "all";
 
   // Info: (20260325 - Luphia) 抽出清除條件的函式，方便後續擴充
   const handleClearFilters = () => {
-    setSearchTerm("");
+    setKeyWord("");
     setVerifyStatusFilter("all");
-    setIntensityFilter("all");
-    setScopeFilter("all");
+    setFilteredIntensity("all");
+    setFilteredScope("all");
   };
 
-  const selectedEsgRecord = records.find(r => r.id === selectedEsgId);
+  const selectedEsgRecord = records.find((r) => r.id === selectedEsgId);
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        {/* Info: (20260312 - Julian) Toolbar */}
-        <div className="flex flex-col items-center justify-between gap-2 border-b border-slate-200 p-4 lg:flex-row">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder={t("esg_table.search_placeholder")}
-              aria-label={t("esg_table.search_aria")}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-            />
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm">
-            <select
-              aria-label="Filter by verify status"
-              value={verifyStatusFilter}
-              onChange={(e) =>
-                setVerifyStatusFilter(e.target.value as VerifyStatus | "all")
-              }
-              className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-bold text-slate-600 focus:outline-none"
-            >
-              <option value="all">{t("common.all")}</option>
-              <option value={VerifyStatus.VERIFIED}>
-                {t("verify.status.verified")}
-              </option>
-              <option value={VerifyStatus.UNVERIFIED}>
-                {t("verify.status.unverified")}
-              </option>
-            </select>
-            <select
-              aria-label={t("esg_table.filter_intensity_aria")}
-              value={intensityFilter}
-              onChange={(e) => setIntensityFilter(e.target.value)}
-              className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-bold text-slate-600 focus:outline-none"
-            >
-              <option value="all">{t("esg_table.filter_intensity_all")}</option>
-              <option value={EsgIntensity.HIGH}>
-                {t("esg_table.intensity.high")}
-              </option>
-              <option value={EsgIntensity.MEDIUM}>
-                {t("esg_table.intensity.medium")}
-              </option>
-              <option value={EsgIntensity.LOW}>
-                {t("esg_table.intensity.low")}
-              </option>
-            </select>
-            <select
-              aria-label={t("esg_table.filter_scope_aria")}
-              value={scopeFilter}
-              onChange={(e) => setScopeFilter(e.target.value)}
-              className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-bold text-slate-600 focus:outline-none"
-            >
-              <option value="all">{t("esg_table.filter_scope_all")}</option>
-              <option value={EsgScope.SCOPE_1}>
-                {t("esg_table.scope.scope_1")}
-              </option>
-              <option value={EsgScope.SCOPE_2}>
-                {t("esg_table.scope.scope_2")}
-              </option>
-              <option value={EsgScope.SCOPE_3}>
-                {t("esg_table.scope.scope_3")}
-              </option>
-            </select>
-            <button
-              type="button"
-              aria-label={t("esg_table.sort_date_aria")}
-              onClick={() => setDateSort(dateSort === "desc" ? "asc" : "desc")}
-              className="flex items-center rounded-lg border border-slate-300 px-4 py-2 font-bold text-slate-600 transition-colors hover:bg-slate-50"
-            >
-              {dateSort === "desc"
-                ? t("esg_table.sort_newest")
-                : t("esg_table.sort_oldest")}
-              {dateSort === "desc" ? (
-                <ArrowDown className="ml-1 h-4 w-4" />
-              ) : (
-                <ArrowUp className="ml-1 h-4 w-4" />
-              )}
-            </button>
-            <button
-              type="button"
-              aria-label={t("common.verify_all")}
-              onClick={() => setIsVerifyAllConfirmOpen(true)}
-              disabled={isLoading}
-              className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
-            >
-              {t("common.verify_all")}
-            </button>
-          </div>
+      {/* Info: (20260312 - Julian) Toolbar */}
+      <div className="flex flex-col items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder={t("esg_table.search_placeholder")}
+            aria-label={t("esg_table.search_aria")}
+            value={keyWord}
+            onChange={(e) => setKeyWord(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+          />
         </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm">
+          <select
+            aria-label="Filter by verify status"
+            value={verifyStatusFilter}
+            onChange={(e) =>
+              setVerifyStatusFilter(e.target.value as VerifyStatus | "all")
+            }
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+          >
+            <option value="all">
+              {t("verify.status.all", { type: t("verify.type.esg") })}
+            </option>
+            <option value={VerifyStatus.VERIFIED}>
+              {t("verify.status.verified")}
+            </option>
+            <option value={VerifyStatus.UNVERIFIED}>
+              {t("verify.status.unverified")}
+            </option>
+          </select>
+          <select
+            aria-label={t("esg_table.filter_intensity_aria")}
+            value={filteredIntensity}
+            onChange={(e) => setFilteredIntensity(e.target.value)}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+          >
+            <option value="all">{t("esg_table.filter_intensity_all")}</option>
+            <option value={EsgIntensity.HIGH}>
+              {t("esg_table.intensity.high")}
+            </option>
+            <option value={EsgIntensity.MEDIUM}>
+              {t("esg_table.intensity.medium")}
+            </option>
+            <option value={EsgIntensity.LOW}>
+              {t("esg_table.intensity.low")}
+            </option>
+          </select>
+          <select
+            aria-label={t("esg_table.filter_scope_aria")}
+            value={filteredScope}
+            onChange={(e) => setFilteredScope(e.target.value)}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+          >
+            <option value="all">{t("esg_table.filter_scope_all")}</option>
+            <option value={EsgScope.SCOPE_1}>
+              {t("esg_table.scope.scope_1")}
+            </option>
+            <option value={EsgScope.SCOPE_2}>
+              {t("esg_table.scope.scope_2")}
+            </option>
+            <option value={EsgScope.SCOPE_3}>
+              {t("esg_table.scope.scope_3")}
+            </option>
+          </select>
+          <button
+            type="button"
+            aria-label={t("common.sort.date_aria")}
+            onClick={() => setSortOrder(sortOrder === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC)}
+            className="flex items-center rounded-lg border border-slate-300 px-4 py-2 font-bold text-slate-600 transition-colors hover:bg-orange-50"
+          >
+            {sortOrder === SortOrder.DESC
+              ? t("common.sort.newest")
+              : t("common.sort.oldest")}
+            {sortOrder === SortOrder.DESC ? (
+              <ArrowDown className="ml-1 h-4 w-4" />
+            ) : (
+              <ArrowUp className="ml-1 h-4 w-4" />
+            )}
+          </button>
+          <button
+            type="button"
+            aria-label={t("common.verify_all")}
+            onClick={() => setIsVerifyAllConfirmOpen(true)}
+            disabled={isLoading}
+            className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+          >
+            {t("common.verify_all")}
+          </button>
+        </div>
+      </div>
 
+      {/* Info: (20260401 - Julian) Table */}
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         {/* Info: (20260312 - Julian) Table */}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[800px] border-collapse text-left">

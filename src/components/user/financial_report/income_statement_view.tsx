@@ -9,6 +9,7 @@ import {
   IIncomeStatement,
 } from "@/interfaces/income_statement";
 import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
+import ReportPrintNote, { IReportNote } from "@/components/user/financial_report/report_print_note";
 import { numberWithCommas } from "@/lib/utils/common";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import {
@@ -33,7 +34,7 @@ const IncomeStatementSection = ({
   isValueNegative?: boolean;
 }) => {
   return (
-    <div className="mb-6 print:mb-2">
+    <div className="mb-6 print:mb-2 print:break-inside-avoid">
       {/* Info: (20260330 - Julian) 項目標題 */}
       <div className="mb-2 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-100 px-3 py-2">
         <span className="font-bold text-slate-700">{titleText}</span>
@@ -54,7 +55,7 @@ const IncomeStatementSection = ({
               className="flex items-center justify-between border-b border-slate-50 py-2"
             >
               <div className="flex w-2/3 flex-col">
-                <span className="text-[15px] font-medium text-slate-600">
+                <span className="text-[15px] font-medium text-slate-600 print:text-sm">
                   {item.name}
                 </span>
                 <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
@@ -141,76 +142,92 @@ export default function IncomeStatementView({
   // Info: (20260330 - Julian) 營收做為 100% 基準
   const baseRevenue = sections.revenue.total;
 
+    // Info: (20260401 - Julian) 關鍵指標註解
+    const incomeNotes: IReportNote[] = [
+      {
+        title: "毛利率 (Gross Margin)",
+        type: "獲利能力",
+        mainDesc: "毛利率 = (營業收入 - 營業成本) / 營業收入。",
+        subDesc:
+          "衡量企業產品或服務的初始獲利能力，建議大於 50%，表示產品或服務的初始獲利能力良好。",
+      },
+      {
+        title: "營益率 (Operating Margin)",
+        type: "獲利能力",
+        mainDesc: "營益率 = 營業利益 / 營業收入。",
+        subDesc:
+          "衡量企業本業營運獲利能力，建議大於 15%，表示本業營運獲利能力良好。",
+      },
+      {
+        title: "淨利率 (Net Profit Margin)",
+        type: "獲利能力",
+        mainDesc: "淨利率 = 稅後淨利 / 營業收入。",
+        subDesc:
+          "衡量企業最終稅後實質獲利能力，建議大於 10%，表示最終稅後實質獲利能力良好。",
+      },
+      {
+        title: "EBITDA 利潤率",
+        type: "獲利能力",
+        mainDesc: "EBITDA 利潤率 = EBITDA / 營業收入。",
+        subDesc:
+          "衡量企業可分配之現金獲利指標，建議大於 15%，表示可分配之現金獲利指標良好。",
+      },
+    ];
+  
+    // Info: (20260401 - Julian) 綜合損益表關鍵指標
+    const incomeKeyMetricsData = [
+      {
+        title: "毛利率 (Gross Margin)",
+        value: `${metrics.grossMargin.toFixed(1)}%`,
+        description: "產品初始獲利能力",
+        textColor: "text-cyan-600",
+        statusGood: metrics.grossMargin >= 50,
+      },
+      {
+        title: "營益率 (Operating Margin)",
+        value: `${metrics.operatingMargin.toFixed(1)}%`,
+        description: "本業營運獲利能力",
+        textColor: "text-indigo-600",
+        statusGood: metrics.operatingMargin >= 15,
+      },
+      {
+        title: "淨利率 (Net Profit Margin)",
+        value: `${metrics.netProfitMargin.toFixed(1)}%`,
+        description: "最終稅後實質獲利能力",
+        textColor: "text-amber-600",
+        statusGood: metrics.netProfitMargin >= 10,
+      },
+      {
+        title: "EBITDA 利潤率",
+        value: `${metrics.ebitdaMargin.toFixed(1)}%`,
+        description: "可分配之現金獲利指標",
+        textColor: "text-slate-700",
+        statusGood: metrics.ebitdaMargin >= 15,
+      },
+    ];
+
   const keyMetricsBanner = metrics ? (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 print:flex">
-      <KeyMetricsCard
-        title="毛利率 (Gross Margin)"
-        value={`${metrics.grossMargin.toFixed(1)}%`}
-        description="產品初始獲利能力"
-        textColor="text-emerald-600"
-        tooltip={
-          <>
-            <span className="font-bold">
-              毛利率 = (營業收入 - 營業成本) / 營業收入。
-            </span>
-            <br />
-            <span>
-              衡量企業產品或服務的初始獲利能力，建議大於 50%
-              ，表示產品或服務的初始獲利能力良好。
-            </span>
-          </>
-        }
-      />
-      <KeyMetricsCard
-        title="營益率 (Operating Margin)"
-        value={`${metrics.operatingMargin.toFixed(1)}%`}
-        description="本業營運獲利能力"
-        textColor="text-indigo-600"
-        tooltip={
-          <>
-            <span className="font-bold">營益率 = 營業利益 / 營業收入。</span>
-            <br />
-            <span>
-              衡量企業本業營運獲利能力，建議大於 15%
-              ，表示本業營運獲利能力良好。
-            </span>
-          </>
-        }
-      />
-      <KeyMetricsCard
-        title="淨利率 (Net Profit Margin)"
-        value={`${metrics.netProfitMargin.toFixed(1)}%`}
-        description="最終稅後實質獲利能力"
-        textColor="text-blue-600"
-        tooltip={
-          <>
-            <span className="font-bold">淨利率 = 稅後淨利 / 營業收入。</span>
-            <br />
-            <span>
-              衡量企業最終稅後實質獲利能力，建議大於 10%
-              ，表示最終稅後實質獲利能力良好。
-            </span>
-          </>
-        }
-      />
-      <KeyMetricsCard
-        title="EBITDA 利潤率"
-        value={`${metrics.ebitdaMargin.toFixed(1)}%`}
-        description="可分配之現金獲利指標"
-        textColor="text-amber-600"
-        tooltip={
-          <>
-            <span className="font-bold">
-              EBITDA 利潤率 = EBITDA / 營業收入。
-            </span>
-            <br />
-            <span>
-              衡量企業可分配之現金獲利指標，建議大於 15%
-              ，表示可分配之現金獲利指標良好。
-            </span>
-          </>
-        }
-      />
+      {incomeKeyMetricsData.map((metric) => {
+              const note = incomeNotes.find((note) => note.title === metric.title);
+             return (
+              <KeyMetricsCard
+                key={metric.title}
+                title={metric.title}
+                value={metric.value}
+                description={metric.description}
+                textColor={metric.textColor}
+                statusGood={metric.statusGood}
+                tooltip={
+                  <>
+                    <span className="font-bold">{note?.mainDesc}</span>
+                    <br />
+                    <span>{note?.subDesc}</span>
+                  </>
+                }
+              />
+            )
+            })}
     </div>
   ) : (
     <div className="flex h-[150px] w-full items-center justify-center rounded-2xl bg-white p-5">
@@ -220,7 +237,7 @@ export default function IncomeStatementView({
 
   const operatingSection = sections ? (
     <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
-      <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4">
+      <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4 box-decoration-clone">
         <div className="mb-4 flex items-end justify-between border-b-2 border-slate-200 pb-3">
           <span className="text-lg font-black tracking-wider text-slate-800 uppercase">
             營業活動 OPERATING
@@ -244,7 +261,7 @@ export default function IncomeStatementView({
           barColor="bg-rose-400"
         />
 
-        <div className="mb-6 flex items-center justify-between rounded-xl border border-sky-100 bg-sky-50 p-4 shadow-sm">
+        <div className="mb-6 flex items-center justify-between rounded-xl border border-sky-100 bg-sky-50 p-4 shadow-sm print:break-inside-avoid">
           <span className="text-md font-bold text-slate-700">
             營業毛利 (Gross Profit)
           </span>
@@ -261,7 +278,7 @@ export default function IncomeStatementView({
           barColor="bg-rose-400"
         />
 
-        <div className="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50 p-4 shadow-sm">
+        <div className="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50 p-4 shadow-sm print:break-inside-avoid">
           <span className="text-md font-bold text-slate-700">
             營業利益 (Operating Income)
           </span>
@@ -278,8 +295,8 @@ export default function IncomeStatementView({
   );
 
   const nonOperatingSection = sections ? (
-    <div className="flex flex-col gap-4">
-      <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+    <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
+      <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4 box-decoration-clone">
         <div className="mb-4 flex items-end justify-between border-b-2 border-slate-200 pb-3">
           <span className="text-lg font-black tracking-wider text-slate-800 uppercase">
             業外與稅 NON-OP & TAX
@@ -295,7 +312,7 @@ export default function IncomeStatementView({
           barColor="bg-violet-400"
         />
 
-        <div className="mb-6 flex items-center justify-between rounded-xl border border-violet-100 bg-violet-50 p-4 shadow-sm">
+        <div className="mb-6 flex items-center justify-between rounded-xl border border-violet-100 bg-violet-50 p-4 shadow-sm print:break-inside-avoid">
           <span className="text-md font-bold text-slate-700">
             稅前淨利 (Income Before Tax)
           </span>
@@ -314,7 +331,7 @@ export default function IncomeStatementView({
       </div>
 
       {/* Info: (20260330 - Julian) 最終淨利 */}
-      <div className="flex items-center justify-between rounded-2xl bg-slate-800 p-6 text-white shadow-sm">
+      <div className="flex items-center justify-between rounded-2xl bg-slate-800 p-6 text-white shadow-sm print:break-inside-avoid">
         <span className="text-lg font-black tracking-widest uppercase">
           本期淨利 (NET INCOME)
         </span>
@@ -334,12 +351,14 @@ export default function IncomeStatementView({
       {/* Info: (20260330 - Julian) 關鍵指標 */}
       {keyMetricsBanner}
       {/* Info: (20260330 - Julian) 營業損益 & 業外損益與稅後淨利 */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 print:flex">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 print:flex print:items-start">
         {/* Info: (20260330 - Julian) 左欄：營業損益 (本業) */}
         {operatingSection}
         {/* Info: (20260330 - Julian) 右欄：業外與稅 */}
         {nonOperatingSection}
       </div>
+      {/* Info: (20260401 - Julian) 綜合損益表註解 */}
+      <ReportPrintNote notes={incomeNotes} />
     </div>
   );
 }

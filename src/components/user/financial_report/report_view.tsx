@@ -10,6 +10,7 @@ import CashFlowSheetView from "@/components/user/financial_report/cash_flow_stat
 import IncomeStatementView from "@/components/user/financial_report/income_statement_view";
 import { numberWithCommas } from "@/lib/utils/common";
 import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
 import { downloadHtmlAsPdf } from "@/lib/utils/pdf";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 
@@ -18,6 +19,7 @@ export default function ReportView() {
   const params = useParams();
   const accountBookId = params.account_book_id as string;
 
+  const [accountbookName, setAccountbookName] = useState<string>("");
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState<boolean>(false);
   const [selectedReportType, setSelectedReportType] = useState<ReportType>(
     ReportType.BALANCE_SHEET,
@@ -31,6 +33,20 @@ export default function ReportView() {
   } | null>(null);
   const [countOfVerifiedVouchers, setCountOfVerifiedVouchers] =
     useState<number>(0);
+
+  // Info: (20260401 - Julian) 從 API 取得「帳簿名稱」
+  useEffect(() => {
+    if (!accountBookId) return;
+    request<IApiResponse<{ name: string }>>(
+      `/api/v1/user/account_book/${accountBookId}`,
+    )
+      .then((res) => {
+        if (res.payload?.name) {
+          setAccountbookName(res.payload.name);
+        }
+      })
+      .catch((error) => console.error("Failed to fetch account book:", error));
+  }, [accountBookId]);
 
   // Info: (20260331 - Julian) 從 API 取得「已核對的傳票數目」
   useEffect(() => {
@@ -95,14 +111,19 @@ export default function ReportView() {
     try {
       // Info: (20260331 - Julian) 過濾掉需要隱藏的元素（例如工具列與重點指標 Tooltip）
       const filter = (node: HTMLElement) => {
-        if (
-          node?.hasAttribute &&
-          node.hasAttribute("data-html2canvas-ignore")
-        ) {
+        // Info: (20260401 - Julian) 隱藏 data-html2canvas-ignore 的元素
+        if (node?.hasAttribute && node.hasAttribute("data-html2canvas-ignore")) {
           return false;
         }
         return true;
       };
+
+      // Info: (20260401 - Julian) 暫時顯示需要印出的註解
+      const noteElement = document.getElementById("report-print-note");
+      if (noteElement) {
+        noteElement.classList.remove("hidden");
+        noteElement.classList.add("flex");
+      }
 
       // Info: (20260331 - Julian) 產出 PDF
       await downloadHtmlAsPdf("report-content-to-print", filename, { filter });
@@ -203,6 +224,16 @@ export default function ReportView() {
     }
   };
 
+  const displayAccountbookName = accountbookName ? (
+    <h2 className="text-2xl font-black tracking-[0.2em] text-slate-800 md:text-3xl">
+      {accountbookName}
+    </h2>
+  ) : (
+    <h2 className="text-2xl font-black tracking-[0.2em] text-slate-300 md:text-3xl">
+      (未知的帳簿)
+    </h2>
+  );
+
   const reportContent = !generatedConfig ? (
     <div className="flex h-full min-h-[500px] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
       <Filter className="mb-4 h-12 w-12 text-slate-300" strokeWidth={1.5} />
@@ -239,9 +270,7 @@ export default function ReportView() {
       {/* Info: (20260330 - Julian) 報表標題 */}
       <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-sm md:p-8">
         <div className="absolute top-0 left-0 h-1 w-full bg-amber-500"></div>
-        <h2 className="text-2xl font-black tracking-[0.2em] md:text-3xl">
-          ISUNFA 智慧會計系統
-        </h2>
+        {displayAccountbookName}
         <h3 className="mt-2 text-xl font-bold tracking-widest text-slate-600">
           {reportData?.reportTitle}
         </h3>

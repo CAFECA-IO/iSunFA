@@ -85,7 +85,7 @@ export default function EsgDetailModal({
         {
           method: "PUT",
           body: JSON.stringify(formPayload),
-        }
+        },
       );
       if (res.payload) {
         onSave?.(res.payload);
@@ -126,7 +126,7 @@ export default function EsgDetailModal({
   };
 
   const EsgContent = (
-    <div className="flex h-full w-full flex-col bg-[#F8FAFC] overflow-hidden">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-[#F8FAFC]">
       {/* Info: (20260312 - Julian) Header (Removed for embedded) */}
 
       {/* Info: (20260326 - Julian) Body */}
@@ -315,7 +315,7 @@ export default function EsgDetailModal({
                     }
                     className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                   />
-                  <span className="text-xs font-bold text-slate-500 whitespace-nowrap">
+                  <span className="text-xs font-bold whitespace-nowrap text-slate-500">
                     kg CO₂e
                   </span>
                 </div>

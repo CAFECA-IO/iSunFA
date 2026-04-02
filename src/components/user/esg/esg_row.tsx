@@ -181,9 +181,7 @@ export function EsgRow({
           colSpan={6}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
-          <p className="font-bold text-red-500">
-            {t("esg_table.ai.failed")}
-          </p>
+          <p className="font-bold text-red-500">{t("esg_table.ai.failed")}</p>
         </td>
       </tr>
     );
