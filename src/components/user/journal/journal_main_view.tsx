@@ -5,9 +5,11 @@ import { useTranslation } from "@/i18n/i18n_context";
 import JournalUploadView from "@/components/user/journal/journal_upload_view";
 import JournalListView from "@/components/user/journal/journal_list_view";
 import JournalLogView from "@/components/user/journal/journal_log_view";
+import JournalScanView from "@/components/user/journal/journal_scan_view";
 
 enum EJournalTab {
   UPLOAD = "upload",
+  SCAN = "scan",
   LIST = "list",
   LOG = "log",
 }
@@ -22,6 +24,12 @@ export default function JournalMainView() {
         return (
           <JournalUploadView
             onUploadComplete={() => setActiveTab(EJournalTab.LIST)}
+          />
+        );
+      case EJournalTab.SCAN:
+        return (
+          <JournalScanView
+            onScanComplete={() => setActiveTab(EJournalTab.LIST)}
           />
         );
       case EJournalTab.LIST:
@@ -45,23 +53,32 @@ export default function JournalMainView() {
         <div className="hide-scrollbar flex h-fit w-full max-w-full flex-row gap-2 overflow-x-auto rounded-lg border border-gray-200 bg-gray-100 p-2 lg:w-[180px] lg:flex-col lg:overflow-visible lg:p-4">
           <button
             type="button"
-            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${
-              activeTab === EJournalTab.UPLOAD
-                ? "bg-white text-orange-600 shadow-sm"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
+            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.UPLOAD
+              ? "bg-white text-orange-600 shadow-sm"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
             onClick={() => setActiveTab(EJournalTab.UPLOAD)}
           >
             {t("journal.main_view.upload")}
           </button>
+          {/* Info: (20260402 - Julian) Quick Scan Area */}
+          <button
+            type="button"
+            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.SCAN
+              ? "bg-white text-orange-600 shadow-sm"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
+            onClick={() => setActiveTab(EJournalTab.SCAN)}
+          >
+            {t("ocr.quick_scan")}
+          </button>
           {/* Info: (20260304 - Julian) View Logs */}
           <button
             type="button"
-            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${
-              activeTab === EJournalTab.LIST
-                ? "bg-white text-orange-600 shadow-sm"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
+            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.LIST
+              ? "bg-white text-orange-600 shadow-sm"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
             onClick={() => setActiveTab(EJournalTab.LIST)}
           >
             {t("journal.main_view.list")}
@@ -69,11 +86,10 @@ export default function JournalMainView() {
           {/* Info: (20260306 - Julian) View Audit Logs */}
           <button
             type="button"
-            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${
-              activeTab === EJournalTab.LOG
-                ? "bg-white text-orange-600 shadow-sm"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
+            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.LOG
+              ? "bg-white text-orange-600 shadow-sm"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
             onClick={() => setActiveTab(EJournalTab.LOG)}
           >
             {t("journal.main_view.log")}
