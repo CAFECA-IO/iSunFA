@@ -617,3 +617,66 @@ model EsgTarget {
   @@unique([accountBookId, year])
   @@map("esg_target")
 }
+
+enum TaskType {
+  FIN_REPORT // Info: (20260401 - Tzuhan) 財務年報 (PDF)
+  ESG_REPORT // Info: (20260401 - Tzuhan) 永續報告書 (PDF)
+  ESG_METRICS // Info: (20260401 - Tzuhan) ESG 數據指標 (JSON) - 💡 依照你的決策，這裡只存 JSON 不產 CSV
+}
+
+enum TaskStatus {
+  PENDING // Info: (20260401 - Tzuhan) 待下載
+  SUCCESS // Info: (20260401 - Tzuhan) 下載成功
+  FAILED // Info: (20260401 - Tzuhan) 下載失敗 (超過重試次數)
+}
+
+// Info: (20260402 - Tzuhan) twse 上市上櫃公司清單
+model Company {
+  stockId      String  @id @map("stock_id") // Info: (20260401 - Tzuhan) 公司代號 (如 "1101")
+  name         String  @map("name") // Info: (20260401 - Tzuhan) 公司全稱
+  abbreviation String? @map("abbreviation") // Info: (20260401 - Tzuhan) 公司簡稱 
+  marketType   String  @map("market_type") // Info: (20260401 - Tzuhan) 市場別 ("sii" 或 "otc")
+  isActive     Boolean @default(true) @map("is_active") // Info: (20260401 - Tzuhan) 是否持續追蹤 (可手動標記下市公司)
+
+  // Info: (20260402 - Tzuhan) 穩定資訊 (便於未來搜尋、篩選與清洗)
+  taxId             String? @map("tax_id") // Info: (20260402 - Tzuhan) 營利事業統一編號
+  industry          String? @map("industry") // Info: (20260402 - Tzuhan) 產業別
+  incorporationDate String? @map("incorporation_date") // Info: (20260402 - Tzuhan) 成立日期
+  listingDate       String? @map("listing_date") // Info: (20260402 - Tzuhan) 上市/上櫃日期
+  symbol            String? @map("symbol") // Info: (20260402 - Tzuhan) 英文簡稱
+
+  // Info: (20260402 - Tzuhan) 其他不常用或易變動的資料
+  metadata Json? @map("metadata")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tasks ReportDownloadTask[]
+
+  @@map("company")
+}
+
+model ReportDownloadTask {
+  id          String @id @default(uuid())
+  stockId     String @map("stock_id") // Info: (20260401 - Tzuhan) 公司代號 (如 "1101")
+  companyName String @map("company_name") // Info: (20260401 - Tzuhan) 公司簡稱 (如 "台泥")
+  marketType  String @map("market_type") // Info: (20260401 - Tzuhan) 市場別 ("sii" 或 "otc")
+  year        Int    @map("year") // Info: (20260401 - Tzuhan) 目標年度 (如 2024)
+
+  taskType TaskType   @map("task_type") // Info: (20260401 - Tzuhan) 任務類型
+  status   TaskStatus @default(PENDING) // Info: (20260401 - Tzuhan) 初始建立時皆為 PENDING
+
+  filePath   String? @map("file_path") // Info: (20260401 - Tzuhan) 檔案存放的相對路徑 (下載成功後寫入)
+  retryCount Int     @default(0) @map("retry_count") // Info: (20260401 - Tzuhan) 重試次數
+  errorMsg   String? @map("error_msg") @db.Text // Info: (20260401 - Tzuhan) 失敗時的錯誤訊息記錄
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  company   Company  @relation(fields: [stockId], references: [stockId])
+
+  // Info: (20260401 - Tzuhan) 複合唯一鍵：確保「同一家公司、同一年、同一種任務」絕對不會重複建立！
+  @@unique([stockId, year, taskType])
+  // Info: (20260401 - Tzuhan) 狀態索引：因為主控台會瘋狂 Query "PENDING" 的任務，加 Index 提升查詢速度
+  @@index([status])
+  @@map("report_download_task")
+}

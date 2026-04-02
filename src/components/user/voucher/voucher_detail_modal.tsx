@@ -68,7 +68,9 @@ const VoucherRow = ({
             aria-label={t("voucher.detail_modal.fields.particular")}
             value={row.particular}
             placeholder={t("voucher.detail_modal.fields.particular")}
-            onChange={(e) => updateRow(row.id, { ...row, particular: e.target.value })}
+            onChange={(e) =>
+              updateRow(row.id, { ...row, particular: e.target.value })
+            }
             className="h-full w-full rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
           />
         </div>
@@ -85,7 +87,11 @@ const VoucherRow = ({
           onWheel={(e) => e.currentTarget.blur()}
           onChange={(e) => {
             const val = e.target.value;
-            updateRow(row.id, { ...row, isDebit: val === "" ? null : true, amount: val === "" ? 0 : Number(val) });
+            updateRow(row.id, {
+              ...row,
+              isDebit: val === "" ? null : true,
+              amount: val === "" ? 0 : Number(val),
+            });
           }}
           className="h-full w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 text-right text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
         />
@@ -102,7 +108,11 @@ const VoucherRow = ({
           onWheel={(e) => e.currentTarget.blur()}
           onChange={(e) => {
             const val = e.target.value;
-            updateRow(row.id, { ...row, isDebit: val === "" ? null : false, amount: val === "" ? 0 : Number(val) });
+            updateRow(row.id, {
+              ...row,
+              isDebit: val === "" ? null : false,
+              amount: val === "" ? 0 : Number(val),
+            });
           }}
           className="h-full w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 text-right text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
         />
@@ -148,8 +158,11 @@ export default function VoucherDetailModal({
   const [isUnverifyModalOpen, setIsUnverifyModalOpen] = useState(false);
   const [targetVerify, setTargetVerify] = useState<boolean>(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-  const [isAccountBookSelectorOpen, setIsAccountBookSelectorOpen] = useState(false);
-  const [selectorTargetRowId, setSelectorTargetRowId] = useState<string | null>(null);
+  const [isAccountBookSelectorOpen, setIsAccountBookSelectorOpen] =
+    useState(false);
+  const [selectorTargetRowId, setSelectorTargetRowId] = useState<string | null>(
+    null,
+  );
 
   // Info: (20260327 - Luphia) 處理 Fetch，並加入 abort/ignore 避免競態條件
   useEffect(() => {
@@ -159,7 +172,7 @@ export default function VoucherDetailModal({
         setIsLoading(true);
         try {
           const res = await request<IApiResponse<IVoucher>>(
-            `/api/v1/user/account_book/${accountBookId}/voucher/${voucherId}`
+            `/api/v1/user/account_book/${accountBookId}/voucher/${voucherId}`,
           );
           if (res.payload && isMounted) {
             const v = res.payload;
@@ -187,7 +200,7 @@ export default function VoucherDetailModal({
   const { totalCredit, totalDebit, isTotalBalanced } = useMemo(() => {
     let credit = 0;
     let debit = 0;
-    rows.forEach(row => {
+    rows.forEach((row) => {
       if (row.isDebit === false) credit += row.amount;
       if (row.isDebit === true) debit += row.amount;
     });
@@ -213,7 +226,13 @@ export default function VoucherDetailModal({
   const addRow = useCallback(() => {
     setRows((prev) => [
       ...prev,
-      { id: `row-${Date.now()}`, accounting: null, particular: "", amount: 0, isDebit: null },
+      {
+        id: `row-${Date.now()}`,
+        accounting: null,
+        particular: "",
+        amount: 0,
+        isDebit: null,
+      },
     ]);
   }, []);
 
@@ -228,7 +247,8 @@ export default function VoucherDetailModal({
   const checkHasChanges = useCallback(() => {
     if (!activeVoucher) return true;
     if (inputDate / 1000 !== (activeVoucher.tradingDate ?? 0)) return true;
-    if (voucherType !== (activeVoucher.tradingType ?? TradingType.INCOME)) return true;
+    if (voucherType !== (activeVoucher.tradingType ?? TradingType.INCOME))
+      return true;
     if (note !== (activeVoucher.note || "")) return true;
     if (editedVoucherId !== activeVoucher.id) return true;
 
@@ -244,7 +264,6 @@ export default function VoucherDetailModal({
       );
     });
   }, [activeVoucher, inputDate, voucherType, note, editedVoucherId, rows]);
-
 
   const handleCancelEdit = () => {
     if (activeVoucher) {
@@ -276,7 +295,7 @@ export default function VoucherDetailModal({
       };
       const res = await request<IApiResponse<IVoucher>>(
         `/api/v1/user/account_book/${accountBookId}/voucher/${voucherId}`,
-        { method: "PUT", body: JSON.stringify(payload) }
+        { method: "PUT", body: JSON.stringify(payload) },
       );
       if (res.code === ApiCode.SUCCESS || res.payload) {
         setIsSaveModalOpen(false);
@@ -306,8 +325,7 @@ export default function VoucherDetailModal({
   if (!activeVoucher || activeVoucher?.isDeleted) return null;
 
   const VoucherContent = (
-    <div className="flex h-full w-full flex-col bg-[#F8FAFC] overflow-hidden">
-
+    <div className="flex h-full w-full flex-col overflow-hidden bg-[#F8FAFC]">
       {/* Info: (20260327 - Luphia) Body Content */}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-[10px]">
         {/* Info: (20260327 - Luphia) Section 1: Basic Info */}
@@ -327,13 +345,19 @@ export default function VoucherDetailModal({
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <AiConfidence confidence={activeVoucher.confidence} note={activeVoucher.aiNote} />
+            <AiConfidence
+              confidence={activeVoucher.confidence}
+              note={activeVoucher.aiNote}
+            />
           </div>
         </div>
 
         <div className="mb-8 grid grid-cols-2 gap-4 px-6 pt-4">
           <div>
-            <label htmlFor="voucher-date" className="mb-2 block text-xs font-bold text-slate-600">
+            <label
+              htmlFor="voucher-date"
+              className="mb-2 block text-xs font-bold text-slate-600"
+            >
               {t("voucher.detail_modal.fields.voucher_date")}
             </label>
             <input
@@ -341,7 +365,11 @@ export default function VoucherDetailModal({
               aria-label={String(t("voucher.detail_modal.fields.voucher_date"))}
               type="date"
               value={new Date(inputDate).toISOString().split("T")[0]}
-              onChange={(e) => setInputDate(isNaN(e.target.valueAsNumber) ? 0 : e.target.valueAsNumber)}
+              onChange={(e) =>
+                setInputDate(
+                  isNaN(e.target.valueAsNumber) ? 0 : e.target.valueAsNumber,
+                )
+              }
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
             />
           </div>
@@ -356,19 +384,31 @@ export default function VoucherDetailModal({
                 onChange={(e) => setVoucherType(e.target.value as TradingType)}
                 className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
               >
-                <option value={TradingType.INCOME}>{t("voucher.main_view.table.types.income")}</option>
-                <option value={TradingType.OUTCOME}>{t("voucher.main_view.table.types.outcome")}</option>
-                <option value={TradingType.TRANSFER}>{t("voucher.main_view.table.types.transfer")}</option>
+                <option value={TradingType.INCOME}>
+                  {t("voucher.main_view.table.types.income")}
+                </option>
+                <option value={TradingType.OUTCOME}>
+                  {t("voucher.main_view.table.types.outcome")}
+                </option>
+                <option value={TradingType.TRANSFER}>
+                  {t("voucher.main_view.table.types.transfer")}
+                </option>
               </select>
-              <ChevronDown size={18} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+              <ChevronDown
+                size={18}
+                className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-slate-400"
+              />
             </div>
           </div>
 
           <div className="col-span-2">
-            <label htmlFor="voucher-no" className="mb-2 block text-xs font-bold text-slate-600">
+            <label
+              htmlFor="voucher-no"
+              className="mb-2 block text-xs font-bold text-slate-600"
+            >
               {t("voucher.detail_modal.fields.voucher_no")}
             </label>
-            <div className="flex h-[42px] items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500 text-slate-700">
+            <div className="flex h-[42px] items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-slate-700 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
               <Hash size={20} className="text-slate-400" />
               <input
                 id="voucher-no"
@@ -377,27 +417,39 @@ export default function VoucherDetailModal({
                 value={editedVoucherId}
                 onChange={(e) => setEditedVoucherId(e.target.value)}
                 className="w-full bg-transparent text-sm font-semibold text-slate-700 outline-none placeholder:font-normal placeholder:text-slate-400"
-                placeholder={t("voucher.detail_modal.fields.voucher_no_placeholder")}
+                placeholder={t(
+                  "voucher.detail_modal.fields.voucher_no_placeholder",
+                )}
               />
             </div>
           </div>
         </div>
 
         {/* Info: (20260327 - Luphia) Section 2: Accounting Entries */}
-        <div className="mb-3 mt-6 flex flex-col items-start justify-between gap-2 px-6 sm:flex-row sm:items-center">
+        <div className="mt-6 mb-3 flex flex-col items-start justify-between gap-2 px-6 sm:flex-row sm:items-center">
           <h4 className="text-sm font-bold text-slate-700">
             {t("voucher.detail_modal.sections.accounting_entries")}
           </h4>
-          <button type="button" onClick={addRow} className="flex items-center gap-1 text-sm font-bold text-orange-500 hover:text-orange-600">
+          <button
+            type="button"
+            onClick={addRow}
+            className="flex items-center gap-1 text-sm font-bold text-orange-500 hover:text-orange-600"
+          >
             <Plus size={16} className="stroke-[2.5]" />
             {t("voucher.detail_modal.actions.add_row")}
           </button>
         </div>
 
         <div className="mb-2 flex items-center px-6 pr-10">
-          <div className="flex-1 text-xs font-bold text-slate-600">{t("voucher.detail_modal.fields.account_code_name")}</div>
-          <div className="w-[100px] pr-2 text-right text-xs font-bold text-slate-600">{t("voucher.detail_modal.fields.debit")}</div>
-          <div className="w-[100px] pr-2 text-right text-xs font-bold text-slate-600">{t("voucher.detail_modal.fields.credit")}</div>
+          <div className="flex-1 text-xs font-bold text-slate-600">
+            {t("voucher.detail_modal.fields.account_code_name")}
+          </div>
+          <div className="w-[100px] pr-2 text-right text-xs font-bold text-slate-600">
+            {t("voucher.detail_modal.fields.debit")}
+          </div>
+          <div className="w-[100px] pr-2 text-right text-xs font-bold text-slate-600">
+            {t("voucher.detail_modal.fields.credit")}
+          </div>
         </div>
 
         <div className="mb-4 grid grid-cols-11 gap-x-1 gap-y-2 px-6">
@@ -417,17 +469,26 @@ export default function VoucherDetailModal({
 
         {/* Info: (20260327 - Luphia) Notes */}
         <div className="mb-8 px-6">
-          <label htmlFor="voucher-note" className="mb-2 block text-xs font-bold text-slate-600">
-            {t("voucher.detail_modal.fields.note")} <span className="font-normal text-slate-400">({t("common.optional_in_parentheses")})</span>
+          <label
+            htmlFor="voucher-note"
+            className="mb-2 block text-xs font-bold text-slate-600"
+          >
+            {t("voucher.detail_modal.fields.note")}{" "}
+            <span className="font-normal text-slate-400">
+              ({t("common.optional_in_parentheses")})
+            </span>
           </label>
           <div className="relative">
-            <MessageSquare size={18} className="absolute left-4 top-3.5 text-slate-400" />
+            <MessageSquare
+              size={18}
+              className="absolute top-3.5 left-4 text-slate-400"
+            />
             <textarea
               id="voucher-note"
               aria-label={String(t("voucher.detail_modal.fields.note"))}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="min-h-[100px] w-full resize-none rounded-xl border border-slate-300 bg-white py-2.5 pl-11 pr-4 text-sm leading-relaxed text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+              className="min-h-[100px] w-full resize-none rounded-xl border border-slate-300 bg-white py-2.5 pr-4 pl-11 text-sm leading-relaxed text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
               placeholder={t("voucher.detail_modal.fields.note_placeholder")}
             />
           </div>
@@ -435,51 +496,89 @@ export default function VoucherDetailModal({
 
         {/* Info: (20260327 - Luphia) Balance Check */}
         <div className="px-6 pb-4">
-          <div className={`rounded-xl border p-5 ${isTotalBalanced ? "border-emerald-200 bg-emerald-50/50" : "border-red-200 bg-red-50/50"}`}>
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Scale size={18} className={isTotalBalanced ? "text-emerald-500" : "text-red-500"} />
-              <h4 className="font-bold text-slate-700">{t("voucher.detail_modal.balance_check.title")}</h4>
+          <div
+            className={`rounded-xl border p-5 ${isTotalBalanced ? "border-emerald-200 bg-emerald-50/50" : "border-red-200 bg-red-50/50"}`}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Scale
+                  size={18}
+                  className={
+                    isTotalBalanced ? "text-emerald-500" : "text-red-500"
+                  }
+                />
+                <h4 className="font-bold text-slate-700">
+                  {t("voucher.detail_modal.balance_check.title")}
+                </h4>
+              </div>
+              <div
+                className={`flex items-center gap-1.5 text-sm font-bold ${isTotalBalanced ? "text-emerald-500" : "text-red-500"}`}
+              >
+                {isTotalBalanced ? (
+                  <>
+                    <CheckCircle2 size={18} />{" "}
+                    {t("voucher.detail_modal.balance_check.balanced")}
+                  </>
+                ) : (
+                  <>
+                    <X size={18} />{" "}
+                    {t("voucher.detail_modal.balance_check.unbalanced")}
+                  </>
+                )}
+              </div>
             </div>
-            <div className={`flex items-center gap-1.5 text-sm font-bold ${isTotalBalanced ? "text-emerald-500" : "text-red-500"}`}>
-              {isTotalBalanced ? (
-                <><CheckCircle2 size={18} /> {t("voucher.detail_modal.balance_check.balanced")}</>
-              ) : (
-                <><X size={18} /> {t("voucher.detail_modal.balance_check.unbalanced")}</>
-              )}
+            <div className="my-4 border-t border-dashed border-slate-300"></div>
+            <div className="flex items-end justify-between">
+              <span className="text-sm font-bold text-slate-500">
+                {t("voucher.detail_modal.fields.total_amount")}
+              </span>
+              <span className="text-2xl font-black tracking-tight text-slate-800">
+                $ {numberWithCommas(Math.max(totalDebit, totalCredit))}
+              </span>
             </div>
-          </div>
-          <div className="my-4 border-t border-dashed border-slate-300"></div>
-          <div className="flex items-end justify-between">
-            <span className="text-sm font-bold text-slate-500">{t("voucher.detail_modal.fields.total_amount")}</span>
-            <span className="text-2xl font-black tracking-tight text-slate-800">
-              $ {numberWithCommas(Math.max(totalDebit, totalCredit))}
-            </span>
           </div>
         </div>
-      </div>
       </div>
 
       {/* Info: (20260327 - Luphia) Footer Actions */}
       <div className="flex shrink-0 flex-col-reverse justify-end gap-3 border-t border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:p-6">
         {checkHasChanges() && (
-          <button type="button" onClick={() => setIsCancelModalOpen(true)} className="mr-auto text-sm font-bold text-slate-500 hover:text-slate-700 sm:m-0">
+          <button
+            type="button"
+            onClick={() => setIsCancelModalOpen(true)}
+            className="mr-auto text-sm font-bold text-slate-500 hover:text-slate-700 sm:m-0"
+          >
             {t("voucher.detail_modal.actions.cancel_edit")}
           </button>
         )}
         <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto sm:gap-3">
           {activeVoucher?.isVerified ? (
-            <button type="button" disabled={disabledSaveButton || isSaving} onClick={() => setIsUnverifyModalOpen(true)} className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-red-400 px-4 text-xs font-bold text-white hover:bg-red-500 disabled:bg-slate-300 sm:flex-none sm:px-6 sm:text-sm">
+            <button
+              type="button"
+              disabled={disabledSaveButton || isSaving}
+              onClick={() => setIsUnverifyModalOpen(true)}
+              className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-red-400 px-4 text-xs font-bold text-white hover:bg-red-500 disabled:bg-slate-300 sm:flex-none sm:px-6 sm:text-sm"
+            >
               <X size={16} className="stroke-3" />
               {t("verify.button.unverify")}
             </button>
           ) : (
-            <button type="button" disabled={disabledSaveButton || isSaving} onClick={() => saveVoucher(true)} className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 text-xs font-bold text-white hover:bg-emerald-500 disabled:bg-slate-300 sm:flex-none sm:px-6 sm:text-sm">
+            <button
+              type="button"
+              disabled={disabledSaveButton || isSaving}
+              onClick={() => saveVoucher(true)}
+              className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 text-xs font-bold text-white hover:bg-emerald-500 disabled:bg-slate-300 sm:flex-none sm:px-6 sm:text-sm"
+            >
               <CheckCircle2 size={16} className="stroke-3" />
               {t("verify.button.verify")}
             </button>
           )}
-          <button type="button" disabled={disabledSaveButton || isSaving} onClick={() => saveVoucher(activeVoucher?.isVerified)} className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 text-xs font-bold text-white hover:bg-orange-600 disabled:bg-slate-300 sm:flex-none sm:px-6 sm:text-sm">
+          <button
+            type="button"
+            disabled={disabledSaveButton || isSaving}
+            onClick={() => saveVoucher(activeVoucher?.isVerified)}
+            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 text-xs font-bold text-white hover:bg-orange-600 disabled:bg-slate-300 sm:flex-none sm:px-6 sm:text-sm"
+          >
             <Save size={16} className="stroke-3" />
             {t("voucher.detail_modal.actions.save_only")}
           </button>
@@ -492,10 +591,50 @@ export default function VoucherDetailModal({
     <>
       {VoucherContent}
       {/* Info: (20260327 - Luphia) Modals */}
-      <ConfirmModal isOpen={isCancelModalOpen} onClose={() => setIsCancelModalOpen(false)} title={t("common.cancel_edit_title")} message={t("common.cancel_edit_message")} confirmText={t("common.confirm")} cancelText={t("common.cancel")} onConfirm={handleCancelEdit} />
-      <ConfirmModal isOpen={isCloseModalOpen} onClose={() => setIsCloseModalOpen(false)} title={t("voucher.detail_modal.confirm_modals.leave_without_saving.title")} message={t("voucher.detail_modal.confirm_modals.leave_without_saving.message")} confirmText={t("voucher.detail_modal.actions.confirm")} cancelText={t("common.cancel")} onConfirm={() => onClose()} />
-      <ConfirmModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} title={t("voucher.detail_modal.confirm_modals.save_voucher.title")} message={t("voucher.detail_modal.confirm_modals.save_voucher.message")} confirmText={isSaving ? "Saving..." : t("voucher.detail_modal.actions.confirm")} cancelText={t("common.cancel")} onConfirm={executeSaveVoucher} />
-      <ConfirmModal isOpen={isUnverifyModalOpen} onClose={() => setIsUnverifyModalOpen(false)} title={t("verify.unverify_modal.title")} message={t("verify.unverify_modal.message", { type: t("verify.type.voucher") })} confirmText={t("verify.unverify_modal.confirm")} cancelText={t("common.cancel")} onConfirm={handleUnverifyConfirmed} />
+      <ConfirmModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        title={t("common.cancel_edit_title")}
+        message={t("common.cancel_edit_message")}
+        confirmText={t("common.confirm")}
+        cancelText={t("common.cancel")}
+        onConfirm={handleCancelEdit}
+      />
+      <ConfirmModal
+        isOpen={isCloseModalOpen}
+        onClose={() => setIsCloseModalOpen(false)}
+        title={t(
+          "voucher.detail_modal.confirm_modals.leave_without_saving.title",
+        )}
+        message={t(
+          "voucher.detail_modal.confirm_modals.leave_without_saving.message",
+        )}
+        confirmText={t("voucher.detail_modal.actions.confirm")}
+        cancelText={t("common.cancel")}
+        onConfirm={() => onClose()}
+      />
+      <ConfirmModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        title={t("voucher.detail_modal.confirm_modals.save_voucher.title")}
+        message={t("voucher.detail_modal.confirm_modals.save_voucher.message")}
+        confirmText={
+          isSaving ? "Saving..." : t("voucher.detail_modal.actions.confirm")
+        }
+        cancelText={t("common.cancel")}
+        onConfirm={executeSaveVoucher}
+      />
+      <ConfirmModal
+        isOpen={isUnverifyModalOpen}
+        onClose={() => setIsUnverifyModalOpen(false)}
+        title={t("verify.unverify_modal.title")}
+        message={t("verify.unverify_modal.message", {
+          type: t("verify.type.voucher"),
+        })}
+        confirmText={t("verify.unverify_modal.confirm")}
+        cancelText={t("common.cancel")}
+        onConfirm={handleUnverifyConfirmed}
+      />
 
       <AccountBookSelector
         isOpen={isAccountBookSelectorOpen}
@@ -505,12 +644,20 @@ export default function VoucherDetailModal({
           if (selectorTargetRowId) {
             const targetRow = rows.find((r) => r.id === selectorTargetRowId);
             if (targetRow) {
-              updateRow(selectorTargetRowId, { ...targetRow, accounting: account });
+              updateRow(selectorTargetRowId, {
+                ...targetRow,
+                accounting: account,
+              });
             }
           }
         }}
       />
-      <FilePreviewModal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} file={activeVoucher?.file} title={t("voucher.detail_modal.sections.preview")} />
+      <FilePreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        file={activeVoucher?.file}
+        title={t("voucher.detail_modal.sections.preview")}
+      />
     </>
   );
 }

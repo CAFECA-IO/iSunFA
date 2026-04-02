@@ -39,6 +39,11 @@ export const zhCn = {
       processing: "AI 正在处理中...",
       failed: "AI 处理失败",
     },
+    sort: {
+      date_aria: "切换日期排序",
+      newest: "由新至旧",
+      oldest: "由旧至新",
+    }
   },
   faith: {
     title: "费思",
@@ -956,6 +961,15 @@ export const zhCn = {
     button: "立即咨询 AI",
   },
   ocr: {
+    quick_scan: "快速扫描",
+    camera_denied_title: "无法访问相机",
+    camera_denied_desc: "请在浏览器中允许相机权限以使用文件扫描功能。",
+    hold_still: "静止 1 秒钟启动扫描",
+    place_document_in_frame: "请将文件放置于框内",
+    initializing: "正在初始化相机与扫描引擎...",
+    processing: "处理影像中...",
+    analyzing: "批次上传分析中...",
+    analyze_btn_with_count: "分析 ({{count}})",
     prepared_files_prefix: "已准备好 ",
     prepared_files_suffix: " 份凭证",
     add_more_or_analyze: "您可以继续新增凭证，或一次开始批次分析",
@@ -973,9 +987,8 @@ export const zhCn = {
     analyze_prompt: "是否分析此发票？",
     analyze_btn: "是的，让 AI 分析发票",
     reupload_btn: "重新上传",
+    display_type: "显示方式：",
     search_placeholder: "搜索发票内容...",
-    sort_desc: "从新到旧排序",
-    sort_asc: "从旧到新排序",
     start_date: "开始日期",
     end_date: "结束日期",
     list_view: "列表视图",
@@ -1082,9 +1095,6 @@ export const zhCn = {
     filter_intensity_all: "全部强度",
     filter_scope_aria: "依范畴筛选",
     filter_scope_all: "全部范畴 (Scope 1-3)",
-    sort_date_aria: "切换日期排序",
-    sort_newest: "由新至旧",
-    sort_oldest: "由旧至新",
     header: {
       voucher: "凭证",
       date: "日期",
@@ -1242,12 +1252,10 @@ export const zhCn = {
         add: "新增凭证",
       },
       filters: {
-        type: "字段类型",
-        type_options: {
-          income: "收入",
-          outcome: "支出",
-          transfer: "转换",
-        },
+        all: "全部类别",
+        income: "收入",
+        outcome: "支出",
+        transfer: "转换",
         period: "期间",
         search: "搜索凭证编号、科目编号...",
         hide_deleted: "隐藏已删除的凭证及其冲销纪录",
@@ -1264,7 +1272,7 @@ export const zhCn = {
         headers: {
           receipt: "发票",
           voucher_date: "传票日期",
-          voucher_type_id: "传票种类及编号",
+          voucher_type_id: "传票类别及编号",
           accounting_entries: "会计科目分录",
           debit: "借方金额",
           credit: "贷方金额",
@@ -1417,6 +1425,7 @@ export const zhCn = {
       confirm: "确认退回",
     },
     status: {
+       all: "全部{{type}}",
       verified: "已核对",
       unverified: "待核对",
     },

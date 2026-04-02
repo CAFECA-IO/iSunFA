@@ -132,18 +132,14 @@ const JournalListItem = ({
           colSpan={2}
           className="px-3 py-2 align-middle text-xs sm:hidden"
         >
-          <p className="font-bold text-red-500">
-            {t("ocr.ai.failed")}
-          </p>
+          <p className="font-bold text-red-500">{t("ocr.ai.failed")}</p>
         </td>
         <td
           aria-label="AI Failed"
           colSpan={3}
           className="hidden px-3 py-2 align-middle sm:table-cell sm:px-6 sm:text-sm"
         >
-          <p className="font-bold text-red-500">
-            {t("ocr.ai.failed")}
-          </p>
+          <p className="font-bold text-red-500">{t("ocr.ai.failed")}</p>
         </td>
       </tr>
     );

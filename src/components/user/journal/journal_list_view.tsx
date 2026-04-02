@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   Search,
-  Calendar,
   ArrowDown,
   ArrowUp,
   LayoutGrid,
@@ -20,11 +19,17 @@ import RecordTabModal from "@/components/user/common/record_tab_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
 import Pagination from "@/components/common/pagination";
 import { ApiCode } from "@/lib/utils/status";
-
-const PAGE_SIZE = 12;
 import { VerifyStatus } from "@/constants/verify_status";
 import JournalSummary from "@/components/user/journal/journal_summary";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { SortOrder } from "@/constants/sort";
+
+const PAGE_SIZE = 12;
+
+enum DisplayType {
+  GRID = "grid",
+  LIST = "list",
+}
 
 export default function JournalListView() {
   const { t } = useTranslation();
@@ -33,11 +38,6 @@ export default function JournalListView() {
   // Info: (20260309 - Julian) 從 URL 取得帳簿 ID
   const accountBookId = params?.account_book_id as string;
 
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [displayType, setDisplayType] = useState<"grid" | "list">("list");
-  const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<
-    VerifyStatus | "all"
-  >("all");
   const [journals, setJournals] = useState<IJournal[]>([]);
   const [totalItems, setTotalItems] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -47,6 +47,11 @@ export default function JournalListView() {
   const [debouncedKeyWord, setDebouncedKeyWord] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.DESC);
+  const [displayType, setDisplayType] = useState<DisplayType>(DisplayType.LIST);
+  const [filteredVerifyStatus, setFilteredVerifyStatus] = useState<
+    VerifyStatus | "all"
+  >("all");
 
   useEffect(() => {
     // Info: (20260305 - Julian) 設置緩衝，避免過度請求
@@ -58,6 +63,8 @@ export default function JournalListView() {
 
   const [selectedJournal, setSelectedJournal] = useState<IJournal | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
+    useState<boolean>(false);
 
   const [journalToDelete, setJournalToDelete] = useState<IJournal | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -104,6 +111,23 @@ export default function JournalListView() {
       console.error("Failed to delete journal:", error);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const verifyAllJournals = async () => {
+    if (!accountBookId) return;
+    try {
+      setIsLoading(true);
+      await request(
+        `/api/v1/user/account_book/${accountBookId}/journal/verify_all`,
+        { method: "PUT" },
+      );
+      await fetchJournals();
+    } catch (error) {
+      console.error("Failed to verify all journals:", error);
+      setIsLoading(false);
+    } finally {
+      setIsVerifyAllConfirmOpen(false);
     }
   };
 
@@ -178,7 +202,8 @@ export default function JournalListView() {
   useEffect(() => {
     const pendingJournals = journals.filter(
       (j) =>
-        j.analysisStatus === AIAnalysisStatus.PENDING || j.analysisStatus === AIAnalysisStatus.PROCESSING,
+        j.analysisStatus === AIAnalysisStatus.PENDING ||
+        j.analysisStatus === AIAnalysisStatus.PROCESSING,
     );
 
     if (pendingJournals.length === 0) return;
@@ -204,7 +229,7 @@ export default function JournalListView() {
   }, [journals, accountBookId]);
 
   const displayLayout =
-    displayType === "list" ? (
+    displayType === DisplayType.LIST ? (
       <JournalListLayout
         isLoading={isLoading}
         journals={journals}
@@ -220,77 +245,91 @@ export default function JournalListView() {
     );
 
   return (
-    <div className="flex min-w-0 w-full max-w-full flex-col gap-4">
+    <div className="flex w-full max-w-full min-w-0 flex-col gap-4">
       <JournalSummary />
-      <div className="flex size-full min-w-0 max-w-full flex-col gap-4">
-        {/* Info: (20260304 - Julian) Filter Area */}
-        <div className="flex w-full min-w-0 max-w-full flex-col items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:flex-wrap">
-          {/* Info: (20260305 - Julian) Left Actions: Search + Date */}
-          <div className="flex w-full min-w-0 max-w-full flex-1 flex-col items-stretch gap-4 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
-            {/* Info: (20260304 - Julian) Search input */}
-            <div className="relative w-full sm:w-[200px]">
-              <Search
-                className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
-                size={18}
-              />
+      <div className="flex size-full max-w-full min-w-0 flex-col gap-4">
+        {/* Info: (20260304 - Julian) Display type */}
+        <div className="ml-auto flex items-center gap-4">
+          <p className="text-xs font-medium text-slate-600">{t('ocr.display_type')}</p>
+          <div className="flex items-center rounded-lg border border-gray-200 bg-gray-100 p-1">
+            <button
+              title={t("ocr.list_view") as string}
+              type="button"
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
+                displayType === DisplayType.LIST
+                  ? "bg-white text-orange-600 shadow-sm"
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
+              onClick={() => setDisplayType(DisplayType.LIST)}
+            >
+              <ListIcon size={16} />
+            </button>
+            <button
+              title={t("ocr.grid_view") as string}
+              type="button"
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
+                displayType === DisplayType.GRID
+                  ? "bg-white text-orange-600 shadow-sm"
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
+              onClick={() => setDisplayType(DisplayType.GRID)}
+            >
+              <LayoutGrid size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Info: (20260312 - Julian) Toolbar */}
+        <div className="flex flex-col items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row">
+          {/* Info: (20260401 - Julian) Search Bar */}
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder={t("ocr.search_placeholder")}
+              aria-label={t("ocr.search_placeholder")}
+              value={keyWord}
+              onChange={(e) => setKeyWord(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+            />
+          </div>
+
+          {/* Info: (20260304 - Julian) Date Picker */}
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <div className="flex w-full flex-col items-stretch gap-2 text-sm sm:flex-row sm:items-center">
               <input
-                aria-label="Search journals"
-                type="text"
-                value={keyWord}
-                onChange={(e) => setKeyWord(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pr-4 pl-10 text-sm transition-all outline-none placeholder:text-gray-400 focus:border-orange-500 focus:bg-white focus:ring-1 focus:ring-orange-500"
-                placeholder={t("ocr.search_placeholder") as string}
+                type="date"
+                aria-label="Start Date"
+                value={startDate}
+                max={endDate || undefined}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+              <span className="hidden text-gray-400 sm:block">-</span>
+              <input
+                type="date"
+                aria-label="End Date"
+                value={endDate}
+                min={startDate || undefined}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
               />
             </div>
+          </div>
 
-            <div className="hidden h-6 w-px bg-gray-200 sm:block"></div>
-
-            {/* Info: (20260304 - Julian) Date Picker */}
-            <div className="flex w-full items-center gap-2 sm:w-auto">
-              <Calendar className="hidden text-gray-400 sm:block" size={18} />
-              <div className="flex w-full flex-col items-stretch gap-2 text-sm sm:flex-row sm:items-center">
-                <div className="flex items-center gap-2">
-                  <p className="block text-gray-700 sm:hidden">
-                    {t("ocr.start_date")}
-                  </p>
-                  <input
-                    type="date"
-                    aria-label="Start Date"
-                    value={startDate}
-                    max={endDate || undefined}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-gray-700 transition-colors outline-none focus:border-orange-500 focus:bg-white"
-                  />
-                </div>
-                <span className="hidden text-gray-400 sm:block">-</span>
-                <div className="flex items-center gap-2">
-                  <p className="block text-gray-700 sm:hidden">
-                    {t("ocr.end_date")}
-                  </p>
-                  <input
-                    type="date"
-                    aria-label="End Date"
-                    value={endDate}
-                    min={startDate || undefined}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-gray-700 transition-colors outline-none focus:border-orange-500 focus:bg-white"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden h-6 w-px bg-gray-200 sm:block"></div>
-
-            {/* Info: (20260324 - Julian) Filtered Verify Status */}
+          {/* Info: (20260401 - Julian) Verify Status Filter */}
+          <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm">
             <select
-              id="verifyStatusSelect"
+              aria-label="Filter by verify status"
               value={filteredVerifyStatus}
               onChange={(e) =>
                 setFilteredVerifyStatus(e.target.value as VerifyStatus | "all")
               }
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:outline-none sm:w-32"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
             >
-              <option value="all">{t("common.all")}</option>
+              <option value="all">
+                {t("verify.status.all", { type: t("verify.type.journal") })}
+              </option>
               <option value={VerifyStatus.VERIFIED}>
                 {t("verify.status.verified")}
               </option>
@@ -298,65 +337,37 @@ export default function JournalListView() {
                 {t("verify.status.unverified")}
               </option>
             </select>
-          </div>
-
-          {/* Info: (20260305 - Julian) Right Actions: Sort + View Mode */}
-          <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
-            {/* Info: (20260304 - Julian) Sort by date */}
+            {/* Info: (20260401 - Julian) Sort by date */}
             <button
-              title={
-                sortOrder === "asc"
-                  ? (t("ocr.sort_asc") as string)
-                  : (t("ocr.sort_desc") as string)
-              }
               type="button"
-              className="flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-xs whitespace-nowrap text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 active:scale-95 sm:text-base"
-              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+              aria-label={t("common.sort.date_aria")}
+              onClick={() =>
+                setSortOrder(sortOrder === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC)
+              }
+              className="flex items-center rounded-lg border border-slate-300 px-4 py-2 font-bold text-slate-600 transition-colors hover:bg-orange-50"
             >
-              {sortOrder === "asc" ? (
-                <div className="flex items-center gap-2">
-                  <p>{t("ocr.sort_asc")}</p>
-                  <ArrowDown size={18} className="shrink-0" />
-                </div>
+              {sortOrder === SortOrder.DESC
+                ? t("common.sort.newest")
+                : t("common.sort.oldest")}
+              {sortOrder === SortOrder.DESC ? (
+                <ArrowDown className="ml-1 h-4 w-4" />
               ) : (
-                <div className="flex items-center gap-2">
-                  <p>{t("ocr.sort_desc")}</p>
-                  <ArrowUp size={18} className="shrink-0" />
-                </div>
+                <ArrowUp className="ml-1 h-4 w-4" />
               )}
             </button>
-
-            <div className="mx-1 h-6 w-px bg-gray-200"></div>
-
-            {/* Info: (20260304 - Julian) Display type */}
-            <div className="flex items-center rounded-lg border border-gray-200 bg-gray-50 p-1">
-              <button
-                title={t("ocr.list_view") as string}
-                type="button"
-                className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
-                  displayType === "list"
-                    ? "bg-white text-orange-600 shadow-sm"
-                    : "text-gray-400 hover:text-gray-600"
-                }`}
-                onClick={() => setDisplayType("list")}
-              >
-                <ListIcon size={16} />
-              </button>
-              <button
-                title={t("ocr.grid_view") as string}
-                type="button"
-                className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
-                  displayType === "grid"
-                    ? "bg-white text-orange-600 shadow-sm"
-                    : "text-gray-400 hover:text-gray-600"
-                }`}
-                onClick={() => setDisplayType("grid")}
-              >
-                <LayoutGrid size={16} />
-              </button>
-            </div>
+            {/* Info: (20260401 - Julian) Verify All Button */}
+            <button
+              type="button"
+              aria-label={t("common.verify_all")}
+              onClick={() => setIsVerifyAllConfirmOpen(true)}
+              disabled={isLoading}
+              className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+            >
+              {t("common.verify_all")}
+            </button>
           </div>
         </div>
+
         {/* Info: (20260304 - Julian) Journal List */}
         {displayLayout}
 
@@ -393,6 +404,17 @@ export default function JournalListView() {
           }
           cancelText={t("common.cancel") as string}
           onConfirm={executeDelete}
+        />
+
+        {/* Info: (20260401 - Julian) Verify All Confirmation Modal */}
+        <ConfirmModal
+          isOpen={isVerifyAllConfirmOpen}
+          onClose={() => setIsVerifyAllConfirmOpen(false)}
+          title={t("common.verify_all_confirm_title")}
+          message={t("common.verify_all_confirm_desc")}
+          confirmText={t("common.confirm")}
+          cancelText={t("common.cancel")}
+          onConfirm={verifyAllJournals}
         />
       </div>
     </div>

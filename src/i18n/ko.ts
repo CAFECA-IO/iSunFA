@@ -38,6 +38,11 @@ export const ko = {
     ai: {
       pending: "잠시만 기다려주세요. AI가 처리 중입니다...",
     },
+    sort: {
+      date_aria: "날짜 정렬 전환",
+      newest: "최신순",
+      oldest: "오래된순",
+    }
   },
   faith: {
     title: "FAITH",
@@ -967,6 +972,15 @@ export const ko = {
     button: "지금 AI에게 질문하기",
   },
   ocr: {
+    quick_scan: "빠른 스캔",
+    camera_denied_title: "카메라 액세스 거부됨",
+    camera_denied_desc: "문서 스캐너를 사용하려면 브라우저에서 카메라 권한을 허용하십시오.",
+    hold_still: "스캔하려면 1초 동안 가만히 있으십시오",
+    place_document_in_frame: "프레임 안에 문서를 놓으십시오",
+    initializing: "초기화 중...",
+    processing: "이미지 처리 중...",
+    analyzing: "일괄 분석 중...",
+    analyze_btn_with_count: "분석 ({{count}})",
     prepared_files_prefix: "준비 완료: ",
     prepared_files_suffix: "건",
     add_more_or_analyze: "파일을 추가하거나 일괄 분석을 시작할 수 있습니다",
@@ -986,9 +1000,8 @@ export const ko = {
     analyze_prompt: "이 청구서를 분석하시겠습니까?",
     analyze_btn: "예, AI에게 분석 맡기기",
     reupload_btn: "다시 업로드",
+    display_type: "디스플레이 방식：",
     search_placeholder: "청구서 내용 검색...",
-    sort_desc: "최신순 정렬",
-    sort_asc: "오래된순 정렬",
     start_date: "시작일",
     end_date: "종료일",
     list_view: "목록 보기",
@@ -1090,9 +1103,6 @@ export const ko = {
     filter_intensity_all: "전체 강도",
     filter_scope_aria: "스코프 필터링",
     filter_scope_all: "전체 스코프 (Scope 1-3)",
-    sort_date_aria: "날짜 정렬 전환",
-    sort_newest: "최신순",
-    sort_oldest: "오래된순",
     header: {
       voucher: "전표",
       date: "날짜",
@@ -1249,12 +1259,10 @@ export const ko = {
         add: "전표 추가",
       },
       filters: {
-        type: "항목 유형",
-        type_options: {
-          income: "수입",
-          outcome: "지출",
-          transfer: "전환",
-        },
+        all: "모든 전표 유형",
+        income: "수입",
+        outcome: "지출",
+        transfer: "전환",
         period: "기간",
         search: "전표 번호, 계정 코드 검색...",
         hide_deleted: "삭제된 전표 및 취소 기록 숨기기",
@@ -1418,6 +1426,7 @@ export const ko = {
       confirm: "確認退回",
     },
     status: {
+      all: "全部 {{type}}",
       verified: "已核對",
       unverified: "待核對",
     },
