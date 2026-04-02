@@ -1,0 +1,839 @@
+"use client";
+
+import { useEffect, useRef, useState, useCallback } from "react";
+import Script from "next/script";
+import { Loader2, Camera, X, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
+import { useParams } from "next/navigation";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
+import { uploadFile, fileToBase64 } from "@/lib/file_operator";
+
+type UploadedFileData = {
+  id: string;
+  file: File;
+  previewUrl: string | null;
+  hash: string;
+  base64: string;
+};
+
+export default function JournalScanView({
+  onScanComplete,
+}: {
+  onScanComplete: () => void;
+}) {
+  const { t } = useTranslation();
+  const params = useParams();
+  const accountBookId = params?.account_book_id as string;
+
+  const [cvReady, setCvReady] = useState(false);
+  const [streamReady, setStreamReady] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [permissionDenied, setPermissionDenied] = useState(false);
+  const [showFlash, setShowFlash] = useState(false);
+
+  const [capturedFiles, setCapturedFiles] = useState<UploadedFileData[]>([]);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [analyzedCount, setAnalyzedCount] = useState<number>(0);
+  const [isDetecting, setIsDetecting] = useState<boolean>(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hiddenCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  const streamRef = useRef<MediaStream | null>(null);
+  const animationFrameId = useRef<number>(0);
+  const isDetectingRef = useRef<boolean>(false);
+
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+
+  // Info: (20260402 - Luphia) States for stabilization
+  const stabilityRef = useRef({
+    count: 0,
+    lastArea: 0,
+    lastPoints: [] as { x: number; y: number }[],
+  });
+
+  useEffect(() => {
+    // Info: (20260402 - Luphia) Check if OpenCV is already loaded globally from a previous mount
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof window !== "undefined" && (window as any).cv && typeof (window as any).cv.Mat === "function") {
+      setCvReady(true);
+    }
+  }, []);
+
+  const capturedFilesRef = useRef<UploadedFileData[]>([]);
+  useEffect(() => {
+    capturedFilesRef.current = capturedFiles;
+  }, [capturedFiles]);
+
+  useEffect(() => {
+    return () => {
+      // Info: (20260402 - Luphia) Only revoke on component unmount, not on every re-render
+      capturedFilesRef.current.forEach((f) => {
+        if (f.previewUrl) URL.revokeObjectURL(f.previewUrl);
+      });
+    };
+  }, []);
+
+  const uploadCapturedImage = useCallback(
+    async (blob: Blob) => {
+      setIsProcessing(true);
+      try {
+        const file = new File([blob], "scan.jpg", { type: "image/jpeg" });
+        const hash = await new Promise<string>((resolve, reject) => {
+          uploadFile(file, {
+            onSuccess: (h) => resolve(h),
+            onError: (e) => reject(e),
+          });
+        });
+        const base64 = await fileToBase64(file);
+        const fileData: UploadedFileData = {
+          id: crypto.randomUUID(),
+          file: file,
+          previewUrl: URL.createObjectURL(file), // Info: (20260402 - Luphia) Will be handled internally
+          hash,
+          base64,
+        };
+
+        setCapturedFiles((prev) => [...prev, fileData]);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [],
+  );
+
+  const handleAnalyzeAll = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (capturedFiles.length === 0) return;
+
+    setIsAnalyzing(true);
+    setAnalyzedCount(0);
+    try {
+      for (let i = 0; i < capturedFiles.length; i++) {
+        const fileData = capturedFiles[i];
+        const response = await request<IApiResponse<object>>(
+          `/api/v1/user/account_book/${accountBookId}/ai_analysis`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              file: {
+                id: fileData.id,
+                file: { name: fileData.file.name, type: fileData.file.type },
+                previewUrl: fileData.previewUrl,
+                hash: fileData.hash,
+                base64: fileData.base64
+              }
+            }),
+          },
+        );
+        if (response.code === ApiCode.SUCCESS) {
+          setAnalyzedCount((prev) => prev + 1);
+        }
+      }
+      onScanComplete();
+    } catch (error) {
+      console.error("Analysis failed:", error);
+      setIsAnalyzing(false);
+    }
+  };
+
+  const removeFile = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setCapturedFiles((prev) => {
+      const file = prev.find((f) => f.id === id);
+      // Info: (20260402 - Luphia) Revoke blob url to free up memory when explicitly deleted
+      if (file && file.previewUrl) URL.revokeObjectURL(file.previewUrl);
+      return prev.filter((f) => f.id !== id);
+    });
+  };
+
+  const initCamera = async (isMounted: { current: boolean }) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1920 } },
+        audio: false,
+      });
+
+      if (!isMounted.current) {
+        // Info: (20260402 - Luphia) Component unmounted while waiting for user media
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        streamRef.current = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+          setStreamReady(true);
+        };
+      } else {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    } catch (error) {
+      if (isMounted.current) {
+        console.error("Error accessing camera: ", error);
+        setPermissionDenied(true);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const isMounted = { current: true };
+    initCamera(isMounted);
+
+    const currentVideoRef = videoRef.current;
+
+    return () => {
+      isMounted.current = false;
+      // Info: (20260402 - Luphia) Cleanup
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      if (currentVideoRef) {
+        currentVideoRef.srcObject = null;
+      }
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    };
+  }, []);
+
+  const processFrame = useCallback(() => {
+    if (
+      !cvReady ||
+      !streamReady ||
+      isProcessing ||
+      isAnalyzing ||
+      capturedFiles.length >= 100 ||
+      !videoRef.current ||
+      !canvasRef.current ||
+      !hiddenCanvasRef.current
+    ) {
+      return;
+    }
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const hiddenCanvas = hiddenCanvasRef.current;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cv = (window as any).cv;
+
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      animationFrameId.current = requestAnimationFrame(processFrame);
+      return;
+    }
+
+    // Info: (20260402 - Luphia) Match dimensions
+    canvas.width = video.clientWidth;
+    canvas.height = video.clientHeight;
+    hiddenCanvas.width = video.videoWidth;
+    hiddenCanvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    const hiddenCtx = hiddenCanvas.getContext("2d", {
+      willReadFrequently: true,
+    });
+
+    if (!ctx || !hiddenCtx) return;
+
+    // Info: (20260402 - Luphia) Draw the current video frame to hidden canvas for CV processing
+    hiddenCtx.drawImage(video, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+    // Info: (20260402 - Luphia) Clear overlay canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const src = new cv.Mat();
+    const dst = new cv.Mat();
+    const cap = new cv.Mat(hiddenCanvas.height, hiddenCanvas.width, cv.CV_8UC4);
+
+    try {
+      const imageData = hiddenCtx.getImageData(
+        0,
+        0,
+        hiddenCanvas.width,
+        hiddenCanvas.height,
+      );
+      cap.data.set(imageData.data);
+      cv.cvtColor(cap, src, cv.COLOR_RGBA2GRAY);
+      cv.GaussianBlur(src, dst, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
+
+      // Info: (20260402 - Luphia) Standard Canny thresholds to prevent picking up faint wall shadows
+      cv.Canny(dst, dst, 50, 150);
+
+      // Info: (20260402 - Luphia) Use a smaller 3x3 Dilate kernel to prevent merging document edges with background lines
+      const M = cv.Mat.ones(3, 3, cv.CV_8U);
+      cv.dilate(
+        dst,
+        dst,
+        M,
+        new cv.Point(-1, -1),
+        1,
+        cv.BORDER_CONSTANT,
+        cv.morphologyDefaultBorderValue()
+      );
+      M.delete();
+
+      const contours = new cv.MatVector();
+      const hierarchy = new cv.Mat();
+      cv.findContours(
+        dst,
+        contours,
+        hierarchy,
+        cv.RETR_EXTERNAL, // Info: (20260402 - Luphia) Only want the outermost contours
+        cv.CHAIN_APPROX_SIMPLE,
+      );
+
+      let maxArea = 0;
+      let maxContour = null;
+      // Info: (20260402 - Luphia) Filter out small artifacts (reduce to 2% screen area minimum)
+      const minDocArea = hiddenCanvas.width * hiddenCanvas.height * 0.02;
+
+      const debugContours = [];
+      const cw = canvas.width;
+      const ch = canvas.height;
+      const vw = hiddenCanvas.width;
+      const vh = hiddenCanvas.height;
+
+      const renderScale = Math.max(cw / vw, ch / vh);
+      const offsetX = (cw - vw * renderScale) / 2;
+      const offsetY = (ch - vh * renderScale) / 2;
+
+      // Info: (20260402 - Luphia) Find largest quadrilateral
+      for (let i = 0; i < contours.size(); i++) {
+        const cnt = contours.get(i);
+        const area = cv.contourArea(cnt);
+
+        if (area > minDocArea) {
+          const peri = cv.arcLength(cnt, true);
+
+          const approx = new cv.Mat();
+          let found4 = false;
+
+          // Info: (20260402 - Luphia) Standard tolerance sweep (no convex hull so garbage fails naturally)
+          for (let eps = 0.02; eps <= 0.05; eps += 0.01) {
+            cv.approxPolyDP(cnt, approx, eps * peri, true);
+            if (approx.rows === 4) {
+              found4 = true;
+              break;
+            }
+          }
+
+          // Info: (20260402 - Luphia) If it isn't 4 points, render it as a debug line anyway
+          if (!found4) {
+            cv.approxPolyDP(cnt, approx, 0.05 * peri, true);
+          }
+
+          // Info: (20260402 - Luphia) Save point geometry for debugging layer
+          const polyPoints = [];
+          for (let j = 0; j < approx.rows; j++) {
+            polyPoints.push({
+              x: approx.intPtr(j, 0)[0] * renderScale + offsetX,
+              y: approx.intPtr(j, 0)[1] * renderScale + offsetY,
+            });
+          }
+          debugContours.push(polyPoints);
+
+          if (found4 && cv.isContourConvex(approx)) {
+            // Info: (20260402 - Luphia) Calculate max cosine of angles for the 4 corners
+            let maxCos = 0;
+            const pts = [];
+            for (let j = 0; j < 4; j++) {
+              pts.push({ x: approx.intPtr(j, 0)[0], y: approx.intPtr(j, 0)[1] });
+            }
+            for (let j = 0; j < 4; j++) {
+              const p1 = pts[j];
+              const p2 = pts[(j + 1) % 4];
+              const p0 = pts[(j + 3) % 4];
+              const dx1 = p1.x - p0.x;
+              const dy1 = p1.y - p0.y;
+              const dx2 = p1.x - p2.x;
+              const dy2 = p1.y - p2.y;
+              const cosine = Math.abs((dx1 * dx2 + dy1 * dy2) / Math.sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-6));
+              maxCos = Math.max(maxCos, cosine);
+            }
+
+            // Info: (20260402 - Luphia) Reject absurdly skewed trapezoids (maxCos > 0.6 means angles < 53 deg or > 127 deg)
+            if (maxCos < 0.6 && area > maxArea) {
+              maxArea = area;
+              if (maxContour) maxContour.delete();
+              maxContour = approx.clone();
+            }
+          }
+
+          approx.delete();
+        }
+        cnt.delete();
+      }
+
+      // Info: (20260402 - Luphia) Draw all candidate shapes in faint blue for debug observation
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(59, 130, 246, 0.5)"; // Info: (20260402 - Luphia) blue-500
+      debugContours.forEach((pts) => {
+        if (pts.length < 2) return;
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) {
+          ctx.lineTo(pts[i].x, pts[i].y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      });
+
+      const prev = stabilityRef.current;
+
+      if (maxContour) {
+        // Info: (20260402 - Luphia) Draw the bounding box on the visible canvas wrapper scaling appropriately
+        const points = [];
+        for (let i = 0; i < 4; i++) {
+          points.push({
+            x: maxContour.intPtr(i, 0)[0] * renderScale + offsetX,
+            y: maxContour.intPtr(i, 0)[1] * renderScale + offsetY,
+          });
+        }
+
+        // Info: (20260402 - Luphia) Check for stability first to determine colors
+        let isStabilizing = false;
+        const areaDiff = Math.abs(prev.lastArea - maxArea) / maxArea;
+
+        if (areaDiff < 0.15 && prev.lastPoints.length === 4) {
+          // Info: (20260402 - Luphia) Calculate displacement of corners
+          let totalDisp = 0;
+          for (let i = 0; i < 4; i++) {
+            const p1 = prev.lastPoints[i];
+            const p2 = points[i];
+            totalDisp += Math.hypot(p1.x - p2.x, p1.y - p2.y);
+          }
+          // Info: (20260402 - Luphia) if points didn't move much (shaky hand compensation: max 200px jitter total)
+          if (totalDisp < 200) {
+            isStabilizing = true;
+          }
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < 4; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.closePath();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = isStabilizing ? "#10b981" : "#f97316"; // Info: (20260402 - Luphia) Green if stable, Orange otherwise
+        ctx.stroke();
+        ctx.fillStyle = isStabilizing ? "rgba(16, 185, 129, 0.2)" : "rgba(249, 115, 22, 0.2)";
+        ctx.fill();
+
+        if (isStabilizing) {
+          prev.count += 1;
+        } else {
+          prev.count = 0;
+        }
+
+        prev.lastArea = maxArea;
+        prev.lastPoints = points;
+
+        if (!isDetectingRef.current) {
+          isDetectingRef.current = true;
+          setIsDetecting(true);
+        }
+
+        // Info: (20260402 - Luphia) Auto capture after stable for roughly 30 frames (1.0 seconds)
+        if (prev.count > 30) {
+          setShowFlash(true);
+          setTimeout(() => setShowFlash(false), 300);
+          setIsProcessing(true);
+          const origPoints = [];
+          for (let i = 0; i < 4; i++) {
+            origPoints.push({
+              x: maxContour.intPtr(i, 0)[0],
+              y: maxContour.intPtr(i, 0)[1],
+            });
+          }
+
+          // Info: (20260402 - Luphia) Order points: top-left, top-right, bottom-right, bottom-left
+
+          const topPoints = origPoints
+            .sort((a, b) => a.y - b.y)
+            .slice(0, 2)
+            .sort((a, b) => a.x - b.x);
+          const bottomPoints = origPoints
+            .sort((a, b) => a.y - b.y)
+            .slice(2, 4)
+            .sort((a, b) => a.x - b.x);
+          const tl = topPoints[0];
+          const tr = topPoints[1];
+          const bl = bottomPoints[0];
+          const br = bottomPoints[1];
+
+          const widthA = Math.hypot(br.x - bl.x, br.y - bl.y);
+          const widthB = Math.hypot(tr.x - tl.x, tr.y - tl.y);
+          const maxWidth = Math.max(widthA, widthB);
+
+          const heightA = Math.hypot(tr.x - br.x, tr.y - br.y);
+          const heightB = Math.hypot(tl.x - bl.x, tl.y - bl.y);
+          const maxHeight = Math.max(heightA, heightB);
+
+          const srcCoords = cv.matFromArray(4, 1, cv.CV_32FC2, [
+            tl.x,
+            tl.y,
+            tr.x,
+            tr.y,
+            br.x,
+            br.y,
+            bl.x,
+            bl.y,
+          ]);
+          const dstCoords = cv.matFromArray(4, 1, cv.CV_32FC2, [
+            0,
+            0,
+            maxWidth - 1,
+            0,
+            maxWidth - 1,
+            maxHeight - 1,
+            0,
+            maxHeight - 1,
+          ]);
+
+          const dsize = new cv.Size(maxWidth, maxHeight);
+          const transformMat = cv.getPerspectiveTransform(srcCoords, dstCoords);
+
+          const warped = new cv.Mat();
+          cv.warpPerspective(
+            cap,
+            warped,
+            transformMat,
+            dsize,
+            cv.INTER_LINEAR,
+            cv.BORDER_CONSTANT,
+            new cv.Scalar(),
+          );
+
+          // Info: (20260402 - Luphia) Render deskewed image to canvas and extract blob
+          const outCanvas = document.createElement("canvas");
+          outCanvas.width = maxWidth;
+          outCanvas.height = maxHeight;
+          cv.imshow(outCanvas, warped);
+
+          outCanvas.toBlob(
+            (blob) => {
+              if (blob) {
+                // Info: (20260402 - Luphia) Remove previewUrl to avoid memory leaks
+                uploadCapturedImage(blob);
+              }
+              // Info: (20260402 - Luphia) cleanup OpenCV objects early
+              srcCoords.delete();
+              dstCoords.delete();
+              transformMat.delete();
+              warped.delete();
+            },
+            "image/jpeg",
+            0.95,
+          );
+
+          prev.count = 0; // Info: (20260402 - Luphia) reset
+        }
+
+        maxContour.delete();
+      } else {
+        if (isDetectingRef.current) {
+          isDetectingRef.current = false;
+          setIsDetecting(false);
+        }
+        prev.count = 0;
+      }
+
+      contours.delete();
+      hierarchy.delete();
+    } catch (err) {
+      console.warn("OpenCV Error", err);
+    } finally {
+      src.delete();
+      dst.delete();
+      cap.delete();
+    }
+
+    if (!isProcessing && !isAnalyzing && capturedFiles.length < 100) {
+      animationFrameId.current = requestAnimationFrame(processFrame);
+    }
+  }, [cvReady, streamReady, isProcessing, isAnalyzing, capturedFiles.length, uploadCapturedImage]);
+
+  useEffect(() => {
+    if (cvReady && streamReady && !isProcessing && !isAnalyzing && capturedFiles.length < 100) {
+      animationFrameId.current = requestAnimationFrame(processFrame);
+    }
+    return () => {
+      if (animationFrameId.current)
+        cancelAnimationFrame(animationFrameId.current);
+    };
+  }, [cvReady, streamReady, isProcessing, isAnalyzing, capturedFiles.length, processFrame]);
+
+  return (
+    <div className="relative flex h-full min-h-[500px] flex-col overflow-hidden rounded-2xl bg-black lg:h-[calc(100vh-250px)]">
+      <Script
+        src="https://docs.opencv.org/4.8.0/opencv.js"
+        strategy="lazyOnload"
+        onLoad={() => {
+          let iters = 0;
+          const checkReady = setInterval(() => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if ((window as any).cv && typeof (window as any).cv.Mat === "function") {
+              clearInterval(checkReady);
+              setCvReady(true);
+            }
+            if (++iters > 100) clearInterval(checkReady);
+          }, 100);
+        }}
+      />
+
+      {permissionDenied ? (
+        <div className="flex h-full flex-col items-center justify-center p-4 text-center text-white">
+          <Camera className="mb-4 h-12 w-12 text-slate-500" />
+          <h2 className="mb-2 text-xl font-bold">{t("ocr.camera_denied_title")}</h2>
+          <p className="text-slate-400">
+            {t("ocr.camera_denied_desc")}
+          </p>
+        </div>
+      ) : (
+        <>
+          <video
+            ref={videoRef}
+            aria-label="Camera feed"
+            className="absolute inset-0 h-full w-full object-cover"
+            playsInline
+            autoPlay
+            muted
+          />
+
+          {/* Info: (20260402 - Luphia) Guiding UI Overlay */}
+          <div className="pointers-events-none absolute inset-0 z-10">
+            <div
+              className={`absolute top-10 left-10 right-10 bottom-40 rounded-2xl border-4 border-dashed transition-all duration-300 ${isDetecting ? "border-green-400 bg-green-500/10" : "border-white/50"
+                }`}
+            >
+              <div
+                className={`absolute -bottom-10 left-0 right-0 text-center text-lg font-bold tracking-wide drop-shadow-md transition-colors ${isDetecting ? "text-green-400" : "text-white"
+                  }`}
+              >
+                {isDetecting ? t("ocr.hold_still") : t("ocr.place_document_in_frame")}
+              </div>
+            </div>
+          </div>
+
+          <canvas
+            ref={canvasRef}
+            aria-label="Detection overlay"
+            className="pointers-events-none absolute inset-0 z-20 h-full w-full"
+          />
+          <canvas ref={hiddenCanvasRef} className="hidden" aria-label="Hidden processing canvas" />
+
+          {/* Info: (20260402 - Luphia) Capture Flash Overlay */}
+          <div
+            className={`pointer-events-none absolute inset-0 z-50 bg-white transition-opacity duration-300 ${showFlash ? "opacity-100" : "opacity-0"
+              }`}
+          />
+
+          {(!cvReady || !streamReady) && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/50 text-white backdrop-blur-sm">
+              <Loader2 className="mb-4 h-10 w-10 animate-spin text-orange-500" />
+              <p className="text-lg font-bold tracking-wide">
+                {t("ocr.initializing")}
+              </p>
+            </div>
+          )}
+
+          {isProcessing && !isAnalyzing && (
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 text-white backdrop-blur-md">
+              <Loader2 className="mb-4 h-12 w-12 animate-spin text-emerald-500" />
+              <p className="text-2xl font-bold tracking-wide">
+                {t("ocr.processing")}
+              </p>
+            </div>
+          )}
+
+          {isAnalyzing && (
+            <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md backdrop-saturate-150 transition-all duration-300">
+              <Loader2 className="mb-6 h-16 w-16 animate-spin text-orange-500 drop-shadow-md" />
+              <p className="text-2xl font-bold tracking-wide text-slate-800 drop-shadow-sm">
+                {t("ocr.analyzing")}
+              </p>
+              <div className="mt-4 flex items-center justify-center gap-3">
+                <span className="text-2xl font-black tracking-tight text-orange-600">
+                  {analyzedCount}
+                </span>
+                <span className="text-xl font-bold text-slate-400">/</span>
+                <span className="text-2xl font-bold tracking-tight text-slate-600">
+                  {capturedFiles.length}
+                </span>
+              </div>
+              <p className="mt-4 text-sm font-semibold text-slate-500">
+                {t("ocr.please_wait")}
+              </p>
+            </div>
+          )}
+
+          <div className="absolute bottom-0 left-0 right-0 z-30 flex min-h-[120px] flex-col justify-end bg-gradient-to-t from-black/80 to-transparent p-4 pb-6">
+            {capturedFiles.length > 0 && (
+              <div className="mb-4 flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+                {capturedFiles.map((fileData, index) => (
+                  <div
+                    key={fileData.id}
+                    className="relative h-16 w-12 flex-shrink-0 cursor-pointer rounded-md overflow-hidden ring-2 ring-white/50 transition-all hover:ring-white"
+                    onClick={() => setPreviewIndex(index)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") setPreviewIndex(index);
+                    }}
+                  >
+                    <button
+                      type="button"
+                      aria-label="Remove image"
+                      onClick={(e) => removeFile(fileData.id, e)}
+                      className="absolute -top-1 -right-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600 focus:outline-none"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={fileData.previewUrl || ""} alt="Scan" className="h-full w-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between px-2">
+              <div className="w-1/3"></div>
+              {/* Info: (20260402 - Luphia) Provide manual capture fallback */}
+              <div className="flex w-1/3 justify-center">
+                <button
+                  aria-label="Capture document"
+                  className="rounded-full border-4 border-white bg-white/20 p-4 shadow-[0_0_20px_rgba(0,0,0,0.5)] backdrop-blur-md transition hover:bg-white/40 disabled:opacity-50"
+                  disabled={capturedFiles.length >= 100 || isProcessing || isAnalyzing}
+                  onClick={() => {
+                    if (!hiddenCanvasRef.current || isProcessing || isAnalyzing || capturedFiles.length >= 100) return;
+                    setShowFlash(true);
+                    setTimeout(() => setShowFlash(false), 300);
+                    setIsProcessing(true);
+                    hiddenCanvasRef.current.toBlob(
+                      (blob) => {
+                        if (blob) uploadCapturedImage(blob);
+                      },
+                      "image/jpeg",
+                      0.95,
+                    );
+                  }}
+                >
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white transition hover:scale-95" />
+                </button>
+              </div>
+
+              <div className="flex w-1/3 justify-end">
+                {capturedFiles.length > 0 && (
+                  <button
+                    className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-orange-600 disabled:opacity-50"
+                    onClick={handleAnalyzeAll}
+                    disabled={isAnalyzing}
+                  >
+                    <span>{t("ocr.analyze_btn_with_count", { count: capturedFiles.length })}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Info: (20260402 - Luphia) Image Preview Modal */}
+          {previewIndex !== null && capturedFiles[previewIndex] && (
+            // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+            <div
+              className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 p-4 backdrop-blur-md"
+              onClick={() => setPreviewIndex(null)}
+              onTouchStart={(e) => { touchStartX.current = e.targetTouches[0].clientX; }}
+              onTouchMove={(e) => { touchEndX.current = e.targetTouches[0].clientX; }}
+              onTouchEnd={() => {
+                const diff = touchStartX.current - touchEndX.current;
+                // Info: (20260402 - Luphia) Require at least 50px swipe 
+                if (diff > 50 && previewIndex < capturedFiles.length - 1) {
+                  setPreviewIndex(previewIndex + 1); // Info: (20260402 - Luphia) Swipe left -> Next
+                } else if (diff < -50 && previewIndex > 0) {
+                  setPreviewIndex(previewIndex - 1); // Info: (20260402 - Luphia) Swipe right -> Prev
+                }
+                // Info: (20260402 - Luphia) Reset touch ref
+                touchStartX.current = 0;
+                touchEndX.current = 0;
+              }}
+            >
+
+              {/* Info: (20260402 - Luphia) Header actions */}
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+              <div className="absolute top-4 right-4 flex gap-4" onClick={(e) => e.stopPropagation()}>
+                <button
+                  className="rounded-full bg-red-500/80 p-2 text-white transition hover:bg-red-500"
+                  onClick={() => {
+                    const currentId = capturedFiles[previewIndex].id;
+                    removeFile(currentId);
+                    if (capturedFiles.length <= 1) {
+                      setPreviewIndex(null);
+                    } else if (previewIndex === capturedFiles.length - 1) {
+                      setPreviewIndex(previewIndex - 1);
+                    }
+                  }}
+                >
+                  <Trash2 className="h-6 w-6" />
+                </button>
+                <button
+                  className="rounded-full bg-white/20 p-2 text-white transition hover:bg-white/40"
+                  onClick={() => setPreviewIndex(null)}
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Info: (20260402 - Luphia) Navigation Indicators */}
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+              <div className="absolute top-6 left-6 rounded-md bg-black/50 px-3 py-1 font-mono text-sm font-bold text-white shadow-sm" onClick={(e) => e.stopPropagation()}>
+                {previewIndex + 1} / {capturedFiles.length}
+              </div>
+
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+              <div className="relative flex h-full max-h-[85vh] w-full max-w-3xl items-center justify-center overflow-hidden rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()}>
+
+                {/* Info: (20260402 - Luphia) Desktop Nav Buttons */}
+                {previewIndex > 0 && (
+                  <button
+                    className="absolute left-4 z-10 hidden sm:flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/80"
+                    onClick={() => setPreviewIndex(previewIndex - 1)}
+                  >
+                    <ChevronLeft className="h-8 w-8" />
+                  </button>
+                )}
+
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  key={capturedFiles[previewIndex].id}
+                  src={capturedFiles[previewIndex].previewUrl || ""}
+                  alt="Enlarged preview"
+                  className="h-full w-full object-contain animate-in fade-in duration-300"
+                  draggable={false}
+                />
+
+                {previewIndex < capturedFiles.length - 1 && (
+                  <button
+                    className="absolute right-4 z-10 hidden sm:flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/80"
+                    onClick={() => setPreviewIndex(previewIndex + 1)}
+                  >
+                    <ChevronRight className="h-8 w-8" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
