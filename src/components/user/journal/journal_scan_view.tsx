@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Script from "next/script";
+import Image from "next/image";
 import { Loader2, Camera, X, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useParams } from "next/navigation";
@@ -59,8 +60,8 @@ export default function JournalScanView({
 
   useEffect(() => {
     // Info: (20260402 - Luphia) Check if OpenCV is already loaded globally from a previous mount
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (typeof window !== "undefined" && (window as any).cv && typeof (window as any).cv.Mat === "function") {
+    const w = window as typeof window & { cv: ReturnType<typeof JSON.parse> };
+    if (typeof window !== "undefined" && w.cv && typeof w.cv.Mat === "function") {
       setCvReady(true);
     }
   }, []);
@@ -224,8 +225,7 @@ export default function JournalScanView({
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const hiddenCanvas = hiddenCanvasRef.current;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cv = (window as any).cv;
+    const cv = (window as typeof window & { cv: ReturnType<typeof JSON.parse> }).cv;
 
     if (video.videoWidth === 0 || video.videoHeight === 0) {
       animationFrameId.current = requestAnimationFrame(processFrame);
@@ -287,7 +287,7 @@ export default function JournalScanView({
         dst,
         contours,
         hierarchy,
-        cv.RETR_EXTERNAL, // Info: (20260402 - Luphia) Only want the outermost contours
+        cv.RETR_LIST, // Info: (20260404 - Luphia) RETR_LIST finds inner contours in case hand/shadow merges with paper edge
         cv.CHAIN_APPROX_SIMPLE,
       );
 
@@ -312,14 +312,16 @@ export default function JournalScanView({
         const area = cv.contourArea(cnt);
 
         if (area > minDocArea) {
-          const peri = cv.arcLength(cnt, true);
-
           const approx = new cv.Mat();
+          const hull = new cv.Mat();
+          cv.convexHull(cnt, hull, false, true);
+          const hullPeri = cv.arcLength(hull, true);
+
           let found4 = false;
 
-          // Info: (20260402 - Luphia) Standard tolerance sweep (no convex hull so garbage fails naturally)
-          for (let eps = 0.02; eps <= 0.05; eps += 0.01) {
-            cv.approxPolyDP(cnt, approx, eps * peri, true);
+          // Info: (20260404 - Luphia) Sweeping over the convex hull prevents hand intrusions from breaking the 4 corners
+          for (let eps = 0.02; eps <= 0.06; eps += 0.01) {
+            cv.approxPolyDP(hull, approx, eps * hullPeri, true);
             if (approx.rows === 4) {
               found4 = true;
               break;
@@ -328,7 +330,7 @@ export default function JournalScanView({
 
           // Info: (20260402 - Luphia) If it isn't 4 points, render it as a debug line anyway
           if (!found4) {
-            cv.approxPolyDP(cnt, approx, 0.05 * peri, true);
+            cv.approxPolyDP(hull, approx, 0.05 * hullPeri, true);
           }
 
           // Info: (20260402 - Luphia) Save point geometry for debugging layer
@@ -369,6 +371,7 @@ export default function JournalScanView({
           }
 
           approx.delete();
+          hull.delete();
         }
         cnt.delete();
       }
@@ -403,7 +406,8 @@ export default function JournalScanView({
         let isStabilizing = false;
         const areaDiff = Math.abs(prev.lastArea - maxArea) / maxArea;
 
-        if (areaDiff < 0.15 && prev.lastPoints.length === 4) {
+        // Info: (20260404 - Luphia) Increased areaDiff tolerance to 0.20 for unsteady hands
+        if (areaDiff < 0.20 && prev.lastPoints.length === 4) {
           // Info: (20260402 - Luphia) Calculate displacement of corners
           let totalDisp = 0;
           for (let i = 0; i < 4; i++) {
@@ -411,8 +415,8 @@ export default function JournalScanView({
             const p2 = points[i];
             totalDisp += Math.hypot(p1.x - p2.x, p1.y - p2.y);
           }
-          // Info: (20260402 - Luphia) if points didn't move much (shaky hand compensation: max 200px jitter total)
-          if (totalDisp < 200) {
+          // Info: (20260404 - Luphia) Increased displacement tolerance to 400px to handle shaky hands
+          if (totalDisp < 400) {
             isStabilizing = true;
           }
         }
@@ -432,7 +436,8 @@ export default function JournalScanView({
         if (isStabilizing) {
           prev.count += 1;
         } else {
-          prev.count = 0;
+          // Info: (20260404 - Luphia) Leaky bucket drop instead of hard reset to handle occasional jitters
+          prev.count = Math.max(0, prev.count - 2);
         }
 
         prev.lastArea = maxArea;
@@ -443,8 +448,8 @@ export default function JournalScanView({
           setIsDetecting(true);
         }
 
-        // Info: (20260402 - Luphia) Auto capture after stable for roughly 30 frames (1.0 seconds)
-        if (prev.count > 30) {
+        // Info: (20260404 - Luphia) Auto capture after stable for roughly 20 frames (much faster for shaky hands)
+        if (prev.count > 20) {
           setShowFlash(true);
           setTimeout(() => setShowFlash(false), 300);
           setIsProcessing(true);
@@ -581,8 +586,8 @@ export default function JournalScanView({
         onLoad={() => {
           let iters = 0;
           const checkReady = setInterval(() => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if ((window as any).cv && typeof (window as any).cv.Mat === "function") {
+            const w = window as typeof window & { cv: ReturnType<typeof JSON.parse> };
+            if (w.cv && typeof w.cv.Mat === "function") {
               clearInterval(checkReady);
               setCvReady(true);
             }
@@ -699,8 +704,7 @@ export default function JournalScanView({
                     >
                       <X className="h-3 w-3" />
                     </button>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={fileData.previewUrl || ""} alt="Scan" className="h-full w-full object-cover" />
+                    <Image src={fileData.previewUrl || ""} alt="Scan" fill unoptimized className="object-cover" />
                   </div>
                 ))}
               </div>
@@ -748,10 +752,13 @@ export default function JournalScanView({
 
           {/* Info: (20260402 - Luphia) Image Preview Modal */}
           {previewIndex !== null && capturedFiles[previewIndex] && (
-            // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
             <div
+              role="presentation"
               className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 p-4 backdrop-blur-md"
               onClick={() => setPreviewIndex(null)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setPreviewIndex(null);
+              }}
               onTouchStart={(e) => { touchStartX.current = e.targetTouches[0].clientX; }}
               onTouchMove={(e) => { touchEndX.current = e.targetTouches[0].clientX; }}
               onTouchEnd={() => {
@@ -769,8 +776,12 @@ export default function JournalScanView({
             >
 
               {/* Info: (20260402 - Luphia) Header actions */}
-              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-              <div className="absolute top-4 right-4 flex gap-4" onClick={(e) => e.stopPropagation()}>
+              <div
+                role="presentation"
+                className="absolute top-4 right-4 flex gap-4"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
                 <button
                   className="rounded-full bg-red-500/80 p-2 text-white transition hover:bg-red-500"
                   onClick={() => {
@@ -794,13 +805,21 @@ export default function JournalScanView({
               </div>
 
               {/* Info: (20260402 - Luphia) Navigation Indicators */}
-              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-              <div className="absolute top-6 left-6 rounded-md bg-black/50 px-3 py-1 font-mono text-sm font-bold text-white shadow-sm" onClick={(e) => e.stopPropagation()}>
+              <div
+                role="presentation"
+                className="absolute top-6 left-6 rounded-md bg-black/50 px-3 py-1 font-mono text-sm font-bold text-white shadow-sm"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
                 {previewIndex + 1} / {capturedFiles.length}
               </div>
 
-              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-              <div className="relative flex h-full max-h-[85vh] w-full max-w-3xl items-center justify-center overflow-hidden rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div
+                role="presentation"
+                className="relative flex h-full max-h-[85vh] w-full max-w-3xl items-center justify-center overflow-hidden rounded-lg shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
 
                 {/* Info: (20260402 - Luphia) Desktop Nav Buttons */}
                 {previewIndex > 0 && (
@@ -812,12 +831,13 @@ export default function JournalScanView({
                   </button>
                 )}
 
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   key={capturedFiles[previewIndex].id}
                   src={capturedFiles[previewIndex].previewUrl || ""}
                   alt="Enlarged preview"
-                  className="h-full w-full object-contain animate-in fade-in duration-300"
+                  fill
+                  unoptimized
+                  className="object-contain animate-in fade-in duration-300"
                   draggable={false}
                 />
 
