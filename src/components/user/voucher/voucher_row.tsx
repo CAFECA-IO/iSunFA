@@ -8,6 +8,8 @@ import {
   FileQuestion,
   Loader2,
   CircleAlert,
+  Trash2,
+  Undo2,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { timestampToString, numberWithCommas } from "@/lib/utils/common";
@@ -19,14 +21,44 @@ import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 export function VoucherRow({
   voucher,
   onClick,
+  onDelete,
+  onRestore,
 }: {
   voucher: IVoucher;
   onClick: () => void;
+  onDelete: (id: string) => void;
+  onRestore: (id: string) => void;
 }) {
   const { t } = useTranslation();
   const lineItems = voucher.lineItems.lines;
 
   const isAnalysisFailed = voucher.analysisStatus === AIAnalysisStatus.FAILED;
+
+  const actionsColumn = (
+    <td
+      aria-label="Actions"
+      className="p-2 text-center align-middle lg:px-4 lg:py-4"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {voucher.isDeleted ? (
+        <button
+          title={t("common.restore")}
+          onClick={() => onRestore(voucher.id)}
+          className="rounded-full p-2 text-slate-400 transition-colors hover:bg-emerald-100 hover:text-emerald-500"
+        >
+          <Undo2 size={20} />
+        </button>
+      ) : (
+        <button
+          title={t("common.delete")}
+          onClick={() => onDelete(voucher.id)}
+          className="rounded-full p-2 text-slate-400 transition-colors hover:bg-red-100 hover:text-red-500"
+        >
+          <Trash2 size={20} />
+        </button>
+      )}
+    </td>
+  );
 
   const renderType = (type: TradingType | null) => {
     switch (type) {
@@ -64,79 +96,11 @@ export function VoucherRow({
   // Info: (20260320 - Julian) 尚未開始
   if (voucher.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
-      <tr className="border-b border-slate-300 bg-slate-50 text-sm text-slate-400 opacity-80 transition-colors last:border-0">
+      <tr className={`border-b text-sm opacity-80 transition-colors last:border-0 ${voucher.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-slate-300 bg-slate-50 text-slate-400"}`}>
         {/* Info: (20260320 - Julian) File Preview loading */}
         <td className="p-2 text-center lg:px-6 lg:py-4">
           <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
-            <Loader2 className="size-6 animate-spin text-orange-400" />
-          </div>
-        </td>
-        {/* Info: (20260320 - Julian) Trading Date (still showing the created date conceptually) */}
-        <td className="p-2 text-center align-middle font-bold whitespace-nowrap text-slate-400 lg:px-6 lg:py-4">
-          <p className="text-xs lg:text-sm">
-            {timestampToString(voucher.tradingDate).dateWithDash}
-          </p>
-        </td>
-        {/* Info: (20260320 - Julian) Colspan the rest of the parsing info to show a generic loading center */}
-        <td
-          colSpan={6}
-          className="p-2 text-center align-middle lg:px-6 lg:py-4"
-        >
-          <span className="flex items-center justify-center gap-2 text-sm font-medium italic">
-            <Loader2 className="size-4 animate-spin text-orange-500" />
-            {t("common.ai.pending")}
-          </span>
-        </td>
-      </tr>
-    );
-  }
-
-  // Info: (20260320 - Julian) 處理中
-  if (voucher.analysisStatus === AIAnalysisStatus.PROCESSING) {
-    return (
-      <tr className="border-b border-blue-200 bg-blue-50 text-sm opacity-90 transition-colors last:border-0">
-        {/* Info: (20260320 - Julian) File Preview loading */}
-        <td className="p-2 text-center lg:px-6 lg:py-4">
-          <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
-            <Loader2 className="size-6 animate-spin text-blue-500" />
-          </div>
-        </td>
-        {/* Info: (20260320 - Julian) Trading Date */}
-        <td className="p-2 text-center align-middle font-bold whitespace-nowrap text-blue-400 lg:px-6 lg:py-4">
-          <p className="text-xs lg:text-sm">
-            {timestampToString(voucher.tradingDate).dateWithDash}
-          </p>
-        </td>
-        <td
-          aria-label="AI Processing"
-          colSpan={6}
-          className="p-2 text-center align-middle lg:px-6 lg:py-4"
-        >
-          <div className="mx-auto flex max-w-sm flex-col items-center justify-center gap-2">
-            <span className="flex items-center justify-center gap-2 text-sm font-bold text-blue-600 italic">
-              <Loader2 className="size-4 animate-spin text-blue-500" />
-              {t("voucher.main_view.table.ai.processing")}
-            </span>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
-              <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
-            </div>
-          </div>
-        </td>
-      </tr>
-    );
-  }
-
-  // Info: (20260320 - Julian) 分析出錯
-  if (voucher.analysisStatus === AIAnalysisStatus.FAILED) {
-    return (
-      <tr
-        onClick={!voucher.isDeleted ? onClick : undefined}
-        className="border-b border-slate-300 bg-red-50 text-sm text-red-500 opacity-80 transition-colors last:border-0 hover:cursor-pointer hover:bg-red-100"
-      >
-        {/* Info: (20260320 - Julian) File Preview loading */}
-        <td className="p-2 lg:px-6 lg:py-4">
-          <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white p-1 shadow-sm sm:size-16">
-            <CircleAlert className="size-6 text-red-500" />
+            {voucher.isDeleted ? <Trash2 className="size-6 text-slate-400" /> : <Loader2 className="size-6 animate-spin text-orange-400" />}
           </div>
         </td>
         {/* Info: (20260320 - Julian) Trading Date (still showing the created date conceptually) */}
@@ -150,10 +114,93 @@ export function VoucherRow({
           colSpan={6}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
-          <p className="font-bold text-red-500">
-            {t("voucher.main_view.table.ai.failed")}
+          {voucher.isDeleted ? (
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+          ) : (
+            <span className="flex items-center justify-center gap-2 text-sm font-medium italic">
+              <Loader2 className="size-4 animate-spin text-orange-500" />
+              {t("common.ai.pending")}
+            </span>
+          )}
+        </td>
+        {actionsColumn}
+      </tr>
+    );
+  }
+
+  // Info: (20260320 - Julian) 處理中
+  if (voucher.analysisStatus === AIAnalysisStatus.PROCESSING) {
+    return (
+      <tr className={`border-b text-sm opacity-90 transition-colors last:border-0 ${voucher.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-blue-200 bg-blue-50 text-blue-400"}`}>
+        {/* Info: (20260320 - Julian) File Preview loading */}
+        <td className="p-2 text-center lg:px-6 lg:py-4">
+          <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
+            {voucher.isDeleted ? <Trash2 className="size-6 text-slate-400" /> : <Loader2 className="size-6 animate-spin text-blue-500" />}
+          </div>
+        </td>
+        {/* Info: (20260320 - Julian) Trading Date */}
+        <td className="p-2 text-center align-middle font-bold whitespace-nowrap lg:px-6 lg:py-4">
+          <p className="text-xs lg:text-sm">
+            {timestampToString(voucher.tradingDate).dateWithDash}
           </p>
         </td>
+        <td
+          aria-label="AI Processing"
+          colSpan={6}
+          className="p-2 text-center align-middle lg:px-6 lg:py-4"
+        >
+          {voucher.isDeleted ? (
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+          ) : (
+            <div className="mx-auto flex max-w-sm flex-col items-center justify-center gap-2">
+              <span className="flex items-center justify-center gap-2 text-sm font-bold text-blue-600 italic">
+                <Loader2 className="size-4 animate-spin text-blue-500" />
+                {t("voucher.main_view.table.ai.processing")}
+              </span>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
+                <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
+              </div>
+            </div>
+          )}
+        </td>
+        {actionsColumn}
+      </tr>
+    );
+  }
+
+  // Info: (20260320 - Julian) 分析出錯
+  if (voucher.analysisStatus === AIAnalysisStatus.FAILED) {
+    return (
+      <tr
+        onClick={!voucher.isDeleted ? onClick : undefined}
+        className={`border-b text-sm opacity-80 transition-colors last:border-0 ${voucher.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "hover:cursor-pointer hover:bg-red-100 border-slate-300 bg-red-50 text-red-500"}`}
+      >
+        {/* Info: (20260320 - Julian) File Preview loading */}
+        <td className="p-2 lg:px-6 lg:py-4">
+          <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white p-1 shadow-sm sm:size-16">
+            {voucher.isDeleted ? <Trash2 className="size-6 text-slate-400" /> : <CircleAlert className="size-6 text-red-500" />}
+          </div>
+        </td>
+        {/* Info: (20260320 - Julian) Trading Date (still showing the created date conceptually) */}
+        <td className="p-2 text-center align-middle font-bold whitespace-nowrap lg:px-6 lg:py-4">
+          <p className="text-xs lg:text-sm">
+            {timestampToString(voucher.tradingDate).dateWithDash}
+          </p>
+        </td>
+        {/* Info: (20260320 - Julian) Colspan the rest of the parsing info to show a generic loading center */}
+        <td
+          colSpan={6}
+          className="p-2 text-center align-middle lg:px-6 lg:py-4"
+        >
+          {voucher.isDeleted ? (
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+          ) : (
+            <p className="font-bold text-red-500">
+              {t("voucher.main_view.table.ai.failed")}
+            </p>
+          )}
+        </td>
+        {actionsColumn}
       </tr>
     );
   }
@@ -271,13 +318,6 @@ export function VoucherRow({
         <p className="text-xs lg:text-sm">
           {timestampToString(voucher.tradingDate).dateWithDash}
         </p>
-        {voucher.isDeleted && (
-          <div className="mt-2 text-center">
-            <span className="inline-block rounded-full bg-orange-200 px-2 py-0.5 text-[10px] font-bold text-orange-500">
-              {t("voucher.main_view.table.status.deleted")}
-            </span>
-          </div>
-        )}
       </td>
       {/* Info: (20260316 - Julian) Type */}
       <td
@@ -307,7 +347,14 @@ export function VoucherRow({
         aria-label="Status"
         className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
-        {voucher.isVerified ? (
+        {voucher.isDeleted ? (
+          <div className="mx-auto flex flex-col items-center justify-center gap-1 text-slate-400">
+            <Trash2 size={24} />
+            <span className="text-xs font-bold whitespace-nowrap">
+              {t("common.status_deleted")}
+            </span>
+          </div>
+        ) : voucher.isVerified ? (
           <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
             <CheckCircle2 size={24} />
             <span className="text-xs font-bold whitespace-nowrap">
@@ -323,6 +370,8 @@ export function VoucherRow({
           </div>
         )}
       </td>
+      {/* Info: (20260404 - Luphia) Actions */}
+      {actionsColumn}
     </tr>
   );
 }

@@ -344,29 +344,52 @@ export default function JournalScanView({
           debugContours.push(polyPoints);
 
           if (found4 && cv.isContourConvex(approx)) {
-            // Info: (20260402 - Luphia) Calculate max cosine of angles for the 4 corners
-            let maxCos = 0;
+            // Info: (20260404 - Luphia) Extract the 4 corners
             const pts = [];
             for (let j = 0; j < 4; j++) {
               pts.push({ x: approx.intPtr(j, 0)[0], y: approx.intPtr(j, 0)[1] });
             }
+            
+            // Info: (20260404 - Luphia) Calculate lengths of the 4 sides to prevent absurd perspective distortion (like one edge being tiny)
+            const sideLengths = [];
             for (let j = 0; j < 4; j++) {
               const p1 = pts[j];
               const p2 = pts[(j + 1) % 4];
-              const p0 = pts[(j + 3) % 4];
-              const dx1 = p1.x - p0.x;
-              const dy1 = p1.y - p0.y;
-              const dx2 = p1.x - p2.x;
-              const dy2 = p1.y - p2.y;
-              const cosine = Math.abs((dx1 * dx2 + dy1 * dy2) / Math.sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-6));
-              maxCos = Math.max(maxCos, cosine);
+              sideLengths.push(Math.hypot(p1.x - p2.x, p1.y - p2.y));
             }
-
-            // Info: (20260402 - Luphia) Reject absurdly skewed trapezoids (maxCos > 0.6 means angles < 53 deg or > 127 deg)
-            if (maxCos < 0.6 && area > maxArea) {
-              maxArea = area;
-              if (maxContour) maxContour.delete();
-              maxContour = approx.clone();
+            
+            // Info: (20260404 - Luphia) Opposite sides should be at least 40% of each other. If lower, the angle is too extreme.
+            const minOpp1 = Math.min(sideLengths[0], sideLengths[2]);
+            const maxOpp1 = Math.max(sideLengths[0], sideLengths[2]);
+            const minOpp2 = Math.min(sideLengths[1], sideLengths[3]);
+            const maxOpp2 = Math.max(sideLengths[1], sideLengths[3]);
+            
+            const ratio1 = maxOpp1 > 0 ? minOpp1 / maxOpp1 : 0;
+            const ratio2 = maxOpp2 > 0 ? minOpp2 / maxOpp2 : 0;
+            
+            const isValidPerspective = ratio1 > 0.4 && ratio2 > 0.4;
+            
+            if (isValidPerspective) {
+              // Info: (20260404 - Luphia) Evaluate maximum inner angle sharpness
+              let maxCos = 0;
+              for (let j = 0; j < 4; j++) {
+                const p1 = pts[j];
+                const p2 = pts[(j + 1) % 4];
+                const p0 = pts[(j + 3) % 4];
+                const dx1 = p1.x - p0.x;
+                const dy1 = p1.y - p0.y;
+                const dx2 = p1.x - p2.x;
+                const dy2 = p1.y - p2.y;
+                const cosine = Math.abs((dx1 * dx2 + dy1 * dy2) / Math.sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-6));
+                maxCos = Math.max(maxCos, cosine);
+              }
+  
+              // Info: (20260404 - Luphia) Relaxed max angle distortion to ~36 deg (0.8) since opposite lengths are strictly checked
+              if (maxCos < 0.8 && area > maxArea) {
+                maxArea = area;
+                if (maxContour) maxContour.delete();
+                maxContour = approx.clone();
+              }
             }
           }
 
@@ -448,8 +471,8 @@ export default function JournalScanView({
           setIsDetecting(true);
         }
 
-        // Info: (20260404 - Luphia) Auto capture after stable for roughly 20 frames (much faster for shaky hands)
-        if (prev.count > 20) {
+        // Info: (20260404 - Luphia) Auto capture after stable for roughly 15 frames (0.5 seconds)
+        if (prev.count > 15) {
           setShowFlash(true);
           setTimeout(() => setShowFlash(false), 300);
           setIsProcessing(true);

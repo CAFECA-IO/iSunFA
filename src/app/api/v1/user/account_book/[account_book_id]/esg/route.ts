@@ -159,14 +159,25 @@ export async function GET(
       };
     }
 
-    // Info: (20260312 - Julian) 整理查詢條件
+    // Info: (20260312 - Luphia) 整理查詢條件
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
     const whereClause: Prisma.EsgRecordWhereInput = {
       accountBookId: accountBook.id,
+      OR: [
+        { deletedAt: null },
+        { deletedAt: { gte: sevenDaysAgo } },
+      ],
       ...(searchParam && {
-        OR: [
-          { vendor: { contains: searchParam, mode: "insensitive" } },
-          { activityType: { contains: searchParam, mode: "insensitive" } },
-        ],
+        AND: [
+          {
+            OR: [
+              { vendor: { contains: searchParam, mode: "insensitive" } },
+              { activityType: { contains: searchParam, mode: "insensitive" } },
+            ]
+          }
+        ]
       }),
       ...(verifyStatus && { isVerified: verifyStatus === VerifyStatus.VERIFIED }),
       ...(intensity && { intensity: intensity as ClientEsgIntensity }),
@@ -201,6 +212,7 @@ export async function GET(
       analysisStatus: r.analysisStatus as AIAnalysisStatus,
       journalId: r.journalId,
       voucherId: r.voucherId,
+      isDeleted: !!r.deletedAt,
     }));
 
     return jsonOk({

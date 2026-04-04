@@ -1,5 +1,6 @@
 export const en = {
   common: {
+    actions: "Actions",
     note: "Note",
     optional_in_parentheses: "Optional",
     no_data: "No Data",
@@ -15,6 +16,11 @@ export const en = {
     notification: "Notification",
     ok: "OK",
     close: "Close",
+    restore: "Restore",
+    restore_confirm_desc: "This will restore the record from the trash",
+    delete: "Delete",
+    delete_confirm_desc: "This will move the record to trash",
+    status_deleted: "Deleted",
     coming_soon_message: "Coming Soon",
     all: "All",
     agree: "Agree",

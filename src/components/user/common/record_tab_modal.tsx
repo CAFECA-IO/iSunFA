@@ -7,7 +7,7 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { X, BookCopy, FileText, Leaf, ImageIcon } from "lucide-react";
+import { X, BookCopy, FileText, Leaf, ImageIcon, Trash2, Undo2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import dynamic from "next/dynamic";
 import { IJournal } from "@/interfaces/journal";
@@ -41,6 +41,9 @@ interface IRecordTabModalProps {
   onJournalUpdate?: (journal: IJournal) => void;
   onVoucherUpdate?: (voucher: IVoucher) => void;
   onEsgUpdate?: (esg: IEsgRecord) => void;
+  onDelete?: () => void;
+  onRestore?: () => void;
+  isDeleted?: boolean;
 }
 
 export default function RecordTabModal({
@@ -54,6 +57,9 @@ export default function RecordTabModal({
   onJournalUpdate,
   onVoucherUpdate,
   onEsgUpdate,
+  onDelete,
+  onRestore,
+  isDeleted,
 }: IRecordTabModalProps) {
   const { t } = useTranslation();
 
@@ -227,13 +233,34 @@ export default function RecordTabModal({
                     </button>
                   </div>
 
-                  <button
-                    type="button"
-                    className="ml-4 flex-shrink-0 rounded-full bg-gray-100 p-2 text-gray-500 outline-none transition-colors hover:bg-gray-200 hover:text-gray-700"
-                    onClick={onClose}
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
+                  <div className="ml-4 flex flex-shrink-0 items-center space-x-2">
+                    {onRestore && isDeleted ? (
+                      <button
+                        type="button"
+                        className="rounded-full bg-emerald-50 p-2 text-emerald-500 outline-none transition-colors hover:bg-emerald-100 hover:text-emerald-700"
+                        onClick={onRestore}
+                        title={String(t("common.restore") || "Restore")}
+                      >
+                        <Undo2 className="h-5 w-5" />
+                      </button>
+                    ) : onDelete && !isDeleted ? (
+                      <button
+                        type="button"
+                        className="rounded-full bg-red-50 p-2 text-red-500 outline-none transition-colors hover:bg-red-100 hover:text-red-700"
+                        onClick={onDelete}
+                        title={String(t("common.delete") || "Delete")}
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="rounded-full bg-gray-100 p-2 text-gray-500 outline-none transition-colors hover:bg-gray-200 hover:text-gray-700"
+                      onClick={onClose}
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Info: (20260327 - Luphia) Content Area */}

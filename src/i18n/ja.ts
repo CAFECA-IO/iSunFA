@@ -1,5 +1,6 @@
 export const ja = {
   common: {
+    actions: "操作",
     note: "備考",
     optional_in_parentheses: "オプション",
     no_data: "データなし",
@@ -16,6 +17,11 @@ export const ja = {
     notification: "システム通知",
     ok: "確認",
     close: "閉じる",
+    restore: "元に戻す",
+    restore_confirm_desc: "これにより、データがゴミ箱から復元されます",
+    delete: "削除",
+    delete_confirm_desc: "これにより、データがゴミ箱に移動されます",
+    status_deleted: "削除済み",
     coming_soon_message: "まもなく登場",
     all: "すべて",
     agree: "同意",

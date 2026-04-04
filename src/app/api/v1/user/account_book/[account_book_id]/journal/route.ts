@@ -101,14 +101,25 @@ export async function GET(
     const orderByParams = searchParams.get("orderBy");
 
     // Info: (20260327 - Luphia) 乾淨且安全地組裝查詢條件 (Where)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
     const where: Prisma.JournalWhereInput = {
       accountBookId: accountBook.id,
+      OR: [
+        { deletedAt: null },
+        { deletedAt: { gte: sevenDaysAgo } },
+      ],
     };
 
     if (keyWord) {
-      where.OR = [
-        { text: { contains: keyWord } },
-        { id: { contains: keyWord } },
+      where.AND = [
+        {
+          OR: [
+            { text: { contains: keyWord } },
+            { id: { contains: keyWord } },
+          ]
+        }
       ];
     }
 
@@ -165,6 +176,7 @@ export async function GET(
       confidence: j.confidence,
       isVerified: j.isVerified,
       aiNote: j.aiNote ?? undefined,
+      isDeleted: !!j.deletedAt,
     }));
 
     return jsonOk({ data: formattedJournals, total: totalCount });

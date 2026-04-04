@@ -1,5 +1,6 @@
 export const ko = {
   common: {
+    actions: "작업",
     note: "비고",
     optional_in_parentheses: "선택",
     no_data: "데이터 없음",
@@ -16,6 +17,11 @@ export const ko = {
     notification: "시스템 알림",
     ok: "확인",
     close: "닫기",
+    restore: "복원",
+    restore_confirm_desc: "이 데이터는 휴지통에서 복원됩니다.",
+    delete: "삭제",
+    delete_confirm_desc: "이 데이터는 휴지통으로 이동됩니다.",
+    status_deleted: "삭제됨",
     coming_soon_message: "오픈 예정",
     all: "전체",
     agree: "동의",
@@ -1285,6 +1291,9 @@ export const ko = {
           credit: "대변 금액",
           confidence: "AI 신뢰도",
           status: "상태",
+        },
+        status: {
+          deleted: "삭제됨",
         },
         no_entries: "분개 없음",
         no_file: "파일 없음",

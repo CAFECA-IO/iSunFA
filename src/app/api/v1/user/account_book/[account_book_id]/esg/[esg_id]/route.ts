@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -210,5 +211,84 @@ export async function PUT(
       ApiCode.INTERNAL_SERVER_ERROR,
       "Failed to update esg record",
     );
+  }
+}
+
+/**
+ * Info: (20260404 - Luphia) 刪除單一 ESG 紀錄與同步刪除
+ * DELETE /api/v1/user/account_book/:account_book_id/esg/:esg_id
+ */
+export async function DELETE(
+  request: NextRequest,
+  {
+    params,
+  }: { params: Promise<{ account_book_id: string; esg_id: string }> },
+) {
+  try {
+    const authHeader = request.headers.get("Authorization");
+    const sessionUser = await getIdentityFromDeWT(authHeader);
+
+    if (!sessionUser) {
+      console.error("User not found");
+      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+    }
+
+    const deleter = await webAuthnRepo.findUserByAddress(sessionUser.address);
+
+    if (!deleter) {
+      console.error("Deleter not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Deleter not found");
+    }
+
+    const { account_book_id: accountBookId, esg_id: esgId } = await params;
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
+
+    if (!accountBook) {
+      console.error("Accountbook not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+    }
+
+    const existingEsg = await esgRepo.getEsgRecordById(esgId);
+
+    if (!existingEsg) {
+      console.error("Esg record not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Esg record not found");
+    }
+
+    const deletedEsg = await prisma.esgRecord.update({
+      where: { id: esgId },
+      data: { deletedAt: new Date() }
+    });
+
+    if (existingEsg.fileId) {
+      await prisma.voucher.updateMany({
+        where: {
+          fileId: existingEsg.fileId,
+          accountBookId: accountBookId,
+        },
+        data: { deletedAt: new Date() }
+      });
+
+      await prisma.journal.updateMany({
+        where: {
+          fileId: existingEsg.fileId,
+          accountBookId: accountBookId,
+        },
+        data: { deletedAt: new Date() }
+      });
+    }
+
+    await auditLogRepo.createAuditLog({
+      userId: deleter.id,
+      dataType: "ESG_RECORD",
+      dataId: deletedEsg.id,
+      accountBookId: accountBook.id,
+      action: "DELETE",
+    });
+
+    return jsonOk({ success: true, esgRecord: deletedEsg });
+  } catch (error) {
+    console.error("Delete ESG record failed", error);
+    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Delete ESG record failed");
   }
 }

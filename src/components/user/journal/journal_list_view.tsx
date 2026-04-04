@@ -67,7 +67,9 @@ export default function JournalListView() {
     useState<boolean>(false);
 
   const [journalToDelete, setJournalToDelete] = useState<IJournal | null>(null);
+  const [journalToRestore, setJournalToRestore] = useState<IJournal | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [isRestoring, setIsRestoring] = useState<boolean>(false);
 
   const handleJournalSelect = (journal: IJournal) => {
     setSelectedJournal(journal);
@@ -81,9 +83,15 @@ export default function JournalListView() {
     setSelectedJournal(updatedJournal);
   };
 
-  // const handleDeleteClick = (journal: IJournal) => {
-  //   setJournalToDelete(journal);
-  // };
+  const handleDeleteClick = (id: string) => {
+    const journal = journals.find(j => j.id === id);
+    if (journal) setJournalToDelete(journal);
+  };
+
+  const handleRestoreClick = (id: string) => {
+    const journal = journals.find(j => j.id === id);
+    if (journal) setJournalToRestore(journal);
+  };
 
   const executeDelete = async () => {
     if (!journalToDelete) return;
@@ -111,6 +119,33 @@ export default function JournalListView() {
       console.error("Failed to delete journal:", error);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const executeRestore = async () => {
+    if (!journalToRestore) return;
+
+    setIsRestoring(true);
+    try {
+      const data = await request<IApiResponse<null>>(
+        `/api/v1/user/account_book/${accountBookId}/journal/${journalToRestore.id}/restore`,
+        {
+          method: "POST",
+        },
+      );
+
+      if (data.code === ApiCode.SUCCESS) {
+        setJournals((prev) =>
+          prev.map((j) =>
+            j.id === journalToRestore.id ? { ...j, isDeleted: false } : j
+          )
+        );
+        setJournalToRestore(null);
+      }
+    } catch (error) {
+      console.error("Failed to restore journal:", error);
+    } finally {
+      setIsRestoring(false);
     }
   };
 
@@ -234,13 +269,16 @@ export default function JournalListView() {
         isLoading={isLoading}
         journals={journals}
         onSelect={handleJournalSelect}
+        onDelete={handleDeleteClick}
+        onRestore={handleRestoreClick}
       />
     ) : (
       <JournalGridLayout
         isLoading={isLoading}
         journals={journals}
         onSelect={handleJournalSelect}
-        // onDelete={handleDeleteClick}
+        onDelete={handleDeleteClick}
+        onRestore={handleRestoreClick}
       />
     );
 
@@ -388,7 +426,13 @@ export default function JournalListView() {
           voucherId={selectedJournal?.voucherId}
           esgId={selectedJournal?.esgRecordId}
           onJournalUpdate={handleJournalUpdate}
-          // onDelete={handleDeleteClick}
+          onDelete={() => {
+            if (selectedJournal) setJournalToDelete(selectedJournal);
+          }}
+          onRestore={() => {
+            if (selectedJournal) setJournalToRestore(selectedJournal);
+          }}
+          isDeleted={selectedJournal?.isDeleted}
         />
 
         {/* Info: (20260305 - Julian) Delete Confirmation Modal */}
@@ -404,6 +448,17 @@ export default function JournalListView() {
           }
           cancelText={t("common.cancel") as string}
           onConfirm={executeDelete}
+        />
+
+        {/* Info: (20260404 - Luphia) Restore Confirmation Modal */}
+        <ConfirmModal
+          isOpen={!!journalToRestore}
+          onClose={() => setJournalToRestore(null)}
+          title={t("common.restore") as string}
+          message={t("common.restore_confirm_desc") as string}
+          confirmText={isRestoring ? (t("ocr.please_wait") as string) : (t("common.restore") as string)}
+          cancelText={t("common.cancel") as string}
+          onConfirm={executeRestore}
         />
 
         {/* Info: (20260401 - Julian) Verify All Confirmation Modal */}

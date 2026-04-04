@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -199,5 +200,84 @@ export async function PUT(
   } catch (error) {
     console.error("Put voucher failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Put voucher failed");
+  }
+}
+
+/**
+ * Info: (20260404 - Luphia) 軟刪除傳票與同步刪除 ESG
+ * DELETE /api/v1/user/account_book/:account_book_id/voucher/:voucher_id
+ */
+export async function DELETE(
+  request: NextRequest,
+  {
+    params,
+  }: { params: Promise<{ account_book_id: string; voucher_id: string }> },
+) {
+  try {
+    // Info: (20260404 - Luphia) Verify Token & Get User
+    const authHeader = request.headers.get("Authorization");
+    const sessionUser = await getIdentityFromDeWT(authHeader);
+
+    if (!sessionUser) {
+      console.error("User not found");
+      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+    }
+
+    const { account_book_id: accountBookId, voucher_id: voucherId } = await params;
+    
+    // Info: (20260404 - Luphia) 確認操作者權限與存在性
+    const deleter = await webAuthnRepo.findUserByAddress(sessionUser.address);
+    if (!deleter) {
+      console.error("Deleter not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Deleter not found");
+    }
+
+    // Info: (20260404 - Luphia) 驗證帳簿
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
+    if (!accountBook) {
+      console.error("Accountbook not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+    }
+
+    // Info: (20260404 - Luphia) 取出現有傳票進行檢查
+    const existingVoucher = await voucherRepo.getVoucherById(voucherId);
+    if (!existingVoucher) {
+      return jsonFail(ApiCode.NOT_FOUND, "Voucher not found");
+    }
+
+    const now = new Date();
+
+    // Info: (20260404 - Luphia) 更新 Voucher 的 deletedAt
+    await prisma.voucher.update({
+      where: { id: voucherId },
+      data: { deletedAt: now }
+    });
+
+    // Info: (20260404 - Luphia) 同步軟刪除對應的 ESG (透過 fileId 原有依賴綁定)
+    if (existingVoucher.fileId) {
+      await prisma.esgRecord.updateMany({
+        where: {
+          fileId: existingVoucher.fileId,
+          accountBookId: accountBookId
+        },
+        data: {
+          deletedAt: now
+        }
+      });
+    }
+
+    // Info: (20260404 - Luphia) 紀錄刪除動作
+    await auditLogRepo.createAuditLog({
+      userId: deleter.id,
+      dataType: "VOUCHER",
+      dataId: voucherId,
+      accountBookId: accountBook.id,
+      action: "DELETE",
+    });
+
+    return jsonOk({ success: true });
+  } catch (error) {
+    console.error("Delete voucher failed", error);
+    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Delete voucher failed");
   }
 }

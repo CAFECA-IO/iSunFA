@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -210,12 +211,34 @@ export async function DELETE(
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
 
-    // Info: (20260304 - Julian) 刪除日記帳
-    const deletedJournal = await journalRepo.deleteJournal(journalId);
+    const existingJournal = await journalRepo.getJournalById(journalId);
+    if (!existingJournal) {
+      return jsonFail(ApiCode.NOT_FOUND, "Journal not found");
+    }
 
-    if (!deletedJournal) {
-      console.error("Journal delete failed");
-      return jsonFail(ApiCode.NOT_FOUND, "Journal delete failed");
+    // Info: (20260404 - Luphia) 將 Journal 標記刪除
+    const deletedJournal = await prisma.journal.update({
+      where: { id: journalId },
+      data: { deletedAt: new Date() }
+    });
+
+    // Info: (20260404 - Luphia) 同步刪除關聯 Voucher 和 EsgRecord
+    if (existingJournal.fileId) {
+      await prisma.voucher.updateMany({
+        where: {
+          fileId: existingJournal.fileId,
+          accountBookId: accountBookId,
+        },
+        data: { deletedAt: new Date() }
+      });
+
+      await prisma.esgRecord.updateMany({
+        where: {
+          fileId: existingJournal.fileId,
+          accountBookId: accountBookId,
+        },
+        data: { deletedAt: new Date() }
+      });
     }
 
     // Info: (20260306 - Julian) 新增 log
@@ -227,7 +250,7 @@ export async function DELETE(
       action: "DELETE",
     });
 
-    return jsonOk(deletedJournal);
+    return jsonOk({ success: true, journal: deletedJournal });
   } catch (error) {
     console.error("Delete journal failed", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Delete journal failed");

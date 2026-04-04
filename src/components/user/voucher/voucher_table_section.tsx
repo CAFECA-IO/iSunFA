@@ -58,6 +58,10 @@ export default function VoucherTableSection() {
   const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
     null,
   );
+  
+  // Info: (20260404 - Luphia) 軟刪除與復原狀態
+  const [voucherToDelete, setVoucherToDelete] = useState<string | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (!accountBookId) return;
@@ -270,6 +274,41 @@ export default function VoucherTableSection() {
       setIsLoading(false); // Info: (20260325 - Luphia) 只有失敗時在這裡關閉 loading
     } finally {
       setIsVerifyAllConfirmOpen(false);
+    }
+  };
+
+  // Info: (20260404 - Luphia) 刪除傳票
+  const handleDeleteVoucher = async () => {
+    if (!voucherToDelete || !accountBookId) return;
+    try {
+      setIsLoading(true);
+      await request(
+        `/api/v1/user/account_book/${accountBookId}/voucher/${voucherToDelete}`,
+        { method: "DELETE" }
+      );
+      await fetchVouchers();
+    } catch (error) {
+      console.error("Failed to delete voucher:", error);
+      setIsLoading(false);
+    } finally {
+      setIsDeleteConfirmOpen(false);
+      setVoucherToDelete(null);
+    }
+  };
+
+  // Info: (20260404 - Luphia) 復原傳票
+  const handleRestoreVoucher = async (id: string) => {
+    if (!accountBookId) return;
+    try {
+      setIsLoading(true);
+      await request(
+        `/api/v1/user/account_book/${accountBookId}/voucher/${id}/restore`,
+        { method: "POST" }
+      );
+      await fetchVouchers();
+    } catch (error) {
+      console.error("Failed to restore voucher:", error);
+      setIsLoading(false);
     }
   };
 
@@ -555,6 +594,9 @@ export default function VoucherTableSection() {
                     <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
                       {t("voucher.main_view.table.headers.status")}
                     </th>
+                    <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
+                      {/* Info: (20260404 - Luphia) Actions */}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -579,6 +621,11 @@ export default function VoucherTableSection() {
                           setSelectedVoucherId(v.id);
                           setIsModalOpen(true);
                         }}
+                        onDelete={(id) => {
+                          setVoucherToDelete(id);
+                          setIsDeleteConfirmOpen(true);
+                        }}
+                        onRestore={handleRestoreVoucher}
                       />
                     ))
                   ) : (
@@ -646,6 +693,19 @@ export default function VoucherTableSection() {
         voucherId={selectedVoucherId}
         esgId={selectedVoucher?.esgRecordId}
         file={selectedVoucher?.file}
+        onDelete={() => {
+          if (selectedVoucherId) {
+            onModalClose();
+            setVoucherToDelete(selectedVoucherId);
+            setIsDeleteConfirmOpen(true);
+          }
+        }}
+        onRestore={() => {
+          if (selectedVoucherId) {
+            handleRestoreVoucher(selectedVoucherId);
+          }
+        }}
+        isDeleted={selectedVoucher?.isDeleted}
       />
       <ConfirmModal
         isOpen={isVerifyAllConfirmOpen}
@@ -655,6 +715,18 @@ export default function VoucherTableSection() {
         confirmText={t("common.confirm")}
         cancelText={t("common.cancel")}
         onConfirm={verifyAllVouchers}
+      />
+      <ConfirmModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => {
+          setIsDeleteConfirmOpen(false);
+          setVoucherToDelete(null);
+        }}
+        title={t("common.delete")}
+        message={t("common.delete_confirm_desc")}
+        confirmText={t("common.confirm")}
+        cancelText={t("common.cancel")}
+        onConfirm={handleDeleteVoucher}
       />
     </>
   );

@@ -90,4 +90,5 @@ export interface IEsgRecord {
   aiNote: string;
   journalId?: string;
   voucherId?: string;
+  isDeleted?: boolean;
 }

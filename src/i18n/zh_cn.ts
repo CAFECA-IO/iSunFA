@@ -1,5 +1,6 @@
 export const zhCn = {
   common: {
+    actions: "操作",
     note: "备注",
     optional_in_parentheses: "选填",
     no_data: "无数据",
@@ -15,6 +16,11 @@ export const zhCn = {
     notification: "系统提示",
     ok: "确认",
     close: "关闭",
+    restore: "恢复",
+    restore_confirm_desc: "这将会把数据从垃圾桶还原",
+    delete: "删除",
+    delete_confirm_desc: "这将会把数据移至垃圾桶",
+    status_deleted: "已删除",
     coming_soon_message: "即将推出",
     all: "全部",
     agree: "同意",
@@ -1278,6 +1284,9 @@ export const zhCn = {
           credit: "贷方金额",
           confidence: "AI 信心度",
           status: "状态",
+        },
+        status: {
+          deleted: "已删除",
         },
         no_entries: "没有分录",
         no_file: "无文件",

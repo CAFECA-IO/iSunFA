@@ -22,4 +22,5 @@ export interface IJournal {
   aiNote: string;
   voucherId?: string;
   esgRecordId?: string;
+  isDeleted?: boolean;
 }

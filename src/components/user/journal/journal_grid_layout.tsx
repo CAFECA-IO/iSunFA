@@ -1,6 +1,6 @@
 "use client";
 
-import { TrashIcon, Loader2, CircleAlert } from "lucide-react";
+import { Loader2, CircleAlert, Trash2, Undo2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import { IJournal } from "@/interfaces/journal";
@@ -10,29 +10,63 @@ import { timestampToString } from "@/lib/utils/common";
 const JournalGridItem = ({
   journal,
   onSelect,
-  // onDelete,
+  onDelete,
+  onRestore,
 }: {
   journal: IJournal;
   onSelect: (j: IJournal) => void;
-  // onDelete: (j: IJournal) => void;
+  onDelete: (id: string) => void;
+  onRestore: (id: string) => void;
 }) => {
   const { t } = useTranslation();
 
   const isAnalysisFailed = journal.analysisStatus === AIAnalysisStatus.FAILED;
 
+  const actionButtons = (
+    <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
+      {journal.isDeleted ? (
+        <button
+          type="button"
+          title={t("common.restore")}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRestore(journal.id);
+          }}
+          className="rounded-md bg-emerald-100 p-1.5 text-emerald-600 shadow-sm transition-colors hover:bg-emerald-200"
+        >
+          <Undo2 size={20} />
+        </button>
+      ) : (
+        <button
+          type="button"
+          title={t("common.delete")}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(journal.id);
+          }}
+          className="rounded-md bg-red-100 p-1.5 text-red-600 shadow-sm transition-colors hover:bg-red-200"
+        >
+          <Trash2 size={20} />
+        </button>
+      )}
+    </div>
+  );
+
+  const deletedOverlay = journal.isDeleted ? (
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-100/70 backdrop-blur-[1px] rounded-lg">
+      <Trash2 size={36} className="mb-2 text-slate-500 drop-shadow-sm" />
+      <span className="rounded-full bg-slate-200/90 px-3 py-1 text-xs font-bold text-slate-600 shadow-sm">
+        {t("common.status_deleted")}
+      </span>
+    </div>
+  ) : null;
+
   // Info: (20260320 - Julian) 尚未開始
   if (journal.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
       <div className="relative flex size-72 flex-col items-center justify-center gap-2 justify-self-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50 p-2 opacity-90">
-        <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
-          <button
-            type="button"
-            disabled
-            className="cursor-not-allowed rounded-md bg-gray-50 p-1 text-gray-300 shadow-sm"
-          >
-            <TrashIcon size={24} />
-          </button>
-        </div>
+        {deletedOverlay}
+        {actionButtons}
         <div className="relative size-[250px] shrink-0 overflow-hidden rounded-md">
           <div className="flex size-full flex-col items-center justify-center gap-3 bg-gray-100">
             <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
@@ -52,15 +86,8 @@ const JournalGridItem = ({
   if (journal.analysisStatus === AIAnalysisStatus.PROCESSING) {
     return (
       <div className="relative flex size-72 flex-col items-center justify-center gap-2 justify-self-center overflow-hidden rounded-lg border border-blue-300 bg-blue-50 p-2 opacity-90 shadow-sm">
-        <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
-          <button
-            type="button"
-            disabled
-            className="cursor-not-allowed rounded-md bg-gray-50 p-1 text-gray-300 shadow-sm"
-          >
-            <TrashIcon size={24} />
-          </button>
-        </div>
+        {deletedOverlay}
+        {actionButtons}
         <div className="relative size-[250px] shrink-0 overflow-hidden rounded-md">
           <div className="flex size-full flex-col items-center justify-center gap-4 bg-white/60 px-6 backdrop-blur-sm">
             <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
@@ -82,24 +109,13 @@ const JournalGridItem = ({
   }
 
   return (
-    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events
     <div
-      className={`relative flex size-72 flex-col items-center justify-center gap-2 justify-self-center overflow-hidden rounded-lg border p-2 hover:cursor-pointer ${isAnalysisFailed ? "bg-red-200 hover:bg-red-300" : ""} ${journal.isVerified ? "border-emerald-500 bg-emerald-50 hover:bg-emerald-100" : "border-orange-500 bg-orange-50 hover:bg-orange-100"}`}
-      onClick={() => onSelect(journal)}
+      className={`relative flex size-72 flex-col items-center justify-center gap-2 justify-self-center overflow-hidden rounded-lg border p-2 transition-colors ${journal.isDeleted ? "opacity-50 border-gray-200 bg-gray-50" : isAnalysisFailed ? "bg-red-200 hover:bg-red-300 border-red-300 hover:cursor-pointer" : journal.isVerified ? "border-emerald-500 bg-emerald-50 hover:bg-emerald-100 hover:cursor-pointer" : "border-orange-500 bg-orange-50 hover:bg-orange-100 hover:cursor-pointer"}`}
+      onClick={!journal.isDeleted ? () => onSelect(journal) : undefined}
     >
-      {/* ToDo: (20260324 - Julian) Hide Delete Button */}
-      {/* <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(journal);
-          }}
-          className="rounded-md bg-red-100 p-1 text-red-600 shadow-sm transition-colors hover:bg-red-200"
-        >
-          <TrashIcon size={24} />
-        </button>
-      </div> */}
+      {deletedOverlay}
+      {actionButtons}
       {/* Info: (20260320 - Julian) File Preview */}
       <div className="relative size-[250px] shrink-0">
         {journal.file?.hash ? (
@@ -130,12 +146,14 @@ const JournalGridLayout = ({
   isLoading,
   journals,
   onSelect,
-  // onDelete,
+  onDelete,
+  onRestore,
 }: {
   isLoading: boolean;
   journals: IJournal[];
   onSelect: (journal: IJournal) => void;
-  // onDelete: (journal: IJournal) => void;
+  onDelete: (id: string) => void;
+  onRestore: (id: string) => void;
 }) => {
   const { t } = useTranslation();
 
@@ -154,7 +172,8 @@ const JournalGridLayout = ({
       key={journal.id}
       journal={journal}
       onSelect={onSelect}
-      // onDelete={onDelete}
+      onDelete={onDelete}
+      onRestore={onRestore}
     />
   ));
 

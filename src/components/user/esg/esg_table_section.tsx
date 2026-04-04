@@ -10,6 +10,7 @@ import ConfirmModal from "@/components/common/confirm_modal";
 import { request } from "@/lib/utils/request";
 import { useParams } from "next/navigation";
 import { IApiResponse } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
 import { useTranslation } from "@/i18n/i18n_context";
 import { VerifyStatus } from "@/constants/verify_status";
 import Pagination from "@/components/common/pagination";
@@ -48,6 +49,11 @@ export default function EsgTableSection({
   const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
     useState<boolean>(false);
   const [selectedEsgId, setSelectedEsgId] = useState<string | null>(null);
+
+  const [esgToDelete, setEsgToDelete] = useState<IEsgRecord | null>(null);
+  const [esgToRestore, setEsgToRestore] = useState<IEsgRecord | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [isRestoring, setIsRestoring] = useState<boolean>(false);
 
   const fetchRecords = useCallback(async () => {
     if (!accountBookId) return;
@@ -189,6 +195,71 @@ export default function EsgTableSection({
   const handleVerifyOpen = (record: IEsgRecord) => {
     setSelectedEsgId(record.id);
     setIsVerifyModalOpen(true);
+  };
+
+  const handleDeleteClick = (id: string) => {
+    const record = records.find(r => r.id === id);
+    if (record) setEsgToDelete(record);
+  };
+
+  const handleRestoreClick = (id: string) => {
+    const record = records.find(r => r.id === id);
+    if (record) setEsgToRestore(record);
+  };
+
+  const executeDelete = async () => {
+    if (!esgToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const data = await request<IApiResponse<null>>(
+        `/api/v1/user/account_book/${accountBookId}/esg/${esgToDelete.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (data.code === ApiCode.SUCCESS) {
+        setRecords((prev) => prev.filter((r) => r.id !== esgToDelete.id));
+        setEsgToDelete(null);
+
+        if (selectedEsgId === esgToDelete.id) {
+          setIsVerifyModalOpen(false);
+          setSelectedEsgId(null);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to delete ESG record:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const executeRestore = async () => {
+    if (!esgToRestore) return;
+
+    setIsRestoring(true);
+    try {
+      const data = await request<IApiResponse<null>>(
+        `/api/v1/user/account_book/${accountBookId}/esg/${esgToRestore.id}/restore`,
+        {
+          method: "POST",
+        },
+      );
+
+      if (data.code === ApiCode.SUCCESS) {
+        setRecords((prev) =>
+          prev.map((r) =>
+            r.id === esgToRestore.id ? { ...r, isDeleted: false } : r
+          )
+        );
+        setEsgToRestore(null);
+      }
+    } catch (error) {
+      console.error("Failed to restore ESG record:", error);
+    } finally {
+      setIsRestoring(false);
+    }
   };
 
   const handleVerifySave = async () => {
@@ -357,6 +428,9 @@ export default function EsgTableSection({
                 <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                   {t("esg_table.header.status")}
                 </th>
+                <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
+                  {t("common.actions")}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -375,6 +449,8 @@ export default function EsgTableSection({
                     key={record.id}
                     record={record}
                     onVerifyClick={handleVerifyOpen}
+                    onDelete={handleDeleteClick}
+                    onRestore={handleRestoreClick}
                   />
                 ))
               ) : (
@@ -453,6 +529,13 @@ export default function EsgTableSection({
         esgId={selectedEsgId}
         file={selectedEsgRecord?.file}
         onEsgUpdate={handleVerifySave}
+        onDelete={() => {
+          if (selectedEsgRecord) setEsgToDelete(selectedEsgRecord);
+        }}
+        onRestore={() => {
+          if (selectedEsgRecord) setEsgToRestore(selectedEsgRecord);
+        }}
+        isDeleted={selectedEsgRecord?.isDeleted}
       />
       <ConfirmModal
         isOpen={isVerifyAllConfirmOpen}
@@ -462,6 +545,28 @@ export default function EsgTableSection({
         confirmText={t("common.confirm")}
         cancelText={t("common.cancel")}
         onConfirm={verifyAllEsgRecords}
+      />
+      <ConfirmModal
+        isOpen={!!esgToDelete}
+        onClose={() => setEsgToDelete(null)}
+        title={t("ocr.confirm_delete_title") as string}
+        message={t("ocr.confirm_delete_msg") as string}
+        confirmText={
+          isDeleting
+            ? (t("ocr.please_wait") as string)
+            : (t("ocr.delete") as string)
+        }
+        cancelText={t("common.cancel") as string}
+        onConfirm={executeDelete}
+      />
+      <ConfirmModal
+        isOpen={!!esgToRestore}
+        onClose={() => setEsgToRestore(null)}
+        title={t("common.restore") as string}
+        message={t("common.restore_confirm_desc") as string}
+        confirmText={isRestoring ? (t("ocr.please_wait") as string) : (t("common.restore") as string)}
+        cancelText={t("common.cancel") as string}
+        onConfirm={executeRestore}
       />
     </div>
   );

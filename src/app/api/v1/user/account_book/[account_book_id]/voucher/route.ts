@@ -199,6 +199,21 @@ export async function GET(
 
     if (hideDeleted) {
       filteredConditions.where!.deletedAt = null;
+    } else {
+      // Info: (20260404 - Luphia) 預設列表顯示：未刪除、或是被軟刪除但距今小於 7 天內的傳票
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const whereInput = filteredConditions.where as Prisma.VoucherWhereInput;
+      const andConditions = Array.isArray(whereInput.AND) 
+        ? whereInput.AND 
+        : (whereInput.AND ? [whereInput.AND] : []);
+        
+      andConditions.push({
+        OR: [
+          { deletedAt: null },
+          { deletedAt: { gte: sevenDaysAgo } }
+        ]
+      });
+      whereInput.AND = andConditions;
     }
 
     // Info: (20260310 - Julian) 取得日記帳列表

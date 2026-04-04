@@ -1,5 +1,6 @@
 export const zhTw = {
   common: {
+    actions: "操作",
     note: "備註",
     optional_in_parentheses: "選填",
     no_data: "無資料",
@@ -15,6 +16,11 @@ export const zhTw = {
     notification: "系統提示",
     ok: "確認",
     close: "關閉",
+    restore: "復原",
+    restore_confirm_desc: "這將會把資料從垃圾桶還原",
+    delete: "刪除",
+    delete_confirm_desc: "這將會把資料移至垃圾桶",
+    status_deleted: "已刪除",
     coming_soon_message: "即將推出",
     all: "全部",
     agree: "同意",
