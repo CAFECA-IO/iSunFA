@@ -3,7 +3,7 @@ import { webAuthnService } from '@/services/webauthn.service';
 import { jsonOk, jsonFail } from '@/lib/utils/response';
 import { ApiCode } from '@/lib/utils/status';
 import { AppError } from '@/lib/utils/error';
-import { createTeamForUsersWithoutTeam } from '@/services/team.services';
+import { createTeamForUsersWithoutTeam } from '@/services/team.service';
 import { createAccountBookForTeamsWithoutOne } from '@/services/account_book.service';
 
 export async function POST(request: NextRequest) {
