@@ -158,7 +158,7 @@ export default function JournalScanView({
   const initCamera = async (isMounted: { current: boolean }) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1920 } },
+        video: { facingMode: "environment", width: { ideal: 4096 }, height: { ideal: 2160 } },
         audio: false,
       });
 
