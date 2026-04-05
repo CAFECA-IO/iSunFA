@@ -158,7 +158,13 @@ export default function JournalScanView({
   const initCamera = async (isMounted: { current: boolean }) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 4096 }, height: { ideal: 2160 } },
+        video: { 
+          facingMode: "environment", 
+          width: { ideal: 3840 },
+          height: { ideal: 2160 },
+          // @ts-expect-error: Non-standard / Experimental property for image stabilization where supported
+          advanced: [{ imageStabilization: true }]
+        },
         audio: false,
       });
 
@@ -429,8 +435,8 @@ export default function JournalScanView({
         let isStabilizing = false;
         const areaDiff = Math.abs(prev.lastArea - maxArea) / maxArea;
 
-        // Info: (20260404 - Luphia) Increased areaDiff tolerance to 0.20 for unsteady hands
-        if (areaDiff < 0.20 && prev.lastPoints.length === 4) {
+        // Info: (20260405 - Luphia) Relax areaDiff and displacement tolerance for high-resolution input
+        if (areaDiff < 0.25 && prev.lastPoints.length === 4) {
           // Info: (20260402 - Luphia) Calculate displacement of corners
           let totalDisp = 0;
           for (let i = 0; i < 4; i++) {
@@ -438,8 +444,7 @@ export default function JournalScanView({
             const p2 = points[i];
             totalDisp += Math.hypot(p1.x - p2.x, p1.y - p2.y);
           }
-          // Info: (20260404 - Luphia) Increased displacement tolerance to 400px to handle shaky hands
-          if (totalDisp < 400) {
+          if (totalDisp < 800) {
             isStabilizing = true;
           }
         }
