@@ -127,28 +127,28 @@ export async function POST(
 
     // Info: (20260318 - Julian) 新增 AuditLog
     await auditLogRepo.createManyAuditLogs([
-        {
-          userId: creator.id,
-          dataType: "JOURNAL",
-          dataId: newJournal.id,
-          accountBookId: accountBook.id,
-          action: "CREATE",
-        },
-        {
-          userId: creator.id,
-          dataType: "VOUCHER",
-          dataId: newVoucher.id,
-          accountBookId: accountBook.id,
-          action: "CREATE",
-        },
-        {
-          userId: creator.id,
-          dataType: "ESG_RECORD",
-          dataId: newRecord.id,
-          accountBookId: accountBook.id,
-          action: "CREATE",
-        },
-      ]);
+      {
+        userId: creator.id,
+        dataType: "JOURNAL",
+        dataId: newJournal.id,
+        accountBookId: accountBook.id,
+        action: "CREATE",
+      },
+      {
+        userId: creator.id,
+        dataType: "VOUCHER",
+        dataId: newVoucher.id,
+        accountBookId: accountBook.id,
+        action: "CREATE",
+      },
+      {
+        userId: creator.id,
+        dataType: "ESG_RECORD",
+        dataId: newRecord.id,
+        accountBookId: accountBook.id,
+        action: "CREATE",
+      },
+    ]);
 
     // Info: (20260320 - Julian) 觸發 Mission Generator 寫入任務
     const missionDef = missionGenerator.generateMission({
@@ -160,6 +160,7 @@ export async function POST(
       fileBase64: file.base64,
       fileMimeType: file.file.type,
       accountBookId: accountBook.id,
+      prerequisiteData: { accountBook },
     });
 
     if (missionDef) {

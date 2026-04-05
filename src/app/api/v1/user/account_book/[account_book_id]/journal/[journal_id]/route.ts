@@ -219,7 +219,7 @@ export async function DELETE(
     // Info: (20260404 - Luphia) 將 Journal 標記刪除
     const deletedJournal = await prisma.journal.update({
       where: { id: journalId },
-      data: { deletedAt: new Date() }
+      data: { deletedAt: new Date() },
     });
 
     // Info: (20260404 - Luphia) 同步刪除關聯 Voucher 和 EsgRecord
@@ -229,7 +229,7 @@ export async function DELETE(
           fileId: existingJournal.fileId,
           accountBookId: accountBookId,
         },
-        data: { deletedAt: new Date() }
+        data: { deletedAt: new Date() },
       });
 
       await prisma.esgRecord.updateMany({
@@ -237,7 +237,7 @@ export async function DELETE(
           fileId: existingJournal.fileId,
           accountBookId: accountBookId,
         },
-        data: { deletedAt: new Date() }
+        data: { deletedAt: new Date() },
       });
     }
 

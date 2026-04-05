@@ -1,15 +1,17 @@
-import { createWalletClient, http, createPublicClient } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
-import { userOperationSchema } from '@/validators';
-import { ABIS } from '@/config/contracts';
+import { createWalletClient, http, createPublicClient } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { userOperationSchema } from "@/validators";
+import { ABIS } from "@/config/contracts";
 
-const RELAYER_PRIVATE_KEY = process.env.ISUNCOIN_PRIVATE_KEY as `0x${string}` | undefined;
+const RELAYER_PRIVATE_KEY = process.env.ISUNCOIN_PRIVATE_KEY as
+  | `0x${string}`
+  | undefined;
 const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL;
 
 export class BundlerService {
   public async sendUserOp(userOpJson: unknown, entryPointAddress: string) {
     if (!RELAYER_PRIVATE_KEY || !rpcUrl) {
-      throw new Error('Server configuration error: Missing env variables');
+      throw new Error("Server configuration error: Missing env variables");
     }
 
     const userOp = userOperationSchema.parse(userOpJson);
@@ -55,7 +57,7 @@ export class BundlerService {
       account: relayerAccount,
       address: entryPointAddress as `0x${string}`,
       abi: ABIS.ENTRY_POINT,
-      functionName: 'handleOps',
+      functionName: "handleOps",
       args: [ops, beneficiary],
       chain: publicClient.chain,
     });
@@ -64,7 +66,9 @@ export class BundlerService {
     const txHash = await relayerClient.writeContract(request);
 
     // Info: (20251204 - Tzuhan) 等待交易被打包並回傳結果
-    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash: txHash,
+    });
 
     return {
       transactionHash: receipt.transactionHash,

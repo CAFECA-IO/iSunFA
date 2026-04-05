@@ -1,6 +1,6 @@
-import { promises as fs, createReadStream, type ReadStream, Stats } from 'fs';
-import type { FileHandle } from 'fs/promises';
-import path from 'path';
+import { promises as fs, createReadStream, type ReadStream, Stats } from "fs";
+import type { FileHandle } from "fs/promises";
+import path from "path";
 // ToDo: (20251028 - Luphia) 尋找或建立更好的 Reed-Solomon Erasure Code 實作庫
 // import { ReedSolomonErasure } from '@/lib/reed_solomon_erasure';
 class ReedSolomonErasure {
@@ -14,7 +14,11 @@ class ReedSolomonErasure {
 
   async encode(shards: Buffer[]): Promise<void> {
     // Info: (20251028 - Luphia) 模擬編碼過程 (實際應用中應使用真實的 Reed-Solomon 編碼)
-    for (let i = this.dataShards; i < this.dataShards + this.parityShards; i++) {
+    for (
+      let i = this.dataShards;
+      i < this.dataShards + this.parityShards;
+      i++
+    ) {
       shards[i] = Buffer.alloc(shards[0].length, 0); // 簡單填充為零
     }
   }
@@ -50,12 +54,14 @@ async function validateFileExists(filePath: string): Promise<Stats | null> {
   try {
     const stats: Stats = await fs.stat(filePath);
     if (!stats.isFile() || stats.size === 0) {
-      console.error('[錯誤] 檔案不存在或是空的。');
+      console.error("[錯誤] 檔案不存在或是空的。");
       return null;
     }
     return stats;
   } catch (err: unknown) {
-    console.error(`[錯誤] 無法存取檔案: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(
+      `[錯誤] 無法存取檔案: ${err instanceof Error ? err.message : String(err)}`,
+    );
     return null;
   }
 }
@@ -66,7 +72,10 @@ async function validateFileExists(filePath: string): Promise<Stats | null> {
  * @param filePath - 來源檔案路徑
  * @param outputDir - 切片存放目錄
  */
-export async function encodeFile(filePath: string, outputDir: string): Promise<void> {
+export async function encodeFile(
+  filePath: string,
+  outputDir: string,
+): Promise<void> {
   console.log(`[編碼] (8, 5) 開始處理檔案: ${filePath}`);
 
   const stats: Stats | null = await validateFileExists(filePath);
@@ -79,20 +88,22 @@ export async function encodeFile(filePath: string, outputDir: string): Promise<v
     // Info: (20251028 - Luphia) 建立輸出目錄並儲存 metadata
     await fs.mkdir(outputDir, { recursive: true });
     await fs.writeFile(
-      path.join(outputDir, 'metadata.json'),
-      JSON.stringify({ originalFileSize })
+      path.join(outputDir, "metadata.json"),
+      JSON.stringify({ originalFileSize }),
     );
 
     // Info: (20251028 - Luphia) 建立 8 個檔案寫入句柄
     const writerHandles: FileHandle[] = await Promise.all(
       Array.from({ length: TOTAL_SHARDS }, (_, i) => {
         const shardPath = path.join(outputDir, `shard-${i + 1}.bin`);
-        return fs.open(shardPath, 'w');
-      })
+        return fs.open(shardPath, "w");
+      }),
     );
 
     // Info: (20251028 - Luphia) 建立檔案讀取串流 (20MB)
-    const readStream: ReadStream = createReadStream(filePath, { highWaterMark: DATA_STRIPE_SIZE });
+    const readStream: ReadStream = createReadStream(filePath, {
+      highWaterMark: DATA_STRIPE_SIZE,
+    });
 
     // Info: (20251028 - Luphia) 逐塊處理檔案
     for await (const chunk of readStream) {
@@ -103,7 +114,9 @@ export async function encodeFile(filePath: string, outputDir: string): Promise<v
         const paddedStripe = Buffer.alloc(DATA_STRIPE_SIZE);
         dataStripe.copy(paddedStripe, 0);
         dataStripe = paddedStripe;
-        console.log(`[編碼] 偵測到檔案結尾，填充 ${DATA_STRIPE_SIZE - chunk.length} bytes。`);
+        console.log(
+          `[編碼] 偵測到檔案結尾，填充 ${DATA_STRIPE_SIZE - chunk.length} bytes。`,
+        );
       }
 
       // Info: (20251028 - Luphia) 準備 shards 陣列 (k=5 個資料 + m=3 個空緩衝區)
@@ -120,16 +133,19 @@ export async function encodeFile(filePath: string, outputDir: string): Promise<v
 
       // Info: (20251028 - Luphia) 將 8 個 4MB 切片寫入各自的檔案
       await Promise.all(
-        shards.map((shard, i) => writerHandles[i].write(shard, 0, shard.length))
+        shards.map((shard, i) =>
+          writerHandles[i].write(shard, 0, shard.length),
+        ),
       );
     }
 
     // Info: (20251028 - Luphia) 關閉所有檔案
-    await Promise.all(writerHandles.map(handle => handle.close()));
+    await Promise.all(writerHandles.map((handle) => handle.close()));
     console.log(`[編碼] ${TOTAL_SHARDS} 個切片已成功寫入 ${outputDir}`);
-
   } catch (err: unknown) {
-    console.error(`[編碼] 處理失敗: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(
+      `[編碼] 處理失敗: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
 }
 
@@ -139,29 +155,37 @@ export async function encodeFile(filePath: string, outputDir: string): Promise<v
  * @param shardsDir - 切片存放目錄
  * @param outputFilePath - 恢復後的檔案存放路徑
  */
-export async function recoverFile(shardsDir: string, outputFilePath: string): Promise<void> {
+export async function recoverFile(
+  shardsDir: string,
+  outputFilePath: string,
+): Promise<void> {
   console.log(`[恢復] (8, 5) 開始從 ${shardsDir} 嘗試恢復檔案...`);
 
   let originalFileSize: number;
   try {
     // Info: (20251028 - Luphia) 讀取元資料
-    const metaPath = path.join(shardsDir, 'metadata.json');
+    const metaPath = path.join(shardsDir, "metadata.json");
     const metaBuffer: Buffer = await fs.readFile(metaPath);
 
     // Info: (20251028 - Luphia) 型別安全的解析
-    const metaData: { originalFileSize?: number } = JSON.parse(metaBuffer.toString());
-    if (typeof metaData.originalFileSize !== 'number') {
-      throw new Error('metadata 格式錯誤，缺少 originalFileSize');
+    const metaData: { originalFileSize?: number } = JSON.parse(
+      metaBuffer.toString(),
+    );
+    if (typeof metaData.originalFileSize !== "number") {
+      throw new Error("metadata 格式錯誤，缺少 originalFileSize");
     }
     originalFileSize = metaData.originalFileSize;
     console.log(`[恢復] 目標檔案大小: ${originalFileSize} bytes`);
-
   } catch (err: unknown) {
-    console.error(`[錯誤] 讀取 metadata 失敗，檔案無法恢復: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(
+      `[錯誤] 讀取 metadata 失敗，檔案無法恢復: ${err instanceof Error ? err.message : String(err)}`,
+    );
     return;
   }
 
-  const readerHandles: (FileHandle | null)[] = new Array(TOTAL_SHARDS).fill(null);
+  const readerHandles: (FileHandle | null)[] = new Array(TOTAL_SHARDS).fill(
+    null,
+  );
   let foundShards: number = 0;
   let outputHandle: FileHandle | undefined;
 
@@ -170,10 +194,12 @@ export async function recoverFile(shardsDir: string, outputFilePath: string): Pr
     for (let i = 0; i < TOTAL_SHARDS; i++) {
       const shardPath = path.join(shardsDir, `shard-${i + 1}.bin`);
       try {
-        readerHandles[i] = await fs.open(shardPath, 'r');
+        readerHandles[i] = await fs.open(shardPath, "r");
         foundShards++;
       } catch (err: unknown) {
-        console.warn(`[恢復] 偵測到切片 ${i + 1} 遺失: ${err instanceof Error ? err.message : String(err)}`);
+        console.warn(
+          `[恢復] 偵測到切片 ${i + 1} 遺失: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
     }
 
@@ -181,11 +207,13 @@ export async function recoverFile(shardsDir: string, outputFilePath: string): Pr
 
     // Info: (20251028 - Luphia) 檢查是否滿足恢復條件 (k=5)
     if (foundShards < DATA_SHARDS) {
-      throw new Error(`恢復失敗。需要 ${DATA_SHARDS} (5) 個切片，但只找到 ${foundShards} 個。`);
+      throw new Error(
+        `恢復失敗。需要 ${DATA_SHARDS} (5) 個切片，但只找到 ${foundShards} 個。`,
+      );
     }
 
     // Info: (20251028 - Luphia) 開啟輸出檔案存取器
-    outputHandle = await fs.open(outputFilePath, 'w');
+    outputHandle = await fs.open(outputFilePath, "w");
 
     // Info: (20251028 - Luphia) 逐個 "Stripe" 讀取、恢復、寫入
     while (true) {
@@ -220,7 +248,7 @@ export async function recoverFile(shardsDir: string, outputFilePath: string): Pr
       }
 
       if (totalBytesReadThisStripe === 0) {
-        console.log('[恢復] 已到達所有切片檔案結尾。');
+        console.log("[恢復] 已到達所有切片檔案結尾。");
         break; // Info: (20251028 - Luphia) 完成檔案，結束迴圈
       }
 
@@ -250,12 +278,13 @@ export async function recoverFile(shardsDir: string, outputFilePath: string): Pr
     // Info: (20251028 - Luphia) 裁剪檔案至原始大小
     await outputHandle.truncate(originalFileSize);
     console.log(`[恢復] 檔案已成功恢復。 總大小: ${originalFileSize} bytes`);
-
   } catch (err: unknown) {
-    console.error(`[恢復] 處理失敗: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(
+      `[恢復] 處理失敗: ${err instanceof Error ? err.message : String(err)}`,
+    );
   } finally {
     // Info: (20251028 - Luphia) 關閉所有檔案句柄
     if (outputHandle) await outputHandle.close();
-    await Promise.all(readerHandles.map(handle => handle && handle.close()));
+    await Promise.all(readerHandles.map((handle) => handle && handle.close()));
   }
 }

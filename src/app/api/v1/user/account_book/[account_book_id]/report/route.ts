@@ -12,6 +12,8 @@ import { generateIncomeStatement } from "@/lib/report/income_statement_generator
 import { getAccountByCode } from "@/lib/utils/account";
 import { IVoucherLineUI } from "@/interfaces/voucher";
 import { IAccount } from "@/constants/accounts";
+import { generateEsgReport } from "@/lib/report/esg_report_generator";
+import { esgRepo } from "@/repositories/esg.repo";
 
 /**
  * Info: (20260330 - Julian) 取得財務報表
@@ -43,15 +45,16 @@ export async function GET(
     const searchParams = request.nextUrl.searchParams;
     const reportType = searchParams.get("reportType") as ReportType;
     const period = searchParams.get("period") as ReportPeriod;
+    const yearParam = searchParams.get("year");
 
     // Info: (20260331 - Julian) 取得期間 Date
     const getTradingDateRange: () => { start: Date; end: Date } = () => {
       const thisYear = new Date().getFullYear();
-      const lastYear = thisYear - 1;
+      const selectedYear = yearParam ? parseInt(yearParam, 10) : thisYear;
 
       const allYearRange = {
-        start: new Date(`${lastYear}-01-01 00:00:00`),
-        end: new Date(`${lastYear}-12-31 23:59:59`),
+        start: new Date(`${selectedYear}-01-01 00:00:00`),
+        end: new Date(`${selectedYear}-12-31 23:59:59`),
       };
 
       switch (period) {
@@ -59,28 +62,47 @@ export async function GET(
           return allYearRange;
         case ReportPeriod.Q1:
           return {
-            start: new Date(`${lastYear}-01-01 00:00:00`),
-            end: new Date(`${lastYear}-03-31 23:59:59`),
+            start: new Date(`${selectedYear}-01-01 00:00:00`),
+            end: new Date(`${selectedYear}-03-31 23:59:59`),
           };
         case ReportPeriod.Q2:
           return {
-            start: new Date(`${lastYear}-04-01 00:00:00`),
-            end: new Date(`${lastYear}-06-30 23:59:59`),
+            start: new Date(`${selectedYear}-04-01 00:00:00`),
+            end: new Date(`${selectedYear}-06-30 23:59:59`),
           };
         case ReportPeriod.Q3:
           return {
-            start: new Date(`${lastYear}-07-01 00:00:00`),
-            end: new Date(`${lastYear}-09-30 23:59:59`),
+            start: new Date(`${selectedYear}-07-01 00:00:00`),
+            end: new Date(`${selectedYear}-09-30 23:59:59`),
           };
         case ReportPeriod.Q4:
           return {
-            start: new Date(`${lastYear}-10-01 00:00:00`),
-            end: new Date(`${lastYear}-12-31 23:59:59`),
+            start: new Date(`${selectedYear}-10-01 00:00:00`),
+            end: new Date(`${selectedYear}-12-31 23:59:59`),
           };
         default:
           return allYearRange;
       }
     };
+
+    if (reportType === ReportType.ESG_REPORT) {
+      // Info: (20260406 - Luphia) 產出碳盤查報表
+      const range = getTradingDateRange();
+      const startTs = Math.floor(range.start.getTime() / 1000);
+      const endTs = Math.floor(range.end.getTime() / 1000);
+
+      const esgRecords = await esgRepo.getEsgRecords({
+        where: {
+          accountBookId,
+          dateTimestamp: { gte: startTs, lte: endTs },
+          isVerified: true,
+          deletedAt: null,
+        },
+      });
+
+      const report = generateEsgReport(esgRecords);
+      return jsonOk({ report });
+    }
 
     // Info: (20260331 - Julian) 建立傳票查詢條件
     const where: Prisma.VoucherWhereInput = {

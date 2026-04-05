@@ -12,7 +12,7 @@ import { TEAM_INVITATION_STATUS } from "@/constants/status";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string }> }
+  { params }: { params: Promise<{ teamId: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -27,7 +27,10 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Check permission (OWNER or ADMIN)
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
-      return jsonFail(ApiCode.FORBIDDEN, "Permission denied. Only OWNER or ADMIN can invite members.");
+      return jsonFail(
+        ApiCode.FORBIDDEN,
+        "Permission denied. Only OWNER or ADMIN can invite members.",
+      );
     }
 
     const body = await request.json();
@@ -44,31 +47,53 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Fetch operator's current challenge
     const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Missing WebAuthn challenge. Please retry.");
+      return jsonFail(
+        ApiCode.UNAUTHORIZED,
+        "Missing WebAuthn challenge. Please retry.",
+      );
     }
 
     // Info: (20260325 - Tzuhan) Verify FIDO2 signature
-    await webAuthnService.verifySignature(sessionUser.address, authentication, operatorUser.currentChallenge);
+    await webAuthnService.verifySignature(
+      sessionUser.address,
+      authentication,
+      operatorUser.currentChallenge,
+    );
 
     // Info: (20260325 - Tzuhan) Clear challenge to prevent replay
     await webAuthnRepo.clearChallenge(sessionUser.id);
 
-    const assignedRole = ["OWNER", "ADMIN", "EDITOR", "VIEWER"].includes(role) ? role : "VIEWER";
+    const assignedRole = ["OWNER", "ADMIN", "EDITOR", "VIEWER"].includes(role)
+      ? role
+      : "VIEWER";
 
     // Info: (20260325 - Tzuhan) Validate if the address is already a member
     const targetUser = await webAuthnRepo.findUserByAddress(address);
     if (targetUser) {
-      const existingMember = await teamRepo.getTeamMember(targetUser.id, teamId);
+      const existingMember = await teamRepo.getTeamMember(
+        targetUser.id,
+        teamId,
+      );
       if (existingMember) {
-        return jsonFail(ApiCode.VALIDATION_ERROR, "User is already a member of this team");
+        return jsonFail(
+          ApiCode.VALIDATION_ERROR,
+          "User is already a member of this team",
+        );
       }
     }
 
     // Info: (20260325 - Tzuhan) Validate if an invitation already exists and is pending
-    const existingInvite = await teamRepo.getTeamInvitation(teamId, address, TEAM_INVITATION_STATUS.PENDING);
+    const existingInvite = await teamRepo.getTeamInvitation(
+      teamId,
+      address,
+      TEAM_INVITATION_STATUS.PENDING,
+    );
 
     if (existingInvite) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "An invitation is already pending for this address");
+      return jsonFail(
+        ApiCode.VALIDATION_ERROR,
+        "An invitation is already pending for this address",
+      );
     }
 
     // Info: (20260325 - Tzuhan) Fetch team needed for the contract message
@@ -93,13 +118,19 @@ export async function POST(
       maxFeePerGas: BigInt(0),
       maxPriorityFeePerGas: BigInt(0),
       paymasterAndData: "0x",
-      signature: "0x"
+      signature: "0x",
     };
 
     try {
-      await bundlerService.sendUserOp(dummyUserOp, CONTRACT_ADDRESSES.ENTRY_POINT);
+      await bundlerService.sendUserOp(
+        dummyUserOp,
+        CONTRACT_ADDRESSES.ENTRY_POINT,
+      );
     } catch (e) {
-      console.info("[Simulated On-Chain] 'Send Invite' UserOp submission failed as expected for dummy UserOp:", e);
+      console.info(
+        "[Simulated On-Chain] 'Send Invite' UserOp submission failed as expected for dummy UserOp:",
+        e,
+      );
     }
 
     // Info: (20260325 - Tzuhan) Create the TeamInvitation
@@ -108,7 +139,7 @@ export async function POST(
       inviterId: sessionUser.id,
       inviteeAddress: address,
       role: assignedRole,
-      status: TEAM_INVITATION_STATUS.PENDING
+      status: TEAM_INVITATION_STATUS.PENDING,
     });
 
     return jsonOk(newInvitation);
@@ -120,7 +151,7 @@ export async function POST(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string }> }
+  { params }: { params: Promise<{ teamId: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -136,7 +167,10 @@ export async function GET(
       return jsonFail(ApiCode.FORBIDDEN, "Permission denied.");
     }
 
-    const invitations = await teamRepo.listTeamInvitations(teamId, TEAM_INVITATION_STATUS.PENDING);
+    const invitations = await teamRepo.listTeamInvitations(
+      teamId,
+      TEAM_INVITATION_STATUS.PENDING,
+    );
 
     return jsonOk(invitations);
   } catch (error) {

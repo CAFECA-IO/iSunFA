@@ -1,15 +1,18 @@
-import { z } from 'zod';
-import { apiResponseSchema } from '@/validators/common';
+import { z } from "zod";
+import { apiResponseSchema } from "@/validators/common";
 
 // Info: (20251118 - Tzuhan) Zod helper to validate 0x-prefixed hex strings
 const hexStringSchema = z.string().regex(/^0x[0-9a-fA-F]*$/, {
-  message: 'Not a valid 0x-prefixed hex string',
+  message: "Not a valid 0x-prefixed hex string",
 });
 
 // Info: (20251118 - Tzuhan) 1. Zod schema for the JSON transport layer (API 傳輸用)
 // Info: (20251118 - Tzuhan) 這裡所有的 BigInt 都被表示為 0x-prefixed hex strings
 export const userOperationJsonSchema = z.object({
-  sender: hexStringSchema.regex(/^0x[0-9a-fA-F]{40}$/, 'Invalid sender address'),
+  sender: hexStringSchema.regex(
+    /^0x[0-9a-fA-F]{40}$/,
+    "Invalid sender address",
+  ),
   nonce: hexStringSchema,
   initCode: hexStringSchema,
   callData: hexStringSchema,
@@ -34,7 +37,7 @@ const hexToBigInt = z.string().transform((val, ctx) => {
   } catch {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'Invalid hex string, cannot convert to BigInt',
+      message: "Invalid hex string, cannot convert to BigInt",
     });
     return z.NEVER;
   }
@@ -61,5 +64,7 @@ export const bundlerResponsePayloadSchema = z.object({
   message: z.string().optional(),
 });
 
-export const bundlerResponseSchema = apiResponseSchema(bundlerResponsePayloadSchema);
+export const bundlerResponseSchema = apiResponseSchema(
+  bundlerResponsePayloadSchema,
+);
 export type BundlerResponse = z.infer<typeof bundlerResponseSchema>;

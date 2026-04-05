@@ -88,11 +88,7 @@ const CashFlowSection = ({
   );
 };
 
-export default function CashFlowSheetView({
-  period,
-}: {
-  period: ReportPeriod;
-}) {
+export default function CashFlowSheetView({ period, year }: { period: ReportPeriod; year: number }) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
 
@@ -107,7 +103,7 @@ export default function CashFlowSheetView({
           const res = await request<
             IApiResponse<{ report: ICashFlowStatement }>
           >(
-            `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.CASH_FLOW}&period=${period}`,
+            `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.CASH_FLOW}&period=${period}&year=${year}`,
           );
           if (res.payload) {
             setReportData(res.payload.report);
@@ -122,7 +118,7 @@ export default function CashFlowSheetView({
     } else {
       setIsLoading(false);
     }
-  }, [accountBookId, period]);
+  }, [accountBookId, period, year]);
 
   if (isLoading) {
     return (

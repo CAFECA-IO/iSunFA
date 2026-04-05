@@ -10,7 +10,10 @@ export async function POST(request: Request) {
   const STORAGE_DOMAIN = process.env.STORAGE_DOMAIN;
 
   if (!STORAGE_DOMAIN) {
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "STORAGE_DOMAIN is not defined");
+    return jsonFail(
+      ApiCode.INTERNAL_SERVER_ERROR,
+      "STORAGE_DOMAIN is not defined",
+    );
   }
 
   try {
@@ -27,8 +30,13 @@ export async function POST(request: Request) {
 
     // Info: (20260226 - Julian) 僅保留必要的 headers 轉發，避免干擾 fetch 的 Content-Type 處理
     const newHeaders = new Headers();
-    const headersToForward = ['authorization', 'cookie', 'user-agent', 'accept'];
-    headersToForward.forEach(h => {
+    const headersToForward = [
+      "authorization",
+      "cookie",
+      "user-agent",
+      "accept",
+    ];
+    headersToForward.forEach((h) => {
       const val = request.headers.get(h);
       if (val) newHeaders.set(h, val);
     });
@@ -50,7 +58,12 @@ export async function POST(request: Request) {
         data = JSON.parse(responseBody);
 
         // Info: (20260318 - Julian) 如果回傳格式是 IApiResponse，則直接回傳 payload，避免雙重包裝
-        if (data && typeof data === 'object' && 'success' in data && 'payload' in data) {
+        if (
+          data &&
+          typeof data === "object" &&
+          "success" in data &&
+          "payload" in data
+        ) {
           return jsonOk(data.payload, data.message);
         }
       } catch (e) {
@@ -70,11 +83,14 @@ export async function POST(request: Request) {
       } catch (e) {
         console.error(`[API] Proxy /file POST error:`, e);
       }
-      
+
       return jsonFail(code, errorMessage, { status: response.status });
     }
   } catch (error) {
     console.error(`[API] Proxy /file/ POST error:`, error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, `Internal Server Error: ${error instanceof Error ? error.message : String(error)}`);
+    return jsonFail(
+      ApiCode.INTERNAL_SERVER_ERROR,
+      `Internal Server Error: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }

@@ -10,10 +10,5 @@
     "experimentalDecorators": true,
     "strict": false
   },
-  "include": [
-    "hardhat.config.ts",
-    "scripts",
-    "test",
-    "ignition"
-  ]
+  "include": ["hardhat.config.ts", "scripts", "test", "ignition"]
 }

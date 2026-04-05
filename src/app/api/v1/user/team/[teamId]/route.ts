@@ -7,7 +7,7 @@ import { teamRepo } from "@/repositories/team.repo";
 // Info: (20260325 - Tzuhan) Rename a team
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string }> }
+  { params }: { params: Promise<{ teamId: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -27,7 +27,10 @@ export async function PATCH(
 
     const member = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
-      return jsonFail(ApiCode.FORBIDDEN, "Permission denied. Only OWNER or ADMIN can edit the team name.");
+      return jsonFail(
+        ApiCode.FORBIDDEN,
+        "Permission denied. Only OWNER or ADMIN can edit the team name.",
+      );
     }
 
     const updatedTeam = await teamRepo.updateTeam(teamId, { name });

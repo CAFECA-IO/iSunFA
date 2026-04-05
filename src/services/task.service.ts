@@ -4,6 +4,7 @@ import { TASK_STATUS } from "@/constants/status";
 import { missionService } from "@/services/mission.service";
 import { Task, Mission } from "@/generated/client";
 import { accountBookRepo } from "@/repositories/account_book.repo";
+import { voucherRepo } from "@/repositories/voucher.repo";
 
 interface ITaskData {
   key: string;
@@ -85,7 +86,8 @@ export class TaskService {
       if (
         task.type === "JOURNAL_PARSING" ||
         task.type === "VOUCHER_PARSING" ||
-        task.type === "ESG_PARSING"
+        task.type === "ESG_PARSING" ||
+        task.type === "DOCUMENT_PRE_CHECK"
       ) {
         const taskData = task.data as unknown as ITaskData;
         let parsedContext: {
@@ -108,29 +110,75 @@ export class TaskService {
           );
         }
 
-        let images: { data: string, mimeType: string }[] = [];
+        let images: { data: string; mimeType: string }[] = [];
         if (parsedContext.fileBase64 && parsedContext.fileMimeType) {
-          images = [{ data: parsedContext.fileBase64, mimeType: parsedContext.fileMimeType }];
+          images = [
+            {
+              data: parsedContext.fileBase64,
+              mimeType: parsedContext.fileMimeType,
+            },
+          ];
         } else {
           // Info: (20260320 - Julian) 中止對於舊任務（沒有 Base64）的執行，避免觸發 400 Bad Request
-          throw new Error("No fileBase64 or fileMimeType provided for document parsing task. This might be an outdated task format.");
+          throw new Error(
+            "No fileBase64 or fileMimeType provided for document parsing task. This might be an outdated task format.",
+          );
         }
 
         // Info: (20260326 - Julian) 取得帳本資訊
-        const accountBook = parsedContext.accountBookId 
-          ? await accountBookRepo.getAccountBookById(parsedContext.accountBookId) 
+        const accountBook = parsedContext.accountBookId
+          ? await accountBookRepo.getAccountBookById(
+              parsedContext.accountBookId,
+            )
           : null;
 
         if (task.type === "JOURNAL_PARSING") {
           const res = await chatService.analyzeJournal(images, accountBook);
           result = res.text;
-        }
-        else if (task.type === "VOUCHER_PARSING") {
+        } else if (task.type === "VOUCHER_PARSING") {
           const res = await chatService.analyzeVoucher(images, accountBook);
           result = JSON.stringify(res);
         } else if (task.type === "ESG_PARSING") {
           const res = await chatService.analyzeESG(images, accountBook);
           result = JSON.stringify(res);
+        } else if (task.type === "DOCUMENT_PRE_CHECK") {
+          const res = await chatService.analyzeDocumentPreCheck(images);
+          result = JSON.stringify(res);
+
+          // Info: (20260406 - Luphia) Check duplication with backend database
+          if (res.data && parsedContext.accountBookId) {
+            const dupResult = await voucherRepo.checkDocumentDuplication(
+              parsedContext.accountBookId,
+              res.data,
+            );
+            if (dupResult.isDuplicate) {
+              const msg = `憑證已入錄，停止後續分析。 (與${dupResult.duplicateType === "VOUCHER" ? "傳票" : "日記帳"} ID: ${dupResult.duplicateId} 重複)`;
+              
+              // Info: (20260406 - Luphia) 即使重複而停止後續分析，仍要將截取到的交易日期寫回原本建立的紀錄中
+              if (parsedContext.fileId && res.data.tradingDate) {
+                const tradingDateObj = new Date(res.data.tradingDate);
+                if (!isNaN(tradingDateObj.getTime())) {
+                  try {
+                    const { prisma } = await import("@/lib/prisma");
+
+                    const v = await prisma.voucher.findFirst({ where: { fileId: parsedContext.fileId } });
+                    if (v) await prisma.voucher.update({ where: { id: v.id }, data: { tradingDate: tradingDateObj } });
+
+                    const j = await prisma.journal.findFirst({ where: { fileId: parsedContext.fileId } });
+                    if (j) await prisma.journal.update({ where: { id: j.id }, data: { tradingDate: tradingDateObj } });
+
+                    const e = await prisma.esgRecord.findFirst({ where: { fileId: parsedContext.fileId } });
+                    if (e) await prisma.esgRecord.update({ where: { id: e.id }, data: { dateTimestamp: Math.floor(tradingDateObj.getTime() / 1000) } });
+                  } catch (updateErr) {
+                    console.error("[TaskService] Failed to update trading date for duplicate document:", updateErr);
+                  }
+                }
+              }
+
+              await taskRepo.cancelPendingTasks(mission.id, msg);
+              throw new Error(msg);
+            }
+          }
         }
       } else if (task.type === "MARKET_EVENT_COLLECTION") {
         const taskData = task.data as unknown as ITaskData;

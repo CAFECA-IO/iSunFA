@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma';
-import { Prisma } from '@/generated/client';
+import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/client";
 
 export class FileRepository {
   async getFileById(id: string) {

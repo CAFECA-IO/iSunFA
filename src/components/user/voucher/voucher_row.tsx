@@ -170,6 +170,10 @@ export function VoucherRow({
 
   // Info: (20260320 - Julian) 分析出錯
   if (voucher.analysisStatus === AIAnalysisStatus.FAILED) {
+    const failedMessage = voucher.aiNote && voucher.aiNote !== "無 AI 分析備註" 
+      ? voucher.aiNote 
+      : (t("voucher.main_view.table.ai.failed") as string);
+
     return (
       <tr
         onClick={!voucher.isDeleted ? onClick : undefined}
@@ -195,8 +199,8 @@ export function VoucherRow({
           {voucher.isDeleted ? (
             <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
           ) : (
-            <p className="font-bold text-red-500">
-              {t("voucher.main_view.table.ai.failed")}
+            <p className="font-bold text-red-500 truncate" title={failedMessage}>
+              {failedMessage}
             </p>
           )}
         </td>

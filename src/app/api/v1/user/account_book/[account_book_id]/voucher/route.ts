@@ -161,7 +161,8 @@ export async function GET(
 
     // Info: (20260324 - Julian) 建立審核狀態篩選
     if (verifyStatus) {
-      filteredConditions.where!.isVerified = verifyStatus === VerifyStatus.VERIFIED;
+      filteredConditions.where!.isVerified =
+        verifyStatus === VerifyStatus.VERIFIED;
     }
 
     // Info: (20260310 - Julian) 建立時間區間篩選
@@ -203,15 +204,14 @@ export async function GET(
       // Info: (20260404 - Luphia) 預設列表顯示：未刪除、或是被軟刪除但距今小於 7 天內的傳票
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
       const whereInput = filteredConditions.where as Prisma.VoucherWhereInput;
-      const andConditions = Array.isArray(whereInput.AND) 
-        ? whereInput.AND 
-        : (whereInput.AND ? [whereInput.AND] : []);
-        
+      const andConditions = Array.isArray(whereInput.AND)
+        ? whereInput.AND
+        : whereInput.AND
+          ? [whereInput.AND]
+          : [];
+
       andConditions.push({
-        OR: [
-          { deletedAt: null },
-          { deletedAt: { gte: sevenDaysAgo } }
-        ]
+        OR: [{ deletedAt: null }, { deletedAt: { gte: sevenDaysAgo } }],
       });
       whereInput.AND = andConditions;
     }
@@ -250,10 +250,10 @@ export async function GET(
         fileId: v.fileId ?? "",
         file: v.file
           ? {
-            id: v.file.id,
-            hash: v.file.hash,
-            fileName: v.file.fileName || "Unknown",
-          }
+              id: v.file.id,
+              hash: v.file.hash,
+              fileName: v.file.fileName || "Unknown",
+            }
           : undefined,
         lineItems: {
           lines: voucherLineItems,
@@ -302,7 +302,9 @@ export async function GET(
     }
 
     // Info: (20260324 - Julian) 總筆數
-    const totalCount = await voucherRepo.countVouchers(filteredConditions.where || {});
+    const totalCount = await voucherRepo.countVouchers(
+      filteredConditions.where || {},
+    );
 
     return jsonOk({ data: formattedVouchers, total: totalCount });
   } catch (error) {

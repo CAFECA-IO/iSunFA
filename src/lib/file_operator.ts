@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 export interface IUploadCallbacks {
   onProgress?: (percentage: number) => void;
@@ -30,17 +30,24 @@ class ReedSolomonErasure {
 
   async encode(shards: Uint8Array[]): Promise<void> {
     // Info: (20251028 - Luphia) Mock encoding: parity shards are just zeros
-    for (let i = this.dataShards; i < this.dataShards + this.parityShards; i++) {
+    for (
+      let i = this.dataShards;
+      i < this.dataShards + this.parityShards;
+      i++
+    ) {
       shards[i] = new Uint8Array(shards[0].length);
     }
   }
 
-  async reconstruct(shards: (Uint8Array | null)[], fallbackShardSize: number): Promise<void> {
+  async reconstruct(
+    shards: (Uint8Array | null)[],
+    fallbackShardSize: number,
+  ): Promise<void> {
     /**
      * Info: (20251028 - Luphia) Mock reconstruction: just fill missing with zeros
      * In real RS, this would use the available shards to rebuild missing ones.
      */
-    const len = shards.find(s => s !== null)?.length || fallbackShardSize;
+    const len = shards.find((s) => s !== null)?.length || fallbackShardSize;
     for (let i = 0; i < shards.length; i++) {
       if (shards[i] === null) {
         shards[i] = new Uint8Array(len);
@@ -57,10 +64,10 @@ const rse = new ReedSolomonErasure(DATA_SHARDS, PARITY_SHARDS);
 const uploadSingleFile = (file: Blob, fileName: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const formData = new FormData();
-    formData.append('file', file, fileName);
+    formData.append("file", file, fileName);
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/v1/file', true);
+    xhr.open("POST", "/api/v1/file", true);
 
     xhr.onload = () => {
       if (xhr.status === 200) {
@@ -68,7 +75,7 @@ const uploadSingleFile = (file: Blob, fileName: string): Promise<string> => {
           const response = JSON.parse(xhr.responseText);
           resolve(response.payload.hash);
         } catch {
-          reject(new Error('Invalid response'));
+          reject(new Error("Invalid response"));
         }
       } else {
         reject(new Error(`Upload failed: ${xhr.status} ${xhr.responseText}`));
@@ -76,7 +83,7 @@ const uploadSingleFile = (file: Blob, fileName: string): Promise<string> => {
     };
 
     xhr.onerror = () => {
-      reject(new Error('Network error'));
+      reject(new Error("Network error"));
     };
 
     xhr.send(formData);
@@ -90,8 +97,8 @@ const downloadSingleFile = (cid: string): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     // Info: (20260113 - Luphia) Using the existing GET endpoint pattern
-    xhr.open('GET', `/api/v1/file/${cid}`, true);
-    xhr.responseType = 'blob';
+    xhr.open("GET", `/api/v1/file/${cid}`, true);
+    xhr.responseType = "blob";
 
     xhr.onload = () => {
       if (xhr.status === 200) {
@@ -102,13 +109,12 @@ const downloadSingleFile = (cid: string): Promise<Blob> => {
     };
 
     xhr.onerror = () => {
-      reject(new Error('Network error'));
+      reject(new Error("Network error"));
     };
 
     xhr.send();
   });
 };
-
 
 // Info: (20251028 - Luphia) Core Upload Function using Laria split logic
 export const uploadFile = async (file: File, callbacks: IUploadCallbacks) => {
@@ -116,7 +122,10 @@ export const uploadFile = async (file: File, callbacks: IUploadCallbacks) => {
     const originalFileSize = file.size;
 
     // Info: (20260311 - Luphia) Always split into exactly DATA_SHARDS (5 data + 3 parity = 8 parts)
-    const currentShardSize = Math.max(1, Math.ceil(originalFileSize / DATA_SHARDS));
+    const currentShardSize = Math.max(
+      1,
+      Math.ceil(originalFileSize / DATA_SHARDS),
+    );
     const dataStripeSize = DATA_SHARDS * currentShardSize;
 
     // Info: (20260311 - Luphia) Since we always use 5 data shards for the whole file, there's exactly 1 stripe
@@ -182,24 +191,30 @@ export const uploadFile = async (file: File, callbacks: IUploadCallbacks) => {
       algorithm: {
         k: DATA_SHARDS,
         m: PARITY_SHARDS,
-        shardSize: currentShardSize
-      }
+        shardSize: currentShardSize,
+      },
     };
 
-    const metadataBlob = new Blob([JSON.stringify(metadata)], { type: 'application/json' });
-    const metadataCid = await uploadSingleFile(metadataBlob, `${file.name}.meta.json`);
+    const metadataBlob = new Blob([JSON.stringify(metadata)], {
+      type: "application/json",
+    });
+    const metadataCid = await uploadSingleFile(
+      metadataBlob,
+      `${file.name}.meta.json`,
+    );
 
     if (callbacks.onProgress) callbacks.onProgress(100);
     if (callbacks.onSuccess) callbacks.onSuccess(metadataCid, metadata);
-
   } catch (err) {
     if (callbacks.onError) {
-      callbacks.onError(err instanceof Error ? err.message : 'Unknown error');
+      callbacks.onError(err instanceof Error ? err.message : "Unknown error");
     }
   }
 
   return {
-    abort: () => { console.warn('Abort not fully implemented for split upload'); }
+    abort: () => {
+      console.warn("Abort not fully implemented for split upload");
+    },
   };
 };
 
@@ -219,10 +234,12 @@ export interface ILariaMetadata {
 // Info: (20251028 - Luphia) Type guard for Laria Metadata
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isLariaMetadata(obj: any): obj is ILariaMetadata {
-  return obj
-    && typeof obj.filename === 'string'
-    && typeof obj.originalFileSize === 'number'
-    && Array.isArray(obj.shards);
+  return (
+    obj &&
+    typeof obj.filename === "string" &&
+    typeof obj.originalFileSize === "number" &&
+    Array.isArray(obj.shards)
+  );
 }
 
 /**
@@ -232,7 +249,10 @@ function isLariaMetadata(obj: any): obj is ILariaMetadata {
  * - If yes, downloads shards and reconstructs.
  * - If no, treats as direct file download.
  */
-export const downloadFile = async (cid: string, callbacks: IDownloadCallbacks) => {
+export const downloadFile = async (
+  cid: string,
+  callbacks: IDownloadCallbacks,
+) => {
   try {
     if (callbacks.onProgress) callbacks.onProgress(1); // Started
 
@@ -250,9 +270,13 @@ export const downloadFile = async (cid: string, callbacks: IDownloadCallbacks) =
         const parsed = JSON.parse(initialText);
 
         // Info: (20260302 - Julian) Handle standard IApiResponse wrapping
-        const data = (parsed && typeof parsed === 'object' && 'success' in parsed && 'payload' in parsed)
-          ? parsed.payload
-          : parsed;
+        const data =
+          parsed &&
+          typeof parsed === "object" &&
+          "success" in parsed &&
+          "payload" in parsed
+            ? parsed.payload
+            : parsed;
 
         if (isLariaMetadata(data)) {
           isMetadata = true;
@@ -273,19 +297,26 @@ export const downloadFile = async (cid: string, callbacks: IDownloadCallbacks) =
       // Info: (20260113 - Luphia) Try to extract filename from header if possible, or use CID default
       if (callbacks.onSuccess) callbacks.onSuccess(initialBlob, `file_${cid}`);
     }
-
   } catch (err) {
     if (callbacks.onError) {
-      callbacks.onError(err instanceof Error ? err.message : 'Download failed');
+      callbacks.onError(err instanceof Error ? err.message : "Download failed");
     }
   }
 };
 
 // Info: (20260113 - Luphia) Download file from Laria Metadata
-export const downloadFromMetadata = async (metadata: ILariaMetadata, callbacks: IDownloadCallbacks) => {
+export const downloadFromMetadata = async (
+  metadata: ILariaMetadata,
+  callbacks: IDownloadCallbacks,
+) => {
   try {
     // Info: (20260113 - Luphia) --- Laria Reconstruction ---
-    const { originalFileSize, shards: shardCids, filename, algorithm } = metadata;
+    const {
+      originalFileSize,
+      shards: shardCids,
+      filename,
+      algorithm,
+    } = metadata;
     const currentShardSize = algorithm?.shardSize || DEFAULT_SHARD_SIZE;
 
     const totalShards = shardCids.length;
@@ -297,32 +328,41 @@ export const downloadFromMetadata = async (metadata: ILariaMetadata, callbacks: 
     const reconstructedStripes: Uint8Array[] = [];
 
     for (let stripeIdx = 0; stripeIdx < totalStripes; stripeIdx++) {
-      const stripeShardsCids = shardCids.slice(stripeIdx * shardsPerStripe, (stripeIdx + 1) * shardsPerStripe);
+      const stripeShardsCids = shardCids.slice(
+        stripeIdx * shardsPerStripe,
+        (stripeIdx + 1) * shardsPerStripe,
+      );
 
       const shards: (Uint8Array | null)[] = new Array(TOTAL_SHARDS).fill(null);
 
       // Info: (20260113 - Luphia) Parallel download of shards for this stripe
-      await Promise.all(stripeShardsCids.map(async (shardCid, localIdx) => {
-        try {
-          const blob = await downloadSingleFile(shardCid);
-          const buffer = await blob.arrayBuffer();
-          shards[localIdx] = new Uint8Array(buffer);
+      await Promise.all(
+        stripeShardsCids.map(async (shardCid, localIdx) => {
+          try {
+            const blob = await downloadSingleFile(shardCid);
+            const buffer = await blob.arrayBuffer();
+            shards[localIdx] = new Uint8Array(buffer);
 
-          downloadedBytes += currentShardSize;
-          if (callbacks.onProgress) {
-            callbacks.onProgress((downloadedBytes / totalExpectedDownload) * 90); // Info: (20260113 - Luphia) Up to 90%
+            downloadedBytes += currentShardSize;
+            if (callbacks.onProgress) {
+              callbacks.onProgress(
+                (downloadedBytes / totalExpectedDownload) * 90,
+              ); // Info: (20260113 - Luphia) Up to 90%
+            }
+          } catch {
+            // Info: (20260113 - Luphia) Missing shard
+            shards[localIdx] = null;
           }
-        } catch {
-          // Info: (20260113 - Luphia) Missing shard
-          shards[localIdx] = null;
-        }
-      }));
+        }),
+      );
 
       // Info: (20260113 - Luphia) Reconstruct
       // Info: (20260113 - Luphia) Check sufficiency
-      const validShardsCount = shards.filter(s => s !== null).length;
+      const validShardsCount = shards.filter((s) => s !== null).length;
       if (validShardsCount < DATA_SHARDS) {
-        throw new Error(`Insufficient shards to reconstruct stripe ${stripeIdx}. Needed ${DATA_SHARDS}, got ${validShardsCount}.`);
+        throw new Error(
+          `Insufficient shards to reconstruct stripe ${stripeIdx}. Needed ${DATA_SHARDS}, got ${validShardsCount}.`,
+        );
       }
 
       await rse.reconstruct(shards, currentShardSize);
@@ -343,7 +383,9 @@ export const downloadFromMetadata = async (metadata: ILariaMetadata, callbacks: 
     }
 
     // Info: (20260113 - Luphia) Merge all stripes
-    const finalBuffer = new Uint8Array(reconstructedStripes.reduce((acc, curr) => acc + curr.length, 0));
+    const finalBuffer = new Uint8Array(
+      reconstructedStripes.reduce((acc, curr) => acc + curr.length, 0),
+    );
     let offset = 0;
     for (const stripe of reconstructedStripes) {
       finalBuffer.set(stripe, offset);
@@ -353,14 +395,15 @@ export const downloadFromMetadata = async (metadata: ILariaMetadata, callbacks: 
     // Info: (20260113 - Luphia) Truncate to original size
     const truncated = finalBuffer.slice(0, originalFileSize);
 
-    const finalBlob = new Blob([truncated as unknown as BlobPart], { type: metadata.mimeType || 'application/octet-stream' });
+    const finalBlob = new Blob([truncated as unknown as BlobPart], {
+      type: metadata.mimeType || "application/octet-stream",
+    });
 
     if (callbacks.onProgress) callbacks.onProgress(100);
     if (callbacks.onSuccess) callbacks.onSuccess(finalBlob, filename);
-
   } catch (err) {
     if (callbacks.onError) {
-      callbacks.onError(err instanceof Error ? err.message : 'Download failed');
+      callbacks.onError(err instanceof Error ? err.message : "Download failed");
     }
   }
 };

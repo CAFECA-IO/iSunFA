@@ -10,17 +10,21 @@ export interface ITaskDefinition {
 }
 
 export class TaskGenerator {
-  generateTask(key: string, prompt: string, context: string, order: number = 0): ITaskDefinition {
+  generateTask(
+    key: string,
+    prompt: string,
+    context: string,
+    order: number = 0,
+  ): ITaskDefinition {
     // Info: (20260130 - Luphia) Just return the logic definition, no execution
     return {
-      type: 'LLM_GENERATION',
+      type: "LLM_GENERATION",
       order,
       data: {
         key,
         prompt,
-        context
-      }
+        context,
+      },
     };
   }
 }
-

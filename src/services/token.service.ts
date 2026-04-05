@@ -1,7 +1,13 @@
 "use server";
 
 // Info: (20260126 - Luphia) 伺服器端操作：處理部署與鑄造邏輯
-import { parseAbi, getAddress, parseEther, encodeFunctionData, toHex } from "viem";
+import {
+  parseAbi,
+  getAddress,
+  parseEther,
+  encodeFunctionData,
+  toHex,
+} from "viem";
 import { account, publicClient, walletClient } from "@/lib/viem";
 import IR_ARTIFACT from "@erc3643org/erc-3643/artifacts/contracts/registry/implementation/IdentityRegistry.sol/IdentityRegistry.json";
 import IRS_ARTIFACT from "@erc3643org/erc-3643/artifacts/contracts/registry/implementation/IdentityRegistryStorage.sol/IdentityRegistryStorage.json";

@@ -9,13 +9,13 @@ export type IndustryCategoryItem = {
 };
 
 export enum EmploymentType {
-  FULL_TIME = 'Full-time',
-  PART_TIME = 'Part-time',
+  FULL_TIME = "Full-time",
+  PART_TIME = "Part-time",
 }
 
 export enum TaxResidencyStatus {
-  TAIWAN = 'Taiwan Resident',
-  NON_TAIWAN = 'Non-Taiwan Resident',
+  TAIWAN = "Taiwan Resident",
+  NON_TAIWAN = "Non-Taiwan Resident",
 }
 
 export interface IMonthlySalary {
@@ -194,4 +194,8 @@ interface IGetSalaryLevelOptions {
   salary: number; // Info: (20250727 - Luphia) 薪資金額
 }
 
-export type { ISalaryCalculatorOptions, ISalaryCalculatorResult, IGetSalaryLevelOptions };
+export type {
+  ISalaryCalculatorOptions,
+  ISalaryCalculatorResult,
+  IGetSalaryLevelOptions,
+};

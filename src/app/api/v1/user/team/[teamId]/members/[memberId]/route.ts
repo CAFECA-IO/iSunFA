@@ -11,7 +11,7 @@ import { CONTRACT_ADDRESSES } from "@/config/contracts";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string, memberId: string }> }
+  { params }: { params: Promise<{ teamId: string; memberId: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -25,7 +25,10 @@ export async function PATCH(
 
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator || operator.role !== "OWNER") {
-      return jsonFail(ApiCode.FORBIDDEN, "Permission denied. Only OWNER can modify roles.");
+      return jsonFail(
+        ApiCode.FORBIDDEN,
+        "Permission denied. Only OWNER can modify roles.",
+      );
     }
 
     const body = await request.json();
@@ -42,11 +45,18 @@ export async function PATCH(
     // Info: (20260326 - Tzuhan) Fetch operator's current challenge
     const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Missing WebAuthn challenge. Please retry.");
+      return jsonFail(
+        ApiCode.UNAUTHORIZED,
+        "Missing WebAuthn challenge. Please retry.",
+      );
     }
 
     // Info: (20260326 - Tzuhan) Verify FIDO2 signature
-    await webAuthnService.verifySignature(sessionUser.address, authentication, operatorUser.currentChallenge);
+    await webAuthnService.verifySignature(
+      sessionUser.address,
+      authentication,
+      operatorUser.currentChallenge,
+    );
 
     // Info: (20260326 - Tzuhan) Clear challenge to prevent replay
     await webAuthnRepo.clearChallenge(sessionUser.id);
@@ -60,9 +70,15 @@ export async function PATCH(
     // Info: (20260325 - Tzuhan) If changing the target role to OWNER, operator might want to transfer, but typically we allow OWNER to make others OWNER.
     // Info: (20260325 - Tzuhan) However, if target is the last OWNER being changed to something else, we should prevent it.
     if (targetMember.role === "OWNER" && role !== "OWNER") {
-      const ownersCount = await teamRepo.countTeamMembersByRole(teamId, "OWNER");
+      const ownersCount = await teamRepo.countTeamMembersByRole(
+        teamId,
+        "OWNER",
+      );
       if (ownersCount <= 1) {
-        return jsonFail(ApiCode.VALIDATION_ERROR, "Cannot change role of the last OWNER. Please transfer ownership first.");
+        return jsonFail(
+          ApiCode.VALIDATION_ERROR,
+          "Cannot change role of the last OWNER. Please transfer ownership first.",
+        );
       }
     }
 
@@ -86,26 +102,34 @@ export async function PATCH(
       maxFeePerGas: BigInt(0),
       maxPriorityFeePerGas: BigInt(0),
       paymasterAndData: "0x",
-      signature: "0x"
+      signature: "0x",
     };
 
     try {
-      await bundlerService.sendUserOp(dummyUserOp, CONTRACT_ADDRESSES.ENTRY_POINT);
+      await bundlerService.sendUserOp(
+        dummyUserOp,
+        CONTRACT_ADDRESSES.ENTRY_POINT,
+      );
     } catch (e) {
-      console.info("[Simulated On-Chain] 'Change Role' UserOp submission failed as expected for dummy UserOp:", e);
+      console.info(
+        "[Simulated On-Chain] 'Change Role' UserOp submission failed as expected for dummy UserOp:",
+        e,
+      );
     }
 
     return jsonOk(updatedMember);
-
   } catch (error) {
-    console.error("[API] /team/[teamId]/members/[memberId] PATCH error:", error);
+    console.error(
+      "[API] /team/[teamId]/members/[memberId] PATCH error:",
+      error,
+    );
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string, memberId: string }> }
+  { params }: { params: Promise<{ teamId: string; memberId: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -119,7 +143,10 @@ export async function DELETE(
 
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator) {
-      return jsonFail(ApiCode.FORBIDDEN, "Permission denied. You are not connected to this team.");
+      return jsonFail(
+        ApiCode.FORBIDDEN,
+        "Permission denied. You are not connected to this team.",
+      );
     }
 
     const targetMember = await teamRepo.getTeamMemberById(memberId);
@@ -137,11 +164,18 @@ export async function DELETE(
     // Info: (20260326 - Tzuhan) Fetch operator's current challenge
     const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Missing WebAuthn challenge. Please retry.");
+      return jsonFail(
+        ApiCode.UNAUTHORIZED,
+        "Missing WebAuthn challenge. Please retry.",
+      );
     }
 
     // Info: (20260326 - Tzuhan) Verify FIDO2 signature
-    await webAuthnService.verifySignature(sessionUser.address, authentication, operatorUser.currentChallenge);
+    await webAuthnService.verifySignature(
+      sessionUser.address,
+      authentication,
+      operatorUser.currentChallenge,
+    );
 
     // Info: (20260326 - Tzuhan) Clear challenge to prevent replay
     await webAuthnRepo.clearChallenge(sessionUser.id);
@@ -157,16 +191,28 @@ export async function DELETE(
       if (operator.role === "EDITOR" || operator.role === "VIEWER") {
         return jsonFail(ApiCode.FORBIDDEN, "Permission denied");
       }
-      if (operator.role === "ADMIN" && (targetMember.role === "OWNER" || targetMember.role === "ADMIN")) {
-        return jsonFail(ApiCode.FORBIDDEN, "ADMIN cannot remove other ADMIN or OWNER");
+      if (
+        operator.role === "ADMIN" &&
+        (targetMember.role === "OWNER" || targetMember.role === "ADMIN")
+      ) {
+        return jsonFail(
+          ApiCode.FORBIDDEN,
+          "ADMIN cannot remove other ADMIN or OWNER",
+        );
       }
     }
 
     // Info: (20260325 - Tzuhan) If removing an OWNER, ensure it is not the last OWNER
     if (targetMember.role === "OWNER") {
-      const ownersCount = await teamRepo.countTeamMembersByRole(teamId, "OWNER");
+      const ownersCount = await teamRepo.countTeamMembersByRole(
+        teamId,
+        "OWNER",
+      );
       if (ownersCount <= 1) {
-        return jsonFail(ApiCode.VALIDATION_ERROR, "Cannot remove the last OWNER. Please transfer ownership or delete the team entirely.");
+        return jsonFail(
+          ApiCode.VALIDATION_ERROR,
+          "Cannot remove the last OWNER. Please transfer ownership or delete the team entirely.",
+        );
       }
     }
 
@@ -190,19 +236,27 @@ export async function DELETE(
       maxFeePerGas: BigInt(0),
       maxPriorityFeePerGas: BigInt(0),
       paymasterAndData: "0x",
-      signature: "0x"
+      signature: "0x",
     };
 
     try {
-      await bundlerService.sendUserOp(dummyUserOp, CONTRACT_ADDRESSES.ENTRY_POINT);
+      await bundlerService.sendUserOp(
+        dummyUserOp,
+        CONTRACT_ADDRESSES.ENTRY_POINT,
+      );
     } catch (e) {
-      console.info("[Simulated On-Chain] 'Delete Member' UserOp submission failed as expected for dummy UserOp:", e);
+      console.info(
+        "[Simulated On-Chain] 'Delete Member' UserOp submission failed as expected for dummy UserOp:",
+        e,
+      );
     }
 
     return jsonOk(deletedMember);
-
   } catch (error) {
-    console.error("[API] /team/[teamId]/members/[memberId] DELETE error:", error);
+    console.error(
+      "[API] /team/[teamId]/members/[memberId] DELETE error:",
+      error,
+    );
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }

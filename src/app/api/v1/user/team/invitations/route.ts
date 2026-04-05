@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const invitations = await teamRepo.getPendingInvitationsByAddress(sessionUser.address);
+    const invitations = await teamRepo.getPendingInvitationsByAddress(
+      sessionUser.address,
+    );
 
     return jsonOk(invitations);
   } catch (error) {

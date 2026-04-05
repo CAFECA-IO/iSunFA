@@ -67,7 +67,10 @@ export async function POST(
 
     // Info: (20260212 - Julian) 3. 重新計算該討論串的按讚/倒讚總數
     const countOfLike = await talkRepo.countThreadReactions(threadId, "LIKE");
-    const countOfDislike = await talkRepo.countThreadReactions(threadId, "DISLIKE");
+    const countOfDislike = await talkRepo.countThreadReactions(
+      threadId,
+      "DISLIKE",
+    );
 
     return jsonOk({
       countOfLike,

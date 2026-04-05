@@ -1,7 +1,9 @@
-import { prisma } from '@/lib/prisma';
-import { EsgTarget, Prisma, EsgRecord } from '@/generated/client';
+import { prisma } from "@/lib/prisma";
+import { EsgTarget, Prisma, EsgRecord } from "@/generated/client";
 
-export type EsgRecordWithRelations = Prisma.EsgRecordGetPayload<{ include: { file: true } }> & { journalId?: string; voucherId?: string; };
+export type EsgRecordWithRelations = Prisma.EsgRecordGetPayload<{
+  include: { file: true };
+}> & { journalId?: string; voucherId?: string };
 
 export interface IEsgRepository {
   getEsgTargetsByAccountBookId(accountBookId: string): Promise<EsgTarget[]>;
@@ -11,20 +13,32 @@ export interface IEsgRepository {
     totalEmissionTarget: Prisma.Decimal | number | null;
     revenueEmissionTarget: Prisma.Decimal | number | null;
   }): Promise<EsgTarget>;
-  getVerifiedEsgRecordsByAccountBookId(accountBookId: string): Promise<EsgRecord[]>;
-  getEsgTargetByYear(accountBookId: string, year: number): Promise<EsgTarget | null>;
-  getEsgRecords(args: Prisma.EsgRecordFindManyArgs): Promise<EsgRecordWithRelations[]>;
-  createEsgRecord(data: Prisma.EsgRecordUncheckedCreateInput): Promise<EsgRecord>;
+  getVerifiedEsgRecordsByAccountBookId(
+    accountBookId: string,
+  ): Promise<EsgRecord[]>;
+  getEsgTargetByYear(
+    accountBookId: string,
+    year: number,
+  ): Promise<EsgTarget | null>;
+  getEsgRecords(
+    args: Prisma.EsgRecordFindManyArgs,
+  ): Promise<EsgRecordWithRelations[]>;
+  createEsgRecord(
+    data: Prisma.EsgRecordUncheckedCreateInput,
+  ): Promise<EsgRecord>;
   countEsgRecords(where: Prisma.EsgRecordWhereInput): Promise<number>;
   getEsgRecordById(id: string): Promise<EsgRecordWithRelations | null>;
-  updateEsgRecord(id: string, data: Prisma.EsgRecordUpdateInput): Promise<EsgRecordWithRelations | null>;
+  updateEsgRecord(
+    id: string,
+    data: Prisma.EsgRecordUpdateInput,
+  ): Promise<EsgRecordWithRelations | null>;
 }
 
 export class EsgRepository implements IEsgRepository {
   async getEsgTargetsByAccountBookId(accountBookId: string) {
     return prisma.esgTarget.findMany({
       where: { accountBookId },
-      orderBy: { year: 'asc' },
+      orderBy: { year: "asc" },
     });
   }
 
@@ -62,7 +76,7 @@ export class EsgRepository implements IEsgRepository {
   async verifyAllEsgRecords(accountBookId: string) {
     return prisma.esgRecord.updateMany({
       where: { accountBookId, isVerified: false },
-      data: { isVerified: true }
+      data: { isVerified: true },
     });
   }
 
@@ -70,43 +84,49 @@ export class EsgRepository implements IEsgRepository {
     return prisma.esgRecord.findMany({
       where: {
         accountBookId,
-        isVerified: true
-      }
+        isVerified: true,
+      },
     });
   }
 
   async getEsgTargetByYear(accountBookId: string, year: number) {
     return prisma.esgTarget.findFirst({
-      where: { accountBookId, year }
+      where: { accountBookId, year },
     });
   }
 
-  async getEsgRecords(args: Prisma.EsgRecordFindManyArgs): Promise<EsgRecordWithRelations[]> {
-    const records = await prisma.esgRecord.findMany(args) as unknown as Prisma.EsgRecordGetPayload<{ include: { file: true } }>[];
+  async getEsgRecords(
+    args: Prisma.EsgRecordFindManyArgs,
+  ): Promise<EsgRecordWithRelations[]> {
+    const records = (await prisma.esgRecord.findMany(
+      args,
+    )) as unknown as Prisma.EsgRecordGetPayload<{ include: { file: true } }>[];
     if (records.length === 0) return records as EsgRecordWithRelations[];
 
-    const fileIds = Array.from(new Set(records.map(r => r.fileId).filter(Boolean))) as string[];
-    let journals: { id: string, fileId: string | null }[] = [];
-    let vouchers: { id: string, fileId: string | null }[] = [];
+    const fileIds = Array.from(
+      new Set(records.map((r) => r.fileId).filter(Boolean)),
+    ) as string[];
+    let journals: { id: string; fileId: string | null }[] = [];
+    let vouchers: { id: string; fileId: string | null }[] = [];
 
     if (fileIds.length > 0) {
       journals = await prisma.journal.findMany({
         where: { fileId: { in: fileIds } },
-        select: { id: true, fileId: true }
+        select: { id: true, fileId: true },
       });
       vouchers = await prisma.voucher.findMany({
         where: { fileId: { in: fileIds } },
-        select: { id: true, fileId: true }
+        select: { id: true, fileId: true },
       });
     }
 
-    return records.map(record => {
-      const journalId = journals.find(j => j.fileId === record.fileId)?.id;
-      const voucherId = vouchers.find(v => v.fileId === record.fileId)?.id;
+    return records.map((record) => {
+      const journalId = journals.find((j) => j.fileId === record.fileId)?.id;
+      const voucherId = vouchers.find((v) => v.fileId === record.fileId)?.id;
       return {
         ...record,
         journalId,
-        voucherId
+        voucherId,
       };
     }) as EsgRecordWithRelations[];
   }
@@ -151,7 +171,10 @@ export class EsgRepository implements IEsgRepository {
     } as EsgRecordWithRelations;
   }
 
-  async updateEsgRecord(id: string, data: Prisma.EsgRecordUpdateInput): Promise<EsgRecordWithRelations | null> {
+  async updateEsgRecord(
+    id: string,
+    data: Prisma.EsgRecordUpdateInput,
+  ): Promise<EsgRecordWithRelations | null> {
     const record = await prisma.esgRecord.update({
       where: { id },
       data,

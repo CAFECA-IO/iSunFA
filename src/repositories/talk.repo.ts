@@ -1,32 +1,65 @@
-import { prisma } from '@/lib/prisma';
-import { Prisma, Reaction, ReactionType, Tag, Thread, ThreadTag, Comment } from '@/generated/client';
+import { prisma } from "@/lib/prisma";
+import {
+  Prisma,
+  Reaction,
+  ReactionType,
+  Tag,
+  Thread,
+  ThreadTag,
+  Comment,
+} from "@/generated/client";
 
 export interface ITalkRepository {
   getReaction(userId: string, commentId: string): Promise<Reaction | null>;
   deleteReaction(id: string): Promise<Reaction>;
   updateReaction(id: string, type: ReactionType): Promise<Reaction>;
-  createReaction(userId: string, commentId: string, type: ReactionType): Promise<Reaction>;
+  createReaction(
+    userId: string,
+    commentId: string,
+    type: ReactionType,
+  ): Promise<Reaction>;
   countReactions(commentId: string, type: ReactionType): Promise<number>;
 
   getThreadReaction(userId: string, threadId: string): Promise<Reaction | null>;
-  createThreadReaction(userId: string, threadId: string, type: ReactionType): Promise<Reaction>;
+  createThreadReaction(
+    userId: string,
+    threadId: string,
+    type: ReactionType,
+  ): Promise<Reaction>;
   countThreadReactions(threadId: string, type: ReactionType): Promise<number>;
 
   getThreadById(threadId: string): Promise<Thread | null>;
   getCommentById(commentId: string): Promise<Comment | null>;
-  listCommentsByThreadId(threadId: string): Promise<Prisma.CommentGetPayload<{ include: { user: true; replyToUser: true; reactions: true } }>[]>;
+  listCommentsByThreadId(
+    threadId: string,
+  ): Promise<
+    Prisma.CommentGetPayload<{
+      include: { user: true; replyToUser: true; reactions: true };
+    }>[]
+  >;
   createComment(data: Prisma.CommentUncheckedCreateInput): Promise<Comment>;
 
-  getThreadByIdWithFiles(threadId: string): Promise<Prisma.ThreadGetPayload<{ include: { files: true } }> | null>;
+  getThreadByIdWithFiles(
+    threadId: string,
+  ): Promise<Prisma.ThreadGetPayload<{ include: { files: true } }> | null>;
   getTagsByThreadId(threadId: string): Promise<Tag[]>;
   getReactionsByThreadId(threadId: string): Promise<Reaction[]>;
   countSharesByThreadId(threadId: string): Promise<number>;
   countCommentsByThreadId(threadId: string): Promise<number>;
 
-  listThreadsWithCounts(): Promise<Prisma.ThreadGetPayload<{ include: { _count: { select: { comments: true; shares: true } } } }>[]>;
+  listThreadsWithCounts(): Promise<
+    Prisma.ThreadGetPayload<{
+      include: { _count: { select: { comments: true; shares: true } } };
+    }>[]
+  >;
   getThreadTagsByThreadIds(threadIds: string[]): Promise<ThreadTag[]>;
   getTagsByIds(tagIds: string[]): Promise<Tag[]>;
-  getReactionCounts(): Promise<(Prisma.PickEnumerable<Prisma.ReactionGroupByOutputType, "threadId" | "type"> & { _count: { _all: number } })[]>;
+  getReactionCounts(): Promise<
+    (Prisma.PickEnumerable<
+      Prisma.ReactionGroupByOutputType,
+      "threadId" | "type"
+    > & { _count: { _all: number } })[]
+  >;
   createThread(data: Prisma.ThreadUncheckedCreateInput): Promise<Thread>;
   createFiles(data: Prisma.FileCreateManyInput[]): Promise<Prisma.BatchPayload>;
   upsertTag(name: string): Promise<Tag>;
@@ -164,7 +197,11 @@ export class TalkRepository implements ITalkRepository {
     });
   }
 
-  async createThreadReaction(userId: string, threadId: string, type: ReactionType) {
+  async createThreadReaction(
+    userId: string,
+    threadId: string,
+    type: ReactionType,
+  ) {
     return prisma.reaction.create({
       data: { userId, threadId, type },
     });

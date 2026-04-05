@@ -226,7 +226,7 @@ export function EsgRow({
           {record.isDeleted ? (
             <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
           ) : (
-            <p className="font-bold text-red-500">{t("esg_table.ai.failed")}</p>
+            <p className="font-bold text-red-500">{record.aiNote || t("esg_table.ai.failed")}</p>
           )}
         </td>
         {actionsColumn}
@@ -292,8 +292,24 @@ export function EsgRow({
         {rawActivity}
       </td>
       {/* Info: (20260320 - Julian) Emissions */}
-      <td className="p-2 text-center text-sm font-semibold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4">
-        {record.emissions}
+      <td className="p-2 text-center whitespace-nowrap lg:px-6 lg:py-4">
+        <div className="flex flex-col items-center justify-center gap-1">
+          <span className="text-sm font-semibold text-slate-800">
+            {record.emissions}
+          </span>
+          {record.coefficient && (
+            <div className="flex flex-col items-center justify-center">
+              <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-inset ring-slate-200">
+                {record.coefficient}
+              </span>
+              {record.coefficientSource && (
+                <span className="mt-0.5 text-[9px] text-slate-400">
+                  {record.coefficientSource}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
       </td>
       {/* Info: (20260320 - Julian) Intensity */}
       <td className="p-2 text-center lg:px-6 lg:py-4">

@@ -27,7 +27,7 @@ export async function GET(
     const { account_book_id: accountBookId } = await params;
     const accountBook = await accountBookRepo.getAccountBookByIdAndUserAddress(
       accountBookId,
-      sessionUser.address
+      sessionUser.address,
     );
 
     if (!accountBook) {
@@ -37,7 +37,12 @@ export async function GET(
       );
     }
 
-    const { todayVoucherCount, monthTotalAmount, pendingVoucherCount, aiAverageConfidence } = await voucherRepo.getVoucherSummary(accountBookId);
+    const {
+      todayVoucherCount,
+      monthTotalAmount,
+      pendingVoucherCount,
+      aiAverageConfidence,
+    } = await voucherRepo.getVoucherSummary(accountBookId);
 
     // Info: (20260316 - Julian) 組合 response
     const dashboardSummary: IVoucherDashboardSummary = {

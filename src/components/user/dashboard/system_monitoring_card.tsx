@@ -25,7 +25,6 @@ export const SystemMonitoringCard = ({ currentData }: ISystemMonitoringCardProps
           <div className="p-2 bg-indigo-50 rounded-lg"><Activity className="w-5 h-5 text-indigo-600" /></div>
           <h4 className="text-sm font-bold text-gray-900">{t('dashboard.system_monitoring')}</h4>
         </div>
-        <button className="text-xs font-bold text-indigo-700 hover:underline">Review</button>
       </div>
 
       <div className="space-y-6 flex-1 overflow-y-auto pr-2">

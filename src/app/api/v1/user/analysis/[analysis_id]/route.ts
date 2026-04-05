@@ -1,46 +1,52 @@
-import { NextRequest } from 'next/server';
-import { getIdentityFromDeWT } from '@/lib/auth/dewt';
-import { jsonOk, jsonFail } from '@/lib/utils/response';
-import { ApiCode } from '@/lib/utils/status';
-import { analysisRepo } from '@/repositories/analysis.repo';
+import { NextRequest } from "next/server";
+import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
+import { analysisRepo } from "@/repositories/analysis.repo";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ analysis_id: string }> }
+  { params }: { params: Promise<{ analysis_id: string }> },
 ) {
   try {
     const { analysis_id: analysisId } = await params;
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get("Authorization");
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, 'Invalid or expired token');
+      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
     if (!analysisId) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, 'Analysis ID is required');
+      return jsonFail(ApiCode.VALIDATION_ERROR, "Analysis ID is required");
     }
 
     // Info: (20260130 - Luphia) Fetch analysis details
     const analysis = await analysisRepo.findById(analysisId);
 
     if (!analysis) {
-      return jsonFail(ApiCode.NOT_FOUND, 'Analysis not found');
+      return jsonFail(ApiCode.NOT_FOUND, "Analysis not found");
     }
 
     // Info: (20260130 - Luphia) Authorization Check
     if (analysis.userId !== user.id) {
-      return jsonFail(ApiCode.FORBIDDEN, 'You do not have permission to view this analysis');
+      return jsonFail(
+        ApiCode.FORBIDDEN,
+        "You do not have permission to view this analysis",
+      );
     }
 
-    const missionData = analysis.mission?.data as Record<string, unknown> | null;
+    const missionData = analysis.mission?.data as Record<
+      string,
+      unknown
+    > | null;
     let isExternal = false;
-    if (typeof missionData?.isExternal === 'boolean') {
+    if (typeof missionData?.isExternal === "boolean") {
       isExternal = missionData.isExternal;
     } else {
       // Info: (20260324 - Tzuhan) Fallback to order data if available
       const orderData = analysis.order?.data as Record<string, unknown> | null;
-      if (typeof orderData?.isExternal === 'boolean') {
+      if (typeof orderData?.isExternal === "boolean") {
         isExternal = orderData.isExternal;
       }
     }
@@ -48,16 +54,21 @@ export async function GET(
     // Info: (20260130 - Luphia) Return full details including mission result
     return jsonOk({
       id: analysis.id,
-      status: analysis.mission?.status ?? 'UNKNOWN',
+      status: analysis.mission?.status ?? "UNKNOWN",
       result: analysis.mission?.result,
       createdAt: analysis.createdAt,
       type: analysis.type,
-      isExternal
+      isExternal,
       // Info: (20260130 - Luphia) Include any other necessary fields
     });
-
   } catch (error) {
-    console.error(`[API] GET /user/analysis/${(await params).analysis_id} error:`, error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, (error as Error).message || 'Internal Server Error');
+    console.error(
+      `[API] GET /user/analysis/${(await params).analysis_id} error:`,
+      error,
+    );
+    return jsonFail(
+      ApiCode.INTERNAL_SERVER_ERROR,
+      (error as Error).message || "Internal Server Error",
+    );
   }
 }

@@ -49,7 +49,7 @@ export interface IVoucher {
   issuerName: string;
   confidence: number;
   isVerified: boolean;
-  analysisStatus: AIAnalysisStatus
+  analysisStatus: AIAnalysisStatus;
   aiNote: string;
   journalId?: string;
   esgRecordId?: string;

@@ -5,11 +5,11 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
-import { TeamRole } from '@/generated/client';
+import { TeamRole } from "@/generated/client";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string }> }
+  { params }: { params: Promise<{ teamId: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -24,7 +24,10 @@ export async function GET(
     // Info: (20260325 - Tzuhan) Verify user is in this team
     const member = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!member) {
-      return jsonFail(ApiCode.FORBIDDEN, "Permission denied. You are not a member of this team.");
+      return jsonFail(
+        ApiCode.FORBIDDEN,
+        "Permission denied. You are not a member of this team.",
+      );
     }
 
     const members = await teamRepo.listTeamMember(teamId);
@@ -37,7 +40,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string }> }
+  { params }: { params: Promise<{ teamId: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -52,7 +55,10 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Check permission (OWNER or ADMIN)
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
-      return jsonFail(ApiCode.FORBIDDEN, "Permission denied. Only OWNER or ADMIN can invite members.");
+      return jsonFail(
+        ApiCode.FORBIDDEN,
+        "Permission denied. Only OWNER or ADMIN can invite members.",
+      );
     }
 
     const body = await request.json();
@@ -69,16 +75,26 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Fetch operator's current challenge
     const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Missing WebAuthn challenge. Please retry.");
+      return jsonFail(
+        ApiCode.UNAUTHORIZED,
+        "Missing WebAuthn challenge. Please retry.",
+      );
     }
 
     // Info: (20260325 - Tzuhan) Verify FIDO2 signature
-    await webAuthnService.verifySignature(sessionUser.address, authentication, operatorUser.currentChallenge);
+    await webAuthnService.verifySignature(
+      sessionUser.address,
+      authentication,
+      operatorUser.currentChallenge,
+    );
 
     // Info: (20260325 - Tzuhan) Clear challenge to prevent replay
     await webAuthnRepo.clearChallenge(sessionUser.id);
 
-    const assignedRole: TeamRole = role === "ADMIN" || role === "EDITOR" || role === "VIEWER" ? role : TeamRole.VIEWER;
+    const assignedRole: TeamRole =
+      role === "ADMIN" || role === "EDITOR" || role === "VIEWER"
+        ? role
+        : TeamRole.VIEWER;
 
     // Info: (20260325 - Tzuhan) Find the target user by address
     const targetUser = await webAuthnRepo.findUserByAddress(address);
@@ -89,7 +105,10 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Check if user is already a member
     const existingMember = await teamRepo.getTeamMember(targetUser.id, teamId);
     if (existingMember) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "User is already a member of this team");
+      return jsonFail(
+        ApiCode.VALIDATION_ERROR,
+        "User is already a member of this team",
+      );
     }
 
     const newMember = await teamRepo.createTeamMember({

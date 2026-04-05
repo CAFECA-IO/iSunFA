@@ -72,7 +72,7 @@ const BalanceSheetSection = ({
   );
 };
 
-export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
+export default function BalanceSheetView({ period, year }: { period: ReportPeriod; year: number }) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
 
@@ -85,7 +85,7 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
         try {
           setIsLoading(true);
           const res = await request<IApiResponse<{ report: IBalanceSheet }>>(
-            `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.BALANCE_SHEET}&period=${period}`,
+            `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.BALANCE_SHEET}&period=${period}&year=${year}`,
           );
           if (res.payload) {
             setReportData(res.payload.report);
@@ -100,7 +100,7 @@ export default function BalanceSheetView({ period }: { period: ReportPeriod }) {
     } else {
       setIsLoading(false);
     }
-  }, [accountBookId, period]);
+  }, [accountBookId, period, year]);
 
   if (isLoading) {
     return (

@@ -16,7 +16,10 @@ export async function GET(
     const STORAGE_DOMAIN = process.env.STORAGE_DOMAIN;
 
     if (!STORAGE_DOMAIN) {
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "STORAGE_DOMAIN is not defined");
+      return jsonFail(
+        ApiCode.INTERNAL_SERVER_ERROR,
+        "STORAGE_DOMAIN is not defined",
+      );
     }
 
     const targetUrl = `${STORAGE_DOMAIN}/api/v1/file/${fileId}`;
@@ -34,7 +37,12 @@ export async function GET(
       if (contentType && contentType.includes("application/json")) {
         const data = await response.json();
         // Info: (20260226 - Julian) Normalize if already an IApiResponse to avoid double-wrapping
-        if (data && typeof data === 'object' && 'success' in data && 'payload' in data) {
+        if (
+          data &&
+          typeof data === "object" &&
+          "success" in data &&
+          "payload" in data
+        ) {
           return jsonOk(data.payload, data.message);
         }
         return jsonOk(data);
@@ -61,7 +69,6 @@ export async function GET(
 
       return jsonFail(code, errorMessage, { status: response.status });
     }
-
   } catch (error) {
     console.error(`[API] Proxy /file/:file_id error:`, error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");

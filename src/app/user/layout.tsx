@@ -14,8 +14,8 @@ export default function UserLayout({
     <AuthGuard>
       <div className="flex flex-col min-h-screen bg-gray-50">
         <UserHeader />
-        <div className="flex flex-1">
-          <main className="grow lg:max-w-[calc(100vw-15px)] p-4 lg:p-8">
+        <div className="flex flex-1 min-w-0">
+          <main className="grow min-w-0 w-full max-w-full lg:max-w-[calc(100vw-15px)] p-4 lg:p-8 overflow-x-hidden">
             {children}
           </main>
         </div>

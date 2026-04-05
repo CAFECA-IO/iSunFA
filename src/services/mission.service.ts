@@ -75,6 +75,11 @@ export class MissionService {
         const fileId = context.fileId;
         const accountBookId = context.accountBookId;
 
+        const failedTask = tasks.find((t) => t.status === "FAILED");
+        const failureReason = failedTask?.result
+          ? String(failedTask.result)
+          : "系統分析失敗";
+
         if (fileId && accountBookId) {
           await prisma.$transaction(async (tx) => {
             // Info: (20260323 - Julian) 更新或建立日記帳
@@ -92,7 +97,10 @@ export class MissionService {
                 if (existingJournal) {
                   await tx.journal.update({
                     where: { id: existingJournal.id },
-                    data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                    data: {
+                      analysisStatus: "FAILED" as AIAnalysisStatus,
+                      aiNote: failureReason,
+                    },
                   });
                 }
               } else if (
@@ -104,7 +112,7 @@ export class MissionService {
                   if (match) {
                     const parsed = JSON.parse(match[0]);
                     const jd = parsed.data || parsed;
-                    const tradingDate = new Date(jd.tradingDate || new Date())
+                    const tradingDate = new Date(jd.tradingDate || new Date());
                     const confidence = parseInt(String(jd.confidence)) || 0;
 
                     const dataPayload: Prisma.JournalUncheckedCreateInput = {
@@ -120,7 +128,7 @@ export class MissionService {
 
                     if (existingJournal) {
                       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                      const { fileId: _fileId, accountBookId: _accountBookId, ...updatePayload } = dataPayload;
+                      const { fileId, accountBookId, ...updatePayload } = dataPayload;
                       await tx.journal.update({
                         where: { id: existingJournal.id },
                         data: updatePayload,
@@ -133,7 +141,10 @@ export class MissionService {
                     if (existingJournal) {
                       await tx.journal.update({
                         where: { id: existingJournal.id },
-                        data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                        data: {
+                          analysisStatus: "FAILED" as AIAnalysisStatus,
+                          aiNote: failureReason,
+                        },
                       });
                     }
                   }
@@ -145,7 +156,10 @@ export class MissionService {
                   if (existingJournal) {
                     await tx.journal.update({
                       where: { id: existingJournal.id },
-                      data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                      data: {
+                        analysisStatus: "FAILED" as AIAnalysisStatus,
+                        aiNote: failureReason,
+                      },
                     });
                   }
                 }
@@ -166,7 +180,10 @@ export class MissionService {
                 if (existingVoucher) {
                   await tx.voucher.update({
                     where: { id: existingVoucher.id },
-                    data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                    data: {
+                      analysisStatus: "FAILED" as AIAnalysisStatus,
+                      aiNote: failureReason,
+                    },
                   });
                 }
               } else if (
@@ -191,7 +208,7 @@ export class MissionService {
                     const dataPayload: Prisma.VoucherUncheckedCreateInput = {
                       tradingDate,
                       tradingType: trType as VoucherTradingType,
-                      note: vd.note ?? '-',
+                      note: vd.note ?? "-",
                       currency: vd.currency || "TWD",
                       fileId,
                       accountBookId,
@@ -213,7 +230,7 @@ export class MissionService {
 
                     if (existingVoucher) {
                       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                      const { fileId: _fileId, accountBookId: _accountBookId, lines, ...updatePayload } = dataPayload;
+                      const { fileId, accountBookId, lines, ...updatePayload } = dataPayload;
                       await tx.voucher.update({
                         where: { id: existingVoucher.id },
                         data: {
@@ -239,7 +256,10 @@ export class MissionService {
                     if (existingVoucher) {
                       await tx.voucher.update({
                         where: { id: existingVoucher.id },
-                        data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                        data: {
+                          analysisStatus: "FAILED" as AIAnalysisStatus,
+                          aiNote: failureReason,
+                        },
                       });
                     }
                   }
@@ -251,7 +271,10 @@ export class MissionService {
                   if (existingVoucher) {
                     await tx.voucher.update({
                       where: { id: existingVoucher.id },
-                      data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                      data: {
+                        analysisStatus: "FAILED" as AIAnalysisStatus,
+                        aiNote: failureReason,
+                      },
                     });
                   }
                 }
@@ -272,7 +295,10 @@ export class MissionService {
                 if (existingEsg) {
                   await tx.esgRecord.update({
                     where: { id: existingEsg.id },
-                    data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                    data: {
+                      analysisStatus: "FAILED" as AIAnalysisStatus,
+                      aiNote: failureReason,
+                    },
                   });
                 }
               } else if (esgTask.result && typeof esgTask.result === "string") {
@@ -293,6 +319,8 @@ export class MissionService {
                       rawActivityData: String(ed.rawActivityData || ""),
                       unit: ed.unit || "",
                       emissions: parseFloat(String(ed.emissions)) || 0,
+                      coefficient: ed.coefficient || null,
+                      coefficientSource: ed.coefficientSource || null,
                       intensity: ed.intensity || "LOW",
                       confidence,
                       isVerified: confidence > 85,
@@ -302,7 +330,7 @@ export class MissionService {
 
                     if (existingEsg) {
                       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                      const { fileId: _fileId, accountBookId: _accountBookId, ...updatePayload } = esgData;
+                      const { fileId, accountBookId, ...updatePayload } = esgData;
                       await tx.esgRecord.update({
                         where: { id: existingEsg.id },
                         data: updatePayload,
@@ -315,7 +343,10 @@ export class MissionService {
                     if (existingEsg) {
                       await tx.esgRecord.update({
                         where: { id: existingEsg.id },
-                        data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                        data: {
+                          analysisStatus: "FAILED" as AIAnalysisStatus,
+                          aiNote: failureReason,
+                        },
                       });
                     }
                   }
@@ -327,7 +358,10 @@ export class MissionService {
                   if (existingEsg) {
                     await tx.esgRecord.update({
                       where: { id: existingEsg.id },
-                      data: { analysisStatus: "FAILED" as AIAnalysisStatus },
+                      data: {
+                        analysisStatus: "FAILED" as AIAnalysisStatus,
+                        aiNote: failureReason,
+                      },
                     });
                   }
                 }

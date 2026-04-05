@@ -1,9 +1,9 @@
-import { ApiCode } from '@/lib/utils/status';
-import path from 'path';
-import { promises as fs } from 'fs';
-import { tmpdir } from 'os';
-import { randomUUID } from 'crypto';
-import { encodeFile } from '@/lib/laria';
+import { ApiCode } from "@/lib/utils/status";
+import path from "path";
+import { promises as fs } from "fs";
+import { tmpdir } from "os";
+import { randomUUID } from "crypto";
+import { encodeFile } from "@/lib/laria";
 
 export interface IStorageUploadResponse {
   hash: string;
@@ -16,7 +16,7 @@ export class StorageService {
 
   constructor() {
     // Info: (20260128 - Luphia) Use environment variable for storage domain
-    this.storageDomain = process.env.STORAGE_DOMAIN || '';
+    this.storageDomain = process.env.STORAGE_DOMAIN || "";
   }
 
   /**
@@ -27,47 +27,52 @@ export class StorageService {
    */
   async uploadFile(file: Blob | File, filename?: string): Promise<string> {
     if (!this.storageDomain) {
-      console.warn('[StorageService] STORAGE_DOMAIN is not set.');
+      console.warn("[StorageService] STORAGE_DOMAIN is not set.");
     }
 
     const formData = new FormData();
     /**
-     * Info: (20260128 - Luphia) Append file to FormData. 
+     * Info: (20260128 - Luphia) Append file to FormData.
      * If passing a Blob, a filename is often required by servers to detect it as a file upload.
      */
-    formData.append('file', file, filename || (file as File).name || 'upload.bin');
+    formData.append(
+      "file",
+      file,
+      filename || (file as File).name || "upload.bin",
+    );
 
-    const domain = this.storageDomain.replace(/\/$/, '');
+    const domain = this.storageDomain.replace(/\/$/, "");
     const url = `${domain}/api/v1/file`;
 
     try {
       const response = await fetch(url, {
-        method: 'POST',
+        method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Storage upload failed: ${response.status} ${errorText}`);
+        throw new Error(
+          `Storage upload failed: ${response.status} ${errorText}`,
+        );
       }
 
       // Info: (20260128 - Luphia) Parse the standard API response structure
       const result = await response.json();
 
       // Info: (20260128 - Luphia) External storage service might return 'OK' instead of 'SUCCESS'
-      if (result.code !== ApiCode.SUCCESS && result.code !== 'OK') {
-        throw new Error(result.message || 'Storage upload failed w/o message');
+      if (result.code !== ApiCode.SUCCESS && result.code !== "OK") {
+        throw new Error(result.message || "Storage upload failed w/o message");
       }
 
       const payload = result.payload as IStorageUploadResponse;
       if (!payload || !payload.hash) {
-        throw new Error('Storage upload response missing hash');
+        throw new Error("Storage upload response missing hash");
       }
 
       return payload.hash;
-
     } catch (error) {
-      console.error('[StorageService] Error uploading file:', error);
+      console.error("[StorageService] Error uploading file:", error);
       throw error;
     }
   }
@@ -185,7 +190,9 @@ export class StorageService {
         const shardHash = shards[i];
         const shardRes = await fetch(`${domain}/api/v1/file/${shardHash}`);
         if (!shardRes.ok) {
-          throw new Error(`Failed to fetch shard ${i + 1}: ${shardRes.statusText}`);
+          throw new Error(
+            `Failed to fetch shard ${i + 1}: ${shardRes.statusText}`,
+          );
         }
         const shardBuffer = Buffer.from(await shardRes.arrayBuffer());
         await fs.writeFile(

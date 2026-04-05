@@ -1,13 +1,13 @@
-import { server } from '@passwordless-id/webauthn';
+import { server } from "@passwordless-id/webauthn";
 import type {
   RegistrationJSON,
   AuthenticationJSON,
   CredentialInfo,
-} from '@passwordless-id/webauthn/dist/esm/types';
-import { AppError } from '@/lib/utils/error';
-import { ApiCode } from '@/lib/utils/status';
+} from "@passwordless-id/webauthn/dist/esm/types";
+import { AppError } from "@/lib/utils/error";
+import { ApiCode } from "@/lib/utils/status";
 
-const ORIGIN = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const ORIGIN = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 /**
  * Info: (20251223 - Tzuhan)
@@ -15,7 +15,7 @@ const ORIGIN = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
  */
 export async function verifyRegistration(
   registration: RegistrationJSON,
-  expectedChallenge: string
+  expectedChallenge: string,
 ) {
   try {
     const result = await server.verifyRegistration(registration, {
@@ -24,8 +24,8 @@ export async function verifyRegistration(
     });
     return result;
   } catch (error) {
-    console.error('Registration verification failed:', error);
-    throw new AppError(ApiCode.VALIDATION_ERROR, 'Invalid registration data');
+    console.error("Registration verification failed:", error);
+    throw new AppError(ApiCode.VALIDATION_ERROR, "Invalid registration data");
   }
 }
 
@@ -36,18 +36,22 @@ export async function verifyRegistration(
 export async function verifyAuthentication(
   authentication: AuthenticationJSON,
   credential: CredentialInfo,
-  expectedChallenge: string
+  expectedChallenge: string,
 ) {
   try {
     // Info: (20251223 - Tzuhan) server.verifyAuthentication 預期第二個參數符合 CredentialInfo
-    const result = await server.verifyAuthentication(authentication, credential, {
-      challenge: expectedChallenge,
-      origin: ORIGIN,
-      userVerified: false,
-    });
+    const result = await server.verifyAuthentication(
+      authentication,
+      credential,
+      {
+        challenge: expectedChallenge,
+        origin: ORIGIN,
+        userVerified: false,
+      },
+    );
     return result;
   } catch (error) {
-    console.error('Authentication verification failed:', error);
-    throw new AppError(ApiCode.UNAUTHORIZED, 'Invalid signature or challenge');
+    console.error("Authentication verification failed:", error);
+    throw new AppError(ApiCode.UNAUTHORIZED, "Invalid signature or challenge");
   }
 }

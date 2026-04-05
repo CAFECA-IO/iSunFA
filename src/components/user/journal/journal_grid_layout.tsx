@@ -21,6 +21,9 @@ const JournalGridItem = ({
   const { t } = useTranslation();
 
   const isAnalysisFailed = journal.analysisStatus === AIAnalysisStatus.FAILED;
+  const failedMessage = journal.aiNote && journal.aiNote !== "無 AI 分析備註" 
+    ? journal.aiNote 
+    : (t("ocr.ai.failed") as string);
 
   const actionButtons = (
     <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
@@ -129,8 +132,11 @@ const JournalGridItem = ({
         )}
         {/* Info: (20260320 - Julian) Failed Icon */}
         {isAnalysisFailed && (
-          <div className="absolute top-0 left-0 z-10 flex size-full items-center justify-center bg-red-100/50 p-1">
-            <CircleAlert size={24} className="text-red-500" />
+          <div className="absolute top-0 left-0 z-10 flex size-full flex-col items-center justify-center bg-red-100/70 p-2 backdrop-blur-sm transition-opacity">
+            <CircleAlert size={36} className="mb-2 text-red-500 drop-shadow-sm" />
+            <span className="w-full truncate rounded bg-white/80 px-2 py-1 text-center text-xs font-bold text-red-600 shadow-sm" title={failedMessage}>
+              {failedMessage}
+            </span>
           </div>
         )}
       </div>

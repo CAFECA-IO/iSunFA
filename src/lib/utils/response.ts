@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import { ApiCode } from '@/lib/utils/status';
-import { name, version } from '@/package';
+import { NextResponse } from "next/server";
+import { ApiCode } from "@/lib/utils/status";
+import { name, version } from "@/package";
 
 export const POWERBY = `${name} v${version}`;
 
@@ -12,10 +12,12 @@ export interface IApiResponse<T> {
   payload: T | null;
 }
 
-export const ok = <T>(payload: T, message = 'OK'): IApiResponse<T> => {
+export const ok = <T>(payload: T, message = "OK"): IApiResponse<T> => {
   // Info: (20250926 - Luphia) jsonstringify 無法解析 bigint，這邊做個轉換
   const safePayload = JSON.parse(
-    JSON.stringify(payload, (key, value) => (typeof value === 'bigint' ? value.toString() : value))
+    JSON.stringify(payload, (key, value) =>
+      typeof value === "bigint" ? value.toString() : value,
+    ),
   );
 
   return {
@@ -35,7 +37,7 @@ export const fail = (code: ApiCode, message: string): IApiResponse<null> => ({
   payload: null,
 });
 
-export const jsonOk = <T>(payload: T, message = 'OK', init?: ResponseInit) =>
+export const jsonOk = <T>(payload: T, message = "OK", init?: ResponseInit) =>
   NextResponse.json<IApiResponse<T>>(ok(payload, message), init);
 
 export const jsonFail = (code: ApiCode, message: string, init?: ResponseInit) =>

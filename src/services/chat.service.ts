@@ -2,6 +2,7 @@ import { AI_CONSULTATION_ROOM_PROMPT } from "@/constants/prompts/ai_consultation
 import { getEsgPrompt } from "@/constants/prompts/esg";
 import { getJournalPrompt } from "@/constants/prompts/journal";
 import { getVoucherPrompt } from "@/constants/prompts/voucher";
+import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
 import { IEsgRecord } from "@/interfaces/esg";
 import { IParsedVoucher } from "@/interfaces/voucher";
 import { GoogleGenerativeAI, Part, Tool } from "@google/generative-ai";
@@ -329,6 +330,50 @@ export class ChatService {
     } catch (error) {
       console.error("[ChatService] Error in analyzeESG:", error);
       return { data: null, error: "AI 解析碳盤查失敗，請稍後再試" };
+    }
+  }
+
+  // Info: (20260406 - Luphia) 前置防呆：快速掃描憑證是否可能重複
+  async analyzeDocumentPreCheck(
+    images: { data: string; mimeType: string }[] = [],
+  ): Promise<{
+    data: {
+      invoiceNumber?: string | null;
+      vendorTaxId?: string | null;
+      tradingDate?: string | null;
+      totalAmount?: number | null;
+    } | null;
+    error?: string;
+  }> {
+    try {
+      const model = this.genAI.getGenerativeModel({ model: this.modelName });
+      const promptText = getDocumentDuplicateCheckPrompt();
+      const parts: Part[] = [{ text: promptText }];
+
+      if (images && images.length > 0) {
+        images.forEach((img) => {
+          parts.push({
+            inlineData: {
+              data: img.data,
+              mimeType: img.mimeType,
+            },
+          });
+        });
+      }
+
+      const result = await model.generateContent(parts);
+      const response = await result.response;
+      const text = response.text().trim();
+
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return { data: JSON.parse(jsonMatch[0]) };
+      }
+
+      return { data: null, error: "無法從 AI 回應中解析出有效的 JSON 格式" };
+    } catch (error) {
+      console.error("[ChatService] Error in analyzeDocumentPreCheck:", error);
+      return { data: null, error: "AI 前置防呆掃描失敗，請稍後再試" };
     }
   }
 }

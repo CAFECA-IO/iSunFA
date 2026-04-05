@@ -83,6 +83,8 @@ export interface IEsgRecord {
   rawActivityData: string;
   unit: string;
   emissions: string;
+  coefficient?: string | null;
+  coefficientSource?: string | null;
   intensity: EsgIntensity;
   confidence: number;
   isVerified: boolean;

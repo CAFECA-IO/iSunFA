@@ -159,6 +159,10 @@ const JournalListItem = ({
 
   // Info: (20260320 - Julian) 分析出錯
   if (journal.analysisStatus === AIAnalysisStatus.FAILED) {
+    const failedMessage = journal.aiNote && journal.aiNote !== "無 AI 分析備註" 
+      ? journal.aiNote 
+      : (t("ocr.ai.failed") as string);
+
     return (
       <tr
         onClick={!journal.isDeleted ? () => onSelect(journal) : undefined}
@@ -183,7 +187,7 @@ const JournalListItem = ({
           {journal.isDeleted ? (
             <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
           ) : (
-            <p className="font-bold text-red-500">{t("ocr.ai.failed")}</p>
+            <p className="font-bold text-red-500 truncate" title={failedMessage}>{failedMessage}</p>
           )}
         </td>
         <td
@@ -194,7 +198,7 @@ const JournalListItem = ({
           {journal.isDeleted ? (
             <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
           ) : (
-            <p className="font-bold text-red-500">{t("ocr.ai.failed")}</p>
+            <p className="font-bold text-red-500 truncate" title={failedMessage}>{failedMessage}</p>
           )}
         </td>
         {actionsColumn}

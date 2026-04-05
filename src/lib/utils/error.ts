@@ -1,5 +1,5 @@
-import { ApiCode, HTTP_MAP } from '@/lib/utils/status';
-import { fail, IApiResponse } from '@/lib/utils/response';
+import { ApiCode, HTTP_MAP } from "@/lib/utils/status";
+import { fail, IApiResponse } from "@/lib/utils/response";
 
 export class AppError extends Error {
   readonly code: ApiCode;

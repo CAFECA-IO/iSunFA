@@ -1,28 +1,31 @@
-import { prisma } from '@/lib/prisma';
-import { Prisma, AccountBook, TeamMember, Team } from '@/generated/client';
+import { prisma } from "@/lib/prisma";
+import { Prisma, AccountBook, TeamMember, Team } from "@/generated/client";
 
 export interface IAccountBookRepository {
   create(data: Prisma.AccountBookCreateInput): Promise<AccountBook>;
   listTeamsAccountBooksByUserId(userId: string): Promise<
     (TeamMember & {
       team: Team & {
-        accountBooks: AccountBook[]
-      }
+        accountBooks: AccountBook[];
+      };
     })[]
   >;
   listTeamsAccountBooksByTeamId(teamId: string): Promise<AccountBook[]>;
   updateAccountBook(
     accountBookId: string,
-    data: Prisma.AccountBookUpdateInput
+    data: Prisma.AccountBookUpdateInput,
   ): Promise<AccountBook>;
-  transferAccountBook(accountBookId: string, teamId: string): Promise<AccountBook>;
+  transferAccountBook(
+    accountBookId: string,
+    teamId: string,
+  ): Promise<AccountBook>;
   softDelete(accountBookId: string): Promise<AccountBook>;
 }
 
 export class AccountBookRepository {
   async create(data: Prisma.AccountBookCreateInput) {
     const accountBook = await prisma.accountBook.create({
-      data
+      data,
     });
     return accountBook;
   }
@@ -31,17 +34,17 @@ export class AccountBookRepository {
     // Info: (20260306 - Luphia) 這裡在 include 加入 filter，只取未刪除的帳本
     const teamMembers = await prisma.teamMember.findMany({
       where: {
-        userId
+        userId,
       },
       include: {
         team: {
           include: {
             accountBooks: {
-              where: { deletedAt: null } // Info: (20260306 - Luphia) 軟刪除過濾
-            }
-          }
-        }
-      }
+              where: { deletedAt: null }, // Info: (20260306 - Luphia) 軟刪除過濾
+            },
+          },
+        },
+      },
     });
     return teamMembers;
   }
@@ -50,20 +53,23 @@ export class AccountBookRepository {
     const accountBook = await prisma.accountBook.findUnique({
       where: {
         id: accountBookId,
-        deletedAt: null
-      }
+        deletedAt: null,
+      },
     });
     return accountBook;
   }
 
-  async getAccountBookByIdAndUserAddress(accountBookId: string, userAddress: string) {
+  async getAccountBookByIdAndUserAddress(
+    accountBookId: string,
+    userAddress: string,
+  ) {
     return prisma.accountBook.findUnique({
       where: {
         id: accountBookId,
         team: {
           teamMembers: { some: { user: { address: userAddress } } },
         },
-        deletedAt: null
+        deletedAt: null,
       },
     });
   }
@@ -73,8 +79,8 @@ export class AccountBookRepository {
     const accountBooks = await prisma.accountBook.findMany({
       where: {
         teamId,
-        deletedAt: null // Info: (20260306 - Luphia) 軟刪除過濾
-      }
+        deletedAt: null, // Info: (20260306 - Luphia) 軟刪除過濾
+      },
     });
     return accountBooks;
   }
@@ -87,29 +93,32 @@ export class AccountBookRepository {
     const accountBook = await prisma.accountBook.update({
       where: {
         id: accountBookId,
-        deletedAt: null
+        deletedAt: null,
       },
       data: {
-        team: { connect: { id: teamId } }
+        team: { connect: { id: teamId } },
       },
     });
 
     return accountBook;
   }
 
-  async updateAccountBook(accountBookId: string, data: Prisma.AccountBookUpdateInput) {
+  async updateAccountBook(
+    accountBookId: string,
+    data: Prisma.AccountBookUpdateInput,
+  ) {
     /**
      * Info: (20260306 - Luphia) Update accountBook details.
-     * Logic: 
+     * Logic:
      * 1. 確保該帳本 ID 存在且尚未被標記為軟刪除。
      * 2. 執行局部更新 (Partial Update)。
      */
     const accountBook = await prisma.accountBook.update({
       where: {
         id: accountBookId,
-        deletedAt: null // Info: (20260306 - Luphia) 確保不更新已刪除的資料
+        deletedAt: null, // Info: (20260306 - Luphia) 確保不更新已刪除的資料
       },
-      data
+      data,
     });
 
     return accountBook;
@@ -122,10 +131,10 @@ export class AccountBookRepository {
      */
     const accountBook = await prisma.accountBook.update({
       where: { id: accountBookId },
-      data: { deletedAt: new Date() }
+      data: { deletedAt: new Date() },
     });
     return accountBook;
   }
-};
+}
 
 export const accountBookRepo = new AccountBookRepository();

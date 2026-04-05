@@ -27,7 +27,7 @@ export async function GET(
     const { account_book_id: accountBookId } = await params;
     const accountBook = await accountBookRepo.getAccountBookByIdAndUserAddress(
       accountBookId,
-      sessionUser.address
+      sessionUser.address,
     );
 
     if (!accountBook) {
@@ -37,7 +37,8 @@ export async function GET(
       );
     }
 
-    const { todayJournalCount, pendingJournalCount, aiAverageConfidence } = await journalRepo.getJournalSummary(accountBookId);
+    const { todayJournalCount, pendingJournalCount, aiAverageConfidence } =
+      await journalRepo.getJournalSummary(accountBookId);
 
     // Info: (20260324 - Julian) 組合 response
     const dashboardSummary: IJournalDashboardSummary = {

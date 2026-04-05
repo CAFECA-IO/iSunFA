@@ -21,10 +21,11 @@ export interface ICashFlowStatement {
   };
   summary: {
     netIncreaseDecrease: number; // Info: (20260330 - Julian) 本期現金增加(減少)數
-    beginningBalance: number;    // Info: (20260330 - Julian) 期初現金及約當現金餘額
-    endingBalance: number;       // Info: (20260330 - Julian) 期末現金及約當現金餘額
+    beginningBalance: number; // Info: (20260330 - Julian) 期初現金及約當現金餘額
+    endingBalance: number; // Info: (20260330 - Julian) 期末現金及約當現金餘額
   };
-  supplementary: {               // Info: (20260330 - Julian) 補充揭露
+  supplementary: {
+    // Info: (20260330 - Julian) 補充揭露
     interestPaid: number;
     taxesPaid: number;
   };
