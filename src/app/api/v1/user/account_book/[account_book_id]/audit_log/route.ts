@@ -5,6 +5,7 @@ import { accountBookRepo } from "@/repositories/account_book.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { AuditLogDataType } from "@/generated/enums";
+import { Prisma } from "@/generated/browser";
 
 /**
  * Info: (20260306 - Julian) 取得日記帳的異動紀錄
@@ -38,9 +39,31 @@ export async function GET(
       ? parseInt(searchParams.get("take")!, 10)
       : 100;
     const dataType = searchParams.get("dataType") as AuditLogDataType;
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+
+    const where: Prisma.AuditLogWhereInput = {
+      accountBookId: accountBook.id,
+    };
+
+    // Info: (20260407 - Julian) 篩選資料類型
+    if (dataType) {
+      where.dataType = dataType;
+    }
+
+    // Info: (20260407 - Julian) 篩選時間區間
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate);
+      }
+    }
 
     const logs = await auditLogRepo.getAuditLogs({
-      where: { dataType, accountBookId: accountBook.id },
+      where,
       orderBy: { createdAt: "desc" },
       take,
       include: {

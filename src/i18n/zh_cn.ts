@@ -1048,7 +1048,7 @@ export const zhCn = {
       log: "变动记录",
     },
     log_view: {
-      title: "凭证变动记录",
+      title: "变动记录",
       refresh: "刷新",
       record_time: "记录时间",
       action_type: "操作类型",
