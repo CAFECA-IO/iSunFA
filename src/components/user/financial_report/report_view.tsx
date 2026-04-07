@@ -88,15 +88,15 @@ export default function ReportView() {
   const getReportPeriod = (period: ReportPeriod, year: number) => {
     switch (period) {
       case ReportPeriod.ALL_YEAR:
-        return `${year} ` + t("report_view.periods.allyear");
+        return `${year}_` + t("report_view.periods.allyear");
       case ReportPeriod.Q1:
-        return `${year} ` + t("report_view.periods.q1");
+        return `${year}_` + t("report_view.periods.q1");
       case ReportPeriod.Q2:
-        return `${year} ` + t("report_view.periods.q2");
+        return `${year}_` + t("report_view.periods.q2");
       case ReportPeriod.Q3:
-        return `${year} ` + t("report_view.periods.q3");
+        return `${year}_` + t("report_view.periods.q3");
       case ReportPeriod.Q4:
-        return `${year} ` + t("report_view.periods.q4");
+        return `${year}_` + t("report_view.periods.q4");
       default:
         return "";
     }
@@ -108,10 +108,10 @@ export default function ReportView() {
   // Info: (20260331 - Julian) 報表資料
   const reportData = generatedConfig
     ? {
-        reportTitle: getReportTitle(generatedConfig.type),
-        reportPeriod: getReportPeriod(generatedConfig.period, generatedConfig.year),
-        currency: generatedConfig.currency,
-      }
+      reportTitle: getReportTitle(generatedConfig.type),
+      reportPeriod: getReportPeriod(generatedConfig.period, generatedConfig.year),
+      currency: generatedConfig.currency,
+    }
     : null;
 
   const handleDownload = async () => {

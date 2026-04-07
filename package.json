@@ -12,7 +12,8 @@
     "swarm": "npm run build && next start -p 10020",
     "worker": "npx tsx scripts/workers.run.ts",
     "prettier": "prettier --write .",
-    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\""
+    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
+    "service": "npx tsx scripts/run_service.ts"
   },
   "dependencies": {
     "@erc3643org/erc-3643": "^4.1.3",
