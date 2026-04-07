@@ -1,7 +1,7 @@
 import { AI_CONSULTATION_ROOM_PROMPT } from "@/constants/prompts/ai_consultation_room";
 import { getEsgPrompt } from "@/constants/prompts/esg";
 import { getJournalPrompt } from "@/constants/prompts/journal";
-import { getVoucherPrompt } from "@/constants/prompts/voucher";
+import { getBaseVoucherPrompt, getVoucherLinesPrompt } from "@/constants/prompts/voucher";
 import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
 import { IEsgRecord } from "@/interfaces/esg";
 import { IParsedVoucher } from "@/interfaces/voucher";
@@ -254,16 +254,16 @@ export class ChatService {
   }
 
   /**
-   * Info: (20260311 - Julian) 將憑證圖片轉換為傳票 JSON
+   * Info: (20260407 - Julian) 將憑證圖片轉換為傳票基本資料 JSON
    */
-  async analyzeVoucher(
+  async analyzeVoucherBase(
     images: { data: string; mimeType: string }[] = [],
     accountBook: Partial<AccountBook> | null = null,
     journalText?: string,
-  ): Promise<{ data: IParsedVoucher | null; error?: string }> {
+  ): Promise<{ data: Partial<IParsedVoucher> | null; error?: string }> {
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
-      let promptText = getVoucherPrompt(accountBook);
+      let promptText = getBaseVoucherPrompt(accountBook);
       
       if (journalText) {
         promptText += `\n\n【重要指示】\n使用者已提供/修正日記帳的最新內容如下。請優先依據以下文字資訊進行解析，若與圖片內容有衝突，以此文字為準：\n${journalText}`;
@@ -286,7 +286,6 @@ export class ChatService {
       const response = await result.response;
       const text = response.text().trim();
 
-      // Info: (20260311 - Julian) 尋找 JSON 區塊
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         return { data: JSON.parse(jsonMatch[0]) };
@@ -294,8 +293,53 @@ export class ChatService {
 
       return { data: null, error: "無法從 AI 回應中解析出有效的 JSON 格式" };
     } catch (error) {
-      console.error("[ChatService] Error in analyzeVoucher:", error);
-      return { data: null, error: "AI 解析傳票失敗，請稍後再試" };
+      console.error("[ChatService] Error in analyzeVoucherBase:", error);
+      return { data: null, error: "AI 解析傳票基礎資料失敗，請稍後再試" };
+    }
+  }
+
+  /**
+   * Info: (20260407 - Julian) 將憑證圖片轉換為傳票分錄 JSON
+   */
+  async analyzeVoucherLines(
+    images: { data: string; mimeType: string }[] = [],
+    accountBook: Partial<AccountBook> | null = null,
+    journalText?: string,
+  ): Promise<{ data: Partial<IParsedVoucher> | null; error?: string }> {
+    try {
+      const model = this.genAI.getGenerativeModel({ model: this.modelName });
+      let promptText = getVoucherLinesPrompt(accountBook);
+      
+      if (journalText) {
+        promptText += `\n\n【重要指示】\n使用者已提供/修正日記帳的最新內容如下。請優先依據以下文字資訊進行解析，若與圖片內容有衝突，以此文字為準：\n${journalText}`;
+      }
+      
+      const parts: Part[] = [{ text: promptText }];
+
+      if (images && images.length > 0) {
+        images.forEach((img) => {
+          parts.push({
+            inlineData: {
+              data: img.data,
+              mimeType: img.mimeType,
+            },
+          });
+        });
+      }
+
+      const result = await model.generateContent(parts);
+      const response = await result.response;
+      const text = response.text().trim();
+
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return { data: JSON.parse(jsonMatch[0]) };
+      }
+
+      return { data: null, error: "無法從 AI 回應中解析出有效的 JSON 格式" };
+    } catch (error) {
+      console.error("[ChatService] Error in analyzeVoucherLines:", error);
+      return { data: null, error: "AI 解析傳票分錄失敗，請稍後再試" };
     }
   }
 

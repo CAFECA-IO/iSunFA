@@ -3,7 +3,7 @@ import {
   IMissionDefinition,
   IMissionParams,
 } from "@/lib/worker/mission.interface";
-import { getVoucherPrompt } from "@/constants/prompts/voucher";
+import { getBaseVoucherPrompt, getVoucherLinesPrompt } from "@/constants/prompts/voucher";
 import { getEsgPrompt } from "@/constants/prompts/esg";
 import { AccountBook } from "@/generated/client";
 
@@ -28,11 +28,21 @@ export function generateJournalCorrectionMission(
 
   // Info: (20260407 - Julian) 跳過 PRE_CHECK 和 JOURNAL_PARSING，直接重產傳票與 ESG
   tasks.push({
-    type: "VOUCHER_PARSING",
+    type: "VOUCHER_BASE_PARSING",
     order: 1,
     data: {
-      key: "VOUCHER",
-      prompt: getVoucherPrompt(accountBook),
+      key: "VOUCHER_BASE",
+      prompt: getBaseVoucherPrompt(accountBook),
+      context,
+    },
+  });
+
+  tasks.push({
+    type: "VOUCHER_LINES_PARSING",
+    order: 1,
+    data: {
+      key: "VOUCHER_LINES",
+      prompt: getVoucherLinesPrompt(accountBook),
       context,
     },
   });

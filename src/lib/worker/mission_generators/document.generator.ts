@@ -4,7 +4,7 @@ import {
   IMissionParams,
 } from "@/lib/worker/mission.interface";
 import { getJournalPrompt } from "@/constants/prompts/journal";
-import { getVoucherPrompt } from "@/constants/prompts/voucher";
+import { getBaseVoucherPrompt, getVoucherLinesPrompt } from "@/constants/prompts/voucher";
 import { getEsgPrompt } from "@/constants/prompts/esg";
 import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
 
@@ -46,11 +46,21 @@ export function generateDocumentParsingMission(
   });
 
   tasks.push({
-    type: "VOUCHER_PARSING",
+    type: "VOUCHER_BASE_PARSING",
     order: 1,
     data: {
-      key: "VOUCHER",
-      prompt: getVoucherPrompt(accountBook),
+      key: "VOUCHER_BASE",
+      prompt: getBaseVoucherPrompt(accountBook),
+      context,
+    },
+  });
+
+  tasks.push({
+    type: "VOUCHER_LINES_PARSING",
+    order: 1,
+    data: {
+      key: "VOUCHER_LINES",
+      prompt: getVoucherLinesPrompt(accountBook),
       context,
     },
   });

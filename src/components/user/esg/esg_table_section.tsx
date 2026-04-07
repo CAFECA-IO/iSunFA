@@ -467,7 +467,7 @@ export default function EsgTableSection({
               {isLoading ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="p-2 text-center text-sm font-bold text-slate-500 lg:px-6 lg:py-4"
                   >
                     {t("esg_table.loading")}
@@ -486,7 +486,7 @@ export default function EsgTableSection({
               ) : (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="bg-white p-8 text-center lg:px-6 lg:py-16"
                   >
                     {/* Info: (20260325 - Luphia) 區分真的沒資料 vs 搜尋不到資料 */}

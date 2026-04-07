@@ -109,7 +109,7 @@ export async function POST(
       fileId: uploadedFile.id,
       createdAt: new Date(),
       updatedAt: new Date(),
-      dateTimestamp: 0,
+      tradingDate: new Date(),
       activityType: "",
       vendor: "",
       rawActivityData: "",

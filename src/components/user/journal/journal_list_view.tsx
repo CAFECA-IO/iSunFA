@@ -170,7 +170,7 @@ export default function JournalListView() {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
-      params.append("orderBy", `{"createdAt":"${sortOrder}"}`);
+      params.append("sort", sortOrder);
       if (debouncedKeyWord) params.append("keyWord", debouncedKeyWord);
 
       if (filteredVerifyStatus !== "all") {

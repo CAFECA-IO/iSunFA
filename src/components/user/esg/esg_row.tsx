@@ -138,6 +138,8 @@ export function EsgRow({
     </td>
   );
 
+  const dateString = timestampToString(new Date(record.tradingDate).getTime() / 1000).dateWithDash;
+
   // Info: (20260320 - Julian) 尚未開始
   if (record.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
@@ -148,7 +150,7 @@ export function EsgRow({
           </div>
         </td>
         <td className="p-2 text-center text-xs font-semibold whitespace-nowrap text-slate-400 lg:px-6 lg:py-4 lg:text-sm">
-          {timestampToString(record.dateTimestamp).dateWithDash}
+          {dateString}
         </td>
         <td
           colSpan={6}
@@ -178,7 +180,7 @@ export function EsgRow({
           </div>
         </td>
         <td className="p-2 text-center text-xs font-semibold whitespace-nowrap text-blue-400 lg:px-6 lg:py-4 lg:text-sm">
-          {timestampToString(record.dateTimestamp).dateWithDash}
+          {dateString}
         </td>
         <td
           aria-label="AI Processing"
@@ -217,7 +219,7 @@ export function EsgRow({
           </div>
         </td>
         <td className="p-2 text-center text-xs font-semibold whitespace-nowrap lg:px-6 lg:py-4 lg:text-sm">
-          {timestampToString(record.dateTimestamp).dateWithDash}
+          {dateString}
         </td>
         <td
           colSpan={6}
@@ -276,7 +278,7 @@ export function EsgRow({
       </td>
       {/* Info: (20260320 - Julian) Date */}
       <td className="p-2 text-center text-xs font-semibold whitespace-nowrap text-slate-800 lg:px-6 lg:py-4 lg:text-sm">
-        {timestampToString(record.dateTimestamp).dateWithDash}
+        {dateString}
       </td>
       {/* Info: (20260320 - Julian) Activity Type */}
       <td className="p-2 lg:px-6 lg:py-4">
