@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
+import { voucherRepo } from "@/repositories/voucher.repo";
+import { journalRepo } from "@/repositories/journal.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { EsgScope, EsgIntensity } from "@/generated/client";
@@ -60,14 +61,14 @@ export async function GET(
 
     const formattedRecord: IEsgRecord = {
       id: esgRecord.id,
-      dateTimestamp: esgRecord.dateTimestamp,
+      tradingDate: esgRecord.tradingDate.toISOString(),
       fileId: esgRecord.fileId ?? "",
       file: esgRecord.file
         ? {
-            id: esgRecord.file.id,
-            hash: esgRecord.file.hash,
-            fileName: esgRecord.file.fileName || "Unknown",
-          }
+          id: esgRecord.file.id,
+          hash: esgRecord.file.hash,
+          fileName: esgRecord.file.fileName || "Unknown",
+        }
         : undefined,
       scope: esgRecord.scope as unknown as ClientEsgScope,
       activityType: esgRecord.activityType,
@@ -143,7 +144,7 @@ export async function PUT(
 
     // Info: (20260312 - Julian) 更新 ESG 紀錄
     const updatedRecord = await esgRepo.updateEsgRecord(esgId, {
-      ...(reqBody.dateTimestamp && { dateTimestamp: reqBody.dateTimestamp }),
+      ...(reqBody.tradingDate && { tradingDate: reqBody.tradingDate }),
       ...(reqBody.scope && {
         scope: reqBody.scope.toUpperCase() as EsgScope,
       }),
@@ -179,7 +180,7 @@ export async function PUT(
 
     const formattedRecord: IEsgRecord = {
       id: updatedRecord.id,
-      dateTimestamp: updatedRecord.dateTimestamp,
+      tradingDate: updatedRecord.tradingDate.toISOString(),
       fileId: updatedRecord.fileId ?? "",
       scope: updatedRecord.scope as unknown as ClientEsgScope,
       activityType: updatedRecord.activityType,
@@ -257,27 +258,24 @@ export async function DELETE(
       return jsonFail(ApiCode.NOT_FOUND, "Esg record not found");
     }
 
-    const deletedEsg = await prisma.esgRecord.update({
-      where: { id: esgId },
-      data: { deletedAt: new Date() },
-    });
+    const deletedEsg = await esgRepo.updateEsgRecord(esgId, { deletedAt: new Date() });
+
+    if (!deletedEsg) {
+      return jsonFail(ApiCode.NOT_FOUND, "Esg record not found to delete");
+    }
 
     if (existingEsg.fileId) {
-      await prisma.voucher.updateMany({
-        where: {
-          fileId: existingEsg.fileId,
-          accountBookId: accountBookId,
-        },
-        data: { deletedAt: new Date() },
-      });
+      await voucherRepo.updateManyVouchersByFile(
+        existingEsg.fileId,
+        accountBookId,
+        { deletedAt: new Date() },
+      );
 
-      await prisma.journal.updateMany({
-        where: {
-          fileId: existingEsg.fileId,
-          accountBookId: accountBookId,
-        },
-        data: { deletedAt: new Date() },
-      });
+      await journalRepo.updateManyJournalsByFile(
+        existingEsg.fileId,
+        accountBookId,
+        { deletedAt: new Date() },
+      );
     }
 
     await auditLogRepo.createAuditLog({

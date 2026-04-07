@@ -35,6 +35,11 @@ export default function AiConfidence({
   // Info: (20260325 - Julian) Only show progress bar
   if (barOnly) return progessBar;
 
+  const formattedNote = note?.replaceAll(/\n/g, "<br>")?.replaceAll(/-\s(\S+：)/g, "<li class='text-slate-800 font-bold'>$1</li>")
+    .replaceAll("<li", "<ul class='list-disc list-inside'><li")
+    .replace("</li>", "</li></ul>")
+    ?? ''
+
   return (
     <div className="flex items-center gap-2">
       {/* Info: (20260325 - Julian) AI 信心度 Progress Bar */}
@@ -83,9 +88,9 @@ export default function AiConfidence({
                     {t("common.ai_confidence.note_title")}
                   </h4>
                 </div>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap text-slate-600">
-                  {note}
-                </p>
+                <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-600">
+                  <article dangerouslySetInnerHTML={{ __html: formattedNote }} />
+                </div>
               </PopoverPanel>
             )}
           </>

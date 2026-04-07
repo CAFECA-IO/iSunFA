@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -7,6 +6,7 @@ import { accountBookRepo } from "@/repositories/account_book.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { esgRepo } from "@/repositories/esg.repo";
 import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
@@ -78,10 +78,10 @@ export async function GET(
       fileId: voucher.fileId ?? "",
       file: voucher.file
         ? {
-            id: voucher.file.id,
-            hash: voucher.file.hash,
-            fileName: voucher.file.fileName || "Unknown",
-          }
+          id: voucher.file.id,
+          hash: voucher.file.hash,
+          fileName: voucher.file.fileName || "Unknown",
+        }
         : undefined,
       lineItems: {
         lines: lineItems,
@@ -249,22 +249,17 @@ export async function DELETE(
     const now = new Date();
 
     // Info: (20260404 - Luphia) 更新 Voucher 的 deletedAt
-    await prisma.voucher.update({
-      where: { id: voucherId },
-      data: { deletedAt: now },
-    });
+    await voucherRepo.updateVoucher(voucherId, { deletedAt: now });
 
     // Info: (20260404 - Luphia) 同步軟刪除對應的 ESG (透過 fileId 原有依賴綁定)
     if (existingVoucher.fileId) {
-      await prisma.esgRecord.updateMany({
-        where: {
-          fileId: existingVoucher.fileId,
-          accountBookId: accountBookId,
-        },
-        data: {
+      await esgRepo.updateManyEsgRecordsByFile(
+        existingVoucher.fileId,
+        accountBookId,
+        {
           deletedAt: now,
         },
-      });
+      );
     }
 
     // Info: (20260404 - Luphia) 紀錄刪除動作

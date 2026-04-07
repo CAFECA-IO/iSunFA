@@ -148,6 +148,17 @@ export class JournalRepository {
   }
 
   // Info: (20260327 - Luphia) 抽離共用的關聯查詢邏輯，並使用 Promise.all 加速
+  async updateManyJournalsByFile(
+    fileId: string,
+    accountBookId: string,
+    data: Prisma.JournalUpdateInput,
+  ) {
+    return prisma.journal.updateMany({
+      where: { fileId, accountBookId },
+      data,
+    });
+  }
+
   private async getRelationsForJournal(
     fileId: string | null,
     accountBookId: string,

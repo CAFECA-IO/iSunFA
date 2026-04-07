@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { esgRepo } from "@/repositories/esg.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
 
 /**
@@ -46,20 +46,15 @@ export async function POST(
     }
 
     // Info: (20260404 - Luphia) 將 Voucher 復原
-    await prisma.voucher.update({
-      where: { id: voucherId },
-      data: { deletedAt: null },
-    });
+    await voucherRepo.updateVoucher(voucherId, { deletedAt: null });
 
     // Info: (20260404 - Luphia) 同步復原 ESG
     if (existingVoucher.fileId) {
-      await prisma.esgRecord.updateMany({
-        where: {
-          fileId: existingVoucher.fileId,
-          accountBookId: accountBookId,
-        },
-        data: { deletedAt: null },
-      });
+      await esgRepo.updateManyEsgRecordsByFile(
+        existingVoucher.fileId,
+        accountBookId,
+        { deletedAt: null },
+      );
     }
 
     // Info: (20260404 - Luphia) 紀錄復原動作

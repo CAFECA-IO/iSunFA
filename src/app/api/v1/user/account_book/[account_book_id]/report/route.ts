@@ -3,7 +3,6 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { prisma } from "@/lib/prisma";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import { Prisma } from "@/generated/browser";
 import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
@@ -14,6 +13,7 @@ import { IVoucherLineUI } from "@/interfaces/voucher";
 import { IAccount } from "@/constants/accounts";
 import { generateEsgReport } from "@/lib/report/esg_report_generator";
 import { esgRepo } from "@/repositories/esg.repo";
+import { voucherRepo } from "@/repositories/voucher.repo";
 
 /**
  * Info: (20260330 - Julian) 取得財務報表
@@ -88,13 +88,11 @@ export async function GET(
     if (reportType === ReportType.ESG_REPORT) {
       // Info: (20260406 - Luphia) 產出碳盤查報表
       const range = getTradingDateRange();
-      const startTs = Math.floor(range.start.getTime() / 1000);
-      const endTs = Math.floor(range.end.getTime() / 1000);
 
       const esgRecords = await esgRepo.getEsgRecords({
         where: {
           accountBookId,
-          dateTimestamp: { gte: startTs, lte: endTs },
+          tradingDate: { gte: range.start, lte: range.end },
           isVerified: true,
           deletedAt: null,
         },
@@ -116,7 +114,7 @@ export async function GET(
     };
 
     // Info: (20260331 - Julian) 取得傳票與會計分錄
-    const vouchers = await prisma.voucher.findMany({
+    const vouchers = await voucherRepo.getVouchers({
       where,
       include: { lines: true },
     });

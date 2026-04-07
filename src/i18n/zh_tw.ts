@@ -1123,7 +1123,7 @@ export const zhTw = {
       log: "異動紀錄",
     },
     log_view: {
-      title: "憑證異動紀錄",
+      title: "異動紀錄",
       refresh: "重新整理",
       record_time: "紀錄時間",
       action_type: "操作類型",

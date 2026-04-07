@@ -3,7 +3,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { prisma } from "@/lib/prisma";
+import { voucherRepo } from "@/repositories/voucher.repo";
 
 /**
  * Info: (20260331 - Julian) 取得帳本中「已核對的傳票數目」
@@ -32,11 +32,9 @@ export async function GET(
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
 
-    const countOfVerifiedVouchers = await prisma.voucher.count({
-      where: {
-        accountBookId,
-        isVerified: true,
-      },
+    const countOfVerifiedVouchers = await voucherRepo.countVouchers({
+      accountBookId,
+      isVerified: true,
     });
 
     return jsonOk({ count: countOfVerifiedVouchers });

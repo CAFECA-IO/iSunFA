@@ -119,10 +119,7 @@ export default function EsgDetailModal({
   if (!formData) return null;
 
   const handleDateChange = (dateString: string) => {
-    const timestamp = new Date(dateString).getTime() / 1000;
-    if (!isNaN(timestamp)) {
-      setFormData({ ...formData, dateTimestamp: timestamp });
-    }
+    setFormData({ ...formData, tradingDate: dateString });
   };
 
   const EsgContent = (
@@ -168,11 +165,7 @@ export default function EsgDetailModal({
               id="dateTimestamp"
               aria-label={t("esg_verify.form.date")}
               type="date"
-              value={
-                new Date(formData.dateTimestamp * 1000)
-                  .toISOString()
-                  .split("T")[0]
-              }
+              value={formData.tradingDate}
               onChange={(e) => handleDateChange(e.target.value)}
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
             />

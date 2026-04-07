@@ -63,10 +63,7 @@ export async function GET(
     const esgRecords = await esgRepo.getEsgRecords({
       where: {
         accountBookId,
-        dateTimestamp: {
-          gte: Math.floor(startDate.getTime() / 1000),
-          lte: Math.floor(endDate.getTime() / 1000),
-        },
+        tradingDate: { gte: startDate, lte: endDate },
       },
     });
 
@@ -74,10 +71,7 @@ export async function GET(
       where: {
         accountBookId,
         tradingType: "INCOME",
-        tradingDate: {
-          gte: startDate,
-          lte: endDate,
-        },
+        tradingDate: { gte: startDate, lte: endDate },
       },
       include: { lines: true },
     });

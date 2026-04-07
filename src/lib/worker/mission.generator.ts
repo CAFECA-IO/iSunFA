@@ -4,6 +4,7 @@ import {
 } from "@/lib/worker/mission.interface";
 import { generateIrscMission } from "@/lib/worker/mission_generators/irsc.generator";
 import { generateDocumentParsingMission } from "@/lib/worker/mission_generators/document.generator";
+import { generateJournalCorrectionMission } from "@/lib/worker/mission_generators/journal_correction.generator";
 
 import { generateMission as generateMarketTrends } from "@/lib/worker/mission_generators/market_trends.generator";
 import { generateMission as generateIndustryDevelopment } from "@/lib/worker/mission_generators/industry_development.generator";
@@ -28,6 +29,7 @@ const GENERATOR_MAP: Record<string, MissionGeneratorFn> = {
   // Info: (20260406 - Luphia) Special independent generators
   irsc: generateIrscMission,
   document_parsing: generateDocumentParsingMission,
+  journal_correction: generateJournalCorrectionMission,
 
   // Info: (20260406 - Luphia) External generators
   market_trends: generateMarketTrends,
