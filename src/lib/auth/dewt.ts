@@ -1,22 +1,22 @@
-import { SignJWT, jwtVerify, importPKCS8, exportJWK, importJWK } from 'jose';
-import type { JWTPayload, KeyObject, CryptoKey, JWK } from 'jose';
-import { webAuthnRepo } from '@/repositories/webauthn.repo';
-import { logger } from '@/lib/utils/logger';
-import { AppError } from '@/lib/utils/error';
-import { ApiCode } from '@/lib/utils/status';
-import { User } from '@/generated/client';
+import { SignJWT, jwtVerify, importPKCS8, exportJWK, importJWK } from "jose";
+import type { JWTPayload, KeyObject, CryptoKey, JWK } from "jose";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { logger } from "@/lib/utils/logger";
+import { AppError } from "@/lib/utils/error";
+import { ApiCode } from "@/lib/utils/status";
+import { User } from "@/generated/client";
 
-const origin = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const origin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const PEM_PRIVATE_KEY = process.env.DEWT_PRIVATE_KEY_PEM;
 
 if (!PEM_PRIVATE_KEY) {
-  logger.error('FATAL: DEWT_PRIVATE_KEY_PEM environment variable is not set.');
+  logger.error("FATAL: DEWT_PRIVATE_KEY_PEM environment variable is not set.");
 }
 
-const DEWT_ALG = 'ES256';
+const DEWT_ALG = "ES256";
 const DEWT_ISSUER = origin;
 const DEWT_AUDIENCE = origin;
-const DEWT_EXPIRATION_TIME = process.env.DEWT_EXPIRATION_TIME ?? '24h';
+const DEWT_EXPIRATION_TIME = process.env.DEWT_EXPIRATION_TIME ?? "24h";
 
 interface ILoadedKeys {
   privateKey: KeyObject | CryptoKey;
@@ -31,14 +31,16 @@ async function loadKeys(): Promise<ILoadedKeys> {
   if (!PEM_PRIVATE_KEY) {
     throw new AppError(
       ApiCode.INTERNAL_SERVER_ERROR,
-      'Server configuration error: Missing Private Key'
+      "Server configuration error: Missing Private Key",
     );
   }
 
   try {
     // Info: (20260127 - Tzuhan) Fix potential issue with .env newline escaping
-    const sanitizedKey = PEM_PRIVATE_KEY.replace(/\\n/g, '\n');
-    const privateKey = await importPKCS8(sanitizedKey, DEWT_ALG, { extractable: true });
+    const sanitizedKey = PEM_PRIVATE_KEY.replace(/\\n/g, "\n");
+    const privateKey = await importPKCS8(sanitizedKey, DEWT_ALG, {
+      extractable: true,
+    });
     const privateJwk = await exportJWK(privateKey);
     const publicJwk: JWK = {
       kty: privateJwk.kty,
@@ -46,13 +48,18 @@ async function loadKeys(): Promise<ILoadedKeys> {
       x: privateJwk.x,
       y: privateJwk.y,
     };
-    const publicKey = (await importJWK(publicJwk, DEWT_ALG)) as KeyObject | CryptoKey;
+    const publicKey = (await importJWK(publicJwk, DEWT_ALG)) as
+      | KeyObject
+      | CryptoKey;
 
     loadedKeys = { privateKey, publicKey };
     return loadedKeys;
   } catch (error) {
     logger.error(`Failed to load keys: ${JSON.stringify(error)}`);
-    throw new AppError(ApiCode.INTERNAL_SERVER_ERROR, 'Failed to load cryptographic keys');
+    throw new AppError(
+      ApiCode.INTERNAL_SERVER_ERROR,
+      "Failed to load cryptographic keys",
+    );
   }
 }
 
@@ -65,7 +72,7 @@ export const signDeWT = async (user: User): Promise<string> => {
     sub: user.id,
     address: user.address,
     role: user.role,
-    scope: ['user'],
+    scope: ["user"],
     pubKeyX: user.pubKeyX,
     pubKeyY: user.pubKeyY,
     name: user.name,
@@ -93,14 +100,14 @@ export const verifyDeWT = async (dewt: string): Promise<JWTPayload> => {
     return payload;
   } catch (error) {
     logger.error(`DeWT verification failed: ${JSON.stringify(error)}`);
-    throw new AppError(ApiCode.UNAUTHORIZED, 'Invalid or expired token');
+    throw new AppError(ApiCode.UNAUTHORIZED, "Invalid or expired token");
   }
 };
 
 export const getIdentityFromDeWT = async (
-  authHeader: string | null | undefined
+  authHeader: string | null | undefined,
 ): Promise<User | null> => {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return null;
   }
   const dewt = authHeader.substring(7);
@@ -125,7 +132,7 @@ export const getIdentityFromDeWT = async (
     // Info: (20260124 - Tzuhan) 3. [核心修正] 容錯降級 (Offline Mode)
     // Info: (20260124 - Tzuhan) 如果 DB 連線失敗，不拋出錯誤，而是使用 JWT Payload 重組 User 物件
     logger.warn(
-      `[Auth] DB Connection Failed. Falling back to JWT Payload. Error: ${(error as Error).message}`
+      `[Auth] DB Connection Failed. Falling back to JWT Payload. Error: ${(error as Error).message}`,
     );
   }
 
@@ -135,10 +142,12 @@ export const getIdentityFromDeWT = async (
   const result = {
     id: payload.sub as string,
     address: payload.address as string,
-    role: (payload.role as 'USER' | 'ADMIN') || 'USER',
+    role: (payload.role as "USER" | "ADMIN") || "USER",
     pubKeyX: payload.pubKeyX as string,
     pubKeyY: payload.pubKeyY as string,
-    name: (payload.name as string) || `User ${(payload.address as string).slice(0, 6)}`,
+    name:
+      (payload.name as string) ||
+      `User ${(payload.address as string).slice(0, 6)}`,
     imageUrl: (payload.imageUrl as string) || null,
     // Info: (20260124 - Tzuhan) 以下欄位在 JWT 中不存在，給予空值或預設值
     credentialId: null,

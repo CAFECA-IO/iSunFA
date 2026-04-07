@@ -17,11 +17,17 @@ export async function GET() {
     const threads = await talkRepo.listThreadsWithCounts();
 
     // Info: (20260212 - Julian) 取得與討論串關聯的標籤
-    const tagIds = await talkRepo.getThreadTagsByThreadIds(threads.map((thread) => thread.id));
-    const tags = await talkRepo.getTagsByIds(tagIds.map((tagId) => tagId.tagId));
+    const tagIds = await talkRepo.getThreadTagsByThreadIds(
+      threads.map((thread) => thread.id),
+    );
+    const tags = await talkRepo.getTagsByIds(
+      tagIds.map((tagId) => tagId.tagId),
+    );
 
     // Info: (20260212 - Julian) 取得討論串的使用者
-    const users = await webAuthnRepo.findUsersByIds(threads.map((thread) => thread.userId));
+    const users = await webAuthnRepo.findUsersByIds(
+      threads.map((thread) => thread.userId),
+    );
 
     // Info: (20260212 - Julian) 取得與討論串關聯的按讚數、倒讚數
     const reactionCounts = await talkRepo.getReactionCounts();
@@ -88,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { question, files= [] } = body;
+    const { question, files = [] } = body;
 
     if (!question) {
       console.error("Missing question");
@@ -116,9 +122,9 @@ export async function POST(request: NextRequest) {
 
     // Info: (20260213 - Julian) 整理圖片資料發給 AI (直接從 body 取得，不經由 DB)
     const imagesForAi = files.map((f: IFile) => ({
-        data: f.base64,
-        mimeType: f.mimeType,
-      }));
+      data: f.base64,
+      mimeType: f.mimeType,
+    }));
 
     const { answer, tags } = await chatService.askAccountTalk(
       question,
@@ -133,12 +139,14 @@ export async function POST(request: NextRequest) {
     });
 
     // Info: (20260226 - Julian) 建立上傳檔案並與討論串關聯
-    if(files.length > 0){
-      await talkRepo.createFiles(files.map((file: IFile) => ({
-        hash: file.hash,
-        fileName: file.fileName,
-        threadId: thread.id,
-      })));
+    if (files.length > 0) {
+      await talkRepo.createFiles(
+        files.map((file: IFile) => ({
+          hash: file.hash,
+          fileName: file.fileName,
+          threadId: thread.id,
+        })),
+      );
     }
 
     // Info: (20260212 - Julian) 建立標籤並關聯
@@ -156,4 +164,3 @@ export async function POST(request: NextRequest) {
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }
-

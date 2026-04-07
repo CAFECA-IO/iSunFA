@@ -318,9 +318,9 @@ export default function JournalListView() {
         </div>
 
         {/* Info: (20260312 - Julian) Toolbar */}
-        <div className="flex flex-col items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row">
+        <div className="flex flex-col items-stretch lg:items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row">
           {/* Info: (20260401 - Julian) Search Bar */}
-          <div className="relative w-full max-w-sm">
+          <div className="relative w-full lg:max-w-sm">
             <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
@@ -333,7 +333,7 @@ export default function JournalListView() {
           </div>
 
           {/* Info: (20260304 - Julian) Date Picker */}
-          <div className="flex w-full items-center gap-2 sm:w-auto">
+          <div className="flex w-full items-center gap-2 lg:w-auto">
             <div className="flex w-full flex-col items-stretch gap-2 text-sm sm:flex-row sm:items-center">
               <input
                 type="date"

@@ -16,33 +16,33 @@ export interface IAccount {
 }
 
 export const COUNTRY = {
-  CN: 'CN',
-  HK: 'HK',
-  JP: 'JP',
-  KR: 'KR',
-  TW: 'TW',
-  US: 'US',
-}
+  CN: "CN",
+  HK: "HK",
+  JP: "JP",
+  KR: "KR",
+  TW: "TW",
+  US: "US",
+};
 
 export const CURRENCY = {
-  CN: 'CNY',
-  HK: 'HKD',
-  JP: 'JPY',
-  KR: 'KRW',
-  TW: 'TWD',
-  US: 'USD',
-}
+  CN: "CNY",
+  HK: "HKD",
+  JP: "JPY",
+  KR: "KRW",
+  TW: "TWD",
+  US: "USD",
+};
 
 export const RULE = {
-  IFRS: 'IFRS',
-  HKFRS: 'HKFRS',
-  K_IFRS: 'K-IFRS',
-  T_IFRS: 'T-IFRS',
-  ASBE: 'ASBE',
-  JMIS: 'JMIS',
-  US_GAAP: 'US-GAAP',
-  J_GAAP: 'J-GAAP',
-}
+  IFRS: "IFRS",
+  HKFRS: "HKFRS",
+  K_IFRS: "K-IFRS",
+  T_IFRS: "T-IFRS",
+  ASBE: "ASBE",
+  JMIS: "JMIS",
+  US_GAAP: "US-GAAP",
+  J_GAAP: "J-GAAP",
+};
 
 export const DEFAULT_RULE = {
   [COUNTRY.CN]: RULE.ASBE,
@@ -51,7 +51,7 @@ export const DEFAULT_RULE = {
   [COUNTRY.KR]: RULE.K_IFRS,
   [COUNTRY.TW]: RULE.T_IFRS,
   [COUNTRY.US]: RULE.US_GAAP,
-}
+};
 
 export const ACCOUNTS = {
   CN: CN_ACCOUNTS,

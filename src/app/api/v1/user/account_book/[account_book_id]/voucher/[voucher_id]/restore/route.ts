@@ -26,8 +26,9 @@ export async function POST(
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
 
-    const { account_book_id: accountBookId, voucher_id: voucherId } = await params;
-    
+    const { account_book_id: accountBookId, voucher_id: voucherId } =
+      await params;
+
     const restorer = await webAuthnRepo.findUserByAddress(sessionUser.address);
     if (!restorer) {
       return jsonFail(ApiCode.NOT_FOUND, "Restorer not found");
@@ -47,7 +48,7 @@ export async function POST(
     // Info: (20260404 - Luphia) 將 Voucher 復原
     await prisma.voucher.update({
       where: { id: voucherId },
-      data: { deletedAt: null }
+      data: { deletedAt: null },
     });
 
     // Info: (20260404 - Luphia) 同步復原 ESG
@@ -55,9 +56,9 @@ export async function POST(
       await prisma.esgRecord.updateMany({
         where: {
           fileId: existingVoucher.fileId,
-          accountBookId: accountBookId
+          accountBookId: accountBookId,
         },
-        data: { deletedAt: null }
+        data: { deletedAt: null },
       });
     }
 

@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma';
-import { Prisma } from '@/generated/client';
+import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/client";
 
 export class AuditLogRepository {
   async createAuditLog(data: Prisma.AuditLogUncheckedCreateInput) {
@@ -11,7 +11,11 @@ export class AuditLogRepository {
   }
 
   async getAuditLogs(args: Prisma.AuditLogFindManyArgs) {
-    return prisma.auditLog.findMany(args) as unknown as Promise<Prisma.AuditLogGetPayload<{ include: { user: { select: { id: true, name: true, address: true } } } }>[]>;
+    return prisma.auditLog.findMany(args) as unknown as Promise<
+      Prisma.AuditLogGetPayload<{
+        include: { user: { select: { id: true; name: true; address: true } } };
+      }>[]
+    >;
   }
 }
 

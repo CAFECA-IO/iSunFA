@@ -44,6 +44,7 @@ export default function EsgTableSection({
   >("all");
   const [filteredIntensity, setFilteredIntensity] = useState<string>("all");
   const [filteredScope, setFilteredScope] = useState<string>("all");
+  const [hideDeleted, setHideDeleted] = useState<boolean>(false);
 
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState<boolean>(false);
   const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
@@ -69,6 +70,7 @@ export default function EsgTableSection({
         queryParams.append("scope", filteredScope);
       if (year) queryParams.append("year", year.toString());
       if (month) queryParams.append("month", month.toString());
+      if (hideDeleted) queryParams.append("hideDeleted", "true");
       queryParams.append("sort", sortOrder);
       queryParams.append("page", currentPage.toString());
       queryParams.append("pageSize", PAGE_SIZE.toString());
@@ -99,6 +101,7 @@ export default function EsgTableSection({
     year,
     month,
     currentPage,
+    hideDeleted,
   ]);
 
   // Info: (20260324 - Julian) Reset pagination when filters change
@@ -112,6 +115,7 @@ export default function EsgTableSection({
     sortOrder,
     year,
     month,
+    hideDeleted,
   ]);
 
   const totalPages = Math.ceil(recordCount / PAGE_SIZE) || 1;
@@ -399,8 +403,34 @@ export default function EsgTableSection({
 
       {/* Info: (20260401 - Julian) Table */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        {/* Info: (20260324 - Julian) 隱藏已刪除紀錄 toggle */}
+        <div className="flex items-center justify-between bg-white px-2 py-4 lg:px-6">
+          <div className="flex cursor-pointer items-center gap-3">
+            <button
+              type="button"
+              id="hideDeletedToggle"
+              aria-label="Toggle hide deleted records"
+              onClick={(e) => {
+                e.preventDefault();
+                setHideDeleted(!hideDeleted);
+              }}
+              className={`relative h-6 w-11 rounded-full transition-colors ${hideDeleted ? "bg-orange-500" : "bg-slate-200"}`}
+            >
+              <div
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${hideDeleted ? "translate-x-5.5" : "translate-x-0.5"}`}
+              />
+            </button>
+            <label
+              htmlFor="hideDeletedToggle"
+              className="cursor-pointer text-xs font-semibold text-slate-600 lg:text-sm"
+            >
+              {t("voucher.main_view.filters.hide_deleted")}
+            </label>
+          </div>
+        </div>
+
         {/* Info: (20260312 - Julian) Table */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto border-t border-slate-200">
           <table className="w-full min-w-[800px] border-collapse text-left">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/70">

@@ -26,14 +26,14 @@ export type RegistrationStep =
 
 export class RegistrationService {
   /**
-   * Info: (20260116 - Tzuhan) 
+   * Info: (20260116 - Tzuhan)
    * 核心註冊流程：結合 WebAuthn 與 ERC-4337 部署
    * @param username 用戶暱稱
    * @param onStepChange 狀態回呼，用於更新 UI
    */
   public async signUp(
     username: string,
-    onStepChange?: (step: RegistrationStep) => void
+    onStepChange?: (step: RegistrationStep) => void,
   ) {
     try {
       const imageUrl = "default_avatar_url"; // Info: (20260116 - Tzuhan) 未來可從參數傳入
@@ -55,7 +55,7 @@ export class RegistrationService {
       onStepChange?.("PARSING_PASSKEY");
       const { x, y, credentialID } = await parsePasskey(
         registration,
-        regChallenge
+        regChallenge,
       );
       const pubKeyX = BigInt(x);
       const pubKeyY = BigInt(y);
@@ -81,7 +81,7 @@ export class RegistrationService {
         args: [pubKeyX, pubKeyY, salt, credentialID, username, imageUrl],
       });
       const initCode = `${CONTRACT_ADDRESSES.FACTORY}${factoryCallData.slice(
-        2
+        2,
       )}` as Hex;
 
       const partialUserOp = {
@@ -121,28 +121,28 @@ export class RegistrationService {
       const encodedSignature = encodeWebAuthnSignature(
         authentication,
         pubKeyX,
-        pubKeyY
+        pubKeyY,
       );
       const finalUserOp = {
         ...partialUserOp,
         nonce: `0x${partialUserOp.nonce.toString(16)}`,
         callGasLimit: `0x${partialUserOp.callGasLimit.toString(16)}`,
         verificationGasLimit: `0x${partialUserOp.verificationGasLimit.toString(
-          16
+          16,
         )}`,
         preVerificationGas: `0x${partialUserOp.preVerificationGas.toString(
-          16
+          16,
         )}`,
         maxFeePerGas: `0x${partialUserOp.maxFeePerGas.toString(16)}`,
         maxPriorityFeePerGas: `0x${partialUserOp.maxPriorityFeePerGas.toString(
-          16
+          16,
         )}`,
         signature: encodedSignature,
       };
 
       const result = await sendUserOpToBundler(
         finalUserOp,
-        CONTRACT_ADDRESSES.ENTRY_POINT
+        CONTRACT_ADDRESSES.ENTRY_POINT,
       );
 
       if (result.code === "SUCCESS" || result.success === true) {

@@ -346,6 +346,24 @@ export default function EsgDetailModal({
                   </option>
                 </select>
               </div>
+              {/* Info: (20260406 - Luphia) 碳排放係數紀錄 */}
+              {formData.coefficient && (
+                <div className="col-span-2 mt-2 rounded-lg bg-orange-50 p-3 ring-1 ring-inset ring-orange-100">
+                  <div className="mb-1 text-[10px] font-bold text-orange-600">
+                    {t("esg_verify.emissions.coefficient")}
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-4">
+                    <div className="text-sm font-bold text-slate-700">
+                      {formData.coefficient}
+                    </div>
+                    {formData.coefficientSource && (
+                      <div className="text-xs font-medium text-slate-500">
+                        ({formData.coefficientSource})
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

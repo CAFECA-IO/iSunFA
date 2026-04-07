@@ -1,9 +1,12 @@
-import { randomUUID } from 'crypto';
+import { randomUUID } from "crypto";
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+type LogLevel = "debug" | "info" | "warn" | "error";
 
 type Primitive = string | number | boolean | null;
-type LogValue = Primitive | Record<string, unknown> | Array<Primitive | Record<string, unknown>>;
+type LogValue =
+  | Primitive
+  | Record<string, unknown>
+  | Array<Primitive | Record<string, unknown>>;
 
 export interface ILogContext {
   service?: string;
@@ -25,8 +28,8 @@ export interface ILogger {
   time(label: string): { end: (extra?: ILogFields) => void };
 }
 
-const isProd = process.env.NODE_ENV === 'production';
-const SERVICE = process.env.NEXT_PUBLIC_API_POWERBY ?? 'BusinessMonitor API';
+const isProd = process.env.NODE_ENV === "production";
+const SERVICE = process.env.NEXT_PUBLIC_API_POWERBY ?? "BusinessMonitor API";
 
 class Logger implements ILogger {
   private readonly ctx: ILogContext;
@@ -40,19 +43,19 @@ class Logger implements ILogger {
   }
 
   debug(msg: string, fields?: ILogFields): void {
-    this.log('debug', msg, fields);
+    this.log("debug", msg, fields);
   }
 
   info(msg: string, fields?: ILogFields): void {
-    this.log('info', msg, fields);
+    this.log("info", msg, fields);
   }
 
   warn(msg: string, fields?: ILogFields): void {
-    this.log('warn', msg, fields);
+    this.log("warn", msg, fields);
   }
 
   error(msg: string, fields?: ILogFields): void {
-    this.log('error', msg, fields);
+    this.log("error", msg, fields);
   }
 
   time(label: string): { end: (extra?: ILogFields) => void } {
@@ -79,16 +82,16 @@ class Logger implements ILogger {
       // Info: (20250808 - Tzuhan) 結構化 JSON，方便 Log pipeline
       const line = JSON.stringify(payload);
       switch (level) {
-        case 'debug':
+        case "debug":
           console.debug(line);
           break;
-        case 'info':
+        case "info":
           console.info(line);
           break;
-        case 'warn':
+        case "warn":
           console.warn(line);
           break;
-        case 'error':
+        case "error":
           console.error(line);
           break;
       }
@@ -98,20 +101,20 @@ class Logger implements ILogger {
     // Info: (20250808 - Tzuhan) Dev：可讀格式
     const prefix = `[${payload.level.toUpperCase()}]`;
     const ctxStr = this.formatCtx(this.ctx);
-    const fieldsStr = fields ? ` ${JSON.stringify(fields)}` : '';
+    const fieldsStr = fields ? ` ${JSON.stringify(fields)}` : "";
     // Info: (20250808 - Tzuhan) 用對應 console 方法維持等級語意
     const line = `${prefix} ${msg}${ctxStr}${fieldsStr}`;
     switch (level) {
-      case 'debug':
+      case "debug":
         console.debug(line);
         break;
-      case 'info':
+      case "info":
         console.info(line);
         break;
-      case 'warn':
+      case "warn":
         console.warn(line);
         break;
-      case 'error':
+      case "error":
         console.error(line);
         break;
     }
@@ -124,7 +127,7 @@ class Logger implements ILogger {
     if (requestId) parts.push(`requestId=${requestId}`);
     if (route) parts.push(`route=${route}`);
     if (Object.keys(rest).length > 0) parts.push(`ctx=${JSON.stringify(rest)}`);
-    return parts.length ? ` (${parts.join(' ')})` : '';
+    return parts.length ? ` (${parts.join(" ")})` : "";
   }
 }
 
@@ -139,6 +142,9 @@ export const loggerFromRequest = (input: {
   requestIdHeader?: string;
 }): ILogger => {
   const requestId = input.requestIdHeader || randomUUID();
-  const route = input.method && input.url ? `${input.method} ${input.url}` : (input.url ?? '');
+  const route =
+    input.method && input.url
+      ? `${input.method} ${input.url}`
+      : (input.url ?? "");
   return logger.child({ requestId, route });
 };

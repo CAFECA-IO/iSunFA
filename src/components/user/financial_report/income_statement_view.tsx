@@ -87,8 +87,10 @@ const IncomeStatementSection = ({
 
 export default function IncomeStatementView({
   period,
+  year,
 }: {
   period: ReportPeriod;
+  year: number;
 }) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
@@ -102,7 +104,7 @@ export default function IncomeStatementView({
         try {
           setIsLoading(true);
           const res = await request<IApiResponse<{ report: IIncomeStatement }>>(
-            `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.INCOME_STATEMENT}&period=${period}`,
+            `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.INCOME_STATEMENT}&period=${period}&year=${year}`,
           );
           if (res.payload) {
             setReportData(res.payload.report);
@@ -117,7 +119,7 @@ export default function IncomeStatementView({
     } else {
       setIsLoading(false);
     }
-  }, [accountBookId, period]);
+  }, [accountBookId, period, year]);
 
   if (isLoading) {
     return (

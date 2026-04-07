@@ -1,5 +1,5 @@
-import { User, Prisma } from '@/generated/client';
-import { prisma } from '@/lib/prisma';
+import { User, Prisma } from "@/generated/client";
+import { prisma } from "@/lib/prisma";
 
 export interface IWebAuthnRepository {
   findUserByCredentialId(credentialId: string): Promise<User | null>;
@@ -20,7 +20,9 @@ export interface IWebAuthnRepository {
 }
 
 class WebAuthnRepository implements IWebAuthnRepository {
-  public async findUserByCredentialId(credentialId: string): Promise<User | null> {
+  public async findUserByCredentialId(
+    credentialId: string,
+  ): Promise<User | null> {
     return prisma.user.findUnique({
       where: { credentialId },
     });
@@ -50,14 +52,21 @@ class WebAuthnRepository implements IWebAuthnRepository {
     });
   }
 
-  public async getUserWithPaymentMethods(userId: string): Promise<Prisma.UserGetPayload<{ include: { paymentMethods: true } }> | null> {
+  public async getUserWithPaymentMethods(
+    userId: string,
+  ): Promise<Prisma.UserGetPayload<{
+    include: { paymentMethods: true };
+  }> | null> {
     return prisma.user.findUnique({
       where: { id: userId },
       include: { paymentMethods: true },
     });
   }
 
-  public async updateChallenge(address: string, challenge: string): Promise<void> {
+  public async updateChallenge(
+    address: string,
+    challenge: string,
+  ): Promise<void> {
     await prisma.user.update({
       where: { address },
       data: { currentChallenge: challenge },
@@ -78,7 +87,10 @@ class WebAuthnRepository implements IWebAuthnRepository {
     });
   }
 
-  public async updateIdentityAddress(userId: string, identityAddress: string): Promise<User> {
+  public async updateIdentityAddress(
+    userId: string,
+    identityAddress: string,
+  ): Promise<User> {
     return prisma.user.update({
       where: { id: userId },
       data: { identityAddress },
@@ -99,7 +111,9 @@ class WebAuthnRepository implements IWebAuthnRepository {
       update: {
         pubKeyX: data.pubKeyX,
         pubKeyY: data.pubKeyY,
-        ...(data.credentialId ? { credentialId: data.credentialId, currentChallenge: null } : {}),
+        ...(data.credentialId
+          ? { credentialId: data.credentialId, currentChallenge: null }
+          : {}),
         ...(data.name ? { name: data.name } : {}),
         ...(data.imageUrl ? { imageUrl: data.imageUrl } : {}),
       },

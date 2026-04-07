@@ -58,8 +58,8 @@ export async function GET(
     const formattedFiles: IFile[] = thread.files.map((file) => ({
       id: file.id,
       hash: file.hash,
-      fileName: file.fileName ?? '',
-      threadId: file.threadId ?? '',
+      fileName: file.fileName ?? "",
+      threadId: file.threadId ?? "",
     }));
 
     const response: IThreadDetail = {

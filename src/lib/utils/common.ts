@@ -83,7 +83,7 @@ export function formatTime(timestamp: number, now: number) {
 
 // Info: (20260224 - Julian) 千分位符號、括號
 export function numberWithCommas(number: number | string) {
-  const num = typeof number === 'string' ? parseFloat(number) : number;
+  const num = typeof number === "string" ? parseFloat(number) : number;
   const formattedNumber = new Intl.NumberFormat().format(Math.abs(num));
   return num < 0 ? `(${formattedNumber})` : formattedNumber;
-};
+}

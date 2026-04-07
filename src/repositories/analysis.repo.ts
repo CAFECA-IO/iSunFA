@@ -1,6 +1,6 @@
-import { prisma } from '@/lib/prisma';
-import { Prisma, Analysis, Mission } from '@/generated/client';
-import { MISSION_STATUS } from '@/constants/status';
+import { prisma } from "@/lib/prisma";
+import { Prisma, Analysis, Mission } from "@/generated/client";
+import { MISSION_STATUS } from "@/constants/status";
 
 export type FullAnalysis = Prisma.AnalysisGetPayload<{
   include: {
@@ -25,10 +25,20 @@ export interface IAnalysisRepository {
   }): Promise<Analysis>;
   findByUserId(userId: string): Promise<Analysis[]>;
   findById(id: string): Promise<Analysis | null>;
-  updateMissionUploadSuccess(missionId: string, planHash: string): Promise<Mission | null>;
-  updateMissionUploadFailed(missionId: string, errorReason: string): Promise<Mission>;
+  updateMissionUploadSuccess(
+    missionId: string,
+    planHash: string,
+  ): Promise<Mission | null>;
+  updateMissionUploadFailed(
+    missionId: string,
+    errorReason: string,
+  ): Promise<Mission>;
   getGlobalTopTags(limit?: number): Promise<string[]>;
-  findAnalysisByKeywordAndType(userId: string, type: string, keyword: string): Promise<Analysis | null>;
+  findAnalysisByKeywordAndType(
+    userId: string,
+    type: string,
+    keyword: string,
+  ): Promise<Analysis | null>;
   getFullAnalysisHistoryByUserId(userId: string): Promise<FullAnalysis[]>;
 }
 
@@ -50,14 +60,16 @@ export class AnalysisRepository implements IAnalysisRepository {
         name: params.missionName,
         status: params.status || MISSION_STATUS.PENDING,
         data: params.missionData,
-        tasks: params.tasks ? {
-          create: params.tasks.map(t => ({
-            type: t.type,
-            order: t.order,
-            data: t.data
-          }))
-        } : undefined
-      }
+        tasks: params.tasks
+          ? {
+              create: params.tasks.map((t) => ({
+                type: t.type,
+                order: t.order,
+                data: t.data,
+              })),
+            }
+          : undefined,
+      },
     });
 
     // Info: (20260128 - Luphia) Create Analysis linked to Mission
@@ -69,23 +81,23 @@ export class AnalysisRepository implements IAnalysisRepository {
         orderId: params.orderId,
         type: params.category,
         missionId: mission.id,
-        data: params.missionData // Info: (20260130 - Luphia) Analysis data field is required
-      }
+        data: params.missionData, // Info: (20260130 - Luphia) Analysis data field is required
+      },
     });
   }
 
   async findByUserId(userId: string) {
     return prisma.analysis.findMany({
       where: {
-        userId: userId
+        userId: userId,
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: "desc",
       },
       include: {
         mission: true,
-        order: true
-      }
+        order: true,
+      },
     });
   }
   async findById(id: string) {
@@ -93,13 +105,15 @@ export class AnalysisRepository implements IAnalysisRepository {
       where: { id },
       include: {
         mission: true,
-        order: true
-      }
+        order: true,
+      },
     });
   }
 
   async updateMissionUploadSuccess(missionId: string, planHash: string) {
-    const mission = await prisma.mission.findUnique({ where: { id: missionId } });
+    const mission = await prisma.mission.findUnique({
+      where: { id: missionId },
+    });
     if (!mission) return null;
 
     const mData = (mission.data as Record<string, unknown>) || {};
@@ -107,8 +121,8 @@ export class AnalysisRepository implements IAnalysisRepository {
       where: { id: missionId },
       data: {
         status: MISSION_STATUS.PENDING,
-        data: { ...mData, planHash }
-      }
+        data: { ...mData, planHash },
+      },
     });
   }
 
@@ -117,20 +131,20 @@ export class AnalysisRepository implements IAnalysisRepository {
       where: { id: missionId },
       data: {
         status: MISSION_STATUS.FAILED,
-        result: errorReason
-      }
+        result: errorReason,
+      },
     });
   }
 
   async getGlobalTopTags(limit: number = 20): Promise<string[]> {
     const topTags = await prisma.analysisTag.groupBy({
-      by: ['tagId'],
+      by: ["tagId"],
       _count: {
         tagId: true,
       },
       orderBy: {
         _count: {
-          tagId: 'desc',
+          tagId: "desc",
         },
       },
       take: limit,
@@ -138,41 +152,49 @@ export class AnalysisRepository implements IAnalysisRepository {
 
     if (topTags.length === 0) return [];
 
-    const tagIds = topTags.map(t => t.tagId);
+    const tagIds = topTags.map((t) => t.tagId);
     const tags = await prisma.tag.findMany({
       where: { id: { in: tagIds } },
     });
 
     // Info: (20260312 - Tzuhan) Create a map to ensure the returned tag strings are ordered by the count
-    const tagMap = new Map(tags.map(t => [t.id, t.name]));
-    return topTags.map(t => tagMap.get(t.tagId)).filter((name): name is string => !!name);
+    const tagMap = new Map(tags.map((t) => [t.id, t.name]));
+    return topTags
+      .map((t) => tagMap.get(t.tagId))
+      .filter((name): name is string => !!name);
   }
 
-  async findAnalysisByKeywordAndType(userId: string, type: string, keyword: string): Promise<Analysis | null> {
+  async findAnalysisByKeywordAndType(
+    userId: string,
+    type: string,
+    keyword: string,
+  ): Promise<Analysis | null> {
     return prisma.analysis.findFirst({
       where: {
         userId,
         type,
         data: {
-          path: ['keyword'],
+          path: ["keyword"],
           equals: keyword,
-        }
+        },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
   }
 
-  async getFullAnalysisHistoryByUserId(userId: string): Promise<FullAnalysis[]> {
+  async getFullAnalysisHistoryByUserId(
+    userId: string,
+  ): Promise<FullAnalysis[]> {
     return prisma.analysis.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
         mission: true,
         order: true,
         tags: {
-          include: { tag: true }
-        }
-      }
+          include: { tag: true },
+        },
+      },
     });
   }
 }

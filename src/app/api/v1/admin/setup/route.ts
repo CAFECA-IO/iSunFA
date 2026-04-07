@@ -1,29 +1,29 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { jsonOk, jsonFail } from '@/lib/utils/response';
-import { ApiCode } from '@/lib/utils/status';
+import { promises as fs } from "fs";
+import path from "path";
+import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const envExamplePath = path.join(process.cwd(), '.env.example');
-    const envPath = path.join(process.cwd(), '.env');
+    const envExamplePath = path.join(process.cwd(), ".env.example");
+    const envPath = path.join(process.cwd(), ".env");
 
     // Info: (20260116 - Luphia) Read .env.example logic (reused from previous action)
-    let exampleContent = '';
+    let exampleContent = "";
     try {
-      exampleContent = await fs.readFile(envExamplePath, 'utf8');
+      exampleContent = await fs.readFile(envExamplePath, "utf8");
     } catch {
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Failed to read template');
+      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Failed to read template");
     }
 
-    const lines = exampleContent.split('\n');
-    let envContent = '';
+    const lines = exampleContent.split("\n");
+    let envContent = "";
 
     for (const line of lines) {
       const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) {
-        envContent += line + '\n';
+      if (!trimmed || trimmed.startsWith("#")) {
+        envContent += line + "\n";
         continue;
       }
 
@@ -37,15 +37,15 @@ export async function POST(request: Request) {
           envContent += `${key}=\n`;
         }
       } else {
-        envContent += line + '\n';
+        envContent += line + "\n";
       }
     }
 
-    await fs.writeFile(envPath, envContent, 'utf8');
+    await fs.writeFile(envPath, envContent, "utf8");
 
     return jsonOk({ success: true });
   } catch (error) {
-    console.error('Failed to save .env', error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    console.error("Failed to save .env", error);
+    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }

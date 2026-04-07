@@ -1,6 +1,6 @@
-import { Prisma, TeamRole } from '@/generated/client';
-import { prisma } from '@/lib/prisma';
-import { teamRepo } from '@/repositories/team.repo';
+import { Prisma, TeamRole } from "@/generated/client";
+import { prisma } from "@/lib/prisma";
+import { teamRepo } from "@/repositories/team.repo";
 
 // Info: (20260308 - Luphia) 找出所有沒團隊的使用者，使用 getOrCreateUserTeam 為他建立一個
 export const createTeamForUsersWithoutTeam = async () => {
@@ -22,14 +22,17 @@ export const createTeamForUsersWithoutTeam = async () => {
 };
 
 // Info: (20260308 - Luphia) 為使用者建立一個團隊
-export const getOrCreateUserTeam = async (userId: string, userName?: string) => {
+export const getOrCreateUserTeam = async (
+  userId: string,
+  userName?: string,
+) => {
   const teams = await teamRepo.listMemberTeam(userId);
   if (teams.length > 0) {
     return teams[0];
   }
 
   const team = await teamRepo.createTeam({
-    name: userName ? `${userName}'s Team` : 'New Team',
+    name: userName ? `${userName}'s Team` : "New Team",
   });
 
   await teamRepo.createTeamMember({
@@ -42,12 +45,19 @@ export const getOrCreateUserTeam = async (userId: string, userName?: string) => 
 };
 
 // Info: (20260308 - Luphia) 修改團隊資料
-export const updateTeam = async (teamId: string, data: Prisma.TeamUpdateInput) => {
+export const updateTeam = async (
+  teamId: string,
+  data: Prisma.TeamUpdateInput,
+) => {
   return teamRepo.updateTeam(teamId, data);
 };
 
 // Info: (20260308 - Luphia) 增加一個團隊成員
-export const addTeamMember = async (teamId: string, userId: string, role: TeamRole = TeamRole.VIEWER) => {
+export const addTeamMember = async (
+  teamId: string,
+  userId: string,
+  role: TeamRole = TeamRole.VIEWER,
+) => {
   return teamRepo.createTeamMember({
     team: { connect: { id: teamId } },
     user: { connect: { id: userId } },

@@ -1,24 +1,26 @@
-import { NextRequest } from 'next/server';
-import { getIdentityFromDeWT } from '@/lib/auth/dewt';
-import { paymentRepo } from '@/repositories/payment.repo';
-import { jsonOk, jsonFail } from '@/lib/utils/response';
-import { ApiCode } from '@/lib/utils/status';
+import { NextRequest } from "next/server";
+import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { paymentRepo } from "@/repositories/payment.repo";
+import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { ApiCode } from "@/lib/utils/status";
 // import { DEFAULT_PLAN } from '@/constants/plans';
-import { MODULES } from '@/constants/modules';
+import { MODULES } from "@/constants/modules";
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get("Authorization");
 
     // Info: (20251224 - Tzuhan) 1. Verify Token & Get User
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, 'Invalid or missing device token');
+      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or missing device token");
     }
 
     // Info: (20260302 - Tzuhan) [機制: 處理中點數] 找出所有已扣款成功但還未上鏈的訂單點數加總，讓前端介面能顯示「處理中」，避免使用者誤以為扣款失敗
-    const pendingOrders = await paymentRepo.getPendingOenOrdersByUserId(user.id);
+    const pendingOrders = await paymentRepo.getPendingOenOrdersByUserId(
+      user.id,
+    );
 
     const pendingCredits = pendingOrders.reduce((sum, order) => {
       const data = order.data as { credits?: number };
@@ -50,7 +52,11 @@ export async function GET(request: NextRequest) {
         credits = Number(chainCredits);
         */
       } catch (err) {
-        console.warn("Deprecate: (20260310 - Tzuhan) ", `[API] /auth/me failed to read contract for ${user.identityAddress}:`, err);
+        console.warn(
+          "Deprecate: (20260310 - Tzuhan) ",
+          `[API] /auth/me failed to read contract for ${user.identityAddress}:`,
+          err,
+        );
       }
     }
 
@@ -58,12 +64,16 @@ export async function GET(request: NextRequest) {
       ...user,
       address: user.address,
       modules: MODULES.filter((m) => m.basic).map((m) => m.key),
-      isAdmin: user.role === 'ADMIN',
+      isAdmin: user.role === "ADMIN",
       identityAddress: user.identityAddress,
       pendingCredits,
     });
   } catch (error) {
-    console.error("Deprecate: (20260310 - Tzuhan) ", '[API] /auth/me error:', error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    console.error(
+      "Deprecate: (20260310 - Tzuhan) ",
+      "[API] /auth/me error:",
+      error,
+    );
+    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }

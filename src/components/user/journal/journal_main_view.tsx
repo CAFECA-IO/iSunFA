@@ -53,7 +53,7 @@ export default function JournalMainView() {
         <div className="hide-scrollbar flex h-fit w-full max-w-full flex-row gap-2 overflow-x-auto rounded-lg border border-gray-200 bg-gray-100 p-2 lg:w-[180px] lg:flex-col lg:overflow-visible lg:p-4">
           <button
             type="button"
-            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.UPLOAD
+            className={`flex shrink-0 min-w-max lg:w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.UPLOAD
               ? "bg-white text-orange-600 shadow-sm"
               : "text-gray-600 hover:bg-gray-100"
               }`}
@@ -64,7 +64,7 @@ export default function JournalMainView() {
           {/* Info: (20260402 - Julian) Quick Scan Area */}
           <button
             type="button"
-            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.SCAN
+            className={`flex shrink-0 min-w-max lg:w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.SCAN
               ? "bg-white text-orange-600 shadow-sm"
               : "text-gray-600 hover:bg-gray-100"
               }`}
@@ -75,7 +75,7 @@ export default function JournalMainView() {
           {/* Info: (20260304 - Julian) View Logs */}
           <button
             type="button"
-            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.LIST
+            className={`flex shrink-0 min-w-max lg:w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.LIST
               ? "bg-white text-orange-600 shadow-sm"
               : "text-gray-600 hover:bg-gray-100"
               }`}
@@ -86,7 +86,7 @@ export default function JournalMainView() {
           {/* Info: (20260306 - Julian) View Audit Logs */}
           <button
             type="button"
-            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.LOG
+            className={`flex shrink-0 min-w-max lg:w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.LOG
               ? "bg-white text-orange-600 shadow-sm"
               : "text-gray-600 hover:bg-gray-100"
               }`}

@@ -75,6 +75,8 @@ export async function GET(
       rawActivityData: esgRecord.rawActivityData,
       unit: esgRecord.unit,
       emissions: esgRecord.emissions.toString(),
+      coefficient: esgRecord.coefficient,
+      coefficientSource: esgRecord.coefficientSource,
       intensity: esgRecord.intensity as unknown as ClientEsgIntensity,
       confidence: esgRecord.confidence,
       isVerified: esgRecord.isVerified,
@@ -141,33 +143,33 @@ export async function PUT(
 
     // Info: (20260312 - Julian) 更新 ESG 紀錄
     const updatedRecord = await esgRepo.updateEsgRecord(esgId, {
-        ...(reqBody.dateTimestamp && { dateTimestamp: reqBody.dateTimestamp }),
-        ...(reqBody.scope && {
-          scope: reqBody.scope.toUpperCase() as EsgScope,
-        }),
-        ...(reqBody.activityType && { activityType: reqBody.activityType }),
-        ...(reqBody.vendor && { vendor: reqBody.vendor }),
-        ...(reqBody.rawActivityData !== undefined && {
-          rawActivityData: reqBody.rawActivityData,
-        }),
-        ...(reqBody.unit && { unit: reqBody.unit }),
-        ...(reqBody.emissions && { emissions: reqBody.emissions }),
-        ...(reqBody.intensity && {
-          intensity: reqBody.intensity.toUpperCase() as EsgIntensity,
-        }),
-        ...(reqBody.confidence !== undefined && {
-          confidence: reqBody.confidence,
-        }),
-        ...(reqBody.isVerified !== undefined && {
-          isVerified: reqBody.isVerified,
-        }),
-        ...(reqBody.analysisStatus && {
-          // Info: (20260326 - Julian) 如果使用者手動修改，就將 analysisStatus 的 FAILED 設為 COMPLETED
-          analysisStatus:
-            reqBody.analysisStatus === AIAnalysisStatus.FAILED
-              ? AIAnalysisStatus.COMPLETED
-              : reqBody.analysisStatus,
-        }),
+      ...(reqBody.dateTimestamp && { dateTimestamp: reqBody.dateTimestamp }),
+      ...(reqBody.scope && {
+        scope: reqBody.scope.toUpperCase() as EsgScope,
+      }),
+      ...(reqBody.activityType && { activityType: reqBody.activityType }),
+      ...(reqBody.vendor && { vendor: reqBody.vendor }),
+      ...(reqBody.rawActivityData !== undefined && {
+        rawActivityData: reqBody.rawActivityData,
+      }),
+      ...(reqBody.unit && { unit: reqBody.unit }),
+      ...(reqBody.emissions && { emissions: reqBody.emissions }),
+      ...(reqBody.intensity && {
+        intensity: reqBody.intensity.toUpperCase() as EsgIntensity,
+      }),
+      ...(reqBody.confidence !== undefined && {
+        confidence: reqBody.confidence,
+      }),
+      ...(reqBody.isVerified !== undefined && {
+        isVerified: reqBody.isVerified,
+      }),
+      ...(reqBody.analysisStatus && {
+        // Info: (20260326 - Julian) 如果使用者手動修改，就將 analysisStatus 的 FAILED 設為 COMPLETED
+        analysisStatus:
+          reqBody.analysisStatus === AIAnalysisStatus.FAILED
+            ? AIAnalysisStatus.COMPLETED
+            : reqBody.analysisStatus,
+      }),
     });
 
     if (!updatedRecord) {
@@ -185,6 +187,8 @@ export async function PUT(
       rawActivityData: updatedRecord.rawActivityData,
       unit: updatedRecord.unit,
       emissions: updatedRecord.emissions.toString(),
+      coefficient: updatedRecord.coefficient,
+      coefficientSource: updatedRecord.coefficientSource,
       intensity: updatedRecord.intensity as unknown as ClientEsgIntensity,
       confidence: updatedRecord.confidence,
       isVerified: updatedRecord.isVerified,
@@ -220,9 +224,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  {
-    params,
-  }: { params: Promise<{ account_book_id: string; esg_id: string }> },
+  { params }: { params: Promise<{ account_book_id: string; esg_id: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -257,7 +259,7 @@ export async function DELETE(
 
     const deletedEsg = await prisma.esgRecord.update({
       where: { id: esgId },
-      data: { deletedAt: new Date() }
+      data: { deletedAt: new Date() },
     });
 
     if (existingEsg.fileId) {
@@ -266,7 +268,7 @@ export async function DELETE(
           fileId: existingEsg.fileId,
           accountBookId: accountBookId,
         },
-        data: { deletedAt: new Date() }
+        data: { deletedAt: new Date() },
       });
 
       await prisma.journal.updateMany({
@@ -274,7 +276,7 @@ export async function DELETE(
           fileId: existingEsg.fileId,
           accountBookId: accountBookId,
         },
-        data: { deletedAt: new Date() }
+        data: { deletedAt: new Date() },
       });
     }
 

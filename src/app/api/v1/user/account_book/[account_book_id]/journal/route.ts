@@ -12,17 +12,22 @@ import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { VerifyStatus } from "@/constants/verify_status";
 
 // Info: (20260327 - Luphia) 內部共用 Helper：抽離重複的權限與帳簿驗證邏輯
-async function validateRequestAndGetContext(request: NextRequest, accountBookId: string) {
+async function validateRequestAndGetContext(
+  request: NextRequest,
+  accountBookId: string,
+) {
   const authHeader = request.headers.get("Authorization");
   const sessionUser = await getIdentityFromDeWT(authHeader);
 
-  if (!sessionUser) return { error: jsonFail(ApiCode.NOT_FOUND, "User not found") };
+  if (!sessionUser)
+    return { error: jsonFail(ApiCode.NOT_FOUND, "User not found") };
 
   const user = await webAuthnRepo.findUserByAddress(sessionUser.address);
   if (!user) return { error: jsonFail(ApiCode.NOT_FOUND, "User not found") };
 
   const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
-  if (!accountBook) return { error: jsonFail(ApiCode.NOT_FOUND, "Accountbook not found") };
+  if (!accountBook)
+    return { error: jsonFail(ApiCode.NOT_FOUND, "Accountbook not found") };
 
   return { user, accountBook };
 }
@@ -37,7 +42,11 @@ export async function POST(
 ) {
   try {
     const { account_book_id: accountBookId } = await params;
-    const { user: creator, accountBook, error } = await validateRequestAndGetContext(request, accountBookId);
+    const {
+      user: creator,
+      accountBook,
+      error,
+    } = await validateRequestAndGetContext(request, accountBookId);
     if (error) return error;
 
     const body = await request.json();
@@ -88,7 +97,10 @@ export async function GET(
 ) {
   try {
     const { account_book_id: accountBookId } = await params;
-    const { error, accountBook } = await validateRequestAndGetContext(request, accountBookId);
+    const { error, accountBook } = await validateRequestAndGetContext(
+      request,
+      accountBookId,
+    );
     if (error) return error;
 
     const searchParams = request.nextUrl.searchParams;
@@ -96,8 +108,12 @@ export async function GET(
     const verifyStatus = searchParams.get("verifyStatus");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
-    const page = searchParams.get("page") ? parseInt(searchParams.get("page")!) : undefined;
-    const pageSize = searchParams.get("pageSize") ? parseInt(searchParams.get("pageSize")!) : undefined;
+    const page = searchParams.get("page")
+      ? parseInt(searchParams.get("page")!)
+      : undefined;
+    const pageSize = searchParams.get("pageSize")
+      ? parseInt(searchParams.get("pageSize")!)
+      : undefined;
     const orderByParams = searchParams.get("orderBy");
 
     // Info: (20260327 - Luphia) 乾淨且安全地組裝查詢條件 (Where)
@@ -106,20 +122,14 @@ export async function GET(
 
     const where: Prisma.JournalWhereInput = {
       accountBookId: accountBook.id,
-      OR: [
-        { deletedAt: null },
-        { deletedAt: { gte: sevenDaysAgo } },
-      ],
+      OR: [{ deletedAt: null }, { deletedAt: { gte: sevenDaysAgo } }],
     };
 
     if (keyWord) {
       where.AND = [
         {
-          OR: [
-            { text: { contains: keyWord } },
-            { id: { contains: keyWord } },
-          ]
-        }
+          OR: [{ text: { contains: keyWord } }, { id: { contains: keyWord } }],
+        },
       ];
     }
 
@@ -134,7 +144,7 @@ export async function GET(
     }
 
     // Info: (20260327 - Luphia) 解析分頁與排序參數
-    const skip = (page && pageSize) ? (page - 1) * pageSize : undefined;
+    const skip = page && pageSize ? (page - 1) * pageSize : undefined;
     const take = pageSize || undefined;
     let orderBy: Prisma.JournalOrderByWithRelationInput | undefined;
 
@@ -165,10 +175,10 @@ export async function GET(
       fileId: j.fileId ?? "",
       file: j.file
         ? {
-          id: j.file.id,
-          hash: j.file.hash,
-          fileName: j.file.fileName ?? "",
-        }
+            id: j.file.id,
+            hash: j.file.hash,
+            fileName: j.file.fileName ?? "",
+          }
         : undefined,
       voucherId: j.voucherId,
       esgRecordId: j.esgRecordId,

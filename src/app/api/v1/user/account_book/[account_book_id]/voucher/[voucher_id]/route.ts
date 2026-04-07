@@ -223,8 +223,9 @@ export async function DELETE(
       return jsonFail(ApiCode.NOT_FOUND, "User not found");
     }
 
-    const { account_book_id: accountBookId, voucher_id: voucherId } = await params;
-    
+    const { account_book_id: accountBookId, voucher_id: voucherId } =
+      await params;
+
     // Info: (20260404 - Luphia) 確認操作者權限與存在性
     const deleter = await webAuthnRepo.findUserByAddress(sessionUser.address);
     if (!deleter) {
@@ -250,7 +251,7 @@ export async function DELETE(
     // Info: (20260404 - Luphia) 更新 Voucher 的 deletedAt
     await prisma.voucher.update({
       where: { id: voucherId },
-      data: { deletedAt: now }
+      data: { deletedAt: now },
     });
 
     // Info: (20260404 - Luphia) 同步軟刪除對應的 ESG (透過 fileId 原有依賴綁定)
@@ -258,11 +259,11 @@ export async function DELETE(
       await prisma.esgRecord.updateMany({
         where: {
           fileId: existingVoucher.fileId,
-          accountBookId: accountBookId
+          accountBookId: accountBookId,
         },
         data: {
-          deletedAt: now
-        }
+          deletedAt: now,
+        },
       });
     }
 

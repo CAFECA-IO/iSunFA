@@ -140,11 +140,12 @@ export async function GET(
       : undefined;
 
     let dateTimestampQuery: Prisma.IntFilter | undefined = undefined;
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
+
     if (yearParam) {
       const year = parseInt(yearParam, 10);
       const month = monthParam ? parseInt(monthParam, 10) : null;
-      let startDate: Date;
-      let endDate: Date;
 
       if (month) {
         startDate = new Date(year, month - 1, 1);
@@ -159,30 +160,59 @@ export async function GET(
       };
     }
 
+    const hideDeleted = searchParams.get("hideDeleted") === "true";
+
     // Info: (20260312 - Luphia) 整理查詢條件
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+    const andConditions: Prisma.EsgRecordWhereInput[] = [];
+
+    // Info: (20260406 - Luphia) 軟刪除過濾邏輯
+    if (hideDeleted) {
+      andConditions.push({ deletedAt: null });
+    }
+
+    // Info: (20260406 - Luphia) 搜尋字串過濾邏輯
+    if (searchParam) {
+      andConditions.push({
+        OR: [
+          { vendor: { contains: searchParam, mode: "insensitive" } },
+          { activityType: { contains: searchParam, mode: "insensitive" } },
+        ],
+      });
+    }
+
+    if (verifyStatus) {
+      andConditions.push({ isVerified: verifyStatus === VerifyStatus.VERIFIED });
+    }
+
+    if (intensity) {
+      andConditions.push({ intensity: intensity as ClientEsgIntensity });
+    }
+
+    if (scope) {
+      andConditions.push({ scope: scope as ClientEsgScope });
+    }
+
+    // Info: (20260406 - Luphia) 日期過濾邏輯：對於未設定日期 (0) 的資料，使用 createdAt 搭配年/月時間區段過濾
+    if (dateTimestampQuery && startDate && endDate) {
+      andConditions.push({
+        OR: [
+          { dateTimestamp: dateTimestampQuery },
+          {
+            AND: [
+              { dateTimestamp: 0 },
+              { createdAt: { gte: startDate, lte: endDate } },
+            ],
+          },
+        ],
+      });
+    }
+
     const whereClause: Prisma.EsgRecordWhereInput = {
       accountBookId: accountBook.id,
-      OR: [
-        { deletedAt: null },
-        { deletedAt: { gte: sevenDaysAgo } },
-      ],
-      ...(searchParam && {
-        AND: [
-          {
-            OR: [
-              { vendor: { contains: searchParam, mode: "insensitive" } },
-              { activityType: { contains: searchParam, mode: "insensitive" } },
-            ]
-          }
-        ]
-      }),
-      ...(verifyStatus && { isVerified: verifyStatus === VerifyStatus.VERIFIED }),
-      ...(intensity && { intensity: intensity as ClientEsgIntensity }),
-      ...(scope && { scope: scope as ClientEsgScope }),
-      ...(dateTimestampQuery && { dateTimestamp: dateTimestampQuery }),
+      AND: andConditions.length > 0 ? andConditions : undefined,
     };
 
     const totalEsgCount = await esgRepo.countEsgRecords(whereClause);

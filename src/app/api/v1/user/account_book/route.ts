@@ -2,7 +2,10 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { getAccountBooksByUserId, createAccountBook } from "@/services/account_book.service";
+import {
+  getAccountBooksByUserId,
+  createAccountBook,
+} from "@/services/account_book.service";
 import { teamRepo } from "@/repositories/team.repo";
 
 export async function GET(request: NextRequest) {
@@ -33,7 +36,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, country, currency, rule, teamId, enterpriseId, startYear, esgIndustryId } = body;
+    const {
+      name,
+      country,
+      currency,
+      rule,
+      teamId,
+      enterpriseId,
+      startYear,
+      esgIndustryId,
+    } = body;
 
     if (!name || !country || !currency || !rule || !teamId) {
       return jsonFail(ApiCode.VALIDATION_ERROR, "Missing required fields");
@@ -46,7 +58,9 @@ export async function POST(request: NextRequest) {
       return jsonFail(ApiCode.FORBIDDEN, "You do not belong to this team");
     }
 
-    const createdAt = startYear ? new Date(`${startYear}-01-01T00:00:00.000Z`) : undefined;
+    const createdAt = startYear
+      ? new Date(`${startYear}-01-01T00:00:00.000Z`)
+      : undefined;
 
     const accountBook = await createAccountBook({
       name,

@@ -1,17 +1,31 @@
-import { prisma } from '@/lib/prisma';
-import { Prisma, Mission, Task } from '@/generated/client';
-import { MISSION_STATUS, TASK_STATUS } from '@/constants/status';
-import { SortOrder } from '@/generated/internal/prismaNamespace';
+import { prisma } from "@/lib/prisma";
+import { Prisma, Mission, Task } from "@/generated/client";
+import { MISSION_STATUS, TASK_STATUS } from "@/constants/status";
+import { SortOrder } from "@/generated/internal/prismaNamespace";
 
 export interface ITaskRepository {
-  findNextPendingTask(): Promise<{ task: Task, mission: Mission } | null>;
-  findNextTaskInMission(mission: Prisma.MissionGetPayload<{ include: { tasks: true } }>): Promise<Task | null>;
+  findNextPendingTask(): Promise<{ task: Task; mission: Mission } | null>;
+  findNextTaskInMission(
+    mission: Prisma.MissionGetPayload<{ include: { tasks: true } }>,
+  ): Promise<Task | null>;
   getTasksByOrder(missionId: string, order: number): Promise<Task[]>;
   getTasksBeforeOrder(missionId: string, currentOrder: number): Promise<Task[]>;
-  updateStatus(taskId: string, status: string, result?: Prisma.InputJsonValue): Promise<Task>;
-  completeMission(missionId: string, status: string, result?: Prisma.InputJsonValue): Promise<Mission>;
+  updateStatus(
+    taskId: string,
+    status: string,
+    result?: Prisma.InputJsonValue,
+  ): Promise<Task>;
+  completeMission(
+    missionId: string,
+    status: string,
+    result?: Prisma.InputJsonValue,
+  ): Promise<Mission>;
   checkMissionCompletion(missionId: string): Promise<boolean>;
   resetAllRunningTasks(): Promise<{ count: number }>;
+  cancelPendingTasks(
+    missionId: string,
+    reason: string,
+  ): Promise<Prisma.BatchPayload>;
 }
 
 export class TaskRepository implements ITaskRepository {
@@ -21,7 +35,7 @@ export class TaskRepository implements ITaskRepository {
    * 1. Find oldest Mission that is PENDING or RUNNING.
    * 2. Find the lowest task order that has PENDING tasks.
    * 3. Return a PENDING task from that order.
-   * 
+   *
    * Note: This is a simplified version. For robustness, we might want to lock tasks.
    */
   async findNextPendingTask() {
@@ -30,19 +44,19 @@ export class TaskRepository implements ITaskRepository {
       where: {
         status: { in: [MISSION_STATUS.PENDING, MISSION_STATUS.RUNNING] },
         tasks: {
-          some: {}
-        }
+          some: {},
+        },
       },
       orderBy: {
-        createdAt: 'asc' as SortOrder
+        createdAt: "asc" as SortOrder,
       },
       include: {
         tasks: {
           orderBy: {
-            order: 'asc' as SortOrder
-          }
-        }
-      }
+            order: "asc" as SortOrder,
+          },
+        },
+      },
     };
     const mission = await prisma.mission.findFirst(query);
     if (!mission) return null;
@@ -60,7 +74,9 @@ export class TaskRepository implements ITaskRepository {
    * Let's group tasks by order.
    * Since they are ordered by 'order', we can iterate.
    */
-  async findNextTaskInMission(mission: Prisma.MissionGetPayload<{ include: { tasks: true } }>) {
+  async findNextTaskInMission(
+    mission: Prisma.MissionGetPayload<{ include: { tasks: true } }>,
+  ) {
     const tasksByOrder = new Map<number, typeof mission.tasks>();
 
     for (const task of mission.tasks) {
@@ -75,8 +91,8 @@ export class TaskRepository implements ITaskRepository {
 
     for (const order of orders) {
       const tasks = tasksByOrder.get(order) || [];
-      const hasPending = tasks.some(t => t.status === TASK_STATUS.PENDING);
-      const hasRunning = tasks.some(t => t.status === TASK_STATUS.RUNNING);
+      const hasPending = tasks.some((t) => t.status === TASK_STATUS.PENDING);
+      const hasRunning = tasks.some((t) => t.status === TASK_STATUS.RUNNING);
 
       if (hasPending || hasRunning) {
         // Info: (20260130 - Luphia) This is the current active order level
@@ -84,7 +100,12 @@ export class TaskRepository implements ITaskRepository {
         // Info: (20260130 - Luphia) Safety check: Are all tasks from previous order completed?
         if (order > 0) {
           const prevTasks = tasksByOrder.get(order - 1) || [];
-          const prevCompleted = prevTasks.every(t => t.status === TASK_STATUS.COMPLETED || t.status === TASK_STATUS.SKIPPED || t.status === TASK_STATUS.FAILED);
+          const prevCompleted = prevTasks.every(
+            (t) =>
+              t.status === TASK_STATUS.COMPLETED ||
+              t.status === TASK_STATUS.SKIPPED ||
+              t.status === TASK_STATUS.FAILED,
+          );
           if (!prevCompleted) {
             /**
              * Info: (20260130 - Luphia)
@@ -92,14 +113,16 @@ export class TaskRepository implements ITaskRepository {
              * This shouldn't happen if we process strictly, but handled here.
              * Wait for previous order
              */
-            console.log(`[TaskRepo] Mission ${mission.id}: Waiting for order ${order - 1} to complete. Cannot start order ${order}.`);
+            console.log(
+              `[TaskRepo] Mission ${mission.id}: Waiting for order ${order - 1} to complete. Cannot start order ${order}.`,
+            );
             return null;
           }
         }
 
         // Info: (20260310 - Tzuhan) Detect and recover stuck RUNNING tasks (e.g. timeout after 10 mins)
         if (hasRunning) {
-          const stuckTask = tasks.find(t => {
+          const stuckTask = tasks.find((t) => {
             if (t.status === TASK_STATUS.RUNNING && t.updatedAt) {
               const diffMs = new Date().getTime() - t.updatedAt.getTime();
               return diffMs > 10 * 60 * 1000; // Info: (20260310 - Tzuhan) 10 minutes timeout
@@ -107,30 +130,52 @@ export class TaskRepository implements ITaskRepository {
             return false;
           });
           if (stuckTask) {
-            const dataPreview = stuckTask.data ? JSON.stringify(stuckTask.data) : '{}';
-            console.log(`[TaskRepo] Mission ${mission.id}: Recovering stuck task [${stuckTask.id}] (Order: ${order}, Type: ${stuckTask.type})`);
-            console.log(`[TaskRepo] -> Task Content: ${dataPreview.substring(0, 300)}...`);
+            const dataPreview = stuckTask.data
+              ? JSON.stringify(stuckTask.data)
+              : "{}";
+            console.log(
+              `[TaskRepo] Mission ${mission.id}: Recovering stuck task [${stuckTask.id}] (Order: ${order}, Type: ${stuckTask.type})`,
+            );
+            console.log(
+              `[TaskRepo] -> Task Content: ${dataPreview.substring(0, 300)}...`,
+            );
             return stuckTask;
           }
         }
 
         if (hasPending) {
-          const pendingTask = tasks.find(t => t.status === TASK_STATUS.PENDING);
+          const pendingTask = tasks.find(
+            (t) => t.status === TASK_STATUS.PENDING,
+          );
           if (pendingTask) {
-            const dataPreview = pendingTask.data ? JSON.stringify(pendingTask.data) : '{}';
-            console.log(`[TaskRepo] Mission ${mission.id}: Found next task [${pendingTask.id}] (Order: ${order}, Type: ${pendingTask.type})`);
-            console.log(`[TaskRepo] -> Task Content: ${dataPreview.substring(0, 300)}...`);
+            const dataPreview = pendingTask.data
+              ? JSON.stringify(pendingTask.data)
+              : "{}";
+            console.log(
+              `[TaskRepo] Mission ${mission.id}: Found next task [${pendingTask.id}] (Order: ${order}, Type: ${pendingTask.type})`,
+            );
+            console.log(
+              `[TaskRepo] -> Task Content: ${dataPreview.substring(0, 300)}...`,
+            );
             return pendingTask;
           }
         }
 
         // Info: (20260130 - Luphia) If only RUNNING tasks exist in this order and none are stuck, we wait.
-        console.log(`[TaskRepo] Mission ${mission.id}: Order ${order} currently has RUNNING tasks. Waiting for them to finish...`);
-        tasks.filter(t => t.status === TASK_STATUS.RUNNING).forEach(t => {
-          const dataPreview = t.data ? JSON.stringify(t.data) : '{}';
-          console.log(`[TaskRepo] -> Blocking Task [${t.id}] (Type: ${t.type}) running since ${t.updatedAt?.toLocaleString('zh-TW', { hour12: false })}`);
-          console.log(`[TaskRepo] -> Content: ${dataPreview.substring(0, 150)}...`);
-        });
+        console.log(
+          `[TaskRepo] Mission ${mission.id}: Order ${order} currently has RUNNING tasks. Waiting for them to finish...`,
+        );
+        tasks
+          .filter((t) => t.status === TASK_STATUS.RUNNING)
+          .forEach((t) => {
+            const dataPreview = t.data ? JSON.stringify(t.data) : "{}";
+            console.log(
+              `[TaskRepo] -> Blocking Task [${t.id}] (Type: ${t.type}) running since ${t.updatedAt?.toLocaleString("zh-TW", { hour12: false })}`,
+            );
+            console.log(
+              `[TaskRepo] -> Content: ${dataPreview.substring(0, 150)}...`,
+            );
+          });
         return null;
       }
 
@@ -144,8 +189,8 @@ export class TaskRepository implements ITaskRepository {
     return prisma.task.findMany({
       where: {
         missionId,
-        order
-      }
+        order,
+      },
     });
   }
 
@@ -154,49 +199,64 @@ export class TaskRepository implements ITaskRepository {
       where: {
         missionId,
         order: {
-          lt: currentOrder
-        }
+          lt: currentOrder,
+        },
       },
       orderBy: {
-        order: 'asc'
-      }
+        order: "asc",
+      },
     });
   }
 
-  async updateStatus(taskId: string, status: string, result?: Prisma.InputJsonValue) {
+  async updateStatus(
+    taskId: string,
+    status: string,
+    result?: Prisma.InputJsonValue,
+  ) {
     return prisma.task.update({
       where: { id: taskId },
       data: {
         status,
         result: result ?? undefined,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
   }
 
-  async completeMission(missionId: string, status: string, result?: Prisma.InputJsonValue) {
+  async completeMission(
+    missionId: string,
+    status: string,
+    result?: Prisma.InputJsonValue,
+  ) {
     return prisma.mission.update({
       where: { id: missionId },
       data: {
         status,
         result: result ?? undefined,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
   }
 
   async resetAllRunningTasks() {
     return prisma.task.updateMany({
       where: { status: TASK_STATUS.RUNNING },
-      data: { status: TASK_STATUS.PENDING }
+      data: { status: TASK_STATUS.PENDING },
+    });
+  }
+
+  async cancelPendingTasks(missionId: string, reason: string) {
+    return prisma.task.updateMany({
+      where: { missionId, status: TASK_STATUS.PENDING },
+      data: { status: TASK_STATUS.FAILED, result: reason },
     });
   }
 
   async checkMissionCompletion(missionId: string): Promise<boolean> {
     const counts = await prisma.task.groupBy({
-      by: ['status'],
+      by: ["status"],
       where: { missionId },
-      _count: true
+      _count: true,
     });
 
     /**
@@ -204,8 +264,10 @@ export class TaskRepository implements ITaskRepository {
      * If any task is not COMPLETED/SKIPPED/FAILED (if we allow failure), mission is not done.
      * But typically "COMPLETED".
      */
-    const pending = counts.find(c => c.status === TASK_STATUS.PENDING)?._count ?? 0;
-    const running = counts.find(c => c.status === TASK_STATUS.RUNNING)?._count ?? 0;
+    const pending =
+      counts.find((c) => c.status === TASK_STATUS.PENDING)?._count ?? 0;
+    const running =
+      counts.find((c) => c.status === TASK_STATUS.RUNNING)?._count ?? 0;
 
     return pending === 0 && running === 0;
   }

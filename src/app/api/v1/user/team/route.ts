@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     await teamRepo.createTeamMember({
       team: { connect: { id: team.id } },
       user: { connect: { id: sessionUser.id } },
-      role: "OWNER"
+      role: "OWNER",
     });
 
     return jsonOk(team);

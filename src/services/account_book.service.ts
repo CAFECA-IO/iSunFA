@@ -1,7 +1,7 @@
-import { COUNTRY, CURRENCY, RULE } from '@/constants/accounts';
-import { Prisma } from '@/generated/client';
-import { prisma } from '@/lib/prisma';
-import { accountBookRepo } from '@/repositories/account_book.repo';
+import { COUNTRY, CURRENCY, RULE } from "@/constants/accounts";
+import { Prisma } from "@/generated/client";
+import { prisma } from "@/lib/prisma";
+import { accountBookRepo } from "@/repositories/account_book.repo";
 
 export interface IAccountBook {
   id: string;
@@ -30,7 +30,7 @@ export const createAccountBookForTeamsWithoutOne = async () => {
   const results: IAccountBook[] = [];
   for (const team of teamsWithoutAccountBook) {
     const accountBook = await createAccountBook({
-      name: 'New Account Book',
+      name: "New Account Book",
       country: COUNTRY.TW,
       currency: CURRENCY.TW,
       rule: RULE.T_IFRS,
@@ -43,45 +43,61 @@ export const createAccountBookForTeamsWithoutOne = async () => {
 };
 
 // Info: (20260308 - Luphia) 找出用戶可以存取的帳簿清單，並提供用戶角色
-export const getAccountBooksByUserId = async (userId: string): Promise<IAccountBook[]> => {
-  const teamMembers = await accountBookRepo.listTeamsAccountBooksByUserId(userId);
+export const getAccountBooksByUserId = async (
+  userId: string,
+): Promise<IAccountBook[]> => {
+  const teamMembers =
+    await accountBookRepo.listTeamsAccountBooksByUserId(userId);
   return teamMembers.flatMap((member) =>
     member.team.accountBooks.map((ab) => ({
       ...ab,
       teamId: member.team.id,
       teamName: member.team.name,
       userRole: member.role,
-    }))
+    })),
   );
 };
 
 // Info: (20260308 - Luphia) 找出團隊可以存取的帳簿清單
-export const getAccountBooksByTeamId = async (teamId: string): Promise<IAccountBook[]> => {
+export const getAccountBooksByTeamId = async (
+  teamId: string,
+): Promise<IAccountBook[]> => {
   return accountBookRepo.listTeamsAccountBooksByTeamId(teamId);
 };
 
 // Info: (20260308 - Luphia) 建立一個帳簿
-export const createAccountBook = async (data: Prisma.AccountBookCreateInput): Promise<IAccountBook> => {
+export const createAccountBook = async (
+  data: Prisma.AccountBookCreateInput,
+): Promise<IAccountBook> => {
   return accountBookRepo.create(data);
 };
 
 // Info: (20260308 - Luphia) 取得一個帳簿
-export const getAccountBookById = async (accountBookId: string): Promise<IAccountBook | null> => {
+export const getAccountBookById = async (
+  accountBookId: string,
+): Promise<IAccountBook | null> => {
   return accountBookRepo.getAccountBookById(accountBookId);
 };
 
 // Info: (20260308 - Luphia) 編輯帳簿
-export const updateAccountBook = async (accountBookId: string, data: Prisma.AccountBookUpdateInput): Promise<IAccountBook> => {
+export const updateAccountBook = async (
+  accountBookId: string,
+  data: Prisma.AccountBookUpdateInput,
+): Promise<IAccountBook> => {
   return accountBookRepo.updateAccountBook(accountBookId, data);
 };
 
 // Info: (20260308 - Luphia) 轉移帳簿
-export const transferAccountBook = async (accountBookId: string, teamId: string): Promise<IAccountBook> => {
+export const transferAccountBook = async (
+  accountBookId: string,
+  teamId: string,
+): Promise<IAccountBook> => {
   return accountBookRepo.transferAccountBook(accountBookId, teamId);
 };
 
 // Info: (20260308 - Luphia) 軟刪除帳簿
-export const deleteAccountBook = async (accountBookId: string): Promise<IAccountBook> => {
+export const deleteAccountBook = async (
+  accountBookId: string,
+): Promise<IAccountBook> => {
   return accountBookRepo.softDelete(accountBookId);
 };
-

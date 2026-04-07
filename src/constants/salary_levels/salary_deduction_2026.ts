@@ -845,13 +845,13 @@ const salaryData = `
 // Info: (20260103 - Luphia) 整理為 [[80500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], ...]
 const DATA = salaryData
   .trim()
-  .split('\n')
+  .split("\n")
   .map((line: string) => {
-    const parts = line.split(' ');
-    const range = parseInt(parts[2].replace(/,/g, '').trim(), 10);
+    const parts = line.split(" ");
+    const range = parseInt(parts[2].replace(/,/g, "").trim(), 10);
     const salaries = parts
       .slice(3)
-      .map((num: string) => parseInt(num.replace(/,/g, '').trim(), 10));
+      .map((num: string) => parseInt(num.replace(/,/g, "").trim(), 10));
     return [range, ...salaries];
   });
 

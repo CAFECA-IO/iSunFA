@@ -1,12 +1,13 @@
-
-import { PDFDocument } from 'pdf-lib';
-import fs from 'fs';
-import path from 'path';
+import { PDFDocument } from "pdf-lib";
+import fs from "fs";
+import path from "path";
 
 async function mergeSlidesToPdf() {
   // Info: (20260202 - Luphia) Get directory from args or default to public/deep_review
-  const targetDir = process.argv[2] || 'public/DeepReview_商品管理平台';
-  const slidesDir = path.isAbsolute(targetDir) ? targetDir : path.join(process.cwd(), targetDir);
+  const targetDir = process.argv[2] || "public/DeepReview_商品管理平台";
+  const slidesDir = path.isAbsolute(targetDir)
+    ? targetDir
+    : path.join(process.cwd(), targetDir);
 
   if (!fs.existsSync(slidesDir)) {
     console.error(`Directory not found: ${slidesDir}`);
@@ -23,11 +24,11 @@ async function mergeSlidesToPdf() {
   // Info: (20260201 - Luphia) Filter for PNG files and sort them naturally
   // Info: (20260202 - Luphia) Relaxed filter to match any PNG with numbers
   const pngFiles = files
-    .filter(file => file.toLowerCase().endsWith('.png') && /\d/.test(file))
+    .filter((file) => file.toLowerCase().endsWith(".png") && /\d/.test(file))
     .sort((a, b) => {
       // Info: (20260201 - Luphia) Extract number from filename for correct sorting
-      const numA = parseInt(a.match(/(\d+)/)?.[0] || '0', 10);
-      const numB = parseInt(b.match(/(\d+)/)?.[0] || '0', 10);
+      const numA = parseInt(a.match(/(\d+)/)?.[0] || "0", 10);
+      const numB = parseInt(b.match(/(\d+)/)?.[0] || "0", 10);
       return numA - numB;
     });
 
@@ -73,6 +74,6 @@ async function mergeSlidesToPdf() {
   console.log(`Successfully created PDF at: ${outputPdfPath}`);
 }
 
-mergeSlidesToPdf().catch(err => {
-  console.error('Error merging slides to PDF:', err);
+mergeSlidesToPdf().catch((err) => {
+  console.error("Error merging slides to PDF:", err);
 });

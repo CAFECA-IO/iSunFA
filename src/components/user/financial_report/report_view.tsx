@@ -8,13 +8,16 @@ import EmbedGenerateModal from "@/components/user/financial_report/embed_generat
 import BalanceSheetView from "@/components/user/financial_report/balance_sheet_view";
 import CashFlowSheetView from "@/components/user/financial_report/cash_flow_statement_view";
 import IncomeStatementView from "@/components/user/financial_report/income_statement_view";
+import EsgReportView from "@/components/user/financial_report/esg_report_view";
 import { numberWithCommas } from "@/lib/utils/common";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { downloadHtmlAsPdf } from "@/lib/utils/pdf";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
+import { useTranslation } from "@/i18n/i18n_context";
 
 export default function ReportView() {
+  const { t } = useTranslation();
   const printContentRef = useRef<HTMLDivElement>(null);
   const params = useParams();
   const accountBookId = params.account_book_id as string;
@@ -26,9 +29,13 @@ export default function ReportView() {
   );
   const [selectedReportPeriod, setSelectedReportPeriod] =
     useState<ReportPeriod>(ReportPeriod.ALL_YEAR);
+  const [selectedReportYear, setSelectedReportYear] = useState<number>(
+    new Date().getFullYear()
+  );
   const [generatedConfig, setGeneratedConfig] = useState<{
     type: ReportType;
     period: ReportPeriod;
+    year: number;
     currency: string;
   } | null>(null);
   const [countOfVerifiedVouchers, setCountOfVerifiedVouchers] =
@@ -62,47 +69,47 @@ export default function ReportView() {
   }, [accountBookId]);
 
   // Info: (20260330 - Julian) 報表標題
-  // ToDo: (20260330 - Julian) 翻譯檔
   const getReportTitle = (type: ReportType) => {
     switch (type) {
       case ReportType.BALANCE_SHEET:
-        return "資產負債表";
+        return t("report_view.types.balance_sheet");
       case ReportType.CASH_FLOW:
-        return "現金流量表";
+        return t("report_view.types.cash_flow");
       case ReportType.INCOME_STATEMENT:
-        return "綜合損益表";
+        return t("report_view.types.income_statement");
+      case ReportType.ESG_REPORT:
+        return t("report_view.types.esg_report");
       default:
         return "";
     }
   };
 
   // Info: (20260330 - Julian) 報表期間
-  // ToDo: (20260330 - Julian) 計算區間與翻譯檔
-  const getReportPeriod = (period: ReportPeriod) => {
+  const getReportPeriod = (period: ReportPeriod, year: number) => {
     switch (period) {
       case ReportPeriod.ALL_YEAR:
-        return "2025 全年度";
+        return `${year} ` + t("report_view.periods.allyear");
       case ReportPeriod.Q1:
-        return "2025 第一季(Q1)";
+        return `${year} ` + t("report_view.periods.q1");
       case ReportPeriod.Q2:
-        return "2025 第二季(Q2)";
+        return `${year} ` + t("report_view.periods.q2");
       case ReportPeriod.Q3:
-        return "2025 第三季(Q3)";
+        return `${year} ` + t("report_view.periods.q3");
       case ReportPeriod.Q4:
-        return "2025 第四季(Q4)";
+        return `${year} ` + t("report_view.periods.q4");
       default:
         return "";
     }
   };
 
   // Info: (20260331 - Julian) 設定下載/列印檔名
-  const filename = `${getReportTitle(selectedReportType)}_${getReportPeriod(selectedReportPeriod)}.pdf`;
+  const filename = `${getReportTitle(selectedReportType)}_${getReportPeriod(selectedReportPeriod, selectedReportYear)}.pdf`;
 
   // Info: (20260331 - Julian) 報表資料
   const reportData = generatedConfig
     ? {
         reportTitle: getReportTitle(generatedConfig.type),
-        reportPeriod: getReportPeriod(generatedConfig.period),
+        reportPeriod: getReportPeriod(generatedConfig.period, generatedConfig.year),
         currency: generatedConfig.currency,
       }
     : null;
@@ -146,7 +153,8 @@ export default function ReportView() {
     setGeneratedConfig({
       type: selectedReportType,
       period: selectedReportPeriod,
-      currency: "TWD",
+      year: selectedReportYear,
+      currency: selectedReportType === ReportType.ESG_REPORT ? "kgCO2e" : "TWD",
     });
   };
 
@@ -165,10 +173,16 @@ export default function ReportView() {
     setSelectedReportPeriod(e.target.value as ReportPeriod);
   };
 
+  const handleReportYearChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    setSelectedReportYear(parseInt(e.target.value, 10));
+  };
+
   const reportSelection = (
     <div className="flex flex-col space-y-2">
       <label htmlFor="report-type" className="text-sm font-bold text-slate-600">
-        報表種類
+        {t("report_view.report_type")}
       </label>
       <select
         id="report-type"
@@ -185,13 +199,32 @@ export default function ReportView() {
     </div>
   );
 
+  const yearSelection = (
+    <div className="flex flex-col space-y-2">
+      <label htmlFor="report-year" className="text-sm font-bold text-slate-600">
+        {t("report_view.year_selection")}
+      </label>
+      <select
+        id="report-year"
+        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+        value={selectedReportYear}
+        onChange={handleReportYearChange}
+      >
+        {[...Array(5)].map((_, i) => {
+          const y = new Date().getFullYear() - i;
+          return <option key={y} value={y}>{y}</option>;
+        })}
+      </select>
+    </div>
+  );
+
   const periodSelection = (
     <div className="flex flex-col space-y-2">
       <label
         htmlFor="report-period"
         className="text-sm font-bold text-slate-600"
       >
-        期間選擇
+        {t("report_view.period_selection")}
       </label>
       <select
         id="report-period"
@@ -201,7 +234,7 @@ export default function ReportView() {
       >
         {Object.values(ReportPeriod).map((period) => (
           <option key={period} value={period}>
-            {getReportPeriod(period)}
+            {t(`report_view.periods.${period.toLowerCase()}`)}
           </option>
         ))}
       </select>
@@ -214,11 +247,13 @@ export default function ReportView() {
 
     switch (generatedConfig.type) {
       case ReportType.BALANCE_SHEET:
-        return <BalanceSheetView period={generatedConfig.period} />;
+        return <BalanceSheetView period={generatedConfig.period} year={generatedConfig.year} />;
       case ReportType.CASH_FLOW:
-        return <CashFlowSheetView period={generatedConfig.period} />;
+        return <CashFlowSheetView period={generatedConfig.period} year={generatedConfig.year} />;
       case ReportType.INCOME_STATEMENT:
-        return <IncomeStatementView period={generatedConfig.period} />;
+        return <IncomeStatementView period={generatedConfig.period} year={generatedConfig.year} />;
+      case ReportType.ESG_REPORT:
+        return <EsgReportView period={generatedConfig.period} year={generatedConfig.year} />;
       default:
         return null;
     }
@@ -230,7 +265,7 @@ export default function ReportView() {
     </h2>
   ) : (
     <h2 className="text-2xl font-black tracking-[0.2em] text-slate-300 md:text-3xl">
-      (未知的帳簿)
+      {t("report_view.unknown_account_book")}
     </h2>
   );
 
@@ -238,10 +273,10 @@ export default function ReportView() {
     <div className="flex h-full min-h-[500px] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
       <Filter className="mb-4 h-12 w-12 text-slate-300" strokeWidth={1.5} />
       <h3 className="text-xl font-bold tracking-widest text-slate-700">
-        尚未產出報表
+        {t("report_view.empty_report_title")}
       </h3>
       <p className="mt-2 text-sm font-medium">
-        請設定需要的報表參數，iSunFA 馬上為您產出報表
+        {t("report_view.empty_report_desc")}
       </p>
     </div>
   ) : (
@@ -275,7 +310,7 @@ export default function ReportView() {
           {reportData?.reportTitle}
         </h3>
         <p className="mt-2 text-sm font-medium text-slate-400">
-          期間：{reportData?.reportPeriod} (單位：{reportData?.currency})
+          {reportData?.reportPeriod && t("report_view.period_unit", { period: reportData.reportPeriod, currency: reportData.currency || "" })}
         </p>
       </div>
 
@@ -291,26 +326,25 @@ export default function ReportView() {
         <div className="flex h-fit w-full shrink-0 flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:w-72 print:hidden">
           <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
             <Filter className="h-5 w-5 text-slate-800" strokeWidth={2.5} />
-            <h2 className="text-base font-bold text-slate-800">報表參數設定</h2>
+            <h2 className="text-base font-bold text-slate-800">{t("report_view.period_selection")}</h2>
           </div>
 
           <div className="space-y-6">
             {reportSelection}
+            {yearSelection}
             {periodSelection}
             <button
               type="button"
               onClick={handleGenerateReport}
               className="mt-2 w-full rounded-md bg-slate-600 py-2 text-sm font-bold text-white transition-colors outline-none hover:bg-slate-800"
             >
-              立即產出報表
+              {t("report_view.generate_btn")}
             </button>
 
             {/* Info:(20260319 - Julian) 傳票核對數提示 */}
             <div className="rounded-xl border border-slate-200 bg-gray-50/50 p-4">
               <p className="text-xs leading-relaxed font-medium text-slate-600">
-                系統將根據目前已核對的{" "}
-                {numberWithCommas(countOfVerifiedVouchers)}{" "}
-                筆傳票資訊進行即時彙整。
+                {t("report_view.hint_verified_count", { count: numberWithCommas(countOfVerifiedVouchers) })}
               </p>
             </div>
           </div>

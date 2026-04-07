@@ -14,9 +14,7 @@ import { esgRepo } from "@/repositories/esg.repo";
  */
 export async function POST(
   request: NextRequest,
-  {
-    params,
-  }: { params: Promise<{ account_book_id: string; esg_id: string }> },
+  { params }: { params: Promise<{ account_book_id: string; esg_id: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -27,7 +25,7 @@ export async function POST(
     }
 
     const { account_book_id: accountBookId, esg_id: esgId } = await params;
-    
+
     const restorer = await webAuthnRepo.findUserByAddress(sessionUser.address);
     if (!restorer) {
       return jsonFail(ApiCode.NOT_FOUND, "Restorer not found");
@@ -45,23 +43,23 @@ export async function POST(
 
     await prisma.esgRecord.update({
       where: { id: esgId },
-      data: { deletedAt: null }
+      data: { deletedAt: null },
     });
 
     if (existingEsg.fileId) {
       await prisma.voucher.updateMany({
         where: {
           fileId: existingEsg.fileId,
-          accountBookId: accountBookId
+          accountBookId: accountBookId,
         },
-        data: { deletedAt: null }
+        data: { deletedAt: null },
       });
       await prisma.journal.updateMany({
         where: {
           fileId: existingEsg.fileId,
-          accountBookId: accountBookId
+          accountBookId: accountBookId,
         },
-        data: { deletedAt: null }
+        data: { deletedAt: null },
       });
     }
 

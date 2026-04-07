@@ -12,7 +12,7 @@ import { TEAM_INVITATION_STATUS } from "@/constants/status";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ inviteId: string }> }
+  { params }: { params: Promise<{ inviteId: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -30,11 +30,17 @@ export async function POST(
     const invitation = await teamRepo.getInvitationByIdWithDetails(inviteId);
 
     if (!invitation || invitation.status !== TEAM_INVITATION_STATUS.PENDING) {
-      return jsonFail(ApiCode.NOT_FOUND, "Invitation not found or no longer pending");
+      return jsonFail(
+        ApiCode.NOT_FOUND,
+        "Invitation not found or no longer pending",
+      );
     }
 
     if (invitation.inviteeAddress !== sessionUser.address) {
-      return jsonFail(ApiCode.FORBIDDEN, "You are not the intended recipient of this invitation");
+      return jsonFail(
+        ApiCode.FORBIDDEN,
+        "You are not the intended recipient of this invitation",
+      );
     }
 
     if (!authentication) {
@@ -44,17 +50,29 @@ export async function POST(
     // Info: (20260326 - Tzuhan) Fetch invitee's current challenge
     const inviteeUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!inviteeUser || !inviteeUser.currentChallenge) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Missing WebAuthn challenge. Please retry.");
+      return jsonFail(
+        ApiCode.UNAUTHORIZED,
+        "Missing WebAuthn challenge. Please retry.",
+      );
     }
 
     // Info: (20260326 - Tzuhan) Verify FIDO2 signature
-    await webAuthnService.verifySignature(sessionUser.address, authentication, inviteeUser.currentChallenge);
+    await webAuthnService.verifySignature(
+      sessionUser.address,
+      authentication,
+      inviteeUser.currentChallenge,
+    );
 
     // Info: (20260326 - Tzuhan) Clear challenge to prevent replay
     await webAuthnRepo.clearChallenge(sessionUser.id);
 
     // Info: (20260326 - Tzuhan) Accept invitation inside a transaction
-    const newMember = await teamRepo.acceptInvitation(inviteId, invitation.teamId, sessionUser.id, invitation.role);
+    const newMember = await teamRepo.acceptInvitation(
+      inviteId,
+      invitation.teamId,
+      sessionUser.id,
+      invitation.role,
+    );
 
     const inviterName = invitation.inviter.name || invitation.inviter.address;
     const inviteeName = sessionUser.name || sessionUser.address;
@@ -73,18 +91,27 @@ export async function POST(
       maxFeePerGas: BigInt(0),
       maxPriorityFeePerGas: BigInt(0),
       paymasterAndData: "0x",
-      signature: "0x"
+      signature: "0x",
     };
 
     try {
-      await bundlerService.sendUserOp(dummyUserOp, CONTRACT_ADDRESSES.ENTRY_POINT);
+      await bundlerService.sendUserOp(
+        dummyUserOp,
+        CONTRACT_ADDRESSES.ENTRY_POINT,
+      );
     } catch (e) {
-      console.info("[Simulated On-Chain] 'Accept Invite' UserOp submission failed as expected for dummy UserOp:", e);
+      console.info(
+        "[Simulated On-Chain] 'Accept Invite' UserOp submission failed as expected for dummy UserOp:",
+        e,
+      );
     }
 
     return jsonOk(newMember);
   } catch (error) {
-    console.error("[API] /team/invitations/[inviteId]/accept POST error:", error);
+    console.error(
+      "[API] /team/invitations/[inviteId]/accept POST error:",
+      error,
+    );
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }

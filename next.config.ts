@@ -4,12 +4,12 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'isuncloud.com',
+        protocol: "https",
+        hostname: "isuncloud.com",
       },
       {
-        protocol: 'https',
-        hostname: 'storage.cafeca.io',
+        protocol: "https",
+        hostname: "storage.cafeca.io",
       },
     ],
   },
