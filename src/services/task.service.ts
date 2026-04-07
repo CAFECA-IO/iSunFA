@@ -95,6 +95,10 @@ export class TaskService {
           accountBookId: string;
           fileBase64?: string;
           fileMimeType?: string;
+          journalText?: string;
+          journalId?: string;
+          voucherId?: string;
+          esgRecordId?: string;
         } = {
           fileId: "",
           accountBookId: "",
@@ -118,10 +122,10 @@ export class TaskService {
               mimeType: parsedContext.fileMimeType,
             },
           ];
-        } else {
+        } else if (!parsedContext.journalText) {
           // Info: (20260320 - Julian) 中止對於舊任務（沒有 Base64）的執行，避免觸發 400 Bad Request
           throw new Error(
-            "No fileBase64 or fileMimeType provided for document parsing task. This might be an outdated task format.",
+            "No fileBase64, fileMimeType, or journalText provided for document parsing task. This might be an outdated task format.",
           );
         }
 
@@ -136,10 +140,12 @@ export class TaskService {
           const res = await chatService.analyzeJournal(images, accountBook);
           result = res.text;
         } else if (task.type === "VOUCHER_PARSING") {
-          const res = await chatService.analyzeVoucher(images, accountBook);
+          // Info: (20260407 - Julian) 傳入修改後的日記帳文字內容，用於重新排程 AI 分析
+          const res = await chatService.analyzeVoucher(images, accountBook, parsedContext.journalText);
           result = JSON.stringify(res);
         } else if (task.type === "ESG_PARSING") {
-          const res = await chatService.analyzeESG(images, accountBook);
+          // Info: (20260407 - Julian) 傳入修改後的日記帳文字內容，用於重新排程 AI 分析
+          const res = await chatService.analyzeESG(images, accountBook, parsedContext.journalText);
           result = JSON.stringify(res);
         } else if (task.type === "DOCUMENT_PRE_CHECK") {
           const res = await chatService.analyzeDocumentPreCheck(images);

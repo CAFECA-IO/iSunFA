@@ -99,7 +99,7 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
     <tr className="border-b border-gray-100 odd:bg-white even:bg-slate-50">
       <td className="px-3 py-4 sm:px-6">
         <span
-          className={`inline-flex items-center uppercase rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap sm:text-sm ${getDataTypeColor(
+          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap uppercase sm:text-sm ${getDataTypeColor(
             log.dataType,
           )}`}
         >
@@ -167,86 +167,90 @@ export default function JournalLogView() {
   const [dataType, setDataType] = useState<string>("");
 
   useEffect(() => {
+    const fetchLogs = async () => {
+      setIsLoading(true);
+      try {
+        const queryParams = new URLSearchParams();
+        if (startDate) {
+          queryParams.append("startDate", new Date(startDate).toISOString());
+        }
+        if (endDate) {
+          const endDay = new Date(endDate);
+          endDay.setHours(23, 59, 59, 999);
+          queryParams.append("endDate", endDay.toISOString());
+        }
+        if (dataType) {
+          queryParams.append("dataType", dataType);
+        }
+        const qs = queryParams.toString();
+        const url = `/api/v1/user/account_book/${accountBookId}/audit_log${qs ? `?${qs}` : ""}`;
+
+        const data = await request<IApiResponse<{ logs: IAuditLog[] }>>(url);
+        if (data.code === ApiCode.SUCCESS && data.payload?.logs) {
+          setLogs(data.payload.logs);
+        }
+      } catch (error) {
+        console.error("Failed to fetch logs", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchLogs();
-  }, [startDate, endDate, dataType]);
-
-  const fetchLogs = async () => {
-    setIsLoading(true);
-    try {
-      const queryParams = new URLSearchParams();
-      if (startDate) {
-        queryParams.append("startDate", new Date(startDate).toISOString());
-      }
-      if (endDate) {
-        const endDay = new Date(endDate);
-        endDay.setHours(23, 59, 59, 999);
-        queryParams.append("endDate", endDay.toISOString());
-      }
-      if (dataType) {
-        queryParams.append("dataType", dataType);
-      }
-      const qs = queryParams.toString();
-      const url = `/api/v1/user/account_book/${accountBookId}/audit_log${qs ? `?${qs}` : ""}`;
-
-      const data = await request<IApiResponse<{ logs: IAuditLog[] }>>(url);
-      if (data.code === ApiCode.SUCCESS && data.payload?.logs) {
-        setLogs(data.payload.logs);
-      }
-    } catch (error) {
-      console.error("Failed to fetch logs", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [startDate, endDate, dataType, accountBookId]);
 
   return (
     <div className="flex w-full max-w-full min-w-0 flex-col gap-4">
-      <div className="flex flex-col gap-2 items-center justify-between lg:flex-row">
+      <div className="flex flex-col items-center justify-between gap-2 lg:flex-row">
         {/* Info: (20260407 - Julian) Title */}
         <h2 className="font-sans text-xl font-semibold text-gray-800">
           {t("journal.log_view.title")}
         </h2>
 
         {/* Info: (20260407 - Julian) Filter */}
-      <div className="flex items-center gap-8 p-4">
-        {/* Info: (20260407 - Julian) Type Filter */}
-        <select
-          value={dataType}
-          onChange={(e) => setDataType(e.target.value)}
-          className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-        >
+        <div className="flex items-center gap-8 p-4">
+          {/* Info: (20260407 - Julian) Type Filter */}
+          <select
+            value={dataType}
+            onChange={(e) => setDataType(e.target.value)}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+          >
             <option value="">{t("全部項目")}</option>
-            <option value={AuditLogDataType.JOURNAL}>{t("verify.type.journal")}</option>
-            <option value={AuditLogDataType.VOUCHER}>{t("verify.type.voucher")}</option>
-            <option value={AuditLogDataType.ESG_RECORD}>{t("verify.type.esg")}</option>
+            <option value={AuditLogDataType.JOURNAL}>
+              {t("verify.type.journal")}
+            </option>
+            <option value={AuditLogDataType.VOUCHER}>
+              {t("verify.type.voucher")}
+            </option>
+            <option value={AuditLogDataType.ESG_RECORD}>
+              {t("verify.type.esg")}
+            </option>
           </select>
-       
-        {/* Info: (20260407 - Julian) Date Picker */}
-        <div className="flex w-full items-center gap-2 lg:w-auto">
-          <div className="flex w-full flex-col items-stretch gap-2 text-sm sm:flex-row sm:items-center">
-            <input
-              type="date"
-              aria-label="Start Date"
-              value={startDate}
-              max={endDate || undefined}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-            />
-            <span className="hidden text-gray-400 sm:block">-</span>
-            <input
-              type="date"
-              aria-label="End Date"
-              value={endDate}
-              min={startDate || undefined}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-            />
+
+          {/* Info: (20260407 - Julian) Date Picker */}
+          <div className="flex w-full items-center gap-2 lg:w-auto">
+            <div className="flex w-full flex-col items-stretch gap-2 text-sm sm:flex-row sm:items-center">
+              <input
+                type="date"
+                aria-label="Start Date"
+                value={startDate}
+                max={endDate || undefined}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+              <span className="hidden text-gray-400 sm:block">-</span>
+              <input
+                type="date"
+                aria-label="End Date"
+                value={endDate}
+                min={startDate || undefined}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+            </div>
           </div>
         </div>
       </div>
-      </div>
-
-
 
       {/* Info: (20260407 - Julian) Log Table */}
       <div className="relative mt-2 overflow-x-auto rounded-lg border border-gray-200 shadow-sm">

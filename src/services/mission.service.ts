@@ -74,13 +74,15 @@ export class MissionService {
         const context = JSON.parse(taskData?.context || "{}");
         const fileId = context.fileId;
         const accountBookId = context.accountBookId;
+        const voucherIdContext = context.voucherId;
+        const esgRecordIdContext = context.esgRecordId;
 
         const failedTask = tasks.find((t) => t.status === "FAILED");
         const failureReason = failedTask?.result
           ? String(failedTask.result)
           : "系統分析失敗";
 
-        if (fileId && accountBookId) {
+        if ((fileId || voucherIdContext || esgRecordIdContext) && accountBookId) {
           await prisma.$transaction(async (tx) => {
             // Info: (20260323 - Julian) 更新或建立日記帳
             if (journalTask) {
@@ -89,9 +91,12 @@ export class MissionService {
                   ? "FAILED"
                   : "COMPLETED";
 
-              const existingJournal = await tx.journal.findFirst({
-                where: { fileId, accountBookId },
-              });
+              let existingJournal = null;
+              if (fileId && accountBookId) {
+                existingJournal = await tx.journal.findFirst({
+                  where: { fileId, accountBookId },
+                });
+              }
 
               if (jStatus === "FAILED") {
                 if (existingJournal) {
@@ -172,9 +177,16 @@ export class MissionService {
                 voucherTask.status.toUpperCase() === "FAILED"
                   ? "FAILED"
                   : "COMPLETED";
-              const existingVoucher = await tx.voucher.findFirst({
-                where: { fileId, accountBookId },
-              });
+              let existingVoucher = null;
+              if (voucherIdContext) {
+                existingVoucher = await tx.voucher.findUnique({
+                  where: { id: voucherIdContext },
+                });
+              } else if (fileId && accountBookId) {
+                existingVoucher = await tx.voucher.findFirst({
+                  where: { fileId, accountBookId },
+                });
+              }
 
               if (vStatus === "FAILED") {
                 if (existingVoucher) {
@@ -287,9 +299,16 @@ export class MissionService {
                 esgTask.status.toUpperCase() === "FAILED"
                   ? "FAILED"
                   : "COMPLETED";
-              const existingEsg = await tx.esgRecord.findFirst({
-                where: { fileId, accountBookId },
-              });
+              let existingEsg = null;
+              if (esgRecordIdContext) {
+                existingEsg = await tx.esgRecord.findUnique({
+                  where: { id: esgRecordIdContext },
+                });
+              } else if (fileId && accountBookId) {
+                existingEsg = await tx.esgRecord.findFirst({
+                  where: { fileId, accountBookId },
+                });
+              }
 
               if (eStatus === "FAILED") {
                 if (existingEsg) {

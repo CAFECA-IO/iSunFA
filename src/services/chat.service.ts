@@ -259,10 +259,16 @@ export class ChatService {
   async analyzeVoucher(
     images: { data: string; mimeType: string }[] = [],
     accountBook: Partial<AccountBook> | null = null,
+    journalText?: string,
   ): Promise<{ data: IParsedVoucher | null; error?: string }> {
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
-      const promptText = getVoucherPrompt(accountBook);
+      let promptText = getVoucherPrompt(accountBook);
+      
+      if (journalText) {
+        promptText += `\n\n【重要指示】\n使用者已提供/修正日記帳的最新內容如下。請優先依據以下文字資訊進行解析，若與圖片內容有衝突，以此文字為準：\n${journalText}`;
+      }
+      
       const parts: Part[] = [{ text: promptText }];
 
       if (images && images.length > 0) {
@@ -299,10 +305,16 @@ export class ChatService {
   async analyzeESG(
     images: { data: string; mimeType: string }[] = [],
     accountBook: Partial<AccountBook> | null = null,
+    journalText?: string,
   ): Promise<{ data: IEsgRecord | null; error?: string }> {
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
-      const promptText = getEsgPrompt(accountBook);
+      let promptText = getEsgPrompt(accountBook);
+      
+      if (journalText) {
+        promptText += `\n\n【重要指示】\n使用者已提供/修正日記帳的最新內容如下。請優先依據以下文字資訊進行解析，若與圖片內容有衝突，以此文字為準：\n${journalText}`;
+      }
+      
       const parts: Part[] = [{ text: promptText }];
 
       if (images && images.length > 0) {

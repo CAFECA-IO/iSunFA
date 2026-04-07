@@ -9,6 +9,8 @@ import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { missionRepo } from "@/repositories/mission.repo";
+import { missionGenerator } from "@/lib/worker/mission.generator";
 
 /**
  * Info: (20260304 - Julian) 取得日記帳
@@ -140,6 +142,68 @@ export async function PUT(
       accountBookId: accountBook.id,
       action: "UPDATE",
     });
+
+    // Info: (20260407 - Julian) 觸發 journal_correction 生成 Voucher 和 ESG
+    const missionDef = missionGenerator.generateMission({
+      category: "journal_correction",
+      periodType: "N/A",
+      periodValue: "N/A",
+      year: new Date().getFullYear(),
+      fileId: updatedJournal.fileId || undefined,
+      journalId: updatedJournal.id,
+      journalText: text,
+      voucherId: updatedJournal.voucherId,
+      esgRecordId: updatedJournal.esgRecordId,
+      accountBookId: accountBook.id,
+      prerequisiteData: { accountBook },
+    });
+
+    if (missionDef) {
+      await missionRepo.createMission({
+        userId: updater.id,
+        name: missionDef.name,
+        status: AIAnalysisStatus.PENDING,
+        tasks: {
+          create: missionDef.tasks.map((task) => ({
+            type: task.type,
+            order: task.order,
+            data: task.data,
+            status: AIAnalysisStatus.PENDING,
+          })),
+        },
+      });
+
+      // Info: (20260407 - Julian) 將現有傳票狀態更新為 PROCESSING
+      if (updatedJournal.voucherId) {
+        await prisma.voucher.update({
+          where: { id: updatedJournal.voucherId },
+          data: { analysisStatus: AIAnalysisStatus.PROCESSING },
+        });
+        // Info: (20260407 - Julian) 編輯傳票 log
+        await auditLogRepo.createAuditLog({
+          userId: updater.id,
+          dataType: "VOUCHER",
+          dataId: updatedJournal.voucherId,
+          accountBookId: accountBook.id,
+          action: "UPDATE",
+        });
+      }
+      if (updatedJournal.esgRecordId) {
+        // Info: (20260407 - Julian) 將現有碳盤查狀態更新為 PROCESSING
+        await prisma.esgRecord.update({
+          where: { id: updatedJournal.esgRecordId },
+          data: { analysisStatus: AIAnalysisStatus.PROCESSING },
+        });
+        // Info: (20260407 - Julian) 編輯碳盤查 log
+        await auditLogRepo.createAuditLog({
+          userId: updater.id,
+          dataType: "ESG_RECORD",
+          dataId: updatedJournal.esgRecordId,
+          accountBookId: accountBook.id,
+          action: "UPDATE",
+        });
+      }
+    }
 
     const formattedJournal: IJournal = {
       id: updatedJournal.id,
