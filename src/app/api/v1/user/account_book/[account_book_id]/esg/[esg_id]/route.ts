@@ -60,7 +60,7 @@ export async function GET(
 
     const formattedRecord: IEsgRecord = {
       id: esgRecord.id,
-      dateTimestamp: esgRecord.dateTimestamp,
+      tradingDate: esgRecord.tradingDate.toISOString(),
       fileId: esgRecord.fileId ?? "",
       file: esgRecord.file
         ? {
@@ -143,7 +143,7 @@ export async function PUT(
 
     // Info: (20260312 - Julian) 更新 ESG 紀錄
     const updatedRecord = await esgRepo.updateEsgRecord(esgId, {
-      ...(reqBody.dateTimestamp && { dateTimestamp: reqBody.dateTimestamp }),
+      ...(reqBody.tradingDate && { tradingDate: reqBody.tradingDate }),
       ...(reqBody.scope && {
         scope: reqBody.scope.toUpperCase() as EsgScope,
       }),
@@ -179,7 +179,7 @@ export async function PUT(
 
     const formattedRecord: IEsgRecord = {
       id: updatedRecord.id,
-      dateTimestamp: updatedRecord.dateTimestamp,
+      tradingDate: updatedRecord.tradingDate.toISOString(),
       fileId: updatedRecord.fileId ?? "",
       scope: updatedRecord.scope as unknown as ClientEsgScope,
       activityType: updatedRecord.activityType,

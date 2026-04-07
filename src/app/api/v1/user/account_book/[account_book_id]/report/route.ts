@@ -88,13 +88,11 @@ export async function GET(
     if (reportType === ReportType.ESG_REPORT) {
       // Info: (20260406 - Luphia) 產出碳盤查報表
       const range = getTradingDateRange();
-      const startTs = Math.floor(range.start.getTime() / 1000);
-      const endTs = Math.floor(range.end.getTime() / 1000);
 
       const esgRecords = await esgRepo.getEsgRecords({
         where: {
           accountBookId,
-          dateTimestamp: { gte: startTs, lte: endTs },
+          tradingDate: { gte: range.start, lte: range.end },
           isVerified: true,
           deletedAt: null,
         },
