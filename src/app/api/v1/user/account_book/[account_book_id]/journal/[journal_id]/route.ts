@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { journalRepo } from "@/repositories/journal.repo";
+import { voucherRepo } from "@/repositories/voucher.repo";
+import { esgRepo } from "@/repositories/esg.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IJournal } from "@/interfaces/journal";
@@ -59,10 +60,10 @@ export async function GET(
       ...journalDbRecord,
       file: journalDbRecord.file
         ? {
-            id: journalDbRecord.file.id,
-            hash: journalDbRecord.file.hash,
-            fileName: journalDbRecord.file.fileName || "Unknown",
-          }
+          id: journalDbRecord.file.id,
+          hash: journalDbRecord.file.hash,
+          fileName: journalDbRecord.file.fileName || "Unknown",
+        }
         : undefined,
       voucherId: journalDbRecord.voucherId,
       esgRecordId: journalDbRecord.esgRecordId,
@@ -175,9 +176,8 @@ export async function PUT(
 
       // Info: (20260407 - Julian) 將現有傳票狀態更新為 PROCESSING
       if (updatedJournal.voucherId) {
-        await prisma.voucher.update({
-          where: { id: updatedJournal.voucherId },
-          data: { analysisStatus: AIAnalysisStatus.PROCESSING },
+        await voucherRepo.updateVoucher(updatedJournal.voucherId, {
+          analysisStatus: AIAnalysisStatus.PROCESSING
         });
         // Info: (20260407 - Julian) 編輯傳票 log
         await auditLogRepo.createAuditLog({
@@ -190,9 +190,8 @@ export async function PUT(
       }
       if (updatedJournal.esgRecordId) {
         // Info: (20260407 - Julian) 將現有碳盤查狀態更新為 PROCESSING
-        await prisma.esgRecord.update({
-          where: { id: updatedJournal.esgRecordId },
-          data: { analysisStatus: AIAnalysisStatus.PROCESSING },
+        await esgRepo.updateEsgRecord(updatedJournal.esgRecordId, {
+          analysisStatus: AIAnalysisStatus.PROCESSING
         });
         // Info: (20260407 - Julian) 編輯碳盤查 log
         await auditLogRepo.createAuditLog({
@@ -212,10 +211,10 @@ export async function PUT(
       fileId: updatedJournal.fileId ?? "",
       file: updatedJournal.file
         ? {
-            id: updatedJournal.file.id,
-            hash: updatedJournal.file.hash,
-            fileName: updatedJournal.file.fileName ?? "",
-          }
+          id: updatedJournal.file.id,
+          hash: updatedJournal.file.hash,
+          fileName: updatedJournal.file.fileName ?? "",
+        }
         : undefined,
       voucherId: updatedJournal.voucherId,
       esgRecordId: updatedJournal.esgRecordId,
@@ -281,28 +280,25 @@ export async function DELETE(
     }
 
     // Info: (20260404 - Luphia) 將 Journal 標記刪除
-    const deletedJournal = await prisma.journal.update({
-      where: { id: journalId },
-      data: { deletedAt: new Date() },
-    });
+    const deletedJournal = await journalRepo.updateJournal(journalId, { deletedAt: new Date() });
+
+    if (!deletedJournal) {
+      return jsonFail(ApiCode.NOT_FOUND, "Journal record not found to delete");
+    }
 
     // Info: (20260404 - Luphia) 同步刪除關聯 Voucher 和 EsgRecord
     if (existingJournal.fileId) {
-      await prisma.voucher.updateMany({
-        where: {
-          fileId: existingJournal.fileId,
-          accountBookId: accountBookId,
-        },
-        data: { deletedAt: new Date() },
-      });
+      await voucherRepo.updateManyVouchersByFile(
+        existingJournal.fileId,
+        accountBookId,
+        { deletedAt: new Date() },
+      );
 
-      await prisma.esgRecord.updateMany({
-        where: {
-          fileId: existingJournal.fileId,
-          accountBookId: accountBookId,
-        },
-        data: { deletedAt: new Date() },
-      });
+      await esgRepo.updateManyEsgRecordsByFile(
+        existingJournal.fileId,
+        accountBookId,
+        { deletedAt: new Date() },
+      );
     }
 
     // Info: (20260306 - Julian) 新增 log

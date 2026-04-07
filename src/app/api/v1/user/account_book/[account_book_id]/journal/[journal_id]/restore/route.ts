@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -7,6 +6,8 @@ import { accountBookRepo } from "@/repositories/account_book.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { journalRepo } from "@/repositories/journal.repo";
+import { voucherRepo } from "@/repositories/voucher.repo";
+import { esgRepo } from "@/repositories/esg.repo";
 
 /**
  * Info: (20260404 - Luphia) 復原軟刪除的傳票與同步復原 ESG
@@ -46,27 +47,21 @@ export async function POST(
     }
 
     // Info: (20260404 - Luphia) 將 Journal 復原
-    await prisma.journal.update({
-      where: { id: journalId },
-      data: { deletedAt: null },
-    });
+    // Info: (20260404 - Luphia) 將 Journal 復原
+    await journalRepo.updateJournal(journalId, { deletedAt: null });
 
     // Info: (20260404 - Luphia) 同步復原 Voucher 和 ESG
     if (existingJournal.fileId) {
-      await prisma.voucher.updateMany({
-        where: {
-          fileId: existingJournal.fileId,
-          accountBookId: accountBookId,
-        },
-        data: { deletedAt: null },
-      });
-      await prisma.esgRecord.updateMany({
-        where: {
-          fileId: existingJournal.fileId,
-          accountBookId: accountBookId,
-        },
-        data: { deletedAt: null },
-      });
+      await voucherRepo.updateManyVouchersByFile(
+        existingJournal.fileId,
+        accountBookId,
+        { deletedAt: null },
+      );
+      await esgRepo.updateManyEsgRecordsByFile(
+        existingJournal.fileId,
+        accountBookId,
+        { deletedAt: null },
+      );
     }
 
     // Info: (20260404 - Luphia) 紀錄復原動作

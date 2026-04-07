@@ -276,8 +276,7 @@ export default function JournalLogView() {
           </thead>
           <tbody>
             {isLoading ? (
-              // eslint-disable-next-line jsx-a11y/control-has-associated-label
-              <tr>
+              <tr aria-label={t("common.loading")}>
                 <td colSpan={5} className="h-40 text-center">
                   <div className="flex flex-col items-center justify-center gap-2 text-orange-500">
                     <Loader2 className="h-8 w-8 animate-spin" />
