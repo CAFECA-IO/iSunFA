@@ -114,7 +114,7 @@ export async function GET(
     const pageSize = searchParams.get("pageSize")
       ? parseInt(searchParams.get("pageSize")!)
       : undefined;
-    const orderByParams = searchParams.get("orderBy");
+    const sort = searchParams.get("sort") === "asc" ? "asc" : "desc";
 
     // Info: (20260327 - Luphia) 乾淨且安全地組裝查詢條件 (Where)
     const sevenDaysAgo = new Date();
@@ -143,18 +143,9 @@ export async function GET(
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
 
-    // Info: (20260327 - Luphia) 解析分頁與排序參數
+    // Info: (20260327 - Luphia) 解析分頁
     const skip = page && pageSize ? (page - 1) * pageSize : undefined;
     const take = pageSize || undefined;
-    let orderBy: Prisma.JournalOrderByWithRelationInput | undefined;
-
-    if (orderByParams) {
-      try {
-        orderBy = JSON.parse(orderByParams);
-      } catch {
-        console.warn("Invalid orderBy param format, ignoring");
-      }
-    }
 
     // Info: (20260327 - Luphia) 使用 Promise.all 並行執行 Count 與資料查詢，大幅縮短等待時間
     const [totalCount, journals] = await Promise.all([
@@ -163,7 +154,7 @@ export async function GET(
         where,
         skip,
         take,
-        orderBy,
+        orderBy: { tradingDate: sort },
       }),
     ]);
 

@@ -22,7 +22,7 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null) => {
   並請在 aiNote 欄位寫下 AI 分析碳盤查的邏輯，不需要任何標題，直接寫下分析邏輯或列點描述即可。
   請務必回傳一個 JSON 格式，包含以下欄位（不要加入任何額外的文字，也不要包裝在 markdown 程式碼區塊中，直接回傳 JSON 字串）：
   {
-      "dateTimestamp": 1700000000, // 交易日期，unix timestamp 格式，以「秒」為單位
+      "recordDate": "YYYY-MM-DD", // 交易日期
       "scope": "SCOPE_1", // 溫室氣體範疇 ("SCOPE_1" | "SCOPE_2" | "SCOPE_3")
       "activityType": "電力使用", // 活動類型
       "vendor": "心心小舖", // 供應商

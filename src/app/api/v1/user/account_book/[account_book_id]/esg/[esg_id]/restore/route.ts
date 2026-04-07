@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -7,6 +6,8 @@ import { accountBookRepo } from "@/repositories/account_book.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { esgRepo } from "@/repositories/esg.repo";
+import { voucherRepo } from "@/repositories/voucher.repo";
+import { journalRepo } from "@/repositories/journal.repo";
 
 /**
  * Info: (20260404 - Luphia) 復原軟刪除的 ESG
@@ -41,26 +42,19 @@ export async function POST(
       return jsonFail(ApiCode.NOT_FOUND, "ESG record not found");
     }
 
-    await prisma.esgRecord.update({
-      where: { id: esgId },
-      data: { deletedAt: null },
-    });
+    await esgRepo.updateEsgRecord(esgId, { deletedAt: null });
 
     if (existingEsg.fileId) {
-      await prisma.voucher.updateMany({
-        where: {
-          fileId: existingEsg.fileId,
-          accountBookId: accountBookId,
-        },
-        data: { deletedAt: null },
-      });
-      await prisma.journal.updateMany({
-        where: {
-          fileId: existingEsg.fileId,
-          accountBookId: accountBookId,
-        },
-        data: { deletedAt: null },
-      });
+      await voucherRepo.updateManyVouchersByFile(
+        existingEsg.fileId,
+        accountBookId,
+        { deletedAt: null },
+      );
+      await journalRepo.updateManyJournalsByFile(
+        existingEsg.fileId,
+        accountBookId,
+        { deletedAt: null },
+      );
     }
 
     await auditLogRepo.createAuditLog({

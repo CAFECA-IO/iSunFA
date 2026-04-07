@@ -21,6 +21,11 @@ export interface IVoucherRepository {
     id: string,
     data: Prisma.VoucherUpdateInput,
   ): Promise<VoucherWithRelations | null>;
+  updateManyVouchersByFile(
+    fileId: string,
+    accountBookId: string,
+    data: Prisma.VoucherUpdateInput,
+  ): Promise<Prisma.BatchPayload>;
   getVoucherSummary(
     accountBookId: string,
   ): Promise<{
@@ -182,6 +187,17 @@ export class VoucherRepository implements IVoucherRepository {
       journalId,
       esgRecordId,
     } as VoucherWithRelations;
+  }
+
+  async updateManyVouchersByFile(
+    fileId: string,
+    accountBookId: string,
+    data: Prisma.VoucherUpdateInput,
+  ): Promise<Prisma.BatchPayload> {
+    return prisma.voucher.updateMany({
+      where: { fileId, accountBookId },
+      data,
+    });
   }
 
   async getVoucherSummary(accountBookId: string) {

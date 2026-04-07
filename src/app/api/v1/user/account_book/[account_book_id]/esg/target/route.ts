@@ -41,7 +41,7 @@ export async function GET(
       {};
 
     esgRecords.forEach((r) => {
-      const year = new Date(r.dateTimestamp * 1000).getFullYear();
+      const year = r.tradingDate.getFullYear();
       if (!yearlyData[year]) yearlyData[year] = { emissions: 0, revenue: 0 };
       yearlyData[year].emissions += Number(r.emissions);
     });

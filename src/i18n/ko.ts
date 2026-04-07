@@ -1056,7 +1056,7 @@ export const ko = {
       log: "변경 내역",
     },
     log_view: {
-      title: "전표 변경 내역",
+      title: "변경 내역",
       refresh: "새로고침",
       record_time: "기록 시간",
       action_type: "작업 유형",

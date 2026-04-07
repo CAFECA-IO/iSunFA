@@ -66,7 +66,7 @@ export async function POST(
       fileId: "",
       createdAt: new Date(),
       updatedAt: new Date(),
-      dateTimestamp: 0,
+      tradingDate: new Date(),
       activityType: "",
       vendor: "",
       rawActivityData: "",
@@ -139,7 +139,7 @@ export async function GET(
       ? parseInt(searchParams.get("pageSize")!)
       : undefined;
 
-    let dateTimestampQuery: Prisma.IntFilter | undefined = undefined;
+    let recordDateQuery: Prisma.StringFilter | undefined = undefined;
     let startDate: Date | undefined;
     let endDate: Date | undefined;
 
@@ -154,9 +154,9 @@ export async function GET(
         startDate = new Date(year, 0, 1);
         endDate = new Date(year, 11, 31, 23, 59, 59, 999);
       }
-      dateTimestampQuery = {
-        gte: Math.floor(startDate.getTime() / 1000),
-        lte: Math.floor(endDate.getTime() / 1000),
+      recordDateQuery = {
+        gte: startDate.toISOString(),
+        lte: endDate.toISOString(),
       };
     }
 
@@ -184,7 +184,9 @@ export async function GET(
     }
 
     if (verifyStatus) {
-      andConditions.push({ isVerified: verifyStatus === VerifyStatus.VERIFIED });
+      andConditions.push({
+        isVerified: verifyStatus === VerifyStatus.VERIFIED,
+      });
     }
 
     if (intensity) {
@@ -195,16 +197,13 @@ export async function GET(
       andConditions.push({ scope: scope as ClientEsgScope });
     }
 
-    // Info: (20260406 - Luphia) 日期過濾邏輯：對於未設定日期 (0) 的資料，使用 createdAt 搭配年/月時間區段過濾
-    if (dateTimestampQuery && startDate && endDate) {
+    // Info: (20260407 - Julian) 日期過濾邏輯
+    if (recordDateQuery && startDate && endDate) {
       andConditions.push({
         OR: [
-          { dateTimestamp: dateTimestampQuery },
+          { tradingDate: recordDateQuery },
           {
-            AND: [
-              { dateTimestamp: 0 },
-              { createdAt: { gte: startDate, lte: endDate } },
-            ],
+            AND: [{ tradingDate: { gte: startDate, lte: endDate } }],
           },
         ],
       });
@@ -220,7 +219,7 @@ export async function GET(
     const esgDbRecords = await esgRepo.getEsgRecords({
       where: whereClause,
       include: { file: true },
-      orderBy: { dateTimestamp: sort },
+      orderBy: { tradingDate: sort },
       ...(page && pageSize
         ? { skip: (page - 1) * pageSize, take: pageSize }
         : {}),
@@ -228,13 +227,14 @@ export async function GET(
 
     const esgRecords: IEsgRecord[] = esgDbRecords.map((r) => ({
       ...r,
+      tradingDate: r.tradingDate.toString(),
       fileId: r.fileId ?? "",
       file: r.file
         ? {
-          id: r.file.id,
-          hash: r.file.hash,
-          fileName: r.file.fileName || "Unknown",
-        }
+            id: r.file.id,
+            hash: r.file.hash,
+            fileName: r.file.fileName || "Unknown",
+          }
         : undefined,
       scope: r.scope as ClientEsgScope,
       emissions: r.emissions.toString(),

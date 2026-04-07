@@ -70,7 +70,7 @@ export const mockDashboardSummary: IEsgDashboardSummary = {
 
 export interface IEsgRecord {
   id: string;
-  dateTimestamp: number;
+  tradingDate: string;
   fileId: string;
   file?: {
     id: string;

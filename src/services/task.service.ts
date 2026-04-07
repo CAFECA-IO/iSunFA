@@ -85,7 +85,8 @@ export class TaskService {
       // Info: (20260320 - Julian) 處理文件解析任務
       if (
         task.type === "JOURNAL_PARSING" ||
-        task.type === "VOUCHER_PARSING" ||
+        task.type === "VOUCHER_BASE_PARSING" ||
+        task.type === "VOUCHER_LINES_PARSING" ||
         task.type === "ESG_PARSING" ||
         task.type === "DOCUMENT_PRE_CHECK"
       ) {
@@ -95,6 +96,10 @@ export class TaskService {
           accountBookId: string;
           fileBase64?: string;
           fileMimeType?: string;
+          journalText?: string;
+          journalId?: string;
+          voucherId?: string;
+          esgRecordId?: string;
         } = {
           fileId: "",
           accountBookId: "",
@@ -118,10 +123,10 @@ export class TaskService {
               mimeType: parsedContext.fileMimeType,
             },
           ];
-        } else {
+        } else if (!parsedContext.journalText) {
           // Info: (20260320 - Julian) 中止對於舊任務（沒有 Base64）的執行，避免觸發 400 Bad Request
           throw new Error(
-            "No fileBase64 or fileMimeType provided for document parsing task. This might be an outdated task format.",
+            "No fileBase64, fileMimeType, or journalText provided for document parsing task. This might be an outdated task format.",
           );
         }
 
@@ -135,11 +140,17 @@ export class TaskService {
         if (task.type === "JOURNAL_PARSING") {
           const res = await chatService.analyzeJournal(images, accountBook);
           result = res.text;
-        } else if (task.type === "VOUCHER_PARSING") {
-          const res = await chatService.analyzeVoucher(images, accountBook);
+        } else if (task.type === "VOUCHER_BASE_PARSING") {
+          // Info: (20260407 - Julian) 傳入修改後的日記帳文字內容，重新排程「傳票基本資料」 AI 分析
+          const res = await chatService.analyzeVoucherBase(images, accountBook, parsedContext.journalText);
+          result = JSON.stringify(res);
+        } else if (task.type === "VOUCHER_LINES_PARSING") {
+          // Info: (20260407 - Julian) 傳入修改後的日記帳文字內容，重新排程「傳票分錄」 AI 分析
+          const res = await chatService.analyzeVoucherLines(images, accountBook, parsedContext.journalText);
           result = JSON.stringify(res);
         } else if (task.type === "ESG_PARSING") {
-          const res = await chatService.analyzeESG(images, accountBook);
+          // Info: (20260407 - Julian) 傳入修改後的日記帳文字內容，重新排程「碳盤查」 AI 分析
+          const res = await chatService.analyzeESG(images, accountBook, parsedContext.journalText);
           result = JSON.stringify(res);
         } else if (task.type === "DOCUMENT_PRE_CHECK") {
           const res = await chatService.analyzeDocumentPreCheck(images);
@@ -168,7 +179,7 @@ export class TaskService {
                     if (j) await prisma.journal.update({ where: { id: j.id }, data: { tradingDate: tradingDateObj } });
 
                     const e = await prisma.esgRecord.findFirst({ where: { fileId: parsedContext.fileId } });
-                    if (e) await prisma.esgRecord.update({ where: { id: e.id }, data: { dateTimestamp: Math.floor(tradingDateObj.getTime() / 1000) } });
+                    if (e) await prisma.esgRecord.update({ where: { id: e.id }, data: { tradingDate: tradingDateObj } });
                   } catch (updateErr) {
                     console.error("[TaskService] Failed to update trading date for duplicate document:", updateErr);
                   }

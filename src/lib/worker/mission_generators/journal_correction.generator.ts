@@ -3,14 +3,11 @@ import {
   IMissionDefinition,
   IMissionParams,
 } from "@/lib/worker/mission.interface";
-import { getJournalPrompt } from "@/constants/prompts/journal";
 import { getBaseVoucherPrompt, getVoucherLinesPrompt } from "@/constants/prompts/voucher";
 import { getEsgPrompt } from "@/constants/prompts/esg";
-import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
-
 import { AccountBook } from "@/generated/client";
 
-export function generateDocumentParsingMission(
+export function generateJournalCorrectionMission(
   params: IMissionParams,
 ): IMissionDefinition | null {
   const accountBook = params.prerequisiteData?.accountBook as
@@ -22,29 +19,14 @@ export function generateDocumentParsingMission(
     fileId: params.fileId,
     fileBase64: params.fileBase64,
     fileMimeType: params.fileMimeType,
+    journalId: params.journalId,
+    journalText: params.journalText,
+    voucherId: params.voucherId,
+    esgRecordId: params.esgRecordId,
     accountBookId: params.accountBookId,
   });
 
-  tasks.push({
-    type: "DOCUMENT_PRE_CHECK",
-    order: 0,
-    data: {
-      key: "PRE_CHECK",
-      prompt: getDocumentDuplicateCheckPrompt(),
-      context,
-    },
-  });
-
-  tasks.push({
-    type: "JOURNAL_PARSING",
-    order: 1,
-    data: {
-      key: "JOURNAL",
-      prompt: getJournalPrompt(accountBook),
-      context,
-    },
-  });
-
+  // Info: (20260407 - Julian) 跳過 PRE_CHECK 和 JOURNAL_PARSING，直接重產傳票與 ESG
   tasks.push({
     type: "VOUCHER_BASE_PARSING",
     order: 1,
@@ -76,7 +58,7 @@ export function generateDocumentParsingMission(
   });
 
   return {
-    name: `Document Parsing - ${params.fileId}`,
+    name: `Journal Correction - ${params.journalId || "Unknown"}`,
     tasks,
   };
 }

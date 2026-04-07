@@ -32,6 +32,11 @@ export interface IEsgRepository {
     id: string,
     data: Prisma.EsgRecordUpdateInput,
   ): Promise<EsgRecordWithRelations | null>;
+  updateManyEsgRecordsByFile(
+    fileId: string,
+    accountBookId: string,
+    data: Prisma.EsgRecordUpdateInput,
+  ): Promise<Prisma.BatchPayload>;
 }
 
 export class EsgRepository implements IEsgRepository {
@@ -205,6 +210,17 @@ export class EsgRepository implements IEsgRepository {
       journalId,
       voucherId,
     } as EsgRecordWithRelations;
+  }
+
+  async updateManyEsgRecordsByFile(
+    fileId: string,
+    accountBookId: string,
+    data: Prisma.EsgRecordUpdateInput,
+  ): Promise<Prisma.BatchPayload> {
+    return prisma.esgRecord.updateMany({
+      where: { fileId, accountBookId },
+      data,
+    });
   }
 }
 

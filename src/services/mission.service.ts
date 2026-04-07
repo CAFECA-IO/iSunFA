@@ -63,24 +63,35 @@ export class MissionService {
 
     // Info: (20260319 - Julian) 4.5. 處理日記帳、傳票、碳盤查
     const journalTask = tasks.find((t) => t.type === "JOURNAL_PARSING");
-    const voucherTask = tasks.find((t) => t.type === "VOUCHER_PARSING");
+    const voucherBaseTask = tasks.find(
+      (t) => t.type === "VOUCHER_BASE_PARSING",
+    );
+    const voucherLinesTask = tasks.find(
+      (t) => t.type === "VOUCHER_LINES_PARSING",
+    );
     const esgTask = tasks.find((t) => t.type === "ESG_PARSING");
 
-    if (journalTask || voucherTask || esgTask) {
+    if (journalTask || voucherBaseTask || voucherLinesTask || esgTask) {
       try {
         const taskData = (journalTask?.data ||
-          voucherTask?.data ||
+          voucherBaseTask?.data ||
+          voucherLinesTask?.data ||
           esgTask?.data) as { context: string };
         const context = JSON.parse(taskData?.context || "{}");
         const fileId = context.fileId;
         const accountBookId = context.accountBookId;
+        const voucherIdContext = context.voucherId;
+        const esgRecordIdContext = context.esgRecordId;
 
         const failedTask = tasks.find((t) => t.status === "FAILED");
         const failureReason = failedTask?.result
           ? String(failedTask.result)
           : "系統分析失敗";
 
-        if (fileId && accountBookId) {
+        if (
+          (fileId || voucherIdContext || esgRecordIdContext) &&
+          accountBookId
+        ) {
           await prisma.$transaction(async (tx) => {
             // Info: (20260323 - Julian) 更新或建立日記帳
             if (journalTask) {
@@ -89,9 +100,12 @@ export class MissionService {
                   ? "FAILED"
                   : "COMPLETED";
 
-              const existingJournal = await tx.journal.findFirst({
-                where: { fileId, accountBookId },
-              });
+              let existingJournal = null;
+              if (fileId && accountBookId) {
+                existingJournal = await tx.journal.findFirst({
+                  where: { fileId, accountBookId },
+                });
+              }
 
               if (jStatus === "FAILED") {
                 if (existingJournal) {
@@ -127,11 +141,9 @@ export class MissionService {
                     };
 
                     if (existingJournal) {
-                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                      const { fileId, accountBookId, ...updatePayload } = dataPayload;
                       await tx.journal.update({
                         where: { id: existingJournal.id },
-                        data: updatePayload,
+                        data: dataPayload,
                       });
                     } else {
                       await tx.journal.create({ data: dataPayload });
@@ -167,14 +179,28 @@ export class MissionService {
             }
 
             // Info: (20260320 - Julian) 更新或建立傳票
-            if (voucherTask) {
+            if (voucherBaseTask || voucherLinesTask) {
+              const baseStatus = voucherBaseTask
+                ? voucherBaseTask.status.toUpperCase()
+                : "SKIP";
+              const linesStatus = voucherLinesTask
+                ? voucherLinesTask.status.toUpperCase()
+                : "SKIP";
+
               const vStatus =
-                voucherTask.status.toUpperCase() === "FAILED"
+                baseStatus === "FAILED" || linesStatus === "FAILED"
                   ? "FAILED"
                   : "COMPLETED";
-              const existingVoucher = await tx.voucher.findFirst({
-                where: { fileId, accountBookId },
-              });
+              let existingVoucher = null;
+              if (voucherIdContext) {
+                existingVoucher = await tx.voucher.findUnique({
+                  where: { id: voucherIdContext },
+                });
+              } else if (fileId && accountBookId) {
+                existingVoucher = await tx.voucher.findFirst({
+                  where: { fileId, accountBookId },
+                });
+              }
 
               if (vStatus === "FAILED") {
                 if (existingVoucher) {
@@ -186,15 +212,39 @@ export class MissionService {
                     },
                   });
                 }
-              } else if (
-                voucherTask.result &&
-                typeof voucherTask.result === "string"
-              ) {
+              } else {
                 try {
-                  const match = voucherTask.result.match(/\{[\s\S]*\}/);
-                  if (match) {
-                    const parsed = JSON.parse(match[0]);
-                    const vd = parsed.data || parsed;
+                  let parsedBase = null;
+                  if (
+                    voucherBaseTask?.result &&
+                    typeof voucherBaseTask.result === "string"
+                  ) {
+                    const match = voucherBaseTask.result.match(/\{[\s\S]*\}/);
+                    if (match) {
+                      const pb = JSON.parse(match[0]);
+                      parsedBase = pb.data || pb;
+                    }
+                  }
+
+                  let parsedLines = null;
+                  if (
+                    voucherLinesTask?.result &&
+                    typeof voucherLinesTask.result === "string"
+                  ) {
+                    const match = voucherLinesTask.result.match(/\{[\s\S]*\}/);
+                    if (match) {
+                      const pl = JSON.parse(match[0]);
+                      parsedLines = pl.data || pl;
+                    }
+                  }
+
+                  if (parsedBase || parsedLines) {
+                    // Info: (20260407 - Julian) 組合最終 JSON
+                    const vd = {
+                      ...(parsedBase || {}),
+                      ...(parsedLines || {}),
+                      aiNote: `- 基本資訊分析：${parsedBase?.aiNote || ""}\n- 會計科目分錄分析：${parsedLines?.aiNote || ""}`
+                    };
                     const tradingDate = new Date(vd.tradingDate || new Date());
                     const typeMap: Record<string, VoucherTradingType> = {
                       income: "INCOME",
@@ -229,12 +279,10 @@ export class MissionService {
                     };
 
                     if (existingVoucher) {
-                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                      const { fileId, accountBookId, lines, ...updatePayload } = dataPayload;
                       await tx.voucher.update({
                         where: { id: existingVoucher.id },
                         data: {
-                          ...updatePayload,
+                          ...dataPayload,
                           lines: {
                             deleteMany: {}, // Info: (20260320 - Julian) 清除舊的傳票項目
                             create: (vd.lines || []).map(
@@ -287,9 +335,16 @@ export class MissionService {
                 esgTask.status.toUpperCase() === "FAILED"
                   ? "FAILED"
                   : "COMPLETED";
-              const existingEsg = await tx.esgRecord.findFirst({
-                where: { fileId, accountBookId },
-              });
+              let existingEsg = null;
+              if (esgRecordIdContext) {
+                existingEsg = await tx.esgRecord.findUnique({
+                  where: { id: esgRecordIdContext },
+                });
+              } else if (fileId && accountBookId) {
+                existingEsg = await tx.esgRecord.findFirst({
+                  where: { fileId, accountBookId },
+                });
+              }
 
               if (eStatus === "FAILED") {
                 if (existingEsg) {
@@ -311,8 +366,9 @@ export class MissionService {
                     const esgData: Prisma.EsgRecordUncheckedCreateInput = {
                       accountBookId,
                       fileId,
-                      dateTimestamp:
-                        ed.dateTimestamp || Math.floor(Date.now() / 1000),
+                      tradingDate: new Date(
+                        ed.recordDate || ed.tradingDate || Date.now(),
+                      ),
                       scope: ed.scope || "SCOPE_1",
                       activityType: ed.activityType || "",
                       vendor: ed.vendor || "",
@@ -329,11 +385,9 @@ export class MissionService {
                     };
 
                     if (existingEsg) {
-                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                      const { fileId, accountBookId, ...updatePayload } = esgData;
                       await tx.esgRecord.update({
                         where: { id: existingEsg.id },
-                        data: updatePayload,
+                        data: esgData,
                       });
                     } else {
                       await tx.esgRecord.create({ data: esgData });

@@ -1070,7 +1070,7 @@ export const ja = {
       log: "変更履歴",
     },
     log_view: {
-      title: "伝票変更履歴",
+      title: "変更履歴",
       refresh: "更新",
       record_time: "記録時間",
       action_type: "操作タイプ",

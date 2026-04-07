@@ -170,10 +170,10 @@ export class AnalysisService {
             ? await prisma.esgRecord.findMany({
                 where: {
                   accountBookId: targetAccountBookId,
-                  dateTimestamp: { gte: startTs, lte: endTs },
+                  tradingDate: { gte: start, lte: end },
                   deletedAt: null,
                 },
-                orderBy: { dateTimestamp: "asc" },
+                orderBy: { tradingDate: "asc" },
               })
             : [];
 
@@ -183,9 +183,7 @@ export class AnalysisService {
 
           if (esgRecords.length > 0) {
             const esgContextLines = esgRecords.map((r) => {
-              const dateStr = new Date(r.dateTimestamp * 1000)
-                .toISOString()
-                .split("T")[0];
+              const dateStr = r.tradingDate.toISOString().split("T")[0];
               return `- 日期: ${dateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
             });
             parsedPrerequisiteParams = {
