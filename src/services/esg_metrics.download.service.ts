@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fetchWithRetry } from '@/lib/utils/http_client';
 
 interface IEsgDataResponse {
   success: boolean;
@@ -34,7 +35,7 @@ export async function downloadEsgMetrics(
   };
 
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithRetry(url, {
       method: "POST",
       headers,
       body: JSON.stringify(requestBody),
