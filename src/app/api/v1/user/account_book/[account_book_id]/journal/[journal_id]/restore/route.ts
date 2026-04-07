@@ -47,7 +47,6 @@ export async function POST(
     }
 
     // Info: (20260404 - Luphia) 將 Journal 復原
-    // Info: (20260404 - Luphia) 將 Journal 復原
     await journalRepo.updateJournal(journalId, { deletedAt: null });
 
     // Info: (20260404 - Luphia) 同步復原 Voucher 和 ESG
