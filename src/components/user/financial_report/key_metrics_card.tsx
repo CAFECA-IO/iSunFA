@@ -5,11 +5,12 @@ import { useState } from "react";
 
 interface IKeyMetricsCardProps {
   title: string;
-  value: number | string;
+  value: number | string | React.ReactNode;
   description: string;
   textColor: string;
   statusGood?: boolean;
   tooltip?: string | React.ReactNode;
+  className?: string;
 }
 
 // Info: (20260330 - Julian) 關鍵指標 card
@@ -20,6 +21,7 @@ export default function KeyMetricsCard({
   textColor,
   statusGood = undefined,
   tooltip = null,
+  className = "",
 }: IKeyMetricsCardProps) {
   const [isExpand, setIsExpand] = useState<boolean>(false);
 
@@ -33,17 +35,15 @@ export default function KeyMetricsCard({
   const status = statusGood ? (
     <div className="flex items-center gap-1 text-emerald-600">
       <CircleCheckBig size={16} className="shrink-0" />
-      <span className="text-[10px] font-bold">狀態良好</span>
     </div>
   ) : (
     <div className="flex items-center gap-1 text-red-600">
       <TriangleAlert size={16} className="shrink-0" />
-      <span className="text-center text-[10px] font-bold">需留意</span>
     </div>
   );
 
   return (
-    <div className="relative flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm print:w-1/4 print:p-2">
+    <div className={`relative flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5  print:p-2 ${className}`}>
       {/* Info: (20260330 - Julian) Tooltip */}
       {isShowTooltip && (
         <div
@@ -61,7 +61,7 @@ export default function KeyMetricsCard({
             <Info size={20} strokeWidth={2} />
           </button>
           <div
-            className={`absolute top-6 right-0 w-max max-w-48 rounded-md bg-blue-50 p-2 text-xs text-slate-900 shadow-md ${isExpand ? "visible opacity-100" : "invisible opacity-0"} transition-all duration-300 ease-in-out`}
+            className={`absolute top-6 right-0 w-max max-w-48 rounded-md bg-blue-50 p-2 text-xs text-slate-900 ${isExpand ? "visible opacity-100" : "invisible opacity-0"} transition-all duration-300 ease-in-out`}
           >
             {tooltip}
           </div>
@@ -71,6 +71,10 @@ export default function KeyMetricsCard({
       {/* Info: (20260330 - Julian) 標題 */}
       <span className="mb-2 text-xs font-bold tracking-wider text-slate-500 uppercase">
         {title}
+        {/* Info: (20260330 - Julian) 描述 */}
+        <p className="mt-2 text-[11px] font-medium text-slate-400">
+          {description}
+        </p>
       </span>
 
       {/* Info: (20260330 - Julian) 數值 */}
@@ -83,11 +87,6 @@ export default function KeyMetricsCard({
         {/* Info: (20260330 - Julian) 狀態 */}
         {isShowStatus && status}
       </div>
-
-      {/* Info: (20260330 - Julian) 描述 */}
-      <p className="mt-2 text-[11px] font-medium text-slate-400">
-        {description}
-      </p>
     </div>
   );
 }

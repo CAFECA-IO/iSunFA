@@ -11,6 +11,7 @@ import {
 import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
 import ReportPrintNote, { IReportNote } from "@/components/user/financial_report/report_print_note";
 import { numberWithCommas } from "@/lib/utils/common";
+import { useTranslation } from "@/i18n/i18n_context";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import {
   LoadingPing,
@@ -36,9 +37,9 @@ const IncomeStatementSection = ({
   return (
     <div className="mb-6 print:mb-2 print:break-inside-avoid">
       {/* Info: (20260330 - Julian) 項目標題 */}
-      <div className="mb-2 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-100 px-3 py-2">
-        <span className="font-bold text-slate-700">{titleText}</span>
-        <span className="font-bold text-slate-700 text-base print:text-sm">
+      <div className="mb-2 flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+        <span className="font-bold text-gray-700">{titleText}</span>
+        <span className="font-bold text-gray-700 text-base print:text-sm">
           {titleValue < 0
             ? `(${numberWithCommas(Math.abs(titleValue))})`
             : numberWithCommas(titleValue)}
@@ -52,13 +53,13 @@ const IncomeStatementSection = ({
           return (
             <div
               key={item.code}
-              className="flex items-center justify-between border-b border-slate-50 py-2"
+              className="flex items-center justify-between border-b border-gray-50 py-2"
             >
               <div className="flex w-2/3 flex-col">
-                <span className="text-[15px] font-medium text-slate-600 print:text-sm">
+                <span className="text-[15px] font-medium text-gray-600 print:text-sm">
                   {item.name}
                 </span>
-                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                   <div
                     className={`h-full rounded-full ${barColor}`}
                     style={{
@@ -68,12 +69,12 @@ const IncomeStatementSection = ({
                 </div>
               </div>
               <div className="flex flex-col items-end">
-                <span className="font-medium text-slate-700 text-base print:text-sm">
+                <span className="font-medium text-gray-700 text-base print:text-sm">
                   {item.amount < 0 || isValueNegative
                     ? `(${numberWithCommas(Math.abs(item.amount))})`
                     : numberWithCommas(item.amount)}
                 </span>
-                <span className="text-[10px] font-bold text-slate-400">
+                <span className="text-[10px] font-bold text-gray-400">
                   {percentage.toFixed(1)}%
                 </span>
               </div>
@@ -94,6 +95,8 @@ export default function IncomeStatementView({
 }) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
+
+  const { t } = useTranslation();
 
   const [reportData, setReportData] = useState<IIncomeStatement | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -124,8 +127,8 @@ export default function IncomeStatementView({
   if (isLoading) {
     return (
       <ReportLoadingPlaceholder
-        title="正在為您生成綜合損益表"
-        description="系統正在結算收入、支出與稅後淨利科目，並計算相關財務指標，請稍候..."
+        title={t("income_statement_view.loading_title")}
+        description={t("income_statement_view.loading_desc")}
       />
     );
   }
@@ -133,8 +136,8 @@ export default function IncomeStatementView({
   if (!reportData || Object.keys(reportData).length === 0) {
     return (
       <ReportErrorPlaceholder
-        title="綜合損益表生成失敗"
-        description="請確認該期間內是否有足夠的核發傳票資料，或是稍後再重新嘗試。"
+        title={t("income_statement_view.error_title")}
+        description={t("income_statement_view.error_desc")}
       />
     );
   }
@@ -144,206 +147,202 @@ export default function IncomeStatementView({
   // Info: (20260330 - Julian) 營收做為 100% 基準
   const baseRevenue = sections.revenue.total;
 
-    // Info: (20260401 - Julian) 關鍵指標註解
-    const incomeNotes: IReportNote[] = [
-      {
-        title: "毛利率 (Gross Margin)",
-        type: "獲利能力",
-        mainDesc: "毛利率 = (營業收入 - 營業成本) / 營業收入。",
-        subDesc:
-          "衡量企業產品或服務的初始獲利能力，建議大於 50%，表示產品或服務的初始獲利能力良好。",
-      },
-      {
-        title: "營益率 (Operating Margin)",
-        type: "獲利能力",
-        mainDesc: "營益率 = 營業利益 / 營業收入。",
-        subDesc:
-          "衡量企業本業營運獲利能力，建議大於 15%，表示本業營運獲利能力良好。",
-      },
-      {
-        title: "淨利率 (Net Profit Margin)",
-        type: "獲利能力",
-        mainDesc: "淨利率 = 稅後淨利 / 營業收入。",
-        subDesc:
-          "衡量企業最終稅後實質獲利能力，建議大於 10%，表示最終稅後實質獲利能力良好。",
-      },
-      {
-        title: "EBITDA 利潤率",
-        type: "獲利能力",
-        mainDesc: "EBITDA 利潤率 = EBITDA / 營業收入。",
-        subDesc:
-          "衡量企業可分配之現金獲利指標，建議大於 15%，表示可分配之現金獲利指標良好。",
-      },
-    ];
-  
-    // Info: (20260401 - Julian) 綜合損益表關鍵指標
-    const incomeKeyMetricsData = [
-      {
-        title: "毛利率 (Gross Margin)",
-        value: `${metrics.grossMargin.toFixed(1)}%`,
-        description: "產品初始獲利能力",
-        textColor: "text-cyan-600",
-        statusGood: metrics.grossMargin >= 50,
-      },
-      {
-        title: "營益率 (Operating Margin)",
-        value: `${metrics.operatingMargin.toFixed(1)}%`,
-        description: "本業營運獲利能力",
-        textColor: "text-indigo-600",
-        statusGood: metrics.operatingMargin >= 15,
-      },
-      {
-        title: "淨利率 (Net Profit Margin)",
-        value: `${metrics.netProfitMargin.toFixed(1)}%`,
-        description: "最終稅後實質獲利能力",
-        textColor: "text-amber-600",
-        statusGood: metrics.netProfitMargin >= 10,
-      },
-      {
-        title: "EBITDA 利潤率",
-        value: `${metrics.ebitdaMargin.toFixed(1)}%`,
-        description: "可分配之現金獲利指標",
-        textColor: "text-slate-700",
-        statusGood: metrics.ebitdaMargin >= 15,
-      },
-    ];
+  // Info: (20260401 - Julian) 關鍵指標註解
+  const incomeNotes: IReportNote[] = [
+    {
+      title: t("income_statement_view.metric_gm_title"),
+      type: t("income_statement_view.note_gm_type"),
+      mainDesc: t("income_statement_view.note_gm_main"),
+      subDesc: t("income_statement_view.note_gm_sub"),
+    },
+    {
+      title: t("income_statement_view.metric_om_title"),
+      type: t("income_statement_view.note_om_type"),
+      mainDesc: t("income_statement_view.note_om_main"),
+      subDesc: t("income_statement_view.note_om_sub"),
+    },
+    {
+      title: t("income_statement_view.metric_npm_title"),
+      type: t("income_statement_view.note_npm_type"),
+      mainDesc: t("income_statement_view.note_npm_main"),
+      subDesc: t("income_statement_view.note_npm_sub"),
+    },
+    {
+      title: t("income_statement_view.metric_ebitda_title"),
+      type: t("income_statement_view.note_ebitda_type"),
+      mainDesc: t("income_statement_view.note_ebitda_main"),
+      subDesc: t("income_statement_view.note_ebitda_sub"),
+    },
+  ];
+
+  // Info: (20260401 - Julian) 綜合損益表關鍵指標
+  const incomeKeyMetricsData = [
+    {
+      title: t("income_statement_view.metric_gm_title"),
+      value: `${metrics.grossMargin.toFixed(1)}%`,
+      description: t("income_statement_view.metric_gm_desc"),
+      textColor: "text-gray-900",
+      statusGood: metrics.grossMargin >= 50,
+    },
+    {
+      title: t("income_statement_view.metric_om_title"),
+      value: `${metrics.operatingMargin.toFixed(1)}%`,
+      description: t("income_statement_view.metric_om_desc"),
+      textColor: "text-gray-900",
+      statusGood: metrics.operatingMargin >= 15,
+    },
+    {
+      title: t("income_statement_view.metric_npm_title"),
+      value: `${metrics.netProfitMargin.toFixed(1)}%`,
+      description: t("income_statement_view.metric_npm_desc"),
+      textColor: "text-gray-900",
+      statusGood: metrics.netProfitMargin >= 10,
+    },
+    {
+      title: t("income_statement_view.metric_ebitda_title"),
+      value: `${metrics.ebitdaMargin.toFixed(1)}%`,
+      description: t("income_statement_view.metric_ebitda_desc"),
+      textColor: "text-gray-900",
+      statusGood: metrics.ebitdaMargin >= 15,
+    },
+  ];
 
   const keyMetricsBanner = metrics ? (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 print:flex">
       {incomeKeyMetricsData.map((metric) => {
-              const note = incomeNotes.find((note) => note.title === metric.title);
-             return (
-              <KeyMetricsCard
-                key={metric.title}
-                title={metric.title}
-                value={metric.value}
-                description={metric.description}
-                textColor={metric.textColor}
-                statusGood={metric.statusGood}
-                tooltip={
-                  <>
-                    <span className="font-bold">{note?.mainDesc}</span>
-                    <br />
-                    <span>{note?.subDesc}</span>
-                  </>
-                }
-              />
-            )
-            })}
+        const note = incomeNotes.find((note) => note.title === metric.title);
+        return (
+          <KeyMetricsCard
+            key={metric.title}
+            title={metric.title}
+            value={metric.value}
+            description={metric.description}
+            textColor={metric.textColor}
+            statusGood={metric.statusGood}
+            tooltip={
+              <>
+                <span className="font-bold">{note?.mainDesc}</span>
+                <br />
+                <span>{note?.subDesc}</span>
+              </>
+            }
+          />
+        )
+      })}
     </div>
   ) : (
-    <div className="flex h-[150px] w-full items-center justify-center rounded-2xl bg-white p-5">
+    <div className="flex h-[150px] w-full items-center justify-center rounded-xl bg-white p-5">
       <LoadingPing size={40} />
     </div>
   );
 
   const operatingSection = sections ? (
     <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
-      <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4 box-decoration-clone">
-        <div className="mb-4 flex items-end justify-between border-b-2 border-slate-200 pb-3">
-          <span className="text-lg font-black tracking-wider text-slate-800 uppercase">
-            營業活動 OPERATING
+      <div className="flex-1 rounded-xl border border-gray-100 bg-white p-6  print:p-4 box-decoration-clone">
+        <div className="mb-4 flex items-end justify-between border-b-2 border-gray-100 pb-3">
+          <span className="text-lg font-black tracking-wider text-gray-800 uppercase">
+            {t("income_statement_view.section_op")}
           </span>
-          <span className="text-sm font-bold text-slate-400">% 營收</span>
+          <span className="text-sm font-bold text-gray-400">{t("income_statement_view.section_percent_rev")}</span>
         </div>
 
         <IncomeStatementSection
-          titleText="營業收入 (Revenue)"
+          titleText={t("income_statement_view.section_rev")}
           titleValue={sections.revenue.total}
           items={sections.revenue.items}
           baseDivisor={baseRevenue}
-          barColor="bg-sky-400"
+          barColor="bg-gray-300"
         />
 
         <IncomeStatementSection
-          titleText="營業成本 (COGS)"
+          titleText={t("income_statement_view.section_cogs")}
           titleValue={sections.cogs.total}
           items={sections.cogs.items}
           baseDivisor={baseRevenue}
-          barColor="bg-rose-400"
+          barColor="bg-gray-200"
         />
 
-        <div className="mb-6 flex items-center justify-between rounded-xl border border-sky-100 bg-sky-50 p-4 shadow-sm print:break-inside-avoid">
-          <span className="text-md font-bold text-slate-700">
-            營業毛利 (Gross Profit)
+        <div className="mb-6 flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 p-4  print:break-inside-avoid">
+          <span className="text-md font-bold text-gray-700">
+            {t("income_statement_view.section_gp")}
           </span>
-          <span className="text-xl font-bold text-sky-700">
+          <span className="text-xl font-bold text-gray-700">
             {numberWithCommas(sections.grossProfit.total)}
           </span>
         </div>
 
         <IncomeStatementSection
-          titleText="營業費用 (Operating Expenses)"
+          titleText={t("income_statement_view.section_opex")}
           titleValue={sections.operatingExpenses.total}
           items={sections.operatingExpenses.items}
           baseDivisor={baseRevenue}
-          barColor="bg-rose-400"
+          barColor="bg-gray-300"
         />
 
-        <div className="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50 p-4 shadow-sm print:break-inside-avoid">
-          <span className="text-md font-bold text-slate-700">
-            營業利益 (Operating Income)
+        <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 p-4  print:break-inside-avoid">
+          <span className="text-md font-bold text-gray-700">
+            {t("income_statement_view.section_oi")}
           </span>
-          <span className="text-xl font-black text-indigo-700">
+          <span className="text-xl font-black text-gray-800">
             {numberWithCommas(sections.operatingIncome.total)}
           </span>
         </div>
       </div>
     </div>
   ) : (
-    <div className="flex h-[400px] w-full items-center justify-center rounded-2xl bg-white p-5">
+    <div className="flex h-[400px] w-full items-center justify-center rounded-xl bg-white p-5">
       <LoadingPing size={40} />
     </div>
   );
 
   const nonOperatingSection = sections ? (
     <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
-      <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4 box-decoration-clone">
-        <div className="mb-4 flex items-end justify-between border-b-2 border-slate-200 pb-3">
-          <span className="text-lg font-black tracking-wider text-slate-800 uppercase">
-            業外與稅 NON-OP & TAX
+      <div className="flex-1 rounded-xl border border-gray-100 bg-white p-6  print:p-4 box-decoration-clone">
+        <div className="mb-4 flex items-end justify-between border-b-2 border-gray-100 pb-3">
+          <span className="text-lg font-black tracking-wider text-gray-800 uppercase">
+            {t("income_statement_view.section_nonop_tax")}
           </span>
-          <span className="text-sm font-bold text-slate-400">% 營收</span>
+          <span className="text-sm font-bold text-gray-400">{t("income_statement_view.section_percent_rev")}</span>
         </div>
 
         <IncomeStatementSection
-          titleText="營業外收入及支出 (Non-Op)"
+          titleText={t("income_statement_view.section_nonop_inc")}
           titleValue={sections.nonOperating.total}
           items={sections.nonOperating.items}
           baseDivisor={baseRevenue}
-          barColor="bg-violet-400"
+          barColor="bg-gray-300"
         />
 
-        <div className="mb-6 flex items-center justify-between rounded-xl border border-violet-100 bg-violet-50 p-4 shadow-sm print:break-inside-avoid">
-          <span className="text-md font-bold text-slate-700">
-            稅前淨利 (Income Before Tax)
+        <div className="mb-6 flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 p-4  print:break-inside-avoid">
+          <span className="text-md font-bold text-gray-700">
+            {t("income_statement_view.section_ibt")}
           </span>
-          <span className="text-xl font-bold text-violet-700">
+          <span className="text-xl font-bold text-gray-700">
             {numberWithCommas(sections.incomeBeforeTax.total)}
           </span>
         </div>
 
         <IncomeStatementSection
-          titleText="所得稅費用 (Tax Expense)"
+          titleText={t("income_statement_view.section_tax")}
           titleValue={sections.taxExpense.total}
           items={sections.taxExpense.items}
           baseDivisor={baseRevenue}
-          barColor="bg-rose-400"
+          barColor="bg-gray-200"
         />
       </div>
 
       {/* Info: (20260330 - Julian) 最終淨利 */}
-      <div className="flex items-center justify-between rounded-2xl bg-slate-800 p-6 text-white shadow-sm print:break-inside-avoid">
-        <span className="text-lg font-black tracking-widest uppercase">
-          本期淨利 (NET INCOME)
+      <div className="flex items-center justify-between rounded-xl bg-gray-900 p-6  mt-2 print:break-inside-avoid">
+        <span className="text-lg font-black tracking-widest uppercase text-white">
+          {t("income_statement_view.section_ni")}
         </span>
-        <span className="text-3xl font-black text-emerald-400">
+        <span className="text-3xl font-black text-white">
           {numberWithCommas(sections.netIncome.total)}
         </span>
       </div>
     </div>
   ) : (
-    <div className="flex h-[400px] w-full items-center justify-center rounded-2xl bg-white p-5">
+    <div className="flex h-[400px] w-full items-center justify-center rounded-xl bg-white p-5">
       <LoadingPing size={40} />
     </div>
   );

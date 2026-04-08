@@ -20,7 +20,7 @@ export const LoadingPing = ({ size }: { size: number }) => {
       ></div>
       <div
         style={{ width: circleSize, height: circleSize }}
-        className="relative flex items-center justify-center rounded-full bg-emerald-50 shadow-sm ring-1 ring-emerald-100"
+        className="relative flex items-center justify-center rounded-full bg-emerald-50  ring-1 ring-emerald-100"
       >
         <Loader2 size={size} className="animate-spin text-emerald-500" />
       </div>
@@ -34,7 +34,7 @@ export const ReportLoadingPlaceholder = ({
   description,
 }: IReportPlaceholderProps) => {
   return (
-    <div className="flex min-h-[400px] w-full flex-col items-center justify-center gap-5 rounded-2xl border border-slate-100 bg-white/60 p-8 shadow-sm backdrop-blur-sm">
+    <div className="flex min-h-[400px] w-full flex-col items-center justify-center gap-5 rounded-2xl border border-slate-100 bg-white/60 p-8  backdrop-blur-sm">
       <LoadingPing size={40} />
       <div className="flex flex-col items-center gap-2 text-center">
         <h2 className="text-xl font-black tracking-widest text-slate-800">
@@ -52,8 +52,8 @@ export const ReportErrorPlaceholder = ({
   description,
 }: IReportPlaceholderProps) => {
   return (
-    <div className="flex min-h-[400px] w-full flex-col items-center justify-center gap-5 rounded-2xl border border-red-50 bg-red-50/50 p-8 shadow-sm">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 shadow-sm ring-1 ring-red-200">
+    <div className="flex min-h-[400px] w-full flex-col items-center justify-center gap-5 rounded-2xl border border-red-50 bg-red-50/50 p-8 ">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100  ring-1 ring-red-200">
         <CircleAlert className="h-8 w-8 text-red-500" />
       </div>
       <div className="flex flex-col items-center gap-2 text-center">

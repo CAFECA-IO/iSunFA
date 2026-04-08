@@ -35,6 +35,7 @@ export function generateBalanceSheet(
   let longTermFundsTotal = 0;
   let intangibleAssetsTotal = 0;
   let retainedEarningsTotal = 0;
+  let commonStockCapitalTotal = 0;
 
   lineItems.forEach((line) => {
     // Info: (20260331 - Julian) 確保有會計科目且借貸方有值
@@ -66,7 +67,7 @@ export function generateBalanceSheet(
     const impact = isDebit ? amount : -amount;
 
     if (isAsset) {
-      // Info: (20260331 - Julian) ========= 資產增加在借方 =========
+      // Info: (20260331 - Julian) 資產增加在借方
       const currentAmount = assetMap.get(code)?.amount || 0;
       assetMap.set(code, {
         name,
@@ -78,17 +79,14 @@ export function generateBalanceSheet(
       if (code.startsWith("110")) cashTotal += impact; // Info: (20260330 - Julian) 現金及約當現金
       if (code.startsWith("117")) accountsReceivableTotal += impact; // Info: (20260330 - Julian) 應收帳款
       if (code.startsWith("13")) inventoryTotal += impact; // Info: (20260330 - Julian) 存貨
-      if (code.startsWith("15") || code.startsWith("16"))
+      if (code.startsWith("15") || code.startsWith("16")) {
         fixedAssetsTotal += impact; // Info: (20260330 - Julian) 不動產、廠房及設備
-      if (
-        code.startsWith("17") ||
-        code.startsWith("18") ||
-        code.startsWith("19")
-      ) {
-        if (name.includes("無形資產")) intangibleAssetsTotal += impact; // Info: (20260330 - Julian) 無形資產
+      }
+      if (code.startsWith("17") || code.startsWith("18") || code.startsWith("19")) {
+        if (code.startsWith("17") || name.includes("無形資產")) intangibleAssetsTotal += impact; // Info: (20260330 - Julian) 無形資產
       }
     } else if (isLiability) {
-      // Info: (20260331 - Julian) ========= 負債增加在貸方 =========
+      // Info: (20260331 - Julian) 負債增加在貸方
       const currentAmount = liabilityMap.get(code)?.amount || 0;
       liabilityMap.set(code, {
         name,
@@ -107,13 +105,16 @@ export function generateBalanceSheet(
         interestBearingDebtTotal -= impact;
       }
     } else if (isEquity) {
-      // Info: (20260331 - Julian) ========= 權益增加在貸方 =========
+      // Info: (20260331 - Julian) 權益增加在貸方
       const currentAmount = equityMap.get(code)?.amount || 0;
       equityMap.set(code, { name, amount: currentAmount - impact });
       totalEquity -= impact;
 
       // Info: (20260331 - Julian) 保留盈餘
       if (code.startsWith("33")) retainedEarningsTotal -= impact;
+
+      // Info: (20260408 - Luphia) 股本
+      if (code.startsWith("31")) commonStockCapitalTotal -= impact;
     }
   });
 
@@ -184,6 +185,9 @@ export function generateBalanceSheet(
   );
   longTermFundsTotal = totalEquity + nonCurrentLiabilitiesTotal;
 
+  // Info: (20260408 - Luphia) 取得發行股數 (以 31** 股本 / 10 計算)
+  const outstandingShares = commonStockCapitalTotal / 10;
+
   // Info: (20260330 - Julian) 計算各項財務比率
   const metrics = {
     currentRatio: safeDivide(currentAssetsTotal, currentLiabilitiesTotal) * 100,
@@ -196,7 +200,7 @@ export function generateBalanceSheet(
       safeDivide(longTermFundsTotal, fixedAssetsTotal) * 100,
     workingCapital: currentAssetsTotal - currentLiabilitiesTotal,
     cashRatio: safeDivide(cashTotal, currentLiabilitiesTotal) * 100,
-    netWorthPerShare: 0, // TODO: (20260330 - Julian) 外部資料，目前預設為 0
+    netWorthPerShare: outstandingShares > 0 ? safeDivide(totalEquity, outstandingShares) : 0,
     retainedEarningsRatio: safeDivide(retainedEarningsTotal, totalEquity) * 100,
     intangibleAssetsRatio: safeDivide(intangibleAssetsTotal, totalAssets) * 100,
     equityRatio: safeDivide(totalEquity, totalAssets) * 100,

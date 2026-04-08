@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useReactToPrint } from "react-to-print";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Filter, Printer, Download } from "lucide-react";
+import { Filter, Download } from "lucide-react";
 import EmbedGenerateModal from "@/components/user/financial_report/embed_generate_modal";
 import BalanceSheetView from "@/components/user/financial_report/balance_sheet_view";
 import CashFlowSheetView from "@/components/user/financial_report/cash_flow_statement_view";
@@ -18,7 +17,6 @@ import { useTranslation } from "@/i18n/i18n_context";
 
 export default function ReportView() {
   const { t } = useTranslation();
-  const printContentRef = useRef<HTMLDivElement>(null);
   const params = useParams();
   const accountBookId = params.account_book_id as string;
 
@@ -140,14 +138,6 @@ export default function ReportView() {
     }
   };
 
-  const handlePrint = useReactToPrint({
-    contentRef: printContentRef,
-    documentTitle: filename,
-    onAfterPrint: () => {
-      console.log("Print completed");
-    },
-  });
-
   // Info: (20260330 - Julian) 產出報表
   const handleGenerateReport = () => {
     setGeneratedConfig({
@@ -181,12 +171,12 @@ export default function ReportView() {
 
   const reportSelection = (
     <div className="flex flex-col space-y-2">
-      <label htmlFor="report-type" className="text-sm font-bold text-slate-600">
+      <label htmlFor="report-type" className="text-sm font-bold text-gray-600">
         {t("report_view.report_type")}
       </label>
       <select
         id="report-type"
-        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
         value={selectedReportType}
         onChange={handleReportTypeChange}
       >
@@ -201,12 +191,12 @@ export default function ReportView() {
 
   const yearSelection = (
     <div className="flex flex-col space-y-2">
-      <label htmlFor="report-year" className="text-sm font-bold text-slate-600">
+      <label htmlFor="report-year" className="text-sm font-bold text-gray-600">
         {t("report_view.year_selection")}
       </label>
       <select
         id="report-year"
-        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
         value={selectedReportYear}
         onChange={handleReportYearChange}
       >
@@ -222,13 +212,13 @@ export default function ReportView() {
     <div className="flex flex-col space-y-2">
       <label
         htmlFor="report-period"
-        className="text-sm font-bold text-slate-600"
+        className="text-sm font-bold text-gray-600"
       >
         {t("report_view.period_selection")}
       </label>
       <select
         id="report-period"
-        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
         value={selectedReportPeriod}
         onChange={handleReportPeriodChange}
       >
@@ -260,19 +250,19 @@ export default function ReportView() {
   };
 
   const displayAccountbookName = accountbookName ? (
-    <h2 className="text-2xl font-black tracking-[0.2em] text-slate-800 md:text-3xl">
+    <h2 className="text-2xl font-black tracking-[0.2em] text-gray-800 md:text-3xl">
       {accountbookName}
     </h2>
   ) : (
-    <h2 className="text-2xl font-black tracking-[0.2em] text-slate-300 md:text-3xl">
+    <h2 className="text-2xl font-black tracking-[0.2em] text-gray-300 md:text-3xl">
       {t("report_view.unknown_account_book")}
     </h2>
   );
 
   const reportContent = !generatedConfig ? (
-    <div className="flex h-full min-h-[500px] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
-      <Filter className="mb-4 h-12 w-12 text-slate-300" strokeWidth={1.5} />
-      <h3 className="text-xl font-bold tracking-widest text-slate-700">
+    <div className="flex h-full min-h-[500px] w-full flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center text-gray-500">
+      <Filter className="mb-4 h-12 w-12 text-gray-300" strokeWidth={1.5} />
+      <h3 className="text-xl font-bold tracking-widest text-gray-700">
         {t("report_view.empty_report_title")}
       </h3>
       <p className="mt-2 text-sm font-medium">
@@ -289,27 +279,20 @@ export default function ReportView() {
         <button
           type="button"
           onClick={handleDownload}
-          className="rounded-lg bg-orange-400 p-3 text-slate-800 outline-none hover:bg-orange-500 active:bg-yellow-400"
+          className="rounded-xl border border-gray-200 bg-white p-3 text-gray-500 outline-none hover:bg-gray-50 hover:text-gray-800 active:bg-gray-100 transition-colors "
         >
           <Download size={20} />
-        </button>
-        <button
-          type="button"
-          onClick={handlePrint}
-          className="rounded-lg bg-orange-400 p-3 text-slate-800 outline-none hover:bg-orange-500 active:bg-yellow-400"
-        >
-          <Printer size={20} />
         </button>
       </div>
 
       {/* Info: (20260330 - Julian) 報表標題 */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-sm md:p-8">
-        <div className="absolute top-0 left-0 h-1 w-full bg-amber-500"></div>
+      <div className="relative overflow-hidden rounded-xl border border-gray-100 bg-white p-6 text-center text-gray-800  md:p-8">
+        <div className="absolute top-0 left-0 h-1 w-full bg-orange-500"></div>
         {displayAccountbookName}
-        <h3 className="mt-2 text-xl font-bold tracking-widest text-slate-600">
+        <h3 className="mt-2 text-xl font-bold tracking-widest text-gray-600">
           {reportData?.reportTitle}
         </h3>
-        <p className="mt-2 text-sm font-medium text-slate-400">
+        <p className="mt-2 text-sm font-medium text-gray-400">
           {reportData?.reportPeriod && t("report_view.period_unit", { period: reportData.reportPeriod, currency: reportData.currency || "" })}
         </p>
       </div>
@@ -323,10 +306,10 @@ export default function ReportView() {
     <>
       <div className="mt-6 flex flex-col gap-8 lg:flex-row">
         {/* Info:(20260319 - Julian) 報表參數設定 */}
-        <div className="flex h-fit w-full shrink-0 flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:w-72 print:hidden">
-          <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
-            <Filter className="h-5 w-5 text-slate-800" strokeWidth={2.5} />
-            <h2 className="text-base font-bold text-slate-800">{t("report_view.period_selection")}</h2>
+        <div className="flex h-fit w-full shrink-0 flex-col gap-4 rounded-xl border border-gray-100 bg-white p-6  lg:w-72 print:hidden">
+          <div className="flex items-center gap-2 border-b border-gray-200 pb-2">
+            <Filter className="h-5 w-5 text-gray-800" strokeWidth={2.5} />
+            <h2 className="text-base font-bold text-gray-800">{t("report_view.period_selection")}</h2>
           </div>
 
           <div className="space-y-6">
@@ -336,14 +319,14 @@ export default function ReportView() {
             <button
               type="button"
               onClick={handleGenerateReport}
-              className="mt-2 w-full rounded-md bg-slate-600 py-2 text-sm font-bold text-white transition-colors outline-none hover:bg-slate-800"
+              className="mt-2 w-full rounded-md bg-[#FA4A11] py-2.5 text-[15px] font-bold text-white transition-colors outline-none hover:bg-[#E5430F] active:bg-[#CC3A0C] focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
             >
               {t("report_view.generate_btn")}
             </button>
 
             {/* Info:(20260319 - Julian) 傳票核對數提示 */}
-            <div className="rounded-xl border border-slate-200 bg-gray-50/50 p-4">
-              <p className="text-xs leading-relaxed font-medium text-slate-600">
+            <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+              <p className="text-xs leading-relaxed font-medium text-gray-600">
                 {t("report_view.hint_verified_count", { count: numberWithCommas(countOfVerifiedVouchers) })}
               </p>
             </div>
@@ -353,7 +336,6 @@ export default function ReportView() {
         {/* Info:(20260319 - Julian) 報表內容 */}
         <div
           id="report-content-to-print"
-          ref={printContentRef}
           className="flex w-full flex-col gap-4 print:p-4"
         >
           {reportContent}
