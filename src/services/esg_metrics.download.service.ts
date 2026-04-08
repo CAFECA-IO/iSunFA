@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fetchWithRetry } from '@/lib/utils/http_client';
+import { fetchWithRetry } from "@/lib/utils/http_client";
 
 interface IEsgDataResponse {
   success: boolean;
@@ -22,7 +22,7 @@ export async function downloadEsgMetrics(
   const url = `https://esggenplus.twse.com.tw/api/api/mopsEsg/singleCompanyData`;
   const headers = {
     "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     Accept: "application/json",
     "Content-Type": "application/json",
   };

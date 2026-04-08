@@ -7,8 +7,8 @@ import { downloadEsgMetrics } from "@/services/esg_metrics.download.service";
 
 async function runTest() {
   // Info: (20260402 - Tzuhan) 測試目標設定 (此處以誠品 2926 作為靶機)
-  const stockId = '2926';
-  const marketType = 'otc';
+  const stockId = "2926";
+  const marketType = "otc";
   const year = 2025;
 
   // Info: (20260402 - Tzuhan) 建立一個專屬的測試輸出資料夾
