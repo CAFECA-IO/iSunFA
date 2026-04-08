@@ -14,9 +14,9 @@ async function main() {
   console.log("🚀 啟動終極下載主控台 (Commander)...");
 
   let isShuttingDown = false;
-  process.on('SIGINT', () => {
-    console.log('\n⚠️ [系統] 接收到中斷訊號 (Ctrl+C)，準備優雅關機...');
-    console.log('請稍候，正在等待執行中的任務安全結束，不要強制關閉終端機！');
+  process.on("SIGINT", () => {
+    console.log("\n⚠️ [系統] 接收到中斷訊號 (Ctrl+C)，準備優雅關機...");
+    console.log("請稍候，正在等待執行中的任務安全結束，不要強制關閉終端機！");
     isShuttingDown = true;
   });
 
@@ -42,12 +42,12 @@ async function main() {
         { status: TaskStatus.PENDING },
         {
           status: TaskStatus.FAILED,
-          retryCount: { lt: 3 } // Info: (20260408 - Tzuhan) 容許最多重試 3 次
-        }
-      ]
+          retryCount: { lt: 3 }, // Info: (20260408 - Tzuhan) 容許最多重試 3 次
+        },
+      ],
     },
     take: limit,
-    orderBy: { updatedAt: 'asc' } // Info: (20260408 - Tzuhan) 改用 updatedAt，讓很久沒動的優先處理
+    orderBy: { updatedAt: "asc" }, // Info: (20260408 - Tzuhan) 改用 updatedAt，讓很久沒動的優先處理
   });
 
   if (pendingTasks.length === 0) {
@@ -140,7 +140,7 @@ async function main() {
       console.error(`💥 [崩潰] ${task.stockId} - ${task.taskType}:`, error);
       if (savePath && fs.existsSync(savePath)) {
         fs.rmSync(savePath, { force: true });
-        console.log(`      🗑️ [清理] 已刪除不完整的檔案殘骸: ${savePath}`);
+        console.log(`🗑️ [清理] 已刪除不完整的檔案殘骸: ${savePath}`);
       }
       await prisma.reportDownloadTask.update({
         where: { id: task.id },
@@ -163,7 +163,7 @@ async function main() {
   await runWithConcurrency(taskFactories, concurrency);
 
   const dlqCount = await prisma.reportDownloadTask.count({
-    where: { status: TaskStatus.FAILED, retryCount: { gte: 3 } }
+    where: { status: TaskStatus.FAILED, retryCount: { gte: 3 } },
   });
 
   const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -171,7 +171,9 @@ async function main() {
   console.log(`📊 統計：成功 ${successCount} 筆，失敗 ${failCount} 筆。`);
 
   if (dlqCount > 0) {
-    console.log(`🚨 [警告] 目前資料庫中有 ${dlqCount} 筆任務已達到重試上限 (Dead Letter Queue)`);
+    console.log(
+      `🚨 [警告] 目前資料庫中有 ${dlqCount} 筆任務已達到重試上限 (Dead Letter Queue)`,
+    );
     console.log(`建議使用 Prisma Studio 手動檢查這些公司的異常狀態。`);
   }
 }
