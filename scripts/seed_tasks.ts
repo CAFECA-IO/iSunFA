@@ -22,6 +22,7 @@ async function main() {
   const currentYear = new Date().getFullYear();
   const taskTypes = [
     TaskType.FIN_REPORT,
+    TaskType.FIN_DATA,
     TaskType.ESG_REPORT,
     TaskType.ESG_METRICS,
   ];

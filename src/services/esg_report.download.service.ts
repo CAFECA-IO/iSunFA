@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fetchWithRetry } from "@/lib/utils/http_client";
 
 interface IEsgReportData {
   twFirstReportDownloadId?: string;
@@ -29,7 +30,7 @@ export async function downloadEsgReport(
 
   const headers = {
     "User-Agent":
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     Accept: "application/json, text/plain, */*",
     "Content-Type": "application/json",
     Origin: "https://esggenplus.twse.com.tw",
@@ -47,7 +48,7 @@ export async function downloadEsgReport(
       companyCode: stockId,
     };
 
-    const listRes = await fetch(listUrl, {
+    const listRes = await fetchWithRetry(listUrl, {
       method: "POST",
       headers,
       body: JSON.stringify(requestBody),
@@ -85,11 +86,14 @@ export async function downloadEsgReport(
       console.warn(
         `⚠️ [ESG PDF] ${stockId} 有登錄資料，但未上傳實體的 PDF 檔案 (可能只提供網址)`,
       );
-      return false;
+      throw new Error('該公司有紀錄，但未上傳有效的 PDF 檔案');
     }
 
     const downloadUrl = `https://esggenplus.twse.com.tw/api/api/MopsSustainReport/data/FileStream?id=${fileId}`;
-    const downloadRes = await fetch(downloadUrl, { method: "GET", headers });
+    const downloadRes = await fetchWithRetry(downloadUrl, {
+      method: "GET",
+      headers,
+    });
 
     if (!downloadRes.ok) {
       console.warn(
@@ -107,7 +111,7 @@ export async function downloadEsgReport(
         .substring(0, 100)
         .replace(/\n/g, "");
       console.warn(`❌ [ESG PDF] ${stockId} 下載內容非 PDF。預覽: ${preview}`);
-      return false;
+      throw new Error('下載的 ESG 檔案非 PDF 格式');
     }
 
     fs.mkdirSync(path.dirname(savePath), { recursive: true });

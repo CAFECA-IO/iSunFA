@@ -10,6 +10,7 @@ import type {
 import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
 import { UserOperationJson } from "@/validators";
+import { fetchWithRetry } from "@/lib/utils/http_client";
 
 // Info: (20251223 - Tzuhan) 定義登入回傳結果介面
 export interface ILoginResult {
@@ -78,7 +79,7 @@ export const fido2ClientService = new Fido2ClientService();
 // --- Info: (20251223 - Tzuhan) 新增：與後端 API 溝通的輔助函式 ---
 
 export async function getRegisterChallenge(): Promise<string> {
-  const res = await fetch("/api/v1/auth/options?action=register");
+  const res = await fetchWithRetry("/api/v1/auth/options?action=register");
   const data = await res.json();
   if (data.code !== ApiCode.SUCCESS) throw new Error(data.message);
   return data.payload.challenge;
@@ -96,7 +97,7 @@ export async function getLoginOptions(
     ? `/api/v1/auth/options?action=login&address=${address}`
     : "/api/v1/auth/options?action=login";
 
-  const res = await fetch(url);
+  const res = await fetchWithRetry(url);
   const data = await res.json();
   if (data.code !== ApiCode.SUCCESS) throw new Error(data.message);
 
