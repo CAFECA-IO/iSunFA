@@ -47,7 +47,7 @@ async function main() {
       ],
     },
     take: limit,
-    orderBy: { updatedAt: "asc" }, // Info: (20260408 - Tzuhan) 改用 updatedAt，讓很久沒動的優先處理
+    orderBy: { updatedAt: "desc" }, // Info: (20260408 - Tzuhan) 改用 updatedAt，讓很久沒動的優先處理
   });
 
   if (pendingTasks.length === 0) {
@@ -77,21 +77,19 @@ async function main() {
     try {
       switch (task.taskType) {
         case TaskType.FIN_REPORT:
-          // Info: (20260409 - Tzuhan) 1. 下載原本的 PDF
           savePath = path.join(baseDir, `${task.year}_FIN_REPORT.pdf`);
           isSuccess = await downloadFinancialReport(
             task.stockId,
             task.year,
             savePath,
           );
-
-          // Info: (20260409 - Tzuhan) 2. 順手下載 JSON (不管成功失敗，不影響主任務狀態)
-          const finJsonPath = path.join(baseDir, `${task.year}_FIN_DATA.json`);
-          await downloadFinancialData(
+        case TaskType.FIN_DATA:
+          savePath = path.join(baseDir, `${task.year}_FIN_DATA.json`);
+          isSuccess = await downloadFinancialData(
             task.stockId,
             task.marketType,
             task.year,
-            finJsonPath,
+            savePath,
           );
           break;
         case TaskType.ESG_REPORT:
