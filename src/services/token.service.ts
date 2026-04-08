@@ -1,5 +1,3 @@
-"use server";
-
 // Info: (20260126 - Luphia) 伺服器端操作：處理部署與鑄造邏輯
 import {
   parseAbi,
