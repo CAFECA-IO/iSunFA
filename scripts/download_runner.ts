@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { prisma } from "@/lib/prisma";
 import { TaskType, TaskStatus } from "@/generated/client";
@@ -11,6 +12,13 @@ import { runWithConcurrency } from "@/lib/utils/concurrency";
 
 async function main() {
   console.log("🚀 啟動終極下載主控台 (Commander)...");
+
+  let isShuttingDown = false;
+  process.on('SIGINT', () => {
+    console.log('\n⚠️ [系統] 接收到中斷訊號 (Ctrl+C)，準備優雅關機...');
+    console.log('請稍候，正在等待執行中的任務安全結束，不要強制關閉終端機！');
+    isShuttingDown = true;
+  });
 
   // Info: (20260408 - Tzuhan) 1. 解析 CLI 參數 (設定併發數與撈取上限)
   let limit = 100; // Info: (20260408 - Tzuhan) 預設一次批次處理 100 筆
@@ -58,6 +66,8 @@ async function main() {
 
   // Info: (20260408 - Tzuhan) 3. 建立併發任務池 (Task Factory)
   const taskFactories = pendingTasks.map((task) => async () => {
+    if (isShuttingDown) return;
+
     console.log(`⏳ [開始] ${task.stockId} - ${task.year} 年 ${task.taskType}`);
 
     const baseDir = path.join(process.cwd(), "downloads", task.stockId);
@@ -128,6 +138,10 @@ async function main() {
       }
     } catch (error) {
       console.error(`💥 [崩潰] ${task.stockId} - ${task.taskType}:`, error);
+      if (savePath && fs.existsSync(savePath)) {
+        fs.rmSync(savePath, { force: true });
+        console.log(`      🗑️ [清理] 已刪除不完整的檔案殘骸: ${savePath}`);
+      }
       await prisma.reportDownloadTask.update({
         where: { id: task.id },
         data: {
@@ -148,9 +162,18 @@ async function main() {
 
   await runWithConcurrency(taskFactories, concurrency);
 
+  const dlqCount = await prisma.reportDownloadTask.count({
+    where: { status: TaskStatus.FAILED, retryCount: { gte: 3 } }
+  });
+
   const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log(`\n🏁 [Commander] 批次執行完畢！共耗時 ${elapsedSec} 秒。`);
   console.log(`📊 統計：成功 ${successCount} 筆，失敗 ${failCount} 筆。`);
+
+  if (dlqCount > 0) {
+    console.log(`🚨 [警告] 目前資料庫中有 ${dlqCount} 筆任務已達到重試上限 (Dead Letter Queue)`);
+    console.log(`建議使用 Prisma Studio 手動檢查這些公司的異常狀態。`);
+  }
 }
 
 main().catch(console.error);
