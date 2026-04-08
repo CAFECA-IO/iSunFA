@@ -247,28 +247,39 @@ export async function downloadFinancialData(
 
   try {
     // Info: (20260408 - Tzuhan) 取得三大報表與財務公告 (純 JSON)
-    const [bsRes, isRes, cfRes, annRes] = await Promise.all([
-      fetchWithRetry("https://mops.twse.com.tw/mops/api/t164sb03", {
+    // Info: (20260408 - Tzuhan) 放棄 Promise.all，改用循序 (Sequential) 請求，避免瞬間對 MOPS 產生 DDoS 級別的併發
+    const bsRes = await fetchWithRetry(
+      "https://mops.twse.com.tw/mops/api/t164sb03",
+      {
         method: "POST",
         headers,
         body: JSON.stringify(basePayload),
-      }),
-      fetchWithRetry("https://mops.twse.com.tw/mops/api/t164sb04", {
+      },
+    );
+    const isRes = await fetchWithRetry(
+      "https://mops.twse.com.tw/mops/api/t164sb04",
+      {
         method: "POST",
         headers,
         body: JSON.stringify(basePayload),
-      }),
-      fetchWithRetry("https://mops.twse.com.tw/mops/api/t164sb05", {
+      },
+    );
+    const cfRes = await fetchWithRetry(
+      "https://mops.twse.com.tw/mops/api/t164sb05",
+      {
         method: "POST",
         headers,
         body: JSON.stringify(basePayload),
-      }),
-      fetchWithRetry("https://mops.twse.com.tw/mops/api/t163sb01", {
+      },
+    );
+    const annRes = await fetchWithRetry(
+      "https://mops.twse.com.tw/mops/api/t163sb01",
+      {
         method: "POST",
         headers,
         body: JSON.stringify(basePayload),
-      }),
-    ]);
+      },
+    );
 
     const bsData = (await bsRes.json()) as IMopsApiResponse<IReportResult>;
     const isData = (await isRes.json()) as IMopsApiResponse<IReportResult>;
@@ -412,8 +423,14 @@ export async function downloadFinancialReport(
       ptype: "F",
     });
 
-    let searchRes = await fetchWithRetry(url, { method: "POST", headers, body: formParams.toString() });
-    let htmlText = Buffer.from(await searchRes.arrayBuffer()).toString("latin1");
+    let searchRes = await fetchWithRetry(url, {
+      method: "POST",
+      headers,
+      body: formParams.toString(),
+    });
+    let htmlText = Buffer.from(await searchRes.arrayBuffer()).toString(
+      "latin1",
+    );
 
     if (htmlText.includes("d߹Lq") || htmlText.includes("查詢過繁")) {
       throw new Error("觸發 MOPS 防爬蟲機制，請等待幾分鐘"); // Info: (20260408 - Tzuhan) 改用 throw
@@ -424,7 +441,11 @@ export async function downloadFinancialReport(
     // Info: (20260408 - Tzuhan) 第二次嘗試：如果 ptype=F 找不到，切換為 ptype=F04 再打一次 API！
     if (!filenameMatch || !filenameMatch[1]) {
       formParams.set("ptype", "F04");
-      searchRes = await fetchWithRetry(url, { method: "POST", headers, body: formParams.toString() });
+      searchRes = await fetchWithRetry(url, {
+        method: "POST",
+        headers,
+        body: formParams.toString(),
+      });
       htmlText = Buffer.from(await searchRes.arrayBuffer()).toString("latin1");
       filenameMatch = htmlText.match(/([a-zA-Z0-9_]*F04[a-zA-Z0-9_]*\.pdf)/i);
     }
