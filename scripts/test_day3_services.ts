@@ -6,10 +6,10 @@ import { downloadEsgReport } from "@/services/esg_report.download.service";
 import { downloadEsgMetrics } from "@/services/esg_metrics.download.service";
 
 async function runTest() {
-  // Info: (20260402 - Tzuhan) 測試目標設定 (此處以亞洲藏壽司 2926 作為靶機)
-  const stockId = "2926";
-  const marketType = "sii";
-  const year = 2024;
+  // Info: (20260402 - Tzuhan) 測試目標設定 (此處以誠品 2926 作為靶機)
+  const stockId = '2926';
+  const marketType = 'otc';
+  const year = 2025;
 
   // Info: (20260402 - Tzuhan) 建立一個專屬的測試輸出資料夾
   const outputDir = path.join(process.cwd(), "downloads", "test_run", stockId);
