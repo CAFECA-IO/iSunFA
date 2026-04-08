@@ -8,7 +8,7 @@ import PaymentConfirmModal from '@/components/common/payment_confirm_modal';
 import SuccessNotification from '@/components/common/success_notification';
 import HistorySection from '@/components/user/analysis/history_section';
 import { getAnalysisCost } from '@/lib/analysis/pricing';
-import { useOrderTransaction } from '@/hooks/use_order_transaction';
+import { useOrderTransaction, IOrderPayload } from '@/hooks/use_order_transaction';
 import { getPeriodDateRange } from '@/lib/analysis/period';
 import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES } from '@/constants/analysis';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
@@ -267,14 +267,21 @@ export default function AnalysisView() {
   const handleAnalysisWorkflow = async () => {
     setIsLoading(true);
 
-    const payload = {
+    const payload: IOrderPayload = {
       category,
       periodType,
       year: selectedYear,
       periodValue: periodType === 'yearly' ? selectedYear.toString() : selectedPeriodValue,
       country,
       keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput ? internalCompanyName : undefined),
-      isExternal: activeTab === 'external'
+      isExternal: activeTab === 'external',
+      items: [
+        {
+          name: t(`analysis.categories.${category}`) || category,
+          unitPrice: calculatedCost,
+          quantity: 1,
+        }
+      ]
     };
 
     const success = await executeOrderTransaction(payload, calculatedCost, async (authData) => {

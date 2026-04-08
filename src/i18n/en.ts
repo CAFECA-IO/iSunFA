@@ -174,6 +174,13 @@ export const en = {
     credits: "Credits",
     logout: "Sign out",
   },
+  checkin_reward: {
+    title: "Daily Check-in Reward",
+    description: "Earned {{amount}} tokens, welcome to explore more features in iSunFA!",
+    reward_label: "Earned Tokens",
+    unit: "Tokens",
+    confirm_btn: "Confirm and Start Use",
+  },
   auth_modal: {
     welcome_back: "Welcome Back",
     create_account: "Create Account",
@@ -778,7 +785,8 @@ export const en = {
     file_count_error_content: "Maximum {count} images can be uploaded",
     upload_btn: "Upload Invoice / Receipt (OCR)",
     drop_to_upload: "Drop to upload",
-    ask_ai: "Ask AI Now",
+    ask_ai: "Ask",
+    consultant_fee: "Consultation Fee",
     disclaimer:
       "* AI responses are for reference only and do not represent formal legal advice. The analysis is based on provided data.",
     discussion_title: "Expert & User Discussion",

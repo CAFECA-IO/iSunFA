@@ -174,6 +174,13 @@ export const ja = {
     credits: "ポイント",
     logout: "ログアウト",
   },
+  checkin_reward: {
+    title: "毎日ログイン報酬",
+    description: "{{amount}} ポイントを獲得しました。iSunFA でさらに多くの機能を探索してください！",
+    reward_label: "獲得ポイント",
+    unit: "ポイント",
+    confirm_btn: "確認して開始する",
+  },
   auth_modal: {
     welcome_back: "おかえりなさい",
     create_account: "アカウント作成",
@@ -779,7 +786,8 @@ export const ja = {
     file_count_error_content: "最大{count}枚の画像までアップロード可能です",
     upload_btn: "添付ファイルをアップロード",
     drop_to_upload: "ドロップしてアップロード",
-    ask_ai: "今すぐAIに質問する",
+    ask_ai: "質問する",
+    consultant_fee: "コンサルタント費用",
     disclaimer:
       "* AIの回答はあくまで参考であり、正式な法的助言ではありません。分析内容は提供されたデータに基づいています。",
     discussion_title: "専門家とユーザーの議論",

@@ -14,11 +14,12 @@ import {
   Plus,
 } from "lucide-react";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
-import { uploadFile, fileToBase64 } from "@/lib/file_operator";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
+import { uploadFile, fileToBase64 } from "@/lib/file_operator";
 import { ApiCode } from "@/lib/utils/status";
-import { useOrderTransaction } from "@/hooks/use_order_transaction";
+import { useOrderTransaction, IOrderPayload } from "@/hooks/use_order_transaction";
+import { getAnalysisCost } from "@/lib/analysis/pricing";
 
 type UploadedFileData = {
   id: string;
@@ -102,14 +103,24 @@ export default function JournalUploadView({
   const handleAnalyzeAll = async () => {
     if (uploadedFiles.length === 0) return;
 
-    const payload = {
+    const costPerFile = getAnalysisCost({ category: "journal_upload", periodType: "daily", year: new Date().getFullYear(), periodValue: "" });
+    const totalCost = costPerFile * uploadedFiles.length;
+
+    const payload: IOrderPayload = {
       category: "journal_upload", 
       periodType: "daily",
       periodValue: new Date().toISOString().split("T")[0],
       year: new Date().getFullYear(),
+      items: [
+        {
+          name: "AI Journal OCR scan (Upload)",
+          unitPrice: costPerFile,
+          quantity: uploadedFiles.length,
+        }
+      ]
     };
 
-    await executeOrderTransaction(payload, uploadedFiles.length, async (authData) => {
+    await executeOrderTransaction(payload, totalCost, async (authData) => {
       setShowConfirmModal(false);
       setIsAnalyzing(true);
       setAnalyzedCount(0);
@@ -366,7 +377,7 @@ export default function JournalUploadView({
           }
         }}
         onConfirm={handleAnalyzeAll}
-        cost={uploadedFiles.length}
+        cost={uploadedFiles.length * getAnalysisCost({ category: "journal_upload", periodType: "daily", year: new Date().getFullYear(), periodValue: "" })}
         title={t("ocr.confirm_analyze_title")}
         description={t("ocr.confirm_analyze_desc")}
         confirmBtnText={t("ocr.confirm_btn")}

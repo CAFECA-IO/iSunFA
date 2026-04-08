@@ -174,6 +174,13 @@ export const ko = {
     credits: "크레딧",
     logout: "로그아웃",
   },
+  checkin_reward: {
+    title: "일일 로그인 보상",
+    description: "{{amount}} 포인트를 획득했습니다. iSunFA에서 더 많은 기능을 탐색해 보세요!",
+    reward_label: "획득한 포인트",
+    unit: "포인트",
+    confirm_btn: "확인 및 사용 시작",
+  },
   auth_modal: {
     welcome_back: "다시 오신 것을 환영합니다",
     create_account: "계정 생성",
@@ -767,7 +774,8 @@ export const ko = {
     file_count_error_content: "최대 {count}장의 이미지만 업로드할 수 있습니다",
     upload_btn: "첨부파일 업로드",
     drop_to_upload: "업로드하려면 파일을 놓으세요",
-    ask_ai: "지금 AI에게 질문하기",
+    ask_ai: "질문하기",
+    consultant_fee: "컨설턴트 비용",
     disclaimer:
       "* AI 답변은 참고용일 뿐이며 공식적인 법률 조언이 아닙니다. 분석 내용은 제공된 데이터를 기반으로 합니다.",
     discussion_title: "전문가 및 사용자 토론",

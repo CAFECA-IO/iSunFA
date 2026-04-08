@@ -175,6 +175,13 @@ export const zhTw = {
     credits: "持有點數",
     logout: "登出",
   },
+  checkin_reward: {
+    title: "每日登入簽到獎勵",
+    description: "獲得 {{amount}} 點數，歡迎在 iSunFA 探索更多功能！",
+    reward_label: "獲得點數",
+    unit: "點數",
+    confirm_btn: "確認並開始使用",
+  },
   auth_modal: {
     welcome_back: "歡迎回來",
     create_account: "建立帳號",
@@ -804,7 +811,8 @@ export const zhTw = {
     file_count_error_content: "最多只能上傳 {count} 張圖片",
     upload_btn: "上傳附件",
     drop_to_upload: "放開以開始上傳",
-    ask_ai: "立即向 AI 提問",
+    ask_ai: "提問",
+    consultant_fee: "顧問費",
     disclaimer:
       "* AI 回覆僅供參考，不代表正式法律建議。其分析內容基於提供的數據。",
     discussion_title: "專家與用戶討論",

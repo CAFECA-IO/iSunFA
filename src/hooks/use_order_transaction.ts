@@ -15,6 +15,11 @@ export interface IOrderPayload {
   country?: string;
   keyword?: string;
   isExternal?: boolean;
+  items: {
+    name: string;
+    unitPrice: number;
+    quantity: number;
+  }[];
 }
 
 export const useOrderTransaction = () => {

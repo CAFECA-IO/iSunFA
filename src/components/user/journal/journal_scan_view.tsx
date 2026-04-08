@@ -11,7 +11,8 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { uploadFile, fileToBase64 } from "@/lib/file_operator";
-import { useOrderTransaction } from "@/hooks/use_order_transaction";
+import { useOrderTransaction, IOrderPayload } from "@/hooks/use_order_transaction";
+import { getAnalysisCost } from "@/lib/analysis/pricing";
 
 type UploadedFileData = {
   id: string;
@@ -119,14 +120,24 @@ export default function JournalScanView({
   const handleAnalyzeAll = async () => {
     if (capturedFiles.length === 0) return;
 
-    const payload = {
+    const costPerFile = getAnalysisCost({ category: "journal_upload", periodType: "daily", year: new Date().getFullYear(), periodValue: "" });
+    const totalCost = costPerFile * capturedFiles.length;
+
+    const payload: IOrderPayload = {
       category: "journal_upload", 
       periodType: "daily",
       periodValue: new Date().toISOString().split("T")[0],
       year: new Date().getFullYear(),
+      items: [
+        {
+          name: "AI Journal OCR scan",
+          unitPrice: costPerFile,
+          quantity: capturedFiles.length,
+        }
+      ]
     };
 
-    await executeOrderTransaction(payload, capturedFiles.length, async (authData) => {
+    await executeOrderTransaction(payload, totalCost, async (authData) => {
       setShowConfirmModal(false);
       setIsAnalyzing(true);
       setAnalyzedCount(0);

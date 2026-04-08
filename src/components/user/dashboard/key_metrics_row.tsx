@@ -185,7 +185,7 @@ export const KeyMetricsRow = ({ currentData }: IKeyMetricsRowProps) => {
 
         {/* Info: (20260118 - Luphia) Background Chart */}
         <div className="absolute bottom-0 left-0 right-0 h-20 opacity-10 pointer-events-none">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
             <BarChart data={currentData.revenueData}>
               <Bar dataKey="value" fill={revStatus.barColor} radius={[2, 2, 0, 0]} />
             </BarChart>
@@ -221,7 +221,7 @@ export const KeyMetricsRow = ({ currentData }: IKeyMetricsRowProps) => {
 
         {/* Info: (20260118 - Luphia) Background Chart */}
         <div className="absolute bottom-0 left-0 right-0 h-20 opacity-10 pointer-events-none">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
             <BarChart data={currentData.expenditureData}>
               <Bar dataKey="value" fill={expStatus.barColor} radius={[2, 2, 0, 0]} />
             </BarChart>
