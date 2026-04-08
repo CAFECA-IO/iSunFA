@@ -283,17 +283,19 @@ export default function PricingPage() {
                   currentPlan={currentPlan}
                   features={[
                     t("pricing.plans.free.features.fido"),
+                    t("pricing.plans.free.features.credit_limit"),
+                    t("pricing.plans.free.features.daily_credits"),
+                    {
+                      text: t("pricing.plans.free.features.consults"),
+                      tooltip: t("pricing.plans.free.features.consults_tooltip"),
+                    },
                     {
                       text: t("pricing.plans.free.features.vouchers"),
-                      tooltip: t(
-                        "pricing.plans.free.features.vouchers_overage_tooltip",
-                      ),
+                      tooltip: t("pricing.plans.free.features.vouchers_overage_tooltip"),
                     },
                     {
                       text: t("pricing.plans.free.features.ai_reports"),
-                      tooltip: t(
-                        "pricing.plans.free.features.ai_overage_tooltip",
-                      ),
+                      tooltip: t("pricing.plans.free.features.ai_overage_tooltip"),
                     },
                   ]}
                   onSelect={showComingSoon}
@@ -309,17 +311,22 @@ export default function PricingPage() {
                       text: t("pricing.plans.team.features.fido"),
                       tooltip: t("pricing.plans.team.features.fido_tooltip"),
                     },
+                    t("pricing.plans.team.features.credit_limit"),
+                    {
+                      text: t("pricing.plans.team.features.monthly_credits"),
+                      tooltip: t("pricing.plans.team.features.monthly_credits_tooltip"),
+                    },
+                    {
+                      text: t("pricing.plans.team.features.consults"),
+                      tooltip: t("pricing.plans.team.features.consults_tooltip"),
+                    },
                     {
                       text: t("pricing.plans.team.features.vouchers"),
-                      tooltip: t(
-                        "pricing.plans.team.features.vouchers_overage_tooltip",
-                      ),
+                      tooltip: t("pricing.plans.team.features.vouchers_overage_tooltip"),
                     },
                     {
                       text: t("pricing.plans.team.features.ai_reports"),
-                      tooltip: t(
-                        "pricing.plans.team.features.ai_overage_tooltip",
-                      ),
+                      tooltip: t("pricing.plans.team.features.ai_overage_tooltip"),
                     },
                     t("pricing.plans.team.features.analytics"),
                     t("pricing.plans.team.features.support"),
@@ -333,35 +340,34 @@ export default function PricingPage() {
                   features={[
                     {
                       text: t("pricing.plans.business.features.fido"),
-                      tooltip: t(
-                        "pricing.plans.business.features.fido_tooltip",
-                      ),
+                      tooltip: t("pricing.plans.business.features.fido_tooltip"),
+                    },
+                    t("pricing.plans.business.features.credit_limit"),
+                    {
+                      text: t("pricing.plans.business.features.monthly_credits"),
+                      tooltip: t("pricing.plans.business.features.monthly_credits_tooltip"),
+                    },
+                    {
+                      text: t("pricing.plans.business.features.consults"),
+                      tooltip: t("pricing.plans.business.features.consults_tooltip"),
                     },
                     {
                       text: t("pricing.plans.business.features.vouchers"),
-                      tooltip: t(
-                        "pricing.plans.business.features.vouchers_overage_tooltip",
-                      ),
+                      tooltip: t("pricing.plans.business.features.vouchers_overage_tooltip"),
                     },
                     {
                       text: t("pricing.plans.business.features.ai_reports"),
-                      tooltip: t(
-                        "pricing.plans.business.features.ai_overage_tooltip",
-                      ),
+                      tooltip: t("pricing.plans.business.features.ai_overage_tooltip"),
                     },
                     t("pricing.plans.business.features.analytics"),
                     t("pricing.plans.business.features.support"),
                     {
                       text: t("pricing.plans.business.features.migration"),
-                      tooltip: t(
-                        "pricing.plans.business.features.migration_tooltip",
-                      ),
+                      tooltip: t("pricing.plans.business.features.migration_tooltip"),
                     },
                     {
                       text: t("pricing.plans.business.features.local_node"),
-                      tooltip: t(
-                        "pricing.plans.business.features.local_node_tooltip",
-                      ),
+                      tooltip: t("pricing.plans.business.features.local_node_tooltip"),
                     },
                   ]}
                 />
