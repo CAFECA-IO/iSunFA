@@ -1,3 +1,5 @@
+import { fetchWithRetry } from "@/lib/utils/http_client";
+
 export interface ICompanyData {
   taxId: string;
   name: string;
@@ -58,7 +60,7 @@ async function lookupByTaxId(taxId: string): Promise<ICompanyData[]> {
     const url =
       "https://data.gcis.nat.gov.tw/od/data/api/5F64D864-61CB-4D0D-8AD9-492047CC1EA6?$format=json&$filter=Business_Accounting_NO eq " +
       taxId;
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const res = await fetchWithRetry(url, {}, 3, 1000, 5000);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
@@ -79,16 +81,21 @@ async function lookupByDuckDuckGo(keyword: string): Promise<ICompanyData[]> {
   try {
     const enc = encodeURIComponent(keyword + " 統編 公司");
     const url = "https://html.duckduckgo.com/html/?q=" + enc;
-    const r = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64 AppleWebKit/537.36)",
+    const res = await fetchWithRetry(
+      url,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+        },
       },
-      signal: AbortSignal.timeout(4000),
-    });
+      2,
+      2000,
+      4000,
+    );
 
-    if (r.ok) {
-      const html = await r.text();
+    if (res.ok) {
+      const html = await res.text();
       const taxIdMatch =
         html.match(
           /(?:統一編號|統編|Business(?:_| )?Accounting(?:_| )?NO)[\s:：]*(\d{8})/i,
@@ -119,7 +126,7 @@ async function lookupByNameGCIS(name: string): Promise<ICompanyData[]> {
     const url =
       "https://data.gcis.nat.gov.tw/od/data/api/F05D1060-7D57-4763-BDCE-0DAF5975AFE0?$format=json&$filter=Company_Name like " +
       encodeURIComponent(name);
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const res = await fetchWithRetry(url, {}, 3, 1000, 5000);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
