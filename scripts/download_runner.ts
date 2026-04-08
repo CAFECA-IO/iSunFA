@@ -1,0 +1,110 @@
+import path from 'node:path';
+import { prisma } from '@/lib/prisma';
+import { TaskType, TaskStatus } from '@/generated/client';
+import { downloadFinancialReport } from '@/services/financial_report.download.service';
+import { downloadEsgReport } from '@/services/esg_report.download.service';
+import { downloadEsgMetrics } from '@/services/esg_metrics.download.service';
+import { runWithConcurrency } from '@/lib/utils/concurrency';
+
+async function main() {
+    console.log('🚀 啟動終極下載主控台 (Commander)...');
+
+    // Info: (20260408 - Tzuhan) 1. 解析 CLI 參數 (設定併發數與撈取上限)
+    let limit = 100;         // Info: (20260408 - Tzuhan) 預設一次批次處理 100 筆
+    let concurrency = 5;     // Info: (20260408 - Tzuhan) 預設同時併發 5 個請求
+
+    const args = process.argv.slice(2);
+    args.forEach(arg => {
+        if (arg.startsWith('--limit=')) limit = parseInt(arg.split('=')[1], 10);
+        if (arg.startsWith('--concurrency=')) concurrency = parseInt(arg.split('=')[1], 10);
+    });
+
+    console.log(`⚙️ 設定：單次批次上限 = ${limit} 筆, 同時併發數 = ${concurrency}`);
+
+    // Info: (20260408 - Tzuhan) 2. 從資料庫撈取 PENDING (待處理) 的工單
+    const pendingTasks = await prisma.reportDownloadTask.findMany({
+        where: { status: TaskStatus.PENDING },
+        take: limit,
+        orderBy: { createdAt: 'asc' } // Info: (20260408 - Tzuhan) 先進先出 (FIFO)
+    });
+
+    if (pendingTasks.length === 0) {
+        console.log(`\n🎉 太棒了！目前資料庫中沒有任何 PENDING 的任務，所有報告皆已下載完畢。`);
+        return;
+    }
+
+    console.log(`\n📦 撈取了 ${pendingTasks.length} 筆 PENDING 任務，準備開始消化...`);
+
+    let successCount = 0;
+    let failCount = 0;
+
+    // Info: (20260408 - Tzuhan) 3. 建立併發任務池 (Task Factory)
+    const taskFactories = pendingTasks.map(task => async () => {
+        console.log(`⏳ [開始] ${task.stockId} - ${task.year} 年 ${task.taskType}`);
+
+        const baseDir = path.join(process.cwd(), 'downloads', task.stockId);
+        let savePath = '';
+        let isSuccess = false;
+
+        try {
+            switch (task.taskType) {
+                case TaskType.FIN_REPORT:
+                    savePath = path.join(baseDir, `${task.year}_FIN_REPORT.pdf`);
+                    isSuccess = await downloadFinancialReport(task.stockId, task.year, savePath);
+                    break;
+                case TaskType.ESG_REPORT:
+                    savePath = path.join(baseDir, `${task.year}_ESG_REPORT.pdf`);
+                    isSuccess = await downloadEsgReport(task.stockId, task.marketType as 'sii' | 'otc', task.year, savePath);
+                    break;
+                case TaskType.ESG_METRICS:
+                    savePath = path.join(baseDir, `${task.year}_ESG_METRICS.json`);
+                    isSuccess = await downloadEsgMetrics(task.stockId, task.year, savePath);
+                    break;
+            }
+
+            // Info: (20260408 - Tzuhan) 📝 狀態回報 (將結果更新回資料庫)
+            await prisma.reportDownloadTask.update({
+                where: { id: task.id },
+                data: {
+                    status: isSuccess ? TaskStatus.SUCCESS : TaskStatus.FAILED,
+                    filePath: isSuccess ? savePath : null,
+                    errorMsg: isSuccess ? null : '查無檔案、尚未上傳或非預期格式',
+                    retryCount: { increment: isSuccess ? 0 : 1 },
+                    updatedAt: new Date()
+                }
+            });
+
+            if (isSuccess) {
+                successCount++;
+                console.log(`✅ [成功] ${task.stockId} - ${task.year} 年 ${task.taskType}`);
+            } else {
+                failCount++;
+                console.log(`❌ [失敗] ${task.stockId} - ${task.year} 年 ${task.taskType}`);
+            }
+
+        } catch (error) {
+            console.error(`💥 [崩潰] ${task.stockId} - ${task.taskType}:`, error);
+            await prisma.reportDownloadTask.update({
+                where: { id: task.id },
+                data: {
+                    status: TaskStatus.FAILED,
+                    errorMsg: (error as Error).message,
+                    retryCount: { increment: 1 },
+                    updatedAt: new Date()
+                }
+            });
+            failCount++;
+        }
+    });
+    // Info: (20260408 - Tzuhan) 4. 點火啟動！將所有任務交給併發控制器
+    console.log(`\n🚦 [Commander] 開始執行併發任務 (Concurrency Limit: ${concurrency})...\n`);
+    const startTime = Date.now();
+
+    await runWithConcurrency(taskFactories, concurrency);
+
+    const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log(`\n🏁 [Commander] 批次執行完畢！共耗時 ${elapsedSec} 秒。`);
+    console.log(`📊 統計：成功 ${successCount} 筆，失敗 ${failCount} 筆。`);
+}
+
+main().catch(console.error);
