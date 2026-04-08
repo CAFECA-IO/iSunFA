@@ -623,8 +623,9 @@ model EsgTarget {
 
 enum TaskType {
   FIN_REPORT // Info: (20260401 - Tzuhan) 財務年報 (PDF)
+  FIN_DATA // Info: (20260408 - Tzuhan) 財務數據 (JSON)
   ESG_REPORT // Info: (20260401 - Tzuhan) 永續報告書 (PDF)
-  ESG_METRICS // Info: (20260401 - Tzuhan) ESG 數據指標 (JSON) - 💡 依照你的決策，這裡只存 JSON 不產 CSV
+  ESG_METRICS // Info: (20260401 - Tzuhan) ESG 數據指標 (JSON)
 }
 
 enum TaskStatus {

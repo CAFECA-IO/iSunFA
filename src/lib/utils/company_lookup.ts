@@ -81,11 +81,18 @@ async function lookupByDuckDuckGo(keyword: string): Promise<ICompanyData[]> {
   try {
     const enc = encodeURIComponent(keyword + " 統編 公司");
     const url = "https://html.duckduckgo.com/html/?q=" + enc;
-    const res = await fetchWithRetry(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64 AppleWebKit/537.36)",
-      }
-    }, 2, 2000, 4000);
+    const res = await fetchWithRetry(
+      url,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+        },
+      },
+      2,
+      2000,
+      4000,
+    );
 
     if (res.ok) {
       const html = await res.text();
