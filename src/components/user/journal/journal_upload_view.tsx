@@ -18,6 +18,7 @@ import { uploadFile, fileToBase64 } from "@/lib/file_operator";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
+import { useOrderTransaction } from "@/hooks/use_order_transaction";
 
 type UploadedFileData = {
   id: string;
@@ -40,7 +41,10 @@ export default function JournalUploadView({
 
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
-  const [analyzedCount, setAnalyzedCount] = useState<number>(0);
+  const [analyzedCount, setAnalyzedCount] = useState(0);
+
+  // Info: (20260408 - Luphia) Payment workflow states
+  const { workflowStatus, errorMessage, txHash, resetTransaction, executeOrderTransaction } = useOrderTransaction();
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -96,20 +100,29 @@ export default function JournalUploadView({
   };
 
   const handleAnalyzeAll = async () => {
-    setShowConfirmModal(false);
     if (uploadedFiles.length === 0) return;
 
-    setIsAnalyzing(true);
-    setAnalyzedCount(0);
-    try {
-      // Info: (20260321 - Julian) 依序發送以避免伺服器超載
+    const payload = {
+      category: "journal_upload", 
+      periodType: "daily",
+      periodValue: new Date().toISOString().split("T")[0],
+      year: new Date().getFullYear(),
+    };
+
+    await executeOrderTransaction(payload, uploadedFiles.length, async (authData) => {
+      setShowConfirmModal(false);
+      setIsAnalyzing(true);
+      setAnalyzedCount(0);
       for (let i = 0; i < uploadedFiles.length; i++) {
         const fileData = uploadedFiles[i];
         const response = await request<IApiResponse<object>>(
           `/api/v1/user/account_book/${accountBookId}/ai_analysis`,
           {
             method: "POST",
-            body: JSON.stringify({ file: fileData }),
+            body: JSON.stringify({ 
+              file: fileData,
+              authentication: authData
+            }),
           },
         );
         if (response.code === ApiCode.SUCCESS) {
@@ -117,11 +130,9 @@ export default function JournalUploadView({
         }
       }
       onUploadComplete?.();
-    } catch (error) {
-      console.error("Analysis failed:", error);
-    } finally {
-      setIsAnalyzing(false);
-    }
+    });
+
+    setIsAnalyzing(false);
   };
 
   const removeFile = (id: string, e: React.MouseEvent) => {
@@ -346,7 +357,14 @@ export default function JournalUploadView({
 
       <PaymentConfirmModal
         isOpen={showConfirmModal}
-        onClose={() => setShowConfirmModal(false)}
+        onClose={() => {
+          if (workflowStatus === 'error' || workflowStatus === 'payment_success') {
+            resetTransaction();
+            setShowConfirmModal(false);
+          } else if (workflowStatus === 'idle') {
+            setShowConfirmModal(false);
+          }
+        }}
         onConfirm={handleAnalyzeAll}
         cost={uploadedFiles.length}
         title={t("ocr.confirm_analyze_title")}
@@ -356,7 +374,10 @@ export default function JournalUploadView({
           { label: t("ocr.analysis_type"), value: t("ocr.multiple_page_upload") },
           { label: t("ocr.page_count"), value: `${uploadedFiles.length} ${t("ocr.page_unit")}` },
         ]}
-        isLoading={isAnalyzing}
+        isLoading={workflowStatus !== 'idle' && workflowStatus !== 'payment_success' && workflowStatus !== 'error'}
+        status={workflowStatus}
+        errorMessage={errorMessage}
+        txHash={txHash}
       />
     </>
   );

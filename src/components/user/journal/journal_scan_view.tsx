@@ -11,6 +11,7 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { uploadFile, fileToBase64 } from "@/lib/file_operator";
+import { useOrderTransaction } from "@/hooks/use_order_transaction";
 
 type UploadedFileData = {
   id: string;
@@ -40,6 +41,9 @@ export default function JournalScanView({
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [analyzedCount, setAnalyzedCount] = useState<number>(0);
+
+  // Info: (20260408 - Luphia) Payment workflow states
+  const { workflowStatus, errorMessage, txHash, resetTransaction, executeOrderTransaction } = useOrderTransaction();
   const [isDetecting, setIsDetecting] = useState<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -113,12 +117,19 @@ export default function JournalScanView({
   );
 
   const handleAnalyzeAll = async () => {
-    setShowConfirmModal(false);
     if (capturedFiles.length === 0) return;
 
-    setIsAnalyzing(true);
-    setAnalyzedCount(0);
-    try {
+    const payload = {
+      category: "journal_upload", 
+      periodType: "daily",
+      periodValue: new Date().toISOString().split("T")[0],
+      year: new Date().getFullYear(),
+    };
+
+    await executeOrderTransaction(payload, capturedFiles.length, async (authData) => {
+      setShowConfirmModal(false);
+      setIsAnalyzing(true);
+      setAnalyzedCount(0);
       for (let i = 0; i < capturedFiles.length; i++) {
         const fileData = capturedFiles[i];
         const response = await request<IApiResponse<object>>(
@@ -132,7 +143,8 @@ export default function JournalScanView({
                 previewUrl: fileData.previewUrl,
                 hash: fileData.hash,
                 base64: fileData.base64
-              }
+              },
+              authentication: authData
             }),
           },
         );
@@ -140,11 +152,10 @@ export default function JournalScanView({
           setAnalyzedCount((prev) => prev + 1);
         }
       }
-      onScanComplete();
-    } catch (error) {
-      console.error("Analysis failed:", error);
-      setIsAnalyzing(false);
-    }
+      onScanComplete?.();
+    });
+
+    setIsAnalyzing(false);
   };
 
   const removeFile = (id: string, e?: React.MouseEvent) => {
@@ -882,7 +893,14 @@ export default function JournalScanView({
 
       <PaymentConfirmModal
         isOpen={showConfirmModal}
-        onClose={() => setShowConfirmModal(false)}
+        onClose={() => {
+          if (workflowStatus === 'error' || workflowStatus === 'payment_success') {
+            resetTransaction();
+            setShowConfirmModal(false);
+          } else if (workflowStatus === 'idle') {
+            setShowConfirmModal(false);
+          }
+        }}
         onConfirm={handleAnalyzeAll}
         cost={capturedFiles.length}
         title={t("ocr.confirm_analyze_title")}
@@ -892,7 +910,10 @@ export default function JournalScanView({
           { label: t("ocr.analysis_type"), value: t("ocr.multiple_page_scan") },
           { label: t("ocr.page_count"), value: `${capturedFiles.length} ${t("ocr.page_unit")}` },
         ]}
-        isLoading={isAnalyzing}
+        isLoading={workflowStatus !== 'idle' && workflowStatus !== 'payment_success' && workflowStatus !== 'error'}
+        status={workflowStatus}
+        errorMessage={errorMessage}
+        txHash={txHash}
       />
     </div>
   );

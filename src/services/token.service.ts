@@ -653,3 +653,13 @@ export async function submitSignedUserOp(
     };
   }
 }
+
+// Info: (20260408 - Luphia) CLI Alias Support for npm run service token mint
+export class Token {
+  async mint(toAddress: string, amount: string | number) {
+    if (typeof toAddress !== "string" || !toAddress.startsWith("0x")) {
+      throw new Error(`Invalid address for token mint: ${toAddress}`);
+    }
+    return mintToAddress(CONTRACT_ADDRESSES.NTD_TOKEN, toAddress, Number(amount), "CLI Mint");
+  }
+}

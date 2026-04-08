@@ -4,22 +4,18 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { Check, Calendar, Coins, FileBarChart, Globe, Info } from 'lucide-react';
 import { request } from '@/lib/utils/request';
-import { useAuth } from '@/contexts/auth_context';
-import PaymentConfirmModal, { PaymentStatus } from '@/components/common/payment_confirm_modal';
+import PaymentConfirmModal from '@/components/common/payment_confirm_modal';
 import SuccessNotification from '@/components/common/success_notification';
 import HistorySection from '@/components/user/analysis/history_section';
-import { fido2ClientService } from '@/lib/auth/fido2_client';
-import { encodeWebAuthnSignature, hexToBase64Url } from '@/lib/auth/crypto_utils';
-import { prepareTransferUserOp, submitSignedUserOp } from '@/services/token.service';
 import { getAnalysisCost } from '@/lib/analysis/pricing';
+import { useOrderTransaction } from '@/hooks/use_order_transaction';
 import { getPeriodDateRange } from '@/lib/analysis/period';
 import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES } from '@/constants/analysis';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { AuthenticationJSON } from '@passwordless-id/webauthn/dist/esm/types';
 
 export default function AnalysisView() {
   const { t } = useTranslation();
-  const { user, refreshAuth } = useAuth();
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -53,8 +49,7 @@ export default function AnalysisView() {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedPeriodValue, setSelectedPeriodValue] = useState<string>('');
-  const [workflowStatus, setWorkflowStatus] = useState<PaymentStatus>('idle');
-  const [txHash, setTxHash] = useState<string>('');
+  const { workflowStatus, txHash, resetTransaction, executeOrderTransaction, errorMessage, setErrorMessage } = useOrderTransaction();
 
   // Info: (20260120 - Luphia) External Analysis States
   const [selectedCountry, setSelectedCountry] = useState<string>('');
@@ -130,7 +125,6 @@ export default function AnalysisView() {
 
   // Info: (20260128 - Luphia) Error Modal State
   // const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
 
   // Info: (20260130 - Luphia) Success Notification State
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
@@ -266,179 +260,50 @@ export default function AnalysisView() {
   // Info: (20260120 - Tzuhan) Open Payment Modal
   const handleGenerate = () => {
     setIsPaymentModalOpen(true);
-    setWorkflowStatus('idle');
-    setErrorMessage('');
-    setTxHash('');
+    resetTransaction();
   };
 
   // Info: (20260209 - Tzuhan) Combined Analysis Workflow (Single Signature)
   const handleAnalysisWorkflow = async () => {
-    try {
-      setIsLoading(true);
-      setWorkflowStatus('preparing');
-      setErrorMessage('');
+    setIsLoading(true);
 
-      if (!user?.address) {
-        throw new Error(t('analysis.error.user_address_missing') || 'User address not found');
-      }
+    const payload = {
+      category,
+      periodType,
+      year: selectedYear,
+      periodValue: periodType === 'yearly' ? selectedYear.toString() : selectedPeriodValue,
+      country,
+      keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput ? internalCompanyName : undefined),
+      isExternal: activeTab === 'external'
+    };
 
-      // =====================================================================
-      // Info: (20260311 - Tzuhan)
-      // [TESTING BACKDOOR] 測試用後門：取消註解以下區塊，即可針對特定帳號繞過付款
-      // =====================================================================
-      /*
-      if (user.address.toLowerCase() === '0xC53941f85Cd6b14612d5E20E81D5dbaC579127a2'.toLowerCase()) {
-        const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
-          method: 'POST',
-          body: JSON.stringify({
-            category,
-            periodType,
-            year: selectedYear,
-            periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-            txHash: null,
-            country,
-            keyword: derivedKeyword,
-            isExternal: activeTab === 'external'
-          })
-        });
-        if (!orderRes?.payload) throw new Error('Failed to create order');
-
-        setWorkflowStatus('signing_payment');
-        if (!user.pubKeyX || !user.pubKeyY) throw new Error('User public keys missing. Please re-login.');
-
-        const transferAuth = await fido2ClientService.startLogin({
-          challenge: orderRes.payload.challenge,
-          timeout: 60000,
-          userVerification: 'required',
-          allowCredentials: [],
-        });
-
-        setWorkflowStatus('payment_success');
-        await request('/api/v1/user/analysis', {
-          method: 'POST',
-          body: JSON.stringify({
-            category, periodType, year: selectedYear, periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-            country, keyword: derivedKeyword,
-            isExternal: activeTab === 'external',
-            authentication: { orderId: orderRes.payload.orderId, ...transferAuth }
-          })
-        });
-
-        await refreshAuth();
-        setTimeout(() => {
-          setIsPaymentModalOpen(false);
-          setActiveTab('history');
-          setShowSuccessNotification(true);
-        }, 2000);
-        setIsLoading(false);
-        return;
-      }
-      */
-      // =====================================================================
-
-      // Info: (20260209 - Tzuhan) 1. 在發送交易前，先向後端請求一個 orderId
-      const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
-        method: 'POST',
-        body: JSON.stringify({
-          category,
-          periodType,
-          year: selectedYear,
-          periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-          txHash: null,
-          country,
-          keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput ? internalCompanyName : undefined),
-          isExternal: activeTab === 'external'
-        })
-      });
-
-      if (!orderRes?.payload) throw new Error('Failed to create order');
-      const { orderId } = orderRes.payload; // Info: (20260209 - Tzuhan) We don't need the random challenge for *this* signature, we sign the UserOp.
-
-      let transactionHash = undefined;
-      let transferAuth: AuthenticationJSON | null = null;
-
-      // Info: (20260209 - Tzuhan) 2. 準備轉帳 UserOp
-      const prepRes = await prepareTransferUserOp(user.address, calculatedCost, orderId);
-      if (!prepRes.success || !prepRes.data) {
-        throw new Error(prepRes.message || 'Failed to prepare transfer');
-      }
-      const { userOp, userOpHash } = prepRes.data;
-
-      // Info: (20260209 - Tzuhan) 3. 簽署 UserOp Hash (Client FIDO2)
-      setWorkflowStatus('signing_payment');
-
-      if (!user.pubKeyX || !user.pubKeyY) {
-        throw new Error('User public keys missing. Please re-login.');
-      }
-
-      const challengeBase64 = hexToBase64Url(userOpHash);
-      transferAuth = await fido2ClientService.startLogin({
-        challenge: challengeBase64,
-        timeout: 60000,
-        userVerification: 'required',
-        allowCredentials: [],
-      });
-
-      // Info: (20260209 - Tzuhan) 4. 編碼簽名並附加到 UserOp
-      const encodedSignature = encodeWebAuthnSignature(
-        transferAuth,
-        BigInt(user.pubKeyX),
-        BigInt(user.pubKeyY)
-      );
-
-      // Info: (20260209 - Tzuhan) 5. 提交已簽署的 UserOp (付款)
-      setWorkflowStatus('submitting_payment');
-      const submitRes = await submitSignedUserOp({
-        ...userOp,
-        signature: encodedSignature
-      });
-
-      if (!submitRes.success) {
-        throw new Error(submitRes.message || 'Token transfer failed');
-      }
-
-      transactionHash = (submitRes.data as { tx: string })?.tx;
-      setTxHash(transactionHash);
-
-      // Info: (20260209 - Tzuhan) 6. 提交分析請求
-      setWorkflowStatus('payment_success'); // Info: (20260209 - Tzuhan) Reuse this status or add a new one like 'analyzing'
-
+    const success = await executeOrderTransaction(payload, calculatedCost, async (authData) => {
       await request('/api/v1/user/analysis', {
         method: 'POST',
         body: JSON.stringify({
           category,
           periodType,
           year: selectedYear,
-          periodValue: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
+          periodValue: periodType === 'yearly' ? selectedYear.toString() : selectedPeriodValue,
           country,
-          keyword: derivedKeyword,
+          keyword: derivedKeyword, // Info: (20260209 - Tzuhan) derivedKeyword for the backend
           isExternal: activeTab === 'external',
-          authentication: {
-            orderId,
-            transactionHash,
-            ...transferAuth,
-          },
+          authentication: authData,
         }),
       });
-
-      // Info: (20260209 - Tzuhan) Refresh user balance
-      await refreshAuth();
-
-      setWorkflowStatus('payment_success');
 
       setTimeout(() => {
         setIsPaymentModalOpen(false);
         setActiveTab('history');
         setShowSuccessNotification(true);
       }, 2000);
+    });
 
-    } catch (error) {
-      console.error('Analysis workflow failed:', error);
-      setWorkflowStatus('error');
-      setErrorMessage(t('auth_modal.failed') + `: ${(error as Error).message}`);
-    } finally {
-      setIsLoading(false);
+    if (!success && errorMessage === "Payment or Analysis failed") {
+      setErrorMessage(t('auth_modal.failed'));
     }
+
+    setIsLoading(false);
   };
 
   const isDaily = periodType === 'daily';
@@ -818,10 +683,8 @@ export default function AnalysisView() {
         isOpen={isPaymentModalOpen}
         onClose={() => {
           if (workflowStatus === 'error' || workflowStatus === 'payment_success') {
-            setWorkflowStatus('idle');
-            setErrorMessage('');
+            resetTransaction();
             setIsPaymentModalOpen(false);
-            setTxHash('');
           } else if (workflowStatus === 'idle') {
             setIsPaymentModalOpen(false);
           }
