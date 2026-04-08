@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fetchWithRetry } from '@/lib/utils/http_client';
 
 interface IEsgReportData {
   twFirstReportDownloadId?: string;
@@ -47,7 +48,7 @@ export async function downloadEsgReport(
       companyCode: stockId,
     };
 
-    const listRes = await fetch(listUrl, {
+    const listRes = await fetchWithRetry(listUrl, {
       method: "POST",
       headers,
       body: JSON.stringify(requestBody),
@@ -89,7 +90,7 @@ export async function downloadEsgReport(
     }
 
     const downloadUrl = `https://esggenplus.twse.com.tw/api/api/MopsSustainReport/data/FileStream?id=${fileId}`;
-    const downloadRes = await fetch(downloadUrl, { method: "GET", headers });
+    const downloadRes = await fetchWithRetry(downloadUrl, { method: "GET", headers });
 
     if (!downloadRes.ok) {
       console.warn(

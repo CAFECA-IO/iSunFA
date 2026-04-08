@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { fetchWithRetry } from "@/lib/utils/http_client";
 
 interface IOpenApiRecord {
   // Info: (20260402 - Tzuhan) 上市 (sii) 中文欄位
@@ -20,13 +21,13 @@ interface IOpenApiRecord {
   DateOfListing?: string;
   Symbol?: string;
   [key: string]:
-    | string
-    | undefined
-    | null
-    | number
-    | boolean
-    | object
-    | string[];
+  | string
+  | undefined
+  | null
+  | number
+  | boolean
+  | object
+  | string[];
 }
 
 interface IDataSource {
@@ -51,7 +52,7 @@ async function main() {
 
   for (const source of sources) {
     console.log(`\n⏳ 抓取 ${source.name} 名單...`);
-    const response = await fetch(source.url, {
+    const response = await fetchWithRetry(source.url, {
       headers: {
         Accept: "application/json",
         "User-Agent":

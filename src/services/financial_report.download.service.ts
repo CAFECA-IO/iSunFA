@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fetchWithRetry } from '@/lib/utils/http_client';
 
 /**
  * Info: (20260402 - Tzuhan)
@@ -38,7 +39,7 @@ export async function downloadFinancialReport(
       ptype: "F",
     });
 
-    const searchRes = await fetch(url, {
+    const searchRes = await fetchWithRetry(url, {
       method: "POST",
       headers,
       body: formParams.toString(),
@@ -68,7 +69,7 @@ export async function downloadFinancialReport(
 
     // Info: (20260331 - Tzuhan) 請求過渡頁面
     const step2Url = `${url}?step=9&kind=F&co_id=${stockId}&filename=${fileName}`;
-    const step2Res = await fetch(step2Url, { method: "GET", headers });
+    const step2Res = await fetchWithRetry(step2Url, { method: "GET", headers });
     const step2Buffer = Buffer.from(await step2Res.arrayBuffer());
 
     // Info: (20260402 - Tzuhan) 如果直接拿到 PDF 就結束任務
@@ -102,7 +103,7 @@ export async function downloadFinancialReport(
       finalDownloadUrl = `https://doc.twse.com.tw/server-java/${finalDownloadUrl}`;
     }
     // Info: (20260331 - Tzuhan) 下載 PDF 檔案
-    const finalRes = await fetch(finalDownloadUrl, { method: "GET", headers });
+    const finalRes = await fetchWithRetry(finalDownloadUrl, { method: "GET", headers });
     const finalBuffer = Buffer.from(await finalRes.arrayBuffer());
 
     if (finalBuffer.subarray(0, 4).toString("ascii") !== "%PDF") {

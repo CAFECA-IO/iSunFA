@@ -21,6 +21,7 @@
 /build
 /src/generated
 /reports
+/downloads
 
 # misc
 .DS_Store
