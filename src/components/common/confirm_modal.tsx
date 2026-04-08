@@ -14,7 +14,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 interface IConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
+  title: string | React.ReactNode;
   message: string | React.ReactNode;
   confirmText?: string;
   cancelText?: string;

@@ -6,7 +6,6 @@ import { Check, Calendar, Coins, FileBarChart, Globe, Info } from 'lucide-react'
 import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
 import PaymentConfirmModal, { PaymentStatus } from '@/components/common/payment_confirm_modal';
-import ConfirmModal from '@/components/common/confirm_modal';
 import SuccessNotification from '@/components/common/success_notification';
 import HistorySection from '@/components/user/analysis/history_section';
 import { fido2ClientService } from '@/lib/auth/fido2_client';
@@ -127,7 +126,6 @@ export default function AnalysisView() {
   }, [category, periodType, selectedPeriodValue, selectedYear]);
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [insufficientCreditsModal, setInsufficientCreditsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Info: (20260128 - Luphia) Error Modal State
@@ -136,11 +134,6 @@ export default function AnalysisView() {
 
   // Info: (20260130 - Luphia) Success Notification State
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
-
-  const handleBuyCredits = () => {
-    setInsufficientCreditsModal(false);
-    router.push('/pricing?tab=credits');
-  };
 
   // Info: (20260120 - Luphia) Generate specific period options based on type
   const renderPeriodOptions = () => {
@@ -343,16 +336,7 @@ export default function AnalysisView() {
       */
       // =====================================================================
 
-      // Info: (20260209 - Tzuhan) Check user credits
-      if ((user.credits || 0) < calculatedCost) {
-        setInsufficientCreditsModal(true);
-        setIsLoading(false);
-        setWorkflowStatus('idle');
-        return;
-      }
-
       // Info: (20260209 - Tzuhan) 1. 在發送交易前，先向後端請求一個 orderId
-
       const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
         method: 'POST',
         body: JSON.stringify({
@@ -844,28 +828,21 @@ export default function AnalysisView() {
         }}
         onConfirm={handleAnalysisWorkflow}
         cost={calculatedCost}
-        analysisType={t(`analysis.categories.${category}`)}
-        period={t('analysis.selected_period_desc', {
-          value: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-          type: t(`analysis.time_units.${periodType}`)
-        })}
-        country={country}
-        keyword={derivedKeyword}
+        items={[
+          { label: t('analysis.category'), value: t(`analysis.categories.${category}`) },
+          ...(country ? [{ label: t('analysis.country'), value: t(`analysis.countries.${country}`) }] : []),
+          ...(derivedKeyword ? [{ label: t('analysis.keyword'), value: derivedKeyword }] : []),
+          {
+            label: t('analysis.period'), value: t('analysis.selected_period_desc', {
+              value: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
+              type: t(`analysis.time_units.${periodType}`)
+            })
+          }
+        ]}
         isLoading={isLoading}
         status={workflowStatus}
         errorMessage={errorMessage}
         txHash={txHash}
-      />
-
-      {/* Info: (20260209 - Tzuhan) Analysis Generation Modal Removed - Merged into Payment Workflow */}
-
-      <ConfirmModal
-        isOpen={insufficientCreditsModal}
-        onClose={() => setInsufficientCreditsModal(false)}
-        title={t('analysis.insufficient_credits.title')}
-        message={t('analysis.insufficient_credits.message')}
-        confirmText={t('analysis.insufficient_credits.buy_btn')}
-        onConfirm={handleBuyCredits}
       />
 
       {/* Info: (20260130 - Luphia) Success Notification */}

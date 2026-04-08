@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   UploadCloud,
@@ -12,6 +13,7 @@ import {
   X,
   Plus,
 } from "lucide-react";
+import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { uploadFile, fileToBase64 } from "@/lib/file_operator";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -43,6 +45,7 @@ export default function JournalUploadView({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFileData[]>([]);
+  const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
   useEffect(() => {
     return () => {
@@ -92,8 +95,8 @@ export default function JournalUploadView({
     }
   };
 
-  const handleAnalyzeAll = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleAnalyzeAll = async () => {
+    setShowConfirmModal(false);
     if (uploadedFiles.length === 0) return;
 
     setIsAnalyzing(true);
@@ -181,13 +184,12 @@ export default function JournalUploadView({
 
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
-        className={`flex h-full min-h-[500px] flex-col rounded-2xl border-2 transition-colors lg:h-[calc(100vh-250px)] ${
-          uploadedFiles.length > 0
-            ? "border-transparent bg-white p-4 shadow-[0_0_15px_rgba(0,0,0,0.05)] sm:p-6 lg:p-10"
-            : isDragging
-              ? "items-center justify-center border-dashed border-orange-500 bg-orange-50 p-10 sm:p-20 lg:p-[100px]"
-              : "items-center justify-center border-dashed border-slate-300 bg-white p-10 hover:border-orange-400 hover:bg-slate-50 sm:p-20 lg:p-[100px]"
-        }`}
+        className={`flex h-full min-h-[500px] flex-col rounded-2xl border-2 transition-colors lg:h-[calc(100vh-250px)] ${uploadedFiles.length > 0
+          ? "border-transparent bg-white p-4 shadow-[0_0_15px_rgba(0,0,0,0.05)] sm:p-6 lg:p-10"
+          : isDragging
+            ? "items-center justify-center border-dashed border-orange-500 bg-orange-50 p-10 sm:p-20 lg:p-[100px]"
+            : "items-center justify-center border-dashed border-slate-300 bg-white p-10 hover:border-orange-400 hover:bg-slate-50 sm:p-20 lg:p-[100px]"
+          }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -260,7 +262,7 @@ export default function JournalUploadView({
                 <button
                   type="button"
                   className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-orange-600 hover:shadow focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                  onClick={handleAnalyzeAll}
+                  onClick={(e) => { e.stopPropagation(); setShowConfirmModal(true); }}
                   disabled={isAnalyzing || isUploading}
                 >
                   <Wand2 className="h-4 w-4" />
@@ -285,11 +287,12 @@ export default function JournalUploadView({
                   </button>
                   <div className="relative flex h-32 w-full items-center justify-center overflow-hidden rounded-lg bg-slate-50 transition-colors group-hover:bg-orange-50/50">
                     {fileData.previewUrl ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
+                      <Image
                         src={fileData.previewUrl}
                         alt={fileData.file.name}
-                        className="h-full w-full object-cover"
+                        fill
+                        className="object-cover"
+                        unoptimized={true}
                       />
                     ) : (
                       <div className="flex flex-col items-center text-slate-400 group-hover:text-orange-400">
@@ -340,6 +343,21 @@ export default function JournalUploadView({
           </div>
         )}
       </div>
+
+      <PaymentConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleAnalyzeAll}
+        cost={uploadedFiles.length}
+        title={t("ocr.confirm_analyze_title")}
+        description={t("ocr.confirm_analyze_desc")}
+        confirmBtnText={t("ocr.confirm_btn")}
+        items={[
+          { label: t("ocr.analysis_type"), value: t("ocr.multiple_page_upload") },
+          { label: t("ocr.page_count"), value: `${uploadedFiles.length} ${t("ocr.page_unit")}` },
+        ]}
+        isLoading={isAnalyzing}
+      />
     </>
   );
 }

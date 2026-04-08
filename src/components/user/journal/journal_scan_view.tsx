@@ -5,6 +5,7 @@ import Script from "next/script";
 import Image from "next/image";
 import { Loader2, Camera, X, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -33,6 +34,7 @@ export default function JournalScanView({
   const [isProcessing, setIsProcessing] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [showFlash, setShowFlash] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const [capturedFiles, setCapturedFiles] = useState<UploadedFileData[]>([]);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
@@ -110,8 +112,8 @@ export default function JournalScanView({
     [],
   );
 
-  const handleAnalyzeAll = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleAnalyzeAll = async () => {
+    setShowConfirmModal(false);
     if (capturedFiles.length === 0) return;
 
     setIsAnalyzing(true);
@@ -349,7 +351,7 @@ export default function JournalScanView({
             for (let j = 0; j < 4; j++) {
               pts.push({ x: approx.intPtr(j, 0)[0], y: approx.intPtr(j, 0)[1] });
             }
-            
+
             // Info: (20260404 - Luphia) Calculate lengths of the 4 sides to prevent absurd perspective distortion (like one edge being tiny)
             const sideLengths = [];
             for (let j = 0; j < 4; j++) {
@@ -357,18 +359,18 @@ export default function JournalScanView({
               const p2 = pts[(j + 1) % 4];
               sideLengths.push(Math.hypot(p1.x - p2.x, p1.y - p2.y));
             }
-            
+
             // Info: (20260404 - Luphia) Opposite sides should be at least 40% of each other. If lower, the angle is too extreme.
             const minOpp1 = Math.min(sideLengths[0], sideLengths[2]);
             const maxOpp1 = Math.max(sideLengths[0], sideLengths[2]);
             const minOpp2 = Math.min(sideLengths[1], sideLengths[3]);
             const maxOpp2 = Math.max(sideLengths[1], sideLengths[3]);
-            
+
             const ratio1 = maxOpp1 > 0 ? minOpp1 / maxOpp1 : 0;
             const ratio2 = maxOpp2 > 0 ? minOpp2 / maxOpp2 : 0;
-            
+
             const isValidPerspective = ratio1 > 0.4 && ratio2 > 0.4;
-            
+
             if (isValidPerspective) {
               // Info: (20260404 - Luphia) Evaluate maximum inner angle sharpness
               let maxCos = 0;
@@ -383,7 +385,7 @@ export default function JournalScanView({
                 const cosine = Math.abs((dx1 * dx2 + dy1 * dy2) / Math.sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-6));
                 maxCos = Math.max(maxCos, cosine);
               }
-  
+
               // Info: (20260404 - Luphia) Relaxed max angle distortion to ~36 deg (0.8) since opposite lengths are strictly checked
               if (maxCos < 0.8 && area > maxArea) {
                 maxArea = area;
@@ -763,7 +765,7 @@ export default function JournalScanView({
                 {capturedFiles.length > 0 && (
                   <button
                     className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-orange-600 disabled:opacity-50"
-                    onClick={handleAnalyzeAll}
+                    onClick={(e) => { e.stopPropagation(); setShowConfirmModal(true); }}
                     disabled={isAnalyzing}
                   >
                     <span>{t("ocr.analyze_btn_with_count", { count: capturedFiles.length })}</span>
@@ -877,6 +879,21 @@ export default function JournalScanView({
           )}
         </>
       )}
+
+      <PaymentConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleAnalyzeAll}
+        cost={capturedFiles.length}
+        title={t("ocr.confirm_analyze_title")}
+        description={t("ocr.confirm_analyze_desc")}
+        confirmBtnText={t("ocr.confirm_btn")}
+        items={[
+          { label: t("ocr.analysis_type"), value: t("ocr.multiple_page_scan") },
+          { label: t("ocr.page_count"), value: `${capturedFiles.length} ${t("ocr.page_unit")}` },
+        ]}
+        isLoading={isAnalyzing}
+      />
     </div>
   );
 }
