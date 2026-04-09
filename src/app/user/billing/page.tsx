@@ -200,7 +200,7 @@ export default function BillingPage() {
       </div>
 
       {/* Info: (20260409 - Luphia) Tabs */}
-      <div className="flex space-x-1 bg-gray-100/50 p-1 rounded-xl mb-8 w-full max-w-xl">
+      <div className="flex space-x-1 bg-gray-100/50 p-1 rounded-xl mb-8 w-full max-w-xl mx-auto">
         <button
           onClick={() => setActiveTab('orders')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'orders'
@@ -421,35 +421,35 @@ export default function BillingPage() {
                         </span>
 
                         <div className="flex items-center gap-1 ml-4">
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingCardId(pm.id);
-                                  setEditingCardData({
-                                    name: pm.data?.name || String(index + 1).padStart(3, '0'),
-                                    email: pm.data?.email || '',
-                                    taxId: pm.data?.taxId || '',
-                                    buyerName: pm.data?.buyerName || '',
-                                    billingAddress: pm.data?.billingAddress || ''
-                                  });
-                                }}
-                                className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
-                                title={t('billing.cards.edit_details', { defaultValue: 'Edit Details' })}
-                              >
-                                <Edit2 className="w-5 h-5" />
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteCard(pm.id); }}
-                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                                title={t('billing.cards.delete', { defaultValue: 'Delete' })}
-                              >
-                                <Trash2 className="w-5 h-5" />
-                              </button>
-                            </>
-                          </div>
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingCardId(pm.id);
+                                setEditingCardData({
+                                  name: pm.data?.name || String(index + 1).padStart(3, '0'),
+                                  email: pm.data?.email || '',
+                                  taxId: pm.data?.taxId || '',
+                                  buyerName: pm.data?.buyerName || '',
+                                  billingAddress: pm.data?.billingAddress || ''
+                                });
+                              }}
+                              className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
+                              title={t('billing.cards.edit_details', { defaultValue: 'Edit Details' })}
+                            >
+                              <Edit2 className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteCard(pm.id); }}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                              title={t('billing.cards.delete', { defaultValue: 'Delete' })}
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </>
                         </div>
                       </div>
+                    </div>
 
                     {/* Info: (20260409 - Luphia) Accordion Content */}
                     {expandedCardId === pm.id && (
