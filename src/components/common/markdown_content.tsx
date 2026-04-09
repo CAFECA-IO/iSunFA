@@ -134,6 +134,14 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content, theme = 'da
             {children}
           </td>
         ),
+        pre: ({ children, ...props }: React.ComponentPropsWithoutRef<'pre'>) => (
+          <pre 
+            className={`p-4 rounded-lg my-4 overflow-x-auto text-sm font-mono leading-relaxed ${isDark ? 'bg-[#1E1E1E] text-gray-200 border border-[#333]' : 'bg-white border border-orange-100 text-gray-800 shadow-sm'}`} 
+            {...props}
+          >
+            {children}
+          </pre>
+        ),
         code: ({ inline, className, children, ...props }: React.ComponentPropsWithoutRef<'code'> & { inline?: boolean }) => {
           const match = /language-(\w+)/.exec(className || '');
           if (!inline && match && match[1] === 'mermaid') {
