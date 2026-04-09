@@ -45,9 +45,10 @@ export default function ZoomablePreview({
     setPosition({ x: 0, y: 0 });
   };
 
+  // Info: (20260409 - Julian) ============ 滑鼠的拖曳事件 (for desktop) ============
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (scale <= 1) return; // Info: (20260305 - Julian) Only allow drag when zoomed in
-    e.preventDefault(); // Info: (20260305 - Julian) Prevent native image drag & text selection
+    if (scale <= 1) return; // Info: (20260409 - Julian) 只有放大時才允許拖曳
+    e.preventDefault(); // Info: (20260409 - Julian) 阻止預設行為
     setIsDragging(true);
     dragStart.current = {
       x: e.clientX - position.x,
@@ -68,6 +69,26 @@ export default function ZoomablePreview({
   const handleMouseLeave = () => {
     if (isDragging) setIsDragging(false);
   };
+
+  // Info: (20260409 - Julian) ============ 觸控的拖曳事件 (for mobile) ============
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (scale <= 1) return;
+    setIsDragging(true);
+    dragStart.current = {
+      x: e.touches[0].clientX - position.x,
+      y: e.touches[0].clientY - position.y,
+    };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.touches[0].clientX - dragStart.current.x,
+      y: e.touches[0].clientY - dragStart.current.y,
+    });
+  };
+
+  const handleTouchEnd = () => setIsDragging(false);
 
   return (
     <div className={className}>
@@ -108,14 +129,18 @@ export default function ZoomablePreview({
           className={`flex flex-1 items-center justify-center overflow-hidden border-0 border-gray-200 bg-white p-0 lg:rounded-lg lg:border lg:p-4 ${
             scale > 1
               ? isDragging
-                ? "cursor-grabbing select-none"
-                : "cursor-grab"
+                ? "cursor-grabbing select-none touch-none"
+                : "cursor-grab touch-none"
               : ""
           }`}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
           onDragStart={(e) => e.preventDefault()}
         >
           {hasContent ? (
