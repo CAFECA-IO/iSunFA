@@ -639,6 +639,11 @@ export const en = {
       delete_confirm_desc: "This will remove the credit card. You won't be able to use it for future payments.",
       cancel: "Cancel",
       save: "Save",
+      edit_details: "Edit Details",
+      email: "Email Address",
+      tax_id: "Tax ID",
+      buyer_name: "Purchaser Name",
+      billing_address: "Billing Address",
     },
     table: {
       date: "Date",

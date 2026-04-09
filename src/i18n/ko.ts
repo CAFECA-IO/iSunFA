@@ -628,6 +628,11 @@ export const ko = {
       delete_confirm_desc: "이 카드를 삭제하면 향후 결제에 사용할 수 없습니다.",
       cancel: "취소",
       save: "저장",
+      edit_details: "세부 정보 편집",
+      email: "이메일 주소",
+      tax_id: "사업자 등록 번호",
+      buyer_name: "구매자 이름",
+      billing_address: "청구지 주소",
     },
     table: {
       date: "날짜",

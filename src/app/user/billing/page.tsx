@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
-import { CreditCard, Receipt, Coins, Loader2, Plus, CheckCircle2, Edit2, Trash2, X, Check } from 'lucide-react';
+import { CreditCard, Receipt, Coins, Loader2, Plus, CheckCircle2, Edit2, Trash2 } from 'lucide-react';
 import { request } from '@/lib/utils/request';
 import { formatDate } from '@/lib/utils/date';
+import EditCardModal from '@/components/user/billing/edit_card_modal';
 
 type Tab = 'orders' | 'points' | 'cards';
 
@@ -35,7 +36,14 @@ interface IPaymentMethod {
   token: string;
   isDefault: boolean;
   createdAt: string;
-  data?: { name?: string; [key: string]: unknown };
+  data?: {
+    name?: string;
+    email?: string;
+    taxId?: string;
+    buyerName?: string;
+    billingAddress?: string;
+    [key: string]: unknown;
+  };
 }
 
 interface IPaymentTransaction {
@@ -61,7 +69,13 @@ export default function BillingPage() {
   const [isBinding, setIsBinding] = useState(false);
 
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
-  const [editingCardName, setEditingCardName] = useState<string>('');
+  const [editingCardData, setEditingCardData] = useState({
+    name: '',
+    email: '',
+    taxId: '',
+    buyerName: '',
+    billingAddress: ''
+  });
 
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [loadingTransactions, setLoadingTransactions] = useState<boolean>(false);
@@ -127,14 +141,14 @@ export default function BillingPage() {
     }
   };
 
-  const handleRenameCard = async (id: string, newName: string) => {
+  const handleSaveCardDetails = async (id: string, newDetails: typeof editingCardData) => {
     try {
       const res = await request<{ payload: { success: boolean } }>(`/api/v1/user/payment_method/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ name: newName })
+        body: JSON.stringify(newDetails)
       });
       if (res?.payload?.success) {
-        setPaymentMethods(prev => prev.map(p => p.id === id ? { ...p, data: { ...p.data, name: newName } } : p));
+        setPaymentMethods(prev => prev.map(p => p.id === id ? { ...p, data: { ...p.data, ...newDetails } } : p));
         setEditingCardId(null);
       }
     } catch (e) {
@@ -369,6 +383,15 @@ export default function BillingPage() {
                     <div
                       className="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
                       onClick={() => toggleExpandCard(pm.id)}
+                      role="button"
+                      aria-label="Toggle card details"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          toggleExpandCard(pm.id);
+                        }
+                      }}
                     >
                       <div className="flex items-center gap-5">
                         <div className="flex h-12 w-16 items-center justify-center rounded-lg bg-orange-600 shadow-sm">
@@ -376,20 +399,9 @@ export default function BillingPage() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            {editingCardId === pm.id ? (
-                              <input
-                                type="text"
-                                value={editingCardName}
-                                onChange={(e) => setEditingCardName(e.target.value)}
-                                onClick={(e) => e.stopPropagation()}
-                                className="text-sm border border-gray-300 rounded px-2 py-1 bg-white outline-none focus:ring-1 focus:ring-orange-500 text-gray-900"
-                                placeholder={t('billing.cards.rename', { defaultValue: 'Rename' })}
-                              />
-                            ) : (
-                              <span className="font-semibold text-gray-900 text-lg">
-                                {pm.data?.name || String(index + 1).padStart(3, '0')}
-                              </span>
-                            )}
+                            <span className="font-semibold text-gray-900 text-lg">
+                              {pm.data?.name || String(index + 1).padStart(3, '0')}
+                            </span>
                             {pm.isDefault && (
                               <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
                                 <CheckCircle2 className="w-3 h-3" />
@@ -408,40 +420,36 @@ export default function BillingPage() {
                           {t('billing.cards.added_at')} {formatDate(pm.createdAt, 'yyyy/MM/dd')}
                         </span>
 
-                        <div className="flex items-center gap-1 ml-4" onClick={(e) => e.stopPropagation()}>
-                          {editingCardId === pm.id ? (
-                            <>
-                              <button onClick={() => handleRenameCard(pm.id, editingCardName)} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title={t('billing.cards.save', { defaultValue: 'Save' })}>
-                                <Check className="w-4 h-4" />
-                              </button>
-                              <button onClick={() => setEditingCardId(null)} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded" title={t('billing.cards.cancel', { defaultValue: 'Cancel' })}>
-                                <X className="w-4 h-4" />
-                              </button>
-                            </>
-                          ) : (
+                        <div className="flex items-center gap-1 ml-4">
                             <>
                               <button
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setEditingCardId(pm.id);
-                                  setEditingCardName(pm.data?.name || String(index + 1).padStart(3, '0'));
+                                  setEditingCardData({
+                                    name: pm.data?.name || String(index + 1).padStart(3, '0'),
+                                    email: pm.data?.email || '',
+                                    taxId: pm.data?.taxId || '',
+                                    buyerName: pm.data?.buyerName || '',
+                                    billingAddress: pm.data?.billingAddress || ''
+                                  });
                                 }}
-                                className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                title={t('billing.cards.rename', { defaultValue: 'Rename' })}
+                                className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
+                                title={t('billing.cards.edit_details', { defaultValue: 'Edit Details' })}
                               >
-                                <Edit2 className="w-4 h-4" />
+                                <Edit2 className="w-5 h-5" />
                               </button>
                               <button
-                                onClick={() => handleDeleteCard(pm.id)}
-                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                onClick={(e) => { e.stopPropagation(); handleDeleteCard(pm.id); }}
+                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                                 title={t('billing.cards.delete', { defaultValue: 'Delete' })}
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-5 h-5" />
                               </button>
                             </>
-                          )}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
                     {/* Info: (20260409 - Luphia) Accordion Content */}
                     {expandedCardId === pm.id && (
@@ -496,6 +504,24 @@ export default function BillingPage() {
           </div>
         )}
       </div>
+
+      {/* Info: (20260409 - Luphia) Edit Card Modal */}
+      {editingCardId && (
+        <EditCardModal
+          isOpen={!!editingCardId}
+          onClose={() => setEditingCardId(null)}
+          onSave={async (data) => {
+            await handleSaveCardDetails(editingCardId, data);
+          }}
+          initialData={{
+            name: editingCardData.name,
+            email: editingCardData.email,
+            taxId: editingCardData.taxId,
+            buyerName: editingCardData.buyerName,
+            billingAddress: editingCardData.billingAddress
+          }}
+        />
+      )}
     </div>
   );
 }

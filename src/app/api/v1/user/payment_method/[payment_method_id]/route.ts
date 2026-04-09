@@ -16,11 +16,7 @@ export async function PATCH(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const { name } = await request.json();
-
-    if (typeof name !== "string") {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid name parameter");
-    }
+    const { name, email, taxId, buyerName, billingAddress } = await request.json();
 
     const paymentMethod = await paymentRepo.getPaymentMethodById(
       params.payment_method_id
@@ -33,7 +29,11 @@ export async function PATCH(
     const currentData = (paymentMethod.data as object) || {};
     await paymentRepo.updatePaymentMethodData(params.payment_method_id, {
       ...currentData,
-      name,
+      ...(name !== undefined && { name }),
+      ...(email !== undefined && { email }),
+      ...(taxId !== undefined && { taxId }),
+      ...(buyerName !== undefined && { buyerName }),
+      ...(billingAddress !== undefined && { billingAddress }),
     });
 
     return jsonOk({ success: true });

@@ -18,6 +18,7 @@ import { encodeWebAuthnSignature } from '@/lib/auth/crypto_utils';
 import { IPaymentModalProps, IOenCheckoutResponse, IOrderStatusResponse, PaymentStep, IOenCallbackData } from "@/interfaces/payment";
 import { ORDER_STATUS } from "@/constants/status";
 import { IJSONObject } from "@/validators/common";
+import EditCardModal from "@/components/user/billing/edit_card_modal";
 
 interface IPaymentMethod {
   id: string;
@@ -67,6 +68,7 @@ export default function PaymentModal({
 
   const [paymentMethods, setPaymentMethods] = useState<IPaymentMethod[]>([]);
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
+  const [requireSetupCard, setRequireSetupCard] = useState<IPaymentMethod | null>(null);
 
   const wasOpen = useRef(isOpen);
 
@@ -254,6 +256,17 @@ export default function PaymentModal({
       if (selectedPaymentMethodId === "new") {
         await handleBindNewCard();
         return;
+      }
+
+      // Info: (20260409 - Luphia) Check if the selected card requires setup
+      const currentPm = paymentMethods.find(p => p.id === selectedPaymentMethodId);
+      if (currentPm) {
+        const pmData = currentPm.data || {};
+        if (!pmData.email || !pmData.buyerName || !pmData.billingAddress) {
+          setRequireSetupCard(currentPm);
+          setLoading(false);
+          return;
+        }
       }
 
       // Info: (20260306 - Tzuhan) 1. Request Payment Order to get challenge
@@ -775,6 +788,35 @@ export default function PaymentModal({
         onClose={() => setLegalDoc(null)}
         documentType={legalDoc}
       />
+      {requireSetupCard && (
+        <EditCardModal
+          isOpen={!!requireSetupCard}
+          onClose={() => setRequireSetupCard(null)}
+          onSave={async (data) => {
+            try {
+              const res = await request<{ payload: { success: boolean } }>(`/api/v1/user/payment_method/${requireSetupCard.id}`, {
+                method: 'PATCH',
+                body: JSON.stringify(data)
+              });
+              if (res?.payload?.success) {
+                setPaymentMethods(prev => prev.map(p => p.id === requireSetupCard.id ? { ...p, data: { ...p.data, ...data } } : p));
+                setRequireSetupCard(null);
+                // Info: (20260409 - Luphia) Users must manually click 'Confirm' again after setup to avoid unexpected immediate charges
+              }
+            } catch (err) {
+              console.error(err);
+              setError(t("pricing.credits.payment_modal.processing_failed") || "付款處理失敗。請重試。");
+            }
+          }}
+          initialData={{
+            name: requireSetupCard.data?.name as string || requireSetupCard.provider,
+            email: requireSetupCard.data?.email as string || '',
+            taxId: requireSetupCard.data?.taxId as string || '',
+            buyerName: requireSetupCard.data?.buyerName as string || '',
+            billingAddress: requireSetupCard.data?.billingAddress as string || ''
+          }}
+        />
+      )}
     </>
   );
 }

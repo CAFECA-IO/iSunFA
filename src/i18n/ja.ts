@@ -638,6 +638,11 @@ export const ja = {
       delete_confirm_desc: "このカードを削除すると、今後の支払いに使用できなくなります。",
       cancel: "キャンセル",
       save: "保存",
+      edit_details: "詳細を編集",
+      email: "メールアドレス",
+      tax_id: "会社法人等番号",
+      buyer_name: "購入者名",
+      billing_address: "請求先住所",
     },
     table: {
       date: "日付",

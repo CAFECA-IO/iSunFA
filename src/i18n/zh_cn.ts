@@ -628,6 +628,11 @@ export const zhCn = {
       delete_confirm_desc: "这将会移除此张信用卡，未来将无法再选用此卡片进行扣款。",
       cancel: "取消",
       save: "保存",
+      edit_details: "编辑详细资料",
+      email: "联系邮箱",
+      tax_id: "统一社会信用代码",
+      buyer_name: "购买人姓名",
+      billing_address: "账单地址",
     },
     table: {
       date: "日期",

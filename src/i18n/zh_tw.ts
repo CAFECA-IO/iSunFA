@@ -669,6 +669,11 @@ export const zhTw = {
       delete_confirm_desc: "這將會移除此張信用卡，未來將無法再選用此卡片進行扣款。",
       cancel: "取消",
       save: "儲存",
+      edit_details: "編輯詳細資料",
+      email: "聯絡信箱",
+      tax_id: "統一編號",
+      buyer_name: "購買人姓名",
+      billing_address: "帳單地址",
     },
     table: {
       date: "日期",
