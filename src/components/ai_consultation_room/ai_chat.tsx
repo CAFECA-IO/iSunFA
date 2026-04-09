@@ -19,8 +19,11 @@ import { IFile } from "@/interfaces/ai_talk";
 import { ApiCode } from "@/lib/utils/status";
 import LoginButton from "@/components/common/login_button";
 import ConfirmModal from "@/components/common/confirm_modal";
+import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { IApiResponse } from "@/lib/utils/response";
 import { FilePreview } from "@/components/common/file_preview";
+import { useOrderTransaction, IOrderPayload } from "@/hooks/use_order_transaction";
+import type { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 
 // Info: (20260302 - Julian) 目前先限制一次只能上傳一張圖片
 const FILE_LIMIT = 1;
@@ -49,7 +52,10 @@ export const AiChat = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [question, setQuestion] = useState<string>("");
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { workflowStatus, resetTransaction, executeOrderTransaction } = useOrderTransaction();
 
   // Info: (20260213 - Julian) 清除 Object URLs 避免記憶體洩漏
   useEffect(() => {
@@ -66,9 +72,13 @@ export const AiChat = () => {
   const isSubmitDisabled =
     !question.trim() || isSubmitting || localFiles.length > 0;
 
-  const handleSubmit = async () => {
+  const handleOpenPayment = () => {
     if (isSubmitDisabled || !user) return;
+    setIsPaymentModalOpen(true);
+    resetTransaction();
+  };
 
+  const submitAiQuestion = async (authentication: AuthenticationJSON) => {
     setIsSubmitting(true);
     try {
       const data = await request<IApiResponse<{ threadId: string }>>(
@@ -78,6 +88,7 @@ export const AiChat = () => {
           body: JSON.stringify({
             question,
             files,
+            authentication,
           }),
         },
       );
@@ -101,6 +112,23 @@ export const AiChat = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePaymentConfirm = async () => {
+    const orderPayload: IOrderPayload = {
+      category: "ai_talk",
+      periodType: "daily",
+      year: new Date().getFullYear(),
+      periodValue: "1",
+      items: [
+        {
+          name: t("ai_consultation_room.consultant_fee"),
+          unitPrice: 5,
+          quantity: 1,
+        }
+      ]
+    };
+    await executeOrderTransaction(orderPayload, 5, submitAiQuestion);
   };
 
   const processFiles = async (selectedFiles: FileList | null) => {
@@ -234,11 +262,10 @@ export const AiChat = () => {
       <button
         onClick={() => fileInputRef.current?.click()}
         disabled={isUploadDisabled}
-        className={`flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-3 transition-all outline-none disabled:bg-gray-200 disabled:text-gray-500 ${
-          isDragging
+        className={`flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-3 transition-all outline-none disabled:bg-gray-200 disabled:text-gray-500 ${isDragging
             ? "scale-[1.02] border-orange-500 bg-orange-50 text-orange-600 shadow-md"
             : "border-gray-200 text-gray-500 enabled:hover:border-orange-300 enabled:hover:bg-orange-50/50 enabled:hover:text-orange-500"
-        }`}
+          }`}
       >
         {isUploadDisabled ? (
           <p className="text-sm text-gray-500">
@@ -264,13 +291,12 @@ export const AiChat = () => {
 
       <button
         id="ai-chat-submit"
-        onClick={handleSubmit}
+        onClick={handleOpenPayment}
         disabled={isSubmitDisabled}
-        className={`flex w-full items-center justify-center rounded-2xl py-4 font-bold shadow-lg transition-all ${
-          isSubmitDisabled
+        className={`flex w-full items-center justify-center rounded-2xl py-4 font-bold shadow-lg transition-all ${isSubmitDisabled
             ? "cursor-not-allowed bg-gray-200 text-gray-400 shadow-none"
             : "bg-orange-600 text-white shadow-orange-200 hover:-translate-y-0.5 hover:bg-orange-500 active:scale-[0.98]"
-        }`}
+          }`}
       >
         {isSubmitting ? (
           <Loader2 size={24} className="animate-spin" />
@@ -285,11 +311,10 @@ export const AiChat = () => {
 
   return (
     <div
-      className={`cubic-bezier(0.4, 0, 0.2, 1) fixed right-6 bottom-24 z-50 flex flex-col overflow-hidden border-2 border-orange-400 bg-white shadow-[0_20px_50px_rgba(234,88,12,0.15)] transition-all duration-500 ${
-        isChatOpen
+      className={`cubic-bezier(0.4, 0, 0.2, 1) fixed right-6 bottom-24 z-50 flex flex-col overflow-hidden border-2 border-orange-400 bg-white shadow-[0_20px_50px_rgba(234,88,12,0.15)] transition-all duration-500 ${isChatOpen
           ? "h-[500px] w-80 rounded-3xl p-6"
           : "h-16 w-16 items-center justify-center rounded-full p-0 hover:scale-110 hover:bg-orange-50 active:scale-95"
-      }`}
+        }`}
     >
       {!isChatOpen && (
         <button
@@ -320,9 +345,8 @@ export const AiChat = () => {
               setIsChatOpen(false);
             }
           }}
-          className={`text-orange-500 transition-all duration-300 ${
-            isChatOpen ? "rounded-full p-2 hover:bg-gray-100" : "p-0"
-          }`}
+          className={`text-orange-500 transition-all duration-300 ${isChatOpen ? "rounded-full p-2 hover:bg-gray-100" : "p-0"
+            }`}
           aria-label={
             isChatOpen
               ? t("ai_consultation_room.close_chat")
@@ -435,6 +459,23 @@ export const AiChat = () => {
         title={confirmModal.title}
         message={confirmModal.message}
         confirmText={t("common.close")}
+      />
+
+      {/* Info: (20260408 - Luphia) Payment Confirmation Modal */}
+      <PaymentConfirmModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => {
+          if (workflowStatus === "error" || workflowStatus === "payment_success") {
+            resetTransaction();
+            setIsPaymentModalOpen(false);
+          } else if (workflowStatus === "idle") {
+            setIsPaymentModalOpen(false);
+          }
+        }}
+        onConfirm={handlePaymentConfirm}
+        cost={5}
+        items={[{ label: t("ai_consultation_room.consultant_fee"), value: t("ai_consultation_room.ask_ai") }]}
+        status={workflowStatus}
       />
     </div>
   );

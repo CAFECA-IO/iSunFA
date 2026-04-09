@@ -5,6 +5,7 @@ import { request } from '@/lib/utils/request';
 import { publicClient } from '@/lib/viem_public';
 import { ABIS, CONTRACT_ADDRESSES } from '@/config/contracts';
 import { formatUnits } from 'viem';
+import { CheckinRewardModal } from '@/components/common/checkin_reward_modal';
 
 interface IUser {
   address: string;
@@ -33,6 +34,8 @@ const AuthContext = createContext<IAuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rewardAmount, setRewardAmount] = useState<number>(0);
+  const [showRewardModal, setShowRewardModal] = useState<boolean>(false);
 
   const refreshAuth = useCallback(async () => {
     const token = localStorage.getItem('dewt');
@@ -43,9 +46,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const response = await request<{ payload: IUser }>('/api/v1/auth/me', {
+      const authPromise = request<{ payload: IUser }>('/api/v1/auth/me', {
         method: 'GET',
       });
+
+      // Info: (20260408 - Luphia) Parallel non-blocking checkin
+      const checkinPromise = request<{ payload: { checkinSuccess: boolean, rewardAmount: number } }>('/api/v1/auth/checkin', {
+        method: 'GET',
+      }).catch((err) => {
+        console.warn("Background checkin failed:", err);
+        return null;
+      });
+      checkinPromise.then((res) => {
+        if (res && res.payload && res.payload.rewardAmount > 0) {
+          setRewardAmount(res.payload.rewardAmount);
+          setShowRewardModal(true);
+        }
+      });
+
+      const response = await authPromise;
+
       if (response && response.payload) {
         let userData = response.payload;
         try {
@@ -108,7 +128,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [user, loading, refreshAuth, logout]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <CheckinRewardModal
+        isOpen={showRewardModal}
+        onClose={() => setShowRewardModal(false)}
+        rewardAmount={rewardAmount}
+      />
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

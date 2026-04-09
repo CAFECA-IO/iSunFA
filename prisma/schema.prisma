@@ -53,6 +53,7 @@ model User {
   auditLogs           AuditLog[]
   vouchers            Voucher[]
   esgRecords          EsgRecord[]
+  checkins            Checkin[]
 
   @@index([address])
   @@map("user")
@@ -683,4 +684,16 @@ model ReportDownloadTask {
   // Info: (20260401 - Tzuhan) 狀態索引：因為主控台會瘋狂 Query "PENDING" 的任務，加 Index 提升查詢速度
   @@index([status])
   @@map("report_download_task")
+}
+
+model Checkin {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  position  String?
+  device    String?
+  ip        String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("checkin")
 }

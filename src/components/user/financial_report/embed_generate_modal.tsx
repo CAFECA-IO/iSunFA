@@ -60,7 +60,7 @@ export default function EmbedGenerateModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl">
+      <div className="w-full max-w-2xl rounded-2xl bg-white -xl">
         {/* Info: (20260319 - Julian) Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
           <div className="flex items-center gap-3">
@@ -95,7 +95,7 @@ export default function EmbedGenerateModal({
               <div className="mb-3 block text-sm font-bold text-slate-600">
                 HTML 嵌入碼
               </div>
-              <div className="relative rounded-2xl bg-slate-900 px-6 py-8 font-mono text-sm text-amber-100 shadow-inner">
+              <div className="relative rounded-2xl bg-slate-900 px-6 py-8 font-mono text-sm text-amber-100 -inner">
                 {embedCode}
                 <button
                   type="button"

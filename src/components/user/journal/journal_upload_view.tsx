@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   UploadCloud,
@@ -12,10 +13,13 @@ import {
   X,
   Plus,
 } from "lucide-react";
-import { uploadFile, fileToBase64 } from "@/lib/file_operator";
+import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
+import { uploadFile, fileToBase64 } from "@/lib/file_operator";
 import { ApiCode } from "@/lib/utils/status";
+import { useOrderTransaction, IOrderPayload } from "@/hooks/use_order_transaction";
+import { getAnalysisCost } from "@/lib/analysis/pricing";
 
 type UploadedFileData = {
   id: string;
@@ -38,11 +42,15 @@ export default function JournalUploadView({
 
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
-  const [analyzedCount, setAnalyzedCount] = useState<number>(0);
+  const [analyzedCount, setAnalyzedCount] = useState(0);
+
+  // Info: (20260408 - Luphia) Payment workflow states
+  const { workflowStatus, errorMessage, txHash, resetTransaction, executeOrderTransaction } = useOrderTransaction();
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFileData[]>([]);
+  const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
   useEffect(() => {
     return () => {
@@ -92,21 +100,40 @@ export default function JournalUploadView({
     }
   };
 
-  const handleAnalyzeAll = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleAnalyzeAll = async () => {
     if (uploadedFiles.length === 0) return;
 
-    setIsAnalyzing(true);
-    setAnalyzedCount(0);
-    try {
-      // Info: (20260321 - Julian) 依序發送以避免伺服器超載
+    const costPerFile = getAnalysisCost({ category: "journal_upload", periodType: "daily", year: new Date().getFullYear(), periodValue: "" });
+    const totalCost = costPerFile * uploadedFiles.length;
+
+    const payload: IOrderPayload = {
+      category: "journal_upload", 
+      periodType: "daily",
+      periodValue: new Date().toISOString().split("T")[0],
+      year: new Date().getFullYear(),
+      items: [
+        {
+          name: "AI Journal OCR scan (Upload)",
+          unitPrice: costPerFile,
+          quantity: uploadedFiles.length,
+        }
+      ]
+    };
+
+    await executeOrderTransaction(payload, totalCost, async (authData) => {
+      setShowConfirmModal(false);
+      setIsAnalyzing(true);
+      setAnalyzedCount(0);
       for (let i = 0; i < uploadedFiles.length; i++) {
         const fileData = uploadedFiles[i];
         const response = await request<IApiResponse<object>>(
           `/api/v1/user/account_book/${accountBookId}/ai_analysis`,
           {
             method: "POST",
-            body: JSON.stringify({ file: fileData }),
+            body: JSON.stringify({ 
+              file: fileData,
+              authentication: authData
+            }),
           },
         );
         if (response.code === ApiCode.SUCCESS) {
@@ -114,11 +141,9 @@ export default function JournalUploadView({
         }
       }
       onUploadComplete?.();
-    } catch (error) {
-      console.error("Analysis failed:", error);
-    } finally {
-      setIsAnalyzing(false);
-    }
+    });
+
+    setIsAnalyzing(false);
   };
 
   const removeFile = (id: string, e: React.MouseEvent) => {
@@ -181,13 +206,12 @@ export default function JournalUploadView({
 
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
-        className={`flex h-full min-h-[500px] flex-col rounded-2xl border-2 transition-colors lg:h-[calc(100vh-250px)] ${
-          uploadedFiles.length > 0
-            ? "border-transparent bg-white p-4 shadow-[0_0_15px_rgba(0,0,0,0.05)] sm:p-6 lg:p-10"
-            : isDragging
-              ? "items-center justify-center border-dashed border-orange-500 bg-orange-50 p-10 sm:p-20 lg:p-[100px]"
-              : "items-center justify-center border-dashed border-slate-300 bg-white p-10 hover:border-orange-400 hover:bg-slate-50 sm:p-20 lg:p-[100px]"
-        }`}
+        className={`flex h-full min-h-[500px] flex-col rounded-2xl border-2 transition-colors lg:h-[calc(100vh-250px)] ${uploadedFiles.length > 0
+          ? "border-transparent bg-white p-4 shadow-[0_0_15px_rgba(0,0,0,0.05)] sm:p-6 lg:p-10"
+          : isDragging
+            ? "items-center justify-center border-dashed border-orange-500 bg-orange-50 p-10 sm:p-20 lg:p-[100px]"
+            : "items-center justify-center border-dashed border-slate-300 bg-white p-10 hover:border-orange-400 hover:bg-slate-50 sm:p-20 lg:p-[100px]"
+          }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -260,7 +284,7 @@ export default function JournalUploadView({
                 <button
                   type="button"
                   className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-orange-600 hover:shadow focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                  onClick={handleAnalyzeAll}
+                  onClick={(e) => { e.stopPropagation(); setShowConfirmModal(true); }}
                   disabled={isAnalyzing || isUploading}
                 >
                   <Wand2 className="h-4 w-4" />
@@ -285,11 +309,12 @@ export default function JournalUploadView({
                   </button>
                   <div className="relative flex h-32 w-full items-center justify-center overflow-hidden rounded-lg bg-slate-50 transition-colors group-hover:bg-orange-50/50">
                     {fileData.previewUrl ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
+                      <Image
                         src={fileData.previewUrl}
                         alt={fileData.file.name}
-                        className="h-full w-full object-cover"
+                        fill
+                        className="object-cover"
+                        unoptimized={true}
                       />
                     ) : (
                       <div className="flex flex-col items-center text-slate-400 group-hover:text-orange-400">
@@ -340,6 +365,31 @@ export default function JournalUploadView({
           </div>
         )}
       </div>
+
+      <PaymentConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => {
+          if (workflowStatus === 'error' || workflowStatus === 'payment_success') {
+            resetTransaction();
+            setShowConfirmModal(false);
+          } else if (workflowStatus === 'idle') {
+            setShowConfirmModal(false);
+          }
+        }}
+        onConfirm={handleAnalyzeAll}
+        cost={uploadedFiles.length * getAnalysisCost({ category: "journal_upload", periodType: "daily", year: new Date().getFullYear(), periodValue: "" })}
+        title={t("ocr.confirm_analyze_title")}
+        description={t("ocr.confirm_analyze_desc")}
+        confirmBtnText={t("ocr.confirm_btn")}
+        items={[
+          { label: t("ocr.analysis_type"), value: t("ocr.multiple_page_upload") },
+          { label: t("ocr.page_count"), value: `${uploadedFiles.length} ${t("ocr.page_unit")}` },
+        ]}
+        isLoading={workflowStatus !== 'idle' && workflowStatus !== 'payment_success' && workflowStatus !== 'error'}
+        status={workflowStatus}
+        errorMessage={errorMessage}
+        txHash={txHash}
+      />
     </>
   );
 }

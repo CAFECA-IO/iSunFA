@@ -139,12 +139,12 @@ export default function HistorySection() {
       if (companyName.includes('(')) {
         companyName = companyName.split('(')[0].trim();
       }
-      
+
       let filenameStr = localizedType;
       if (companyName) {
         filenameStr += `-${companyName}`;
       }
-      
+
       const filename = `${filenameStr}_${new Date().toISOString().split('T')[0].replace(/-/g, '')}.pdf`;
       await downloadHtmlAsPdf('report-pdf-content', filename);
     } catch (err) {
@@ -557,7 +557,7 @@ export default function HistorySection() {
                         disabled={isDownloading || !selectedReport}
                       >
                         {isDownloading && <Loader2 className="h-4 w-4 animate-spin" />}
-                        {t('calculator.button.download') || 'Download PDF'}
+                        {t('analysis.history.download')}
                       </button>
                       <button
                         type="button"

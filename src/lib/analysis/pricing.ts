@@ -6,6 +6,7 @@ export interface IOrderParams {
   country?: string;
   keyword?: string;
   isExternal?: boolean;
+  items?: { name: string; unitPrice: number; quantity: number }[];
 }
 
 /**
@@ -39,6 +40,10 @@ const BASE_COSTS: Record<string, number> = {
   market_trends: 50,
   industry_development: 50,
   financial_product_rating: 50,
+
+  // Info: (20260408 - Luphia) AI Features
+  ai_talk: 5,
+  journal_upload: 1,
 };
 
 const PERIOD_MULTIPLIERS: Record<string, number> = {
@@ -53,6 +58,11 @@ const PERIOD_MULTIPLIERS: Record<string, number> = {
 export function getAnalysisCost(params: IOrderParams): number {
   const baseCost = BASE_COSTS[params.category] || 10; // Info: (20260128 - Luphia) Default to 10 if unknown
   const multiplier = PERIOD_MULTIPLIERS[params.periodType] || 1;
+  const unitCost = Math.round(baseCost * multiplier);
 
-  return Math.round(baseCost * multiplier);
+  if (params.items && params.items.length > 0) {
+    return params.items.reduce((acc, item) => acc + unitCost * item.quantity, 0);
+  }
+
+  return unitCost;
 }

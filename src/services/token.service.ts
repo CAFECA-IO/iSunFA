@@ -612,7 +612,7 @@ export async function prepareTransferUserOp(
       message: "UserOp prepared",
       data: {
         userOp,
-        userOpHash,
+        userOpHash: userOpHash as string,
       },
     };
   } catch (error) {
@@ -653,3 +653,5 @@ export async function submitSignedUserOp(
     };
   }
 }
+
+

@@ -5,11 +5,14 @@ import Script from "next/script";
 import Image from "next/image";
 import { Loader2, Camera, X, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { uploadFile, fileToBase64 } from "@/lib/file_operator";
+import { useOrderTransaction, IOrderPayload } from "@/hooks/use_order_transaction";
+import { getAnalysisCost } from "@/lib/analysis/pricing";
 
 type UploadedFileData = {
   id: string;
@@ -33,11 +36,15 @@ export default function JournalScanView({
   const [isProcessing, setIsProcessing] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [showFlash, setShowFlash] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const [capturedFiles, setCapturedFiles] = useState<UploadedFileData[]>([]);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [analyzedCount, setAnalyzedCount] = useState<number>(0);
+
+  // Info: (20260408 - Luphia) Payment workflow states
+  const { workflowStatus, errorMessage, txHash, resetTransaction, executeOrderTransaction } = useOrderTransaction();
   const [isDetecting, setIsDetecting] = useState<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -110,13 +117,30 @@ export default function JournalScanView({
     [],
   );
 
-  const handleAnalyzeAll = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleAnalyzeAll = async () => {
     if (capturedFiles.length === 0) return;
 
-    setIsAnalyzing(true);
-    setAnalyzedCount(0);
-    try {
+    const costPerFile = getAnalysisCost({ category: "journal_upload", periodType: "daily", year: new Date().getFullYear(), periodValue: "" });
+    const totalCost = costPerFile * capturedFiles.length;
+
+    const payload: IOrderPayload = {
+      category: "journal_upload", 
+      periodType: "daily",
+      periodValue: new Date().toISOString().split("T")[0],
+      year: new Date().getFullYear(),
+      items: [
+        {
+          name: "AI Journal OCR scan",
+          unitPrice: costPerFile,
+          quantity: capturedFiles.length,
+        }
+      ]
+    };
+
+    await executeOrderTransaction(payload, totalCost, async (authData) => {
+      setShowConfirmModal(false);
+      setIsAnalyzing(true);
+      setAnalyzedCount(0);
       for (let i = 0; i < capturedFiles.length; i++) {
         const fileData = capturedFiles[i];
         const response = await request<IApiResponse<object>>(
@@ -130,7 +154,8 @@ export default function JournalScanView({
                 previewUrl: fileData.previewUrl,
                 hash: fileData.hash,
                 base64: fileData.base64
-              }
+              },
+              authentication: authData
             }),
           },
         );
@@ -138,11 +163,10 @@ export default function JournalScanView({
           setAnalyzedCount((prev) => prev + 1);
         }
       }
-      onScanComplete();
-    } catch (error) {
-      console.error("Analysis failed:", error);
-      setIsAnalyzing(false);
-    }
+      onScanComplete?.();
+    });
+
+    setIsAnalyzing(false);
   };
 
   const removeFile = (id: string, e?: React.MouseEvent) => {
@@ -349,7 +373,7 @@ export default function JournalScanView({
             for (let j = 0; j < 4; j++) {
               pts.push({ x: approx.intPtr(j, 0)[0], y: approx.intPtr(j, 0)[1] });
             }
-            
+
             // Info: (20260404 - Luphia) Calculate lengths of the 4 sides to prevent absurd perspective distortion (like one edge being tiny)
             const sideLengths = [];
             for (let j = 0; j < 4; j++) {
@@ -357,18 +381,18 @@ export default function JournalScanView({
               const p2 = pts[(j + 1) % 4];
               sideLengths.push(Math.hypot(p1.x - p2.x, p1.y - p2.y));
             }
-            
+
             // Info: (20260404 - Luphia) Opposite sides should be at least 40% of each other. If lower, the angle is too extreme.
             const minOpp1 = Math.min(sideLengths[0], sideLengths[2]);
             const maxOpp1 = Math.max(sideLengths[0], sideLengths[2]);
             const minOpp2 = Math.min(sideLengths[1], sideLengths[3]);
             const maxOpp2 = Math.max(sideLengths[1], sideLengths[3]);
-            
+
             const ratio1 = maxOpp1 > 0 ? minOpp1 / maxOpp1 : 0;
             const ratio2 = maxOpp2 > 0 ? minOpp2 / maxOpp2 : 0;
-            
+
             const isValidPerspective = ratio1 > 0.4 && ratio2 > 0.4;
-            
+
             if (isValidPerspective) {
               // Info: (20260404 - Luphia) Evaluate maximum inner angle sharpness
               let maxCos = 0;
@@ -383,7 +407,7 @@ export default function JournalScanView({
                 const cosine = Math.abs((dx1 * dx2 + dy1 * dy2) / Math.sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-6));
                 maxCos = Math.max(maxCos, cosine);
               }
-  
+
               // Info: (20260404 - Luphia) Relaxed max angle distortion to ~36 deg (0.8) since opposite lengths are strictly checked
               if (maxCos < 0.8 && area > maxArea) {
                 maxArea = area;
@@ -763,7 +787,7 @@ export default function JournalScanView({
                 {capturedFiles.length > 0 && (
                   <button
                     className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-orange-600 disabled:opacity-50"
-                    onClick={handleAnalyzeAll}
+                    onClick={(e) => { e.stopPropagation(); setShowConfirmModal(true); }}
                     disabled={isAnalyzing}
                   >
                     <span>{t("ocr.analyze_btn_with_count", { count: capturedFiles.length })}</span>
@@ -877,6 +901,31 @@ export default function JournalScanView({
           )}
         </>
       )}
+
+      <PaymentConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => {
+          if (workflowStatus === 'error' || workflowStatus === 'payment_success') {
+            resetTransaction();
+            setShowConfirmModal(false);
+          } else if (workflowStatus === 'idle') {
+            setShowConfirmModal(false);
+          }
+        }}
+        onConfirm={handleAnalyzeAll}
+        cost={capturedFiles.length}
+        title={t("ocr.confirm_analyze_title")}
+        description={t("ocr.confirm_analyze_desc")}
+        confirmBtnText={t("ocr.confirm_btn")}
+        items={[
+          { label: t("ocr.analysis_type"), value: t("ocr.multiple_page_scan") },
+          { label: t("ocr.page_count"), value: `${capturedFiles.length} ${t("ocr.page_unit")}` },
+        ]}
+        isLoading={workflowStatus !== 'idle' && workflowStatus !== 'payment_success' && workflowStatus !== 'error'}
+        status={workflowStatus}
+        errorMessage={errorMessage}
+        txHash={txHash}
+      />
     </div>
   );
 }

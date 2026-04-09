@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/i18n/i18n_context";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -37,10 +38,10 @@ const CashFlowSection = ({
 }) => {
   return (
     <div className={`mb-6 print:mb-2 print:break-inside-avoid ${isMainTotal ? "mt-4" : ""}`}>
-      <div className="mb-2 flex items-center justify-between rounded-lg bg-slate-200 px-3 py-2">
-        <span className="font-bold text-slate-700">{titleText}</span>
+      <div className="mb-2 flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 shadow-none">
+        <span className="font-bold text-gray-700">{titleText}</span>
         <span
-          className={`font-bold print:text-sm ${titleValue >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+          className={"text-base font-bold text-gray-900 print:text-sm"}
         >
           {titleValue >= 0 ? "" : "-"}${numberWithCommas(Math.abs(titleValue))}
         </span>
@@ -54,13 +55,13 @@ const CashFlowSection = ({
           return (
             <div
               key={`${item.name}-${idx}`}
-              className="flex items-center justify-between border-b border-slate-50 py-2"
+              className="flex items-center justify-between border-b border-gray-50 py-2"
             >
               <div className="flex w-2/3 flex-col">
-                <span className="text-[15px] font-medium text-slate-600 print:text-sm">
+                <span className="text-[15px] font-medium text-gray-600 print:text-sm">
                   {item.name}
                 </span>
-                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                   <div
                     className={`h-full rounded-full ${isNegative ? "bg-rose-400" : barColor}`}
                     style={{
@@ -71,12 +72,12 @@ const CashFlowSection = ({
               </div>
               <div className="flex flex-col items-end">
                 <span
-                  className={`text-base font-medium print:text-sm ${isNegative ? "text-rose-600" : "text-slate-700"}`}
+                  className={"text-base font-bold text-gray-900 print:text-sm"}
                 >
                   {isNegative ? "-" : ""}
                   {numberWithCommas(displayAmount)}
                 </span>
-                <span className="text-[10px] font-bold text-slate-400">
+                <span className="text-[10px] font-bold text-gray-400">
                   {percentage.toFixed(1)}%
                 </span>
               </div>
@@ -90,6 +91,7 @@ const CashFlowSection = ({
 
 export default function CashFlowSheetView({ period, year }: { period: ReportPeriod; year: number }) {
   const params = useParams();
+  const { t } = useTranslation();
   const accountBookId = params?.account_book_id as string;
 
   const [reportData, setReportData] = useState<ICashFlowStatement | null>(null);
@@ -123,8 +125,8 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
   if (isLoading) {
     return (
       <ReportLoadingPlaceholder
-        title="正在為您生成現金流量表"
-        description="系統正在結算營業活動、投資活動與融資活動的現金流量，並計算相關財務指標，請稍候..."
+        title={t("cash_flow_statement_view.loading_title")}
+        description={t("cash_flow_statement_view.loading_desc")}
       />
     );
   }
@@ -132,8 +134,8 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
   if (!reportData || Object.keys(reportData).length === 0) {
     return (
       <ReportErrorPlaceholder
-        title="現金流量表生成失敗"
-        description="請確認該期間內是否有足夠的核發傳票資料，或是稍後再重新嘗試。"
+        title={t("cash_flow_statement_view.error_title")}
+        description={t("cash_flow_statement_view.error_desc")}
       />
     );
   }
@@ -144,61 +146,61 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
   // Info: (20260401 - Julian) 關鍵指標註解
   const cashFlowNotes: IReportNote[] = [
     {
-      title: "自由現金流 (Free Cash Flow)",
-      type: "流動性",
-      mainDesc: "自由現金流 = 營業現金流 - 資本支出。",
+      title: t("cash_flow_statement_view.metric_fcf_title"),
+      type: t("cash_flow_statement_view.note_fcf_type"),
+      mainDesc: t("cash_flow_statement_view.note_fcf_main"),
       subDesc:
-        "衡量企業扣除資本支出後可自由運用的現金，建議大於 0，表示償債能力良好。",
+        t("cash_flow_statement_view.note_fcf_sub"),
     },
     {
-      title: "營業現金流對流動負債比率",
-      type: "償債能力",
-      mainDesc: "營業現金流對流動負債比率 = 營業現金流 / 流動負債。",
-      subDesc: "衡量企業短期償還債務的能力，建議大於 100% ，表示償債能力良好。",
+      title: t("cash_flow_statement_view.metric_ocf_ratio_title"),
+      type: t("cash_flow_statement_view.note_ocf_ratio_type"),
+      mainDesc: t("cash_flow_statement_view.note_ocf_ratio_main"),
+      subDesc: t("cash_flow_statement_view.note_ocf_ratio_sub"),
     },
     {
-      title: "現金流量對總資產比率",
-      type: "償債能力",
-      mainDesc: "現金流量對總資產比率 = 營業現金流 / 總資產。",
+      title: t("cash_flow_statement_view.metric_cf_adequacy_title"),
+      type: t("cash_flow_statement_view.note_ocf_ratio_type"),
+      mainDesc: t("cash_flow_statement_view.note_cf_adequacy_main"),
       subDesc:
-        "衡量企業營業現金是否足以支應資本支出及還債，建議大於 100%，表示償債能力良好。",
+        t("cash_flow_statement_view.note_cf_adequacy_sub"),
     },
     {
-      title: "期末現金餘額",
-      type: "償債能力",
-      mainDesc: "期末現金餘額 = 營業現金流 + 投資現金流 + 融資現金流。",
-      subDesc: "衡量企業本期結束時的現金部位，建議大於 0 ，表示償債能力良好。",
+      title: t("cash_flow_statement_view.metric_ending_balance_title"),
+      type: t("cash_flow_statement_view.note_ocf_ratio_type"),
+      mainDesc: t("cash_flow_statement_view.note_ending_balance_main"),
+      subDesc: t("cash_flow_statement_view.note_ending_balance_sub"),
     },
   ];
 
   // Info: (20260401 - Julian) 現金流量表關鍵指標
   const cashFlowKeyMetricsData = [
     {
-      title: "自由現金流 (Free Cash Flow)",
+      title: t("cash_flow_statement_view.metric_fcf_title"),
       value: `$${numberWithCommas(metrics.freeCashFlow)}`,
-      description: "企業扣除資本支出後可自由運用的現金",
-      textColor: "text-cyan-600",
+      description: t("cash_flow_statement_view.metric_fcf_desc"),
+      textColor: "text-gray-900",
       statusGood: metrics.freeCashFlow >= 0,
     },
     {
-      title: "營業現金流對流動負債比率",
+      title: t("cash_flow_statement_view.metric_ocf_ratio_title"),
       value: `${metrics.operatingCashFlowRatio.toFixed(1)}%`,
-      description: "短期償還債務的能力",
-      textColor: "text-indigo-600",
+      description: t("cash_flow_statement_view.metric_ocf_ratio_desc"),
+      textColor: "text-gray-900",
       statusGood: metrics.operatingCashFlowRatio >= 100,
     },
     {
-      title: "現金流量對總資產比率",
+      title: t("cash_flow_statement_view.metric_cf_adequacy_title"),
       value: `${metrics.cashFlowAdequacyRatio.toFixed(1)}%`,
-      description: "營業現金是否足以支應資本支出及還債",
-      textColor: "text-amber-600",
+      description: t("cash_flow_statement_view.metric_cf_adequacy_desc"),
+      textColor: "text-gray-900",
       statusGood: metrics.cashFlowAdequacyRatio >= 100,
     },
     {
-      title: "期末現金餘額",
+      title: t("cash_flow_statement_view.metric_ending_balance_title"),
       value: `$${numberWithCommas(summary.endingBalance)}`,
-      description: "本期結束時的現金部位",
-      textColor: "text-slate-700",
+      description: t("cash_flow_statement_view.metric_ending_balance_desc"),
+      textColor: "text-gray-900",
       statusGood: summary.endingBalance >= 0,
     },
   ];
@@ -236,40 +238,38 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
       })}
     </div>
   ) : (
-    <div className="flex h-[150px] w-full items-center justify-center rounded-2xl bg-white p-5">
+    <div className="flex h-[150px] w-full items-center justify-center rounded-xl bg-white p-5">
       <LoadingPing size={40} />
     </div>
   );
 
   const operatingInvestingSection = activities ? (
     <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
-      <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4 box-decoration-clone">
-        <div className="mb-4 flex items-end justify-between border-b-2 border-slate-200 pb-3">
-          <span className="text-lg font-black tracking-wider text-slate-800 uppercase">
-            營業與投資活動
-          </span>
-          <span className="text-sm font-bold text-slate-400">佔比%</span>
+      <div className="flex-1 rounded-xl border border-gray-100 bg-white p-6  print:p-4 box-decoration-clone">
+        <div className="mb-4 flex items-end justify-between border-b border-gray-200 pb-3">
+          <span className="text-lg font-black tracking-wider text-gray-800 uppercase">{t("cash_flow_statement_view.section_op_inv")}</span>
+          <span className="text-sm font-bold text-gray-400">{t("cash_flow_statement_view.section_ratio")}</span>
         </div>
 
         <CashFlowSection
-          titleText="營業活動之現金流量"
+          titleText={t("cash_flow_statement_view.section_operating")}
           titleValue={activities.operating.total}
           items={activities.operating.items}
           totalAbsolute={operatingAbsolute}
-          barColor="bg-emerald-400"
+          barColor="bg-gray-300"
         />
 
         <CashFlowSection
-          titleText="投資活動之現金流量"
+          titleText={t("cash_flow_statement_view.section_investing")}
           titleValue={activities.investing.total}
           items={activities.investing.items}
           totalAbsolute={investingAbsolute}
-          barColor="bg-blue-400"
+          barColor="bg-gray-200"
         />
       </div>
     </div>
   ) : (
-    <div className="flex h-[400px] w-full items-center justify-center rounded-2xl bg-white p-5">
+    <div className="flex h-[400px] w-full items-center justify-center rounded-xl bg-white p-5">
       <LoadingPing size={40} />
     </div>
   );
@@ -277,46 +277,38 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
   const financingCashFlowSection =
     activities && summary && supplementary ? (
       <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
-        <div className="flex-1 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm print:p-4 box-decoration-clone">
-          <div className="mb-4 flex items-end justify-between border-b-2 border-slate-200 pb-3">
-            <span className="text-lg font-black tracking-wider text-slate-800 uppercase">
-              籌資活動與現金變動
-            </span>
-            <span className="text-sm font-bold text-slate-400">佔比%</span>
+        <div className="flex-1 rounded-xl border border-gray-100 bg-white p-6  print:p-4 box-decoration-clone">
+          <div className="mb-4 flex items-end justify-between border-b border-gray-200 pb-3">
+            <span className="text-lg font-black tracking-wider text-gray-800 uppercase">{t("cash_flow_statement_view.section_fin_change")}</span>
+            <span className="text-sm font-bold text-gray-400">{t("cash_flow_statement_view.section_ratio")}</span>
           </div>
 
           <CashFlowSection
-            titleText="籌資活動之現金流量"
+            titleText={t("cash_flow_statement_view.section_financing")}
             titleValue={activities.financing.total}
             items={activities.financing.items}
             totalAbsolute={financingAbsolute}
-            barColor="bg-amber-400"
+            barColor="bg-gray-300"
           />
 
-          <div className="mt-8 rounded-xl border border-slate-100 bg-slate-50 p-4 print:break-inside-avoid">
-            <div className="flex items-center justify-between border-b border-slate-200 py-2">
-              <span className="text-sm font-bold text-slate-500">
-                期初現金及約當現金餘額
-              </span>
-              <span className="font-medium text-slate-700">
+          <div className="mt-8 rounded-xl border border-gray-100 bg-gray-50 p-4 print:break-inside-avoid">
+            <div className="flex items-center justify-between border-b border-gray-200 py-2">
+              <span className="text-sm font-bold text-gray-500">{t("cash_flow_statement_view.section_beginning_balance")}</span>
+              <span className="font-medium text-gray-700">
                 ${numberWithCommas(summary.beginningBalance)}
               </span>
             </div>
-            <div className="flex items-center justify-between border-b border-slate-200 py-2">
-              <span className="text-sm font-bold text-slate-500">
-                本期現金及約當現金增加(減少)數
-              </span>
+            <div className="flex items-center justify-between border-b border-gray-200 py-2">
+              <span className="text-sm font-bold text-gray-500">{t("cash_flow_statement_view.section_net_change")}</span>
               <span
-                className={`font-bold ${summary.netIncreaseDecrease >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                className={"font-bold text-gray-900"}
               >
                 {summary.netIncreaseDecrease >= 0 ? "" : "-"}$
                 {numberWithCommas(Math.abs(summary.netIncreaseDecrease))}
               </span>
             </div>
-            <div className="mt-2 flex items-center justify-between rounded-lg bg-slate-800 px-4 py-3 text-white">
-              <span className="text-base font-black">
-                期末現金及約當現金餘額
-              </span>
+            <div className="mt-2 flex items-center justify-between rounded-xl bg-gray-900 px-6 p-6 text-white">
+              <span className="text-base font-black">{t("cash_flow_statement_view.section_ending_balance")}</span>
               <span className="text-xl font-black">
                 ${numberWithCommas(summary.endingBalance)}
               </span>
@@ -324,20 +316,16 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
           </div>
 
           {/* Info: (20260330 - Julian) 補充揭露 */}
-          <div className="mt-8 flex justify-around rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 print:break-inside-avoid">
+          <div className="mt-8 flex justify-around rounded-xl border border-gray-100 bg-gray-50 p-4 print:break-inside-avoid">
             <div className="text-center">
-              <div className="mb-1 text-xs font-bold text-indigo-400">
-                本期支付利息
-              </div>
-              <div className="font-semibold text-indigo-700">
+              <div className="mb-1 text-xs font-bold text-gray-500">{t("cash_flow_statement_view.section_interest_paid")}</div>
+              <div className="font-semibold text-gray-900">
                 ${numberWithCommas(supplementary.interestPaid)}
               </div>
             </div>
-            <div className="border-l-2 border-indigo-100 pl-8 text-center">
-              <div className="mb-1 text-xs font-bold text-indigo-400">
-                本期支付所得稅
-              </div>
-              <div className="font-semibold text-indigo-700">
+            <div className="border-l-2 border-gray-200 pl-8 text-center">
+              <div className="mb-1 text-xs font-bold text-gray-500">{t("cash_flow_statement_view.section_taxes_paid")}</div>
+              <div className="font-semibold text-gray-900">
                 ${numberWithCommas(supplementary.taxesPaid)}
               </div>
             </div>
@@ -345,7 +333,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
         </div>
       </div>
     ) : (
-      <div className="flex h-[400px] w-full items-center justify-center rounded-2xl bg-white p-5">
+      <div className="flex h-[400px] w-full items-center justify-center rounded-xl bg-white p-5">
         <LoadingPing size={40} />
       </div>
     );
@@ -361,7 +349,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
         {financingCashFlowSection}
       </div>
 
-      {/* Info: (20260401 - Julian) 財務指標註解與判斷標準（列印時顯示） */}
+      {/* Info: (20260401 - Julian) 財務指標註解與判斷標準 */}
       <ReportPrintNote notes={cashFlowNotes} />
     </div>
   );

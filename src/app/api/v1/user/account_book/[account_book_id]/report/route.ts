@@ -102,13 +102,12 @@ export async function GET(
       return jsonOk({ report });
     }
 
-    // Info: (20260331 - Julian) 建立傳票查詢條件
+    // Info: (20260408 - Luphia) 資產負債表是從開立帳簿以來的累積餘額，因此不應限制 gte 起始日；損益表與現金流量表則是計算當期發生額，因此需限制 gte。
     const where: Prisma.VoucherWhereInput = {
       accountBookId,
       isVerified: true, // Info: (20260331 - Julian) 僅取得「已核對」
       tradingDate: {
-        // Info: (20260331 - Julian) 取得期間內的傳票
-        gte: getTradingDateRange().start,
+        ...(reportType !== ReportType.BALANCE_SHEET && { gte: getTradingDateRange().start }),
         lte: getTradingDateRange().end,
       },
     };
