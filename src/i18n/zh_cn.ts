@@ -600,6 +600,42 @@ export const zhCn = {
     form_esg_industry: "产业分类 (ESG, 选填)",
     submit: "确认",
   },
+  billing: {
+    subtitle: "管理您的消费纪录、帐户点数与付款方式。",
+    tabs: {
+      orders: "消费纪录",
+      points: "点数纪录",
+      cards: "信用卡管理",
+    },
+    orders: {
+      empty: "尚无消费纪录",
+    },
+    points: {
+      empty: "尚无点数纪录",
+    },
+    cards: {
+      title: "已绑定信用卡",
+      add_button: "新增信用卡",
+      empty: "尚未绑定任何信用卡",
+      default_card: "默认卡片",
+      added_at: "新增于",
+    },
+    table: {
+      date: "日期",
+      order_id: "订单编号",
+      amount: "付款金额",
+      status: "状态",
+      source: "来源 / 项目",
+      amount_change: "点数异动",
+    },
+    point_history: {
+      source_purchase: "购买点数",
+      source_analysis: "分析服务使用",
+      source_chat: "AI 咨询服务",
+      source_checkin: "每日签到奖励",
+      source_registration: "注册奖励"
+    }
+  },
   sidebar: {
     modules: "功能模块",
     system: "系统设置",

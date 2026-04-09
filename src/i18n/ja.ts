@@ -610,6 +610,42 @@ export const ja = {
     form_esg_industry: "業界分類 (ESG、任意)",
     submit: "確認",
   },
+  billing: {
+    subtitle: "消費履歴、アカウントポイント、支払い方法を管理します。",
+    tabs: {
+      orders: "消費履歴",
+      points: "ポイント履歴",
+      cards: "クレジットカード管理",
+    },
+    orders: {
+      empty: "消費履歴がありません",
+    },
+    points: {
+      empty: "ポイント履歴がありません",
+    },
+    cards: {
+      title: "登録済みのクレジットカード",
+      add_button: "カードを追加",
+      empty: "クレジットカードが登録されていません",
+      default_card: "デフォルト",
+      added_at: "登録日",
+    },
+    table: {
+      date: "日付",
+      order_id: "注文番号",
+      amount: "支払金額",
+      status: "ステータス",
+      source: "ソース / 項目",
+      amount_change: "ポイント変動",
+    },
+    point_history: {
+      source_purchase: "ポイント購入",
+      source_analysis: "分析サービス利用",
+      source_chat: "AI相談サービス",
+      source_checkin: "チェックイン報酬",
+      source_registration: "登録報酬"
+    }
+  },
   sidebar: {
     modules: "機能モジュール",
     system: "システム設定",

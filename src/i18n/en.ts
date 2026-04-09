@@ -611,6 +611,42 @@ export const en = {
     form_esg_industry: "Industry Category (ESG, Optional)",
     submit: "Confirm",
   },
+  billing: {
+    subtitle: "Manage your consumption records, account points, and payment methods.",
+    tabs: {
+      orders: "Consumption Records",
+      points: "Points Log",
+      cards: "Credit Card Management",
+    },
+    orders: {
+      empty: "No consumption records yet",
+    },
+    points: {
+      empty: "No points log yet",
+    },
+    cards: {
+      title: "Bound Credit Cards",
+      add_button: "Add Credit Card",
+      empty: "No credit cards bound yet",
+      default_card: "Default",
+      added_at: "Added at",
+    },
+    table: {
+      date: "Date",
+      order_id: "Order ID",
+      amount: "Amount",
+      status: "Status",
+      source: "Source / Item",
+      amount_change: "Points Change",
+    },
+    point_history: {
+      source_purchase: "Points Purchase",
+      source_analysis: "Analysis Service Usage",
+      source_chat: "AI Consultation Usage",
+      source_checkin: "Daily Check-in Reward",
+      source_registration: "Registration Reward"
+    }
+  },
   sidebar: {
     modules: "Modules",
     system: "System",

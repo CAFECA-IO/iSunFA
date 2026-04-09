@@ -641,6 +641,42 @@ export const zhTw = {
     form_esg_industry: "產業分類 (ESG, 選填)",
     submit: "確認",
   },
+  billing: {
+    subtitle: "管理您的消費紀錄、帳戶點數與付款方式。",
+    tabs: {
+      orders: "消費紀錄",
+      points: "點數紀錄",
+      cards: "信用卡管理",
+    },
+    orders: {
+      empty: "尚無消費紀錄",
+    },
+    points: {
+      empty: "尚無點數紀錄",
+    },
+    cards: {
+      title: "已綁定信用卡",
+      add_button: "新增信用卡",
+      empty: "尚未綁定任何信用卡",
+      default_card: "預設卡片",
+      added_at: "新增於",
+    },
+    table: {
+      date: "日期",
+      order_id: "訂單編號",
+      amount: "付款金額",
+      status: "狀態",
+      source: "來源 / 項目",
+      amount_change: "點數異動",
+    },
+    point_history: {
+      source_purchase: "購買點數",
+      source_analysis: "分析服務使用",
+      source_chat: "AI 諮詢服務",
+      source_checkin: "每日簽到獎勵",
+      source_registration: "註冊獎勵"
+    }
+  },
   sidebar: {
     modules: "功能模組",
     system: "系統設定",

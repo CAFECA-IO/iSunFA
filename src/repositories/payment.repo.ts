@@ -244,6 +244,18 @@ export class PaymentRepository {
     });
   }
 
+  async getOrdersByUserId(userId: string, type?: string | null) {
+    return prisma.order.findMany({
+      where: {
+        userId,
+        ...(type ? { type } : {}),
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
   async getPaymentMethodsByUserId(userId: string, provider: string) {
     return prisma.paymentMethod.findMany({
       where: { userId, provider },

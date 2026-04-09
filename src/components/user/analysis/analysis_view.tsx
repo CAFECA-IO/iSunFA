@@ -73,7 +73,7 @@ export default function AnalysisView() {
 
   // Info: (20260409) Account Book Tax ID Modal states
   const [isTaxIdModalOpen, setIsTaxIdModalOpen] = useState(false);
-  const [pendingAccountBook, setPendingAccountBook] = useState<{id: string, name: string} | null>(null);
+  const [pendingAccountBook, setPendingAccountBook] = useState<{ id: string, name: string } | null>(null);
   const [taxIdInput, setTaxIdInput] = useState('');
   const [isUpdatingTaxId, setIsUpdatingTaxId] = useState(false);
 
@@ -752,7 +752,7 @@ export default function AnalysisView() {
         <HistorySection />
       )}
 
-      {/* Info: (20260409) Tax ID Edit Modal */}
+      {/* Info: (20260409 - Luphia) Tax ID Edit Modal */}
       <Dialog open={isTaxIdModalOpen} onClose={() => !isUpdatingTaxId && setIsTaxIdModalOpen(false)} className="relative z-50">
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         <div className="fixed inset-0 overflow-y-auto">
@@ -762,11 +762,14 @@ export default function AnalysisView() {
                 {t('account_book_selection.form_enterprise_id') || '統一編號 (Tax ID)'}
               </h3>
               <p className="text-sm text-gray-500 mb-4">
-                {t('analysis.company_input.missing_tax_id_desc', { name: pendingAccountBook?.name })}
+                {t('analysis.company_input.missing_tax_id_desc', { name: pendingAccountBook?.name || '' })}
               </p>
               <div className="space-y-4">
                 <div>
                   <input
+                    id="taxIdInput"
+                    name="taxIdInput"
+                    aria-label="Tax ID"
                     type="text"
                     value={taxIdInput}
                     onChange={(e) => setTaxIdInput(e.target.value)}

@@ -600,6 +600,42 @@ export const ko = {
     form_esg_industry: "산업 분류 (ESG, 선택 시)",
     submit: "확인",
   },
+  billing: {
+    subtitle: "소비 기록, 계정 포인트, 결제 수단을 관리하세요.",
+    tabs: {
+      orders: "소비 기록",
+      points: "포인트 기록",
+      cards: "신용카드 관리",
+    },
+    orders: {
+      empty: "소비 기록이 없습니다",
+    },
+    points: {
+      empty: "포인트 기록이 없습니다",
+    },
+    cards: {
+      title: "등록된 신용카드",
+      add_button: "신용카드 추가",
+      empty: "등록된 신용카드가 없습니다",
+      default_card: "기본 카드",
+      added_at: "추가됨:",
+    },
+    table: {
+      date: "날짜",
+      order_id: "주문 번호",
+      amount: "결제 금액",
+      status: "상태",
+      source: "출처 / 항목",
+      amount_change: "포인트 변동",
+    },
+    point_history: {
+      source_purchase: "포인트 구매",
+      source_analysis: "분석 서비스 이용",
+      source_chat: "AI 상담 서비스",
+      source_checkin: "일일 출석 보상",
+      source_registration: "가입 보상"
+    }
+  },
   sidebar: {
     modules: "기능 모듈",
     system: "시스템 설정",
