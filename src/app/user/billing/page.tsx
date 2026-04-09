@@ -364,15 +364,15 @@ export default function BillingPage() {
             ) : (
               <div className="flex flex-col gap-4">
                 {paymentMethods.map((pm, index) => (
-                  <div key={pm.id} className="flex flex-col border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden bg-white dark:bg-black/20">
+                  <div key={pm.id} className="flex flex-col bg-white rounded-2xl shadow-sm ring-1 ring-gray-200/50 hover:shadow-md transition-all duration-300 overflow-hidden">
                     {/* Info: (20260409 - Luphia) Main Card Header */}
                     <div
-                      className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-black/30 transition-colors"
+                      className="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
                       onClick={() => toggleExpandCard(pm.id)}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-10 bg-gradient-to-br from-slate-700 to-slate-900 rounded flex items-center justify-center text-white text-xs font-bold shadow-inner">
-                          <span className="italic opacity-80">{pm.provider}</span>
+                      <div className="flex items-center gap-5">
+                        <div className="flex h-12 w-16 items-center justify-center rounded-lg bg-orange-600 shadow-sm">
+                          <span className="text-white text-sm font-bold tracking-wider italic">{pm.provider}</span>
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -382,11 +382,11 @@ export default function BillingPage() {
                                 value={editingCardName}
                                 onChange={(e) => setEditingCardName(e.target.value)}
                                 onClick={(e) => e.stopPropagation()}
-                                className="text-sm border border-gray-300 rounded px-2 py-1 bg-white outline-none focus:ring-1 focus:ring-orange-500"
+                                className="text-sm border border-gray-300 rounded px-2 py-1 bg-white outline-none focus:ring-1 focus:ring-orange-500 text-gray-900"
                                 placeholder={t('billing.cards.rename', { defaultValue: 'Rename' })}
                               />
                             ) : (
-                              <span className="font-medium text-gray-900 dark:text-gray-100">
+                              <span className="font-semibold text-gray-900 text-lg">
                                 {pm.data?.name || String(index + 1).padStart(3, '0')}
                               </span>
                             )}
@@ -445,32 +445,32 @@ export default function BillingPage() {
 
                     {/* Info: (20260409 - Luphia) Accordion Content */}
                     {expandedCardId === pm.id && (
-                      <div className="border-t border-gray-100 dark:border-[#333] bg-gray-50/50 dark:bg-black/10 p-0">
+                      <div className="border-t border-gray-100 bg-gray-50/50 p-2">
                         {loadingTransactions ? (
                           <div className="flex justify-center items-center h-24">
-                            <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                            <Loader2 className="w-5 h-5 animate-spin text-orange-600" />
                           </div>
                         ) : cardTransactions.length === 0 ? (
-                          <div className="flex flex-col justify-center items-center h-24 text-gray-400 text-sm">
+                          <div className="flex flex-col justify-center items-center h-24 text-gray-500 text-sm">
                             {t('billing.orders.empty')}
                           </div>
                         ) : (
                           <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm whitespace-nowrap">
-                              <thead className="text-gray-500 bg-white dark:bg-transparent">
+                              <thead className="text-gray-500 bg-transparent">
                                 <tr>
-                                  <th className="px-6 py-3 font-medium">{t('billing.table.date')}</th>
-                                  <th className="px-6 py-3 font-medium">{t('billing.table.amount')}</th>
-                                  <th className="px-6 py-3 font-medium">{t('billing.table.status')}</th>
+                                  <th className="px-6 py-4 font-medium">{t('billing.table.date')}</th>
+                                  <th className="px-6 py-4 font-medium">{t('billing.table.amount')}</th>
+                                  <th className="px-6 py-4 font-medium">{t('billing.table.status')}</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-gray-100 dark:divide-[#333]">
+                              <tbody className="divide-y divide-gray-100">
                                 {cardTransactions.map(tx => (
-                                  <tr key={tx.id} className="hover:bg-white dark:hover:bg-black/30 transition-colors">
-                                    <td className="px-6 py-3 text-gray-600">
+                                  <tr key={tx.id} className="hover:bg-white transition-colors">
+                                    <td className="px-6 py-4 text-gray-600">
                                       {formatDate(tx.createdAt, 'yyyy-MM-dd HH:mm')}
                                     </td>
-                                    <td className="px-6 py-3 font-medium text-gray-900 dark:text-gray-100">
+                                    <td className="px-6 py-4 font-medium text-gray-900">
                                       NT$ {tx.amount.toLocaleString()}
                                     </td>
                                     <td className="px-6 py-3">

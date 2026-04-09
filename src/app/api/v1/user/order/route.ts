@@ -94,7 +94,10 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get("type");
+    let type = searchParams.get("type");
+    if (type === "PAYMENT") {
+      type = "OEN_PAYMENT";
+    }
 
     const orders = await orderService.getOrdersByUserId(user.id, type);
 
