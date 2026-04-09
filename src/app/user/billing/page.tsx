@@ -13,6 +13,12 @@ interface IOrder {
   createdAt: string;
   amount: number;
   status: string;
+  type?: string;
+  cardInfo?: {
+    type_name?: string;
+    bin_code?: string;
+    last_four?: string;
+  } | null;
 }
 
 interface IPointHistory {
@@ -179,8 +185,25 @@ export default function BillingPage() {
                         <td className="px-6 py-4 text-gray-600">
                           {formatDate(order.createdAt, 'yyyy-MM-dd HH:mm')}
                         </td>
-                        <td className="px-6 py-4 text-gray-900 font-mono text-xs">
-                          {order.id}
+                        <td className="px-6 py-4">
+                          <div className="font-mono text-xs text-gray-900 mb-1">
+                            {order.id}
+                          </div>
+                          {order.type === 'OEN_PAYMENT' || order.type === 'PAYMENT' ? (
+                            <div className="text-xs text-gray-500">
+                              {t('billing.point_history.source_purchase')}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-gray-500">
+                              {t('billing.point_history.source_analysis', { defaultValue: '服務消費' })}
+                            </div>
+                          )}
+                          {order.cardInfo && (
+                            <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                              <CreditCard className="w-3 h-3" />
+                              {order.cardInfo.type_name} ••••{order.cardInfo.last_four}
+                            </div>
+                          )}
                         </td>
                         <td className="px-6 py-4 font-medium text-gray-900">
                           NT$ {order.amount.toLocaleString()}
@@ -290,8 +313,8 @@ export default function BillingPage() {
                     </div>
                     <div className="space-y-4 relative z-10">
                       <div className="text-sm text-gray-400">Card Token</div>
-                      <div className="font-mono text-lg tracking-widest truncate" title={pm.token}>
-                        •••• •••• •••• {pm.token.substring(pm.token.length - 4)}
+                      <div className="font-mono text-lg tracking-widest truncate" title={pm.token || ''}>
+                        •••• •••• •••• {pm.token && pm.token.length >= 4 ? pm.token.substring(pm.token.length - 4) : '****'}
                       </div>
                     </div>
                     <div className="mt-6 flex justify-between items-center text-xs text-gray-400 relative z-10">

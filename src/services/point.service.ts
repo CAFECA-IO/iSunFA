@@ -12,7 +12,7 @@ export class PointService {
     const history = [];
 
     for (const order of orders) {
-      if (order.type === "PAYMENT") {
+      if (order.type === "PAYMENT" || order.type === "OEN_PAYMENT") {
         const data = order.data as { credits?: number } | null | undefined;
         if (data && data.credits) {
           history.push({

@@ -250,9 +250,28 @@ export class PaymentRepository {
         userId,
         ...(type ? { type } : {}),
       },
+      include: {
+        paymentTransactions: {
+          include: {
+            paymentMethod: true,
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 1
+        }
+      },
       orderBy: {
         createdAt: "desc",
       },
+    });
+  }
+
+  async getPaymentTransactionsByUserId(userId: string) {
+    return prisma.paymentTransaction.findMany({
+      where: { userId },
+      include: { order: true },
+      orderBy: { createdAt: "desc" },
     });
   }
 
