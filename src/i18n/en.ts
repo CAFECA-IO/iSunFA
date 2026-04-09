@@ -1150,7 +1150,7 @@ export const en = {
     },
     log_view: {
       title: "Audit Logs",
-      refresh: "Refresh",
+      type: "Type",
       record_time: "Record Time",
       action_type: "Action Type",
       operator: "Operator",

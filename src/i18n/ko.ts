@@ -1094,7 +1094,7 @@ export const ko = {
     },
     log_view: {
       title: "변경 내역",
-      refresh: "새로고침",
+      type: "변경 항목",
       record_time: "기록 시간",
       action_type: "작업 유형",
       operator: "작업자",

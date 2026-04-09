@@ -1161,7 +1161,7 @@ export const zhTw = {
     },
     log_view: {
       title: "異動紀錄",
-      refresh: "重新整理",
+      type: "異動項目",
       record_time: "紀錄時間",
       action_type: "操作類型",
       operator: "操作人員",

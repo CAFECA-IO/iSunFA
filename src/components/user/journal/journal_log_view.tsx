@@ -97,7 +97,8 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
 
   return (
     <tr className="border-b border-gray-100 odd:bg-white even:bg-slate-50">
-      <td className="px-3 py-4 sm:px-6">
+      {/* Info: (20260409 - Julian) 異動項目(Desktop) */}
+      <td className="hidden px-3 py-4 sm:table-cell sm:px-6">
         <span
           className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap uppercase sm:text-sm ${getDataTypeColor(
             log.dataType,
@@ -106,7 +107,8 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
           {getDataTypeLabel(log.dataType)}
         </span>
       </td>
-      <td className="px-3 py-4 sm:px-6">
+      {/* Info: (20260409 - Julian) 動作(Desktop) */}
+      <td className="hidden px-3 py-4 sm:table-cell sm:px-6">
         <span
           className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap sm:text-sm ${getActionColor(
             log.action,
@@ -114,6 +116,25 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
         >
           {getActionLabel(log.action)}
         </span>
+      </td>
+      {/* Info: (20260409 - Julian) 異動項目 / 動作(Mobile) */}
+      <td className="table-cell px-3 py-4 sm:hidden sm:px-6">
+        <div className="flex flex-col gap-2">
+          <span
+            className={`inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap uppercase sm:text-sm ${getDataTypeColor(
+              log.dataType,
+            )}`}
+          >
+            {getDataTypeLabel(log.dataType)}
+          </span>
+          <span
+            className={`inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap sm:text-sm ${getActionColor(
+              log.action,
+            )}`}
+          >
+            {getActionLabel(log.action)}
+          </span>
+        </div>
       </td>
       <td className="px-3 py-4 text-xs font-medium text-gray-900 sm:px-6 sm:text-sm">
         {dateStrForDesktop}
@@ -208,14 +229,14 @@ export default function JournalLogView() {
         </h2>
 
         {/* Info: (20260407 - Julian) Filter */}
-        <div className="flex items-center gap-8 p-4">
+        <div className="flex flex-col items-center gap-x-8 gap-y-4 sm:flex-row sm:p-4">
           {/* Info: (20260407 - Julian) Type Filter */}
           <select
             value={dataType}
             onChange={(e) => setDataType(e.target.value)}
             className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
           >
-            <option value="">{t("全部項目")}</option>
+            <option value="">{t("common.all")}</option>
             <option value={AuditLogDataType.JOURNAL}>
               {t("verify.type.journal")}
             </option>
@@ -229,7 +250,7 @@ export default function JournalLogView() {
 
           {/* Info: (20260407 - Julian) Date Picker */}
           <div className="flex w-full items-center gap-2 lg:w-auto">
-            <div className="flex w-full flex-col items-stretch gap-2 text-sm sm:flex-row sm:items-center">
+            <div className="flex w-full items-center gap-2 text-sm">
               <input
                 type="date"
                 aria-label="Start Date"
@@ -238,7 +259,7 @@ export default function JournalLogView() {
                 onChange={(e) => setStartDate(e.target.value)}
                 className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
               />
-              <span className="hidden text-gray-400 sm:block">-</span>
+              <span className="text-gray-400">-</span>
               <input
                 type="date"
                 aria-label="End Date"
@@ -257,11 +278,26 @@ export default function JournalLogView() {
         <table className="w-full text-left font-sans text-sm text-gray-600">
           <thead className="bg-slate-100 text-xs font-semibold text-gray-600 uppercase sm:text-base">
             <tr>
-              <th scope="col" className="px-3 py-4 sm:px-6">
-                {t("異動項目")}
+              {/* Info: (20260409 - Julian) 異動項目(Desktop) */}
+              <th
+                scope="col"
+                className="hidden px-3 py-4 sm:table-cell sm:px-6"
+              >
+                {t("journal.log_view.type")}
               </th>
-              <th scope="col" className="px-3 py-4 sm:px-6">
+              {/* Info: (20260409 - Julian) 動作(Desktop) */}
+              <th
+                scope="col"
+                className="hidden px-3 py-4 sm:table-cell sm:px-6"
+              >
                 {t("journal.log_view.action_type")}
+              </th>
+              {/* Info: (20260409 - Julian) 異動項目 / 動作(Mobile) */}
+              <th
+                scope="col"
+                className="table-cell px-3 py-4 sm:hidden sm:px-6"
+              >
+                {t("journal.log_view.type")} / {t("journal.log_view.action_type")}
               </th>
               <th scope="col" className="px-3 py-4 sm:px-6">
                 {t("journal.log_view.record_time")}
