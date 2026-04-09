@@ -48,10 +48,10 @@ const VoucherRow = ({
   return (
     <>
       <div className="col-span-4 flex flex-1 flex-col gap-2">
-        <div className="relative flex h-[42px] items-center overflow-hidden rounded-xl border border-slate-300 bg-white focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
+        <div className="relative flex h-[36px] items-center overflow-hidden rounded-xl border border-slate-300 bg-white focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500 lg:h-[42px]">
           <button
             type="button"
-            className="w-[250px] flex-1 appearance-none truncate bg-transparent px-4 py-2 text-left text-sm font-semibold text-slate-700 outline-none"
+            className="w-[250px] flex-1 appearance-none truncate bg-transparent px-2 text-left text-[10px] font-semibold text-slate-700 outline-none lg:px-4 lg:text-sm"
             onClick={() => onOpenSelector(row.id)}
           >
             {row.accounting
@@ -62,7 +62,7 @@ const VoucherRow = ({
             <ChevronDown size={16} className="text-slate-400" />
           </div>
         </div>
-        <div className="h-[42px]">
+        <div className="h-[36px] lg:h-[42px]">
           <input
             type="text"
             aria-label={t("voucher.detail_modal.fields.particular")}
@@ -71,12 +71,12 @@ const VoucherRow = ({
             onChange={(e) =>
               updateRow(row.id, { ...row, particular: e.target.value })
             }
-            className="h-full w-full rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+            className="h-full w-full rounded-xl border border-slate-300 bg-white px-2 text-[10px] font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
           />
         </div>
       </div>
 
-      <div className="col-span-3 h-[42px]">
+      <div className="col-span-3 h-[36px] lg:h-[42px]">
         <input
           type="number"
           aria-label={t("voucher.detail_modal.fields.debit")}
@@ -93,11 +93,11 @@ const VoucherRow = ({
               amount: val === "" ? 0 : Number(val),
             });
           }}
-          className="h-full w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 text-right text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
+          className="h-full w-full appearance-none rounded-xl border border-slate-300 bg-white px-2 text-right text-[10px] font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 lg:px-4 lg:text-sm"
         />
       </div>
 
-      <div className="col-span-3 h-[42px]">
+      <div className="col-span-3 h-[36px] lg:h-[42px]">
         <input
           type="number"
           aria-label={t("voucher.detail_modal.fields.credit")}
@@ -114,11 +114,11 @@ const VoucherRow = ({
               amount: val === "" ? 0 : Number(val),
             });
           }}
-          className="h-full w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 text-right text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
+          className="h-full w-full appearance-none rounded-xl border border-slate-300 bg-white px-2 text-right text-[10px] font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 lg:px-4 lg:text-sm"
         />
       </div>
 
-      <div className="flex h-[42px] items-center justify-center p-2">
+      <div className="flex h-[36px] items-center justify-center p-2 lg:h-[42px]">
         <button
           type="button"
           aria-label="Delete row"
@@ -344,7 +344,7 @@ export default function VoucherDetailModal({
               </span>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="ml-auto">
             <AiConfidence
               confidence={activeVoucher.confidence}
               note={activeVoucher.aiNote}
@@ -352,7 +352,7 @@ export default function VoucherDetailModal({
           </div>
         </div>
 
-        <div className="mb-8 grid grid-cols-2 gap-4 px-6 pt-4">
+        <div className="mb-4 grid grid-cols-2 gap-2 px-6 pt-4 lg:mb-8 lg:gap-4">
           <div>
             <label
               htmlFor="voucher-date"
@@ -370,7 +370,7 @@ export default function VoucherDetailModal({
                   isNaN(e.target.valueAsNumber) ? 0 : e.target.valueAsNumber,
                 )
               }
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
             />
           </div>
 
@@ -382,7 +382,7 @@ export default function VoucherDetailModal({
               <select
                 value={voucherType ?? ""}
                 onChange={(e) => setVoucherType(e.target.value as TradingType)}
-                className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
               >
                 <option value={TradingType.INCOME}>
                   {t("voucher.main_view.table.types.income")}
@@ -408,7 +408,7 @@ export default function VoucherDetailModal({
             >
               {t("voucher.detail_modal.fields.voucher_no")}
             </label>
-            <div className="flex h-[42px] items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-slate-700 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
+            <div className="flex h-[36px] items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-slate-700 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500 lg:h-[42px]">
               <Hash size={20} className="text-slate-400" />
               <input
                 id="voucher-no"
@@ -416,7 +416,7 @@ export default function VoucherDetailModal({
                 type="text"
                 value={editedVoucherId}
                 onChange={(e) => setEditedVoucherId(e.target.value)}
-                className="w-full bg-transparent text-sm font-semibold text-slate-700 outline-none placeholder:font-normal placeholder:text-slate-400"
+                className="w-full bg-transparent text-xs font-semibold text-slate-700 outline-none placeholder:font-normal placeholder:text-slate-400 lg:text-sm"
                 placeholder={t(
                   "voucher.detail_modal.fields.voucher_no_placeholder",
                 )}
@@ -426,14 +426,14 @@ export default function VoucherDetailModal({
         </div>
 
         {/* Info: (20260327 - Luphia) Section 2: Accounting Entries */}
-        <div className="mt-6 mb-3 flex flex-col items-start justify-between gap-2 px-6 sm:flex-row sm:items-center">
-          <h4 className="text-sm font-bold text-slate-700">
+        <div className="flex items-center justify-between gap-2 px-6 py-2">
+          <h4 className="text-sm font-extrabold text-slate-700 lg:text-lg">
             {t("voucher.detail_modal.sections.accounting_entries")}
           </h4>
           <button
             type="button"
             onClick={addRow}
-            className="flex items-center gap-1 text-sm font-bold text-orange-500 hover:text-orange-600"
+            className="flex items-center gap-1 rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-500 hover:bg-orange-200 lg:text-sm"
           >
             <Plus size={16} className="stroke-[2.5]" />
             {t("voucher.detail_modal.actions.add_row")}
@@ -441,13 +441,13 @@ export default function VoucherDetailModal({
         </div>
 
         <div className="mb-2 flex items-center px-6 pr-10">
-          <div className="flex-1 text-xs font-bold text-slate-600">
+          <div className="flex-1 text-[10px] font-bold text-slate-600 lg:text-xs">
             {t("voucher.detail_modal.fields.account_code_name")}
           </div>
-          <div className="w-[100px] pr-2 text-right text-xs font-bold text-slate-600">
+          <div className="w-[100px] pr-2 text-right text-[10px] font-bold text-slate-600 lg:text-xs">
             {t("voucher.detail_modal.fields.debit")}
           </div>
-          <div className="w-[100px] pr-2 text-right text-xs font-bold text-slate-600">
+          <div className="w-[100px] pr-2 text-right text-[10px] font-bold text-slate-600 lg:text-xs">
             {t("voucher.detail_modal.fields.credit")}
           </div>
         </div>
@@ -468,7 +468,7 @@ export default function VoucherDetailModal({
         </div>
 
         {/* Info: (20260327 - Luphia) Notes */}
-        <div className="mb-8 px-6">
+        <div className="mb-4 px-6 lg:mb-8">
           <label
             htmlFor="voucher-note"
             className="mb-2 block text-xs font-bold text-slate-600"
@@ -488,7 +488,7 @@ export default function VoucherDetailModal({
               aria-label={String(t("voucher.detail_modal.fields.note"))}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="min-h-[100px] w-full resize-none rounded-xl border border-slate-300 bg-white py-2.5 pr-4 pl-11 text-sm leading-relaxed text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+              className="min-h-[50px] w-full resize-none rounded-xl border border-slate-300 bg-white py-2.5 pr-4 pl-11 text-xs leading-relaxed text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:min-h-[100px] lg:text-sm"
               placeholder={t("voucher.detail_modal.fields.note_placeholder")}
             />
           </div>
@@ -497,15 +497,13 @@ export default function VoucherDetailModal({
         {/* Info: (20260327 - Luphia) Balance Check */}
         <div className="px-6 pb-4">
           <div
-            className={`rounded-xl border p-5 ${isTotalBalanced ? "border-emerald-200 bg-emerald-50/50" : "border-red-200 bg-red-50/50"}`}
+            className={`rounded-xl border p-4 lg:p-5 ${isTotalBalanced ? "border-emerald-200 bg-emerald-50/50" : "border-red-200 bg-red-50/50"}`}
           >
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Scale
                   size={18}
-                  className={
-                    isTotalBalanced ? "text-emerald-500" : "text-red-500"
-                  }
+                  className={`shrink-0 ${isTotalBalanced ? "text-emerald-500" : "text-red-500"}`}
                 />
                 <h4 className="font-bold text-slate-700">
                   {t("voucher.detail_modal.balance_check.title")}
@@ -516,12 +514,12 @@ export default function VoucherDetailModal({
               >
                 {isTotalBalanced ? (
                   <>
-                    <CheckCircle2 size={18} />{" "}
+                    <CheckCircle2 size={18} className="shrink-0" />{" "}
                     {t("voucher.detail_modal.balance_check.balanced")}
                   </>
                 ) : (
                   <>
-                    <X size={18} />{" "}
+                    <X size={18} className="shrink-0" />{" "}
                     {t("voucher.detail_modal.balance_check.unbalanced")}
                   </>
                 )}

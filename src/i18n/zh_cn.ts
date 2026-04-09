@@ -1114,6 +1114,7 @@ export const zhCn = {
   journal: {
     detail_modal: {
       title: "日记账",
+      empty: "没有日记账内容",
     },
     summary: {
       empty: "目前没有日记账资料",
@@ -1128,11 +1129,11 @@ export const zhCn = {
       view_file: "凭证文件",
       view_preview: "查看预览",
       list: "凭证清单",
-      log: "变动记录",
+      log: "异动记录",
     },
     log_view: {
-      title: "变动记录",
-      refresh: "刷新",
+      title: "异动记录",
+      type: "异动项目",
       record_time: "记录时间",
       action_type: "操作类型",
       operator: "操作人员",

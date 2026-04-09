@@ -4,10 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
-import {
-  IEsgReport,
-  IEsgReportItem,
-} from "@/interfaces/esg_report";
+import { IEsgReport, IEsgReportItem } from "@/interfaces/esg_report";
 import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
 import { numberWithCommas } from "@/lib/utils/common";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
@@ -38,7 +35,8 @@ const EsgReportSection = ({
       <div className="mb-2 flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
         <span className="font-bold text-gray-700">{titleText}</span>
         <span className="text-base font-bold text-gray-900 print:text-sm">
-          {numberWithCommas(Number(titleValue.toFixed(1)))} <span className="text-xs font-semibold">{t("esg_report.unit")}</span>
+          {numberWithCommas(Number(titleValue.toFixed(1)))}{" "}
+          <span className="text-xs font-semibold">{t("esg_report.unit")}</span>
         </span>
       </div>
       {/* Info: (20260406 - Luphia) 項目內容 */}
@@ -52,7 +50,7 @@ const EsgReportSection = ({
               className="flex items-center justify-between border-b border-gray-50 py-3"
             >
               <div className="flex w-2/3 flex-col">
-                <span className="text-[15px] font-medium text-gray-600 print:text-sm truncate">
+                <span className="truncate text-xs font-medium text-gray-600 lg:text-base print:text-sm">
                   {item.name}
                 </span>
                 <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
@@ -85,7 +83,13 @@ const EsgReportSection = ({
   );
 };
 
-export default function EsgReportView({ period, year }: { period: ReportPeriod, year: number }) {
+export default function EsgReportView({
+  period,
+  year,
+}: {
+  period: ReportPeriod;
+  year: number;
+}) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
   const { t } = useTranslation();
@@ -143,7 +147,9 @@ export default function EsgReportView({ period, year }: { period: ReportPeriod, 
       value: (
         <>
           {numberWithCommas(Number(metrics.totalEmissions.toFixed(1)))}
-          <span className="ml-[2px] text-xs font-bold">{t("esg_report.unit")}</span>
+          <span className="ml-[2px] text-xs font-bold">
+            {t("esg_report.unit")}
+          </span>
         </>
       ),
       description: t("esg_report.gross_desc"),
@@ -174,7 +180,7 @@ export default function EsgReportView({ period, year }: { period: ReportPeriod, 
   ];
 
   const keyMetricsBanner = metrics ? (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 print:flex">
+    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4 print:flex">
       {keyMetricsData.map((metric) => (
         <KeyMetricsCard
           key={metric.title}
@@ -193,10 +199,10 @@ export default function EsgReportView({ period, year }: { period: ReportPeriod, 
   );
 
   const scopeSection = sections ? (
-    <div className="flex flex-col gap-4 print:p-2 w-full">
-      <div className="flex-1 rounded-xl border border-gray-100 bg-white p-6  print:p-4 box-decoration-clone">
+    <div className="flex w-full flex-col gap-4 print:p-2">
+      <div className="flex-1 rounded-xl border border-gray-100 bg-white box-decoration-clone p-4 lg:p-6 print:p-4">
         <div className="mb-4 flex items-end justify-between border-b border-gray-200 pb-3">
-          <span className="text-lg font-black tracking-wider text-gray-800 uppercase">
+          <span className="text-base font-black tracking-wider text-gray-800 uppercase lg:text-lg">
             {t("esg_report.scopes_title")}
           </span>
           <span className="text-sm font-bold text-gray-400">
@@ -227,15 +233,15 @@ export default function EsgReportView({ period, year }: { period: ReportPeriod, 
           baseDivisor={baseEmissions}
           barColor="bg-gray-300"
         />
-
       </div>
 
-      <div className="flex items-center justify-between rounded-xl bg-gray-900 p-6 text-white  print:break-inside-avoid">
+      <div className="flex items-center justify-between rounded-xl bg-gray-900 p-6 text-white print:break-inside-avoid">
         <span className="text-lg font-black tracking-widest uppercase">
           {t("esg_report.gross_emissions_bottom")}
         </span>
         <span className="text-3xl font-black text-white">
-          {numberWithCommas(Number(sections.grossEmissions.total.toFixed(1)))} <span className="text-lg font-bold">{t("esg_report.unit")}</span>
+          {numberWithCommas(Number(sections.grossEmissions.total.toFixed(1)))}{" "}
+          <span className="text-lg font-bold">{t("esg_report.unit")}</span>
         </span>
       </div>
     </div>

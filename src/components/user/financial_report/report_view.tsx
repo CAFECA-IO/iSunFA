@@ -28,7 +28,7 @@ export default function ReportView() {
   const [selectedReportPeriod, setSelectedReportPeriod] =
     useState<ReportPeriod>(ReportPeriod.ALL_YEAR);
   const [selectedReportYear, setSelectedReportYear] = useState<number>(
-    new Date().getFullYear()
+    new Date().getFullYear(),
   );
   const [generatedConfig, setGeneratedConfig] = useState<{
     type: ReportType;
@@ -106,10 +106,13 @@ export default function ReportView() {
   // Info: (20260331 - Julian) 報表資料
   const reportData = generatedConfig
     ? {
-      reportTitle: getReportTitle(generatedConfig.type),
-      reportPeriod: getReportPeriod(generatedConfig.period, generatedConfig.year),
-      currency: generatedConfig.currency,
-    }
+        reportTitle: getReportTitle(generatedConfig.type),
+        reportPeriod: getReportPeriod(
+          generatedConfig.period,
+          generatedConfig.year,
+        ),
+        currency: generatedConfig.currency,
+      }
     : null;
 
   const handleDownload = async () => {
@@ -117,7 +120,10 @@ export default function ReportView() {
       // Info: (20260331 - Julian) 過濾掉需要隱藏的元素（例如工具列與重點指標 Tooltip）
       const filter = (node: HTMLElement) => {
         // Info: (20260401 - Julian) 隱藏 data-html2canvas-ignore 的元素
-        if (node?.hasAttribute && node.hasAttribute("data-html2canvas-ignore")) {
+        if (
+          node?.hasAttribute &&
+          node.hasAttribute("data-html2canvas-ignore")
+        ) {
           return false;
         }
         return true;
@@ -163,9 +169,7 @@ export default function ReportView() {
     setSelectedReportPeriod(e.target.value as ReportPeriod);
   };
 
-  const handleReportYearChange = (
-    e: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
+  const handleReportYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedReportYear(parseInt(e.target.value, 10));
   };
 
@@ -202,7 +206,11 @@ export default function ReportView() {
       >
         {[...Array(5)].map((_, i) => {
           const y = new Date().getFullYear() - i;
-          return <option key={y} value={y}>{y}</option>;
+          return (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          );
         })}
       </select>
     </div>
@@ -237,13 +245,33 @@ export default function ReportView() {
 
     switch (generatedConfig.type) {
       case ReportType.BALANCE_SHEET:
-        return <BalanceSheetView period={generatedConfig.period} year={generatedConfig.year} />;
+        return (
+          <BalanceSheetView
+            period={generatedConfig.period}
+            year={generatedConfig.year}
+          />
+        );
       case ReportType.CASH_FLOW:
-        return <CashFlowSheetView period={generatedConfig.period} year={generatedConfig.year} />;
+        return (
+          <CashFlowSheetView
+            period={generatedConfig.period}
+            year={generatedConfig.year}
+          />
+        );
       case ReportType.INCOME_STATEMENT:
-        return <IncomeStatementView period={generatedConfig.period} year={generatedConfig.year} />;
+        return (
+          <IncomeStatementView
+            period={generatedConfig.period}
+            year={generatedConfig.year}
+          />
+        );
       case ReportType.ESG_REPORT:
-        return <EsgReportView period={generatedConfig.period} year={generatedConfig.year} />;
+        return (
+          <EsgReportView
+            period={generatedConfig.period}
+            year={generatedConfig.year}
+          />
+        );
       default:
         return null;
     }
@@ -279,21 +307,25 @@ export default function ReportView() {
         <button
           type="button"
           onClick={handleDownload}
-          className="rounded-xl border border-gray-200 bg-white p-3 text-gray-500 outline-none hover:bg-gray-50 hover:text-gray-800 active:bg-gray-100 transition-colors "
+          className="rounded-xl border border-gray-200 bg-white p-3 text-gray-500 transition-colors outline-none hover:bg-gray-50 hover:text-gray-800 active:bg-gray-100"
         >
           <Download size={20} />
         </button>
       </div>
 
       {/* Info: (20260330 - Julian) 報表標題 */}
-      <div className="relative overflow-hidden rounded-xl border border-gray-100 bg-white p-6 text-center text-gray-800  md:p-8">
+      <div className="relative overflow-hidden rounded-xl border border-gray-100 bg-white p-6 text-center text-gray-800 md:p-8">
         <div className="absolute top-0 left-0 h-1 w-full bg-orange-500"></div>
         {displayAccountbookName}
         <h3 className="mt-2 text-xl font-bold tracking-widest text-gray-600">
           {reportData?.reportTitle}
         </h3>
         <p className="mt-2 text-sm font-medium text-gray-400">
-          {reportData?.reportPeriod && t("report_view.period_unit", { period: reportData.reportPeriod, currency: reportData.currency || "" })}
+          {reportData?.reportPeriod &&
+            t("report_view.period_unit", {
+              period: reportData.reportPeriod,
+              currency: reportData.currency || "",
+            })}
         </p>
       </div>
 
@@ -304,30 +336,34 @@ export default function ReportView() {
 
   return (
     <>
-      <div className="mt-6 flex flex-col gap-8 lg:flex-row">
+      <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:gap-8">
         {/* Info:(20260319 - Julian) 報表參數設定 */}
-        <div className="flex h-fit w-full shrink-0 flex-col gap-4 rounded-xl border border-gray-100 bg-white p-6  lg:w-72 print:hidden">
+        <div className="flex h-fit w-full shrink-0 flex-col gap-4 rounded-xl border border-gray-100 bg-white p-6 lg:w-72 print:hidden">
           <div className="flex items-center gap-2 border-b border-gray-200 pb-2">
             <Filter className="h-5 w-5 text-gray-800" strokeWidth={2.5} />
-            <h2 className="text-base font-bold text-gray-800">{t("report_view.period_selection")}</h2>
+            <h2 className="text-base font-bold text-gray-800">
+              {t("report_view.period_selection")}
+            </h2>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-2 lg:space-y-6">
             {reportSelection}
             {yearSelection}
             {periodSelection}
             <button
               type="button"
               onClick={handleGenerateReport}
-              className="mt-2 w-full rounded-md bg-[#FA4A11] py-2.5 text-[15px] font-bold text-white transition-colors outline-none hover:bg-[#E5430F] active:bg-[#CC3A0C] focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+              className="mt-2 w-full rounded-md bg-[#FA4A11] py-2.5 text-[15px] font-bold text-white transition-colors outline-none hover:bg-[#E5430F] focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 active:bg-[#CC3A0C]"
             >
               {t("report_view.generate_btn")}
             </button>
 
             {/* Info:(20260319 - Julian) 傳票核對數提示 */}
-            <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+            <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-2 lg:p-4">
               <p className="text-xs leading-relaxed font-medium text-gray-600">
-                {t("report_view.hint_verified_count", { count: numberWithCommas(countOfVerifiedVouchers) })}
+                {t("report_view.hint_verified_count", {
+                  count: numberWithCommas(countOfVerifiedVouchers),
+                })}
               </p>
             </div>
           </div>

@@ -126,28 +126,28 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
       {/* Info: (20260312 - Julian) 本月總排放量 */}
       <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-500">
+            <span className="text-xs font-bold text-slate-500 lg:text-sm">
               {t("esg_summary.total_emissions")}
             </span>
-            <Cloud className="h-5 w-5 text-emerald-500" />
+            <Cloud className="h-5 w-5 shrink-0 text-emerald-500" />
           </div>
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl font-bold tracking-tight text-slate-800">
               {summaryData.totalEmissions.value.toLocaleString()}
             </span>
-            <span className="text-sm font-bold text-slate-500">
+            <span className="text-xs font-bold text-slate-500 lg:text-sm">
               {summaryData.totalEmissions.unit}
             </span>
           </div>
         </div>
-        <div className="mt-8">
+        <div className="mt-4 lg:mt-8">
           <div className="inline-flex items-center rounded-full border border-green-100 bg-green-50 px-3 py-1.5 text-xs font-bold text-green-700">
-            <TrendingUp className="mr-1 h-3.5 w-3.5" />
+            <TrendingUp className="mr-1 h-3.5 w-3.5 shrink-0" />
             {t("esg_summary.estimate_eom")}{" "}
             {summaryData.totalEmissions.estimatedEndOfMonth.toLocaleString()}{" "}
             {summaryData.totalEmissions.estimatedUnit}
@@ -159,10 +159,10 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
       <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-500">
+            <span className="text-xs font-bold text-slate-500 lg:text-sm">
               {t("esg_summary.emission_intensity")}
             </span>
-            <BarChart3 className="h-5 w-5 text-orange-500" />
+            <BarChart3 className="h-5 w-5 shrink-0 text-orange-500" />
           </div>
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl font-bold tracking-tight text-slate-800">
@@ -175,12 +175,12 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
                     },
                   )}
             </span>
-            <span className="text-sm font-bold text-slate-500">
+            <span className="text-xs font-bold text-slate-500 lg:text-sm">
               {summaryData.emissionIntensity.unit}
             </span>
           </div>
         </div>
-        <div className="mt-8 text-xs font-bold text-slate-500">
+        <div className="mt-4 text-xs font-bold text-slate-500 lg:mt-8">
           {t("esg_summary.better_than_industry", {
             average: summaryData.emissionIntensity.industryAverage,
           })}
@@ -189,7 +189,7 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
 
       {/* Info: (20260312 - Julian) 各範疇分布 */}
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
-        <div className="mb-5 text-center text-sm font-bold text-slate-500">
+        <div className="mb-5 text-center text-xs font-bold text-slate-500 lg:text-sm">
           {t("esg_summary.scope_distribution")}
         </div>
         <div className="flex flex-col gap-2">
@@ -203,10 +203,10 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
       <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-500">
+            <span className="text-xs font-bold text-slate-500 lg:text-sm">
               {t("esg_summary.annual_goal_progress")}
             </span>
-            <Target className="h-5 w-5 text-orange-600" />
+            <Target className="h-5 w-5 shrink-0 text-orange-600" />
           </div>
           <div className="mt-2 flex items-baseline gap-1">
             <span className="text-2xl font-bold tracking-tight text-orange-600">
@@ -215,7 +215,7 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
             <span className="text-sm font-bold text-slate-500">/ 100%</span>
           </div>
         </div>
-        <div className="mt-8">
+        <div className="mt-4 lg:mt-8">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
               className={`h-full rounded-full ${summaryData.goalProgress.percentage > 100 ? "bg-red-500" : "bg-orange-500"}`}

@@ -65,17 +65,17 @@ export default function JournalSummary() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+    <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 lg:gap-4">
       {/* Info: (20260324 - Julian) 今日產生日記帳 */}
       <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
         <div className="shrink-0 px-2 text-blue-500 lg:px-4">
           <FileSpreadsheet size={24} />
         </div>
         <div className="flex flex-col px-2">
-          <p className="text-sm font-bold text-slate-700">
+          <p className="text-[10px] font-bold text-slate-700 sm:text-sm">
             {t("journal.summary.today_count")}
           </p>
-          <p className="text-lg font-bold text-black">
+          <p className="text-base font-bold text-black sm:text-lg">
             <span>{summaryData.todayJournalCount}</span>{" "}
             {t("journal.summary.unit")}
           </p>
@@ -88,10 +88,10 @@ export default function JournalSummary() {
           <CircleAlert size={24} />
         </div>
         <div className="flex flex-col px-2">
-          <p className="text-sm font-bold text-slate-700">
+          <p className="text-[10px] font-bold text-slate-700 sm:text-sm">
             {t("journal.summary.pending")}
           </p>
-          <p className="text-lg font-bold text-amber-500">
+          <p className="text-base font-bold text-amber-500 sm:text-lg">
             <span>{summaryData.pendingJournalCount}</span>{" "}
             {t("journal.summary.unit")}
           </p>
@@ -99,15 +99,15 @@ export default function JournalSummary() {
       </div>
 
       {/* Info: (20260324 - Julian) AI 平均信心度 */}
-      <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
+      <div className="col-span-2 flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:col-span-1 lg:p-4">
         <div className="shrink-0 px-2 text-purple-500 lg:px-4">
           <Zap size={24} />
         </div>
         <div className="flex flex-col px-2">
-          <p className="text-sm font-bold text-slate-700">
+          <p className="text-[10px] font-bold text-slate-700 sm:text-sm">
             {t("journal.summary.ai_confidence")}
           </p>
-          <p className="text-lg font-bold text-black">
+          <p className="text-base font-bold text-black sm:text-lg">
             <span>{numberWithCommas(summaryData.aiAverageConfidence)}</span> %
           </p>
         </div>
