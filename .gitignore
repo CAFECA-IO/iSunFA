@@ -22,6 +22,7 @@
 /src/generated
 /reports
 /downloads
+/logs
 
 # misc
 .DS_Store
