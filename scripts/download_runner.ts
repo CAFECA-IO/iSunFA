@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { prisma } from "@/lib/prisma";
-import { TaskType, TaskStatus } from "@/generated/client";
+import { TaskType, TaskStatus, Prisma } from "@/generated/client";
 import {
   downloadFinancialData,
   downloadFinancialReport,
@@ -21,33 +21,37 @@ async function main() {
   });
 
   // Info: (20260408 - Tzuhan) 1. 解析 CLI 參數 (設定併發數與撈取上限)
-  let limit = 100; // Info: (20260408 - Tzuhan) 預設一次批次處理 100 筆
-  let concurrency = 5; // Info: (20260408 - Tzuhan) 預設同時併發 5 個請求
-
   const args = process.argv.slice(2);
-  args.forEach((arg) => {
-    if (arg.startsWith("--limit=")) limit = parseInt(arg.split("=")[1], 10);
-    if (arg.startsWith("--concurrency="))
-      concurrency = parseInt(arg.split("=")[1], 10);
-  });
+  const limit = parseInt(
+    args.find((a) => a.startsWith("--limit="))?.split("=")[1] || "100",
+  );
+  const concurrency = parseInt(
+    args.find((a) => a.startsWith("--concurrency="))?.split("=")[1] || "5",
+  );
+  const stockIdArg = args
+    .find((a) => a.startsWith("--stockId="))
+    ?.split("=")[1];
+  const yearArg = args.find((a) => a.startsWith("--year="))?.split("=")[1];
 
   console.log(
     `⚙️ 設定：單次批次上限 = ${limit} 筆, 同時併發數 = ${concurrency}`,
   );
 
   // Info: (20260408 - Tzuhan) 2. 從資料庫撈取 PENDING 或「失敗但重試次數未達上限」的工單
+  const whereClause: Prisma.ReportDownloadTaskWhereInput = {
+    OR: [
+      { status: TaskStatus.PENDING },
+      { status: TaskStatus.FAILED, retryCount: { lt: 3 } },
+    ],
+  };
+  if (stockIdArg && stockIdArg !== "ALL")
+    whereClause.stockId = { in: stockIdArg.split(",") };
+  if (yearArg && yearArg !== "ALL") whereClause.year = parseInt(yearArg);
+
   const pendingTasks = await prisma.reportDownloadTask.findMany({
-    where: {
-      OR: [
-        { status: TaskStatus.PENDING },
-        {
-          status: TaskStatus.FAILED,
-          retryCount: { lt: 3 }, // Info: (20260408 - Tzuhan) 容許最多重試 3 次
-        },
-      ],
-    },
+    where: whereClause,
     take: limit,
-    orderBy: { updatedAt: "desc" }, // Info: (20260408 - Tzuhan) 改用 updatedAt，讓很久沒動的優先處理
+    orderBy: { updatedAt: "asc" }, // Info: (20260408 - Tzuhan) 改用 updatedAt，讓很久沒動的優先處理
   });
 
   if (pendingTasks.length === 0) {
@@ -83,6 +87,7 @@ async function main() {
             task.year,
             savePath,
           );
+          break;
         case TaskType.FIN_DATA:
           savePath = path.join(baseDir, `${task.year}_FIN_DATA.json`);
           isSuccess = await downloadFinancialData(
@@ -176,4 +181,6 @@ async function main() {
   }
 }
 
-main().catch(console.error);
+main().catch(console.error).finally(async () => {
+  await prisma.$disconnect();
+});
