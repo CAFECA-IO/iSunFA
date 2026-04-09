@@ -1068,6 +1068,7 @@ export const zhCn = {
   journal: {
     detail_modal: {
       title: "日记账",
+      empty: "没有日记账内容",
     },
     summary: {
       empty: "目前没有日记账资料",

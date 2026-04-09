@@ -1145,6 +1145,7 @@ export const zhTw = {
   journal: {
     detail_modal: {
       title: "日記帳",
+      empty: "沒有日記帳內容",
     },
     summary: {
       empty: "目前沒有日記帳資料",

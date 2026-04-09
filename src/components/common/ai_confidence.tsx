@@ -22,7 +22,7 @@ export default function AiConfidence({
     <div className="flex items-center justify-center gap-2 text-sm font-bold">
       {/* Info: (20260325 - Julian) Progress Bar */}
       <div
-        className={`block h-1.5 shrink-0 overflow-hidden rounded-full bg-slate-200 sm:h-2 ${barOnly ? "w-12" : "w-20"}`}
+        className={`block h-1.5 shrink-0 overflow-hidden rounded-full bg-slate-200 sm:h-2 ${barOnly ? "w-12" : "w-32 lg:w-20"}`}
       >
         <div
           // Info: (20260325 - Julian) 85 以上為綠色
@@ -52,7 +52,7 @@ export default function AiConfidence({
       .replace("</li>", "</li></ul>") ?? "";
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
       {/* Info: (20260325 - Julian) AI 信心度 Progress Bar */}
       <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
         <p className="text-xs font-bold text-slate-500">

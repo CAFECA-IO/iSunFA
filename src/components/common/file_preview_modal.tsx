@@ -34,7 +34,7 @@ export default function FilePreviewModal({
 
   return (
     <Transition show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-[200]" onClose={onClose}>
+      <Dialog as="div" className="relative z-200" onClose={onClose}>
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
@@ -47,7 +47,7 @@ export default function FilePreviewModal({
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" />
         </TransitionChild>
 
-        <div className="fixed inset-0 z-[201] w-screen overflow-y-auto">
+        <div className="fixed inset-0 z-201 w-screen overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
             <TransitionChild
               as={Fragment}

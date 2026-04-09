@@ -2,15 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import {
-  X,
-  Loader2,
-  CheckCircle2,
-  Save,
-  Pencil,
-  Eye,
-  // TrashIcon,
-} from "lucide-react";
+import { X, Loader2, CheckCircle2, Save, Pencil, Eye } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import ConfirmModal from "@/components/common/confirm_modal";
 import FilePreviewModal from "@/components/common/file_preview_modal";
@@ -27,7 +19,6 @@ interface IJournalDetailModalProps {
   journal?: IJournal | null;
   journalId?: string | null;
   onUpdate: (updatedJournal: IJournal) => void;
-  // onDelete: (journal: IJournal) => void;
 }
 
 export default function JournalDetailModal({
@@ -36,7 +27,6 @@ export default function JournalDetailModal({
   journal,
   journalId,
   onUpdate,
-  // onDelete,
 }: IJournalDetailModalProps) {
   const { t } = useTranslation();
   const params = useParams();
@@ -95,6 +85,14 @@ export default function JournalDetailModal({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, activeJournal?.id]);
+
+  useEffect(() => {
+    // Info: (20260409 - Julian) 切換編輯模式時，focus 到 textarea
+    if (isEditMode) {
+      const textarea = document.getElementById("journal-edit-textarea");
+      textarea?.focus();
+    }
+  }, [isEditMode]);
 
   if (isLoading) {
     return (
@@ -192,7 +190,7 @@ export default function JournalDetailModal({
               </button>
             </div>
             {/* Info: (20260325 - Julian) AI Confidence */}
-            <div className="relative">
+            <div className="relative ml-auto">
               <AiConfidence
                 confidence={activeJournal.confidence}
                 note={activeJournal.aiNote}
@@ -201,12 +199,14 @@ export default function JournalDetailModal({
           </div>
 
           {/* Info: (20260327 - Luphia) 將原本外層的 overflow-y-auto 移除，改由內部元素自行處理滾動 */}
-          <div className="flex min-h-0 flex-1 flex-col px-6 py-4">
+          <div className="flex min-h-0 flex-1 flex-col px-4 py-4 lg:px-6">
             {isEditMode ? (
               <textarea
+                id="journal-edit-textarea"
                 aria-label={t("ocr.journal") as string}
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
+                onBlur={() => setIsEditMode(false)} // Info: (20260409 - Julian) textarea blur 即關閉編輯模式 
                 // Info: (20260327 - Luphia) 加入 flex-1 讓它填滿高度，並將 resize-y 改為 resize-none 防止手動拉伸破壞版面
                 className="flex-1 resize-none rounded-xl border border-slate-300 bg-white p-4 leading-relaxed text-slate-700 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
               />
@@ -217,24 +217,14 @@ export default function JournalDetailModal({
                   <MarkdownContent content={editText} theme="light" />
                 ) : (
                   <p className="text-sm text-gray-400 italic">
-                    {t("common.empty") || "Empty"}
+                    {t("journal.detail_modal.empty") || "Empty"}
                   </p>
                 )}
               </div>
             )}
           </div>
         </div>
-        {/* ToDo: (20260323 - Julian) 先隱藏刪除按鈕 */}
-        {/* <div className="mt-4 ml-auto">
-                        <button
-                          type="button"
-                          onClick={() => onDelete(journal)}
-                          className="flex items-center gap-2 rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-200"
-                        >
-                          <TrashIcon size={14} />
-                          {t("ocr.delete")}
-                        </button>
-                      {/* Info: (20260324 - Julian) Footer Actions */}
+        {/* Info: (20260324 - Julian) Footer Actions */}
         <div className="flex shrink-0 flex-col-reverse justify-end gap-3 border-t border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:p-6">
           {hasUnsavedChanges && (
             <button

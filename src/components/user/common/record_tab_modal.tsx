@@ -159,7 +159,7 @@ export default function RecordTabModal({
 
   return (
     <Transition show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-[200]" onClose={onClose}>
+      <Dialog as="div" className="relative z-200" onClose={onClose}>
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
@@ -172,7 +172,7 @@ export default function RecordTabModal({
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" />
         </TransitionChild>
 
-        <div className="fixed inset-0 z-[201] w-screen overflow-y-auto">
+        <div className="fixed inset-0 z-201 w-screen overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
             <TransitionChild
               as={Fragment}
@@ -233,7 +233,7 @@ export default function RecordTabModal({
                     </button>
                   </div>
 
-                  <div className="ml-4 flex flex-shrink-0 items-center space-x-2">
+                  <div className="ml-4 flex shrink-0 items-center space-x-2">
                     {onRestore && isDeleted ? (
                       <button
                         type="button"
@@ -288,8 +288,8 @@ export default function RecordTabModal({
                     {mountedTabs.has("preview") && !!file && (
                       <div className={activeTab === "preview" ? "block h-full" : "hidden"}>
                         <div className="flex h-full flex-col">
-                          <div className="flex-1 overflow-hidden bg-gray-50 p-6">
-                            <div className="size-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                          <div className="flex-1 overflow-hidden bg-gray-50 p-0 lg:p-6">
+                            <div className="size-full overflow-hidden lg:rounded-xl border-0 lg:border border-gray-200 bg-white shadow-sm">
                               <ZoomablePreview
                                 hasContent={!!file?.hash}
                                 fallbackText={t("ocr.no_image") as string}

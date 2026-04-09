@@ -1078,6 +1078,7 @@ export const ko = {
   journal: {
     detail_modal: {
       title: "분개장",
+      empty: "분개장 내용이 없습니다",
     },
     summary: {
       empty: "현재 분개장 데이터가 없습니다",

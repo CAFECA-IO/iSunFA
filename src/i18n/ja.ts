@@ -1092,6 +1092,7 @@ export const ja = {
   journal: {
     detail_modal: {
       title: "仕訳帳",
+      empty: "仕訳帳の内容がありません",
     },
     summary: {
       empty: "現在仕訳帳データはありません",

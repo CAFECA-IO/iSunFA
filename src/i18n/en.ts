@@ -1134,6 +1134,7 @@ export const en = {
   journal: {
     detail_modal: {
       title: "Journal",
+      empty: "Journal is empty.",
     },
     summary: {
       empty: "No journal data available",
