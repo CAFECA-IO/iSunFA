@@ -8,7 +8,7 @@ import {
   IIncomeStatementItem,
   IIncomeStatement,
 } from "@/interfaces/income_statement";
-import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
+import KeyMetricsCard, { TooltipAlign } from "@/components/user/financial_report/key_metrics_card";
 import ReportPrintNote, { IReportNote } from "@/components/user/financial_report/report_print_note";
 import { numberWithCommas } from "@/lib/utils/common";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -183,6 +183,7 @@ export default function IncomeStatementView({
       description: t("income_statement_view.metric_gm_desc"),
       textColor: "text-gray-900",
       statusGood: metrics.grossMargin >= 50,
+      tooltipAlign: TooltipAlign.LEFT
     },
     {
       title: t("income_statement_view.metric_om_title"),
@@ -190,6 +191,7 @@ export default function IncomeStatementView({
       description: t("income_statement_view.metric_om_desc"),
       textColor: "text-gray-900",
       statusGood: metrics.operatingMargin >= 15,
+      tooltipAlign: TooltipAlign.RIGHT
     },
     {
       title: t("income_statement_view.metric_npm_title"),
@@ -197,6 +199,7 @@ export default function IncomeStatementView({
       description: t("income_statement_view.metric_npm_desc"),
       textColor: "text-gray-900",
       statusGood: metrics.netProfitMargin >= 10,
+      tooltipAlign: TooltipAlign.LEFT
     },
     {
       title: t("income_statement_view.metric_ebitda_title"),
@@ -204,6 +207,7 @@ export default function IncomeStatementView({
       description: t("income_statement_view.metric_ebitda_desc"),
       textColor: "text-gray-900",
       statusGood: metrics.ebitdaMargin >= 15,
+      tooltipAlign: TooltipAlign.RIGHT
     },
   ];
 
@@ -226,6 +230,7 @@ export default function IncomeStatementView({
                 <span>{note?.subDesc}</span>
               </>
             }
+            tooltipAlign={metric.tooltipAlign}
           />
         )
       })}

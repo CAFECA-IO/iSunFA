@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { IBalanceSheetItem, IBalanceSheet } from "@/interfaces/balance_sheet";
-import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
+import KeyMetricsCard, { TooltipAlign } from "@/components/user/financial_report/key_metrics_card";
 import ReportPrintNote, { IReportNote } from "@/components/user/financial_report/report_print_note";
 import { numberWithCommas } from "@/lib/utils/common";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
@@ -185,7 +185,7 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
     }
   ];
 
-  // Info: (20260408 - Julian) 計算前台固定資產總額，以判斷特殊分母為 0 的狀況
+  // Info: (20260409 - Julian) 計算前台固定資產總額，以判斷特殊分母為 0 的狀況
   const fixedAssetsTotal = assets.nonCurrent.items
     .filter((i) => i.code.startsWith("15") || i.code.startsWith("16"))
     .reduce((acc, curr) => acc + curr.amount, 0);
@@ -198,7 +198,8 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       description: t("balance_sheet_view.metric_nwps_desc"),
       textColor: "text-gray-900",
       statusGood: (metrics.netWorthPerShare || 0) > 10,
-      className: "col-span-2 lg:col-span-2 print:w-1/2"
+      className: "col-span-2 lg:col-span-2 print:w-1/2",
+      tooltipAlign: TooltipAlign.RIGHT
     },
     {
       title: t("balance_sheet_view.metric_wc_title"),
@@ -206,7 +207,8 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       description: t("balance_sheet_view.metric_wc_desc"),
       textColor: "text-gray-900",
       statusGood: metrics.workingCapital > 0,
-      className: "col-span-2 lg:col-span-2 print:w-1/2"
+      className: "col-span-2 lg:col-span-2 print:w-1/2",
+      tooltipAlign: TooltipAlign.RIGHT
     },
     {
       title: t("balance_sheet_view.metric_cr_title"),
@@ -214,7 +216,8 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       description: t("balance_sheet_view.metric_cr_desc"),
       textColor: "text-gray-900",
       statusGood: metrics.currentRatio > 200,
-      className: "print:w-1/4"
+      className: "print:w-1/4",
+      tooltipAlign: TooltipAlign.LEFT
     },
     {
       title: t("balance_sheet_view.metric_qr_title"),
@@ -222,7 +225,8 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       description: t("balance_sheet_view.metric_qr_desc"),
       textColor: "text-gray-900",
       statusGood: (metrics.quickRatio || 0) > 100,
-      className: "print:w-1/4"
+      className: "print:w-1/4",
+      tooltipAlign: TooltipAlign.RIGHT
     },
     {
       title: t("balance_sheet_view.metric_dr_title"),
@@ -230,7 +234,8 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       description: t("balance_sheet_view.metric_dr_desc"),
       textColor: "text-gray-900",
       statusGood: metrics.debtRatio < 0.5,
-      className: "print:w-1/4"
+      className: "print:w-1/4",
+      tooltipAlign: TooltipAlign.LEFT
     },
     {
       title: t("balance_sheet_view.metric_cashr_title"),
@@ -238,7 +243,8 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       description: t("balance_sheet_view.metric_cashr_desc"),
       textColor: "text-gray-900",
       statusGood: (metrics.cashRatio || 0) > 20,
-      className: "print:w-1/4"
+      className: "print:w-1/4",
+      tooltipAlign: TooltipAlign.RIGHT
     },
     {
       title: t("balance_sheet_view.metric_dte_title"),
@@ -246,7 +252,8 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       description: t("balance_sheet_view.metric_dte_desc"),
       textColor: "text-gray-900",
       statusGood: equity.total === 0 ? undefined : (metrics.debtToEquityRatio || 0) < 100,
-      className: "print:w-1/4"
+      className: "print:w-1/4",
+      tooltipAlign: TooltipAlign.LEFT
     },
     {
       title: t("balance_sheet_view.metric_ltftfa_title"),
@@ -254,7 +261,8 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       description: t("balance_sheet_view.metric_ltftfa_desc"),
       textColor: "text-gray-900",
       statusGood: isFixedAssetsZero ? undefined : (metrics.longTermFundsToFixedAssetsRatio || 0) > 100,
-      className: "print:w-1/4"
+      className: "print:w-1/4",
+      tooltipAlign: TooltipAlign.RIGHT
     },
     {
       title: t("balance_sheet_view.metric_rer_title"),
@@ -262,7 +270,8 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       description: t("balance_sheet_view.metric_rer_desc"),
       textColor: "text-gray-900",
       statusGood: equity.total === 0 ? undefined : (metrics.retainedEarningsRatio || 0) > 0,
-      className: "print:w-1/4"
+      className: "print:w-1/4",
+      tooltipAlign: TooltipAlign.LEFT
     },
     {
       title: t("balance_sheet_view.metric_iar_title"),
@@ -270,7 +279,8 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       description: t("balance_sheet_view.metric_iar_desc"),
       textColor: "text-gray-900",
       statusGood: assets.total === 0 ? undefined : (metrics.intangibleAssetsRatio || 0) < 20,
-      className: "print:w-1/4"
+      className: "print:w-1/4",
+      tooltipAlign: TooltipAlign.RIGHT
     }
   ];
 
@@ -294,6 +304,7 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
               </>
             }
             className={metric.className}
+            tooltipAlign={metric.tooltipAlign}
           />
         )
       })}

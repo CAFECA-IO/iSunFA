@@ -11,6 +11,12 @@ interface IKeyMetricsCardProps {
   statusGood?: boolean;
   tooltip?: string | React.ReactNode;
   className?: string;
+  tooltipAlign?: TooltipAlign;
+}
+
+export enum TooltipAlign {
+  LEFT = "left",
+  RIGHT = "right",
 }
 
 // Info: (20260330 - Julian) 關鍵指標 card
@@ -22,6 +28,7 @@ export default function KeyMetricsCard({
   statusGood = undefined,
   tooltip = null,
   className = "",
+  tooltipAlign = TooltipAlign.RIGHT,
 }: IKeyMetricsCardProps) {
   const [isExpand, setIsExpand] = useState<boolean>(false);
 
@@ -61,7 +68,7 @@ export default function KeyMetricsCard({
             <Info size={20} strokeWidth={2} />
           </button>
           <div
-            className={`absolute top-6 right-0 w-max max-w-48 rounded-md bg-blue-50 p-2 text-xs text-slate-900 ${isExpand ? "visible opacity-100" : "invisible opacity-0"} transition-all duration-300 ease-in-out`}
+            className={`absolute top-6 w-max max-w-48 rounded-md bg-blue-50 p-2 text-xs text-slate-900 ${tooltipAlign === TooltipAlign.LEFT ? "left-0" : "right-0"} ${isExpand ? "visible opacity-100" : "invisible opacity-0"} transition-all duration-300 ease-in-out`}
           >
             {tooltip}
           </div>

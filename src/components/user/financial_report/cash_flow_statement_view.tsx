@@ -9,7 +9,7 @@ import {
   ICashFlowStatementItem,
   ICashFlowStatement,
 } from "@/interfaces/cash_flow_statement";
-import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
+import KeyMetricsCard, { TooltipAlign } from "@/components/user/financial_report/key_metrics_card";
 import ReportPrintNote, {
   IReportNote,
 } from "@/components/user/financial_report/report_print_note";
@@ -181,6 +181,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
       description: t("cash_flow_statement_view.metric_fcf_desc"),
       textColor: "text-gray-900",
       statusGood: metrics.freeCashFlow >= 0,
+      tooltipAlign: TooltipAlign.LEFT
     },
     {
       title: t("cash_flow_statement_view.metric_ocf_ratio_title"),
@@ -188,6 +189,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
       description: t("cash_flow_statement_view.metric_ocf_ratio_desc"),
       textColor: "text-gray-900",
       statusGood: metrics.operatingCashFlowRatio >= 100,
+      tooltipAlign: TooltipAlign.RIGHT
     },
     {
       title: t("cash_flow_statement_view.metric_cf_adequacy_title"),
@@ -195,6 +197,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
       description: t("cash_flow_statement_view.metric_cf_adequacy_desc"),
       textColor: "text-gray-900",
       statusGood: metrics.cashFlowAdequacyRatio >= 100,
+      tooltipAlign: TooltipAlign.LEFT
     },
     {
       title: t("cash_flow_statement_view.metric_ending_balance_title"),
@@ -202,6 +205,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
       description: t("cash_flow_statement_view.metric_ending_balance_desc"),
       textColor: "text-gray-900",
       statusGood: summary.endingBalance >= 0,
+      tooltipAlign: TooltipAlign.RIGHT
     },
   ];
 
@@ -233,6 +237,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
                 <span>{note?.subDesc}</span>
               </>
             }
+            tooltipAlign={metric.tooltipAlign}
           />
         );
       })}
