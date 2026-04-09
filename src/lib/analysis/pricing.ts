@@ -1,3 +1,5 @@
+import { ANALYSIS_BASE_COSTS, ANALYSIS_PERIOD_MULTIPLIERS } from "@/constants/price";
+
 export interface IOrderParams {
   category: string;
   periodType: string;
@@ -23,41 +25,9 @@ export interface IOrderParams {
  *   - Yearly: x10
  */
 
-const BASE_COSTS: Record<string, number> = {
-  // Info: (20260128 - Luphia) Basic Financials
-  balance_sheet: 10,
-  cash_flow: 10,
-  income_statement: 10,
-
-  // Info: (20260128 - Luphia) Advanced
-  financial_compliance: 20,
-  financial_health: 20,
-  irsc: 20,
-  carbon_health_check: 50,
-  net_zero_emissions: 50,
-
-  // Info: (20260128 - Luphia) External
-  market_trends: 50,
-  industry_development: 50,
-  financial_product_rating: 50,
-
-  // Info: (20260408 - Luphia) AI Features
-  ai_talk: 5,
-  journal_upload: 1,
-};
-
-const PERIOD_MULTIPLIERS: Record<string, number> = {
-  // Info: (20260128 - Luphia) Multipliers by Period
-  daily: 1,
-  weekly: 1.5,
-  monthly: 3,
-  seasonly: 5,
-  yearly: 10,
-};
-
 export function getAnalysisCost(params: IOrderParams): number {
-  const baseCost = BASE_COSTS[params.category] || 10; // Info: (20260128 - Luphia) Default to 10 if unknown
-  const multiplier = PERIOD_MULTIPLIERS[params.periodType] || 1;
+  const baseCost = ANALYSIS_BASE_COSTS[params.category] || 10; // Info: (20260128 - Luphia) Default to 10 if unknown
+  const multiplier = ANALYSIS_PERIOD_MULTIPLIERS[params.periodType] || 1;
   const unitCost = Math.round(baseCost * multiplier);
 
   if (params.items && params.items.length > 0) {

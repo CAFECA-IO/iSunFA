@@ -115,15 +115,12 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: IAuthModalProp
         username.trim(),
         (step) => setCurrentStep(step) // Info: (20260116 - Tzuhan) 更新 UI 狀態
       );
-      await refreshAuth();
+
       // Info: (20260116 - Luphia) Add a small delay for user to see success message
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      if (onSuccess) onSuccess();
-      onClose();
-      // Info: (20260118 - Luphia) Redirect to dashboard if at /
-      if (pathname === "/") {
-        router.push('/user/account_book/');
-      }
+
+      setMode("login");
+      await handleLogin();
     } catch (err: unknown) {
       console.error("Registration error:", err);
       const message =

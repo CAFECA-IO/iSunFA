@@ -697,6 +697,7 @@ export const zhTw = {
       placeholder: "輸入全稱、簡稱或統編...",
       searching: "搜尋中...",
       not_found: "查無此公司，請嘗試輸入更完整的全名或統一編號。",
+      missing_tax_id_desc: "此帳本（{{name}}）尚未設定統一編號，內部數據分析需使用統一編號。請在此補齊設定：",
     },
     title: "分析報告",
     internal_analysis: "內部數據分析",

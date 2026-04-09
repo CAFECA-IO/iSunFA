@@ -657,6 +657,7 @@ export const ko = {
       searching: "검색 중...",
       not_found:
         "기업을 찾을 수 없습니다. 더 완전한 이름이나 사업자등록번호를 입력해 보세요.",
+      missing_tax_id_desc: "이 장부({{name}})에는 사업자등록번호가 설정되어 있지 않습니다. 내부 데이터 분석을 위해서는 사업자등록번호가 필요합니다. 여기서 설정해 주세요:",
     },
     title: '분석 보고서',
     internal_analysis: '내부 데이터 분석',

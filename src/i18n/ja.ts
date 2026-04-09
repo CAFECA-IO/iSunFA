@@ -668,6 +668,7 @@ export const ja = {
       searching: "検索中...",
       not_found:
         "企業が見つかりません。より完全な名称または法人番号を入力してください。",
+      missing_tax_id_desc: "この帳簿（{{name}}）には法人番号が設定されていません。内部データ分析には法人番号が必要です。ここで設定してください：",
     },
     title: '分析レポート',
     internal_analysis: '内部分析',

@@ -668,6 +668,7 @@ export const en = {
       searching: "Searching...",
       not_found:
         "Company not found. Please try entering a more complete name or Tax ID.",
+      missing_tax_id_desc: "This account book ({{name}}) does not have a Tax ID set. Internal data analysis requires a Tax ID. Please set it here:",
     },
     title: 'Analysis Report',
     internal_analysis: 'Internal Analysis',

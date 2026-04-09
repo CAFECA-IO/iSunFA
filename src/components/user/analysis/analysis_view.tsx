@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
+import { Dialog } from '@headlessui/react';
 import { Check, Calendar, Coins, FileBarChart, Globe, Info } from 'lucide-react';
 import { request } from '@/lib/utils/request';
 import PaymentConfirmModal from '@/components/common/payment_confirm_modal';
@@ -69,6 +70,12 @@ export default function AnalysisView() {
   const [companySuggestions, setCompanySuggestions] = useState<{ taxId: string, name: string }[]>([]);
   const [isSearchingCompany, setIsSearchingCompany] = useState(false);
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
+
+  // Info: (20260409) Account Book Tax ID Modal states
+  const [isTaxIdModalOpen, setIsTaxIdModalOpen] = useState(false);
+  const [pendingAccountBook, setPendingAccountBook] = useState<{id: string, name: string} | null>(null);
+  const [taxIdInput, setTaxIdInput] = useState('');
+  const [isUpdatingTaxId, setIsUpdatingTaxId] = useState(false);
 
   const isInternalCompanyAnalysis = activeTab === 'internal';
   const isExternalCarbonAnalysis = activeTab === 'external' && ['carbon_health_check', 'net_zero_emissions'].includes(category);
@@ -494,6 +501,8 @@ export default function AnalysisView() {
                             setSelectedCompany({ taxId: ab.enterpriseId, name: ab.name });
                           } else {
                             setSelectedCompany(null);
+                            setPendingAccountBook({ id: ab.id, name: ab.name });
+                            setIsTaxIdModalOpen(true);
                           }
                         }
                       }}
@@ -742,6 +751,72 @@ export default function AnalysisView() {
       {activeTab === 'history' && (
         <HistorySection />
       )}
+
+      {/* Info: (20260409) Tax ID Edit Modal */}
+      <Dialog open={isTaxIdModalOpen} onClose={() => !isUpdatingTaxId && setIsTaxIdModalOpen(false)} className="relative z-50">
+        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
+              <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                {t('account_book_selection.form_enterprise_id') || '統一編號 (Tax ID)'}
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                {t('analysis.company_input.missing_tax_id_desc', { name: pendingAccountBook?.name })}
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <input
+                    type="text"
+                    value={taxIdInput}
+                    onChange={(e) => setTaxIdInput(e.target.value)}
+                    placeholder="12345678"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm text-gray-900 bg-white"
+                  />
+                </div>
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setIsTaxIdModalOpen(false)}
+                    disabled={isUpdatingTaxId}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg"
+                  >
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!taxIdInput) return;
+                      setIsUpdatingTaxId(true);
+                      try {
+                        const res = await request(`/api/v1/user/account_book/${pendingAccountBook?.id}`, {
+                          method: 'PUT',
+                          body: JSON.stringify({ enterpriseId: taxIdInput }),
+                        });
+                        if (res) {
+                          setAccountBooks(prev => prev.map(ab => ab.id === pendingAccountBook?.id ? { ...ab, enterpriseId: taxIdInput } : ab));
+                          setSelectedCompany({ taxId: taxIdInput, name: pendingAccountBook!.name });
+                          setInternalCompanyName(`${pendingAccountBook!.name} (${taxIdInput})`);
+                          setIsTaxIdModalOpen(false);
+                          setTaxIdInput('');
+                        }
+                      } catch (e) {
+                        console.error(e);
+                      } finally {
+                        setIsUpdatingTaxId(false);
+                      }
+                    }}
+                    disabled={isUpdatingTaxId || !taxIdInput}
+                    className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg disabled:opacity-50"
+                  >
+                    {isUpdatingTaxId ? t('common.loading') : (t('common.confirm') || '確認')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }

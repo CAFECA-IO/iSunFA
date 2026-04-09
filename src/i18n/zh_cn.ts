@@ -656,6 +656,7 @@ export const zhCn = {
       placeholder: "输入全称、简称或统一代码...",
       searching: "搜索中...",
       not_found: "找不到此公司，请尝试输入更完整的全称或统一代码。",
+      missing_tax_id_desc: "此账本（{{name}}）尚未设置统一对应代码，内部数据分析需使用统一代码。请在此补齐设置：",
     },
     title: "分析报告",
     internal_analysis: "内部数据分析",
