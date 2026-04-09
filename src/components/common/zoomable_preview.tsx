@@ -45,9 +45,10 @@ export default function ZoomablePreview({
     setPosition({ x: 0, y: 0 });
   };
 
+  // Info: (20260409 - Julian) 滑鼠的拖曳事件 (for desktop)
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (scale <= 1) return; // Info: (20260305 - Julian) Only allow drag when zoomed in
-    e.preventDefault(); // Info: (20260305 - Julian) Prevent native image drag & text selection
+    if (scale <= 1) return; // Info: (20260409 - Julian) 只有放大時才允許拖曳
+    e.preventDefault(); // Info: (20260409 - Julian) 阻止預設行為
     setIsDragging(true);
     dragStart.current = {
       x: e.clientX - position.x,
@@ -69,11 +70,31 @@ export default function ZoomablePreview({
     if (isDragging) setIsDragging(false);
   };
 
+  // Info: (20260409 - Julian) 觸控的拖曳事件 (for mobile)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (scale <= 1) return;
+    setIsDragging(true);
+    dragStart.current = {
+      x: e.touches[0].clientX - position.x,
+      y: e.touches[0].clientY - position.y,
+    };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.touches[0].clientX - dragStart.current.x,
+      y: e.touches[0].clientY - dragStart.current.y,
+    });
+  };
+
+  const handleTouchEnd = () => setIsDragging(false);
+
   return (
     <div className={className}>
-      <div className="relative size-full flex flex-col border-r border-gray-200 bg-gray-100 p-4">
+      <div className="relative flex size-full flex-col border-0 border-gray-200 bg-gray-100 p-0 lg:border-r lg:p-4">
         {/* Info: (20260305 - Julian) Zoom Controls */}
-        <div className="absolute top-6 right-6 z-10 flex gap-2 rounded-lg bg-white/90 p-1 shadow-sm backdrop-blur text-gray-400">
+        <div className="absolute top-2 right-2 z-10 flex gap-2 rounded-lg bg-white/90 p-1 text-gray-400 shadow-sm backdrop-blur lg:top-6 lg:right-6">
           <button
             type="button"
             onClick={handleZoomOut}
@@ -105,21 +126,26 @@ export default function ZoomablePreview({
 
         <div
           role="presentation"
-          className={`flex flex-1 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white p-4 ${scale > 1
-            ? isDragging
-              ? "cursor-grabbing select-none"
-              : "cursor-grab"
-            : ""
-            }`}
+          className={`flex flex-1 items-center justify-center overflow-hidden border-0 border-gray-200 bg-white p-0 lg:rounded-lg lg:border lg:p-4 ${
+            scale > 1
+              ? isDragging
+                ? "cursor-grabbing select-none touch-none"
+                : "cursor-grab touch-none"
+              : ""
+          }`}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
           onDragStart={(e) => e.preventDefault()}
         >
           {hasContent ? (
             <div
-              className="origin-center transition-transform duration-200 will-change-transform size-full flex items-center justify-center"
+              className="flex size-full origin-center items-center justify-center transition-transform duration-200 will-change-transform"
               style={{
                 transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                 // Info: (20260305 - Julian) Disable transition during drag for smoothness

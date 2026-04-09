@@ -3,7 +3,14 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Script from "next/script";
 import Image from "next/image";
-import { Loader2, Camera, X, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Loader2,
+  Camera,
+  X,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { useParams } from "next/navigation";
@@ -11,7 +18,10 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { uploadFile, fileToBase64 } from "@/lib/file_operator";
-import { useOrderTransaction, IOrderPayload } from "@/hooks/use_order_transaction";
+import {
+  useOrderTransaction,
+  IOrderPayload,
+} from "@/hooks/use_order_transaction";
 import { getAnalysisCost } from "@/lib/analysis/pricing";
 
 type UploadedFileData = {
@@ -44,7 +54,13 @@ export default function JournalScanView({
   const [analyzedCount, setAnalyzedCount] = useState<number>(0);
 
   // Info: (20260408 - Luphia) Payment workflow states
-  const { workflowStatus, errorMessage, txHash, resetTransaction, executeOrderTransaction } = useOrderTransaction();
+  const {
+    workflowStatus,
+    errorMessage,
+    txHash,
+    resetTransaction,
+    executeOrderTransaction,
+  } = useOrderTransaction();
   const [isDetecting, setIsDetecting] = useState<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -68,7 +84,11 @@ export default function JournalScanView({
   useEffect(() => {
     // Info: (20260402 - Luphia) Check if OpenCV is already loaded globally from a previous mount
     const w = window as typeof window & { cv: ReturnType<typeof JSON.parse> };
-    if (typeof window !== "undefined" && w.cv && typeof w.cv.Mat === "function") {
+    if (
+      typeof window !== "undefined" &&
+      w.cv &&
+      typeof w.cv.Mat === "function"
+    ) {
       setCvReady(true);
     }
   }, []);
@@ -87,44 +107,46 @@ export default function JournalScanView({
     };
   }, []);
 
-  const uploadCapturedImage = useCallback(
-    async (blob: Blob) => {
-      setIsProcessing(true);
-      try {
-        const file = new File([blob], "scan.jpg", { type: "image/jpeg" });
-        const hash = await new Promise<string>((resolve, reject) => {
-          uploadFile(file, {
-            onSuccess: (h) => resolve(h),
-            onError: (e) => reject(e),
-          });
+  const uploadCapturedImage = useCallback(async (blob: Blob) => {
+    setIsProcessing(true);
+    try {
+      const file = new File([blob], "scan.jpg", { type: "image/jpeg" });
+      const hash = await new Promise<string>((resolve, reject) => {
+        uploadFile(file, {
+          onSuccess: (h) => resolve(h),
+          onError: (e) => reject(e),
         });
-        const base64 = await fileToBase64(file);
-        const fileData: UploadedFileData = {
-          id: crypto.randomUUID(),
-          file: file,
-          previewUrl: URL.createObjectURL(file), // Info: (20260402 - Luphia) Will be handled internally
-          hash,
-          base64,
-        };
+      });
+      const base64 = await fileToBase64(file);
+      const fileData: UploadedFileData = {
+        id: crypto.randomUUID(),
+        file: file,
+        previewUrl: URL.createObjectURL(file), // Info: (20260402 - Luphia) Will be handled internally
+        hash,
+        base64,
+      };
 
-        setCapturedFiles((prev) => [...prev, fileData]);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsProcessing(false);
-      }
-    },
-    [],
-  );
+      setCapturedFiles((prev) => [...prev, fileData]);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, []);
 
   const handleAnalyzeAll = async () => {
     if (capturedFiles.length === 0) return;
 
-    const costPerFile = getAnalysisCost({ category: "journal_upload", periodType: "daily", year: new Date().getFullYear(), periodValue: "" });
+    const costPerFile = getAnalysisCost({
+      category: "journal_upload",
+      periodType: "daily",
+      year: new Date().getFullYear(),
+      periodValue: "",
+    });
     const totalCost = costPerFile * capturedFiles.length;
 
     const payload: IOrderPayload = {
-      category: "journal_upload", 
+      category: "journal_upload",
       periodType: "daily",
       periodValue: new Date().toISOString().split("T")[0],
       year: new Date().getFullYear(),
@@ -133,8 +155,8 @@ export default function JournalScanView({
           name: "AI Journal OCR scan",
           unitPrice: costPerFile,
           quantity: capturedFiles.length,
-        }
-      ]
+        },
+      ],
     };
 
     await executeOrderTransaction(payload, totalCost, async (authData) => {
@@ -153,9 +175,9 @@ export default function JournalScanView({
                 file: { name: fileData.file.name, type: fileData.file.type },
                 previewUrl: fileData.previewUrl,
                 hash: fileData.hash,
-                base64: fileData.base64
+                base64: fileData.base64,
               },
-              authentication: authData
+              authentication: authData,
             }),
           },
         );
@@ -249,7 +271,8 @@ export default function JournalScanView({
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const hiddenCanvas = hiddenCanvasRef.current;
-    const cv = (window as typeof window & { cv: ReturnType<typeof JSON.parse> }).cv;
+    const cv = (window as typeof window & { cv: ReturnType<typeof JSON.parse> })
+      .cv;
 
     if (video.videoWidth === 0 || video.videoHeight === 0) {
       animationFrameId.current = requestAnimationFrame(processFrame);
@@ -301,7 +324,7 @@ export default function JournalScanView({
         new cv.Point(-1, -1),
         1,
         cv.BORDER_CONSTANT,
-        cv.morphologyDefaultBorderValue()
+        cv.morphologyDefaultBorderValue(),
       );
       M.delete();
 
@@ -371,7 +394,10 @@ export default function JournalScanView({
             // Info: (20260404 - Luphia) Extract the 4 corners
             const pts = [];
             for (let j = 0; j < 4; j++) {
-              pts.push({ x: approx.intPtr(j, 0)[0], y: approx.intPtr(j, 0)[1] });
+              pts.push({
+                x: approx.intPtr(j, 0)[0],
+                y: approx.intPtr(j, 0)[1],
+              });
             }
 
             // Info: (20260404 - Luphia) Calculate lengths of the 4 sides to prevent absurd perspective distortion (like one edge being tiny)
@@ -404,7 +430,12 @@ export default function JournalScanView({
                 const dy1 = p1.y - p0.y;
                 const dx2 = p1.x - p2.x;
                 const dy2 = p1.y - p2.y;
-                const cosine = Math.abs((dx1 * dx2 + dy1 * dy2) / Math.sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-6));
+                const cosine = Math.abs(
+                  (dx1 * dx2 + dy1 * dy2) /
+                    Math.sqrt(
+                      (dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-6,
+                    ),
+                );
                 maxCos = Math.max(maxCos, cosine);
               }
 
@@ -454,7 +485,7 @@ export default function JournalScanView({
         const areaDiff = Math.abs(prev.lastArea - maxArea) / maxArea;
 
         // Info: (20260404 - Luphia) Increased areaDiff tolerance to 0.20 for unsteady hands
-        if (areaDiff < 0.20 && prev.lastPoints.length === 4) {
+        if (areaDiff < 0.2 && prev.lastPoints.length === 4) {
           // Info: (20260402 - Luphia) Calculate displacement of corners
           let totalDisp = 0;
           for (let i = 0; i < 4; i++) {
@@ -477,7 +508,9 @@ export default function JournalScanView({
         ctx.lineWidth = 3;
         ctx.strokeStyle = isStabilizing ? "#10b981" : "#f97316"; // Info: (20260402 - Luphia) Green if stable, Orange otherwise
         ctx.stroke();
-        ctx.fillStyle = isStabilizing ? "rgba(16, 185, 129, 0.2)" : "rgba(249, 115, 22, 0.2)";
+        ctx.fillStyle = isStabilizing
+          ? "rgba(16, 185, 129, 0.2)"
+          : "rgba(249, 115, 22, 0.2)";
         ctx.fill();
 
         if (isStabilizing) {
@@ -613,17 +646,37 @@ export default function JournalScanView({
     if (!isProcessing && !isAnalyzing && capturedFiles.length < 100) {
       animationFrameId.current = requestAnimationFrame(processFrame);
     }
-  }, [cvReady, streamReady, isProcessing, isAnalyzing, capturedFiles.length, uploadCapturedImage]);
+  }, [
+    cvReady,
+    streamReady,
+    isProcessing,
+    isAnalyzing,
+    capturedFiles.length,
+    uploadCapturedImage,
+  ]);
 
   useEffect(() => {
-    if (cvReady && streamReady && !isProcessing && !isAnalyzing && capturedFiles.length < 100) {
+    if (
+      cvReady &&
+      streamReady &&
+      !isProcessing &&
+      !isAnalyzing &&
+      capturedFiles.length < 100
+    ) {
       animationFrameId.current = requestAnimationFrame(processFrame);
     }
     return () => {
       if (animationFrameId.current)
         cancelAnimationFrame(animationFrameId.current);
     };
-  }, [cvReady, streamReady, isProcessing, isAnalyzing, capturedFiles.length, processFrame]);
+  }, [
+    cvReady,
+    streamReady,
+    isProcessing,
+    isAnalyzing,
+    capturedFiles.length,
+    processFrame,
+  ]);
 
   return (
     <div className="relative flex h-full min-h-[500px] flex-col overflow-hidden rounded-2xl bg-black lg:h-[calc(100vh-250px)]">
@@ -633,7 +686,9 @@ export default function JournalScanView({
         onLoad={() => {
           let iters = 0;
           const checkReady = setInterval(() => {
-            const w = window as typeof window & { cv: ReturnType<typeof JSON.parse> };
+            const w = window as typeof window & {
+              cv: ReturnType<typeof JSON.parse>;
+            };
             if (w.cv && typeof w.cv.Mat === "function") {
               clearInterval(checkReady);
               setCvReady(true);
@@ -646,10 +701,10 @@ export default function JournalScanView({
       {permissionDenied ? (
         <div className="flex h-full flex-col items-center justify-center p-4 text-center text-white">
           <Camera className="mb-4 h-12 w-12 text-slate-500" />
-          <h2 className="mb-2 text-xl font-bold">{t("ocr.camera_denied_title")}</h2>
-          <p className="text-slate-400">
-            {t("ocr.camera_denied_desc")}
-          </p>
+          <h2 className="mb-2 text-xl font-bold">
+            {t("ocr.camera_denied_title")}
+          </h2>
+          <p className="text-slate-400">{t("ocr.camera_denied_desc")}</p>
         </div>
       ) : (
         <>
@@ -665,14 +720,20 @@ export default function JournalScanView({
           {/* Info: (20260402 - Luphia) Guiding UI Overlay */}
           <div className="pointers-events-none absolute inset-0 z-10">
             <div
-              className={`absolute top-10 left-10 right-10 bottom-40 rounded-2xl border-4 border-dashed transition-all duration-300 ${isDetecting ? "border-green-400 bg-green-500/10" : "border-white/50"
-                }`}
+              className={`absolute top-10 right-10 bottom-40 left-10 rounded-2xl border-4 border-dashed transition-all duration-300 ${
+                isDetecting
+                  ? "border-green-400 bg-green-500/10"
+                  : "border-white/50"
+              }`}
             >
               <div
-                className={`absolute -bottom-10 left-0 right-0 text-center text-lg font-bold tracking-wide drop-shadow-md transition-colors ${isDetecting ? "text-green-400" : "text-white"
-                  }`}
+                className={`absolute right-0 -bottom-10 left-0 text-center text-lg font-bold tracking-wide drop-shadow-md transition-colors ${
+                  isDetecting ? "text-green-400" : "text-white"
+                }`}
               >
-                {isDetecting ? t("ocr.hold_still") : t("ocr.place_document_in_frame")}
+                {isDetecting
+                  ? t("ocr.hold_still")
+                  : t("ocr.place_document_in_frame")}
               </div>
             </div>
           </div>
@@ -682,12 +743,17 @@ export default function JournalScanView({
             aria-label="Detection overlay"
             className="pointers-events-none absolute inset-0 z-20 h-full w-full"
           />
-          <canvas ref={hiddenCanvasRef} className="hidden" aria-label="Hidden processing canvas" />
+          <canvas
+            ref={hiddenCanvasRef}
+            className="hidden"
+            aria-label="Hidden processing canvas"
+          />
 
           {/* Info: (20260402 - Luphia) Capture Flash Overlay */}
           <div
-            className={`pointer-events-none absolute inset-0 z-50 bg-white transition-opacity duration-300 ${showFlash ? "opacity-100" : "opacity-0"
-              }`}
+            className={`pointer-events-none absolute inset-0 z-50 bg-white transition-opacity duration-300 ${
+              showFlash ? "opacity-100" : "opacity-0"
+            }`}
           />
 
           {(!cvReady || !streamReady) && (
@@ -709,7 +775,7 @@ export default function JournalScanView({
           )}
 
           {isAnalyzing && (
-            <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md backdrop-saturate-150 transition-all duration-300">
+            <div className="absolute inset-0 z-100 flex flex-col items-center justify-center bg-white/60 backdrop-blur-md backdrop-saturate-150 transition-all duration-300">
               <Loader2 className="mb-6 h-16 w-16 animate-spin text-orange-500 drop-shadow-md" />
               <p className="text-2xl font-bold tracking-wide text-slate-800 drop-shadow-sm">
                 {t("ocr.analyzing")}
@@ -729,18 +795,19 @@ export default function JournalScanView({
             </div>
           )}
 
-          <div className="absolute bottom-0 left-0 right-0 z-30 flex min-h-[120px] flex-col justify-end bg-gradient-to-t from-black/80 to-transparent p-4 pb-6">
+          <div className="absolute right-0 bottom-0 left-0 z-30 flex min-h-[120px] flex-col justify-end bg-linear-to-t from-black/80 to-transparent p-4 pb-6">
             {capturedFiles.length > 0 && (
-              <div className="mb-4 flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+              <div className="scrollbar-none mb-4 flex gap-3 overflow-x-auto pb-2">
                 {capturedFiles.map((fileData, index) => (
                   <div
                     key={fileData.id}
-                    className="relative h-16 w-12 flex-shrink-0 cursor-pointer rounded-md overflow-hidden ring-2 ring-white/50 transition-all hover:ring-white"
+                    className="relative h-16 w-12 shrink-0 cursor-pointer overflow-hidden rounded-md ring-2 ring-white/50 transition-all hover:ring-white"
                     onClick={() => setPreviewIndex(index)}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") setPreviewIndex(index);
+                      if (e.key === "Enter" || e.key === " ")
+                        setPreviewIndex(index);
                     }}
                   >
                     <button
@@ -751,7 +818,13 @@ export default function JournalScanView({
                     >
                       <X className="h-3 w-3" />
                     </button>
-                    <Image src={fileData.previewUrl || ""} alt="Scan" fill unoptimized className="object-cover" />
+                    <Image
+                      src={fileData.previewUrl || ""}
+                      alt="Scan"
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
                   </div>
                 ))}
               </div>
@@ -764,9 +837,17 @@ export default function JournalScanView({
                 <button
                   aria-label="Capture document"
                   className="rounded-full border-4 border-white bg-white/20 p-4 shadow-[0_0_20px_rgba(0,0,0,0.5)] backdrop-blur-md transition hover:bg-white/40 disabled:opacity-50"
-                  disabled={capturedFiles.length >= 100 || isProcessing || isAnalyzing}
+                  disabled={
+                    capturedFiles.length >= 100 || isProcessing || isAnalyzing
+                  }
                   onClick={() => {
-                    if (!hiddenCanvasRef.current || isProcessing || isAnalyzing || capturedFiles.length >= 100) return;
+                    if (
+                      !hiddenCanvasRef.current ||
+                      isProcessing ||
+                      isAnalyzing ||
+                      capturedFiles.length >= 100
+                    )
+                      return;
                     setShowFlash(true);
                     setTimeout(() => setShowFlash(false), 300);
                     setIsProcessing(true);
@@ -779,7 +860,7 @@ export default function JournalScanView({
                     );
                   }}
                 >
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white transition hover:scale-95" />
+                  <div className="h-10 w-10 rounded-full bg-white transition hover:scale-95 sm:h-12 sm:w-12" />
                 </button>
               </div>
 
@@ -787,10 +868,17 @@ export default function JournalScanView({
                 {capturedFiles.length > 0 && (
                   <button
                     className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-orange-600 disabled:opacity-50"
-                    onClick={(e) => { e.stopPropagation(); setShowConfirmModal(true); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowConfirmModal(true);
+                    }}
                     disabled={isAnalyzing}
                   >
-                    <span>{t("ocr.analyze_btn_with_count", { count: capturedFiles.length })}</span>
+                    <span>
+                      {t("ocr.analyze_btn_with_count", {
+                        count: capturedFiles.length,
+                      })}
+                    </span>
                   </button>
                 )}
               </div>
@@ -801,16 +889,20 @@ export default function JournalScanView({
           {previewIndex !== null && capturedFiles[previewIndex] && (
             <div
               role="presentation"
-              className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 p-4 backdrop-blur-md"
+              className="fixed inset-0 z-200 flex flex-col items-center justify-center bg-black/95 p-4 backdrop-blur-md"
               onClick={() => setPreviewIndex(null)}
               onKeyDown={(e) => {
                 if (e.key === "Escape") setPreviewIndex(null);
               }}
-              onTouchStart={(e) => { touchStartX.current = e.targetTouches[0].clientX; }}
-              onTouchMove={(e) => { touchEndX.current = e.targetTouches[0].clientX; }}
+              onTouchStart={(e) => {
+                touchStartX.current = e.targetTouches[0].clientX;
+              }}
+              onTouchMove={(e) => {
+                touchEndX.current = e.targetTouches[0].clientX;
+              }}
               onTouchEnd={() => {
                 const diff = touchStartX.current - touchEndX.current;
-                // Info: (20260402 - Luphia) Require at least 50px swipe 
+                // Info: (20260402 - Luphia) Require at least 50px swipe
                 if (diff > 50 && previewIndex < capturedFiles.length - 1) {
                   setPreviewIndex(previewIndex + 1); // Info: (20260402 - Luphia) Swipe left -> Next
                 } else if (diff < -50 && previewIndex > 0) {
@@ -821,7 +913,6 @@ export default function JournalScanView({
                 touchEndX.current = 0;
               }}
             >
-
               {/* Info: (20260402 - Luphia) Header actions */}
               <div
                 role="presentation"
@@ -867,11 +958,10 @@ export default function JournalScanView({
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
               >
-
                 {/* Info: (20260402 - Luphia) Desktop Nav Buttons */}
                 {previewIndex > 0 && (
                   <button
-                    className="absolute left-4 z-10 hidden sm:flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/80"
+                    className="absolute left-4 z-10 hidden h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/80 sm:flex"
                     onClick={() => setPreviewIndex(previewIndex - 1)}
                   >
                     <ChevronLeft className="h-8 w-8" />
@@ -884,13 +974,13 @@ export default function JournalScanView({
                   alt="Enlarged preview"
                   fill
                   unoptimized
-                  className="object-contain animate-in fade-in duration-300"
+                  className="animate-in fade-in object-contain duration-300"
                   draggable={false}
                 />
 
                 {previewIndex < capturedFiles.length - 1 && (
                   <button
-                    className="absolute right-4 z-10 hidden sm:flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/80"
+                    className="absolute right-4 z-10 hidden h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/80 sm:flex"
                     onClick={() => setPreviewIndex(previewIndex + 1)}
                   >
                     <ChevronRight className="h-8 w-8" />
@@ -905,10 +995,13 @@ export default function JournalScanView({
       <PaymentConfirmModal
         isOpen={showConfirmModal}
         onClose={() => {
-          if (workflowStatus === 'error' || workflowStatus === 'payment_success') {
+          if (
+            workflowStatus === "error" ||
+            workflowStatus === "payment_success"
+          ) {
             resetTransaction();
             setShowConfirmModal(false);
-          } else if (workflowStatus === 'idle') {
+          } else if (workflowStatus === "idle") {
             setShowConfirmModal(false);
           }
         }}
@@ -919,9 +1012,16 @@ export default function JournalScanView({
         confirmBtnText={t("ocr.confirm_btn")}
         items={[
           { label: t("ocr.analysis_type"), value: t("ocr.multiple_page_scan") },
-          { label: t("ocr.page_count"), value: `${capturedFiles.length} ${t("ocr.page_unit")}` },
+          {
+            label: t("ocr.page_count"),
+            value: `${capturedFiles.length} ${t("ocr.page_unit")}`,
+          },
         ]}
-        isLoading={workflowStatus !== 'idle' && workflowStatus !== 'payment_success' && workflowStatus !== 'error'}
+        isLoading={
+          workflowStatus !== "idle" &&
+          workflowStatus !== "payment_success" &&
+          workflowStatus !== "error"
+        }
         status={workflowStatus}
         errorMessage={errorMessage}
         txHash={txHash}

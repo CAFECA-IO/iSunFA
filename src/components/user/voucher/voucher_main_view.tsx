@@ -14,7 +14,7 @@ export default function VoucherMainView() {
   };
 
   return (
-    <div className="flex max-w-[calc(100vw-30px)] flex-col space-y-6 px-0 md:px-12">
+    <div className="flex max-w-[calc(100vw-30px)] flex-col gap-y-4 px-0 lg:gap-y-6 lg:px-12">
       {/* Info: (20260316 - Julian) Header */}
       <div className="flex flex-col items-center justify-start gap-4 lg:flex-row lg:justify-between">
         <div className="flex flex-col gap-2">

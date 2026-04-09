@@ -60,12 +60,12 @@ export default function EmbedGenerateModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-2xl bg-white -xl">
+      <div className="text-xl w-full max-w-2xl rounded-2xl bg-white">
         {/* Info: (20260319 - Julian) Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50">
-              <Code className="h-5 w-5 text-amber-500" strokeWidth={2.5} />
+            <div className="flex size-10 items-center justify-center rounded-lg bg-orange-50">
+              <Code className="size-5 text-amber-500" strokeWidth={2.5} />
             </div>
             <h2 className="text-xl font-bold text-slate-800">嵌入報表設定</h2>
           </div>
@@ -81,8 +81,8 @@ export default function EmbedGenerateModal({
         {/* Info: (20260319 - Julian) Modal Body / Success State Switch */}
         {isGenerated ? (
           <div className="flex flex-col items-center justify-center p-8 text-center md:p-12">
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
-              <CheckCircle2 className="h-8 w-8" strokeWidth={2.5} />
+            <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
+              <CheckCircle2 className="size-8" strokeWidth={2.5} />
             </div>
             <h3 className="mb-2 text-2xl font-bold text-slate-800">
               嵌入程式碼已產生
@@ -95,7 +95,7 @@ export default function EmbedGenerateModal({
               <div className="mb-3 block text-sm font-bold text-slate-600">
                 HTML 嵌入碼
               </div>
-              <div className="relative rounded-2xl bg-slate-900 px-6 py-8 font-mono text-sm text-amber-100 -inner">
+              <div className="relative rounded-2xl bg-slate-900 px-6 py-8 font-mono text-sm text-amber-100">
                 {embedCode}
                 <button
                   type="button"
@@ -188,7 +188,7 @@ export default function EmbedGenerateModal({
 
             {/* Info: (20260319 - Julian) Info Banner */}
             <div className="flex items-start gap-3 rounded-xl bg-slate-100 p-4">
-              <Info className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" />
+              <Info className="mt-0.5 size-5 shrink-0 text-slate-500" />
               <p className="text-sm leading-relaxed font-medium text-slate-600">
                 產生的嵌入碼將包含即時連動數據。當您在後台更新傳票時，外部網站顯示的報表內容也會同步更新。
               </p>
@@ -213,7 +213,7 @@ export default function EmbedGenerateModal({
               onClick={handleGenerateEmbedCode}
               className="flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-amber-600"
             >
-              <Code className="h-4 w-4" strokeWidth={2.5} />
+              <Code className="size-4" strokeWidth={2.5} />
               產生嵌入碼
             </button>
           )}

@@ -1078,6 +1078,7 @@ export const ko = {
   journal: {
     detail_modal: {
       title: "분개장",
+      empty: "분개장 내용이 없습니다",
     },
     summary: {
       empty: "현재 분개장 데이터가 없습니다",
@@ -1094,7 +1095,7 @@ export const ko = {
     },
     log_view: {
       title: "변경 내역",
-      refresh: "새로고침",
+      type: "변경 항목",
       record_time: "기록 시간",
       action_type: "작업 유형",
       operator: "작업자",

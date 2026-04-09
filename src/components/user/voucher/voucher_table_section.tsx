@@ -58,10 +58,11 @@ export default function VoucherTableSection() {
   const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(
     null,
   );
-  
+
   // Info: (20260404 - Luphia) 軟刪除與復原狀態
   const [voucherToDelete, setVoucherToDelete] = useState<string | null>(null);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState<boolean>(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] =
+    useState<boolean>(false);
 
   useEffect(() => {
     if (!accountBookId) return;
@@ -284,7 +285,7 @@ export default function VoucherTableSection() {
       setIsLoading(true);
       await request(
         `/api/v1/user/account_book/${accountBookId}/voucher/${voucherToDelete}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       await fetchVouchers();
     } catch (error) {
@@ -303,7 +304,7 @@ export default function VoucherTableSection() {
       setIsLoading(true);
       await request(
         `/api/v1/user/account_book/${accountBookId}/voucher/${id}/restore`,
-        { method: "POST" }
+        { method: "POST" },
       );
       await fetchVouchers();
     } catch (error) {
@@ -381,7 +382,7 @@ export default function VoucherTableSection() {
               />
             </div>
 
-            <div className="flex items-center gap-2 text-xs lg:text-sm">
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs lg:text-sm">
               {/* Info: (20260401 - Julian) Filter by verify status */}
               <select
                 aria-label="Filter by verify status"
@@ -439,7 +440,7 @@ export default function VoucherTableSection() {
 
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             {/* Info: (20260324 - Julian) 隱藏已刪除傳票 toggle */}
-            <div className="flex items-center justify-between bg-white px-2 py-4 lg:px-6">
+            <div className="flex flex-col items-center justify-between gap-y-2 bg-white px-2 py-4 lg:flex-row lg:px-6">
               <div className="flex cursor-pointer items-center gap-3">
                 <button
                   type="button"
@@ -471,7 +472,7 @@ export default function VoucherTableSection() {
                   })}
                 </p>
 
-                <div className="hidden h-4 w-px bg-slate-200 sm:block"></div>
+                <div className="h-4 w-px bg-slate-200"></div>
 
                 {/* Info: (20260324 - Julian) 幣別 */}
                 <p>
@@ -487,10 +488,10 @@ export default function VoucherTableSection() {
               <table className="w-full min-w-[1000px] border-collapse text-left text-sm text-gray-600">
                 <thead className="border-b border-slate-200 bg-slate-100">
                   <tr>
-                    <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
+                    <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4 lg:whitespace-nowrap">
                       {t("voucher.main_view.table.headers.receipt")}
                     </th>
-                    <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap lg:px-6 lg:py-4">
+                    <th className="p-2 text-center text-xs font-black tracking-wider lg:px-6 lg:py-4 lg:whitespace-nowrap">
                       <button
                         type="button"
                         aria-label={t(
@@ -500,7 +501,7 @@ export default function VoucherTableSection() {
                         className="group mx-auto flex w-full items-center justify-center gap-1"
                       >
                         <span
-                          className={`transition-colors ease-in-out ${
+                          className={`uppercase transition-colors ease-in-out ${
                             isDateDesc || isDateAsc
                               ? "text-orange-500"
                               : "text-slate-500 group-hover:text-orange-500"
@@ -520,19 +521,19 @@ export default function VoucherTableSection() {
                         </div>
                       </button>
                     </th>
-                    <th className="p-2 text-left text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
+                    <th className="p-2 text-left text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4 lg:whitespace-nowrap">
                       <div className="flex items-center">
                         {t("voucher.main_view.table.headers.voucher_type_id")}
                       </div>
                     </th>
-                    <th className="p-2 text-left text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
-                      <div className="flex w-[250px] items-center">
+                    <th className="p-2 text-left text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4 lg:whitespace-nowrap">
+                      <div className="flex items-center lg:w-[250px]">
                         {t(
                           "voucher.main_view.table.headers.accounting_entries",
                         )}
                       </div>
                     </th>
-                    <th className="p-2 text-right text-xs font-black tracking-wider whitespace-nowrap lg:px-6 lg:py-4">
+                    <th className="p-2 text-right text-xs font-black tracking-wider lg:px-6 lg:py-4 lg:whitespace-nowrap">
                       <button
                         type="button"
                         aria-label={t("voucher.main_view.table.headers.debit")}
@@ -560,7 +561,7 @@ export default function VoucherTableSection() {
                         </div>
                       </button>
                     </th>
-                    <th className="p-2 text-right text-xs font-black tracking-wider whitespace-nowrap lg:px-6 lg:py-4">
+                    <th className="p-2 text-right text-xs font-black tracking-wider lg:px-6 lg:py-4 lg:whitespace-nowrap">
                       <button
                         type="button"
                         aria-label={t("voucher.main_view.table.headers.credit")}
@@ -588,13 +589,11 @@ export default function VoucherTableSection() {
                         </div>
                       </button>
                     </th>
-                    <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
+                    <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4 lg:whitespace-nowrap">
+                      {t("voucher.main_view.table.headers.status")} /{" "}
                       {t("voucher.main_view.table.headers.confidence")}
                     </th>
-                    <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
-                      {t("voucher.main_view.table.headers.status")}
-                    </th>
-                    <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
+                    <th className="p-2 text-center text-xs font-black tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4 lg:whitespace-nowrap">
                       {/* Info: (20260404 - Luphia) Actions */}
                     </th>
                   </tr>

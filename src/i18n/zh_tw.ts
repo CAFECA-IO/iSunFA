@@ -1145,6 +1145,7 @@ export const zhTw = {
   journal: {
     detail_modal: {
       title: "日記帳",
+      empty: "沒有日記帳內容",
     },
     summary: {
       empty: "目前沒有日記帳資料",
@@ -1161,7 +1162,7 @@ export const zhTw = {
     },
     log_view: {
       title: "異動紀錄",
-      refresh: "重新整理",
+      type: "異動項目",
       record_time: "紀錄時間",
       action_type: "操作類型",
       operator: "操作人員",

@@ -1092,6 +1092,7 @@ export const ja = {
   journal: {
     detail_modal: {
       title: "仕訳帳",
+      empty: "仕訳帳の内容がありません",
     },
     summary: {
       empty: "現在仕訳帳データはありません",
@@ -1108,7 +1109,7 @@ export const ja = {
     },
     log_view: {
       title: "変更履歴",
-      refresh: "更新",
+      type: "変更項目",
       record_time: "記録時間",
       action_type: "操作タイプ",
       operator: "操作者",

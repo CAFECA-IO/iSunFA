@@ -33,7 +33,7 @@ export default function HeaderNav() {
   return (
     <>
       {/* Info: (20260304 - Julian) Desktop Navigation */}
-      <div className="hidden items-center gap-x-3 sm:flex sm:gap-x-4 lg:gap-x-8">
+      <div className="hidden items-center gap-x-3 lg:flex lg:gap-x-8">
         {NAV_ITEMS.map((item) => (
           <Link
             key={item.label}

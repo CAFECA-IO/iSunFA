@@ -64,28 +64,28 @@ export function VoucherRow({
     switch (type) {
       case TradingType.INCOME:
         return (
-          <div className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-500">
-            <ArrowDownLeft size={14} className="stroke-[2.5]" />
+          <div className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-bold text-emerald-500 lg:text-xs">
+            <ArrowDownLeft size={14} className="shrink-0 stroke-[2.5]" />
             <span>{t("voucher.main_view.table.types.income")}</span>
           </div>
         );
       case TradingType.OUTCOME:
         return (
-          <div className="flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-bold text-red-500">
-            <ArrowUpRight size={14} className="stroke-[2.5]" />
+          <div className="flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[10px] font-bold text-red-500 lg:text-xs">
+            <ArrowUpRight size={14} className="shrink-0 stroke-[2.5]" />
             <span>{t("voucher.main_view.table.types.outcome")}</span>
           </div>
         );
       case TradingType.TRANSFER:
         return (
-          <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-700">
-            <ArrowRightLeft size={14} className="stroke-[2.5]" />
+          <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-bold text-slate-700 lg:text-xs">
+            <ArrowRightLeft size={14} className="shrink-0 stroke-[2.5]" />
             <span>{t("voucher.main_view.table.types.transfer")}</span>
           </div>
         );
       default:
         return (
-          <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600">
+          <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-bold text-slate-600 lg:text-xs">
             <FileQuestion size={14} className="stroke-[2.5]" />
             <span>{t("voucher.main_view.table.types.unknown")}</span>
           </div>
@@ -96,11 +96,17 @@ export function VoucherRow({
   // Info: (20260320 - Julian) 尚未開始
   if (voucher.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
-      <tr className={`border-b text-sm opacity-80 transition-colors last:border-0 ${voucher.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-slate-300 bg-slate-50 text-slate-400"}`}>
+      <tr
+        className={`border-b text-sm opacity-80 transition-colors last:border-0 ${voucher.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-slate-300 bg-slate-50 text-slate-400"}`}
+      >
         {/* Info: (20260320 - Julian) File Preview loading */}
         <td className="p-2 text-center lg:px-6 lg:py-4">
           <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
-            {voucher.isDeleted ? <Trash2 className="size-6 text-slate-400" /> : <Loader2 className="size-6 animate-spin text-orange-400" />}
+            {voucher.isDeleted ? (
+              <Trash2 className="size-6 text-slate-400" />
+            ) : (
+              <Loader2 className="size-6 animate-spin text-orange-400" />
+            )}
           </div>
         </td>
         {/* Info: (20260320 - Julian) Trading Date (still showing the created date conceptually) */}
@@ -111,13 +117,16 @@ export function VoucherRow({
         </td>
         {/* Info: (20260320 - Julian) Colspan the rest of the parsing info to show a generic loading center */}
         <td
-          colSpan={6}
+          colSpan={5}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           {voucher.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
+              <Trash2 size={16} />
+              {t("common.status_deleted")}
+            </span>
           ) : (
-            <span className="flex items-center justify-center gap-2 text-sm font-medium italic">
+            <span className="flex items-center justify-center gap-2 text-[10px] font-medium italic sm:text-xs lg:text-sm">
               <Loader2 className="size-4 animate-spin text-orange-500" />
               {t("common.ai.pending")}
             </span>
@@ -131,11 +140,17 @@ export function VoucherRow({
   // Info: (20260320 - Julian) 處理中
   if (voucher.analysisStatus === AIAnalysisStatus.PROCESSING) {
     return (
-      <tr className={`border-b text-sm opacity-90 transition-colors last:border-0 ${voucher.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-blue-200 bg-blue-50 text-blue-400"}`}>
+      <tr
+        className={`border-b text-sm opacity-90 transition-colors last:border-0 ${voucher.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-blue-200 bg-blue-50 text-blue-400"}`}
+      >
         {/* Info: (20260320 - Julian) File Preview loading */}
         <td className="p-2 text-center lg:px-6 lg:py-4">
           <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 shadow-sm sm:h-16 sm:w-16">
-            {voucher.isDeleted ? <Trash2 className="size-6 text-slate-400" /> : <Loader2 className="size-6 animate-spin text-blue-500" />}
+            {voucher.isDeleted ? (
+              <Trash2 className="size-6 text-slate-400" />
+            ) : (
+              <Loader2 className="size-6 animate-spin text-blue-500" />
+            )}
           </div>
         </td>
         {/* Info: (20260320 - Julian) Trading Date */}
@@ -146,14 +161,17 @@ export function VoucherRow({
         </td>
         <td
           aria-label="AI Processing"
-          colSpan={6}
+          colSpan={5}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           {voucher.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
+              <Trash2 size={16} />
+              {t("common.status_deleted")}
+            </span>
           ) : (
             <div className="mx-auto flex max-w-sm flex-col items-center justify-center gap-2">
-              <span className="flex items-center justify-center gap-2 text-sm font-bold text-blue-600 italic">
+              <span className="flex items-center justify-center gap-2 text-[10px] font-bold text-blue-600 italic sm:text-xs lg:text-sm">
                 <Loader2 className="size-4 animate-spin text-blue-500" />
                 {t("voucher.main_view.table.ai.processing")}
               </span>
@@ -170,19 +188,24 @@ export function VoucherRow({
 
   // Info: (20260320 - Julian) 分析出錯
   if (voucher.analysisStatus === AIAnalysisStatus.FAILED) {
-    const failedMessage = voucher.aiNote && voucher.aiNote !== "無 AI 分析備註" 
-      ? voucher.aiNote 
-      : (t("voucher.main_view.table.ai.failed") as string);
+    const failedMessage =
+      voucher.aiNote && voucher.aiNote !== "無 AI 分析備註"
+        ? voucher.aiNote
+        : (t("voucher.main_view.table.ai.failed") as string);
 
     return (
       <tr
         onClick={!voucher.isDeleted ? onClick : undefined}
-        className={`border-b text-sm opacity-80 transition-colors last:border-0 ${voucher.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "hover:cursor-pointer hover:bg-red-100 border-slate-300 bg-red-50 text-red-500"}`}
+        className={`border-b text-sm opacity-80 transition-colors last:border-0 ${voucher.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-slate-300 bg-red-50 text-red-500 hover:cursor-pointer hover:bg-red-100"}`}
       >
         {/* Info: (20260320 - Julian) File Preview loading */}
         <td className="p-2 lg:px-6 lg:py-4">
           <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white p-1 shadow-sm sm:size-16">
-            {voucher.isDeleted ? <Trash2 className="size-6 text-slate-400" /> : <CircleAlert className="size-6 text-red-500" />}
+            {voucher.isDeleted ? (
+              <Trash2 className="size-6 text-slate-400" />
+            ) : (
+              <CircleAlert className="size-6 text-red-500" />
+            )}
           </div>
         </td>
         {/* Info: (20260320 - Julian) Trading Date (still showing the created date conceptually) */}
@@ -193,13 +216,19 @@ export function VoucherRow({
         </td>
         {/* Info: (20260320 - Julian) Colspan the rest of the parsing info to show a generic loading center */}
         <td
-          colSpan={6}
+          colSpan={5}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           {voucher.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
+              <Trash2 size={16} />
+              {t("common.status_deleted")}
+            </span>
           ) : (
-            <p className="font-bold text-red-500 truncate" title={failedMessage}>
+            <p
+              className="truncate text-[10px] font-bold text-red-500 sm:text-xs lg:text-sm"
+              title={failedMessage}
+            >
               {failedMessage}
             </p>
           )}
@@ -232,7 +261,7 @@ export function VoucherRow({
                     line.isDebit
                       ? "font-bold text-slate-800"
                       : "ml-4 font-medium text-slate-700"
-                  } truncate text-xs lg:max-w-[250px] lg:text-sm`}
+                  } max-w-[100px] truncate text-xs lg:max-w-[250px] lg:text-sm`}
                 >
                   {line.accounting?.name}
                 </span>
@@ -328,9 +357,9 @@ export function VoucherRow({
         aria-label="Type"
         className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
-        <div className="flex flex-col items-center justify-center gap-2">
+        <div className="flex w-[100px] flex-col items-center justify-center gap-2 lg:w-auto">
           {renderType(voucher.tradingType)}
-          <span className="text-xs font-black tracking-wider text-slate-800">
+          <span className="text-[8px] font-black tracking-wider text-slate-800 lg:text-xs">
             {voucher.id}
           </span>
         </div>
@@ -339,40 +368,36 @@ export function VoucherRow({
       {/* Info: (20260325 - Julian) Accounting, Debit, Credit */}
       {voucherline}
 
-      {/* Info: (20260316 - Julian) Confidence */}
-      <td
-        aria-label="Confidence"
-        className="p-2 text-center align-middle lg:px-6 lg:py-4"
-      >
-        <AiConfidence confidence={voucher.confidence} barOnly />
-      </td>
-      {/* Info: (20260316 - Julian) Status */}
+      {/* Info: (20260409 - Julian) Status / AI Confidence */}
       <td
         aria-label="Status"
         className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
-        {voucher.isDeleted ? (
-          <div className="mx-auto flex flex-col items-center justify-center gap-1 text-slate-400">
-            <Trash2 size={24} />
-            <span className="text-xs font-bold whitespace-nowrap">
-              {t("common.status_deleted")}
-            </span>
-          </div>
-        ) : voucher.isVerified ? (
-          <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
-            <CheckCircle2 size={24} />
-            <span className="text-xs font-bold whitespace-nowrap">
-              {t("verify.status.verified")}
-            </span>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center gap-1.5 text-orange-500">
-            <FileQuestion size={24} />
-            <span className="text-xs font-bold whitespace-nowrap">
-              {t("verify.status.unverified")}
-            </span>
-          </div>
-        )}
+        <div className="flex flex-col items-center gap-2">
+          {voucher.isDeleted ? (
+            <div className="mx-auto flex flex-col items-center justify-center gap-1 text-slate-400">
+              <Trash2 size={24} />
+              <span className="text-xs font-bold whitespace-nowrap">
+                {t("common.status_deleted")}
+              </span>
+            </div>
+          ) : voucher.isVerified ? (
+            <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
+              <CheckCircle2 size={24} />
+              <span className="text-xs font-bold whitespace-nowrap">
+                {t("verify.status.verified")}
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-1.5 text-orange-500">
+              <FileQuestion size={24} />
+              <span className="text-xs font-bold whitespace-nowrap">
+                {t("verify.status.unverified")}
+              </span>
+            </div>
+          )}
+          <AiConfidence confidence={voucher.confidence} barOnly />
+        </div>
       </td>
       {/* Info: (20260404 - Luphia) Actions */}
       {actionsColumn}

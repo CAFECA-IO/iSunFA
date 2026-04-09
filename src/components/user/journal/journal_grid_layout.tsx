@@ -21,9 +21,10 @@ const JournalGridItem = ({
   const { t } = useTranslation();
 
   const isAnalysisFailed = journal.analysisStatus === AIAnalysisStatus.FAILED;
-  const failedMessage = journal.aiNote && journal.aiNote !== "無 AI 分析備註" 
-    ? journal.aiNote 
-    : (t("ocr.ai.failed") as string);
+  const failedMessage =
+    journal.aiNote && journal.aiNote !== "無 AI 分析備註"
+      ? journal.aiNote
+      : (t("ocr.ai.failed") as string);
 
   const actionButtons = (
     <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
@@ -56,7 +57,7 @@ const JournalGridItem = ({
   );
 
   const deletedOverlay = journal.isDeleted ? (
-    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-100/70 backdrop-blur-[1px] rounded-lg">
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-slate-100/70 backdrop-blur-[1px]">
       <Trash2 size={36} className="mb-2 text-slate-500 drop-shadow-sm" />
       <span className="rounded-full bg-slate-200/90 px-3 py-1 text-xs font-bold text-slate-600 shadow-sm">
         {t("common.status_deleted")}
@@ -114,7 +115,7 @@ const JournalGridItem = ({
   return (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events
     <div
-      className={`relative flex size-72 flex-col items-center justify-center gap-2 justify-self-center overflow-hidden rounded-lg border p-2 transition-colors ${journal.isDeleted ? "opacity-50 border-gray-200 bg-gray-50" : isAnalysisFailed ? "bg-red-200 hover:bg-red-300 border-red-300 hover:cursor-pointer" : journal.isVerified ? "border-emerald-500 bg-emerald-50 hover:bg-emerald-100 hover:cursor-pointer" : "border-orange-500 bg-orange-50 hover:bg-orange-100 hover:cursor-pointer"}`}
+      className={`relative flex size-72 flex-col items-center justify-center gap-2 justify-self-center overflow-hidden rounded-lg border p-2 transition-colors ${journal.isDeleted ? "border-gray-200 bg-gray-50 opacity-50" : isAnalysisFailed ? "border-red-300 bg-red-200 hover:cursor-pointer hover:bg-red-300" : journal.isVerified ? "border-emerald-500 bg-emerald-50 hover:cursor-pointer hover:bg-emerald-100" : "border-orange-500 bg-orange-50 hover:cursor-pointer hover:bg-orange-100"}`}
       onClick={!journal.isDeleted ? () => onSelect(journal) : undefined}
     >
       {deletedOverlay}
@@ -133,8 +134,14 @@ const JournalGridItem = ({
         {/* Info: (20260320 - Julian) Failed Icon */}
         {isAnalysisFailed && (
           <div className="absolute top-0 left-0 z-10 flex size-full flex-col items-center justify-center bg-red-100/70 p-2 backdrop-blur-sm transition-opacity">
-            <CircleAlert size={36} className="mb-2 text-red-500 drop-shadow-sm" />
-            <span className="w-full truncate rounded bg-white/80 px-2 py-1 text-center text-xs font-bold text-red-600 shadow-sm" title={failedMessage}>
+            <CircleAlert
+              size={36}
+              className="mb-2 text-red-500 drop-shadow-sm"
+            />
+            <span
+              className="w-full truncate rounded bg-white/80 px-2 py-1 text-center text-xs font-bold text-red-600 shadow-sm"
+              title={failedMessage}
+            >
               {failedMessage}
             </span>
           </div>
@@ -184,7 +191,7 @@ const JournalGridLayout = ({
   ));
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="flex flex-wrap justify-center gap-2">
       {isLoading ? loadingView : journals.length === 0 ? emptyView : gridView}
     </div>
   );

@@ -81,7 +81,10 @@ export function EsgRow({
             <div className="shrink-0">
               <Zap className="mr-1.5 h-4 w-4 text-amber-500" />
             </div>
-            {t("esg_table.scope.scope_1")}：{record.activityType}
+            <div className="flex flex-wrap">
+              <p>{t("esg_table.scope.scope_1")}：</p>
+              <p>{record.activityType}</p>
+            </div>
           </div>
         );
       case EsgScope.SCOPE_2:
@@ -90,7 +93,10 @@ export function EsgRow({
             <div className="shrink-0">
               <Truck className="mr-1.5 h-4 w-4 text-blue-500" />
             </div>
-            {t("esg_table.scope.scope_2")}：{record.activityType}
+            <div className="flex flex-wrap">
+              <p>{t("esg_table.scope.scope_2")}：</p>
+              <p>{record.activityType}</p>
+            </div>
           </div>
         );
       case EsgScope.SCOPE_3:
@@ -99,7 +105,10 @@ export function EsgRow({
             <div className="shrink-0">
               <Cloud className="mr-1.5 h-4 w-4 text-green-500" />
             </div>
-            {t("esg_table.scope.scope_3")}：{record.activityType}
+            <div className="flex flex-wrap">
+              <p>{t("esg_table.scope.scope_3")}：</p>
+              <p>{record.activityType}</p>
+            </div>
           </div>
         );
       default:
@@ -138,29 +147,40 @@ export function EsgRow({
     </td>
   );
 
-  const dateString = timestampToString(new Date(record.tradingDate).getTime() / 1000).dateWithDash;
+  const dateString = timestampToString(
+    new Date(record.tradingDate).getTime() / 1000,
+  ).dateWithDash;
 
   // Info: (20260320 - Julian) 尚未開始
   if (record.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
-      <tr className={`border-b opacity-80 transition-colors last:border-0 ${record.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-slate-200 bg-slate-50"}`}>
+      <tr
+        className={`border-b opacity-80 transition-colors last:border-0 ${record.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-slate-200 bg-slate-50"}`}
+      >
         <td className="p-2 lg:px-6 lg:py-4">
           <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-white p-1 shadow-sm sm:size-16">
-            {record.isDeleted ? <Trash2 className="size-6 text-slate-400" /> : <Loader2 className="size-6 animate-spin text-orange-500" />}
+            {record.isDeleted ? (
+              <Trash2 className="size-6 text-slate-400" />
+            ) : (
+              <Loader2 className="size-6 animate-spin text-orange-500" />
+            )}
           </div>
         </td>
         <td className="p-2 text-center text-xs font-semibold whitespace-nowrap text-slate-400 lg:px-6 lg:py-4 lg:text-sm">
           {dateString}
         </td>
         <td
-          colSpan={6}
+          colSpan={5}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           {record.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
+              <Trash2 size={16} />
+              {t("common.status_deleted")}
+            </span>
           ) : (
-            <span className="flex items-center justify-center gap-2 text-sm font-medium text-orange-500 italic">
-              <Loader2 className="size4 animate-spin text-orange-500" />
+            <span className="flex items-center justify-center gap-2 text-[10px] font-medium text-orange-500 italic sm:text-xs lg:text-sm">
+              <Loader2 className="size-4 animate-spin text-orange-500" />
               {t("common.ai.pending")}
             </span>
           )}
@@ -173,10 +193,16 @@ export function EsgRow({
   // Info: (20260320 - Julian) 處理中
   if (record.analysisStatus === AIAnalysisStatus.PROCESSING) {
     return (
-      <tr className={`border-b text-sm opacity-90 transition-colors last:border-0 ${record.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-blue-200 bg-blue-50"}`}>
+      <tr
+        className={`border-b text-sm opacity-90 transition-colors last:border-0 ${record.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-blue-200 bg-blue-50"}`}
+      >
         <td className="p-2 lg:px-6 lg:py-4">
           <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 shadow-sm sm:size-16">
-            {record.isDeleted ? <Trash2 className="size-6 text-slate-400" /> : <Loader2 className="size-6 animate-spin text-blue-500" />}
+            {record.isDeleted ? (
+              <Trash2 className="size-6 text-slate-400" />
+            ) : (
+              <Loader2 className="size-6 animate-spin text-blue-500" />
+            )}
           </div>
         </td>
         <td className="p-2 text-center text-xs font-semibold whitespace-nowrap text-blue-400 lg:px-6 lg:py-4 lg:text-sm">
@@ -184,14 +210,17 @@ export function EsgRow({
         </td>
         <td
           aria-label="AI Processing"
-          colSpan={6}
+          colSpan={5}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           {record.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
+              <Trash2 size={16} />
+              {t("common.status_deleted")}
+            </span>
           ) : (
             <div className="mx-auto flex max-w-sm flex-col items-center justify-center gap-2">
-              <span className="flex items-center justify-center gap-2 text-sm font-bold text-blue-600 italic">
+              <span className="flex items-center justify-center gap-2 text-[10px] font-bold text-blue-600 italic sm:text-xs lg:text-sm">
                 <Loader2 className="size-4 animate-spin text-blue-500" />
                 {t("esg_table.ai.processing")}
               </span>
@@ -211,24 +240,33 @@ export function EsgRow({
     return (
       <tr
         onClick={!record.isDeleted ? handleVerifyClick : undefined}
-        className={`border-b opacity-80 transition-colors last:border-0 ${record.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "hover:cursor-pointer hover:bg-red-100 border-slate-200 bg-red-50 text-red-500"}`}
+        className={`border-b opacity-80 transition-colors last:border-0 ${record.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500" : "border-slate-200 bg-red-50 text-red-500 hover:cursor-pointer hover:bg-red-100"}`}
       >
         <td className="p-2 lg:px-6 lg:py-4">
           <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white p-1 shadow-sm sm:size-16">
-            {record.isDeleted ? <Trash2 className="size-6 text-slate-400" /> : <CircleAlert className="size-6 text-red-500" />}
+            {record.isDeleted ? (
+              <Trash2 className="size-6 text-slate-400" />
+            ) : (
+              <CircleAlert className="size-6 text-red-500" />
+            )}
           </div>
         </td>
         <td className="p-2 text-center text-xs font-semibold whitespace-nowrap lg:px-6 lg:py-4 lg:text-sm">
           {dateString}
         </td>
         <td
-          colSpan={6}
+          colSpan={5}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           {record.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
+              <Trash2 size={16} />
+              {t("common.status_deleted")}
+            </span>
           ) : (
-            <p className="font-bold text-red-500">{record.aiNote || t("esg_table.ai.failed")}</p>
+            <p className="text-[10px] font-bold text-red-500 sm:text-xs lg:text-sm">
+              {record.aiNote || t("esg_table.ai.failed")}
+            </p>
           )}
         </td>
         {actionsColumn}
@@ -251,11 +289,11 @@ export function EsgRow({
   return (
     <tr
       onClick={!record.isDeleted ? handleVerifyClick : undefined}
-      className={`border-b border-slate-300 last:border-0 transition-colors ${record.isDeleted ? "opacity-50 bg-slate-50" : isAnalysisFailed ? "bg-red-200 hover:bg-red-300 cursor-pointer" : "bg-white hover:bg-orange-100 cursor-pointer"}`}
+      className={`border-b border-slate-300 transition-colors last:border-0 ${record.isDeleted ? "bg-slate-50 opacity-50" : isAnalysisFailed ? "cursor-pointer bg-red-200 hover:bg-red-300" : "cursor-pointer bg-white hover:bg-orange-100"}`}
     >
       {/* Info: (20260320 - Julian) File */}
       <td className="p-2 lg:px-6 lg:py-4">
-        <div className="size14 relative mx-auto flex items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:size-16">
+        <div className="relative mx-auto flex size-14 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm sm:size-16">
           {/* Info: (20260312 - Julian) File Preview */}
           {record.file ? (
             <FilePreview
@@ -301,7 +339,7 @@ export function EsgRow({
           </span>
           {record.coefficient && (
             <div className="flex flex-col items-center justify-center">
-              <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-inset ring-slate-200">
+              <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200 ring-inset">
                 {record.coefficient}
               </span>
               {record.coefficientSource && (
@@ -317,37 +355,33 @@ export function EsgRow({
       <td className="p-2 text-center lg:px-6 lg:py-4">
         {renderIntensity(record.intensity)}
       </td>
-      {/* Info: (20260320 - Julian) Confidence */}
-      <td
-        aria-label="AI Confidence"
-        className="p-2 text-center lg:px-6 lg:py-4"
-      >
-        <AiConfidence confidence={record.confidence} barOnly />
-      </td>
-      {/* Info: (20260320 - Julian) Verified */}
+      {/* Info: (20260409 - Julian) Status / AI Confidence */}
       <td className="p-2 text-center lg:px-6 lg:py-4">
-        {record.isDeleted ? (
-          <div className="mx-auto flex flex-col items-center justify-center gap-1 text-slate-400">
-            <Trash2 size={24} />
-            <span className="text-sm font-bold">
-              {t("common.status_deleted")}
-            </span>
-          </div>
-        ) : record.isVerified ? (
-          <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
-            <CheckCircle2 size={24} />
-            <span className="text-sm font-bold">
-              {t("verify.status.verified")}
-            </span>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center gap-1 text-orange-500">
-            <FileQuestion size={24} />
-            <span className="text-sm font-bold whitespace-nowrap">
-              {t("verify.status.unverified")}
-            </span>
-          </div>
-        )}
+        <div className="flex flex-col items-center gap-2">
+          {record.isDeleted ? (
+            <div className="mx-auto flex flex-col items-center justify-center gap-1 text-slate-400">
+              <Trash2 size={24} />
+              <span className="text-[10px] font-bold lg:text-xs">
+                {t("common.status_deleted")}
+              </span>
+            </div>
+          ) : record.isVerified ? (
+            <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
+              <CheckCircle2 size={24} />
+              <span className="text-[10px] font-bold lg:text-xs">
+                {t("verify.status.verified")}
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-1 text-orange-500">
+              <FileQuestion size={24} />
+              <span className="text-[10px] font-bold whitespace-nowrap lg:text-xs">
+                {t("verify.status.unverified")}
+              </span>
+            </div>
+          )}
+          <AiConfidence confidence={record.confidence} barOnly />
+        </div>
       </td>
       {/* Info: (20260404 - Luphia) Actions */}
       {actionsColumn}

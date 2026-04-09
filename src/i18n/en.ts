@@ -1134,6 +1134,7 @@ export const en = {
   journal: {
     detail_modal: {
       title: "Journal",
+      empty: "Journal is empty.",
     },
     summary: {
       empty: "No journal data available",
@@ -1150,7 +1151,7 @@ export const en = {
     },
     log_view: {
       title: "Audit Logs",
-      refresh: "Refresh",
+      type: "Type",
       record_time: "Record Time",
       action_type: "Action Type",
       operator: "Operator",

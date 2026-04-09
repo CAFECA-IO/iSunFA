@@ -144,7 +144,7 @@ export default function EsgDetailModal({
               </span>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="ml-auto">
             <AiConfidence
               confidence={formData.confidence}
               note={formData.aiNote}
@@ -167,7 +167,7 @@ export default function EsgDetailModal({
               type="date"
               value={formData.tradingDate}
               onChange={(e) => handleDateChange(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
             />
           </div>
 
@@ -189,7 +189,7 @@ export default function EsgDetailModal({
                   scope: e.target.value as EsgScope,
                 })
               }
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
             >
               <option value={EsgScope.SCOPE_1}>
                 {t("esg_verify.form.scope_1")}
@@ -222,7 +222,7 @@ export default function EsgDetailModal({
                   activityType: e.target.value,
                 })
               }
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
             />
           </div>
 
@@ -247,7 +247,7 @@ export default function EsgDetailModal({
               onChange={(e) =>
                 setFormData({ ...formData, vendor: e.target.value })
               }
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
             />
           </div>
 
@@ -256,7 +256,7 @@ export default function EsgDetailModal({
             <h4 className="mb-4 text-sm font-bold text-slate-700">
               {t("esg_verify.emissions.title")}
             </h4>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 lg:gap-4">
               <div>
                 <label className="mb-1 block text-xs font-bold text-slate-500">
                   {t("esg_verify.emissions.raw_data")} /{" "}
@@ -273,7 +273,7 @@ export default function EsgDetailModal({
                         rawActivityData: e.target.value,
                       })
                     }
-                    className="w-2/3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                    className="w-2/3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
                   />
                   <div className="relative w-1/3">
                     <input
@@ -286,7 +286,7 @@ export default function EsgDetailModal({
                           unit: e.target.value,
                         })
                       }
-                      className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                      className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
                     />
                   </div>
                 </div>
@@ -306,14 +306,14 @@ export default function EsgDetailModal({
                         emissions: e.target.value,
                       })
                     }
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
                   />
                   <span className="text-xs font-bold whitespace-nowrap text-slate-500">
                     kg CO₂e
                   </span>
                 </div>
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1 lg:col-span-2">
                 <label className="mb-1 block text-xs font-bold text-slate-500">
                   {t("esg_verify.emissions.intensity")}
                 </label>
@@ -326,7 +326,7 @@ export default function EsgDetailModal({
                       intensity: e.target.value as EsgIntensity,
                     })
                   }
-                  className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+                  className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
                 >
                   <option value={EsgIntensity.LOW}>
                     {t("esg_verify.form.intensity_low")}
@@ -341,11 +341,11 @@ export default function EsgDetailModal({
               </div>
               {/* Info: (20260406 - Luphia) 碳排放係數紀錄 */}
               {formData.coefficient && (
-                <div className="col-span-2 mt-2 rounded-lg bg-orange-50 p-3 ring-1 ring-inset ring-orange-100">
+                <div className="col-span-1 mt-2 rounded-lg bg-orange-50 p-3 ring-1 ring-orange-100 ring-inset lg:col-span-2">
                   <div className="mb-1 text-[10px] font-bold text-orange-600">
                     {t("esg_verify.emissions.coefficient")}
                   </div>
-                  <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-4">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
                     <div className="text-sm font-bold text-slate-700">
                       {formData.coefficient}
                     </div>
@@ -376,7 +376,7 @@ export default function EsgDetailModal({
                 setFormData({ ...formData, aiNote: e.target.value })
               }
               rows={4}
-              className="w-full resize-none rounded-xl border border-slate-300 bg-white p-4 text-sm leading-relaxed text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
+              className="w-full resize-none rounded-xl border border-slate-300 bg-white p-4 text-xs leading-relaxed text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
             />
           </div>
         </div>
