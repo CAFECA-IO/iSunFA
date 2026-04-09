@@ -589,10 +589,7 @@ export default function VoucherTableSection() {
                       </button>
                     </th>
                     <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
-                      {t("voucher.main_view.table.headers.confidence")}
-                    </th>
-                    <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
-                      {t("voucher.main_view.table.headers.status")}
+                      {t("voucher.main_view.table.headers.status")} / {t("voucher.main_view.table.headers.confidence")}
                     </th>
                     <th className="p-2 text-center text-xs font-black tracking-wider whitespace-nowrap text-slate-500 uppercase lg:px-6 lg:py-4">
                       {/* Info: (20260404 - Luphia) Actions */}

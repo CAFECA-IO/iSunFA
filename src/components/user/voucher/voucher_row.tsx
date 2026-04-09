@@ -111,7 +111,7 @@ export function VoucherRow({
         </td>
         {/* Info: (20260320 - Julian) Colspan the rest of the parsing info to show a generic loading center */}
         <td
-          colSpan={6}
+          colSpan={5}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           {voucher.isDeleted ? (
@@ -146,7 +146,7 @@ export function VoucherRow({
         </td>
         <td
           aria-label="AI Processing"
-          colSpan={6}
+          colSpan={5}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           {voucher.isDeleted ? (
@@ -193,7 +193,7 @@ export function VoucherRow({
         </td>
         {/* Info: (20260320 - Julian) Colspan the rest of the parsing info to show a generic loading center */}
         <td
-          colSpan={6}
+          colSpan={5}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           {voucher.isDeleted ? (
@@ -339,19 +339,13 @@ export function VoucherRow({
       {/* Info: (20260325 - Julian) Accounting, Debit, Credit */}
       {voucherline}
 
-      {/* Info: (20260316 - Julian) Confidence */}
-      <td
-        aria-label="Confidence"
-        className="p-2 text-center align-middle lg:px-6 lg:py-4"
-      >
-        <AiConfidence confidence={voucher.confidence} barOnly />
-      </td>
-      {/* Info: (20260316 - Julian) Status */}
+      {/* Info: (20260409 - Julian) Status / AI Confidence */}
       <td
         aria-label="Status"
         className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
-        {voucher.isDeleted ? (
+        <div className="flex flex-col items-center gap-2">
+          {voucher.isDeleted ? (
           <div className="mx-auto flex flex-col items-center justify-center gap-1 text-slate-400">
             <Trash2 size={24} />
             <span className="text-xs font-bold whitespace-nowrap">
@@ -373,6 +367,8 @@ export function VoucherRow({
             </span>
           </div>
         )}
+        <AiConfidence confidence={voucher.confidence} barOnly />
+        </div>
       </td>
       {/* Info: (20260404 - Luphia) Actions */}
       {actionsColumn}

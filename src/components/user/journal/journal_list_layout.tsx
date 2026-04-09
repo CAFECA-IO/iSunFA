@@ -82,7 +82,7 @@ const JournalListItem = ({
           )}
         </td>
         <td
-          colSpan={3}
+          colSpan={2}
           className="hidden px-3 py-2 text-center align-middle sm:table-cell sm:px-6 sm:text-sm"
         >
           {journal.isDeleted ? (
@@ -135,7 +135,7 @@ const JournalListItem = ({
         </td>
         <td
           aria-label="AI Processing"
-          colSpan={3}
+          colSpan={2}
           className="hidden px-3 py-2 text-center align-middle sm:table-cell sm:px-6 sm:text-sm"
         >
           {journal.isDeleted ? (
@@ -192,7 +192,7 @@ const JournalListItem = ({
         </td>
         <td
           aria-label="AI Failed"
-          colSpan={3}
+          colSpan={2}
           className="hidden px-3 py-2 text-center align-middle sm:table-cell sm:px-6 sm:text-sm"
         >
           {journal.isDeleted ? (
@@ -243,19 +243,13 @@ const JournalListItem = ({
           {journal.text}
         </pre>
       </td>
-      {/* Info: (20260323 - Julian) Confidence */}
+      {/* Info: (20260409 - Julian) Status / AI Confidence */}
       <td
-        aria-label={t("ocr.confidence")}
-        className="w-[60px] px-1 py-2 text-center text-xs sm:w-auto sm:px-6 sm:text-right sm:text-sm"
-      >
-        <AiConfidence confidence={journal.confidence} barOnly />
-      </td>
-      {/* Info: (20260316 - Julian) Status */}
-      <td
-        aria-label="Status"
+        aria-label={`${t("ocr.status")} / ${t("ocr.confidence")}`}
         className="p-2 text-center align-middle lg:px-6 lg:py-4"
       >
-        {journal.isDeleted ? (
+        <div className="flex flex-col items-center gap-2">
+          {journal.isDeleted ? (
           <div className="mx-auto flex flex-col items-center justify-center gap-1 text-slate-400">
             <Trash2 size={24} />
             <span className="text-xs font-bold whitespace-nowrap">
@@ -277,6 +271,8 @@ const JournalListItem = ({
             </span>
           </div>
         )}
+        <AiConfidence confidence={journal.confidence} barOnly />
+        </div>
       </td>
       {/* Info: (20260404 - Luphia) Actions */}
       {actionsColumn}
@@ -308,7 +304,7 @@ const JournalListLayout = ({
         <Loader2 className="mx-auto h-6 w-6 animate-spin text-orange-500" />
       </td>
       <td
-        colSpan={6}
+        colSpan={5}
         className="hidden px-3 py-8 text-center text-slate-500 sm:table-cell sm:px-6"
       >
         <Loader2 className="mx-auto h-6 w-6 animate-spin text-orange-500" />
@@ -325,7 +321,7 @@ const JournalListLayout = ({
         {t("ocr.no_records")}
       </td>
       <td
-        colSpan={6}
+        colSpan={5}
         className="hidden px-3 py-8 text-center text-slate-500 sm:table-cell sm:px-6"
       >
         {t("ocr.no_records")}
@@ -360,11 +356,8 @@ const JournalListLayout = ({
             <th className="hidden bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:table-cell sm:px-6 sm:text-left sm:text-base">
               {t("ocr.journal")}
             </th>
-            <th className="w-[60px] bg-slate-100 px-1 py-3 text-center text-xs text-slate-700 sm:w-auto sm:px-6 sm:text-left sm:text-base">
-              {t("ocr.confidence")}
-            </th>
             <th className="bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:px-6 sm:text-left sm:text-base">
-              {t("ocr.status")}
+              {`${t("ocr.status")} / ${t("ocr.confidence")}`}
             </th>
             <th className="bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:px-6 sm:text-left sm:text-base">
               {t("common.actions")}

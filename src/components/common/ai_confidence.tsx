@@ -21,14 +21,14 @@ export default function AiConfidence({
   const progessBar = (
     <div className="flex items-center justify-center gap-2 text-sm font-bold">
       {/* Info: (20260325 - Julian) Progress Bar */}
-      <div className="hidden sm:block h-2 w-20 shrink-0 overflow-hidden rounded-full bg-slate-200">
+      <div className={`hidden sm:block h-2 shrink-0 overflow-hidden rounded-full bg-slate-200 ${barOnly ? "w-12" : "w-20"}`}>
         <div
           // Info: (20260325 - Julian) 85 以上為綠色
           className={`h-full rounded-full ${confidence >= 85 ? "bg-emerald-400" : "bg-orange-500"}`}
           style={{ width: `${confidence}%` }}
         />
       </div>
-      <p className="whitespace-nowrap text-slate-700">{confidence}%</p>
+      <p className={`whitespace-nowrap text-slate-700 ${barOnly ? "text-[10px]" : "text-sm"}`}>{confidence}%</p>
     </div>
   );
 

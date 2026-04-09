@@ -153,7 +153,7 @@ export function EsgRow({
           {dateString}
         </td>
         <td
-          colSpan={6}
+          colSpan={5}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           {record.isDeleted ? (
@@ -184,7 +184,7 @@ export function EsgRow({
         </td>
         <td
           aria-label="AI Processing"
-          colSpan={6}
+          colSpan={5}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           {record.isDeleted ? (
@@ -222,7 +222,7 @@ export function EsgRow({
           {dateString}
         </td>
         <td
-          colSpan={6}
+          colSpan={5}
           className="p-2 text-center align-middle lg:px-6 lg:py-4"
         >
           {record.isDeleted ? (
@@ -317,16 +317,10 @@ export function EsgRow({
       <td className="p-2 text-center lg:px-6 lg:py-4">
         {renderIntensity(record.intensity)}
       </td>
-      {/* Info: (20260320 - Julian) Confidence */}
-      <td
-        aria-label="AI Confidence"
-        className="p-2 text-center lg:px-6 lg:py-4"
-      >
-        <AiConfidence confidence={record.confidence} barOnly />
-      </td>
-      {/* Info: (20260320 - Julian) Verified */}
+      {/* Info: (20260409 - Julian) Status / AI Confidence */}
       <td className="p-2 text-center lg:px-6 lg:py-4">
-        {record.isDeleted ? (
+        <div className="flex flex-col items-center gap-2">
+          {record.isDeleted ? (
           <div className="mx-auto flex flex-col items-center justify-center gap-1 text-slate-400">
             <Trash2 size={24} />
             <span className="text-sm font-bold">
@@ -348,6 +342,8 @@ export function EsgRow({
             </span>
           </div>
         )}
+        <AiConfidence confidence={record.confidence} barOnly />
+        </div>
       </td>
       {/* Info: (20260404 - Luphia) Actions */}
       {actionsColumn}

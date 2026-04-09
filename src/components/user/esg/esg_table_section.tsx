@@ -453,10 +453,7 @@ export default function EsgTableSection({
                   {t("esg_table.header.intensity_label")}
                 </th>
                 <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
-                  {t("esg_table.header.ai_confidence")}
-                </th>
-                <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
-                  {t("esg_table.header.status")}
+                  {t("esg_table.header.status")} / {t("esg_table.header.ai_confidence")}
                 </th>
                 <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                   {t("common.actions")}
