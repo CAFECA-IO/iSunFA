@@ -9,7 +9,9 @@ import {
   ICashFlowStatementItem,
   ICashFlowStatement,
 } from "@/interfaces/cash_flow_statement";
-import KeyMetricsCard, { TooltipAlign } from "@/components/user/financial_report/key_metrics_card";
+import KeyMetricsCard, {
+  TooltipAlign,
+} from "@/components/user/financial_report/key_metrics_card";
 import ReportPrintNote, {
   IReportNote,
 } from "@/components/user/financial_report/report_print_note";
@@ -37,12 +39,12 @@ const CashFlowSection = ({
   isMainTotal?: boolean;
 }) => {
   return (
-    <div className={`mb-6 print:mb-2 print:break-inside-avoid ${isMainTotal ? "mt-4" : ""}`}>
+    <div
+      className={`mb-4 lg:mb-6 print:mb-2 print:break-inside-avoid ${isMainTotal ? "mt-4" : ""}`}
+    >
       <div className="mb-2 flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 shadow-none">
         <span className="font-bold text-gray-700">{titleText}</span>
-        <span
-          className={"text-base font-bold text-gray-900 print:text-sm"}
-        >
+        <span className={"text-base font-bold text-gray-900 print:text-sm"}>
           {titleValue >= 0 ? "" : "-"}${numberWithCommas(Math.abs(titleValue))}
         </span>
       </div>
@@ -55,10 +57,10 @@ const CashFlowSection = ({
           return (
             <div
               key={`${item.name}-${idx}`}
-              className="flex items-center justify-between border-b border-gray-50 py-2"
+              className="flex items-center justify-between border-b border-gray-50 py-1 lg:py-2"
             >
               <div className="flex w-2/3 flex-col">
-                <span className="text-[15px] font-medium text-gray-600 print:text-sm">
+                <span className="text-xs font-medium text-gray-600 lg:text-base print:text-sm">
                   {item.name}
                 </span>
                 <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
@@ -89,7 +91,13 @@ const CashFlowSection = ({
   );
 };
 
-export default function CashFlowSheetView({ period, year }: { period: ReportPeriod; year: number }) {
+export default function CashFlowSheetView({
+  period,
+  year,
+}: {
+  period: ReportPeriod;
+  year: number;
+}) {
   const params = useParams();
   const { t } = useTranslation();
   const accountBookId = params?.account_book_id as string;
@@ -149,8 +157,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
       title: t("cash_flow_statement_view.metric_fcf_title"),
       type: t("cash_flow_statement_view.note_fcf_type"),
       mainDesc: t("cash_flow_statement_view.note_fcf_main"),
-      subDesc:
-        t("cash_flow_statement_view.note_fcf_sub"),
+      subDesc: t("cash_flow_statement_view.note_fcf_sub"),
     },
     {
       title: t("cash_flow_statement_view.metric_ocf_ratio_title"),
@@ -162,8 +169,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
       title: t("cash_flow_statement_view.metric_cf_adequacy_title"),
       type: t("cash_flow_statement_view.note_ocf_ratio_type"),
       mainDesc: t("cash_flow_statement_view.note_cf_adequacy_main"),
-      subDesc:
-        t("cash_flow_statement_view.note_cf_adequacy_sub"),
+      subDesc: t("cash_flow_statement_view.note_cf_adequacy_sub"),
     },
     {
       title: t("cash_flow_statement_view.metric_ending_balance_title"),
@@ -181,7 +187,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
       description: t("cash_flow_statement_view.metric_fcf_desc"),
       textColor: "text-gray-900",
       statusGood: metrics.freeCashFlow >= 0,
-      tooltipAlign: TooltipAlign.LEFT
+      tooltipAlign: TooltipAlign.LEFT,
     },
     {
       title: t("cash_flow_statement_view.metric_ocf_ratio_title"),
@@ -189,7 +195,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
       description: t("cash_flow_statement_view.metric_ocf_ratio_desc"),
       textColor: "text-gray-900",
       statusGood: metrics.operatingCashFlowRatio >= 100,
-      tooltipAlign: TooltipAlign.RIGHT
+      tooltipAlign: TooltipAlign.RIGHT,
     },
     {
       title: t("cash_flow_statement_view.metric_cf_adequacy_title"),
@@ -197,7 +203,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
       description: t("cash_flow_statement_view.metric_cf_adequacy_desc"),
       textColor: "text-gray-900",
       statusGood: metrics.cashFlowAdequacyRatio >= 100,
-      tooltipAlign: TooltipAlign.LEFT
+      tooltipAlign: TooltipAlign.LEFT,
     },
     {
       title: t("cash_flow_statement_view.metric_ending_balance_title"),
@@ -205,7 +211,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
       description: t("cash_flow_statement_view.metric_ending_balance_desc"),
       textColor: "text-gray-900",
       statusGood: summary.endingBalance >= 0,
-      tooltipAlign: TooltipAlign.RIGHT
+      tooltipAlign: TooltipAlign.RIGHT,
     },
   ];
 
@@ -219,7 +225,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
   const financingAbsolute = getTotalAbsolute(activities.financing.items);
 
   const keyMetricsBanner = metrics ? (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 print:flex">
+    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4 print:flex">
       {cashFlowKeyMetricsData.map((metric) => {
         const note = cashFlowNotes.find((note) => note.title === metric.title);
         return (
@@ -250,10 +256,14 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
 
   const operatingInvestingSection = activities ? (
     <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
-      <div className="flex-1 rounded-xl border border-gray-100 bg-white p-6  print:p-4 box-decoration-clone">
+      <div className="flex-1 rounded-xl border border-gray-100 bg-white box-decoration-clone p-4 lg:p-6 print:p-4">
         <div className="mb-4 flex items-end justify-between border-b border-gray-200 pb-3">
-          <span className="text-lg font-black tracking-wider text-gray-800 uppercase">{t("cash_flow_statement_view.section_op_inv")}</span>
-          <span className="text-sm font-bold text-gray-400">{t("cash_flow_statement_view.section_ratio")}</span>
+          <span className="text-base font-black tracking-wider text-gray-800 uppercase lg:text-lg">
+            {t("cash_flow_statement_view.section_op_inv")}
+          </span>
+          <span className="text-sm font-bold text-gray-400">
+            {t("cash_flow_statement_view.section_ratio")}
+          </span>
         </div>
 
         <CashFlowSection
@@ -282,10 +292,14 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
   const financingCashFlowSection =
     activities && summary && supplementary ? (
       <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
-        <div className="flex-1 rounded-xl border border-gray-100 bg-white p-6  print:p-4 box-decoration-clone">
+        <div className="flex-1 rounded-xl border border-gray-100 bg-white box-decoration-clone p-4 lg:p-6 print:p-4">
           <div className="mb-4 flex items-end justify-between border-b border-gray-200 pb-3">
-            <span className="text-lg font-black tracking-wider text-gray-800 uppercase">{t("cash_flow_statement_view.section_fin_change")}</span>
-            <span className="text-sm font-bold text-gray-400">{t("cash_flow_statement_view.section_ratio")}</span>
+            <span className="text-base font-black tracking-wider text-gray-800 uppercase lg:text-lg">
+              {t("cash_flow_statement_view.section_fin_change")}
+            </span>
+            <span className="text-sm font-bold text-gray-400">
+              {t("cash_flow_statement_view.section_ratio")}
+            </span>
           </div>
 
           <CashFlowSection
@@ -296,24 +310,28 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
             barColor="bg-gray-300"
           />
 
-          <div className="mt-8 rounded-xl border border-gray-100 bg-gray-50 p-4 print:break-inside-avoid">
+          <div className="mt-4 rounded-xl border border-gray-100 bg-gray-50 p-4 lg:mt-8 print:break-inside-avoid">
             <div className="flex items-center justify-between border-b border-gray-200 py-2">
-              <span className="text-sm font-bold text-gray-500">{t("cash_flow_statement_view.section_beginning_balance")}</span>
+              <span className="text-sm font-bold text-gray-500">
+                {t("cash_flow_statement_view.section_beginning_balance")}
+              </span>
               <span className="font-medium text-gray-700">
                 ${numberWithCommas(summary.beginningBalance)}
               </span>
             </div>
             <div className="flex items-center justify-between border-b border-gray-200 py-2">
-              <span className="text-sm font-bold text-gray-500">{t("cash_flow_statement_view.section_net_change")}</span>
-              <span
-                className={"font-bold text-gray-900"}
-              >
+              <span className="text-sm font-bold text-gray-500">
+                {t("cash_flow_statement_view.section_net_change")}
+              </span>
+              <span className={"font-bold text-gray-900"}>
                 {summary.netIncreaseDecrease >= 0 ? "" : "-"}$
                 {numberWithCommas(Math.abs(summary.netIncreaseDecrease))}
               </span>
             </div>
-            <div className="mt-2 flex items-center justify-between rounded-xl bg-gray-900 px-6 p-6 text-white">
-              <span className="text-base font-black">{t("cash_flow_statement_view.section_ending_balance")}</span>
+            <div className="mt-2 flex items-center justify-between rounded-xl bg-gray-900 p-6 px-6 text-white">
+              <span className="text-base font-black">
+                {t("cash_flow_statement_view.section_ending_balance")}
+              </span>
               <span className="text-xl font-black">
                 ${numberWithCommas(summary.endingBalance)}
               </span>
@@ -321,15 +339,19 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
           </div>
 
           {/* Info: (20260330 - Julian) 補充揭露 */}
-          <div className="mt-8 flex justify-around rounded-xl border border-gray-100 bg-gray-50 p-4 print:break-inside-avoid">
+          <div className="mt-4 flex justify-around rounded-xl border border-gray-100 bg-gray-50 p-4 lg:mt-8 print:break-inside-avoid">
             <div className="text-center">
-              <div className="mb-1 text-xs font-bold text-gray-500">{t("cash_flow_statement_view.section_interest_paid")}</div>
+              <div className="mb-1 text-xs font-bold text-gray-500">
+                {t("cash_flow_statement_view.section_interest_paid")}
+              </div>
               <div className="font-semibold text-gray-900">
                 ${numberWithCommas(supplementary.interestPaid)}
               </div>
             </div>
             <div className="border-l-2 border-gray-200 pl-8 text-center">
-              <div className="mb-1 text-xs font-bold text-gray-500">{t("cash_flow_statement_view.section_taxes_paid")}</div>
+              <div className="mb-1 text-xs font-bold text-gray-500">
+                {t("cash_flow_statement_view.section_taxes_paid")}
+              </div>
               <div className="font-semibold text-gray-900">
                 ${numberWithCommas(supplementary.taxesPaid)}
               </div>
@@ -347,7 +369,7 @@ export default function CashFlowSheetView({ period, year }: { period: ReportPeri
     <div className="flex flex-col gap-4">
       {/* Info: (20260330 - Julian) 關鍵指標 */}
       {keyMetricsBanner}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 print:flex print:items-start">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:gap-4 print:flex print:items-start">
         {/* Info: (20260330 - Julian) 左側：營業活動與投資活動 */}
         {operatingInvestingSection}
         {/* Info: (20260330 - Julian) 右側：籌資活動與現金變動摘要 */}

@@ -5,8 +5,12 @@ import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { IBalanceSheetItem, IBalanceSheet } from "@/interfaces/balance_sheet";
-import KeyMetricsCard, { TooltipAlign } from "@/components/user/financial_report/key_metrics_card";
-import ReportPrintNote, { IReportNote } from "@/components/user/financial_report/report_print_note";
+import KeyMetricsCard, {
+  TooltipAlign,
+} from "@/components/user/financial_report/key_metrics_card";
+import ReportPrintNote, {
+  IReportNote,
+} from "@/components/user/financial_report/report_print_note";
 import { numberWithCommas } from "@/lib/utils/common";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -30,8 +34,8 @@ const BalanceSheetSection = ({
   barColor: string;
 }) => {
   return (
-    <div className="mb-6 print:mb-2 print:break-inside-avoid">
-      <div className="mb-2 flex items-center justify-between rounded-lg bg-gray-50 border border-gray-100 px-3 py-2">
+    <div className="mb-4 lg:mb-6 print:mb-2 print:break-inside-avoid">
+      <div className="mb-2 flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
         <span className="font-semibold text-gray-700">{titleText}</span>
         <span className="text-base font-bold text-gray-900 print:text-sm">
           {numberWithCommas(titleValue)}
@@ -41,10 +45,10 @@ const BalanceSheetSection = ({
         {items.map((item) => (
           <div
             key={item.code}
-            className="flex items-center justify-between border-b border-gray-50 py-2"
+            className="flex items-center justify-between border-b border-gray-50 py-1 lg:py-2"
           >
             <div className="flex w-2/3 flex-col">
-              <span className="text-[15px] font-medium text-gray-600 print:text-sm">
+              <span className="text-xs font-medium text-gray-600 lg:text-base print:text-sm">
                 {item.name}
               </span>
               <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
@@ -71,7 +75,13 @@ const BalanceSheetSection = ({
   );
 };
 
-export default function BalanceSheetView({ period, year }: { period: ReportPeriod; year: number }) {
+export default function BalanceSheetView({
+  period,
+  year,
+}: {
+  period: ReportPeriod;
+  year: number;
+}) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
   const { t } = useTranslation();
@@ -182,7 +192,7 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       type: t("balance_sheet_view.note_iar_type"),
       mainDesc: t("balance_sheet_view.note_iar_main"),
       subDesc: t("balance_sheet_view.note_iar_sub"),
-    }
+    },
   ];
 
   // Info: (20260409 - Julian) 計算前台固定資產總額，以判斷特殊分母為 0 的狀況
@@ -199,7 +209,7 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       textColor: "text-gray-900",
       statusGood: (metrics.netWorthPerShare || 0) > 10,
       className: "col-span-2 lg:col-span-2 print:w-1/2",
-      tooltipAlign: TooltipAlign.RIGHT
+      tooltipAlign: TooltipAlign.RIGHT,
     },
     {
       title: t("balance_sheet_view.metric_wc_title"),
@@ -208,7 +218,7 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       textColor: "text-gray-900",
       statusGood: metrics.workingCapital > 0,
       className: "col-span-2 lg:col-span-2 print:w-1/2",
-      tooltipAlign: TooltipAlign.RIGHT
+      tooltipAlign: TooltipAlign.RIGHT,
     },
     {
       title: t("balance_sheet_view.metric_cr_title"),
@@ -217,7 +227,7 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       textColor: "text-gray-900",
       statusGood: metrics.currentRatio > 200,
       className: "print:w-1/4",
-      tooltipAlign: TooltipAlign.LEFT
+      tooltipAlign: TooltipAlign.LEFT,
     },
     {
       title: t("balance_sheet_view.metric_qr_title"),
@@ -226,7 +236,7 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       textColor: "text-gray-900",
       statusGood: (metrics.quickRatio || 0) > 100,
       className: "print:w-1/4",
-      tooltipAlign: TooltipAlign.RIGHT
+      tooltipAlign: TooltipAlign.RIGHT,
     },
     {
       title: t("balance_sheet_view.metric_dr_title"),
@@ -235,7 +245,7 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       textColor: "text-gray-900",
       statusGood: metrics.debtRatio < 0.5,
       className: "print:w-1/4",
-      tooltipAlign: TooltipAlign.LEFT
+      tooltipAlign: TooltipAlign.LEFT,
     },
     {
       title: t("balance_sheet_view.metric_cashr_title"),
@@ -244,50 +254,72 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
       textColor: "text-gray-900",
       statusGood: (metrics.cashRatio || 0) > 20,
       className: "print:w-1/4",
-      tooltipAlign: TooltipAlign.RIGHT
+      tooltipAlign: TooltipAlign.RIGHT,
     },
     {
       title: t("balance_sheet_view.metric_dte_title"),
-      value: equity.total === 0 ? "N/A" : `${(metrics.debtToEquityRatio || 0).toFixed(1)}%`,
+      value:
+        equity.total === 0
+          ? "N/A"
+          : `${(metrics.debtToEquityRatio || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_dte_desc"),
       textColor: "text-gray-900",
-      statusGood: equity.total === 0 ? undefined : (metrics.debtToEquityRatio || 0) < 100,
+      statusGood:
+        equity.total === 0 ? undefined : (metrics.debtToEquityRatio || 0) < 100,
       className: "print:w-1/4",
-      tooltipAlign: TooltipAlign.LEFT
+      tooltipAlign: TooltipAlign.LEFT,
     },
     {
       title: t("balance_sheet_view.metric_ltftfa_title"),
-      value: isFixedAssetsZero ? "N/A" : `${(metrics.longTermFundsToFixedAssetsRatio || 0).toFixed(1)}%`,
+      value: isFixedAssetsZero
+        ? "N/A"
+        : `${(metrics.longTermFundsToFixedAssetsRatio || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_ltftfa_desc"),
       textColor: "text-gray-900",
-      statusGood: isFixedAssetsZero ? undefined : (metrics.longTermFundsToFixedAssetsRatio || 0) > 100,
+      statusGood: isFixedAssetsZero
+        ? undefined
+        : (metrics.longTermFundsToFixedAssetsRatio || 0) > 100,
       className: "print:w-1/4",
-      tooltipAlign: TooltipAlign.RIGHT
+      tooltipAlign: TooltipAlign.RIGHT,
     },
     {
       title: t("balance_sheet_view.metric_rer_title"),
-      value: equity.total === 0 ? "N/A" : `${(metrics.retainedEarningsRatio || 0).toFixed(1)}%`,
+      value:
+        equity.total === 0
+          ? "N/A"
+          : `${(metrics.retainedEarningsRatio || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_rer_desc"),
       textColor: "text-gray-900",
-      statusGood: equity.total === 0 ? undefined : (metrics.retainedEarningsRatio || 0) > 0,
+      statusGood:
+        equity.total === 0
+          ? undefined
+          : (metrics.retainedEarningsRatio || 0) > 0,
       className: "print:w-1/4",
-      tooltipAlign: TooltipAlign.LEFT
+      tooltipAlign: TooltipAlign.LEFT,
     },
     {
       title: t("balance_sheet_view.metric_iar_title"),
-      value: assets.total === 0 ? "N/A" : `${(metrics.intangibleAssetsRatio || 0).toFixed(1)}%`,
+      value:
+        assets.total === 0
+          ? "N/A"
+          : `${(metrics.intangibleAssetsRatio || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_iar_desc"),
       textColor: "text-gray-900",
-      statusGood: assets.total === 0 ? undefined : (metrics.intangibleAssetsRatio || 0) < 20,
+      statusGood:
+        assets.total === 0
+          ? undefined
+          : (metrics.intangibleAssetsRatio || 0) < 20,
       className: "print:w-1/4",
-      tooltipAlign: TooltipAlign.RIGHT
-    }
+      tooltipAlign: TooltipAlign.RIGHT,
+    },
   ];
 
   const keyMetricsBanner = metrics ? (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 print:flex">
+    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4 print:flex">
       {balanceKeyMetricsData.map((metric) => {
-        const note = balanceSheetNotes.find((note) => note.title === metric.title);
+        const note = balanceSheetNotes.find(
+          (note) => note.title === metric.title,
+        );
         return (
           <KeyMetricsCard
             key={metric.title}
@@ -306,23 +338,25 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
             className={metric.className}
             tooltipAlign={metric.tooltipAlign}
           />
-        )
+        );
       })}
     </div>
   ) : (
-    <div className="flex h-[150px] w-full items-center justify-center rounded-2xl bg-white p-5 border border-gray-100 ">
+    <div className="flex h-[150px] w-full items-center justify-center rounded-2xl border border-gray-100 bg-white p-5">
       <LoadingPing size={40} />
     </div>
   );
 
   const assetsSection = assets ? (
     <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
-      <div className="flex-1 rounded-xl border border-gray-100 bg-white p-6  print:p-4 box-decoration-clone">
+      <div className="flex-1 rounded-xl border border-gray-100 bg-white box-decoration-clone p-4 lg:p-6 print:p-4">
         <div className="mb-4 flex items-end justify-between border-b border-gray-100 pb-3">
-          <span className="text-lg font-bold tracking-wider text-gray-800">
+          <span className="text-base font-black tracking-wider text-gray-800 lg:text-lg">
             {t("balance_sheet_view.assets_title")}
           </span>
-          <span className="text-sm font-medium text-gray-400">{t("balance_sheet_view.pct_total_assets")}</span>
+          <span className="text-sm font-medium text-gray-400">
+            {t("balance_sheet_view.pct_total_assets")}
+          </span>
         </div>
         <BalanceSheetSection
           titleText={t("balance_sheet_view.current_assets")}
@@ -339,15 +373,17 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
           barColor="bg-blue-400"
         />
       </div>
-      <div className="flex items-center justify-between rounded-xl bg-gray-50 border border-gray-200 p-6  print:break-inside-avoid">
-        <span className="text-lg font-bold tracking-widest text-gray-700">{t("balance_sheet_view.total_assets")}</span>
-        <span className="text-2xl font-black text-gray-900">
+      <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4 lg:p-6 print:break-inside-avoid">
+        <span className="text-base font-black tracking-widest text-gray-700 lg:text-lg">
+          {t("balance_sheet_view.total_assets")}
+        </span>
+        <span className="text-lg font-black text-gray-900 lg:text-2xl">
           {numberWithCommas(assets.total)}
         </span>
       </div>
     </div>
   ) : (
-    <div className="flex h-[400px] w-full items-center justify-center rounded-xl bg-white border border-gray-100 p-5 ">
+    <div className="flex h-[400px] w-full items-center justify-center rounded-xl border border-gray-100 bg-white p-5">
       <LoadingPing size={40} />
     </div>
   );
@@ -355,12 +391,14 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
   const liabilitiesAndEquitySection =
     liabilities && equity ? (
       <div className="flex flex-col gap-4 print:w-1/2 print:p-2">
-        <div className="flex-1 rounded-xl border border-gray-100 bg-white p-6  print:p-4 box-decoration-clone">
+        <div className="flex-1 rounded-xl border border-gray-100 bg-white box-decoration-clone p-4 lg:p-6 print:p-4">
           <div className="mb-4 flex items-end justify-between border-b border-gray-100 pb-3">
-            <span className="text-lg font-bold tracking-wider text-gray-800">
+            <span className="text-base font-black tracking-wider text-gray-800 lg:text-lg">
               {t("balance_sheet_view.liab_equity_title")}
             </span>
-            <span className="text-sm font-medium text-gray-400">{t("balance_sheet_view.pct_total_liab_equity")}</span>
+            <span className="text-sm font-medium text-gray-400">
+              {t("balance_sheet_view.pct_total_liab_equity")}
+            </span>
           </div>
           <BalanceSheetSection
             titleText={t("balance_sheet_view.current_liab")}
@@ -385,11 +423,11 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
           />
         </div>
 
-        <div className="flex items-center justify-between rounded-xl bg-gray-900 p-6 text-white  print:break-inside-avoid">
-          <span className="text-lg font-bold tracking-widest text-white">
+        <div className="flex items-center justify-between rounded-xl bg-gray-900 p-4 text-white lg:p-6 print:break-inside-avoid">
+          <span className="text-base font-black tracking-widest text-white lg:text-lg">
             {t("balance_sheet_view.total_liab_equity")}
           </span>
-          <span className="text-2xl font-black text-white">
+          <span className="text-lg font-black text-white lg:text-2xl">
             {numberWithCommas(
               reportData.liabilities.total + reportData.equity.total,
             )}
@@ -397,7 +435,7 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
         </div>
       </div>
     ) : (
-      <div className="flex h-[400px] w-full items-center justify-center rounded-xl bg-white border border-gray-100 p-5 ">
+      <div className="flex h-[400px] w-full items-center justify-center rounded-xl border border-gray-100 bg-white p-5">
         <LoadingPing size={40} />
       </div>
     );
@@ -406,7 +444,7 @@ export default function BalanceSheetView({ period, year }: { period: ReportPerio
     <div className="flex w-full flex-col gap-4">
       {keyMetricsBanner}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 print:flex print:items-start">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:gap-4 print:flex print:items-start">
         {assetsSection}
         {liabilitiesAndEquitySection}
       </div>

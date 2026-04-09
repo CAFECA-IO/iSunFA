@@ -50,7 +50,9 @@ export default function KeyMetricsCard({
   );
 
   return (
-    <div className={`relative flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5  print:p-2 ${className}`}>
+    <div
+      className={`relative flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 lg:p-5 print:p-2 ${className}`}
+    >
       {/* Info: (20260330 - Julian) Tooltip */}
       {isShowTooltip && (
         <div
@@ -68,7 +70,7 @@ export default function KeyMetricsCard({
             <Info size={20} strokeWidth={2} />
           </button>
           <div
-            className={`absolute top-6 w-max max-w-48 rounded-md bg-blue-50 p-2 text-xs text-slate-900 ${tooltipAlign === TooltipAlign.LEFT ? "left-0" : "right-0"} ${isExpand ? "visible opacity-100" : "invisible opacity-0"} transition-all duration-300 ease-in-out`}
+            className={`absolute top-6 w-max max-w-48 rounded-md bg-blue-50 p-2 text-xs text-slate-900 shadow-md ${tooltipAlign === TooltipAlign.LEFT ? "left-0" : "right-0"} ${isExpand ? "visible opacity-100" : "invisible opacity-0"} transition-all duration-300 ease-in-out`}
           >
             {tooltip}
           </div>
@@ -79,7 +81,7 @@ export default function KeyMetricsCard({
       <span className="mb-2 text-xs font-bold tracking-wider text-slate-500 uppercase">
         {title}
         {/* Info: (20260330 - Julian) 描述 */}
-        <p className="mt-2 text-[11px] font-medium text-slate-400">
+        <p className="mt-1 text-[8px] font-medium text-slate-400 lg:mt-2 lg:text-[10px]">
           {description}
         </p>
       </span>
@@ -87,7 +89,7 @@ export default function KeyMetricsCard({
       {/* Info: (20260330 - Julian) 數值 */}
       <div className="flex items-end justify-between gap-2">
         <span
-          className={`text-3xl font-black ${textColor} print:text-xl print:text-slate-800`}
+          className={`text-xl font-black lg:text-3xl ${textColor} print:text-xl print:text-slate-800`}
         >
           {value}
         </span>
