@@ -6,7 +6,7 @@ import { paymentRepo } from "@/repositories/payment.repo";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { payment_method_id: string } }
+  { params }: { params: Promise<{ payment_method_id: string }> }
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -18,8 +18,10 @@ export async function PATCH(
 
     const { name, email, taxId, buyerName, billingAddress } = await request.json();
 
+    const { payment_method_id: paymentMethodId } = await params;
+
     const paymentMethod = await paymentRepo.getPaymentMethodById(
-      params.payment_method_id
+      paymentMethodId
     );
 
     if (!paymentMethod || paymentMethod.userId !== user.id) {
@@ -27,7 +29,7 @@ export async function PATCH(
     }
 
     const currentData = (paymentMethod.data as object) || {};
-    await paymentRepo.updatePaymentMethodData(params.payment_method_id, {
+    await paymentRepo.updatePaymentMethodData(paymentMethodId, {
       ...currentData,
       ...(name !== undefined && { name }),
       ...(email !== undefined && { email }),
@@ -45,7 +47,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { payment_method_id: string } }
+  { params }: { params: Promise<{ payment_method_id: string }> }
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -55,8 +57,10 @@ export async function DELETE(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
+    const { payment_method_id: paymentMethodId } = await params;
+
     const paymentMethod = await paymentRepo.getPaymentMethodById(
-      params.payment_method_id
+      paymentMethodId
     );
 
     if (!paymentMethod || paymentMethod.userId !== user.id) {
@@ -65,7 +69,7 @@ export async function DELETE(
 
     const currentData = (paymentMethod.data as object) || {};
     // Info: (20260409 - Luphia) Soft delete to preserve transaction history links
-    await paymentRepo.updatePaymentMethodData(params.payment_method_id, {
+    await paymentRepo.updatePaymentMethodData(paymentMethodId, {
       ...currentData,
       isDeleted: true,
     });

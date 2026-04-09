@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { X, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
 
@@ -28,8 +29,6 @@ export default function EditCardModal({ isOpen, onClose, onSave, initialData }: 
     }
   }, [initialData, isOpen]);
 
-  if (!isOpen) return null;
-
   const handleSave = async () => {
     setLoading(true);
     try {
@@ -40,20 +39,44 @@ export default function EditCardModal({ isOpen, onClose, onSave, initialData }: 
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden flex flex-col">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">{t('billing.cards.edit_details', { defaultValue: 'Edit Card Details' })}</h3>
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors disabled:opacity-50"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Transition show={isOpen}>
+      <Dialog className="relative z-[60]" onClose={loading ? () => {} : onClose}>
+        <TransitionChild
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
+        </TransitionChild>
 
-        <div className="px-6 py-5 space-y-4">
+        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <TransitionChild
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enterTo="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >
+              <DialogPanel className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden flex flex-col text-left">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <DialogTitle as="h3" className="text-lg font-semibold text-gray-900">
+                    {t('billing.cards.edit_details', { defaultValue: 'Edit Card Details' })}
+                  </DialogTitle>
+                  <button
+                    onClick={onClose}
+                    disabled={loading}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors disabled:opacity-50"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="px-6 py-5 space-y-4">
           <label htmlFor="editCardName" className="block">
             <span className="block text-sm font-medium text-gray-700 mb-1">{t('billing.cards.rename')}</span>
             <input
@@ -120,24 +143,28 @@ export default function EditCardModal({ isOpen, onClose, onSave, initialData }: 
           </label>
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-2xl">
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
-          >
-            {t('billing.cards.cancel', { defaultValue: 'Cancel' })}
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={loading || !data.email || !data.buyerName || !data.billingAddress}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
-          >
-            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {t('billing.cards.save', { defaultValue: 'Save' })}
-          </button>
+                <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-2xl">
+                  <button
+                    onClick={onClose}
+                    disabled={loading}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
+                  >
+                    {t('billing.cards.cancel', { defaultValue: 'Cancel' })}
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={loading || !data.email || !data.buyerName || !data.billingAddress}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
+                  >
+                    {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {t('billing.cards.save', { defaultValue: 'Save' })}
+                  </button>
+                </div>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
         </div>
-      </div>
-    </div>
+      </Dialog>
+    </Transition>
   );
 }
