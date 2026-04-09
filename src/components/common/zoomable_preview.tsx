@@ -45,7 +45,7 @@ export default function ZoomablePreview({
     setPosition({ x: 0, y: 0 });
   };
 
-  // Info: (20260409 - Julian) ============ 滑鼠的拖曳事件 (for desktop) ============
+  // Info: (20260409 - Julian) 滑鼠的拖曳事件 (for desktop)
   const handleMouseDown = (e: React.MouseEvent) => {
     if (scale <= 1) return; // Info: (20260409 - Julian) 只有放大時才允許拖曳
     e.preventDefault(); // Info: (20260409 - Julian) 阻止預設行為
@@ -70,7 +70,7 @@ export default function ZoomablePreview({
     if (isDragging) setIsDragging(false);
   };
 
-  // Info: (20260409 - Julian) ============ 觸控的拖曳事件 (for mobile) ============
+  // Info: (20260409 - Julian) 觸控的拖曳事件 (for mobile)
   const handleTouchStart = (e: React.TouchEvent) => {
     if (scale <= 1) return;
     setIsDragging(true);
