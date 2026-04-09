@@ -118,7 +118,10 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
         </span>
       </td>
       {/* Info: (20260409 - Julian) 異動項目 / 動作(Mobile) */}
-      <td className="table-cell px-3 py-4 sm:hidden sm:px-6">
+      <td
+        aria-label={`${t("journal.log_view.type")} / ${t("journal.log_view.action_type")}`}
+        className="table-cell px-3 py-4 sm:hidden sm:px-6"
+      >
         <div className="flex flex-col gap-2">
           <span
             className={`inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap uppercase sm:text-sm ${getDataTypeColor(
@@ -297,7 +300,8 @@ export default function JournalLogView() {
                 scope="col"
                 className="table-cell px-3 py-4 sm:hidden sm:px-6"
               >
-                {t("journal.log_view.type")} / {t("journal.log_view.action_type")}
+                {t("journal.log_view.type")} /{" "}
+                {t("journal.log_view.action_type")}
               </th>
               <th scope="col" className="px-3 py-4 sm:px-6">
                 {t("journal.log_view.record_time")}

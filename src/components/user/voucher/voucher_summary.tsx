@@ -81,7 +81,7 @@ export default function VoucherSummary() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-2 md:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
       {/* Info: (20260316 - Julian) 今日產生傳票 */}
       <div className="flex items-center rounded-2xl border border-slate-300 bg-white p-2 shadow-sm lg:p-4">
         <div className="shrink-0 px-2 text-blue-500 lg:px-4">

@@ -126,7 +126,7 @@ export function VoucherRow({
               {t("common.status_deleted")}
             </span>
           ) : (
-            <span className="flex items-center justify-center gap-2 text-sm font-medium italic">
+            <span className="flex items-center justify-center gap-2 text-[10px] font-medium italic sm:text-xs lg:text-sm">
               <Loader2 className="size-4 animate-spin text-orange-500" />
               {t("common.ai.pending")}
             </span>
@@ -171,7 +171,7 @@ export function VoucherRow({
             </span>
           ) : (
             <div className="mx-auto flex max-w-sm flex-col items-center justify-center gap-2">
-              <span className="flex items-center justify-center gap-2 text-sm font-bold text-blue-600 italic">
+              <span className="flex items-center justify-center gap-2 text-[10px] font-bold text-blue-600 italic sm:text-xs lg:text-sm">
                 <Loader2 className="size-4 animate-spin text-blue-500" />
                 {t("voucher.main_view.table.ai.processing")}
               </span>
@@ -226,7 +226,7 @@ export function VoucherRow({
             </span>
           ) : (
             <p
-              className="truncate font-bold text-red-500"
+              className="truncate text-[10px] font-bold text-red-500 sm:text-xs lg:text-sm"
               title={failedMessage}
             >
               {failedMessage}

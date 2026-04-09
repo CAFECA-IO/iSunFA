@@ -78,15 +78,15 @@ const JournalListItem = ({
             )}
           </div>
         </td>
-        <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium sm:w-auto sm:px-6 sm:text-sm sm:whitespace-nowrap">
+        <td className="w-[80px] px-1 py-2 text-center align-middle text-xs font-medium sm:w-auto sm:px-6 sm:text-sm sm:whitespace-nowrap">
           {formattedDate}
         </td>
-        <td className="hidden px-3 py-2 align-middle font-medium whitespace-nowrap sm:table-cell sm:px-6">
+        <td className="px-3 py-2 text-center align-middle text-[10px] font-medium whitespace-nowrap sm:px-6 sm:text-sm">
           {formattedID}
         </td>
         <td
-          colSpan={1}
-          className="px-3 py-2 text-center align-middle text-[10px] sm:hidden sm:text-xs"
+          colSpan={2}
+          className="px-3 py-2 text-center align-middle text-[10px] sm:text-xs lg:text-sm"
         >
           {journal.isDeleted ? (
             <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
@@ -96,22 +96,6 @@ const JournalListItem = ({
           ) : (
             <span className="flex items-center justify-center gap-2 italic">
               <Loader2 className="size-4 shrink-0 animate-spin text-orange-400" />
-              {t("common.ai.pending")}
-            </span>
-          )}
-        </td>
-        <td
-          colSpan={2}
-          className="hidden px-3 py-2 text-center align-middle sm:table-cell sm:px-6 sm:text-sm"
-        >
-          {journal.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
-              <Trash2 size={16} />
-              {t("common.status_deleted")}
-            </span>
-          ) : (
-            <span className="flex items-center justify-center gap-2 italic">
-              <Loader2 className="size-4 shrink-0 animate-spin text-orange-400 sm:size-6" />
               {t("common.ai.pending")}
             </span>
           )}
@@ -136,38 +120,16 @@ const JournalListItem = ({
             )}
           </div>
         </td>
-        <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium sm:w-auto sm:px-6 sm:text-sm sm:whitespace-nowrap">
+        <td className="w-[80px] px-1 py-2 text-center align-middle text-xs font-medium sm:w-auto sm:px-6 sm:text-sm sm:whitespace-nowrap">
           {formattedDate}
         </td>
-        <td className="hidden px-3 py-2 align-middle font-medium whitespace-nowrap sm:table-cell sm:px-6">
+        <td className="px-3 py-2 text-center align-middle text-[10px] font-medium whitespace-nowrap sm:px-6 sm:text-sm">
           {formattedID}
         </td>
         <td
           aria-label="AI Processing"
-          colSpan={1}
-          className="px-3 py-2 text-center align-middle text-[10px] sm:hidden sm:text-xs"
-        >
-          {journal.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
-              <Trash2 size={16} />
-              {t("common.status_deleted")}
-            </span>
-          ) : (
-            <div className="max-w-sm flex-col gap-2">
-              <span className="mb-2 flex items-center gap-2 font-bold italic">
-                <Loader2 className="h-4 w-4 shrink-0 animate-spin text-blue-500" />
-                {t("ocr.ai.processing")}
-              </span>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
-                <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
-              </div>
-            </div>
-          )}
-        </td>
-        <td
-          aria-label="AI Processing"
           colSpan={2}
-          className="hidden px-3 py-2 text-center align-middle sm:table-cell sm:px-6 sm:text-sm"
+          className="px-3 py-2 text-center align-middle text-[10px] sm:text-xs lg:text-sm"
         >
           {journal.isDeleted ? (
             <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
@@ -215,32 +177,13 @@ const JournalListItem = ({
         <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium sm:w-auto sm:px-6 sm:text-sm sm:whitespace-nowrap">
           {formattedDate}
         </td>
-        <td className="hidden px-3 py-2 align-middle font-medium whitespace-nowrap sm:table-cell sm:px-6">
+        <td className="px-3 py-2 align-middle text-[10px] font-medium whitespace-nowrap sm:px-6 sm:text-sm">
           {formattedID}
         </td>
         <td
           aria-label="AI Failed"
-          colSpan={1}
-          className="px-3 py-2 text-center align-middle text-[10px] sm:hidden sm:text-xs"
-        >
-          {journal.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
-              <Trash2 size={16} />
-              {t("common.status_deleted")}
-            </span>
-          ) : (
-            <p
-              className="truncate font-bold text-red-500"
-              title={failedMessage}
-            >
-              {failedMessage}
-            </p>
-          )}
-        </td>
-        <td
-          aria-label="AI Failed"
           colSpan={2}
-          className="hidden px-3 py-2 text-center align-middle sm:table-cell sm:px-6 sm:text-sm"
+          className="px-3 py-2 text-center align-middle text-[10px] sm:text-xs lg:text-sm"
         >
           {journal.isDeleted ? (
             <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
@@ -288,12 +231,12 @@ const JournalListItem = ({
       {/* Info: (20260323 - Julian) ID */}
       <td
         aria-label={t("ocr.id")}
-        className="hidden px-3 py-2 align-middle font-medium whitespace-nowrap text-slate-700 sm:table-cell sm:px-6"
+        className="px-3 py-2 text-center align-middle text-[10px] font-medium whitespace-nowrap text-slate-700 sm:px-6 sm:text-sm"
       >
         {formattedID}
       </td>
       {/* Info: (20260320 - Julian) Content */}
-      <td className="hidden px-3 py-2 align-middle text-xs text-slate-700 sm:table-cell sm:px-6 sm:text-sm">
+      <td className="px-3 py-2 align-middle text-[10px] text-slate-700 sm:px-6 sm:text-sm">
         <pre className="line-clamp-2 whitespace-break-spaces sm:whitespace-normal">
           {journal.text}
         </pre>
@@ -405,10 +348,10 @@ const JournalListLayout = ({
             <th className="w-[80px] bg-slate-100 px-1 py-3 text-center text-xs text-slate-700 sm:w-auto sm:px-6 sm:text-left sm:text-base">
               {t("ocr.created_date")}
             </th>
-            <th className="hidden bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:table-cell sm:px-6 sm:text-left sm:text-base">
+            <th className="bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:px-6 sm:text-left sm:text-base">
               {t("ocr.id")}
             </th>
-            <th className="hidden bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:table-cell sm:px-6 sm:text-left sm:text-base">
+            <th className="bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:table-cell sm:px-6 sm:text-left sm:text-base">
               {t("ocr.journal")}
             </th>
             <th className="bg-slate-100 px-3 py-3 text-center text-xs text-slate-700 sm:px-6 sm:text-left sm:text-base">
