@@ -1,6 +1,13 @@
 "use client";
 
-import { Loader2, CircleAlert, CheckCircle2, FileQuestion, Trash2, Undo2 } from "lucide-react";
+import {
+  Loader2,
+  CircleAlert,
+  CheckCircle2,
+  FileQuestion,
+  Trash2,
+  Undo2,
+} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { FilePreview } from "@/components/common/file_preview";
 import AiConfidence from "@/components/common/ai_confidence";
@@ -59,10 +66,16 @@ const JournalListItem = ({
   // Info: (20260320 - Julian) 尚未開始
   if (journal.analysisStatus === AIAnalysisStatus.PENDING) {
     return (
-      <tr className={`border-b last:border-0 ${journal.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500 opacity-50" : "border-slate-300 bg-white text-slate-400"}`}>
+      <tr
+        className={`border-b last:border-0 ${journal.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500 opacity-50" : "border-slate-300 bg-white text-slate-400"}`}
+      >
         <td className="w-[72px] px-3 py-2 align-middle sm:w-[150px] sm:px-6">
           <div className="flex size-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50 p-1 sm:size-20">
-            {journal.isDeleted ? <Trash2 className="size-4 text-slate-400 sm:size-6" /> : <Loader2 className="size-4 animate-spin text-orange-400 sm:size-6" />}
+            {journal.isDeleted ? (
+              <Trash2 className="size-4 text-slate-400 sm:size-6" />
+            ) : (
+              <Loader2 className="size-4 animate-spin text-orange-400 sm:size-6" />
+            )}
           </div>
         </td>
         <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium sm:w-auto sm:px-6 sm:text-sm sm:whitespace-nowrap">
@@ -71,12 +84,18 @@ const JournalListItem = ({
         <td className="hidden px-3 py-2 align-middle font-medium whitespace-nowrap sm:table-cell sm:px-6">
           {formattedID}
         </td>
-        <td colSpan={2} className="px-3 py-2 text-center align-middle text-xs sm:hidden">
+        <td
+          colSpan={1}
+          className="px-3 py-2 text-center align-middle text-[10px] sm:hidden sm:text-xs"
+        >
           {journal.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
+              <Trash2 size={16} />
+              {t("common.status_deleted")}
+            </span>
           ) : (
             <span className="flex items-center justify-center gap-2 italic">
-              <Loader2 className="size-4 animate-spin text-orange-400" />
+              <Loader2 className="size-4 shrink-0 animate-spin text-orange-400" />
               {t("common.ai.pending")}
             </span>
           )}
@@ -86,10 +105,13 @@ const JournalListItem = ({
           className="hidden px-3 py-2 text-center align-middle sm:table-cell sm:px-6 sm:text-sm"
         >
           {journal.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
+              <Trash2 size={16} />
+              {t("common.status_deleted")}
+            </span>
           ) : (
             <span className="flex items-center justify-center gap-2 italic">
-              <Loader2 className="size-4 animate-spin text-orange-400 sm:size-6" />
+              <Loader2 className="size-4 shrink-0 animate-spin text-orange-400 sm:size-6" />
               {t("common.ai.pending")}
             </span>
           )}
@@ -102,10 +124,16 @@ const JournalListItem = ({
   // Info: (20260320 - Julian) 處理中
   if (journal.analysisStatus === AIAnalysisStatus.PROCESSING) {
     return (
-      <tr className={`border-b last:border-0 ${journal.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500 opacity-50" : "border-blue-200 bg-blue-50 text-blue-500 opacity-90"}`}>
+      <tr
+        className={`border-b last:border-0 ${journal.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500 opacity-50" : "border-blue-200 bg-blue-50 text-blue-500 opacity-90"}`}
+      >
         <td className="w-[72px] px-3 py-2 align-middle sm:w-[150px] sm:px-6">
           <div className="flex size-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-blue-300 bg-white p-1 sm:size-20">
-            {journal.isDeleted ? <Trash2 className="size-4 text-slate-400 sm:size-6" /> : <Loader2 className="size-4 animate-spin text-blue-500 sm:size-6" />}
+            {journal.isDeleted ? (
+              <Trash2 className="size-4 text-slate-400 sm:size-6" />
+            ) : (
+              <Loader2 className="size-4 shrink-0 animate-spin text-blue-500 sm:size-6" />
+            )}
           </div>
         </td>
         <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium sm:w-auto sm:px-6 sm:text-sm sm:whitespace-nowrap">
@@ -116,15 +144,18 @@ const JournalListItem = ({
         </td>
         <td
           aria-label="AI Processing"
-          colSpan={2}
-          className="px-3 py-2 text-center align-middle text-xs sm:hidden"
+          colSpan={1}
+          className="px-3 py-2 text-center align-middle text-[10px] sm:hidden sm:text-xs"
         >
           {journal.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
+              <Trash2 size={16} />
+              {t("common.status_deleted")}
+            </span>
           ) : (
             <div className="max-w-sm flex-col gap-2">
               <span className="mb-2 flex items-center gap-2 font-bold italic">
-                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin text-blue-500" />
                 {t("ocr.ai.processing")}
               </span>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
@@ -139,11 +170,14 @@ const JournalListItem = ({
           className="hidden px-3 py-2 text-center align-middle sm:table-cell sm:px-6 sm:text-sm"
         >
           {journal.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
+              <Trash2 size={16} />
+              {t("common.status_deleted")}
+            </span>
           ) : (
             <div className="max-w-sm flex-col gap-2">
               <span className="mb-2 flex items-center gap-2 font-bold italic">
-                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin text-blue-500" />
                 {t("ocr.ai.processing")}
               </span>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200">
@@ -159,18 +193,23 @@ const JournalListItem = ({
 
   // Info: (20260320 - Julian) 分析出錯
   if (journal.analysisStatus === AIAnalysisStatus.FAILED) {
-    const failedMessage = journal.aiNote && journal.aiNote !== "無 AI 分析備註" 
-      ? journal.aiNote 
-      : (t("ocr.ai.failed") as string);
+    const failedMessage =
+      journal.aiNote && journal.aiNote !== "無 AI 分析備註"
+        ? journal.aiNote
+        : (t("ocr.ai.failed") as string);
 
     return (
       <tr
         onClick={!journal.isDeleted ? () => onSelect(journal) : undefined}
-        className={`border-b last:border-0 transition-colors ${journal.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500 opacity-50" : "hover:cursor-pointer hover:bg-red-100 border-red-200 bg-red-50 text-red-500 opacity-90"}`}
+        className={`border-b transition-colors last:border-0 ${journal.isDeleted ? "border-slate-300 bg-slate-50 text-slate-500 opacity-50" : "border-red-200 bg-red-50 text-red-500 opacity-90 hover:cursor-pointer hover:bg-red-100"}`}
       >
         <td className="w-[72px] px-3 py-2 align-middle sm:w-[150px] sm:px-6">
           <div className="flex size-12 items-center justify-center overflow-hidden rounded-lg border border-dashed border-red-300 bg-white p-1 sm:size-20">
-            {journal.isDeleted ? <Trash2 className="size-4 text-slate-400 sm:size-6" /> : <CircleAlert size={24} className="text-red-500" />}
+            {journal.isDeleted ? (
+              <Trash2 className="size-4 text-slate-400 sm:size-6" />
+            ) : (
+              <CircleAlert size={24} className="text-red-500" />
+            )}
           </div>
         </td>
         <td className="w-[80px] px-1 py-2 align-middle text-xs font-medium sm:w-auto sm:px-6 sm:text-sm sm:whitespace-nowrap">
@@ -181,13 +220,21 @@ const JournalListItem = ({
         </td>
         <td
           aria-label="AI Failed"
-          colSpan={2}
-          className="px-3 py-2 text-center align-middle text-xs sm:hidden"
+          colSpan={1}
+          className="px-3 py-2 text-center align-middle text-[10px] sm:hidden sm:text-xs"
         >
           {journal.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
+              <Trash2 size={16} />
+              {t("common.status_deleted")}
+            </span>
           ) : (
-            <p className="font-bold text-red-500 truncate" title={failedMessage}>{failedMessage}</p>
+            <p
+              className="truncate font-bold text-red-500"
+              title={failedMessage}
+            >
+              {failedMessage}
+            </p>
           )}
         </td>
         <td
@@ -196,9 +243,17 @@ const JournalListItem = ({
           className="hidden px-3 py-2 text-center align-middle sm:table-cell sm:px-6 sm:text-sm"
         >
           {journal.isDeleted ? (
-            <span className="flex items-center justify-center gap-2 font-bold text-slate-500"><Trash2 size={16}/>{t("common.status_deleted")}</span>
+            <span className="flex items-center justify-center gap-2 font-bold text-slate-500">
+              <Trash2 size={16} />
+              {t("common.status_deleted")}
+            </span>
           ) : (
-            <p className="font-bold text-red-500 truncate" title={failedMessage}>{failedMessage}</p>
+            <p
+              className="truncate font-bold text-red-500"
+              title={failedMessage}
+            >
+              {failedMessage}
+            </p>
           )}
         </td>
         {actionsColumn}
@@ -208,7 +263,7 @@ const JournalListItem = ({
 
   return (
     <tr
-      className={`border-b border-slate-300 last:border-0 transition-colors ${journal.isDeleted ? "opacity-50 bg-slate-50" : "bg-white cursor-pointer hover:bg-orange-100"}`}
+      className={`border-b border-slate-300 transition-colors last:border-0 ${journal.isDeleted ? "bg-slate-50 opacity-50" : "cursor-pointer bg-white hover:bg-orange-100"}`}
       onClick={!journal.isDeleted ? () => onSelect(journal) : undefined}
     >
       {/* Info: (20260320 - Julian) File */}
@@ -250,28 +305,28 @@ const JournalListItem = ({
       >
         <div className="flex flex-col items-center gap-2">
           {journal.isDeleted ? (
-          <div className="mx-auto flex flex-col items-center justify-center gap-1 text-slate-400">
-            <Trash2 size={24} />
-            <span className="text-xs font-bold whitespace-nowrap">
-              {t("common.status_deleted")}
-            </span>
-          </div>
-        ) : journal.isVerified ? (
-          <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
-            <CheckCircle2 size={24} />
-            <span className="text-xs font-bold whitespace-nowrap">
-              {t("verify.status.verified")}
-            </span>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center gap-1.5 text-orange-500">
-            <FileQuestion size={24} />
-            <span className="text-xs font-bold whitespace-nowrap">
-              {t("verify.status.unverified")}
-            </span>
-          </div>
-        )}
-        <AiConfidence confidence={journal.confidence} barOnly />
+            <div className="mx-auto flex flex-col items-center justify-center gap-1 text-slate-400">
+              <Trash2 size={24} />
+              <span className="text-[10px] font-bold whitespace-nowrap sm:text-xs">
+                {t("common.status_deleted")}
+              </span>
+            </div>
+          ) : journal.isVerified ? (
+            <div className="mx-auto flex flex-col items-center justify-center gap-1 text-emerald-500">
+              <CheckCircle2 size={24} />
+              <span className="text-[10px] font-bold whitespace-nowrap sm:text-xs">
+                {t("verify.status.verified")}
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-1.5 text-orange-500">
+              <FileQuestion size={24} />
+              <span className="text-[10px] font-bold whitespace-nowrap sm:text-xs">
+                {t("verify.status.unverified")}
+              </span>
+            </div>
+          )}
+          <AiConfidence confidence={journal.confidence} barOnly />
         </div>
       </td>
       {/* Info: (20260404 - Luphia) Actions */}
@@ -301,13 +356,13 @@ const JournalListLayout = ({
         colSpan={5}
         className="px-3 py-8 text-center text-slate-500 sm:hidden"
       >
-        <Loader2 className="mx-auto h-6 w-6 animate-spin text-orange-500" />
+        <Loader2 className="mx-auto h-6 w-6 shrink-0 animate-spin text-orange-500" />
       </td>
       <td
         colSpan={5}
         className="hidden px-3 py-8 text-center text-slate-500 sm:table-cell sm:px-6"
       >
-        <Loader2 className="mx-auto h-6 w-6 animate-spin text-orange-500" />
+        <Loader2 className="mx-auto h-6 w-6 shrink-0 animate-spin text-orange-500" />
       </td>
     </tr>
   );
@@ -330,12 +385,12 @@ const JournalListLayout = ({
   );
 
   const listLayout = journals.map((journal) => (
-    <JournalListItem 
-      key={journal.id} 
-      journal={journal} 
-      onSelect={onSelect} 
-      onDelete={onDelete} 
-      onRestore={onRestore} 
+    <JournalListItem
+      key={journal.id}
+      journal={journal}
+      onSelect={onSelect}
+      onDelete={onDelete}
+      onRestore={onRestore}
     />
   ));
 

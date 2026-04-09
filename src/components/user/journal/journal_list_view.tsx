@@ -67,7 +67,9 @@ export default function JournalListView() {
     useState<boolean>(false);
 
   const [journalToDelete, setJournalToDelete] = useState<IJournal | null>(null);
-  const [journalToRestore, setJournalToRestore] = useState<IJournal | null>(null);
+  const [journalToRestore, setJournalToRestore] = useState<IJournal | null>(
+    null,
+  );
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [isRestoring, setIsRestoring] = useState<boolean>(false);
 
@@ -84,12 +86,12 @@ export default function JournalListView() {
   };
 
   const handleDeleteClick = (id: string) => {
-    const journal = journals.find(j => j.id === id);
+    const journal = journals.find((j) => j.id === id);
     if (journal) setJournalToDelete(journal);
   };
 
   const handleRestoreClick = (id: string) => {
-    const journal = journals.find(j => j.id === id);
+    const journal = journals.find((j) => j.id === id);
     if (journal) setJournalToRestore(journal);
   };
 
@@ -137,8 +139,8 @@ export default function JournalListView() {
       if (data.code === ApiCode.SUCCESS) {
         setJournals((prev) =>
           prev.map((j) =>
-            j.id === journalToRestore.id ? { ...j, isDeleted: false } : j
-          )
+            j.id === journalToRestore.id ? { ...j, isDeleted: false } : j,
+          ),
         );
         setJournalToRestore(null);
       }
@@ -283,12 +285,14 @@ export default function JournalListView() {
     );
 
   return (
-    <div className="flex w-full max-w-full min-w-0 flex-col gap-4">
+    <div className="flex w-full max-w-full min-w-0 flex-col gap-2 lg:gap-4">
       <JournalSummary />
-      <div className="flex size-full max-w-full min-w-0 flex-col gap-4">
+      <div className="flex size-full max-w-full min-w-0 flex-col gap-2 lg:gap-4">
         {/* Info: (20260304 - Julian) Display type */}
         <div className="ml-auto flex items-center gap-4">
-          <p className="text-xs font-medium text-slate-600">{t('ocr.display_type')}</p>
+          <p className="text-xs font-medium text-slate-600">
+            {t("ocr.display_type")}
+          </p>
           <div className="flex items-center rounded-lg border border-gray-200 bg-gray-100 p-1">
             <button
               title={t("ocr.list_view") as string}
@@ -318,7 +322,7 @@ export default function JournalListView() {
         </div>
 
         {/* Info: (20260312 - Julian) Toolbar */}
-        <div className="flex flex-col items-stretch lg:items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row">
+        <div className="flex flex-col items-stretch justify-between gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:gap-4">
           {/* Info: (20260401 - Julian) Search Bar */}
           <div className="relative w-full lg:max-w-sm">
             <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -334,23 +338,23 @@ export default function JournalListView() {
 
           {/* Info: (20260304 - Julian) Date Picker */}
           <div className="flex w-full items-center gap-2 lg:w-auto">
-            <div className="flex w-full flex-col items-stretch gap-2 text-sm sm:flex-row sm:items-center">
+            <div className="flex w-full items-center gap-1 text-sm lg:gap-2">
               <input
                 type="date"
                 aria-label="Start Date"
                 value={startDate}
                 max={endDate || undefined}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4"
               />
-              <span className="hidden text-gray-400 sm:block">-</span>
+              <span className="text-gray-400">-</span>
               <input
                 type="date"
                 aria-label="End Date"
                 value={endDate}
                 min={startDate || undefined}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4"
               />
             </div>
           </div>
@@ -363,7 +367,7 @@ export default function JournalListView() {
               onChange={(e) =>
                 setFilteredVerifyStatus(e.target.value as VerifyStatus | "all")
               }
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              className="rounded-lg border border-slate-300 bg-white px-2 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4"
             >
               <option value="all">
                 {t("verify.status.all", { type: t("verify.type.journal") })}
@@ -380,9 +384,11 @@ export default function JournalListView() {
               type="button"
               aria-label={t("common.sort.date_aria")}
               onClick={() =>
-                setSortOrder(sortOrder === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC)
+                setSortOrder(
+                  sortOrder === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC,
+                )
               }
-              className="flex items-center rounded-lg border border-slate-300 px-4 py-2 font-bold text-slate-600 transition-colors hover:bg-orange-50"
+              className="flex items-center rounded-lg border border-slate-300 px-2 py-2 font-bold text-slate-600 transition-colors hover:bg-orange-50 lg:px-4"
             >
               {sortOrder === SortOrder.DESC
                 ? t("common.sort.newest")
@@ -456,7 +462,11 @@ export default function JournalListView() {
           onClose={() => setJournalToRestore(null)}
           title={t("common.restore") as string}
           message={t("common.restore_confirm_desc") as string}
-          confirmText={isRestoring ? (t("ocr.please_wait") as string) : (t("common.restore") as string)}
+          confirmText={
+            isRestoring
+              ? (t("ocr.please_wait") as string)
+              : (t("common.restore") as string)
+          }
           cancelText={t("common.cancel") as string}
           onConfirm={executeRestore}
         />

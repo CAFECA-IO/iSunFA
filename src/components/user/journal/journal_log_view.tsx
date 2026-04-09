@@ -106,10 +106,6 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
           {getDataTypeLabel(log.dataType)}
         </span>
       </td>
-      <td className="px-3 py-4 text-xs font-medium text-gray-900 sm:px-6 sm:text-sm">
-        {dateStrForDesktop}
-        {dateStrForMobile}
-      </td>
       <td className="px-3 py-4 sm:px-6">
         <span
           className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap sm:text-sm ${getActionColor(
@@ -118,6 +114,10 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
         >
           {getActionLabel(log.action)}
         </span>
+      </td>
+      <td className="px-3 py-4 text-xs font-medium text-gray-900 sm:px-6 sm:text-sm">
+        {dateStrForDesktop}
+        {dateStrForMobile}
       </td>
       <td className="px-3 py-4 sm:px-6">
         <div className="flex flex-col items-start">
@@ -261,10 +261,10 @@ export default function JournalLogView() {
                 {t("異動項目")}
               </th>
               <th scope="col" className="px-3 py-4 sm:px-6">
-                {t("journal.log_view.record_time")}
+                {t("journal.log_view.action_type")}
               </th>
               <th scope="col" className="px-3 py-4 sm:px-6">
-                {t("journal.log_view.action_type")}
+                {t("journal.log_view.record_time")}
               </th>
               <th scope="col" className="px-3 py-4 sm:px-6">
                 {t("journal.log_view.operator")}

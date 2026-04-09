@@ -39,6 +39,42 @@ export default function JournalMainView() {
     }
   };
 
+  const menuData = [
+    {
+      key: EJournalTab.UPLOAD,
+      label: t("journal.main_view.upload"),
+    },
+    {
+      key: EJournalTab.SCAN,
+      label: t("ocr.quick_scan"),
+    },
+    {
+      key: EJournalTab.LIST,
+      label: t("journal.main_view.list"),
+    },
+    {
+      key: EJournalTab.LOG,
+      label: t("journal.main_view.log"),
+    },
+  ];
+
+  const renderMenu = () => {
+    return menuData.map((item) => (
+      <button
+        key={item.key}
+        type="button"
+        className={`flex min-w-max shrink-0 items-center justify-center gap-3 rounded-lg p-2.5 text-sm font-medium transition-colors lg:w-full lg:justify-start lg:px-4 lg:py-3 ${
+          activeTab === item.key
+            ? "bg-white text-orange-600 shadow-sm"
+            : "text-gray-600 hover:bg-gray-100"
+        }`}
+        onClick={() => setActiveTab(item.key)}
+      >
+        {item.label}
+      </button>
+    ));
+  };
+
   return (
     <div className="flex w-full min-w-0 flex-col bg-gray-50">
       <div className="flex justify-between px-4 py-4 md:px-8 md:py-6">
@@ -48,52 +84,10 @@ export default function JournalMainView() {
       </div>
 
       {/* Info: (20260304 - Julian) Menu */}
-      <div className="flex max-w-full min-w-0 flex-col gap-4 px-2 sm:px-4 lg:flex-row">
+      <div className="flex max-w-full min-w-0 flex-col gap-4 sm:px-4 lg:flex-row">
         {/* Info: (20260304 - Julian) Upload Area */}
-        <div className="hide-scrollbar flex h-fit w-full max-w-full flex-row gap-2 overflow-x-auto rounded-lg border border-gray-200 bg-gray-100 p-2 lg:w-[180px] lg:flex-col lg:overflow-visible lg:p-4">
-          <button
-            type="button"
-            className={`flex shrink-0 min-w-max lg:w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.UPLOAD
-              ? "bg-white text-orange-600 shadow-sm"
-              : "text-gray-600 hover:bg-gray-100"
-              }`}
-            onClick={() => setActiveTab(EJournalTab.UPLOAD)}
-          >
-            {t("journal.main_view.upload")}
-          </button>
-          {/* Info: (20260402 - Julian) Quick Scan Area */}
-          <button
-            type="button"
-            className={`flex shrink-0 min-w-max lg:w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.SCAN
-              ? "bg-white text-orange-600 shadow-sm"
-              : "text-gray-600 hover:bg-gray-100"
-              }`}
-            onClick={() => setActiveTab(EJournalTab.SCAN)}
-          >
-            {t("ocr.quick_scan")}
-          </button>
-          {/* Info: (20260304 - Julian) View Logs */}
-          <button
-            type="button"
-            className={`flex shrink-0 min-w-max lg:w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.LIST
-              ? "bg-white text-orange-600 shadow-sm"
-              : "text-gray-600 hover:bg-gray-100"
-              }`}
-            onClick={() => setActiveTab(EJournalTab.LIST)}
-          >
-            {t("journal.main_view.list")}
-          </button>
-          {/* Info: (20260306 - Julian) View Audit Logs */}
-          <button
-            type="button"
-            className={`flex shrink-0 min-w-max lg:w-full items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors lg:justify-start ${activeTab === EJournalTab.LOG
-              ? "bg-white text-orange-600 shadow-sm"
-              : "text-gray-600 hover:bg-gray-100"
-              }`}
-            onClick={() => setActiveTab(EJournalTab.LOG)}
-          >
-            {t("journal.main_view.log")}
-          </button>
+        <div className="hide-scrollbar grid h-fit w-full max-w-full grid-flow-row grid-cols-2 rounded-lg border border-gray-200 bg-gray-100 p-2 lg:w-[180px] lg:grid-cols-1 lg:p-4">
+          {renderMenu()}
         </div>
 
         {/* Info: (20260304 - Julian) Main View */}
