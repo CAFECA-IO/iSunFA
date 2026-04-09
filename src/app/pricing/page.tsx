@@ -508,6 +508,8 @@ export default function PricingPage() {
                           src="/images/hardware_lease.png"
                           alt="Hardware Lease"
                           fill
+                          priority
+                          sizes="(max-width: 1024px) 100vw, 384px"
                           className="object-cover grayscale-[0.2] opacity-80"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent" />
