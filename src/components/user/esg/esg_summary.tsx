@@ -33,8 +33,7 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
       const fetchSummary = async () => {
         try {
           setIsLoading(true);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const query: any = {};
+          const query: { year?: number; month?: number } = {};
           if (year) query.year = year;
           if (month) query.month = month;
 

@@ -10,7 +10,7 @@ import {
   CircleAlert,
   Zap,
 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { IVoucherDashboardSummary } from "@/interfaces/voucher";
@@ -19,6 +19,7 @@ import { numberWithCommas } from "@/lib/utils/common";
 
 export default function VoucherSummary() {
   const params = useParams();
+  const pathname = usePathname();
   const accountBookId = params?.account_book_id as string;
   const { t } = useTranslation();
 
@@ -26,10 +27,8 @@ export default function VoucherSummary() {
     useState<IVoucherDashboardSummary | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Info: (20260316 - Julian) 新增傳票
-  const createVoucher = async () => {
-    // ToDo: (20260316 - Julian) 建立傳票邏輯
-  };
+  // Info: (20260410 - Julian) 連接到 Journal
+  const journalLink = pathname.replace("voucher", "journal");
 
   useEffect(() => {
     if (accountBookId) {
@@ -69,8 +68,7 @@ export default function VoucherSummary() {
         <span className="text-sm font-bold">
           {t("voucher.summary.empty_prefix")}
           <Link
-            href="#"
-            onClick={createVoucher}
+            href={journalLink}
             className="mx-1 text-blue-600 hover:underline"
           >
             {t("voucher.summary.empty_link")}
