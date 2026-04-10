@@ -47,6 +47,8 @@ export default function PaymentModal({
   initialStep,
   transactionHash,
   orderId,
+  title,
+  planId,
 }: IPaymentModalProps) {
   const { t } = useTranslation();
   const { user, refreshAuth, loading: authLoading } = useAuth();

@@ -54,4 +54,6 @@ export interface IPaymentModalProps {
   initialStep?: PaymentStep;
   transactionHash?: string;
   orderId?: string | null;
+  title?: string;
+  planId?: string;
 }

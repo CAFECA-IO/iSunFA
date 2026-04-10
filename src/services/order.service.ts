@@ -8,6 +8,7 @@ export class OrderService {
       // Info: (20260409 - Luphia) Access the latest payment transaction to get fiat swipe status
       const tx = "paymentTransactions" in o ? (o as unknown as { paymentTransactions: Array<{ status: string; paymentMethod?: { data?: { card_info?: unknown } } }> }).paymentTransactions?.[0] : undefined;
       const pmData = tx?.paymentMethod?.data as Record<string, unknown> | undefined;
+      const orderData = (o.data as Record<string, unknown>) || {};
 
       let itemsFallback: { name: string; quantity: number | string; unitPrice: number | string; amount: number | string; remark: string }[] = [];
       if (orderData.planId) {
