@@ -38,6 +38,7 @@ export default function ReceiptPdfDownloader({
 
   const invoiceItems = items && items.length > 0 ? items : [];
   const [isDownloading, setIsDownloading] = useState(false);
+  const [realReceiptId, setRealReceiptId] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = async (e: React.MouseEvent) => {
@@ -46,6 +47,16 @@ export default function ReceiptPdfDownloader({
     setIsDownloading(true);
 
     try {
+      // Info: (20260410 - Luphia) Fetch authentic Receipt ID, silently generating if missing.
+      const res = await fetch(`/api/v1/user/order/${receiptNumber}/receipt`);
+      const payload = await res.json();
+
+      const officialReceiptId = payload?.data?.id || receiptNumber;
+      setRealReceiptId(officialReceiptId);
+
+      // Info: (20260410 - Luphia) Wait for React state to propagate targetId to DOM
+      await new Promise(resolve => setTimeout(resolve, 50));
+
       const html2pdf = (await import('html2pdf.js')).default;
 
       const element = containerRef.current.querySelector('.invoice-content') as HTMLElement;
@@ -55,7 +66,7 @@ export default function ReceiptPdfDownloader({
 
       const opt = {
         margin: 0,
-        filename: `invoice_${receiptNumber.substring(0, 15)}.pdf`,
+        filename: `invoice_${officialReceiptId.substring(0, 15)}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 794 },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
@@ -74,8 +85,18 @@ export default function ReceiptPdfDownloader({
   };
 
   const invoiceDate = new Date(date);
-  const formattedDateString = formatDate(invoiceDate, 'yyyy-MM-dd'); // Format: 2026-04-02
-  const fakeInvoiceNumber = receiptNumber.length >= 10 ? receiptNumber.substring(0, 10).toUpperCase() : `ZM${receiptNumber.padEnd(8, '0').substring(0, 8).toUpperCase()}`;
+  const formattedDateString = formatDate(invoiceDate, 'yyyy-MM-dd'); // Info: (20260410 - Luphia) Format: 2026-04-02
+  
+  const minguoYear = invoiceDate.getFullYear() - 1911;
+  const month = invoiceDate.getMonth() + 1;
+  const startMonth = month % 2 === 0 ? month - 1 : month;
+  const endMonth = startMonth + 1;
+  const displayInvoiceTerm = `${Math.max(0, minguoYear).toString().padStart(3, '0')}年${startMonth.toString().padStart(2, '0')}-${endMonth.toString().padStart(2, '0')}月`;
+
+  const targetId = realReceiptId || receiptNumber;
+  const digits = targetId.replace(/\D/g, '');
+  const numericPart = digits.padEnd(8, '0').substring(0, 8);
+  const displayReceiptNumber = `ZM${numericPart}`;
 
   const tax = Math.round(amount - (amount / 1.05));
   const salesAmount = amount - tax;
@@ -136,7 +157,8 @@ export default function ReceiptPdfDownloader({
               <Image src="/isunfa_logo_color.svg" alt="iSunFA Logo" width={110} height={32} style={{ height: '32px', width: 'auto' }} unoptimized priority />
             </div>
             <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 5px 0', letterSpacing: '2px', color: '#ea580c' }}>電子發票證明聯</h1>
-            <h2 style={{ fontSize: '18px', fontWeight: 'normal', margin: '0', color: '#6b7280' }}>{formattedDateString}</h2>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '1px', margin: '0 0 5px 0', color: '#1f2937' }}>{displayInvoiceTerm}</h2>
+            <h3 style={{ fontSize: '14px', fontWeight: 'normal', margin: '0', color: '#6b7280' }}>開立日期：{formattedDateString}</h3>
           </div>
 
           {/* Info: (20260410 - Luphia) Info Block */}
@@ -144,7 +166,7 @@ export default function ReceiptPdfDownloader({
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', marginBottom: '4px' }}>
                 <span style={{ width: '80px', letterSpacing: '0px' }}>發票號碼：</span>
-                <span>{fakeInvoiceNumber}</span>
+                <span>{displayReceiptNumber}</span>
               </div>
               <div style={{ display: 'flex', marginBottom: '4px' }}>
                 <span style={{ width: '80px', letterSpacing: '4px' }}>買方：</span>
@@ -200,15 +222,15 @@ export default function ReceiptPdfDownloader({
             {/* Info: (20260410 - Luphia) Tax Info Block (Left side) */}
             <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', padding: '16px', width: '280px', backgroundColor: '#f9fafb' }}>
               <div style={{ color: '#4b5563', fontSize: '13px', marginBottom: '16px', fontWeight: 'bold' }}>稅別判定 (TAX)</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <span style={{ color: '#6b7280' }}>應稅</span>
                 <span style={{ backgroundColor: '#ffedd5', color: '#ea580c', padding: '2px 10px', borderRadius: '9999px', fontSize: '12px', fontWeight: 'bold' }}>5%</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <span style={{ color: '#6b7280' }}>零稅</span>
                 <span style={{ color: '#d1d5db' }}>-</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: '#6b7280' }}>免稅</span>
                 <span style={{ color: '#d1d5db' }}>-</span>
               </div>
