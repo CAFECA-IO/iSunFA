@@ -4,6 +4,8 @@ import { useState, useRef } from 'react';
 import { Download, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { formatDate } from '@/lib/utils/date';
+import QRCode from 'react-qr-code';
+import Barcode from 'react-barcode';
 import Image from 'next/image';
 
 interface IReceiptPdfDownloaderProps {
@@ -65,21 +67,41 @@ export default function ReceiptPdfDownloader({
 
       const html2pdf = (await import('html2pdf.js')).default;
 
-      const element = containerRef.current.querySelector('.invoice-content') as HTMLElement;
+      const isB2B = !!buyerTaxId;
+      const targetSelector = isB2B ? '.invoice-content-a4' : '.invoice-content-thermal';
+      const element = containerRef.current.querySelector(targetSelector) as HTMLElement;
       if (!element) return;
 
       element.style.display = 'block';
 
-      const fileDate = formatDate(new Date(date), 'yyyy-MM-dd');
+      const fileDate = formatDate(new Date(date), 'yyyyMMdd');
       const invoiceNum = `ZM${officialReceiptId.replace(/\D/g, '').padEnd(8, '0').substring(0, 8)}`;
 
-      const opt = {
-        margin: 0,
-        filename: `iSunFA_${fileDate}_${invoiceNum}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 794 },
-        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
-      };
+      let opt;
+      if (isB2B) {
+        opt = {
+          margin: 0,
+          filename: `iSunFA_B2B_${fileDate}_${invoiceNum}.pdf`,
+          image: { type: 'jpeg' as const, quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 794 },
+          jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+        };
+      } else {
+        const rawHeightPx = element.scrollHeight;
+        const mmHeight = Math.max(120, Math.ceil(rawHeightPx * 0.264583) + 10);
+        
+        // Info: (20260410 - Luphia) Explicitly define format tuples to prevent TS falling back to loose number[]
+        const marginConfig: [number, number, number, number] = [2, 0, 2, 0];
+        const formatConfig: [number, number] = [57, mmHeight];
+        
+        opt = {
+          margin: marginConfig,
+          filename: `iSunFA_B2C_${fileDate}_${invoiceNum}.pdf`,
+          image: { type: 'jpeg' as const, quality: 1.0 },
+          html2canvas: { scale: 3, useCORS: true, logging: false, windowWidth: 215 },
+          jsPDF: { unit: 'mm' as const, format: formatConfig, orientation: 'portrait' as const }
+        };
+      }
 
       await html2pdf().set(opt).from(element).save();
 
@@ -134,6 +156,16 @@ export default function ReceiptPdfDownloader({
 
   const chineseAmount = numberToChinese(amount);
 
+  // Info: (20260410 - Luphia) Fallback or derived values strictly for layout showcase.
+  const rcode = realRandomCode || Math.abs(targetId.split('').reduce((hash, char) => char.charCodeAt(0) + ((hash << 5) - hash), 0) % 9000).toString().padStart(4, '0') + 1000;
+
+  // Info: (20260410 - Luphia) 1D Barcode relies on Code39: Year (3 digits) + Month (2) + InvoiceNum (10) + Random (4)
+  const barcodeValue = `${minguoYear.toString().padStart(3, '0')}${endMonth.toString().padStart(2, '0')}${displayReceiptNumber}${rcode}`;
+
+  // Info: (20260410 - Luphia) Placeholder QR structures as standard API responses
+  const qr1 = `InvNum:${displayReceiptNumber}|Date:${formattedDateString}|Amount:${amount}|Seller:${sellerTaxId}|Buyer:${buyerTaxId || '00000000'}`;
+  const qr2 = `**Items** ${invoiceItems.map(i => `${i.name}:${i.quantity}`).join(', ')}`;
+
   return (
     <>
       <button
@@ -145,15 +177,122 @@ export default function ReceiptPdfDownloader({
         {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
       </button>
 
-      {/* Info: (20260410 - Luphia) A4 Format Container (hidden but unrestricted width for canvas capture) */}
+      {/* Info: (20260410 - Luphia) Wrapper to prevent capturing visually on screen */}
       <div ref={containerRef} className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none -z-10">
+
+        {/* Info: (20260410 - Luphia) B2C Layout: 57mm Thermal Roll */}
         <div
-          className="invoice-content"
+          className="invoice-content-thermal"
+          style={{
+            display: 'none',
+            width: '215px', // Info: (20260410 - Luphia) 57mm at 96 DPI
+            padding: '10px',
+            backgroundColor: '#ffffff',
+            color: '#000000',
+            fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
+            fontSize: '9px', // Info: (20260410 - Luphia) >= 0.2cm (approx 7.5px) requirement met
+            lineHeight: '1.4'
+          }}
+        >
+          {/* Info: (20260410 - Luphia) UPPER FIXED HEIGHT SECTION (≤ 90mm | ~340px) */}
+          <div style={{ minHeight: '300px', maxHeight: '340px', overflow: 'hidden', paddingBottom: '10px' }}>
+            {/* Info: (20260410 - Luphia) Header branding */}
+            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+              <div style={{ fontSize: '10px', fontWeight: 'bold' }}>{sellerName}</div>
+
+              {/* Info: (20260410 - Luphia) Type Title: Bold, min 0.5cm (~19px) */}
+              <div style={{ fontSize: '19px', fontWeight: 'bold', letterSpacing: '1px' }}>電子發票證明聯</div>
+              {/* Info: (20260410 - Luphia) Period: Bold, min 0.5cm */}
+              <div style={{ fontSize: '19px', fontWeight: 'bold' }}>{displayInvoiceTerm}</div>
+              {/* Info: (20260410 - Luphia) Invoice Num: Bold, min 0.5cm */}
+              <div style={{ fontSize: '19px', fontWeight: 'bold', marginBottom: '4px' }}>{displayReceiptNumber}</div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 4px', fontSize: '9px', marginBottom: '2px' }}>
+                <span>{formattedDateString}</span>
+                <span>{buyerTaxId ? '格式：25' : ''}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 4px', fontSize: '9px', marginBottom: '2px' }}>
+                <span>隨機碼：{rcode}</span>
+                <span>總計：{amount}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 4px', fontSize: '9px', marginBottom: '6px' }}>
+                <span>賣方：{sellerTaxId}</span>
+                <span>買方：{buyerTaxId || '00000000'}</span>
+              </div>
+            </div>
+
+            {/* Info: (20260410 - Luphia) 1D Barcode: 0.5cm height required (~19px min) */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <Barcode value={barcodeValue} format="CODE39" height={22} width={1} displayValue={false} margin={0} background="#ffffff" lineColor="#000000" />
+            </div>
+
+            {/* Info: (20260410 - Luphia) 2D Barcodes: Two horizonal */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+              <QRCode value={qr1} size={65} level="M" />
+              <QRCode value={qr2} size={65} level="M" />
+            </div>
+          </div>
+
+          {/* Info: (20260410 - Luphia) CUT LINE LOGIC - Exclusively separated for B2C */}
+          {!buyerTaxId && (
+            <div style={{
+              width: '100%',
+              height: '0px',
+              borderTop: '2px dashed #000',
+              margin: '4px 0',
+              position: 'relative'
+            }}>
+              <span style={{ position: 'absolute', top: '-6px', right: '0', backgroundColor: '#fff', fontSize: '8px', paddingLeft: '4px' }}>✂</span>
+            </div>
+          )}
+
+          {/* Info: (20260410 - Luphia) TRANSACTION DETAILS (Unrestricted length) */}
+          <div style={{ marginTop: '8px', fontSize: '9px' }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '4px', textAlign: 'center' }}>** 交易明細 **</div>
+
+            <div style={{ display: 'flex', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '4px', fontWeight: 'bold' }}>
+              <div style={{ flex: '1' }}>品名</div>
+              <div style={{ width: '20px', textAlign: 'center' }}>數量</div>
+              <div style={{ width: '40px', textAlign: 'right' }}>金額</div>
+            </div>
+
+            {invoiceItems.map((item, index) => (
+              <div key={`item-${index}`} style={{ display: 'flex', marginBottom: '2px', alignItems: 'flex-start' }}>
+                <div style={{ flex: '1', wordBreak: 'break-word' }}>{item.name}</div>
+                <div style={{ width: '20px', textAlign: 'center' }}>{item.quantity}</div>
+                <div style={{ width: '40px', textAlign: 'right' }}>{typeof item.amount === 'number' ? item.amount.toLocaleString() : item.amount}</div>
+              </div>
+            ))}
+
+            <div style={{ borderTop: '1px solid #000', marginTop: '6px', paddingTop: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                <span>銷售額合計</span>
+                <span>{salesAmount.toLocaleString()}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                <span>營業稅</span>
+                <span>{tax.toLocaleString()}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '11px', marginTop: '4px' }}>
+                <span>總計金額</span>
+                <span>${amount.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '8px', color: '#666' }}>
+              謝謝光臨，祝您中獎！
+            </div>
+          </div>
+        </div>
+
+        {/* Info: (20260410 - Luphia) B2B Layout: A4 Format */}
+        <div
+          className="invoice-content-a4"
           style={{
             display: 'none',
             width: '794px', // Info: (20260410 - Luphia) A4 width at 96 DPI
             padding: '40px',
-            background: 'white',
+            backgroundColor: '#ffffff',
             color: '#374151',
             fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
             fontSize: '14px',
@@ -197,10 +336,7 @@ export default function ReceiptPdfDownloader({
                 </div>
               ) : (
                 <div style={{ marginBottom: '4px' }}>
-                  <span style={{ letterSpacing: '0px' }}>隨機碼：</span>{
-                    // Info: (20260410 - Luphia) Deterministic Random Code derived from API/DB Receipt payload.
-                    realRandomCode || Math.abs(targetId.split('').reduce((hash, char) => char.charCodeAt(0) + ((hash << 5) - hash), 0) % 9000) + 1000
-                  }
+                  <span style={{ letterSpacing: '0px' }}>隨機碼：</span>{rcode}
                 </div>
               )}
               <div>第 1 頁 / 共 1 頁</div>
@@ -209,7 +345,6 @@ export default function ReceiptPdfDownloader({
 
           {/* Info: (20260410 - Luphia) Main Item List */}
           <div style={{ marginTop: '20px', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-            {/* Info: (20260410 - Luphia) Header */}
             <div style={{ display: 'flex', backgroundColor: '#fff7ed', borderBottom: '1px solid #e5e7eb', color: '#ea580c', fontWeight: 'bold', padding: '14px 20px', fontSize: '13px', letterSpacing: '1px' }}>
               <div style={{ flex: '0 0 35%' }}>品名</div>
               <div style={{ flex: '0 0 10%', textAlign: 'center' }}>數量</div>
@@ -217,8 +352,6 @@ export default function ReceiptPdfDownloader({
               <div style={{ flex: '0 0 15%', textAlign: 'right' }}>金額</div>
               <div style={{ flex: '1', textAlign: 'right' }}>備註</div>
             </div>
-
-            {/* Info: (20260410 - Luphia) Rows */}
             <div style={{ minHeight: '160px' }}>
               {invoiceItems.map((item, index) => (
                 <div key={`item-${index}`} style={{ display: 'flex', padding: '16px 20px', borderBottom: index === invoiceItems.length - 1 ? 'none' : '1px solid #f3f4f6', color: '#374151' }}>
@@ -234,7 +367,6 @@ export default function ReceiptPdfDownloader({
 
           {/* Info: (20260410 - Luphia) Totals Section */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px', alignItems: 'flex-start' }}>
-            {/* Info: (20260410 - Luphia) Tax Info Block (Left side) */}
             <div style={{ border: '1px solid #f3f4f6', borderRadius: '12px', padding: '20px', width: '280px', backgroundColor: '#ffffff' }}>
               <div style={{ color: '#1f2937', fontSize: '14px', marginBottom: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ width: '4px', height: '14px', backgroundColor: '#ea580c', borderRadius: '2px' }}></div>
@@ -254,7 +386,6 @@ export default function ReceiptPdfDownloader({
               </div>
             </div>
 
-            {/* Info: (20260410 - Luphia) Price Summary Block (Right side) */}
             <div style={{ width: '320px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px dashed #e5e7eb' }}>
                 <span style={{ color: '#6b7280' }}>銷售額合計</span>
