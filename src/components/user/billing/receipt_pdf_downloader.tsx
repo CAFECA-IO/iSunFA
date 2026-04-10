@@ -300,46 +300,48 @@ export default function ReceiptPdfDownloader({
           }}
         >
           {/* Info: (20260410 - Luphia) Header */}
-          <div style={{ textAlign: 'center', marginBottom: '20px', position: 'relative' }}>
-            <div style={{ position: 'absolute', left: 0, top: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Image src="/isunfa_logo_color.svg" alt="iSunFA Logo" width={110} height={32} style={{ height: '32px', width: 'auto' }} unoptimized priority />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
+            <div style={{ marginBottom: '16px' }}>
+              <Image src="/isunfa_logo_color.svg" alt="iSunFA Logo" width={140} height={40} style={{ height: '40px', width: 'auto' }} unoptimized priority />
             </div>
-            <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 5px 0', letterSpacing: '2px', color: '#ea580c' }}>電子發票證明聯</h1>
-            <h2 style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '1px', margin: '0 0 5px 0', color: '#1f2937' }}>{displayInvoiceTerm}</h2>
-            <h3 style={{ fontSize: '14px', fontWeight: 'normal', margin: '0', color: '#6b7280' }}>開立日期：{formattedDateString}</h3>
+            <h1 style={{ fontSize: '26px', fontWeight: 'bold', margin: '0 0 8px 0', letterSpacing: '4px', color: '#ea580c' }}>電子發票證明聯</h1>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '2px', margin: '0 0 10px 0', color: '#1f2937' }}>{displayInvoiceTerm}</h2>
+            <h2 style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '3px', margin: '0 0 10px 0', color: '#1f2937' }}>{displayReceiptNumber}</h2>
+            <h3 style={{ fontSize: '14px', fontWeight: '500', margin: '0', color: '#6b7280', letterSpacing: '1px' }}>開立日期：{formattedDateString}</h3>
           </div>
 
           {/* Info: (20260410 - Luphia) Info Block */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', marginBottom: '4px' }}>
-                <span style={{ width: '80px', letterSpacing: '0px' }}>發票號碼：</span>
-                <span>{displayReceiptNumber}</span>
-              </div>
-              <div style={{ display: 'flex', marginBottom: '4px' }}>
-                <span style={{ width: '80px', letterSpacing: '4px' }}>買方：</span>
-                <span>{buyerName || ''}</span>
-              </div>
-              <div style={{ display: 'flex', marginBottom: '4px' }}>
-                <span style={{ width: '80px', letterSpacing: '0px' }}>統一編號：</span>
-                <span>{buyerTaxId || ''}</span>
-              </div>
-              <div style={{ display: 'flex', marginBottom: '4px' }}>
-                <span style={{ width: '80px', letterSpacing: '4px' }}>地址：</span>
-                <span>{buyerAddress || ''}</span>
-              </div>
-            </div>
-            <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-              {buyerTaxId ? (
-                <div style={{ marginBottom: '4px' }}>
-                  <span style={{ letterSpacing: '4px' }}>格式：</span>25 進項發票
+          <div style={{ padding: '24px', backgroundColor: '#f9fafb', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '24px', position: 'relative' }}>
+            <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 'bold', letterSpacing: '2px', marginBottom: '16px', textTransform: 'uppercase' }}>買方資訊 (Buyer Info)</div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#111827', marginBottom: '8px' }}>
+                   {buyerName || '散客交易'}
                 </div>
-              ) : (
-                <div style={{ marginBottom: '4px' }}>
-                  <span style={{ letterSpacing: '0px' }}>隨機碼：</span>{rcode}
-                </div>
-              )}
-              <div>第 1 頁 / 共 1 頁</div>
+                {buyerTaxId && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '12px', color: '#6b7280', padding: '2px 6px', backgroundColor: '#e5e7eb', borderRadius: '4px' }}>統編</span>
+                    <span style={{ fontSize: '15px', fontWeight: '600', color: '#374151', letterSpacing: '1px' }}>{buyerTaxId}</span>
+                  </div>
+                )}
+                {buyerAddress && (
+                   <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '4px' }}>{buyerAddress}</div>
+                )}
+              </div>
+              
+              <div style={{ flex: '0 0 auto', textAlign: 'right', borderLeft: '1px solid #e5e7eb', paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '160px' }}>
+                {buyerTaxId ? (
+                   <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                     格式 <span style={{ fontWeight: 'bold', color: '#ea580c', marginLeft: '8px', fontSize: '14px' }}>25 進項發票</span>
+                   </div>
+                ) : (
+                   <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                     隨機碼 <span style={{ fontWeight: 'bold', color: '#111827', marginLeft: '8px', fontSize: '14px' }}>{rcode}</span>
+                   </div>
+                )}
+                <div style={{ fontSize: '13px', color: '#9ca3af' }}>第 1 頁 / 共 1 頁</div>
+              </div>
             </div>
           </div>
 
@@ -366,43 +368,43 @@ export default function ReceiptPdfDownloader({
           </div>
 
           {/* Info: (20260410 - Luphia) Totals Section */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px', alignItems: 'flex-start' }}>
-            <div style={{ border: '1px solid #f3f4f6', borderRadius: '12px', padding: '20px', width: '280px', backgroundColor: '#ffffff' }}>
-              <div style={{ color: '#1f2937', fontSize: '14px', marginBottom: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '24px', marginTop: '24px', alignItems: 'stretch' }}>
+            <div style={{ flex: 1, border: '1px solid #f3f4f6', borderRadius: '12px', padding: '24px', backgroundColor: '#f9fafb' }}>
+              <div style={{ color: '#1f2937', fontSize: '14px', marginBottom: '20px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ width: '4px', height: '14px', backgroundColor: '#ea580c', borderRadius: '2px' }}></div>
                 稅別判定 (TAX)
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px dashed #f3f4f6' }}>
-                <span style={{ color: '#4b5563', fontSize: '13px' }}>應稅</span>
-                <span style={{ backgroundColor: '#ffedd5', color: '#ea580c', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 10px', height: '22px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', lineHeight: 1 }}>5%</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px dashed #e5e7eb' }}>
+                <span style={{ color: '#4b5563', fontSize: '14px' }}>應稅</span>
+                <span style={{ backgroundColor: '#ffedd5', color: '#ea580c', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 12px', height: '24px', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', lineHeight: 1 }}>5%</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px dashed #f3f4f6' }}>
-                <span style={{ color: '#4b5563', fontSize: '13px' }}>零稅</span>
-                <span style={{ color: '#d1d5db', fontSize: '13px' }}>-</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px dashed #e5e7eb' }}>
+                <span style={{ color: '#4b5563', fontSize: '14px' }}>零稅</span>
+                <span style={{ color: '#d1d5db', fontSize: '14px' }}>-</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px' }}>
-                <span style={{ color: '#4b5563', fontSize: '13px' }}>免稅</span>
-                <span style={{ color: '#d1d5db', fontSize: '13px' }}>-</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '12px' }}>
+                <span style={{ color: '#4b5563', fontSize: '14px' }}>免稅</span>
+                <span style={{ color: '#d1d5db', fontSize: '14px' }}>-</span>
               </div>
             </div>
 
-            <div style={{ width: '320px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px dashed #e5e7eb' }}>
+            <div style={{ flex: 1, border: '1px solid #f3f4f6', borderRadius: '12px', padding: '24px', backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px dashed #e5e7eb' }}>
                 <span style={{ color: '#6b7280' }}>銷售額合計</span>
-                <span style={{ color: '#374151', fontWeight: '500' }}>{salesAmount.toLocaleString()}</span>
+                <span style={{ color: '#374151', fontWeight: '600' }}>{salesAmount.toLocaleString()}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #e5e7eb' }}>
                 <span style={{ color: '#6b7280' }}>營業稅</span>
-                <span style={{ color: '#374151', fontWeight: '500' }}>{tax.toLocaleString()}</span>
+                <span style={{ color: '#374151', fontWeight: '600' }}>{tax.toLocaleString()}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '20px', paddingBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '20px', paddingBottom: '16px' }}>
                 <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#111827' }}>總計金額</span>
-                <span style={{ fontWeight: 'bold', fontSize: '24px', lineHeight: '1', color: '#ea580c' }}>${amount.toLocaleString()}</span>
+                <span style={{ fontWeight: 'bold', fontSize: '26px', lineHeight: '1', color: '#ea580c' }}>${amount.toLocaleString()}</span>
               </div>
 
-              <div style={{ backgroundColor: '#fff7ed', padding: '16px', borderRadius: '12px', marginTop: '8px', textAlign: 'center', border: '1px solid #ffedd5' }}>
+              <div style={{ backgroundColor: '#fff7ed', padding: '16px', borderRadius: '8px', marginTop: 'auto', textAlign: 'center', border: '1px solid #ffedd5' }}>
                 <div style={{ fontSize: '12px', color: '#fb923c', marginBottom: '6px' }}>總計新臺幣 (中文大寫)</div>
-                <div style={{ letterSpacing: '6px', fontWeight: 'bold', fontSize: '18px', color: '#ea580c' }}>{chineseAmount}</div>
+                <div style={{ letterSpacing: '4px', fontWeight: 'bold', fontSize: '18px', color: '#ea580c' }}>{chineseAmount}</div>
               </div>
             </div>
           </div>
