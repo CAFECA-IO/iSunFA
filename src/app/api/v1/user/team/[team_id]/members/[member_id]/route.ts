@@ -129,7 +129,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string; memberId: string }> },
+  { params }: { params: Promise<{ team_id: string; member_id: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -139,7 +139,7 @@ export async function DELETE(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const { teamId, memberId } = await params;
+    const { team_id: teamId, member_id: memberId } = await params;
 
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator) {
