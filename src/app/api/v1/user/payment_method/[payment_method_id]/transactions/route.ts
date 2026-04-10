@@ -47,7 +47,7 @@ export async function GET(
         }
 
         itemsFallback.push({
-          name: orderData.title ? `${orderData.title} (一般購買)` : 'iSunFA 點數',
+          name: `iSunFA ${base} 點`,
           quantity: 1,
           unitPrice: t.amount,
           amount: t.amount,
@@ -56,7 +56,7 @@ export async function GET(
 
         if (bonus > 0) {
           itemsFallback.push({
-            name: 'iSunFA 點數 (行銷贈送)',
+            name: `iSunFA ${bonus} 點（贈品）`,
             quantity: 1,
             unitPrice: 0,
             amount: 0,

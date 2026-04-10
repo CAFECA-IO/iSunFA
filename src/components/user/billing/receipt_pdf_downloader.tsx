@@ -57,7 +57,7 @@ export default function ReceiptPdfDownloader({
         margin: 10,
         filename: `invoice_${receiptNumber.substring(0, 15)}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
+        html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 800 },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
@@ -115,8 +115,8 @@ export default function ReceiptPdfDownloader({
         {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
       </button>
 
-      {/* Info: (20260410 - Luphia) A4 Format Container (hidden) */}
-      <div ref={containerRef} className="absolute overflow-hidden w-0 h-0 opacity-0 pointer-events-none z-[-10]">
+      {/* Info: (20260410 - Luphia) A4 Format Container (hidden but unrestricted width for canvas capture) */}
+      <div ref={containerRef} className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none -z-10" style={{ width: '800px' }}>
         <div
           className="invoice-content"
           style={{
@@ -170,101 +170,81 @@ export default function ReceiptPdfDownloader({
             </div>
           </div>
 
-          {/* Info: (20260410 - Luphia) Main Table */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb', color: '#374151' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#fff7ed', color: '#ea580c' }}>
-                <th style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'center', width: '40%' }}>品名</th>
-                <th style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'center', width: '10%' }}>數量</th>
-                <th style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'center', width: '15%' }}>單價</th>
-                <th style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'center', width: '15%' }}>金額</th>
-                <th style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'center', width: '20%' }}>備註</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Info: (20260410 - Luphia) Item Rows mapped cleanly vertically */}
+          {/* Info: (20260410 - Luphia) Main Item List */}
+          <div style={{ marginTop: '20px', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+            {/* Info: (20260410 - Luphia) Header */}
+            <div style={{ display: 'flex', backgroundColor: '#fff7ed', borderBottom: '1px solid #e5e7eb', color: '#ea580c', fontWeight: 'bold', padding: '14px 20px', fontSize: '13px', letterSpacing: '1px' }}>
+              <div style={{ flex: '0 0 35%' }}>品名</div>
+              <div style={{ flex: '0 0 10%', textAlign: 'center' }}>數量</div>
+              <div style={{ flex: '0 0 15%', textAlign: 'right' }}>單價</div>
+              <div style={{ flex: '0 0 15%', textAlign: 'right' }}>金額</div>
+              <div style={{ flex: '1', textAlign: 'right' }}>備註</div>
+            </div>
+
+            {/* Info: (20260410 - Luphia) Rows */}
+            <div style={{ minHeight: '160px' }}>
               {invoiceItems.map((item, index) => (
-                <tr key={`item-${index}`}>
-                  <td style={{ border: '1px solid #e5e7eb', borderBottom: 'none', padding: '12px 8px 120px 8px', verticalAlign: 'top' }}>
-                    {item.name}
-                  </td>
-                  <td style={{ border: '1px solid #e5e7eb', borderBottom: 'none', padding: '12px 8px 120px 8px', textAlign: 'center', verticalAlign: 'top' }}>
-                    {item.quantity}
-                  </td>
-                  <td style={{ border: '1px solid #e5e7eb', borderBottom: 'none', padding: '12px 8px 120px 8px', textAlign: 'right', verticalAlign: 'top' }}>
-                    {typeof item.unitPrice === 'number' ? item.unitPrice.toLocaleString() : item.unitPrice}
-                  </td>
-                  <td style={{ border: '1px solid #e5e7eb', borderBottom: 'none', padding: '12px 8px 120px 8px', textAlign: 'right', verticalAlign: 'top' }}>
-                    {typeof item.amount === 'number' ? item.amount.toLocaleString() : item.amount}
-                  </td>
-                  <td style={{ border: '1px solid #e5e7eb', borderBottom: 'none', padding: '12px 8px 120px 8px', verticalAlign: 'top', color: '#6b7280', fontSize: '12px' }}>
-                    {item.remark || <span className="sr-only">備註</span>}
-                  </td>
-                </tr>
+                <div key={`item-${index}`} style={{ display: 'flex', padding: '16px 20px', borderBottom: index === invoiceItems.length - 1 ? 'none' : '1px solid #f3f4f6', color: '#374151' }}>
+                  <div style={{ flex: '0 0 35%', fontWeight: '500' }}>{item.name}</div>
+                  <div style={{ flex: '0 0 10%', textAlign: 'center' }}>{item.quantity}</div>
+                  <div style={{ flex: '0 0 15%', textAlign: 'right' }}>{typeof item.unitPrice === 'number' ? item.unitPrice.toLocaleString() : item.unitPrice}</div>
+                  <div style={{ flex: '0 0 15%', textAlign: 'right' }}>{typeof item.amount === 'number' ? item.amount.toLocaleString() : item.amount}</div>
+                  <div style={{ flex: '1', textAlign: 'right', color: '#6b7280', fontSize: '13px' }}>{item.remark || ''}</div>
+                </div>
               ))}
-              {/* Info: (20260410 - Luphia) Spacer Row to force some height before totals if needed, handled by padding above */}
+            </div>
+          </div>
 
-              {/* Info: (20260410 - Luphia) Totals - Row 1 */}
-              <tr>
-                <td colSpan={3} style={{ border: '1px solid #e5e7eb', padding: '12px 8px' }}>
-                  銷售額合計
-                </td>
-                <td style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'right' }}>
-                  {salesAmount.toLocaleString()}
-                </td>
-                {/* Info: (20260410 - Luphia) Seller Stamp Block */}
-                <td rowSpan={4} style={{ border: '1px solid #e5e7eb', padding: '12px 8px', fontSize: '12px', verticalAlign: 'top', backgroundColor: '#f9fafb' }}>
-                  <div style={{ marginBottom: '8px', color: '#ea580c', fontWeight: 'bold' }}>營業人蓋統一發票專用章</div>
-                  <div style={{ color: '#9ca3af', fontSize: '10px', marginBottom: '15px' }}>(已條列營業人資料者得免蓋章)</div>
+          {/* Info: (20260410 - Luphia) Totals Section */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px', alignItems: 'flex-start' }}>
+            {/* Info: (20260410 - Luphia) Tax Info Block (Left side) */}
+            <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', padding: '16px', width: '280px', backgroundColor: '#f9fafb' }}>
+              <div style={{ color: '#4b5563', fontSize: '13px', marginBottom: '16px', fontWeight: 'bold' }}>稅別判定 (TAX)</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ color: '#6b7280' }}>應稅</span>
+                <span style={{ backgroundColor: '#ffedd5', color: '#ea580c', padding: '2px 10px', borderRadius: '9999px', fontSize: '12px', fontWeight: 'bold' }}>V</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ color: '#6b7280' }}>零稅</span>
+                <span style={{ color: '#d1d5db' }}>-</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#6b7280' }}>免稅</span>
+                <span style={{ color: '#d1d5db' }}>-</span>
+              </div>
+            </div>
 
-                  <div style={{ marginBottom: '4px' }}>賣方：{sellerName}</div>
-                  <div style={{ marginBottom: '4px' }}>統一編號：{sellerTaxId}</div>
-                  <div>地址：{sellerAddress}</div>
-                </td>
-              </tr>
+            {/* Info: (20260410 - Luphia) Price Summary Block (Right side) */}
+            <div style={{ width: '320px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px dashed #e5e7eb' }}>
+                <span style={{ color: '#6b7280' }}>銷售額合計</span>
+                <span style={{ color: '#374151', fontWeight: '500' }}>{salesAmount.toLocaleString()}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #e5e7eb' }}>
+                <span style={{ color: '#6b7280' }}>營業稅</span>
+                <span style={{ color: '#374151', fontWeight: '500' }}>{tax.toLocaleString()}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '20px', paddingBottom: '12px' }}>
+                <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#111827' }}>總計金額</span>
+                <span style={{ fontWeight: 'bold', fontSize: '24px', lineHeight: '1', color: '#ea580c' }}>${amount.toLocaleString()}</span>
+              </div>
 
-              {/* Info: (20260410 - Luphia) Totals - Row 2 */}
-              <tr>
-                <td colSpan={3} style={{ border: '1px solid #e5e7eb', padding: '0' }}>
-                  <span className="sr-only">TAX</span>
-                  <table style={{ width: '100%', height: '100%', borderCollapse: 'collapse', border: 'none' }}>
-                    <tbody>
-                      <tr>
-                        <td style={{ width: '25%', padding: '12px 8px', borderRight: '1px solid #e5e7eb', textAlign: 'center' }}>營業稅</td>
-                        <td style={{ width: '20%', padding: '12px 8px', borderRight: '1px solid #e5e7eb', textAlign: 'center' }}>應稅</td>
-                        <td style={{ width: '15%', padding: '12px 8px', borderRight: '1px solid #e5e7eb', textAlign: 'center', color: '#ea580c', fontWeight: 'bold' }}>V</td>
-                        <td style={{ width: '20%', padding: '12px 8px', borderRight: '1px solid #e5e7eb', textAlign: 'center' }}>零稅</td>
-                        <td style={{ width: '20%', padding: '12px 8px', textAlign: 'center' }}>免稅</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'right' }}>
-                  {tax.toLocaleString()}
-                </td>
-              </tr>
+              <div style={{ backgroundColor: '#fff7ed', padding: '16px', borderRadius: '12px', marginTop: '8px', textAlign: 'center', border: '1px solid #ffedd5' }}>
+                <div style={{ fontSize: '12px', color: '#fb923c', marginBottom: '6px' }}>總計新臺幣 (中文大寫)</div>
+                <div style={{ letterSpacing: '6px', fontWeight: 'bold', fontSize: '18px', color: '#ea580c' }}>{chineseAmount}</div>
+              </div>
+            </div>
+          </div>
 
-              {/* Info: (20260410 - Luphia) Totals - Row 3 */}
-              <tr>
-                <td colSpan={3} style={{ border: '1px solid #e5e7eb', padding: '12px 8px', fontWeight: 'bold' }}>
-                  總計
-                </td>
-                <td style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', color: '#ea580c' }}>
-                  {amount.toLocaleString()}
-                </td>
-              </tr>
-
-              {/* Info: (20260410 - Luphia) Totals - Row 4 */}
-              <tr style={{ backgroundColor: '#f9fafb' }}>
-                <td style={{ border: '1px solid #e5e7eb', padding: '12px 8px', whiteSpace: 'nowrap', width: '15%' }}>
-                  總計新臺幣<br />(中文大寫)
-                </td>
-                <td colSpan={3} style={{ border: '1px solid #e5e7eb', padding: '8px', textAlign: 'center', verticalAlign: 'middle', letterSpacing: '4px', fontWeight: 'bold', fontSize: '16px', color: '#ea580c' }}>
-                  {chineseAmount}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          {/* Info: (20260410 - Luphia) Seller Details Footer */}
+          <div style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px dashed #d1d5db', fontSize: '13px', color: '#4b5563', lineHeight: '1.8' }}>
+            <div style={{ fontWeight: 'bold', color: '#374151', marginBottom: '8px', fontSize: '14px' }}>賣方資訊</div>
+            <div style={{ display: 'flex', gap: '20px' }}>
+              <div>統一編號：{sellerTaxId}</div>
+              <div>名稱：{sellerName}</div>
+            </div>
+            <div>地址：{sellerAddress}</div>
+          </div>
 
         </div>
       </div>

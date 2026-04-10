@@ -293,14 +293,14 @@ export default function PaymentModal({
               }]
             : [
                 {
-                  name: title ? `${title} (一般購買)` : `iSunFA 點數`,
+                  name: `iSunFA ${baseCredits || credits} 點`,
                   quantity: 1,
                   unitPrice: amount,
                   amount: amount,
                   remark: `購買 ${baseCredits || credits} 點`
                 },
                 ...(bonusCredits && bonusCredits > 0 ? [{
-                  name: 'iSunFA 點數 (行銷贈送)',
+                  name: `iSunFA ${bonusCredits} 點（贈品）`,
                   quantity: 1,
                   unitPrice: 0,
                   amount: 0,
