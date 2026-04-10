@@ -54,10 +54,10 @@ export default function ReceiptPdfDownloader({
       element.style.display = 'block';
 
       const opt = {
-        margin: 10,
+        margin: 0,
         filename: `invoice_${receiptNumber.substring(0, 15)}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 800 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 794 },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
@@ -116,7 +116,7 @@ export default function ReceiptPdfDownloader({
       </button>
 
       {/* Info: (20260410 - Luphia) A4 Format Container (hidden but unrestricted width for canvas capture) */}
-      <div ref={containerRef} className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none -z-10" style={{ width: '800px' }}>
+      <div ref={containerRef} className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none -z-10">
         <div
           className="invoice-content"
           style={{
@@ -202,7 +202,7 @@ export default function ReceiptPdfDownloader({
               <div style={{ color: '#4b5563', fontSize: '13px', marginBottom: '16px', fontWeight: 'bold' }}>稅別判定 (TAX)</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                 <span style={{ color: '#6b7280' }}>應稅</span>
-                <span style={{ backgroundColor: '#ffedd5', color: '#ea580c', padding: '2px 10px', borderRadius: '9999px', fontSize: '12px', fontWeight: 'bold' }}>V</span>
+                <span style={{ backgroundColor: '#ffedd5', color: '#ea580c', padding: '2px 10px', borderRadius: '9999px', fontSize: '12px', fontWeight: 'bold' }}>5%</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                 <span style={{ color: '#6b7280' }}>零稅</span>
