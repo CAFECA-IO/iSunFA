@@ -578,6 +578,7 @@ model EsgRecord {
   coefficientSource String?          @map("coefficient_source") // Info: (20260406 - Luphia) 碳排放係數來源
   intensity         EsgIntensity? // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
   confidence        Int // Info: (20260312 - Julian) AI 信心度
+  dqiScore          Decimal?         @map("dqi_score") // Info: (20260410 - Julian) DQI 數據品質指標
   isVerified        Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
   analysisStatus    AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態
 

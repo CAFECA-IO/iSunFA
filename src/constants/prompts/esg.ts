@@ -18,11 +18,21 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null) => {
   ${ESG_EMISSION_FACTORS_TEXT}
 
   請務必在「coefficient」欄位中，確切填寫你套用的排放係數數值與單位（例如 "2.508 kgCO2e/度" 或 "0.123"）。
+
   請在「coefficientSource」欄位中，確切填寫你使用的係數資料來源（例如 "經濟部能源署發布" 或 "固定燃燒排放源排放係數"）。
-  並請在 aiNote 欄位寫下 AI 分析碳盤查的邏輯，不需要任何標題，直接寫下分析邏輯或列點描述即可。
+
+  請在「dqiScore」中，根據以下標準來計算數據品質分數（數字 1-5，1 為最優，5 為最差)：
+  1. 技術相關性 (Te)：數據是否真實反映了產品所使用的技術、設備或製程。優質標準：數據來自實際生產線的特定技術（如：使用特定品牌、型號的電爐數據，而非產業平均值）。
+  2. 地理相關性 (Ge)：數據的地理位置是否與排放源位置相符。優質標準：數據來自排放源所在地的特定地理位置（如：使用特定國家、地區的排放係數，而非全球平均值）。
+  3. 時間相關性 (Ti)： 數據的時效性。優質標準：採用近 1–3 年內產生的數據。如果使用的是 10 年前的係數，評分會非常低。
+  4. 數據完整性 (Co)：數據是否涵蓋了所有的碳排放來源。優質標準：數據包含所有必要的欄位（如：活動類型、排放量、排放係數等）。
+  5. 數據可靠性 (Re)：數據來源是否可靠。優質標準：數據來源為政府機構、學術研究或國際組織等權威機構。
+  請用以上五個分數，計算出平均 DQI 分數，並填入 dqiScore 欄位。
+
+  並請在 aiNote 欄位寫下 AI 分析碳盤查的邏輯，不需要任何標題，直接寫下分析邏輯或列點描述即可。 
   請務必回傳一個 JSON 格式，包含以下欄位（不要加入任何額外的文字，也不要包裝在 markdown 程式碼區塊中，直接回傳 JSON 字串）：
   {
-      "recordDate": "YYYY-MM-DD", // 交易日期
+      "recordDate": "YYYY-MM-DD", // 交易日期 
       "scope": "SCOPE_1", // 溫室氣體範疇 ("SCOPE_1" | "SCOPE_2" | "SCOPE_3")
       "activityType": "電力使用", // 活動類型
       "vendor": "心心小舖", // 供應商
@@ -31,6 +41,7 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null) => {
       "emissions": 123.45, // 排放量 (數字，單位為 kgCO2e)
       "coefficient": "2.508 kgCO2e/度", // 使用的碳排放係數標示 (字串)
       "coefficientSource": "環境部", // 使用的碳排放係數來源 (字串)
+      "dqiScore": 1.2, // 數據品質分數 (數字 1-5)
       "intensity": "HIGH", // 排放強度 ("HIGH" | "MEDIUM" | "LOW")
       "confidence": 85, // AI 分析的整體信心度 (數字 0-100)
       "aiNote": "string" // AI 分析的備註

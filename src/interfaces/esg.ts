@@ -19,62 +19,6 @@ export interface IEsgDashboardSummary {
   aiAverageConfidence: number;
 }
 
-export interface IEsgTotalEmissions {
-  value: number;
-  unit: string;
-  estimatedEndOfMonth: number;
-  estimatedUnit: string;
-}
-
-export interface IEsgEmissionIntensity {
-  value: number | null;
-  unit: string;
-  industryAverage: number;
-}
-
-export interface IEsgScopeData {
-  value: number;
-  unit: string;
-  percentage: number;
-}
-
-export interface IEsgScopeDistribution {
-  scope1: IEsgScopeData;
-  scope2: IEsgScopeData;
-  scope3: IEsgScopeData;
-}
-
-export interface IEsgDashboardSummaryII {
-  totalEmissions: IEsgTotalEmissions;
-  emissionIntensity: IEsgEmissionIntensity;
-  scopeDistribution: IEsgScopeDistribution;
-  goalProgress: {
-    percentage: number;
-  };
-}
-
-export const mockDashboardSummary: IEsgDashboardSummaryII = {
-  totalEmissions: {
-    value: 1606.5,
-    unit: "kgCO2e",
-    estimatedEndOfMonth: 1850,
-    estimatedUnit: "kg",
-  },
-  emissionIntensity: {
-    value: 1147.5,
-    unit: "kg / 萬元營收",
-    industryAverage: 2.45,
-  },
-  scopeDistribution: {
-    scope1: { value: 45.2, unit: "kg", percentage: 10 },
-    scope2: { value: 1240.5, unit: "kg", percentage: 85 },
-    scope3: { value: 320.8, unit: "kg", percentage: 25 },
-  },
-  goalProgress: {
-    percentage: 35.4,
-  },
-};
-
 export interface IEsgRecord {
   id: string;
   tradingDate: string;
@@ -90,6 +34,7 @@ export interface IEsgRecord {
   rawActivityData: string;
   unit: string;
   emissions: string;
+  dqiScore: number;
   coefficient?: string | null;
   coefficientSource?: string | null;
   intensity: EsgIntensity;

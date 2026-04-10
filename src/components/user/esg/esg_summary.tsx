@@ -86,11 +86,11 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
         </div>
         <div className="flex flex-col px-2">
           <p className="text-[10px] font-bold text-slate-700 sm:text-sm">
-            {t("今日產生碳排紀錄")}
+            {t("esg_summary.today_records")}
           </p>
           <p className="text-base font-bold text-black sm:text-lg">
             <span>{summaryData.todayEsgRecordCount}</span>{" "}
-            {t("筆")}
+            {t("esg_summary.record_unit")}
           </p>
         </div>
       </div>
@@ -102,7 +102,7 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
         </div>
         <div className="flex flex-col px-2">
           <p className="text-[10px] font-bold text-slate-700 sm:text-sm">
-            {t("平均 DQI 評分")}
+            {t("esg_summary.dqi_average")}
           </p>
           <p className="text-base font-bold text-black sm:text-lg">
             <span>{summaryData.dqiAverage.toFixed(1)}</span>
@@ -117,11 +117,11 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
         </div>
         <div className="flex flex-col px-2">
           <p className="text-[10px] font-bold text-slate-700 sm:text-sm">
-            {t("待核對")}
+            {t("esg_summary.pending")}
           </p>
           <p className="text-base font-bold text-amber-500 sm:text-lg">
             <span>{summaryData.pendingEsgRecordCount}</span>{" "}
-            {t("筆")}
+            {t("esg_summary.record_unit")}
           </p>
         </div>
       </div>
@@ -133,7 +133,7 @@ export default function EsgSummary({ year, month }: IEsgSummaryProps) {
         </div>
         <div className="flex flex-col px-2">
           <p className="text-[10px] font-bold text-slate-700 sm:text-sm">
-            {t("AI 平均信心度")}
+            {t("esg_summary.ai_confidence")}
           </p>
           <p className="text-base font-bold text-black sm:text-lg">
             <span>{summaryData.aiAverageConfidence.toFixed(1)}</span> % 

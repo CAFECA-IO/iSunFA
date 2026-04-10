@@ -1375,6 +1375,11 @@ export const en = {
     better_than_industry: "Better than industry average ({{average}})",
     scope_distribution: "Scope Distribution (SCOPE)",
     annual_goal_progress: "Annual Goal Progress",
+    today_records: "Records Created Today",
+    dqi_average: "Average DQI Score",
+    pending: "Pending Verifications",
+    ai_confidence: "AI Avg. Confidence",
+    record_unit: "records",
   },
   esg_table: {
     intensity: {

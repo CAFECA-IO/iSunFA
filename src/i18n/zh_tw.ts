@@ -1384,6 +1384,11 @@ export const zhTw = {
     better_than_industry: "優於產業平均 ({{average}})",
     scope_distribution: "各範疇分布 (SCOPE)",
     annual_goal_progress: "年度目標進度",
+    today_records: "今日產生碳排紀錄",
+    dqi_average: "平均 DQI 評分",
+    pending: "待核對",
+    ai_confidence: "AI 平均信心度",
+    record_unit: "筆",
   },
   esg_table: {
     intensity: {

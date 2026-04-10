@@ -182,8 +182,8 @@ export class EsgRepository implements IEsgRepository {
       // Info: (20260410 - Julian) 更乾淨的今日零時寫法
       const startOfToday = new Date(now.setHours(0, 0, 0, 0));
   
-      // Info: (20260410 - Julian) 三個獨立的 Aggregate 查詢使用 Promise.all 並行處理
-      const [todayEsgRecordCount, pendingEsgRecordCount, aiAverageConfidenceAggr] =
+      // Info: (20260410 - Julian) 獨立的 Aggregate 查詢使用 Promise.all 並行處理
+      const [todayEsgRecordCount, pendingEsgRecordCount, aiAverageConfidenceAggr, dqiAverageAggr] =
         await Promise.all([
           prisma.esgRecord.count({
             where: { accountBookId, tradingDate: { gte: startOfToday } },
@@ -195,14 +195,18 @@ export class EsgRepository implements IEsgRepository {
             where: { accountBookId, analysisStatus: AIAnalysisStatus.COMPLETED },
             _avg: { confidence: true },
           }),
+          prisma.esgRecord.aggregate({
+            where: { accountBookId, analysisStatus: AIAnalysisStatus.COMPLETED },
+            _avg: { dqiScore: true },
+          }),
         ]);
   
       const aiAverageConfidence = Math.round(
         aiAverageConfidenceAggr._avg.confidence || 0,
       );
 
-      // ToDo: 計算平均 DQI 評分
-      const dqiAverage = 10
+      // Info: (20260410 - Julian) 計算平均 DQI 評分
+      const dqiAverage = Number(dqiAverageAggr._avg.dqiScore || 0);
   
       return { todayEsgRecordCount, dqiAverage, pendingEsgRecordCount, aiAverageConfidence };
     }
