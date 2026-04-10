@@ -6,7 +6,7 @@ import { receiptRepo } from "@/repositories/receipt.repo";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ order_id: string }> }
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -16,14 +16,14 @@ export async function GET(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const { id: orderId } = await params;
+    const { order_id: orderId } = await params;
 
     // Info: (20260410 - Luphia) Retrieve or dynamically create the receipt
     const receipt = await receiptRepo.getOrCreateReceipt(orderId);
 
     return jsonOk(receipt);
   } catch (error: unknown) {
-    console.error("[API] /user/order/[id]/receipt GET error:", error);
+    console.error("[API] /user/order/[order_id]/receipt GET error:", error);
     const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, errorMessage);
   }
