@@ -1,113 +1,145 @@
-// Info: (20260411 - Tzuhan) 統一的輸入介面 (Aggregated Input DTOs)
-// Info: (20260411 - Tzuhan) 涵蓋所有可能從 Prisma JsonValue 取出的欄位
-export interface IShareDataInput {
-    keyword?: string;
-    companyName?: string;
-    targetCompany?: string;
-}
-
-export interface IShareResultInput {
-    // Info: (20260411 - Tzuhan) 碳排相關欄位
-    totalEmissions?: number | null;
-    score?: number | null;
-    hotspots?: Array<{ category?: string; percentage?: number }>;
-
-    // Info: (20260411 - Tzuhan) 財務與評級相關欄位
-    finalRating?: string;
-    rating?: string;
-    riskLevel?: string;
-    executiveSummary?: string;
-    keyHighlights?: string[];
-
-    // Info: (20260411 - Tzuhan) 共用欄位
-    aiSummary?: string;
-    summary?: { aiSummary?: string };
-}
-
-// Info: (20260411 - Tzuhan) 嚴格的輸出介面 (Strict Output Types)
+/**
+ * Info: (20260410 - Tzuhan)
+ * 暫時的版本，之後會再重構
+ */
 export interface ICarbonMetrics {
-    totalEmissions: number | null;
-    score: number | null;
-    hotspots: Array<{ category: string; percentage: number }>;
+    score: string | null;
+    tags: string[];
+    strategicPosition: string | null;
 }
 
 export interface IFinancialMetrics {
-    finalRating: string;
-    riskLevel: string;
-    keyHighlights: string[];
+    rating: string | null;
+    tags: string[];
 }
 
 export interface IPublicReportData<TMetrics> {
     companyName: string;
-    aiSummary: string;
+    safeMarkdown: string;
     metrics: TMetrics;
 }
 
-// Info: (20260411 - Tzuhan) 策略介面：只保留「輸出」的泛型
+// Info: (20260410 - Tzuhan) 工具函式 (Helpers)
+/** Info: (20260410 - Tzuhan) 嘗試從 Prisma JsonValue 中安全提取 Markdown 字串 */
+const extractMarkdown = (result: unknown): string => {
+    if (typeof result === 'string') return result;
+    if (typeof result === 'object' && result !== null) {
+        // Info: (20260410 - Tzuhan) 應對可能的 JSON 結構，如 { content: "..." } 或 { markdown: "..." }
+        const obj = result as Record<string, unknown>;
+        if (typeof obj.content === 'string') return obj.content;
+        if (typeof obj.markdown === 'string') return obj.markdown;
+    }
+    return '';
+};
+
+const extractCompanyName = (data: unknown, fallback: string): string => {
+    if (typeof data === 'object' && data !== null) {
+        const obj = data as Record<string, unknown>;
+        if (typeof obj.keyword === 'string' && obj.keyword.trim() !== '') return obj.keyword;
+        if (typeof obj.targetCompany === 'string' && obj.targetCompany.trim() !== '') return obj.targetCompany;
+        if (typeof obj.companyName === 'string' && obj.companyName.trim() !== '') return obj.companyName;
+    }
+    return fallback;
+};
+
+// Info: (20260410 - Tzuhan) 隱藏 Markdown 中的所有表格 (防護財報機密金額)
+const redactMarkdownTables = (markdown: string): string => {
+    const tableRegex = /\|.*\|[\r\n]+\|[-:\s|]+\|[\r\n]+(\|.*\|[\r\n]+)+/g;
+    return markdown.replace(tableRegex, '\n> **🔒 [系統提示] 依據隱私保護原則，詳細財務與金額數據已隱藏，僅公開 AI 查核與戰略總結。**\n\n');
+};
+
+// Info: (20260410 - Tzuhan) 策略實作區
 export interface IShareSanitizeStrategy<TMetrics> {
-    sanitize(data: IShareDataInput | null, result: IShareResultInput | null): IPublicReportData<TMetrics>;
+    sanitize(data: unknown, result: unknown): IPublicReportData<TMetrics>;
 }
 
-// Info: (20260411 - Tzuhan) 策略實作區
+/**
+ * Info: (20260410 - Tzuhan) 策略 A：碳排與永續報告 (Carbon Health Check)
+ */
 export class CarbonSanitizer implements IShareSanitizeStrategy<ICarbonMetrics> {
-    sanitize(data: IShareDataInput | null, result: IShareResultInput | null): IPublicReportData<ICarbonMetrics> {
-        const safeData = data || {};
-        const safeResult = result || {};
+    sanitize(data: unknown, result: unknown): IPublicReportData<ICarbonMetrics> {
+        const rawMarkdown = extractMarkdown(result);
+
+        const scoreMatch = rawMarkdown.match(/碳健檢綜合評分：\s*(\d+(?:\.\d+)?)/);
+        const tagsMatch = rawMarkdown.match(/減碳核心標籤：\s*\**([^*\n]+)\**/);
+        const positionMatch = rawMarkdown.match(/戰略風險定位：\s*\**([^*\n]+)\**/);
 
         return {
-            companyName: safeData.keyword || safeData.companyName || '未公開企業',
-            aiSummary: safeResult.aiSummary || safeResult.summary?.aiSummary || '暫無公開摘要',
+            companyName: extractCompanyName(data, '企業'),
+            safeMarkdown: rawMarkdown,
             metrics: {
-                totalEmissions: safeResult.totalEmissions ?? null,
-                score: safeResult.score ?? null,
-                hotspots: (safeResult.hotspots || []).map(h => ({
-                    category: h?.category || 'Other',
-                    percentage: h?.percentage || 0,
-                })),
+                score: scoreMatch ? scoreMatch[1] : null,
+                tags: tagsMatch ? tagsMatch[1].split(',').map(t => t.trim().replace(/#/g, '')) : [],
+                strategicPosition: positionMatch ? positionMatch[1].trim() : null,
             },
         };
     }
 }
 
-export class FinancialSanitizer implements IShareSanitizeStrategy<IFinancialMetrics> {
-    sanitize(data: IShareDataInput | null, result: IShareResultInput | null): IPublicReportData<IFinancialMetrics> {
-        const safeData = data || {};
-        const safeResult = result || {};
+/**
+ * Info: (20260410 - Tzuhan) 策略 B：量化金融與市場評級 (Quant & Rating)
+ */
+export class RatingSanitizer implements IShareSanitizeStrategy<IFinancialMetrics> {
+    sanitize(data: unknown, result: unknown): IPublicReportData<IFinancialMetrics> {
+        const rawMarkdown = extractMarkdown(result);
+
+        const ratingMatch = rawMarkdown.match(/評級結果：\s*\[?([^\]\n]+)\]?/);
+        const tagsMatch = rawMarkdown.match(/產品風險與量化特徵：\s*\**([^*\n]+)\**/);
 
         return {
-            companyName: safeData.keyword || safeData.targetCompany || '未公開企業',
-            aiSummary: safeResult.executiveSummary || safeResult.aiSummary || '暫無公開摘要',
+            companyName: extractCompanyName(data, '投資標的'),
+            safeMarkdown: rawMarkdown,
             metrics: {
-                finalRating: safeResult.finalRating || safeResult.rating || 'N/A',
-                riskLevel: safeResult.riskLevel || '未評估',
-                keyHighlights: (safeResult.keyHighlights || []).filter(item => typeof item === 'string'),
+                rating: ratingMatch ? ratingMatch[1].replace(/[\*\[\]]/g, '').trim() : null,
+                tags: tagsMatch ? tagsMatch[1].split(',').map(t => t.trim()) : [],
             },
         };
     }
 }
 
-// Info: (20260411 - Tzuhan) 工廠模式 (Factory)
+/**
+ * Info: (20260410 - Tzuhan) 策略 C：極密財務報表 (Balance Sheet, Income Statement)
+ */
+export class FinancialReportSanitizer implements IShareSanitizeStrategy<null> {
+    sanitize(data: unknown, result: unknown): IPublicReportData<null> {
+        const rawMarkdown = extractMarkdown(result);
+        const redactedMarkdown = redactMarkdownTables(rawMarkdown);
+
+        return {
+            companyName: extractCompanyName(data, '企業'),
+            safeMarkdown: redactedMarkdown,
+            metrics: null,
+        };
+    }
+}
+
+// Info: (20260410 - Tzuhan) 工廠模式 (Factory)
 export class ShareSanitizerFactory {
-    /**
-     * Info: (20260411 - Tzuhan)
-     * 由於輸出型別 (TMetrics) 是協變的 (Covariant)，
-     * TypeScript 允許我們將 <ICarbonMetrics> 或 <IFinancialMetrics> 
-     * 自然地回傳給宣告為 <unknown> 的介面，不需寫任何 as cast！
-     */
     static getSanitizer(category: string): IShareSanitizeStrategy<unknown> {
         switch (category) {
+            // Info: (20260410 - Tzuhan) 永續系列
             case 'carbon_health_check':
             case 'net_zero_emissions':
                 return new CarbonSanitizer();
 
+            // Info: (20260410 - Tzuhan) 量化與評級系列
             case 'financial_product_rating':
             case 'irsc':
             case 'industry_development':
-                return new FinancialSanitizer();
+            case 'market_trends':
+                return new RatingSanitizer();
+
+            // Info: (20260410 - Tzuhan) 機密財報系列
+            case 'balance_sheet':
+            case 'cash_flow':
+            case 'income_statement':
+            case 'financial_health':
+            case 'financial_compliance':
+                return new FinancialReportSanitizer();
 
             default:
                 throw new Error(
-                    `[Security Guard] Unsupported share category: '${category}'. Sharing is blocked to prevent data leakage.`
+                    `[Security Guard] Unsupported share category: '${category}'. Sharing is blocked.`
                 );
         }
     }
