@@ -6,6 +6,7 @@ import { CreditCard, Receipt, Coins, Loader2, Plus, CheckCircle2, Edit2, Trash2 
 import { request } from '@/lib/utils/request';
 import { formatDate } from '@/lib/utils/date';
 import EditCardModal from '@/components/user/billing/edit_card_modal';
+import ReceiptPdfDownloader from '@/components/user/billing/receipt_pdf_downloader';
 
 type Tab = 'orders' | 'points' | 'cards';
 
@@ -255,6 +256,7 @@ export default function BillingPage() {
                       <th className="px-6 py-4 font-medium">{t('billing.table.order_id')}</th>
                       <th className="px-6 py-4 font-medium">{t('billing.table.amount')}</th>
                       <th className="px-6 py-4 font-medium">{t('billing.table.status')}</th>
+                      <th className="px-6 py-4 font-medium w-16"><span className="sr-only">Action</span></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -293,6 +295,15 @@ export default function BillingPage() {
                             }`}>
                             {order.status}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 flex justify-end">
+                          {(order.type === 'OEN_PAYMENT' || order.type === 'PAYMENT') && order.status === 'SUCCESS' && (
+                            <ReceiptPdfDownloader
+                              receiptNumber={order.id}
+                              date={order.createdAt}
+                              amount={order.amount}
+                            />
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -470,6 +481,7 @@ export default function BillingPage() {
                                   <th className="px-6 py-4 font-medium">{t('billing.table.date')}</th>
                                   <th className="px-6 py-4 font-medium">{t('billing.table.amount')}</th>
                                   <th className="px-6 py-4 font-medium">{t('billing.table.status')}</th>
+                                  <th className="px-6 py-4 font-medium w-16"><span className="sr-only">Action</span></th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-gray-100">
@@ -488,6 +500,17 @@ export default function BillingPage() {
                                         }`}>
                                         {tx.status}
                                       </span>
+                                    </td>
+                                    <td className="px-6 py-3 flex justify-end">
+                                      {tx.status === 'SUCCESS' && (
+                                        <ReceiptPdfDownloader
+                                          receiptNumber={tx.id}
+                                          date={tx.createdAt}
+                                          amount={tx.amount}
+                                          buyerName={pm.data?.buyerName}
+                                          buyerTaxId={pm.data?.taxId}
+                                        />
+                                      )}
                                     </td>
                                   </tr>
                                 ))}
