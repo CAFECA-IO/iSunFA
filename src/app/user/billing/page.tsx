@@ -430,7 +430,7 @@ export default function BillingPage() {
                             )}
                           </div>
                           <div className="text-sm text-gray-500 mt-1 font-mono">
-                            •••• •••• •••• {pm.token && pm.token.length >= 4 ? pm.token.substring(pm.token.length - 4) : '****'}
+                            •••• •••• •••• {pm.data?.paymentInfo ? String(pm.data.paymentInfo).substring(String(pm.data.paymentInfo).length - 4) : '****'}
                           </div>
                         </div>
                       </div>

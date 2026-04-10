@@ -518,7 +518,7 @@ export default function PaymentModal({
                                             <div className="flex items-center">
                                               <div className="text-sm">
                                                 <p className={`font-semibold ${isSelected ? "text-orange-900" : "text-gray-900"}`}>
-                                                  {brand}
+                                                  {(pm.data?.name as string) || brand}
                                                 </p>
                                                 <div className={`mt-1 flex items-center gap-2 ${isSelected ? "text-orange-700" : "text-gray-500"}`}>
                                                   <span className="text-xs">••••</span>
