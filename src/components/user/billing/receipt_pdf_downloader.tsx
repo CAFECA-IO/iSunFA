@@ -75,7 +75,7 @@ export default function ReceiptPdfDownloader({
 
       const opt = {
         margin: 0,
-        filename: `isunfa_${fileDate}_${invoiceNum}.pdf`,
+        filename: `iSunFA_${fileDate}_${invoiceNum}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 794 },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
@@ -203,7 +203,7 @@ export default function ReceiptPdfDownloader({
                   }
                 </div>
               )}
-              <div>第1頁/共1頁</div>
+              <div>第 1 頁 / 共 1 頁</div>
             </div>
           </div>
 
@@ -235,19 +235,22 @@ export default function ReceiptPdfDownloader({
           {/* Info: (20260410 - Luphia) Totals Section */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px', alignItems: 'flex-start' }}>
             {/* Info: (20260410 - Luphia) Tax Info Block (Left side) */}
-            <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', padding: '16px', width: '280px', backgroundColor: '#f9fafb' }}>
-              <div style={{ color: '#4b5563', fontSize: '13px', marginBottom: '16px', fontWeight: 'bold' }}>稅別判定 (TAX)</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span style={{ color: '#6b7280' }}>應稅</span>
-                <span style={{ backgroundColor: '#ffedd5', color: '#ea580c', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 10px', height: '22px', borderRadius: '3px', fontSize: '12px', fontWeight: 'bold', lineHeight: 1 }}>5%</span>
+            <div style={{ border: '1px solid #f3f4f6', borderRadius: '12px', padding: '20px', width: '280px', backgroundColor: '#ffffff' }}>
+              <div style={{ color: '#1f2937', fontSize: '14px', marginBottom: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '4px', height: '14px', backgroundColor: '#ea580c', borderRadius: '2px' }}></div>
+                稅別判定 (TAX)
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span style={{ color: '#6b7280' }}>零稅</span>
-                <span style={{ color: '#d1d5db' }}>-</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px dashed #f3f4f6' }}>
+                <span style={{ color: '#4b5563', fontSize: '13px' }}>應稅</span>
+                <span style={{ backgroundColor: '#ffedd5', color: '#ea580c', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 10px', height: '22px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', lineHeight: 1 }}>5%</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#6b7280' }}>免稅</span>
-                <span style={{ color: '#d1d5db' }}>-</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px dashed #f3f4f6' }}>
+                <span style={{ color: '#4b5563', fontSize: '13px' }}>零稅</span>
+                <span style={{ color: '#d1d5db', fontSize: '13px' }}>-</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px' }}>
+                <span style={{ color: '#4b5563', fontSize: '13px' }}>免稅</span>
+                <span style={{ color: '#d1d5db', fontSize: '13px' }}>-</span>
               </div>
             </div>
 
@@ -274,17 +277,20 @@ export default function ReceiptPdfDownloader({
           </div>
 
           {/* Info: (20260410 - Luphia) Seller Details Footer */}
-          <div style={{ marginTop: '50px', backgroundColor: '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '12px', padding: '24px', display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <div style={{ flex: '0 0 auto', borderRight: '1px solid #e5e7eb', paddingRight: '24px' }}>
-              <div style={{ fontWeight: 'bold', color: '#1f2937', fontSize: '16px', letterSpacing: '2px', marginBottom: '6px' }}>{sellerName}</div>
-              <div style={{ display: 'flex', alignItems: 'center', color: '#ea580c', fontWeight: 'bold', fontSize: '13px', letterSpacing: '1px' }}>
-                統一編號：<span style={{ fontSize: '16px', letterSpacing: '2px' }}>{sellerTaxId}</span>
+          <div style={{ marginTop: '50px', backgroundColor: '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '12px', padding: '24px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#6b7280', letterSpacing: '2px', marginBottom: '16px' }}>賣方資訊</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+              <div style={{ flex: '0 0 auto', borderRight: '1px solid #e5e7eb', paddingRight: '24px' }}>
+                <div style={{ fontWeight: 'bold', color: '#1f2937', fontSize: '16px', letterSpacing: '2px', marginBottom: '6px' }}>{sellerName}</div>
+                <div style={{ display: 'flex', alignItems: 'center', color: '#ea580c', fontWeight: 'bold', fontSize: '13px', letterSpacing: '1px' }}>
+                  統一編號：<span style={{ fontSize: '16px', letterSpacing: '2px' }}>{sellerTaxId}</span>
+                </div>
               </div>
-            </div>
-            <div style={{ flex: '1', fontSize: '13px', color: '#4b5563', lineHeight: '1.6' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                <span style={{ color: '#9ca3af', minWidth: '40px', letterSpacing: '4px' }}>地址</span>
-                <span style={{ color: '#374151', wordBreak: 'break-word', paddingRight: '16px' }}>{sellerAddress}</span>
+              <div style={{ flex: '1', fontSize: '13px', color: '#4b5563', lineHeight: '1.6' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#9ca3af', minWidth: '40px', letterSpacing: '4px' }}>地址</span>
+                  <span style={{ color: '#374151', wordBreak: 'break-word', paddingRight: '16px' }}>{sellerAddress}</span>
+                </div>
               </div>
             </div>
           </div>

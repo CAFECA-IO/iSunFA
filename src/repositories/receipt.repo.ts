@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/client";
+import { buildReceiptDataToSave } from "@/lib/utils/payment_helpers";
 
 export class ReceiptRepo {
   /**
@@ -16,7 +18,8 @@ export class ReceiptRepo {
     }
 
     const order = await prisma.order.findUnique({
-      where: { id: orderId }
+      where: { id: orderId },
+      include: { user: true }
     });
 
     if (!order) {
@@ -34,8 +37,18 @@ export class ReceiptRepo {
       if (checkReceipt) return checkReceipt;
 
       const randomCode = Math.floor(Math.random() * 9000 + 1000).toString();
+      
+      const standardizedData = buildReceiptDataToSave(
+        order.id,
+        order.amount,
+        (order.data as Record<string, unknown>) || {},
+        undefined,
+        order.user
+      );
+      
       const receiptData = {
         ...(typeof order.data === 'object' && order.data !== null ? order.data : {}),
+        ...standardizedData,
         randomCode
       };
 
@@ -43,7 +56,7 @@ export class ReceiptRepo {
         data: {
           orderId: order.id,
           amount: order.amount,
-          data: receiptData
+          data: receiptData as Prisma.InputJsonObject
         }
       });
     });

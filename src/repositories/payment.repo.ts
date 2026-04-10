@@ -6,6 +6,7 @@ import {
   ORDER_TYPE,
 } from "@/constants/status";
 import { IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
+import { buildReceiptDataToSave } from "@/lib/utils/payment_helpers";
 
 export interface IOrderWithUser extends Order {
   user: User | null;
@@ -72,12 +73,21 @@ export class PaymentRepository {
           });
         } else if (order.type === ORDER_TYPE.OEN_PAYMENT) {
           const _creditsToMint = (order.data as IOenOrderData)?.credits || 0;
+          const standardizedData = buildReceiptDataToSave(
+            order.id,
+            order.amount,
+            (order.data as Record<string, unknown>) || {},
+            body as Record<string, unknown>, // Info: (20260410 - Luphia) Use webhook body as pmData proxy for buyerName/taxId if submitted
+            order.user
+          );
+
           const dbReceipt = await tx.receipt.create({
             data: {
               orderId: order.id,
               amount: order.amount,
               data: {
                 ...body,
+                ...standardizedData,
                 randomCode: Math.floor(Math.random() * 9000 + 1000).toString(),
                 receiptDetails: {
                   amount: order.amount,

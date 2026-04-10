@@ -3,6 +3,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IOenOrderData } from "@/interfaces/payment";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
+import { buildOenTransactionPayload } from "@/lib/utils/payment_helpers";
 import { mintToAddress } from "@/services/token.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { paymentRepo } from "@/repositories/payment.repo";
@@ -110,24 +111,16 @@ export async function POST(
         "Content-Type": "application/json",
         Authorization: `Bearer ${OEN_ACCESS_TOKEN}`,
       },
-      body: JSON.stringify({
-        merchantId: "mermer",
-        amount: amount,
-        currency: "TWD",
-        token: providerToken,
-        orderId: order.id,
-        userName: pmData?.buyerName || dbUser.name || "Unknown",
-        userEmail: pmData?.email || `${dbUser.id}@isunfa.tw`,
-        productDetails: [
-          {
-            productionCode: "ISUNFA-CREDITS",
-            description: `iSunFA Credits - ${credits}`,
-            quantity: 1,
-            unit: "pcs",
-            unitPrice: amount,
-          },
-        ],
-      }),
+      body: JSON.stringify(
+        buildOenTransactionPayload(
+          dbUser,
+          pmData,
+          order.id,
+          amount,
+          order.data as Record<string, unknown>,
+          providerToken
+        )
+      ),
     };
     const oenRes = await fetch(fetchUrl, fetchQuery);
 
