@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { EsgTarget, Prisma, EsgRecord } from "@/generated/client";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 export type EsgRecordWithRelations = Prisma.EsgRecordGetPayload<{
   include: { file: true };
@@ -175,6 +176,36 @@ export class EsgRepository implements IEsgRepository {
       voucherId,
     } as EsgRecordWithRelations;
   }
+
+    async getEsgSummary(accountBookId: string) {
+      const now = new Date();
+      // Info: (20260410 - Julian) 更乾淨的今日零時寫法
+      const startOfToday = new Date(now.setHours(0, 0, 0, 0));
+  
+      // Info: (20260410 - Julian) 三個獨立的 Aggregate 查詢使用 Promise.all 並行處理
+      const [todayEsgRecordCount, pendingEsgRecordCount, aiAverageConfidenceAggr] =
+        await Promise.all([
+          prisma.esgRecord.count({
+            where: { accountBookId, tradingDate: { gte: startOfToday } },
+          }),
+          prisma.esgRecord.count({
+            where: { accountBookId, isVerified: false },
+          }),
+          prisma.esgRecord.aggregate({
+            where: { accountBookId, analysisStatus: AIAnalysisStatus.COMPLETED },
+            _avg: { confidence: true },
+          }),
+        ]);
+  
+      const aiAverageConfidence = Math.round(
+        aiAverageConfidenceAggr._avg.confidence || 0,
+      );
+
+      // ToDo: 計算平均 DQI 評分
+      const dqiAverage = 10
+  
+      return { todayEsgRecordCount, dqiAverage, pendingEsgRecordCount, aiAverageConfidence };
+    }
 
   async updateEsgRecord(
     id: string,

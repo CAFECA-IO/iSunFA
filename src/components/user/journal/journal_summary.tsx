@@ -13,7 +13,6 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { IJournalDashboardSummary } from "@/interfaces/journal";
 import { useTranslation } from "@/i18n/i18n_context";
-import { numberWithCommas } from "@/lib/utils/common";
 
 export default function JournalSummary() {
   const params = useParams();
@@ -50,7 +49,7 @@ export default function JournalSummary() {
   if (isLoading) {
     return (
       <div className="flex h-32 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+        <Loader2 className="size-6 shrink-0 animate-spin text-orange-500" />
       </div>
     );
   }
@@ -58,7 +57,7 @@ export default function JournalSummary() {
   if (!summaryData) {
     return (
       <div className="flex h-72 w-full flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm">
-        <Cloud className="mb-2 h-8 w-8 text-slate-300" />
+        <Cloud className="mb-2 size-8 shrink-0 text-slate-300" />
         <span className="text-sm font-bold">{t("journal.summary.empty")}</span>
       </div>
     );
@@ -108,7 +107,7 @@ export default function JournalSummary() {
             {t("journal.summary.ai_confidence")}
           </p>
           <p className="text-base font-bold text-black sm:text-lg">
-            <span>{numberWithCommas(summaryData.aiAverageConfidence)}</span> %
+            <span>{summaryData.aiAverageConfidence.toFixed(1)}</span> %
           </p>
         </div>
       </div>

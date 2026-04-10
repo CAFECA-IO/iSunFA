@@ -12,6 +12,13 @@ export enum EsgIntensity {
   HIGH = "HIGH",
 }
 
+export interface IEsgDashboardSummary {
+  todayEsgRecordCount: number;
+  dqiAverage: number;
+  pendingEsgRecordCount: number;
+  aiAverageConfidence: number;
+}
+
 export interface IEsgTotalEmissions {
   value: number;
   unit: string;
@@ -37,7 +44,7 @@ export interface IEsgScopeDistribution {
   scope3: IEsgScopeData;
 }
 
-export interface IEsgDashboardSummary {
+export interface IEsgDashboardSummaryII {
   totalEmissions: IEsgTotalEmissions;
   emissionIntensity: IEsgEmissionIntensity;
   scopeDistribution: IEsgScopeDistribution;
@@ -46,7 +53,7 @@ export interface IEsgDashboardSummary {
   };
 }
 
-export const mockDashboardSummary: IEsgDashboardSummary = {
+export const mockDashboardSummary: IEsgDashboardSummaryII = {
   totalEmissions: {
     value: 1606.5,
     unit: "kgCO2e",
