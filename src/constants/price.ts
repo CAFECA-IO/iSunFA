@@ -14,7 +14,7 @@
 
 export const REWARD_AMOUNTS = {
   REGISTRATION_REWARD: 100,
-  DAILY_CHECKIN_REWARD: 10,
+  DAILY_CHECKIN_REWARD: 5,
 } as const;
 
 export const ANALYSIS_BASE_COSTS: Record<string, number> = {
