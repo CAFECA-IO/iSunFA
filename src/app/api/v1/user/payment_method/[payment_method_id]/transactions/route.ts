@@ -6,7 +6,7 @@ import { paymentRepo } from "@/repositories/payment.repo";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { payment_method_id: string } }
+  { params }: { params: Promise<{ payment_method_id: string }> }
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -16,9 +16,11 @@ export async function GET(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
+    const { payment_method_id: paymentMethodId } = await params;
+
     // Info: (20260409 - Luphia) Securely fetch transactions with matching userId
     const transactions = await paymentRepo.getPaymentTransactionsByPaymentMethodId(
-      params.payment_method_id,
+      paymentMethodId,
       user.id
     );
 
