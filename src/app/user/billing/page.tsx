@@ -509,6 +509,7 @@ export default function BillingPage() {
                                           amount={tx.amount}
                                           buyerName={pm.data?.buyerName}
                                           buyerTaxId={pm.data?.taxId}
+                                          buyerAddress={pm.data?.billingAddress}
                                         />
                                       )}
                                     </td>
