@@ -24,7 +24,56 @@ export async function GET(
       user.id
     );
 
-    return jsonOk({ transactions });
+    // Info: (20260410 - Luphia) Map transaction outputs to extract order items for receipt matching
+    const mappedTransactions = transactions.map((t) => {
+      const orderData = (t.order?.data as Record<string, unknown>) || {};
+      
+      let itemsFallback: { name: string; quantity: number | string; unitPrice: number | string; amount: number | string; remark: string }[] = [];
+      if (orderData.planId) {
+        itemsFallback = [{
+          name: (orderData.title as string) || '會員訂閱',
+          quantity: 1,
+          unitPrice: t.amount,
+          amount: t.amount,
+          remark: orderData.billingInterval === 'year' ? '購買會員資格 (年繳)' : '購買會員資格'
+        }];
+      } else {
+        let base = Number(orderData.baseCredits || orderData.credits || t.amount);
+        let bonus = Number(orderData.bonusCredits || 0);
+
+        if (!orderData.bonusCredits && orderData.credits && Number(orderData.credits) > Number(t.amount)) {
+          base = Number(t.amount);
+          bonus = Number(orderData.credits) - Number(t.amount);
+        }
+
+        itemsFallback.push({
+          name: orderData.title ? `${orderData.title} (一般購買)` : 'iSunFA 點數',
+          quantity: 1,
+          unitPrice: t.amount,
+          amount: t.amount,
+          remark: `購買 ${base} 點`
+        });
+
+        if (bonus > 0) {
+          itemsFallback.push({
+            name: 'iSunFA 點數 (行銷贈送)',
+            quantity: 1,
+            unitPrice: 0,
+            amount: 0,
+            remark: `贈送 ${bonus} 點`
+          });
+        }
+      }
+
+      const items = orderData.items || itemsFallback;
+      
+      return {
+        ...t,
+        items
+      };
+    });
+
+    return jsonOk({ transactions: mappedTransactions });
   } catch (error) {
     console.error("[API] /user/payment_method/[id]/transactions GET error:", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");

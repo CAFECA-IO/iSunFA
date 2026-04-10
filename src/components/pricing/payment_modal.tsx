@@ -277,6 +277,34 @@ export default function PaymentModal({
           amount,
           credits,
           paymentMethodId: selectedPaymentMethodId,
+          title,
+          baseCredits,
+          bonusCredits,
+          planId,
+          items: planId 
+            ? [{
+                name: title || '會員訂閱',
+                quantity: 1,
+                unitPrice: amount,
+                amount: amount,
+                remark: '購買會員資格'
+              }]
+            : [
+                {
+                  name: title ? `${title} (一般購買)` : `iSunFA 點數`,
+                  quantity: 1,
+                  unitPrice: amount,
+                  amount: amount,
+                  remark: `購買 ${baseCredits || credits} 點`
+                },
+                ...(bonusCredits && bonusCredits > 0 ? [{
+                  name: 'iSunFA 點數 (行銷贈送)',
+                  quantity: 1,
+                  unitPrice: 0,
+                  amount: 0,
+                  remark: `贈送 ${bonusCredits} 點`
+                }] : [])
+              ]
         })
       });
 

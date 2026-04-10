@@ -21,6 +21,10 @@ interface IOrder {
     bin_code?: string;
     last_four?: string;
   } | null;
+  buyerName?: string;
+  buyerTaxId?: string;
+  buyerAddress?: string;
+  items?: { name: string; quantity: number | string; unitPrice: number | string; amount: number | string; remark?: string }[];
 }
 
 interface IPointHistory {
@@ -52,6 +56,7 @@ interface IPaymentTransaction {
   createdAt: string;
   amount: number;
   status: string;
+  items?: { name: string; quantity: number; unitPrice: number; amount: number; remark?: string }[];
 }
 
 export default function BillingPage() {
@@ -302,6 +307,10 @@ export default function BillingPage() {
                               receiptNumber={order.id}
                               date={order.createdAt}
                               amount={order.amount}
+                              buyerName={order.buyerName}
+                              buyerTaxId={order.buyerTaxId}
+                              buyerAddress={order.buyerAddress}
+                              items={order.items}
                             />
                           )}
                         </td>
@@ -510,6 +519,7 @@ export default function BillingPage() {
                                           buyerName={pm.data?.buyerName}
                                           buyerTaxId={pm.data?.taxId}
                                           buyerAddress={pm.data?.billingAddress}
+                                          items={tx.items}
                                         />
                                       )}
                                     </td>

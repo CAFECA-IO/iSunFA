@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { Download, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { formatDate } from '@/lib/utils/date';
+import Image from 'next/image';
 
 interface IReceiptPdfDownloaderProps {
   receiptNumber: string;
@@ -15,7 +16,7 @@ interface IReceiptPdfDownloaderProps {
   buyerName?: string;
   buyerTaxId?: string;
   buyerAddress?: string;
-  itemName?: string;
+  items?: { name: string; quantity: number | string; unitPrice: number | string; amount: number | string; remark?: string }[];
   className?: string;
 }
 
@@ -30,10 +31,12 @@ export default function ReceiptPdfDownloader({
   buyerName,
   buyerTaxId,
   buyerAddress = '',
-  itemName = 'iSunFA 點數',
+  items,
   className
 }: IReceiptPdfDownloaderProps) {
   const { t } = useTranslation();
+
+  const invoiceItems = items && items.length > 0 ? items : [];
   const [isDownloading, setIsDownloading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -121,16 +124,19 @@ export default function ReceiptPdfDownloader({
             width: '794px', // Info: (20260410 - Luphia) A4 width at 96 DPI
             padding: '40px',
             background: 'white',
-            color: 'black',
+            color: '#374151',
             fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
             fontSize: '14px',
             lineHeight: '1.5'
           }}
         >
           {/* Info: (20260410 - Luphia) Header */}
-          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 5px 0', letterSpacing: '2px' }}>電子發票證明聯</h1>
-            <h2 style={{ fontSize: '18px', fontWeight: 'normal', margin: '0' }}>{formattedDateString}</h2>
+          <div style={{ textAlign: 'center', marginBottom: '20px', position: 'relative' }}>
+            <div style={{ position: 'absolute', left: 0, top: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Image src="/isunfa_logo_color.svg" alt="iSunFA Logo" width={110} height={32} style={{ height: '32px', width: 'auto' }} unoptimized priority />
+            </div>
+            <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 5px 0', letterSpacing: '2px', color: '#ea580c' }}>電子發票證明聯</h1>
+            <h2 style={{ fontSize: '18px', fontWeight: 'normal', margin: '0', color: '#6b7280' }}>{formattedDateString}</h2>
           </div>
 
           {/* Info: (20260410 - Luphia) Info Block */}
@@ -165,49 +171,51 @@ export default function ReceiptPdfDownloader({
           </div>
 
           {/* Info: (20260410 - Luphia) Main Table */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid black' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb', color: '#374151' }}>
             <thead>
-              <tr>
-                <th style={{ border: '1px solid black', padding: '8px', textAlign: 'center', width: '40%' }}>品名</th>
-                <th style={{ border: '1px solid black', padding: '8px', textAlign: 'center', width: '10%' }}>數量</th>
-                <th style={{ border: '1px solid black', padding: '8px', textAlign: 'center', width: '15%' }}>單價</th>
-                <th style={{ border: '1px solid black', padding: '8px', textAlign: 'center', width: '15%' }}>金額</th>
-                <th style={{ border: '1px solid black', padding: '8px', textAlign: 'center', width: '20%' }}>備註</th>
+              <tr style={{ backgroundColor: '#fff7ed', color: '#ea580c' }}>
+                <th style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'center', width: '40%' }}>品名</th>
+                <th style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'center', width: '10%' }}>數量</th>
+                <th style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'center', width: '15%' }}>單價</th>
+                <th style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'center', width: '15%' }}>金額</th>
+                <th style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'center', width: '20%' }}>備註</th>
               </tr>
             </thead>
             <tbody>
-              {/* Info: (20260410 - Luphia) Item Row */}
-              <tr>
-                <td style={{ border: '1px solid black', borderBottom: 'none', padding: '8px 8px 120px 8px', verticalAlign: 'top' }}>
-                  {itemName}
-                </td>
-                <td style={{ border: '1px solid black', borderBottom: 'none', padding: '8px 8px 120px 8px', textAlign: 'right', verticalAlign: 'top' }}>
-                  1
-                </td>
-                <td style={{ border: '1px solid black', borderBottom: 'none', padding: '8px 8px 120px 8px', textAlign: 'right', verticalAlign: 'top' }}>
-                  {amount.toLocaleString()}
-                </td>
-                <td style={{ border: '1px solid black', borderBottom: 'none', padding: '8px 8px 120px 8px', textAlign: 'right', verticalAlign: 'top' }}>
-                  {amount.toLocaleString()}
-                </td>
-                <td style={{ border: '1px solid black', borderBottom: 'none', padding: '8px', verticalAlign: 'top' }}>
-                  <span className="sr-only">備註</span>
-                </td>
-              </tr>
+              {/* Info: (20260410 - Luphia) Item Rows mapped cleanly vertically */}
+              {invoiceItems.map((item, index) => (
+                <tr key={`item-${index}`}>
+                  <td style={{ border: '1px solid #e5e7eb', borderBottom: 'none', padding: '12px 8px 120px 8px', verticalAlign: 'top' }}>
+                    {item.name}
+                  </td>
+                  <td style={{ border: '1px solid #e5e7eb', borderBottom: 'none', padding: '12px 8px 120px 8px', textAlign: 'center', verticalAlign: 'top' }}>
+                    {item.quantity}
+                  </td>
+                  <td style={{ border: '1px solid #e5e7eb', borderBottom: 'none', padding: '12px 8px 120px 8px', textAlign: 'right', verticalAlign: 'top' }}>
+                    {typeof item.unitPrice === 'number' ? item.unitPrice.toLocaleString() : item.unitPrice}
+                  </td>
+                  <td style={{ border: '1px solid #e5e7eb', borderBottom: 'none', padding: '12px 8px 120px 8px', textAlign: 'right', verticalAlign: 'top' }}>
+                    {typeof item.amount === 'number' ? item.amount.toLocaleString() : item.amount}
+                  </td>
+                  <td style={{ border: '1px solid #e5e7eb', borderBottom: 'none', padding: '12px 8px 120px 8px', verticalAlign: 'top', color: '#6b7280', fontSize: '12px' }}>
+                    {item.remark || <span className="sr-only">備註</span>}
+                  </td>
+                </tr>
+              ))}
               {/* Info: (20260410 - Luphia) Spacer Row to force some height before totals if needed, handled by padding above */}
 
               {/* Info: (20260410 - Luphia) Totals - Row 1 */}
               <tr>
-                <td colSpan={3} style={{ border: '1px solid black', padding: '8px' }}>
+                <td colSpan={3} style={{ border: '1px solid #e5e7eb', padding: '12px 8px' }}>
                   銷售額合計
                 </td>
-                <td style={{ border: '1px solid black', padding: '8px', textAlign: 'right' }}>
+                <td style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'right' }}>
                   {salesAmount.toLocaleString()}
                 </td>
                 {/* Info: (20260410 - Luphia) Seller Stamp Block */}
-                <td rowSpan={4} style={{ border: '1px solid black', padding: '8px', fontSize: '12px', verticalAlign: 'top' }}>
-                  <div style={{ marginBottom: '8px' }}>營業人蓋統一發票專用章</div>
-                  <div style={{ color: '#666', fontSize: '10px', marginBottom: '15px' }}>(已條列營業人資料者得免蓋章)</div>
+                <td rowSpan={4} style={{ border: '1px solid #e5e7eb', padding: '12px 8px', fontSize: '12px', verticalAlign: 'top', backgroundColor: '#f9fafb' }}>
+                  <div style={{ marginBottom: '8px', color: '#ea580c', fontWeight: 'bold' }}>營業人蓋統一發票專用章</div>
+                  <div style={{ color: '#9ca3af', fontSize: '10px', marginBottom: '15px' }}>(已條列營業人資料者得免蓋章)</div>
 
                   <div style={{ marginBottom: '4px' }}>賣方：{sellerName}</div>
                   <div style={{ marginBottom: '4px' }}>統一編號：{sellerTaxId}</div>
@@ -217,37 +225,41 @@ export default function ReceiptPdfDownloader({
 
               {/* Info: (20260410 - Luphia) Totals - Row 2 */}
               <tr>
-                <td colSpan={3} style={{ border: '1px solid black', padding: '0' }}>
+                <td colSpan={3} style={{ border: '1px solid #e5e7eb', padding: '0' }}>
                   <span className="sr-only">TAX</span>
-                  <div style={{ display: 'flex', width: '100%', height: '100%' }}>
-                    <div style={{ width: '25%', padding: '8px', borderRight: '1px solid black' }}>營業稅</div>
-                    <div style={{ width: '20%', padding: '8px', borderRight: '1px solid black', textAlign: 'center' }}>應稅</div>
-                    <div style={{ width: '15%', padding: '8px', borderRight: '1px solid black', textAlign: 'center' }}>V</div>
-                    <div style={{ width: '20%', padding: '8px', borderRight: '1px solid black', textAlign: 'center' }}>零稅</div>
-                    <div style={{ width: '20%', padding: '8px', textAlign: 'center' }}>免稅</div>
-                  </div>
+                  <table style={{ width: '100%', height: '100%', borderCollapse: 'collapse', border: 'none' }}>
+                    <tbody>
+                      <tr>
+                        <td style={{ width: '25%', padding: '12px 8px', borderRight: '1px solid #e5e7eb', textAlign: 'center' }}>營業稅</td>
+                        <td style={{ width: '20%', padding: '12px 8px', borderRight: '1px solid #e5e7eb', textAlign: 'center' }}>應稅</td>
+                        <td style={{ width: '15%', padding: '12px 8px', borderRight: '1px solid #e5e7eb', textAlign: 'center', color: '#ea580c', fontWeight: 'bold' }}>V</td>
+                        <td style={{ width: '20%', padding: '12px 8px', borderRight: '1px solid #e5e7eb', textAlign: 'center' }}>零稅</td>
+                        <td style={{ width: '20%', padding: '12px 8px', textAlign: 'center' }}>免稅</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </td>
-                <td style={{ border: '1px solid black', padding: '8px', textAlign: 'right' }}>
+                <td style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'right' }}>
                   {tax.toLocaleString()}
                 </td>
               </tr>
 
               {/* Info: (20260410 - Luphia) Totals - Row 3 */}
               <tr>
-                <td colSpan={3} style={{ border: '1px solid black', padding: '8px' }}>
+                <td colSpan={3} style={{ border: '1px solid #e5e7eb', padding: '12px 8px', fontWeight: 'bold' }}>
                   總計
                 </td>
-                <td style={{ border: '1px solid black', padding: '8px', textAlign: 'right' }}>
+                <td style={{ border: '1px solid #e5e7eb', padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', color: '#ea580c' }}>
                   {amount.toLocaleString()}
                 </td>
               </tr>
 
               {/* Info: (20260410 - Luphia) Totals - Row 4 */}
-              <tr>
-                <td style={{ border: '1px solid black', padding: '8px', whiteSpace: 'nowrap', width: '15%' }}>
+              <tr style={{ backgroundColor: '#f9fafb' }}>
+                <td style={{ border: '1px solid #e5e7eb', padding: '12px 8px', whiteSpace: 'nowrap', width: '15%' }}>
                   總計新臺幣<br />(中文大寫)
                 </td>
-                <td colSpan={3} style={{ border: '1px solid black', padding: '4px 8px', textAlign: 'center', verticalAlign: 'middle', letterSpacing: '4px' }}>
+                <td colSpan={3} style={{ border: '1px solid #e5e7eb', padding: '8px', textAlign: 'center', verticalAlign: 'middle', letterSpacing: '4px', fontWeight: 'bold', fontSize: '16px', color: '#ea580c' }}>
                   {chineseAmount}
                 </td>
               </tr>

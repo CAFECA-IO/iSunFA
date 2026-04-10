@@ -315,6 +315,9 @@ export class PaymentRepository {
         paymentMethodId,
         userId
       },
+      include: {
+        order: true
+      },
       orderBy: { createdAt: "desc" },
     });
   }
