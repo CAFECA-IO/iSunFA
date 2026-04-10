@@ -1461,6 +1461,7 @@ export const zhTw = {
       unit: "單位",
       total: "總排放量",
       intensity: "排放強度分級",
+      coefficient: "排放係數",
     },
     actions: {
       cancel_edit: "取消修改",

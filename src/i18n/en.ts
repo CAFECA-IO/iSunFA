@@ -1454,6 +1454,7 @@ export const en = {
       unit: "Unit",
       total: "Total Emissions",
       intensity: "Intensity Level",
+      coefficient: "Emission Coefficient",
     },
     actions: {
       cancel_edit: "Cancel Edit",
