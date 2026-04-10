@@ -137,7 +137,7 @@ export default function UserActions() {
               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 md:mb-3 px-1 md:px-2">
                 {t("sidebar.system")}
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 {SYSTEM_MODULES.filter((action) => action.enable).map((action) => {
                   const Icon = action.icon;
                   return (

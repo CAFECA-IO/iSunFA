@@ -100,6 +100,8 @@ export async function POST(
         authentication,
       );
 
+    const pmData = oenPaymentMethod.data as Record<string, string> | undefined;
+
     // Info: (20260305 - Tzuhan) 準備打給應援科技的扣款請求
     const fetchUrl = `${OEN_BASE_URL}/token/transactions`;
     const fetchQuery = {
@@ -114,8 +116,8 @@ export async function POST(
         currency: "TWD",
         token: providerToken,
         orderId: order.id,
-        userName: dbUser.name || "Unknown",
-        userEmail: `${dbUser.id}@isunfa.tw`,
+        userName: pmData?.buyerName || dbUser.name || "Unknown",
+        userEmail: pmData?.email || `${dbUser.id}@isunfa.tw`,
         productDetails: [
           {
             productionCode: "ISUNFA-CREDITS",
@@ -131,7 +133,7 @@ export async function POST(
 
     const oenData = await oenRes.json();
 
-    // Info: (20260306 - Tzuhan) ======= 扣款失敗 =======
+    // Info: (20260306 - Tzuhan) 扣款失敗
     if (oenData.code !== "S0000" && !oenRes.ok) {
       await paymentRepo.failPaymentTransactionAndOrder(
         paymentTransaction.id,
@@ -147,7 +149,7 @@ export async function POST(
       );
     }
 
-    // Info: (20260306 - Tzuhan) ======= 扣款成功，開始鑄造代幣 =======
+    // Info: (20260306 - Tzuhan) 扣款成功，開始鑄造代幣
     await paymentRepo.completePaymentTransactionAndOrder(
       paymentTransaction.id,
       order.id,
@@ -175,7 +177,7 @@ export async function POST(
       memo,
     );
 
-    // Info: (20260306 - Tzuhan) ======= 鑄造代幣失敗 =======
+    // Info: (20260306 - Tzuhan) 鑄造代幣失敗
     if (!mintResult.success) {
       await paymentRepo.updateOrderMintFailed(
         order.id,
@@ -189,7 +191,7 @@ export async function POST(
       );
     }
 
-    // Info: (20260306 - Tzuhan) ======= 全部成功 =======
+    // Info: (20260306 - Tzuhan) 全部成功
     const txHash = (mintResult.data as { tx: string })?.tx;
 
     if (txHash) {

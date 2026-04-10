@@ -600,6 +600,56 @@ export const ko = {
     form_esg_industry: "산업 분류 (ESG, 선택 시)",
     submit: "확인",
   },
+  billing: {
+    subtitle: "소비 기록, 계정 포인트, 결제 수단을 관리하세요.",
+    tabs: {
+      orders: "소비 기록",
+      points: "포인트 기록",
+      cards: "신용카드 관리",
+    },
+    orders: {
+      empty: "소비 기록이 없습니다",
+    },
+    points: {
+      empty: "포인트 기록이 없습니다",
+    },
+    cards: {
+      title: "등록된 신용카드",
+      add_button: "신용카드 추가",
+      empty: "등록된 신용카드가 없습니다",
+      default_card: "기본 카드",
+      added_at: "추가됨:",
+      rename: "이름 변경",
+      delete: "삭제",
+      view_records: "결제 내역 조회",
+      rename_success: "이름이 성공적으로 변경되었습니다.",
+      delete_success: "신용카드가 삭제되었습니다.",
+      delete_confirm_title: "신용카드를 삭제하시겠습니까?",
+      delete_confirm_desc: "이 카드를 삭제하면 향후 결제에 사용할 수 없습니다.",
+      cancel: "취소",
+      save: "저장",
+      edit_details: "세부 정보 편집",
+      email: "이메일 주소",
+      tax_id: "사업자 등록 번호",
+      buyer_name: "구매자 이름",
+      billing_address: "청구지 주소",
+    },
+    table: {
+      date: "날짜",
+      order_id: "주문 번호",
+      amount: "결제 금액",
+      status: "상태",
+      source: "출처 / 항목",
+      amount_change: "포인트 변동",
+    },
+    point_history: {
+      source_purchase: "포인트 구매",
+      source_analysis: "분석 서비스 이용",
+      source_chat: "AI 상담 서비스",
+      source_checkin: "일일 출석 보상",
+      source_registration: "가입 보상"
+    }
+  },
   sidebar: {
     modules: "기능 모듈",
     system: "시스템 설정",
@@ -657,6 +707,7 @@ export const ko = {
       searching: "검색 중...",
       not_found:
         "기업을 찾을 수 없습니다. 더 완전한 이름이나 사업자등록번호를 입력해 보세요.",
+      missing_tax_id_desc: "이 장부({{name}})에는 사업자등록번호가 설정되어 있지 않습니다. 내부 데이터 분석을 위해서는 사업자등록번호가 필요합니다. 여기서 설정해 주세요:",
     },
     title: '분석 보고서',
     internal_analysis: '내부 데이터 분석',

@@ -244,8 +244,39 @@ export class PaymentRepository {
     });
   }
 
+  async getOrdersByUserId(userId: string, type?: string | null) {
+    return prisma.order.findMany({
+      where: {
+        userId,
+        ...(type ? { type } : {}),
+      },
+      include: {
+        paymentTransactions: {
+          include: {
+            paymentMethod: true,
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 1
+        }
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
+  async getPaymentTransactionsByUserId(userId: string) {
+    return prisma.paymentTransaction.findMany({
+      where: { userId },
+      include: { order: true },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
   async getPaymentMethodsByUserId(userId: string, provider: string) {
-    return prisma.paymentMethod.findMany({
+    const methods = await prisma.paymentMethod.findMany({
       where: { userId, provider },
       select: {
         id: true,
@@ -254,6 +285,37 @@ export class PaymentRepository {
         isDefault: true,
         createdAt: true,
       },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // Info: (20260409 - Luphia) Filter out soft-deleted payment methods
+    return methods.filter(
+      (m) => !(m.data && typeof m.data === "object" && !Array.isArray(m.data) && (m.data as Record<string, unknown>).isDeleted)
+    );
+  }
+
+  async getPaymentMethodById(id: string) {
+    return prisma.paymentMethod.findUnique({
+      where: { id },
+    });
+  }
+
+  async updatePaymentMethodData(id: string, data: Prisma.InputJsonObject) {
+    return prisma.paymentMethod.update({
+      where: { id },
+      data: { data },
+    });
+  }
+
+  async getPaymentTransactionsByPaymentMethodId(paymentMethodId: string, userId: string) {
+    return prisma.paymentTransaction.findMany({
+      where: {
+        paymentMethodId,
+        userId
+      },
+      orderBy: { createdAt: "desc" },
     });
   }
 

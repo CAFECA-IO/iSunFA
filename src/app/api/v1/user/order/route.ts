@@ -4,6 +4,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnService } from "@/services/webauthn.service";
 import { orderGenerator } from "@/lib/order/order.generator";
+import { orderService } from "@/services/order.service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -78,7 +79,32 @@ export async function POST(request: NextRequest) {
 
     return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid order type");
   } catch (error) {
-    console.error("[API] /user/order error:", error);
+    console.error("[API] /user/order POST error:", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Failed to create order");
   }
 }
+
+export async function GET(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get("Authorization");
+    const user = await getIdentityFromDeWT(authHeader);
+
+    if (!user) {
+      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+    }
+
+    const { searchParams } = new URL(request.url);
+    let type = searchParams.get("type");
+    if (type === "PAYMENT") {
+      type = "OEN_PAYMENT";
+    }
+
+    const orders = await orderService.getOrdersByUserId(user.id, type);
+
+    return jsonOk({ orders });
+  } catch (error) {
+    console.error("[API] /user/order GET error:", error);
+    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Failed to fetch orders");
+  }
+}
+

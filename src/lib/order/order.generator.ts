@@ -66,7 +66,7 @@ export class OrderGenerator {
 
     const orderData = {
       ...params,
-      amount: cost,
+      amount: -cost,
       timestamp: new Date().toISOString(),
     };
 
@@ -83,7 +83,7 @@ export class OrderGenerator {
     const order = await paymentRepo.createOrder({
       userId,
       type: "ANALYSIS",
-      amount: cost,
+      amount: -cost,
       // Info: (20260128 - Luphia) Store the full data object including timestamp
       data: orderData,
       status: ORDER_STATUS.PENDING,

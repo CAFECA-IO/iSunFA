@@ -610,6 +610,56 @@ export const ja = {
     form_esg_industry: "業界分類 (ESG、任意)",
     submit: "確認",
   },
+  billing: {
+    subtitle: "消費履歴、アカウントポイント、支払い方法を管理します。",
+    tabs: {
+      orders: "消費履歴",
+      points: "ポイント履歴",
+      cards: "クレジットカード管理",
+    },
+    orders: {
+      empty: "消費履歴がありません",
+    },
+    points: {
+      empty: "ポイント履歴がありません",
+    },
+    cards: {
+      title: "登録済みのクレジットカード",
+      add_button: "カードを追加",
+      empty: "クレジットカードが登録されていません",
+      default_card: "デフォルト",
+      added_at: "登録日",
+      rename: "名前を変更する",
+      delete: "削除",
+      view_records: "利用履歴を見る",
+      rename_success: "名前を変更しました",
+      delete_success: "クレジットカードを削除しました",
+      delete_confirm_title: "クレジットカードを削除しますか？",
+      delete_confirm_desc: "このカードを削除すると、今後の支払いに使用できなくなります。",
+      cancel: "キャンセル",
+      save: "保存",
+      edit_details: "詳細を編集",
+      email: "メールアドレス",
+      tax_id: "会社法人等番号",
+      buyer_name: "購入者名",
+      billing_address: "請求先住所",
+    },
+    table: {
+      date: "日付",
+      order_id: "注文番号",
+      amount: "支払金額",
+      status: "ステータス",
+      source: "ソース / 項目",
+      amount_change: "ポイント変動",
+    },
+    point_history: {
+      source_purchase: "ポイント購入",
+      source_analysis: "分析サービス利用",
+      source_chat: "AI相談サービス",
+      source_checkin: "チェックイン報酬",
+      source_registration: "登録報酬"
+    }
+  },
   sidebar: {
     modules: "機能モジュール",
     system: "システム設定",
@@ -668,6 +718,7 @@ export const ja = {
       searching: "検索中...",
       not_found:
         "企業が見つかりません。より完全な名称または法人番号を入力してください。",
+      missing_tax_id_desc: "この帳簿（{{name}}）には法人番号が設定されていません。内部データ分析には法人番号が必要です。ここで設定してください：",
     },
     title: '分析レポート',
     internal_analysis: '内部分析',

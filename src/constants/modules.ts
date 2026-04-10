@@ -52,7 +52,7 @@ export const SYSTEM_MODULES = [
     icon: CreditCard,
     href: "/user/billing",
     labelKey: "sidebar.billing",
-    enable: false,
+    enable: true,
   },
   {
     id: "settings",

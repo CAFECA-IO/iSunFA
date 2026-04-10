@@ -11,7 +11,6 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content, theme = 'da
   const isDark = theme === 'dark';
   const textColor = isDark ? 'text-white' : 'text-gray-900';
   const secondaryTextColor = isDark ? 'text-[#E0E0E0]' : 'text-gray-700';
-  const accentColor = '#FF9800'; // Keep orange accent
   const linkColor = isDark ? 'text-[#64B5F6]' : 'text-blue-600';
   const borderColor = isDark ? 'border-[#444]' : 'border-gray-200';
   const blockquoteBg = isDark ? 'bg-[#FF9800]/10' : 'bg-orange-50';
@@ -27,35 +26,50 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content, theme = 'da
       components={{
         h1: ({ children, ...props }: React.ComponentPropsWithoutRef<'h1'>) => (
           <h1
-            className={`mb-3 mt-5 flex items-center gap-2 border-b ${borderColor} pb-2 text-[1.4rem] ${textColor}`}
+            className={`mb-3 mt-5 flex items-center gap-2 border-b ${borderColor} pb-2 text-2xl font-bold ${textColor}`}
             {...props}
           >
             {children}
           </h1>
         ),
         h2: ({ children, ...props }: React.ComponentPropsWithoutRef<'h2'>) => (
-          <h2 className={`mb-2 mt-4 flex items-center gap-2 text-[1.2rem] ${textColor}`} {...props}>
-            <span className={`inline-block h-[18px] w-1 rounded-sm bg-[${accentColor}]`}></span>
+          <h2 className={`mb-2 mt-4 flex items-center gap-2 text-xl font-bold ${textColor}`} {...props}>
+            <span className={`inline-block h-5 w-1 rounded-sm bg-[#FF9800]`}></span>
             {children}
           </h2>
         ),
         h3: ({ children, ...props }: React.ComponentPropsWithoutRef<'h3'>) => (
-          <h3 className={`mb-1.5 mt-3 text-[1.1rem] font-semibold ${textColor}`} {...props}>
+          <h3 className={`mb-1.5 mt-3 text-lg font-bold ${textColor}`} {...props}>
             {children}
           </h3>
         ),
+        h4: ({ children, ...props }: React.ComponentPropsWithoutRef<'h4'>) => (
+          <h4 className={`mb-1.5 mt-3 text-base font-semibold ${textColor}`} {...props}>
+            {children}
+          </h4>
+        ),
+        h5: ({ children, ...props }: React.ComponentPropsWithoutRef<'h5'>) => (
+          <h5 className={`mb-1 mt-2 text-sm font-semibold ${textColor}`} {...props}>
+            {children}
+          </h5>
+        ),
+        h6: ({ children, ...props }: React.ComponentPropsWithoutRef<'h6'>) => (
+          <h6 className={`mb-1 mt-2 text-sm font-medium ${textColor}`} {...props}>
+            {children}
+          </h6>
+        ),
         strong: ({ children, ...props }: React.ComponentPropsWithoutRef<'strong'>) => (
-          <strong className={textColor} {...props}>
+          <strong className={`font-bold ${textColor}`} {...props}>
             {children}
           </strong>
         ),
         ul: ({ children, ...props }: React.ComponentPropsWithoutRef<'ul'>) => (
-          <ul className="list-none pl-5" {...props}>
+          <ul className={`list-disc pl-6 mb-3 ${secondaryTextColor}`} {...props}>
             {children}
           </ul>
         ),
         ol: ({ children, ...props }: React.ComponentPropsWithoutRef<'ol'>) => (
-          <ol className="list-decimal pl-5" {...props}>
+          <ol className={`list-decimal pl-6 mb-3 ${secondaryTextColor}`} {...props}>
             {children}
           </ol>
         ),
@@ -63,43 +77,33 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content, theme = 'da
           children,
           ...props
         }: React.ComponentPropsWithoutRef<'li'> & { ordered?: boolean }) => {
-          const { ordered, ...rest } = props;
-          if (ordered) {
-            return (
-              <li className={`mb-1.5 pl-1 ${secondaryTextColor}`} {...rest}>
-                {children}
-              </li>
-            );
-          }
           return (
-            <li className={`relative mb-1.5 pl-0 ${secondaryTextColor}`} {...rest}>
-              {/* Info: (20251220 - Luphia) 小圓裝飾點 */}
-              {/* <span className="absolute -left-[25px] top-[7px] size-1.5 bg-[#FF9800] rounded-full"></span> */}
+            <li className={`mb-1.5 ${secondaryTextColor}`} {...props}>
               {children}
             </li>
           );
         },
         p: ({ children, ...props }: React.ComponentPropsWithoutRef<'p'>) => (
-          <p className={`mb-2.5 leading-relaxed ${secondaryTextColor}`} {...props}>
+          <p className={`mb-3 leading-relaxed ${secondaryTextColor}`} {...props}>
             {children}
           </p>
         ),
         a: ({ children, ...props }: React.ComponentPropsWithoutRef<'a'>) => (
-          <a className={`${linkColor} underline`} {...props}>
+          <a className={`${linkColor} underline font-medium hover:opacity-80 transition-opacity`} target="_blank" rel="noopener noreferrer" {...props}>
             {children}
           </a>
         ),
         blockquote: ({ children, ...props }: React.ComponentPropsWithoutRef<'blockquote'>) => (
           <blockquote
-            className={`my-2.5 rounded border-l-4 border-[${accentColor}] ${blockquoteBg} px-3.5 py-2.5 italic ${blockquoteText}`}
+            className={`my-3 rounded-r-lg border-l-4 border-[#FF9800] ${blockquoteBg} px-4 py-3 italic ${blockquoteText}`}
             {...props}
           >
             {children}
           </blockquote>
         ),
         table: ({ children, ...props }: React.ComponentPropsWithoutRef<'table'>) => (
-          <div className="my-5 overflow-x-auto">
-            <table className={`w-full border-collapse border ${tableBorder} text-sm`} {...props}>
+          <div className="my-5 overflow-x-auto rounded-lg border border-gray-200">
+            <table className={`w-full border-collapse ${tableBorder} text-sm`} {...props}>
               {children}
             </table>
           </div>
@@ -110,30 +114,45 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content, theme = 'da
           </thead>
         ),
         tbody: ({ children, ...props }: React.ComponentPropsWithoutRef<'tbody'>) => (
-          <tbody {...props}>{children}</tbody>
+          <tbody className="divide-y divide-gray-200" {...props}>{children}</tbody>
         ),
         tr: ({ children, ...props }: React.ComponentPropsWithoutRef<'tr'>) => (
-          <tr className={`border-b ${rowBorder}`} {...props}>
+          <tr className={`${rowBorder} hover:bg-black/5 transition-colors`} {...props}>
             {children}
           </tr>
         ),
         th: ({ children, ...props }: React.ComponentPropsWithoutRef<'th'>) => (
           <th
-            className={`border-r ${tableBorder} p-3 text-left font-semibold ${thText}`}
+            className={`p-3 text-left font-semibold ${thText}`}
             {...props}
           >
             {children}
           </th>
         ),
         td: ({ children, ...props }: React.ComponentPropsWithoutRef<'td'>) => (
-          <td className={`border-r ${tableBorder} p-3 text-left ${secondaryTextColor}`} {...props}>
+          <td className={`p-3 text-left ${secondaryTextColor}`} {...props}>
             {children}
           </td>
+        ),
+        pre: ({ children, ...props }: React.ComponentPropsWithoutRef<'pre'>) => (
+          <pre 
+            className={`p-4 rounded-lg my-4 overflow-x-auto text-sm font-mono leading-relaxed ${isDark ? 'bg-[#1E1E1E] text-gray-200 border border-[#333]' : 'bg-white border border-orange-100 text-gray-800 shadow-sm'}`} 
+            {...props}
+          >
+            {children}
+          </pre>
         ),
         code: ({ inline, className, children, ...props }: React.ComponentPropsWithoutRef<'code'> & { inline?: boolean }) => {
           const match = /language-(\w+)/.exec(className || '');
           if (!inline && match && match[1] === 'mermaid') {
             return <MermaidChart chart={String(children).replace(/\n$/, '')} />;
+          }
+          if (inline) {
+            return (
+              <code className={`px-1.5 py-0.5 rounded-md text-sm bg-black/5 ${textColor} font-mono`} {...props}>
+                {children}
+              </code>
+            );
           }
           return (
             <code className={className} {...props}>

@@ -20,6 +20,7 @@ import { UserOperationJson } from "@/validators";
 import { buildTransferUserOp } from "@/lib/utils/user_op_builder";
 import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES, ABIS } from "@/config/contracts";
+import { REWARD_AMOUNTS } from "@/constants/price";
 
 // Info: (20260126 - Luphia) 回傳結果型別
 type ActionResponse = {
@@ -361,6 +362,13 @@ export async function registerUser(
 
     await publicClient.waitForTransactionReceipt({ hash: tx });
     console.log(`[RegisterUser] Registration/Update confirmed: ${tx}`);
+
+    // Info: (20260410 - Luphia) 完成建立用戶 ERC-3643 錢包後，非同步 mint Token 給用戶
+    if (!isVerified) {
+      mintToAddress(tokenAddress, validUserAddress, REWARD_AMOUNTS.REGISTRATION_REWARD, "Registration Reward").catch((err) => {
+        console.error(`[RegisterUser] Failed to async mint tokens for ${validUserAddress}:`, err);
+      });
+    }
 
     return {
       success: true,

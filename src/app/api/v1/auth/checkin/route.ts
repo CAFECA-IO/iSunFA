@@ -7,6 +7,7 @@ import { publicClient } from "@/lib/viem";
 import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
 import { formatUnits } from "viem";
 import { mintToAddress, registerUser } from "@/services/token.service";
+import { REWARD_AMOUNTS } from "@/constants/price";
 
 export async function GET(request: NextRequest) {
   try {
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
             await registerUser(CONTRACT_ADDRESSES.NTD_TOKEN, user.address);
           }
 
-          rewardedAmount = 10;
+          rewardedAmount = REWARD_AMOUNTS.DAILY_CHECKIN_REWARD;
           await mintToAddress(
             CONTRACT_ADDRESSES.NTD_TOKEN,
             user.address,
