@@ -78,6 +78,7 @@ export class PaymentRepository {
               amount: order.amount,
               data: {
                 ...body,
+                randomCode: Math.floor(Math.random() * 9000 + 1000).toString(),
                 receiptDetails: {
                   amount: order.amount,
                   credits: _creditsToMint,

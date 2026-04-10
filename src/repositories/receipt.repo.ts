@@ -33,11 +33,17 @@ export class ReceiptRepo {
       });
       if (checkReceipt) return checkReceipt;
 
+      const randomCode = Math.floor(Math.random() * 9000 + 1000).toString();
+      const receiptData = {
+        ...(typeof order.data === 'object' && order.data !== null ? order.data : {}),
+        randomCode
+      };
+
       return await tx.receipt.create({
         data: {
           orderId: order.id,
           amount: order.amount,
-          data: order.data || {}
+          data: receiptData
         }
       });
     });

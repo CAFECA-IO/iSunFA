@@ -39,6 +39,7 @@ export default function ReceiptPdfDownloader({
   const invoiceItems = items && items.length > 0 ? items : [];
   const [isDownloading, setIsDownloading] = useState(false);
   const [realReceiptId, setRealReceiptId] = useState<string>('');
+  const [realRandomCode, setRealRandomCode] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = async (e: React.MouseEvent) => {
@@ -52,7 +53,12 @@ export default function ReceiptPdfDownloader({
       const payload = await res.json();
 
       const officialReceiptId = payload?.data?.id || receiptNumber;
+
+      const deterministicHashFallback = Math.abs(officialReceiptId.split('').reduce((hash: number, char: string) => char.charCodeAt(0) + ((hash << 5) - hash), 0) % 9000) + 1000;
+      const officialRandomCode = payload?.data?.data?.randomCode || deterministicHashFallback.toString();
+
       setRealReceiptId(officialReceiptId);
+      setRealRandomCode(officialRandomCode);
 
       // Info: (20260410 - Luphia) Wait for React state to propagate targetId to DOM
       await new Promise(resolve => setTimeout(resolve, 50));
@@ -64,9 +70,12 @@ export default function ReceiptPdfDownloader({
 
       element.style.display = 'block';
 
+      const fileDate = formatDate(new Date(date), 'yyyy-MM-dd');
+      const invoiceNum = `ZM${officialReceiptId.replace(/\D/g, '').padEnd(8, '0').substring(0, 8)}`;
+
       const opt = {
         margin: 0,
-        filename: `invoice_${officialReceiptId.substring(0, 15)}.pdf`,
+        filename: `isunfa_${fileDate}_${invoiceNum}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 794 },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
@@ -86,7 +95,7 @@ export default function ReceiptPdfDownloader({
 
   const invoiceDate = new Date(date);
   const formattedDateString = formatDate(invoiceDate, 'yyyy-MM-dd'); // Info: (20260410 - Luphia) Format: 2026-04-02
-  
+
   const minguoYear = invoiceDate.getFullYear() - 1911;
   const month = invoiceDate.getMonth() + 1;
   const startMonth = month % 2 === 0 ? month - 1 : month;
@@ -186,7 +195,10 @@ export default function ReceiptPdfDownloader({
                 <span style={{ letterSpacing: '4px' }}>格式：</span>25
               </div>
               <div style={{ marginBottom: '4px' }}>
-                <span style={{ letterSpacing: '0px' }}>隨機碼：</span>{Math.floor(Math.random() * 9000 + 1000)}
+                <span style={{ letterSpacing: '0px' }}>隨機碼：</span>{
+                  // Info: (20260410 - Luphia) Deterministic Random Code derived from API/DB Receipt payload.
+                  realRandomCode || Math.abs(targetId.split('').reduce((hash, char) => char.charCodeAt(0) + ((hash << 5) - hash), 0) % 9000) + 1000
+                }
               </div>
               <div>第1頁/共1頁</div>
             </div>
@@ -224,7 +236,7 @@ export default function ReceiptPdfDownloader({
               <div style={{ color: '#4b5563', fontSize: '13px', marginBottom: '16px', fontWeight: 'bold' }}>稅別判定 (TAX)</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <span style={{ color: '#6b7280' }}>應稅</span>
-                <span style={{ backgroundColor: '#ffedd5', color: '#ea580c', padding: '2px 10px', borderRadius: '9999px', fontSize: '12px', fontWeight: 'bold' }}>5%</span>
+                <span style={{ backgroundColor: '#ffedd5', color: '#ea580c', padding: '2px 10px', borderRadius: '3px', fontSize: '12px', fontWeight: 'bold' }}>5%</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <span style={{ color: '#6b7280' }}>零稅</span>
