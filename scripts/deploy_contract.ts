@@ -3,6 +3,7 @@ import path from "path";
 import { keccak256, toBytes, createPublicClient, createWalletClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { Wallet } from "ethers";
+import { http } from "viem";
 
 async function main() {
   console.log("Compiling contracts...");
@@ -26,7 +27,6 @@ async function main() {
   const account = privateKeyToAccount(privateKey);
   console.log(`Deploying contracts with account: ${account.address}`);
 
-  const { http } = await import("viem");
   const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://mainnet.isuncoin.com";
   const mainTransport = http(rpcUrl);
 
