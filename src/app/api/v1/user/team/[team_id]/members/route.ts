@@ -9,7 +9,7 @@ import { TeamRole } from "@/generated/client";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string }> },
+  { params }: { params: Promise<{ team_id: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -19,7 +19,7 @@ export async function GET(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const { teamId } = await params;
+    const { team_id: teamId } = await params;
 
     // Info: (20260325 - Tzuhan) Verify user is in this team
     const member = await teamRepo.getTeamMember(sessionUser.id, teamId);
@@ -33,7 +33,7 @@ export async function GET(
     const members = await teamRepo.listTeamMember(teamId);
     return jsonOk(members);
   } catch (error) {
-    console.error("[API] /team/[teamId]/members GET error:", error);
+    console.error("[API] /team/[team_id]/members GET error:", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }
@@ -119,7 +119,7 @@ export async function POST(
 
     return jsonOk(newMember);
   } catch (error) {
-    console.error("[API] /team/[teamId]/members POST error:", error);
+    console.error("[API] /team/[team_id]/members POST error:", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }

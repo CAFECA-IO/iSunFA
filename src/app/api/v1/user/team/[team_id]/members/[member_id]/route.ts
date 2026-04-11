@@ -11,7 +11,7 @@ import { CONTRACT_ADDRESSES } from "@/config/contracts";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string; memberId: string }> },
+  { params }: { params: Promise<{ team_id: string; member_id: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -21,7 +21,7 @@ export async function PATCH(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const { teamId, memberId } = await params;
+    const { team_id: teamId, member_id: memberId } = await params;
 
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator || operator.role !== "OWNER") {
@@ -87,7 +87,7 @@ export async function PATCH(
     // Info: (20260325 - Tzuhan) simulated on-chain record for role change
     const team = await teamRepo.getTeamById(teamId);
     const operatorName = sessionUser.name || sessionUser.address;
-    const targetName = targetMember.userId; // we could fetch name but userId works for simulation
+    const targetName = targetMember.userId;
     const teamName = team?.name || "Unknown Team";
     const contractMessage = `契約: ${operatorName} 更改了 ${targetName} 在 ${teamName} 團隊的角色為 ${role}`;
 
@@ -120,7 +120,7 @@ export async function PATCH(
     return jsonOk(updatedMember);
   } catch (error) {
     console.error(
-      "[API] /team/[teamId]/members/[memberId] PATCH error:",
+      "[API] /team/[team_id]/members/[member_id] PATCH error:",
       error,
     );
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
@@ -129,7 +129,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string; memberId: string }> },
+  { params }: { params: Promise<{ team_id: string; member_id: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -139,7 +139,7 @@ export async function DELETE(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const { teamId, memberId } = await params;
+    const { team_id: teamId, member_id: memberId } = await params;
 
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator) {
@@ -254,7 +254,7 @@ export async function DELETE(
     return jsonOk(deletedMember);
   } catch (error) {
     console.error(
-      "[API] /team/[teamId]/members/[memberId] DELETE error:",
+      "[API] /team/[team_id]/members/[member_id] DELETE error:",
       error,
     );
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");

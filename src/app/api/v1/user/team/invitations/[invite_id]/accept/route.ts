@@ -12,7 +12,7 @@ import { TEAM_INVITATION_STATUS } from "@/constants/status";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ inviteId: string }> },
+  { params }: { params: Promise<{ invite_id: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -22,7 +22,7 @@ export async function POST(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const { inviteId } = await params;
+    const { invite_id: inviteId } = await params;
     const body = await request.json();
     const { authentication } = body;
 
@@ -109,7 +109,7 @@ export async function POST(
     return jsonOk(newMember);
   } catch (error) {
     console.error(
-      "[API] /team/invitations/[inviteId]/accept POST error:",
+      "[API] /team/invitations/[invite_id]/accept POST error:",
       error,
     );
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");

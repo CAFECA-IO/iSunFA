@@ -1,6 +1,6 @@
 {
   "name": "isunfa",
-  "version": "0.12.0+62",
+  "version": "0.12.0+63",
   "private": true,
   "engines": {
     "node": ">=22.10.0"
@@ -42,6 +42,7 @@
     "next": "16.2.3",
     "pdf-lib": "^1.17.1",
     "react": "19.2.5",
+    "react-barcode": "^1.6.1",
     "react-dom": "19.2.5",
     "react-markdown": "^10.1.0",
     "react-qr-code": "^2.0.18",
