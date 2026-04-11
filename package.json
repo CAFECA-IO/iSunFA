@@ -1,7 +1,8 @@
 {
   "name": "isunfa",
-  "version": "0.12.0+63",
+  "version": "0.12.0+64",
   "private": true,
+  "type": "module",
   "engines": {
     "node": ">=22.10.0"
   },
@@ -16,7 +17,9 @@
     "worker": "npx tsx scripts/workers.run.ts",
     "prettier": "prettier --write .",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
-    "service": "npx tsx scripts/run_service.ts"
+    "service": "npx tsx scripts/run_service.ts",
+    "initial_wallet": "npx tsx scripts/initial_wallet.ts",
+    "deploy_contract": "npx hardhat run scripts/deploy_contract.ts"
   },
   "dependencies": {
     "@erc3643org/erc-3643": "^4.1.3",
@@ -24,6 +27,7 @@
     "@headlessui/react": "^2.2.9",
     "@next/third-parties": "^16.1.6",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.1",
+    "@openzeppelin/contracts": "^5.0.0",
     "@passwordless-id/webauthn": "^2.3.1",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
@@ -52,6 +56,7 @@
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^16.1.1",
+    "@nomicfoundation/solidity-analyzer-darwin-arm64": "^0.1.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^25",
     "@types/react": "^19",
