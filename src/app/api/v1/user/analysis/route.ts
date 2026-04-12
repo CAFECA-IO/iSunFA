@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
             abi: ABIS.ENTRY_POINT,
             data: tx.input,
           });
-          const ops = args[0];
+          const ops = args[0] as unknown as { sender: string; callData: `0x${string}` }[];
 
           // Info: (20260209 - Tzuhan) 3. Find UserOp for this user
           for (const op of ops) {
