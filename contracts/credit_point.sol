@@ -2,23 +2,20 @@
 pragma solidity ^0.8.20;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {
-    Ownable2Step,
-    Ownable
-} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {KYCRegistry} from "./kyc_registry.sol";
 
 /**
- * Info: (20260411 - Luphia)
- * @title PointERC3643Treasury
+ * Info: (20260412 - Luphia)
+ * @title CreditPoint
  * @dev An enterprise-grade token representing system points incorporating ERC-3643 compliance concepts.
- * Acts as the Treasury: dictates that tokens minted need an ETH equivalent provided as collateral.
+ * Acts as the Treasury: dictates that tokens minted need an ISC equivalent provided as collateral.
  * Provides a `burnAndUnlock` functionality to reclaim that value.
  */
-contract PointERC3643Treasury is ERC20, Ownable2Step {
+contract CreditPoint is ERC20, AccessControl {
     KYCRegistry public kycRegistry;
 
-    // Info: (20260411 - Luphia) Config: required ETH collateral per 1 full point representation
+    // Info: (20260411 - Luphia) Config: required ISC collateral per 1 full point representation
     uint256 public collateralRate;
 
     address public subscriptionManager;
@@ -37,25 +34,30 @@ contract PointERC3643Treasury is ERC20, Ownable2Step {
     event BurnedAndUnlocked(
         address indexed from,
         uint256 amount,
-        uint256 unlockedETH
+        uint256 unlockedISC
     );
 
     modifier onlyAuthorized() {
-        if (msg.sender != owner() && msg.sender != subscriptionManager)
-            revert Unauthorized();
+        if (
+            !hasRole(DEFAULT_ADMIN_ROLE, msg.sender) &&
+            msg.sender != subscriptionManager
+        ) revert Unauthorized();
         _;
     }
 
     constructor(
-        address initialOwner,
+        address defaultAdmin,
         address _kycRegistry,
         uint256 _collateralRate
-    ) ERC20("iSunFA Point", "ISPT") Ownable(initialOwner) {
+    ) ERC20("iSunFA Credit Point", "ICP") {
+        _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
         kycRegistry = KYCRegistry(_kycRegistry);
         collateralRate = _collateralRate;
     }
 
-    function setSubscriptionManager(address _manager) external onlyOwner {
+    function setSubscriptionManager(
+        address _manager
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         subscriptionManager = _manager;
     }
 
@@ -82,45 +84,45 @@ contract PointERC3643Treasury is ERC20, Ownable2Step {
     }
 
     /**
-     * Info: (20260411 - Luphia)
+     * Info: (20260412 - Luphia)
      * @dev Administrator or SubManager minting tokens based on collateral logic.
-     * ETH is permanently locked in this contract until burned.
+     * ISC is permanently locked in this contract until burned.
      */
     function collateralizedMint(
         address to,
         uint256 amount
     ) external payable onlyAuthorized {
-        uint256 requiredETH = (amount * collateralRate) / (10 ** decimals());
-        if (msg.value < requiredETH)
-            revert InsufficientCollateral(msg.value, requiredETH);
+        uint256 requiredISC = (amount * collateralRate) / (10 ** decimals());
+        if (msg.value < requiredISC)
+            revert InsufficientCollateral(msg.value, requiredISC);
 
         _mint(to, amount);
         emit CollateralizedMint(to, amount, msg.value);
 
-        // Info: (20260411 - Luphia) Refund excess ETH if overpaid
-        if (msg.value > requiredETH) {
-            (bool success, ) = msg.sender.call{value: msg.value - requiredETH}(
+        // Info: (20260411 - Luphia) Refund excess ISC if overpaid
+        if (msg.value > requiredISC) {
+            (bool success, ) = msg.sender.call{value: msg.value - requiredISC}(
                 ""
             );
-            require(success, "ETH refund failed");
+            require(success, "ISC refund failed");
         }
     }
 
     /**
      * Info: (20260411 - Luphia)
-     * @dev Redeems points and burns them to retrieve the underlying ETH.
+     * @dev Redeems points and burns them to retrieve the underlying ISC.
      */
     function burnAndUnlock(uint256 amount) external {
         if (balanceOf(msg.sender) < amount) revert InsufficientPoints(amount);
 
-        uint256 unlockETH = (amount * collateralRate) / (10 ** decimals());
-        if (address(this).balance < unlockETH) revert TreasuryEmpty();
+        uint256 unlockISC = (amount * collateralRate) / (10 ** decimals());
+        if (address(this).balance < unlockISC) revert TreasuryEmpty();
 
         _burn(msg.sender, amount);
 
-        (bool success, ) = msg.sender.call{value: unlockETH}("");
-        require(success, "ETH transfer failed");
+        (bool success, ) = msg.sender.call{value: unlockISC}("");
+        require(success, "ISC transfer failed");
 
-        emit BurnedAndUnlocked(msg.sender, amount, unlockETH);
+        emit BurnedAndUnlocked(msg.sender, amount, unlockISC);
     }
 }

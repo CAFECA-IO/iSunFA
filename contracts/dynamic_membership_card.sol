@@ -5,17 +5,17 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {
     ERC721URIStorage
 } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {KYCRegistry} from "./kyc_registry.sol";
 import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
 
 /**
- * Info: (20260411 - Luphia)
+ * Info: (20260412 - Luphia)
  * @title DynamicMembershipCard
  * @dev ERC721 Token combined with EIP-4906 (MetadataUpdate) and linked to KYCRegistry
  * to freeze non-compliant assets dynamically. Can be bound to ERC-6551 accounts.
  */
-contract DynamicMembershipCard is ERC721URIStorage, Ownable {
+contract DynamicMembershipCard is ERC721URIStorage, AccessControl {
     KYCRegistry public kycRegistry;
     uint256 private _nextTokenId;
 
@@ -23,28 +23,29 @@ contract DynamicMembershipCard is ERC721URIStorage, Ownable {
     mapping(uint256 => uint256) public experiencePoints;
 
     constructor(
-        address initialOwner,
+        address defaultAdmin,
         address _kycRegistry
-    ) ERC721("iSunFA Membership", "ISMC") Ownable(initialOwner) {
+    ) ERC721("iSunFA Membership", "ISMC") {
+        _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
         kycRegistry = KYCRegistry(_kycRegistry);
     }
 
     /**
-     * Info: (20260411 - Luphia)
+     * Info: (20260412 - Luphia)
      * @dev Sets a new KYC Registry address in case of an upgrade.
      */
-    function setKYCRegistry(address _kycRegistry) external onlyOwner {
+    function setKYCRegistry(address _kycRegistry) external onlyRole(DEFAULT_ADMIN_ROLE) {
         kycRegistry = KYCRegistry(_kycRegistry);
     }
 
     /**
-     * Info: (20260411 - Luphia)
+     * Info: (20260412 - Luphia)
      * @dev Mint a new membership card for the user.
      */
     function mintCard(
         address to,
         string memory uri
-    ) external onlyOwner returns (uint256) {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
         // Info: (20260411 - Luphia) Disallow minting if user is frozen
         if (address(kycRegistry) != address(0)) {
             require(!kycRegistry.isFrozen(to), "Receiver address is frozen");
@@ -57,26 +58,26 @@ contract DynamicMembershipCard is ERC721URIStorage, Ownable {
     }
 
     /**
-     * Info: (20260411 - Luphia)
+     * Info: (20260412 - Luphia)
      * @dev Updates experience points and emits MetadataUpdate event (EIP-4906)
      */
     function updateExperience(
         uint256 tokenId,
         uint256 addedExp
-    ) external onlyOwner {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _requireOwned(tokenId); // Info: (20260411 - Luphia) OZ v5 logic to check existence
         experiencePoints[tokenId] += addedExp;
         emit MetadataUpdate(tokenId);
     }
 
     /**
-     * Info: (20260411 - Luphia)
+     * Info: (20260412 - Luphia)
      * @dev Explicitly change token URI and notify external indexers.
      */
     function setTokenURI(
         uint256 tokenId,
         string memory uri
-    ) external onlyOwner {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _requireOwned(tokenId);
         _setTokenURI(tokenId, uri);
         emit MetadataUpdate(tokenId);
@@ -106,12 +107,12 @@ contract DynamicMembershipCard is ERC721URIStorage, Ownable {
     }
 
     /**
-     * Info: (20260411 - Luphia)
-     * @dev Supports interface for ERC721, ERC721URIStorage and EIP4906.
+     * Info: (20260412 - Luphia)
+     * @dev Supports interface for ERC721, ERC721URIStorage, AccessControl, and EIP4906.
      */
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC721URIStorage) returns (bool) {
+    ) public view virtual override(ERC721URIStorage, AccessControl) returns (bool) {
         return
             interfaceId == bytes4(0x49064906) ||
             super.supportsInterface(interfaceId);

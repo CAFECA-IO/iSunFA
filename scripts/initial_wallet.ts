@@ -67,7 +67,7 @@ async function main() {
 
   let wallet;
   try {
-    // Info: (20260411 - Luphia) Trying Ethers (if installed contextually)
+    // Info: (20260411 - Luphia) Trying iSunCoin (if installed contextually)
     wallet = Wallet.createRandom();
     const encryptedJson = await wallet.encrypt(password);
 

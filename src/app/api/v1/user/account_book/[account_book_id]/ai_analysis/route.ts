@@ -12,6 +12,19 @@ import { missionRepo } from "@/repositories/mission.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { missionGenerator } from "@/lib/worker/mission.generator";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
+import {
+  decodeFunctionData,
+  keccak256,
+  stringToBytes,
+  parseAbi,
+  decodeEventLog,
+} from "viem";
+import { AppError } from "@/lib/utils/error";
+import { orderGenerator } from "@/lib/order/order.generator";
+import { publicClient } from "@/lib/viem_public";
+import { ABIS } from "@/config/contracts";
+import { webAuthnService } from "@/services/webauthn.service";
 
 /**
  * Info: (20260318 - Julian) AI 分析：生成日記帳、傳票、碳排查
@@ -49,12 +62,151 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { file } = body;
+    const { file, authentication } = body;
 
     // Info: (20260318 - Julian) 驗證 file 參數
     if (!file) {
       console.error("Missing file or file hash");
       return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
+    }
+
+    // Info: (20260413 - Luphia) Verify Payment Order before doing AI processing
+    if (!authentication || !authentication.orderId) {
+      return jsonFail(ApiCode.VALIDATION_ERROR, "Order ID is required");
+    }
+
+    const orderId = authentication.orderId;
+    const authWithTx = authentication as AuthenticationJSON & {
+      transactionHash?: string;
+    };
+    const txHash = authWithTx.transactionHash;
+
+    try {
+      if (txHash) {
+        const tx = await publicClient.getTransaction({
+          hash: txHash as `0x${string}`,
+        });
+        if (!tx) {
+          throw new Error("Transaction not found");
+        }
+
+        let foundUserOp = false;
+        let verifiedHash = false;
+
+        try {
+          const { args } = decodeFunctionData({
+            abi: ABIS.ENTRY_POINT,
+            data: tx.input,
+          });
+          const ops = args[0];
+
+          for (const op of ops) {
+            if (op.sender.toLowerCase() === sessionUser.address.toLowerCase()) {
+              foundUserOp = true;
+              const executeAbi = parseAbi([
+                "function execute(address, uint256, bytes) external",
+              ]);
+
+              const { args: executeArgs } = decodeFunctionData({
+                abi: executeAbi,
+                data: op.callData,
+              });
+
+              const innerCallData = executeArgs[2];
+
+              const orderHash = keccak256(stringToBytes(orderId));
+              const hashHex = orderHash.slice(2).toLowerCase();
+              if (innerCallData.toLowerCase().endsWith(hashHex)) {
+                verifiedHash = true;
+              }
+              break;
+            }
+          }
+        } catch {
+          throw new Error("Invalid transaction structure");
+        }
+
+        if (!foundUserOp) {
+          throw new Error(
+            "No UserOperation found for this user in the transaction",
+          );
+        }
+        if (!verifiedHash) {
+          throw new Error("Transaction is not bound to this Order ID");
+        }
+
+        const receipt = await publicClient.getTransactionReceipt({
+          hash: txHash as `0x${string}`,
+        });
+        if (!receipt) {
+          throw new Error("Transaction receipt not found");
+        }
+
+        let userOpSuccess = false;
+        for (const log of receipt.logs) {
+          try {
+            const decoded = decodeEventLog({
+              abi: ABIS.ENTRY_POINT,
+              data: log.data,
+              topics: log.topics,
+            });
+            if (decoded.eventName === "UserOperationEvent") {
+              const args = decoded.args as { sender: string; success: boolean };
+              if (args.sender.toLowerCase() === sessionUser.address.toLowerCase()) {
+                if (args.success) {
+                  userOpSuccess = true;
+                }
+                break;
+              }
+            }
+          } catch { }
+        }
+
+        if (!userOpSuccess) {
+          await orderGenerator.failOrder(
+            orderId,
+            "UserOperation failed on-chain",
+          );
+          throw new AppError(
+            ApiCode.VALIDATION_ERROR,
+            "The token transfer failed on-chain. Order cancelled.",
+          );
+        }
+
+        // Wait to complete order because multiple AI scans share the same order, so only complete it once if pending!
+        const existingOrder = await orderGenerator.getPendingOrder(orderId, creator.id).catch(() => null);
+        if (existingOrder && existingOrder.status === "PENDING") {
+          await orderGenerator.completeOrder(
+            orderId,
+            JSON.stringify({ verifiedVia: "tx", txHash }),
+            txHash,
+          );
+        }
+      } else {
+        const order = await orderGenerator.getPendingOrder(orderId, creator.id).catch(() => null);
+
+        if (order && order.status === "PENDING") {
+          await webAuthnService.verifySignature(
+            sessionUser.address,
+            authentication,
+            order.challenge,
+          );
+
+          await orderGenerator.completeOrder(
+            orderId,
+            JSON.stringify(authentication),
+            undefined,
+          );
+        }
+      }
+    } catch (error) {
+      if (error instanceof AppError) {
+        return jsonFail(error.code, error.message);
+      }
+      return jsonFail(
+        ApiCode.UNAUTHORIZED,
+        `Verification failed: ${(error as Error).message}`,
+      );
     }
 
     // Info: (20260318 - Julian) 將 file 存入 DB

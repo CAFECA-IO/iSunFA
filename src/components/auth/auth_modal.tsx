@@ -46,6 +46,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: IAuthModalProp
   const [legalDoc, setLegalDoc] = useState<
     "terms_of_service" | "privacy_policy" | null
   >(null);
+  const [showUnregisteredPrompt, setShowUnregisteredPrompt] = useState(false);
   const [currentStep, setCurrentStep] = useState<RegistrationStep>("IDLE");
   const [loginStep, setLoginStep] = useState<LoginStep>("IDLE");
 
@@ -87,8 +88,14 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: IAuthModalProp
     } catch (err: unknown) {
       console.error("Login error:", err);
       const message = err instanceof Error ? err.message : "Login failed";
-      setError(message);
-      setLoginStep("FAILED");
+      if (message.includes("User not found") || message.includes("not registered")) {
+        setShowUnregisteredPrompt(true);
+        setError(null);
+        setLoginStep("IDLE");
+      } else {
+        setError(message);
+        setLoginStep("FAILED");
+      }
     } finally {
       if (loginStep !== "SUCCESS") {
         setLoading(false);
@@ -117,21 +124,23 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: IAuthModalProp
       );
 
       // Info: (20260116 - Luphia) Add a small delay for user to see success message
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
+      /**
+       * Info: (20260413 - Luphia) Do NOT automatically call handleLogin() here!
+       * The blockchain indexer needs a few seconds to pick up the AccountCreated event.
+       * Auto-triggering FIDO2 login immediately will result in a 404. Let the user click it manually.
+       */
       setMode("login");
-      await handleLogin();
+      setError(null);
     } catch (err: unknown) {
       console.error("Registration error:", err);
       const message =
         err instanceof Error ? err.message : "Registration failed";
       setError(message);
     } finally {
-      // Info: (20260116 - Luphia) Only set loading false if not successful/closed yet, but since we await delay on success, we might want to keep it loading.
-      // Info: (20260116 - Luphia) Actually registrationService sets "SUCCESS" step, so we can rely on that.
-      if (currentStep !== "SUCCESS") {
-        setLoading(false);
-      }
+      setLoading(false);
+      setCurrentStep("IDLE");
     }
   };
 
@@ -178,68 +187,97 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: IAuthModalProp
                         as="h3"
                         className="text-2xl font-bold leading-9 tracking-tight text-gray-900"
                       >
-                        {mode === "login"
-                          ? t("auth_modal.welcome_back")
-                          : t("auth_modal.create_account")}
+                        {showUnregisteredPrompt
+                          ? t("auth_modal.unregistered_confirm_title")
+                          : mode === "login"
+                            ? t("auth_modal.welcome_back")
+                            : t("auth_modal.create_account")}
                       </DialogTitle>
                     </div>
 
-                    {/* Info: (20260103 - Luphia) Tabs */}
-                    <div className="flex border-b border-gray-200 mb-6">
-                      <button
-                        type="button"
-                        disabled={loading}
-                        className={`flex-1 pb-2 text-center font-medium transition-colors ${mode === "login"
-                          ? "text-orange-600 border-b-2 border-orange-600"
-                          : "text-gray-500 hover:text-gray-700"
-                          } ${loading ? "opacity-50 cursor-not-allowed hover:text-gray-500" : ""}`}
-                        onClick={() => {
-                          if (loading) return;
-                          setMode("login");
-                          setError(null);
-                        }}
-                      >
-                        {t("auth_modal.login_tab")}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={loading}
-                        className={`flex-1 pb-2 text-center font-medium transition-colors ${mode === "register"
-                          ? "text-orange-600 border-b-2 border-orange-600"
-                          : "text-gray-500 hover:text-gray-700"
-                          } ${loading ? "opacity-50 cursor-not-allowed hover:text-gray-500" : ""}`}
-                        onClick={() => {
-                          if (loading) return;
-                          setMode("register");
-                          setError(null);
-                        }}
-                      >
-                        {t("auth_modal.register_tab")}
-                      </button>
-                    </div>
-
-                    {/* Info: (20260103 - Luphia) Error Message */}
-                    {error && (
-                      <div className="mb-4 rounded-md bg-red-50 p-4">
-                        <div className="flex">
-                          <div className="ml-3">
-                            <h3 className="text-sm font-medium text-red-800">
-                              {error}
-                            </h3>
-                          </div>
+                    {showUnregisteredPrompt ? (
+                      <div className="space-y-6">
+                        <p className="text-gray-600 text-sm text-center">
+                          {t("auth_modal.unregistered_confirm_desc")}
+                        </p>
+                        <div className="flex gap-4 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowUnregisteredPrompt(false)}
+                            className="flex-1 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition"
+                          >
+                            {t("auth_modal.unregistered_confirm_no")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowUnregisteredPrompt(false);
+                              setMode("register");
+                            }}
+                            className="flex-1 rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition"
+                          >
+                            {t("auth_modal.unregistered_confirm_yes")}
+                          </button>
                         </div>
                       </div>
-                    )}
-
-                    {mode === "login" ? (
+                    ) : (
                       <>
-                        {loading ? (
-                          <AuthTransition mode="login" step={loginStep} />
-                        ) : (
-                          <div className="space-y-6">
-                            <div className="text-sm text-gray-500 text-center">
-                              {t("auth_modal.login_desc")}
+                        {/* Info: (20260103 - Luphia) Tabs */}
+                        <div className="flex border-b border-gray-200 mb-6">
+                          <button
+                            type="button"
+                            disabled={loading}
+                            className={`flex-1 pb-2 text-center font-medium transition-colors ${mode === "login"
+                              ? "text-orange-600 border-b-2 border-orange-600"
+                              : "text-gray-500 hover:text-gray-700"
+                              } ${loading ? "opacity-50 cursor-not-allowed hover:text-gray-500" : ""}`}
+                            onClick={() => {
+                              if (loading) return;
+                              setMode("login");
+                              setError(null);
+                            }}
+                          >
+                            {t("auth_modal.login_tab")}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={loading}
+                            className={`flex-1 pb-2 text-center font-medium transition-colors ${mode === "register"
+                              ? "text-orange-600 border-b-2 border-orange-600"
+                              : "text-gray-500 hover:text-gray-700"
+                              } ${loading ? "opacity-50 cursor-not-allowed hover:text-gray-500" : ""}`}
+                            onClick={() => {
+                              if (loading) return;
+                              setMode("register");
+                              setError(null);
+                            }}
+                          >
+                            {t("auth_modal.register_tab")}
+                          </button>
+                        </div>
+
+                        {/* Info: (20260103 - Luphia) Error Message */}
+                        {error && (
+                          <div className="mb-4 rounded-md bg-red-50 p-4">
+                            <div className="flex">
+                              <div className="ml-3">
+                                <h3 className="text-sm font-medium text-red-800">
+                                  {error}
+                                </h3>
+                              </div>
                             </div>
+                          </div>
+                        )}
+
+                        {mode === "login" ? (
+                          <>
+                            {loading ? (
+                              <AuthTransition mode="login" step={loginStep} />
+                            ) : (
+                              <div className="space-y-6">
+                                <div className="text-sm text-gray-500 text-center">
+                                  {t("auth_modal.login_desc")}
+                                </div>
                             <button
                               onClick={handleLogin}
                               disabled={loading}
@@ -348,7 +386,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: IAuthModalProp
                         )}
                       </>
                     )}
-                  </div>
+                  </>
+                )}
+              </div>
                 </DialogPanel>
               </TransitionChild>
             </div>

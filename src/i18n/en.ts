@@ -209,6 +209,10 @@ export const en = {
     login_failed: "Login failed",
     reg_failed: "Registration failed",
     scroll_to_agree: "Please read the relevant provisions in detail.",
+    unregistered_confirm_title: "Account Not Registered",
+    unregistered_confirm_desc: "The system cannot find an account associated with this Passkey. Would you like to create a new account using this device?",
+    unregistered_confirm_yes: "Yes, Create Account",
+    unregistered_confirm_no: "Cancel",
   },
   features: {
     title: "Smarter Financial Management",

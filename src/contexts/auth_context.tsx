@@ -72,23 +72,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (userData.address) {
             // Info: (20260129 - Tzuhan) Fetch credits from blockchain
             const balance = await publicClient.readContract({
-              address: CONTRACT_ADDRESSES.NTD_TOKEN,
-              abi: ABIS.NTD_TOKEN,
+              address: CONTRACT_ADDRESSES.CREDIT_POINT,
+              abi: ABIS.CREDIT_POINT,
               functionName: 'balanceOf',
               args: [userData.address as `0x${string}`]
             });
             const credits = Number(formatUnits(balance, 18));
 
-            // Info: (20260129 - Tzuhan) Fetch verification status from IdentityRegistry
-            const isVerified = await publicClient.readContract({
-              address: CONTRACT_ADDRESSES.IDENTITY_REGISTRY,
-              abi: ABIS.IDENTITY_REGISTRY,
-              functionName: 'isVerified',
+            // Info: (20260129 - Tzuhan) Fetch verification status from KYC_REGISTRY
+            const isFrozen = await publicClient.readContract({
+              address: CONTRACT_ADDRESSES.KYC_REGISTRY,
+              abi: ABIS.KYC_REGISTRY,
+              functionName: 'isFrozen',
               args: [userData.address as `0x${string}`]
             });
 
             // Info: (20260302 - Tzuhan) 將從區塊鏈取得的 credits 寫入 userData，同時也包含後端傳來的 pendingCredits
-            userData = { ...userData, credits, isVerified };
+            userData = { ...userData, credits, isVerified: !isFrozen };
           }
         } catch (e) {
           console.warn("Deprecate: (20260310 - Tzuhan) ", 'Failed to fetch user balance:', e);

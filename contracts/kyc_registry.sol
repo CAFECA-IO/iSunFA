@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
- * Info: (20260411 - Luphia)
+ * Info: (20260412 - Luphia)
  * @title KYCRegistry
  * @dev Manages enterprise account (TBA) compliance levels and frozen states.
- * Only the administrator (Web2 backend) can call updates.
+ * Only the administrator (Web2 backend or Super Admin) can call updates.
  */
-contract KYCRegistry is Ownable {
+contract KYCRegistry is AccessControl {
     enum KYCLevel {
         LEVEL_0,
         LEVEL_1,
@@ -29,26 +29,28 @@ contract KYCRegistry is Ownable {
     event KYCUpdated(address indexed user, KYCLevel level);
     event UserFrozenStatusChanged(address indexed user, bool isFrozen);
 
-    constructor(address initialOwner) Ownable(initialOwner) {}
+    constructor(address defaultAdmin) {
+        _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
+    }
 
     /**
-     * Info: (20260411 - Luphia)
+     * Info: (20260412 - Luphia)
      * @dev Updates KYC level for a single user.
      */
-    function updateKYC(address user, KYCLevel _level) external onlyOwner {
+    function updateKYC(address user, KYCLevel _level) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(!_users[user].isFrozen, "Cannot update KYC for frozen user");
         _users[user].level = _level;
         emit KYCUpdated(user, _level);
     }
 
     /**
-     * Info: (20260411 - Luphia)
+     * Info: (20260412 - Luphia)
      * @dev Updates KYC level for multiple users to save Gas.
      */
     function batchUpdateKYC(
         address[] calldata userList,
         KYCLevel[] calldata levelList
-    ) external onlyOwner {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (userList.length != levelList.length) revert LengthMismatch();
         for (uint256 i = 0; i < userList.length; i++) {
             if (!_users[userList[i]].isFrozen) {
@@ -59,11 +61,11 @@ contract KYCRegistry is Ownable {
     }
 
     /**
-     * Info: (20260411 - Luphia)
+     * Info: (20260412 - Luphia)
      * @dev Freezes or unfreezes an account.
      * When frozen, forces the account down to LEVEL_0.
      */
-    function setFreezeStatus(address user, bool _freeze) external onlyOwner {
+    function setFreezeStatus(address user, bool _freeze) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _users[user].isFrozen = _freeze;
         if (_freeze) {
             _users[user].level = KYCLevel.LEVEL_0;

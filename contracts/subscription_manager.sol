@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {PointERC3643Treasury} from "./point_erc3643_treasury.sol";
+import {CreditPoint} from "./credit_point.sol";
 import {KYCRegistry} from "./kyc_registry.sol";
-import {
-    Ownable2Step,
-    Ownable
-} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
- * Info: (20260411 - Luphia)
+ * Info: (20260412 - Luphia)
  * @title SubscriptionManager
  * @dev The core logic component dealing with the Triple-Track Ledger
  * (Permanent, Subscription, Purchased) and point lifecycle management.
  */
-contract SubscriptionManager is Ownable2Step {
+contract SubscriptionManager is AccessControl {
     KYCRegistry public kycRegistry;
-    PointERC3643Treasury public treasury;
+    CreditPoint public treasury;
+
+    address public treasuryReceiver;
 
     struct SubscriptionData {
         uint256 permanentPoints;
@@ -52,21 +51,27 @@ contract SubscriptionManager is Ownable2Step {
     );
     event PointsPurchased(address indexed user, uint256 amount);
     event PointsExpired(address indexed user, uint256 amount);
+    event TreasuryReceiverUpdated(address indexed newReceiver);
 
-    constructor(
-        address initialOwner,
-        address _kyc,
-        address _treasury
-    ) Ownable(initialOwner) {
+    constructor(address defaultAdmin, address _kyc, address _treasury) {
+        _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
         kycRegistry = KYCRegistry(_kyc);
-        treasury = PointERC3643Treasury(_treasury);
+        treasury = CreditPoint(_treasury);
+        treasuryReceiver = defaultAdmin;
     }
 
     /**
-     * Info: (20260411 - Luphia)
-     * @dev Accepts ETH from the Developer/Admin to fund the Daily Claim collateral.
+     * Info: (20260412 - Luphia)
+     * @dev Accepts ISC from the Developer/Admin to fund the Daily Claim collateral.
      */
     receive() external payable {}
+
+    function setTreasuryReceiver(
+        address newReceiver
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        treasuryReceiver = newReceiver;
+        emit TreasuryReceiverUpdated(newReceiver);
+    }
 
     /**
      * Info: (20260411 - Luphia)
@@ -94,14 +99,14 @@ contract SubscriptionManager is Ownable2Step {
     }
 
     /**
-     * Info: (20260411 - Luphia)
+     * Info: (20260412 - Luphia)
      * @dev Admin/Backend adds subscription points directly when user upgrades
      * plan via Stripe/Web2 gateways.
      */
     function addSubscription(
         address user,
         uint256 pointsAmount
-    ) external payable onlyOwner {
+    ) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 limit = kycRegistry.getPointsLimit(user) * 10 ** 18;
         SubscriptionData storage data = userAccounts[user];
 
@@ -124,13 +129,13 @@ contract SubscriptionManager is Ownable2Step {
     }
 
     /**
-     * Info: (20260411 - Luphia)
+     * Info: (20260412 - Luphia)
      * @dev Directly purchase uncapped points. Bypasses KYC ledger limit checking.
      */
     function purchasePoints(
         address user,
         uint256 amount
-    ) external payable onlyOwner {
+    ) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
         SubscriptionData storage data = userAccounts[user];
         data.purchasedPoints += amount;
 
@@ -194,7 +199,7 @@ contract SubscriptionManager is Ownable2Step {
 
         // Info: (20260411 - Luphia) Return the points to the Admin/Treasury operator
         require(
-            treasury.transferFrom(msg.sender, owner(), amount),
+            treasury.transferFrom(msg.sender, treasuryReceiver, amount),
             "ERC20 transfer fails"
         );
 
@@ -219,16 +224,16 @@ contract SubscriptionManager is Ownable2Step {
     }
 
     function _mintFromTreasury(address to, uint256 amount) internal {
-        uint256 requiredETH = (amount * treasury.collateralRate()) /
+        uint256 requiredISC = (amount * treasury.collateralRate()) /
             (10 ** treasury.decimals());
-        if (address(this).balance < requiredETH)
+        if (address(this).balance < requiredISC)
             revert NotEnoughFundInManager();
-        treasury.collateralizedMint{value: requiredETH}(to, amount);
+        treasury.collateralizedMint{value: requiredISC}(to, amount);
     }
 
     function _burnExpired(address user, uint256 amount) internal {
         require(
-            treasury.transferFrom(user, owner(), amount),
+            treasury.transferFrom(user, treasuryReceiver, amount),
             "Expiration sweep failed"
         );
         emit PointsExpired(user, amount);

@@ -1,0 +1,15 @@
+{
+  "name": "isuncoin-node-reporter",
+  "version": "1.0.0",
+  "description": "Periodically reports node status to centralized monitors",
+  "main": "reporter.ts",
+  "scripts": {
+    "start": "npx tsx reporter.ts"
+  },
+  "dependencies": {
+    "systeminformation": "^5.23.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
