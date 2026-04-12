@@ -139,11 +139,11 @@ async function main() {
   await publicClient.waitForTransactionReceipt({ hash: grantHash });
   console.log("-> MembershipSystem Configuration completed successfully.");
 
-  console.log("Prefunding MembershipSystem with 100 ISC for initial point distribution...");
+  console.log("Prefunding MembershipSystem with 20 ISC for initial point distribution...");
   const fundHash = await walletClient.sendTransaction({
     chain: isuncoin,
     to: membershipAddress,
-    value: 1000n * 10n ** 18n,
+    value: 20n * 10n ** 18n,
   });
   await publicClient.waitForTransactionReceipt({ hash: fundHash });
   console.log("-> MembershipSystem prefunded successfully.");

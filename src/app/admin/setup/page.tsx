@@ -360,7 +360,7 @@ export default function SetupWizardPage() {
           {/* Info: (20260412 - Luphia) Step 1 */}
           <div className={`flex items-start gap-4 p-4 rounded-lg transition-colors ${step === 1 ? "bg-orange-50 border border-orange-100" : "bg-transparent border border-transparent"}`}>
             <div className="pt-1">{renderStatusIcon(dockerInstalledStatus)}</div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3 className={`font-semibold ${step >= 1 ? "text-gray-900" : "text-gray-400"}`}>
                 Step 1: Verify Docker Installation
               </h3>
@@ -374,7 +374,7 @@ export default function SetupWizardPage() {
           {/* Info: (20260412 - Luphia) Step 2 */}
           <div className={`flex items-start gap-4 p-4 rounded-lg transition-colors ${step === 2 ? "bg-orange-50 border border-orange-100" : "bg-transparent border border-transparent"}`}>
             <div className="pt-1">{renderStatusIcon(dockerRunningStatus)}</div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3 className={`font-semibold ${step >= 2 ? "text-gray-900" : "text-gray-400"}`}>
                 Step 2: Verify Docker Engine
               </h3>
@@ -388,7 +388,7 @@ export default function SetupWizardPage() {
           {/* Info: (20260412 - Luphia) Step 3 */}
           <div className={`flex items-start gap-4 p-4 rounded-lg transition-colors ${step === 3 ? "bg-orange-50 border border-orange-100" : "bg-transparent border border-transparent"}`}>
             <div className="pt-1">{renderStatusIcon(composeStatus)}</div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3 className={`font-semibold ${step >= 3 ? "text-gray-900" : "text-gray-400"}`}>
                 Step 3: Start Core Infrastructure
               </h3>
@@ -402,7 +402,7 @@ export default function SetupWizardPage() {
           {/* Info: (20260412 - Luphia) Step 4 */}
           <div className={`flex items-start gap-4 p-4 rounded-lg transition-colors ${step === 4 ? "bg-orange-50 border border-orange-100" : "bg-transparent border border-transparent"}`}>
             <div className="pt-1">{renderStatusIcon(walletStatus)}</div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3 className={`font-semibold ${step >= 4 ? "text-gray-900" : "text-gray-400"}`}>
                 Step 4: System Treasury Validation
               </h3>
@@ -510,7 +510,7 @@ export default function SetupWizardPage() {
           {/* Info: (20260412 - Luphia) Step 5 */}
           <div className={`flex items-start gap-4 p-4 rounded-lg transition-colors ${step === 5 ? "bg-orange-50 border border-orange-100" : "bg-transparent border border-transparent"}`}>
             <div className="pt-1">{renderStatusIcon(deployStatus)}</div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3 className={`font-semibold ${step >= 5 ? "text-gray-900" : "text-gray-400"}`}>
                 Step 5: Deploy Smart Contracts
               </h3>
@@ -600,7 +600,7 @@ export default function SetupWizardPage() {
           {/* Info: (20260412 - Luphia) Step 6 */}
           <div className={`flex items-start gap-4 p-4 rounded-lg transition-colors ${step === 6 ? "bg-orange-50 border border-orange-100" : "bg-transparent border border-transparent"}`}>
             <div className="pt-1">{renderStatusIcon(initDbStatus)}</div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3 className={`font-semibold ${step >= 6 ? "text-gray-900" : "text-gray-400"}`}>
                 Step 6: Initialize Database
               </h3>
@@ -614,7 +614,7 @@ export default function SetupWizardPage() {
           {/* Info: (20260412 - Luphia) Step 7 */}
           <div className={`flex items-start gap-4 p-4 rounded-lg transition-colors ${step === 7 ? "bg-orange-50 border border-orange-100" : "bg-transparent border border-transparent"}`}>
             <div className="pt-1">{renderStatusIcon(superAdminStatus)}</div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3 className={`font-semibold ${step >= 7 ? "text-gray-900" : "text-gray-400"}`}>
                 Step 7: Register Server SUPER_ADMIN
               </h3>
@@ -651,7 +651,7 @@ export default function SetupWizardPage() {
           {/* Info: (20260412 - Luphia) Step 8 */}
           <div className={`flex items-start gap-4 p-4 rounded-lg transition-colors ${step === 8 ? "bg-orange-50 border border-orange-100" : "bg-transparent border border-transparent"}`}>
             <div className="pt-1">{renderStatusIcon(appUrlStatus)}</div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3 className={`font-semibold ${step >= 8 ? "text-gray-900" : "text-gray-400"}`}>
                 Step 8: Domain & API Configuration
               </h3>
@@ -755,7 +755,7 @@ export default function SetupWizardPage() {
           {/* Info: (20260412 - Luphia) Step 9 */}
           <div className={`flex items-start gap-4 p-4 rounded-lg transition-colors ${step === 9 ? "bg-orange-50 border border-orange-100" : "bg-transparent border border-transparent"}`}>
             <div className="pt-1">{renderStatusIcon(finalizingStatus)}</div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3 className={`font-semibold ${step >= 9 ? "text-gray-900" : "text-gray-400"}`}>
                 Step 9: Finalize Configuration
               </h3>

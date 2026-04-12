@@ -60,9 +60,9 @@ export async function startDockerCompose() {
   };
 
   // Info: (20260412 - Luphia) Enforce DB config
+  envContent = updateOrAppend("POSTGRES_DB", "isunfa", envContent);
   envContent = updateOrAppend("POSTGRES_USER", "isunfa", envContent);
   envContent = updateOrAppend("POSTGRES_PASSWORD", `"${newPassword}"`, envContent);
-  envContent = updateOrAppend("POSTGRES_DB", "isunfa", envContent);
   envContent = updateOrAppend("POSTGRES_HOST", "127.0.0.1", envContent);
   envContent = updateOrAppend("POSTGRES_PORT", "20021", envContent);
 
@@ -242,6 +242,8 @@ export async function initDb() {
       }
     };
 
+    updateEnv("POSTGRES_DB", "isunfa");
+    updateEnv("POSTGRES_USER", "isunfa");
     updateEnv("POSTGRES_PASSWORD", dbPassword);
     updateEnv("DATABASE_URL", dbUrl);
 
@@ -600,11 +602,30 @@ export async function getEnvHashChallenge(): Promise<{ success: boolean; challen
       return { success: false, error: ".env.setup not found" };
     }
 
-    let content = fs.readFileSync(envSetupPath, "utf-8");
-    // Info: (20260412 - Luphia) Strip out any previously added SUPER_ADMIN_SIGNATURE to get raw conf hash
-    content = content.replace(/^SUPER_ADMIN_SIGNATURE=.*$/m, "").trim();
+    const envPath = path.join(process.cwd(), ".env");
+    const envContentOrig = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf-8") : "";
+    
+    const content = fs.readFileSync(envSetupPath, "utf-8");
+    const dotenv = (await import("dotenv")).default;
+    
+    // Info: (20260413 - Luphia) Mock the EXACT future state of .env by merging .env.setup into the current .env
+    const baseConfig = dotenv.parse(envContentOrig);
+    const setupConfig = dotenv.parse(content);
+    const config = Object.assign({}, baseConfig, setupConfig);
 
-    const hashBuffer = crypto.createHash('sha256').update(content).digest();
+    // Info: (20260413 - Luphia) Exclude signature before hashing
+    const excludeKeys = ["SUPER_ADMIN_SIGNATURE"];
+    for (const k of excludeKeys) {
+      delete config[k];
+    }
+
+    // Info: (20260413 - Luphia) Build a perfectly deterministic string based strictly on key-value pairs
+    const sortedKeys = Object.keys(config).sort();
+    const stableString = sortedKeys.map(k => `${k}=${config[k]}`).join('\n');
+
+    const crypto = await import("crypto");
+    const hashBuffer = crypto.createHash('sha256').update(stableString).digest();
+
     // Info: (20260412 - Luphia) Base64url encoded challenge string format required by FIDO2
     const challenge = hashBuffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 

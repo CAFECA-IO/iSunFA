@@ -76,8 +76,27 @@ export async function validateEnv(): Promise<boolean> {
     const clientData = JSON.parse(clientDataStr);
     const expectedChallenge = clientData.challenge;
 
-    await verifyAuthentication(authData, credential, expectedChallenge);
+    // Info: (20260413 - Luphia) 7. Verify that the .env contents match exactly what was signed using deterministic map hashing
+    const crypto = await import("crypto");
+    const dotenvConfig = dotenv.parse(envContent);
 
+    const excludeKeys = ["SUPER_ADMIN_SIGNATURE"];
+    for (const k of excludeKeys) {
+      delete dotenvConfig[k];
+    }
+
+    const sortedKeys = Object.keys(dotenvConfig).sort();
+    const stableString = sortedKeys.map(k => `${k}=${dotenvConfig[k]}`).join('\n');
+
+    const hashBuffer = crypto.createHash('sha256').update(stableString).digest();
+    const computedChallenge = hashBuffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+    if (computedChallenge !== expectedChallenge) {
+      console.warn(`[EnvValidator] .env parameters were modified and do not match the signature. Expected challenge: ${expectedChallenge}, Found: ${computedChallenge}`);
+      return false;
+    }
+
+    await verifyAuthentication(authData, credential, expectedChallenge);
     return true;
   } catch (error) {
     console.error("[EnvValidator] Error validating env signature:", error);
