@@ -195,8 +195,8 @@ async function main() {
   }
 
   let envContent = fs.readFileSync(envSetupPath, "utf-8");
-  if (!envContent.includes("# PART 5")) {
-    envContent += "\n\n# PART 5: Smart Contract Deployment";
+  if (!envContent.includes("# PART 2")) {
+    envContent += "\n\n# PART 2: Smart Contract Deployment";
   }
 
   const updateEnv = (key: string, value: string) => {

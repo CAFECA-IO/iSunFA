@@ -9,6 +9,10 @@ export class DockerService {
     return await runCommand("docker info");
   }
 
+  public async getRunningContainers() {
+    return await runCommand("docker ps --format '{{.ID}}|{{.Image}}|{{.Names}}|{{.Status}}'");
+  }
+
   public async startEngine() {
     const platform = process.platform;
     if (platform === 'darwin') {
