@@ -27,8 +27,14 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
                 title: `${companyName} 的分析報告 | iSunFA`,
                 description: '點擊查看此份由 iSunFA AI 生成的專業分析摘要。',
                 type: 'website',
-                // Todo: （20260410 - Tzuhan 這裡預留給動態 OG 圖片網址
-                // images: [`/api/v1/share/og?token=${token}`], 
+                images: [
+                    {
+                        url: `/api/v1/share/og?token=${token}`,
+                        width: 1200,
+                        height: 630,
+                        alt: `${companyName} 分析報告預覽`,
+                    }
+                ],
             },
             twitter: {
                 card: 'summary_large_image',
