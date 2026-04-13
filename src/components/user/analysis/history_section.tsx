@@ -658,13 +658,14 @@ export default function HistorySection() {
                   <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                     <DialogTitle as="h3" className="text-lg font-bold leading-6 text-gray-900 mb-2 flex items-center gap-2">
                       <Share2 className="h-5 w-5 text-blue-600" />
-                      分享對外公開報告
+                      {t('analysis.share.modal_title')}
                     </DialogTitle>
 
                     <div className="mt-2">
-                      <p className="text-sm text-gray-500 mb-4">
-                        任何人擁有此連結皆可檢視該報告的<strong className="text-gray-700">「摘要與去識別化版本」</strong>。機密金額與詳細供應商資訊已被系統安全隱藏。
-                      </p>
+                      <p
+                        className="text-sm text-gray-500 mb-4"
+                        dangerouslySetInnerHTML={{ __html: t('analysis.share.modal_desc') }}
+                      />
 
                       <div className="flex items-center gap-2 p-1.5 bg-gray-50 border border-gray-200 rounded-lg">
                         <input
@@ -676,7 +677,7 @@ export default function HistorySection() {
                           onClick={copyToClipboard}
                           className="flex items-center gap-1 bg-white border border-gray-200 shadow-sm text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-md text-sm font-medium transition-colors shrink-0"
                         >
-                          <Copy className="h-4 w-4" /> 複製
+                          <Copy className="h-4 w-4" /> {t('analysis.share.copy')}
                         </button>
                       </div>
                     </div>
@@ -689,14 +690,14 @@ export default function HistorySection() {
                         disabled={isRevoking}
                       >
                         {isRevoking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                        撤銷此分享連結
+                        {t('analysis.share.revoke')}
                       </button>
                       <button
                         type="button"
                         className="inline-flex justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
                         onClick={() => setIsShareLinkModalOpen(false)}
                       >
-                        完成
+                        {t('analysis.share.done')}
                       </button>
                     </div>
                   </DialogPanel>
