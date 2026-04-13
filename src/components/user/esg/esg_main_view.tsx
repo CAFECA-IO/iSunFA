@@ -27,7 +27,9 @@ export default function EsgMainView() {
   const [accountBook, setAccountBook] = useState<{
     esgIndustryId: string;
   } | null>(null);
-  const [activeTab, setActiveTab] = useState<"records" | "coefficient">("records");
+  const [activeTab, setActiveTab] = useState<"records" | "coefficient">(
+    "records",
+  );
 
   useEffect(() => {
     if (accountBookId) {
@@ -63,8 +65,9 @@ export default function EsgMainView() {
     months = months.filter((m) => m >= startMonth);
   }
 
-  const recordTab = <>
-        {/* Info: (20260312 - Julian) Summary */}
+  const recordTab = (
+    <>
+      {/* Info: (20260312 - Julian) Summary */}
       <EsgSummary year={selectedYear} month={selectedMonth} />
 
       {/* Info: (20260312 - Julian) Table Section */}
@@ -77,9 +80,11 @@ export default function EsgMainView() {
         accountBookId={accountBookId}
         esgIndustryId={Number(accountBook?.esgIndustryId) || null}
       />
-  </>
+    </>
+  );
 
-  const tabContent = activeTab === "records" ? recordTab : <CoefficientManagementTab />;
+  const tabContent =
+    activeTab === "records" ? recordTab : <CoefficientManagementTab />;
 
   return (
     <div className="flex max-w-[calc(100vw-30px)] flex-col gap-y-4 px-0 lg:gap-y-6 lg:px-12">

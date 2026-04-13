@@ -31,7 +31,11 @@ interface ICoefficientCardProps {
   onDelete: (id: string) => void;
 }
 
-const CoefficientCard = ({ coefficient, onEdit, onDelete }: ICoefficientCardProps) => {
+const CoefficientCard = ({
+  coefficient,
+  onEdit,
+  onDelete,
+}: ICoefficientCardProps) => {
   const [isShowAction, setIsShowAction] = useState<boolean>(false);
 
   // Info: (20260413 - Julian) 游標移入時顯示編輯與刪除按鈕
@@ -106,8 +110,7 @@ const CoefficientCard = ({ coefficient, onEdit, onDelete }: ICoefficientCardProp
               >
                 {coefficient.source}
               </span>{" "}
-              • 最後更新{" "}
-              {timestampToString(coefficient.updatedAt).dateWithDash}
+              • 最後更新 {timestampToString(coefficient.updatedAt).dateWithDash}
             </p>
           </div>
         </div>
@@ -144,12 +147,14 @@ const CoefficientCard = ({ coefficient, onEdit, onDelete }: ICoefficientCardProp
 
 export default function CoefficientManagementTab() {
   const [coefficientList, setCoefficientList] = useState<ICoefficient[]>([]);
-  const [activeTab, setActiveTab] = useState<CoefficientTab>(CoefficientTab.ALL);
+  const [activeTab, setActiveTab] = useState<CoefficientTab>(
+    CoefficientTab.ALL,
+  );
 
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState<boolean>(false);
-  const [selectedCoefficientId, setSelectedCoefficientId] = useState<string | null>(
-    null,
-  );
+  const [selectedCoefficientId, setSelectedCoefficientId] = useState<
+    string | null
+  >(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] =
     useState<boolean>(false);
 
@@ -177,7 +182,9 @@ export default function CoefficientManagementTab() {
         break;
       case CoefficientTab.CUSTOM:
         setCoefficientList(
-          mockCoefficientList.filter((f) => f.category === CoefficientCategory.CUSTOM),
+          mockCoefficientList.filter(
+            (f) => f.category === CoefficientCategory.CUSTOM,
+          ),
         );
         break;
       default:

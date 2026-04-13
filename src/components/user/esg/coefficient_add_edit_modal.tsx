@@ -38,7 +38,9 @@ export default function CoefficientAddEditModal({
     // Info: (20260413 - Julian) 編輯模式：填入係數資料
     if (isEdit) {
       // ToDo: (20260413 - Julian) 串接 API 取得係數資料
-      const data = mockCoefficientList.find((coefficient) => coefficient.id === selectedCoefficientId);
+      const data = mockCoefficientList.find(
+        (coefficient) => coefficient.id === selectedCoefficientId,
+      );
       if (data) {
         setName(data.name);
         setEmissionFactor(data.emissionFactor.toString());
@@ -106,10 +108,15 @@ export default function CoefficientAddEditModal({
                 </div>
 
                 {/* Info: (20260413 - Julian) Form */}
-                <div className="grid grid-cols-2 grid-flow-row items-center gap-4 py-6 text-sm font-semibold">
+                <div className="grid grid-flow-row grid-cols-2 items-center gap-4 py-6 text-sm font-semibold">
                   {/* Info: (20260413 - Julian) Name */}
-                  <div className="flex flex-col gap-1 col-span-2">
-                    <label htmlFor="coefficient-name" className="text-xs text-gray-400">係數名稱</label>
+                  <div className="col-span-2 flex flex-col gap-1">
+                    <label
+                      htmlFor="coefficient-name"
+                      className="text-xs text-gray-400"
+                    >
+                      係數名稱
+                    </label>
                     <input
                       id="coefficient-name"
                       aria-label="係數名稱"
@@ -117,12 +124,17 @@ export default function CoefficientAddEditModal({
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="例如：特定產品碳足跡係數"
-                      className="rounded-lg border outline-none border-gray-100 bg-gray-50 px-4 py-3 text-sm placeholder:text-gray-400 text-slate-800"
+                      className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-gray-400"
                     />
                   </div>
                   {/* Info: (20260413 - Julian) Emission Factor */}
                   <div className="flex flex-col gap-1">
-                    <label htmlFor="coefficient-ef" className="text-xs text-gray-400">排放係數 (EF)</label>
+                    <label
+                      htmlFor="coefficient-ef"
+                      className="text-xs text-gray-400"
+                    >
+                      排放係數 (EF)
+                    </label>
                     <input
                       id="coefficient-ef"
                       aria-label="排放係數"
@@ -130,12 +142,17 @@ export default function CoefficientAddEditModal({
                       value={emissionFactor}
                       onChange={(e) => setEmissionFactor(e.target.value)}
                       placeholder="0.00"
-                      className="rounded-lg border outline-none border-gray-100 bg-gray-50 px-4 py-3 text-sm placeholder:text-gray-400 text-slate-800"
+                      className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-gray-400"
                     />
                   </div>
                   {/* Info: (20260413 - Julian) Unit */}
                   <div className="flex flex-col gap-1">
-                    <label htmlFor="coefficient-unit" className="text-xs text-gray-400">單位</label>
+                    <label
+                      htmlFor="coefficient-unit"
+                      className="text-xs text-gray-400"
+                    >
+                      單位
+                    </label>
                     <input
                       id="coefficient-unit"
                       aria-label="單位"
@@ -143,12 +160,17 @@ export default function CoefficientAddEditModal({
                       placeholder="kgCO2e/你的單位"
                       value={unit}
                       onChange={(e) => setUnit(e.target.value)}
-                      className="rounded-lg border outline-none border-gray-100 bg-gray-50 px-4 py-3 text-sm placeholder:text-gray-400 text-slate-800"
+                      className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-gray-400"
                     />
                   </div>
                   {/* Info: (20260413 - Julian) Description */}
-                  <div className="flex flex-col gap-1 col-span-2">
-                    <label htmlFor="coefficient-desc" className="text-xs text-gray-400">描述說明</label>
+                  <div className="col-span-2 flex flex-col gap-1">
+                    <label
+                      htmlFor="coefficient-desc"
+                      className="text-xs text-gray-400"
+                    >
+                      描述說明
+                    </label>
                     <textarea
                       id="coefficient-desc"
                       aria-label="描述說明"
@@ -156,16 +178,16 @@ export default function CoefficientAddEditModal({
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="說明此係數的來源貨適用範圍..."
-                      className="rounded-lg border outline-none resize-none border-gray-100 bg-gray-50 px-4 py-3 text-sm placeholder:text-gray-400 text-slate-800"
+                      className="resize-none rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-gray-400"
                     />
                   </div>
                 </div>
 
                 {/* Info: (20260413 - Julian) Buttons */}
-                <div className="flex lg:flex-row flex-col-reverse mt-4 items-center gap-2 text-sm font-semibold">
+                <div className="mt-4 flex flex-col-reverse items-center gap-2 text-sm font-semibold lg:flex-row">
                   <button
                     type="button"
-                    className="inline-flex justify-center rounded-md bg-gray-100 px-12 py-3 whitespace-nowrap text-gray-600 hover:bg-gray-200 w-full lg:w-auto"
+                    className="inline-flex w-full justify-center rounded-md bg-gray-100 px-12 py-3 whitespace-nowrap text-gray-600 hover:bg-gray-200 lg:w-auto"
                     onClick={onClose}
                   >
                     取消
@@ -186,4 +208,4 @@ export default function CoefficientAddEditModal({
       </Dialog>
     </Transition>
   );
-};
+}
