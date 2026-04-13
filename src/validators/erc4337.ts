@@ -16,11 +16,9 @@ export const userOperationJsonSchema = z.object({
   nonce: hexStringSchema,
   initCode: hexStringSchema,
   callData: hexStringSchema,
-  callGasLimit: hexStringSchema,
-  verificationGasLimit: hexStringSchema,
+  accountGasLimits: hexStringSchema,
   preVerificationGas: hexStringSchema,
-  maxFeePerGas: hexStringSchema,
-  maxPriorityFeePerGas: hexStringSchema,
+  gasFees: hexStringSchema,
   paymasterAndData: hexStringSchema,
   signature: hexStringSchema,
 });
@@ -45,11 +43,7 @@ const hexToBigInt = z.string().transform((val, ctx) => {
 
 export const userOperationSchema = userOperationJsonSchema.extend({
   nonce: hexToBigInt,
-  callGasLimit: hexToBigInt,
-  verificationGasLimit: hexToBigInt,
   preVerificationGas: hexToBigInt,
-  maxFeePerGas: hexToBigInt,
-  maxPriorityFeePerGas: hexToBigInt,
 });
 
 // Info: (20251118 - Tzuhan) 4. TypeScript type inferred from the BigInt schema (內部函式用)

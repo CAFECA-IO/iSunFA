@@ -1,16 +1,14 @@
 import { createWalletClient, http, createPublicClient } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
 import { userOperationSchema } from "@/validators";
 import { ABIS } from "@/config/contracts";
 
-const RELAYER_PRIVATE_KEY = process.env.ISUNCOIN_PRIVATE_KEY as
-  | `0x${string}`
-  | undefined;
+import { getAdminAccount } from "@/lib/wallet/admin_wallet";
+
 const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL;
 
 export class BundlerService {
   public async sendUserOp(userOpJson: unknown, entryPointAddress: string) {
-    if (!RELAYER_PRIVATE_KEY || !rpcUrl) {
+    if (!rpcUrl) {
       throw new Error("Server configuration error: Missing env variables");
     }
 
@@ -18,7 +16,7 @@ export class BundlerService {
 
     // Info: (20251118 - Tzuhan) 設定 Viem 客戶端連接至 isuncoin_mainnet
     const publicClient = createPublicClient({ transport: http(rpcUrl) });
-    const relayerAccount = privateKeyToAccount(RELAYER_PRIVATE_KEY);
+    const relayerAccount = await getAdminAccount();
     const relayerClient = createWalletClient({
       account: relayerAccount,
       transport: http(rpcUrl),
@@ -39,11 +37,9 @@ export class BundlerService {
         nonce: userOp.nonce,
         initCode: userOp.initCode as `0x${string}`,
         callData: userOp.callData as `0x${string}`,
-        callGasLimit: userOp.callGasLimit,
-        verificationGasLimit: userOp.verificationGasLimit,
+        accountGasLimits: userOp.accountGasLimits as `0x${string}`,
         preVerificationGas: userOp.preVerificationGas,
-        maxFeePerGas: userOp.maxFeePerGas,
-        maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
+        gasFees: userOp.gasFees as `0x${string}`,
         paymasterAndData: userOp.paymasterAndData as `0x${string}`,
         signature: userOp.signature as `0x${string}`,
       },

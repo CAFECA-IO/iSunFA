@@ -12,7 +12,7 @@ import { TEAM_INVITATION_STATUS } from "@/constants/status";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string }> },
+  { params }: { params: Promise<{ team_id: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -22,7 +22,7 @@ export async function POST(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const { teamId } = await params;
+    const { team_id: teamId } = await params;
 
     // Info: (20260325 - Tzuhan) Check permission (OWNER or ADMIN)
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
@@ -144,7 +144,7 @@ export async function POST(
 
     return jsonOk(newInvitation);
   } catch (error) {
-    console.error("[API] /team/[teamId]/invitations POST error:", error);
+    console.error("[API] /team/[team_id]/invitations POST error:", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }
@@ -174,7 +174,7 @@ export async function GET(
 
     return jsonOk(invitations);
   } catch (error) {
-    console.error("[API] /team/[teamId]/invitations GET error:", error);
+    console.error("[API] /team/[team_id]/invitations GET error:", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
   }
 }

@@ -7,7 +7,9 @@ import type {
 import { AppError } from "@/lib/utils/error";
 import { ApiCode } from "@/lib/utils/status";
 
-const ORIGIN = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const allowedOrigins = [configuredOrigin];
+if (!allowedOrigins.includes("http://localhost:3000")) allowedOrigins.push("http://localhost:3000");
 
 /**
  * Info: (20251223 - Tzuhan)
@@ -20,12 +22,12 @@ export async function verifyRegistration(
   try {
     const result = await server.verifyRegistration(registration, {
       challenge: expectedChallenge,
-      origin: ORIGIN,
+      origin: (origin: string) => allowedOrigins.includes(origin),
     });
     return result;
   } catch (error) {
     console.error("Registration verification failed:", error);
-    throw new AppError(ApiCode.VALIDATION_ERROR, "Invalid registration data");
+    throw new AppError(ApiCode.VALIDATION_ERROR, "Invalid registration data: " + String(error));
   }
 }
 
@@ -39,19 +41,18 @@ export async function verifyAuthentication(
   expectedChallenge: string,
 ) {
   try {
-    // Info: (20251223 - Tzuhan) server.verifyAuthentication 預期第二個參數符合 CredentialInfo
     const result = await server.verifyAuthentication(
       authentication,
       credential,
       {
         challenge: expectedChallenge,
-        origin: ORIGIN,
+        origin: (origin: string) => allowedOrigins.includes(origin),
         userVerified: false,
       },
     );
     return result;
   } catch (error) {
     console.error("Authentication verification failed:", error);
-    throw new AppError(ApiCode.UNAUTHORIZED, "Invalid signature or challenge");
+    throw new AppError(ApiCode.UNAUTHORIZED, "Invalid signature or challenge: " + String(error));
   }
 }

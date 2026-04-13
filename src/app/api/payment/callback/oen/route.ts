@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mintToAddress } from "@/services/token.service";
-import { CONTRACT_ADDRESSES } from "@/config/contracts";
+import { issuePurchasedPointsToMember } from "@/services/member.service";
 import { IOenCallbackData } from "@/interfaces/payment";
-import { PAYMENT_STATUS, PAYMENT_PROVIDER } from "@/constants/status";
+import { PAYMENT_STATUS } from "@/constants/status";
 import { paymentRepo } from "@/repositories/payment.repo";
 
 export async function POST(request: NextRequest) {
@@ -65,7 +64,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Order not found" }, { status: 404 });
     }
 
-    const { shouldMint, creditsToMint, amountPaid } =
+    const { shouldMint, creditsToMint } =
       await paymentRepo.processOenPayment(
         order,
         body,
@@ -74,16 +73,9 @@ export async function POST(request: NextRequest) {
       );
 
     if (shouldMint && creditsToMint > 0 && order.user?.address) {
-      const memo = JSON.stringify({
-        provider: PAYMENT_PROVIDER.OEN_CALLBACK,
-        orderId: order.id,
-        amount: amountPaid,
-      });
-      const mintResult = await mintToAddress(
-        CONTRACT_ADDRESSES.NTD_TOKEN,
+      const mintResult = await issuePurchasedPointsToMember(
         order.user.address,
-        creditsToMint,
-        memo,
+        creditsToMint
       );
 
       if (!mintResult.success) {

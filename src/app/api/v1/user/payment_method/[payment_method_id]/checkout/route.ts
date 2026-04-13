@@ -3,8 +3,8 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IOenOrderData } from "@/interfaces/payment";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { mintToAddress } from "@/services/token.service";
-import { CONTRACT_ADDRESSES } from "@/config/contracts";
+import { buildOenTransactionPayload } from "@/lib/utils/payment_helpers";
+import { issuePurchasedPointsToMember } from "@/services/member.service";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
@@ -110,24 +110,16 @@ export async function POST(
         "Content-Type": "application/json",
         Authorization: `Bearer ${OEN_ACCESS_TOKEN}`,
       },
-      body: JSON.stringify({
-        merchantId: "mermer",
-        amount: amount,
-        currency: "TWD",
-        token: providerToken,
-        orderId: order.id,
-        userName: pmData?.buyerName || dbUser.name || "Unknown",
-        userEmail: pmData?.email || `${dbUser.id}@isunfa.tw`,
-        productDetails: [
-          {
-            productionCode: "ISUNFA-CREDITS",
-            description: `iSunFA Credits - ${credits}`,
-            quantity: 1,
-            unit: "pcs",
-            unitPrice: amount,
-          },
-        ],
-      }),
+      body: JSON.stringify(
+        buildOenTransactionPayload(
+          dbUser,
+          pmData,
+          order.id,
+          amount,
+          order.data as Record<string, unknown>,
+          providerToken
+        )
+      ),
     };
     const oenRes = await fetch(fetchUrl, fetchQuery);
 
@@ -163,18 +155,9 @@ export async function POST(
     );
 
     // Info: (20260306 - Tzuhan) 呼叫鑄造代幣合約
-    const memo = JSON.stringify({
-      provider: "OEN",
-      orderId: order.id,
-      amount,
-      credits,
-      paymentMethodId,
-    });
-    const mintResult = await mintToAddress(
-      CONTRACT_ADDRESSES.NTD_TOKEN,
+    const mintResult = await issuePurchasedPointsToMember(
       user.address,
-      credits,
-      memo,
+      credits
     );
 
     // Info: (20260306 - Tzuhan) 鑄造代幣失敗

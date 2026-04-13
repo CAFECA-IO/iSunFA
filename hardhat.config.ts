@@ -1,5 +1,5 @@
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
-import { configVariable, defineConfig } from "hardhat/config";
+import { defineConfig } from "hardhat/config";
 import "dotenv/config";
 
 export default defineConfig({
@@ -13,6 +13,7 @@ export default defineConfig({
             enabled: true,
             runs: 200,
           },
+          viaIR: true,
           evmVersion: "paris",
         },
       },
@@ -23,6 +24,7 @@ export default defineConfig({
             enabled: true,
             runs: 200,
           },
+          viaIR: true,
           evmVersion: "paris",
         },
       },
@@ -38,12 +40,7 @@ export default defineConfig({
     isuncoin_mainnet: {
       type: "http",
       chainType: "l1",
-      url: "https://mainnet.isuncoin.com",
-      accounts: [configVariable("ISUNCOIN_PRIVATE_KEY")],
-    },
-    localhost: {
-      type: "http",
-      url: "http://127.0.0.1:8545",
+      url: "http://127.0.0.1:20024",
     },
   },
 });

@@ -47,6 +47,8 @@ export default function PaymentModal({
   initialStep,
   transactionHash,
   orderId,
+  title,
+  planId,
 }: IPaymentModalProps) {
   const { t } = useTranslation();
   const { user, refreshAuth, loading: authLoading } = useAuth();
@@ -277,6 +279,34 @@ export default function PaymentModal({
           amount,
           credits,
           paymentMethodId: selectedPaymentMethodId,
+          title,
+          baseCredits,
+          bonusCredits,
+          planId,
+          items: planId 
+            ? [{
+                name: title || '會員訂閱',
+                quantity: 1,
+                unitPrice: amount,
+                amount: amount,
+                remark: '購買會員資格'
+              }]
+            : [
+                {
+                  name: `iSunFA ${baseCredits || credits} 點`,
+                  quantity: 1,
+                  unitPrice: amount,
+                  amount: amount,
+                  remark: `購買 ${baseCredits || credits} 點`
+                },
+                ...(bonusCredits && bonusCredits > 0 ? [{
+                  name: `iSunFA ${bonusCredits} 點（贈品）`,
+                  quantity: 1,
+                  unitPrice: 0,
+                  amount: 0,
+                  remark: `贈送 ${bonusCredits} 點`
+                }] : [])
+              ]
         })
       });
 
@@ -488,7 +518,7 @@ export default function PaymentModal({
                                             <div className="flex items-center">
                                               <div className="text-sm">
                                                 <p className={`font-semibold ${isSelected ? "text-orange-900" : "text-gray-900"}`}>
-                                                  {brand}
+                                                  {(pm.data?.name as string) || brand}
                                                 </p>
                                                 <div className={`mt-1 flex items-center gap-2 ${isSelected ? "text-orange-700" : "text-gray-500"}`}>
                                                   <span className="text-xs">••••</span>

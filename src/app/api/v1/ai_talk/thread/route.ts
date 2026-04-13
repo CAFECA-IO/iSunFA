@@ -145,15 +145,11 @@ export async function POST(request: NextRequest) {
         let verifiedHash = false;
 
         try {
-          const handleOpsAbi = parseAbi([
-            "function handleOps((address sender, uint256 nonce, bytes initCode, bytes callData, uint256 callGasLimit, uint256 verificationGasLimit, uint256 preVerificationGas, uint256 maxFeePerGas, uint256 maxPriorityFeePerGas, bytes paymasterAndData, bytes signature)[] ops, address beneficiary) external",
-          ]);
-
           const { args } = decodeFunctionData({
-            abi: handleOpsAbi,
+            abi: ABIS.ENTRY_POINT,
             data: tx.input,
           });
-          const ops = args[0];
+          const ops = args[0] as unknown as { sender: string; callData: `0x${string}` }[];
 
           for (const op of ops) {
             if (op.sender.toLowerCase() === user.address.toLowerCase()) {

@@ -1,19 +1,51 @@
-# ToDo: (20251211 - Luphia) docker-compose.yml with poxa, ipfs, postgres, isuncoin
-
-version: '3.8'
-
 services:
-  postgres:
-    image: postgres:16
-    container_name: isunfa_db
+  gateway:
+    build:
+      context: ./dockerfiles/gateway
+    container_name: gateway
     restart: always
     ports:
-      - '${POSTGRES_PORT:-5435}:5432'
+      - '${GATEWAY_PORT_HTTP:-80}:80'
+      - '${GATEWAY_PORT:-443}:443'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  postgres:
+    image: postgres:16
+    container_name: database
+    restart: always
+    ports:
+      - '${POSTGRES_PORT:-20021}:5432'
     environment:
       POSTGRES_USER:     ${POSTGRES_USER:-isunfa}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-isunfa}
       POSTGRES_DB:       ${POSTGRES_DB:-isunfa}
     volumes:                       
-      - postgres_data:/var/lib/postgresql/data
-volumes:                           
-  postgres_data:
+      - database_data:/var/lib/postgresql/data
+
+  storage:
+    build:
+      context: ./dockerfiles/storage
+    container_name: storage
+    restart: always
+    ports:
+      - '${STORAGE_PORT:-20022}:10014'
+    volumes:
+      - storage_data:/root/.ipfs
+
+  blockchain:
+    build:
+      context: ./dockerfiles/blockchain
+    container_name: blockchain
+    restart: always
+    ports:
+      - '${DISCOVERY:-20023}:20023'
+      - '${RPC:-20024}:20024'
+    volumes:
+      - blockchain_data:/root/.isuncoin
+
+volumes:
+  blockchain_data:
+  database_data:
+  storage_data:
+

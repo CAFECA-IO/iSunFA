@@ -40,9 +40,9 @@ export default async function RootLayout({
   const headersList = await headers();
   const currentUrl = headersList.get('x-url') || "";
 
-  // Info: (20260118 - Luphia) Use the new validator
+  // Info: (20260118 - Luphia) .env validator
   const { validateEnv } = await import('@/validators/env');
-  const envIsValid = validateEnv();
+  const envIsValid = await validateEnv();
 
   // Info: (20260118 - Luphia) If validation fails, force setup page (unless we are already there)
   if (!envIsValid && !currentUrl.includes('/admin/setup')) {

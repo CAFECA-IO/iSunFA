@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { IEsgDashboardSummary } from "@/interfaces/esg";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 
@@ -39,15 +38,15 @@ export async function GET(
       );
     }
 
-    const { todayEsgRecordCount, dqiAverage, pendingEsgRecordCount, aiAverageConfidence } =
-      await esgRepo.getEsgSummary(accountBookId);
+    const searchParams = request.nextUrl.searchParams;
+    const yearParam = searchParams.get("year") ?? undefined;
+    const monthParam = searchParams.get("month") ?? undefined;
 
-    const dashboardSummary: IEsgDashboardSummary = {
-      todayEsgRecordCount,
-      dqiAverage,
-      pendingEsgRecordCount,
-      aiAverageConfidence,
-    };
+    const dashboardSummary = await esgRepo.getEsgSummary(
+      accountBookId,
+      yearParam,
+      monthParam,
+    );
 
     return jsonOk(dashboardSummary);
   } catch (error) {

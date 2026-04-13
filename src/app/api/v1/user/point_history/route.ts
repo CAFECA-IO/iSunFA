@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const history = await pointService.getPointHistory(user.id, user.createdAt);
+    const history = await pointService.getPointHistory(user);
 
     return jsonOk({ pointHistory: history });
   } catch (error) {
