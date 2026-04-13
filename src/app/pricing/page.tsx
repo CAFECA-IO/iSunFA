@@ -283,8 +283,10 @@ export default function PricingPage() {
                   currentPlan={currentPlan}
                   features={[
                     t("pricing.plans.free.features.fido"),
-                    t("pricing.plans.free.features.credit_limit"),
-                    t("pricing.plans.free.features.daily_credits"),
+                    {
+                      text: t("pricing.plans.free.features.daily_credits"),
+                      tooltip: t("pricing.plans.free.features.credit_limit"),
+                    },
                     {
                       text: t("pricing.plans.free.features.consults"),
                       tooltip: t("pricing.plans.free.features.consults_tooltip"),
@@ -311,7 +313,6 @@ export default function PricingPage() {
                       text: t("pricing.plans.team.features.fido"),
                       tooltip: t("pricing.plans.team.features.fido_tooltip"),
                     },
-                    t("pricing.plans.team.features.credit_limit"),
                     {
                       text: t("pricing.plans.team.features.monthly_credits"),
                       tooltip: t("pricing.plans.team.features.monthly_credits_tooltip"),
@@ -342,7 +343,6 @@ export default function PricingPage() {
                       text: t("pricing.plans.business.features.fido"),
                       tooltip: t("pricing.plans.business.features.fido_tooltip"),
                     },
-                    t("pricing.plans.business.features.credit_limit"),
                     {
                       text: t("pricing.plans.business.features.monthly_credits"),
                       tooltip: t("pricing.plans.business.features.monthly_credits_tooltip"),

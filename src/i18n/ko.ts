@@ -209,6 +209,10 @@ export const ko = {
     login_failed: "로그인 실패",
     reg_failed: "가입 실패",
     scroll_to_agree: "관련 조항을 자세히 읽어 주십시오",
+    unregistered_confirm_title: "계정 미등록",
+    unregistered_confirm_desc: "이 패스키와 연결된 계정을 찾을 수 없습니다. 이 장치를 사용하여 새 계정을 생성하시겠습니까?",
+    unregistered_confirm_yes: "네, 계정 생성",
+    unregistered_confirm_no: "취소",
   },
   features: {
     title: "더 스마트한 재무 관리",

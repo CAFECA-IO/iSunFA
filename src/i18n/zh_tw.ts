@@ -213,6 +213,10 @@ export const zhTw = {
     login_failed: "登入失敗",
     reg_failed: "註冊失敗",
     scroll_to_agree: "請詳細閱覽相關條文",
+    unregistered_confirm_title: "帳戶未註冊",
+    unregistered_confirm_desc: "系統找不到此 Passkey 對應的帳戶。您是否要使用此裝置註冊一個新帳戶？",
+    unregistered_confirm_yes: "好，建立帳戶",
+    unregistered_confirm_no: "取消",
   },
   features: {
     title: "更聰明的財務管理",

@@ -99,11 +99,22 @@ export function encodeWebAuthnSignature(
   pubKeyY: bigint,
 ): Hex {
   const struct = getWebAuthnSignatureStruct(authentication, pubKeyX, pubKeyY);
+  /**
+   * Info: (20260413 - Luphia) Matching fido2_account.sol abi.decode:
+   * (bytes authenticatorData, bytes clientDataJSON, uint256 challengeIndex, uint256 typeIndex, uint256 r, uint256 s)
+   */
   return encodeAbiParameters(
     parseAbiParameters(
-      "(bytes authenticatorData, bytes clientDataJSON, uint256 challengeLocation, uint256 responseTypeLocation, uint256 r, uint256 s, uint256 pubKeyX, uint256 pubKeyY)",
+      "bytes, bytes, uint256, uint256, uint256, uint256"
     ),
-    [struct],
+    [
+      struct.authenticatorData,
+      struct.clientDataJSON,
+      struct.challengeLocation,
+      struct.responseTypeLocation,
+      struct.r,
+      struct.s
+    ],
   );
 }
 

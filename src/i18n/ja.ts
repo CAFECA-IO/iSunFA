@@ -209,6 +209,10 @@ export const ja = {
     login_failed: "ログイン失敗",
     reg_failed: "登録失敗",
     scroll_to_agree: "関連条項を詳細にお読みください",
+    unregistered_confirm_title: "アカウントが未登録です",
+    unregistered_confirm_desc: "このパスキーに関連付けられたアカウントが見つかりません。このデバイスを使用して新しいアカウントを作成しますか？",
+    unregistered_confirm_yes: "はい、アカウントを作成します",
+    unregistered_confirm_no: "キャンセル",
   },
   features: {
     title: "よりスマートな財務管理",

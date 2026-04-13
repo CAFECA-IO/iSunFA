@@ -18,7 +18,7 @@ export async function buildTransferUserOp(
   sender: Address,
   to: Address,
   amount: string, // Info: (20260130 - Tzuhan) Parsed 18 decimals string
-  tokenAddress: Address = CONTRACT_ADDRESSES.NTD_TOKEN,
+  tokenAddress: Address = CONTRACT_ADDRESSES.CREDIT_POINT,
   orderId?: string, // Info: (20260209 - Tzuhan) Optional Order ID to bind payment
 ): Promise<UserOperationJson> {
   /** Info: (20260130 - Tzuhan)
@@ -88,11 +88,9 @@ export async function buildTransferUserOp(
     nonce: toHex(nonce),
     initCode: "0x",
     callData: scwCallData,
-    callGasLimit: toHex(callGasLimit),
-    verificationGasLimit: toHex(verificationGasLimit),
+    accountGasLimits: `0x${((verificationGasLimit << 128n) | callGasLimit).toString(16).padStart(64, "0")}`,
     preVerificationGas: toHex(preVerificationGas),
-    maxFeePerGas: toHex(maxFeePerGas),
-    maxPriorityFeePerGas: toHex(maxPriorityFeePerGas),
+    gasFees: `0x${((maxPriorityFeePerGas << 128n) | maxFeePerGas).toString(16).padStart(64, "0")}`,
     paymasterAndData: "0x",
     signature: "0x",
   };

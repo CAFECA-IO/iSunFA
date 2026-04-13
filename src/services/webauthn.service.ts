@@ -149,7 +149,7 @@ class WebAuthnService {
     console.log(`[Sync] Fetching ${address} from chain...`);
     try {
       const logs = await publicClient.getLogs({
-        address: CONTRACT_ADDRESSES.FACTORY as `0x${string}`,
+        address: CONTRACT_ADDRESSES.SCW_FACTORY as `0x${string}`,
         event: parseAbiItem(
           "event AccountCreated(address indexed scw, uint256 pubKeyX, uint256 pubKeyY, uint256 salt, string credentialId,string name, string imageUrl)",
         ),
@@ -213,7 +213,7 @@ class WebAuthnService {
       );
 
       const logs = await publicClient.getLogs({
-        address: CONTRACT_ADDRESSES.FACTORY as `0x${string}`,
+        address: CONTRACT_ADDRESSES.SCW_FACTORY as `0x${string}`,
         event: parseAbiItem(
           "event AccountCreated(address indexed scw, uint256 pubKeyX, uint256 pubKeyY, uint256 salt, string credentialId, string name, string imageUrl)",
         ),

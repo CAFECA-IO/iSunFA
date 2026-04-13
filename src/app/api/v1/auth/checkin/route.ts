@@ -6,8 +6,9 @@ import { ApiCode } from "@/lib/utils/status";
 import { publicClient } from "@/lib/viem";
 import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
 import { formatUnits } from "viem";
-import { mintToAddress, registerUser } from "@/services/token.service";
+import { claimDailyCheckIn, registerUserViaMembership } from "@/services/member.service";
 import { REWARD_AMOUNTS } from "@/constants/price";
+import { paymentRepo } from "@/repositories/payment.repo";
 
 export async function GET(request: NextRequest) {
   try {
@@ -57,9 +58,10 @@ export async function GET(request: NextRequest) {
     console.log(user.address, "checkin");
     try {
       if (user.address) {
+        await registerUserViaMembership(user.address);
         const balance = await publicClient.readContract({
-          address: CONTRACT_ADDRESSES.NTD_TOKEN,
-          abi: ABIS.NTD_TOKEN,
+          address: CONTRACT_ADDRESSES.CREDIT_POINT,
+          abi: ABIS.CREDIT_POINT,
           functionName: "balanceOf",
           args: [user.address as `0x${string}`],
         });
@@ -67,31 +69,40 @@ export async function GET(request: NextRequest) {
         const credits = Number(formatUnits(balance, 18));
 
         if (credits < 500) {
-          // Info: (20260408 - Luphia) Check if user is verified before minting
-          const isVerified = await publicClient.readContract({
-            address: CONTRACT_ADDRESSES.IDENTITY_REGISTRY,
-            abi: ABIS.IDENTITY_REGISTRY,
-            functionName: "isVerified",
+          // Info: (20260408 - Luphia) Check if user is frozen before minting
+          const isFrozen = await publicClient.readContract({
+            address: CONTRACT_ADDRESSES.KYC_REGISTRY,
+            abi: ABIS.KYC_REGISTRY,
+            functionName: "isFrozen",
             args: [user.address as `0x${string}`],
           });
 
-          if (!isVerified) {
-            await registerUser(CONTRACT_ADDRESSES.NTD_TOKEN, user.address);
+          if (isFrozen) {
+            console.warn(`User ${user.address} is frozen, skipping checkin mint`);
+            return;
           }
 
           rewardedAmount = REWARD_AMOUNTS.DAILY_CHECKIN_REWARD;
-          await mintToAddress(
-            CONTRACT_ADDRESSES.NTD_TOKEN,
-            user.address,
-            rewardedAmount,
-            "Daily Checkin Reward"
-          );
-          console.log(user.address, "minted", rewardedAmount);
+          const mintResult = await claimDailyCheckIn(user.address);
+          
+          if (mintResult.success) {
+            await paymentRepo.createOrder({
+              userId: user.id,
+              type: "CHECKIN_REWARD",
+              amount: rewardedAmount,
+              status: "COMPLETED",
+              challenge: "reward",
+              data: {},
+              transactionHash: (mintResult.data as { tx: string })?.tx || "",
+            });
+            console.log(user.address, "checked in", rewardedAmount);
+          } else {
+            throw new Error(`MembershipSystem checkin failed: ${mintResult.message}`);
+          }
         }
       }
     } catch (contractError) {
-      console.warn("Deprecate: (20260408 - AI Agent) Checkin mint failed: ", contractError);
-      // Info: (20260408 - Luphia) Even if mint fails, don't revert the DB checkin. The checkin succeeded, reward failed.
+      console.warn("Checkin transaction blocked or failed: ", contractError);
     }
 
     return jsonOk({

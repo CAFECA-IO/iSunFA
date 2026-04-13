@@ -63,37 +63,49 @@ export class RegistrationService {
 
       // Info: (20260116 - Tzuhan) 步驟 4: 預測 SCW 地址 (前端讀取合約)
       onStepChange?.("PREDICTING_ADDRESS");
-      if (!CONTRACT_ADDRESSES.FACTORY)
+      if (!CONTRACT_ADDRESSES.SCW_FACTORY)
         throw new Error("Factory Address not set");
 
+      // Info: (20260412 - Luphia) getAddress expects (bytes credentialId, uint256 pubKeyX, uint256 pubKeyY, uint256 salt)
+      const { stringToHex } = await import("viem");
+      const credentialIdHex = stringToHex(credentialID);
+
       const scwAddress = await publicClient.readContract({
-        address: CONTRACT_ADDRESSES.FACTORY,
-        abi: ABIS.FACTORY,
+        address: CONTRACT_ADDRESSES.SCW_FACTORY,
+        abi: ABIS.SCW_FACTORY,
         functionName: "getAddress",
-        args: [pubKeyX, pubKeyY, salt],
+        args: [credentialIdHex, pubKeyX, pubKeyY, salt],
       });
 
       // Info: (20260116 - Tzuhan) 步驟 5: 計算 UserOp Hash
       onStepChange?.("CALCULATING_HASH");
       const factoryCallData = encodeFunctionData({
-        abi: ABIS.FACTORY,
+        abi: ABIS.SCW_FACTORY,
         functionName: "createAccount",
-        args: [pubKeyX, pubKeyY, salt, credentialID, username, imageUrl],
+        args: [credentialIdHex, pubKeyX, pubKeyY, salt, username, imageUrl],
       });
-      const initCode = `${CONTRACT_ADDRESSES.FACTORY}${factoryCallData.slice(
+      const initCode = `${CONTRACT_ADDRESSES.SCW_FACTORY}${factoryCallData.slice(
         2,
       )}` as Hex;
+
+      const verificationGasLimit = 3_500_000n;
+      const callGasLimit = 200_000n;
+      const accountGasLimitsBigInt = (verificationGasLimit << 128n) | callGasLimit;
+      const accountGasLimits = `0x${accountGasLimitsBigInt.toString(16).padStart(64, "0")}` as Hex;
+
+      const maxPriorityFeePerGas = 0n;
+      const maxFeePerGas = 0n;
+      const gasFeesBigInt = (maxPriorityFeePerGas << 128n) | maxFeePerGas;
+      const gasFees = `0x${gasFeesBigInt.toString(16).padStart(64, "0")}` as Hex;
 
       const partialUserOp = {
         sender: scwAddress,
         nonce: BigInt(0),
         initCode: initCode,
         callData: "0x" as Hex,
-        callGasLimit: BigInt(200_000),
-        verificationGasLimit: BigInt(3_500_000),
+        accountGasLimits,
         preVerificationGas: BigInt(100_000),
-        maxFeePerGas: BigInt(0),
-        maxPriorityFeePerGas: BigInt(0),
+        gasFees,
         paymasterAndData: "0x" as Hex,
         signature: "0x" as Hex,
       };
@@ -112,6 +124,7 @@ export class RegistrationService {
       const challengeBase64 = hexToBase64Url(userOpHash);
       const authentication = await fido2ClientService.startLogin({
         challenge: challengeBase64,
+        allowCredentials: [credentialID],
         userVerification: "required",
         timeout: 60000,
       });
@@ -126,17 +139,7 @@ export class RegistrationService {
       const finalUserOp = {
         ...partialUserOp,
         nonce: `0x${partialUserOp.nonce.toString(16)}`,
-        callGasLimit: `0x${partialUserOp.callGasLimit.toString(16)}`,
-        verificationGasLimit: `0x${partialUserOp.verificationGasLimit.toString(
-          16,
-        )}`,
-        preVerificationGas: `0x${partialUserOp.preVerificationGas.toString(
-          16,
-        )}`,
-        maxFeePerGas: `0x${partialUserOp.maxFeePerGas.toString(16)}`,
-        maxPriorityFeePerGas: `0x${partialUserOp.maxPriorityFeePerGas.toString(
-          16,
-        )}`,
+        preVerificationGas: `0x${partialUserOp.preVerificationGas.toString(16)}`,
         signature: encodedSignature,
       };
 

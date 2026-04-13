@@ -44,6 +44,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# hardhat
+/artifacts
+/cache
+/typechain-types
+
 # lock files
 package-lock.json
 yarn.lock

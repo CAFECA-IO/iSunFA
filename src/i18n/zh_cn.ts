@@ -210,6 +210,10 @@ export const zhCn = {
     login_failed: "登录失败",
     reg_failed: "注册失败",
     scroll_to_agree: "请详细阅览相关条文",
+    unregistered_confirm_title: "账户未注册",
+    unregistered_confirm_desc: "系统找不到此 Passkey 对应的账户。您是否要使用此设备注册一个新账户？",
+    unregistered_confirm_yes: "好，创建账户",
+    unregistered_confirm_no: "取消",
   },
   features: {
     title: "更聪明的财务管理",

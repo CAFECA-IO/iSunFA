@@ -4,8 +4,7 @@ import { IOenOrderData } from "@/interfaces/payment";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { buildOenTransactionPayload } from "@/lib/utils/payment_helpers";
-import { mintToAddress } from "@/services/token.service";
-import { CONTRACT_ADDRESSES } from "@/config/contracts";
+import { issuePurchasedPointsToMember } from "@/services/member.service";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
@@ -156,18 +155,9 @@ export async function POST(
     );
 
     // Info: (20260306 - Tzuhan) 呼叫鑄造代幣合約
-    const memo = JSON.stringify({
-      provider: "OEN",
-      orderId: order.id,
-      amount,
-      credits,
-      paymentMethodId,
-    });
-    const mintResult = await mintToAddress(
-      CONTRACT_ADDRESSES.NTD_TOKEN,
+    const mintResult = await issuePurchasedPointsToMember(
       user.address,
-      credits,
-      memo,
+      credits
     );
 
     // Info: (20260306 - Tzuhan) 鑄造代幣失敗
