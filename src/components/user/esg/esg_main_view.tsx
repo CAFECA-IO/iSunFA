@@ -5,7 +5,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { request } from "@/lib/utils/request";
-import FormulaManagementTab from "@/components/user/esg/formula_management_tab";
+import CoefficientManagementTab from "@/components/user/esg/coefficient_management_tab";
 import EsgSummary from "@/components/user/esg/esg_summary";
 import EsgTableSection from "@/components/user/esg/esg_table_section";
 import EsgTargetModal from "@/components/user/esg/esg_target_modal";
@@ -27,7 +27,7 @@ export default function EsgMainView() {
   const [accountBook, setAccountBook] = useState<{
     esgIndustryId: string;
   } | null>(null);
-  const [activeTab, setActiveTab] = useState<"records" | "formula">("records");
+  const [activeTab, setActiveTab] = useState<"records" | "coefficient">("records");
 
   useEffect(() => {
     if (accountBookId) {
@@ -79,7 +79,7 @@ export default function EsgMainView() {
       />
   </>
 
-  const tabContent = activeTab === "records" ? recordTab : <FormulaManagementTab />;
+  const tabContent = activeTab === "records" ? recordTab : <CoefficientManagementTab />;
 
   return (
     <div className="flex max-w-[calc(100vw-30px)] flex-col gap-y-4 px-0 lg:gap-y-6 lg:px-12">
@@ -146,16 +146,16 @@ export default function EsgMainView() {
           碳盤查紀錄
         </button>
         <button
-          title={"公式管理"}
+          title={"係數資料庫"}
           type="button"
           className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
-            activeTab === "formula"
+            activeTab === "coefficient"
               ? "bg-white text-orange-600 shadow-sm"
               : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
           }`}
-          onClick={() => setActiveTab("formula")}
+          onClick={() => setActiveTab("coefficient")}
         >
-          公式管理
+          係數資料庫
         </button>
       </div>
 

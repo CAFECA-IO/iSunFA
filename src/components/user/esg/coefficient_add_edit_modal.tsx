@@ -10,23 +10,23 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { mockFormulaList } from "@/interfaces/formula";
+import { mockCoefficientList } from "@/interfaces/coefficient";
 
-interface IFormulaAddEditModalProps {
-  selectedFormulaId: string | null;
+interface ICoefficientAddEditModalProps {
+  selectedCoefficientId: string | null;
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
 }
 
-export default function FormulaAddEditModal({
-  selectedFormulaId,
+export default function CoefficientAddEditModal({
+  selectedCoefficientId,
   isOpen,
   onClose,
   onConfirm,
-}: IFormulaAddEditModalProps) {
-  // Info: (20260413 - Julian) 如果有選擇公式 ID，則為編輯模式，否則為新增模式
-  const isEdit = selectedFormulaId !== null;
+}: ICoefficientAddEditModalProps) {
+  // Info: (20260413 - Julian) 如果有選擇係數 ID，則為編輯模式，否則為新增模式
+  const isEdit = selectedCoefficientId !== null;
 
   // Info: (20260413 - Julian) State
   const [name, setName] = useState<string>("");
@@ -35,10 +35,10 @@ export default function FormulaAddEditModal({
   const [description, setDescription] = useState<string>("");
 
   useEffect(() => {
-    // Info: (20260413 - Julian) 編輯模式：填入公式資料
+    // Info: (20260413 - Julian) 編輯模式：填入係數資料
     if (isEdit) {
-      // ToDo: (20260413 - Julian) 串接 API 取得公式資料
-      const data = mockFormulaList.find((formula) => formula.id === selectedFormulaId);
+      // ToDo: (20260413 - Julian) 串接 API 取得係數資料
+      const data = mockCoefficientList.find((coefficient) => coefficient.id === selectedCoefficientId);
       if (data) {
         setName(data.name);
         setEmissionFactor(data.emissionFactor.toString());
@@ -52,7 +52,7 @@ export default function FormulaAddEditModal({
       setUnit("");
       setDescription("");
     }
-  }, [selectedFormulaId, isOpen, isEdit]);
+  }, [selectedCoefficientId, isOpen, isEdit]);
 
   return (
     <Transition show={isOpen} as={Fragment}>
@@ -88,7 +88,7 @@ export default function FormulaAddEditModal({
                     </div>
                     <div className="flex flex-col">
                       <h3 className="text-xl font-semibold text-gray-900">
-                        {isEdit ? "編輯自訂公式" : "新增自訂公式"}
+                        {isEdit ? "編輯自訂係數" : "新增自訂係數"}
                       </h3>
                       <span className="text-xs text-gray-400">
                         定義您的專屬碳排計算邏輯
@@ -109,22 +109,22 @@ export default function FormulaAddEditModal({
                 <div className="grid grid-cols-2 grid-flow-row items-center gap-4 py-6 text-sm font-semibold">
                   {/* Info: (20260413 - Julian) Name */}
                   <div className="flex flex-col gap-1 col-span-2">
-                    <label htmlFor="formula-name" className="text-xs text-gray-400">公式名稱</label>
+                    <label htmlFor="coefficient-name" className="text-xs text-gray-400">係數名稱</label>
                     <input
-                      id="formula-name"
-                      aria-label="公式名稱"
+                      id="coefficient-name"
+                      aria-label="係數名稱"
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="例如：特定產品碳足跡公式"
+                      placeholder="例如：特定產品碳足跡係數"
                       className="rounded-lg border outline-none border-gray-100 bg-gray-50 px-4 py-3 text-sm placeholder:text-gray-400 text-slate-800"
                     />
                   </div>
                   {/* Info: (20260413 - Julian) Emission Factor */}
                   <div className="flex flex-col gap-1">
-                    <label htmlFor="formula-ef" className="text-xs text-gray-400">排放係數 (EF)</label>
+                    <label htmlFor="coefficient-ef" className="text-xs text-gray-400">排放係數 (EF)</label>
                     <input
-                      id="formula-ef"
+                      id="coefficient-ef"
                       aria-label="排放係數"
                       type="number"
                       value={emissionFactor}
@@ -135,9 +135,9 @@ export default function FormulaAddEditModal({
                   </div>
                   {/* Info: (20260413 - Julian) Unit */}
                   <div className="flex flex-col gap-1">
-                    <label htmlFor="formula-unit" className="text-xs text-gray-400">單位</label>
+                    <label htmlFor="coefficient-unit" className="text-xs text-gray-400">單位</label>
                     <input
-                      id="formula-unit"
+                      id="coefficient-unit"
                       aria-label="單位"
                       type="text"
                       placeholder="kgCO2e/你的單位"
@@ -148,14 +148,14 @@ export default function FormulaAddEditModal({
                   </div>
                   {/* Info: (20260413 - Julian) Description */}
                   <div className="flex flex-col gap-1 col-span-2">
-                    <label htmlFor="formula-desc" className="text-xs text-gray-400">描述說明</label>
+                    <label htmlFor="coefficient-desc" className="text-xs text-gray-400">描述說明</label>
                     <textarea
-                      id="formula-desc"
+                      id="coefficient-desc"
                       aria-label="描述說明"
                       rows={3}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="說明此公式的來源貨適用範圍..."
+                      placeholder="說明此係數的來源貨適用範圍..."
                       className="rounded-lg border outline-none resize-none border-gray-100 bg-gray-50 px-4 py-3 text-sm placeholder:text-gray-400 text-slate-800"
                     />
                   </div>
@@ -176,7 +176,7 @@ export default function FormulaAddEditModal({
                     onClick={onConfirm}
                   >
                     <CircleCheck size={20} />
-                    <p>儲存公式</p>
+                    <p>儲存係數</p>
                   </button>
                 </div>
               </DialogPanel>

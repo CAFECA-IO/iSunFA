@@ -1,21 +1,21 @@
-export enum FormulaCategory {
+export enum CoefficientCategory {
   STANDARD = "standard",
   CUSTOM = "custom",
 }
 
-export interface IFormula {
+export interface ICoefficient {
   id: string;
   name: string; // Info: (20260413 - Julian) 公式名稱
   emissionFactor: number; // Info: (20260413 - Julian) 排放係數
   unit: string; // Info: (20260413 - Julian) 單位
   description: string; // Info: (20260413 - Julian) 公式描述
   source: string; // Info: (20260413 - Julian) 公式來源
-  category: FormulaCategory; // Info: (20260413 - Julian) 公式標籤：自訂、標準
+  category: CoefficientCategory; // Info: (20260413 - Julian) 公式標籤：自訂、標準
   createdAt: number; // Info: (20260413 - Julian) 建立時間
   updatedAt: number; // Info: (20260413 - Julian) 更新時間
 }
 
-export const mockFormulaList: IFormula[] = [
+export const mockCoefficientList: ICoefficient[] = [
   {
     id: "1",
     name: "電力排放公式 (台灣 2023)",
@@ -23,7 +23,7 @@ export const mockFormulaList: IFormula[] = [
     unit: "kWh",
     description: "根據經濟部能源署公布之電力排碳係數計算",
     source: "經濟部能源署",
-    category: FormulaCategory.STANDARD,
+    category: CoefficientCategory.STANDARD,
     createdAt: 1701388800,
     updatedAt: 1701388800,
   },
@@ -33,7 +33,7 @@ export const mockFormulaList: IFormula[] = [
     description: "國內高鐵每人公里排放係數",
     emissionFactor: 0.034,
     unit: "km",
-    category: FormulaCategory.STANDARD,
+    category: CoefficientCategory.STANDARD,
     source: "環保署",
     createdAt: 1701388800,
     updatedAt: 1758288800,
@@ -45,7 +45,7 @@ export const mockFormulaList: IFormula[] = [
     unit: "kg",
     description: "供應商 A 提供之鋼鐵排放係數",
     source: "供應商 A",
-    category: FormulaCategory.CUSTOM,
+    category: CoefficientCategory.CUSTOM,
     createdAt: 1701388800,
     updatedAt: 1724288800,
   },
@@ -56,7 +56,7 @@ export const mockFormulaList: IFormula[] = [
     unit: "km",
     description: "供應商 B 提供之通勤排放係數",
     source: "供應商 B",
-    category: FormulaCategory.CUSTOM,
+    category: CoefficientCategory.CUSTOM,
     createdAt: 1701388800,
     updatedAt: 1736388800,
   },
