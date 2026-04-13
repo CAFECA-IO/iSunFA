@@ -113,7 +113,7 @@ export async function getAdminWalletInfo() {
     let rpcUrl = "http://127.0.0.1:20024";
 
     if (fs.existsSync(envPath)) {
-      const dotenv = (await import("dotenv")).default;
+      const dotenv = await import("dotenv").then(m => (m as unknown as { default?: typeof m }).default || m);
       const envConfig = dotenv.parse(fs.readFileSync(envPath, "utf8"));
       if (envConfig.NEXT_PUBLIC_RPC_URL) {
         rpcUrl = envConfig.NEXT_PUBLIC_RPC_URL;
@@ -134,7 +134,7 @@ export async function getAdminWalletInfo() {
     const envSetupPath = path.join(process.cwd(), ".env.setup");
     let cpAddress: string | null = null;
     if (fs.existsSync(envSetupPath)) {
-      const dotenv = (await import("dotenv")).default;
+      const dotenv = await import("dotenv").then(m => (m as unknown as { default?: typeof m }).default || m);
       const setupConfig = dotenv.parse(fs.readFileSync(envSetupPath, "utf8"));
       if (setupConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS) {
         cpAddress = setupConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS;
@@ -202,7 +202,7 @@ export async function initDb() {
   const rootPath = process.cwd();
 
   const envPath = path.join(process.cwd(), ".env");
-  const dotenv = (await import("dotenv")).default;
+  const dotenv = await import("dotenv").then(m => (m as unknown as { default?: typeof m }).default || m);
   const envConfig = dotenv.parse(fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf8") : "");
 
   const dbPassword = envConfig.POSTGRES_PASSWORD || "isunfa";
@@ -254,12 +254,22 @@ export async function initDb() {
   return result;
 }
 
-export async function checkSuperAdminExists(): Promise<{ exists: boolean, address?: string }> {
+export async function checkSuperAdminExists(): Promise<{ exists: boolean, address?: string, needsAuth?: boolean, credId?: string }> {
   try {
     const localPrisma = await getDynamicPrisma();
     const adminUser = await localPrisma.user.findFirst({
       where: { role: "SUPER_ADMIN" },
     });
+
+    const envSetupPath = path.join(process.cwd(), ".env.setup");
+    let envCredId, envPubX, envPubY;
+    if (fs.existsSync(envSetupPath)) {
+      const dotenv = await import("dotenv").then(m => (m as unknown as { default?: typeof m }).default || m);
+      const envConfig = dotenv.parse(fs.readFileSync(envSetupPath, "utf8"));
+      envCredId = envConfig.SUPER_ADMIN_CRED_ID;
+      envPubX = envConfig.SUPER_ADMIN_PUB_X;
+      envPubY = envConfig.SUPER_ADMIN_PUB_Y;
+    }
 
     if (adminUser) {
       if (adminUser.credentialId === "undefined" || !adminUser.credentialId) {
@@ -268,67 +278,13 @@ export async function checkSuperAdminExists(): Promise<{ exists: boolean, addres
         await localPrisma.$disconnect();
         return { exists: false };
       }
-
-      // Info: (20260412 - Luphia) Sync existing valid super admin to .env.setup if missing
-      const envSetupPath = path.join(process.cwd(), ".env.setup");
-      if (fs.existsSync(envSetupPath)) {
-        let envContent = fs.readFileSync(envSetupPath, "utf-8");
-        let updated = false;
-
-        const updateEnv = (key: string, value: string) => {
-          const regex = new RegExp(`^${key}=.*$`, "m");
-          if (envContent.match(regex)) {
-            envContent = envContent.replace(regex, `${key}="${value}"`);
-          } else {
-            envContent += `\n${key}="${value}"`;
-          }
-        };
-
-        if (!envContent.includes("SUPER_ADMIN_CRED_ID=")) {
-          updateEnv("SUPER_ADMIN_CRED_ID", adminUser.credentialId);
-          updateEnv("SUPER_ADMIN_PUB_X", adminUser.pubKeyX!);
-          updateEnv("SUPER_ADMIN_PUB_Y", adminUser.pubKeyY!);
-          updated = true;
-        }
-
-        if (!envContent.includes("DEWT_PRIVATE_KEY_PEM=")) {
-          const { privateKey } = generateKeyPairSync('ec', {
-            namedCurve: 'prime256v1',
-            publicKeyEncoding: { type: 'spki', format: 'pem' },
-            privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
-          });
-          const dewtKeyPem = privateKey.replace(/\n/g, "\\n");
-          updateEnv("DEWT_PRIVATE_KEY_PEM", dewtKeyPem);
-          updated = true;
-        }
-
-        if (updated) {
-          fs.writeFileSync(envSetupPath, envContent, "utf-8");
-        }
-      }
-
       await localPrisma.$disconnect();
-      return { exists: true, address: adminUser.address };
+      return { exists: true, address: adminUser.address, needsAuth: true, credId: adminUser.credentialId };
     }
 
-    if (!adminUser) {
-      const envSetupPath = path.join(process.cwd(), ".env.setup");
-      if (fs.existsSync(envSetupPath)) {
-        const dotenv = (await import("dotenv")).default;
-        const envConfig = dotenv.parse(fs.readFileSync(envSetupPath, "utf8"));
-        if (envConfig.SUPER_ADMIN_CRED_ID && envConfig.SUPER_ADMIN_PUB_X && envConfig.SUPER_ADMIN_PUB_Y) {
-          console.log("Auto-restoring SUPER_ADMIN from .env.setup...");
-          const res = await createSuperAdminRecord(
-            envConfig.SUPER_ADMIN_CRED_ID,
-            envConfig.SUPER_ADMIN_PUB_X,
-            envConfig.SUPER_ADMIN_PUB_Y
-          );
-          if (res.success && res.address) {
-            await localPrisma.$disconnect();
-            return { exists: true, address: res.address };
-          }
-        }
-      }
+    if (!adminUser && envCredId && envPubX && envPubY) {
+      await localPrisma.$disconnect();
+      return { exists: true, needsAuth: true, credId: envCredId };
     }
 
     await localPrisma.$disconnect();
@@ -339,6 +295,36 @@ export async function checkSuperAdminExists(): Promise<{ exists: boolean, addres
   }
 }
 
+// Info: (20260413 - Luphia) Proceed with system config load AFTER the user explicitly authorizes via FIDO
+export async function authorizeSuperAdmin(): Promise<{ success: boolean, address?: string, error?: string }> {
+  try {
+    const localPrisma = await getDynamicPrisma();
+    const user = await localPrisma.user.findFirst({ where: { role: "SUPER_ADMIN" } });
+
+    if (user) {
+      await createSuperAdminRecord(user.credentialId!, user.pubKeyX!, user.pubKeyY!);
+      await localPrisma.$disconnect();
+      return { success: true, address: user.address };
+    }
+
+    const envSetupPath = path.join(process.cwd(), ".env.setup");
+    if (fs.existsSync(envSetupPath)) {
+      const dotenv = await import("dotenv").then(m => (m as unknown as { default?: typeof m }).default || m);
+      const envConfig = dotenv.parse(fs.readFileSync(envSetupPath, "utf-8"));
+      if (envConfig.SUPER_ADMIN_CRED_ID && envConfig.SUPER_ADMIN_PUB_X && envConfig.SUPER_ADMIN_PUB_Y) {
+        const res = await createSuperAdminRecord(envConfig.SUPER_ADMIN_CRED_ID, envConfig.SUPER_ADMIN_PUB_X, envConfig.SUPER_ADMIN_PUB_Y);
+        await localPrisma.$disconnect();
+        return { success: res.success, address: res.address };
+      }
+    }
+
+    await localPrisma.$disconnect();
+    return { success: false, error: "Configuration not found" };
+  } catch (err) {
+    return { success: false, error: String(err) };
+  }
+}
+
 async function getDynamicPrisma() {
   const envSetupPath = path.join(process.cwd(), ".env.setup");
   const envPath = path.join(process.cwd(), ".env");
@@ -346,7 +332,7 @@ async function getDynamicPrisma() {
 
   let dbUrl = process.env.DATABASE_URL;
   if (targetEnv) {
-    const dotenv = (await import("dotenv")).default;
+    const dotenv = await import("dotenv").then(m => (m as unknown as { default?: typeof m }).default || m);
     const envConfig = dotenv.parse(fs.readFileSync(targetEnv, "utf8"));
     if (envConfig.DATABASE_URL) dbUrl = envConfig.DATABASE_URL;
   }
@@ -368,7 +354,7 @@ export async function createSuperAdminRecord(credentialId: string, pubKeyX: stri
     // Info: (20260412 - Luphia) Dynamically read from .env.setup first, then .env
     const targetEnvPath = fs.existsSync(envSetupPath) ? envSetupPath : (fs.existsSync(envPath) ? envPath : null);
     if (targetEnvPath) {
-      const dotenv = (await import("dotenv")).default;
+      const dotenv = await import("dotenv").then(m => (m as unknown as { default?: typeof m }).default || m);
       const envConfig = dotenv.parse(fs.readFileSync(targetEnvPath, "utf8"));
       if (envConfig.NEXT_PUBLIC_SCW_FACTORY_ADDRESS) {
         factoryAddress = envConfig.NEXT_PUBLIC_SCW_FACTORY_ADDRESS as `0x${string}`;
@@ -388,16 +374,21 @@ export async function createSuperAdminRecord(credentialId: string, pubKeyX: stri
     });
 
     const localPrisma = await getDynamicPrisma();
-    await localPrisma.user.create({
-      data: {
-        address: address.toLowerCase(),
-        pubKeyX,
-        pubKeyY,
-        credentialId,
-        role: "SUPER_ADMIN",
-        name: "ISUNFA SUPER ADMIN"
-      },
-    });
+    const existing = await localPrisma.user.findUnique({ where: { address: address.toLowerCase() } });
+    if (!existing) {
+      // Info: (20260413 - Luphia) Securely downgrade old SUPER ADMIN in case of forced registration overwrite to avoid FK constraint errors
+      await localPrisma.user.updateMany({ where: { role: "SUPER_ADMIN" }, data: { role: "USER" } });
+      await localPrisma.user.create({
+        data: {
+          address: address.toLowerCase(),
+          pubKeyX,
+          pubKeyY,
+          credentialId,
+          role: "SUPER_ADMIN",
+          name: "ISUNFA SUPER ADMIN"
+        },
+      });
+    }
     await localPrisma.$disconnect();
 
     // Info: (20260412 - Luphia) Automatically register ERC-3643 Wallet & Set as Contract Manager
@@ -411,7 +402,7 @@ export async function createSuperAdminRecord(credentialId: string, pubKeyX: stri
 
       if (adminAccount) {
         const targetEnvConfig = fs.existsSync(envSetupPath)
-          ? (await import("dotenv")).default.parse(fs.readFileSync(envSetupPath, "utf8"))
+          ? await import("dotenv").then(m => ((m as unknown as { default?: typeof m }).default || m).parse(fs.readFileSync(envSetupPath, "utf8")))
           : {};
         const rpcUrl = targetEnvConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
 
@@ -519,7 +510,7 @@ export async function createSuperAdminRecord(credentialId: string, pubKeyX: stri
     if (fs.existsSync(envSetupPath)) {
       let envContent = fs.readFileSync(envSetupPath, "utf-8");
       if (!envContent.includes("# PART 7")) {
-        envContent += "\n\n# PART 7: Security & Identity Configuration";
+        envContent += "\n\n# PART 7: Server SUPER ADMIN";
       }
       const updateEnv = (key: string, value: string) => {
         const regex = new RegExp(`^${key}=.*$`, "m");
@@ -604,10 +595,10 @@ export async function getEnvHashChallenge(): Promise<{ success: boolean; challen
 
     const envPath = path.join(process.cwd(), ".env");
     const envContentOrig = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf-8") : "";
-    
+
     const content = fs.readFileSync(envSetupPath, "utf-8");
-    const dotenv = (await import("dotenv")).default;
-    
+    const dotenv = await import("dotenv").then(m => (m as unknown as { default?: typeof m }).default || m);
+
     // Info: (20260413 - Luphia) Mock the EXACT future state of .env by merging .env.setup into the current .env
     const baseConfig = dotenv.parse(envContentOrig);
     const setupConfig = dotenv.parse(content);
@@ -642,7 +633,7 @@ export async function verifyAndFinalizeConfig(authData: AuthenticationJSON): Pro
       return { success: false, error: "Setup file not found" };
     }
 
-    const dotenv = (await import("dotenv")).default;
+    const dotenv = await import("dotenv").then(m => (m as unknown as { default?: typeof m }).default || m);
     const envConfig = dotenv.parse(fs.readFileSync(envSetupPath, "utf-8"));
 
     const pubX = envConfig.SUPER_ADMIN_PUB_X;
@@ -701,7 +692,7 @@ export async function isSystemSetupComplete(): Promise<boolean> {
     const envPath = path.join(process.cwd(), ".env");
     if (!fs.existsSync(envPath)) return false;
 
-    const dotenv = (await import("dotenv")).default;
+    const dotenv = await import("dotenv").then(m => (m as unknown as { default?: typeof m }).default || m);
     const envConfig = dotenv.parse(fs.readFileSync(envPath, "utf-8"));
 
     const pubX = envConfig.SUPER_ADMIN_PUB_X;
@@ -775,6 +766,46 @@ export async function saveExternalConfig(config: {
 
     fs.writeFileSync(envSetupPath, content, "utf-8");
     return { success: true };
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+export async function getExternalConfig(): Promise<{
+  success: boolean;
+  data?: {
+    appUrl: string;
+    gaId: string;
+    geminiKey: string;
+    oenToken: string;
+    oenMerchant: string;
+  };
+  error?: string;
+}> {
+  try {
+    const envPath = path.join(process.cwd(), ".env");
+    const envSetupPath = path.join(process.cwd(), ".env.setup");
+
+    // Info: (20260413 - Luphia) Read from .env.setup first, then .env
+    const targetEnv = fs.existsSync(envSetupPath) ? envSetupPath : (fs.existsSync(envPath) ? envPath : null);
+
+    if (targetEnv) {
+      const dotenv = await import("dotenv").then(m => (m as unknown as { default?: typeof m }).default || m);
+      const config = dotenv.parse(fs.readFileSync(targetEnv, "utf-8"));
+
+      return {
+        success: true,
+        data: {
+          appUrl: config.NEXT_PUBLIC_APP_URL || "https://isunfa.localhost",
+          gaId: config.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-ZNVVW7JP0N",
+          geminiKey: config.GEMINI_API_KEY || "",
+          oenToken: config.OEN_ACCESS_TOKEN || "",
+          oenMerchant: config.OEN_MERCHANT_ID || "mermer"
+        }
+      };
+    }
+
+    return { success: false, error: "No config file found" };
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : String(err) };
   }

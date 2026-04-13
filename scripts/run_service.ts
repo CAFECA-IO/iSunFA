@@ -1,7 +1,11 @@
 import fs from "fs";
 import path from "path";
-import "dotenv/config";
+import dotenv from "dotenv";
 
+if (fs.existsSync(path.resolve(process.cwd(), ".env.setup"))) {
+  dotenv.config({ path: path.resolve(process.cwd(), ".env.setup") });
+}
+dotenv.config(); // Info: (20260413 - Luphia) fallback to .env 
 async function main() {
   const args = process.argv.slice(2);
 
@@ -29,7 +33,7 @@ async function main() {
   console.log(`======================================================\n`);
 
   try {
-    const servicesDir = path.resolve(__dirname, "../src/services");
+    const servicesDir = path.resolve(process.cwd(), "src/services");
     const files = fs.readdirSync(servicesDir).filter(f => f.endsWith(".service.ts") || f.endsWith(".service.tsx"));
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
