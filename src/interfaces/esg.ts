@@ -12,14 +12,14 @@ export enum EsgIntensity {
   HIGH = "HIGH",
 }
 
-export interface ITotalEmissions {
+export interface IEsgTotalEmissions {
   value: number;
   unit: string;
   estimatedEndOfMonth: number;
   estimatedUnit: string;
 }
 
-export interface IEmissionIntensity {
+export interface IEsgEmissionIntensity {
   value: number | null;
   unit: string;
   industryAverage: number;
@@ -31,26 +31,19 @@ export interface IEsgScopeData {
   percentage: number;
 }
 
-export interface IScopeDistribution {
+export interface IEsgScopeDistribution {
   scope1: IEsgScopeData;
   scope2: IEsgScopeData;
   scope3: IEsgScopeData;
 }
 
-export interface IEmissionSummary {
-  totalEmissions: ITotalEmissions;
-  emissionIntensity: IEmissionIntensity;
-  scopeDistribution: IScopeDistribution;
+export interface IEsgDashboardSummary {
+  totalEmissions: IEsgTotalEmissions;
+  emissionIntensity: IEsgEmissionIntensity;
+  scopeDistribution: IEsgScopeDistribution;
   goalProgress: {
     percentage: number;
   };
-}
-
-export interface IEsgDashboardSummary {
-  todayEsgRecordCount: number;
-  dqiAverage: number;
-  pendingEsgRecordCount: number;
-  aiAverageConfidence: number;
 }
 
 export interface IEsgRecord {

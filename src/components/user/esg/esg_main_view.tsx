@@ -5,32 +5,37 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { request } from "@/lib/utils/request";
+import FormulaManagementTab from "@/components/user/esg/formula_management_tab";
 import EsgSummary from "@/components/user/esg/esg_summary";
 import EsgTableSection from "@/components/user/esg/esg_table_section";
 import EsgTargetModal from "@/components/user/esg/esg_target_modal";
+import { IApiResponse } from "@/lib/utils/response";
 
 export default function EsgMainView() {
   const { t } = useTranslation();
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
 
-  const [isTargetModalOpen, setIsTargetModalOpen] = useState(false);
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
 
+  const [isTargetModalOpen, setIsTargetModalOpen] = useState<boolean>(false);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedMonth, setSelectedMonth] = useState<number | "">("");
-
   const [startYear, setStartYear] = useState<number>(currentYear);
   const [startMonth, setStartMonth] = useState<number>(1);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [accountBook, setAccountBook] = useState<any>(null);
+  const [accountBook, setAccountBook] = useState<{
+    esgIndustryId: string;
+  } | null>(null);
+  const [activeTab, setActiveTab] = useState<"records" | "formula">("records");
 
   useEffect(() => {
     if (accountBookId) {
-      request(`/api/v1/user/account_book/${accountBookId}`)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .then((res: any) => {
+      const fetchAccountBook = async () => {
+        try {
+          const res = await request<
+            IApiResponse<{ esgIndustryId: string; createdAt: string }>
+          >(`/api/v1/user/account_book/${accountBookId}`);
           if (res.payload) {
             setAccountBook(res.payload);
             if (res.payload.createdAt) {
@@ -39,8 +44,11 @@ export default function EsgMainView() {
               setStartMonth(createdAt.getMonth() + 1);
             }
           }
-        })
-        .catch((err) => console.error(err));
+        } catch (error) {
+          console.error("Failed to fetch cash flow statement:", error);
+        }
+      };
+      fetchAccountBook();
     }
   }, [accountBookId]);
 
@@ -54,6 +62,24 @@ export default function EsgMainView() {
   if (selectedYear === startYear) {
     months = months.filter((m) => m >= startMonth);
   }
+
+  const recordTab = <>
+        {/* Info: (20260312 - Julian) Summary */}
+      <EsgSummary year={selectedYear} month={selectedMonth} />
+
+      {/* Info: (20260312 - Julian) Table Section */}
+      <EsgTableSection year={selectedYear} month={selectedMonth} />
+
+      {/* Info: (20260321 - Luphia) Target Modal */}
+      <EsgTargetModal
+        isOpen={isTargetModalOpen}
+        onClose={() => setIsTargetModalOpen(false)}
+        accountBookId={accountBookId}
+        esgIndustryId={Number(accountBook?.esgIndustryId) || null}
+      />
+  </>
+
+  const tabContent = activeTab === "records" ? recordTab : <FormulaManagementTab />;
 
   return (
     <div className="flex max-w-[calc(100vw-30px)] flex-col gap-y-4 px-0 lg:gap-y-6 lg:px-12">
@@ -105,19 +131,36 @@ export default function EsgMainView() {
         </div>
       </div>
 
-      {/* Info: (20260312 - Julian) Summary */}
-      <EsgSummary year={selectedYear} month={selectedMonth} />
+      {/* Info: (20260413 - Julian) Tab Switch */}
+      <div className="ml-auto grid grid-cols-2 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5">
+        <button
+          title={"碳盤查紀錄"}
+          type="button"
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+            activeTab === "records"
+              ? "bg-white text-orange-600 shadow-sm"
+              : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
+          }`}
+          onClick={() => setActiveTab("records")}
+        >
+          碳盤查紀錄
+        </button>
+        <button
+          title={"公式管理"}
+          type="button"
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+            activeTab === "formula"
+              ? "bg-white text-orange-600 shadow-sm"
+              : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
+          }`}
+          onClick={() => setActiveTab("formula")}
+        >
+          公式管理
+        </button>
+      </div>
 
-      {/* Info: (20260312 - Julian) Table Section */}
-      <EsgTableSection year={selectedYear} month={selectedMonth} />
-
-      {/* Info: (20260321 - Luphia) Target Modal */}
-      <EsgTargetModal
-        isOpen={isTargetModalOpen}
-        onClose={() => setIsTargetModalOpen(false)}
-        accountBookId={accountBookId}
-        esgIndustryId={accountBook?.esgIndustryId || null}
-      />
+      {/* Info: (20260413 - Julian) Tab Content */}
+      {tabContent}
     </div>
   );
 }
