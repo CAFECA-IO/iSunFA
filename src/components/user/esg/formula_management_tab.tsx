@@ -1,11 +1,23 @@
 "use client";
 /* eslint-disable jsx-a11y/no-static-element-interactions, react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
-import { Globe, User, Plus, Search, PenLine, Trash2 } from "lucide-react";
+import {
+  Globe,
+  User,
+  Plus,
+  Search,
+  PenLine,
+  Trash2,
+  SearchX,
+} from "lucide-react";
 import { timestampToString } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
 import FormulaAddEditModal from "@/components/user/esg/formula_add_edit_modal";
-import { FormulaCategory, IFormula, mockFormulaList } from "@/interfaces/formula";
+import {
+  FormulaCategory,
+  IFormula,
+  mockFormulaList,
+} from "@/interfaces/formula";
 
 enum FormulaTab {
   ALL = "all",
@@ -121,10 +133,8 @@ const FormulaCard = ({ formula, onEdit, onDelete }: IFormulaCardProps) => {
   );
 };
 
-
-
 export default function FormulaManagementTab() {
-  const [formulaList, setFormulaList] = useState<IFormula[]>(mockFormulaList);
+  const [formulaList, setFormulaList] = useState<IFormula[]>([]);
   const [activeTab, setActiveTab] = useState<FormulaTab>(FormulaTab.ALL);
 
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState<boolean>(false);
@@ -147,12 +157,12 @@ export default function FormulaManagementTab() {
   useEffect(() => {
     switch (activeTab) {
       case FormulaTab.ALL:
-        setFormulaList(mockFormulaList);
+        setFormulaList([]);
         break;
       case FormulaTab.STANDARD:
         setFormulaList(
           mockFormulaList.filter(
-          (f) => f.category === FormulaCategory.STANDARD,
+            (f) => f.category === FormulaCategory.STANDARD,
           ),
         );
         break;
@@ -202,13 +212,27 @@ export default function FormulaManagementTab() {
     );
   });
 
+  const formulaSection =
+    formulaList.length > 0 ? (
+      <div className="grid grid-flow-row grid-cols-1 gap-y-4 lg:grid-cols-2 lg:gap-x-4">
+        {displayedFormulaList}
+      </div>
+    ) : (
+      <div className="flex flex-col items-center justify-center gap-2 p-4 text-xl font-semibold text-gray-400">
+        <SearchX size={40} />
+        <p>沒有公式</p>
+      </div>
+    );
+
   return (
     <>
       {/* Info: (20260413 - Julian) Toolbar */}
       <div className="flex flex-col gap-8 rounded-xl bg-white p-6 shadow-sm lg:flex-row">
         {/* Info: (20260413 - Julian) Search */}
         <div className="flex flex-1 items-center gap-2 rounded-lg bg-gray-50 px-5 py-3">
-          <label htmlFor="formula-search-input" className="sr-only">搜尋公式</label>
+          <label htmlFor="formula-search-input" className="sr-only">
+            搜尋公式
+          </label>
           <Search size={20} className="text-gray-300" />
           <input
             id="formula-search-input"
@@ -238,9 +262,7 @@ export default function FormulaManagementTab() {
       </div>
 
       {/* Info: (20260413 - Julian) Formula Section */}
-      <div className="grid grid-flow-row grid-cols-1 gap-y-4 lg:grid-cols-2 lg:gap-x-4">
-        {displayedFormulaList}
-      </div>
+      {formulaSection}
 
       {/* Info: (20260413 - Julian) Confirm Modal */}
       <ConfirmModal

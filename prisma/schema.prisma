@@ -431,6 +431,9 @@ model AccountBook {
   // Info: (20260322 - Luphia) 帳本對應的各年度 ESG 目標
   esgTargets EsgTarget[]
 
+  // Info: (20260413 - Julian) 帳本對應的公式
+  formulas Formula[]
+
   @@map("account_book")
 }
 
@@ -698,4 +701,23 @@ model Checkin {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("checkin")
+}
+
+model Formula {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  name           String
+  description    String
+  unit           String
+  emissionFactor Decimal @map("emission_factor")
+  source         String
+
+  // Info: (20260413 - Julian) 關聯帳本，沒有帳本代表是標準公式
+  accountBookId String?      @map("account_book_id")
+  accountBook   AccountBook? @relation(fields: [accountBookId], references: [id])
+
+  @@map("formula")
 }
