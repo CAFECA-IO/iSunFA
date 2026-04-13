@@ -4,25 +4,25 @@ import { ShareSanitizerFactory, ICarbonMetrics, IFinancialMetrics, TShareData, T
 
 export const dynamic = 'force-dynamic';
 
+// Info: (20260413 - Tzuhan) 確保涵蓋所有 11 種分類
 const CATEGORY_MAP: Record<string, string> = {
-    carbon_health_check: '碳健檢報告',
-    net_zero_emissions: '淨零碳排報告',
-    financial_product_rating: '金融商品評級',
-    irsc: '智能企業評級',
-    industry_development: '產業發展分析',
-    market_trends: '交易市場趨勢',
-    balance_sheet: '資產負債表查核',
-    cash_flow: '現金流量表查核',
-    income_statement: '損益表查核',
-    financial_health: '財務健康分析',
-    financial_compliance: '財務合規審查',
+    balance_sheet: "資產負債表",
+    cash_flow: "現金流量表",
+    income_statement: "損益表",
+    irsc: "智能企業評級",
+    financial_compliance: "財務合規",
+    financial_health: "財務健康",
+    market_trends: "交易市場趨勢",
+    industry_development: "產業發展",
+    financial_product_rating: "金融商品評級",
+    carbon_health_check: "碳健檢",
+    net_zero_emissions: "淨零碳排",
 };
 
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const token = searchParams.get('token');
-
         if (!token) throw new Error('Missing token');
 
         const shareRecord = await prisma.reportShareToken.findUnique({
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
             include: { analysis: true }
         });
 
-        if (!shareRecord) throw new Error('Token invalid or inactive');
+        if (!shareRecord) throw new Error('Token invalid');
 
         const sanitizer = ShareSanitizerFactory.getSanitizer(shareRecord.category);
         const safeData = sanitizer.sanitize(
@@ -45,62 +45,50 @@ export async function GET(request: Request) {
         let displayTags: string[] = [];
         let isScoreMode = false;
 
-        if (['carbon_health_check', 'net_zero_emissions'].includes(shareRecord.category)) {
-            const metrics = safeData.metrics as ICarbonMetrics;
-            displayScore = metrics?.score || '';
-            displayTags = metrics?.tags?.slice(0, 3) || [];
-            isScoreMode = true;
-        }
-        else if (['financial_product_rating', 'irsc', 'industry_development'].includes(shareRecord.category)) {
-            const metrics = safeData.metrics as IFinancialMetrics;
-            displayScore = metrics?.rating || '';
-            displayTags = metrics?.tags?.slice(0, 3) || [];
+        // Info: (20260413 - Tzuhan) 依據 metrics 型別判斷要顯示的畫面元素
+        if (safeData.metrics !== null) {
+            if ('score' in safeData.metrics) { // Info: (20260413 - Tzuhan) Carbon 類
+                displayScore = (safeData.metrics as ICarbonMetrics).score || '';
+                displayTags = safeData.metrics.tags.slice(0, 3) || [];
+                isScoreMode = true;
+            } else if ('rating' in safeData.metrics) { // Info: (20260413 - Tzuhan) Rating 類
+                displayScore = (safeData.metrics as IFinancialMetrics).rating || '';
+                displayTags = safeData.metrics.tags.slice(0, 3) || [];
+            }
         }
 
-        // Info: (20260413 - Tzuhan) 使用 JSX 繪製圖片 (1200x630)
         return new ImageResponse(
             (
-                <div
-                    style={{
-                        height: '100%',
-                        width: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        backgroundColor: '#FAFAFA',
-                        fontFamily: 'sans-serif',
-                        position: 'relative',
-                    }}
-                >
-                    <div style={{ display: 'flex', width: '100%', height: '16px', background: 'linear-gradient(90deg, #EA580C 0%, #F97316 50%, #3B82F6 100%)' }} />
+                <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF', fontFamily: 'sans-serif' }}>
+                    <div style={{ display: 'flex', width: '100%', height: '12px', background: '#EA580C' }} />
 
                     <div style={{ display: 'flex', flexDirection: 'column', padding: '60px 80px', flex: 1, justifyContent: 'space-between' }}>
-
-                        {/* Header: Logo 與 報告類型 */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                {/* ToDo: (20260413 - Tzuhan) 加上 iSunFA 的 Logo */}
-                                <div style={{ display: 'flex', width: '48px', height: '48px', borderRadius: '12px', background: '#EA580C', color: 'white', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: 'bold' }}>
-                                    i
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="5" fill="#EA580C" />
+                                    <path d="M12 2V4M12 20V22M4 12H2M22 12H20M19.07 4.93L17.66 6.34M6.34 17.66L4.93 19.07M19.07 19.07L17.66 17.66M6.34 6.34L4.93 4.93" stroke="#EA580C" strokeWidth="2" strokeLinecap="round" />
+                                </svg>
+                                <div style={{ display: 'flex', fontSize: '32px', fontWeight: 800 }}>
+                                    <span style={{ color: '#111827' }}>iSun</span>
+                                    <span style={{ color: '#EA580C' }}>FA</span>
                                 </div>
-                                <span style={{ fontSize: '32px', fontWeight: 800, color: '#111827' }}>iSunFA 陽光智能會計</span>
                             </div>
-                            <div style={{ display: 'flex', padding: '8px 24px', background: '#DBEAFE', borderRadius: '999px', border: '2px solid #BFDBFE' }}>
-                                <span style={{ color: '#2563EB', fontSize: '24px', fontWeight: 600 }}>{categoryName}</span>
+                            <div style={{ display: 'flex', padding: '6px 20px', background: '#FFF7ED', borderRadius: '999px', border: '1.5px solid #FFEDD5' }}>
+                                <span style={{ color: '#C2410C', fontSize: '20px', fontWeight: 600 }}>{categoryName}</span>
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginTop: '40px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '60%' }}>
-                                <span style={{ fontSize: '28px', color: '#6B7280', marginBottom: '16px' }}>分析目標</span>
-                                <span style={{ fontSize: '72px', fontWeight: 900, color: '#111827', lineHeight: 1.1 }}>
-                                    {companyName}
-                                </span>
+                        <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                                <span style={{ fontSize: '24px', color: '#6B7280', marginBottom: '12px', letterSpacing: '0.05em' }}>ANALYSIS TARGET</span>
+                                <span style={{ fontSize: '64px', fontWeight: 900, color: '#111827', lineHeight: 1.2 }}>{companyName}</span>
 
                                 {displayTags.length > 0 && (
-                                    <div style={{ display: 'flex', gap: '16px', marginTop: '32px', flexWrap: 'wrap' }}>
+                                    <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
                                         {displayTags.map((tag, idx) => (
-                                            <div key={idx} style={{ display: 'flex', padding: '8px 20px', background: '#F3F4F6', borderRadius: '8px', border: '2px solid #E5E7EB' }}>
-                                                <span style={{ fontSize: '24px', color: '#4B5563', fontWeight: 500 }}>#{tag}</span>
+                                            <div key={idx} style={{ display: 'flex', padding: '6px 16px', background: '#F3F4F6', borderRadius: '6px' }}>
+                                                <span style={{ fontSize: '20px', color: '#374151', fontWeight: 500 }}>#{tag}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -108,40 +96,27 @@ export async function GET(request: Request) {
                             </div>
 
                             {displayScore && (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#FFF7ED', padding: '40px', borderRadius: '32px', border: '4px solid #FFEDD5', minWidth: '300px' }}>
-                                    <span style={{ fontSize: '24px', color: '#C2410C', fontWeight: 600, marginBottom: '8px' }}>
-                                        {isScoreMode ? '綜合評分' : '最終評級'}
-                                    </span>
-                                    <span style={{ fontSize: '96px', fontWeight: 900, color: '#EA580C', lineHeight: 1 }}>
-                                        {displayScore}
-                                    </span>
-                                    {isScoreMode && <span style={{ fontSize: '24px', color: '#F97316', marginTop: '8px' }}>/ 100</span>}
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#FFF7ED', padding: '36px', borderRadius: '24px', border: '2px solid #FFEDD5', marginLeft: '40px' }}>
+                                    <span style={{ fontSize: '20px', color: '#9A3412', fontWeight: 700, marginBottom: '4px' }}>{isScoreMode ? 'SCORE' : 'RATING'}</span>
+                                    <span style={{ fontSize: '84px', fontWeight: 900, color: '#EA580C', lineHeight: 1 }}>{displayScore}</span>
+                                    {isScoreMode && <span style={{ fontSize: '20px', color: '#F97316' }}>/ 100</span>}
                                 </div>
                             )}
                         </div>
 
-                        <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px solid #E5E7EB', paddingTop: '32px', marginTop: '40px' }}>
-                            <span style={{ fontSize: '24px', color: '#9CA3AF' }}>由 AI 驅動的頂級審計與永續分析</span>
-                            <span style={{ fontSize: '24px', color: '#9CA3AF', fontWeight: 500 }}>isunfa.com</span>
+                        <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', borderTop: '1px solid #E5E7EB', paddingTop: '24px' }}>
+                            <span style={{ fontSize: '20px', color: '#9CA3AF' }}>iSunFA AI-Powered Financial Auditor</span>
+                            <span style={{ fontSize: '20px', color: '#9CA3AF', fontWeight: 500 }}>www.isunfa.com</span>
                         </div>
-
                     </div>
                 </div>
             ),
-            {
-                width: 1200,
-                height: 630,
-            }
+            { width: 1200, height: 630 }
         );
     } catch (error) {
-        console.error('OG Image generation failed:', error);
-        // 產生一張預設的錯誤或備用 OG 圖片
+        console.error(`[PublicReportPage] Error generating metadata: ${error}`);
         return new ImageResponse(
-            (
-                <div style={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111827', color: 'white', fontSize: '48px', fontWeight: 'bold' }}>
-                    iSunFA 專業分析報告
-                </div>
-            ),
+            <div style={{ height: '100%', width: '100%', display: 'flex', background: '#111827', color: 'white', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>iSunFA</div>,
             { width: 1200, height: 630 }
         );
     }
