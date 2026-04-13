@@ -15,7 +15,9 @@ import {
   createSuperAdminRecord,
   getEnvHashChallenge,
   verifyAndFinalizeConfig,
-  saveExternalConfig
+  saveExternalConfig,
+  getExternalConfig,
+  authorizeSuperAdmin
 } from "@/app/admin/setup/actions";
 import { deployContracts, getDeployProgress } from "@/services/deploy.service";
 
@@ -43,6 +45,8 @@ export default function SetupWizardPage() {
   const [superAdminStatus, setSuperAdminStatus] = useState<StepStatus>(StepStatus.IDLE);
 
   const [adminExists, setAdminExists] = useState<boolean | null>(null);
+  const [adminNeedsAuth, setAdminNeedsAuth] = useState<boolean>(false);
+  const [adminCredId, setAdminCredId] = useState<string>("");
   const [adminAddress, setAdminAddress] = useState<string>("");
   const [appUrlStatus, setAppUrlStatus] = useState<StepStatus>(StepStatus.IDLE);
   const [appUrlValue, setAppUrlValue] = useState<string>("https://isunfa.localhost");
@@ -175,7 +179,22 @@ export default function SetupWizardPage() {
       } catch { }
     }, 1500);
 
-    const result = await deployContracts();
+    let result: { success: boolean; output: string } = { success: false, output: "" };
+
+    try {
+      result = await deployContracts();
+    } catch (err) {
+      /**
+       * Info: (20260413 - Luphia) Server reloads when .env.setup is updated at the end of deployment, 
+       * causing the fetch to drop. We pause to let it restart, then fetch the fast-path result.
+       */
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      try {
+        result = await deployContracts();
+      } catch (innerErr) {
+        result = { success: false, output: String(err) + " / " + String(innerErr) };
+      }
+    }
 
     // Info: (20260412 - Luphia) Stop polling and grab final output
     clearInterval(intervalId);
@@ -208,7 +227,18 @@ export default function SetupWizardPage() {
 
   const handleStep6 = useCallback(async () => {
     setInitDbStatus(StepStatus.LOADING);
-    const result = await initDb();
+    let result: { success: boolean; output: string } = { success: false, output: "" };
+
+    try {
+      result = await initDb();
+    } catch {
+      /**
+       * Info: (20260413 - Luphia) Similar to step 5, updating .env.setup drops the connection.
+       * If it throws here, it means the DB push succeeded and the file was written.
+       */
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      result = { success: true, output: "Database completely initialized (Server Reloaded)." };
+    }
     if (result.success) {
       setInitDbStatus(StepStatus.SUCCESS);
       setErrorMsg("");
@@ -224,15 +254,52 @@ export default function SetupWizardPage() {
     const res = await checkSuperAdminExists();
     if (!res.exists) {
       setAdminExists(false);
+      setAdminNeedsAuth(false);
       setSuperAdminStatus(StepStatus.IDLE);
     } else {
       setAdminExists(true);
       if (res.address) setAdminAddress(res.address);
-      setSuperAdminStatus(StepStatus.SUCCESS);
-      setErrorMsg("");
-      setTimeout(handleNextStep, 800);
+      if (res.needsAuth) {
+        setAdminNeedsAuth(true);
+        if (res.credId) setAdminCredId(res.credId);
+        setSuperAdminStatus(StepStatus.IDLE);
+      } else {
+        setSuperAdminStatus(StepStatus.SUCCESS);
+        setErrorMsg("");
+        setTimeout(handleNextStep, 800);
+      }
     }
   }, [handleNextStep]);
+
+  const performFido2Login = async () => {
+    setSuperAdminStatus(StepStatus.LOADING);
+    setErrorMsg("");
+    try {
+      const challengeStr = await getEnvHashChallenge();
+      if (!challengeStr.success || !challengeStr.challenge) {
+        throw new Error(challengeStr.error || "Failed to generate login challenge.")
+      }
+
+      await fido2ClientService.startLogin({
+        challenge: challengeStr.challenge,
+        allowCredentials: adminCredId ? [adminCredId] : undefined,
+        userVerification: "preferred"
+      });
+
+      const restoreRes = await authorizeSuperAdmin();
+      if (restoreRes.success) {
+        if (restoreRes.address) setAdminAddress(restoreRes.address);
+        setAdminNeedsAuth(false);
+        setSuperAdminStatus(StepStatus.SUCCESS);
+        setTimeout(() => setStep(8), 800);
+      } else {
+        throw new Error(restoreRes.error || "Failed to authorize configuration record.");
+      }
+    } catch (err) {
+      setSuperAdminStatus(StepStatus.ERROR);
+      setErrorMsg(`FIDO2 Authorization failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  };
 
   const performFido2Registration = async () => {
     setSuperAdminStatus(StepStatus.LOADING);
@@ -254,7 +321,8 @@ export default function SetupWizardPage() {
         if (res.address) setAdminAddress(res.address);
         setSuperAdminStatus(StepStatus.SUCCESS);
         setAdminExists(true);
-        setTimeout(handleNextStep, 800);
+        setAdminNeedsAuth(false);
+        setTimeout(() => setStep(8), 800);
       } else {
         setSuperAdminStatus(StepStatus.ERROR);
         setErrorMsg(`Failed to create SUPER_ADMIN: ${res.error}`);
@@ -325,6 +393,21 @@ export default function SetupWizardPage() {
     }
     return () => clearInterval(interval);
   }, [step, walletStatus, handleNextStep]);
+
+  // Info: (20260413 - Luphia) Preload PART 8 configuration parameters
+  useEffect(() => {
+    if (step === 8 && appUrlStatus === StepStatus.IDLE) {
+      getExternalConfig().then(res => {
+        if (res.success && res.data) {
+          if (res.data.appUrl) setAppUrlValue(res.data.appUrl.replace(/^"(.*)"$/, '$1'));
+          if (res.data.gaId) setGaIdValue(res.data.gaId.replace(/^"(.*)"$/, '$1'));
+          if (res.data.geminiKey) setGeminiKey(res.data.geminiKey.replace(/^"(.*)"$/, '$1'));
+          if (res.data.oenToken) setOenToken(res.data.oenToken.replace(/^"(.*)"$/, '$1'));
+          if (res.data.oenMerchant) setOenMerchant(res.data.oenMerchant.replace(/^"(.*)"$/, '$1'));
+        }
+      }).catch(console.error);
+    }
+  }, [step, appUrlStatus]);
 
   // Info: (20260412 - Luphia) Auto-scroll to active step
   useEffect(() => {
@@ -616,7 +699,7 @@ export default function SetupWizardPage() {
             <div className="pt-1">{renderStatusIcon(superAdminStatus)}</div>
             <div className="flex-1 min-w-0">
               <h3 className={`font-semibold ${step >= 7 ? "text-gray-900" : "text-gray-400"}`}>
-                Step 7: Register Server SUPER_ADMIN
+                Step 7: Register Server SUPER ADMIN
               </h3>
               <p className="text-sm text-gray-500">Attach a secure FIDO2 Passkey to establish the initial SUPER_ADMIN wallet.</p>
 
@@ -627,7 +710,25 @@ export default function SetupWizardPage() {
                   </button>
                 </div>
               )}
-              {step === 7 && adminExists === true && (
+              {step === 7 && superAdminStatus !== StepStatus.LOADING && adminExists === true && adminNeedsAuth === true && (
+                <div className="mt-3 bg-orange-50 border border-orange-100 p-5 rounded-lg mr-2">
+                  <p className="text-sm text-orange-800 font-medium mb-3">
+                    Existing SUPER ADMIN configuration found.
+                  </p>
+                  <p className="text-xs text-orange-600 mb-4">
+                    You can either authorize with your existing FIDO2 passkey to continue, or overwrite it by registering a completely new identity.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button onClick={performFido2Login} className="text-sm px-5 py-2 min-w-[140px] bg-orange-600 font-medium text-white shadow-sm rounded-md hover:bg-orange-700 transition">
+                      Use Existing Key
+                    </button>
+                    <button onClick={performFido2Registration} className="text-sm px-5 py-2 bg-white border border-orange-200 text-orange-700 font-medium rounded-md hover:bg-orange-50 transition shadow-sm">
+                      Register New Key
+                    </button>
+                  </div>
+                </div>
+              )}
+              {step === 7 && adminExists === true && adminNeedsAuth === false && (
                 <div className="mt-3">
                   <p className="text-sm text-green-600 font-medium whitespace-pre-line">
                     SUPER_ADMIN account successfully initialized & secured!
