@@ -391,6 +391,13 @@ export class EsgRepository implements IEsgRepository {
 
     return coefficients;
   }
+
+  async getEsgCoefficientById(id: string) {
+    return prisma.coefficient.findUnique({
+      where: { id },
+      include: { accountBook: true },
+    });
+  }
 }
 
 export const esgRepo = new EsgRepository();

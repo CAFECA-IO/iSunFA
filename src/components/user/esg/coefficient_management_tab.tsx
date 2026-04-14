@@ -20,6 +20,7 @@ import CoefficientAddEditModal from "@/components/user/esg/coefficient_add_edit_
 import {
   CoefficientCategory,
   ICoefficient,
+  ICoefficientInput,
 } from "@/interfaces/coefficient";
 
 interface ICoefficientCardProps {
@@ -33,18 +34,9 @@ const CoefficientCard = ({
   onEdit,
   onDelete,
 }: ICoefficientCardProps) => {
-  const [isShowAction, setIsShowAction] = useState<boolean>(false);
-
-  // Info: (20260413 - Julian) 游標移入時顯示編輯與刪除按鈕
-  const handleMouseEnter = () => setIsShowAction(true);
-  // Info: (20260413 - Julian) 游標移出時隱藏編輯與刪除按鈕
-  const handleMouseLeave = () => setIsShowAction(false);
-
   // Info: (20260413 - Julian) 只有自訂係數可以編輯與刪除
   const actions = coefficient.category === CoefficientCategory.CUSTOM && (
-    <div
-      className={`${isShowAction ? "visible opacity-100" : "invisible opacity-0"} flex items-center gap-2 transition-all duration-200`}
-    >
+    <div className="invisible flex items-center gap-2 opacity-0 transition-all duration-200 lg:opacity-0 lg:group-hover:visible lg:group-hover:opacity-100">
       <button
         type="button"
         onClick={() => onEdit(coefficient.id)}
@@ -80,11 +72,7 @@ const CoefficientCard = ({
     ) : null;
 
   return (
-    <div
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className="flex flex-col gap-4 rounded-xl bg-white p-6 shadow-sm"
-    >
+    <div className="group flex flex-col gap-4 rounded-xl bg-white p-6 shadow-sm">
       {/* Info: (20260413 - Julian) Header */}
       <div className="flex items-center justify-between">
         {/* Info: (20260413 - Julian) Title */}
@@ -168,6 +156,26 @@ export default function CoefficientManagementTab() {
   // ToDo: (20260413 - Julian) 刪除係數 API
   const deleteCoefficient = async () => {
     console.log(`delete coefficient ${selectedCoefficientId}`);
+  };
+
+  const saveCoefficient = async (coefficient: ICoefficientInput) => {
+    try {
+      const data = await request<IApiResponse<ICoefficient[]>>(
+        `/api/v1/user/account_book/${accountBookId}/esg/coefficient`,
+        {
+          method: "POST",
+          body: JSON.stringify({ coefficient }),
+        },
+      );
+      if (data.payload) {
+        setCoefficientList(data.payload);
+      }
+    } catch (err) {
+      console.error("Failed to save coefficient:", err);
+    } finally {
+      setIsLoading(false);
+    }
+    setIsAddEditModalOpen(false);
   };
 
   // Info: (20260414 - Julian) 取得係數列表
@@ -298,7 +306,7 @@ export default function CoefficientManagementTab() {
         selectedCoefficientId={selectedCoefficientId}
         isOpen={isAddEditModalOpen}
         onClose={() => setIsAddEditModalOpen(false)}
-        onConfirm={() => setIsAddEditModalOpen(false)}
+        onConfirm={saveCoefficient}
       />
     </>
   );

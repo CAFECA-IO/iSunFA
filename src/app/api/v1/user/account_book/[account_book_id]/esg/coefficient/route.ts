@@ -5,7 +5,7 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { CoefficientCategory, ICoefficient } from "@/interfaces/coefficient";
+import { CoefficientCategory, ICoefficient, ICoefficientInput } from "@/interfaces/coefficient";
 import { Prisma } from "@/generated/client";
 
 /**
@@ -45,7 +45,7 @@ export async function POST(
 
     // Info: (20260413 - Julian) 新增自訂公式
     const body = await request.json();
-    const { coefficient } = body;
+    const { coefficient }: { coefficient: ICoefficientInput } = body;
 
     // Info: (20260413 - Julian) 驗證 coefficient 參數
     if (!coefficient || !coefficient.name) {
@@ -59,7 +59,7 @@ export async function POST(
       description: coefficient.description,
       emissionFactor: coefficient.emissionFactor,
       unit: coefficient.unit,
-      source: coefficient.source,
+      source: accountBook.name,
       accountBook: { connect: { id: accountBook.id } },
     });
 
