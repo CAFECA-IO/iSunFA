@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Users, Coins, RefreshCw, UserCircle, ShieldAlert, ShieldCheck } from "lucide-react";
 import { request } from "@/lib/utils/request";
-import { PointIssueModal, IUserTarget } from "@/app/admin/member/components/point_issue_modal";
+import { PointIssueModal, IUserTarget } from "@/components/admin/member/point_issue_modal";
 import { useTranslation } from "@/i18n/i18n_context";
 import { Role } from "@/generated/enums";
 

@@ -72,7 +72,7 @@ export function PointIssueModal({ isOpen, onClose, targetUser, onSuccess }: IPoi
             onClick={onClose}
             disabled={isLoading}
             aria-label="Close modal"
-            className="text-gray-400 hover:text-gray-600 :text-gray-300 transition"
+            className="text-gray-400 hover:text-gray-600 transition"
           >
             <X className="w-5 h-5" />
           </button>
