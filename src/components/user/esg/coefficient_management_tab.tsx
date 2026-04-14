@@ -1,5 +1,5 @@
 "use client";
-/* eslint-disable jsx-a11y/no-static-element-interactions, react-hooks/set-state-in-effect */
+
 import { useState, useEffect } from "react";
 import {
   Globe,
@@ -9,21 +9,21 @@ import {
   PenLine,
   Trash2,
   SearchX,
+  Loader2,
 } from "lucide-react";
+import { useParams } from "next/navigation";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
 import { timestampToString } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
+import Pagination from "@/components/common/pagination";
 import CoefficientAddEditModal from "@/components/user/esg/coefficient_add_edit_modal";
 import {
   CoefficientCategory,
   ICoefficient,
-  mockCoefficientList,
+  ICoefficientInput,
 } from "@/interfaces/coefficient";
-
-enum CoefficientTab {
-  ALL = "all",
-  STANDARD = "standard",
-  CUSTOM = "custom",
-}
+import { useTranslation } from "@/i18n/i18n_context";
 
 interface ICoefficientCardProps {
   coefficient: ICoefficient;
@@ -36,22 +36,15 @@ const CoefficientCard = ({
   onEdit,
   onDelete,
 }: ICoefficientCardProps) => {
-  const [isShowAction, setIsShowAction] = useState<boolean>(false);
-
-  // Info: (20260413 - Julian) 游標移入時顯示編輯與刪除按鈕
-  const handleMouseEnter = () => setIsShowAction(true);
-  // Info: (20260413 - Julian) 游標移出時隱藏編輯與刪除按鈕
-  const handleMouseLeave = () => setIsShowAction(false);
+  const { t } = useTranslation();
 
   // Info: (20260413 - Julian) 只有自訂係數可以編輯與刪除
   const actions = coefficient.category === CoefficientCategory.CUSTOM && (
-    <div
-      className={`${isShowAction ? "visible opacity-100" : "invisible opacity-0"} flex items-center gap-2 transition-all duration-200`}
-    >
+    <div className="flex items-center gap-1 transition-all duration-200 lg:gap-2">
       <button
         type="button"
         onClick={() => onEdit(coefficient.id)}
-        className="rounded-lg p-2 text-gray-400 transition-all hover:bg-gray-100 hover:text-gray-700"
+        className="rounded-lg p-2 text-gray-400 transition-all hover:bg-orange-100 hover:text-orange-600"
       >
         <PenLine size={16} />
       </button>
@@ -68,32 +61,28 @@ const CoefficientCard = ({
   const icon =
     coefficient.category === CoefficientCategory.STANDARD ? (
       <div className="rounded-lg bg-green-100 p-2.5 text-green-600">
-        <Globe size={24} />
+        <Globe className="size-4 lg:size-6" />
       </div>
     ) : (
       <div className="rounded-lg bg-orange-100 p-2.5 text-orange-600">
-        <User size={24} />
+        <User className="size-4 lg:size-6" />
       </div>
     );
   const tag =
     coefficient.category === CoefficientCategory.STANDARD ? (
-      <div className="rounded-lg bg-green-100 px-2.5 py-1 text-xs text-green-600">
-        標準
+      <div className="rounded-md bg-green-100 px-2 py-0.5 text-[10px] text-green-600 lg:text-xs">
+        {t("coefficient.tag.standard")}
       </div>
     ) : null;
 
   return (
-    <div
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className="flex flex-col gap-4 rounded-xl bg-white p-6 shadow-sm"
-    >
+    <div className="flex flex-col gap-2.5 rounded-xl bg-white p-3 shadow-sm lg:gap-4 lg:p-6">
       {/* Info: (20260413 - Julian) Header */}
       <div className="flex items-center justify-between">
         {/* Info: (20260413 - Julian) Title */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 lg:gap-4">
           {icon}
-          <div className="flex flex-col gap-1 font-bold">
+          <div className="flex flex-col gap-0 font-bold lg:gap-1">
             <div className="flex items-center gap-3">
               <h2 className="text-sm text-slate-800 lg:text-base">
                 {coefficient.name}
@@ -110,7 +99,8 @@ const CoefficientCard = ({
               >
                 {coefficient.source}
               </span>{" "}
-              • 最後更新 {timestampToString(coefficient.updatedAt).dateWithDash}
+              • {t("coefficient.card.last_updated")}{" "}
+              {timestampToString(coefficient.updatedAt).dateWithDash}
             </p>
           </div>
         </div>
@@ -124,19 +114,21 @@ const CoefficientCard = ({
         </p>
       </div>
       {/* Info: (20260413 - Julian) Coefficient */}
-      <div className="flex flex-col gap-4 rounded-lg bg-gray-50 p-4 font-semibold">
-        <p className="text-xs text-gray-400 lg:text-sm">計算邏輯</p>
+      <div className="flex flex-col gap-1.5 rounded-lg bg-gray-50 p-2.5 font-semibold lg:gap-4 lg:p-4">
+        <p className="text-xs text-gray-400 lg:text-sm">
+          {t("coefficient.card.logic")}
+        </p>
         <div className="rounded-lg border border-gray-100 bg-white px-3 py-2">
           <p className="text-sm text-slate-800 lg:text-base">
             {coefficient.unit} * {coefficient.emissionFactor}
           </p>
         </div>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs lg:text-sm">
-            <p className="text-gray-400">排放係數 (EF)</p>
+          <div className="flex items-center gap-2 text-[10px] lg:text-xs">
+            <p className="text-gray-400">{t("coefficient.card.ef")}</p>
             <p className="text-slate-800">{coefficient.emissionFactor}</p>
           </div>
-          <p className="text-xs tracking-widest text-gray-400 uppercase lg:text-sm">
+          <p className="text-[10px] tracking-widest text-gray-400 uppercase lg:text-xs">
             kgCO2e/{coefficient.unit}
           </p>
         </div>
@@ -145,11 +137,22 @@ const CoefficientCard = ({
   );
 };
 
+type ICoefficientTab = CoefficientCategory | "all";
+
+const PAGE_SIZE = 10;
+
 export default function CoefficientManagementTab() {
+  const params = useParams();
+  const accountBookId = params?.account_book_id as string;
+  const { t } = useTranslation();
+
   const [coefficientList, setCoefficientList] = useState<ICoefficient[]>([]);
-  const [activeTab, setActiveTab] = useState<CoefficientTab>(
-    CoefficientTab.ALL,
-  );
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [keyword, setKeyword] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<ICoefficientTab>("all");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [refreshFlag, setRefreshFlag] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState<boolean>(false);
   const [selectedCoefficientId, setSelectedCoefficientId] = useState<
@@ -163,50 +166,86 @@ export default function CoefficientManagementTab() {
     setIsAddEditModalOpen(true);
   };
 
-  // ToDo: (20260413 - Julian) 刪除係數 API
+  // Info: (20260414 - Julian) 刪除係數 API
   const deleteCoefficient = async () => {
-    console.log(`delete coefficient ${selectedCoefficientId}`);
+    try {
+      await request<IApiResponse<null>>(
+        `/api/v1/user/account_book/${accountBookId}/esg/coefficient/${selectedCoefficientId}`,
+        { method: "DELETE" },
+      );
+      setRefreshFlag((prev) => !prev);
+    } catch (error) {
+      console.error("Error deleting coefficient:", error);
+    }
   };
 
-  useEffect(() => {
-    switch (activeTab) {
-      case CoefficientTab.ALL:
-        setCoefficientList(mockCoefficientList);
-        break;
-      case CoefficientTab.STANDARD:
-        setCoefficientList(
-          mockCoefficientList.filter(
-            (f) => f.category === CoefficientCategory.STANDARD,
-          ),
-        );
-        break;
-      case CoefficientTab.CUSTOM:
-        setCoefficientList(
-          mockCoefficientList.filter(
-            (f) => f.category === CoefficientCategory.CUSTOM,
-          ),
-        );
-        break;
-      default:
-        break;
-    }
-  }, [activeTab]);
+  // Info: (20260414 - Julian) 儲存係數資料
+  const saveCoefficient = async (input: ICoefficientInput) => {
+    // Info: (20260414 - Julian) 判斷是新增或編輯
+    const isEdit = selectedCoefficientId !== null;
 
-  const tabs = Object.values(CoefficientTab).map((tab) => (
+    // Info: (20260414 - Julian) 新增和編輯須使用不同的 API URL 和 method
+    const apiUrl = isEdit
+      ? `/api/v1/user/account_book/${accountBookId}/esg/coefficient/${selectedCoefficientId}`
+      : `/api/v1/user/account_book/${accountBookId}/esg/coefficient`;
+    const method = isEdit ? "PUT" : "POST";
+
+    try {
+      await request<IApiResponse<{ coefficientId?: string }>>(apiUrl, {
+        method,
+        body: JSON.stringify({ input }),
+      });
+      // Info: (20260414 - Julian) 觸發 useEffect 以重新取得係數列表
+      setRefreshFlag((prev) => !prev);
+    } catch (err) {
+      console.error("Failed to save coefficient:", err);
+    } finally {
+      setIsLoading(false);
+    }
+    setIsAddEditModalOpen(false);
+  };
+
+  // Info: (20260414 - Julian) 取得係數列表
+  useEffect(() => {
+    const fetchCoefficientList = async () => {
+      try {
+        setIsLoading(true);
+        const data = await request<
+          IApiResponse<{ items: ICoefficient[]; total: number }>
+        >(
+          `/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=${activeTab}&search=${keyword}&page=${currentPage}&pageSize=${PAGE_SIZE}`,
+        );
+        if (data.payload) {
+          setCoefficientList(data.payload.items);
+          setTotalCount(data.payload.total);
+        }
+      } catch (err) {
+        console.error("Failed to fetch coefficient list:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCoefficientList();
+  }, [activeTab, keyword, accountBookId, refreshFlag, currentPage]);
+
+  // Info: (20260414 - Julian) 切回合與搜尋條件改變時重置第一頁
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, keyword]);
+
+  const tabs = ["all", ...Object.values(CoefficientCategory)].map((tab) => (
     <button
       key={tab}
       type="button"
-      onClick={() => setActiveTab(tab)}
-      className={`${tab === activeTab ? "text-slate-800" : "text-gray-400"} w-24 py-4 text-base font-semibold transition-all outline-none hover:text-slate-700`}
+      onClick={() => setActiveTab(tab as ICoefficientTab)}
+      className={`${tab === activeTab ? "text-slate-800" : "text-gray-400"} w-1/3 py-2 text-xs font-semibold transition-all outline-none hover:text-slate-700 lg:w-40 lg:py-4 lg:text-base`}
     >
-      {/* ToDo: (20260413 - Julian) 使用翻譯檔 */}
-      {tab === CoefficientTab.ALL
-        ? "全部"
-        : tab === CoefficientTab.STANDARD
-          ? "標準係數"
-          : "自訂係數"}
+      {t(`coefficient.tab.${tab.toLowerCase()}`)}
     </button>
   ));
+
+  // Info: (20260414 - Julian) 計算總頁數
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
 
   const displayedCoefficientList = coefficientList.map((coefficient) => {
     const handleEdit = (id: string) => {
@@ -228,44 +267,49 @@ export default function CoefficientManagementTab() {
     );
   });
 
-  const coefficientSection =
-    coefficientList.length > 0 ? (
-      <div className="grid grid-flow-row grid-cols-1 gap-y-4 lg:grid-cols-2 lg:gap-x-4">
-        {displayedCoefficientList}
-      </div>
-    ) : (
-      <div className="flex flex-col items-center justify-center gap-2 p-4 text-xl font-semibold text-gray-400">
-        <SearchX size={40} />
-        <p>沒有係數</p>
-      </div>
-    );
+  const coefficientSection = isLoading ? (
+    <div className="flex items-center justify-center gap-2 p-20 text-xl font-semibold text-orange-400">
+      <Loader2 className="animate-spin" size={40} />
+    </div>
+  ) : coefficientList.length > 0 ? (
+    <div className="grid grid-flow-row grid-cols-1 gap-y-4 md:grid-cols-2 md:gap-x-4">
+      {displayedCoefficientList}
+    </div>
+  ) : (
+    <div className="flex flex-col items-center justify-center gap-2 p-4 text-xl font-semibold text-gray-400">
+      <SearchX size={40} />
+      <p>{t("coefficient.empty")}</p>
+    </div>
+  );
 
   return (
     <>
       {/* Info: (20260413 - Julian) Toolbar */}
-      <div className="flex flex-col gap-8 rounded-xl bg-white p-6 shadow-sm lg:flex-row">
+      <div className="flex flex-col gap-x-8 gap-y-2 rounded-xl bg-white p-3 shadow-sm md:flex-row md:p-6">
         {/* Info: (20260413 - Julian) Search */}
-        <div className="flex flex-1 items-center gap-2 rounded-lg bg-gray-50 px-5 py-3">
+        <div className="flex flex-1 items-center gap-2 rounded-lg bg-gray-50 p-2 lg:px-5 lg:py-3">
           <label htmlFor="coefficient-search-input" className="sr-only">
-            搜尋係數
+            {t("coefficient.search.label")}
           </label>
           <Search size={20} className="text-gray-300" />
           <input
             id="coefficient-search-input"
-            aria-label="搜尋係數"
+            aria-label={t("coefficient.search.label")}
             type="text"
-            placeholder="搜尋係數名稱、描述..."
-            className="w-full bg-transparent text-base font-medium text-slate-800 outline-none placeholder:text-gray-400"
+            placeholder={t("coefficient.search.placeholder")}
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            className="w-full bg-transparent text-xs font-medium text-slate-800 outline-none placeholder:text-gray-400 lg:text-base"
           />
         </div>
         {/* Info: (20260413 - Julian) Add Button */}
         <button
           type="button"
           onClick={clickAddCoefficient}
-          className="flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-5 py-3 text-base font-medium text-white shadow-sm transition-all hover:bg-orange-600 focus:outline-none"
+          className="flex items-center justify-center gap-2 rounded-lg bg-orange-500 p-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-orange-600 focus:outline-none lg:px-5 lg:py-3 lg:text-base"
         >
           <Plus size={20} />
-          <p>新增係數</p>
+          <p>{t("coefficient.action.add")}</p>
         </button>
       </div>
 
@@ -273,21 +317,32 @@ export default function CoefficientManagementTab() {
       <div className="relative flex items-center border-b border-gray-200">
         {tabs}
         <div
-          className={`absolute bottom-0 left-0 h-1 w-24 bg-slate-700 transition-all duration-200 ${activeTab === CoefficientTab.ALL ? "left-0" : ""} ${activeTab === CoefficientTab.STANDARD ? "left-24" : ""} ${activeTab === CoefficientTab.CUSTOM ? "left-48" : ""} `}
+          className={`absolute bottom-0 left-0 h-0.5 w-1/3 bg-slate-700 transition-all duration-200 lg:h-1 lg:w-40 ${activeTab === "all" ? "left-0" : activeTab === CoefficientCategory.STANDARD ? "left-1/3 lg:left-40" : "left-2/3 lg:left-80"} `}
         ></div>
       </div>
 
       {/* Info: (20260413 - Julian) Coefficient Section */}
       {coefficientSection}
 
+      {/* Info: (20260414 - Julian) Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
+
       {/* Info: (20260413 - Julian) Confirm Modal */}
       <ConfirmModal
         isOpen={isDeleteConfirmOpen}
         onClose={() => setIsDeleteConfirmOpen(false)}
-        title={"刪除係數"}
-        message={"確定要刪除此係數嗎？"}
-        confirmText={"刪除"}
-        cancelText={"取消"}
+        title={t("coefficient.delete.title")}
+        message={t("coefficient.delete.message")}
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
         onConfirm={deleteCoefficient}
       />
 
@@ -296,7 +351,7 @@ export default function CoefficientManagementTab() {
         selectedCoefficientId={selectedCoefficientId}
         isOpen={isAddEditModalOpen}
         onClose={() => setIsAddEditModalOpen(false)}
-        onConfirm={() => setIsAddEditModalOpen(false)}
+        onConfirm={saveCoefficient}
       />
     </>
   );

@@ -5,7 +5,12 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { CoefficientCategory, ICoefficient } from "@/interfaces/coefficient";
+import {
+  CoefficientCategory,
+  ICoefficient,
+  ICoefficientInput,
+} from "@/interfaces/coefficient";
+import { Prisma } from "@/generated/client";
 
 /**
  * Info: (20260413 - Julian) 新增自訂係數
@@ -44,21 +49,21 @@ export async function POST(
 
     // Info: (20260413 - Julian) 新增自訂公式
     const body = await request.json();
-    const { coefficient } = body;
+    const { input }: { input: ICoefficientInput } = body;
 
     // Info: (20260413 - Julian) 驗證 coefficient 參數
-    if (!coefficient || !coefficient.name) {
+    if (!input || !input.name) {
       console.error("Missing coefficient or coefficient name");
       return jsonFail(ApiCode.VALIDATION_ERROR, "Coefficient is required");
     }
 
     // Info: (20260413 - Julian) 建立自訂公式
     const newCoefficient = await esgRepo.createEsgCoefficient({
-      name: coefficient.name,
-      description: coefficient.description,
-      emissionFactor: coefficient.emissionFactor,
-      unit: coefficient.unit,
-      source: coefficient.source,
+      name: input.name,
+      description: input.description,
+      emissionFactor: input.emissionFactor,
+      unit: input.unit,
+      source: accountBook.name,
       accountBook: { connect: { id: accountBook.id } },
     });
 
@@ -101,6 +106,7 @@ export async function GET(
 
     // Info: (20260312 - Julian) 取得 ESG 紀錄
     const { searchParams } = new URL(request.url);
+    const tabParam = searchParams.get("tab");
     const searchParam = searchParams.get("search");
     const page = searchParams.get("page")
       ? parseInt(searchParams.get("page")!)
@@ -109,28 +115,43 @@ export async function GET(
       ? parseInt(searchParams.get("pageSize")!)
       : undefined;
 
-    const coefficients = await esgRepo.getEsgCoefficients({
-      where: {
-        accountBookId: accountBook.id,
-        // Info: (20260413 - Julian) 排除已刪除的係數
-        deletedAt: null,
-        // Info: (20260413 - Julian) 搜尋字串過濾邏輯
-        ...(searchParam
-          ? {
-              OR: [
-                { name: { contains: searchParam, mode: "insensitive" } },
-                { description: { contains: searchParam, mode: "insensitive" } },
-              ],
-            }
+    // Info: (20260414 - Julian) 依據 tab 篩選係數
+    const andConditions: Prisma.CoefficientWhereInput[] = [];
+
+    // Info: (20260413 - Julian) 排除已刪除的係數
+    andConditions.push({ deletedAt: null });
+
+    // Info: (20260414 - Julian) 依據 tab 篩選係數
+    if (tabParam === CoefficientCategory.STANDARD) {
+      // Info: (20260414 - Julian) 無 accountBookId => 標準係數
+      andConditions.push({ accountBookId: null });
+    } else if (tabParam === CoefficientCategory.CUSTOM) {
+      // Info: (20260414 - Julian) 有 accountBookId => 自訂係數
+      andConditions.push({ accountBookId: { not: null } });
+    }
+
+    // Info: (20260414 - Julian) 搜尋字串過濾邏輯
+    if (searchParam) {
+      andConditions.push({
+        OR: [
+          { name: { contains: searchParam, mode: "insensitive" } },
+          { description: { contains: searchParam, mode: "insensitive" } },
+        ],
+      });
+    }
+
+    const [coefficients, totalCount] = await Promise.all([
+      esgRepo.getEsgCoefficients({
+        where: { AND: andConditions },
+        // Info: (20260413 - Julian) 分頁邏輯
+        ...(page && pageSize
+          ? { skip: (page - 1) * pageSize, take: pageSize }
           : {}),
-      },
-      // Info: (20260413 - Julian) 分頁邏輯
-      ...(page && pageSize
-        ? { skip: (page - 1) * pageSize, take: pageSize }
-        : {}),
-      // Info: (20260413 - Julian) 排序邏輯
-      orderBy: { accountBook: { id: "asc" }, createdAt: "desc" },
-    });
+        // Info: (20260413 - Julian) 排序邏輯：將標準係數排在前面，並依據更新時間倒序排列
+        orderBy: [{ accountBookId: "desc" }, { updatedAt: "desc" }],
+      }),
+      esgRepo.countEsgCoefficients({ AND: andConditions }),
+    ]);
 
     const result: ICoefficient[] = coefficients.map((coefficient) => ({
       id: coefficient.id,
@@ -139,14 +160,14 @@ export async function GET(
       emissionFactor: Number(coefficient.emissionFactor),
       unit: coefficient.unit,
       source: coefficient.source,
-      category: !!accountBookId
+      category: !!coefficient.accountBookId
         ? CoefficientCategory.CUSTOM
         : CoefficientCategory.STANDARD,
       createdAt: new Date(coefficient.createdAt).getTime() / 1000,
       updatedAt: new Date(coefficient.updatedAt).getTime() / 1000,
     }));
 
-    return jsonOk(result);
+    return jsonOk({ items: result, total: totalCount });
   } catch (error) {
     console.error("Error fetching esg coefficients:", error);
     return jsonFail(
