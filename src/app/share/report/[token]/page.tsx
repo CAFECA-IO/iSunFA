@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { ShareSanitizerFactory, TShareData, TShareResult } from '@/lib/analysis/share_sanitizer';
 import { Metadata } from 'next';
+import { headers } from 'next/headers';
 import PublicReportClientView from '@/app/share/report/[token]/public_report_client_view';
 
 // Info: (20260413 - Tzuhan) 動態生成 SEO Metadata (Server Side)
@@ -15,6 +16,11 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
 
     if (!shareRecord) return { title: 'iSunFA' };
 
+    const headersList = await headers();
+    const host = headersList.get('x-forwarded-host') || headersList.get('host') || 'localhost:3000';
+    const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+    const baseUrl = `${protocol}://${host}`;
+
     try {
         const sanitizer = ShareSanitizerFactory.getSanitizer(shareRecord.category);
         const safeData = sanitizer.sanitize(
@@ -27,7 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
             openGraph: {
                 title: `${safeData.companyName} | iSunFA`,
                 type: 'website',
-                images: [{ url: `/api/v1/share/og?token=${token}`, width: 1200, height: 630 }],
+                images: [{ url: `${baseUrl}/api/v1/share/og?token=${token}`, width: 1200, height: 630 }],
             },
             twitter: { card: 'summary_large_image' }
         };

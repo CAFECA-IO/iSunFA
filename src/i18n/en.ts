@@ -47,7 +47,8 @@ export const en = {
       date_aria: "Toggle date sort",
       newest: "Newest",
       oldest: "Oldest",
-    }
+    },
+    share: "Share",
   },
   faith: {
     title: "FAITH",
@@ -798,6 +799,9 @@ export const en = {
       empty_title: "No Analysis Yet",
       empty_description:
         "Start your journey by generating your first financial analysis report using our advanced AI tools.",
+      retry: "Retry",
+      retry_confirm_title: "Confirm Retry",
+      retry_confirm_desc: "This action will retry the analysis. Are you sure?",
     },
     steps: {
       preparing: "Preparing transaction...",
