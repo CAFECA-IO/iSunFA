@@ -40,11 +40,11 @@ const CoefficientCard = ({
 
   // Info: (20260413 - Julian) 只有自訂係數可以編輯與刪除
   const actions = coefficient.category === CoefficientCategory.CUSTOM && (
-    <div className="visible flex items-center gap-1 opacity-100 transition-all duration-200 lg:gap-2 lg:opacity-0 lg:group-hover:visible lg:group-hover:opacity-100">
+    <div className="flex items-center gap-1 transition-all duration-200 lg:gap-2">
       <button
         type="button"
         onClick={() => onEdit(coefficient.id)}
-        className="rounded-lg p-2 text-gray-400 transition-all hover:bg-gray-100 hover:text-gray-700"
+        className="rounded-lg p-2 text-gray-400 transition-all hover:bg-orange-100 hover:text-orange-600"
       >
         <PenLine size={16} />
       </button>
@@ -76,7 +76,7 @@ const CoefficientCard = ({
     ) : null;
 
   return (
-    <div className="group flex flex-col gap-2.5 rounded-xl bg-white p-3 shadow-sm lg:gap-4 lg:p-6">
+    <div className="flex flex-col gap-2.5 rounded-xl bg-white p-3 shadow-sm lg:gap-4 lg:p-6">
       {/* Info: (20260413 - Julian) Header */}
       <div className="flex items-center justify-between">
         {/* Info: (20260413 - Julian) Title */}
@@ -306,7 +306,7 @@ export default function CoefficientManagementTab() {
         <button
           type="button"
           onClick={clickAddCoefficient}
-          className="flex items-center justify-center gap-2 rounded-lg bg-orange-500 p-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-orange-600 focus:outline-none lg:px-5 lg:py-3 lg:text-base"
+          className="flex items-center justify-center gap-2 rounded-lg bg-orange-500 p-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-orange-600 focus:outline-none lg:px-5 lg:py-3 lg:text-base"
         >
           <Plus size={20} />
           <p>{t("coefficient.action.add")}</p>

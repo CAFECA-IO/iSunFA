@@ -99,7 +99,7 @@ export default function CoefficientAddEditModal({
     if (isEdit) {
       fetchCoefficient();
     }
-  }, [selectedCoefficientId, accountBookId]);
+  }, [selectedCoefficientId, accountBookId, isEdit]);
 
   useEffect(() => {
     // Info: (20260413 - Julian) 編輯模式：填入係數資料
@@ -247,7 +247,7 @@ export default function CoefficientAddEditModal({
             {/* Info: (20260414 - Julian) Close Button */}
             <button
               type="button"
-              className="p-2 text-gray-400 outline-none hover:text-gray-500"
+              className="rounded-full p-2 text-gray-400 outline-none hover:bg-gray-100 hover:text-gray-700"
               onClick={onClose}
             >
               <span className="sr-only">Close</span>
