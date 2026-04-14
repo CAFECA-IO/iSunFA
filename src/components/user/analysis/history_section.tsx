@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { request } from '@/lib/utils/request';
-import { Check, ChevronLeft, ChevronRight, Loader2, Sparkles, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Loader2, Sparkles, X, Share2, Copy, Trash2 } from 'lucide-react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { Fragment } from 'react';
 import { MarkdownContent } from '@/components/common/markdown_content';
@@ -28,6 +28,19 @@ export default function HistorySection() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Info: (20260130 - Luphia) Report View Modal State
+  const [selectedReport, setSelectedReport] = useState<{ id: string; content: string; type: string; keyword?: string; isExternal?: boolean } | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loadingReport, setLoadingReport] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareToken, setShareToken] = useState<string | null>(null);
+  const [isShareLinkModalOpen, setIsShareLinkModalOpen] = useState(false);
+  const [isRevoking, setIsRevoking] = useState(false);
 
   const [history, setHistory] = useState<IHistoryItem[]>([]);
 
@@ -56,14 +69,6 @@ export default function HistorySection() {
       setCurrentPage(totalPages);
     }
   }, [itemsPerPage, history.length, currentPage]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Info: (20260130 - Luphia) Report View Modal State
-  const [selectedReport, setSelectedReport] = useState<{ id: string; content: string; type: string; keyword?: string; isExternal?: boolean } | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loadingReport, setLoadingReport] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
 
   // Info: (20260130 - Luphia) Fetch history from API
   useEffect(() => {
@@ -172,6 +177,60 @@ export default function HistorySection() {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedReport(null);
+  };
+
+  // Info: (20260410 - Tzuhan) 處理點擊分享按鈕
+  const handleShareReport = async () => {
+    if (!selectedReport) return;
+    try {
+      setIsSharing(true);
+      // Info: (20260410 - Tzuhan) 呼叫 Day 1 建立的 Generate API
+      const result = await request<{ code: string; payload: { token: string } }>(
+        `/api/v1/user/analysis/${selectedReport.id}/share`,
+        { method: 'POST' }
+      );
+
+      if (result.code === 'SUCCESS' && result.payload?.token) {
+        setShareToken(result.payload.token);
+        setIsShareLinkModalOpen(true);
+      } else {
+        console.error('Failed to generate share link');
+      }
+    } catch (err) {
+      console.error('Share error:', err);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  // Info: (20260410 - Tzuhan) 處理撤銷分享
+  const handleRevokeShare = async () => {
+    if (!selectedReport || !shareToken) return;
+    try {
+      setIsRevoking(true);
+      // Info: (20260410 - Tzuhan) 呼叫 Revoke API
+      const result = await request<{ code: string }>(
+        `/api/v1/user/analysis/${selectedReport.id}/share/${shareToken}/revoke`,
+        { method: 'PATCH' }
+      );
+
+      if (result.code === 'SUCCESS') {
+        setShareToken(null);
+        setIsShareLinkModalOpen(false);
+        // Todo: (20260410 - Tzuhan) 加上 Toast 提示「已撤銷」
+      }
+    } catch (err) {
+      console.error('Revoke error:', err);
+    } finally {
+      setIsRevoking(false);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    if (!shareToken) return;
+    const url = `${window.location.origin}/share/report/${shareToken}`;
+    await navigator.clipboard.writeText(url);
+    // Todo: (20260410 - Tzuhan) 觸發 Toast 提示「已複製到剪貼簿」
   };
 
   const filteredHistory = selectedTag
@@ -552,6 +611,15 @@ export default function HistorySection() {
                     <div className="flex gap-2">
                       <button
                         type="button"
+                        className="inline-flex items-center justify-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 transition-colors"
+                        onClick={handleShareReport}
+                        disabled={isSharing || !selectedReport}
+                      >
+                        {isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+                        {t('common.share') || '分享報告'}
+                      </button>
+                      <button
+                        type="button"
                         className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-orange-100 px-4 py-2 text-sm font-medium text-orange-900 hover:bg-orange-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:opacity-50"
                         onClick={() => selectedReport && downloadCurrentPdf(selectedReport.type, selectedReport.keyword)}
                         disabled={isDownloading || !selectedReport}
@@ -578,6 +646,66 @@ export default function HistorySection() {
             </div>
           </div>
         </Dialog>
+        {/* Info: (20260410 - Tzuhan) 分享網址專用的 Modal */}
+        <Transition appear show={isShareLinkModalOpen} as={Fragment}>
+          <Dialog as="div" className="relative z-[60]" onClose={() => setIsShareLinkModalOpen(false)}>
+            <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
+              <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+            </TransitionChild>
+            <div className="fixed inset-0 overflow-y-auto">
+              <div className="flex min-h-full items-center justify-center p-4 text-center">
+                <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                  <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                    <DialogTitle as="h3" className="text-lg font-bold leading-6 text-gray-900 mb-2 flex items-center gap-2">
+                      <Share2 className="h-5 w-5 text-blue-600" />
+                      {t('analysis.share.modal_title')}
+                    </DialogTitle>
+
+                    <div className="mt-2">
+                      <p
+                        className="text-sm text-gray-500 mb-4"
+                        dangerouslySetInnerHTML={{ __html: t('analysis.share.modal_desc') }}
+                      />
+
+                      <div className="flex items-center gap-2 p-1.5 bg-gray-50 border border-gray-200 rounded-lg">
+                        <input
+                          readOnly
+                          value={shareToken ? `${window.location.origin}/share/report/${shareToken}` : ''}
+                          className="flex-1 bg-transparent border-none text-sm text-gray-600 focus:ring-0 px-2 outline-none"
+                        />
+                        <button
+                          onClick={copyToClipboard}
+                          className="flex items-center gap-1 bg-white border border-gray-200 shadow-sm text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-md text-sm font-medium transition-colors shrink-0"
+                        >
+                          <Copy className="h-4 w-4" /> {t('analysis.share.copy')}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-between items-center border-t border-gray-100 pt-4">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                        onClick={handleRevokeShare}
+                        disabled={isRevoking}
+                      >
+                        {isRevoking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        {t('analysis.share.revoke')}
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                        onClick={() => setIsShareLinkModalOpen(false)}
+                      >
+                        {t('analysis.share.done')}
+                      </button>
+                    </div>
+                  </DialogPanel>
+                </TransitionChild>
+              </div>
+            </div>
+          </Dialog>
+        </Transition>
       </Transition>
     </div >
   );
