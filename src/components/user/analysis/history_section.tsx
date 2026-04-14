@@ -512,7 +512,7 @@ export default function HistorySection() {
                         <span className="inline-flex items-center rounded-md bg-white px-2 py-0.5 text-xs font-medium text-gray-600 border border-gray-200">
                           {item.periodType && item.periodType !== 'unknown' ? t(`analysis.time_units.${item.periodType}`) : '-'}
                         </span>
-                        <span className="text-sm text-gray-500 break-words">{item.period}</span>
+                        <span className="text-sm text-gray-500 wrap-break-word">{item.period}</span>
                       </div>
                     </div>
                     {renderStatus(item.status)}
@@ -648,7 +648,7 @@ export default function HistorySection() {
         </Dialog>
         {/* Info: (20260410 - Tzuhan) 分享網址專用的 Modal */}
         <Transition appear show={isShareLinkModalOpen} as={Fragment}>
-          <Dialog as="div" className="relative z-[60]" onClose={() => setIsShareLinkModalOpen(false)}>
+          <Dialog as="div" className="relative z-60" onClose={() => setIsShareLinkModalOpen(false)}>
             <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
               <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
             </TransitionChild>
@@ -669,6 +669,7 @@ export default function HistorySection() {
 
                       <div className="flex items-center gap-2 p-1.5 bg-gray-50 border border-gray-200 rounded-lg">
                         <input
+                          aria-label="Share link"
                           readOnly
                           value={shareToken ? `${window.location.origin}/share/report/${shareToken}` : ''}
                           className="flex-1 bg-transparent border-none text-sm text-gray-600 focus:ring-0 px-2 outline-none"
