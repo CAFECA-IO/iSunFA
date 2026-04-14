@@ -48,7 +48,8 @@ export const ja = {
       date_aria: "日付の並べ替えを切り替える",
       newest: "新しい順",
       oldest: "古い順",
-    }
+    },
+    share: "共有",
   },
   faith: {
     title: "FAITH",
@@ -797,6 +798,9 @@ export const ja = {
       empty_title: "分析レポートはまだありません",
       empty_description:
         "高度なAIツールを使用して最初の財務分析レポートを作成し、旅を始めましょう。",
+      retry: "再試行",
+      retry_confirm_title: "再試行を確認しますか？",
+      retry_confirm_desc: "この操作は分析を再試行します。よろしいですか？",
     },
     steps: {
       preparing: "取引の準備中...",

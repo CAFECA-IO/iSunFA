@@ -49,7 +49,8 @@ export const zhCn = {
       date_aria: "切换日期排序",
       newest: "由新至旧",
       oldest: "由旧至新",
-    }
+    },
+    share: "分享",
   },
   faith: {
     title: "费思",
@@ -784,6 +785,9 @@ export const zhCn = {
       empty_title: "尚无分析报告",
       empty_description:
         "使用我们先进的 A​​I 工具生成您的第一份财务分析报告，开启您的旅程。",
+      retry: "重试",
+      retry_confirm_title: "确认重试？",
+      retry_confirm_desc: "此操作将重新生成分析。确定要继续吗？",
     },
     steps: {
       preparing: "准备交易中...",

@@ -49,7 +49,8 @@ export const zhTw = {
       date_aria: "切換日期排序",
       newest: "由新至舊",
       oldest: "由舊至新",
-    }
+    },
+    share: "分享",
   },
   faith: {
     title: "費思",
@@ -825,6 +826,9 @@ export const zhTw = {
       empty_title: "尚無分析報告",
       empty_description:
         "使用我們先進的 AI 工具產生您的第一份財務分析報告，開啟您的旅程。",
+      retry: "重試",
+      retry_confirm_title: "確認重試？",
+      retry_confirm_desc: "此操作將重新生成分析。確定要繼續嗎？",
     },
     steps: {
       preparing: "準備交易中...",

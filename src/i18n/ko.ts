@@ -48,7 +48,8 @@ export const ko = {
       date_aria: "날짜 정렬 전환",
       newest: "최신순",
       oldest: "오래된순",
-    }
+    },
+    share: "공유",
   },
   faith: {
     title: "FAITH",
@@ -787,6 +788,9 @@ export const ko = {
       empty_title: "분석 보고서 없음",
       empty_description:
         "고급 AI 도구를 사용하여 첫 번째 재무 분석 보고서를 생성하고 여정을 시작하세요。",
+      retry: "재시도",
+      retry_confirm_title: "재시도 확인",
+      retry_confirm_desc: "이 작업은 분석을 재시도합니다. 확인하시겠습니까?",
     },
     steps: {
       preparing: "거래 준비 중...",

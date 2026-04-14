@@ -26,7 +26,8 @@ export class StorageService {
    * @param filename - Optional filename
    */
   async uploadFile(file: Blob | File, filename?: string): Promise<string> {
-    if (!this.storageDomain) {
+    const activeDomain = process.env.STORAGE_DOMAIN || this.storageDomain;
+    if (!activeDomain) {
       console.warn("[StorageService] STORAGE_DOMAIN is not set.");
     }
 
@@ -41,7 +42,7 @@ export class StorageService {
       filename || (file as File).name || "upload.bin",
     );
 
-    const domain = this.storageDomain.replace(/\/$/, "");
+    const domain = activeDomain.replace(/\/$/, "");
     const url = `${domain}/api/v1/file`;
 
     try {
@@ -157,7 +158,8 @@ export class StorageService {
     const outputDir = path.join(tempDir, "shards");
     const recoveredPath = path.join(tempDir, "recovered_file");
 
-    const domain = this.storageDomain.replace(/\/$/, "");
+    const activeDomain = process.env.STORAGE_DOMAIN || this.storageDomain;
+    const domain = activeDomain.replace(/\/$/, "");
 
     try {
       await fs.mkdir(outputDir, { recursive: true });
