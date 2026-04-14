@@ -64,7 +64,9 @@ export default function PublicReportClientView({ shareRecord, safeData }: IPubli
                         <p className="text-sm text-gray-500 flex items-center gap-2">
                             {sharedByText}
                             <span className="text-gray-300">•</span>
-                            {new Date(shareRecord.createdAt).toLocaleDateString()}
+                            <span suppressHydrationWarning>
+                                {shareRecord.createdAt.split('T')[0].replace(/-/g, '/')}
+                            </span>
                         </p>
                     </div>
 

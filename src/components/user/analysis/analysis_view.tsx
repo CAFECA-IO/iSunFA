@@ -280,7 +280,7 @@ export default function AnalysisView() {
       year: selectedYear,
       periodValue: periodType === 'yearly' ? selectedYear.toString() : selectedPeriodValue,
       country,
-      keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput ? internalCompanyName : undefined),
+      keyword: derivedKeyword,
       isExternal: activeTab === 'external',
       items: [
         {
