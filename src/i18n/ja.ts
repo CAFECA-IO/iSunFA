@@ -51,6 +51,7 @@ export const ja = {
       newest: "新しい順",
       oldest: "古い順",
     },
+    share: "共有",
   },
   faith: {
     title: "FAITH",
@@ -820,6 +821,9 @@ export const ja = {
       empty_title: "分析レポートはまだありません",
       empty_description:
         "高度なAIツールを使用して最初の財務分析レポートを作成し、旅を始めましょう。",
+      retry: "再試行",
+      retry_confirm_title: "再試行を確認しますか？",
+      retry_confirm_desc: "この操作は分析を再試行します。よろしいですか？",
     },
     steps: {
       preparing: "取引の準備中...",
@@ -1222,7 +1226,50 @@ export const ja = {
       copy_id: "クリックして伝票 ID をコピー: {{id}}",
     },
   },
+  coefficient: {
+    tag: {
+      standard: "標準"
+    },
+    tab: {
+      all: "全て",
+      standard: "標準係数",
+      custom: "カスタム係数"
+    },
+    search: {
+      label: "係数を検索",
+      placeholder: "係数名や説明を検索..."
+    },
+    action: {
+      add: "係数を追加"
+    },
+    empty: "係数がありません",
+    card: {
+      logic: "計算ロジック",
+      ef: "排出係数 (EF)",
+      last_updated: "最終更新"
+    },
+    delete: {
+      title: "係数を削除",
+      message: "この係数を削除してもよろしいですか？"
+    },
+    modal: {
+      title_add: "カスタム係数を追加",
+      title_edit: "カスタム係数を編集",
+      subtitle: "専用の炭素排出計算ロジックを定義します",
+      name: "係数名",
+      name_placeholder: "例：特定製品のカーボンフットプリント係数",
+      unit: "単位",
+      unit_placeholder: "kgCO2e/入力単位",
+      description: "説明",
+      desc_placeholder: "この係数の出典または適用範囲を説明してください...",
+      save: "係数を保存"
+    }
+  },
   esg_main: {
+    tab: {
+      records: "炭素インベントリ記録",
+      coefficient: "係数データベース"
+    },
     title: "炭素排出管理およびESG分析",
     description:
       "入力証憑を自動分析し、リアルタイムのカーボンニュートラル進捗状況と各排出ディメンション分析を提供します。",

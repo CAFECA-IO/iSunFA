@@ -280,7 +280,7 @@ export default function AnalysisView() {
       year: selectedYear,
       periodValue: periodType === 'yearly' ? selectedYear.toString() : selectedPeriodValue,
       country,
-      keyword: activeTab === 'external' && category !== 'market_trends' ? keyword : (needsCompanyInput ? internalCompanyName : undefined),
+      keyword: derivedKeyword,
       isExternal: activeTab === 'external',
       items: [
         {
@@ -733,7 +733,7 @@ export default function AnalysisView() {
             <span>{t('analysis.success.message')}</span>
             {txHash && (
               <a
-                href={`${process.env.NEXT_PUBLIC_BAIFA_EXPLORER || 'https://baifa.io'}/chain/isuncoin/tx/${txHash}`}
+                href={`${process.env.NEXT_PUBLIC_BAIFA_EXPLORER || 'https://baifa.io'}/chain/isuncoin/txs/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-orange-600 hover:text-orange-700 underline text-xs break-all"

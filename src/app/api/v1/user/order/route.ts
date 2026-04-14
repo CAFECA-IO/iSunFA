@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid order type");
   } catch (error) {
     console.error("[API] /user/order POST error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Failed to create order");
+    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, (error as Error).message);
   }
 }
 

@@ -51,6 +51,7 @@ export const zhTw = {
       newest: "由新至舊",
       oldest: "由舊至新",
     },
+    share: "分享",
   },
   faith: {
     title: "費思",
@@ -843,6 +844,9 @@ export const zhTw = {
       empty_title: "尚無分析報告",
       empty_description:
         "使用我們先進的 AI 工具產生您的第一份財務分析報告，開啟您的旅程。",
+      retry: "重試",
+      retry_confirm_title: "確認重試？",
+      retry_confirm_desc: "此操作將重新生成分析。確定要繼續嗎？",
     },
     steps: {
       preparing: "準備交易中...",
@@ -1407,7 +1411,50 @@ export const zhTw = {
       },
     },
   },
+  coefficient: {
+    tag: {
+      standard: "標準"
+    },
+    tab: {
+      all: "全部",
+      standard: "標準係數",
+      custom: "自訂係數"
+    },
+    search: {
+      label: "搜尋係數",
+      placeholder: "搜尋係數名稱、描述..."
+    },
+    action: {
+      add: "新增係數"
+    },
+    empty: "沒有係數",
+    card: {
+      logic: "計算邏輯",
+      ef: "排放係數 (EF)",
+      last_updated: "最後更新"
+    },
+    delete: {
+      title: "刪除係數",
+      message: "確定要刪除此係數嗎？"
+    },
+    modal: {
+      title_add: "新增自訂係數",
+      title_edit: "編輯自訂係數",
+      subtitle: "定義您的專屬碳排計算邏輯",
+      name: "係數名稱",
+      name_placeholder: "例如：特定產品碳足跡係數",
+      unit: "單位",
+      unit_placeholder: "kgCO2e/你的單位",
+      description: "描述說明",
+      desc_placeholder: "說明此係數的來源或適用範圍...",
+      save: "儲存係數"
+    }
+  },
   esg_main: {
+    tab: {
+      records: "碳盤查紀錄",
+      coefficient: "係數資料庫"
+    },
     title: "碳排管理與 ESG 分析",
     description:
       "自動分析進項憑證，為您提供即時的碳中和進度與各項排放維度分析。",

@@ -120,8 +120,8 @@ export async function PUT(
     const updater = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!updater) {
-      console.error("Creator not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Creator not found");
+      console.error("Updater not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Updater not found");
     }
 
     // Info: (20260312 - Julian) 取得帳簿

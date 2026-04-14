@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { request } from '@/lib/utils/request';
-import { Check, ChevronLeft, ChevronRight, Loader2, Sparkles, X, Share2, Copy, Trash2 } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Loader2, Sparkles, X, Share2, Copy, Trash2, Eye, Download, RefreshCw } from 'lucide-react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { Fragment } from 'react';
 import { MarkdownContent } from '@/components/common/markdown_content';
@@ -21,6 +21,7 @@ interface IHistoryItem {
   keyword?: string;
   tags?: string[];
   isExternal?: boolean;
+  retryCount?: number;
 }
 
 export default function HistorySection() {
@@ -41,6 +42,8 @@ export default function HistorySection() {
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [isShareLinkModalOpen, setIsShareLinkModalOpen] = useState(false);
   const [isRevoking, setIsRevoking] = useState(false);
+  const [sharingReportId, setSharingReportId] = useState<string | null>(null);
+  const [retryingReportId, setRetryingReportId] = useState<string | null>(null);
 
   const [history, setHistory] = useState<IHistoryItem[]>([]);
 
@@ -94,6 +97,26 @@ export default function HistorySection() {
 
     fetchHistory();
   }, [t]);
+
+  const handleRetryReport = async (item: IHistoryItem) => {
+    try {
+      setRetryingReportId(item.reportId);
+      const result = await request<{ code: string; payload?: { retryCount: number } }>(`/api/v1/user/analysis/${item.reportId}/retry`, {
+        method: 'POST'
+      });
+
+      if (result.code === 'SUCCESS') {
+        const newRetryCount = result.payload?.retryCount || ((item.retryCount || 0) + 1);
+        setHistory(prev => prev.map(h => h.id === item.id ? { ...h, status: 'pending', retryCount: newRetryCount } : h));
+      } else {
+        console.error('Failed to retry report');
+      }
+    } catch (err) {
+      console.error('Retry error:', err);
+    } finally {
+      setRetryingReportId(null);
+    }
+  };
 
   // Info: (20260130 - Luphia) Handle View Report
   const handleViewReport = async (item: IHistoryItem) => {
@@ -180,13 +203,15 @@ export default function HistorySection() {
   };
 
   // Info: (20260410 - Tzuhan) 處理點擊分享按鈕
-  const handleShareReport = async () => {
-    if (!selectedReport) return;
+  const handleShareReport = async (reportId?: string) => {
+    const idToShare = reportId || selectedReport?.id;
+    if (!idToShare) return;
     try {
+      setSharingReportId(idToShare);
       setIsSharing(true);
       // Info: (20260410 - Tzuhan) 呼叫 Day 1 建立的 Generate API
       const result = await request<{ code: string; payload: { token: string } }>(
-        `/api/v1/user/analysis/${selectedReport.id}/share`,
+        `/api/v1/user/analysis/${idToShare}/share`,
         { method: 'POST' }
       );
 
@@ -205,12 +230,13 @@ export default function HistorySection() {
 
   // Info: (20260410 - Tzuhan) 處理撤銷分享
   const handleRevokeShare = async () => {
-    if (!selectedReport || !shareToken) return;
+    const idToRevoke = sharingReportId || selectedReport?.id;
+    if (!idToRevoke || !shareToken) return;
     try {
       setIsRevoking(true);
       // Info: (20260410 - Tzuhan) 呼叫 Revoke API
       const result = await request<{ code: string }>(
-        `/api/v1/user/analysis/${selectedReport.id}/share/${shareToken}/revoke`,
+        `/api/v1/user/analysis/${idToRevoke}/share/${shareToken}/revoke`,
         { method: 'PATCH' }
       );
 
@@ -448,20 +474,54 @@ export default function HistorySection() {
                       {renderStatus(item.status)}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                      <button
-                        className="text-orange-600 hover:text-orange-900 font-medium mr-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
-                        onClick={() => handleViewReport(item)}
-                      >
-                        {loadingReport && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.view')}
-                      </button>
-                      <button
-                        className="text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-                        disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase()) || isDownloading}
-                        onClick={() => handleDownloadFromTable(item)}
-                      >
-                        {isDownloading && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.download')}
-                      </button>
+                      <div className="flex items-center gap-3">
+                        {['failed', 'error'].includes(item.status.toLowerCase()) ? (
+                          (item.retryCount || 0) >= 3 ? (
+                            <span className="text-red-600 text-xs font-bold border border-red-200 bg-red-50 px-2 py-1 rounded-md">
+                              {t('analysis.history.contact_admin') || '聯絡系統管理員'}
+                            </span>
+                          ) : (
+                            <button
+                              className="text-red-500 hover:text-red-700 font-medium disabled:opacity-50 flex items-center gap-1 transition-colors group text-xs border border-red-200 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md"
+                              disabled={retryingReportId === item.reportId}
+                              onClick={() => handleRetryReport(item)}
+                            >
+                              <RefreshCw className={`h-3.5 w-3.5 ${retryingReportId === item.reportId ? 'animate-spin' : ''}`} />
+                              {t('analysis.history.retry') || '重試'} ({(item.retryCount || 0)}/3)
+                            </button>
+                          )
+                        ) : (
+                          <>
+                            <button
+                              className="text-orange-600 hover:text-orange-900 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors group"
+                              disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
+                              onClick={() => handleViewReport(item)}
+                              title={t('analysis.history.view')}
+                            >
+                              {loadingReport && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4 group-hover:scale-110 transition-transform" />}
+                              <span className="sr-only">{t('analysis.history.view')}</span>
+                            </button>
+                            <button
+                              className="text-gray-600 hover:text-gray-900 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors group"
+                              disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase()) || isDownloading}
+                              onClick={() => handleDownloadFromTable(item)}
+                              title={t('analysis.history.download')}
+                            >
+                              {isDownloading && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 group-hover:scale-110 transition-transform" />}
+                              <span className="sr-only">{t('analysis.history.download')}</span>
+                            </button>
+                            <button
+                              className="text-blue-600 hover:text-blue-900 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors group"
+                              disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
+                              onClick={() => handleShareReport(item.reportId)}
+                              title={t('common.share')}
+                            >
+                              {isSharing && sharingReportId === item.reportId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4 group-hover:scale-110 transition-transform" />}
+                              <span className="sr-only">{t('common.share')}</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -512,7 +572,7 @@ export default function HistorySection() {
                         <span className="inline-flex items-center rounded-md bg-white px-2 py-0.5 text-xs font-medium text-gray-600 border border-gray-200">
                           {item.periodType && item.periodType !== 'unknown' ? t(`analysis.time_units.${item.periodType}`) : '-'}
                         </span>
-                        <span className="text-sm text-gray-500 break-words">{item.period}</span>
+                        <span className="text-sm text-gray-500 wrap-break-word">{item.period}</span>
                       </div>
                     </div>
                     {renderStatus(item.status)}
@@ -520,21 +580,50 @@ export default function HistorySection() {
 
                   <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-200">
                     <span>{item.generatedAt}</span>
-                    <div className="flex gap-3">
-                      <button
-                        className="text-orange-600 font-medium disabled:opacity-50"
-                        disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
-                        onClick={() => handleViewReport(item)}
-                      >
-                        {loadingReport && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.view')}
-                      </button>
-                      <button
-                        className="text-gray-600 disabled:opacity-50 flex items-center gap-1"
-                        disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase()) || isDownloading}
-                        onClick={() => handleDownloadFromTable(item)}
-                      >
-                        {isDownloading && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('analysis.history.download')}
-                      </button>
+                    <div className="flex gap-4">
+                      {['failed', 'error'].includes(item.status.toLowerCase()) ? (
+                        (item.retryCount || 0) >= 3 ? (
+                          <span className="text-red-600 text-[10px] font-bold border border-red-200 bg-red-50 px-2 py-1 rounded-md max-w-[120px] truncate">
+                            {t('analysis.history.contact_admin') || '聯絡系統管理員'}
+                          </span>
+                        ) : (
+                          <button
+                            className="text-red-500 font-medium disabled:opacity-50 flex items-center gap-1 text-[10px] border border-red-200 bg-red-50 px-2 py-1 rounded-md"
+                            disabled={retryingReportId === item.reportId}
+                            onClick={() => handleRetryReport(item)}
+                          >
+                            <RefreshCw className={`h-3 w-3 ${retryingReportId === item.reportId ? 'animate-spin' : ''}`} />
+                            {t('analysis.history.retry') || '重試'} ({(item.retryCount || 0)}/3)
+                          </button>
+                        )
+                      ) : (
+                        <>
+                          <button
+                            className="text-orange-600 font-medium disabled:opacity-50 flex items-center gap-1 transition-colors group"
+                            disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
+                            onClick={() => handleViewReport(item)}
+                            title={t('analysis.history.view')}
+                          >
+                            {loadingReport && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4 group-hover:scale-110 transition-transform" />}
+                          </button>
+                          <button
+                            className="text-gray-600 font-medium disabled:opacity-50 flex items-center gap-1 transition-colors group"
+                            disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase()) || isDownloading}
+                            onClick={() => handleDownloadFromTable(item)}
+                            title={t('analysis.history.download')}
+                          >
+                            {isDownloading && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 group-hover:scale-110 transition-transform" />}
+                          </button>
+                          <button
+                            className="text-blue-600 font-medium disabled:opacity-50 flex items-center gap-1 transition-colors group"
+                            disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
+                            onClick={() => handleShareReport(item.reportId)}
+                            title={t('common.share')}
+                          >
+                            {isSharing && sharingReportId === item.reportId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4 group-hover:scale-110 transition-transform" />}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -612,11 +701,11 @@ export default function HistorySection() {
                       <button
                         type="button"
                         className="inline-flex items-center justify-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 transition-colors"
-                        onClick={handleShareReport}
+                        onClick={() => handleShareReport()}
                         disabled={isSharing || !selectedReport}
                       >
                         {isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
-                        {t('common.share') || '分享報告'}
+                        {t('common.share')}
                       </button>
                       <button
                         type="button"
@@ -646,18 +735,20 @@ export default function HistorySection() {
             </div>
           </div>
         </Dialog>
-        {/* Info: (20260410 - Tzuhan) 分享網址專用的 Modal */}
-        <Transition appear show={isShareLinkModalOpen} as={Fragment}>
-          <Dialog as="div" className="relative z-[60]" onClose={() => setIsShareLinkModalOpen(false)}>
-            <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
-              <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-            </TransitionChild>
-            <div className="fixed inset-0 overflow-y-auto">
-              <div className="flex min-h-full items-center justify-center p-4 text-center">
-                <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
-                  <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                    <DialogTitle as="h3" className="text-lg font-bold leading-6 text-gray-900 mb-2 flex items-center gap-2">
-                      <Share2 className="h-5 w-5 text-blue-600" />
+      </Transition>
+
+      {/* Info: (20260410 - Tzuhan) 分享網址專用的 Modal */}
+      <Transition appear show={isShareLinkModalOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-[60]" onClose={() => setIsShareLinkModalOpen(false)}>
+          <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+          </TransitionChild>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <DialogTitle as="h3" className="text-lg font-bold leading-6 text-gray-900 mb-2 flex items-center gap-2">
+                    <Share2 className="h-5 w-5 text-blue-600" />
                       {t('analysis.share.modal_title')}
                     </DialogTitle>
 
@@ -669,6 +760,7 @@ export default function HistorySection() {
 
                       <div className="flex items-center gap-2 p-1.5 bg-gray-50 border border-gray-200 rounded-lg">
                         <input
+                          aria-label="Share link"
                           readOnly
                           aria-label="Share link"
                           value={shareToken ? `${window.location.origin}/share/report/${shareToken}` : ''}
@@ -707,7 +799,6 @@ export default function HistorySection() {
             </div>
           </Dialog>
         </Transition>
-      </Transition>
     </div >
   );
 }
