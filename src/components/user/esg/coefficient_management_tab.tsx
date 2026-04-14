@@ -36,7 +36,7 @@ const CoefficientCard = ({
 }: ICoefficientCardProps) => {
   // Info: (20260413 - Julian) 只有自訂係數可以編輯與刪除
   const actions = coefficient.category === CoefficientCategory.CUSTOM && (
-    <div className="invisible flex items-center gap-2 opacity-0 transition-all duration-200 lg:opacity-0 lg:group-hover:visible lg:group-hover:opacity-100">
+    <div className="visible flex items-center gap-2 opacity-100 transition-all duration-200 lg:opacity-0 lg:group-hover:visible lg:group-hover:opacity-100">
       <button
         type="button"
         onClick={() => onEdit(coefficient.id)}
@@ -140,6 +140,7 @@ export default function CoefficientManagementTab() {
   const [keyword, setKeyword] = useState<string>("");
   const [activeTab, setActiveTab] = useState<ICoefficientTab>("all");
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [refreshFlag, setRefreshFlag] = useState<boolean>(false);
 
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState<boolean>(false);
   const [selectedCoefficientId, setSelectedCoefficientId] = useState<
@@ -153,23 +154,37 @@ export default function CoefficientManagementTab() {
     setIsAddEditModalOpen(true);
   };
 
-  // ToDo: (20260413 - Julian) 刪除係數 API
+  // Info: (20260414 - Julian) 刪除係數 API
   const deleteCoefficient = async () => {
-    console.log(`delete coefficient ${selectedCoefficientId}`);
-  };
-
-  const saveCoefficient = async (coefficient: ICoefficientInput) => {
     try {
-      const data = await request<IApiResponse<ICoefficient[]>>(
-        `/api/v1/user/account_book/${accountBookId}/esg/coefficient`,
-        {
-          method: "POST",
-          body: JSON.stringify({ coefficient }),
-        },
+      await request<IApiResponse<null>>(
+        `/api/v1/user/account_book/${accountBookId}/esg/coefficient/${selectedCoefficientId}`,
+        { method: "DELETE" },
       );
-      if (data.payload) {
-        setCoefficientList(data.payload);
-      }
+      setRefreshFlag((prev) => !prev);
+    } catch (error) {
+      console.error("Error deleting coefficient:", error);
+    }
+  };  
+
+  // Info: (20260414 - Julian) 儲存係數資料
+  const saveCoefficient = async (input: ICoefficientInput) => {
+    // Info: (20260414 - Julian) 判斷是新增或編輯
+    const isEdit = selectedCoefficientId !== null;
+
+    // Info: (20260414 - Julian) 新增和編輯須使用不同的 API URL 和 method
+    const apiUrl = isEdit
+      ? `/api/v1/user/account_book/${accountBookId}/esg/coefficient/${selectedCoefficientId}`
+      : `/api/v1/user/account_book/${accountBookId}/esg/coefficient`;
+    const method = isEdit ? "PUT" : "POST";
+
+    try {
+      await request<IApiResponse<{ coefficientId?: string }>>(apiUrl, {
+        method,
+        body: JSON.stringify({ input }),
+      });
+      // Info: (20260414 - Julian) 觸發 useEffect 以重新取得係數列表
+      setRefreshFlag((prev) => !prev);
     } catch (err) {
       console.error("Failed to save coefficient:", err);
     } finally {
@@ -195,7 +210,7 @@ export default function CoefficientManagementTab() {
       }
     };
     fetchCoefficientList();
-  }, [activeTab, keyword, accountBookId]);
+  }, [activeTab, keyword, accountBookId, refreshFlag]);
 
   const tabs = ["all", ...Object.values(CoefficientCategory)].map((tab) => (
     <button

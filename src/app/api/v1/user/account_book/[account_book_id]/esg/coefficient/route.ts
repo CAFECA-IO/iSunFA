@@ -5,7 +5,11 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { CoefficientCategory, ICoefficient, ICoefficientInput } from "@/interfaces/coefficient";
+import {
+  CoefficientCategory,
+  ICoefficient,
+  ICoefficientInput,
+} from "@/interfaces/coefficient";
 import { Prisma } from "@/generated/client";
 
 /**
@@ -45,20 +49,20 @@ export async function POST(
 
     // Info: (20260413 - Julian) 新增自訂公式
     const body = await request.json();
-    const { coefficient }: { coefficient: ICoefficientInput } = body;
+    const { input }: { input: ICoefficientInput } = body;
 
     // Info: (20260413 - Julian) 驗證 coefficient 參數
-    if (!coefficient || !coefficient.name) {
+    if (!input || !input.name) {
       console.error("Missing coefficient or coefficient name");
       return jsonFail(ApiCode.VALIDATION_ERROR, "Coefficient is required");
     }
 
     // Info: (20260413 - Julian) 建立自訂公式
     const newCoefficient = await esgRepo.createEsgCoefficient({
-      name: coefficient.name,
-      description: coefficient.description,
-      emissionFactor: coefficient.emissionFactor,
-      unit: coefficient.unit,
+      name: input.name,
+      description: input.description,
+      emissionFactor: input.emissionFactor,
+      unit: input.unit,
       source: accountBook.name,
       accountBook: { connect: { id: accountBook.id } },
     });
@@ -142,8 +146,8 @@ export async function GET(
       ...(page && pageSize
         ? { skip: (page - 1) * pageSize, take: pageSize }
         : {}),
-      // Info: (20260413 - Julian) 排序邏輯：將標準係數排在前面，並依據建立時間倒序排列
-      orderBy: [{ accountBookId: "desc" }, { createdAt: "desc" }],
+      // Info: (20260413 - Julian) 排序邏輯：將標準係數排在前面，並依據更新時間倒序排列
+      orderBy: [{ accountBookId: "desc" }, { updatedAt: "desc" }],
     });
 
     const result: ICoefficient[] = coefficients.map((coefficient) => ({

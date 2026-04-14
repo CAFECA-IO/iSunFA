@@ -1,14 +1,7 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect } from "react";
 import { X, Calculator, CircleCheck, Loader2 } from "lucide-react";
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  Transition,
-  TransitionChild,
-} from "@headlessui/react";
 import { ICoefficient, ICoefficientInput } from "@/interfaces/coefficient";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
@@ -39,7 +32,6 @@ export default function CoefficientAddEditModal({
   const [unit, setUnit] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  // const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const confirmCoefficient = () => {
     const input: ICoefficientInput = {
@@ -59,20 +51,20 @@ export default function CoefficientAddEditModal({
         setIsLoading(true);
         const data = await request<IApiResponse<ICoefficient>>(
           `/api/v1/user/account_book/${accountBookId}/esg/coefficient/${selectedCoefficientId}`,
-        { method: "GET" },
-      );
-      if (data.payload) {
-        setName(data.payload.name);
-        setEmissionFactor(data.payload.emissionFactor.toString());
-        setUnit(data.payload.unit);
-        setDescription(data.payload.description);
+          { method: "GET" },
+        );
+        if (data.payload) {
+          setName(data.payload.name);
+          setEmissionFactor(data.payload.emissionFactor.toString());
+          setUnit(data.payload.unit);
+          setDescription(data.payload.description);
+        }
+      } catch (error) {
+        console.error("Error fetching coefficient:", error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching coefficient:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
     // Info: (20260413 - Julian) 編輯模式：填入係數資料
     if (isEdit) {
@@ -84,6 +76,7 @@ export default function CoefficientAddEditModal({
       setEmissionFactor("");
       setUnit("");
       setDescription("");
+      setIsLoading(false);
     }
   }, [accountBookId, selectedCoefficientId, isOpen, isEdit]);
 
@@ -179,62 +172,40 @@ export default function CoefficientAddEditModal({
   );
 
   return (
-    <Transition show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-200" onClose={onClose}>
-        <TransitionChild
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
-        </TransitionChild>
-
-        <div className="fixed inset-0 z-201 w-screen overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-            <TransitionChild
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-              enterTo="opacity-100 translate-y-0 sm:scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+    isOpen && (
+      <div className="fixed inset-0 z-200 flex min-h-full w-screen items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity sm:p-0">
+        <div className="relative overflow-hidden rounded-2xl bg-white p-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+          {/* Info: (20260414 - Julian) Header */}
+          <div className="flex items-start justify-between">
+            {/* Info: (20260414 - Julian) Title */}
+            <div className="flex items-center gap-4">
+              <div className="rounded-lg bg-slate-100 p-2.5 text-slate-600">
+                <Calculator size={24} />
+              </div>
+              <div className="flex flex-col">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {isEdit ? "編輯自訂係數" : "新增自訂係數"}
+                </h3>
+                <span className="text-xs text-gray-400">
+                  定義您的專屬碳排計算邏輯
+                </span>
+              </div>
+            </div>
+            {/* Info: (20260414 - Julian) Close Button */}
+            <button
+              type="button"
+              className="hover:text-gray-500outline-none text-gray-400"
+              onClick={onClose}
             >
-              <DialogPanel className="relative transform overflow-hidden rounded-2xl bg-white p-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-                <div className="flex items-start justify-between">
-                  <DialogTitle as="div" className="flex items-center gap-4">
-                    <div className="rounded-lg bg-slate-100 p-2.5 text-slate-600">
-                      <Calculator size={24} />
-                    </div>
-                    <div className="flex flex-col">
-                      <h3 className="text-xl font-semibold text-gray-900">
-                        {isEdit ? "編輯自訂係數" : "新增自訂係數"}
-                      </h3>
-                      <span className="text-xs text-gray-400">
-                        定義您的專屬碳排計算邏輯
-                      </span>
-                    </div>
-                  </DialogTitle>
-                  <button
-                    type="button"
-                    className="hover:text-gray-500outline-none text-gray-400"
-                    onClick={onClose}
-                  >
-                    <span className="sr-only">Close</span>
-                    <X size={24} aria-hidden="true" />
-                  </button>
-                </div>
-
-                {modalContent}
-              </DialogPanel>
-            </TransitionChild>
+              <span className="sr-only">Close</span>
+              <X size={24} aria-hidden="true" />
+            </button>
           </div>
+
+          {/* Info: (20260414 - Julian) Modal Content */}
+          {modalContent}
         </div>
-      </Dialog>
-    </Transition>
+      </div>
+    )
   );
 }

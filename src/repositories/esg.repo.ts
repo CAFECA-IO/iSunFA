@@ -398,6 +398,19 @@ export class EsgRepository implements IEsgRepository {
       include: { accountBook: true },
     });
   }
+
+  async updateEsgCoefficient(id: string, data: Prisma.CoefficientUpdateInput) {
+    return prisma.coefficient.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async deleteEsgCoefficient(id: string) {
+    return prisma.coefficient.delete({
+      where: { id },
+    });
+  }
 }
 
 export const esgRepo = new EsgRepository();
