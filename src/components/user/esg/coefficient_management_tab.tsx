@@ -1,5 +1,5 @@
 "use client";
-/* eslint-disable jsx-a11y/no-static-element-interactions, react-hooks/set-state-in-effect */
+
 import { useState, useEffect } from "react";
 import {
   Globe,
@@ -9,21 +9,18 @@ import {
   PenLine,
   Trash2,
   SearchX,
+  Loader2,
 } from "lucide-react";
+import { useParams } from "next/navigation";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
 import { timestampToString } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
 import CoefficientAddEditModal from "@/components/user/esg/coefficient_add_edit_modal";
 import {
   CoefficientCategory,
   ICoefficient,
-  mockCoefficientList,
 } from "@/interfaces/coefficient";
-
-enum CoefficientTab {
-  ALL = "all",
-  STANDARD = "standard",
-  CUSTOM = "custom",
-}
 
 interface ICoefficientCardProps {
   coefficient: ICoefficient;
@@ -145,11 +142,16 @@ const CoefficientCard = ({
   );
 };
 
+type ICoefficientTab = CoefficientCategory | "all";
+
 export default function CoefficientManagementTab() {
+  const params = useParams();
+  const accountBookId = params?.account_book_id as string;
+
   const [coefficientList, setCoefficientList] = useState<ICoefficient[]>([]);
-  const [activeTab, setActiveTab] = useState<CoefficientTab>(
-    CoefficientTab.ALL,
-  );
+  const [keyword, setKeyword] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<ICoefficientTab>("all");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState<boolean>(false);
   const [selectedCoefficientId, setSelectedCoefficientId] = useState<
@@ -168,41 +170,36 @@ export default function CoefficientManagementTab() {
     console.log(`delete coefficient ${selectedCoefficientId}`);
   };
 
+  // Info: (20260414 - Julian) 取得係數列表
   useEffect(() => {
-    switch (activeTab) {
-      case CoefficientTab.ALL:
-        setCoefficientList(mockCoefficientList);
-        break;
-      case CoefficientTab.STANDARD:
-        setCoefficientList(
-          mockCoefficientList.filter(
-            (f) => f.category === CoefficientCategory.STANDARD,
-          ),
+    const fetchCoefficientList = async () => {
+      try {
+        const data = await request<IApiResponse<ICoefficient[]>>(
+          `/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=${activeTab}&search=${keyword}`,
         );
-        break;
-      case CoefficientTab.CUSTOM:
-        setCoefficientList(
-          mockCoefficientList.filter(
-            (f) => f.category === CoefficientCategory.CUSTOM,
-          ),
-        );
-        break;
-      default:
-        break;
-    }
-  }, [activeTab]);
+        if (data.payload) {
+          setCoefficientList(data.payload);
+        }
+      } catch (err) {
+        console.error("Failed to fetch coefficient list:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCoefficientList();
+  }, [activeTab, keyword, accountBookId]);
 
-  const tabs = Object.values(CoefficientTab).map((tab) => (
+  const tabs = ["all", ...Object.values(CoefficientCategory)].map((tab) => (
     <button
       key={tab}
       type="button"
-      onClick={() => setActiveTab(tab)}
+      onClick={() => setActiveTab(tab as ICoefficientTab)}
       className={`${tab === activeTab ? "text-slate-800" : "text-gray-400"} w-24 py-4 text-base font-semibold transition-all outline-none hover:text-slate-700`}
     >
       {/* ToDo: (20260413 - Julian) 使用翻譯檔 */}
-      {tab === CoefficientTab.ALL
+      {tab === "all"
         ? "全部"
-        : tab === CoefficientTab.STANDARD
+        : tab === CoefficientCategory.STANDARD
           ? "標準係數"
           : "自訂係數"}
     </button>
@@ -228,17 +225,20 @@ export default function CoefficientManagementTab() {
     );
   });
 
-  const coefficientSection =
-    coefficientList.length > 0 ? (
-      <div className="grid grid-flow-row grid-cols-1 gap-y-4 lg:grid-cols-2 lg:gap-x-4">
-        {displayedCoefficientList}
-      </div>
-    ) : (
-      <div className="flex flex-col items-center justify-center gap-2 p-4 text-xl font-semibold text-gray-400">
-        <SearchX size={40} />
-        <p>沒有係數</p>
-      </div>
-    );
+  const coefficientSection = isLoading ? (
+    <div className="flex items-center justify-center gap-2 p-20 text-xl font-semibold text-orange-400">
+      <Loader2 className="animate-spin" size={40} />
+    </div>
+  ) : coefficientList.length > 0 ? (
+    <div className="grid grid-flow-row grid-cols-1 gap-y-4 lg:grid-cols-2 lg:gap-x-4">
+      {displayedCoefficientList}
+    </div>
+  ) : (
+    <div className="flex flex-col items-center justify-center gap-2 p-4 text-xl font-semibold text-gray-400">
+      <SearchX size={40} />
+      <p>沒有係數</p>
+    </div>
+  );
 
   return (
     <>
@@ -255,6 +255,8 @@ export default function CoefficientManagementTab() {
             aria-label="搜尋係數"
             type="text"
             placeholder="搜尋係數名稱、描述..."
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
             className="w-full bg-transparent text-base font-medium text-slate-800 outline-none placeholder:text-gray-400"
           />
         </div>
@@ -273,7 +275,7 @@ export default function CoefficientManagementTab() {
       <div className="relative flex items-center border-b border-gray-200">
         {tabs}
         <div
-          className={`absolute bottom-0 left-0 h-1 w-24 bg-slate-700 transition-all duration-200 ${activeTab === CoefficientTab.ALL ? "left-0" : ""} ${activeTab === CoefficientTab.STANDARD ? "left-24" : ""} ${activeTab === CoefficientTab.CUSTOM ? "left-48" : ""} `}
+          className={`absolute bottom-0 left-0 h-1 w-24 bg-slate-700 transition-all duration-200 ${activeTab === "all" ? "left-0" : activeTab === CoefficientCategory.STANDARD ? "left-24" : "left-48"} `}
         ></div>
       </div>
 
