@@ -202,12 +202,12 @@ export default function EsgTableSection({
   };
 
   const handleDeleteClick = (id: string) => {
-    const record = records.find(r => r.id === id);
+    const record = records.find((r) => r.id === id);
     if (record) setEsgToDelete(record);
   };
 
   const handleRestoreClick = (id: string) => {
-    const record = records.find(r => r.id === id);
+    const record = records.find((r) => r.id === id);
     if (record) setEsgToRestore(record);
   };
 
@@ -254,8 +254,8 @@ export default function EsgTableSection({
       if (data.code === ApiCode.SUCCESS) {
         setRecords((prev) =>
           prev.map((r) =>
-            r.id === esgToRestore.id ? { ...r, isDeleted: false } : r
-          )
+            r.id === esgToRestore.id ? { ...r, isDeleted: false } : r,
+          ),
         );
         setEsgToRestore(null);
       }
@@ -377,7 +377,11 @@ export default function EsgTableSection({
           <button
             type="button"
             aria-label={t("common.sort.date_aria")}
-            onClick={() => setSortOrder(sortOrder === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC)}
+            onClick={() =>
+              setSortOrder(
+                sortOrder === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC,
+              )
+            }
             className="flex items-center rounded-lg border border-slate-300 px-4 py-2 font-bold text-slate-600 transition-colors hover:bg-orange-50"
           >
             {sortOrder === SortOrder.DESC
@@ -453,7 +457,8 @@ export default function EsgTableSection({
                   {t("esg_table.header.intensity_label")}
                 </th>
                 <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
-                  {t("esg_table.header.status")} / {t("esg_table.header.ai_confidence")}
+                  {t("esg_table.header.status")} /{" "}
+                  {t("esg_table.header.ai_confidence")}
                 </th>
                 <th className="p-2 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase lg:px-6 lg:py-4">
                   {t("common.actions")}
@@ -591,7 +596,11 @@ export default function EsgTableSection({
         onClose={() => setEsgToRestore(null)}
         title={t("common.restore") as string}
         message={t("common.restore_confirm_desc") as string}
-        confirmText={isRestoring ? (t("ocr.please_wait") as string) : (t("common.restore") as string)}
+        confirmText={
+          isRestoring
+            ? (t("ocr.please_wait") as string)
+            : (t("common.restore") as string)
+        }
         cancelText={t("common.cancel") as string}
         onConfirm={executeRestore}
       />

@@ -72,6 +72,7 @@ export async function POST(
       rawActivityData: "",
       unit: "",
       emissions: 0,
+      dqiScore: 0,
       confidence: 0,
       isVerified: false,
       aiNote: "",
@@ -243,6 +244,7 @@ export async function GET(
       journalId: r.journalId,
       voucherId: r.voucherId,
       isDeleted: !!r.deletedAt,
+      dqiScore: Number(r.dqiScore) ?? 0,
     }));
 
     return jsonOk({

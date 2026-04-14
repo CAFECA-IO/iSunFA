@@ -834,11 +834,27 @@ export const zhTw = {
       signing_analysis: "請簽署分析請求",
       analyzing: "正在生成分析報告...",
     },
-
     success: {
       title: "分析請求已提交",
       message: "您的請求已上鏈，報告生成需時，請至歷史報告分頁查看進度。",
       view_tx: "檢視交易",
+    },
+    share: {
+      button: '分享報告',
+      modal_title: '分享對外公開報告',
+      modal_desc: '任何人擁有此連結皆可檢視該報告的「摘要與去識別化版本」。機密金額與詳細供應商資訊已被系統安全隱藏。',
+      copy: '複製',
+      copied: '已複製到剪貼簿',
+      revoke: '撤銷此分享連結',
+      revoked: '已成功撤銷分享連結',
+      done: '完成',
+      public_badge: '公開摘要報告',
+      shared_by: '由 {{name}} 分享',
+      security_intercept: '系統安全攔截',
+      security_desc: '此類型的報告尚未開放公開分享，或資料格式異常。',
+      cta_title: '想為您的企業產生專屬的深度分析報告嗎？',
+      cta_desc: 'iSunFA 透過前沿 AI 技術，為您提供包含碳健檢、財務評級、合規審查等全方位智能會計解決方案。',
+      cta_button: '了解 iSunFA 陽光智能會計'
     },
   },
   ai_consultation_room: {
@@ -1388,6 +1404,11 @@ export const zhTw = {
     better_than_industry: "優於產業平均 ({{average}})",
     scope_distribution: "各範疇分布 (SCOPE)",
     annual_goal_progress: "年度目標進度",
+    today_records: "今日產生碳排紀錄",
+    dqi_average: "平均 DQI 評分",
+    pending: "待核對",
+    ai_confidence: "AI 平均信心度",
+    record_unit: "筆",
   },
   esg_table: {
     intensity: {
@@ -1460,6 +1481,7 @@ export const zhTw = {
       unit: "單位",
       total: "總排放量",
       intensity: "排放強度分級",
+      coefficient: "排放係數",
     },
     actions: {
       cancel_edit: "取消修改",

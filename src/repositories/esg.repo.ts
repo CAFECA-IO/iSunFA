@@ -193,33 +193,34 @@ export class EsgRepository implements IEsgRepository {
       endDate = new Date(currentYear, 11, 31, 23, 59, 59, 999);
     }
 
-    const [esgAggregations, incomeVoucherLinesAggr, accountBook, targets] = await Promise.all([
-      prisma.esgRecord.groupBy({
-        by: ["scope"],
-        where: {
-          accountBookId,
-          tradingDate: { gte: startDate, lte: endDate },
-          deletedAt: null,
-        },
-        _sum: { emissions: true },
-      }),
-      prisma.voucherLine.aggregate({
-        where: {
-          voucher: {
+    const [esgAggregations, incomeVoucherLinesAggr, accountBook, targets] =
+      await Promise.all([
+        prisma.esgRecord.groupBy({
+          by: ["scope"],
+          where: {
             accountBookId,
-            tradingType: "INCOME",
             tradingDate: { gte: startDate, lte: endDate },
             deletedAt: null,
           },
-        },
-        _sum: { amount: true },
-      }),
-      prisma.accountBook.findUnique({
-        where: { id: accountBookId },
-        select: { esgIndustryId: true },
-      }),
-      this.getEsgTargetsByAccountBookId(accountBookId),
-    ]);
+          _sum: { emissions: true },
+        }),
+        prisma.voucherLine.aggregate({
+          where: {
+            voucher: {
+              accountBookId,
+              tradingType: "INCOME",
+              tradingDate: { gte: startDate, lte: endDate },
+              deletedAt: null,
+            },
+          },
+          _sum: { amount: true },
+        }),
+        prisma.accountBook.findUnique({
+          where: { id: accountBookId },
+          select: { esgIndustryId: true },
+        }),
+        this.getEsgTargetsByAccountBookId(accountBookId),
+      ]);
 
     let totalEmissions = 0;
     let scope1 = 0;
@@ -259,7 +260,10 @@ export class EsgRepository implements IEsgRepository {
       const msInYear =
         new Date(currentYear, 11, 31, 23, 59, 59, 999).getTime() -
         new Date(currentYear, 0, 1).getTime();
-      const spanMs = Math.min(endDate.getTime() - startDate.getTime(), msInYear);
+      const spanMs = Math.min(
+        endDate.getTime() - startDate.getTime(),
+        msInYear,
+      );
       const proportion = spanMs / msInYear;
       const proportionalTarget =
         Number(target.totalEmissionTarget) * proportion;
@@ -283,10 +287,11 @@ export class EsgRepository implements IEsgRepository {
     let industryAverage = 0;
     if (accountBook?.esgIndustryId) {
       const benchmark = ESG_INDUSTRY_BENCHMARKS.find(
-        (b) => b.id === accountBook.esgIndustryId
+        (b) => b.id === accountBook.esgIndustryId,
       );
       if (benchmark) {
-        industryAverage = (benchmark.emissionPer10kMin + benchmark.emissionPer10kMax) / 2;
+        industryAverage =
+          (benchmark.emissionPer10kMin + benchmark.emissionPer10kMax) / 2;
       }
     }
 
@@ -372,6 +377,19 @@ export class EsgRepository implements IEsgRepository {
       where: { fileId, accountBookId },
       data,
     });
+  }
+
+  async createEsgCoefficient(data: Prisma.CoefficientCreateInput) {
+    return prisma.coefficient.create({ data });
+  }
+
+  async getEsgCoefficients(args: Prisma.CoefficientFindManyArgs) {
+    const coefficients = await prisma.coefficient.findMany({
+      ...args,
+      include: { accountBook: true },
+    });
+
+    return coefficients;
   }
 }
 

@@ -267,6 +267,7 @@ export async function POST(
       rawActivityData: "",
       unit: "",
       emissions: 0,
+      dqiScore: 0,
       aiNote: "",
       confidence: 0,
       isVerified: false,

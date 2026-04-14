@@ -669,6 +669,4 @@ CO2排放係數(公噸/公噸產品),,,
 ,,熱傳導流體排放係數單位微機電產品面積排放係數（公斤/平方米）（kg/m2）,0.015,,,,0.076,,,,,,1.86,,,,,,,,
 ,,註1：半導體排放係數是假設 200 mm 與 300 mm之生產比例為 50/50，故適用於晶圓尺寸為200 mm以下者。,,,,,,,,,,,,,,,,,,,
 ,,"註2：資料來源為2019 IPCC Guidelines for National Greenhouse Gas Inventories, Volume 3 Industrial Processes and Product Use, Chapter 6: Electronics Industry Emissions, table 6.6。",,,,,,,,,,,,,,,,,,,
-
-
 `;
