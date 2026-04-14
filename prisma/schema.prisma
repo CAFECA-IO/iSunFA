@@ -55,6 +55,7 @@ model User {
   vouchers            Voucher[]
   esgRecords          EsgRecord[]
   checkins            Checkin[]
+  reportShareTokens   ReportShareToken[]   @relation("ReportSharer")
 
   @@index([address])
   @@map("user")
@@ -137,7 +138,8 @@ model Analysis {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tags AnalysisTag[]
+  tags              AnalysisTag[]
+  reportShareTokens ReportShareToken[]
 
   @@map("analysis")
 }
@@ -697,4 +699,24 @@ model Checkin {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("checkin")
+}
+
+// Info: (20260410 - Tzuhan) 通用報告分享引擎，支援不同類型的報告對外分享
+model ReportShareToken {
+  id          String   @id @default(uuid())
+  token       String   @unique @default(uuid()) // Info: (20260410 - Tzuhan) 實際暴露在 URL 的亂碼字串
+  analysisId  String   @map("analysis_id")
+  analysis    Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  category    String // Info: (20260410 - Tzuhan) 報告類別 (例如 carbon_health_check)，用於策略模式分流
+  isActive    Boolean  @default(true) @map("is_active") // Info: (20260410 - Tzuhan) 支援手動關閉分享
+  createdById String   @map("created_by_id")
+  createdBy   User     @relation("ReportSharer", fields: [createdById], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  expiresAt DateTime? @map("expires_at") // Info: (20260410 - Tzuhan) 預留給未來「限時分享」功能使用
+
+  @@index([token])
+  @@index([analysisId])
+  @@map("report_share_token")
 }
