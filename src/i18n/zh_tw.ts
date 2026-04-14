@@ -1692,7 +1692,6 @@ export const zhTw = {
     scope3_title: "範疇三 (供應鏈排放)",
   },
   report_view: {
-
     title: "報表編製",
     desc: "一鍵生成專業會計報表與碳盤查報告，即時掌握企業現況。",
     print_note_title: "財務指標註解與判斷標準",

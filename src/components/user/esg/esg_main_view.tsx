@@ -102,7 +102,7 @@ export default function EsgMainView() {
             {t("esg_main.description")}
           </p>
         </div>
-        <div className="flex flex-wrap items-center justify-center lg:justify-end gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-end">
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -144,7 +144,7 @@ export default function EsgMainView() {
         <button
           title={t("esg_main.tab.records")}
           type="button"
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-all duration-200 lg:px-4 lg:py-2.5 ${
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${
             activeTab === EsgTab.RECORDS
               ? "bg-white text-orange-600 shadow-sm"
               : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
@@ -156,7 +156,7 @@ export default function EsgMainView() {
         <button
           title={t("esg_main.tab.coefficient")}
           type="button"
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-all duration-200 lg:px-4 lg:py-2.5 ${
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${
             activeTab === EsgTab.COEFFICIENT
               ? "bg-white text-orange-600 shadow-sm"
               : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"

@@ -16,6 +16,7 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { timestampToString } from "@/lib/utils/common";
 import ConfirmModal from "@/components/common/confirm_modal";
+import Pagination from "@/components/common/pagination";
 import CoefficientAddEditModal from "@/components/user/esg/coefficient_add_edit_modal";
 import {
   CoefficientCategory,
@@ -36,6 +37,7 @@ const CoefficientCard = ({
   onDelete,
 }: ICoefficientCardProps) => {
   const { t } = useTranslation();
+
   // Info: (20260413 - Julian) 只有自訂係數可以編輯與刪除
   const actions = coefficient.category === CoefficientCategory.CUSTOM && (
     <div className="visible flex items-center gap-1 opacity-100 transition-all duration-200 lg:gap-2 lg:opacity-0 lg:group-hover:visible lg:group-hover:opacity-100">
@@ -97,7 +99,8 @@ const CoefficientCard = ({
               >
                 {coefficient.source}
               </span>{" "}
-              • {t("coefficient.card.last_updated")} {timestampToString(coefficient.updatedAt).dateWithDash}
+              • {t("coefficient.card.last_updated")}{" "}
+              {timestampToString(coefficient.updatedAt).dateWithDash}
             </p>
           </div>
         </div>
@@ -112,7 +115,9 @@ const CoefficientCard = ({
       </div>
       {/* Info: (20260413 - Julian) Coefficient */}
       <div className="flex flex-col gap-1.5 rounded-lg bg-gray-50 p-2.5 font-semibold lg:gap-4 lg:p-4">
-        <p className="text-xs text-gray-400 lg:text-sm">{t("coefficient.card.logic")}</p>
+        <p className="text-xs text-gray-400 lg:text-sm">
+          {t("coefficient.card.logic")}
+        </p>
         <div className="rounded-lg border border-gray-100 bg-white px-3 py-2">
           <p className="text-sm text-slate-800 lg:text-base">
             {coefficient.unit} * {coefficient.emissionFactor}
@@ -134,16 +139,20 @@ const CoefficientCard = ({
 
 type ICoefficientTab = CoefficientCategory | "all";
 
+const PAGE_SIZE = 10;
+
 export default function CoefficientManagementTab() {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
   const { t } = useTranslation();
 
   const [coefficientList, setCoefficientList] = useState<ICoefficient[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [keyword, setKeyword] = useState<string>("");
   const [activeTab, setActiveTab] = useState<ICoefficientTab>("all");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [refreshFlag, setRefreshFlag] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState<boolean>(false);
   const [selectedCoefficientId, setSelectedCoefficientId] = useState<
@@ -200,11 +209,15 @@ export default function CoefficientManagementTab() {
   useEffect(() => {
     const fetchCoefficientList = async () => {
       try {
-        const data = await request<IApiResponse<ICoefficient[]>>(
-          `/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=${activeTab}&search=${keyword}`,
+        setIsLoading(true);
+        const data = await request<
+          IApiResponse<{ items: ICoefficient[]; total: number }>
+        >(
+          `/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=${activeTab}&search=${keyword}&page=${currentPage}&pageSize=${PAGE_SIZE}`,
         );
         if (data.payload) {
-          setCoefficientList(data.payload);
+          setCoefficientList(data.payload.items);
+          setTotalCount(data.payload.total);
         }
       } catch (err) {
         console.error("Failed to fetch coefficient list:", err);
@@ -213,7 +226,12 @@ export default function CoefficientManagementTab() {
       }
     };
     fetchCoefficientList();
-  }, [activeTab, keyword, accountBookId, refreshFlag]);
+  }, [activeTab, keyword, accountBookId, refreshFlag, currentPage]);
+
+  // Info: (20260414 - Julian) 切回合與搜尋條件改變時重置第一頁
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, keyword]);
 
   const tabs = ["all", ...Object.values(CoefficientCategory)].map((tab) => (
     <button
@@ -225,6 +243,9 @@ export default function CoefficientManagementTab() {
       {t(`coefficient.tab.${tab.toLowerCase()}`)}
     </button>
   ));
+
+  // Info: (20260414 - Julian) 計算總頁數
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
 
   const displayedCoefficientList = coefficientList.map((coefficient) => {
     const handleEdit = (id: string) => {
@@ -302,6 +323,17 @@ export default function CoefficientManagementTab() {
 
       {/* Info: (20260413 - Julian) Coefficient Section */}
       {coefficientSection}
+
+      {/* Info: (20260414 - Julian) Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
 
       {/* Info: (20260413 - Julian) Confirm Modal */}
       <ConfirmModal

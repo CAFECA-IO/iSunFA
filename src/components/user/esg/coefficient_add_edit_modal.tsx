@@ -28,13 +28,37 @@ export default function CoefficientAddEditModal({
   // Info: (20260413 - Julian) 如果有選擇係數 ID，則為編輯模式，否則為新增模式
   const isEdit = selectedCoefficientId !== null;
 
-  // Info: (20260413 - Julian) State
+  // Info: (20260413 - Julian) Form State
   const [name, setName] = useState<string>("");
   const [emissionFactor, setEmissionFactor] = useState<string>("");
   const [unit, setUnit] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+
+  // Info: (20260414 - Julian) Original Data State
+  const [originalData, setOriginalData] = useState<ICoefficientInput | null>(
+    null,
+  );
+
+  // Info: (20260414 - Julian) Loading State
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Info: (20260414 - Julian) 判斷是否有更改的數據
+  const hasChanged =
+    name !== originalData?.name ||
+    emissionFactor !== originalData?.emissionFactor.toString() ||
+    unit !== originalData?.unit ||
+    description !== originalData?.description;
+
+  // Info: (20260414 - Julian) 判斷是否有空的欄位
+  const hasEmpty =
+    name !== "" && emissionFactor !== "" && unit !== "" && description !== "";
+
+  // Info: (20260414 - Julian) 判斷是否可以送出：
+  // 1. 新增模式：所有欄位都有填寫
+  // 2. 編輯模式：所有欄位都有填寫，且有更改的數據
+  const isSubmitDisabled = isEdit ? !hasChanged || !hasEmpty : !hasEmpty;
+
+  // Info: (20260414 - Julian) 送出結果
   const confirmCoefficient = () => {
     const input: ICoefficientInput = {
       name,
@@ -56,10 +80,13 @@ export default function CoefficientAddEditModal({
           { method: "GET" },
         );
         if (data.payload) {
-          setName(data.payload.name);
-          setEmissionFactor(data.payload.emissionFactor.toString());
-          setUnit(data.payload.unit);
-          setDescription(data.payload.description);
+          setOriginalData({
+            name: data.payload.name,
+            emissionFactor: data.payload.emissionFactor,
+            unit: data.payload.unit,
+            description: data.payload.description,
+            source: data.payload.source,
+          });
         }
       } catch (error) {
         console.error("Error fetching coefficient:", error);
@@ -68,19 +95,28 @@ export default function CoefficientAddEditModal({
       }
     };
 
+    // Info: (20260414 - Julian) 編輯模式才要 call API
+    if (isEdit) {
+      fetchCoefficient();
+    }
+  }, [selectedCoefficientId, accountBookId]);
+
+  useEffect(() => {
     // Info: (20260413 - Julian) 編輯模式：填入係數資料
     if (isEdit) {
-      // Info: (20260413 - Julian) 串接 API 取得係數資料
-      fetchCoefficient();
+      // Info: (20260413 - Julian) 取得係數資料
+      setName(originalData?.name || "");
+      setEmissionFactor(originalData?.emissionFactor.toString() || "");
+      setUnit(originalData?.unit || "");
+      setDescription(originalData?.description || "");
     } else {
       // Info: (20260413 - Julian) 新增模式：清空表單
       setName("");
       setEmissionFactor("");
       setUnit("");
       setDescription("");
-      setIsLoading(false);
     }
-  }, [accountBookId, selectedCoefficientId, isOpen, isEdit]);
+  }, [originalData, isEdit]);
 
   const modalContent = isLoading ? (
     <div className="flex min-h-60 items-center justify-center p-10 text-orange-400">
@@ -89,10 +125,13 @@ export default function CoefficientAddEditModal({
   ) : (
     <>
       {/* Info: (20260413 - Julian) Form */}
-      <div className="grid grid-flow-row grid-cols-2 items-center gap-4 py-3 text-sm font-semibold lg:py-6">
+      <div className="grid grid-flow-row grid-cols-2 items-center gap-4 py-4 text-sm font-semibold lg:py-6">
         {/* Info: (20260413 - Julian) Name */}
         <div className="col-span-2 flex flex-col gap-1">
-          <label htmlFor="coefficient-name" className="text-xs text-gray-400">
+          <label
+            htmlFor="coefficient-name"
+            className="text-xs text-slate-600 lg:text-base"
+          >
             {t("coefficient.modal.name")}
           </label>
           <input
@@ -102,12 +141,15 @@ export default function CoefficientAddEditModal({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t("coefficient.modal.name_placeholder")}
-            className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-gray-400"
+            className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-xs text-slate-800 outline-none placeholder:text-gray-400 lg:text-sm"
           />
         </div>
         {/* Info: (20260413 - Julian) Emission Factor */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="coefficient-ef" className="text-xs text-gray-400">
+          <label
+            htmlFor="coefficient-ef"
+            className="text-xs text-slate-600 lg:text-base"
+          >
             {t("coefficient.card.ef")}
           </label>
           <input
@@ -117,12 +159,15 @@ export default function CoefficientAddEditModal({
             value={emissionFactor}
             onChange={(e) => setEmissionFactor(e.target.value)}
             placeholder="0.00"
-            className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-gray-400"
+            className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-xs text-slate-800 outline-none placeholder:text-gray-400 lg:text-sm"
           />
         </div>
         {/* Info: (20260413 - Julian) Unit */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="coefficient-unit" className="text-xs text-gray-400">
+          <label
+            htmlFor="coefficient-unit"
+            className="text-xs text-slate-600 lg:text-base"
+          >
             {t("coefficient.modal.unit")}
           </label>
           <input
@@ -132,12 +177,15 @@ export default function CoefficientAddEditModal({
             placeholder={t("coefficient.modal.unit_placeholder")}
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
-            className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-gray-400"
+            className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-xs text-slate-800 outline-none placeholder:text-gray-400 lg:text-sm"
           />
         </div>
         {/* Info: (20260413 - Julian) Description */}
         <div className="col-span-2 flex flex-col gap-1">
-          <label htmlFor="coefficient-desc" className="text-xs text-gray-400">
+          <label
+            htmlFor="coefficient-desc"
+            className="text-xs text-slate-600 lg:text-base"
+          >
             {t("coefficient.modal.description")}
           </label>
           <textarea
@@ -147,13 +195,13 @@ export default function CoefficientAddEditModal({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t("coefficient.modal.desc_placeholder")}
-            className="resize-none rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-gray-400"
+            className="resize-none rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-xs text-slate-800 outline-none placeholder:text-gray-400 lg:text-sm"
           />
         </div>
       </div>
 
       {/* Info: (20260413 - Julian) Buttons */}
-      <div className="mt-4 flex flex-col-reverse items-center gap-2 text-sm font-semibold lg:flex-row">
+      <div className="flex flex-col-reverse items-center gap-2 text-sm font-semibold lg:mt-4 lg:flex-row">
         <button
           type="button"
           className="inline-flex w-full justify-center rounded-md bg-gray-100 px-12 py-3 whitespace-nowrap text-gray-600 hover:bg-gray-200 lg:w-auto"
@@ -163,8 +211,9 @@ export default function CoefficientAddEditModal({
         </button>
         <button
           type="button"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-orange-600 px-12 py-3 whitespace-nowrap text-white shadow-sm hover:bg-orange-700"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-orange-600 px-12 py-3 whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-700 disabled:bg-gray-200"
           onClick={confirmCoefficient}
+          disabled={isSubmitDisabled}
         >
           <CircleCheck size={20} />
           <p>{t("coefficient.modal.save")}</p>
@@ -180,15 +229,17 @@ export default function CoefficientAddEditModal({
           {/* Info: (20260414 - Julian) Header */}
           <div className="flex items-start justify-between">
             {/* Info: (20260414 - Julian) Title */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2.5 lg:gap-4">
               <div className="rounded-lg bg-slate-100 p-2.5 text-slate-600">
                 <Calculator size={24} />
               </div>
               <div className="flex flex-col">
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {isEdit ? t("coefficient.modal.title_edit") : t("coefficient.modal.title_add")}
+                <h3 className="text-lg font-semibold text-gray-900 lg:text-xl">
+                  {isEdit
+                    ? t("coefficient.modal.title_edit")
+                    : t("coefficient.modal.title_add")}
                 </h3>
-                <span className="text-xs text-gray-400">
+                <span className="text-[10px] text-gray-400 lg:text-xs">
                   {t("coefficient.modal.subtitle")}
                 </span>
               </div>
@@ -196,7 +247,7 @@ export default function CoefficientAddEditModal({
             {/* Info: (20260414 - Julian) Close Button */}
             <button
               type="button"
-              className="hover:text-gray-500outline-none text-gray-400"
+              className="p-2 text-gray-400 outline-none hover:text-gray-500"
               onClick={onClose}
             >
               <span className="sr-only">Close</span>

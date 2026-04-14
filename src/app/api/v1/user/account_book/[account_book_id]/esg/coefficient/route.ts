@@ -140,15 +140,18 @@ export async function GET(
       });
     }
 
-    const coefficients = await esgRepo.getEsgCoefficients({
-      where: { AND: andConditions },
-      // Info: (20260413 - Julian) 分頁邏輯
-      ...(page && pageSize
-        ? { skip: (page - 1) * pageSize, take: pageSize }
-        : {}),
-      // Info: (20260413 - Julian) 排序邏輯：將標準係數排在前面，並依據更新時間倒序排列
-      orderBy: [{ accountBookId: "desc" }, { updatedAt: "desc" }],
-    });
+    const [coefficients, totalCount] = await Promise.all([
+      esgRepo.getEsgCoefficients({
+        where: { AND: andConditions },
+        // Info: (20260413 - Julian) 分頁邏輯
+        ...(page && pageSize
+          ? { skip: (page - 1) * pageSize, take: pageSize }
+          : {}),
+        // Info: (20260413 - Julian) 排序邏輯：將標準係數排在前面，並依據更新時間倒序排列
+        orderBy: [{ accountBookId: "desc" }, { updatedAt: "desc" }],
+      }),
+      esgRepo.countEsgCoefficients({ AND: andConditions }),
+    ]);
 
     const result: ICoefficient[] = coefficients.map((coefficient) => ({
       id: coefficient.id,
@@ -164,7 +167,7 @@ export async function GET(
       updatedAt: new Date(coefficient.updatedAt).getTime() / 1000,
     }));
 
-    return jsonOk(result);
+    return jsonOk({ items: result, total: totalCount });
   } catch (error) {
     console.error("Error fetching esg coefficients:", error);
     return jsonFail(
