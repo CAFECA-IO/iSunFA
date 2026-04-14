@@ -1264,6 +1264,7 @@ export const zhCn = {
       unit: "单位",
       total: "总排放量",
       intensity: "排放强度分级",
+      coefficient: "排放系数",
     },
     messages: {
       fetch_error: "获取凭证失败",
