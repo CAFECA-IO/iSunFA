@@ -6,6 +6,7 @@ import { ICoefficient, ICoefficientInput } from "@/interfaces/coefficient";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
+import { useTranslation } from "@/i18n/i18n_context";
 
 interface ICoefficientAddEditModalProps {
   selectedCoefficientId: string | null;
@@ -22,6 +23,7 @@ export default function CoefficientAddEditModal({
 }: ICoefficientAddEditModalProps) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
+  const { t } = useTranslation();
 
   // Info: (20260413 - Julian) 如果有選擇係數 ID，則為編輯模式，否則為新增模式
   const isEdit = selectedCoefficientId !== null;
@@ -91,26 +93,26 @@ export default function CoefficientAddEditModal({
         {/* Info: (20260413 - Julian) Name */}
         <div className="col-span-2 flex flex-col gap-1">
           <label htmlFor="coefficient-name" className="text-xs text-gray-400">
-            係數名稱
+            {t("coefficient.modal.name")}
           </label>
           <input
             id="coefficient-name"
-            aria-label="係數名稱"
+            aria-label={t("coefficient.modal.name")}
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="例如：特定產品碳足跡係數"
+            placeholder={t("coefficient.modal.name_placeholder")}
             className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-gray-400"
           />
         </div>
         {/* Info: (20260413 - Julian) Emission Factor */}
         <div className="flex flex-col gap-1">
           <label htmlFor="coefficient-ef" className="text-xs text-gray-400">
-            排放係數 (EF)
+            {t("coefficient.card.ef")}
           </label>
           <input
             id="coefficient-ef"
-            aria-label="排放係數"
+            aria-label={t("coefficient.card.ef")}
             type="number"
             value={emissionFactor}
             onChange={(e) => setEmissionFactor(e.target.value)}
@@ -121,13 +123,13 @@ export default function CoefficientAddEditModal({
         {/* Info: (20260413 - Julian) Unit */}
         <div className="flex flex-col gap-1">
           <label htmlFor="coefficient-unit" className="text-xs text-gray-400">
-            單位
+            {t("coefficient.modal.unit")}
           </label>
           <input
             id="coefficient-unit"
-            aria-label="單位"
+            aria-label={t("coefficient.modal.unit")}
             type="text"
-            placeholder="kgCO2e/你的單位"
+            placeholder={t("coefficient.modal.unit_placeholder")}
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
             className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-gray-400"
@@ -136,15 +138,15 @@ export default function CoefficientAddEditModal({
         {/* Info: (20260413 - Julian) Description */}
         <div className="col-span-2 flex flex-col gap-1">
           <label htmlFor="coefficient-desc" className="text-xs text-gray-400">
-            描述說明
+            {t("coefficient.modal.description")}
           </label>
           <textarea
             id="coefficient-desc"
-            aria-label="描述說明"
+            aria-label={t("coefficient.modal.description")}
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="說明此係數的來源貨適用範圍..."
+            placeholder={t("coefficient.modal.desc_placeholder")}
             className="resize-none rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-gray-400"
           />
         </div>
@@ -157,7 +159,7 @@ export default function CoefficientAddEditModal({
           className="inline-flex w-full justify-center rounded-md bg-gray-100 px-12 py-3 whitespace-nowrap text-gray-600 hover:bg-gray-200 lg:w-auto"
           onClick={onClose}
         >
-          取消
+          {t("common.cancel")}
         </button>
         <button
           type="button"
@@ -165,7 +167,7 @@ export default function CoefficientAddEditModal({
           onClick={confirmCoefficient}
         >
           <CircleCheck size={20} />
-          <p>儲存係數</p>
+          <p>{t("coefficient.modal.save")}</p>
         </button>
       </div>
     </>
@@ -184,10 +186,10 @@ export default function CoefficientAddEditModal({
               </div>
               <div className="flex flex-col">
                 <h3 className="text-xl font-semibold text-gray-900">
-                  {isEdit ? "編輯自訂係數" : "新增自訂係數"}
+                  {isEdit ? t("coefficient.modal.title_edit") : t("coefficient.modal.title_add")}
                 </h3>
                 <span className="text-xs text-gray-400">
-                  定義您的專屬碳排計算邏輯
+                  {t("coefficient.modal.subtitle")}
                 </span>
               </div>
             </div>

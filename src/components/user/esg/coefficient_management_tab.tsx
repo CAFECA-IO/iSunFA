@@ -22,6 +22,7 @@ import {
   ICoefficient,
   ICoefficientInput,
 } from "@/interfaces/coefficient";
+import { useTranslation } from "@/i18n/i18n_context";
 
 interface ICoefficientCardProps {
   coefficient: ICoefficient;
@@ -34,6 +35,7 @@ const CoefficientCard = ({
   onEdit,
   onDelete,
 }: ICoefficientCardProps) => {
+  const { t } = useTranslation();
   // Info: (20260413 - Julian) 只有自訂係數可以編輯與刪除
   const actions = coefficient.category === CoefficientCategory.CUSTOM && (
     <div className="visible flex items-center gap-1 opacity-100 transition-all duration-200 lg:gap-2 lg:opacity-0 lg:group-hover:visible lg:group-hover:opacity-100">
@@ -67,7 +69,7 @@ const CoefficientCard = ({
   const tag =
     coefficient.category === CoefficientCategory.STANDARD ? (
       <div className="rounded-md bg-green-100 px-2 py-0.5 text-[10px] text-green-600 lg:text-xs">
-        標準
+        {t("coefficient.tag.standard")}
       </div>
     ) : null;
 
@@ -95,7 +97,7 @@ const CoefficientCard = ({
               >
                 {coefficient.source}
               </span>{" "}
-              • 最後更新 {timestampToString(coefficient.updatedAt).dateWithDash}
+              • {t("coefficient.card.last_updated")} {timestampToString(coefficient.updatedAt).dateWithDash}
             </p>
           </div>
         </div>
@@ -110,7 +112,7 @@ const CoefficientCard = ({
       </div>
       {/* Info: (20260413 - Julian) Coefficient */}
       <div className="flex flex-col gap-1.5 rounded-lg bg-gray-50 p-2.5 font-semibold lg:gap-4 lg:p-4">
-        <p className="text-xs text-gray-400 lg:text-sm">計算邏輯</p>
+        <p className="text-xs text-gray-400 lg:text-sm">{t("coefficient.card.logic")}</p>
         <div className="rounded-lg border border-gray-100 bg-white px-3 py-2">
           <p className="text-sm text-slate-800 lg:text-base">
             {coefficient.unit} * {coefficient.emissionFactor}
@@ -118,7 +120,7 @@ const CoefficientCard = ({
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-[10px] lg:text-xs">
-            <p className="text-gray-400">排放係數 (EF)</p>
+            <p className="text-gray-400">{t("coefficient.card.ef")}</p>
             <p className="text-slate-800">{coefficient.emissionFactor}</p>
           </div>
           <p className="text-[10px] tracking-widest text-gray-400 uppercase lg:text-xs">
@@ -135,6 +137,7 @@ type ICoefficientTab = CoefficientCategory | "all";
 export default function CoefficientManagementTab() {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
+  const { t } = useTranslation();
 
   const [coefficientList, setCoefficientList] = useState<ICoefficient[]>([]);
   const [keyword, setKeyword] = useState<string>("");
@@ -217,14 +220,9 @@ export default function CoefficientManagementTab() {
       key={tab}
       type="button"
       onClick={() => setActiveTab(tab as ICoefficientTab)}
-      className={`${tab === activeTab ? "text-slate-800" : "text-gray-400"} w-1/3 py-2 text-xs font-semibold transition-all outline-none hover:text-slate-700 lg:w-24 lg:py-4 lg:text-base`}
+      className={`${tab === activeTab ? "text-slate-800" : "text-gray-400"} w-1/3 py-2 text-xs font-semibold transition-all outline-none hover:text-slate-700 lg:w-40 lg:py-4 lg:text-base`}
     >
-      {/* ToDo: (20260413 - Julian) 使用翻譯檔 */}
-      {tab === "all"
-        ? "全部"
-        : tab === CoefficientCategory.STANDARD
-          ? "標準係數"
-          : "自訂係數"}
+      {t(`coefficient.tab.${tab.toLowerCase()}`)}
     </button>
   ));
 
@@ -259,7 +257,7 @@ export default function CoefficientManagementTab() {
   ) : (
     <div className="flex flex-col items-center justify-center gap-2 p-4 text-xl font-semibold text-gray-400">
       <SearchX size={40} />
-      <p>沒有係數</p>
+      <p>{t("coefficient.empty")}</p>
     </div>
   );
 
@@ -270,14 +268,14 @@ export default function CoefficientManagementTab() {
         {/* Info: (20260413 - Julian) Search */}
         <div className="flex flex-1 items-center gap-2 rounded-lg bg-gray-50 p-2 lg:px-5 lg:py-3">
           <label htmlFor="coefficient-search-input" className="sr-only">
-            搜尋係數
+            {t("coefficient.search.label")}
           </label>
           <Search size={20} className="text-gray-300" />
           <input
             id="coefficient-search-input"
-            aria-label="搜尋係數"
+            aria-label={t("coefficient.search.label")}
             type="text"
-            placeholder="搜尋係數名稱、描述..."
+            placeholder={t("coefficient.search.placeholder")}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             className="w-full bg-transparent text-xs font-medium text-slate-800 outline-none placeholder:text-gray-400 lg:text-base"
@@ -290,7 +288,7 @@ export default function CoefficientManagementTab() {
           className="flex items-center justify-center gap-2 rounded-lg bg-orange-500 p-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-orange-600 focus:outline-none lg:px-5 lg:py-3 lg:text-base"
         >
           <Plus size={20} />
-          <p>新增係數</p>
+          <p>{t("coefficient.action.add")}</p>
         </button>
       </div>
 
@@ -298,7 +296,7 @@ export default function CoefficientManagementTab() {
       <div className="relative flex items-center border-b border-gray-200">
         {tabs}
         <div
-          className={`absolute bottom-0 left-0 h-0.5 w-1/3 bg-slate-700 transition-all duration-200 lg:h-1 lg:w-24 ${activeTab === "all" ? "left-0" : activeTab === CoefficientCategory.STANDARD ? "left-1/3 lg:left-24" : "left-2/3 lg:left-48"} `}
+          className={`absolute bottom-0 left-0 h-0.5 w-1/3 bg-slate-700 transition-all duration-200 lg:h-1 lg:w-40 ${activeTab === "all" ? "left-0" : activeTab === CoefficientCategory.STANDARD ? "left-1/3 lg:left-40" : "left-2/3 lg:left-80"} `}
         ></div>
       </div>
 
@@ -309,10 +307,10 @@ export default function CoefficientManagementTab() {
       <ConfirmModal
         isOpen={isDeleteConfirmOpen}
         onClose={() => setIsDeleteConfirmOpen(false)}
-        title={"刪除係數"}
-        message={"確定要刪除此係數嗎？"}
-        confirmText={"刪除"}
-        cancelText={"取消"}
+        title={t("coefficient.delete.title")}
+        message={t("coefficient.delete.message")}
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
         onConfirm={deleteCoefficient}
       />
 

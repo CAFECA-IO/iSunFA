@@ -102,7 +102,7 @@ export default function EsgMainView() {
             {t("esg_main.description")}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-center lg:justify-end gap-3">
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -142,7 +142,7 @@ export default function EsgMainView() {
       {/* Info: (20260413 - Julian) Tab Switch */}
       <div className="grid grid-cols-2 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5 md:ml-auto">
         <button
-          title={"碳盤查紀錄"}
+          title={t("esg_main.tab.records")}
           type="button"
           className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-all duration-200 lg:px-4 lg:py-2.5 ${
             activeTab === EsgTab.RECORDS
@@ -151,10 +151,10 @@ export default function EsgMainView() {
           }`}
           onClick={() => setActiveTab(EsgTab.RECORDS)}
         >
-          碳盤查紀錄
+          {t("esg_main.tab.records")}
         </button>
         <button
-          title={"係數資料庫"}
+          title={t("esg_main.tab.coefficient")}
           type="button"
           className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-all duration-200 lg:px-4 lg:py-2.5 ${
             activeTab === EsgTab.COEFFICIENT
@@ -163,7 +163,7 @@ export default function EsgMainView() {
           }`}
           onClick={() => setActiveTab(EsgTab.COEFFICIENT)}
         >
-          係數資料庫
+          {t("esg_main.tab.coefficient")}
         </button>
       </div>
 
