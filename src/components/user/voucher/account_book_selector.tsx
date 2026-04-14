@@ -52,29 +52,32 @@ export default function AccountBookSelector({
   const [accountBook, setAccountBook] = useState<IAccountBook | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+
   useEffect(() => {
-    if (isOpen && accountBookId) {
-      if (accountBook?.id !== accountBookId) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setIsLoading(true);
-        setSelectedType(null);
-        request<IApiResponse<IAccountBook>>(
+    const fetchAccountBook = async () => {
+      try {
+        const data = await request<IApiResponse<IAccountBook>>(
           `/api/v1/user/account_book/${accountBookId}`,
-        )
-          .then((res) => {
-            if (res.payload) {
-              setAccountBook(res.payload);
-            }
-          })
-          .finally(() => setIsLoading(false));
-      } else {
+        );
+        if (data.payload) {
+          setAccountBook(data.payload);
+        }
+      } catch (err) {
+        console.error("Failed to fetch account book:", err);
+      } finally {
         setIsLoading(false);
       }
-    } else {
+    };
+    fetchAccountBook();
+  }, [accountBookId]);
+
+  useEffect(() => {
+    // Info: (20260414 - Julian) 清除前一次的搜尋
+    if (isOpen) {
       setKeyword("");
       setSelectedType(null);
     }
-  }, [isOpen, accountBookId, accountBook?.id]);
+  }, [isOpen]);
 
   // Info: (20260317 - Julian) Determine options by matching country code
   const accountOptions = useMemo(() => {

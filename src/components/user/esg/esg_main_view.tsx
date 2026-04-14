@@ -11,6 +11,11 @@ import EsgTableSection from "@/components/user/esg/esg_table_section";
 import EsgTargetModal from "@/components/user/esg/esg_target_modal";
 import { IApiResponse } from "@/lib/utils/response";
 
+enum EsgTab {
+  RECORDS = "records",
+  COEFFICIENT = "coefficient",
+}
+
 export default function EsgMainView() {
   const { t } = useTranslation();
   const params = useParams();
@@ -27,9 +32,7 @@ export default function EsgMainView() {
   const [accountBook, setAccountBook] = useState<{
     esgIndustryId: string;
   } | null>(null);
-  const [activeTab, setActiveTab] = useState<"records" | "coefficient">(
-    "records",
-  );
+  const [activeTab, setActiveTab] = useState<EsgTab>(EsgTab.RECORDS);
 
   useEffect(() => {
     if (accountBookId) {
@@ -84,7 +87,7 @@ export default function EsgMainView() {
   );
 
   const tabContent =
-    activeTab === "records" ? recordTab : <CoefficientManagementTab />;
+    activeTab === EsgTab.RECORDS ? recordTab : <CoefficientManagementTab />;
 
   return (
     <div className="flex max-w-[calc(100vw-30px)] flex-col gap-y-4 px-0 lg:gap-y-6 lg:px-12">
@@ -99,7 +102,7 @@ export default function EsgMainView() {
             {t("esg_main.description")}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-end">
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -130,37 +133,37 @@ export default function EsgMainView() {
             onClick={() => setIsTargetModalOpen(true)}
             className="flex items-center rounded-lg bg-orange-500 px-5 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-orange-600 focus:outline-none"
           >
-            <Target className="mr-2 h-4 w-4" />
+            <Target className="mr-2 size-4" />
             {t("esg_target.btn")}
           </button>
         </div>
       </div>
 
       {/* Info: (20260413 - Julian) Tab Switch */}
-      <div className="ml-auto grid grid-cols-2 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5">
+      <div className="grid grid-cols-2 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5 md:ml-auto">
         <button
-          title={"碳盤查紀錄"}
+          title={t("esg_main.tab.records")}
           type="button"
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
-            activeTab === "records"
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${
+            activeTab === EsgTab.RECORDS
               ? "bg-white text-orange-600 shadow-sm"
               : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
           }`}
-          onClick={() => setActiveTab("records")}
+          onClick={() => setActiveTab(EsgTab.RECORDS)}
         >
-          碳盤查紀錄
+          {t("esg_main.tab.records")}
         </button>
         <button
-          title={"係數資料庫"}
+          title={t("esg_main.tab.coefficient")}
           type="button"
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
-            activeTab === "coefficient"
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${
+            activeTab === EsgTab.COEFFICIENT
               ? "bg-white text-orange-600 shadow-sm"
               : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
           }`}
-          onClick={() => setActiveTab("coefficient")}
+          onClick={() => setActiveTab(EsgTab.COEFFICIENT)}
         >
-          係數資料庫
+          {t("esg_main.tab.coefficient")}
         </button>
       </div>
 

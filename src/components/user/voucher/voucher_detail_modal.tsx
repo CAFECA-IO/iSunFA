@@ -635,6 +635,7 @@ export default function VoucherDetailModal({
       />
 
       <AccountBookSelector
+        key={accountBookId}
         isOpen={isAccountBookSelectorOpen}
         onClose={() => setIsAccountBookSelectorOpen(false)}
         accountBookId={accountBookId}
