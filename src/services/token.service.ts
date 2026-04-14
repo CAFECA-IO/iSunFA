@@ -1,13 +1,12 @@
 "use server";
 
 // Info: (20260126 - Luphia) 伺服器端操作：處理部署與鑄造邏輯
-import {
-  parseAbi,
-  getAddress,
-  parseEther,
-} from "viem";
+import { parseAbi, getAddress, parseEther } from "viem";
 import { publicClient } from "@/lib/viem";
-import { getAdminAccount, getAdminWalletClient } from "@/lib/wallet/admin_wallet";
+import {
+  getAdminAccount,
+  getAdminWalletClient,
+} from "@/lib/wallet/admin_wallet";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { UserOperationJson } from "@/validators";
@@ -22,8 +21,6 @@ type ActionResponse = {
   message: string;
   data?: unknown;
 };
-
-
 
 /**
  * Info: (20260126 - Luphia) 鑄造代幣給指定地址
@@ -131,7 +128,9 @@ export async function registerUser(
       });
     }
 
-    console.log(`[RegisterUser] KYCRegistry: ${registryAddress}, checking status for ${validUserAddress}`);
+    console.log(
+      `[RegisterUser] KYCRegistry: ${registryAddress}, checking status for ${validUserAddress}`,
+    );
 
     // Info: (20260129 - Tzuhan) Check if user is already verified via KYCLevel
     const irAbi = parseAbi([
@@ -169,7 +168,11 @@ export async function registerUser(
     const user = await webAuthnRepo.findUserByAddress(validUserAddress);
 
     if (user) {
-      await syncRegistrationRewardIfNeeded(user.id, validUserAddress, tokenAddress as `0x${string}`);
+      await syncRegistrationRewardIfNeeded(
+        user.id,
+        validUserAddress,
+        tokenAddress as `0x${string}`,
+      );
     }
 
     return {
@@ -183,11 +186,22 @@ export async function registerUser(
   }
 }
 
-export async function syncRegistrationRewardIfNeeded(userId: string, validUserAddress: `0x${string}`, tokenAddress: `0x${string}`) {
-  const existingRewards = await paymentRepo.getOrdersByUserId(userId, "REGISTRATION_REWARD");
-  
+export async function syncRegistrationRewardIfNeeded(
+  userId: string,
+  validUserAddress: `0x${string}`,
+  tokenAddress: `0x${string}`,
+) {
+  const existingRewards = await paymentRepo.getOrdersByUserId(
+    userId,
+    "REGISTRATION_REWARD",
+  );
+
   if (existingRewards.length === 0) {
-    mintToAddress(tokenAddress, validUserAddress, REWARD_AMOUNTS.REGISTRATION_REWARD)
+    mintToAddress(
+      tokenAddress,
+      validUserAddress,
+      REWARD_AMOUNTS.REGISTRATION_REWARD,
+    )
       .then(async (res) => {
         if (res.success) {
           await paymentRepo.createOrder({
@@ -199,11 +213,16 @@ export async function syncRegistrationRewardIfNeeded(userId: string, validUserAd
             data: {},
             transactionHash: (res.data as { tx: string })?.tx || "",
           });
-          console.log(`[SyncReward] Successfully logged registration reward for ${validUserAddress}`);
+          console.log(
+            `[SyncReward] Successfully logged registration reward for ${validUserAddress}`,
+          );
         }
       })
       .catch((err) => {
-        console.error(`[SyncReward] Failed to async mint tokens for ${validUserAddress}:`, err);
+        console.error(
+          `[SyncReward] Failed to async mint tokens for ${validUserAddress}:`,
+          err,
+        );
       });
   } else {
     // console.log(`[SyncReward] Registration reward already exists for ${validUserAddress}`);

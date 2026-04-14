@@ -117,8 +117,8 @@ export async function POST(
           order.id,
           amount,
           order.data as Record<string, unknown>,
-          providerToken
-        )
+          providerToken,
+        ),
       ),
     };
     const oenRes = await fetch(fetchUrl, fetchQuery);
@@ -157,7 +157,7 @@ export async function POST(
     // Info: (20260306 - Tzuhan) 呼叫鑄造代幣合約
     const mintResult = await issuePurchasedPointsToMember(
       user.address,
-      credits
+      credits,
     );
 
     // Info: (20260306 - Tzuhan) 鑄造代幣失敗

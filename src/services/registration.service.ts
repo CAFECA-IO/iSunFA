@@ -84,19 +84,21 @@ export class RegistrationService {
         functionName: "createAccount",
         args: [credentialIdHex, pubKeyX, pubKeyY, salt, username, imageUrl],
       });
-      const initCode = `${CONTRACT_ADDRESSES.SCW_FACTORY}${factoryCallData.slice(
-        2,
-      )}` as Hex;
+      const initCode =
+        `${CONTRACT_ADDRESSES.SCW_FACTORY}${factoryCallData.slice(2)}` as Hex;
 
       const verificationGasLimit = 3_500_000n;
       const callGasLimit = 200_000n;
-      const accountGasLimitsBigInt = (verificationGasLimit << 128n) | callGasLimit;
-      const accountGasLimits = `0x${accountGasLimitsBigInt.toString(16).padStart(64, "0")}` as Hex;
+      const accountGasLimitsBigInt =
+        (verificationGasLimit << 128n) | callGasLimit;
+      const accountGasLimits =
+        `0x${accountGasLimitsBigInt.toString(16).padStart(64, "0")}` as Hex;
 
       const maxPriorityFeePerGas = 0n;
       const maxFeePerGas = 0n;
       const gasFeesBigInt = (maxPriorityFeePerGas << 128n) | maxFeePerGas;
-      const gasFees = `0x${gasFeesBigInt.toString(16).padStart(64, "0")}` as Hex;
+      const gasFees =
+        `0x${gasFeesBigInt.toString(16).padStart(64, "0")}` as Hex;
 
       const partialUserOp = {
         sender: scwAddress,

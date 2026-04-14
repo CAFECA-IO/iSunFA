@@ -7,4 +7,4 @@ npx lint-staged
 
 # Info: (20240830 - Shirley) 測試和版本更新
 npm run test
-npm run update-version
+npm run version

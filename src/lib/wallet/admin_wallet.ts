@@ -13,7 +13,9 @@ export async function getAdminPrivateKey(): Promise<`0x${string}`> {
   const envSeedPath = path.join(process.cwd(), ".env.seed");
 
   if (!fs.existsSync(envAdminPath) || !fs.existsSync(envSeedPath)) {
-    throw new Error("Admin wallet not found. Please run npm run initial_wallet first.");
+    throw new Error(
+      "Admin wallet not found. Please run npm run initial_wallet first.",
+    );
   }
 
   const keystoreJson = fs.readFileSync(envAdminPath, "utf-8");
@@ -36,6 +38,6 @@ export async function getAdminWalletClient() {
   return createWalletClient({
     account,
     chain: isuncoin,
-    transport: http()
+    transport: http(),
   });
 }

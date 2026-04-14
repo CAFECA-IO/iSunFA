@@ -142,15 +142,27 @@ export class TaskService {
           result = res.text;
         } else if (task.type === "VOUCHER_BASE_PARSING") {
           // Info: (20260407 - Julian) 傳入修改後的日記帳文字內容，重新排程「傳票基本資料」 AI 分析
-          const res = await chatService.analyzeVoucherBase(images, accountBook, parsedContext.journalText);
+          const res = await chatService.analyzeVoucherBase(
+            images,
+            accountBook,
+            parsedContext.journalText,
+          );
           result = JSON.stringify(res);
         } else if (task.type === "VOUCHER_LINES_PARSING") {
           // Info: (20260407 - Julian) 傳入修改後的日記帳文字內容，重新排程「傳票分錄」 AI 分析
-          const res = await chatService.analyzeVoucherLines(images, accountBook, parsedContext.journalText);
+          const res = await chatService.analyzeVoucherLines(
+            images,
+            accountBook,
+            parsedContext.journalText,
+          );
           result = JSON.stringify(res);
         } else if (task.type === "ESG_PARSING") {
           // Info: (20260407 - Julian) 傳入修改後的日記帳文字內容，重新排程「碳盤查」 AI 分析
-          const res = await chatService.analyzeESG(images, accountBook, parsedContext.journalText);
+          const res = await chatService.analyzeESG(
+            images,
+            accountBook,
+            parsedContext.journalText,
+          );
           result = JSON.stringify(res);
         } else if (task.type === "DOCUMENT_PRE_CHECK") {
           const res = await chatService.analyzeDocumentPreCheck(images);
@@ -164,7 +176,7 @@ export class TaskService {
             );
             if (dupResult.isDuplicate) {
               const msg = `憑證已入錄，停止後續分析。 (與${dupResult.duplicateType === "VOUCHER" ? "傳票" : "日記帳"} ID: ${dupResult.duplicateId} 重複)`;
-              
+
               // Info: (20260406 - Luphia) 即使重複而停止後續分析，仍要將截取到的交易日期寫回原本建立的紀錄中
               if (parsedContext.fileId && res.data.tradingDate) {
                 const tradingDateObj = new Date(res.data.tradingDate);
@@ -172,16 +184,37 @@ export class TaskService {
                   try {
                     const { prisma } = await import("@/lib/prisma");
 
-                    const v = await prisma.voucher.findFirst({ where: { fileId: parsedContext.fileId } });
-                    if (v) await prisma.voucher.update({ where: { id: v.id }, data: { tradingDate: tradingDateObj } });
+                    const v = await prisma.voucher.findFirst({
+                      where: { fileId: parsedContext.fileId },
+                    });
+                    if (v)
+                      await prisma.voucher.update({
+                        where: { id: v.id },
+                        data: { tradingDate: tradingDateObj },
+                      });
 
-                    const j = await prisma.journal.findFirst({ where: { fileId: parsedContext.fileId } });
-                    if (j) await prisma.journal.update({ where: { id: j.id }, data: { tradingDate: tradingDateObj } });
+                    const j = await prisma.journal.findFirst({
+                      where: { fileId: parsedContext.fileId },
+                    });
+                    if (j)
+                      await prisma.journal.update({
+                        where: { id: j.id },
+                        data: { tradingDate: tradingDateObj },
+                      });
 
-                    const e = await prisma.esgRecord.findFirst({ where: { fileId: parsedContext.fileId } });
-                    if (e) await prisma.esgRecord.update({ where: { id: e.id }, data: { tradingDate: tradingDateObj } });
+                    const e = await prisma.esgRecord.findFirst({
+                      where: { fileId: parsedContext.fileId },
+                    });
+                    if (e)
+                      await prisma.esgRecord.update({
+                        where: { id: e.id },
+                        data: { tradingDate: tradingDateObj },
+                      });
                   } catch (updateErr) {
-                    console.error("[TaskService] Failed to update trading date for duplicate document:", updateErr);
+                    console.error(
+                      "[TaskService] Failed to update trading date for duplicate document:",
+                      updateErr,
+                    );
                   }
                 }
               }

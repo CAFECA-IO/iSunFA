@@ -670,6 +670,7 @@ export default function HistorySection() {
                       <div className="flex items-center gap-2 p-1.5 bg-gray-50 border border-gray-200 rounded-lg">
                         <input
                           readOnly
+                          aria-label="Share link"
                           value={shareToken ? `${window.location.origin}/share/report/${shareToken}` : ''}
                           className="flex-1 bg-transparent border-none text-sm text-gray-600 focus:ring-0 px-2 outline-none"
                         />

@@ -3,7 +3,10 @@ import {
   IMissionDefinition,
   IMissionParams,
 } from "@/lib/worker/mission.interface";
-import { getBaseVoucherPrompt, getVoucherLinesPrompt } from "@/constants/prompts/voucher";
+import {
+  getBaseVoucherPrompt,
+  getVoucherLinesPrompt,
+} from "@/constants/prompts/voucher";
 import { getEsgPrompt } from "@/constants/prompts/esg";
 import { AccountBook } from "@/generated/client";
 

@@ -51,7 +51,7 @@ export default async function RootLayout({
 
   // Info: (20260118 - Luphia) once valid, never setup again
   if (envIsValid && currentUrl.includes('/admin/setup')) {
-    redirect('/');
+    redirect('/admin/reboot');
   }
 
   const privacyPolicyPath = path.join(process.cwd(), 'documents/privacy_policy.md');

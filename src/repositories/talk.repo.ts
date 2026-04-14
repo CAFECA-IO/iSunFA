@@ -30,9 +30,7 @@ export interface ITalkRepository {
 
   getThreadById(threadId: string): Promise<Thread | null>;
   getCommentById(commentId: string): Promise<Comment | null>;
-  listCommentsByThreadId(
-    threadId: string,
-  ): Promise<
+  listCommentsByThreadId(threadId: string): Promise<
     Prisma.CommentGetPayload<{
       include: { user: true; replyToUser: true; reactions: true };
     }>[]

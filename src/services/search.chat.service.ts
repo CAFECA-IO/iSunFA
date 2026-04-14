@@ -15,7 +15,8 @@ export class SearchChatService {
 
   constructor(apiKey?: string) {
     // Info: (20260407 - Luphia) Fallback to runtime ENV variables
-    const key = apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+    const key =
+      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
     this.genAI = new GoogleGenerativeAI(key);
     this.modelName = process.env.MODEL || "gemini-1.5-flash";
     this.searchService = new SearchService(key);
@@ -42,7 +43,7 @@ export class SearchChatService {
       generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.1,
-      }
+      },
     });
 
     try {
@@ -53,7 +54,10 @@ export class SearchChatService {
       }
       return [];
     } catch (e) {
-      console.error("[SearchChatService] Planner failed to output valid JSON array.", e);
+      console.error(
+        "[SearchChatService] Planner failed to output valid JSON array.",
+        e,
+      );
       return [];
     }
   }
@@ -64,41 +68,57 @@ export class SearchChatService {
    * Prompts -> Plans -> Scrapes -> Synthesizes.
    */
   public async chatWithWeb(userPrompt: string): Promise<ISearchChatResult> {
-    console.log(`\n[SearchChat Orchestrator] Initiating Deep Reasoning for: "${userPrompt}"`);
+    console.log(
+      `\n[SearchChat Orchestrator] Initiating Deep Reasoning for: "${userPrompt}"`,
+    );
 
     // Info: (20260407 - Luphia) Phase 1. Planning
-    console.log("[SearchChat Orchestrator] Analyzing question and deriving optimal search vectors...");
+    console.log(
+      "[SearchChat Orchestrator] Analyzing question and deriving optimal search vectors...",
+    );
     const queries = await this.planSearchQueries(userPrompt);
 
     if (queries.length === 0) {
-      console.log("[SearchChat Orchestrator] Fallback: Directly searching user prompt as singular query.");
+      console.log(
+        "[SearchChat Orchestrator] Fallback: Directly searching user prompt as singular query.",
+      );
       queries.push(userPrompt);
     }
 
-    console.log(`[SearchChat Orchestrator] Derived sub-queries to map:`, queries);
+    console.log(
+      `[SearchChat Orchestrator] Derived sub-queries to map:`,
+      queries,
+    );
 
     /**
      * Info: (20260407 - Luphia) Phase 2. Execution
      * Fire all sub-queries concurrently via SearchService
      * Limiting each query to dig into the top 2 web pages to balance latency and depth.
      */
-    console.log("[SearchChat Orchestrator] Spawning parallel Docker scrapers...");
+    console.log(
+      "[SearchChat Orchestrator] Spawning parallel Docker scrapers...",
+    );
 
     const subResults = [];
     for (let i = 0; i < queries.length; i++) {
       if (i > 0) {
-        console.log("[SearchChat Orchestrator] Throttling for 3 seconds to ensure content delivery and prevent API 503 rate limits...");
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        console.log(
+          "[SearchChat Orchestrator] Throttling for 3 seconds to ensure content delivery and prevent API 503 rate limits...",
+        );
+        await new Promise((resolve) => setTimeout(resolve, 3000));
       }
       try {
         const res = await this.searchService.searchAndSummarize({
           query: queries[i],
           maxPages: 2,
-          maxSummaryLength: 300
+          maxSummaryLength: 300,
         });
         subResults.push(res);
       } catch (err) {
-        console.error(`[SearchChat Orchestrator] Sub-query "${queries[i]}" bypassed due to error:`, err);
+        console.error(
+          `[SearchChat Orchestrator] Sub-query "${queries[i]}" bypassed due to error:`,
+          err,
+        );
       }
     }
 
@@ -107,14 +127,18 @@ export class SearchChatService {
     const contextBlocks: string[] = [];
 
     subResults.forEach((res, idx) => {
-      res.scrapedUrls.forEach(url => allUrls.add(url));
-      contextBlocks.push(`[Search Vector ${idx + 1}: "${res.query}"]\n[Raw Extracted Intelligence]: ${res.summary}`);
+      res.scrapedUrls.forEach((url) => allUrls.add(url));
+      contextBlocks.push(
+        `[Search Vector ${idx + 1}: "${res.query}"]\n[Raw Extracted Intelligence]: ${res.summary}`,
+      );
     });
 
     const uniqueUrls = Array.from(allUrls);
 
     // Info: (20260407 - Luphia) Phase 3. Synthesis
-    console.log("[SearchChat Orchestrator] Search vectors concluded. Synthesizing final response...");
+    console.log(
+      "[SearchChat Orchestrator] Search vectors concluded. Synthesizing final response...",
+    );
 
     const synthesisPrompt = `
       You are an elite, highly intelligent research analyst. 
@@ -142,7 +166,7 @@ export class SearchChatService {
       contents: [{ role: "user", parts: [{ text: synthesisPrompt }] }],
       generationConfig: {
         temperature: 0.3, // Info: (20260407 - Luphia) Slight creative liberty to weave facts elegantly
-      }
+      },
     });
 
     const finalAnswer = finalResult.response.text().trim();
@@ -152,7 +176,7 @@ export class SearchChatService {
       userPrompt,
       derivedQueries: queries,
       referencedUrls: uniqueUrls,
-      finalAnswer
+      finalAnswer,
     };
   }
 }

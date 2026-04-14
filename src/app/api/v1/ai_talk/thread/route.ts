@@ -149,7 +149,10 @@ export async function POST(request: NextRequest) {
             abi: ABIS.ENTRY_POINT,
             data: tx.input,
           });
-          const ops = args[0] as unknown as { sender: string; callData: `0x${string}` }[];
+          const ops = args[0] as unknown as {
+            sender: string;
+            callData: `0x${string}`;
+          }[];
 
           for (const op of ops) {
             if (op.sender.toLowerCase() === user.address.toLowerCase()) {
@@ -210,7 +213,7 @@ export async function POST(request: NextRequest) {
                 break;
               }
             }
-          } catch { }
+          } catch {}
         }
 
         if (!userOpSuccess) {

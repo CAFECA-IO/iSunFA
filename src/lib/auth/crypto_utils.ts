@@ -104,16 +104,14 @@ export function encodeWebAuthnSignature(
    * (bytes authenticatorData, bytes clientDataJSON, uint256 challengeIndex, uint256 typeIndex, uint256 r, uint256 s)
    */
   return encodeAbiParameters(
-    parseAbiParameters(
-      "bytes, bytes, uint256, uint256, uint256, uint256"
-    ),
+    parseAbiParameters("bytes, bytes, uint256, uint256, uint256, uint256"),
     [
       struct.authenticatorData,
       struct.clientDataJSON,
       struct.challengeLocation,
       struct.responseTypeLocation,
       struct.r,
-      struct.s
+      struct.s,
     ],
   );
 }

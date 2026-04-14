@@ -1,3 +1,4 @@
+import { useTranslation } from "@/i18n/i18n_context";
 import { useEffect, useState, useCallback } from "react";
 import { Box, PlayCircle, Clock } from "lucide-react";
 import { StepCard } from "@/components/admin/setup/step_card";
@@ -12,21 +13,23 @@ interface IContainerInfo {
   description: string;
 }
 
-export function Step2StartAndVerifyNodes({ isActive, isCompleted, onNext }: IStepProps) {
+export function SetupStartVerifyNodes({ isActive, isCompleted, onNext, onReset }: IStepProps) {
+  const { t } = useTranslation();
+
   const [status, setStatus] = useState<StepStatus>(StepStatus.IDLE);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [containers, setContainers] = useState<IContainerInfo[]>([]);
 
-  const guessDescription = (name: string, image: string) => {
+  const guessDescription = useCallback((name: string, image: string) => {
     const n = name.toLowerCase();
     const i = image.toLowerCase();
-    if (n.includes("postgres") || n.includes("db") || i.includes("postgres")) return "Database Node (Relational data & transactions)";
-    if (n.includes("redis") || i.includes("redis")) return "Cache Service (High-speed key-value store)";
-    if (n.includes("ipfs") || n.includes("storage")) return "Decentralized Storage (IPFS content-addressing)";
-    if (n.includes("ganache") || n.includes("hardhat") || n.includes("node") || n.includes("blockchain")) return "EVM Blockchain Node (Layer 2 / Local Network)";
-    if (n.includes("nginx") || n.includes("proxy") || n.includes("gateway")) return "Reverse Proxy (Gateway & Edge router)";
-    return "Application Container";
-  };
+    if (n.includes("postgres") || n.includes("db") || i.includes("postgres")) return t('admin_setup.step2.desc_db');
+    if (n.includes("redis") || i.includes("redis")) return t('admin_setup.step2.desc_cache');
+    if (n.includes("ipfs") || n.includes("storage")) return t('admin_setup.step2.desc_storage');
+    if (n.includes("ganache") || n.includes("hardhat") || n.includes("node") || n.includes("blockchain")) return t('admin_setup.step2.desc_evm');
+    if (n.includes("nginx") || n.includes("proxy") || n.includes("gateway")) return t('admin_setup.step2.desc_proxy');
+    return t('admin_setup.step2.desc_app');
+  }, [t]);
 
   const execute = useCallback(async () => {
     if (status !== StepStatus.IDLE) return;
@@ -35,7 +38,7 @@ export function Step2StartAndVerifyNodes({ isActive, isCompleted, onNext }: ISte
       const upResult = await startDockerCompose();
       if (!upResult.success) {
         setStatus(StepStatus.ERROR);
-        setErrorMessage(`Failed to start docker-compose. Output: ${(upResult.output || "").substring(0, 150)}...`);
+        setErrorMessage(`${t('admin_setup.step2.err_start')}${(upResult.output || "").substring(0, 150)}...`);
         return;
       }
 
@@ -49,13 +52,13 @@ export function Step2StartAndVerifyNodes({ isActive, isCompleted, onNext }: ISte
         const parsed = lines.map(line => {
           const [id, image, name, runStatus] = line.split('|');
           return {
-            id: id || "Unknown",
-            image: image || "Unknown",
-            name: name || "Unknown",
-            status: runStatus || "Unknown",
+            id: id || t('admin_setup.step2.unknown'),
+            image: image || t('admin_setup.step2.unknown'),
+            name: name || t('admin_setup.step2.unknown'),
+            status: runStatus || t('admin_setup.step2.unknown'),
             description: guessDescription(name || "", image || ""),
           };
-        }).filter(c => c.id !== "Unknown" && COMPOSE_CONTAINERS.includes(c.name));
+        }).filter(c => c.id !== t('admin_setup.step2.unknown') && COMPOSE_CONTAINERS.includes(c.name));
         setContainers(parsed);
       }
 
@@ -65,7 +68,7 @@ export function Step2StartAndVerifyNodes({ isActive, isCompleted, onNext }: ISte
       setStatus(StepStatus.ERROR);
       setErrorMessage(err instanceof Error ? err.message : String(err));
     }
-  }, [status, onNext]);
+  }, [status, onNext, t, guessDescription]);
 
   useEffect(() => {
     if (isActive && status === StepStatus.IDLE) {
@@ -78,19 +81,27 @@ export function Step2StartAndVerifyNodes({ isActive, isCompleted, onNext }: ISte
   return (
     <StepCard
       step={2}
-      title="Step 2: Start & Verify Infrastructure"
-      description="Bringing up the local networking and verifying container health."
+      title={t('admin_setup.step2.title')}
+      description={t('admin_setup.step2.desc')}
       isActive={isActive}
       status={displayStatus}
       errorMessage={errorMessage}
+      onReset={onReset}
+      actionContent={
+        isActive && status === StepStatus.ERROR ? (
+          <button onClick={() => { setStatus(StepStatus.IDLE); setErrorMessage(""); }} className="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg text-sm transition-all flex items-center justify-center">
+            {t('admin_setup.step2.retry_btn')}
+          </button>
+        ) : null
+      }
     >
       {(isActive || isCompleted) && (
         <div className="mt-6 flex flex-col gap-4">
 
           {containers.length > 0 ? (
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 ">
               <h4 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-4 flex items-center gap-1.5">
-                <Box className="w-4 h-4 text-slate-400" /> Infrastructure Nodes ({containers.length})
+                <Box className="w-4 h-4 text-slate-400" /> {t('admin_setup.step2.nodes')} ({containers.length})
               </h4>
               <div className="space-y-3">
                 {containers.map(c => (
@@ -119,20 +130,12 @@ export function Step2StartAndVerifyNodes({ isActive, isCompleted, onNext }: ISte
             </div>
           ) : (
             displayStatus === StepStatus.SUCCESS && (
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 text-center shadow-sm">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 text-center ">
                 <Box className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h4 className="text-sm font-semibold text-slate-700">Starting Services...</h4>
-                <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">Docker Compose is booting the gateway, database, storage and blockchain nodes.</p>
+                <h4 className="text-sm font-semibold text-slate-700">{t('admin_setup.step2.starting_title')}</h4>
+                <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">{t('admin_setup.step2.starting_desc')}</p>
               </div>
             )
-          )}
-
-          {isActive && status === StepStatus.ERROR && (
-            <div className="mt-2 text-center">
-              <button onClick={() => { setStatus(StepStatus.IDLE); setErrorMessage(""); }} className="text-sm px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition font-medium shadow-sm">
-                Retry Verification
-              </button>
-            </div>
           )}
         </div>
       )}

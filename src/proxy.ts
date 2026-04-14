@@ -10,11 +10,18 @@ export async function proxy(request: NextRequest) {
     try {
       const targetUrl = new URL(targetUrlStr);
       const xForwardedHost = request.headers.get("x-forwarded-host") || "";
-      const hostHeader = xForwardedHost ? xForwardedHost.split(",")[0].trim() : (request.headers.get("host") || "");
-      const currentHostname = hostHeader ? hostHeader.split(":")[0] : request.nextUrl.hostname;
+      const hostHeader = xForwardedHost
+        ? xForwardedHost.split(",")[0].trim()
+        : request.headers.get("host") || "";
+      const currentHostname = hostHeader
+        ? hostHeader.split(":")[0]
+        : request.nextUrl.hostname;
 
       // Info: (20260413 - Luphia) 當進來的網域與環境變數設定的網域不同時，強制重導向至正確的網址 (但設定頁面例外)
-      if (!request.nextUrl.pathname.startsWith("/admin/setup") && currentHostname !== targetUrl.hostname) {
+      if (
+        !request.nextUrl.pathname.startsWith("/admin/setup") &&
+        currentHostname !== targetUrl.hostname
+      ) {
         const redirectUrl = new URL(request.url);
         redirectUrl.hostname = targetUrl.hostname;
         redirectUrl.protocol = targetUrl.protocol;

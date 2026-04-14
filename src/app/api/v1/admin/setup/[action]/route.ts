@@ -6,7 +6,7 @@ import { validateEnv } from "@/validators/env";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ action: string }> }
+  { params }: { params: Promise<{ action: string }> },
 ) {
   try {
     const { action } = await params;
@@ -20,12 +20,15 @@ export async function POST(
      * Info: (20260413 - Luphia) 2. Strict Environment Lock: Only allow setup if .env is NOT fully validated
      * We bypass this check ONLY for `isSystemSetupComplete` itself so the frontend can check it securely
      */
-    if (action !== "isSystemSetupComplete" && action !== "getSuperAdminTaskStatus") {
+    if (
+      action !== "isSystemSetupComplete" &&
+      action !== "getSuperAdminTaskStatus"
+    ) {
       const isComplete = await validateEnv();
       if (isComplete) {
         return jsonFail(
           ApiCode.FORBIDDEN,
-          "System initialization is already completed. Further setup actions are disabled."
+          "System initialization is already completed. Further setup actions are disabled.",
         );
       }
     }
@@ -48,9 +51,14 @@ export async function POST(
     }
 
     // Info: (20260413 - Luphia) 4. Dispatch the call dynamically
-    const fn = (SetupService as Record<string, (...args: unknown[]) => unknown>)[action];
+    const fn = (
+      SetupService as Record<string, (...args: unknown[]) => unknown>
+    )[action];
     if (typeof fn !== "function") {
-      return jsonFail(ApiCode.VALIDATION_ERROR, `Target '${action}' is not executable`);
+      return jsonFail(
+        ApiCode.VALIDATION_ERROR,
+        `Target '${action}' is not executable`,
+      );
     }
 
     const result = await fn(...args);
@@ -60,10 +68,10 @@ export async function POST(
      * The previous actions usually returned { success, data, error } directly.
      */
     return jsonOk(result, `Executed setup action: ${action}`);
-
   } catch (error: unknown) {
     console.error(`[API] Setup Action Error:`, error);
-    const msg = error instanceof Error ? error.message : "Unknown error occurred";
+    const msg =
+      error instanceof Error ? error.message : "Unknown error occurred";
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, msg);
   }
 }

@@ -1,51 +1,75 @@
-"use server"
+"use server";
 
 import fs from "fs";
-import path from "path";
-import { runCommand } from "@/services/cli.service";
+import { exec } from "child_process";
+import {
+  loadEnvConfig,
+  ENV_SETUP_PATH,
+  ENV_PATH,
+} from "@/services/env.service";
 
-export async function deployContracts() {
-  // Info: (20260412 - Luphia) Skip deployment if already deployed in .env.setup
-  const envSetupPath = path.join(process.cwd(), ".env.setup");
-  if (fs.existsSync(envSetupPath)) {
-    const dotenv = (await import("dotenv")).default;
-    const envConfig = dotenv.parse(fs.readFileSync(envSetupPath, "utf8"));
-    if (envConfig.NEXT_PUBLIC_SCW_FACTORY_ADDRESS) {
-      const mockOutput = `
-      KYCRegistry: ${envConfig.NEXT_PUBLIC_KYC_REGISTRY_ADDRESS || "0x"}
-      DynamicMembershipCard: ${envConfig.NEXT_PUBLIC_DYNAMIC_MEMBERSHIP_CARD_ADDRESS || "0x"}
-      CreditPoint: ${envConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS || "0x"}
-      MembershipSystem: ${envConfig.NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS || "0x"}
-      SubscriptionManager: ${envConfig.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS || "0x"}
-      EntryPoint: ${envConfig.NEXT_PUBLIC_ENTRY_POINT_ADDRESS || "0x"}
-      Fido2AccountFactory: ${envConfig.NEXT_PUBLIC_SCW_FACTORY_ADDRESS || "0x"}
-      `;
-      return { success: true, output: mockOutput };
+const globalAny = global as typeof globalThis & { deployTaskProgress?: string };
+
+export async function deployContracts(): Promise<{
+  success: boolean;
+  output: string;
+}> {
+  // Info: (20260414 - Luphia) Skip deployment if already deployed in any env file
+  const envPaths = [ENV_SETUP_PATH, ENV_PATH];
+
+  for (const envPath of envPaths) {
+    if (fs.existsSync(envPath)) {
+      const envConfig = await loadEnvConfig(envPath);
+      if (envConfig.NEXT_PUBLIC_SCW_FACTORY_ADDRESS) {
+        const mockOutput = `
+        KYCRegistry: ${envConfig.NEXT_PUBLIC_KYC_REGISTRY_ADDRESS || "0x"}
+        DynamicMembershipCard: ${envConfig.NEXT_PUBLIC_DYNAMIC_MEMBERSHIP_CARD_ADDRESS || "0x"}
+        CreditPoint: ${envConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS || "0x"}
+        MembershipSystem: ${envConfig.NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS || "0x"}
+        SubscriptionManager: ${envConfig.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS || "0x"}
+        EntryPoint: ${envConfig.NEXT_PUBLIC_ENTRY_POINT_ADDRESS || "0x"}
+        Fido2AccountFactory: ${envConfig.NEXT_PUBLIC_SCW_FACTORY_ADDRESS || "0x"}
+        `;
+        return { success: true, output: mockOutput };
+      }
     }
   }
 
   const rootPath = process.cwd();
-  const reportsDir = path.join(rootPath, "reports");
-  if (!fs.existsSync(reportsDir)) {
-    fs.mkdirSync(reportsDir, { recursive: true });
-  }
-  const logFile = path.join(reportsDir, ".deploy_progress.log");
-  fs.writeFileSync(logFile, "Starting deployment...\n", "utf8");
+  globalAny.deployTaskProgress = "Starting deployment...\n";
 
-  // Info: (20260412 - Luphia) Redirect output to a temp file for live polling via getDeployProgress
-  const cmd = `npm run deploy_contract > "${logFile}" 2>&1`;
-  const result = await runCommand(cmd, rootPath, 5 * 1024 * 1024);
+  return new Promise<{ success: boolean; output: string }>((resolve) => {
+    const child = exec(
+      "npm run deploy_contract",
+      { cwd: rootPath, maxBuffer: 5 * 1024 * 1024 },
+      (error) => {
+        if (error) {
+          resolve({
+            success: false,
+            output: globalAny.deployTaskProgress || "",
+          });
+        } else {
+          resolve({
+            success: true,
+            output: globalAny.deployTaskProgress || "",
+          });
+        }
+      },
+    );
 
-  if (fs.existsSync(logFile)) {
-    result.output = fs.readFileSync(logFile, "utf8");
-  }
-  return result;
+    if (child.stdout) {
+      child.stdout.on("data", (data) => {
+        globalAny.deployTaskProgress += data;
+      });
+    }
+    if (child.stderr) {
+      child.stderr.on("data", (data) => {
+        globalAny.deployTaskProgress += data;
+      });
+    }
+  });
 }
 
 export async function getDeployProgress() {
-  const logFile = path.join(process.cwd(), "reports", ".deploy_progress.log");
-  if (fs.existsSync(logFile)) {
-    return fs.readFileSync(logFile, "utf8");
-  }
-  return "";
-};
+  return globalAny.deployTaskProgress || "";
+}

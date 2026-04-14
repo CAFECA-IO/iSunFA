@@ -1,6 +1,11 @@
 import fs from "fs";
 import path from "path";
-import { keccak256, toBytes, createPublicClient, createWalletClient } from "viem";
+import {
+  keccak256,
+  toBytes,
+  createPublicClient,
+  createWalletClient,
+} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { Wallet } from "ethers";
 import { http } from "viem";
@@ -45,9 +50,12 @@ async function main() {
   const getArtifact = (pathName: string, contractName: string) => {
     return JSON.parse(
       fs.readFileSync(
-        path.join(process.cwd(), `artifacts/contracts/${pathName}.sol/${contractName}.json`),
-        "utf-8"
-      )
+        path.join(
+          process.cwd(),
+          `artifacts/contracts/${pathName}.sol/${contractName}.json`,
+        ),
+        "utf-8",
+      ),
     );
   };
 
@@ -60,12 +68,17 @@ async function main() {
     bytecode: kycArtifact.bytecode,
     args: [account.address],
   });
-  const kycReceipt = await publicClient.waitForTransactionReceipt({ hash: kycHash });
+  const kycReceipt = await publicClient.waitForTransactionReceipt({
+    hash: kycHash,
+  });
   const kycAddress = kycReceipt.contractAddress;
   console.log(`-> KYCRegistry deployed to: ${kycAddress}`);
 
   // Info: (20260411 - Luphia) 2. DynamicMembershipCard
-  const dmcArtifact = getArtifact("dynamic_membership_card", "DynamicMembershipCard");
+  const dmcArtifact = getArtifact(
+    "dynamic_membership_card",
+    "DynamicMembershipCard",
+  );
   console.log("Deploying DynamicMembershipCard...");
   const dmcHash = await walletClient.deployContract({
     chain: isuncoin,
@@ -73,7 +86,9 @@ async function main() {
     bytecode: dmcArtifact.bytecode,
     args: [account.address, kycAddress],
   });
-  const dmcReceipt = await publicClient.waitForTransactionReceipt({ hash: dmcHash });
+  const dmcReceipt = await publicClient.waitForTransactionReceipt({
+    hash: dmcHash,
+  });
   const dmcAddress = dmcReceipt.contractAddress;
   console.log(`-> DynamicMembershipCard deployed to: ${dmcAddress}`);
 
@@ -87,12 +102,17 @@ async function main() {
     bytecode: treasuryArtifact.bytecode,
     args: [account.address, kycAddress, collateralRate],
   });
-  const treasuryReceipt = await publicClient.waitForTransactionReceipt({ hash: treasuryHash });
+  const treasuryReceipt = await publicClient.waitForTransactionReceipt({
+    hash: treasuryHash,
+  });
   const treasuryAddress = treasuryReceipt.contractAddress;
   console.log(`-> CreditPoint deployed to: ${treasuryAddress}`);
 
   // Info: (20260411 - Luphia) 4. SubscriptionManager
-  const subManagerArtifact = getArtifact("subscription_manager", "SubscriptionManager");
+  const subManagerArtifact = getArtifact(
+    "subscription_manager",
+    "SubscriptionManager",
+  );
   console.log("Deploying SubscriptionManager...");
   const subManagerHash = await walletClient.deployContract({
     chain: isuncoin,
@@ -100,12 +120,16 @@ async function main() {
     bytecode: subManagerArtifact.bytecode,
     args: [account.address, kycAddress, treasuryAddress],
   });
-  const subManagerReceipt = await publicClient.waitForTransactionReceipt({ hash: subManagerHash });
+  const subManagerReceipt = await publicClient.waitForTransactionReceipt({
+    hash: subManagerHash,
+  });
   const subManagerAddress = subManagerReceipt.contractAddress;
   console.log(`-> SubscriptionManager deployed to: ${subManagerAddress}`);
 
   // Info: (20260411 - Luphia) 5. Connect SubscriptionManager to Treasury
-  console.log("Configuring contracts (setting SubscriptionManager in Treasury)...");
+  console.log(
+    "Configuring contracts (setting SubscriptionManager in Treasury)...",
+  );
   const configHash = await walletClient.writeContract({
     chain: isuncoin,
     address: treasuryAddress as `0x${string}`,
@@ -116,7 +140,10 @@ async function main() {
   await publicClient.waitForTransactionReceipt({ hash: configHash });
   console.log("-> Configuration completed successfully.");
   // Info: (20260412 - Luphia) 6. Deploy MembershipSystem
-  const membershipArtifact = getArtifact("membership_system", "MembershipSystem");
+  const membershipArtifact = getArtifact(
+    "membership_system",
+    "MembershipSystem",
+  );
   console.log("Deploying MembershipSystem...");
   const membershipHash = await walletClient.deployContract({
     chain: isuncoin,
@@ -124,22 +151,31 @@ async function main() {
     bytecode: membershipArtifact.bytecode,
     args: [account.address, treasuryAddress],
   });
-  const membershipReceipt = await publicClient.waitForTransactionReceipt({ hash: membershipHash });
+  const membershipReceipt = await publicClient.waitForTransactionReceipt({
+    hash: membershipHash,
+  });
   const membershipAddress = membershipReceipt.contractAddress;
   console.log(`-> MembershipSystem deployed to: ${membershipAddress}`);
 
-  console.log("Configuring contracts (granting AdminRole to MembershipSystem on Treasury)...");
+  console.log(
+    "Configuring contracts (granting AdminRole to MembershipSystem on Treasury)...",
+  );
   const grantHash = await walletClient.writeContract({
     chain: isuncoin,
     address: treasuryAddress as `0x${string}`,
     abi: treasuryArtifact.abi,
     functionName: "grantRole",
-    args: ["0x0000000000000000000000000000000000000000000000000000000000000000", membershipAddress], // Info: (20260412 - Luphia) DEFAULT_ADMIN_ROLE
+    args: [
+      "0x0000000000000000000000000000000000000000000000000000000000000000",
+      membershipAddress,
+    ], // Info: (20260412 - Luphia) DEFAULT_ADMIN_ROLE
   });
   await publicClient.waitForTransactionReceipt({ hash: grantHash });
   console.log("-> MembershipSystem Configuration completed successfully.");
 
-  console.log("Prefunding MembershipSystem with 20 ISC for initial point distribution...");
+  console.log(
+    "Prefunding MembershipSystem with 20 ISC for initial point distribution...",
+  );
   const fundHash = await walletClient.sendTransaction({
     chain: isuncoin,
     to: membershipAddress,
@@ -150,9 +186,12 @@ async function main() {
   // Info: (20260412 - Luphia) 6. Deploy EntryPoint
   const epArtifact = JSON.parse(
     fs.readFileSync(
-      path.join(process.cwd(), "node_modules/@account-abstraction/contracts/artifacts/EntryPoint.json"),
-      "utf-8"
-    )
+      path.join(
+        process.cwd(),
+        "node_modules/@account-abstraction/contracts/artifacts/EntryPoint.json",
+      ),
+      "utf-8",
+    ),
   );
   console.log("Deploying EntryPoint...");
   const epHash = await walletClient.deployContract({
@@ -160,12 +199,17 @@ async function main() {
     abi: epArtifact.abi,
     bytecode: epArtifact.bytecode,
   });
-  const epReceipt = await publicClient.waitForTransactionReceipt({ hash: epHash });
+  const epReceipt = await publicClient.waitForTransactionReceipt({
+    hash: epHash,
+  });
   const entryPointAddress = epReceipt.contractAddress;
   console.log(`-> EntryPoint deployed to: ${entryPointAddress}`);
 
   // Info: (20260412 - Luphia) 7. Deploy Fido2AccountFactory
-  const fido2FactoryArtifact = getArtifact("fido2_account_factory", "Fido2AccountFactory");
+  const fido2FactoryArtifact = getArtifact(
+    "fido2_account_factory",
+    "Fido2AccountFactory",
+  );
   console.log("Deploying Fido2AccountFactory...");
   const factoryHash = await walletClient.deployContract({
     chain: isuncoin,
@@ -173,7 +217,9 @@ async function main() {
     bytecode: fido2FactoryArtifact.bytecode,
     args: [entryPointAddress],
   });
-  const factoryReceipt = await publicClient.waitForTransactionReceipt({ hash: factoryHash });
+  const factoryReceipt = await publicClient.waitForTransactionReceipt({
+    hash: factoryHash,
+  });
   const factoryAddress = factoryReceipt.contractAddress;
   console.log(`-> Fido2AccountFactory deployed to: ${factoryAddress}`);
 
@@ -212,12 +258,17 @@ async function main() {
   updateEnv("NEXT_PUBLIC_DYNAMIC_MEMBERSHIP_CARD_ADDRESS", dmcAddress || "");
   updateEnv("NEXT_PUBLIC_CREDIT_POINT_ADDRESS", treasuryAddress || "");
   updateEnv("NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS", membershipAddress || "");
-  updateEnv("NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS", subManagerAddress || "");
+  updateEnv(
+    "NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS",
+    subManagerAddress || "",
+  );
   updateEnv("NEXT_PUBLIC_SCW_FACTORY_ADDRESS", factoryAddress || "");
   updateEnv("NEXT_PUBLIC_ENTRY_POINT_ADDRESS", entryPointAddress || "");
 
   fs.writeFileSync(envSetupPath, envContent, "utf-8");
-  console.log("-> Successfully updated .env.setup with all contract addresses.");
+  console.log(
+    "-> Successfully updated .env.setup with all contract addresses.",
+  );
 }
 
 main().catch((error) => {

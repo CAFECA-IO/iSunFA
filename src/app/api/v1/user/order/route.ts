@@ -107,4 +107,3 @@ export async function GET(request: NextRequest) {
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Failed to fetch orders");
   }
 }
-

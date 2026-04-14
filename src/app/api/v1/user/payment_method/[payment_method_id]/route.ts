@@ -6,7 +6,7 @@ import { paymentRepo } from "@/repositories/payment.repo";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ payment_method_id: string }> }
+  { params }: { params: Promise<{ payment_method_id: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -16,13 +16,13 @@ export async function PATCH(
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
     }
 
-    const { name, email, taxId, buyerName, billingAddress } = await request.json();
+    const { name, email, taxId, buyerName, billingAddress } =
+      await request.json();
 
     const { payment_method_id: paymentMethodId } = await params;
 
-    const paymentMethod = await paymentRepo.getPaymentMethodById(
-      paymentMethodId
-    );
+    const paymentMethod =
+      await paymentRepo.getPaymentMethodById(paymentMethodId);
 
     if (!paymentMethod || paymentMethod.userId !== user.id) {
       return jsonFail(ApiCode.NOT_FOUND, "Payment method not found");
@@ -47,7 +47,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ payment_method_id: string }> }
+  { params }: { params: Promise<{ payment_method_id: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -59,9 +59,8 @@ export async function DELETE(
 
     const { payment_method_id: paymentMethodId } = await params;
 
-    const paymentMethod = await paymentRepo.getPaymentMethodById(
-      paymentMethodId
-    );
+    const paymentMethod =
+      await paymentRepo.getPaymentMethodById(paymentMethodId);
 
     if (!paymentMethod || paymentMethod.userId !== user.id) {
       return jsonFail(ApiCode.NOT_FOUND, "Payment method not found");

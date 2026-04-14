@@ -78,7 +78,7 @@ export class PaymentRepository {
             order.amount,
             (order.data as Record<string, unknown>) || {},
             body as Record<string, unknown>, // Info: (20260410 - Luphia) Use webhook body as pmData proxy for buyerName/taxId if submitted
-            order.user
+            order.user,
           );
 
           const dbReceipt = await tx.receipt.create({
@@ -267,10 +267,10 @@ export class PaymentRepository {
             paymentMethod: true,
           },
           orderBy: {
-            createdAt: 'desc'
+            createdAt: "desc",
           },
-          take: 1
-        }
+          take: 1,
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -303,7 +303,13 @@ export class PaymentRepository {
 
     // Info: (20260409 - Luphia) Filter out soft-deleted payment methods
     return methods.filter(
-      (m) => !(m.data && typeof m.data === "object" && !Array.isArray(m.data) && (m.data as Record<string, unknown>).isDeleted)
+      (m) =>
+        !(
+          m.data &&
+          typeof m.data === "object" &&
+          !Array.isArray(m.data) &&
+          (m.data as Record<string, unknown>).isDeleted
+        ),
     );
   }
 
@@ -320,14 +326,17 @@ export class PaymentRepository {
     });
   }
 
-  async getPaymentTransactionsByPaymentMethodId(paymentMethodId: string, userId: string) {
+  async getPaymentTransactionsByPaymentMethodId(
+    paymentMethodId: string,
+    userId: string,
+  ) {
     return prisma.paymentTransaction.findMany({
       where: {
         paymentMethodId,
-        userId
+        userId,
       },
       include: {
-        order: true
+        order: true,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -428,7 +437,11 @@ export class PaymentRepository {
               buyerId: userId,
               buyerName: userName,
               itemDescription: `iSunFA Credits - ${credits}`,
-              gatewayTxId: (oenData as { data?: { id?: string }; id?: string })?.data?.id || (oenData as { data?: { id?: string }; id?: string })?.id || "",
+              gatewayTxId:
+                (oenData as { data?: { id?: string }; id?: string })?.data
+                  ?.id ||
+                (oenData as { data?: { id?: string }; id?: string })?.id ||
+                "",
             },
           } as Prisma.InputJsonObject,
         },

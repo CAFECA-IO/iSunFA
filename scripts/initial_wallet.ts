@@ -30,7 +30,9 @@ async function main() {
   if (fs.existsSync(envAdminPath)) {
     const content = fs.readFileSync(envAdminPath, "utf-8");
     if (isValidKeystoreV3(content)) {
-      console.log(".env.admin contains a valid encrypted BIP44 wallet Keystore.");
+      console.log(
+        ".env.admin contains a valid encrypted BIP44 wallet Keystore.",
+      );
       shouldRegenerate = false;
     } else {
       console.log(".env.admin format is invalid. Regenerating...");
@@ -63,7 +65,9 @@ async function main() {
   console.log(`Password derived from seed: ${password.substring(0, 10)}...`);
 
   // Info: (20260411 - Luphia) 3. Create BIP44 Wallet (with mnemonic)
-  console.log("Generating BIP44 Wallet and encrypting... (This may take a few seconds)");
+  console.log(
+    "Generating BIP44 Wallet and encrypting... (This may take a few seconds)",
+  );
 
   let wallet;
   try {
@@ -73,10 +77,14 @@ async function main() {
 
     // Info: (20260411 - Luphia) 4. Save to .env.admin
     fs.writeFileSync(envAdminPath, encryptedJson, "utf-8");
-    console.log(`Successfully created and encrypted BIP44 wallet to .env.admin`);
+    console.log(
+      `Successfully created and encrypted BIP44 wallet to .env.admin`,
+    );
     console.log(`Address: ${wallet.address}`);
   } catch (e) {
-    console.error("Error creating/encrypting wallet. Note: This script requires 'ethers' to encrypt to Keystore V3.");
+    console.error(
+      "Error creating/encrypting wallet. Note: This script requires 'ethers' to encrypt to Keystore V3.",
+    );
     console.error(e);
     process.exit(1);
   }

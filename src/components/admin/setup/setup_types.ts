@@ -10,4 +10,6 @@ export interface IStepProps {
   isActive: boolean;
   isCompleted: boolean;
   onNext: () => void;
+  onReset?: () => void;
+  envData?: Record<string, string>;
 }

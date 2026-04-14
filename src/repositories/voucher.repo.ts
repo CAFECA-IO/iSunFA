@@ -26,9 +26,7 @@ export interface IVoucherRepository {
     accountBookId: string,
     data: Prisma.VoucherUpdateInput,
   ): Promise<Prisma.BatchPayload>;
-  getVoucherSummary(
-    accountBookId: string,
-  ): Promise<{
+  getVoucherSummary(accountBookId: string): Promise<{
     todayVoucherCount: number;
     monthTotalAmount: number;
     pendingVoucherCount: number;
