@@ -46,15 +46,15 @@ export async function POST(
       return jsonFail(ApiCode.VALIDATION_ERROR, "Maximum retry limit (3) exceeded, please contact system administrator");
     }
 
-    // Increment retry count
+    // Info: (20260414 - Tzuhan) Increment retry count
     const updatedData = {
       ...missionData,
       retryCount: currentRetryCount + 1,
     };
 
-    // Transaction to update Mission and Tasks
+    // Info: (20260414 - Tzuhan) Transaction to update Mission and Tasks
     await prisma.$transaction(async (tx) => {
-      // Reset Mission status
+      // Info: (20260414 - Tzuhan) Reset Mission status
       await tx.mission.update({
         where: { id: mission.id },
         data: {
@@ -65,7 +65,7 @@ export async function POST(
         },
       });
 
-      // Reset Failed Tasks to Pending
+      // Info: (20260414 - Tzuhan) Reset Failed Tasks to Pending
       await tx.task.updateMany({
         where: {
           missionId: mission.id,
