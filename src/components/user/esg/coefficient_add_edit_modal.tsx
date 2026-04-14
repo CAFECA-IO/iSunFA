@@ -87,7 +87,7 @@ export default function CoefficientAddEditModal({
   ) : (
     <>
       {/* Info: (20260413 - Julian) Form */}
-      <div className="grid grid-flow-row grid-cols-2 items-center gap-4 py-6 text-sm font-semibold">
+      <div className="grid grid-flow-row grid-cols-2 items-center gap-4 py-3 text-sm font-semibold lg:py-6">
         {/* Info: (20260413 - Julian) Name */}
         <div className="col-span-2 flex flex-col gap-1">
           <label htmlFor="coefficient-name" className="text-xs text-gray-400">
