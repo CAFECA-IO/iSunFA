@@ -24,9 +24,8 @@ const DICTIONARY: Record<string, Record<string, Record<string, string>>> = {
             target: "ANALYSIS TARGET",
             score: "ANALYSIS SCORE",
             rating: "RATING",
-            readyBadge: "分析報告",
-            readyTitle: "專屬洞察已就緒", // Info: 縮短文字
-            readySubtitle: "即刻解鎖完整數據分析", // Info: 縮短文字
+            readyBadge: "STATUS",
+            readyTitle: "專屬洞察已就緒",
             slogan: "運用 AI 驅動的頂尖財務與碳管理平台",
             subSlogan: "免費產生專屬企業洞察",
             cta: "立即前往 isunfa.com"
@@ -51,9 +50,8 @@ const DICTIONARY: Record<string, Record<string, Record<string, string>>> = {
             target: "ANALYSIS TARGET",
             score: "ANALYSIS SCORE",
             rating: "RATING",
-            readyBadge: "Smart Analysis",
-            readyTitle: "Insights Ready",
-            readySubtitle: "Unlock full data analysis now",
+            readyBadge: "STATUS",
+            readyTitle: "INSIGHTS READY",
             slogan: "AI-Driven Finance & Carbon Platform",
             subSlogan: "Generate your insights for free",
             cta: "Visit isunfa.com"
@@ -206,28 +204,21 @@ export async function GET(request: Request) {
                                     </div>
                                 </div>
                             ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', background: '#FFFFFF', padding: '24px', borderRadius: '24px', border: '2px solid #FFEDD5', marginLeft: '40px', width: '320px', flexShrink: 0, boxShadow: '0 10px 15px -3px rgba(234, 88, 12, 0.05)' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#FFF7ED', padding: '24px', borderRadius: '24px', border: '2px dashed #FDBA74', marginLeft: '40px', width: '280px', flexShrink: 0 }}>
+                                    <svg width="100" height="100" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: '16px' }}>
+                                        <circle cx="60" cy="60" r="45" fill="#FFEDD5" />
+                                        <rect x="35" y="30" width="50" height="60" rx="6" fill="#FFFFFF" stroke="#FDBA74" strokeWidth="3" />
+                                        <rect x="45" y="45" width="30" height="4" rx="2" fill="#FED7AA" />
+                                        <rect x="45" y="55" width="20" height="4" rx="2" fill="#FED7AA" />
+                                        <rect x="45" y="75" width="15" height="4" rx="2" fill="#F97316" />
+                                        <path d="M75 55 L90 50 L105 55 L100 80 C95 90 85 95 85 95 C85 95 75 90 70 80 Z" fill="#FFFFFF" stroke="#EA580C" strokeWidth="3" strokeLinejoin="round" />
+                                        <path d="M82 70 L87 75 L95 62" stroke="#F97316" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                                        {/* 星星 */}
+                                        <path d="M30 35 L33 28 L38 35 L45 38 L38 42 L33 50 L30 42 L22 38 Z" fill="#FDBA74" />
+                                    </svg>
 
-                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '130px', background: '#FFF7ED', borderRadius: '16px', marginBottom: '20px', overflow: 'hidden' }}>
-                                        <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <circle cx="60" cy="60" r="45" fill="#FFEDD5" />
-                                            <rect x="35" y="30" width="50" height="60" rx="6" fill="#FFFFFF" stroke="#FDBA74" strokeWidth="3" />
-                                            <rect x="45" y="45" width="30" height="4" rx="2" fill="#FED7AA" />
-                                            <rect x="45" y="55" width="20" height="4" rx="2" fill="#FED7AA" />
-                                            <rect x="45" y="75" width="15" height="4" rx="2" fill="#F97316" />
-                                            <path d="M75 55 L90 50 L105 55 L100 80 C95 90 85 95 85 95 C85 95 75 90 70 80 Z" fill="#FFFFFF" stroke="#EA580C" strokeWidth="3" strokeLinejoin="round" />
-                                            <path d="M82 70 L87 75 L95 62" stroke="#F97316" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </div>
-
-                                    <div style={{ display: 'flex', padding: '4px 12px', background: '#EA580C', borderRadius: '6px', marginBottom: '12px', alignSelf: 'flex-start' }}>
-                                        <span style={{ fontSize: '14px', color: '#FFFFFF', fontWeight: 700 }}>{t.ui.readyBadge}</span>
-                                    </div>
-
-                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <span style={{ fontSize: '26px', color: '#C2410C', fontWeight: 900, marginBottom: '6px', lineHeight: 1.2 }}>{t.ui.readyTitle}</span>
-                                        <span style={{ fontSize: '15px', color: '#6B7280', fontWeight: 600 }}>{t.ui.readySubtitle}</span>
-                                    </div>
+                                    <span style={{ fontSize: '18px', color: '#EA580C', fontWeight: 800, marginBottom: '4px', letterSpacing: '0.1em' }}>{t.ui.readyBadge}</span>
+                                    <span style={{ fontSize: '26px', fontWeight: 800, color: '#C2410C', textAlign: 'center' }}>{t.ui.readyTitle}</span>
                                 </div>
                             )}
                         </div>
