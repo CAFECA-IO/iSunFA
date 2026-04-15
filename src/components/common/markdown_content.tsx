@@ -18,7 +18,6 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content, theme = 'da
   const tableBorder = isDark ? 'border-[#444]' : 'border-gray-300';
   const theadBg = isDark ? 'bg-white/5' : 'bg-gray-50';
   const thText = isDark ? 'text-[#FFB74D]' : 'text-orange-700';
-  const rowBorder = isDark ? 'border-[#333]' : 'border-gray-200';
 
   const result = (
     <ReactMarkdown
@@ -102,8 +101,8 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content, theme = 'da
           </blockquote>
         ),
         table: ({ children, ...props }: React.ComponentPropsWithoutRef<'table'>) => (
-          <div className="my-5 overflow-x-auto rounded-lg border border-gray-200">
-            <table className={`w-full border-collapse ${tableBorder} text-sm`} {...props}>
+          <div className={`my-5 w-full overflow-x-auto rounded-lg border ${tableBorder} not-prose align-middle shadow-sm sm:rounded-lg`}>
+            <table className={`min-w-full divide-y ${isDark ? 'divide-[#444]' : 'divide-gray-200'} text-sm`} {...props}>
               {children}
             </table>
           </div>
@@ -114,29 +113,31 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content, theme = 'da
           </thead>
         ),
         tbody: ({ children, ...props }: React.ComponentPropsWithoutRef<'tbody'>) => (
-          <tbody className="divide-y divide-gray-200" {...props}>{children}</tbody>
+          <tbody className={`divide-y ${isDark ? 'divide-[#333]' : 'divide-gray-200'} ${isDark ? 'bg-transparent' : 'bg-white'}`} {...props}>
+            {children}
+          </tbody>
         ),
         tr: ({ children, ...props }: React.ComponentPropsWithoutRef<'tr'>) => (
-          <tr className={`${rowBorder} hover:bg-black/5 transition-colors`} {...props}>
+          <tr className={`hover:bg-black/5 transition-colors`} {...props}>
             {children}
           </tr>
         ),
         th: ({ children, ...props }: React.ComponentPropsWithoutRef<'th'>) => (
           <th
-            className={`p-3 text-left font-semibold ${thText}`}
+            className={`px-4 py-3.5 text-left font-semibold ${thText} whitespace-nowrap`}
             {...props}
           >
             {children}
           </th>
         ),
         td: ({ children, ...props }: React.ComponentPropsWithoutRef<'td'>) => (
-          <td className={`p-3 text-left ${secondaryTextColor}`} {...props}>
+          <td className={`px-4 py-3 text-left ${secondaryTextColor} align-top whitespace-normal`} {...props}>
             {children}
           </td>
         ),
         pre: ({ children, ...props }: React.ComponentPropsWithoutRef<'pre'>) => (
-          <pre 
-            className={`p-4 rounded-lg my-4 overflow-x-auto text-sm font-mono leading-relaxed ${isDark ? 'bg-[#1E1E1E] text-gray-200 border border-[#333]' : 'bg-white border border-orange-100 text-gray-800 shadow-sm'}`} 
+          <pre
+            className={`p-4 rounded-lg my-4 overflow-x-auto text-sm font-mono leading-relaxed ${isDark ? 'bg-[#1E1E1E] text-gray-200 border border-[#333]' : 'bg-white border border-orange-100 text-gray-800 shadow-sm'}`}
             {...props}
           >
             {children}

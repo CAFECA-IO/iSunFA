@@ -129,7 +129,7 @@ export class JournalRepository {
     const [todayJournalCount, pendingJournalCount, aiAverageConfidenceAggr] =
       await Promise.all([
         prisma.journal.count({
-          where: { accountBookId, tradingDate: { gte: startOfToday } },
+          where: { accountBookId, createdAt: { gte: startOfToday } },
         }),
         prisma.journal.count({
           where: { accountBookId, isVerified: false },

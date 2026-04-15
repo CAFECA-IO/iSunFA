@@ -140,6 +140,8 @@ export default function EsgDetailModal({
     setIsLoading(true);
     try {
       const formPayload = { ...formData, isVerified: isVerifiedState };
+      const isoString = `${dateValue}T00:00:00.000Z`;
+      formPayload.tradingDate = isoString;
       const res = await request<IApiResponse<IEsgRecord>>(
         `/api/v1/user/account_book/${accountBookId}/esg/${formData.id}`,
         {
@@ -292,6 +294,9 @@ export default function EsgDetailModal({
   //   </div>
   // );
 
+  const dateValue = formData.tradingDate
+    ? formData.tradingDate.split("T")[0]
+    : "";
   const EsgContent = (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[#F8FAFC]">
       {/* Info: (20260312 - Julian) Header (Removed for embedded) */}
@@ -335,7 +340,7 @@ export default function EsgDetailModal({
               id="dateTimestamp"
               aria-label={t("esg_verify.form.date")}
               type="date"
-              value={formData.tradingDate}
+              value={dateValue}
               onChange={(e) => handleDateChange(e.target.value)}
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
             />
