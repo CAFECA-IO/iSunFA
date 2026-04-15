@@ -2122,7 +2122,8 @@ export const ko = {
       role_super_admin: "최고 관리자",
       role_admin: "관리자",
       role_user: "일반 사용자",
-
+      admin_icp_inventory: "시스템 인벤토리 ICP",
+      mint: "발행",
     },
 
     modal_issue: {

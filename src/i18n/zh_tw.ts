@@ -2133,7 +2133,8 @@ export const zhTw = {
       role_super_admin: "超級管理員",
       role_admin: "管理員",
       role_user: "一般用戶",
-
+      admin_icp_inventory: "系統庫存 ICP",
+      mint: "增發",
     },
 
     modal_issue: {

@@ -1,8 +1,7 @@
-import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { validateAdminFido2 } from "@/lib/auth/admin_validator";
 import { issuePurchasedPointsToMember } from "@/services/member.service";
 import { paymentRepo } from "@/repositories/payment.repo";
-import { Role } from "@/generated/enums";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 
@@ -11,22 +10,13 @@ export async function POST(
   { params }: { params: Promise<{ user_id: string }> },
 ) {
   try {
-    const authHeader = req.headers.get("authorization");
-    const adminUser = await getIdentityFromDeWT(authHeader);
-
-    if (
-      !adminUser ||
-      (adminUser.role !== Role.SUPER_ADMIN && adminUser.role !== Role.ADMIN)
-    ) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Unauthorized");
-    }
+    const { user: adminUser, body } = await validateAdminFido2(req);
 
     const { user_id: userId } = await params;
     if (!userId) {
       return jsonFail(ApiCode.VALIDATION_ERROR, "Missing user_id");
     }
 
-    const body = await req.json();
     const amount = Number(body.amount);
 
     if (isNaN(amount) || amount <= 0) {
