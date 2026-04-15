@@ -5,6 +5,8 @@ import { missionService } from "@/services/mission.service";
 import { Task, Mission } from "@/generated/client";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
+import { journalRepo } from "@/repositories/journal.repo";
+import { esgRepo } from "@/repositories/esg.repo";
 
 interface ITaskData {
   key: string;
@@ -41,6 +43,15 @@ export class TaskService {
         console.log(
           `[TaskService] No pending tasks found. (${new Date().toLocaleString("zh-TW", { hour12: false })})`,
         );
+
+        // Info: (20260415 - Luphia) 當 processNextTask 沒有 pendingTask 時，將 FAILED 狀態的 Task 改為 PENDING
+        const resetResult = await taskRepo.resetAllFailedTasks();
+        if (resetResult.count > 0) {
+          console.log(
+            `[TaskService] Reset ${resetResult.count} FAILED tasks to PENDING.`,
+          );
+        }
+
         return false;
       }
 
@@ -182,34 +193,23 @@ export class TaskService {
                 const tradingDateObj = new Date(res.data.tradingDate);
                 if (!isNaN(tradingDateObj.getTime())) {
                   try {
-                    const { prisma } = await import("@/lib/prisma");
+                    await voucherRepo.updateManyVouchersByFile(
+                      parsedContext.fileId,
+                      parsedContext.accountBookId,
+                      { tradingDate: tradingDateObj },
+                    );
 
-                    const v = await prisma.voucher.findFirst({
-                      where: { fileId: parsedContext.fileId },
-                    });
-                    if (v)
-                      await prisma.voucher.update({
-                        where: { id: v.id },
-                        data: { tradingDate: tradingDateObj },
-                      });
+                    await journalRepo.updateManyJournalsByFile(
+                      parsedContext.fileId,
+                      parsedContext.accountBookId,
+                      { tradingDate: tradingDateObj },
+                    );
 
-                    const j = await prisma.journal.findFirst({
-                      where: { fileId: parsedContext.fileId },
-                    });
-                    if (j)
-                      await prisma.journal.update({
-                        where: { id: j.id },
-                        data: { tradingDate: tradingDateObj },
-                      });
-
-                    const e = await prisma.esgRecord.findFirst({
-                      where: { fileId: parsedContext.fileId },
-                    });
-                    if (e)
-                      await prisma.esgRecord.update({
-                        where: { id: e.id },
-                        data: { tradingDate: tradingDateObj },
-                      });
+                    await esgRepo.updateManyEsgRecordsByFile(
+                      parsedContext.fileId,
+                      parsedContext.accountBookId,
+                      { tradingDate: tradingDateObj },
+                    );
                   } catch (updateErr) {
                     console.error(
                       "[TaskService] Failed to update trading date for duplicate document:",

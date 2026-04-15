@@ -22,6 +22,7 @@ export interface ITaskRepository {
   ): Promise<Mission>;
   checkMissionCompletion(missionId: string): Promise<boolean>;
   resetAllRunningTasks(): Promise<{ count: number }>;
+  resetAllFailedTasks(): Promise<{ count: number }>;
   cancelPendingTasks(
     missionId: string,
     reason: string,
@@ -241,6 +242,13 @@ export class TaskRepository implements ITaskRepository {
   async resetAllRunningTasks() {
     return prisma.task.updateMany({
       where: { status: TASK_STATUS.RUNNING },
+      data: { status: TASK_STATUS.PENDING },
+    });
+  }
+
+  async resetAllFailedTasks() {
+    return prisma.task.updateMany({
+      where: { status: TASK_STATUS.FAILED },
       data: { status: TASK_STATUS.PENDING },
     });
   }
