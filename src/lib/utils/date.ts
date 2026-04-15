@@ -4,7 +4,10 @@
  * @param dateObj The date to format
  * @param formatStr Format string (e.g., 'yyyy-MM-dd HH:mm', 'yyyy/MM')
  */
-export function formatDate(dateObj: Date | number | string, formatStr: string): string {
+export function formatDate(
+  dateObj: Date | number | string,
+  formatStr: string,
+): string {
   const d = new Date(dateObj);
 
   if (isNaN(d.getTime())) {

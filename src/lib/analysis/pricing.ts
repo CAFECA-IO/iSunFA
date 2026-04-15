@@ -1,4 +1,7 @@
-import { ANALYSIS_BASE_COSTS, ANALYSIS_PERIOD_MULTIPLIERS } from "@/constants/price";
+import {
+  ANALYSIS_BASE_COSTS,
+  ANALYSIS_PERIOD_MULTIPLIERS,
+} from "@/constants/price";
 
 export interface IOrderParams {
   category: string;
@@ -31,7 +34,10 @@ export function getAnalysisCost(params: IOrderParams): number {
   const unitCost = Math.round(baseCost * multiplier);
 
   if (params.items && params.items.length > 0) {
-    return params.items.reduce((acc, item) => acc + unitCost * item.quantity, 0);
+    return params.items.reduce(
+      (acc, item) => acc + unitCost * item.quantity,
+      0,
+    );
   }
 
   return unitCost;

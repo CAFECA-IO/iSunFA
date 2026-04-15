@@ -26,6 +26,10 @@ export async function GET(
 
     const newHeaders = new Headers(request.headers);
     newHeaders.delete("host");
+    newHeaders.delete("connection");
+    newHeaders.delete("keep-alive");
+    newHeaders.delete("transfer-encoding");
+    newHeaders.delete("accept-encoding");
 
     const response = await fetch(targetUrl, {
       method: "GET",

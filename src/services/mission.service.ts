@@ -243,7 +243,7 @@ export class MissionService {
                     const vd = {
                       ...(parsedBase || {}),
                       ...(parsedLines || {}),
-                      aiNote: `- 基本資訊分析：${parsedBase?.aiNote || ""}\n- 會計科目分錄分析：${parsedLines?.aiNote || ""}`
+                      aiNote: `- 基本資訊分析：${parsedBase?.aiNote || ""}\n- 會計科目分錄分析：${parsedLines?.aiNote || ""}`,
                     };
                     const tradingDate = new Date(vd.tradingDate || new Date());
                     const typeMap: Record<string, VoucherTradingType> = {

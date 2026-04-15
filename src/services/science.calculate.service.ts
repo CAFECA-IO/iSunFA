@@ -14,18 +14,29 @@ export class ScienceCalculateService {
     try {
       const { stdout } = await execAsync(`docker images -q ${this.imageName}`);
       if (!stdout.trim()) {
-        console.log(`[ScienceCalculateService] Building Docker image ${this.imageName} (this may take a few minutes for the first time)...`);
+        console.log(
+          `[ScienceCalculateService] Building Docker image ${this.imageName} (this may take a few minutes for the first time)...`,
+        );
         const dockerfile = `
 FROM python:3.10-slim
 RUN pip install --no-cache-dir sympy scipy numpy
 `;
         // Info: (20260407 - Luphia) Build the docker image securely by echoing dockerfile to docker build via stdin
-        await execAsync(`echo "${dockerfile}" | docker build -t ${this.imageName} -`);
-        console.log(`[ScienceCalculateService] Docker image ${this.imageName} built successfully.`);
+        await execAsync(
+          `echo "${dockerfile}" | docker build -t ${this.imageName} -`,
+        );
+        console.log(
+          `[ScienceCalculateService] Docker image ${this.imageName} built successfully.`,
+        );
       }
     } catch (error) {
-      console.error("[ScienceCalculateService] Failed to ensure docker image exists:", error);
-      throw new Error("Failed to prepare Docker dependency environment for calculation.");
+      console.error(
+        "[ScienceCalculateService] Failed to ensure docker image exists:",
+        error,
+      );
+      throw new Error(
+        "Failed to prepare Docker dependency environment for calculation.",
+      );
     }
   }
 
@@ -52,7 +63,7 @@ RUN pip install --no-cache-dir sympy scipy numpy
         this.imageName,
         "python",
         "-c",
-        "import sys; exec(sys.stdin.read())"
+        "import sys; exec(sys.stdin.read())",
       ]);
 
       let output = "";
@@ -72,7 +83,11 @@ RUN pip install --no-cache-dir sympy scipy numpy
           resolved = true;
           // Info: (20260407 - Luphia) Forceally stop Python execution to release container
           dockerProcess.kill("SIGKILL");
-          reject(new Error(`Python Script Exhausted Timeout Limit of ${this.timeoutMs}ms.`));
+          reject(
+            new Error(
+              `Python Script Exhausted Timeout Limit of ${this.timeoutMs}ms.`,
+            ),
+          );
         }
       }, this.timeoutMs);
 

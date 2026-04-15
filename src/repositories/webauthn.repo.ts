@@ -1,4 +1,4 @@
-import { User, Prisma } from "@/generated/client";
+import { User, Prisma, Role } from "@/generated/client";
 import { prisma } from "@/lib/prisma";
 
 export interface IWebAuthnRepository {
@@ -7,6 +7,15 @@ export interface IWebAuthnRepository {
   findUserById(id: string): Promise<User | null>;
   findUsersByIds(ids: string[]): Promise<User[]>;
   findUserByName(name: string): Promise<User | null>;
+  findAllUsersForAdmin(): Promise<
+    Array<{
+      id: string;
+      address: string;
+      name: string | null;
+      role: string;
+      createdAt: Date;
+    }>
+  >;
   updateChallenge(address: string, challenge: string): Promise<void>;
   clearChallenge(userId: string): Promise<void>;
   upsertUser(data: {
@@ -17,6 +26,7 @@ export interface IWebAuthnRepository {
     name?: string;
     imageUrl?: string;
   }): Promise<User>;
+  clearSuperAdmins(): Promise<void>;
 }
 
 class WebAuthnRepository implements IWebAuthnRepository {
@@ -49,6 +59,27 @@ class WebAuthnRepository implements IWebAuthnRepository {
   public async findUserByName(name: string): Promise<User | null> {
     return prisma.user.findFirst({
       where: { name },
+    });
+  }
+
+  public async findAllUsersForAdmin(): Promise<
+    Array<{
+      id: string;
+      address: string;
+      name: string | null;
+      role: string;
+      createdAt: Date;
+    }>
+  > {
+    return prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        address: true,
+        name: true,
+        role: true,
+        createdAt: true,
+      },
     });
   }
 
@@ -125,6 +156,12 @@ class WebAuthnRepository implements IWebAuthnRepository {
         name: data.name ?? `User ${data.address.slice(0, 6)}`,
         imageUrl: data.imageUrl ?? null,
       },
+    });
+  }
+
+  public async clearSuperAdmins(): Promise<void> {
+    await prisma.user.deleteMany({
+      where: { role: Role.SUPER_ADMIN },
     });
   }
 }

@@ -1,5 +1,12 @@
 import fs from "fs";
-import { keccak256, toBytes, createWalletClient, createPublicClient, http, parseEther } from "viem";
+import {
+  keccak256,
+  toBytes,
+  createWalletClient,
+  createPublicClient,
+  http,
+  parseEther,
+} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { Wallet } from "ethers";
 import { isuncoin } from "@/lib/viem_public";
@@ -22,15 +29,27 @@ async function main() {
   const account = privateKeyToAccount(privateKey);
 
   const mainTransport = http("http://127.0.0.1:20024");
-  const walletClient = createWalletClient({ account, chain: isuncoin, transport: mainTransport });
-  const publicClient = createPublicClient({ chain: isuncoin, transport: mainTransport });
+  const walletClient = createWalletClient({
+    account,
+    chain: isuncoin,
+    transport: mainTransport,
+  });
+  const publicClient = createPublicClient({
+    chain: isuncoin,
+    transport: mainTransport,
+  });
 
-  const getArtifact = (pathName: string, contractName: string) => JSON.parse(
-    fs.readFileSync(`artifacts/contracts/${pathName}.sol/${contractName}.json`, "utf-8")
-  );
+  const getArtifact = (pathName: string, contractName: string) =>
+    JSON.parse(
+      fs.readFileSync(
+        `artifacts/contracts/${pathName}.sol/${contractName}.json`,
+        "utf-8",
+      ),
+    );
 
   const kycAddress = process.env.NEXT_PUBLIC_KYC_REGISTRY_ADDRESS;
-  const subManagerAddress = process.env.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS;
+  const subManagerAddress =
+    process.env.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS;
 
   console.log("1. Redeploying CreditPoint with 0.01 ISC collateral rate...");
   const treasuryArtifact = getArtifact("credit_point", "CreditPoint");
@@ -39,7 +58,9 @@ async function main() {
     bytecode: treasuryArtifact.bytecode,
     args: [account.address, kycAddress, parseEther("0.01")],
   });
-  const treasuryReceipt = await publicClient.waitForTransactionReceipt({ hash: treasuryHash });
+  const treasuryReceipt = await publicClient.waitForTransactionReceipt({
+    hash: treasuryHash,
+  });
   const treasuryAddress = treasuryReceipt.contractAddress;
 
   console.log("2. Configuring CreditPoint with SubscriptionManager...");
@@ -53,13 +74,18 @@ async function main() {
   await publicClient.waitForTransactionReceipt({ hash: configHash });
 
   console.log("3. Redeploying MembershipSystem...");
-  const membershipArtifact = getArtifact("membership_system", "MembershipSystem");
+  const membershipArtifact = getArtifact(
+    "membership_system",
+    "MembershipSystem",
+  );
   const membershipHash = await walletClient.deployContract({
     abi: membershipArtifact.abi,
     bytecode: membershipArtifact.bytecode,
     args: [account.address, treasuryAddress],
   });
-  const membershipReceipt = await publicClient.waitForTransactionReceipt({ hash: membershipHash });
+  const membershipReceipt = await publicClient.waitForTransactionReceipt({
+    hash: membershipHash,
+  });
   const membershipAddress = membershipReceipt.contractAddress;
 
   console.log("4. Granting AdminRole to MembershipSystem on Treasury...");
@@ -68,11 +94,16 @@ async function main() {
     address: treasuryAddress as `0x${string}`,
     abi: treasuryArtifact.abi,
     functionName: "grantRole",
-    args: ["0x0000000000000000000000000000000000000000000000000000000000000000", membershipAddress],
+    args: [
+      "0x0000000000000000000000000000000000000000000000000000000000000000",
+      membershipAddress,
+    ],
   });
   await publicClient.waitForTransactionReceipt({ hash: grantHash });
 
-  console.log("5. Prefunding MembershipSystem with 10 ISC (enough for 1,000 points via 0.01 rate)...");
+  console.log(
+    "5. Prefunding MembershipSystem with 10 ISC (enough for 1,000 points via 0.01 rate)...",
+  );
   const fundHash = await walletClient.sendTransaction({
     chain: isuncoin,
     to: membershipAddress,

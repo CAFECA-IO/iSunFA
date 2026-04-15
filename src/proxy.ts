@@ -10,8 +10,12 @@ export async function proxy(request: NextRequest) {
     try {
       const targetUrl = new URL(targetUrlStr);
       const xForwardedHost = request.headers.get("x-forwarded-host") || "";
-      const hostHeader = xForwardedHost ? xForwardedHost.split(",")[0].trim() : (request.headers.get("host") || "");
-      const currentHostname = hostHeader ? hostHeader.split(":")[0] : request.nextUrl.hostname;
+      const hostHeader = xForwardedHost
+        ? xForwardedHost.split(",")[0].trim()
+        : request.headers.get("host") || "";
+      const currentHostname = hostHeader
+        ? hostHeader.split(":")[0]
+        : request.nextUrl.hostname;
 
       const isPublicShare = request.nextUrl.pathname.startsWith("/share/report");
       const isSetup = request.nextUrl.pathname.startsWith("/admin/setup");

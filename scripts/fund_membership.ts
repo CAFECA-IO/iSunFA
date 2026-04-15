@@ -1,6 +1,13 @@
 import fs from "fs";
 import path from "path";
-import { keccak256, toBytes, createPublicClient, createWalletClient, http, parseEther } from "viem";
+import {
+  keccak256,
+  toBytes,
+  createPublicClient,
+  createWalletClient,
+  http,
+  parseEther,
+} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { Wallet } from "ethers";
 import { isuncoin } from "@/lib/viem";
@@ -40,16 +47,23 @@ async function main() {
 
   // Info: (20260413 - Luphia) Load ABI from .env
   const dotenv = (await import("dotenv")).default;
-  const envConfig = dotenv.parse(fs.readFileSync(path.join(process.cwd(), ".env"), "utf-8"));
+  const envConfig = dotenv.parse(
+    fs.readFileSync(path.join(process.cwd(), ".env"), "utf-8"),
+  );
 
-  const membershipAddress = envConfig.NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS as `0x${string}`;
+  const membershipAddress =
+    envConfig.NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS as `0x${string}`;
 
   if (!membershipAddress) {
-    console.error("Could not find NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS in .env");
+    console.error(
+      "Could not find NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS in .env",
+    );
     process.exit(1);
   }
 
-  console.log(`Funding MembershipSystem at ${membershipAddress} with 50 ISC...`);
+  console.log(
+    `Funding MembershipSystem at ${membershipAddress} with 50 ISC...`,
+  );
   const fundHash = await walletClient.sendTransaction({
     to: membershipAddress,
     value: parseEther("50"),

@@ -3,6 +3,7 @@ import type { FileHandle } from "fs/promises";
 import path from "path";
 // ToDo: (20251028 - Luphia) 尋找或建立更好的 Reed-Solomon Erasure Code 實作庫
 // import { ReedSolomonErasure } from '@/lib/reed_solomon_erasure';
+
 class ReedSolomonErasure {
   private dataShards: number;
   private parityShards: number;
@@ -19,7 +20,7 @@ class ReedSolomonErasure {
       i < this.dataShards + this.parityShards;
       i++
     ) {
-      shards[i] = Buffer.alloc(shards[0].length, 0); // 簡單填充為零
+      shards[i] = Buffer.alloc(shards[0].length, 0); // Info: (20260415 - Luphia) 簡單填充為零
     }
   }
 
@@ -39,17 +40,13 @@ const DATA_SHARDS: number = 5;
 const PARITY_SHARDS: number = 3;
 const TOTAL_SHARDS: number = DATA_SHARDS + PARITY_SHARDS;
 
-// --- Info: (20251028 - Luphia) 新的固定參數 ---
-const SHARD_SIZE: number = 4 * 1024 * 1024; // 固定 4MB
-const DATA_STRIPE_SIZE: number = DATA_SHARDS * SHARD_SIZE; // 20MB
+// Info: (20260415 - Luphia) 這裡改為最大上限值，而非絕對固定值
+const MAX_SHARD_SIZE: number = 4 * 1024 * 1024; // Info: (20260415 - Luphia) 4MB 上限
 
 // Info: (20251028 - Luphia) 實例化 Reed-Solomon 編碼器
 const rse = new ReedSolomonErasure(DATA_SHARDS, PARITY_SHARDS);
 
-/**
- * Info: (20251028 - Luphia)
- * 檢查檔案是否存在
- */
+// Info: (20251028 - Luphia) 檢查檔案是否存在
 async function validateFileExists(filePath: string): Promise<Stats | null> {
   try {
     const stats: Stats = await fs.stat(filePath);
@@ -85,11 +82,20 @@ export async function encodeFile(
   console.log(`[編碼] 原始檔案大小: ${originalFileSize} bytes`);
 
   try {
+    // Info: (20260415 - Gemini) 與前端同步：動態計算 Shard 大小，最大不超過 4MB
+    const currentShardSize = Math.min(
+      MAX_SHARD_SIZE,
+      Math.max(1, Math.ceil(originalFileSize / DATA_SHARDS))
+    );
+    const currentDataStripeSize = DATA_SHARDS * currentShardSize;
+
     // Info: (20251028 - Luphia) 建立輸出目錄並儲存 metadata
     await fs.mkdir(outputDir, { recursive: true });
+
+    // Info: (20260415 - Luphia) metadata 必須寫入 shardSize，以便恢復時使用
     await fs.writeFile(
       path.join(outputDir, "metadata.json"),
-      JSON.stringify({ originalFileSize }),
+      JSON.stringify({ originalFileSize, shardSize: currentShardSize }),
     );
 
     // Info: (20251028 - Luphia) 建立 8 個檔案寫入句柄
@@ -100,38 +106,38 @@ export async function encodeFile(
       }),
     );
 
-    // Info: (20251028 - Luphia) 建立檔案讀取串流 (20MB)
+    // Info: (20260415 - Luphia) 建立檔案讀取串流，以動態計算的 Stripe Size 為準
     const readStream: ReadStream = createReadStream(filePath, {
-      highWaterMark: DATA_STRIPE_SIZE,
+      highWaterMark: currentDataStripeSize,
     });
 
     // Info: (20251028 - Luphia) 逐塊處理檔案
     for await (const chunk of readStream) {
-      let dataStripe: Buffer = chunk as Buffer; // Info: (20251028 - Luphia) chunk 預設為 Buffer
+      let dataStripe: Buffer = chunk as Buffer;
 
       // Info: (20251028 - Luphia) 處理最後一塊 (Padding)
-      if (dataStripe.length < DATA_STRIPE_SIZE) {
-        const paddedStripe = Buffer.alloc(DATA_STRIPE_SIZE);
+      if (dataStripe.length < currentDataStripeSize) {
+        const paddedStripe = Buffer.alloc(currentDataStripeSize);
         dataStripe.copy(paddedStripe, 0);
         dataStripe = paddedStripe;
         console.log(
-          `[編碼] 偵測到檔案結尾，填充 ${DATA_STRIPE_SIZE - chunk.length} bytes。`,
+          `[編碼] 偵測到檔案結尾，填充 ${currentDataStripeSize - chunk.length} bytes。`,
         );
       }
 
-      // Info: (20251028 - Luphia) 準備 shards 陣列 (k=5 個資料 + m=3 個空緩衝區)
+      // Info: (20260415 - Luphia) 準備 shards 陣列，依照 currentShardSize 切割
       const shards: Buffer[] = [];
       for (let i = 0; i < DATA_SHARDS; i++) {
-        shards.push(dataStripe.subarray(i * SHARD_SIZE, (i + 1) * SHARD_SIZE));
+        shards.push(dataStripe.subarray(i * currentShardSize, (i + 1) * currentShardSize));
       }
       for (let i = 0; i < PARITY_SHARDS; i++) {
-        shards.push(Buffer.alloc(SHARD_SIZE));
+        shards.push(Buffer.alloc(currentShardSize));
       }
 
       // Info: (20251028 - Luphia) 執行 Reed-Solomon 編碼 (5+3)
       await rse.encode(shards);
 
-      // Info: (20251028 - Luphia) 將 8 個 4MB 切片寫入各自的檔案
+      // Info: (20251028 - Luphia) 將 8 個切片寫入各自的檔案
       await Promise.all(
         shards.map((shard, i) =>
           writerHandles[i].write(shard, 0, shard.length),
@@ -141,7 +147,7 @@ export async function encodeFile(
 
     // Info: (20251028 - Luphia) 關閉所有檔案
     await Promise.all(writerHandles.map((handle) => handle.close()));
-    console.log(`[編碼] ${TOTAL_SHARDS} 個切片已成功寫入 ${outputDir}`);
+    console.log(`[編碼] ${TOTAL_SHARDS} 個切片已成功寫入 ${outputDir} (單一切片大小: ${currentShardSize} bytes)`);
   } catch (err: unknown) {
     console.error(
       `[編碼] 處理失敗: ${err instanceof Error ? err.message : String(err)}`,
@@ -162,20 +168,27 @@ export async function recoverFile(
   console.log(`[恢復] (8, 5) 開始從 ${shardsDir} 嘗試恢復檔案...`);
 
   let originalFileSize: number;
+  let currentShardSize: number;
+
   try {
     // Info: (20251028 - Luphia) 讀取元資料
     const metaPath = path.join(shardsDir, "metadata.json");
     const metaBuffer: Buffer = await fs.readFile(metaPath);
 
     // Info: (20251028 - Luphia) 型別安全的解析
-    const metaData: { originalFileSize?: number } = JSON.parse(
+    const metaData: { originalFileSize?: number; shardSize?: number } = JSON.parse(
       metaBuffer.toString(),
     );
+
     if (typeof metaData.originalFileSize !== "number") {
       throw new Error("metadata 格式錯誤，缺少 originalFileSize");
     }
+
     originalFileSize = metaData.originalFileSize;
-    console.log(`[恢復] 目標檔案大小: ${originalFileSize} bytes`);
+    // Info: (20260415 - Luphia) 優先讀取 metadata 的 shardSize，若無則降級為預設最大值
+    currentShardSize = metaData.shardSize || MAX_SHARD_SIZE;
+
+    console.log(`[恢復] 目標檔案大小: ${originalFileSize} bytes, 預期切片大小: ${currentShardSize} bytes`);
   } catch (err: unknown) {
     console.error(
       `[錯誤] 讀取 metadata 失敗，檔案無法恢復: ${err instanceof Error ? err.message : String(err)}`,
@@ -222,12 +235,12 @@ export async function recoverFile(
       let shardsAvailableThisStripe: number = 0;
       let totalBytesReadThisStripe: number = 0;
 
-      // Info: (20251028 - Luphia) 嘗試從所有存在的檔案存取器中讀取 4MB
+      // Info: (20260415 - Luphia) 改用 currentShardSize 讀取每個切片
       const readPromises = readerHandles.map((handle, i) => {
         if (handle) {
-          const buffer = Buffer.alloc(SHARD_SIZE);
+          const buffer = Buffer.alloc(currentShardSize);
           readBuffers[i] = buffer;
-          return handle.read(buffer, 0, SHARD_SIZE, null);
+          return handle.read(buffer, 0, currentShardSize, null);
         }
         return Promise.resolve(null);
       });
@@ -236,10 +249,10 @@ export async function recoverFile(
 
       // Info: (20251028 - Luphia) 檢查讀取結果
       for (let i = 0; i < TOTAL_SHARDS; i++) {
-        const result = results[i]; // Info: (20251028 - Luphia) 型別為 FileHandle.ReadResult | null
+        const result = results[i];
         if (result && result.bytesRead > 0) {
-          if (result.bytesRead !== SHARD_SIZE) {
-            throw new Error(`切片 ${i + 1} 損毀: 讀取到不完整的 4MB 區塊。`);
+          if (result.bytesRead !== currentShardSize) {
+            throw new Error(`切片 ${i + 1} 損毀: 讀取到不完整的區塊 (${result.bytesRead} / ${currentShardSize} bytes)。`);
           }
           shards[i] = readBuffers[i];
           shardsAvailableThisStripe++;
@@ -249,17 +262,17 @@ export async function recoverFile(
 
       if (totalBytesReadThisStripe === 0) {
         console.log("[恢復] 已到達所有切片檔案結尾。");
-        break; // Info: (20251028 - Luphia) 完成檔案，結束迴圈
+        break;
       }
 
       if (shardsAvailableThisStripe < DATA_SHARDS) {
         throw new Error(`恢復中途失敗。可用的切片不足 ${DATA_SHARDS} (5) 個。`);
       }
 
-      // Info: (20251028 - Luphia) 填充遺失的切片 (用空 Buffer 佔位)
+      // Info: (20260415 - Luphia) 填充遺失的切片
       for (let i = 0; i < TOTAL_SHARDS; i++) {
         if (shards[i] === null) {
-          shards[i] = Buffer.alloc(SHARD_SIZE);
+          shards[i] = Buffer.alloc(currentShardSize);
         }
       }
 

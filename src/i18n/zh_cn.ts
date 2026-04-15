@@ -1,5 +1,14 @@
 export const zhCn = {
   common: {
+    batch_download: "批次下载",
+    download: "下载",
+    downloading: "下载中...",
+    zipping: "压缩中...",
+    start_date: "开始日期",
+    end_date: "结束日期",
+    error: {
+      download_failed: "下载失败",
+    },
     actions: "操作",
     note: "备注",
     optional_in_parentheses: "选填",
@@ -32,7 +41,8 @@ export const zhCn = {
       page_info: "第 {{current}} 页，共 {{total}} 页",
     },
     testing_env_banner: {
-      message: "⚠️ 本环境为开发与展示用测试环境，资料不定期清空，请勿用作生产环境。正式环境请前往 ",
+      message:
+        "⚠️ 本环境为开发与展示用测试环境，资料不定期清空，请勿用作生产环境。正式环境请前往 ",
     },
     ai_confidence: {
       title: "AI 信心度",
@@ -71,7 +81,8 @@ export const zhCn = {
   dashboard: {
     title: "资讯战情室",
     empty_state_title: "暂无数据",
-    empty_state_desc: "在所选期间内暂无数据。您可以尝试切换不同的时间区间，或是前往凭证模块上传新数据。",
+    empty_state_desc:
+      "在所选期间内暂无数据。您可以尝试切换不同的时间区间，或是前往凭证模块上传新数据。",
     empty_state_cta: "上传凭证/数据",
     executive_summary: "经营决策顶层指标",
     auto_refresh: "自动更新",
@@ -210,7 +221,8 @@ export const zhCn = {
     reg_failed: "注册失败",
     scroll_to_agree: "请详细阅览相关条文",
     unregistered_confirm_title: "账户未注册",
-    unregistered_confirm_desc: "系统找不到此 Passkey 对应的账户。您是否要使用此设备注册一个新账户？",
+    unregistered_confirm_desc:
+      "系统找不到此 Passkey 对应的账户。您是否要使用此设备注册一个新账户？",
     unregistered_confirm_yes: "好，创建账户",
     unregistered_confirm_no: "取消",
   },
@@ -616,7 +628,8 @@ export const zhCn = {
       rename_success: "重新命名成功",
       delete_success: "信用卡已删除",
       delete_confirm_title: "确认删除信用卡？",
-      delete_confirm_desc: "这将会移除此张信用卡，未来将无法再选用此卡片进行扣款。",
+      delete_confirm_desc:
+        "这将会移除此张信用卡，未来将无法再选用此卡片进行扣款。",
       cancel: "取消",
       save: "保存",
       edit_details: "编辑详细资料",
@@ -638,8 +651,9 @@ export const zhCn = {
       source_analysis: "分析服务使用",
       source_chat: "AI 咨询服务",
       source_checkin: "每日签到奖励",
-      source_registration: "注册奖励"
-    }
+      source_registration: "注册奖励",
+      source_admin_issued: "系统管理员发放",
+    },
   },
   sidebar: {
     modules: "功能模块",
@@ -659,45 +673,58 @@ export const zhCn = {
         title: "产业发展 (Industry Development)",
         desc: "这个模块的分析层级是「宏观行业」与「中观供应链」，因此关键字应该围绕在产业板块、次产业、技术趋势或特定供应链。",
         sectors_title: "大分类板块 (Sectors)：",
-        sectors_desc: "科技 (Technology)、医疗保健 (Healthcare)、金融 (Financials)、非必需消费品 (Consumer Discretionary)、能源 (Energy)。",
+        sectors_desc:
+          "科技 (Technology)、医疗保健 (Healthcare)、金融 (Financials)、非必需消费品 (Consumer Discretionary)、能源 (Energy)。",
         sub_title: "次产业 / 供应链节点 (Sub-industries / Supply Chains)：",
-        sub_desc: "半导体制造 (Semiconductor Manufacturing)、IC设计 (IC Design)、电动车电池 (EV Batteries)、云端基础设施 (Cloud Infrastructure)、生技制药 (Biotechnology)。",
+        sub_desc:
+          "半导体制造 (Semiconductor Manufacturing)、IC设计 (IC Design)、电动车电池 (EV Batteries)、云端基础设施 (Cloud Infrastructure)、生技制药 (Biotechnology)。",
         trends_title: "新兴趋势 / 概念股 (Emerging Trends / Concepts)：",
-        trends_desc: "AI 服务器 (AI Servers)、硅光子 (Silicon Photonics)、固态电池 (Solid-State Batteries)、低轨卫星 (Low Earth Orbit Satellites)、ESG 绿能 (ESG Green Energy)。"
+        trends_desc:
+          "AI 服务器 (AI Servers)、硅光子 (Silicon Photonics)、固态电池 (Solid-State Batteries)、低轨卫星 (Low Earth Orbit Satellites)、ESG 绿能 (ESG Green Energy)。",
       },
       smart_enterprise_rating: {
         title: "智能企业评级 (Smart Enterprise Rating)",
         desc: "这个模块的分析层级是「微观个体」，也就是针对单一公司进行财务与信用体检。因此，关键字必须是精确的公司名称、股票代码或统一编号。",
         us_tickers_title: "美股标的 (US Tickers / Company Names)：",
-        us_tickers_desc: "AAPL 或 Apple (苹果)\nNVDA 或 NVIDIA (英伟达)\nMSFT 或 Microsoft (微软)\nTSLA 或 Tesla (特斯拉)",
+        us_tickers_desc:
+          "AAPL 或 Apple (苹果)\nNVDA 或 NVIDIA (英伟达)\nMSFT 或 Microsoft (微软)\nTSLA 或 Tesla (特斯拉)",
         tw_tickers_title: "台股 / ADR 标的 (若系统支援跨国或美国存托凭证)：",
-        tw_tickers_desc: "TSM (台积电 ADR)\n2330 或 台湾积体电路制造 (若系统包含台湾数据库)",
+        tw_tickers_desc:
+          "TSM (台积电 ADR)\n2330 或 台湾积体电路制造 (若系统包含台湾数据库)",
         fuzzy_title: "企业属性分类 (若系统支援模糊搜寻)：",
-        fuzzy_desc: "有时也可以输入「苹果供应链」、「Tier 1 车用零组件厂」来筛选出一批目标企业进行批量评级。",
+        fuzzy_desc:
+          "有时也可以输入「苹果供应链」、「Tier 1 车用零组件厂」来筛选出一批目标企业进行批量评级。",
         analyst_view_title: "💡 分析师视角：",
-        analyst_view_desc: "实务上，管理层最常在这里输入「主要竞争对手」、「关键供应商」或「潜在并购标的」的代码，用以监控供应链断链风险或进行同业财务指标（如 ROE、毛利率）的 Benchmarking（标杆测试）。"
+        analyst_view_desc:
+          "实务上，管理层最常在这里输入「主要竞争对手」、「关键供应商」或「潜在并购标的」的代码，用以监控供应链断链风险或进行同业财务指标（如 ROE、毛利率）的 Benchmarking（标杆测试）。",
       },
       financial_product_rating: {
         title: "金融商品评级 (Financial Product Rating)",
         desc: "这个模块针对的是可交易的「金融资产」与「投资组合」，关键字应为具体的商品代码、基金名称或资产类别。",
         etf_title: "指数型基金 / ETF (ETFs)：",
-        etf_desc: "SPY 或 VOO (追踪标普500指数)\nQQQ (追踪纳斯达克100指数)\nTLT (20年期以上美国公债 ETF)",
+        etf_desc:
+          "SPY 或 VOO (追踪标普500指数)\nQQQ (追踪纳斯达克100指数)\nTLT (20年期以上美国公债 ETF)",
         mutual_funds_title: "主动型基金 (Mutual Funds)：",
-        mutual_funds_desc: "输入特定基金公司的产品名称，例如：富达全球科技基金、联博全高收。",
+        mutual_funds_desc:
+          "输入特定基金公司的产品名称，例如：富达全球科技基金、联博全高收。",
         bonds_title: "特定债券 / 固定收益商品 (Bonds)：",
-        bonds_desc: "美国十年期公债 (US 10-Year Treasury)、特定公司的公司债代码（如 Apple 2030 到期公司债）、投资级公司债 (IG Bonds)、高收益债 (High Yield Bonds / Junk Bonds)。",
+        bonds_desc:
+          "美国十年期公债 (US 10-Year Treasury)、特定公司的公司债代码（如 Apple 2030 到期公司债）、投资级公司债 (IG Bonds)、高收益债 (High Yield Bonds / Junk Bonds)。",
         derivatives_title: "衍生性商品或原物料 (Commodities / Derivatives)：",
-        derivatives_desc: "黄金 (Gold / GLD)、布兰特原油 (Brent Crude)、比特币 (Bitcoin / IBIT)。",
+        derivatives_desc:
+          "黄金 (Gold / GLD)、布兰特原油 (Brent Crude)、比特币 (Bitcoin / IBIT)。",
         analyst_view_title: "💡 分析师视角：",
-        analyst_view_desc: "在这里输入关键字后，系统通常会吐出夏普值 (Sharpe Ratio)、最大回撤 (Max Drawdown) 等量化风险指标。这对于企业的「财务部」在管理闲置资金（Treasury Management）或配置避险部位时，是非常重要的决策依据。"
-      }
+        analyst_view_desc:
+          "在这里输入关键字后，系统通常会吐出夏普值 (Sharpe Ratio)、最大回撤 (Max Drawdown) 等量化风险指标。这对于企业的「财务部」在管理闲置资金（Treasury Management）或配置避险部位时，是非常重要的决策依据。",
+      },
     },
     company_input: {
       label: "企业名称或统一社会信用代码",
       placeholder: "输入全称、简称或统一代码...",
       searching: "搜索中...",
       not_found: "找不到此公司，请尝试输入更完整的全称或统一代码。",
-      missing_tax_id_desc: "此账本（{{name}}）尚未设置统一对应代码，内部数据分析需使用统一代码。请在此补齐设置：",
+      missing_tax_id_desc:
+        "此账本（{{name}}）尚未设置统一对应代码，内部数据分析需使用统一代码。请在此补齐设置：",
     },
     title: "分析报告",
     internal_analysis: "内部数据分析",
@@ -789,21 +816,23 @@ export const zhCn = {
       view_tx: "查看交易",
     },
     share: {
-      button: '分享报告',
-      modal_title: '分享对外公开报告',
-      modal_desc: '任何人拥有此链接皆可检视该报告的“摘要与去识别化版本”。机密金额与详细供应商信息已被系统安全隐藏。',
-      copy: '复制',
-      copied: '已复制到剪贴板',
-      revoke: '撤销此分享链接',
-      revoked: '已成功撤销分享链接',
-      done: '完成',
-      public_badge: '公开摘要报告',
-      shared_by: '由 {{name}} 分享',
-      security_intercept: '系统安全拦截',
-      security_desc: '此类型的报告尚未开放公开分享，或数据格式异常。',
-      cta_title: '想为您的企业产生专属的深度分析报告吗？',
-      cta_desc: 'iSunFA 透过前沿 AI 技术，为您提供包含碳健检、财务评级、合规审查等全方位智能会计解决方案。',
-      cta_button: '了解 iSunFA 阳光智能会计'
+      button: "分享报告",
+      modal_title: "分享对外公开报告",
+      modal_desc:
+        "任何人拥有此链接皆可检视该报告的“摘要与去识别化版本”。机密金额与详细供应商信息已被系统安全隐藏。",
+      copy: "复制",
+      copied: "已复制到剪贴板",
+      revoke: "撤销此分享链接",
+      revoked: "已成功撤销分享链接",
+      done: "完成",
+      public_badge: "公开摘要报告",
+      shared_by: "由 {{name}} 分享",
+      security_intercept: "系统安全拦截",
+      security_desc: "此类型的报告尚未开放公开分享，或数据格式异常。",
+      cta_title: "想为您的企业产生专属的深度分析报告吗？",
+      cta_desc:
+        "iSunFA 透过前沿 AI 技术，为您提供包含碳健检、财务评级、合规审查等全方位智能会计解决方案。",
+      cta_button: "了解 iSunFA 阳光智能会计",
     },
   },
   ai_consultation_room: {
@@ -1238,7 +1267,8 @@ export const zhCn = {
     },
     loading: "载入中...",
     no_records: "暂无数据",
-    no_records_desc: "在所选期间内暂无ESG纪录。您可以尝试切换不同的时间区间，或是前往凭证模块上传新数据。",
+    no_records_desc:
+      "在所选期间内暂无ESG纪录。您可以尝试切换不同的时间区间，或是前往凭证模块上传新数据。",
     no_records_cta: "上传凭证/数据",
     no_filter_results: "找不到符合条件的纪录",
     no_filter_results_desc: "请尝试调整搜索关键字或筛选条件",
@@ -1470,7 +1500,8 @@ export const zhCn = {
         filter_btn: "筛选条件",
         verify_all: "一键核对",
         no_data: "暂无数据",
-        no_data_desc: "在所选期间内暂无凭证数据。您可以尝试切换不同的时间区间，或是前往凭证模块上传新数据。",
+        no_data_desc:
+          "在所选期间内暂无凭证数据。您可以尝试切换不同的时间区间，或是前往凭证模块上传新数据。",
         no_data_cta: "上传凭证/数据",
         no_filter_results: "找不到符合条件的纪录",
         no_filter_results_desc: "请尝试调整搜索关键字或筛选条件",
@@ -1548,15 +1579,17 @@ export const zhCn = {
       },
     },
   },
-  "verify": {
-    "verify_modal": {
+  verify: {
+    verify_modal: {
       title: "确认核对？",
-      message: "您确定要核对此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
+      message:
+        "您确定要核对此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
       confirm: "确认核对",
     },
-    "unverify_modal": {
+    unverify_modal: {
       title: "确认退回？",
-      message: "您确定要退回此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
+      message:
+        "您确定要退回此{{type}}吗？变更的内容将会储存，请确认资料是否无误。",
       confirm: "确认退回",
     },
     status: {
@@ -1572,7 +1605,7 @@ export const zhCn = {
       journal: "日记账",
       voucher: "传票",
       esg: "碳排记录",
-    }
+    },
   },
   esg: {
     detail_modal: {
@@ -1600,7 +1633,8 @@ export const zhCn = {
     web3Address: "Web3 钱包地址",
     role: "角色",
     fido2Requirement: "FIDO2 验证要求：",
-    fido2RequirementText: "您需要通过通行密钥 (Passkey) 进行验证并在链上签署此交易。",
+    fido2RequirementText:
+      "您需要通过通行密钥 (Passkey) 进行验证并在链上签署此交易。",
     signing: "签署中...",
     inviteViaFido2: "使用 FIDO2 发送邀请",
     roles: {
@@ -1623,7 +1657,7 @@ export const zhCn = {
       errorAccept: "接受邀请失败",
       errorRole: "更改角色失败",
       errorRemove: "移除成员失败",
-    }
+    },
   },
   esg_report: {
     unit: "kgCO2e",
@@ -1648,7 +1682,6 @@ export const zhCn = {
     scope3_title: "范畴三 (供应链排放)",
   },
   report_view: {
-
     title: "报表编制",
     desc: "一键生成专业会计报表与碳盘查报告，即时掌握企业现况。",
     print_note_title: "财务指标注解与判断标准",
@@ -1656,7 +1689,8 @@ export const zhCn = {
     period_selection: "期间选择",
     year_selection: "年份选择",
     generate_btn: "生成报表",
-    hint_verified_count: "系统将根据目前已核对的 {{count}} 笔传票资讯进行即时汇整。",
+    hint_verified_count:
+      "系统将根据目前已核对的 {{count}} 笔传票资讯进行即时汇整。",
     empty_report_title: "尚未产出报表",
     empty_report_desc: "请设定需要的报表参数，iSunFA 马上为您产出报表",
     unknown_account_book: "(未知的帐簿)",
@@ -1673,11 +1707,12 @@ export const zhCn = {
       q2: "第二季",
       q3: "第三季",
       q4: "第四季",
-    }
+    },
   },
   cash_flow_statement_view: {
     loading_title: "正在为您生成现金流量表",
-    loading_desc: "系統正在结算营业活動、投资活動與融资活動的现金流量，並計算相關財务指标，请稍候...",
+    loading_desc:
+      "系統正在结算营业活動、投资活動與融资活動的现金流量，並計算相關財务指标，请稍候...",
     error_title: "现金流量表生成失败",
     error_desc: "請确认该期间内是否有足够的核发传票资料，或是稍后再重新尝试。",
     metric_fcf_title: "自由现金流",
@@ -1690,16 +1725,21 @@ export const zhCn = {
     metric_ending_balance_desc: "本期結束时的现金部位",
     note_fcf_type: "流動性",
     note_fcf_main: "自由现金流 = 营业现金流 - 资本支出。",
-    note_fcf_sub: "衡量企业扣除资本支出后可自由運用的现金，建議大於 0，表示償债能力良好。",
+    note_fcf_sub:
+      "衡量企业扣除资本支出后可自由運用的现金，建議大於 0，表示償债能力良好。",
     note_ocf_ratio_type: "償债能力",
     note_ocf_ratio_main: "营业现金流对流动负债比率 = 营业现金流 / 流动负债。",
-    note_ocf_ratio_sub: "衡量企业短期償还债务的能力，建議大於 100% ，表示償债能力良好。",
+    note_ocf_ratio_sub:
+      "衡量企业短期償还债务的能力，建議大於 100% ，表示償债能力良好。",
     note_cf_adequacy_type: "償债能力",
     note_cf_adequacy_main: "现金流量对总资产比率 = 营业现金流 / 总资产。",
-    note_cf_adequacy_sub: "衡量企业营业现金是否足以支應资本支出及还债，建議大於 100%，表示償债能力良好。",
+    note_cf_adequacy_sub:
+      "衡量企业营业现金是否足以支應资本支出及还债，建議大於 100%，表示償债能力良好。",
     note_ending_balance_type: "償债能力",
-    note_ending_balance_main: "期末现金余额 = 营业现金流 + 投资现金流 + 融资现金流。",
-    note_ending_balance_sub: "衡量企业本期結束时的现金部位，建議大於 0 ，表示償债能力良好。",
+    note_ending_balance_main:
+      "期末现金余额 = 营业现金流 + 投资现金流 + 融资现金流。",
+    note_ending_balance_sub:
+      "衡量企业本期結束时的现金部位，建議大於 0 ，表示償债能力良好。",
     section_op_inv: "营业與投资活動",
     section_ratio: "占比%",
     section_operating: "营业活動之现金流量",
@@ -1737,7 +1777,8 @@ export const zhCn = {
     note_dte_main: "负债权益比 = 总负债 / 总权益。",
     note_dte_sub: "反映企业由所有者与债权人提供的资金比例，建议小于 100%。",
     note_ltftfa_type: "财务结构",
-    note_ltftfa_main: "长期资金占固定资产比 = (权益 + 非流动负债) / 固定资产净额。",
+    note_ltftfa_main:
+      "长期资金占固定资产比 = (权益 + 非流动负债) / 固定资产净额。",
     note_ltftfa_sub: "衡量固定资产是否由稳定的长期资金支应，建议大于 100%。",
     note_nwps_type: "获利能力",
     note_nwps_main: "每股净值 = 总权益 / 总发行股数。",
@@ -1750,7 +1791,8 @@ export const zhCn = {
     note_iar_sub: "衡量企业无形资产在总资产中的比重，比例过高等同风险增加。",
 
     loading_title: "正在为您生成资产负债表",
-    loading_desc: "系统正在结算资产、负债与权益科目，并计算相关财务指标，请稍候...",
+    loading_desc:
+      "系统正在结算资产、负债与权益科目，并计算相关财务指标，请稍候...",
     error_title: "资产负债表生成失败",
     error_desc: "请确认该期间内是否有足够的核发传票资料，或是稍后再重新尝试。",
     assets_title: "资产",
@@ -1783,12 +1825,13 @@ export const zhCn = {
     note_em_sub: "衡量企业财务杠杆程度，建议小于 2 ，表示财务杠杆程度良好。",
     note_wc_type: "流动性",
     note_wc_main: "营运资金 = 流动资产 - 流动负债。",
-    note_wc_sub: "衡量企业短期偿债能力，建议大于 0，表示偿债能力良好。"
+    note_wc_sub: "衡量企业短期偿债能力，建议大于 0，表示偿债能力良好。",
   },
 
   income_statement_view: {
     loading_title: "正在为您生成综合损益表",
-    loading_desc: "系统正在结算是收入、支出与税后净利科目，并计算相关财务指标，请稍候...",
+    loading_desc:
+      "系统正在结算是收入、支出与税后净利科目，并计算相关财务指标，请稍候...",
     error_title: "综合损益表生成失败",
     error_desc: "请确认该期间内是否有足够的核发传票数据，或是稍后再重新尝试。",
     metric_gm_title: "毛利率",
@@ -1801,16 +1844,20 @@ export const zhCn = {
     metric_ebitda_desc: "可分配之现金获利指标",
     note_gm_type: "获利能力",
     note_gm_main: "毛利率 = (营业收入 - 营业成本) / 营业收入。",
-    note_gm_sub: "衡量企业产品或服务的初始获利能力，建议大于 50%，表示产品或服务的初始获利能力良好。",
+    note_gm_sub:
+      "衡量企业产品或服务的初始获利能力，建议大于 50%，表示产品或服务的初始获利能力良好。",
     note_om_type: "获利能力",
     note_om_main: "营益率 = 营业利益 / 营业收入。",
-    note_om_sub: "衡量企业本业营运获利能力，建议大于 15%，表示本业营运获利能力良好。",
+    note_om_sub:
+      "衡量企业本业营运获利能力，建议大于 15%，表示本业营运获利能力良好。",
     note_npm_type: "获利能力",
     note_npm_main: "净利率 = 税后净利 / 营业收入。",
-    note_npm_sub: "衡量企业最终税后实质获利能力，建议大于 10%，表示最终税后实质获利能力良好。",
+    note_npm_sub:
+      "衡量企业最终税后实质获利能力，建议大于 10%，表示最终税后实质获利能力良好。",
     note_ebitda_type: "获利能力",
     note_ebitda_main: "EBITDA 利润率 = EBITDA / 营业收入。",
-    note_ebitda_sub: "衡量企业可分配之现金获利指标，建议大于 15%，表示可分配之现金获利指标良好。",
+    note_ebitda_sub:
+      "衡量企业可分配之现金获利指标，建议大于 15%，表示可分配之现金获利指标良好。",
     section_op: "营业活动",
     section_percent_rev: "% 营收",
     section_rev: "营业收入",
@@ -1823,5 +1870,268 @@ export const zhCn = {
     section_ibt: "税前净利",
     section_tax: "所得税费用",
     section_ni: "本期净利",
+  },
+  admin_setup: {
+    header: {
+      title: "系统部署",
+      subtitle: "系统初始化与安全集群设置",
+      restart: "重新启动",
+      reset: "重置",
+      restart_title: "重新开始设置",
+      restart_desc:
+        "您确定要重新开始设置流程吗？这将从步骤 1 重新审视与执行所有的初始化操作。",
+    },
+    step_card: {
+      exec_failed: "执行失败",
+      reset_setup: "重置流程",
+    },
+    sidebar: {
+      milestones: "设置里程碑",
+    },
+    step1: {
+      title: "步骤 1：验证 Docker 引擎",
+      desc: "企业版系统需要本地 Docker 环境（Docker Desktop 或 Colima）来部署容器化服务。",
+      active: "Docker 引擎运行中",
+      start_btn: "启动 Docker 引擎",
+      err_not_installed: "未安装 Docker 或未在 PATH 中找到。",
+      err_not_running:
+        "Docker 已安装但后台服务未运行。请手动启动 Docker 引擎（例如 Docker Desktop 或 OrbStack）并重试。",
+      validating: "验证与启动中...",
+      retry_detection: "重试引擎检测",
+      start_detection: "开始检测",
+      host_hw: "主机硬件识别信息",
+      os: "操作系统",
+      compute: "计算核心",
+      cores: "核心",
+      memory_alloc: "内存配置",
+      mem_detected: "GB 总内存已检测",
+      docker_running: "Docker 引擎运行中",
+    },
+    step2: {
+      title: "步骤 2：启动基础设施",
+      desc: "启动本地网络与容器并验证各服务的健康状态。",
+      retry_btn: "重试验证",
+      nodes: "基础设施节点",
+      starting_title: "正在启动服务...",
+      starting_desc: "Docker Compose 正在启动网关、数据库、存储与区块链节点...",
+      desc_db: "数据库节点（关系型数据与事务）",
+      desc_cache: "缓存服务（高速键值存储）",
+      desc_storage: "去中心化存储（IPFS 内容寻址）",
+      desc_evm: "EVM 区块链节点（Layer 2 / 本地网络）",
+      desc_proxy: "反向代理（网关与边缘路由器）",
+      desc_app: "应用程序容器",
+      err_start: "启动 docker-compose 失败。输出信息：",
+      unknown: "未知",
+    },
+    step3: {
+      title: "步骤 3：注入资金至核心钱包",
+      desc: "要部署智能合约，核心系统钱包需要有初始的区块链资金。",
+      awaiting: "等待初始资金汇入",
+      awaiting_desc:
+        "请转入一些原生货币（如 ISUN）到下方的核心部署者地址。余额充足后，后续部署将自动执行。",
+      deployer_address: "核心部署者地址",
+      waiting_deposit: "等待存款中...",
+      checking_network: "正在检查网络连接",
+      checking_desc: "验证本地区块链节点连接中...",
+      refresh_btn: "刷新余额",
+      force_refresh_btn: "强制刷新",
+      funded_title: "已注入资金",
+      err_wallet_info: "获取钱包信息失败：",
+      err_mining: "切换挖矿状态失败：",
+      err_refresh: "刷新余额失败：",
+      node_mining: "节点挖矿",
+      active: "运行中",
+      off: "已停止",
+      mining_on: "节点正在使用 5 个线程进行挖矿",
+      mining_off: "挖矿目前已停用",
+    },
+    step4: {
+      title: "步骤 4：部署企业级合约",
+      desc: "编译并部署身份注册、积分金库及订阅管理员合约。",
+      completed: "Hardhat 部署已完成",
+      extracting: "正在将部署地址提取至 .env 配置文件...",
+      deploy_btn: "部署合约",
+      retry_btn: "重试部署",
+      re_deploy_btn: "重新部署",
+      init_msg: "正在初始化 EVM 部署...\n等待编译器中...",
+      deploying: "部署中",
+      pending: "等待中",
+      err_deploy: "部署合约失败。输出信息：",
+    },
+    step5: {
+      title: "步骤 5：初始化数据库",
+      desc: "创建应用程序共用数据库、生成高强度密码，并推送 Prisma 结构。",
+      completed: "数据库已初始化",
+      init_btn: "初始化与推送结构",
+      retry_btn: "重试数据库初始化",
+      db_schema: "数据库结构",
+      tables_synced: "已同步的数据表数量",
+      schema_ready: "数据库结构已成功推送且就绪！",
+      db_connection: "数据库连接",
+      host_domain: "主机域名",
+      port: "端口",
+      root_pwd: "Root 密码",
+      reset_root_pwd: "重置 Root 密码",
+      new_pwd_placeholder: "输入新的高强度密码",
+      cancel_btn: "取消",
+      save_sync_btn: "保存并同步",
+      err_init: "数据库初始化失败。输出信息：",
+      err_reset: "重置数据库密码失败。输出信息：",
+    },
+    step6: {
+      title: "步骤 6：注册服务器 SUPER ADMIN",
+      desc: "通过配置高强度的 FIDO2 密钥来建立初始化的 SUPER ADMIN 钱包。",
+      create_btn: "创建 SUPER ADMIN 密钥",
+      bind_admin_btn: "绑定新管理员",
+      master_identity: "主身份识别 (SUPER ADMIN)",
+      secondary_admins: "次级管理员",
+      add_admin: "添加管理员",
+      placeholder_admin: "例如：IT 部门管理员",
+      placeholder_super: "例如：ISUNFA 系统管理员",
+      none_yet: "目前还没有。",
+      modal_add_title: "添加次级管理员",
+      modal_add_desc: "在注册 FIDO2 密钥之前，请为新的管理员输入描述性名称。",
+      admin_name_placeholder: "管理员名称（如：人力经理 / 安全部门）",
+      use_existing_key: "使用现有密钥",
+      register_new_key: "注册新密钥",
+      replace_with_existing_key: "替换为现有密钥",
+      replace_with_new_key: "替换为新密钥",
+      register_btn: "注册管理密钥",
+      replace_super_btn: "替换 SUPER ADMIN",
+      modal_replace_title: "替换 SUPER ADMIN",
+      modal_replace_warn:
+        "警告：这将不可逆地降级当前启用的 Super Admin 权限，并指派一个新的主身份。",
+      modal_replace_desc: "请命名您的新主身份 FIDO2 密钥：",
+      master_name_placeholder: "主身份名称",
+      current: "当前身份：",
+      sign_replace_btn: "签署替换请求",
+      confirm_pwd: "确认密码",
+      modal_del_title: "删除次要管理员",
+      delete_admin: "删除管理员",
+      task_init: "正在初始化后台任务...",
+      task_auth_challenge: "正在请求 FIDO2 登录挑战...",
+      task_wait_bio: "等待生物识别或安全密钥交互...",
+      task_auth_record: "正在验证身份验证记录...",
+      err_auth_record: "无法验证身份验证记录。",
+      task_req_fido2: "正在请求 FIDO2 注册挑战...",
+      task_process_cred: "正在处理凭据...",
+      task_write_config: "正在写入主要身份配置...",
+      err_create_super: "创建超级管理员 (SUPER ADMIN) 配置失败。",
+      err_fido2_reg: "FIDO2 注册失败。",
+      task_write_secondary: "正在写入次要管理员配置...",
+      err_create_admin: "创建管理员配置失败。",
+      err_reg: "注册失败。",
+      unknown_admin: "未知的管理员",
+      task_revoke: "正在撤销管理员...",
+      err_del_admin: "删除管理员失败。",
+      err_del: "删除失败。",
+      super_admin_found: "检测到超级管理员配置",
+      super_admin_found_desc:
+        "存在有效的超级管理员配置，但需要授权才能解锁管理功能。",
+      super_admin_secured: "超级管理员已成功注册并获得保护。",
+      registered: "注册时间：",
+      pending_sync: "等待同步中",
+      unavailable_sync: "网络数据无法获取",
+      identity_est: "身份已在本地节点上建立。",
+      loading_identity: "正在加载身份数据...",
+      no_secondary: "找不到次要管理员。",
+      cancel_btn: "取消",
+      continue_fido2_btn: "继续使用 FIDO2",
+      modal_del_msg: "您确定要删除管理员 {{name}} 吗？此操作将无法撤销。",
+      confirm_del_btn: "删除",
+    },
+    step7: {
+      title: "步骤 7：设置外部集成",
+      desc: "设置系统的公开访问域名与外部 API 集成。",
+      domain_label: "公开应用程序域名",
+      domain_placeholder: "例如：https://isunfa.cafeca.io",
+      ga_label: "Google 分析标识码 (GA-ID)",
+      ga_placeholder: "G-XXXXXXXXXX",
+      gemini_label: "Gemini API 密钥",
+      gemini_placeholder: "AI 模型专用密钥",
+      oen_token_label: "OEN 访问 Token",
+      oen_token_placeholder: "OEN Sync Token",
+      oen_merchant_label: "OEN 商家 ID",
+      oen_merchant_placeholder: "OEN 商家代码",
+      domain_hint: "绝对路由和 OAuth 回调所需的基础端点。",
+      ga_hint: "可选的遥测集成功能，用于追踪网页流量。",
+      gemini_hint:
+        "驱动 LLM 向量搜索引擎。如果省略，AI 助手将在备用的 Mock 模式下运行。",
+      oen_hint:
+        "法币入金操作的必要条件。可以生成动态发票并在链下记录付款状态。",
+      core_system: "核心生态系统",
+      ai_consult: "AI 咨询服务",
+      payment_gateway: "OEN 支付网关",
+      finalizing_btn: "正在完成集成设置...",
+      saved_btn: "设置已保存！",
+      save_btn: "保存并保护设置",
+      err_save: "保存设置失败",
+      updated: "配置已更新",
+    },
+    step8: {
+      title: "步骤 8：完成设置与重启",
+      desc: "通过 FIDO2 签署所有环境变量，将企业部署封装并确保安全不被篡改。",
+      sign_save_btn: "签署并保存配置",
+      signing_status: "正在签署与完成...",
+      immutable: "配置文件不可篡改验证",
+      immutable_desc:
+        "您的部署配置文件将由密码学技术绑定到 SUPER ADMIN 密钥中。任何对于 .env 配置文件的变更都必须重新签名才能启动服务器。",
+      preview: "基础配置预览",
+      ready_title: "企业级系统已就绪",
+      ready_desc:
+        "系统配置文件已完成安全签名。后台基础设施现已正式启用并处于受 FIDO2 全面保护的运行状态。",
+      err_challenge: "生成签名挑战失败。",
+      err_finalize: "完成配置失败：",
+      err_sign: "签名失败：",
+      verify_msg:
+        "验证完成。系统依赖 WebAuthn 证明来防止篡改。请在签名之前查看下方的环境配置。",
+    },
+    reboot: {
+      title: "正在应用更改并重启系统",
+      desc: "您将自动返回首页...",
+    },
+    page: {
+      invalid_status: "无效的 SUPER ADMIN 验证状态。",
+      fatal: "致命的系统错误",
+      fatal_desc: "加载企业设置向导时发生不可预期的错误：",
+      retry: "重试初始化",
+      init: "正在初始化设置引擎中...",
+    },
+  },
+  admin_member: {
+    page: {
+      title: "用户与点数管理",
+      subtitle:
+        "查看系统中的所有注册用户，并管理他们的点数余额 (ERC3643 Treasury)。",
+      refresh: "刷新",
+      refresh_list_aria: "刷新列表",
+      th_user: "用户名称与地址",
+      th_role: "身份权限",
+      th_joined_at: "加入时间",
+      th_balance: "当前余额",
+      th_action: "操作",
+      no_users: "系统中尚无用户",
+      unnamed_user: "未命名用户",
+      refresh_balance_aria: "刷新余额",
+      issue_points_btn: "发放点数",
+      role_super_admin: "超级管理员",
+      role_admin: "管理员",
+      role_user: "一般用户",
+
+    },
+
+    modal_issue: {
+      title: "发放系统点数",
+      target_user: "目标用户",
+      unnamed_user: "未命名用户",
+      amount_label: "发放数量 (Points)",
+      amount_placeholder: "例如：500",
+      err_amount: "点数必须大于 0",
+      success_msg: "发放成功",
+      err_msg: "发放失败",
+      processing: "处理中...",
+      issued: "已发放",
+      confirm_btn: "确认发放",
+    },
   },
 };

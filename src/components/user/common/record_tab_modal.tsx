@@ -7,13 +7,14 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { X, BookCopy, FileText, Leaf, ImageIcon, Trash2, Undo2 } from "lucide-react";
+import { X, BookCopy, FileText, Leaf, ImageIcon, Trash2, Undo2, Download } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import dynamic from "next/dynamic";
 import { IJournal } from "@/interfaces/journal";
 import { IVoucher } from "@/interfaces/voucher";
 import { IEsgRecord } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
+import { downloadFile } from "@/lib/file_operator";
 
 // Info: (20260327 - Luphia) 共用 Loading 畫面
 const TabLoading = () => (
@@ -157,6 +158,35 @@ export default function RecordTabModal({
     if (e.file) setFile(e.file);
   }, [onEsgUpdate]);
 
+  const [isDownloadingFile, setIsDownloadingFile] = useState(false);
+  const handleDownloadOriginal = useCallback(async () => {
+    if (!file?.hash) return;
+    setIsDownloadingFile(true);
+    try {
+      await downloadFile(file.hash, {
+        onSuccess: (blob, filename) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download = file.fileName || filename || "download";
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        },
+        onError: (err) => {
+          console.error("Failed to download file:", err);
+          alert(t("common.error.download_failed") || "Download failed");
+        }
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDownloadingFile(false);
+    }
+  }, [file, t]);
+
   return (
     <Transition show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-200" onClose={onClose}>
@@ -229,17 +259,32 @@ export default function RecordTabModal({
                         }`}
                     >
                       <ImageIcon size={16} />
-                      <span className="hidden sm:inline">{String(t("ocr.preview") || "Preview")}</span>
+                      <span className="hidden sm:inline">{t("ocr.preview")}</span>
                     </button>
                   </div>
 
                   <div className="ml-4 flex shrink-0 items-center space-x-2">
+                    {!!file?.hash && (
+                      <button
+                        type="button"
+                        className="rounded-full bg-orange-100 p-2 text-orange-500 outline-none transition-colors hover:bg-orange-200 hover:text-orange-700"
+                        onClick={handleDownloadOriginal}
+                        disabled={isDownloadingFile}
+                        title={t("common.download")}
+                      >
+                        {isDownloadingFile ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-orange-600 border-t-transparent" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                      </button>
+                    )}
                     {onRestore && isDeleted ? (
                       <button
                         type="button"
                         className="rounded-full bg-emerald-50 p-2 text-emerald-500 outline-none transition-colors hover:bg-emerald-100 hover:text-emerald-700"
                         onClick={onRestore}
-                        title={String(t("common.restore") || "Restore")}
+                        title={t("common.restore")}
                       >
                         <Undo2 className="h-5 w-5" />
                       </button>
@@ -248,7 +293,7 @@ export default function RecordTabModal({
                         type="button"
                         className="rounded-full bg-red-50 p-2 text-red-500 outline-none transition-colors hover:bg-red-100 hover:text-red-700"
                         onClick={onDelete}
-                        title={String(t("common.delete") || "Delete")}
+                        title={t("common.delete")}
                       >
                         <Trash2 className="h-5 w-5" />
                       </button>

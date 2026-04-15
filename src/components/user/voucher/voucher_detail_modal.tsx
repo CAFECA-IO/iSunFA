@@ -323,7 +323,10 @@ export default function VoucherDetailModal({
   }
 
   if (!activeVoucher || activeVoucher?.isDeleted) return null;
-
+  console.log(voucherType);
+  console.log(TradingType.INCOME);
+  console.log(TradingType.OUTCOME);
+  console.log(TradingType.TRANSFER);
   const VoucherContent = (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[#F8FAFC]">
       {/* Info: (20260327 - Luphia) Body Content */}
@@ -362,7 +365,7 @@ export default function VoucherDetailModal({
             </label>
             <input
               id="voucher-date"
-              aria-label={String(t("voucher.detail_modal.fields.voucher_date"))}
+              aria-label="voucher.detail_modal.fields.voucher_date"
               type="date"
               value={new Date(inputDate).toISOString().split("T")[0]}
               onChange={(e) =>
@@ -412,7 +415,7 @@ export default function VoucherDetailModal({
               <Hash size={20} className="text-slate-400" />
               <input
                 id="voucher-no"
-                aria-label={String(t("voucher.detail_modal.fields.voucher_no"))}
+                aria-label="voucher.detail_modal.fields.voucher_no"
                 type="text"
                 value={editedVoucherId}
                 onChange={(e) => setEditedVoucherId(e.target.value)}
@@ -485,7 +488,7 @@ export default function VoucherDetailModal({
             />
             <textarea
               id="voucher-note"
-              aria-label={String(t("voucher.detail_modal.fields.note"))}
+              aria-label="voucher.detail_modal.fields.note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="min-h-[50px] w-full resize-none rounded-xl border border-slate-300 bg-white py-2.5 pr-4 pl-11 text-xs leading-relaxed text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:min-h-[100px] lg:text-sm"

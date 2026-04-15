@@ -65,10 +65,10 @@ export async function GET(
       fileId: esgRecord.fileId ?? "",
       file: esgRecord.file
         ? {
-          id: esgRecord.file.id,
-          hash: esgRecord.file.hash,
-          fileName: esgRecord.file.fileName || "Unknown",
-        }
+            id: esgRecord.file.id,
+            hash: esgRecord.file.hash,
+            fileName: esgRecord.file.fileName || "Unknown",
+          }
         : undefined,
       scope: esgRecord.scope as unknown as ClientEsgScope,
       activityType: esgRecord.activityType,
@@ -260,7 +260,9 @@ export async function DELETE(
       return jsonFail(ApiCode.NOT_FOUND, "Esg record not found");
     }
 
-    const deletedEsg = await esgRepo.updateEsgRecord(esgId, { deletedAt: new Date() });
+    const deletedEsg = await esgRepo.updateEsgRecord(esgId, {
+      deletedAt: new Date(),
+    });
 
     if (!deletedEsg) {
       return jsonFail(ApiCode.NOT_FOUND, "Esg record not found to delete");

@@ -3,7 +3,7 @@ import { getMemberInfo } from "@/services/member.service";
 import { REWARD_AMOUNTS } from "@/constants/price";
 
 export class PointService {
-  async getPointHistory(user: { id: string, address?: string | null }) {
+  async getPointHistory(user: { id: string; address?: string | null }) {
     const orders = await paymentRepo.getOrdersByUserId(user.id);
 
     const history = [];
@@ -74,7 +74,10 @@ export class PointService {
           }
         }
       } catch (e) {
-        console.warn("Failed to fetch on-chain member info for point history", e);
+        console.warn(
+          "Failed to fetch on-chain member info for point history",
+          e,
+        );
       }
     }
 

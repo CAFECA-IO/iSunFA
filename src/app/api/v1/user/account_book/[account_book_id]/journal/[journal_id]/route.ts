@@ -60,10 +60,10 @@ export async function GET(
       ...journalDbRecord,
       file: journalDbRecord.file
         ? {
-          id: journalDbRecord.file.id,
-          hash: journalDbRecord.file.hash,
-          fileName: journalDbRecord.file.fileName || "Unknown",
-        }
+            id: journalDbRecord.file.id,
+            hash: journalDbRecord.file.hash,
+            fileName: journalDbRecord.file.fileName || "Unknown",
+          }
         : undefined,
       voucherId: journalDbRecord.voucherId,
       esgRecordId: journalDbRecord.esgRecordId,
@@ -177,7 +177,7 @@ export async function PUT(
       // Info: (20260407 - Julian) 將現有傳票狀態更新為 PROCESSING
       if (updatedJournal.voucherId) {
         await voucherRepo.updateVoucher(updatedJournal.voucherId, {
-          analysisStatus: AIAnalysisStatus.PROCESSING
+          analysisStatus: AIAnalysisStatus.PROCESSING,
         });
         // Info: (20260407 - Julian) 編輯傳票 log
         await auditLogRepo.createAuditLog({
@@ -191,7 +191,7 @@ export async function PUT(
       if (updatedJournal.esgRecordId) {
         // Info: (20260407 - Julian) 將現有碳盤查狀態更新為 PROCESSING
         await esgRepo.updateEsgRecord(updatedJournal.esgRecordId, {
-          analysisStatus: AIAnalysisStatus.PROCESSING
+          analysisStatus: AIAnalysisStatus.PROCESSING,
         });
         // Info: (20260407 - Julian) 編輯碳盤查 log
         await auditLogRepo.createAuditLog({
@@ -211,10 +211,10 @@ export async function PUT(
       fileId: updatedJournal.fileId ?? "",
       file: updatedJournal.file
         ? {
-          id: updatedJournal.file.id,
-          hash: updatedJournal.file.hash,
-          fileName: updatedJournal.file.fileName ?? "",
-        }
+            id: updatedJournal.file.id,
+            hash: updatedJournal.file.hash,
+            fileName: updatedJournal.file.fileName ?? "",
+          }
         : undefined,
       voucherId: updatedJournal.voucherId,
       esgRecordId: updatedJournal.esgRecordId,
@@ -280,7 +280,9 @@ export async function DELETE(
     }
 
     // Info: (20260404 - Luphia) 將 Journal 標記刪除
-    const deletedJournal = await journalRepo.updateJournal(journalId, { deletedAt: new Date() });
+    const deletedJournal = await journalRepo.updateJournal(journalId, {
+      deletedAt: new Date(),
+    });
 
     if (!deletedJournal) {
       return jsonFail(ApiCode.NOT_FOUND, "Journal record not found to delete");

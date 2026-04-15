@@ -1,9 +1,13 @@
-"use server"
+"use server";
 
 import { exec } from "child_process";
 
 // Info: (20260412 - Luphia) Utility to run generic shell commands asynchronously.
-export async function runCommand(command: string, cwd?: string, maxBuffer?: number): Promise<{ success: boolean; output: string }> {
+export async function runCommand(
+  command: string,
+  cwd?: string,
+  maxBuffer?: number,
+): Promise<{ success: boolean; output: string }> {
   return new Promise((resolve) => {
     exec(command, { cwd, maxBuffer }, (error, stdout, stderr) => {
       if (error) {
@@ -13,4 +17,4 @@ export async function runCommand(command: string, cwd?: string, maxBuffer?: numb
       }
     });
   });
-};
+}

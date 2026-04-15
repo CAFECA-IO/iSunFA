@@ -78,10 +78,10 @@ export async function GET(
       fileId: voucher.fileId ?? "",
       file: voucher.file
         ? {
-          id: voucher.file.id,
-          hash: voucher.file.hash,
-          fileName: voucher.file.fileName || "Unknown",
-        }
+            id: voucher.file.id,
+            hash: voucher.file.hash,
+            fileName: voucher.file.fileName || "Unknown",
+          }
         : undefined,
       lineItems: {
         lines: lineItems,

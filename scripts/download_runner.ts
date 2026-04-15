@@ -10,7 +10,6 @@ import { downloadEsgReport } from "@/services/esg_report.download.service";
 import { downloadEsgMetrics } from "@/services/esg_metrics.download.service";
 import { runWithConcurrency } from "@/lib/utils/concurrency";
 
-
 async function main() {
   console.log("🚀 啟動終極下載主控台 (Commander)...");
 
@@ -75,7 +74,7 @@ async function main() {
 
     // Info: (20260409 - Tzuhan) 隨機延遲 1-3 秒，避免對證交所造成瞬間流量衝擊
     const jitterMs = 1000 + Math.random() * 2000;
-    await new Promise(resolve => setTimeout(resolve, jitterMs));
+    await new Promise((resolve) => setTimeout(resolve, jitterMs));
 
     console.log(`⏳ [開始] ${task.stockId} - ${task.year} 年 ${task.taskType}`);
 
@@ -186,6 +185,8 @@ async function main() {
   }
 }
 
-main().catch(console.error).finally(async () => {
-  await prisma.$disconnect();
-});
+main()
+  .catch(console.error)
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

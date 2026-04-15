@@ -1,11 +1,21 @@
 export const ko = {
   common: {
+    batch_download: "일괄 다운로드",
+    download: "다운로드",
+    downloading: "다운로드 중...",
+    zipping: "압축 중...",
+    start_date: "시작일",
+    end_date: "종료일",
+    error: {
+      download_failed: "다운로드 실패",
+    },
     actions: "작업",
     note: "비고",
     optional_in_parentheses: "선택",
     no_data: "데이터 없음",
     cancel_edit_title: "편집 취소?",
-    cancel_edit_message: "편집을 취소하시겠습니까? 데이터가 원래 상태로 돌아갑니다.",
+    cancel_edit_message:
+      "편집을 취소하시겠습니까? 데이터가 원래 상태로 돌아갑니다.",
     loading: "로딩 중...",
     save: "저장",
     confirm: "확인",
@@ -33,7 +43,8 @@ export const ko = {
       page_info: "{{current}} / {{total}} 페이지",
     },
     testing_env_banner: {
-      message: "⚠️ 본 환경은 개발 및 데모용 테스트 환경입니다. 데이터는 주기적으로 초기화됩니다. 프로덕션 환경으로 사용하지 마십시오. 프로덕션 환경은 다음을 방문하십시오 ",
+      message:
+        "⚠️ 본 환경은 개발 및 데모용 테스트 환경입니다. 데이터는 주기적으로 초기화됩니다. 프로덕션 환경으로 사용하지 마십시오. 프로덕션 환경은 다음을 방문하십시오 ",
     },
     ai_confidence: {
       title: "AI 신뢰도",
@@ -70,7 +81,8 @@ export const ko = {
   dashboard: {
     title: "정보 상황실",
     empty_state_title: "데이터 없음",
-    empty_state_desc: "선택한 기간 동안 데이터가 없습니다. 다른 기간을 선택하거나 영수증 데이터를 업로드해 주세요.",
+    empty_state_desc:
+      "선택한 기간 동안 데이터가 없습니다. 다른 기간을 선택하거나 영수증 데이터를 업로드해 주세요.",
     empty_state_cta: "데이터 업로드",
     executive_summary: "요약",
     auto_refresh: "자동 갱신",
@@ -175,7 +187,8 @@ export const ko = {
   },
   checkin_reward: {
     title: "일일 로그인 보상",
-    description: "{{amount}} 포인트를 획득했습니다. iSunFA에서 더 많은 기능을 탐색해 보세요!",
+    description:
+      "{{amount}} 포인트를 획득했습니다. iSunFA에서 더 많은 기능을 탐색해 보세요!",
     reward_label: "획득한 포인트",
     unit: "포인트",
     confirm_btn: "확인 및 사용 시작",
@@ -209,7 +222,8 @@ export const ko = {
     reg_failed: "가입 실패",
     scroll_to_agree: "관련 조항을 자세히 읽어 주십시오",
     unregistered_confirm_title: "계정 미등록",
-    unregistered_confirm_desc: "이 패스키와 연결된 계정을 찾을 수 없습니다. 이 장치를 사용하여 새 계정을 생성하시겠습니까?",
+    unregistered_confirm_desc:
+      "이 패스키와 연결된 계정을 찾을 수 없습니다. 이 장치를 사용하여 새 계정을 생성하시겠습니까?",
     unregistered_confirm_yes: "네, 계정 생성",
     unregistered_confirm_no: "취소",
   },
@@ -638,8 +652,9 @@ export const ko = {
       source_analysis: "분석 서비스 이용",
       source_chat: "AI 상담 서비스",
       source_checkin: "일일 출석 보상",
-      source_registration: "가입 보상"
-    }
+      source_registration: "가입 보상",
+      source_admin_issued: "관리자 지급",
+    },
   },
   sidebar: {
     modules: "기능 모듈",
@@ -659,38 +674,50 @@ export const ko = {
         title: "산업 발전 (Industry Development)",
         desc: "이 모듈의 분석 수준은 '거시 산업' 및 '공급망 메조'입니다. 따라서 키워드는 산업 부문, 하위 산업, 기술 동향 또는 특정 공급망을 중심으로 해야 합니다.",
         sectors_title: "주요 부문 (Sectors):",
-        sectors_desc: "기술 (Technology), 헬스케어 (Healthcare), 금융 (Financials), 자유 소비재 (Consumer Discretionary), 에너지 (Energy).",
+        sectors_desc:
+          "기술 (Technology), 헬스케어 (Healthcare), 금융 (Financials), 자유 소비재 (Consumer Discretionary), 에너지 (Energy).",
         sub_title: "하위 산업 / 공급망 (Sub-industries / Supply Chains):",
-        sub_desc: "반도체 제조 (Semiconductor Manufacturing), IC 설계 (IC Design), EV 배터리 (EV Batteries), 클라우드 인프라 (Cloud Infrastructure), 생명 공학 (Biotechnology).",
+        sub_desc:
+          "반도체 제조 (Semiconductor Manufacturing), IC 설계 (IC Design), EV 배터리 (EV Batteries), 클라우드 인프라 (Cloud Infrastructure), 생명 공학 (Biotechnology).",
         trends_title: "신흥 동향 / 개념 (Emerging Trends / Concepts):",
-        trends_desc: "AI 서버 (AI Servers), 실리콘 포토닉스 (Silicon Photonics), 전고체 배터리 (Solid-State Batteries), 저궤도 위성 (Low Earth Orbit Satellites), ESG 친환경 에너지 (ESG Green Energy)."
+        trends_desc:
+          "AI 서버 (AI Servers), 실리콘 포토닉스 (Silicon Photonics), 전고체 배터리 (Solid-State Batteries), 저궤도 위성 (Low Earth Orbit Satellites), ESG 친환경 에너지 (ESG Green Energy).",
       },
       smart_enterprise_rating: {
         title: "스마트 기업 평가 (Smart Enterprise Rating)",
         desc: "이 모듈의 분석 수준은 '미시적 개체'이며, 단일 회사의 재무 및 신용 상태 확인에 초점을 맞춥니다. 키워드는 정확한 회사 이름, 주식 종목 코드 또는 사업자 등록 번호여야 합니다.",
         us_tickers_title: "미국 주식 티커 / 회사 이름:",
-        us_tickers_desc: "AAPL 또는 Apple (애플)\nNVDA 또는 NVIDIA (엔비디아)\nMSFT 또는 Microsoft (마이크로소프트)\nTSLA 또는 Tesla (테슬라)",
+        us_tickers_desc:
+          "AAPL 또는 Apple (애플)\nNVDA 또는 NVIDIA (엔비디아)\nMSFT 또는 Microsoft (마이크로소프트)\nTSLA 또는 Tesla (테슬라)",
         tw_tickers_title: "대만 / ADR 주식 티커:",
-        tw_tickers_desc: "TSM (TSMC ADR)\n2330 또는 Taiwan Semiconductor Manufacturing",
+        tw_tickers_desc:
+          "TSM (TSMC ADR)\n2330 또는 Taiwan Semiconductor Manufacturing",
         fuzzy_title: "기업 속성 분류 (퍼지 검색 지원 시):",
-        fuzzy_desc: "때로는 'Apple 공급망' 또는 'Tier 1 자동차 부품 공급업체'를 입력하여 일괄 평가를 위한 대상 회사를 필터링할 수도 있습니다.",
+        fuzzy_desc:
+          "때로는 'Apple 공급망' 또는 'Tier 1 자동차 부품 공급업체'를 입력하여 일괄 평가를 위한 대상 회사를 필터링할 수도 있습니다.",
         analyst_view_title: "💡 애널리스트 관점:",
-        analyst_view_desc: "실제로 경영진은 종종 여기에 '주요 경쟁사', '핵심 공급업체' 또는 '잠재적 인수 대상'의 티커를 입력하여 공급망 중단 위험을 모니터링하거나 동종 업계 회사와 재무 지표(예: ROE, 매출 총이익률)를 벤치마킹합니다."
+        analyst_view_desc:
+          "실제로 경영진은 종종 여기에 '주요 경쟁사', '핵심 공급업체' 또는 '잠재적 인수 대상'의 티커를 입력하여 공급망 중단 위험을 모니터링하거나 동종 업계 회사와 재무 지표(예: ROE, 매출 총이익률)를 벤치마킹합니다.",
       },
       financial_product_rating: {
         title: "금융 상품 평가 (Financial Product Rating)",
         desc: "이 모듈은 거래 가능한 '금융 자산' 및 '투자 포트폴리오'를 대상으로 합니다. 키워드는 특정 상품 코드, 펀드 이름 또는 자산 클래스여야 합니다.",
         etf_title: "인덱스 펀드 / ETF (ETFs):",
-        etf_desc: "SPY 또는 VOO (S&P 500 추종)\nQQQ (나스닥 100 추종)\nTLT (만기 20년 이상 미국 국채 ETF)",
+        etf_desc:
+          "SPY 또는 VOO (S&P 500 추종)\nQQQ (나스닥 100 추종)\nTLT (만기 20년 이상 미국 국채 ETF)",
         mutual_funds_title: "액티브 펀드 (Mutual Funds):",
-        mutual_funds_desc: "특정 펀드 회사 제품 이름을 입력합니다 (예: Fidelity Global Technology Fund, AB Global High Yield).",
+        mutual_funds_desc:
+          "특정 펀드 회사 제품 이름을 입력합니다 (예: Fidelity Global Technology Fund, AB Global High Yield).",
         bonds_title: "특정 채권 / 고정 수입 상품 (Bonds):",
-        bonds_desc: "미국 10년물 국채 (US 10-Year Treasury), 특정 회사의 회사채 티커 (예: Apple 2030 만기 회사채), 투자 등급 (IG) 채권, 하이일드 채권 (High Yield Bonds / Junk Bonds).",
+        bonds_desc:
+          "미국 10년물 국채 (US 10-Year Treasury), 특정 회사의 회사채 티커 (예: Apple 2030 만기 회사채), 투자 등급 (IG) 채권, 하이일드 채권 (High Yield Bonds / Junk Bonds).",
         derivatives_title: "파생 상품 또는 원자재 (Commodities / Derivatives):",
-        derivatives_desc: "금 (Gold / GLD), 브렌트유 (Brent Crude), 비트코인 (Bitcoin / IBIT).",
+        derivatives_desc:
+          "금 (Gold / GLD), 브렌트유 (Brent Crude), 비트코인 (Bitcoin / IBIT).",
         analyst_view_title: "💡 애널리스트 관점:",
-        analyst_view_desc: "여기에 키워드를 입력하면 시스템은 일반적으로 샤프 비율 (Sharpe Ratio), 최대 손실폭 (Max Drawdown) 등의 정량적 위험 지표를 생성합니다. 이는 유휴 자금을 관리하거나 (Treasury Management) 헤지 포지션을 배치할 때 기업의 '재무 부서'에 매우 중요한 결정 요소입니다."
-      }
+        analyst_view_desc:
+          "여기에 키워드를 입력하면 시스템은 일반적으로 샤프 비율 (Sharpe Ratio), 최대 손실폭 (Max Drawdown) 등의 정량적 위험 지표를 생성합니다. 이는 유휴 자금을 관리하거나 (Treasury Management) 헤지 포지션을 배치할 때 기업의 '재무 부서'에 매우 중요한 결정 요소입니다.",
+      },
     },
     company_input: {
       label: "기업명 또는 사업자등록번호",
@@ -698,25 +725,26 @@ export const ko = {
       searching: "검색 중...",
       not_found:
         "기업을 찾을 수 없습니다. 더 완전한 이름이나 사업자등록번호를 입력해 보세요.",
-      missing_tax_id_desc: "이 장부({{name}})에는 사업자등록번호가 설정되어 있지 않습니다. 내부 데이터 분석을 위해서는 사업자등록번호가 필요합니다. 여기서 설정해 주세요:",
+      missing_tax_id_desc:
+        "이 장부({{name}})에는 사업자등록번호가 설정되어 있지 않습니다. 내부 데이터 분석을 위해서는 사업자등록번호가 필요합니다. 여기서 설정해 주세요:",
     },
-    title: '분석 보고서',
-    internal_analysis: '내부 데이터 분석',
-    external_analysis: '외부 데이터 분석',
-    history_reports: '이력 보고서',
-    period_type: '시간 단위',
-    select_year: '연도 선택',
-    select_period: '기간 선택',
-    select_account_book: '내 장부에서 선택',
-    select_from_account_books: '장부 선택',
-    country: '국가 선택',
-    category: '카테고리 선택',
-    keyword: '키워드',
-    enter_keyword: '키워드 입력...',
-    period: '기간',
-    confirm_cost: '비용',
-    generate: '보고서 생성',
-    selected_period_desc: '{{value}} ({{type}})',
+    title: "분석 보고서",
+    internal_analysis: "내부 데이터 분석",
+    external_analysis: "외부 데이터 분석",
+    history_reports: "이력 보고서",
+    period_type: "시간 단위",
+    select_year: "연도 선택",
+    select_period: "기간 선택",
+    select_account_book: "내 장부에서 선택",
+    select_from_account_books: "장부 선택",
+    country: "국가 선택",
+    category: "카테고리 선택",
+    keyword: "키워드",
+    enter_keyword: "키워드 입력...",
+    period: "기간",
+    confirm_cost: "비용",
+    generate: "보고서 생성",
+    selected_period_desc: "{{value}} ({{type}})",
     insufficient_credits: {
       title: "크레딧 부족",
       message:
@@ -793,21 +821,25 @@ export const ko = {
       view_tx: "트랜잭션 보기",
     },
     share: {
-      button: '보고서 공유',
-      modal_title: '공개 보고서 공유',
-      modal_desc: '이 링크를 가진 사람은 누구나 이 보고서의 "익명화된 요약본"을 볼 수 있습니다. 기밀 금액 및 상세 공급업체 정보는 시스템에 의해 안전하게 숨겨집니다.',
-      copy: '복사',
-      copied: '클립보드에 복사되었습니다',
-      revoke: '공유 링크 취소',
-      revoked: '공유 링크가 성공적으로 취소되었습니다',
-      done: '완료',
-      public_badge: '공개 요약 보고서',
-      shared_by: '{{name}} 님이 공유함',
-      security_intercept: '보안 차단',
-      security_desc: '이 유형의 보고서는 공개 공유가 지원되지 않거나 데이터 형식이 잘못되었습니다.',
-      cta_title: '귀하의 기업을 위한 맞춤형 심층 분석 보고서를 생성하시겠습니까?',
-      cta_desc: 'iSunFA는 최첨단 AI 기술을 통해 탄소 건강 진단, 재무 등급 평가, 규정 준수 감사를 포함한 포괄적인 스마트 회계 솔루션을 제공합니다.',
-      cta_button: 'iSunFA 스마트 회계 알아보기'
+      button: "보고서 공유",
+      modal_title: "공개 보고서 공유",
+      modal_desc:
+        '이 링크를 가진 사람은 누구나 이 보고서의 "익명화된 요약본"을 볼 수 있습니다. 기밀 금액 및 상세 공급업체 정보는 시스템에 의해 안전하게 숨겨집니다.',
+      copy: "복사",
+      copied: "클립보드에 복사되었습니다",
+      revoke: "공유 링크 취소",
+      revoked: "공유 링크가 성공적으로 취소되었습니다",
+      done: "완료",
+      public_badge: "공개 요약 보고서",
+      shared_by: "{{name}} 님이 공유함",
+      security_intercept: "보안 차단",
+      security_desc:
+        "이 유형의 보고서는 공개 공유가 지원되지 않거나 데이터 형식이 잘못되었습니다.",
+      cta_title:
+        "귀하의 기업을 위한 맞춤형 심층 분석 보고서를 생성하시겠습니까?",
+      cta_desc:
+        "iSunFA는 최첨단 AI 기술을 통해 탄소 건강 진단, 재무 등급 평가, 규정 준수 감사를 포함한 포괄적인 스마트 회계 솔루션을 제공합니다.",
+      cta_button: "iSunFA 스마트 회계 알아보기",
     },
   },
   ai_consultation_room: {
@@ -1024,7 +1056,7 @@ export const ko = {
       all: "모두",
     },
     button: {
-      download: "PNG로 다운로드",
+      download: "PNG 로 다운로드",
       send: "급여 명세서 발송",
       reset: "초기화",
       re_send: "급여 명세서 재발송",
@@ -1072,7 +1104,8 @@ export const ko = {
     confirm_btn: "동의 및 차감",
     quick_scan: "빠른 스캔",
     camera_denied_title: "카메라 액세스 거부됨",
-    camera_denied_desc: "문서 스캐너를 사용하려면 브라우저에서 카메라 권한을 허용하십시오.",
+    camera_denied_desc:
+      "문서 스캐너를 사용하려면 브라우저에서 카메라 권한을 허용하십시오.",
     hold_still: "스캔하려면 1초 동안 가만히 있으십시오",
     place_document_in_frame: "프레임 안에 문서를 놓으십시오",
     initializing: "초기화 중...",
@@ -1245,7 +1278,8 @@ export const ko = {
     },
     loading: "로딩 중...",
     no_records: "데이터 없음",
-    no_records_desc: "선택한 기간 동안 ESG 기록이 없습니다. 다른 기간을 선택하거나 영수증 데이터를 업로드해 주세요.",
+    no_records_desc:
+      "선택한 기간 동안 ESG 기록이 없습니다. 다른 기간을 선택하거나 영수증 데이터를 업로드해 주세요.",
     no_records_cta: "데이터 업로드",
     no_filter_results: "조건에 맞는 기록을 찾을 수 없습니다",
     no_filter_results_desc: "검색어나 필터 조건을 조정해 보세요",
@@ -1475,7 +1509,8 @@ export const ko = {
         filter_btn: "필터",
         verify_all: "일괄 확인",
         no_data: "데이터 없음",
-        no_data_desc: "선택한 기간 동안 전표 데이터가 없습니다. 다른 기간을 선택하거나 영수증 데이터를 업로드해 주세요.",
+        no_data_desc:
+          "선택한 기간 동안 전표 데이터가 없습니다. 다른 기간을 선택하거나 영수증 데이터를 업로드해 주세요.",
         no_data_cta: "데이터 업로드",
         no_filter_results: "조건에 맞는 기록을 찾을 수 없습니다",
         no_filter_results_desc: "검색어나 필터 조건을 조정해 보세요",
@@ -1547,15 +1582,17 @@ export const ko = {
       },
     },
   },
-  "verify": {
-    "verify_modal": {
+  verify: {
+    verify_modal: {
       title: "確認核對？",
-      message: "您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+      message:
+        "您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
       confirm: "確認核對",
     },
-    "unverify_modal": {
+    unverify_modal: {
       title: "確認退回？",
-      message: "您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+      message:
+        "您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
       confirm: "確認退回",
     },
     status: {
@@ -1571,7 +1608,7 @@ export const ko = {
       journal: "日記帳",
       voucher: "傳票",
       esg: "碳排紀錄",
-    }
+    },
   },
   esg: {
     detail_modal: {
@@ -1599,7 +1636,8 @@ export const ko = {
     web3Address: "Web3 주소",
     role: "권한",
     fido2Requirement: "FIDO2 인증 요구 사항:",
-    fido2RequirementText: "이 트랜잭션을 온체인에서 서명하려면 Passkey를 통한 인증이 필요합니다.",
+    fido2RequirementText:
+      "이 트랜잭션을 온체인에서 서명하려면 Passkey를 통한 인증이 필요합니다.",
     signing: "서명 중...",
     inviteViaFido2: "FIDO2로 초대",
     roles: {
@@ -1622,14 +1660,15 @@ export const ko = {
       errorAccept: "초대 수락 중 오류 발생",
       errorRole: "역할 변경 중 오류 발생",
       errorRemove: "멤버 삭제 중 오류 발생",
-    }
+    },
   },
   esg_report: {
     unit: "kgCO2e",
     loading_title: "ESG 보고서 생성 중",
     loading_desc: "각 스코프의 배출량 분포를 계산 중입니다...",
     error_title: "ESG 보고서 생성 실패",
-    error_desc: "해당 기간 동안 승인된 탄소 배출 기록이 있는지 확인하거나 나중에 다시 시도해 주세요.",
+    error_desc:
+      "해당 기간 동안 승인된 탄소 배출 기록이 있는지 확인하거나 나중에 다시 시도해 주세요.",
     gross_emissions: "총 온실가스 배출량",
     gross_desc: "해당 기간 누적 총량",
     scope1: "Scope 1 (직접 배출)",
@@ -1647,7 +1686,6 @@ export const ko = {
     scope3_title: "Scope 3 (공급망 배출)",
   },
   report_view: {
-
     title: "보고서 작성",
     desc: "클릭 한 번으로 전문 회계 보고서와 ESG 보고서를 생성하여 기업 현황을 즉시 파악하세요.",
     print_note_title: "재무 지표 주석",
@@ -1655,9 +1693,11 @@ export const ko = {
     period_selection: "기간 선택",
     year_selection: "연도 선택",
     generate_btn: "보고서 생성",
-    hint_verified_count: "현재 확인된 {{count}}건의 전표 정보를 기준으로 실시간으로 집계됩니다.",
+    hint_verified_count:
+      "현재 확인된 {{count}}건의 전표 정보를 기준으로 실시간으로 집계됩니다.",
     empty_report_title: "생성된 보고서 없음",
-    empty_report_desc: "필요한 매개변수를 설정하면 iSunFA에서 즉시 보고서를 생성합니다.",
+    empty_report_desc:
+      "필요한 매개변수를 설정하면 iSunFA에서 즉시 보고서를 생성합니다.",
     unknown_account_book: "(알 수 없는 장부)",
     period_unit: "기간: {{period}} | 단위: {{currency}}",
     types: {
@@ -1672,13 +1712,15 @@ export const ko = {
       q2: "2분기",
       q3: "3분기",
       q4: "4분기",
-    }
+    },
   },
   cash_flow_statement_view: {
     loading_title: "현금흐름표 생성 중...",
-    loading_desc: "시스템이 영업, 투자 및 재무 활동을 계산하고 있습니다. 잠시만 기다려 주십시오...",
+    loading_desc:
+      "시스템이 영업, 투자 및 재무 활동을 계산하고 있습니다. 잠시만 기다려 주십시오...",
     error_title: "생성 실패",
-    error_desc: "해당 기간 동안 충분한 전표 기록이 있는지 확인하거나 나중에 다시 시도하십시오.",
+    error_desc:
+      "해당 기간 동안 충분한 전표 기록이 있는지 확인하거나 나중에 다시 시도하십시오.",
     metric_fcf_title: "잉여 현금 흐름",
     metric_fcf_desc: "자본 지출 후 사용 가능한 현금",
     metric_ocf_ratio_title: "영업 현금 흐름 비율",
@@ -1695,7 +1737,8 @@ export const ko = {
     note_ocf_ratio_sub: "단기 부채 상환 능력을 측정합니다. > 100% 권장.",
     note_cf_adequacy_type: "지불 능력",
     note_cf_adequacy_main: "현금 흐름 적정 비율 = 영업 현금 흐름 / 총 자산.",
-    note_cf_adequacy_sub: "부채와 자본 지출을 지원하는 능력입니다. > 100% 권장.",
+    note_cf_adequacy_sub:
+      "부채와 자본 지출을 지원하는 능력입니다. > 100% 권장.",
     note_ending_balance_type: "지불 능력",
     note_ending_balance_main: "기말 잔고 = 영업 + 투자 + 재무 현금 흐름.",
     note_ending_balance_sub: "최종 현금 가용성을 측정합니다. > 0 권장.",
@@ -1734,10 +1777,12 @@ export const ko = {
     note_cashr_sub: "가장 보수적인 단기 부채 상환 능력 지표입니다.",
     note_dte_type: "재무구조",
     note_dte_main: "부채자본비율 = 총부채 / 총자본",
-    note_dte_sub: "자기자본 대비 부채 의존도를 반영합니다. 100% 미만을 권장합니다.",
+    note_dte_sub:
+      "자기자본 대비 부채 의존도를 반영합니다. 100% 미만을 권장합니다.",
     note_ltftfa_type: "재무구조",
     note_ltftfa_main: "비율 = (자기자본 + 비유동부채) / 고정자산",
-    note_ltftfa_sub: "고정자산이 안정적인 장기자금으로 조달되었는지를 평가합니다.",
+    note_ltftfa_sub:
+      "고정자산이 안정적인 장기자금으로 조달되었는지를 평가합니다.",
     note_nwps_type: "수익성",
     note_nwps_main: "주당순자산가치 = 총자본 / 발행주식수",
     note_nwps_sub: "청산 시 주당 잔여 가치를 나타냅니다.",
@@ -1749,9 +1794,11 @@ export const ko = {
     note_iar_sub: "이 비율이 너무 높으면 위험이 증가합니다.",
 
     loading_title: "대차대조표를 생성 중입니다",
-    loading_desc: "자산, 부채 및 자본 계정을 결제하고 있습니다. 잠시만 기다려주세요...",
+    loading_desc:
+      "자산, 부채 및 자본 계정을 결제하고 있습니다. 잠시만 기다려주세요...",
     error_title: "대차대조표 생성 실패",
-    error_desc: "해당 기간 내에 승인된 전표 데이터가 충분한지 확인하거나 다시 시도하십시오.",
+    error_desc:
+      "해당 기간 내에 승인된 전표 데이터가 충분한지 확인하거나 다시 시도하십시오.",
     assets_title: "자산",
     pct_total_assets: "% 총 자산",
     current_assets: "유동 자산",
@@ -1782,7 +1829,7 @@ export const ko = {
     note_em_sub: "재무 레버리지. 2 미만 권장.",
     note_wc_type: "유동성",
     note_wc_main: "운전 자본 = 유동 자산 - 유동 부채.",
-    note_wc_sub: "단기 유동성. 0 이상 권장."
+    note_wc_sub: "단기 유동성. 0 이상 권장.",
   },
 
   income_statement_view: {
@@ -1822,5 +1869,274 @@ export const ko = {
     section_ibt: "세전이익",
     section_tax: "법인세",
     section_ni: "당기순이익",
+  },
+  admin_setup: {
+    header: {
+      title: "시스템 배포",
+      subtitle: "초기화 및 안전한 클러스터 설정",
+      restart: "재시작",
+      reset: "초기화",
+      restart_title: "설정 프로세스 재시작",
+      restart_desc:
+        "설정 프로세스를 다시 시작하시겠습니까? 이렇게 하면 1단계부터 모든 초기화 단계를 자유롭게 검토하고 실행할 수 있습니다.",
+    },
+    step_card: {
+      exec_failed: "실행 실패",
+      reset_setup: "설정 초기화",
+    },
+    sidebar: {
+      milestones: "설정 마일스톤",
+    },
+    step1: {
+      title: "1단계: 호스트 Docker 엔진 확인",
+      desc: "엔터프라이즈 시스템은 컨테이너화된 서비스 배포를 위해 로컬 Docker 데몬(Docker Desktop 또는 Colima)이 필요합니다.",
+      active: "Docker 엔진이 활성화되었습니다",
+      start_btn: "Docker 엔진 시작",
+      err_not_installed:
+        "Docker가 설치되지 않았거나 PATH에서 찾을 수 없습니다.",
+      err_not_running:
+        "Docker가 설치되어 있지만 데몬이 실행되고 있지 않습니다. Docker 엔진(예: Docker Desktop 또는 OrbStack)을 수동으로 시작하고 다시 시도하세요.",
+      validating: "확인 및 시작 중...",
+      retry_detection: "엔진 감지 재시도",
+      start_detection: "감지 시작",
+      host_hw: "호스트 하드웨어 서명",
+      os: "운영 체제",
+      compute: "컴퓨팅",
+      cores: "코어",
+      memory_alloc: "메모리 할당",
+      mem_detected: "GB 총 RAM 감지됨",
+      docker_running: "Docker 엔진 실행 중",
+    },
+    step2: {
+      title: "2단계: 인프라 시작 및 확인",
+      desc: "로컬 네트워킹을 시작하고 컨테이너 상태를 확인 중입니다.",
+      retry_btn: "확인 재시도",
+      nodes: "인프라 노드",
+      starting_title: "서비스를 시작하는 중...",
+      starting_desc:
+        "Docker Compose가 게이트웨이, 데이터베이스, 스토리지 및 블록체인 노드를 시작하고 있습니다.",
+      desc_db: "데이터베이스 노드(관계형 데이터 및 트랜잭션)",
+      desc_cache: "캐시 서비스(고속 키-값 저장소)",
+      desc_storage: "분산 스토리지(IPFS 콘텐츠 주소 지정)",
+      desc_evm: "EVM 블록체인 노드(레이어 2 / 로컬 네트워크)",
+      desc_proxy: "리버스 프록시(게이트웨이 및 에지 라우터)",
+      desc_app: "애플리케이션 컨테이너",
+      err_start: "docker-compose를 시작하지 못했습니다. 출력: ",
+      unknown: "알 수 없음",
+    },
+    step3: {
+      title: "3단계: 시스템 코어 지갑 자금 지원",
+      desc: "컨트랙트를 배포하려면 코어 시스템 지갑에 초기 블록체인 자금이 필요합니다.",
+      awaiting: "초기 자금 대기 중",
+      awaiting_desc:
+        "아래 표시된 코어 배포자 주소로 네이티브 통화(예: ISUN)를 이체하십시오. 잔액이 충분해지면 배포가 자동으로 다시 시작됩니다.",
+      deployer_address: "코어 배포자 주소",
+      waiting_deposit: "입금 대기 중...",
+      checking_network: "네트워크 연결 확인 중",
+      checking_desc: "로컬 블록체인 노드 연결을 확인하는 중...",
+      refresh_btn: "잔액 새로 고침",
+      force_refresh_btn: "강제 새로고침",
+      funded_title: "자금 지원 완료",
+      err_wallet_info: "지갑 정보를 가져오지 못했습니다: ",
+      err_mining: "마이닝을 전환하지 못했습니다: ",
+      err_refresh: "잔액을 새로 고치지 못했습니다: ",
+      node_mining: "노드 마이닝",
+      active: "활성",
+      off: "꺼짐",
+      mining_on: "노드가 5개의 스레드로 마이닝 중입니다.",
+      mining_off: "마이닝이 현재 비활성화되어 있습니다.",
+    },
+    step4: {
+      title: "4단계: 엔터프라이즈 컨트랙트 배포",
+      desc: "신원 레지스트리, 포인트 트레저리 및 구독 관리자를 컴파일하고 배포합니다.",
+      completed: "Hardhat 배포 완료",
+      extracting: ".env 구성으로 배포된 주소를 추출 중...",
+      deploy_btn: "컨트랙트 배포",
+      retry_btn: "배포 재시도",
+      re_deploy_btn: "다시 배포",
+      init_msg: "EVM 배포를 초기화하는 중...\n컴파일러 대기 중...",
+      deploying: "배포 중",
+      pending: "대기 중",
+      err_deploy: "계약을 배포하지 못했습니다. 출력: ",
+    },
+    step5: {
+      title: "5단계: 데이터베이스 초기화",
+      desc: "애플리케이션 공용 데이터베이스를 생성하고, 강력한 비밀번호를 생성하며, Prisma 스키마를 푸시합니다.",
+      completed: "데이터베이스 초기화 완료",
+      init_btn: "스키마 초기화 및 푸시",
+      retry_btn: "데이터베이스 초기화 재시도",
+      db_schema: "데이터베이스 스키마",
+      tables_synced: "동기화된 테이블 수",
+      schema_ready: "스키마가 성공적으로 푸시되었으며 준비되었습니다!",
+      db_connection: "데이터베이스 연결",
+      host_domain: "호스트 도메인",
+      port: "포트",
+      root_pwd: "Root 비밀번호",
+      reset_root_pwd: "Root 비밀번호 재설정",
+      new_pwd_placeholder: "새로운 강력한 비밀번호 입력",
+      cancel_btn: "취소",
+      save_sync_btn: "저장 및 동기화",
+      err_init: "데이터베이스 초기화 실패. 출력: ",
+      err_reset: "데이터베이스 암호를 재설정하지 못했습니다. 출력: ",
+    },
+    step6: {
+      title: "6단계: 서버 SUPER ADMIN 등록",
+      desc: "안전한 FIDO2 패스키를 연결하여 초기 SUPER ADMIN 지갑을 설정합니다.",
+      create_btn: "SUPER ADMIN 패스키 생성",
+      bind_admin_btn: "새 관리자 연결",
+      master_identity: "마스터 ID (SUPER ADMIN)",
+      secondary_admins: "보조 관리자",
+      add_admin: "관리자 추가",
+      placeholder_admin: "예: IT 부서 관리자",
+      placeholder_super: "예: ISUNFA 시스템 관리자",
+      none_yet: "아직 없습니다.",
+      modal_add_title: "보조 관리자 추가",
+      modal_add_desc:
+        "FIDO2 패스키를 등록하기 전에 새 관리자를 설명하는 이름을 입력하십시오.",
+      admin_name_placeholder: "관리자 이름(예: 인사 관리자 / 보안팀)",
+      use_existing_key: "기존 키 사용",
+      register_new_key: "새 키 등록",
+      replace_with_existing_key: "기존 키로 교체",
+      replace_with_new_key: "새 키로 교체",
+      register_btn: "관리 키 등록",
+      replace_super_btn: "SUPER ADMIN 교체",
+      modal_replace_title: "SUPER ADMIN 교체",
+      modal_replace_warn:
+        "경고: 이렇게 하면 현재 활성 Super Admin 자격 증명이 돌이킬 수 없이 다운그레이드되고 새 마스터 ID가 할당됩니다.",
+      modal_replace_desc:
+        "새로운 마스터 ID FIDO2 패스키의 이름을 지정하십시오:",
+      master_name_placeholder: "마스터 ID 이름",
+      current: "현재 키",
+      sign_replace_btn: "교체 요청 서명",
+      confirm_pwd: "비밀번호 확인",
+      modal_del_title: "보조 관리자 삭제",
+      delete_admin: "관리자 삭제",
+      task_init: "백그라운드 작업 초기화 중...",
+      task_auth_challenge: "FIDO2 로그인 챌린지 요청 중...",
+      task_wait_bio: "생체 인식/보안 키 상호 작용 대기 중...",
+      task_auth_record: "인증 기록 확인 중...",
+      err_auth_record: "인증 기록을 확인하지 못했습니다.",
+      task_req_fido2: "FIDO2 등록 챌린지 요청 중...",
+      task_process_cred: "자격 증명 처리 중...",
+      task_write_config: "마스터 ID 구성을 작성하는 중...",
+      err_create_super: "최고 관리자 (SUPER ADMIN) 구성을 만들지 못했습니다.",
+      err_fido2_reg: "FIDO2 등록에 실패했습니다.",
+      task_write_secondary: "보조 관리자 구성을 작성하는 중...",
+      err_create_admin: "관리자 구성을 만들지 못했습니다.",
+      err_reg: "등록 실패.",
+      unknown_admin: "알 수 없는 관리자",
+      task_revoke: "관리자 권한 취소 중...",
+      err_del_admin: "관리자를 삭제하지 못했습니다.",
+      err_del: "삭제 실패.",
+      super_admin_found: "최고 관리자 구성 감지됨",
+      super_admin_found_desc:
+        "유효한 최고 관리자 구성이 있지만 관리 기능을 잠금 해제하려면 인증이 필요합니다.",
+      super_admin_secured: "최고 관리자가 성공적으로 등록되고 보호되었습니다.",
+      registered: "등록일: ",
+      pending_sync: "동기화 대기 중",
+      unavailable_sync: "네트워크 데이터를 사용할 수 없음",
+      identity_est: "로컬 노드에 ID가 설정되었습니다.",
+      loading_identity: "ID 데이터 로딩 중...",
+      no_secondary: "보조 관리자를 찾을 수 없습니다.",
+      cancel_btn: "취소",
+      continue_fido2_btn: "FIDO2로 계속",
+      modal_del_msg:
+        "관리자 {{name}}을(를) 삭제하시겠습니까? 이 작업은 실행 취소할 수 없습니다.",
+      confirm_del_btn: "삭제",
+    },
+    step7: {
+      title: "7단계: 외부 통합 설정",
+      desc: "공개적으로 접근 가능한 도메인과 외부 API 후크를 구성합니다.",
+      domain_label: "공개 애플리케이션 도메인",
+      domain_placeholder: "예: https://isunfa.cafeca.io",
+      ga_label: "Google 애널리틱스 측정 ID",
+      ga_placeholder: "G-XXXXXXXXXX",
+      gemini_label: "Gemini API 키",
+      gemini_placeholder: "AI 모델 키",
+      oen_token_label: "OEN 액세스 토큰",
+      oen_token_placeholder: "OEN 동기화 토큰",
+      oen_merchant_label: "OEN 가맹점 ID",
+      oen_merchant_placeholder: "OEN 판매자",
+      domain_hint: "절대 라우팅 및 OAuth 콜백에 필요한 기본 엔드포인트입니다.",
+      ga_hint: "웹 트래픽 추적을 위한 선택적 분석 통합입니다.",
+      gemini_hint:
+        "LLM 벡터 검색 엔진을 구동합니다. 생략하면 AI 어시스턴트가 대체 모의 모드로 작동합니다.",
+      oen_hint:
+        "명목 화폐 온램프 작업에 필요. 동적 송장을 생성하고 오프체인에서 결제 상태를 기록합니다.",
+      core_system: "핵심 생태계",
+      ai_consult: "AI 상담",
+      payment_gateway: "OEN 결제 게이트웨이",
+      finalizing_btn: "통합을 완료하는 중...",
+      saved_btn: "구성이 저장되었습니다!",
+      save_btn: "구성 저장 및 보호",
+      err_save: "구성 저장 실패",
+      updated: "구성이 업데이트되었습니다",
+    },
+    step8: {
+      title: "8단계: 구성 확정",
+      desc: "엔터프라이즈 배포를 안전하게 봉인하기 위해 FIDO2로 환경 변수에 서명하십시오.",
+      sign_save_btn: "구성 서명 및 저장",
+      signing_status: "서명 및 완료 중...",
+      immutable: "구성 불변성 검증",
+      immutable_desc:
+        "배포 구성은 암호학적으로 SUPER ADMIN 패스키에 바인딩됩니다. 서버를 시작하려면 최종 .env 파일에 대한 변경 사항에 다시 서명해야 합니다.",
+      preview: "기본 구성 미리보기",
+      ready_title: "엔터프라이즈 시스템 준비 완료",
+      ready_desc:
+        "구성이 안전하게 서명되었습니다. 백엔드 인프라는 이제 FIDO2 보호 하에 완벽하게 작동합니다.",
+      err_challenge: "서명 챌린지 생성 실패.",
+      err_finalize: "구성을 완료하지 못했습니다: ",
+      err_sign: "서명 실패: ",
+      verify_msg:
+        "검증 완료. 시스템은 변조를 방지하기 위해 WebAuthn 어설션에 의존합니다. 서명하기 전에 아래의 환경 구성을 검토하십시오.",
+    },
+    reboot: {
+      title: "변경 사항 적용 및 재부팅 중",
+      desc: "자동으로 리디렉션됩니다...",
+    },
+    page: {
+      invalid_status: "유효하지 않은 SUPER ADMIN 검증 상태입니다.",
+      fatal: "치명적인 시스템 오류",
+      fatal_desc:
+        "엔터프라이즈 설정 마법사를 로드하지 못하게 하는 오류가 발생했습니다:",
+      retry: "초기화 재시도",
+      init: "설정 엔진을 초기화하는 중...",
+    },
+  },
+  admin_member: {
+    page: {
+      title: "사용자 및 포인트 관리",
+      subtitle:
+        "시스템에 등록된 모든 사용자를 확인하고 포인트 잔액(ERC3643 Treasury)을 관리합니다.",
+      refresh: "새로고침",
+      refresh_list_aria: "목록 새로고침",
+      th_user: "사용자 이름 및 주소",
+      th_role: "권한",
+      th_joined_at: "가입일",
+      th_balance: "현재 잔액",
+      th_action: "작업",
+      no_users: "시스템에 사용자가 없습니다",
+      unnamed_user: "이름 없는 사용자",
+      refresh_balance_aria: "잔액 새로고침",
+      issue_points_btn: "포인트 지급",
+      role_super_admin: "최고 관리자",
+      role_admin: "관리자",
+      role_user: "일반 사용자",
+
+    },
+
+    modal_issue: {
+      title: "시스템 포인트 지급",
+      target_user: "대상 사용자",
+      unnamed_user: "이름 없는 사용자",
+      amount_label: "지급 수량 (Points)",
+      amount_placeholder: "예: 500",
+      err_amount: "포인트는 0보다 커야 합니다",
+      success_msg: "지급 성공",
+      err_msg: "지급 실패",
+      processing: "처리 중...",
+      issued: "지급 완료",
+      confirm_btn: "지급 확인",
+    },
   },
 };
