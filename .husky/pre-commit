@@ -2,9 +2,6 @@
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-# Info: (20260415 - Luphia) 更新版本
-npm run version
-
 # Info: (20240830 - Shirley) 檢查 stage files，有不符合規定就會阻止 commit
 npx lint-staged
 
