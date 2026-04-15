@@ -208,7 +208,7 @@ export class VoucherRepository implements IVoucherRepository {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const todayVoucherCount = await prisma.voucher.count({
-      where: { accountBookId, tradingDate: { gte: startOfToday } },
+      where: { accountBookId, createdAt: { gte: startOfToday } },
     });
 
     const monthTotalAmountAggr = await prisma.voucherLine.aggregate({
