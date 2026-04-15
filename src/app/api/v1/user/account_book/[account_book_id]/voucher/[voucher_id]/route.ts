@@ -72,7 +72,7 @@ export async function GET(
     const result: IVoucher = {
       id: voucher.id,
       tradingDate: Math.floor(voucher.tradingDate.getTime() / 1000),
-      tradingType: voucher.tradingType as TradingType,
+      tradingType: voucher.tradingType?.toLowerCase() as TradingType,
       note: voucher.note ?? "",
       isDeleted: !!voucher.deletedAt,
       fileId: voucher.fileId ?? "",
