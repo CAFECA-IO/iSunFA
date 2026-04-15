@@ -1,13 +1,17 @@
 "use server";
 
-import { createPublicClient, formatEther, http, parseAbi } from "viem";
-import { getAdminAccount, getAdminWalletClient } from "@/lib/wallet/admin_wallet";
+import { createPublicClient, createWalletClient, formatEther, http, parseAbi } from "viem";
+import { isuncoin } from "@/lib/viem_public";
+import { getAdminAccount } from "@/lib/wallet/admin_wallet";
 import { getPriorityEnvConfig } from "@/services/env.service";
 import { toggleMining } from "@/services/setup.service";
 import { cookies } from "next/headers";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { Role } from "@/generated/client";
+
+// Info: (20260416 - Luphia) 忽略本地端自簽憑證錯誤，讓 viem publicClient 可以正常存取 localhost https RPC
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 export interface IBlockchainDashboardData {
   address: string;
@@ -18,6 +22,7 @@ export interface IBlockchainDashboardData {
   membershipIscBalance: string;
   systemTotalIcp: string;
   collateralRate: string;
+  totalMembers: number;
 }
 
 // Info: (20260416 - Luphia) 檢查使用者權限 (RBAC)
@@ -52,7 +57,6 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
     const publicClient = createPublicClient({ transport: http(rpcUrl) });
 
     const cpAddress = setupConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS as `0x${string}`;
-    const smAddress = setupConfig.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS as `0x${string}`;
     const msAddress = setupConfig.NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS as `0x${string}`;
 
     // Info: (20260416 - Luphia) 1. Admin Wallet ISC & Mining info
@@ -79,14 +83,21 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
     let systemTotalIcp = "0.0";
     let collateralRate = "0.0";
     let membershipIscBalance = "0.0";
+    let totalMembers = 0;
 
-    // Info: (20260416 - Luphia) 2. Subscription Manager ISC
-    if (smAddress) {
+    try {
+      totalMembers = await webAuthnRepo.countUsers();
+    } catch (e) {
+      console.warn("Failed fetching total members: ", e);
+    }
+
+    // Info: (20260416 - Luphia) 2. Membership System ISC
+    if (msAddress) {
       try {
-        const smIscWei = await publicClient.getBalance({ address: smAddress });
-        membershipIscBalance = formatEther(smIscWei);
+        const msIscWei = await publicClient.getBalance({ address: msAddress });
+        membershipIscBalance = formatEther(msIscWei);
       } catch (err) {
-        console.warn("Failed reading Subscription Manager ISC:", err);
+        console.warn("Failed reading Membership System ISC:", err);
       }
     }
 
@@ -125,7 +136,8 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
         isMining,
         membershipIscBalance,
         systemTotalIcp,
-        collateralRate
+        collateralRate,
+        totalMembers
       }
     };
   } catch (error: unknown) {
@@ -143,15 +155,16 @@ export async function mintIcpAction(amount: number, clientToken?: string): Promi
     }
 
     const adminAccount = await getAdminAccount();
-    const walletClient = await getAdminWalletClient();
-
     const setupConfig = await getPriorityEnvConfig();
     const rpcUrl = setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
-    const publicClient = createPublicClient({ transport: http(rpcUrl) });
-    const cpAddress = setupConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS as `0x${string}`;
 
-    if (!walletClient || !publicClient || !adminAccount || !cpAddress) {
-      throw new Error("Client initialization failed or missing CreditPoint Address.");
+    const publicClient = createPublicClient({ transport: http(rpcUrl) });
+    const walletClient = createWalletClient({ account: adminAccount, chain: isuncoin, transport: http(rpcUrl) });
+    const cpAddress = setupConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS as `0x${string}`;
+    const msAddress = setupConfig.NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS as `0x${string}`;
+
+    if (!walletClient || !publicClient || !adminAccount || !cpAddress || !msAddress) {
+      throw new Error("Client initialization failed or missing required Addresses (CreditPoint or MembershipSystem).");
     }
 
     const tokenAbi = parseAbi([
@@ -177,13 +190,13 @@ export async function mintIcpAction(amount: number, clientToken?: string): Promi
       throw new Error("Insufficient Admin ISC Balance to cover collateral.");
     }
 
-    // Info: (20260416 - Luphia) 發送交易
+    // Info: (20260416 - Luphia) 發送交易 (Mint 將代幣直接存入會員系統合約)
     const tx = await walletClient.writeContract({
       account: adminAccount,
       address: cpAddress,
       abi: tokenAbi,
       functionName: "collateralizedMint",
-      args: [adminAddress, amountBigInt],
+      args: [msAddress, amountBigInt],
       value: requiredISC
     });
 

@@ -53,19 +53,20 @@ export default function BlockchainDashboardPage() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+
   const [mintAmount, setMintAmount] = useState<string>("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isMinting, setIsMinting] = useState(false);
   const [isTogglingMining, setIsTogglingMining] = useState(false);
 
-  const fetcher = async () => {
+  const fetcher = useCallback(async () => {
     const res = await request<{
       success: boolean;
       payload: IBlockchainDashboardData;
     }>("/api/v1/admin/blockchain/dashboard");
     if (!res.success) throw new Error("Failed to fetch dashboard data");
     return res.payload;
-  };
+  }, []);
 
   const { data, error, isValidating, mutate } = usePolling(fetcher, 10000);
 
@@ -187,13 +188,12 @@ export default function BlockchainDashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
       <div className="relative mx-auto max-w-7xl space-y-6">
-        {/* Toast Notification */}
+        {/* Info: (20260416 - Luphia) Toast Notification */}
         {toastMessage && (
           <div
-            className={`fixed top-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg px-6 py-3 shadow-lg transition-all ${toastMessage.type === "success"
-                ? "bg-emerald-500 text-white"
-                : "bg-red-500 text-white"
-              }`}
+            className={`fixed top-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg px-6 py-3 shadow-lg transition-all
+              ${toastMessage.type === "success" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}
+            `}
           >
             {toastMessage.type === "success" ? (
               <CheckCircle2 className="h-5 w-5" />
@@ -343,7 +343,7 @@ export default function BlockchainDashboardPage() {
               {/* Info: (20260416 - Luphia) Member System ISC */}
               <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md">
                 <p className="mb-2 text-xs font-semibold tracking-wider text-gray-400 uppercase">
-                  Subs Manager ISC
+                  Member System ISC
                 </p>
                 <div className="flex items-baseline gap-2">
                   <h2 className="text-2xl font-bold text-gray-800">
@@ -374,6 +374,34 @@ export default function BlockchainDashboardPage() {
                   <span className="text-sm font-medium text-gray-500">ICP</span>
                 </div>
               </div>
+              {/* Info: (20260416 - Luphia) Member System ICP Inventory & Water Level */}
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md sm:col-span-2">
+                <p className="mb-2 text-xs font-semibold tracking-wider text-gray-400 uppercase">
+                  Member System ICP Reserve
+                </p>
+                <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4 justify-between">
+                  <div className="flex items-baseline gap-2">
+                    <h2 className="text-2xl font-bold text-emerald-600">
+                      {data
+                        ? parseFloat(data.membershipSystemIcpInventory).toLocaleString(
+                          undefined,
+                          { maximumFractionDigits: 4 },
+                        )
+                        : "---"}
+                    </h2>
+                    <span className="text-sm font-medium text-gray-500">ICP</span>
+                  </div>
+                  {data && (
+                    <div className="text-xs text-gray-500 mt-2 sm:mt-0 px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
+                      <div>
+                        <p>Members: <span className="font-semibold text-gray-700">{data.totalMembers.toLocaleString()}</span> (Burn: 5 ICP/day)</p>
+                        <p>Est. Water Level: <span className="font-semibold text-gray-700">{data.totalMembers > 0 ? Math.floor(parseFloat(data.membershipSystemIcpInventory) / (data.totalMembers * 5)) : "∞"} days</span> left</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Info: (20260416 - Luphia) Mint ICP Action */}
@@ -389,7 +417,7 @@ export default function BlockchainDashboardPage() {
                   <p className="mt-1 mb-6 text-sm text-gray-500">
                     Minting ICP requires providing an equivalent amount of ISC
                     based on the real-time collateral rate. The minted ICP will
-                    be placed in the Admin wallet inventory.
+                    be placed in the Member System inventory.
                   </p>
 
                   <form onSubmit={handleMintSubmit} className="flex gap-3">

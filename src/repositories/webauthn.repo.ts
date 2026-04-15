@@ -18,6 +18,7 @@ export interface IWebAuthnRepository {
   >;
   updateChallenge(address: string, challenge: string): Promise<void>;
   clearChallenge(userId: string): Promise<void>;
+  countUsers(): Promise<number>;
   upsertUser(data: {
     address: string;
     pubKeyX: string;
@@ -109,6 +110,10 @@ class WebAuthnRepository implements IWebAuthnRepository {
       where: { id: userId },
       data: { currentChallenge: null },
     });
+  }
+
+  public async countUsers(): Promise<number> {
+    return prisma.user.count();
   }
 
   public async updateKYCData(userId: string, data: JSON): Promise<User> {
