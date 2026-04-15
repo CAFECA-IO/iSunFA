@@ -5,7 +5,6 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import PublicReportClientView from '@/app/share/report/[token]/public_report_client_view';
 
-// Info: (20260413 - Tzuhan) 動態生成 SEO Metadata (Server Side)
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
     const { token } = await params;
 
@@ -21,6 +20,22 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
     const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
     const baseUrl = `${protocol}://${host}`;
 
+    // Info: (20260415 - Tzuhan) 解析爬蟲或使用者的 Accept-Language 標頭
+    const acceptLanguage = headersList.get('accept-language') || '';
+    let ogLang = 'zh_tw'; // Info: (20260415 - Tzuhan) 預設語系
+
+    // Info: (20260415 - Tzuhan) 簡易的語系判斷邏輯
+    const lowerLang = acceptLanguage.toLowerCase();
+    if (lowerLang.includes('en')) {
+        ogLang = 'en';
+    } else if (lowerLang.includes('ja')) {
+        ogLang = 'ja';
+    } else if (lowerLang.includes('zh-cn')) {
+        ogLang = 'zh_cn';
+    } else if (lowerLang.includes('ko')) {
+        ogLang = 'ko';
+    }
+
     try {
         const sanitizer = ShareSanitizerFactory.getSanitizer(shareRecord.category);
         const safeData = sanitizer.sanitize(
@@ -33,7 +48,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
             openGraph: {
                 title: `${safeData.companyName} | iSunFA`,
                 type: 'website',
-                images: [{ url: `${baseUrl}/api/v1/share/og?token=${token}`, width: 1200, height: 630 }],
+                images: [{ url: `${baseUrl}/api/v1/share/og?token=${token}&lang=${ogLang}`, width: 1200, height: 630 }],
             },
             twitter: { card: 'summary_large_image' }
         };
