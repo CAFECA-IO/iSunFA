@@ -26,15 +26,19 @@ export async function POST(
       return jsonFail(ApiCode.FORBIDDEN, "Access denied or Analysis not found");
     }
 
-    const shareToken = await prisma.reportShareToken.upsert({
-      where: { id: analysisId },
-      update: { isActive: true },
-      create: {
-        analysisId: analysisId,
-        category: analysis.type,
-        createdById: user.id,
-      },
+    let shareToken = await prisma.reportShareToken.findFirst({
+      where: { analysisId: analysisId, isActive: true },
     });
+
+    if (!shareToken) {
+      shareToken = await prisma.reportShareToken.create({
+        data: {
+          analysisId: analysisId,
+          category: analysis.type,
+          createdById: user.id,
+        },
+      });
+    }
 
     return jsonOk({ token: shareToken.token });
   } catch (error) {

@@ -355,6 +355,7 @@ export async function GET(request: NextRequest) {
         keyword,
         tags,
         isExternal,
+        retryCount: typeof missionData?.retryCount === 'number' ? missionData.retryCount : 0,
       };
     });
 

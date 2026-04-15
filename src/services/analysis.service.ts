@@ -170,7 +170,7 @@ export class AnalysisService {
             ? await prisma.esgRecord.findMany({
                 where: {
                   accountBookId: targetAccountBookId,
-                  tradingDate: { gte: start, lte: end },
+                  tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
                   deletedAt: null,
                 },
                 orderBy: { tradingDate: "asc" },
