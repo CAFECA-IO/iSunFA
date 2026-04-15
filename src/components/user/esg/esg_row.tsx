@@ -274,16 +274,15 @@ export function EsgRow({
     );
   }
 
-  const rawActivity =
-    record.rawActivityData !== "" && record.unit !== "" ? (
-      <>
-        <span className="text-sm font-semibold text-slate-800">
-          {record.rawActivityData}{" "}
-        </span>
-        <span className="text-xs font-bold text-slate-500">{record.unit}</span>
-      </>
-    ) : (
-      "-"
+  const rawActivity = record.unit !== "" ? (
+    <>
+      <span className="text-sm font-semibold text-slate-800">
+        {record.amount}{" "}
+      </span>
+      <span className="text-xs font-bold text-slate-500">{record.unit}</span>
+    </>
+  ) : (
+    "-"
     );
 
   return (
