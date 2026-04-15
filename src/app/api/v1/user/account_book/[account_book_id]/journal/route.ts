@@ -138,9 +138,9 @@ export async function GET(
     }
 
     if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
+      where.tradingDate = {};
+      if (startDate) where.tradingDate.gte = new Date(startDate);
+      if (endDate) where.tradingDate.lte = new Date(endDate);
     }
 
     // Info: (20260327 - Luphia) 解析分頁
@@ -166,10 +166,10 @@ export async function GET(
       fileId: j.fileId ?? "",
       file: j.file
         ? {
-            id: j.file.id,
-            hash: j.file.hash,
-            fileName: j.file.fileName ?? "",
-          }
+          id: j.file.id,
+          hash: j.file.hash,
+          fileName: j.file.fileName ?? "",
+        }
         : undefined,
       voucherId: j.voucherId,
       esgRecordId: j.esgRecordId,
