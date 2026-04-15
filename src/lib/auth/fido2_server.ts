@@ -7,9 +7,11 @@ import type {
 import { AppError } from "@/lib/utils/error";
 import { ApiCode } from "@/lib/utils/status";
 
-const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const configuredOrigin =
+  process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const allowedOrigins = [configuredOrigin];
-if (!allowedOrigins.includes("http://localhost:3000")) allowedOrigins.push("http://localhost:3000");
+if (!allowedOrigins.includes("http://localhost:3000"))
+  allowedOrigins.push("http://localhost:3000");
 
 /**
  * Info: (20251223 - Tzuhan)
@@ -27,7 +29,10 @@ export async function verifyRegistration(
     return result;
   } catch (error) {
     console.error("Registration verification failed:", error);
-    throw new AppError(ApiCode.VALIDATION_ERROR, "Invalid registration data: " + String(error));
+    throw new AppError(
+      ApiCode.VALIDATION_ERROR,
+      "Invalid registration data: " + String(error),
+    );
   }
 }
 
@@ -53,6 +58,9 @@ export async function verifyAuthentication(
     return result;
   } catch (error) {
     console.error("Authentication verification failed:", error);
-    throw new AppError(ApiCode.UNAUTHORIZED, "Invalid signature or challenge: " + String(error));
+    throw new AppError(
+      ApiCode.UNAUTHORIZED,
+      "Invalid signature or challenge: " + String(error),
+    );
   }
 }

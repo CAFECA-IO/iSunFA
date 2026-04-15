@@ -20,13 +20,17 @@ export class SearchService {
   private modelName: string;
 
   constructor(apiKey?: string) {
-    const key = apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+    const key =
+      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
     this.genAI = new GoogleGenerativeAI(key);
     this.modelName = process.env.MODEL || "gemini-1.5-flash";
   }
 
   // Info: (20260407 - Luphia) Spawns a dockerized Puppeteer instance to scrape search engine results and article contents.
-  private async executePuppeteerScraper(query: string, maxPages: number): Promise<{ url: string; content: string }[]> {
+  private async executePuppeteerScraper(
+    query: string,
+    maxPages: number,
+  ): Promise<{ url: string; content: string }[]> {
     return new Promise((resolve, reject) => {
       let resolved = false;
 
@@ -97,7 +101,14 @@ export class SearchService {
       })();
       `;
 
-      const dockerProcess = spawn("docker", ["run", "--rm", "-i", this.imageName, "node", "-"]);
+      const dockerProcess = spawn("docker", [
+        "run",
+        "--rm",
+        "-i",
+        this.imageName,
+        "node",
+        "-",
+      ]);
 
       let output = "";
       let errorOutput = "";
@@ -114,7 +125,11 @@ export class SearchService {
         if (!resolved) {
           resolved = true;
           dockerProcess.kill("SIGKILL");
-          reject(new Error(`Crawler script exceeded total sandbox timeout of ${this.timeoutMs}ms.`));
+          reject(
+            new Error(
+              `Crawler script exceeded total sandbox timeout of ${this.timeoutMs}ms.`,
+            ),
+          );
         }
       }, this.timeoutMs);
 
@@ -124,7 +139,9 @@ export class SearchService {
         clearTimeout(timeoutId);
 
         if (code !== 0 && !output.includes("__crawlerPayload")) {
-          reject(new Error(`Search Crawler Failed (Code ${code}): ${errorOutput}`));
+          reject(
+            new Error(`Search Crawler Failed (Code ${code}): ${errorOutput}`),
+          );
         } else {
           // Info: (20260407 - Luphia)Robust JSON extraction (since stdout might include puppeteer warnings)
           const startIdx = output.indexOf('{"__crawlerPayload":');
@@ -134,7 +151,9 @@ export class SearchService {
               const data = JSON.parse(jsonSubstring);
               resolve(data.__crawlerPayload);
             } catch {
-              reject(new Error("Crawler JSON payload was corrupted or incomplete."));
+              reject(
+                new Error("Crawler JSON payload was corrupted or incomplete."),
+              );
             }
           } else {
             resolve([]);
@@ -155,26 +174,38 @@ export class SearchService {
   }
 
   // Info: (20260407 - Luphia) Orchestrates the Docker-based search engine scrape and condenses findings via Gemini AI.
-  public async searchAndSummarize(params: ISearchSummaryParams): Promise<ISearchResult> {
-    console.log(`[SearchService] Launching Deep Crawler for query: "${params.query}" (Target top ${params.maxPages} sources)...`);
+  public async searchAndSummarize(
+    params: ISearchSummaryParams,
+  ): Promise<ISearchResult> {
+    console.log(
+      `[SearchService] Launching Deep Crawler for query: "${params.query}" (Target top ${params.maxPages} sources)...`,
+    );
 
     // Info: (20260407 - Luphia) 1. Fire up ephemeral docker to scrape
-    const scrapedContents = await this.executePuppeteerScraper(params.query, params.maxPages);
+    const scrapedContents = await this.executePuppeteerScraper(
+      params.query,
+      params.maxPages,
+    );
 
     if (scrapedContents.length === 0) {
       console.log(`[SearchService] Scraper yielded nothing.`);
       return {
         query: params.query,
         scrapedUrls: [],
-        summary: "No relevant content or accessible sources could be successfully connected to summarize your query."
+        summary:
+          "No relevant content or accessible sources could be successfully connected to summarize your query.",
       };
     }
 
     // Info: (20260407 - Luphia) 2. Format Context for Gemini
-    console.log(`[SearchService] Aggregated ${scrapedContents.length} sources. Feeding into Generative AI Model...`);
-    const formattedSources = scrapedContents.map((source, index) => {
-      return `[Source ${index + 1}: ${source.url}]\n${source.content}\n---`;
-    }).join("\n\n");
+    console.log(
+      `[SearchService] Aggregated ${scrapedContents.length} sources. Feeding into Generative AI Model...`,
+    );
+    const formattedSources = scrapedContents
+      .map((source, index) => {
+        return `[Source ${index + 1}: ${source.url}]\n${source.content}\n---`;
+      })
+      .join("\n\n");
 
     const systemPrompt = `
       You are an elite web research assistant. Your task is to digest the following raw text excerpts taken directly from the web 
@@ -198,13 +229,13 @@ export class SearchService {
       contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
       generationConfig: {
         temperature: 0.2, // Info: (20260407 - Luphia) Factually focused
-      }
+      },
     });
 
     return {
       query: params.query,
-      scrapedUrls: scrapedContents.map(c => c.url),
-      summary: result.response.text().trim()
+      scrapedUrls: scrapedContents.map((c) => c.url),
+      summary: result.response.text().trim(),
     };
   }
 }

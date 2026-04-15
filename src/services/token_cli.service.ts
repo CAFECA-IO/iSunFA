@@ -7,6 +7,10 @@ export class Token {
     if (typeof toAddress !== "string" || !toAddress.startsWith("0x")) {
       throw new Error(`Invalid address for token mint: ${toAddress}`);
     }
-    return mintToAddress(CONTRACT_ADDRESSES.CREDIT_POINT, toAddress, Number(amount));
+    return mintToAddress(
+      CONTRACT_ADDRESSES.CREDIT_POINT,
+      toAddress,
+      Number(amount),
+    );
   }
 }

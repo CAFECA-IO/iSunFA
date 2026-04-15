@@ -5,7 +5,8 @@ export const en = {
     optional_in_parentheses: "Optional",
     no_data: "No Data",
     cancel_edit_title: "Cancel Edit?",
-    cancel_edit_message: "Are you sure you want to cancel the edit? Data will revert to the original state.",
+    cancel_edit_message:
+      "Are you sure you want to cancel the edit? Data will revert to the original state.",
     loading: "Loading...",
     save: "Save",
     confirm: "Confirm",
@@ -32,7 +33,8 @@ export const en = {
       page_info: "Page {{current}} of {{total}}",
     },
     testing_env_banner: {
-      message: "⚠️ This environment is for development and demonstration. Data is cleared periodically. Do not use for production. For the official environment, visit ",
+      message:
+        "⚠️ This environment is for development and demonstration. Data is cleared periodically. Do not use for production. For the official environment, visit ",
     },
     ai_confidence: {
       title: "AI Confidence",
@@ -69,7 +71,8 @@ export const en = {
   dashboard: {
     title: "Information War Room",
     empty_state_title: "No Data Found",
-    empty_state_desc: "No data found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
+    empty_state_desc:
+      "No data found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
     empty_state_cta: "Upload Data",
     executive_summary: "Executive Summary",
     auto_refresh: "Auto Refresh",
@@ -177,7 +180,8 @@ export const en = {
   },
   checkin_reward: {
     title: "Daily Check-in Reward",
-    description: "Earned {{amount}} tokens, welcome to explore more features in iSunFA!",
+    description:
+      "Earned {{amount}} tokens, welcome to explore more features in iSunFA!",
     reward_label: "Earned Tokens",
     unit: "Tokens",
     confirm_btn: "Confirm and Start Use",
@@ -211,7 +215,8 @@ export const en = {
     reg_failed: "Registration failed",
     scroll_to_agree: "Please read the relevant provisions in detail.",
     unregistered_confirm_title: "Account Not Registered",
-    unregistered_confirm_desc: "The system cannot find an account associated with this Passkey. Would you like to create a new account using this device?",
+    unregistered_confirm_desc:
+      "The system cannot find an account associated with this Passkey. Would you like to create a new account using this device?",
     unregistered_confirm_yes: "Yes, Create Account",
     unregistered_confirm_no: "Cancel",
   },
@@ -617,7 +622,8 @@ export const en = {
     submit: "Confirm",
   },
   billing: {
-    subtitle: "Manage your consumption records, account points, and payment methods.",
+    subtitle:
+      "Manage your consumption records, account points, and payment methods.",
     tabs: {
       orders: "Consumption Records",
       points: "Points Log",
@@ -641,7 +647,8 @@ export const en = {
       rename_success: "Successfully renamed",
       delete_success: "Credit card deleted",
       delete_confirm_title: "Delete Credit Card?",
-      delete_confirm_desc: "This will remove the credit card. You won't be able to use it for future payments.",
+      delete_confirm_desc:
+        "This will remove the credit card. You won't be able to use it for future payments.",
       cancel: "Cancel",
       save: "Save",
       edit_details: "Edit Details",
@@ -663,8 +670,9 @@ export const en = {
       source_analysis: "Analysis Service Usage",
       source_chat: "AI Consultation Usage",
       source_checkin: "Daily Check-in Reward",
-      source_registration: "Registration Reward"
-    }
+      source_registration: "Registration Reward",
+      source_admin_issued: "Issued by Admin",
+    },
   },
   sidebar: {
     modules: "Modules",
@@ -684,38 +692,49 @@ export const en = {
         title: "Industry Development",
         desc: "The analysis level of this module is 'Macro Industry' and 'Meso Supply Chain'. Therefore, keywords should revolve around industry sectors, sub-industries, technological trends, or specific supply chains.",
         sectors_title: "Major Sectors:",
-        sectors_desc: "Technology, Healthcare, Financials, Consumer Discretionary, Energy.",
+        sectors_desc:
+          "Technology, Healthcare, Financials, Consumer Discretionary, Energy.",
         sub_title: "Sub-industries / Supply Chains:",
-        sub_desc: "Semiconductor Manufacturing, IC Design, EV Batteries, Cloud Infrastructure, Biotechnology.",
+        sub_desc:
+          "Semiconductor Manufacturing, IC Design, EV Batteries, Cloud Infrastructure, Biotechnology.",
         trends_title: "Emerging Trends / Concepts:",
-        trends_desc: "AI Servers, Silicon Photonics, Solid-State Batteries, Low Earth Orbit Satellites, ESG Green Energy."
+        trends_desc:
+          "AI Servers, Silicon Photonics, Solid-State Batteries, Low Earth Orbit Satellites, ESG Green Energy.",
       },
       smart_enterprise_rating: {
         title: "Smart Enterprise Rating",
         desc: "The analysis level of this module is 'Micro Entity', focusing on the financial and credit health check of a single company. Therefore, keywords must be exact company names, stock tickers, or specific ID numbers.",
         us_tickers_title: "US Tickers / Company Names:",
-        us_tickers_desc: "AAPL or Apple\nNVDA or NVIDIA\nMSFT or Microsoft\nTSLA or Tesla",
+        us_tickers_desc:
+          "AAPL or Apple\nNVDA or NVIDIA\nMSFT or Microsoft\nTSLA or Tesla",
         tw_tickers_title: "TW/ADR Tickers:",
-        tw_tickers_desc: "TSM (TSMC ADR)\n2330 or Taiwan Semiconductor Manufacturing",
+        tw_tickers_desc:
+          "TSM (TSMC ADR)\n2330 or Taiwan Semiconductor Manufacturing",
         fuzzy_title: "Enterprise Attribute Classification:",
-        fuzzy_desc: "Sometimes you can also input 'Apple Supply Chain' or 'Tier 1 Auto Parts Suppliers' to filter out target companies for batch ratings.",
+        fuzzy_desc:
+          "Sometimes you can also input 'Apple Supply Chain' or 'Tier 1 Auto Parts Suppliers' to filter out target companies for batch ratings.",
         analyst_view_title: "💡 Analyst View:",
-        analyst_view_desc: "In practice, management often inputs tickers of 'main competitors', 'key suppliers', or 'potential acquisition targets' here to monitor supply chain disruption risks or benchmark financial metrics (e.g., ROE, gross margin) against peers."
+        analyst_view_desc:
+          "In practice, management often inputs tickers of 'main competitors', 'key suppliers', or 'potential acquisition targets' here to monitor supply chain disruption risks or benchmark financial metrics (e.g., ROE, gross margin) against peers.",
       },
       financial_product_rating: {
         title: "Financial Product Rating",
         desc: "This module targets tradable 'financial assets' and 'investment portfolios'. Keywords should be specific product codes, fund names, or asset classes.",
         etf_title: "Index Funds / ETFs:",
-        etf_desc: "SPY or VOO (S&P 500 ETF)\nQQQ (Nasdaq 100 ETF)\nTLT (20+ Year Treasury Bond ETF)",
+        etf_desc:
+          "SPY or VOO (S&P 500 ETF)\nQQQ (Nasdaq 100 ETF)\nTLT (20+ Year Treasury Bond ETF)",
         mutual_funds_title: "Mutual Funds:",
-        mutual_funds_desc: "Enter specific fund product names, for example: Fidelity Global Technology Fund, AB Global High Yield.",
+        mutual_funds_desc:
+          "Enter specific fund product names, for example: Fidelity Global Technology Fund, AB Global High Yield.",
         bonds_title: "Specific Bonds / Fixed Income:",
-        bonds_desc: "US 10-Year Treasury, specific corporate bond tickers (e.g., Apple 2030 Corporate Bond), Investment Grade (IG) Bonds, High Yield Bonds / Junk Bonds.",
+        bonds_desc:
+          "US 10-Year Treasury, specific corporate bond tickers (e.g., Apple 2030 Corporate Bond), Investment Grade (IG) Bonds, High Yield Bonds / Junk Bonds.",
         derivatives_title: "Commodities / Derivatives:",
         derivatives_desc: "Gold (GLD), Brent Crude, Bitcoin (IBIT).",
         analyst_view_title: "💡 Analyst View:",
-        analyst_view_desc: "After inputting a keyword here, the system usually generates quantitative risk metrics such as Sharpe Ratio and Max Drawdown. This is crucial for a company's 'Treasury Department' when managing idle funds or allocating hedge positions."
-      }
+        analyst_view_desc:
+          "After inputting a keyword here, the system usually generates quantitative risk metrics such as Sharpe Ratio and Max Drawdown. This is crucial for a company's 'Treasury Department' when managing idle funds or allocating hedge positions.",
+      },
     },
     company_input: {
       label: "Company Name or Tax ID",
@@ -723,25 +742,26 @@ export const en = {
       searching: "Searching...",
       not_found:
         "Company not found. Please try entering a more complete name or Tax ID.",
-      missing_tax_id_desc: "This account book ({{name}}) does not have a Tax ID set. Internal data analysis requires a Tax ID. Please set it here:",
+      missing_tax_id_desc:
+        "This account book ({{name}}) does not have a Tax ID set. Internal data analysis requires a Tax ID. Please set it here:",
     },
-    title: 'Analysis Report',
-    internal_analysis: 'Internal Analysis',
-    external_analysis: 'External Analysis',
-    history_reports: 'History Reports',
-    period_type: 'Time Unit',
-    select_year: 'Select Year',
-    select_period: 'Select Period',
-    select_account_book: 'Choose from my account books',
-    select_from_account_books: 'Select Account Book',
-    country: 'Select Country',
-    category: 'Select Category',
-    keyword: 'Keyword',
-    enter_keyword: 'Enter keyword...',
-    period: 'Period',
-    confirm_cost: 'Cost',
-    generate: 'Generate Report',
-    selected_period_desc: '{{value}} ({{type}})',
+    title: "Analysis Report",
+    internal_analysis: "Internal Analysis",
+    external_analysis: "External Analysis",
+    history_reports: "History Reports",
+    period_type: "Time Unit",
+    select_year: "Select Year",
+    select_period: "Select Period",
+    select_account_book: "Choose from my account books",
+    select_from_account_books: "Select Account Book",
+    country: "Select Country",
+    category: "Select Category",
+    keyword: "Keyword",
+    enter_keyword: "Enter keyword...",
+    period: "Period",
+    confirm_cost: "Cost",
+    generate: "Generate Report",
+    selected_period_desc: "{{value}} ({{type}})",
     insufficient_credits: {
       title: "Insufficient Credits",
       message:
@@ -818,21 +838,25 @@ export const en = {
       view_tx: "View Transaction",
     },
     share: {
-      button: 'Share Report',
-      modal_title: 'Share Public Report',
-      modal_desc: 'Anyone with this link can view the "anonymized summary" of this report. Confidential amounts and detailed supplier information are securely hidden by the system.',
-      copy: 'Copy',
-      copied: 'Copied to clipboard',
-      revoke: 'Revoke Share Link',
-      revoked: 'Share link successfully revoked',
-      done: 'Done',
-      public_badge: 'Public Summary Report',
-      shared_by: 'Shared by {{name}}',
-      security_intercept: 'Security Intercept',
-      security_desc: 'This type of report is not available for public sharing, or the data format is invalid.',
-      cta_title: 'Want to generate a comprehensive analysis report for your enterprise?',
-      cta_desc: 'iSunFA uses cutting-edge AI to provide smart accounting solutions including Carbon Health Checks, Financial Ratings, and Compliance Audits.',
-      cta_button: 'Discover iSunFA Smart Accounting'
+      button: "Share Report",
+      modal_title: "Share Public Report",
+      modal_desc:
+        'Anyone with this link can view the "anonymized summary" of this report. Confidential amounts and detailed supplier information are securely hidden by the system.',
+      copy: "Copy",
+      copied: "Copied to clipboard",
+      revoke: "Revoke Share Link",
+      revoked: "Share link successfully revoked",
+      done: "Done",
+      public_badge: "Public Summary Report",
+      shared_by: "Shared by {{name}}",
+      security_intercept: "Security Intercept",
+      security_desc:
+        "This type of report is not available for public sharing, or the data format is invalid.",
+      cta_title:
+        "Want to generate a comprehensive analysis report for your enterprise?",
+      cta_desc:
+        "iSunFA uses cutting-edge AI to provide smart accounting solutions including Carbon Health Checks, Financial Ratings, and Compliance Audits.",
+      cta_button: "Discover iSunFA Smart Accounting",
     },
   },
   ai_consultation_room: {
@@ -1133,7 +1157,8 @@ export const en = {
     required_points: "Points needed",
     balance_after_payment: "Balance after payment",
     confirm_analyze_title: "Confirm Analysis Cost",
-    confirm_analyze_desc: "The system will perform AI analysis on all your scanned documents. Please confirm the total cost:",
+    confirm_analyze_desc:
+      "The system will perform AI analysis on all your scanned documents. Please confirm the total cost:",
     cost_per_page: "Cost per page",
     total_cost: "Total deducted points",
     point_unit: "pts",
@@ -1141,7 +1166,8 @@ export const en = {
     cancel_btn: "Cancel",
     quick_scan: "Quick Scan",
     camera_denied_title: "Camera Access Denied",
-    camera_denied_desc: "Please allow camera permissions in your browser to use the document scanner.",
+    camera_denied_desc:
+      "Please allow camera permissions in your browser to use the document scanner.",
     hold_still: "Hold still for 1 second to scan",
     place_document_in_frame: "Please place the document within the frame",
     initializing: "Initializing camera and scanner...",
@@ -1302,7 +1328,8 @@ export const en = {
         filter_btn: "Filters",
         verify_all: "Verify All",
         no_data: "No Data Found",
-        no_data_desc: "No voucher records found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
+        no_data_desc:
+          "No voucher records found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
         no_data_cta: "Upload Data",
         no_filter_results: "No Results Found",
         no_filter_results_desc:
@@ -1479,7 +1506,8 @@ export const en = {
     },
     loading: "Loading...",
     no_records: "No Data Found",
-    no_records_desc: "No ESG records found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
+    no_records_desc:
+      "No ESG records found for the selected period. Try selecting a different time range or upload new receipts to the Journal.",
     no_records_cta: "Upload Data",
     no_filter_results: "No Results Found",
     no_filter_results_desc:
@@ -1631,15 +1659,17 @@ export const en = {
     industry_ranking: "Top % in Similar Industry",
     save: "Save Settings",
   },
-  "verify": {
-    "verify_modal": {
+  verify: {
+    verify_modal: {
       title: "Confirm Verify?",
-      message: "Are you sure you want to verify this {{type}}? Changes will be saved, please confirm the data is correct.",
+      message:
+        "Are you sure you want to verify this {{type}}? Changes will be saved, please confirm the data is correct.",
       confirm: "Confirm Verify",
     },
-    "unverify_modal": {
+    unverify_modal: {
       title: "Confirm Unverify?",
-      message: "Are you sure you want to unverify this {{type}}? Changes will be saved, please confirm the data is correct.",
+      message:
+        "Are you sure you want to unverify this {{type}}? Changes will be saved, please confirm the data is correct.",
       confirm: "Confirm Unverify",
     },
     status: {
@@ -1655,7 +1685,7 @@ export const en = {
       journal: "Journal",
       voucher: "Voucher",
       esg: "ESG",
-    }
+    },
   },
   esg: {
     detail_modal: {
@@ -1683,7 +1713,8 @@ export const en = {
     web3Address: "Web3 Address",
     role: "Role",
     fido2Requirement: "FIDO2 Requirement:",
-    fido2RequirementText: "You will be asked to authenticate via Passkey to sign this transaction on-chain.",
+    fido2RequirementText:
+      "You will be asked to authenticate via Passkey to sign this transaction on-chain.",
     signing: "Signing...",
     inviteViaFido2: "Invite via FIDO2",
     roles: {
@@ -1706,14 +1737,16 @@ export const en = {
       errorAccept: "Error accepting invitation",
       errorRole: "Error changing role",
       errorRemove: "Error removing member",
-    }
+    },
   },
   esg_report: {
     unit: "kgCO2e",
     loading_title: "Generating ESG Report",
-    loading_desc: "Calculating emissions distribution across scopes, please wait...",
+    loading_desc:
+      "Calculating emissions distribution across scopes, please wait...",
     error_title: "Failed to Generate ESG Report",
-    error_desc: "Please verify if there are approved ESG records in this period, or try again later.",
+    error_desc:
+      "Please verify if there are approved ESG records in this period, or try again later.",
     gross_emissions: "Total GHG Emissions",
     gross_desc: "Cumulative total for the period",
     scope1: "Scope 1 (Direct)",
@@ -1731,7 +1764,6 @@ export const en = {
     scope3_title: "Scope 3 (Supply Chain)",
   },
   report_view: {
-
     title: "Report Generation",
     desc: "Grasp business status instantly by generating professional financial & ESG reports with one click.",
     print_note_title: "Financial Metrics Notes",
@@ -1739,9 +1771,11 @@ export const en = {
     period_selection: "Period",
     year_selection: "Year",
     generate_btn: "Generate Report",
-    hint_verified_count: "The system will aggregate based on {{count}} verified vouchers.",
+    hint_verified_count:
+      "The system will aggregate based on {{count}} verified vouchers.",
     empty_report_title: "No Report Generated",
-    empty_report_desc: "Set the required parameters, and iSunFA will generate the report.",
+    empty_report_desc:
+      "Set the required parameters, and iSunFA will generate the report.",
     unknown_account_book: "(Unknown Account Book)",
     period_unit: "Period: {{period}} | Unit: {{currency}}",
     types: {
@@ -1756,13 +1790,15 @@ export const en = {
       q2: "Second Quarter",
       q3: "Third Quarter",
       q4: "Fourth Quarter",
-    }
+    },
   },
   cash_flow_statement_view: {
     loading_title: "Generating Cash Flow Statement...",
-    loading_desc: "The system is calculating operating, investing, and financing cash flows, please wait...",
+    loading_desc:
+      "The system is calculating operating, investing, and financing cash flows, please wait...",
     error_title: "Generation Failed",
-    error_desc: "Please ensure enough voucher records exist for this period or try again later.",
+    error_desc:
+      "Please ensure enough voucher records exist for this period or try again later.",
     metric_fcf_title: "Free Cash Flow",
     metric_fcf_desc: "Cash available after capital expenditures",
     metric_ocf_ratio_title: "OCF Ratio",
@@ -1772,17 +1808,23 @@ export const en = {
     metric_ending_balance_title: "Ending Balance",
     metric_ending_balance_desc: "Cash position at period end",
     note_fcf_type: "Liquidity",
-    note_fcf_main: "Free Cash Flow = Operating Cash Flow - Capital Expenditures.",
+    note_fcf_main:
+      "Free Cash Flow = Operating Cash Flow - Capital Expenditures.",
     note_fcf_sub: "Measures freely to use cash after CapEx. Recommended > 0.",
     note_ocf_ratio_type: "Solvency",
-    note_ocf_ratio_main: "OCF Ratio = Operating Cash Flow / Current Liabilities.",
-    note_ocf_ratio_sub: "Measures short-term debt repayment capability. Recommended > 100%.",
+    note_ocf_ratio_main:
+      "OCF Ratio = Operating Cash Flow / Current Liabilities.",
+    note_ocf_ratio_sub:
+      "Measures short-term debt repayment capability. Recommended > 100%.",
     note_cf_adequacy_type: "Solvency",
-    note_cf_adequacy_main: "CF Adequacy Ratio = Operating Cash Flow / Total Assets.",
-    note_cf_adequacy_sub: "Measures ability to support debt and CapEx. Recommended > 100%.",
+    note_cf_adequacy_main:
+      "CF Adequacy Ratio = Operating Cash Flow / Total Assets.",
+    note_cf_adequacy_sub:
+      "Measures ability to support debt and CapEx. Recommended > 100%.",
     note_ending_balance_type: "Solvency",
     note_ending_balance_main: "Ending Balance = OCF + ICF + FCF.",
-    note_ending_balance_sub: "Measures final cash availability. Recommended > 0.",
+    note_ending_balance_sub:
+      "Measures final cash availability. Recommended > 0.",
     section_op_inv: "Operating & Investing",
     section_ratio: "Ratio %",
     section_operating: "Operating Cash Flow",
@@ -1821,21 +1863,26 @@ export const en = {
     note_dte_sub: "Reflects reliance on debt vs equity. < 100% recommended.",
     note_ltftfa_type: "Structure",
     note_ltftfa_main: "Ratio = (Equity + Non-Current Liab) / Fixed Assets.",
-    note_ltftfa_sub: "Measures if fixed assets are backed by stable LT funds. > 100% recommended.",
+    note_ltftfa_sub:
+      "Measures if fixed assets are backed by stable LT funds. > 100% recommended.",
     note_nwps_type: "Profitability",
     note_nwps_main: "NAV per Share = Total Equity / Outstanding Shares.",
     note_nwps_sub: "Residual value per share at liquidation.",
     note_rer_type: "Structure",
-    note_rer_main: "Retained Earnings Ratio = Retained Earnings / Total Equity.",
+    note_rer_main:
+      "Retained Earnings Ratio = Retained Earnings / Total Equity.",
     note_rer_sub: "Reflects accumulation of undivided profits.",
     note_iar_type: "Structure",
-    note_iar_main: "Intangible Assets Ratio = Intangible Assets / Total Assets.",
+    note_iar_main:
+      "Intangible Assets Ratio = Intangible Assets / Total Assets.",
     note_iar_sub: "Risk increases when this proportion is overly high.",
 
     loading_title: "Generating Balance Sheet",
-    loading_desc: "Calculating assets, liabilities, and equity to prepare metrics. Please wait...",
+    loading_desc:
+      "Calculating assets, liabilities, and equity to prepare metrics. Please wait...",
     error_title: "Failed to generate balance sheet",
-    error_desc: "Please ensure there are enough verified vouchers within this period, or try again later.",
+    error_desc:
+      "Please ensure there are enough verified vouchers within this period, or try again later.",
     assets_title: "ASSETS",
     pct_total_assets: "% Total Assets",
     current_assets: "Current Assets",
@@ -1857,7 +1904,8 @@ export const en = {
     metric_wc_desc: "Short-term debt-paying ability",
     note_cr_type: "Liquidity",
     note_cr_main: "Current Ratio = Current Assets / Current Liab.",
-    note_cr_sub: "Measures short-term debt-paying ability. > 200% stands for good ability.",
+    note_cr_sub:
+      "Measures short-term debt-paying ability. > 200% stands for good ability.",
     note_dr_type: "Solvency",
     note_dr_main: "Debt Ratio = Total Liabilities / Total Assets.",
     note_dr_sub: "Measures debt capacity. < 50% is recommended.",
@@ -1866,12 +1914,13 @@ export const en = {
     note_em_sub: "Measures financial leverage. < 2 is recommended.",
     note_wc_type: "Liquidity",
     note_wc_main: "Working Capital = Current Assets - Current Liab.",
-    note_wc_sub: "Measures short-term liquidity. > 0 is recommended."
+    note_wc_sub: "Measures short-term liquidity. > 0 is recommended.",
   },
 
   income_statement_view: {
     loading_title: "Generating Income Statement",
-    loading_desc: "Processing revenue, expenses, and calculating financial metrics...",
+    loading_desc:
+      "Processing revenue, expenses, and calculating financial metrics...",
     error_title: "Failed to Generate Statement",
     error_desc: "Please ensure enough verified vouchers exist for this period.",
     metric_gm_title: "Gross Margin",
@@ -1884,7 +1933,8 @@ export const en = {
     metric_ebitda_desc: "Cash Profitability Indicator",
     note_gm_type: "Profitability",
     note_gm_main: "Gross Margin = (Revenue - COGS) / Revenue.",
-    note_gm_sub: "Measures initial profitability of products/services. Recommended > 50%.",
+    note_gm_sub:
+      "Measures initial profitability of products/services. Recommended > 50%.",
     note_om_type: "Profitability",
     note_om_main: "Operating Margin = Operating Income / Revenue.",
     note_om_sub: "Measures core operational profitability. Recommended > 15%.",
@@ -1906,5 +1956,274 @@ export const en = {
     section_ibt: "Income Before Tax",
     section_tax: "Tax Expense",
     section_ni: "NET INCOME",
+  },
+  admin_setup: {
+    header: {
+      title: "System Deployment",
+      subtitle: "Initialization & secure cluster setup",
+      restart: "Restart",
+      reset: "Reset",
+      restart_title: "Restart Setup Process",
+      restart_desc:
+        "Are you sure you want to restart the setup process? This will allow you to freely review and execute all initialization steps from Step 1.",
+    },
+    step_card: {
+      exec_failed: "Execution Failed",
+      reset_setup: "Reset Setup",
+    },
+    sidebar: {
+      milestones: "Setup Milestones",
+    },
+    step1: {
+      title: "Step 1: Verify Host Docker Engine",
+      desc: "The enterprise system requires a local Docker daemon (Docker Desktop or Colima) for containerized service deployment.",
+      active: "Docker Engine is Active",
+      start_btn: "Start Docker Engine",
+      err_not_installed: "Docker is not installed or not found in PATH.",
+      err_not_running:
+        "Docker is installed but daemon is not running. Please start Docker Engine (e.g., Docker Desktop or OrbStack) manually and retry.",
+      validating: "Validating & Starting...",
+      retry_detection: "Retry Engine Detection",
+      start_detection: "Start Detection",
+      host_hw: "Host Hardware Signature",
+      os: "Operating System",
+      compute: "Compute",
+      cores: "Cores",
+      memory_alloc: "Memory Allocation",
+      mem_detected: "GB Total RAM detected",
+      docker_running: "Docker Engine Running",
+    },
+    step2: {
+      title: "Step 2: Start & Verify Infrastructure",
+      desc: "Bringing up the local networking and verifying container health.",
+      retry_btn: "Retry Verification",
+      nodes: "Infrastructure Nodes",
+      starting_title: "Starting Services...",
+      starting_desc:
+        "Docker Compose is booting the gateway, database, storage and blockchain nodes.",
+      desc_db: "Database Node (Relational data & transactions)",
+      desc_cache: "Cache Service (High-speed key-value store)",
+      desc_storage: "Decentralized Storage (IPFS content-addressing)",
+      desc_evm: "EVM Blockchain Node (Layer 2 / Local Network)",
+      desc_proxy: "Reverse Proxy (Gateway & Edge router)",
+      desc_app: "Application Container",
+      err_start: "Failed to start docker-compose. Output: ",
+      unknown: "Unknown",
+    },
+    step3: {
+      title: "Step 3: Fund System Core Wallet",
+      desc: "To deploy contracts, the core system wallet needs initial blockchain funds.",
+      awaiting: "Awaiting Initial Funding",
+      awaiting_desc:
+        "Please transfer some native currency (e.g., ISUN) to the Core Deployer Address shown below. Once the balance is sufficient, the deployment will automatically resume.",
+      deployer_address: "Core Deployer Address",
+      waiting_deposit: "Waiting for deposit...",
+      checking_network: "Checking Network Connection",
+      checking_desc: "Verifying local blockchain node connectivity...",
+      refresh_btn: "Refresh Balance",
+      force_refresh_btn: "Force Refresh",
+      funded_title: "Wallet Funded",
+      err_wallet_info: "Failed to get wallet info: ",
+      err_mining: "Failed to toggle mining: ",
+      err_refresh: "Failed to refresh balance: ",
+      node_mining: "Node Mining",
+      active: "Active",
+      off: "Off",
+      mining_on: "Node is mining with 5 threads",
+      mining_off: "Mining is currently disabled",
+    },
+    step4: {
+      title: "Step 4: Deploy Enterprise Contracts",
+      desc: "Compiling and deploying identity registry, point treasury, and subscription managers.",
+      completed: "Hardhat Deployment Completed",
+      extracting: "Extracting deployed addresses to .env configuration...",
+      deploy_btn: "Deploy Contracts",
+      retry_btn: "Retry Deploy",
+      re_deploy_btn: "Re-Deploy",
+      init_msg: "Initializing EVM deployment...\nWaiting for compiler...",
+      deploying: "DEPLOYING",
+      pending: "PENDING",
+      err_deploy: "Failed to deploy contracts. Output: ",
+    },
+    step5: {
+      title: "Step 5: Initialize Database",
+      desc: "Creating application database, generating super-secure PostgreSQL password, and pushing Prisma schemas.",
+      completed: "Database Initialized",
+      init_btn: "Initialize & Push Schema",
+      retry_btn: "Retry DB Initialization",
+      db_schema: "Database Schema",
+      tables_synced: "Tables Synchronized",
+      schema_ready: "Schema successfully pushed & ready!",
+      db_connection: "Database Connection",
+      host_domain: "Host Domain",
+      port: "Port",
+      root_pwd: "Root Password",
+      reset_root_pwd: "Reset Root Password",
+      new_pwd_placeholder: "Enter new strong password",
+      cancel_btn: "Cancel",
+      save_sync_btn: "Save & Sync",
+      err_init: "Failed to initialize Database. Output: ",
+      err_reset: "Failed to reset Database password. Output: ",
+    },
+    step6: {
+      title: "Step 6: Register Server SUPER ADMIN",
+      desc: "Attach a secure FIDO2 Passkey to establish the initial SUPER ADMIN wallet.",
+      create_btn: "Create SUPER ADMIN Passkey",
+      bind_admin_btn: "Bind New Administrator",
+      master_identity: "Master Identity (SUPER ADMIN)",
+      secondary_admins: "Secondary Administrators",
+      add_admin: "Add Admin",
+      placeholder_admin: "e.g. IT Dept Admin",
+      placeholder_super: "e.g. ISUNFA SUPER ADMIN",
+      none_yet: "None yet.",
+      modal_add_title: "Add Secondary Administrator",
+      modal_add_desc:
+        "Please provide a descriptive name for the new administrator prior to FIDO2 passkey registration.",
+      admin_name_placeholder:
+        "Administrator Name (e.g. HR Manager / Security Dept)",
+      use_existing_key: "Use Existing Key",
+      register_new_key: "Register New Key",
+      replace_with_existing_key: "Replace with Existing Key",
+      replace_with_new_key: "Replace with New Key",
+      register_btn: "Register Administrative Key",
+      replace_super_btn: "Replace SUPER ADMIN",
+      modal_replace_title: "Replace SUPER ADMIN",
+      modal_replace_warn:
+        "Warning: This will irreversibly downgrade the current active Super Admin credentials and assign a new master identity.",
+      modal_replace_desc: "Please name your new master identity FIDO2 passkey:",
+      master_name_placeholder: "Master Identity Name",
+      current: "Current",
+      sign_replace_btn: "Sign Replacement Request",
+      confirm_pwd: "Confirm Password",
+      modal_del_title: "Delete Secondary Administrator",
+      delete_admin: "Delete Administrator",
+      task_init: "Initializing background task...",
+      task_auth_challenge: "Requesting FIDO2 login challenge...",
+      task_wait_bio: "Waiting for biometric/security key interaction...",
+      task_auth_record: "Verifying authentication record...",
+      err_auth_record: "Failed to verify authentication record.",
+      task_req_fido2: "Requesting FIDO2 registration challenge...",
+      task_process_cred: "Processing credentials...",
+      task_write_config: "Writing Master Identity configuration...",
+      err_create_super: "Failed to create SUPER ADMIN configuration.",
+      err_fido2_reg: "FIDO2 registration failed.",
+      task_write_secondary: "Writing Secondary Administrator configuration...",
+      err_create_admin: "Failed to create Administrator configuration.",
+      err_reg: "Registration failed.",
+      unknown_admin: "Unknown Admin",
+      task_revoke: "Revoking Administrator...",
+      err_del_admin: "Failed to delete Administrator.",
+      err_del: "Deletion failed.",
+      super_admin_found: "Super Admin Configuration Detected",
+      super_admin_found_desc:
+        "A valid Super Admin configuration exists but authorization is required to unlock management capabilities.",
+      super_admin_secured:
+        "Super Admin is successfully registered and secured.",
+      registered: "Registered: ",
+      pending_sync: "Pending Synchronization",
+      unavailable_sync: "Network Data Unavailable",
+      identity_est: "Identity is established on local node.",
+      loading_identity: "Loading identity data...",
+      no_secondary: "No secondary administrators found.",
+      cancel_btn: "Cancel",
+      continue_fido2_btn: "Continue with FIDO2",
+      modal_del_msg:
+        "Are you sure you want to delete administrator {{name}}? This action cannot be undone.",
+      confirm_del_btn: "Delete",
+    },
+    step7: {
+      title: "Step 7: Setup External Integrations",
+      desc: "Configure public accessible domain and external API hooks.",
+      domain_label: "Public Application Domain",
+      domain_placeholder: "e.g. https://isunfa.cafeca.io",
+      ga_label: "Google Analytics Measurement ID",
+      ga_placeholder: "G-XXXXXXXXXX",
+      gemini_label: "Gemini API Key",
+      gemini_placeholder: "AI Model Key",
+      oen_token_label: "OEN Access Token",
+      oen_token_placeholder: "OEN Sync Token",
+      oen_merchant_label: "OEN Merchant ID",
+      oen_merchant_placeholder: "OEN Merchant",
+      domain_hint:
+        "Primary endpoint required for absolute routing and OAuth callbacks.",
+      ga_hint: "Optional telemetry integration for web traffic tracking.",
+      gemini_hint:
+        "Powers the LLM vector search engine. If omitted, the AI Assistant will operate in fallback mock mode.",
+      oen_hint:
+        "Required for fiat on-ramp operations. Generates dynamic invoices and records payment statuses off-chain.",
+      core_system: "Core Ecosystem",
+      ai_consult: "AI Consultation",
+      payment_gateway: "OEN Payment Gateway",
+      finalizing_btn: "Finalizing Integrations...",
+      saved_btn: "Configuration Saved!",
+      save_btn: "Save & Secure Configuration",
+      err_save: "Failed to save configuration",
+      updated: "Configurations Updated",
+    },
+    step8: {
+      title: "Step 8: Finalize Configuration",
+      desc: "Sign the environment variables with FIDO2 to seal the enterprise deployment securely.",
+      sign_save_btn: "Sign & Save Configuration",
+      signing_status: "Signing & Finalizing...",
+      immutable: "Configuration Immutable Verification",
+      immutable_desc:
+        "Your deployment configuration will be cryptographically bound to the SUPER ADMIN passkey. Changes to the final .env file must be re-signed to start the server.",
+      preview: "Base Configuration Preview",
+      ready_title: "Enterprise System Ready",
+      ready_desc:
+        "Configuration securely signed. The backend infrastructure is now fully operational with FIDO2 enforcement.",
+      err_challenge: "Failed to generate signing challenge.",
+      err_finalize: "Failed to finalize config: ",
+      err_sign: "Signing failed: ",
+      verify_msg:
+        "Verification Complete. The system relies on WebAuthn assertion to prevent tampering. Please review the environment configuration below before signing.",
+    },
+    reboot: {
+      title: "Applying Changes & Rebooting",
+      desc: "You will be redirected automatically...",
+    },
+    page: {
+      invalid_status: "Invalid SUPER ADMIN verification status.",
+      fatal: "Fatal System Error",
+      fatal_desc:
+        "An error occurred preventing the enterprise setup wizard from loading:",
+      retry: "Retry Initialization",
+      init: "Initializing setup engine...",
+    },
+  },
+  admin_member: {
+    page: {
+      title: "User & Points Management",
+      subtitle:
+        "View all registered users in the system and manage their point balances (ERC3643 Treasury).",
+      refresh: "Refresh",
+      refresh_list_aria: "Refresh list",
+      th_user: "User Name & Address",
+      th_role: "Role",
+      th_joined_at: "Joined At",
+      th_balance: "Current Balance",
+      th_action: "Action",
+      no_users: "No users in the system",
+      unnamed_user: "Unnamed User",
+      refresh_balance_aria: "Refresh balance",
+      issue_points_btn: "Issue Points",      role_super_admin: "Super Admin",
+      role_admin: "Admin",
+      role_user: "User",
+
+    },
+
+    modal_issue: {
+      title: "Issue System Points",
+      target_user: "Target User",
+      unnamed_user: "Unnamed User",
+      amount_label: "Issue Amount (Points)",
+      amount_placeholder: "e.g., 500",
+      err_amount: "Points must be greater than 0",
+      success_msg: "Issued successfully",
+      err_msg: "Issuance failed",
+      processing: "Processing...",
+      issued: "Issued",
+      confirm_btn: "Confirm Issue",
+    },
   },
 };

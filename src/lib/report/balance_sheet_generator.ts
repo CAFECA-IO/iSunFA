@@ -82,8 +82,13 @@ export function generateBalanceSheet(
       if (code.startsWith("15") || code.startsWith("16")) {
         fixedAssetsTotal += impact; // Info: (20260330 - Julian) 不動產、廠房及設備
       }
-      if (code.startsWith("17") || code.startsWith("18") || code.startsWith("19")) {
-        if (code.startsWith("17") || name.includes("無形資產")) intangibleAssetsTotal += impact; // Info: (20260330 - Julian) 無形資產
+      if (
+        code.startsWith("17") ||
+        code.startsWith("18") ||
+        code.startsWith("19")
+      ) {
+        if (code.startsWith("17") || name.includes("無形資產"))
+          intangibleAssetsTotal += impact; // Info: (20260330 - Julian) 無形資產
       }
     } else if (isLiability) {
       // Info: (20260331 - Julian) 負債增加在貸方
@@ -200,7 +205,8 @@ export function generateBalanceSheet(
       safeDivide(longTermFundsTotal, fixedAssetsTotal) * 100,
     workingCapital: currentAssetsTotal - currentLiabilitiesTotal,
     cashRatio: safeDivide(cashTotal, currentLiabilitiesTotal) * 100,
-    netWorthPerShare: outstandingShares > 0 ? safeDivide(totalEquity, outstandingShares) : 0,
+    netWorthPerShare:
+      outstandingShares > 0 ? safeDivide(totalEquity, outstandingShares) : 0,
     retainedEarningsRatio: safeDivide(retainedEarningsTotal, totalEquity) * 100,
     intangibleAssetsRatio: safeDivide(intangibleAssetsTotal, totalAssets) * 100,
     equityRatio: safeDivide(totalEquity, totalAssets) * 100,

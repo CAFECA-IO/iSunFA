@@ -4,7 +4,10 @@ import {
   IMissionParams,
 } from "@/lib/worker/mission.interface";
 import { getJournalPrompt } from "@/constants/prompts/journal";
-import { getBaseVoucherPrompt, getVoucherLinesPrompt } from "@/constants/prompts/voucher";
+import {
+  getBaseVoucherPrompt,
+  getVoucherLinesPrompt,
+} from "@/constants/prompts/voucher";
 import { getEsgPrompt } from "@/constants/prompts/esg";
 import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
 

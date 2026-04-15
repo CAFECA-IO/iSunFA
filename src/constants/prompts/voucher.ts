@@ -2,11 +2,13 @@ import { ACCOUNTS } from "@/constants/accounts";
 import { AccountBook } from "@/generated/client";
 
 /*
-** Info: (20260407 - Julian) 將傳票的分析拆解成「基本資料」和「會計分錄」
-*/
+ ** Info: (20260407 - Julian) 將傳票的分析拆解成「基本資料」和「會計分錄」
+ */
 
 //  Info: (20260407 - Julian) 分析傳票「基本資料」的 Prompt
-export const getBaseVoucherPrompt = (accountBook?: Partial<AccountBook> | null) => {
+export const getBaseVoucherPrompt = (
+  accountBook?: Partial<AccountBook> | null,
+) => {
   // Info: (20260326 - Julian) 會計科目代碼
   const country = accountBook?.country || "TW";
 
@@ -35,7 +37,9 @@ export const getBaseVoucherPrompt = (accountBook?: Partial<AccountBook> | null) 
 };
 
 //  Info: (20260407 - Julian) 分析傳票「會計分錄」的 Prompt
-export const getVoucherLinesPrompt = (accountBook?: Partial<AccountBook> | null) => {
+export const getVoucherLinesPrompt = (
+  accountBook?: Partial<AccountBook> | null,
+) => {
   // Info: (20260407 - Julian) 會計科目代碼
   const country = accountBook?.country || "TW";
   const accountsStr = JSON.stringify(
@@ -71,5 +75,5 @@ export const getVoucherLinesPrompt = (accountBook?: Partial<AccountBook> | null)
 
   可以使用的會計科目如下（請優先使用這些會計科目的代碼與名稱，不要自己發明）：
   ${accountsStr}
-  `
-}
+  `;
+};

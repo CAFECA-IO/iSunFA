@@ -2,7 +2,10 @@
 
 import { getAddress, parseAbi, parseEther, formatEther } from "viem";
 import { publicClient } from "@/lib/viem";
-import { getAdminAccount, getAdminWalletClient } from "@/lib/wallet/admin_wallet";
+import {
+  getAdminAccount,
+  getAdminWalletClient,
+} from "@/lib/wallet/admin_wallet";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 
 const MEMBERSHIP_ABI = parseAbi([
@@ -12,7 +15,7 @@ const MEMBERSHIP_ABI = parseAbi([
   "function userRegistrationTimes(address user) external view returns (uint256)",
   "function userLastCheckIns(address user) external view returns (uint256)",
   "function userTotalCheckInRewards(address user) external view returns (uint256)",
-  "function userTotalPurchasedPoints(address user) external view returns (uint256)"
+  "function userTotalPurchasedPoints(address user) external view returns (uint256)",
 ]);
 
 type ActionResponse<T = unknown> = {
@@ -35,11 +38,17 @@ async function getClients() {
     throw new Error("Server Config Error: MembershipSystem address is missing");
   }
 
-  return { account, walletClient, membershipAddress: getAddress(membershipAddress) };
+  return {
+    account,
+    walletClient,
+    membershipAddress: getAddress(membershipAddress),
+  };
 }
 
 // Info: (20260413 - Luphia) Gives a user the 100 pt Registration Reward on-chain.
-export async function registerUserViaMembership(userAddress: string): Promise<ActionResponse> {
+export async function registerUserViaMembership(
+  userAddress: string,
+): Promise<ActionResponse> {
   try {
     const { account, walletClient, membershipAddress } = await getClients();
     const validTo = getAddress(userAddress);
@@ -55,9 +64,16 @@ export async function registerUserViaMembership(userAddress: string): Promise<Ac
     const tx = await walletClient.writeContract(request);
     await publicClient.waitForTransactionReceipt({ hash: tx });
 
-    return { success: true, message: "User registered successfully", data: { tx } };
+    return {
+      success: true,
+      message: "User registered successfully",
+      data: { tx },
+    };
   } catch (error) {
-    console.error(`[MembershipService] registerUser failed for ${userAddress}:`, error);
+    console.error(
+      `[MembershipService] registerUser failed for ${userAddress}:`,
+      error,
+    );
     return { success: false, message: (error as Error).message };
   }
 }
@@ -66,7 +82,9 @@ export async function registerUserViaMembership(userAddress: string): Promise<Ac
  * Info: (20260413 - Luphia) Claims the 5 pt daily check-in reward for a user on-chain.
  * Reverts if 24 hours haven't passed.
  */
-export async function claimDailyCheckIn(userAddress: string): Promise<ActionResponse> {
+export async function claimDailyCheckIn(
+  userAddress: string,
+): Promise<ActionResponse> {
   try {
     const { account, walletClient, membershipAddress } = await getClients();
     const validTo = getAddress(userAddress);
@@ -88,13 +106,18 @@ export async function claimDailyCheckIn(userAddress: string): Promise<ActionResp
      * Info: (20260413 - Luphia) We don't want to blow up the backend entirely if someone just checks in too early,
      * so just log the warning and return false gracefully.
      */
-    console.warn(`[MembershipService] dailyCheckIn blocked for ${userAddress}: ${(error as Error).message.split('\n')[0]}`);
+    console.warn(
+      `[MembershipService] dailyCheckIn blocked for ${userAddress}: ${(error as Error).message.split("\n")[0]}`,
+    );
     return { success: false, message: (error as Error).message };
   }
 }
 
 // Info: (20260413 - Luphia) Distributes purchased points directly through the Membership contract's reserve.
-export async function issuePurchasedPointsToMember(userAddress: string, amount: number): Promise<ActionResponse> {
+export async function issuePurchasedPointsToMember(
+  userAddress: string,
+  amount: number,
+): Promise<ActionResponse> {
   try {
     const { account, walletClient, membershipAddress } = await getClients();
     const validTo = getAddress(userAddress);
@@ -113,7 +136,10 @@ export async function issuePurchasedPointsToMember(userAddress: string, amount: 
 
     return { success: true, message: `Issued ${amount} points`, data: { tx } };
   } catch (error) {
-    console.error(`[MembershipService] issuePurchasedPoints failed for ${userAddress}:`, error);
+    console.error(
+      `[MembershipService] issuePurchasedPoints failed for ${userAddress}:`,
+      error,
+    );
     return { success: false, message: (error as Error).message };
   }
 }
@@ -124,12 +150,33 @@ export async function getMemberInfo(userAddress: string) {
     const { membershipAddress } = await getClients();
     const validTo = getAddress(userAddress);
 
-    const [regTime, lastCheckIn, checkInRewards, purchasedPoints] = await Promise.all([
-      publicClient.readContract({ address: membershipAddress, abi: MEMBERSHIP_ABI, functionName: "userRegistrationTimes", args: [validTo] }),
-      publicClient.readContract({ address: membershipAddress, abi: MEMBERSHIP_ABI, functionName: "userLastCheckIns", args: [validTo] }),
-      publicClient.readContract({ address: membershipAddress, abi: MEMBERSHIP_ABI, functionName: "userTotalCheckInRewards", args: [validTo] }),
-      publicClient.readContract({ address: membershipAddress, abi: MEMBERSHIP_ABI, functionName: "userTotalPurchasedPoints", args: [validTo] })
-    ]);
+    const [regTime, lastCheckIn, checkInRewards, purchasedPoints] =
+      await Promise.all([
+        publicClient.readContract({
+          address: membershipAddress,
+          abi: MEMBERSHIP_ABI,
+          functionName: "userRegistrationTimes",
+          args: [validTo],
+        }),
+        publicClient.readContract({
+          address: membershipAddress,
+          abi: MEMBERSHIP_ABI,
+          functionName: "userLastCheckIns",
+          args: [validTo],
+        }),
+        publicClient.readContract({
+          address: membershipAddress,
+          abi: MEMBERSHIP_ABI,
+          functionName: "userTotalCheckInRewards",
+          args: [validTo],
+        }),
+        publicClient.readContract({
+          address: membershipAddress,
+          abi: MEMBERSHIP_ABI,
+          functionName: "userTotalPurchasedPoints",
+          args: [validTo],
+        }),
+      ]);
 
     return {
       success: true,
@@ -138,7 +185,7 @@ export async function getMemberInfo(userAddress: string) {
         lastCheckInTime: Number(lastCheckIn) * 1000,
         totalCheckInRewards: Number(formatEther(checkInRewards as bigint)),
         totalPurchasedPoints: Number(formatEther(purchasedPoints as bigint)),
-      }
+      },
     };
   } catch (error) {
     return { success: false, message: (error as Error).message };

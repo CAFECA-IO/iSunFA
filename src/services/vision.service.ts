@@ -6,7 +6,8 @@ export class VisionService {
 
   constructor(apiKey?: string) {
     // Info: (20260407 - Luphia) Default to environment variable if no key is provided
-    const key = apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+    const key =
+      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
     this.genAI = new GoogleGenerativeAI(key);
     this.modelName = process.env.MODEL || "gemini-1.5-flash";
   }
@@ -14,10 +15,13 @@ export class VisionService {
   /**
    * Info: (20260407 - Luphia) Converts a base64 encoded image into detailed Markdown text.
    * @param base64Image The image string (supports raw base64 or complete data-uri).
-   * @param mimeType Defaults to "image/jpeg". 
+   * @param mimeType Defaults to "image/jpeg".
    * @returns Generated Markdown text describing or extracting structured data from the image.
    */
-  public async imageToMarkdown(base64Image: string, mimeType: string = "image/jpeg"): Promise<string> {
+  public async imageToMarkdown(
+    base64Image: string,
+    mimeType: string = "image/jpeg",
+  ): Promise<string> {
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
 
@@ -25,7 +29,8 @@ export class VisionService {
       const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
 
       // Info: (20260407 - Luphia) Prompt for image analysis
-      const prompt = "Please analyze the content of this image and convert it strictly into structured Markdown format. Extract tables, lists, text structure, or important visual information accordingly.";
+      const prompt =
+        "Please analyze the content of this image and convert it strictly into structured Markdown format. Extract tables, lists, text structure, or important visual information accordingly.";
 
       const parts: Part[] = [
         { text: prompt },
@@ -41,8 +46,13 @@ export class VisionService {
       const response = await result.response;
       return response.text().trim();
     } catch (error) {
-      console.error("[VisionService] Error converting image to markdown:", error);
-      throw new Error("Failed to process vision data via Google Generative AI.");
+      console.error(
+        "[VisionService] Error converting image to markdown:",
+        error,
+      );
+      throw new Error(
+        "Failed to process vision data via Google Generative AI.",
+      );
     }
   }
 }

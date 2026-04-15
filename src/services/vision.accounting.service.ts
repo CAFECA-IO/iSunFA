@@ -51,13 +51,13 @@ export interface IEsgExtraction {
   confidence: number;
 }
 
-
 export class VisionAccountingService {
   private genAI: GoogleGenerativeAI;
   private modelName: string;
 
   constructor(apiKey?: string) {
-    const key = apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+    const key =
+      apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
     this.genAI = new GoogleGenerativeAI(key);
     this.modelName = process.env.MODEL || "gemini-1.5-flash";
   }
@@ -67,7 +67,11 @@ export class VisionAccountingService {
     return base64Image.replace(/^data:image\/\w+;base64,/, "");
   }
 
-  private async generateJSON<T>(systemPrompt: string, base64Image: string, auxContext?: string): Promise<T> {
+  private async generateJSON<T>(
+    systemPrompt: string,
+    base64Image: string,
+    auxContext?: string,
+  ): Promise<T> {
     const model = this.genAI.getGenerativeModel({ model: this.modelName });
     const payload = this.preparePayload(base64Image);
 
@@ -85,8 +89,8 @@ export class VisionAccountingService {
       contents: [{ role: "user", parts }],
       generationConfig: {
         responseMimeType: "application/json",
-        temperature: 0.1, // Info: (20260407 - Luphia) Highly rigid factual grounding 
-      }
+        temperature: 0.1, // Info: (20260407 - Luphia) Highly rigid factual grounding
+      },
     });
 
     const responseText = result.response.text().trim();
@@ -94,7 +98,10 @@ export class VisionAccountingService {
   }
 
   // Info: (20260407 - Luphia) Phase 1. Pure Image Foundation Parsing
-  public async analyzeJournal(base64Image: string, auxContext?: string): Promise<IJournalExtraction> {
+  public async analyzeJournal(
+    base64Image: string,
+    auxContext?: string,
+  ): Promise<IJournalExtraction> {
     const prompt = `
       You are an expert Accountant parsing system. Analyze the provided image purely for objective physical data.
       You MUST return the output strictly as a JSON object without formatting prefixes like \`\`\`json.
@@ -120,7 +127,11 @@ export class VisionAccountingService {
     `;
 
     try {
-      return await this.generateJSON<IJournalExtraction>(prompt, base64Image, auxContext);
+      return await this.generateJSON<IJournalExtraction>(
+        prompt,
+        base64Image,
+        auxContext,
+      );
     } catch (error) {
       console.error("[VisionAccountingService] Phase 1 Journal Error:", error);
       throw new Error("Failed to extract foundational Journal structure.");
@@ -128,35 +139,48 @@ export class VisionAccountingService {
   }
 
   // Info: (20260407 - Luphia) Phase 2. Accounting (Accounting Code injection)
-  public async analyzeVoucher(base64Image: string, journalResult: IJournalExtraction, auxContext?: string): Promise<IVoucherExtraction> {
+  public async analyzeVoucher(
+    base64Image: string,
+    journalResult: IJournalExtraction,
+    auxContext?: string,
+  ): Promise<IVoucherExtraction> {
     // Info: (20260407 - Luphia) Stringify available accounting subsets to enforce strict referencing
-    const availableAccounts = ACCOUNTS.TW.map(acc => "[" + acc.code + "] " + acc.name).join(" | ");
+    const availableAccounts = ACCOUNTS.TW.map(
+      (acc) => "[" + acc.code + "] " + acc.name,
+    ).join(" | ");
 
     const prompt =
       "You are a Senior Auditor determining formal accounting entries (Vouchers).\n" +
       "Review the original image alongside the previously extracted foundational details.\n\n" +
-      "[Extracted Foundation]:\n" + JSON.stringify(journalResult, null, 2) + "\n\n" +
+      "[Extracted Foundation]:\n" +
+      JSON.stringify(journalResult, null, 2) +
+      "\n\n" +
       "[ACCOUNTING DICTIONARY REFERENCE (TAIWAN)]:\n" +
       "You MUST map every 'accountingCode' strictly matching codes from this explicit list:\n" +
-      availableAccounts + "\n\n" +
+      availableAccounts +
+      "\n\n" +
       "Output strictly the following JSON structure:\n" +
       "{\n" +
-      "  \"tradingType\": \"INCOME\" | \"OUTCOME\" | \"TRANSFER\" | null,\n" +
-      "  \"note\": \"String or N/A (Overall justification)\",\n" +
-      "  \"lines\": [\n" +
+      '  "tradingType": "INCOME" | "OUTCOME" | "TRANSFER" | null,\n' +
+      '  "note": "String or N/A (Overall justification)",\n' +
+      '  "lines": [\n' +
       "    {\n" +
-      "      \"accountingCode\": \"String (Must match exact code from dictionary, e.g. '1101') or N/A\",\n" +
-      "      \"particular\": \"String or N/A (Line item description matching the image item)\",\n" +
-      "      \"amount\": Number or null,\n" +
-      "      \"isDebit\": Boolean or null (true if debit/expense, false if credit/income)\n" +
+      '      "accountingCode": "String (Must match exact code from dictionary, e.g. \'1101\') or N/A",\n' +
+      '      "particular": "String or N/A (Line item description matching the image item)",\n' +
+      '      "amount": Number or null,\n' +
+      '      "isDebit": Boolean or null (true if debit/expense, false if credit/income)\n' +
       "    }\n" +
       "  ],\n" +
-      "  \"accountingNote\": \"String or N/A (Note any tax deduction irregularities, tax mapping problems)\",\n" +
-      "  \"confidence\": Number (1-100 evaluating your accounting classification confidence)\n" +
+      '  "accountingNote": "String or N/A (Note any tax deduction irregularities, tax mapping problems)",\n' +
+      '  "confidence": Number (1-100 evaluating your accounting classification confidence)\n' +
       "}";
 
     try {
-      return await this.generateJSON<IVoucherExtraction>(prompt, base64Image, auxContext);
+      return await this.generateJSON<IVoucherExtraction>(
+        prompt,
+        base64Image,
+        auxContext,
+      );
     } catch (error) {
       console.error("[VisionAccountingService] Phase 2 Voucher Error:", error);
       throw new Error("Failed to process strict Voucher accounting lines.");
@@ -164,30 +188,41 @@ export class VisionAccountingService {
   }
 
   // Info: (20260407 - Luphia) Phase 3. ESG Carbon Target Parsing
-  public async analyzeEsg(base64Image: string, journalResult: IJournalExtraction, auxContext?: string): Promise<IEsgExtraction> {
+  public async analyzeEsg(
+    base64Image: string,
+    journalResult: IJournalExtraction,
+    auxContext?: string,
+  ): Promise<IEsgExtraction> {
     const prompt =
       "You are a Sustainability & Carbon Footprint Auditor. \n" +
       "Review the original image and foundational data to determine environmental tracking parameters.\n\n" +
-      "[Extracted Foundation]:\n" + JSON.stringify(journalResult, null, 2) + "\n\n" +
+      "[Extracted Foundation]:\n" +
+      JSON.stringify(journalResult, null, 2) +
+      "\n\n" +
       "[GHG EMISSION COEFFICIENTS FACTOR DATABASE]:\n" +
       "Below is the official Taiwanese EPA coefficients chart. You must match the activity seen in the image to the most appropriate activity type here, and explicitly quote the exact Coefficient parameter.\n\n" +
-      ESG_EMISSION_FACTORS_TEXT + "\n\n" +
+      ESG_EMISSION_FACTORS_TEXT +
+      "\n\n" +
       "Based strictly on the data and factors provided above, generate the following JSON payload:\n" +
       "{\n" +
-      "  \"esgScope\": \"SCOPE_1\" | \"SCOPE_2\" | \"SCOPE_3\" | null,\n" +
-      "  \"esgActivityType\": \"String or N/A (Name of the category you matched in the database)\",\n" +
-      "  \"esgVendor\": \"String or N/A\",\n" +
-      "  \"esgRawActivityData\": \"String or N/A (The physical consumption volume found in image, e.g. 500 liters or 20 KWH)\",\n" +
-      "  \"esgUnit\": \"String or N/A\",\n" +
-      "  \"coefficient\": \"String or N/A (The exact coefficient numerical string extracted from the table match)\",\n" +
-      "  \"coefficientSource\": \"String or N/A (The official row/name source justification)\",\n" +
-      "  \"esgNote\": \"String or N/A (General corporate sustainability alignment comments)\",\n" +
-      "  \"carbonNote\": \"String or N/A (Any mathematical calculation limitations, missing conversions)\",\n" +
-      "  \"confidence\": Number (1-100 evaluating the precision of environmental mapping)\n" +
+      '  "esgScope": "SCOPE_1" | "SCOPE_2" | "SCOPE_3" | null,\n' +
+      '  "esgActivityType": "String or N/A (Name of the category you matched in the database)",\n' +
+      '  "esgVendor": "String or N/A",\n' +
+      '  "esgRawActivityData": "String or N/A (The physical consumption volume found in image, e.g. 500 liters or 20 KWH)",\n' +
+      '  "esgUnit": "String or N/A",\n' +
+      '  "coefficient": "String or N/A (The exact coefficient numerical string extracted from the table match)",\n' +
+      '  "coefficientSource": "String or N/A (The official row/name source justification)",\n' +
+      '  "esgNote": "String or N/A (General corporate sustainability alignment comments)",\n' +
+      '  "carbonNote": "String or N/A (Any mathematical calculation limitations, missing conversions)",\n' +
+      '  "confidence": Number (1-100 evaluating the precision of environmental mapping)\n' +
       "}";
 
     try {
-      return await this.generateJSON<IEsgExtraction>(prompt, base64Image, auxContext);
+      return await this.generateJSON<IEsgExtraction>(
+        prompt,
+        base64Image,
+        auxContext,
+      );
     } catch (error) {
       console.error("[VisionAccountingService] Phase 3 ESG Error:", error);
       throw new Error("Failed to process Environmental and Carbon factors.");

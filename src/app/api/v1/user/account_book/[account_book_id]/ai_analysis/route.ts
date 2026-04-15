@@ -98,7 +98,10 @@ export async function POST(
             abi: ABIS.ENTRY_POINT,
             data: tx.input,
           });
-          const ops = args[0] as unknown as { sender: string; callData: `0x${string}` }[];
+          const ops = args[0] as unknown as {
+            sender: string;
+            callData: `0x${string}`;
+          }[];
 
           for (const op of ops) {
             if (op.sender.toLowerCase() === sessionUser.address.toLowerCase()) {
@@ -152,14 +155,16 @@ export async function POST(
             });
             if (decoded.eventName === "UserOperationEvent") {
               const args = decoded.args as { sender: string; success: boolean };
-              if (args.sender.toLowerCase() === sessionUser.address.toLowerCase()) {
+              if (
+                args.sender.toLowerCase() === sessionUser.address.toLowerCase()
+              ) {
                 if (args.success) {
                   userOpSuccess = true;
                 }
                 break;
               }
             }
-          } catch { }
+          } catch {}
         }
 
         if (!userOpSuccess) {
@@ -174,7 +179,9 @@ export async function POST(
         }
 
         // Wait to complete order because multiple AI scans share the same order, so only complete it once if pending!
-        const existingOrder = await orderGenerator.getPendingOrder(orderId, creator.id).catch(() => null);
+        const existingOrder = await orderGenerator
+          .getPendingOrder(orderId, creator.id)
+          .catch(() => null);
         if (existingOrder && existingOrder.status === "PENDING") {
           await orderGenerator.completeOrder(
             orderId,
@@ -183,7 +190,9 @@ export async function POST(
           );
         }
       } else {
-        const order = await orderGenerator.getPendingOrder(orderId, creator.id).catch(() => null);
+        const order = await orderGenerator
+          .getPendingOrder(orderId, creator.id)
+          .catch(() => null);
 
         if (order && order.status === "PENDING") {
           await webAuthnService.verifySignature(

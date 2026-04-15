@@ -63,7 +63,7 @@ export class SnapshotService {
         "-i", // Info: (20260407 - Luphia) Need interactive flag for STDIN bridging
         this.imageName,
         "node",
-        "-"
+        "-",
       ]);
 
       let output = "";
@@ -82,7 +82,11 @@ export class SnapshotService {
         if (!resolved) {
           resolved = true;
           dockerProcess.kill("SIGKILL");
-          reject(new Error(`Snapshot execution exceeded timeout limit of ${this.timeoutMs}ms.`));
+          reject(
+            new Error(
+              `Snapshot execution exceeded timeout limit of ${this.timeoutMs}ms.`,
+            ),
+          );
         }
       }, this.timeoutMs);
 
@@ -92,7 +96,9 @@ export class SnapshotService {
         clearTimeout(timeoutId);
 
         if (code !== 0) {
-          reject(new Error(`Docker Puppeteer failed (Code ${code}): ${errorOutput}`));
+          reject(
+            new Error(`Docker Puppeteer failed (Code ${code}): ${errorOutput}`),
+          );
         } else {
           resolve(output.trim());
         }

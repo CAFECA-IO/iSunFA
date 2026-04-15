@@ -6,7 +6,10 @@ import { ApiCode } from "@/lib/utils/status";
 import { publicClient } from "@/lib/viem";
 import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
 import { formatUnits } from "viem";
-import { claimDailyCheckIn, registerUserViaMembership } from "@/services/member.service";
+import {
+  claimDailyCheckIn,
+  registerUserViaMembership,
+} from "@/services/member.service";
 import { REWARD_AMOUNTS } from "@/constants/price";
 import { paymentRepo } from "@/repositories/payment.repo";
 
@@ -78,13 +81,15 @@ export async function GET(request: NextRequest) {
           });
 
           if (isFrozen) {
-            console.warn(`User ${user.address} is frozen, skipping checkin mint`);
+            console.warn(
+              `User ${user.address} is frozen, skipping checkin mint`,
+            );
             return;
           }
 
           rewardedAmount = REWARD_AMOUNTS.DAILY_CHECKIN_REWARD;
           const mintResult = await claimDailyCheckIn(user.address);
-          
+
           if (mintResult.success) {
             await paymentRepo.createOrder({
               userId: user.id,
@@ -97,7 +102,9 @@ export async function GET(request: NextRequest) {
             });
             console.log(user.address, "checked in", rewardedAmount);
           } else {
-            throw new Error(`MembershipSystem checkin failed: ${mintResult.message}`);
+            throw new Error(
+              `MembershipSystem checkin failed: ${mintResult.message}`,
+            );
           }
         }
       }

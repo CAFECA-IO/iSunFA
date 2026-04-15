@@ -86,7 +86,7 @@ export async function downloadEsgReport(
       console.warn(
         `⚠️ [ESG PDF] ${stockId} 有登錄資料，但未上傳實體的 PDF 檔案 (可能只提供網址)`,
       );
-      throw new Error('該公司有紀錄，但未上傳有效的 PDF 檔案');
+      throw new Error("該公司有紀錄，但未上傳有效的 PDF 檔案");
     }
 
     const downloadUrl = `https://esggenplus.twse.com.tw/api/api/MopsSustainReport/data/FileStream?id=${fileId}`;
@@ -111,7 +111,7 @@ export async function downloadEsgReport(
         .substring(0, 100)
         .replace(/\n/g, "");
       console.warn(`❌ [ESG PDF] ${stockId} 下載內容非 PDF。預覽: ${preview}`);
-      throw new Error('下載的 ESG 檔案非 PDF 格式');
+      throw new Error("下載的 ESG 檔案非 PDF 格式");
     }
 
     fs.mkdirSync(path.dirname(savePath), { recursive: true });

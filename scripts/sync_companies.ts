@@ -21,13 +21,13 @@ interface IOpenApiRecord {
   DateOfListing?: string;
   Symbol?: string;
   [key: string]:
-  | string
-  | undefined
-  | null
-  | number
-  | boolean
-  | object
-  | string[];
+    | string
+    | undefined
+    | null
+    | number
+    | boolean
+    | object
+    | string[];
 }
 
 interface IDataSource {
