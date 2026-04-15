@@ -16,7 +16,7 @@ export interface IDownloadCallbacks {
 const DATA_SHARDS = 5;
 const PARITY_SHARDS = 3;
 const TOTAL_SHARDS = DATA_SHARDS + PARITY_SHARDS;
-const DEFAULT_SHARD_SIZE = 4 * 1024 * 1024;
+const DEFAULT_SHARD_SIZE = 4 * 1024 * 1024; // Info: (20260415 - Luphia) 4MB
 
 // Info: (20251028 - Luphia) Mock Reed-Solomon Implementation
 class ReedSolomonErasure {
@@ -121,15 +121,17 @@ export const uploadFile = async (file: File, callbacks: IUploadCallbacks) => {
   try {
     const originalFileSize = file.size;
 
-    // Info: (20260311 - Luphia) Always split into exactly DATA_SHARDS (5 data + 3 parity = 8 parts)
-    const currentShardSize = Math.max(
-      1,
-      Math.ceil(originalFileSize / DATA_SHARDS),
+    // Info: (20260415 - Luphia) 確保單一 Shard 最大不超過 DEFAULT_SHARD_SIZE (4MB)
+    const currentShardSize = Math.min(
+      DEFAULT_SHARD_SIZE,
+      Math.max(1, Math.ceil(originalFileSize / DATA_SHARDS))
     );
+
+    // Info: (20260415 - Luphia) 每個 Stripe 處理的實際資料量 (最多 5 * 4MB = 20MB)
     const dataStripeSize = DATA_SHARDS * currentShardSize;
 
-    // Info: (20260311 - Luphia) Since we always use 5 data shards for the whole file, there's exactly 1 stripe
-    const totalStripes = 1;
+    // Info: (20260415 - Luphia) 根據檔案大小動態計算所需的總 Stripe 數量，不再寫死為 1
+    const totalStripes = Math.ceil(originalFileSize / dataStripeSize);
 
     const totalUploadSize = totalStripes * TOTAL_SHARDS * currentShardSize;
     let totalBytesUploaded = 0;
@@ -254,7 +256,8 @@ export const downloadFile = async (
   callbacks: IDownloadCallbacks,
 ) => {
   try {
-    if (callbacks.onProgress) callbacks.onProgress(1); // Started
+    // Info: (20251028 - Luphia) Started
+    if (callbacks.onProgress) callbacks.onProgress(1);
 
     // Info: (20251028 - Luphia) 1. Fetch the initial file/metadata
     const initialBlob = await downloadSingleFile(cid);
@@ -272,9 +275,9 @@ export const downloadFile = async (
         // Info: (20260302 - Julian) Handle standard IApiResponse wrapping
         const data =
           parsed &&
-          typeof parsed === "object" &&
-          "success" in parsed &&
-          "payload" in parsed
+            typeof parsed === "object" &&
+            "success" in parsed &&
+            "payload" in parsed
             ? parsed.payload
             : parsed;
 

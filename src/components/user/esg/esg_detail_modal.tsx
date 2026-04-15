@@ -370,7 +370,7 @@ export default function EsgDetailModal({
             </label>
             <textarea
               id="noteTextarea"
-              aria-label={String(t("common.note"))}
+              aria-label={t("common.note")}
               value={formData.aiNote}
               onChange={(e) =>
                 setFormData({ ...formData, aiNote: e.target.value })

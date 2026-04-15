@@ -1,5 +1,14 @@
 export const zhCn = {
   common: {
+    batch_download: "批次下载",
+    download: "下载",
+    downloading: "下载中...",
+    zipping: "压缩中...",
+    start_date: "开始日期",
+    end_date: "结束日期",
+    error: {
+      download_failed: "下载失败",
+    },
     actions: "操作",
     note: "备注",
     optional_in_parentheses: "选填",
@@ -2137,7 +2146,8 @@ export const zhCn = {
       no_users: "系统中尚无用户",
       unnamed_user: "未命名用户",
       refresh_balance_aria: "刷新余额",
-      issue_points_btn: "发放点数",      role_super_admin: "超级管理员",
+      issue_points_btn: "发放点数",
+      role_super_admin: "超级管理员",
       role_admin: "管理员",
       role_user: "一般用户",
 
