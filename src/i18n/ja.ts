@@ -1,5 +1,14 @@
 export const ja = {
   common: {
+    batch_download: "一括ダウンロード",
+    download: "ダウンロード",
+    downloading: "ダウンロード中...",
+    zipping: "圧縮中...",
+    start_date: "開始日",
+    end_date: "終了日",
+    error: {
+      download_failed: "ダウンロードに失敗しました",
+    },
     actions: "操作",
     note: "備考",
     optional_in_parentheses: "オプション",
@@ -1076,7 +1085,7 @@ export const ja = {
       all: "すべて",
     },
     button: {
-      download: "PNGとしてダウンロード",
+      download: "PNG としてダウンロード",
       send: "給与明細を送信",
       reset: "リセット",
       re_send: "給与明細を再送信",
@@ -2160,7 +2169,8 @@ export const ja = {
       no_users: "システム内にユーザーがいません",
       unnamed_user: "名無しのユーザー",
       refresh_balance_aria: "残高を更新",
-      issue_points_btn: "ポイント発行",      role_super_admin: "スーパー管理者",
+      issue_points_btn: "ポイント発行",
+      role_super_admin: "スーパー管理者",
       role_admin: "管理者",
       role_user: "一般ユーザー",
 

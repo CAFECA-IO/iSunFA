@@ -1,5 +1,14 @@
 export const ko = {
   common: {
+    batch_download: "일괄 다운로드",
+    download: "다운로드",
+    downloading: "다운로드 중...",
+    zipping: "압축 중...",
+    start_date: "시작일",
+    end_date: "종료일",
+    error: {
+      download_failed: "다운로드 실패",
+    },
     actions: "작업",
     note: "비고",
     optional_in_parentheses: "선택",
@@ -1061,7 +1070,7 @@ export const ko = {
       all: "모두",
     },
     button: {
-      download: "PNG로 다운로드",
+      download: "PNG 로 다운로드",
       send: "급여 명세서 발송",
       reset: "초기화",
       re_send: "급여 명세서 재발송",
@@ -2143,7 +2152,8 @@ export const ko = {
       no_users: "시스템에 사용자가 없습니다",
       unnamed_user: "이름 없는 사용자",
       refresh_balance_aria: "잔액 새로고침",
-      issue_points_btn: "포인트 지급",      role_super_admin: "최고 관리자",
+      issue_points_btn: "포인트 지급",
+      role_super_admin: "최고 관리자",
       role_admin: "관리자",
       role_user: "일반 사용자",
 

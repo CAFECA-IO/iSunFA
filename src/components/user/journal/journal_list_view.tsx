@@ -9,6 +9,7 @@ import {
   ArrowUp,
   LayoutGrid,
   List as ListIcon,
+  Download,
 } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -21,6 +22,7 @@ import Pagination from "@/components/common/pagination";
 import { ApiCode } from "@/lib/utils/status";
 import { VerifyStatus } from "@/constants/verify_status";
 import JournalSummary from "@/components/user/journal/journal_summary";
+import BatchDownloadModal from "@/components/user/journal/batch_download_modal";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { SortOrder } from "@/constants/sort";
 
@@ -64,6 +66,8 @@ export default function JournalListView() {
   const [selectedJournal, setSelectedJournal] = useState<IJournal | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isVerifyAllConfirmOpen, setIsVerifyAllConfirmOpen] =
+    useState<boolean>(false);
+  const [isBatchDownloadModalOpen, setIsBatchDownloadModalOpen] =
     useState<boolean>(false);
 
   const [journalToDelete, setJournalToDelete] = useState<IJournal | null>(null);
@@ -297,11 +301,10 @@ export default function JournalListView() {
             <button
               title={t("ocr.list_view") as string}
               type="button"
-              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
-                displayType === DisplayType.LIST
-                  ? "bg-white text-orange-600 shadow-sm"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${displayType === DisplayType.LIST
+                ? "bg-white text-orange-600 shadow-sm"
+                : "text-gray-400 hover:text-gray-600"
+                }`}
               onClick={() => setDisplayType(DisplayType.LIST)}
             >
               <ListIcon size={16} />
@@ -309,11 +312,10 @@ export default function JournalListView() {
             <button
               title={t("ocr.grid_view") as string}
               type="button"
-              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
-                displayType === DisplayType.GRID
-                  ? "bg-white text-orange-600 shadow-sm"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${displayType === DisplayType.GRID
+                ? "bg-white text-orange-600 shadow-sm"
+                : "text-gray-400 hover:text-gray-600"
+                }`}
               onClick={() => setDisplayType(DisplayType.GRID)}
             >
               <LayoutGrid size={16} />
@@ -402,12 +404,22 @@ export default function JournalListView() {
             {/* Info: (20260401 - Julian) Verify All Button */}
             <button
               type="button"
-              aria-label={t("common.verify_all")}
+              aria-label="common.verify_all"
               onClick={() => setIsVerifyAllConfirmOpen(true)}
               disabled={isLoading}
               className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               {t("common.verify_all")}
+            </button>
+            <button
+              type="button"
+              aria-label={t("common.batch_download")}
+              onClick={() => setIsBatchDownloadModalOpen(true)}
+              disabled={isLoading}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-100 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-orange-600 shadow-sm enabled:hover:bg-orange-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+            >
+              <Download className="h-4 w-4" />
+              {t("common.batch_download")}
             </button>
           </div>
         </div>
@@ -480,6 +492,13 @@ export default function JournalListView() {
           confirmText={t("common.confirm")}
           cancelText={t("common.cancel")}
           onConfirm={verifyAllJournals}
+        />
+
+        {/* Info: (20260415 - Luphia) Batch Download Modal */}
+        <BatchDownloadModal
+          isOpen={isBatchDownloadModalOpen}
+          onClose={() => setIsBatchDownloadModalOpen(false)}
+          accountBookId={accountBookId}
         />
       </div>
     </div>

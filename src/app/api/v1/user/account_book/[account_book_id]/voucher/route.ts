@@ -244,16 +244,16 @@ export async function GET(
         accountBookId: v.accountBookId,
         userId: v.userId,
         tradingDate: Math.floor(v.tradingDate.getTime() / 1000),
-        tradingType: v.tradingType?.toLowerCase() as TradingType,
+        tradingType: v.tradingType as TradingType,
         note: v.note ?? "",
         isDeleted: !!v.deletedAt,
         fileId: v.fileId ?? "",
         file: v.file
           ? {
-              id: v.file.id,
-              hash: v.file.hash,
-              fileName: v.file.fileName || "Unknown",
-            }
+            id: v.file.id,
+            hash: v.file.hash,
+            fileName: v.file.fileName || "Unknown",
+          }
           : undefined,
         lineItems: {
           lines: voucherLineItems,

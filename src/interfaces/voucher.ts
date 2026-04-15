@@ -2,9 +2,9 @@ import { IAccount } from "@/constants/accounts";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 export enum TradingType {
-  INCOME = "income",
-  OUTCOME = "outcome",
-  TRANSFER = "transfer",
+  INCOME = "INCOME",
+  OUTCOME = "OUTCOME",
+  TRANSFER = "TRANSFER",
 }
 
 export interface IVoucherDashboardSummary {

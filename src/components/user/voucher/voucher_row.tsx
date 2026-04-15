@@ -257,11 +257,10 @@ export function VoucherRow({
                 </span>
                 {/* Info: (20260316 - Julian) 借方靠左，貸方靠右 */}
                 <span
-                  className={`${
-                    line.isDebit
-                      ? "font-bold text-slate-800"
-                      : "ml-4 font-medium text-slate-700"
-                  } max-w-[100px] truncate text-xs lg:max-w-[250px] lg:text-sm`}
+                  className={`${line.isDebit
+                    ? "font-bold text-slate-800"
+                    : "ml-4 font-medium text-slate-700"
+                    } max-w-[100px] truncate text-xs lg:max-w-[250px] lg:text-sm`}
                 >
                   {line.accounting?.name}
                 </span>

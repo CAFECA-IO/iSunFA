@@ -1,5 +1,14 @@
 export const zhTw = {
   common: {
+    batch_download: "批次下載",
+    download: "下載",
+    downloading: "下載中...",
+    zipping: "壓縮中...",
+    start_date: "開始日期",
+    end_date: "結束日期",
+    error: {
+      download_failed: "下載失敗",
+    },
     actions: "操作",
     note: "備註",
     optional_in_parentheses: "選填",
@@ -2154,7 +2163,8 @@ export const zhTw = {
       no_users: "系統中尚無用戶",
       unnamed_user: "未命名用戶",
       refresh_balance_aria: "重新整理點數",
-      issue_points_btn: "發放點數",      role_super_admin: "超級管理員",
+      issue_points_btn: "發放點數",
+      role_super_admin: "超級管理員",
       role_admin: "管理員",
       role_user: "一般用戶",
 

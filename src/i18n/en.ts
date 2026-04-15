@@ -1,5 +1,14 @@
 export const en = {
   common: {
+    batch_download: "Batch Download",
+    download: "Download",
+    downloading: "Downloading...",
+    zipping: "Zipping...",
+    start_date: "Start Date",
+    end_date: "End Date",
+    error: {
+      download_failed: "Download failed",
+    },
     actions: "Actions",
     note: "Note",
     optional_in_parentheses: "Optional",
@@ -2206,7 +2215,8 @@ export const en = {
       no_users: "No users in the system",
       unnamed_user: "Unnamed User",
       refresh_balance_aria: "Refresh balance",
-      issue_points_btn: "Issue Points",      role_super_admin: "Super Admin",
+      issue_points_btn: "Issue Points",
+      role_super_admin: "Super Admin",
       role_admin: "Admin",
       role_user: "User",
 
