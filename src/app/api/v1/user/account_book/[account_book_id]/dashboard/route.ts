@@ -186,7 +186,10 @@ export async function GET(
             (v.tradingDate.getMonth() - start.getMonth());
           bIdx = Math.max(0, Math.min(count - 1, months));
         } else {
-          bIdx = Math.max(0, Math.min(count - 1, Math.floor((ts - start.getTime()) / bucketMs)));
+          bIdx = Math.max(
+            0,
+            Math.min(count - 1, Math.floor((ts - start.getTime()) / bucketMs)),
+          );
         }
 
         if (v.tradingType === "INCOME") buckets[bIdx].income += val;
@@ -225,7 +228,15 @@ export async function GET(
             (date.getMonth() - start.getMonth());
           bIdx = Math.max(0, Math.min(count - 1, months));
         } else {
-          bIdx = Math.max(0, Math.min(count - 1, Math.floor((e.tradingDate.getTime() - start.getTime()) / bucketMs)));
+          bIdx = Math.max(
+            0,
+            Math.min(
+              count - 1,
+              Math.floor(
+                (e.tradingDate.getTime() - start.getTime()) / bucketMs,
+              ),
+            ),
+          );
         }
 
         if (e.scope === "SCOPE_1") buckets[bIdx].scope1[gasType] += em;
@@ -280,13 +291,21 @@ export async function GET(
       revenueTrendVal: revTrend,
       revenueTarget: prevIncome * 1.1,
       revenueAchievement:
-        prevIncome > 0 ? (currentIncome / (prevIncome * 1.1)) * 100 : currentIncome > 0 ? 100 : 0,
+        prevIncome > 0
+          ? (currentIncome / (prevIncome * 1.1)) * 100
+          : currentIncome > 0
+            ? 100
+            : 0,
       expenditureCurrent: currentOutcome,
       expenditureTrend: (expTrend > 0 ? "+" : "") + expTrend.toFixed(1) + "%",
       expenditureTrendVal: expTrend,
       expenditureBudget: prevOutcome * 1.05,
       expenditureRate:
-        prevOutcome > 0 ? (currentOutcome / (prevOutcome * 1.05)) * 100 : currentOutcome > 0 ? 100 : 0,
+        prevOutcome > 0
+          ? (currentOutcome / (prevOutcome * 1.05)) * 100
+          : currentOutcome > 0
+            ? 100
+            : 0,
       pendingCount: 0,
       applyingCount: 0,
       anomaliesCritical: 0,
@@ -395,9 +414,9 @@ export async function GET(
             currentIncome === 0
               ? "N/A"
               : (
-                (gasType === "co2" ? cGas / 1000 : cGas) /
-                (currentIncome / 10000)
-              ).toFixed(2),
+                  (gasType === "co2" ? cGas / 1000 : cGas) /
+                  (currentIncome / 10000)
+                ).toFixed(2),
           isTop10Percent: true,
           goalStatus,
           goalProgress,

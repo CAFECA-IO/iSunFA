@@ -64,18 +64,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Order not found" }, { status: 404 });
     }
 
-    const { shouldMint, creditsToMint } =
-      await paymentRepo.processOenPayment(
-        order,
-        body,
-        status,
-        token as string | undefined,
-      );
+    const { shouldMint, creditsToMint } = await paymentRepo.processOenPayment(
+      order,
+      body,
+      status,
+      token as string | undefined,
+    );
 
     if (shouldMint && creditsToMint > 0 && order.user?.address) {
       const mintResult = await issuePurchasedPointsToMember(
         order.user.address,
-        creditsToMint
+        creditsToMint,
       );
 
       if (!mintResult.success) {

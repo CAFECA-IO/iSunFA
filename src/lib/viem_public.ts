@@ -1,8 +1,7 @@
 import { createPublicClient, http, defineChain } from "viem";
 
 // Info: (20260122 - Tzuhan) Prioritize settings from .env
-const RPC_URL =
-  process.env.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
+const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
 const CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_ISUNCOIN_CHAIN_ID || "8017");
 
 export const TAIWAN_COUNTRY_CODE = 158;

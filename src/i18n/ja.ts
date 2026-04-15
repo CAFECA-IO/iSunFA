@@ -5,7 +5,8 @@ export const ja = {
     optional_in_parentheses: "オプション",
     no_data: "データなし",
     cancel_edit_title: "編集をキャンセルしますか？",
-    cancel_edit_message: "編集をキャンセルしてもよろしいですか？データは元の状態に戻ります。",
+    cancel_edit_message:
+      "編集をキャンセルしてもよろしいですか？データは元の状態に戻ります。",
     loading: "読み込み中...",
     save: "保存",
     confirm: "確認",
@@ -33,7 +34,8 @@ export const ja = {
       page_info: "{{current}} / {{total}} ページ",
     },
     testing_env_banner: {
-      message: "⚠️ この環境は開発およびデモ用のテスト環境です。データは定期的にクリアされます。本番環境としては使用しないでください。本番環境はこちらへ ",
+      message:
+        "⚠️ この環境は開発およびデモ用のテスト環境です。データは定期的にクリアされます。本番環境としては使用しないでください。本番環境はこちらへ ",
     },
     ai_confidence: {
       title: "AI 信頼度",
@@ -70,7 +72,8 @@ export const ja = {
   dashboard: {
     title: "情報戦略室",
     empty_state_title: "データなし",
-    empty_state_desc: "選択した期間のデータはありません。別の期間を選択するか、データをアップロードしてください。",
+    empty_state_desc:
+      "選択した期間のデータはありません。別の期間を選択するか、データをアップロードしてください。",
     empty_state_cta: "データをアップロード",
     executive_summary: "経営判断のトップ指標",
     auto_refresh: "自動更新",
@@ -177,7 +180,8 @@ export const ja = {
   },
   checkin_reward: {
     title: "毎日ログイン報酬",
-    description: "{{amount}} ポイントを獲得しました。iSunFA でさらに多くの機能を探索してください！",
+    description:
+      "{{amount}} ポイントを獲得しました。iSunFA でさらに多くの機能を探索してください！",
     reward_label: "獲得ポイント",
     unit: "ポイント",
     confirm_btn: "確認して開始する",
@@ -211,7 +215,8 @@ export const ja = {
     reg_failed: "登録失敗",
     scroll_to_agree: "関連条項を詳細にお読みください",
     unregistered_confirm_title: "アカウントが未登録です",
-    unregistered_confirm_desc: "このパスキーに関連付けられたアカウントが見つかりません。このデバイスを使用して新しいアカウントを作成しますか？",
+    unregistered_confirm_desc:
+      "このパスキーに関連付けられたアカウントが見つかりません。このデバイスを使用して新しいアカウントを作成しますか？",
     unregistered_confirm_yes: "はい、アカウントを作成します",
     unregistered_confirm_no: "キャンセル",
   },
@@ -640,7 +645,8 @@ export const ja = {
       rename_success: "名前を変更しました",
       delete_success: "クレジットカードを削除しました",
       delete_confirm_title: "クレジットカードを削除しますか？",
-      delete_confirm_desc: "このカードを削除すると、今後の支払いに使用できなくなります。",
+      delete_confirm_desc:
+        "このカードを削除すると、今後の支払いに使用できなくなります。",
       cancel: "キャンセル",
       save: "保存",
       edit_details: "詳細を編集",
@@ -662,8 +668,9 @@ export const ja = {
       source_analysis: "分析サービス利用",
       source_chat: "AI相談サービス",
       source_checkin: "チェックイン報酬",
-      source_registration: "登録報酬"
-    }
+      source_registration: "登録報酬",
+      source_admin_issued: "管理者発行",
+    },
   },
   sidebar: {
     modules: "機能モジュール",
@@ -683,38 +690,53 @@ export const ja = {
         title: "産業発展 (Industry Development)",
         desc: "このモジュールの分析レベルは「マクロ産業」と「メソサプライチェーン」です。したがって、キーワードは産業セクター、サブ産業、技術トレンド、または特定のサプライチェーンに焦点を当てるべきです。",
         sectors_title: "主要セクター (Sectors)：",
-        sectors_desc: "テクノロジー (Technology)、ヘルスケア (Healthcare)、金融 (Financials)、一般消費財 (Consumer Discretionary)、エネルギー (Energy)。",
-        sub_title: "サブ産業 / サプライチェーン (Sub-industries / Supply Chains)：",
-        sub_desc: "半導体製造 (Semiconductor Manufacturing)、IC設計 (IC Design)、EVバッテリー (EV Batteries)、クラウドインフラ (Cloud Infrastructure)、バイオテクノロジー (Biotechnology)。",
-        trends_title: "新興トレンド / コンセプト (Emerging Trends / Concepts)：",
-        trends_desc: "AIサーバー (AI Servers)、シリコンフォトニクス (Silicon Photonics)、全固体電池 (Solid-State Batteries)、低軌道衛星 (Low Earth Orbit Satellites)、ESGグリーンエネルギー (ESG Green Energy)。"
+        sectors_desc:
+          "テクノロジー (Technology)、ヘルスケア (Healthcare)、金融 (Financials)、一般消費財 (Consumer Discretionary)、エネルギー (Energy)。",
+        sub_title:
+          "サブ産業 / サプライチェーン (Sub-industries / Supply Chains)：",
+        sub_desc:
+          "半導体製造 (Semiconductor Manufacturing)、IC設計 (IC Design)、EVバッテリー (EV Batteries)、クラウドインフラ (Cloud Infrastructure)、バイオテクノロジー (Biotechnology)。",
+        trends_title:
+          "新興トレンド / コンセプト (Emerging Trends / Concepts)：",
+        trends_desc:
+          "AIサーバー (AI Servers)、シリコンフォトニクス (Silicon Photonics)、全固体電池 (Solid-State Batteries)、低軌道衛星 (Low Earth Orbit Satellites)、ESGグリーンエネルギー (ESG Green Energy)。",
       },
       smart_enterprise_rating: {
         title: "スマート企業格付け (Smart Enterprise Rating)",
         desc: "このモジュールの分析レベルは「ミクロ事業体」であり、単一企業の財務および信用状態のチェックに焦点を当てています。キーワードは正確な企業名、ティッカー、または統一事業番号である必要があります。",
         us_tickers_title: "米国株のティッカー / 企業名：",
-        us_tickers_desc: "AAPL または Apple (アップル)\nNVDA または NVIDIA (エヌビディア)\nMSFT または Microsoft (マイクロソフト)\nTSLA または Tesla (テスラ)",
+        us_tickers_desc:
+          "AAPL または Apple (アップル)\nNVDA または NVIDIA (エヌビディア)\nMSFT または Microsoft (マイクロソフト)\nTSLA または Tesla (テスラ)",
         tw_tickers_title: "台湾株 / ADR ティッカー：",
-        tw_tickers_desc: "TSM (TSMC ADR)\n2330 または 台湾積体電路製造 (データベースが対応している場合)",
+        tw_tickers_desc:
+          "TSM (TSMC ADR)\n2330 または 台湾積体電路製造 (データベースが対応している場合)",
         fuzzy_title: "企業属性分類 (あいまい検索が対応している場合)：",
-        fuzzy_desc: "対象企業を絞り込んでバッチ評価を行うために、「Appleサプライチェーン」や「Tier 1 自動車部品サプライヤー」と入力することもできます。",
+        fuzzy_desc:
+          "対象企業を絞り込んでバッチ評価を行うために、「Appleサプライチェーン」や「Tier 1 自動車部品サプライヤー」と入力することもできます。",
         analyst_view_title: "💡 アナリストの視点：",
-        analyst_view_desc: "実務上、経営陣はここで「主要な競合他社」、「主要なサプライヤー」、「潜在的な買収対象」のティッカーを入力して、サプライチェーンの途絶リスクを監視したり、同業他社との財務指標（ROEや粗利益率など）のベンチマーキングを行ったりします。"
+        analyst_view_desc:
+          "実務上、経営陣はここで「主要な競合他社」、「主要なサプライヤー」、「潜在的な買収対象」のティッカーを入力して、サプライチェーンの途絶リスクを監視したり、同業他社との財務指標（ROEや粗利益率など）のベンチマーキングを行ったりします。",
       },
       financial_product_rating: {
         title: "金融商品格付け (Financial Product Rating)",
         desc: "このモジュールは取引可能な「金融資産」および「投資ポートフォリオ」を対象としています。キーワードは具体的な投資信託、商品コード、ファンド名、または資産クラスである必要があります。",
         etf_title: "インデックスファンド / ETF (ETFs)：",
-        etf_desc: "SPY または VOO (S&P 500連動)\nQQQ (ナスダック100連動)\nTLT (20年超米国債 ETF)",
+        etf_desc:
+          "SPY または VOO (S&P 500連動)\nQQQ (ナスダック100連動)\nTLT (20年超米国債 ETF)",
         mutual_funds_title: "アクティブファンド (Mutual Funds)：",
-        mutual_funds_desc: "特定のファンド商品名を入力します。例：Fidelity Global Technology Fund、AB Global High Yield。",
+        mutual_funds_desc:
+          "特定のファンド商品名を入力します。例：Fidelity Global Technology Fund、AB Global High Yield。",
         bonds_title: "特定債券 / 固定収益商品 (Bonds)：",
-        bonds_desc: "米国10年国債 (US 10-Year Treasury)、特定企業の社債（例：Apple 2030年満期社債）、投資適格社債 (IG Bonds)、ハイイールド債 (High Yield Bonds / Junk Bonds)。",
-        derivatives_title: "デリバティブ / コモディティ (Commodities / Derivatives)：",
-        derivatives_desc: "金 (Gold / GLD)、ブレント原油 (Brent Crude)、ビットコイン (Bitcoin / IBIT)。",
+        bonds_desc:
+          "米国10年国債 (US 10-Year Treasury)、特定企業の社債（例：Apple 2030年満期社債）、投資適格社債 (IG Bonds)、ハイイールド債 (High Yield Bonds / Junk Bonds)。",
+        derivatives_title:
+          "デリバティブ / コモディティ (Commodities / Derivatives)：",
+        derivatives_desc:
+          "金 (Gold / GLD)、ブレント原油 (Brent Crude)、ビットコイン (Bitcoin / IBIT)。",
         analyst_view_title: "💡 アナリストの視点：",
-        analyst_view_desc: "キーワードを入力すると、システムは通常、シャープレシオ (Sharpe Ratio) や最大ドローダウン (Max Drawdown) などの定量的リスク指標を生成します。これは企業の「財務部門」が遊休資金（Treasury Management）を管理したり、ヘッジポジションを配置したりする上で非常に重要です。"
-      }
+        analyst_view_desc:
+          "キーワードを入力すると、システムは通常、シャープレシオ (Sharpe Ratio) や最大ドローダウン (Max Drawdown) などの定量的リスク指標を生成します。これは企業の「財務部門」が遊休資金（Treasury Management）を管理したり、ヘッジポジションを配置したりする上で非常に重要です。",
+      },
     },
     company_input: {
       label: "企業名または法人番号",
@@ -722,25 +744,26 @@ export const ja = {
       searching: "検索中...",
       not_found:
         "企業が見つかりません。より完全な名称または法人番号を入力してください。",
-      missing_tax_id_desc: "この帳簿（{{name}}）には法人番号が設定されていません。内部データ分析には法人番号が必要です。ここで設定してください：",
+      missing_tax_id_desc:
+        "この帳簿（{{name}}）には法人番号が設定されていません。内部データ分析には法人番号が必要です。ここで設定してください：",
     },
-    title: '分析レポート',
-    internal_analysis: '内部分析',
-    external_analysis: '外部分析',
-    history_reports: '履歴レポート',
-    period_type: '時間単位',
-    select_year: '年を選択',
-    select_period: '期間を選択',
-    select_account_book: '私のアカウントブックから選択',
-    select_from_account_books: 'アカウントブックを選択',
-    country: '国を選択',
-    category: 'カテゴリを選択',
-    keyword: 'キーワード',
-    enter_keyword: 'キーワードを入力...',
-    period: '期間',
-    confirm_cost: 'コスト',
-    generate: 'レポート生成',
-    selected_period_desc: '{{value}} ({{type}})',
+    title: "分析レポート",
+    internal_analysis: "内部分析",
+    external_analysis: "外部分析",
+    history_reports: "履歴レポート",
+    period_type: "時間単位",
+    select_year: "年を選択",
+    select_period: "期間を選択",
+    select_account_book: "私のアカウントブックから選択",
+    select_from_account_books: "アカウントブックを選択",
+    country: "国を選択",
+    category: "カテゴリを選択",
+    keyword: "キーワード",
+    enter_keyword: "キーワードを入力...",
+    period: "期間",
+    confirm_cost: "コスト",
+    generate: "レポート生成",
+    selected_period_desc: "{{value}} ({{type}})",
     insufficient_credits: {
       title: "ポイント不足",
       message:
@@ -817,21 +840,24 @@ export const ja = {
       view_tx: "トランザクションを表示",
     },
     share: {
-      button: 'レポートを共有',
-      modal_title: '公開レポートを共有',
-      modal_desc: 'このリンクを知っている人は誰でも、レポートの「匿名化された概要」を閲覧できます。機密の金額や詳細なサプライヤー情報はシステムによって安全に隠されています。',
-      copy: 'コピー',
-      copied: 'クリップボードにコピーしました',
-      revoke: '共有リンクを取り消す',
-      revoked: '共有リンクが正常に取り消されました',
-      done: '完了',
-      public_badge: '公開概要レポート',
-      shared_by: '{{name}} により共有',
-      security_intercept: 'セキュリティブロック',
-      security_desc: 'このタイプのレポートは一般公開に対応していないか、データ形式が不正です。',
-      cta_title: 'あなたの企業専用の包括的な分析レポートを作成しませんか？',
-      cta_desc: 'iSunFA は最先端の AI 技術を活用し、カーボンヘルスチェック、財務格付け、コンプライアンス監査など、包括的なスマート会計ソリューションを提供します。',
-      cta_button: 'iSunFA スマート会計を見る'
+      button: "レポートを共有",
+      modal_title: "公開レポートを共有",
+      modal_desc:
+        "このリンクを知っている人は誰でも、レポートの「匿名化された概要」を閲覧できます。機密の金額や詳細なサプライヤー情報はシステムによって安全に隠されています。",
+      copy: "コピー",
+      copied: "クリップボードにコピーしました",
+      revoke: "共有リンクを取り消す",
+      revoked: "共有リンクが正常に取り消されました",
+      done: "完了",
+      public_badge: "公開概要レポート",
+      shared_by: "{{name}} により共有",
+      security_intercept: "セキュリティブロック",
+      security_desc:
+        "このタイプのレポートは一般公開に対応していないか、データ形式が不正です。",
+      cta_title: "あなたの企業専用の包括的な分析レポートを作成しませんか？",
+      cta_desc:
+        "iSunFA は最先端の AI 技術を活用し、カーボンヘルスチェック、財務格付け、コンプライアンス監査など、包括的なスマート会計ソリューションを提供します。",
+      cta_button: "iSunFA スマート会計を見る",
     },
   },
   ai_consultation_room: {
@@ -1096,7 +1122,8 @@ export const ja = {
     required_points: "必要ポイント",
     balance_after_payment: "支払い後の残高",
     confirm_analyze_title: "分析費用の確認",
-    confirm_analyze_desc: "すべてのスキャンした文書に対してAI分析を実行します。合計支払いポイントを確認してください：",
+    confirm_analyze_desc:
+      "すべてのスキャンした文書に対してAI分析を実行します。合計支払いポイントを確認してください：",
     cost_per_page: "ページごとの費用",
     total_cost: "合計ポイント",
     point_unit: "pt",
@@ -1104,7 +1131,8 @@ export const ja = {
     cancel_btn: "キャンセル",
     quick_scan: "クイックスキャン",
     camera_denied_title: "カメラアクセスが拒否されました",
-    camera_denied_desc: "ドキュメントスキャナーを使用するには、ブラウザでカメラのアクセスを許可してください。",
+    camera_denied_desc:
+      "ドキュメントスキャナーを使用するには、ブラウザでカメラのアクセスを許可してください。",
     hold_still: "スキャンを開始するには1秒間静止してください",
     place_document_in_frame: "ドキュメントを枠内に配置してください",
     initializing: "カメラと初期化しています...",
@@ -1291,10 +1319,12 @@ export const ja = {
     },
     loading: "ロード中...",
     no_records: "データなし",
-    no_records_desc: "選択した期間のESG記録はありません。別の期間を選択するか、データをアップロードしてください。",
+    no_records_desc:
+      "選択した期間のESG記録はありません。別の期間を選択するか、データをアップロードしてください。",
     no_records_cta: "データをアップロード",
     no_filter_results: "条件に一致する記録が見つかりません",
-    no_filter_results_desc: "検索キーワードまたはフィルター条件を調整してみてください",
+    no_filter_results_desc:
+      "検索キーワードまたはフィルター条件を調整してみてください",
     footer: {
       record_count: "{{count}} 件の記録表示",
       data_citation: "データ: IPCC 第6次評価報告書 排出係数",
@@ -1516,10 +1546,12 @@ export const ja = {
         filter_btn: "フィルター",
         verify_all: "一括確認",
         no_data: "データなし",
-        no_data_desc: "選択した期間の伝票データはありません。別の期間を選択するか、データをアップロードしてください。",
+        no_data_desc:
+          "選択した期間の伝票データはありません。別の期間を選択するか、データをアップロードしてください。",
         no_data_cta: "データをアップロード",
         no_filter_results: "条件に一致する記録が見つかりません",
-        no_filter_results_desc: "検索キーワードまたはフィルター条件を調整してみてください",
+        no_filter_results_desc:
+          "検索キーワードまたはフィルター条件を調整してみてください",
       },
     },
     summary: {
@@ -1588,15 +1620,17 @@ export const ja = {
       },
     },
   },
-  "verify": {
-    "verify_modal": {
+  verify: {
+    verify_modal: {
       title: "確認核對？",
-      message: "您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+      message:
+        "您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
       confirm: "確認核對",
     },
-    "unverify_modal": {
+    unverify_modal: {
       title: "確認退回？",
-      message: "您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+      message:
+        "您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
       confirm: "確認退回",
     },
     status: {
@@ -1612,7 +1646,7 @@ export const ja = {
       journal: "日記帳",
       voucher: "傳票",
       esg: "碳排紀錄",
-    }
+    },
   },
   esg: {
     detail_modal: {
@@ -1640,7 +1674,8 @@ export const ja = {
     web3Address: "Web3アドレス",
     role: "権限",
     fido2Requirement: "FIDO2認証の要件:",
-    fido2RequirementText: "このトランザクションをオンチェーンで署名するには、Passkeyでの認証が必要です。",
+    fido2RequirementText:
+      "このトランザクションをオンチェーンで署名するには、Passkeyでの認証が必要です。",
     signing: "署名中...",
     inviteViaFido2: "FIDO2を使って招待",
     roles: {
@@ -1663,14 +1698,15 @@ export const ja = {
       errorAccept: "招待の受け入れに失敗しました",
       errorRole: "役割の変更に失敗しました",
       errorRemove: "メンバーの削除に失敗しました",
-    }
+    },
   },
   esg_report: {
     unit: "kgCO2e",
     loading_title: "ESGレポートを作成中",
     loading_desc: "各スコープの排出分布を計算しています。お待ちください...",
     error_title: "ESGレポートの作成に失敗しました",
-    error_desc: "この期間に承認された炭素排出記録があるか確認してください。または後でお試しください。",
+    error_desc:
+      "この期間に承認された炭素排出記録があるか確認してください。または後でお試しください。",
     gross_emissions: "温室効果ガス総排出量",
     gross_desc: "対象期間の累積総量",
     scope1: "Scope 1 (直接排出)",
@@ -1688,7 +1724,6 @@ export const ja = {
     scope3_title: "Scope 3 (サプライチェーン)",
   },
   report_view: {
-
     title: "レポート作成",
     desc: "ワンクリックで専門的な会計レポートとESGレポートを作成し、企業の現状を即座に把握します。",
     print_note_title: "財務指標の注記",
@@ -1696,9 +1731,11 @@ export const ja = {
     period_selection: "期間選択",
     year_selection: "年選択",
     generate_btn: "レポート生成",
-    hint_verified_count: "現在確認済みの {{count}} 件の伝票情報に基づいてリアルタイムで集計します。",
+    hint_verified_count:
+      "現在確認済みの {{count}} 件の伝票情報に基づいてリアルタイムで集計します。",
     empty_report_title: "レポート未作成",
-    empty_report_desc: "必要なパラメータを設定すると、iSunFAがレポートを作成します。",
+    empty_report_desc:
+      "必要なパラメータを設定すると、iSunFAがレポートを作成します。",
     unknown_account_book: "(不明な帳簿)",
     period_unit: "期間: {{period}} ｜ 単位: {{currency}}",
     types: {
@@ -1713,13 +1750,15 @@ export const ja = {
       q2: "第2四半期",
       q3: "第3四半期",
       q4: "第4四半期",
-    }
+    },
   },
   cash_flow_statement_view: {
     loading_title: "キャッシュフロー計算書を作成中...",
-    loading_desc: "システムが営業、投資、財務活動を計算しています。少々お待ちください...",
+    loading_desc:
+      "システムが営業、投資、財務活動を計算しています。少々お待ちください...",
     error_title: "作成失敗",
-    error_desc: "この期間に十分な伝票記録があるか確認するか、後でもう一度お試しください。",
+    error_desc:
+      "この期間に十分な伝票記録があるか確認するか、後でもう一度お試しください。",
     metric_fcf_title: "フリーキャッシュフロー",
     metric_fcf_desc: "資本的支出後の利用可能な現金",
     metric_ocf_ratio_title: "営業キャッシュフロー比率",
@@ -1729,13 +1768,16 @@ export const ja = {
     metric_ending_balance_title: "期末残高",
     metric_ending_balance_desc: "期末の現金状況",
     note_fcf_type: "流動性",
-    note_fcf_main: "フリーキャッシュフロー = 営業キャッシュフロー - 資本的支出。",
+    note_fcf_main:
+      "フリーキャッシュフロー = 営業キャッシュフロー - 資本的支出。",
     note_fcf_sub: "資本的支出後に自由に使用できる現金。> 0を推奨。",
     note_ocf_ratio_type: "支払能力",
-    note_ocf_ratio_main: "営業キャッシュフロー比率 = 営業キャッシュフロー / 流動負債。",
+    note_ocf_ratio_main:
+      "営業キャッシュフロー比率 = 営業キャッシュフロー / 流動負債。",
     note_ocf_ratio_sub: "短期債務の返済能力を測定します。> 100%を推奨。",
     note_cf_adequacy_type: "支払能力",
-    note_cf_adequacy_main: "キャッシュフロー妥当性比率 = 営業キャッシュフロー / 総資産。",
+    note_cf_adequacy_main:
+      "キャッシュフロー妥当性比率 = 営業キャッシュフロー / 総資産。",
     note_cf_adequacy_sub: "債務と資本的支出をサポートする能力。> 100%を推奨。",
     note_ending_balance_type: "支払能力",
     note_ending_balance_main: "期末残高 = 営業 + 投資 + 財務キャッシュフロー。",
@@ -1778,7 +1820,8 @@ export const ja = {
     note_dte_sub: "自己資本に対する負債の依存度を示します。100%未満を推奨。",
     note_ltftfa_type: "財務構造",
     note_ltftfa_main: "比率 = (自己資本 + 固定負債) / 固定資産",
-    note_ltftfa_sub: "固定資産が安定した長期資金によって賄われているかどうかを測定します。",
+    note_ltftfa_sub:
+      "固定資産が安定した長期資金によって賄われているかどうかを測定します。",
     note_nwps_type: "収益性",
     note_nwps_main: "一株当たり純資産 = 総自己資本 / 発行済株式数",
     note_nwps_sub: "清算時の一株当たりの残存価値。",
@@ -1792,7 +1835,8 @@ export const ja = {
     loading_title: "貸借対照表を作成中",
     loading_desc: "資産、負債、資本項目を決済しています。お待ちください...",
     error_title: "作成に失敗しました",
-    error_desc: "期間内に十分な承認済み伝票があるか確認するか、後でお試しください。",
+    error_desc:
+      "期間内に十分な承認済み伝票があるか確認するか、後でお試しください。",
     assets_title: "資産",
     pct_total_assets: "% 資産合計",
     current_assets: "流動資産",
@@ -1823,7 +1867,7 @@ export const ja = {
     note_em_sub: "財務レバレッジ。2未満が推奨。",
     note_wc_type: "流動性",
     note_wc_main: "運転資本 = 流動資産 - 流動負債。",
-    note_wc_sub: "短期的な流動性。0以上が推奨。"
+    note_wc_sub: "短期的な流動性。0以上が推奨。",
   },
 
   income_statement_view: {
@@ -1863,5 +1907,277 @@ export const ja = {
     section_ibt: "税引前当期純利益",
     section_tax: "法人税等",
     section_ni: "当期純利益",
+  },
+  admin_setup: {
+    header: {
+      title: "システムデプロイ",
+      subtitle: "初期化と安全なクラスタ設定",
+      restart: "再起動",
+      reset: "リセット",
+      restart_title: "セットアッププロセスを再起動",
+      restart_desc:
+        "セットアッププロセスを再起動してもよろしいですか？ これにより、ステップ1からすべての初期化手順を自由に確認して実行できます。",
+    },
+    step_card: {
+      exec_failed: "実行失敗",
+      reset_setup: "セットアップをリセット",
+    },
+    sidebar: {
+      milestones: "セットアップのマイルストーン",
+    },
+    step1: {
+      title: "ステップ 1：ホスト Docker Engine の確認",
+      desc: "エンタープライズシステムでは、コンテナ化されたサービスをデプロイするためにローカルの Docker デーモン（Docker Desktop または Colima）が必要です。",
+      active: "Docker Engine はアクティブです",
+      start_btn: "Docker Engine を起動",
+      err_not_installed:
+        "Docker がインストールされていないか、PATH に見つかりません。",
+      err_not_running:
+        "Docker はインストールされていますが、デーモンが実行されていません。Docker Engine（Docker Desktop や OrbStack など）を手動で起動して再試行してください。",
+      validating: "検証と起動中...",
+      retry_detection: "エンジンの検出を再試行",
+      start_detection: "検出を開始",
+      host_hw: "ホストハードウェア情報",
+      os: "オペレーティングシステム",
+      compute: "コンピュート",
+      cores: "コア",
+      memory_alloc: "メモリ割り当て",
+      mem_detected: "GB 合計検出 RAM",
+      docker_running: "Docker Engine 実行中",
+    },
+    step2: {
+      title: "ステップ 2：インフラストラクチャの起動と確認",
+      desc: "ローカルネットワークを立ち上げ、コンテナの正常性を確認しています。",
+      retry_btn: "検証を再試行",
+      nodes: "インフラノード",
+      starting_title: "サービスを起動中...",
+      starting_desc:
+        "Docker Compose がゲートウェイ、データベース、ストレージ、およびブロックチェーンノードを起動しています。",
+      desc_db: "データベースノード（リレーショナルデータとトランザクション）",
+      desc_cache: "キャッシュサービス（高速キーバリューストア）",
+      desc_storage: "分散型ストレージ（IPFS コンテンツアドレス）",
+      desc_evm:
+        "EVM ブロックチェーンノード（レイヤー2 / ローカルネットワーク）",
+      desc_proxy: "リバースプロキシ（ゲートウェイおよびエッジルーター）",
+      desc_app: "アプリケーションコンテナ",
+      err_start: "docker-compose の起動に失敗しました。出力：",
+      unknown: "不明",
+    },
+    step3: {
+      title: "ステップ 3：システムコアウォレットへの資金提供",
+      desc: "コントラクトをデプロイするには、コアシステムウォレットに初期のブロックチェーン資金が必要です。",
+      awaiting: "初期資金の入金待ち",
+      awaiting_desc:
+        "以下のコアデプロイヤーアドレスにネイティブ通貨（ISUNなど）を送金してください。残高が十分になると、デプロイが自動的に再開されます。",
+      deployer_address: "コアデプロイヤーアドレス",
+      waiting_deposit: "入金待ち...",
+      checking_network: "ネットワーク接続の確認中",
+      checking_desc: "ローカルブロックチェーンノードの接続を検証中...",
+      refresh_btn: "残高の更新",
+      force_refresh_btn: "強制更新",
+      funded_title: "入金済み",
+      err_wallet_info: "ウォレット情報の取得に失敗しました：",
+      err_mining: "マイニングの切り替えに失敗しました：",
+      err_refresh: "残高の更新に失敗しました：",
+      node_mining: "ノードマイニング",
+      active: "アクティブ",
+      off: "オフ",
+      mining_on: "ノードは 5 つのスレッドでマイニングしています",
+      mining_off: "現在マイニングは無効になっています",
+    },
+    step4: {
+      title: "ステップ 4：エンタープライズコントラクトのデプロイ",
+      desc: "IDレジストリ、ポイントトレジャリー、サブスクリプションマネージャーをコンパイルおよびデプロイします。",
+      completed: "Hardhat デプロイ完了",
+      extracting: "環境設定（.env）にデプロイアドレスを展開中...",
+      deploy_btn: "コントラクトを展開",
+      retry_btn: "デプロイを再試行",
+      re_deploy_btn: "再デプロイ",
+      init_msg: "EVM デプロイメントを初期化中...\nコンパイラを待機中...",
+      deploying: "デプロイ中",
+      pending: "保留中",
+      err_deploy: "コントラクトの展開に失敗しました。出力：",
+    },
+    step5: {
+      title: "ステップ 5：データベースの初期化",
+      desc: "アプリケーション共有データベースを作成し、強力なパスワードを生成し、Prisma スキーマをプッシュします。",
+      completed: "データベース初期化完了",
+      init_btn: "初期化とスキーマのプッシュ",
+      retry_btn: "データベースの初期化を再試行",
+      db_schema: "データベーススキーマ",
+      tables_synced: "同期されたテーブル数",
+      schema_ready: "スキーマのプッシュが完了し、準備が整いました！",
+      db_connection: "データベース接続",
+      host_domain: "ホストドメイン",
+      port: "ポート",
+      root_pwd: "Rootパスワード",
+      reset_root_pwd: "Rootパスワードをリセット",
+      new_pwd_placeholder: "新しい強力なパスワードを入力してください",
+      cancel_btn: "キャンセル",
+      save_sync_btn: "保存して同期",
+      err_init: "データベースの初期化に失敗しました。出力：",
+      err_reset: "データベースパスワードのリセットに失敗しました。出力：",
+    },
+    step6: {
+      title: "ステップ 6：サーバー SUPER ADMIN の登録",
+      desc: "安全な FIDO2 パスキーを添付して、最初の SUPER ADMIN ウォレットを確立します。",
+      create_btn: "SUPER ADMIN パスキーを作成",
+      bind_admin_btn: "新しい管理者を関連付ける",
+      master_identity: "マスターID (SUPER ADMIN)",
+      secondary_admins: "セカンダリ管理者",
+      add_admin: "管理者を追加",
+      placeholder_admin: "例: IT 部門管理者",
+      placeholder_super: "例: ISUNFA システム管理者",
+      none_yet: "まだありません。",
+      modal_add_title: "セカンダリ管理者の追加",
+      modal_add_desc:
+        "FIDO2 パスキーの登録前に、新しい管理者のわかりやすい名前を入力してください。",
+      admin_name_placeholder:
+        "管理者名（例: 人事マネージャー / セキュリティ部門）",
+      use_existing_key: "既存のキーを使用",
+      register_new_key: "新しいキーを登録",
+      replace_with_existing_key: "既存のキーに置き換え",
+      replace_with_new_key: "新しいキーに置き換え",
+      register_btn: "管理キーを登録",
+      replace_super_btn: "SUPER ADMIN を置き換え",
+      modal_replace_title: "SUPER ADMIN を置き換え",
+      modal_replace_warn:
+        "警告: これにより現在アクティブな Super Admin 資格情報が不可逆的にダウングレードされ、新しいマスターIDが割り当てられます。",
+      modal_replace_desc:
+        "新しいマスターIDの FIDO2 パスキーに名前を付けてください:",
+      master_name_placeholder: "マスターID名",
+      current: "現在のキー",
+      sign_replace_btn: "置き換え要求に署名",
+      confirm_pwd: "パスワードの確認",
+      modal_del_title: "セカンダリ管理者の削除",
+      delete_admin: "管理者を削除",
+      task_init: "バックグラウンドタスクを初期化しています...",
+      task_auth_challenge: "FIDO2ログインチャレンジをリクエストしています...",
+      task_wait_bio: "生体認証/セキュリティキーの操作を待機しています...",
+      task_auth_record: "認証レコードを確認しています...",
+      err_auth_record: "認証レコードの確認に失敗しました。",
+      task_req_fido2: "FIDO2登録チャレンジをリクエストしています...",
+      task_process_cred: "認証情報を処理しています...",
+      task_write_config: "マスターID構成を書き込んでいます...",
+      err_create_super:
+        "スーパー管理者 (SUPER ADMIN) 構成の作成に失敗しました。",
+      err_fido2_reg: "FIDO2の登録に失敗しました。",
+      task_write_secondary: "セカンダリ管理者設定を書き込んでいます...",
+      err_create_admin: "管理者設定の作成に失敗しました。",
+      err_reg: "登録に失敗しました。",
+      unknown_admin: "不明な管理者",
+      task_revoke: "管理者を失効させています...",
+      err_del_admin: "管理者の削除に失敗しました。",
+      err_del: "削除に失敗しました。",
+      super_admin_found: "スーパー管理者の設定が検出されました",
+      super_admin_found_desc:
+        "有効なスーパー管理者の設定が存在しますが、管理機能のロックを解除するには認証が必要です。",
+      super_admin_secured: "スーパー管理者は正常に登録され、保護されています。",
+      registered: "登録日: ",
+      pending_sync: "同期保留中",
+      unavailable_sync: "ネットワークデータが利用できません",
+      identity_est: "ローカルノードでIDが確立されました。",
+      loading_identity: "IDデータを読み込んでいます...",
+      no_secondary: "セカンダリ管理者は見つかりませんでした。",
+      cancel_btn: "キャンセル",
+      continue_fido2_btn: "FIDO2で続行",
+      modal_del_msg:
+        "管理者 {{name}} を削除してもよろしいですか？この操作は元に戻せません。",
+      confirm_del_btn: "削除",
+    },
+    step7: {
+      title: "ステップ 7：外部統合のセットアップ",
+      desc: "パブリックアクセス可能なドメインと外部 API フックを設定します。",
+      domain_label: "パブリックアプリケーションドメイン",
+      domain_placeholder: "例: https://isunfa.cafeca.io",
+      ga_label: "Google Analytics 測定 ID",
+      ga_placeholder: "G-XXXXXXXXXX",
+      gemini_label: "Gemini API キー",
+      gemini_placeholder: "AI モデルキー",
+      oen_token_label: "OEN アクセストークン",
+      oen_token_placeholder: "OEN 同期トークン",
+      oen_merchant_label: "OEN マーチャント ID",
+      oen_merchant_placeholder: "OEN 加盟店",
+      domain_hint:
+        "絶対ルーティングと OAuth コールバックに必要な主要なエンドポイント。",
+      ga_hint: "ウェブトラフィック追跡用のオプションのテレメトリー統合。",
+      gemini_hint:
+        "LLM ベクトル検索エンジンを強化します。省略すると、AI アシスタントはフォールバックのモックモードで動作します。",
+      oen_hint:
+        "法定通貨のオンランプ操作に必要。動的請求書を生成し、オフチェーンで支払いステータスを記録します。",
+      core_system: "コアエコシステム",
+      ai_consult: "AI コンサルテーション",
+      payment_gateway: "OEN 支払いゲートウェイ",
+      finalizing_btn: "統合を完了しています...",
+      saved_btn: "構成が保存されました！",
+      save_btn: "構成を保存して保護",
+      err_save: "構成の保存に失敗しました",
+      updated: "設定が更新されました",
+    },
+    step8: {
+      title: "ステップ 8：構成の確定",
+      desc: "FIDO2 で環境変数に署名して、エンタープライズデプロイを安全に封印します。",
+      sign_save_btn: "設定を署名して保存",
+      signing_status: "署名して完了しています...",
+      immutable: "設定の不変性検証",
+      immutable_desc:
+        "デプロイ設定は SUPER ADMIN パスキーに暗号化されてバインドされます。最終的な .env ファイルの変更は、サーバーを起動するために再署名する必要があります。",
+      preview: "基本設定のプレビュー",
+      ready_title: "エンタープライズシステムの準備完了",
+      ready_desc:
+        "構成が安全に署名されました。バックエンドインフラストラクチャは FIDO2 の下で完全に稼働しています。",
+      err_challenge: "署名チャレンジの生成に失敗しました。",
+      err_finalize: "設定の完了に失敗しました：",
+      err_sign: "署名に失敗しました：",
+      verify_msg:
+        "検証が完了しました。システムは改ざんを防ぐために WebAuthn アサーションに依存しています。署名する前に、以下の環境構成を確認してください。",
+    },
+    reboot: {
+      title: "変更を適用して再起動しています",
+      desc: "自動的にリダイレクトされます...",
+    },
+    page: {
+      invalid_status: "無効な SUPER ADMIN 検証ステータスです。",
+      fatal: "致命的なシステムエラー",
+      fatal_desc:
+        "エンタープライズセットアップウィザードの読み込みを妨げるエラーが発生しました:",
+      retry: "初期化を再試行",
+      init: "セットアップエンジンを初期化中...",
+    },
+  },
+  admin_member: {
+    page: {
+      title: "ユーザーとポイント管理",
+      subtitle:
+        "システム内のすべての登録ユーザーを表示し、そのポイント残高 (ERC3643 Treasury) を管理します。",
+      refresh: "更新",
+      refresh_list_aria: "リストを更新",
+      th_user: "ユーザー名とアドレス",
+      th_role: "権限",
+      th_joined_at: "参加日",
+      th_balance: "現在の残高",
+      th_action: "操作",
+      no_users: "システム内にユーザーがいません",
+      unnamed_user: "名無しのユーザー",
+      refresh_balance_aria: "残高を更新",
+      issue_points_btn: "ポイント発行",      role_super_admin: "スーパー管理者",
+      role_admin: "管理者",
+      role_user: "一般ユーザー",
+
+    },
+
+    modal_issue: {
+      title: "システムポイントの発行",
+      target_user: "対象ユーザー",
+      unnamed_user: "名無しのユーザー",
+      amount_label: "発行量 (Points)",
+      amount_placeholder: "例：500",
+      err_amount: "ポイントは0より大きくなければなりません",
+      success_msg: "発行成功",
+      err_msg: "発行失敗",
+      processing: "処理中...",
+      issued: "発行済み",
+      confirm_btn: "発行を確認",
+    },
   },
 };

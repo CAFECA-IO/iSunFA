@@ -32,7 +32,8 @@ export const zhTw = {
       page_info: "第 {{current}} 頁，共 {{total}} 頁",
     },
     testing_env_banner: {
-      message: "⚠️ 本環境為開發與展示用測試環境，資料不定期清空，請勿用作生產環境。正式環境請前往 ",
+      message:
+        "⚠️ 本環境為開發與展示用測試環境，資料不定期清空，請勿用作生產環境。正式環境請前往 ",
     },
     ai_confidence: {
       title: "AI 信心度",
@@ -71,7 +72,8 @@ export const zhTw = {
   dashboard: {
     title: "資訊戰情室",
     empty_state_title: "尚無資料",
-    empty_state_desc: "在所選期間內尚無資料。您可以嘗試切換不同的時間區間，或是前往傳票模組上傳新資料。",
+    empty_state_desc:
+      "在所選期間內尚無資料。您可以嘗試切換不同的時間區間，或是前往傳票模組上傳新資料。",
     empty_state_cta: "上傳憑證/資料",
     executive_summary: "經營決策頂層指標",
     auto_refresh: "自動更新",
@@ -215,7 +217,8 @@ export const zhTw = {
     reg_failed: "註冊失敗",
     scroll_to_agree: "請詳細閱覽相關條文",
     unregistered_confirm_title: "帳戶未註冊",
-    unregistered_confirm_desc: "系統找不到此 Passkey 對應的帳戶。您是否要使用此裝置註冊一個新帳戶？",
+    unregistered_confirm_desc:
+      "系統找不到此 Passkey 對應的帳戶。您是否要使用此裝置註冊一個新帳戶？",
     unregistered_confirm_yes: "好，建立帳戶",
     unregistered_confirm_no: "取消",
   },
@@ -671,7 +674,8 @@ export const zhTw = {
       rename_success: "重新命名成功",
       delete_success: "信用卡已刪除",
       delete_confirm_title: "確認刪除信用卡？",
-      delete_confirm_desc: "這將會移除此張信用卡，未來將無法再選用此卡片進行扣款。",
+      delete_confirm_desc:
+        "這將會移除此張信用卡，未來將無法再選用此卡片進行扣款。",
       cancel: "取消",
       save: "儲存",
       edit_details: "編輯詳細資料",
@@ -693,8 +697,9 @@ export const zhTw = {
       source_analysis: "分析服務使用",
       source_chat: "AI 諮詢服務",
       source_checkin: "每日簽到獎勵",
-      source_registration: "註冊獎勵"
-    }
+      source_registration: "註冊獎勵",
+      source_admin_issued: "系統管理員發放",
+    },
   },
   sidebar: {
     modules: "功能模組",
@@ -714,45 +719,58 @@ export const zhTw = {
         title: "產業發展 (Industry Development)",
         desc: "這個模組的分析層級是「宏觀行業」與「中觀供應鏈」，因此關鍵字應該圍繞在產業板塊、次產業、技術趨勢或特定供應鏈。",
         sectors_title: "大分類板塊 (Sectors)：",
-        sectors_desc: "科技 (Technology)、醫療保健 (Healthcare)、金融 (Financials)、非必需消費品 (Consumer Discretionary)、能源 (Energy)。",
+        sectors_desc:
+          "科技 (Technology)、醫療保健 (Healthcare)、金融 (Financials)、非必需消費品 (Consumer Discretionary)、能源 (Energy)。",
         sub_title: "次產業 / 供應鏈節點 (Sub-industries / Supply Chains)：",
-        sub_desc: "半導體製造 (Semiconductor Manufacturing)、IC設計 (IC Design)、電動車電池 (EV Batteries)、雲端基礎設施 (Cloud Infrastructure)、生技製藥 (Biotechnology)。",
+        sub_desc:
+          "半導體製造 (Semiconductor Manufacturing)、IC設計 (IC Design)、電動車電池 (EV Batteries)、雲端基礎設施 (Cloud Infrastructure)、生技製藥 (Biotechnology)。",
         trends_title: "新興趨勢 / 概念股 (Emerging Trends / Concepts)：",
-        trends_desc: "AI 伺服器 (AI Servers)、矽光子 (Silicon Photonics)、固態電池 (Solid-State Batteries)、低軌衛星 (Low Earth Orbit Satellites)、ESG 綠能 (ESG Green Energy)。"
+        trends_desc:
+          "AI 伺服器 (AI Servers)、矽光子 (Silicon Photonics)、固態電池 (Solid-State Batteries)、低軌衛星 (Low Earth Orbit Satellites)、ESG 綠能 (ESG Green Energy)。",
       },
       smart_enterprise_rating: {
         title: "智能企業評級 (Smart Enterprise Rating)",
         desc: "這個模組的分析層級是「微觀個體」，也就是針對單一公司進行財務與信用體檢。因此，關鍵字必須是精確的公司名稱、股票代碼或統一編號。",
         us_tickers_title: "美股標的 (US Tickers / Company Names)：",
-        us_tickers_desc: "AAPL 或 Apple (蘋果)\nNVDA 或 NVIDIA (輝達)\nMSFT 或 Microsoft (微軟)\nTSLA 或 Tesla (特斯拉)",
+        us_tickers_desc:
+          "AAPL 或 Apple (蘋果)\nNVDA 或 NVIDIA (輝達)\nMSFT 或 Microsoft (微軟)\nTSLA 或 Tesla (特斯拉)",
         tw_tickers_title: "台股 / ADR 標的 (若系統支援跨國或美國存託憑證)：",
-        tw_tickers_desc: "TSM (台積電 ADR)\n2330 或 台灣積體電路製造 (若系統包含台灣資料庫)",
+        tw_tickers_desc:
+          "TSM (台積電 ADR)\n2330 或 台灣積體電路製造 (若系統包含台灣資料庫)",
         fuzzy_title: "企業屬性分類 (若系統支援模糊搜尋)：",
-        fuzzy_desc: "有時也可以輸入「蘋果供應鏈」、「Tier 1 車用零組件廠」來篩選出一批目標企業進行批量評級。",
+        fuzzy_desc:
+          "有時也可以輸入「蘋果供應鏈」、「Tier 1 車用零組件廠」來篩選出一批目標企業進行批量評級。",
         analyst_view_title: "💡 分析師視角：",
-        analyst_view_desc: "實務上，管理層最常在這裡輸入「主要競爭對手」、「關鍵供應商」或「潛在併購標的」的代碼，用以監控供應鏈斷鏈風險或進行同業財務指標（如 ROE、毛利率）的 Benchmarking（標竿測試）。"
+        analyst_view_desc:
+          "實務上，管理層最常在這裡輸入「主要競爭對手」、「關鍵供應商」或「潛在併購標的」的代碼，用以監控供應鏈斷鏈風險或進行同業財務指標（如 ROE、毛利率）的 Benchmarking（標竿測試）。",
       },
       financial_product_rating: {
         title: "金融商品評級 (Financial Product Rating)",
         desc: "這個模組針對的是可交易的「金融資產」與「投資組合」，關鍵字應為具體的商品代碼、基金名稱或資產類別。",
         etf_title: "指數型基金 / ETF (ETFs)：",
-        etf_desc: "SPY 或 VOO (追蹤標普500指數)\nQQQ (追蹤納斯達克100指數)\nTLT (20年期以上美國公債 ETF)",
+        etf_desc:
+          "SPY 或 VOO (追蹤標普500指數)\nQQQ (追蹤納斯達克100指數)\nTLT (20年期以上美國公債 ETF)",
         mutual_funds_title: "主動型基金 (Mutual Funds)：",
-        mutual_funds_desc: "輸入特定基金公司的產品名稱，例如：富達全球科技基金、聯博全高收。",
+        mutual_funds_desc:
+          "輸入特定基金公司的產品名稱，例如：富達全球科技基金、聯博全高收。",
         bonds_title: "特定債券 / 固定收益商品 (Bonds)：",
-        bonds_desc: "美國十年期公債 (US 10-Year Treasury)、特定公司的公司債代碼（如 Apple 2030 到期公司債）、投資級公司債 (IG Bonds)、高收益債 (High Yield Bonds / Junk Bonds)。",
+        bonds_desc:
+          "美國十年期公債 (US 10-Year Treasury)、特定公司的公司債代碼（如 Apple 2030 到期公司債）、投資級公司債 (IG Bonds)、高收益債 (High Yield Bonds / Junk Bonds)。",
         derivatives_title: "衍生性商品或原物料 (Commodities / Derivatives)：",
-        derivatives_desc: "黃金 (Gold / GLD)、布蘭特原油 (Brent Crude)、比特幣 (Bitcoin / IBIT)。",
+        derivatives_desc:
+          "黃金 (Gold / GLD)、布蘭特原油 (Brent Crude)、比特幣 (Bitcoin / IBIT)。",
         analyst_view_title: "💡 分析師視角：",
-        analyst_view_desc: "在這裡輸入關鍵字後，系統通常會吐出夏普值 (Sharpe Ratio)、最大回撤 (Max Drawdown) 等量化風險指標。這對於企業的「財務部」在管理閒置資金（Treasury Management）或配置避險部位時，是非常重要的決策依據。"
-      }
+        analyst_view_desc:
+          "在這裡輸入關鍵字後，系統通常會吐出夏普值 (Sharpe Ratio)、最大回撤 (Max Drawdown) 等量化風險指標。這對於企業的「財務部」在管理閒置資金（Treasury Management）或配置避險部位時，是非常重要的決策依據。",
+      },
     },
     company_input: {
       label: "企業名稱或統一編號",
       placeholder: "輸入全稱、簡稱或統編...",
       searching: "搜尋中...",
       not_found: "查無此公司，請嘗試輸入更完整的全名或統一編號。",
-      missing_tax_id_desc: "此帳本（{{name}}）尚未設定統一編號，內部數據分析需使用統一編號。請在此補齊設定：",
+      missing_tax_id_desc:
+        "此帳本（{{name}}）尚未設定統一編號，內部數據分析需使用統一編號。請在此補齊設定：",
     },
     title: "分析報告",
     internal_analysis: "內部數據分析",
@@ -844,21 +862,23 @@ export const zhTw = {
       view_tx: "檢視交易",
     },
     share: {
-      button: '分享報告',
-      modal_title: '分享對外公開報告',
-      modal_desc: '任何人擁有此連結皆可檢視該報告的「摘要與去識別化版本」。機密金額與詳細供應商資訊已被系統安全隱藏。',
-      copy: '複製',
-      copied: '已複製到剪貼簿',
-      revoke: '撤銷此分享連結',
-      revoked: '已成功撤銷分享連結',
-      done: '完成',
-      public_badge: '公開摘要報告',
-      shared_by: '由 {{name}} 分享',
-      security_intercept: '系統安全攔截',
-      security_desc: '此類型的報告尚未開放公開分享，或資料格式異常。',
-      cta_title: '想為您的企業產生專屬的深度分析報告嗎？',
-      cta_desc: 'iSunFA 透過前沿 AI 技術，為您提供包含碳健檢、財務評級、合規審查等全方位智能會計解決方案。',
-      cta_button: '了解 iSunFA 陽光智能會計'
+      button: "分享報告",
+      modal_title: "分享對外公開報告",
+      modal_desc:
+        "任何人擁有此連結皆可檢視該報告的「摘要與去識別化版本」。機密金額與詳細供應商資訊已被系統安全隱藏。",
+      copy: "複製",
+      copied: "已複製到剪貼簿",
+      revoke: "撤銷此分享連結",
+      revoked: "已成功撤銷分享連結",
+      done: "完成",
+      public_badge: "公開摘要報告",
+      shared_by: "由 {{name}} 分享",
+      security_intercept: "系統安全攔截",
+      security_desc: "此類型的報告尚未開放公開分享，或資料格式異常。",
+      cta_title: "想為您的企業產生專屬的深度分析報告嗎？",
+      cta_desc:
+        "iSunFA 透過前沿 AI 技術，為您提供包含碳健檢、財務評級、合規審查等全方位智能會計解決方案。",
+      cta_button: "了解 iSunFA 陽光智能會計",
     },
   },
   ai_consultation_room: {
@@ -1147,7 +1167,8 @@ export const zhTw = {
     required_points: "所需點數",
     balance_after_payment: "支付後餘額",
     confirm_analyze_title: "請確認掃描分析費用",
-    confirm_analyze_desc: "系統將會為您的所有掃描文件進行 AI 分析，請確認支付總額：",
+    confirm_analyze_desc:
+      "系統將會為您的所有掃描文件進行 AI 分析，請確認支付總額：",
     cost_per_page: "每張計費",
     total_cost: "總計支付點數",
     point_unit: "點",
@@ -1311,7 +1332,8 @@ export const zhTw = {
         filter_btn: "篩選條件",
         verify_all: "一鍵核對",
         no_data: "尚無資料",
-        no_data_desc: "在所選期間內尚無傳票資料。您可以嘗試切換不同的時間區間，或是前往傳票模組上傳新資料。",
+        no_data_desc:
+          "在所選期間內尚無傳票資料。您可以嘗試切換不同的時間區間，或是前往傳票模組上傳新資料。",
         no_data_cta: "上傳憑證/資料",
         no_filter_results: "找不到符合條件的紀錄",
         no_filter_results_desc: "請嘗試調整搜尋關鍵字或篩選條件",
@@ -1487,7 +1509,8 @@ export const zhTw = {
     },
     loading: "載入中...",
     no_records: "尚無資料",
-    no_records_desc: "在所選期間內尚無ESG紀錄。您可以嘗試切換不同的時間區間，或是前往傳票模組上傳新資料。",
+    no_records_desc:
+      "在所選期間內尚無ESG紀錄。您可以嘗試切換不同的時間區間，或是前往傳票模組上傳新資料。",
     no_records_cta: "上傳憑證/資料",
     no_filter_results: "找不到符合條件的紀錄",
     no_filter_results_desc: "請嘗試調整搜尋關鍵字或篩選條件",
@@ -1596,15 +1619,17 @@ export const zhTw = {
       },
     },
   },
-  "verify": {
-    "verify_modal": {
+  verify: {
+    verify_modal: {
       title: "確認核對？",
-      message: "您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+      message:
+        "您確定要核對此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
       confirm: "確認核對",
     },
-    "unverify_modal": {
+    unverify_modal: {
       title: "確認退回？",
-      message: "您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
+      message:
+        "您確定要退回此{{type}}嗎？變更的內容將會儲存，請確認資料是否無誤。",
       confirm: "確認退回",
     },
     status: {
@@ -1620,7 +1645,7 @@ export const zhTw = {
       journal: "日記帳",
       voucher: "傳票",
       esg: "碳排紀錄",
-    }
+    },
   },
   esg: {
     detail_modal: {
@@ -1648,7 +1673,8 @@ export const zhTw = {
     web3Address: "Web3 錢包地址",
     role: "角色",
     fido2Requirement: "FIDO2 驗證要求：",
-    fido2RequirementText: "您需要透過通行密鑰 (Passkey) 進行驗證並在鏈上簽署此交易。",
+    fido2RequirementText:
+      "您需要透過通行密鑰 (Passkey) 進行驗證並在鏈上簽署此交易。",
     signing: "簽署中...",
     inviteViaFido2: "使用 FIDO2 寄送邀請",
     roles: {
@@ -1671,7 +1697,7 @@ export const zhTw = {
       errorAccept: "接受邀請失敗",
       errorRole: "變更角色失敗",
       errorRemove: "移除成員失敗",
-    }
+    },
   },
   esg_report: {
     unit: "kgCO2e",
@@ -1703,7 +1729,8 @@ export const zhTw = {
     period_selection: "期間選擇",
     year_selection: "年份選擇",
     generate_btn: "生成報表",
-    hint_verified_count: "系統將根據目前已核對的 {{count}} 筆傳票資訊進行即時彙整。",
+    hint_verified_count:
+      "系統將根據目前已核對的 {{count}} 筆傳票資訊進行即時彙整。",
     empty_report_title: "尚未產出報表",
     empty_report_desc: "請設定需要的報表參數，iSunFA 馬上為您產出報表",
     unknown_account_book: "(未知的帳簿)",
@@ -1720,11 +1747,12 @@ export const zhTw = {
       q2: "第二季",
       q3: "第三季",
       q4: "第四季",
-    }
+    },
   },
   cash_flow_statement_view: {
     loading_title: "正在為您生成現金流量表",
-    loading_desc: "系統正在結算營業活動、投資活動與融資活動的現金流量，並計算相關財務指標，請稍候...",
+    loading_desc:
+      "系統正在結算營業活動、投資活動與融資活動的現金流量，並計算相關財務指標，請稍候...",
     error_title: "現金流量表生成失敗",
     error_desc: "請確認該期間內是否有足夠的核發傳票資料，或是稍後再重新嘗試。",
     metric_fcf_title: "自由現金流",
@@ -1737,16 +1765,21 @@ export const zhTw = {
     metric_ending_balance_desc: "本期結束時的現金部位",
     note_fcf_type: "流動性",
     note_fcf_main: "自由現金流 = 營業現金流 - 資本支出。",
-    note_fcf_sub: "衡量企業扣除資本支出後可自由運用的現金，建議大於 0，表示償債能力良好。",
+    note_fcf_sub:
+      "衡量企業扣除資本支出後可自由運用的現金，建議大於 0，表示償債能力良好。",
     note_ocf_ratio_type: "償債能力",
     note_ocf_ratio_main: "營業現金流對流動負債比率 = 營業現金流 / 流動負債。",
-    note_ocf_ratio_sub: "衡量企業短期償還債務的能力，建議大於 100% ，表示償債能力良好。",
+    note_ocf_ratio_sub:
+      "衡量企業短期償還債務的能力，建議大於 100% ，表示償債能力良好。",
     note_cf_adequacy_type: "償債能力",
     note_cf_adequacy_main: "現金流量對總資產比率 = 營業現金流 / 總資產。",
-    note_cf_adequacy_sub: "衡量企業營業現金是否足以支應資本支出及還債，建議大於 100%，表示償債能力良好。",
+    note_cf_adequacy_sub:
+      "衡量企業營業現金是否足以支應資本支出及還債，建議大於 100%，表示償債能力良好。",
     note_ending_balance_type: "償債能力",
-    note_ending_balance_main: "期末現金餘額 = 營業現金流 + 投資現金流 + 融資現金流。",
-    note_ending_balance_sub: "衡量企業本期結束時的現金部位，建議大於 0 ，表示償債能力良好。",
+    note_ending_balance_main:
+      "期末現金餘額 = 營業現金流 + 投資現金流 + 融資現金流。",
+    note_ending_balance_sub:
+      "衡量企業本期結束時的現金部位，建議大於 0 ，表示償債能力良好。",
     section_op_inv: "營業與投資活動",
     section_ratio: "佔比%",
     section_operating: "營業活動之現金流量",
@@ -1784,7 +1817,8 @@ export const zhTw = {
     note_dte_main: "負債權益比 = 總負債 / 總權益。",
     note_dte_sub: "反映企業由所有者與債權人提供的資金比例，建議小於 100%。",
     note_ltftfa_type: "財務結構",
-    note_ltftfa_main: "長期資金占固定資產比 = (權益 + 非流動負債) / 固定資產淨額。",
+    note_ltftfa_main:
+      "長期資金占固定資產比 = (權益 + 非流動負債) / 固定資產淨額。",
     note_ltftfa_sub: "衡量固定資產是否由穩定的長期資金支應，建議大於 100%。",
     note_nwps_type: "獲利能力",
     note_nwps_main: "每股淨值 = 總權益 / 總發行股數。",
@@ -1797,7 +1831,8 @@ export const zhTw = {
     note_iar_sub: "衡量企業無形資產在總資產中的比重，比例過高等同風險增加。",
 
     loading_title: "正在為您生成資產負債表",
-    loading_desc: "系統正在結算資產、負債與權益科目，並計算相關財務指標，請稍候...",
+    loading_desc:
+      "系統正在結算資產、負債與權益科目，並計算相關財務指標，請稍候...",
     error_title: "資產負債表生成失敗",
     error_desc: "請確認該期間內是否有足夠的核發傳票資料，或是稍後再重新嘗試。",
     assets_title: "資產",
@@ -1830,12 +1865,13 @@ export const zhTw = {
     note_em_sub: "衡量企業財務槓桿程度，建議小於 2 ，表示財務槓桿程度良好。",
     note_wc_type: "流動性",
     note_wc_main: "營運資金 = 流動資產 - 流動負債。",
-    note_wc_sub: "衡量企業短期償債能力，建議大於 0，表示償債能力良好。"
+    note_wc_sub: "衡量企業短期償債能力，建議大於 0，表示償債能力良好。",
   },
 
   income_statement_view: {
     loading_title: "正在為您生成綜合損益表",
-    loading_desc: "系統正在結算收入、支出與稅後淨利科目，並計算相關財務指標，請稍候...",
+    loading_desc:
+      "系統正在結算收入、支出與稅後淨利科目，並計算相關財務指標，請稍候...",
     error_title: "綜合損益表生成失敗",
     error_desc: "請確認該期間內是否有足夠的核發傳票資料，或是稍後再重新嘗試。",
     metric_gm_title: "毛利率",
@@ -1848,16 +1884,20 @@ export const zhTw = {
     metric_ebitda_desc: "可分配之現金獲利指標",
     note_gm_type: "獲利能力",
     note_gm_main: "毛利率 = (營業收入 - 營業成本) / 營業收入。",
-    note_gm_sub: "衡量企業產品或服務的初始獲利能力，建議大於 50%，表示產品或服務的初始獲利能力良好。",
+    note_gm_sub:
+      "衡量企業產品或服務的初始獲利能力，建議大於 50%，表示產品或服務的初始獲利能力良好。",
     note_om_type: "獲利能力",
     note_om_main: "營益率 = 營業利益 / 營業收入。",
-    note_om_sub: "衡量企業本業營運獲利能力，建議大於 15%，表示本業營運獲利能力良好。",
+    note_om_sub:
+      "衡量企業本業營運獲利能力，建議大於 15%，表示本業營運獲利能力良好。",
     note_npm_type: "獲利能力",
     note_npm_main: "淨利率 = 稅後淨利 / 營業收入。",
-    note_npm_sub: "衡量企業最終稅後實質獲利能力，建議大於 10%，表示最終稅後實質獲利能力良好。",
+    note_npm_sub:
+      "衡量企業最終稅後實質獲利能力，建議大於 10%，表示最終稅後實質獲利能力良好。",
     note_ebitda_type: "獲利能力",
     note_ebitda_main: "EBITDA 利潤率 = EBITDA / 營業收入。",
-    note_ebitda_sub: "衡量企業可分配之現金獲利指標，建議大於 15%，表示可分配之現金獲利指標良好。",
+    note_ebitda_sub:
+      "衡量企業可分配之現金獲利指標，建議大於 15%，表示可分配之現金獲利指標良好。",
     section_op: "營業活動",
     section_percent_rev: "% 營收",
     section_rev: "營業收入",
@@ -1870,5 +1910,268 @@ export const zhTw = {
     section_ibt: "稅前淨利",
     section_tax: "所得稅費用",
     section_ni: "本期淨利",
+  },
+  admin_setup: {
+    header: {
+      title: "系統部署",
+      subtitle: "系統初始化與安全叢集設定",
+      restart: "重新啟動",
+      reset: "重置",
+      restart_title: "重新開始設定",
+      restart_desc:
+        "您確定要重新開始設定流程嗎？這將從步驟 1 重新審視與執行所有的初始化操作。",
+    },
+    step_card: {
+      exec_failed: "執行失敗",
+      reset_setup: "重設流程",
+    },
+    sidebar: {
+      milestones: "設定里程碑",
+    },
+    step1: {
+      title: "步驟 1：驗證 Docker 引擎",
+      desc: "企業版系統需要本機 Docker 環境（Docker Desktop 或 Colima）來部署容器化服務。",
+      active: "Docker 引擎運行中",
+      start_btn: "啟動 Docker 引擎",
+      err_not_installed: "尚未安裝 Docker 或未在 PATH 中找到。",
+      err_not_running:
+        "Docker 已安裝，但背景服務未執行。請手動啟動 Docker 引擎（例如 Docker Desktop 或 OrbStack）並重試。",
+      validating: "驗證與啟動中...",
+      retry_detection: "重試引擎檢測",
+      start_detection: "開始檢測",
+      host_hw: "主機硬體識別資訊",
+      os: "作業系統",
+      compute: "運算核心",
+      cores: "核心",
+      memory_alloc: "記憶體配置",
+      mem_detected: "GB 總記憶體已偵測",
+      docker_running: "Docker 引擎運行中",
+    },
+    step2: {
+      title: "步驟 2：啟動基礎設施",
+      desc: "啟動本機網路與容器並驗證各服務的健康狀態。",
+      retry_btn: "重試驗證",
+      nodes: "基礎設施節點",
+      starting_title: "正在啟動服務...",
+      starting_desc:
+        "Docker Compose 正在啟動閘道、資料庫、儲存空間與區塊鏈節點...",
+      desc_db: "資料庫節點（關聯式資料與交易）",
+      desc_cache: "快取服務（高速鍵值儲存）",
+      desc_storage: "去中心化儲存（IPFS 內容尋址）",
+      desc_evm: "EVM 區塊鏈節點（Layer 2 / 本機網路）",
+      desc_proxy: "反向代理（閘道與邊緣路由器）",
+      desc_app: "應用程式容器",
+      err_start: "啟動 docker-compose 失敗。輸出訊息：",
+      unknown: "未知",
+    },
+    step3: {
+      title: "步驟 3：資金注入核心錢包",
+      desc: "要部署智能合約，核心系統錢包需要有初始的區塊鏈原生貨幣（ISUN）。",
+      awaiting: "等待初始資金匯入",
+      awaiting_desc:
+        "請轉入一些原生貨幣（如 ISUN）到下方的核心部署者地址。餘額充足後，後續部署將自動執行。",
+      deployer_address: "核心部署者地址",
+      waiting_deposit: "等待存款中...",
+      checking_network: "正在檢查網路連線",
+      checking_desc: "驗證本機區塊鏈節點連線中...",
+      refresh_btn: "刷新餘額",
+      force_refresh_btn: "強制刷新",
+      funded_title: "已注入資金",
+      err_wallet_info: "取得錢包資訊失敗：",
+      err_mining: "切換挖礦狀態失敗：",
+      err_refresh: "更新餘額失敗：",
+      node_mining: "節點挖礦",
+      active: "運作中",
+      off: "已停止",
+      mining_on: "節點正在使用 5 個執行緒進行挖礦",
+      mining_off: "挖礦目前已停用",
+    },
+    step4: {
+      title: "步驟 4：部署企業級合約",
+      desc: "編譯並部署身分註冊、點數金庫及訂閱管理員合約。",
+      completed: "Hardhat 部署已完成",
+      extracting: "正在將部署地址擷取至 .env 設定檔...",
+      deploy_btn: "部署合約",
+      retry_btn: "重試部署",
+      re_deploy_btn: "重新部署",
+      init_msg: "正在初始化 EVM 部署...\n等待編譯器中...",
+      deploying: "部署中",
+      pending: "等待中",
+      err_deploy: "部署合約失敗。輸出訊息：",
+    },
+    step5: {
+      title: "步驟 5：初始化資料庫",
+      desc: "創建應用程式共用資料庫、生成高強度密碼，並推送 Prisma 結構。",
+      completed: "資料庫已初始化",
+      init_btn: "初始化與推送結構",
+      retry_btn: "重試資料庫初始化",
+      db_schema: "資料庫結構",
+      tables_synced: "已同步的資料表數量",
+      schema_ready: "資料庫結構已成功推送且就緒！",
+      db_connection: "資料庫連線",
+      host_domain: "主機網域",
+      port: "連接埠",
+      root_pwd: "Root 密碼",
+      reset_root_pwd: "重設 Root 密碼",
+      new_pwd_placeholder: "輸入新的高強度密碼",
+      cancel_btn: "取消",
+      save_sync_btn: "儲存並同步",
+      err_init: "資料庫初始化失敗。輸出訊息：",
+      err_reset: "重設資料庫密碼失敗。輸出訊息：",
+    },
+    step6: {
+      title: "步驟 6：註冊伺服器 SUPER ADMIN",
+      desc: "透過高強度的 FIDO2 通行證來建立初始化 SUPER ADMIN 錢包綁定。",
+      create_btn: "建立 SUPER ADMIN 通行證",
+      bind_admin_btn: "綁定新管理員",
+      master_identity: "主身分識別 (SUPER ADMIN)",
+      secondary_admins: "次級管理員",
+      add_admin: "新增管理員",
+      placeholder_admin: "例如：IT 部門管理員",
+      placeholder_super: "例如：ISUNFA 系統管理員",
+      none_yet: "目前還沒有。",
+      modal_add_title: "新增次級管理員",
+      modal_add_desc: "在註冊 FIDO2 通行證之前，請為新的管理員輸入描述性名稱。",
+      admin_name_placeholder: "管理員名稱（如：人資經理 / 資訊安全部）",
+      use_existing_key: "使用現有金鑰",
+      register_new_key: "註冊新金鑰",
+      replace_with_existing_key: "替換為現有金鑰",
+      replace_with_new_key: "替換為新金鑰",
+      register_btn: "註冊管理員金鑰",
+      replace_super_btn: "替換 SUPER ADMIN",
+      modal_replace_title: "替換 SUPER ADMIN",
+      modal_replace_warn:
+        "警告：這將不可逆地降級目前啟用的 Super Admin 權限，並指派一個新的主身分。",
+      modal_replace_desc: "請命名您的新主身分 FIDO2 通行證：",
+      master_name_placeholder: "主身分名稱",
+      current: "目前：",
+      sign_replace_btn: "簽署替換請求",
+      confirm_pwd: "確認密碼",
+      modal_del_title: "刪除次要管理員",
+      delete_admin: "刪除管理員",
+      task_init: "正在初始化背景任務...",
+      task_auth_challenge: "正在要求 FIDO2 登入挑戰...",
+      task_wait_bio: "等待生物辨識或安全金鑰互動...",
+      task_auth_record: "正在驗證身份驗證紀錄...",
+      err_auth_record: "無法驗證身份驗證紀錄。",
+      task_req_fido2: "正在要求 FIDO2 註冊挑戰...",
+      task_process_cred: "正在處理憑證...",
+      task_write_config: "正在寫入主要身份設定...",
+      err_create_super: "建立超級管理員 (SUPER ADMIN) 設定失敗。",
+      err_fido2_reg: "FIDO2 註冊失敗。",
+      task_write_secondary: "正在寫入次要管理員設定...",
+      err_create_admin: "建立管理員設定失敗。",
+      err_reg: "註冊失敗。",
+      unknown_admin: "未知的管理員",
+      task_revoke: "正在撤銷管理員...",
+      err_del_admin: "刪除管理員失敗。",
+      err_del: "刪除失敗。",
+      super_admin_found: "偵測到超級管理員設定",
+      super_admin_found_desc:
+        "存在有效的超級管理員設定，但需要授權才能解鎖管理功能。",
+      super_admin_secured: "超級管理員已成功註冊並獲得保護。",
+      registered: "註冊時間：",
+      pending_sync: "等待同步中",
+      unavailable_sync: "網路資料無法取得",
+      identity_est: "身份已在本地節點上建立。",
+      loading_identity: "正在載入身份資料...",
+      no_secondary: "找不到次要管理員。",
+      cancel_btn: "取消",
+      continue_fido2_btn: "繼續使用 FIDO2",
+      modal_del_msg: "您確定要刪除管理員 {{name}} 嗎？此動作將無法還原。",
+      confirm_del_btn: "刪除",
+    },
+    step7: {
+      title: "步驟 7：設定外部整合",
+      desc: "設定系統的公開存取網域與外部 API 的介接 Token。",
+      domain_label: "公開應用程式網域",
+      domain_placeholder: "例如 https://isunfa.cafeca.io",
+      ga_label: "Google 分析識別碼 (GA-ID)",
+      ga_placeholder: "G-XXXXXXXXXX",
+      gemini_label: "Gemini API 金鑰",
+      gemini_placeholder: "您的 AI 專屬 Token",
+      oen_token_label: "OEN 存取 Token",
+      oen_token_placeholder: "OEN Sync Token",
+      oen_merchant_label: "OEN 商家 ID",
+      oen_merchant_placeholder: "OEN 商家代號",
+      domain_hint: "絕對路由與 OAuth 回呼所需的基礎端點。",
+      ga_hint: "選用的遙測整合功能，用於追蹤網頁流量。",
+      gemini_hint:
+        "驅動 LLM 向量搜尋引擎。如果省略，AI 助理將在備用的 Mock 模式下運作。",
+      oen_hint:
+        "法幣入金操作的必要條件。可以產生動態發票並在鏈下記錄付款狀態。",
+      core_system: "核心生態系統",
+      ai_consult: "AI 諮詢服務",
+      payment_gateway: "OEN 支付閘道",
+      finalizing_btn: "正在完成整合設定...",
+      saved_btn: "設定已儲存！",
+      save_btn: "儲存並保護設定",
+      err_save: "儲存設定失敗",
+      updated: "設定已更新",
+    },
+    step8: {
+      title: "步驟 8：完成設定與重啟",
+      desc: "透過 FIDO2 簽署所有環境變數，將企業部署封裝並確保安全不被竄改。",
+      sign_save_btn: "簽署並儲存設定檔",
+      signing_status: "正在簽署與完成...",
+      immutable: "設定檔不可竄改驗證",
+      immutable_desc:
+        "您的部署設定檔將由密碼學技術綁定到 SUPER ADMIN 通行證中。任何對於 .env 設定檔的變更都必須重新簽名才能啟動整個後台服務。",
+      preview: "基礎設定預覽",
+      ready_title: "企業級系統已就緒",
+      ready_desc:
+        "系統設定檔已完成安全簽署。所有的後台基礎設施現已正式啟用並處於受 FIDO2 全面保護的運行狀態。",
+      err_challenge: "產生簽章挑戰失敗。",
+      err_finalize: "完成設定失敗：",
+      err_sign: "簽署失敗：",
+      verify_msg:
+        "驗證完成。系統依賴 WebAuthn 證明來防止竄改。請在簽署之前檢閱下方的環境設定。",
+    },
+    reboot: {
+      title: "正在套用變更並重啟系統",
+      desc: "您將自動返回首頁...",
+    },
+    page: {
+      invalid_status: "無效的 SUPER ADMIN 驗證狀態。",
+      fatal: "致命的系統錯誤",
+      fatal_desc: "加載企業設定精靈時發生不可預期的錯誤，因為：",
+      retry: "重試初始化",
+      init: "正在初始化設定引擎中...",
+    },
+  },
+  admin_member: {
+    page: {
+      title: "用戶與點數管理",
+      subtitle:
+        "查看系統中的所有註冊用戶，並管理他們的點數餘額 (ERC3643 Treasury)。",
+      refresh: "重新整理",
+      refresh_list_aria: "重新整理列表",
+      th_user: "用戶名稱與地址",
+      th_role: "身分權限",
+      th_joined_at: "加入時間",
+      th_balance: "目前餘額",
+      th_action: "操作",
+      no_users: "系統中尚無用戶",
+      unnamed_user: "未命名用戶",
+      refresh_balance_aria: "重新整理點數",
+      issue_points_btn: "發放點數",      role_super_admin: "超級管理員",
+      role_admin: "管理員",
+      role_user: "一般用戶",
+
+    },
+
+    modal_issue: {
+      title: "發放系統點數",
+      target_user: "目標用戶",
+      unnamed_user: "未命名用戶",
+      amount_label: "發放數量 (Points)",
+      amount_placeholder: "例如：500",
+      err_amount: "點數必須大於 0",
+      success_msg: "發放成功",
+      err_msg: "發放失敗",
+      processing: "處理中...",
+      issued: "已發放",
+      confirm_btn: "確認發放",
+    },
   },
 };

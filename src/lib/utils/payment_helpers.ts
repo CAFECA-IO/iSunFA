@@ -11,22 +11,32 @@ export type IReceiptItem = {
  * Shared utility to build consistent invoice items for PDF receipt and 3rd party gateways (OEN).
  * This ensures that OEN records perfectly match the Receipt PDF generator items output.
  */
-export function generateReceiptItems(amount: number, orderData: Record<string, unknown>): IReceiptItem[] {
+export function generateReceiptItems(
+  amount: number,
+  orderData: Record<string, unknown>,
+): IReceiptItem[] {
   let items: IReceiptItem[] = [];
 
   if (orderData.planId) {
-    items = [{
-      name: (orderData.title as string) || "會員訂閱",
-      quantity: 1,
-      unitPrice: amount,
-      amount: amount,
-      remark: orderData.billingInterval === "year" ? "會員卡年費" : "會員卡月費",
-    }];
+    items = [
+      {
+        name: (orderData.title as string) || "會員訂閱",
+        quantity: 1,
+        unitPrice: amount,
+        amount: amount,
+        remark:
+          orderData.billingInterval === "year" ? "會員卡年費" : "會員卡月費",
+      },
+    ];
   } else {
     let base = Number(orderData.baseCredits || orderData.credits || amount);
     let bonus = Number(orderData.bonusCredits || 0);
 
-    if (!orderData.bonusCredits && orderData.credits && Number(orderData.credits) > Number(amount)) {
+    if (
+      !orderData.bonusCredits &&
+      orderData.credits &&
+      Number(orderData.credits) > Number(amount)
+    ) {
       base = Number(amount);
       bonus = Number(orderData.credits) - Number(amount);
     }
@@ -97,7 +107,7 @@ export function buildReceiptDataToSave(
   amount: number,
   orderData: Record<string, unknown>,
   pmData: Record<string, unknown> | undefined,
-  dbUser?: { name: string | null } | null
+  dbUser?: { name: string | null } | null,
 ) {
   // Info: (20260410 - Luphia) Same logic as PDF Generator
   const targetId = orderId;
@@ -105,10 +115,11 @@ export function buildReceiptDataToSave(
   const numericPart = digits.padEnd(8, "0").substring(0, 8);
   const invoiceNumber = `ZM${numericPart}`;
 
-  const taxAmount = Math.round(amount - (amount / 1.05));
+  const taxAmount = Math.round(amount - amount / 1.05);
   const salesAmount = amount - taxAmount;
 
-  const resolvedBuyerName = pmData?.buyerName || orderData?.buyerName || dbUser?.name || "Unknown";
+  const resolvedBuyerName =
+    pmData?.buyerName || orderData?.buyerName || dbUser?.name || "Unknown";
   const resolvedBuyerTaxId = pmData?.taxId || orderData?.buyerTaxId || null;
   const invoiceType = resolvedBuyerTaxId ? "B2B" : "B2C";
   const items = generateReceiptItems(amount, orderData);

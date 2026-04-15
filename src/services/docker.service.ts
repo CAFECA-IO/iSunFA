@@ -9,11 +9,17 @@ export class DockerService {
     return await runCommand("docker info");
   }
 
+  public async getRunningContainers() {
+    return await runCommand(
+      "docker ps --format '{{.ID}}|{{.Image}}|{{.Names}}|{{.Status}}'",
+    );
+  }
+
   public async startEngine() {
     const platform = process.platform;
-    if (platform === 'darwin') {
+    if (platform === "darwin") {
       return await runCommand("open -a Docker");
-    } else if (platform === 'linux') {
+    } else if (platform === "linux") {
       let result = await runCommand("sudo systemctl start docker");
       if (!result.success) {
         result = await runCommand("sudo service docker start");

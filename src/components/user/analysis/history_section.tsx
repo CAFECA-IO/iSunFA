@@ -1,11 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, Fragment } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { request } from '@/lib/utils/request';
 import { Check, ChevronLeft, ChevronRight, Loader2, Sparkles, X, Share2, Copy, Trash2, Eye, Download, RefreshCw } from 'lucide-react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
-import { Fragment } from 'react';
 import { MarkdownContent } from '@/components/common/markdown_content';
 import { downloadHtmlAsPdf } from '@/lib/utils/pdf';
 
@@ -118,11 +117,9 @@ export default function HistorySection() {
     }
   };
 
-  // Info: (20260130 - Luphia) Handle View Report
   const handleViewReport = async (item: IHistoryItem) => {
     try {
       setLoadingReport(true);
-      // Info: (20260130 - Luphia) Fetch details
       const result = await request<{ code: string; payload: { id: string; result: string; type: string; isExternal?: boolean } }>(`/api/v1/user/analysis/${item.reportId}`);
 
       if (result.code === 'SUCCESS') {
@@ -136,7 +133,6 @@ export default function HistorySection() {
         });
         setIsModalOpen(true);
       } else {
-        // Info: (20260130 - Luphia) Handle error (maybe toast)
         console.error('Failed to load report:', result);
       }
     } catch (err) {
@@ -154,7 +150,6 @@ export default function HistorySection() {
       return;
     }
 
-    // Info: (20260322 - Tzuhan) Temporarily remove scroll boundaries to capture full PDF
     const originalMaxHeight = el.style.maxHeight;
     const originalOverflow = el.style.overflowY;
     el.style.maxHeight = 'none';
@@ -178,7 +173,6 @@ export default function HistorySection() {
     } catch (err) {
       console.error('PDF generation failed:', err);
     } finally {
-      // Info: (20260322 - Tzuhan) Restore UI boundaries
       el.classList.add('max-h-[70vh]', 'overflow-y-auto');
       el.style.maxHeight = originalMaxHeight;
       el.style.overflowY = originalOverflow;
@@ -202,14 +196,12 @@ export default function HistorySection() {
     setSelectedReport(null);
   };
 
-  // Info: (20260410 - Tzuhan) 處理點擊分享按鈕
   const handleShareReport = async (reportId?: string) => {
     const idToShare = reportId || selectedReport?.id;
     if (!idToShare) return;
     try {
       setSharingReportId(idToShare);
       setIsSharing(true);
-      // Info: (20260410 - Tzuhan) 呼叫 Day 1 建立的 Generate API
       const result = await request<{ code: string; payload: { token: string } }>(
         `/api/v1/user/analysis/${idToShare}/share`,
         { method: 'POST' }
@@ -228,13 +220,11 @@ export default function HistorySection() {
     }
   };
 
-  // Info: (20260410 - Tzuhan) 處理撤銷分享
   const handleRevokeShare = async () => {
     const idToRevoke = sharingReportId || selectedReport?.id;
     if (!idToRevoke || !shareToken) return;
     try {
       setIsRevoking(true);
-      // Info: (20260410 - Tzuhan) 呼叫 Revoke API
       const result = await request<{ code: string }>(
         `/api/v1/user/analysis/${idToRevoke}/share/${shareToken}/revoke`,
         { method: 'PATCH' }
@@ -243,7 +233,6 @@ export default function HistorySection() {
       if (result.code === 'SUCCESS') {
         setShareToken(null);
         setIsShareLinkModalOpen(false);
-        // Todo: (20260410 - Tzuhan) 加上 Toast 提示「已撤銷」
       }
     } catch (err) {
       console.error('Revoke error:', err);
@@ -256,23 +245,28 @@ export default function HistorySection() {
     if (!shareToken) return;
     const url = `${window.location.origin}/share/report/${shareToken}`;
     await navigator.clipboard.writeText(url);
-    // Todo: (20260410 - Tzuhan) 觸發 Toast 提示「已複製到剪貼簿」
   };
 
-  const filteredHistory = selectedTag
-    ? history.filter(item => item.tags?.includes(selectedTag))
-    : history;
+  // Info: (20260414 - Tzuhan) 使用 useMemo 記憶化陣列運算，避免不必要的重新渲染計算
+  const filteredHistory = useMemo(() => {
+    return selectedTag
+      ? history.filter(item => item.tags?.includes(selectedTag))
+      : history;
+  }, [history, selectedTag]);
 
   const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
-  const currentData = filteredHistory.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
-  // Info: (20260311 - Tzuhan) Collect all unique tags for the filter
-  const allTags = Array.from(new Set(history.flatMap(item => item.tags || []))).sort();
+  const currentData = useMemo(() => {
+    return filteredHistory.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+  }, [filteredHistory, currentPage, itemsPerPage]);
 
-  // Info: (20260120 - Luphia) Helper to render status badge
+  const allTags = useMemo(() => {
+    return Array.from(new Set(history.flatMap(item => item.tags || []))).sort();
+  }, [history]);
+
   const renderStatus = (status: string) => {
     const s = status.toLowerCase();
     switch (s) {
@@ -325,26 +319,25 @@ export default function HistorySection() {
     );
   }
 
-  // Info: (20260313 - Tzuhan) Deterministic generic color classification based on tag hash for UI mapping
   const getTagColorClass = (tagStr: string, isSelected: boolean) => {
     const colors = [
-      { // Info: (20260313 - Tzuhan) Blue
+      {
         selected: 'bg-blue-600 text-white shadow-sm ring-1 ring-inset ring-blue-700/20',
         unselected: 'bg-blue-50 text-blue-700 hover:bg-blue-100 ring-1 ring-inset ring-blue-700/10'
       },
-      { // Info: (20260313 - Tzuhan) Emerald
+      {
         selected: 'bg-emerald-600 text-white shadow-sm ring-1 ring-inset ring-emerald-700/20',
         unselected: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 ring-1 ring-inset ring-emerald-700/10'
       },
-      { // Info: (20260313 - Tzuhan) Violet
+      {
         selected: 'bg-violet-600 text-white shadow-sm ring-1 ring-inset ring-violet-700/20',
         unselected: 'bg-violet-50 text-violet-700 hover:bg-violet-100 ring-1 ring-inset ring-violet-700/10'
       },
-      { // Info: (20260313 - Tzuhan) Amber
+      {
         selected: 'bg-amber-600 text-white shadow-sm ring-1 ring-inset ring-amber-700/20',
         unselected: 'bg-amber-50 text-amber-700 hover:bg-amber-100 ring-1 ring-inset ring-amber-700/10'
       },
-      { // Info: (20260313 - Tzuhan) Rose
+      {
         selected: 'bg-rose-600 text-white shadow-sm ring-1 ring-inset ring-rose-700/20',
         unselected: 'bg-rose-50 text-rose-700 hover:bg-rose-100 ring-1 ring-inset ring-rose-700/10'
       },
@@ -364,12 +357,12 @@ export default function HistorySection() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h2 className="text-lg font-bold text-gray-900 shrink-0">{t('analysis.history.title')}</h2>
 
-        {/* Info: (20260311 - Tzuhan) Tag Filter UI */}
         {allTags.length > 0 && (
           <div className="flex items-center w-full min-w-0 mt-2">
             <div className="flex items-center gap-3 shrink-0 pr-4 border-r border-gray-200">
               <span className="text-sm font-medium text-gray-500">{t('common.filter')}</span>
               <button
+                type="button"
                 onClick={() => setSelectedTag(null)}
                 className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${selectedTag === null ? 'bg-gray-900 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
               >
@@ -384,6 +377,7 @@ export default function HistorySection() {
                 const colorClasses = getTagColorClass(tag, isSelected);
                 return (
                   <button
+                    type="button"
                     key={tag}
                     onClick={() => setSelectedTag(tag)}
                     className={`${baseClasses} ${colorClasses}`}
@@ -412,7 +406,6 @@ export default function HistorySection() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            {/* Info: (20260120 - Luphia) Desktop Table View */}
             <table className="hidden sm:table min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
@@ -451,7 +444,6 @@ export default function HistorySection() {
                             )}
                           </div>
                         )}
-                        {/* Info: (20260311 - Tzuhan) Display Tags */}
                         {item.tags && item.tags.length > 0 && (
                           <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                             {item.tags.map((tag, idx) => (
@@ -465,7 +457,6 @@ export default function HistorySection() {
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                       <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 mr-2">
-                        {/* Info: (20260128 - Luphia) Handle unknown/missing periodType safely */}
                         {item.periodType && item.periodType !== 'unknown' ? t(`analysis.time_units.${item.periodType}`) : '-'}
                       </span>
                       {item.period}
@@ -482,6 +473,7 @@ export default function HistorySection() {
                             </span>
                           ) : (
                             <button
+                              type="button"
                               className="text-red-500 hover:text-red-700 font-medium disabled:opacity-50 flex items-center gap-1 transition-colors group text-xs border border-red-200 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md"
                               disabled={retryingReportId === item.reportId}
                               onClick={() => handleRetryReport(item)}
@@ -493,6 +485,7 @@ export default function HistorySection() {
                         ) : (
                           <>
                             <button
+                              type="button"
                               className="text-orange-600 hover:text-orange-900 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors group"
                               disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
                               onClick={() => handleViewReport(item)}
@@ -502,6 +495,7 @@ export default function HistorySection() {
                               <span className="sr-only">{t('analysis.history.view')}</span>
                             </button>
                             <button
+                              type="button"
                               className="text-gray-600 hover:text-gray-900 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors group"
                               disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase()) || isDownloading}
                               onClick={() => handleDownloadFromTable(item)}
@@ -511,6 +505,7 @@ export default function HistorySection() {
                               <span className="sr-only">{t('analysis.history.download')}</span>
                             </button>
                             <button
+                              type="button"
                               className="text-blue-600 hover:text-blue-900 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors group"
                               disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
                               onClick={() => handleShareReport(item.reportId)}
@@ -528,7 +523,6 @@ export default function HistorySection() {
               </tbody>
             </table>
 
-            {/* Info: (20260120 - Luphia) Mobile Card View */}
             <div className="space-y-4 sm:hidden">
               {currentData.map((item) => (
                 <div key={item.id} className="bg-gray-50 rounded-lg p-4 border border-gray-100 flex flex-col gap-3">
@@ -557,7 +551,6 @@ export default function HistorySection() {
                             )}
                           </div>
                         )}
-                        {/* Info: (20260311 - Tzuhan) Display Tags - Mobile View */}
                         {item.tags && item.tags.length > 0 && (
                           <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                             {item.tags.map((tag, idx) => (
@@ -588,6 +581,7 @@ export default function HistorySection() {
                           </span>
                         ) : (
                           <button
+                            type="button"
                             className="text-red-500 font-medium disabled:opacity-50 flex items-center gap-1 text-[10px] border border-red-200 bg-red-50 px-2 py-1 rounded-md"
                             disabled={retryingReportId === item.reportId}
                             onClick={() => handleRetryReport(item)}
@@ -599,6 +593,7 @@ export default function HistorySection() {
                       ) : (
                         <>
                           <button
+                            type="button"
                             className="text-orange-600 font-medium disabled:opacity-50 flex items-center gap-1 transition-colors group"
                             disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
                             onClick={() => handleViewReport(item)}
@@ -607,6 +602,7 @@ export default function HistorySection() {
                             {loadingReport && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4 group-hover:scale-110 transition-transform" />}
                           </button>
                           <button
+                            type="button"
                             className="text-gray-600 font-medium disabled:opacity-50 flex items-center gap-1 transition-colors group"
                             disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase()) || isDownloading}
                             onClick={() => handleDownloadFromTable(item)}
@@ -615,6 +611,7 @@ export default function HistorySection() {
                             {isDownloading && selectedReport?.id === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 group-hover:scale-110 transition-transform" />}
                           </button>
                           <button
+                            type="button"
                             className="text-blue-600 font-medium disabled:opacity-50 flex items-center gap-1 transition-colors group"
                             disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
                             onClick={() => handleShareReport(item.reportId)}
@@ -633,10 +630,10 @@ export default function HistorySection() {
         )}
       </div>
 
-      {/* Info: (20260120 - Luphia) Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-gray-200 pt-4 mt-4">
           <button
+            type="button"
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
             className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
@@ -648,6 +645,7 @@ export default function HistorySection() {
             {t('common.pagination.page_info', { current: currentPage, total: totalPages })}
           </span>
           <button
+            type="button"
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
             className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
@@ -658,7 +656,6 @@ export default function HistorySection() {
         </div>
       )}
 
-      {/* Info: (20260130 - Luphia) Report Content Modal */}
       <Transition appear show={isModalOpen} as={Fragment}>
         <Dialog as="div" className="relative z-50" onClose={closeModal}>
           <TransitionChild
@@ -737,7 +734,6 @@ export default function HistorySection() {
         </Dialog>
       </Transition>
 
-      {/* Info: (20260410 - Tzuhan) 分享網址專用的 Modal */}
       <Transition appear show={isShareLinkModalOpen} as={Fragment}>
         <Dialog as="div" className="relative z-[60]" onClose={() => setIsShareLinkModalOpen(false)}>
           <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
@@ -749,55 +745,56 @@ export default function HistorySection() {
                 <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                   <DialogTitle as="h3" className="text-lg font-bold leading-6 text-gray-900 mb-2 flex items-center gap-2">
                     <Share2 className="h-5 w-5 text-blue-600" />
-                      {t('analysis.share.modal_title')}
-                    </DialogTitle>
+                    {t('analysis.share.modal_title')}
+                  </DialogTitle>
 
-                    <div className="mt-2">
-                      <p
-                        className="text-sm text-gray-500 mb-4"
-                        dangerouslySetInnerHTML={{ __html: t('analysis.share.modal_desc') }}
+                  <div className="mt-2">
+                    <p
+                      className="text-sm text-gray-500 mb-4"
+                      dangerouslySetInnerHTML={{ __html: t('analysis.share.modal_desc') }}
+                    />
+
+                    <div className="flex items-center gap-2 p-1.5 bg-gray-50 border border-gray-200 rounded-lg">
+                      <input
+                        aria-label="Share link"
+                        readOnly
+                        value={shareToken ? `${window.location.origin}/share/report/${shareToken}` : ''}
+                        className="flex-1 bg-transparent border-none text-sm text-gray-600 focus:ring-0 px-2 outline-none"
                       />
-
-                      <div className="flex items-center gap-2 p-1.5 bg-gray-50 border border-gray-200 rounded-lg">
-                        <input
-                          aria-label="Share link"
-                          readOnly
-                          value={shareToken ? `${window.location.origin}/share/report/${shareToken}` : ''}
-                          className="flex-1 bg-transparent border-none text-sm text-gray-600 focus:ring-0 px-2 outline-none"
-                        />
-                        <button
-                          onClick={copyToClipboard}
-                          className="flex items-center gap-1 bg-white border border-gray-200 shadow-sm text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-md text-sm font-medium transition-colors shrink-0"
-                        >
-                          <Copy className="h-4 w-4" /> {t('analysis.share.copy')}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 flex justify-between items-center border-t border-gray-100 pt-4">
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
-                        onClick={handleRevokeShare}
-                        disabled={isRevoking}
+                        onClick={copyToClipboard}
+                        className="flex items-center gap-1 bg-white border border-gray-200 shadow-sm text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-md text-sm font-medium transition-colors shrink-0"
                       >
-                        {isRevoking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                        {t('analysis.share.revoke')}
-                      </button>
-                      <button
-                        type="button"
-                        className="inline-flex justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-                        onClick={() => setIsShareLinkModalOpen(false)}
-                      >
-                        {t('analysis.share.done')}
+                        <Copy className="h-4 w-4" /> {t('analysis.share.copy')}
                       </button>
                     </div>
-                  </DialogPanel>
-                </TransitionChild>
-              </div>
+                  </div>
+
+                  <div className="mt-6 flex justify-between items-center border-t border-gray-100 pt-4">
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                      onClick={handleRevokeShare}
+                      disabled={isRevoking}
+                    >
+                      {isRevoking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      {t('analysis.share.revoke')}
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                      onClick={() => setIsShareLinkModalOpen(false)}
+                    >
+                      {t('analysis.share.done')}
+                    </button>
+                  </div>
+                </DialogPanel>
+              </TransitionChild>
             </div>
-          </Dialog>
-        </Transition>
-    </div >
+          </div>
+        </Dialog>
+      </Transition>
+    </div>
   );
 }

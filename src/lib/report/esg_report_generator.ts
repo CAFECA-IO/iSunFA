@@ -3,7 +3,7 @@ import { Prisma } from "@/generated/browser";
 import { safeDivide } from "@/lib/utils/math";
 
 export function generateEsgReport(
-  esgRecords: Prisma.EsgRecordGetPayload<Record<string, never>>[]
+  esgRecords: Prisma.EsgRecordGetPayload<Record<string, never>>[],
 ): IEsgReport {
   const scope1Map = new Map<string, { name: string; amount: number }>();
   const scope2Map = new Map<string, { name: string; amount: number }>();
@@ -39,14 +39,15 @@ export function generateEsgReport(
 
   const mapToArray = (
     map: Map<string, { name: string; amount: number }>,
-    baseTotal: number
+    baseTotal: number,
   ): IEsgReportItem[] => {
     return Array.from(map.entries())
       .map(([id, data]) => ({
         id: Buffer.from(id).toString("base64"), // Info: (20260406 - Luphia) 安全唯一 ID
         name: data.name,
         amount: data.amount,
-        percentageOfScope: baseTotal !== 0 ? (data.amount / baseTotal) * 100 : 0,
+        percentageOfScope:
+          baseTotal !== 0 ? (data.amount / baseTotal) * 100 : 0,
       }))
       .sort((a, b) => b.amount - a.amount); // Info: (20260406 - Luphia) 按數量降序排列
   };

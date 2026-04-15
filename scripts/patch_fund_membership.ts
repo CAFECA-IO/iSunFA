@@ -1,5 +1,11 @@
 import fs from "fs";
-import { keccak256, toBytes, createWalletClient, createPublicClient, http } from "viem";
+import {
+  keccak256,
+  toBytes,
+  createWalletClient,
+  createPublicClient,
+  http,
+} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { Wallet } from "ethers";
 import { isuncoin } from "@/lib/viem_public";
@@ -11,7 +17,8 @@ config({ path: ".env" });
 async function main() {
   const envAdminPath = ".env.admin";
   const envSeedPath = ".env.seed";
-  const membershipAddress = process.env.NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS as `0x${string}`;
+  const membershipAddress = process.env
+    .NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS as `0x${string}`;
 
   if (!membershipAddress) {
     console.log("No membership address found");
@@ -34,7 +41,9 @@ async function main() {
   });
   const publicClient = createPublicClient({ transport: mainTransport });
 
-  console.log(`Funding membership system at ${membershipAddress} with 10,000 ISC...`);
+  console.log(
+    `Funding membership system at ${membershipAddress} with 10,000 ISC...`,
+  );
 
   const hash = await walletClient.sendTransaction({
     chain: isuncoin,

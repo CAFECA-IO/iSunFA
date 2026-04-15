@@ -107,7 +107,9 @@ export async function GET(
       accountBookId,
       isVerified: true, // Info: (20260331 - Julian) 僅取得「已核對」
       tradingDate: {
-        ...(reportType !== ReportType.BALANCE_SHEET && { gte: getTradingDateRange().start }),
+        ...(reportType !== ReportType.BALANCE_SHEET && {
+          gte: getTradingDateRange().start,
+        }),
         lte: getTradingDateRange().end,
       },
     };

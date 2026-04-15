@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const result = await mintToAddress(
       CONTRACT_ADDRESSES.CREDIT_POINT,
       user.address,
-      credits
+      credits,
     );
 
     if (!result.success) {
