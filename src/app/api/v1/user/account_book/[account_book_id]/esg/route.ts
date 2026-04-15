@@ -238,6 +238,7 @@ export async function GET(
           }
         : undefined,
       scope: r.scope as ClientEsgScope,
+      amount: Number(r.rawActivityData),
       emissions: r.emissions.toString(),
       intensity: r.intensity as ClientEsgIntensity,
       analysisStatus: r.analysisStatus as AIAnalysisStatus,

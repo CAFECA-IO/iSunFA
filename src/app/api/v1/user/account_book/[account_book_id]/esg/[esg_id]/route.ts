@@ -73,7 +73,7 @@ export async function GET(
       scope: esgRecord.scope as unknown as ClientEsgScope,
       activityType: esgRecord.activityType,
       vendor: esgRecord.vendor,
-      rawActivityData: esgRecord.rawActivityData,
+      amount: Number(esgRecord.rawActivityData),
       unit: esgRecord.unit,
       emissions: esgRecord.emissions.toString(),
       dqiScore: Number(esgRecord.dqiScore) ?? 0,
@@ -151,8 +151,8 @@ export async function PUT(
       }),
       ...(reqBody.activityType && { activityType: reqBody.activityType }),
       ...(reqBody.vendor && { vendor: reqBody.vendor }),
-      ...(reqBody.rawActivityData !== undefined && {
-        rawActivityData: reqBody.rawActivityData,
+      ...(reqBody.amount !== undefined && {
+        rawActivityData: reqBody.amount.toString(),
       }),
       ...(reqBody.unit && { unit: reqBody.unit }),
       ...(reqBody.emissions && { emissions: reqBody.emissions }),
@@ -186,7 +186,7 @@ export async function PUT(
       scope: updatedRecord.scope as unknown as ClientEsgScope,
       activityType: updatedRecord.activityType,
       vendor: updatedRecord.vendor,
-      rawActivityData: updatedRecord.rawActivityData,
+      amount: Number(updatedRecord.rawActivityData),
       unit: updatedRecord.unit,
       emissions: updatedRecord.emissions.toString(),
       dqiScore: Number(updatedRecord.dqiScore) ?? 0,

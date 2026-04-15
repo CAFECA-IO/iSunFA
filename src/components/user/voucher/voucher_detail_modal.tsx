@@ -383,7 +383,7 @@ export default function VoucherDetailModal({
             </label>
             <div className="relative">
               <select
-                value={voucherType ?? TradingType.INCOME}
+                value={voucherType as TradingType ?? ""}
                 onChange={(e) => setVoucherType(e.target.value as TradingType)}
                 className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
               >
