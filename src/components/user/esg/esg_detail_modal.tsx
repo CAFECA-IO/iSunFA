@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-import { X, CheckCircle2, Save } from "lucide-react";
+import { X, CheckCircle2, Save, Calculator, ChevronDown } from "lucide-react";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -11,6 +11,7 @@ import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import FilePreviewModal from "@/components/common/file_preview_modal";
 import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
+import { ICoefficient } from "@/interfaces/coefficient";
 
 interface IEsgDetailModalProps {
   isOpen: boolean;
@@ -42,6 +43,10 @@ export default function EsgDetailModal({
   // Info: (20260325 - Julian) Preview Modal State
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
 
+  const [selectedCoefficient, setSelectedCoefficient] =
+    useState<ICoefficient | null>(null);
+  const [coefficientList, setCoefficientList] = useState<ICoefficient[]>([]);
+
   useEffect(() => {
     if (isOpen && esgId && accountBookId) {
       const fetchEsgRecord = async () => {
@@ -64,6 +69,26 @@ export default function EsgDetailModal({
       fetchEsgRecord();
     }
   }, [isOpen, esgId, accountBookId]);
+
+  // Info: (20260414 - Julian) 取得係數列表
+  useEffect(() => {
+    const fetchCoefficientList = async () => {
+      try {
+        setIsLoading(true);
+        const data = await request<
+          IApiResponse<{ items: ICoefficient[]; total: number }>
+        >(`/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=all`);
+        if (data.payload) {
+          setCoefficientList(data.payload.items);
+        }
+      } catch (err) {
+        console.error("Failed to fetch coefficient list:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCoefficientList();
+  }, [accountBookId]);
 
   const checkHasChanges = () => {
     if (!formData || !originalData) return false;
@@ -121,6 +146,54 @@ export default function EsgDetailModal({
   const handleDateChange = (dateString: string) => {
     setFormData({ ...formData, tradingDate: dateString });
   };
+
+  // ToDo: (20260414 - Julian) 實作係數選擇
+  const coefficientSelector = (
+    <div className="group relative flex items-center justify-between rounded-xl border border-slate-300 bg-orange-50 p-4 hover:border-orange-300">
+      <div className="flex items-center gap-4">
+        <div className="rounded-lg bg-white p-2 shadow-sm">
+          <Calculator size={20} className="text-orange-300" />
+        </div>
+        <div className="flex flex-col font-semibold">
+          <p className="text-xs text-gray-400">套用計算公式</p>
+          <p className="text-sm text-slate-700 group-hover:text-orange-400">
+            {selectedCoefficient
+              ? `${selectedCoefficient.name} (${selectedCoefficient.unit} * ${selectedCoefficient.emissionFactor})`
+              : "尚未選擇公式"}
+          </p>
+        </div>
+      </div>
+      <div className="text-slate-500 group-hover:text-orange-500">
+        <ChevronDown size={16} />
+      </div>
+
+      {/* Info: (20260414 - Julian) 下拉選單 */}
+      <div className="absolute top-full right-0 left-0 mt-2 flex flex-col gap-2 rounded-xl border border-slate-300 bg-white p-4">
+        {coefficientList.map((coefficient) => {
+          return (
+            <button
+              key={coefficient.id}
+              type="button"
+              onClick={() => setSelectedCoefficient(coefficient)}
+              className="flex items-center gap-2 rounded-xl border border-slate-300 p-4 hover:border-orange-300"
+            >
+              <div className="rounded-lg bg-slate-50 p-2">
+                <Calculator size={16} className="text-slate-700" />
+              </div>
+              <div className="flex items-start flex-col">
+                <p className="text-sm font-bold text-slate-700">
+                  {coefficient.name}
+                </p>
+                <p className="text-xs font-semibold text-slate-400">
+                  {coefficient.unit} * {coefficient.emissionFactor}
+                </p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   const EsgContent = (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[#F8FAFC]">
@@ -326,7 +399,7 @@ export default function EsgDetailModal({
                       intensity: e.target.value as EsgIntensity,
                     })
                   }
-                  className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
                 >
                   <option value={EsgIntensity.LOW}>
                     {t("esg_verify.form.intensity_low")}
@@ -378,6 +451,16 @@ export default function EsgDetailModal({
               rows={4}
               className="w-full resize-none rounded-xl border border-slate-300 bg-white p-4 text-xs leading-relaxed text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
             />
+          </div>
+
+          {/* Info: (20260414 - Julian) 計算公式與係數 */}
+          <div className="col-span-2">
+            <div className="mb-1.5 flex items-center gap-2 text-sm font-bold">
+              <Calculator size={16} className="text-orange-300" />
+              <p className="text-slate-500">{t("計算公式與係數")}</p>
+            </div>
+            {/* Info: (20260414 - Julian) 計算公式與係數下拉選單 */}
+            {coefficientSelector}
           </div>
         </div>
       </div>
