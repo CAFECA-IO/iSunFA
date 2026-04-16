@@ -100,21 +100,23 @@ export async function GET(request: Request) {
             }
         }
 
-        const getScoreFontSize = (score: string, isNumeric: boolean) => {
-            if (isNumeric) {
-                if (score.length <= 3) return '96px';
+        const isShortEnglishRating = !isScoreMode && displayScore.length <= 3 && /^[a-zA-Z\+\-\*]+$/.test(displayScore);
+
+        const getScoreFontSize = (score: string) => {
+            if (isScoreMode || isShortEnglishRating) {
+                if (score.length <= 3) return '100px';
                 if (score.length <= 6) return '64px';
                 return '48px';
             } else {
                 if (score.length <= 2) return '48px';
-                if (score.length <= 5) return '32px';
-                if (score.length <= 10) return '24px';
-                return '20px';
+                if (score.length <= 5) return '36px';
+                if (score.length <= 10) return '28px';
+                return '24px';
             }
         };
 
-        const scoreFontSize = getScoreFontSize(displayScore, isScoreMode);
-        const scoreFontWeight = isScoreMode ? 900 : 700;
+        const scoreFontSize = getScoreFontSize(displayScore);
+        const scoreFontWeight = (isScoreMode || isShortEnglishRating) ? 900 : 700;
 
         const nameFontSize = companyName.length > 20 ? '48px' : (companyName.length > 10 ? '56px' : '72px');
 
@@ -169,7 +171,7 @@ export async function GET(request: Request) {
                                     <path d="M178.459 21.7965H196.557V26.8164H184.475V36.5189H195.729V41.4587H184.475V56.091H178.462V21.7998L178.459 21.7965Z" fill="#1A2E50" />
                                     <path d="M205.317 46.6223L202.717 56.0877H196.607L206.593 21.7965H214.078L224 56.0877H217.7L214.983 46.6223H205.314H205.317ZM214.091 42.0299L211.768 33.7535C211.183 31.5925 210.652 29.0108 210.178 26.8999H210.055C209.594 29.0341 209.073 31.676 208.526 33.7468L206.226 42.0332H214.091V42.0299Z" fill="#1A2E50" />
                                     <path d="M57.5498 5.54096C50.4688 0.544403 42.4396 -0.968591 33.953 0.581142C24.7185 2.26447 17.6241 7.20425 12.6296 15.0565C13.9183 21.1251 16.5691 27.3708 20.4986 33.2859L33.4956 20.2835C34.821 18.9575 36.971 18.9575 38.2964 20.2835C39.6218 21.6094 39.6218 23.7604 38.2964 25.0863L24.605 38.7834C25.5632 39.929 26.5748 41.0546 27.6364 42.1568L54.5451 15.2368C55.8705 13.9109 58.0206 13.9109 59.346 15.2368C60.6714 16.5628 60.6714 18.7137 59.346 20.0397L32.5975 46.7993C33.776 47.7912 34.9746 48.7264 36.1898 49.6082L47.4541 38.3392C48.7795 37.0132 50.9295 37.0132 52.2549 38.3392C53.5803 39.6652 53.5803 41.8161 52.2549 43.142L42.0456 53.3556C46.9332 56.0977 51.9711 57.9881 56.8821 58.9801C64.4406 54.254 69.7355 46.5688 71.1644 37.2537C73.1943 24.0175 68.5203 13.2729 57.5565 5.53762L57.5498 5.54096ZM43.8718 18.0357C41.9955 18.0357 40.4765 16.516 40.4765 14.639C40.4765 12.7619 41.9955 11.2422 43.8718 11.2422C45.7481 11.2422 47.2671 12.7619 47.2671 14.639C47.2671 16.516 45.7481 18.0357 43.8718 18.0357Z" fill="url(#paint0_linear_12_4673)" />
-                                    <path d="M37.2081 58.1952C35.2317 57.0796 33.2787 55.8238 31.369 54.4311C28.7483 52.5206 26.2043 50.3563 23.7905 47.9382C22.3783 46.5254 21.0496 45.0692 19.811 43.5796C18.3186 41.786 16.9532 39.9457 15.7146 38.0687C12.5229 33.2358 10.1826 28.1824 8.74033 23.1892C8.28295 24.3582 7.82891 25.5272 7.34816 26.6828C4.95108 32.4242 2.58071 38.1722 0.210339 43.9236C-0.200303 44.9156 -0.0433912 45.1527 1.01493 45.1661C2.71091 45.1894 4.4069 45.1594 6.10288 45.1727C7.32479 45.1828 7.61524 45.2495 7.68201 46.1046C7.69537 46.295 7.70204 46.6221 7.70204 46.7959C7.70538 49.7585 7.70538 52.7243 7.70538 55.6869C7.70538 57.928 7.70538 60.1691 7.70538 62.4102C7.70538 63.9232 7.77549 63.9933 9.31456 63.9933C13.4777 63.9967 17.6442 63.9933 21.8074 63.9933C22.9225 63.9933 24.0342 63.9933 25.1493 63.9933C27.2359 63.9933 29.3258 63.9933 31.4124 63.9933C34.1868 63.9933 36.9644 63.9933 39.7388 63.9933C41.7085 63.9933 43.6616 63.7896 45.5812 63.4122C46.4092 63.2485 47.2238 63.0581 48.0217 62.841C44.4094 61.7522 40.7704 60.1958 37.2115 58.1885L37.2081 58.1952Z" fill="#1A2E50" />
+                                    <path d="M37.2081 58.1952C35.2317 57.0796 33.2787 55.8238 31.369 54.4311C28.7483 52.5206 26.2043 50.3563 23.7905 47.9382C22.3783 46.5254 21.0496 45.0692 19.811 43.5796C18.3186 41.786 16.9532 39.9457 15.7146 38.0687C12.5229 33.2358 10.1826 28.1824 8.74033 23.1892C8.28295 24.3582 7.82891 25.5272 7.34816 26.6828C4.95108 32.4242 2.58071 38.1722 0.210339 43.9236C-0.200303 44.9156 -0.0433912 45.1527 1.01493 45.1661C2.71091 45.1894 4.4069 45.1594 6.10288 45.1727C7.32479 45.1828 7.61524 45.2495 7.68201 46.1046C7.69537 46.295 7.70204 46.5221 7.70204 46.7959C7.70538 49.7585 7.70538 52.7243 7.70538 55.6869C7.70538 57.928 7.70538 60.1691 7.70538 62.4102C7.70538 63.9232 7.77549 63.9933 9.31456 63.9933C13.4777 63.9967 17.6442 63.9933 21.8074 63.9933C22.9225 63.9933 24.0342 63.9933 25.1493 63.9933C27.2359 63.9933 29.3258 63.9933 31.4124 63.9933C34.1868 63.9933 36.9644 63.9933 39.7388 63.9933C41.7085 63.9933 43.6616 63.7896 45.5812 63.4122C46.4092 63.2485 47.2238 63.0581 48.0217 62.841C44.4094 61.7522 40.7704 60.1958 37.2115 58.1885L37.2081 58.1952Z" fill="#1A2E50" />
                                     <defs>
                                         <linearGradient id="paint0_linear_12_4673" x1="62.0836" y1="9.64575" x2="29.0115" y2="42.7074" gradientUnits="userSpaceOnUse">
                                             <stop stopColor="#FFA502" />
@@ -208,17 +210,17 @@ export async function GET(request: Request) {
 
                             {/* Info: (20260416 - Tzuhan) 右側：動態分數與評級區塊 */}
                             {displayScore ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#FFFFFF', padding: '32px', borderRadius: '32px', border: '2px solid #FFEDD5', marginLeft: '40px', width: '360px', flexShrink: 0, boxShadow: '0 20px 25px -5px rgba(234, 88, 12, 0.1), 0 8px 10px -6px rgba(234, 88, 12, 0.1)' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#FFFFFF', borderRadius: '32px', border: '2px solid #FFEDD5', marginLeft: '40px', width: '320px', minHeight: '280px', flexShrink: 0, padding: '24px', boxShadow: '0 20px 25px -5px rgba(234, 88, 12, 0.1), 0 8px 10px -6px rgba(234, 88, 12, 0.1)' }}>
                                     <span style={{ fontSize: '20px', color: '#C2410C', fontWeight: 800, marginBottom: '16px', letterSpacing: '0.1em', textAlign: 'center' }}>
                                         {isScoreMode ? t.ui.score : t.ui.rating}
                                     </span>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
-                                        <span style={{ fontSize: scoreFontSize, fontWeight: scoreFontWeight, color: '#EA580C', lineHeight: 1.3, textAlign: 'center', wordBreak: 'break-all' }}>{displayScore}</span>
+                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
+                                        <span style={{ fontSize: scoreFontSize, fontWeight: scoreFontWeight, color: '#EA580C', lineHeight: 1.2, textAlign: 'center', wordBreak: 'break-word' }}>{displayScore}</span>
                                         {isScoreMode && <span style={{ fontSize: '32px', color: '#F97316', fontWeight: 700 }}>/ 100</span>}
                                     </div>
                                 </div>
                             ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#FFFFFF', padding: '24px', borderRadius: '24px', border: '2px solid #FFEDD5', marginLeft: '40px', width: '280px', flexShrink: 0, boxShadow: '0 20px 25px -5px rgba(234, 88, 12, 0.1), 0 8px 10px -6px rgba(234, 88, 12, 0.1)' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#FFF7ED', borderRadius: '32px', border: '2px dashed #FDBA74', marginLeft: '40px', width: '320px', minHeight: '280px', flexShrink: 0, padding: '24px' }}>
                                     <svg width="120" height="120" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: '12px' }}>
                                         <circle cx="80" cy="80" r="60" fill="#FFEDD5" />
                                         <rect x="45" y="30" width="70" height="90" rx="6" fill="#FFFFFF" stroke="#FDBA74" strokeWidth="4" />
