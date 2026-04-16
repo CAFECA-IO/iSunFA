@@ -4,6 +4,7 @@ import { useState } from "react";
 import { request } from "@/lib/utils/request";
 import { X, CheckCircle, AlertCircle, Loader2, Coins } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
 
 export interface IUserTarget {
   id: string;
@@ -38,9 +39,25 @@ export function PointIssueModal({ isOpen, onClose, targetUser, onSuccess }: IPoi
     setSuccessMsg(null);
 
     try {
+      /**
+       * Info: (20260416 - Luphia) Admin FIDO2 Check before proceeding with the issue action.
+       * Need to fetch from the currently logged in Admin's address! 
+       * Wait, we don't naturally have the admin's address here unless we fetch it from identity.
+       * Wait, `getLoginOptions()` with no address triggers a Discoverable Login (Stateless)!
+       * So we can just call `getLoginOptions()` without parameters.
+       */
+      const { challenge, token } = await getLoginOptions();
+      const authentication = await fido2ClientService.startLogin({ challenge });
+
       const res = await request<{ success: boolean; message: string }>(`/api/v1/admin/member/${targetUser.id}/issue`, {
         method: "POST",
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({
+          amount,
+          fido2Signature: {
+            authentication,
+            challengeToken: token
+          }
+        }),
       });
       if (res.success) {
         setSuccessMsg(res.message || t("admin_member.modal_issue.success_msg"));

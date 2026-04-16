@@ -1,5 +1,14 @@
 export const en = {
   common: {
+    batch_download: "Batch Download",
+    download: "Download",
+    downloading: "Downloading...",
+    zipping: "Zipping...",
+    start_date: "Start Date",
+    end_date: "End Date",
+    error: {
+      download_failed: "Download failed",
+    },
     actions: "Actions",
     note: "Note",
     optional_in_parentheses: "Optional",
@@ -169,12 +178,10 @@ export const en = {
     },
   },
   header: {
-    free_trial: "Free Trial",
     salary_calculator: "Salary Calculator",
     ai_consultation_room: "AI Consultation Room",
     pricing: "Pricing",
     login: "Login",
-    plan: "Current Plan",
     credits: "Credits",
     logout: "Sign out",
   },
@@ -532,16 +539,6 @@ export const en = {
       },
     },
   },
-  setup: {
-    save: "Save Configuration",
-    saving: "Saving & Restarting...",
-    success: "Configuration Saved",
-    error: "Failed to save configuration, please try again.",
-    generate: "Generate Random",
-    missing_config:
-      "System configuration file (.env) not found. Please verify installation or contact administrator.",
-    config_error: "Error: Missing Environment Configuration",
-  },
   chat: {
     tags: {
       dashboard: "Information War Room",
@@ -579,8 +576,6 @@ export const en = {
       "Establish a base year and management procedures for carbon inventory, disclose carbon assets and liabilities in financial statements, and realize carbon accounting.",
     subtitle_line6:
       "Intelligent carbon health check, continuously analyze enterprise carbon reduction potential and evaluate the benefits of green process introduction.",
-    subtitle_line7:
-      "Provide green finance solutions to help enterprises achieve sustainable development goals.",
     pricing_link: "Pricing",
     free_trial: "Free Trial",
   },
@@ -1154,16 +1149,9 @@ export const en = {
     analysis_type: "Category",
     page_count: "Page count",
     page_unit: "pages",
-    required_points: "Points needed",
-    balance_after_payment: "Balance after payment",
     confirm_analyze_title: "Confirm Analysis Cost",
-    confirm_analyze_desc:
-      "The system will perform AI analysis on all your scanned documents. Please confirm the total cost:",
-    cost_per_page: "Cost per page",
-    total_cost: "Total deducted points",
-    point_unit: "pts",
+    confirm_analyze_desc: "The system will perform AI analysis on all your scanned documents. Please confirm the total cost:",
     confirm_btn: "Agree & Deduct",
-    cancel_btn: "Cancel",
     quick_scan: "Quick Scan",
     camera_denied_title: "Camera Access Denied",
     camera_denied_desc:
@@ -1182,22 +1170,12 @@ export const en = {
     analyze_all_btn: "Analyze All",
     multiple_files_supported:
       "Supports batch uploading multiple files (.jpg, .png, .pdf)",
-    title: "Receipt Management",
-    upload: "Upload",
-    view_file: "Voucher File",
     view_preview: "View Preview",
     preview: "Original Voucher",
-    list: "Voucher List",
     uploading: "Uploading...",
     click_or_drag: "Click or drag file here",
-    single_file_only: "Only one file can be uploaded at a time",
-    analyze_prompt: "Do you want to analyze this invoice?",
-    analyze_btn: "Yes, let AI analyze it",
-    reupload_btn: "Re-upload",
     display_type: "Display Type:",
     search_placeholder: "Search invoice contents...",
-    start_date: "Start Date",
-    end_date: "End Date",
     list_view: "List View",
     grid_view: "Grid View",
     file: "Invoice",
@@ -1206,12 +1184,9 @@ export const en = {
     journal: "Journal",
     confidence: "AI Confidence",
     status: "Status",
-    action: "Action",
     no_image: "No image",
     no_records: "No records found.",
-    unit: "kgCO2e",
     please_wait: "This may take a moment, please wait",
-    detail_title: "Invoice Details",
     ai: {
       processing: "AI is analyzing your invoice...",
       failed:
@@ -2206,10 +2181,12 @@ export const en = {
       no_users: "No users in the system",
       unnamed_user: "Unnamed User",
       refresh_balance_aria: "Refresh balance",
-      issue_points_btn: "Issue Points",      role_super_admin: "Super Admin",
+      issue_points_btn: "Issue Points",
+      role_super_admin: "Super Admin",
       role_admin: "Admin",
       role_user: "User",
-
+      admin_icp_inventory: "Admin Wallet ICP",
+      mint: "Mint",
     },
 
     modal_issue: {

@@ -1,5 +1,14 @@
 export const ja = {
   common: {
+    batch_download: "一括ダウンロード",
+    download: "ダウンロード",
+    downloading: "ダウンロード中...",
+    zipping: "圧縮中...",
+    start_date: "開始日",
+    end_date: "終了日",
+    error: {
+      download_failed: "ダウンロードに失敗しました",
+    },
     actions: "操作",
     note: "備考",
     optional_in_parentheses: "オプション",
@@ -169,12 +178,10 @@ export const ja = {
     },
   },
   header: {
-    free_trial: "無料トライアル",
     salary_calculator: "給与計算シミュレーター",
     ai_consultation_room: "AI相談室",
     pricing: "料金",
     login: "ログイン",
-    plan: "現在のプラン",
     credits: "ポイント",
     logout: "ログアウト",
   },
@@ -534,16 +541,6 @@ export const ja = {
       },
     },
   },
-  setup: {
-    save: "設定を保存",
-    saving: "保存して再起動中...",
-    success: "設定が保存されました",
-    error: "設定の保存に失敗しました。もう一度お試しください。",
-    generate: "ランダム生成",
-    missing_config:
-      "システム設定ファイル (.env) が見つかりません。インストールを確認するか、管理者にお問い合わせください。",
-    config_error: "エラー: 環境設定が不足しています",
-  },
   chat: {
     tags: {
       dashboard: "情報戦略室",
@@ -580,8 +577,6 @@ export const ja = {
       "カーボンインベントリの基準年と管理手続きを確立し、財務諸表に炭素資産と負債を開示して、炭素会計を実現します。",
     subtitle_line6:
       "スマートなカーボンヘルスチェックにより、企業の炭素削減の可能性とグリーンプロセス導入による効果を継続的に評価します。",
-    subtitle_line7:
-      "グリーン・ファイナンス・ソリューションを提供し、企業の持続可能な開発目標の達成を支援します。",
     pricing_link: "料金",
     free_trial: "無料トライアル",
   },
@@ -1076,7 +1071,7 @@ export const ja = {
       all: "すべて",
     },
     button: {
-      download: "PNGとしてダウンロード",
+      download: "PNG としてダウンロード",
       send: "給与明細を送信",
       reset: "リセット",
       re_send: "給与明細を再送信",
@@ -1119,16 +1114,9 @@ export const ja = {
     analysis_type: "カテゴリ",
     page_count: "ページ数",
     page_unit: "枚",
-    required_points: "必要ポイント",
-    balance_after_payment: "支払い後の残高",
     confirm_analyze_title: "分析費用の確認",
-    confirm_analyze_desc:
-      "すべてのスキャンした文書に対してAI分析を実行します。合計支払いポイントを確認してください：",
-    cost_per_page: "ページごとの費用",
-    total_cost: "合計ポイント",
-    point_unit: "pt",
+    confirm_analyze_desc: "すべてのスキャンした文書に対してAI分析を実行します。合計支払いポイントを確認してください：",
     confirm_btn: "同意してポイントを引く",
-    cancel_btn: "キャンセル",
     quick_scan: "クイックスキャン",
     camera_denied_title: "カメラアクセスが拒否されました",
     camera_denied_desc:
@@ -1147,22 +1135,12 @@ export const ja = {
     analyze_all_btn: "一括分析",
     multiple_files_supported:
       "複数ファイルの一括アップロードに対応 (.jpg, .png, .pdf)",
-    title: "請求書管理",
-    upload: "アップロード",
-    view_file: "伝票ファイル",
     view_preview: "プレビューを表示",
     preview: "オリジナル伝票",
-    list: "伝票リスト",
     uploading: "アップロード中...",
     click_or_drag: "ここをクリックまたはファイルをドラッグ",
-    single_file_only: "一度にアップロードできるファイルは1つだけです",
-    analyze_prompt: "この請求書を分析しますか？",
-    analyze_btn: "はい、AIに分析させます",
-    reupload_btn: "再アップロード",
     display_type: "表示方式：",
     search_placeholder: "請求書の内容を検索...",
-    start_date: "開始日",
-    end_date: "終了日",
     list_view: "リストビュー",
     grid_view: "グリッドビュー",
     file: "仕訳帳",
@@ -1171,12 +1149,9 @@ export const ja = {
     journal: "仕訳帳",
     confidence: "AI 信頼度",
     status: "ステータス",
-    action: "操作",
     no_image: "画像なし",
     no_records: "記録が見つかりません",
-    unit: "kgCO2e",
     please_wait: "しばらくお待ちください",
-    detail_title: "請求書の詳細",
     edit: "編集",
     save: "保存",
     delete: "請求書を削除",
@@ -2160,10 +2135,12 @@ export const ja = {
       no_users: "システム内にユーザーがいません",
       unnamed_user: "名無しのユーザー",
       refresh_balance_aria: "残高を更新",
-      issue_points_btn: "ポイント発行",      role_super_admin: "スーパー管理者",
+      issue_points_btn: "ポイント発行",
+      role_super_admin: "スーパー管理者",
       role_admin: "管理者",
       role_user: "一般ユーザー",
-
+      admin_icp_inventory: "システム在庫 ICP",
+      mint: "ミント",
     },
 
     modal_issue: {

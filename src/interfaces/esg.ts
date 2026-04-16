@@ -58,7 +58,7 @@ export interface IEsgRecord {
   scope: EsgScope | null;
   activityType: string;
   vendor: string;
-  rawActivityData: string;
+  amount: number;
   unit: string;
   emissions: string;
   dqiScore: number;
