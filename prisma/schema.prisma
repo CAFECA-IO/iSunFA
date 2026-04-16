@@ -731,14 +731,15 @@ model Coefficient {
 
 // Info: (20260410 - Tzuhan) 通用報告分享引擎，支援不同類型的報告對外分享
 model ReportShareToken {
-  id          String   @id @default(uuid())
-  token       String   @unique @default(uuid()) // Info: (20260410 - Tzuhan) 實際暴露在 URL 的亂碼字串
-  analysisId  String   @map("analysis_id")
-  analysis    Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
-  category    String // Info: (20260410 - Tzuhan) 報告類別 (例如 carbon_health_check)，用於策略模式分流
-  isActive    Boolean  @default(true) @map("is_active") // Info: (20260410 - Tzuhan) 支援手動關閉分享
-  createdById String   @map("created_by_id")
-  createdBy   User     @relation("ReportSharer", fields: [createdById], references: [id])
+  id                    String   @id @default(uuid())
+  token                 String   @unique @default(uuid()) // Info: (20260410 - Tzuhan) 實際暴露在 URL 的亂碼字串
+  analysisId            String   @map("analysis_id")
+  analysis              Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  category              String // Info: (20260410 - Tzuhan) 報告類別 (例如 carbon_health_check)，用於策略模式分流
+  isActive              Boolean  @default(true) @map("is_active") // Info: (20260410 - Tzuhan) 支援手動關閉分享
+  isFinancialDataHidden Boolean  @default(true) @map("is_financial_data_hidden") // Info: (20260416 - Tzuhan) 是否隱藏詳細財務數據
+  createdById           String   @map("created_by_id")
+  createdBy             User     @relation("ReportSharer", fields: [createdById], references: [id])
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")

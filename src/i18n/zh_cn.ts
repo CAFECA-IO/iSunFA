@@ -245,6 +245,16 @@ export const zhCn = {
         desc: "整合预算、审核与转账流程，全面提升财务作业效率。",
       },
       analysis: {
+        share_settings: {
+          title: "分享设置",
+          privacy_warning_title: "隐私保护警告",
+          privacy_warning_desc: "您即将分享内部财务报告。若选择不隐藏，包含营业额、各项花费数字的敏感财务报表将可被取得链接的任何人直接观看。",
+          hide_data_title: "隐藏详细数据 (系统建议)",
+          hide_data_desc: "强制遮蔽所有 Markdown 数字表格，仅对外公开 AI 的战略分析与健康状态。适合对外公关营销。",
+          show_data_title: "完整公开报告",
+          show_data_desc: "不作任何遮蔽，完整显示财务数据表格。适合专递给投资人、会计师或内部合伙人。",
+          confirm: "确认并产生链接"
+        },
         title: "数据分析",
         desc: "提供深度财务数据分析，协助管理层做出明智商业决策。",
       },

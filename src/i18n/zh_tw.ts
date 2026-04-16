@@ -248,6 +248,16 @@ export const zhTw = {
         desc: "整合預算、審核與轉帳流程，全面提升財務作業效率。",
       },
       analysis: {
+        share_settings: {
+          title: "分享設定",
+          privacy_warning_title: "隱私保護警告",
+          privacy_warning_desc: "您即將分享內部財務報告。若選擇不隱藏，包含營業額、各項花費數字的敏感財務報表將可被取得連結的任何人直接觀看。",
+          hide_data_title: "隱藏詳細數據 (系統建議)",
+          hide_data_desc: "強制遮蔽所有 Markdown 數字表格，僅對外公開 AI 的戰略分析與健康狀態。適合對外公關行銷。",
+          show_data_title: "完整公開報告",
+          show_data_desc: "不作任何遮蔽，完整顯示財務數據表格。適合專遞給投資人、會計師或內部合夥人。",
+          confirm: "確認並產生連結"
+        },
         title: "數據分析",
         desc: "提供深度財務數據分析，協助管理層做出明智商業決策。",
       },

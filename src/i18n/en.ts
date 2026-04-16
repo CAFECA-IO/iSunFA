@@ -246,6 +246,16 @@ export const en = {
         desc: "Integrates budget, approval, and transfer processes to comprehensively enhance financial operational efficiency.",
       },
       analysis: {
+        share_settings: {
+          title: "Share Settings",
+          privacy_warning_title: "Privacy Warning",
+          privacy_warning_desc: "You are about to share an internal financial report. If not hidden, sensitive financial data like revenue and expenses will be visible to anyone with the link.",
+          hide_data_title: "Hide Financial Data (Recommended)",
+          hide_data_desc: "Force hide all markdown financial data tables, only sharing AI strategic analysis and health status publically. Suitable for external branding and PR.",
+          show_data_title: "Fully Public Report",
+          show_data_desc: "No data is hidden. All financial data tables are displayed. Suitable for investors, accountants, and internal partners.",
+          confirm: "Confirm and Generate Link"
+        },
         title: "Data Analysis",
         desc: "Provides in-depth financial data analysis to assist management in making informed business decisions.",
       },
