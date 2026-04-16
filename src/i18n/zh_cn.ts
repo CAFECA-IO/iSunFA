@@ -1175,6 +1175,12 @@ export const zhCn = {
     },
   },
   coefficient: {
+    select_modal: {
+      title: "选择计算公式",
+      no_unit_match_prefix: "目前没有单位符合 ",
+      no_unit_match_suffix: " 的系数",
+      goto_manage: "前往系数管理页面新增系数"
+    },
     tag: {
       standard: "标准"
     },
@@ -1310,7 +1316,10 @@ export const zhCn = {
       total: "总排放量",
       intensity: "排放强度分级",
       coefficient: "排放系数",
-    },
+    
+      formula_and_coef: "计算公式与系数",
+      apply_formula: "套用计算公式",
+      no_formula_selected: "尚未选择公式",},
     messages: {
       fetch_error: "获取凭证失败",
       deleted_warning: "已删除凭证不可编辑",

@@ -340,7 +340,7 @@ export default function VoucherDetailModal({
       ))
     ) : (
       <div className="col-span-11 flex items-center justify-center rounded-lg border border-dashed border-red-200 bg-red-50/50 p-4 text-sm text-red-500">
-        尚無會計分錄，請點擊右上方「新增分錄」按鈕
+        {t("voucher.detail_modal.messages.no_entries_hint")}
       </div>
     );
 
@@ -627,7 +627,7 @@ export default function VoucherDetailModal({
         title={t("voucher.detail_modal.confirm_modals.save_voucher.title")}
         message={t("voucher.detail_modal.confirm_modals.save_voucher.message")}
         confirmText={
-          isSaving ? "Saving..." : t("voucher.detail_modal.actions.confirm")
+          isSaving ? t("voucher.detail_modal.actions.saving") : t("voucher.detail_modal.actions.confirm")
         }
         cancelText={t("common.cancel")}
         onConfirm={executeSaveVoucher}

@@ -341,11 +341,11 @@ export default function EsgDetailModal({
                   htmlFor="amountInput"
                   className="mb-1.5 block text-sm font-bold text-slate-500"
                 >
-                  數值 (Amount)
+                  {t("esg_verify.emissions.raw_data")}
                 </label>
                 <input
                   id="amountInput"
-                  aria-label={`數值 (Amount)`}
+                  aria-label={t("esg_verify.emissions.raw_data")}
                   type="number"
                   placeholder="0.00"
                   value={formData.amount || ""}
@@ -363,12 +363,12 @@ export default function EsgDetailModal({
                   htmlFor="unitSelect"
                   className="mb-1.5 block text-sm font-bold text-slate-500"
                 >
-                  單位 (Unit)
+                  {t("esg_verify.emissions.unit")}
                 </label>
                 {/* Info: (20260416 - Julian) 先改為文字輸入 */}
                 <input
                   id="unitInput"
-                  aria-label={`單位 (Unit)`}
+                  aria-label={t("esg_verify.emissions.unit")}
                   type="text"
                   value={formData.unit}
                   onChange={(e) =>
@@ -397,7 +397,7 @@ export default function EsgDetailModal({
               <div className="col-span-2">
                 <div className="mb-1.5 flex items-center gap-2 text-sm font-bold">
                   <Calculator size={16} className="text-orange-400" />
-                  <p className="text-slate-500">{t("計算公式與係數")}</p>
+                  <p className="text-slate-500">{t("esg_verify.emissions.formula_and_coef")}</p>
                 </div>
                 {/* Info: (20260415 - Julian) Coefficient Selector */}
                 <button
@@ -413,12 +413,12 @@ export default function EsgDetailModal({
                       <p
                         className={`${formData.coefficient ? "text-orange-400" : "text-gray-400"} text-xs`}
                       >
-                        套用計算公式
+                        {t("esg_verify.emissions.apply_formula")}
                       </p>
                       <p className="text-sm text-slate-700 transition-all duration-200 ease-in-out group-hover:text-orange-400">
                         {formData.coefficient
                           ? `${formData.coefficient.name} (${formData.coefficient.unit} * ${formData.coefficient.emissionFactor})`
-                          : "尚未選擇公式"}
+                          : t("esg_verify.emissions.no_formula_selected")}
                       </p>
                     </div>
                   </div>
@@ -435,12 +435,12 @@ export default function EsgDetailModal({
                   className="mb-1.5 flex items-center gap-1 text-sm font-bold"
                 >
                   <Leaf size={16} className="text-orange-400" />
-                  <p className="text-slate-500">總排放量</p>
+                  <p className="text-slate-500">{t("esg_verify.emissions.total")}</p>
                 </label>
                 <div className="flex items-baseline gap-2">
                   <input
                     id="totalEmissionsInput"
-                    aria-label={`總排放量`}
+                    aria-label={t("esg_verify.emissions.total")}
                     type="number"
                     placeholder="0.00"
                     readOnly
@@ -465,11 +465,11 @@ export default function EsgDetailModal({
                     size={16}
                     className="text-orange-400"
                   />
-                  <p className="text-slate-500">排放強度分級</p>
+                  <p className="text-slate-500">{t("esg_verify.emissions.intensity")}</p>
                 </label>
                 <input
                   id="esgIntensityInput"
-                  aria-label={`排放強度分級`}
+                  aria-label={t("esg_verify.emissions.intensity")}
                   type="text"
                   placeholder="0.00"
                   value={calculatedResult.intensityLevel}

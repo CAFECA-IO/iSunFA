@@ -1384,6 +1384,12 @@ export const en = {
     },
   },
   coefficient: {
+    select_modal: {
+      title: "Select Calculation Formula",
+      no_unit_match_prefix: "No coefficient matches the unit ",
+      no_unit_match_suffix: "",
+      goto_manage: "Go to coefficient management to add a coefficient"
+    },
     tag: {
       standard: "Standard"
     },
@@ -1526,7 +1532,10 @@ export const en = {
       total: "Total Emissions",
       intensity: "Intensity Level",
       coefficient: "Emission Coefficient",
-    },
+    
+      formula_and_coef: "Calculation Formula & Coefficient",
+      apply_formula: "Apply Calculation Formula",
+      no_formula_selected: "No formula selected",},
     actions: {
       cancel_edit: "Cancel Edit",
       save_only: "Save Only",

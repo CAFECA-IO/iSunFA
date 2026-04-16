@@ -1202,6 +1202,12 @@ export const ja = {
     },
   },
   coefficient: {
+    select_modal: {
+      title: "計算式を選択",
+      no_unit_match_prefix: "単位に一致する係数がありません：",
+      no_unit_match_suffix: "",
+      goto_manage: "係数管理ページに移動して係数を追加"
+    },
     tag: {
       standard: "標準"
     },
@@ -1333,7 +1339,10 @@ export const ja = {
       unit: "単位",
       total: "総排出量",
       intensity: "排出強度レベル",
-    },
+    
+      formula_and_coef: "計算式と係数",
+      apply_formula: "計算式を適用",
+      no_formula_selected: "数式が選択されていません",},
     messages: {
       fetch_error: "伝票の取得に失敗しました",
       deleted_warning: "削除済みの伝票は編集できません",

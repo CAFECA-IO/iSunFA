@@ -1387,6 +1387,12 @@ export const zhTw = {
     },
   },
   coefficient: {
+    select_modal: {
+      title: "選擇計算公式",
+      no_unit_match_prefix: "目前沒有單位符合 ",
+      no_unit_match_suffix: " 的係數",
+      goto_manage: "前往係數管理頁面新增係數"
+    },
     tag: {
       standard: "標準"
     },
@@ -1527,7 +1533,10 @@ export const zhTw = {
       total: "總排放量",
       intensity: "排放強度分級",
       coefficient: "排放係數",
-    },
+    
+      formula_and_coef: "計算公式與係數",
+      apply_formula: "套用計算公式",
+      no_formula_selected: "尚未選擇公式",},
     actions: {
       cancel_edit: "取消修改",
       save_only: "僅儲存修改",

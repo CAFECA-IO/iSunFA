@@ -1186,6 +1186,12 @@ export const ko = {
     },
   },
   coefficient: {
+    select_modal: {
+      title: "계산 공식 선택",
+      no_unit_match_prefix: "해당 단위와 일치하는 계수가 없습니다: ",
+      no_unit_match_suffix: "",
+      goto_manage: "계수 관리 페이지로 이동하여 계수 추가"
+    },
     tag: {
       standard: "표준"
     },
@@ -1316,7 +1322,10 @@ export const ko = {
       unit: "단위",
       total: "총 배출량",
       intensity: "배출 강도 등급",
-    },
+    
+      formula_and_coef: "계산 공식 및 계수",
+      apply_formula: "계산 공식 적용",
+      no_formula_selected: "선택된 공식 없음",},
     messages: {
       fetch_error: "전표를 가져오지 못했습니다",
       deleted_warning: "삭제된 전표는 편집할 수 없습니다",
