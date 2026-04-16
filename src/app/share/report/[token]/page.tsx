@@ -40,7 +40,8 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
         const sanitizer = ShareSanitizerFactory.getSanitizer(shareRecord.category);
         const safeData = sanitizer.sanitize(
             shareRecord.analysis.data as TShareData,
-            shareRecord.analysis.result as TShareResult
+            shareRecord.analysis.result as TShareResult,
+            shareRecord.isFinancialDataHidden
         );
 
         return {
@@ -79,7 +80,8 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
         const sanitizer = ShareSanitizerFactory.getSanitizer(shareRecord.category);
         safeData = sanitizer.sanitize(
             shareRecord.analysis.data as TShareData,
-            shareRecord.analysis.result as TShareResult
+            shareRecord.analysis.result as TShareResult,
+            shareRecord.isFinancialDataHidden
         );
     } catch (error) {
         console.error(`[PublicReportPage] Error sanitizing data: ${error}`);

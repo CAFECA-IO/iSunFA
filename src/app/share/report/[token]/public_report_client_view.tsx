@@ -44,10 +44,10 @@ export default function PublicReportClientView({ shareRecord, safeData }: IPubli
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
             <div className="mx-auto max-w-4xl bg-white rounded-2xl shadow-md ring-1 ring-gray-900/5 overflow-hidden">
                 <div className="bg-gray-900 px-6 py-4 flex justify-between items-center">
-                    <div className="text-white font-bold text-lg flex items-center gap-3">
+                    <Link href="/" className="text-white font-bold text-lg flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
                         <Image src="/isunfa_logo.svg" alt="iSunFA Logo" width={112} height={32} priority className="h-7 w-auto" />
                         <span className="hidden sm:inline-block border-l border-gray-600 pl-3">陽光智能會計</span>
-                    </div>
+                    </Link>
                     <span className="inline-flex items-center rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-400/30">
                         {t('analysis.share.public_badge')}
                     </span>

@@ -9,6 +9,7 @@ export type FullAnalysis = Prisma.AnalysisGetPayload<{
     tags: {
       include: { tag: true };
     };
+    reportShareTokens: true;
   };
 }>;
 
@@ -193,6 +194,10 @@ export class AnalysisRepository implements IAnalysisRepository {
         order: true,
         tags: {
           include: { tag: true },
+        },
+        reportShareTokens: {
+          where: { isActive: true },
+          take: 1,
         },
       },
     });

@@ -240,9 +240,12 @@ export async function POST(request: NextRequest) {
     return jsonOk(result);
   } catch (error) {
     console.error("[API] /user/analysis error:", error);
+    if (error instanceof AppError) {
+      return jsonFail(error.code, error.message);
+    }
     return jsonFail(
       ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to generate analysis",
+      error instanceof Error ? error.message : "Failed to generate analysis",
     );
   }
 }
@@ -302,7 +305,7 @@ export async function GET(request: NextRequest) {
       const orderData = analysis.order?.data as Record<string, unknown> | null;
       const pValue =
         typeof missionData?.periodValue === "string" ||
-        typeof missionData?.periodValue === "number"
+          typeof missionData?.periodValue === "number"
           ? (missionData.periodValue as string | number)
           : (orderData?.periodValue as string | number) || "";
 
@@ -344,6 +347,10 @@ export async function GET(request: NextRequest) {
             ? orderData.isExternal
             : false;
 
+      // Info: (20260416 - Tzuhan) Parse sharing status
+      const isShared = analysis.reportShareTokens && analysis.reportShareTokens.length > 0;
+      const isFinancialDataHidden = isShared ? analysis.reportShareTokens[0].isFinancialDataHidden : true;
+
       return {
         id: analysis.id,
         generatedAt,
@@ -358,6 +365,8 @@ export async function GET(request: NextRequest) {
         keyword,
         tags,
         isExternal,
+        isShared,
+        isFinancialDataHidden,
         retryCount: typeof missionData?.retryCount === 'number' ? missionData.retryCount : 0,
       };
     });

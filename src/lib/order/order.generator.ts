@@ -4,6 +4,7 @@ import { analysisRepo } from "@/repositories/analysis.repo";
 import { getAnalysisCost, IOrderParams } from "@/lib/analysis/pricing";
 import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
+import { prisma } from "@/lib/prisma";
 
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 
@@ -58,6 +59,51 @@ export class OrderGenerator {
         throw new AppError(
           ApiCode.VALIDATION_ERROR,
           "您的企業碳健檢資料已過期！請先針對該企業「重新生成一份最新的碳健檢報告」，再產出淨零碳排報告。",
+        );
+      }
+    }
+
+    // Info: (20260416 - Tzuhan) Prevent generation of internal orders if there is no internal ESG/financial data
+    const INTERNAL_CATEGORIES = [
+      "carbon_health_check",
+      "balance_sheet",
+      "cash_flow",
+      "income_statement",
+      "financial_compliance",
+      "financial_health",
+      "irsc",
+    ];
+
+    if (!params.isExternal && INTERNAL_CATEGORIES.includes(params.category)) {
+      if (params.keyword) {
+        const match = params.keyword.match(/\((.*?)\)/);
+        const taxId = match ? match[1] : params.keyword;
+
+        const teamMembers = await prisma.teamMember.findMany({
+          where: { userId },
+        });
+        const teamIds = teamMembers.map((tm) => tm.teamId);
+
+        const matchedAccountBook = await prisma.accountBook.findFirst({
+          where: { teamId: { in: teamIds }, enterpriseId: taxId },
+        });
+
+        const esgRecordsCount = matchedAccountBook
+          ? await prisma.esgRecord.count({
+            where: { accountBookId: matchedAccountBook.id, deletedAt: null },
+          })
+          : 0;
+
+        if (esgRecordsCount === 0) {
+          throw new AppError(
+            ApiCode.VALIDATION_ERROR,
+            "該企業尚未建立 ESG 或財務數據紀錄。請先上傳相關資料，或是改為申請「外部分析報告」。",
+          );
+        }
+      } else {
+        throw new AppError(
+          ApiCode.VALIDATION_ERROR,
+          "內部分析報告需要提供有效之企業資訊 (統編)。",
         );
       }
     }
