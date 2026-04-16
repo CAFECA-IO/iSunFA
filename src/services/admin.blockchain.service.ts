@@ -10,9 +10,6 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { Role } from "@/generated/client";
 
-// Info: (20260416 - Luphia) 忽略本地端自簽憑證錯誤，讓 viem publicClient 可以正常存取 localhost https RPC
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
 export interface IBlockchainDashboardData {
   address: string;
   adminIscBalance: string;

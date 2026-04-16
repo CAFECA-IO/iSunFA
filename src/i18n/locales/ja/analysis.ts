@@ -60,8 +60,9 @@ export const analysis = {
     missing_tax_id_desc:
       "この帳簿（{{name}}）には法人番号が設定されていません。内部データ分析には法人番号が必要です。ここで設定してください：",
   },
-  title: "分析レポート",
-  internal_analysis: "内部分析",
+  title: "顧問分析",
+  desc: "多分野の専門家による企業分析を提供し、経営陣が賢明なビジネス上の意思決定を行えるよう支援します。",
+  internal_analysis: "内部データ分析",
   external_analysis: "外部分析",
   history_reports: "履歴レポート",
   period_type: "時間単位",

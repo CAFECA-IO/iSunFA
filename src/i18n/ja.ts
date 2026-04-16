@@ -46,6 +46,7 @@ import { adminBlockchain } from "@/i18n/locales/ja/admin_blockchain";
 import { date } from "@/i18n/locales/ja/date";
 import { currencyAlias } from "@/i18n/locales/ja/currency_alias";
 import type { BaseTranslation } from "@/i18n/zh_tw";
+import { adminBilling } from "@/i18n/locales/ja/admin_billing";
 
 export const ja = {
   date,
@@ -94,4 +95,5 @@ export const ja = {
   admin_setup: adminSetup,
   admin_member: adminMember,
   admin_blockchain: adminBlockchain,
+  admin_billing: adminBilling,
 } satisfies BaseTranslation;

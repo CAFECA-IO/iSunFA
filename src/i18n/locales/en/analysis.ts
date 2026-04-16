@@ -57,8 +57,9 @@ export const analysis = {
     missing_tax_id_desc:
       "This account book ({{name}}) does not have a Tax ID set. Internal data analysis requires a Tax ID. Please set it here:",
   },
-  title: "Analysis Report",
-  internal_analysis: "Internal Analysis",
+  title: "Advisory Analysis",
+  desc: "Provide multidisciplinary expert business analysis to help management make informed business decisions.",
+  internal_analysis: "Internal Data Analysis",
   external_analysis: "External Analysis",
   history_reports: "History Reports",
   period_type: "Time Unit",

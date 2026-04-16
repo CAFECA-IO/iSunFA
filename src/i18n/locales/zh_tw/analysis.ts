@@ -57,7 +57,8 @@ export const analysis = {
     missing_tax_id_desc:
       "此帳本（{{name}}）尚未設定統一編號，內部數據分析需使用統一編號。請在此補齊設定：",
   },
-  title: "分析報告",
+  title: "顧問分析",
+  desc: "提供多領域專家企業分析，協助管理層做出明智商業決策。",
   internal_analysis: "內部數據分析",
   external_analysis: "外部數據分析",
   history_reports: "歷史報告",

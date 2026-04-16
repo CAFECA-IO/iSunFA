@@ -6,11 +6,12 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {KYCRegistry} from "./kyc_registry.sol";
 
 /**
- * Info: (20260412 - Luphia)
+ * Info: (20260416 - Luphia)
  * @title CreditPoint
  * @dev An enterprise-grade token representing system points incorporating ERC-3643 compliance concepts.
  * Acts as the Treasury: dictates that tokens minted need an ISC equivalent provided as collateral.
  * Provides a `burnAndUnlock` functionality to reclaim that value.
+ * 會員卡持有點數在增發前都必需抵押等比例的 ISC，透過超額抵押鑄造維持總體經濟穩定。
  */
 contract CreditPoint is ERC20, AccessControl {
     KYCRegistry public kycRegistry;

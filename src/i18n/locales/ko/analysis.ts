@@ -58,7 +58,8 @@ export const analysis = {
     missing_tax_id_desc:
       "이 장부({{name}})에는 사업자등록번호가 설정되어 있지 않습니다. 내부 데이터 분석을 위해서는 사업자등록번호가 필요합니다. 여기서 설정해 주세요:",
   },
-  title: "분석 보고서",
+  title: "고문 분석",
+  desc: "다분야 전문가의 기업 분석을 제공하여 경영진이 타당한 비즈니스 결정을 내리도록 지원합니다.",
   internal_analysis: "내부 데이터 분석",
   external_analysis: "외부 데이터 분석",
   history_reports: "이력 보고서",

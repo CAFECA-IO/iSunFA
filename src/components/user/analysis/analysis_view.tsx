@@ -53,7 +53,7 @@ export default function AnalysisView() {
   const { workflowStatus, txHash, resetTransaction, executeOrderTransaction, errorMessage, setErrorMessage } = useOrderTransaction();
 
   // Info: (20260120 - Luphia) External Analysis States
-  const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [selectedCountry, setSelectedCountry] = useState<string>('tw');
   const [keyword, setKeyword] = useState<string>('');
 
   const [accountBooks, setAccountBooks] = useState<Array<{ id: string, name: string, enterpriseId?: string }>>([]);
@@ -328,6 +328,7 @@ export default function AnalysisView() {
       {/* Info: (20260120 - Luphia) Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{t('analysis.title')}</h1>
+        <p className="mt-2 text-sm text-gray-500">{t('analysis.desc')}</p>
       </div>
 
       {/* Info: (20260120 - Luphia) Tabs */}

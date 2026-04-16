@@ -2,43 +2,26 @@
 
 import { useState, useRef, ChangeEvent } from 'react';
 import Image from 'next/image';
-import { Image as ImageIcon, Send, X, Tag, FileText } from 'lucide-react';
+import { Image as ImageIcon, Send, X, FileText } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
 
 interface IChatInputProps {
   onSend: (message: string, file: File | null, tags: string[]) => void;
   disabled?: boolean;
-  allowedTags?: string[];
 }
 
-const RAW_TAGS = [
-  'voucher',
-  'adjustment',
-  'cashier',
-  'salary',
-  'audit',
-  'esg',
-  'journal',
-  'tax',
-  'financial_report',
-  'analysis',
-  'signing'
-];
-
-export default function ChatInput({ onSend, disabled, allowedTags }: IChatInputProps) {
+export default function ChatInput({ onSend, disabled }: IChatInputProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
     if ((!message.trim() && !selectedFile) || disabled) return;
     // Info: (20260117 Luphia) Send raw tags directly
-    onSend(message, selectedFile, selectedTags);
+    onSend(message, selectedFile, []);
     setMessage('');
     setSelectedFile(null);
-    setSelectedTags([]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -57,16 +40,6 @@ export default function ChatInput({ onSend, disabled, allowedTags }: IChatInputP
       setSelectedFile(e.target.files[0]);
     }
   };
-
-  const toggleTag = (tag: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? [] : [tag]
-    );
-  };
-
-  const tagsToShow = disabled
-    ? []
-    : RAW_TAGS.filter(tag => !allowedTags || allowedTags.includes(tag));
 
   return (
     <div className="border-t bg-white p-4">
@@ -99,23 +72,6 @@ export default function ChatInput({ onSend, disabled, allowedTags }: IChatInputP
           </div>
         </div>
       )}
-
-      {/* Info: (20260117 Luphia) Tags */}
-      <div className="mb-2 flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        {tagsToShow.map((tagKey) => (
-          <button
-            key={tagKey}
-            onClick={() => toggleTag(tagKey)}
-            className={`flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition-colors cursor-pointer shrink-0 ${selectedTags.includes(tagKey)
-              ? 'border-orange-500 bg-orange-50 text-orange-600'
-              : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'
-              }`}
-          >
-            <Tag className="h-3 w-3" />
-            {t(`chat.tags.${tagKey}`)}
-          </button>
-        ))}
-      </div>
 
       <div className="flex gap-2 items-center">
         <input

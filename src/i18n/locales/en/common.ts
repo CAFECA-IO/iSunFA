@@ -1,4 +1,5 @@
 export const common = {
+  search: "Search",
   batch_download: "Batch Download",
   download: "Download",
   downloading: "Downloading...",
@@ -61,4 +62,5 @@ export const common = {
     oldest: "Oldest",
   },
   share: "Share",
+  other: "Other",
 };

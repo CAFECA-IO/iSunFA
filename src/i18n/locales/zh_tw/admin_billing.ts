@@ -1,0 +1,36 @@
+export const adminBilling = {
+  "page": {
+    "title": "營收與發票",
+    "subtitle": "監控全站營收、點數消耗及活躍付費會員狀況。",
+    "filter_date": "區間篩選",
+    "start_date": "開始日期",
+    "end_date": "結束日期",
+    "apply_filter": "套用篩選",
+    "all_time": "所有時間"
+  },
+  "kpi": {
+    "revenue": "總營收",
+    "consumption": "總點數消費",
+    "arpu": "平均客單價 (ARPU)",
+    "burn_ratio": "點數消耗購買比 (BBR)",
+    "users": "付費總人數"
+  },
+  "tabs": {
+    "orders": "收款紀錄",
+    "points": "點數消費紀錄",
+    "credit_cards": "信用卡紀錄"
+  },
+  "table": {
+    "th_date": "交易日期",
+    "th_user": "使用者",
+    "th_order": "訂單編號",
+    "th_amount": "金額",
+    "th_status": "狀態",
+    "th_source": "服務類型",
+    "th_action": "操作",
+    "th_purpose": "項目用途",
+    "th_provider": "付款管道",
+    "th_card_info": "卡片資訊",
+    "unnamed_user": "未命名使用者"
+  }
+};

@@ -57,7 +57,8 @@ export const analysis = {
     missing_tax_id_desc:
       "此账本（{{name}}）尚未设置统一对应代码，内部数据分析需使用统一代码。请在此补齐设置：",
   },
-  title: "分析报告",
+  title: "顾问分析",
+  desc: "提供多领域专家企业分析，协助管理层做出明智商业决策。",
   internal_analysis: "内部数据分析",
   external_analysis: "外部数据分析",
   history_reports: "历史报告",

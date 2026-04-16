@@ -24,6 +24,7 @@ import {
   RegistrationStep,
 } from "@/services/registration.service";
 import AuthTransition, { LoginStep } from "@/components/auth/auth_transition";
+import { Role } from "@/generated/enums";
 
 interface IAuthModalProps {
   isOpen: boolean;
@@ -82,7 +83,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: IAuthModalProp
       if (onSuccess) onSuccess();
       onClose();
       // Info: (20260118 - Luphia) Redirect to dashboard if at /
-      if (pathname === "/") {
+      if (payload.user.role === Role.SUPER_ADMIN || payload.user.role === Role.ADMIN) {
+        router.push('/admin/blockchain');
+      } else if (pathname === "/") {
         router.push('/user/account_book/');
       }
     } catch (err: unknown) {

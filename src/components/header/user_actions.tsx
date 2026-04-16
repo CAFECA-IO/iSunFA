@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import Link from "next/link";
 import {
   Menu,
@@ -9,8 +9,8 @@ import {
   MenuItems,
   Transition,
 } from "@headlessui/react";
-import { User, ChevronDown } from "lucide-react";
-import { MODULES, ADMIN_MODULES, SYSTEM_MODULES } from "@/constants/modules";
+import { User, ChevronDown, Copy, Check } from "lucide-react";
+import { MODULES, ADMIN_MODULES, SYSTEM_MODULES, getModuleI18nKey } from "@/constants/modules";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
 import LoginButton from "@/components/common/login_button";
@@ -20,6 +20,15 @@ export default function UserActions() {
   const { user, logout, refreshAuth } = useAuth();
   const { t } = useTranslation();
   const params = useParams();
+  const [copiedAddress, setCopiedAddress] = useState(false);
+
+  const handleCopyAddress = () => {
+    if (user?.address) {
+      navigator.clipboard.writeText(user.address);
+      setCopiedAddress(true);
+      setTimeout(() => setCopiedAddress(false), 2000);
+    }
+  };
 
   // Info: (20260118 - Luphia) Check if a module is active for the current user
   const isModuleActive = (moduleKey: string) => {
@@ -34,6 +43,7 @@ export default function UserActions() {
   // Info: (20260309 - Luphia) 根據目前路徑取得 account_book_id
   const accountBookId = params?.account_book_id as string || 'default';
   const accountBookPath = `/user/account_book/${accountBookId}`;
+  const isAdmin = user.isAdmin || user.role === 'SUPER_ADMIN' || user.role === 'ADMIN';
 
   return (
     <Menu as="div" className="relative">
@@ -44,7 +54,7 @@ export default function UserActions() {
         <span className="h-8 w-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 ring-1 ring-inset ring-orange-100">
           <User className="h-5 w-5" />
         </span>
-        <span className="sm:inline">{user.name}</span>
+        <span className="hidden sm:inline">{user.name}</span>
         <ChevronDown className="h-4 w-4 text-gray-400" aria-hidden="true" />
       </MenuButton>
       <Transition
@@ -68,9 +78,23 @@ export default function UserActions() {
                   <p className="text-sm font-bold text-gray-900 truncate max-w-[120px] md:max-w-none">
                     {user.name || "User"}
                   </p>
-                  <p className="text-xs text-gray-500 truncate max-w-[120px] md:max-w-none">
-                    {user.address}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-gray-500 truncate max-w-[120px] md:max-w-none">
+                      {user.address}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleCopyAddress}
+                      className="text-gray-400 hover:text-orange-500 transition-colors focus:outline-none"
+                      title="Copy Address"
+                    >
+                      {copiedAddress ? (
+                        <Check className="h-3 w-3 text-emerald-500" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="text-right shrink-0">
@@ -95,14 +119,13 @@ export default function UserActions() {
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {(() => {
-                  const isAdmin = user.isAdmin || user.role === 'SUPER_ADMIN' || user.role === 'ADMIN';
                   const modulesToDisplay = isAdmin ? ADMIN_MODULES : MODULES;
-                  
+
                   return modulesToDisplay.map((module) => {
                     const active = isAdmin ? true : isModuleActive(module.key);
                     const Icon = module.icon;
                     const targetPath = isAdmin ? `/admin/${module.key}` : `${accountBookPath}/${module.key}`;
-                    
+
                     return (
                       <MenuItem key={module.key} as={Fragment}>
                         {({ focus }) =>
@@ -120,14 +143,14 @@ export default function UserActions() {
                               <span
                                 className={`text-xs md:text-sm font-medium ${focus ? "text-orange-900" : "text-gray-700"} text-center`}
                               >
-                                {t(`chat.tags.${module.key}`)}
+                                {t(getModuleI18nKey(module.key))}
                               </span>
                             </Link>
                           ) : (
                             <div className="flex flex-col items-center justify-center p-2 md:p-3 rounded-lg bg-gray-50/50 ring-1 ring-gray-100 opacity-60 cursor-not-allowed h-full w-full">
                               <Icon className="h-5 w-5 md:h-6 md:w-6 mb-1 md:mb-2 text-gray-300" />
                               <span className="text-xs md:text-sm font-medium text-gray-400 text-center">
-                                {t(`chat.tags.${module.key}`)}
+                                {t(getModuleI18nKey(module.key))}
                               </span>
                             </div>
                           )
@@ -144,8 +167,13 @@ export default function UserActions() {
               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 md:mb-3 px-1 md:px-2">
                 {t("sidebar.system")}
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {SYSTEM_MODULES.filter((action) => action.enable).map((action) => {
+              <div className={`grid grid-cols-2 md:grid-cols-4 gap-2`}>
+                {SYSTEM_MODULES.filter((action) => {
+                  if (!action.enable) return false;
+                  // Info: (20260416 - Luphia) 角色為 ADMIN, SUPER ADMIN 時，系统设置只需顯示登出
+                  if (isAdmin && action.action !== "logout") return false;
+                  return true;
+                }).map((action) => {
                   const Icon = action.icon;
                   return (
                     <MenuItem key={action.id} as={Fragment}>

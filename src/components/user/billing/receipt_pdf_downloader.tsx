@@ -89,11 +89,11 @@ export default function ReceiptPdfDownloader({
       } else {
         const rawHeightPx = element.scrollHeight;
         const mmHeight = Math.max(120, Math.ceil(rawHeightPx * 0.264583) + 10);
-        
+
         // Info: (20260410 - Luphia) Explicitly define format tuples to prevent TS falling back to loose number[]
         const marginConfig: [number, number, number, number] = [2, 0, 2, 0];
         const formatConfig: [number, number] = [57, mmHeight];
-        
+
         opt = {
           margin: marginConfig,
           filename: `iSunFA_B2C_${fileDate}_${invoiceNum}.pdf`,
@@ -171,10 +171,11 @@ export default function ReceiptPdfDownloader({
       <button
         onClick={handleDownload}
         disabled={isDownloading}
-        className={className || "p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors disabled:opacity-50 inline-flex items-center gap-1 text-sm"}
-        title={t('billing.orders.download_receipt', { defaultValue: '下載電子發票 (PDF)' })}
+        className={className || "py-1.5 px-3 text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors font-semibold disabled:opacity-50 inline-flex items-center justify-center gap-1.5 text-xs whitespace-nowrap"}
+        title={t('billing.orders.download_receipt')}
       >
-        {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+        {isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+        {t('admin_billing.table.download_receipt')}
       </button>
 
       {/* Info: (20260410 - Luphia) Wrapper to prevent capturing visually on screen */}
@@ -313,11 +314,11 @@ export default function ReceiptPdfDownloader({
           {/* Info: (20260410 - Luphia) Info Block */}
           <div style={{ padding: '20px', backgroundColor: '#f9fafb', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '16px', position: 'relative' }}>
             <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 'bold', letterSpacing: '2px', marginBottom: '12px', textTransform: 'uppercase' }}>買方資訊 (Buyer Info)</div>
-            
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#111827', marginBottom: '6px' }}>
-                   {buyerName || '散客交易'}
+                  {buyerName || '散客交易'}
                 </div>
                 {buyerTaxId && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
@@ -326,19 +327,19 @@ export default function ReceiptPdfDownloader({
                   </div>
                 )}
                 {buyerAddress && (
-                   <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '4px' }}>{buyerAddress}</div>
+                  <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '4px' }}>{buyerAddress}</div>
                 )}
               </div>
-              
+
               <div style={{ flex: '0 0 auto', textAlign: 'right', borderLeft: '1px solid #e5e7eb', paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '160px' }}>
                 {buyerTaxId ? (
-                   <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                     格式 <span style={{ fontWeight: 'bold', color: '#ea580c', marginLeft: '8px', fontSize: '14px' }}>25 進項發票</span>
-                   </div>
+                  <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                    格式 <span style={{ fontWeight: 'bold', color: '#ea580c', marginLeft: '8px', fontSize: '14px' }}>25 進項發票</span>
+                  </div>
                 ) : (
-                   <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                     隨機碼 <span style={{ fontWeight: 'bold', color: '#111827', marginLeft: '8px', fontSize: '14px' }}>{rcode}</span>
-                   </div>
+                  <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                    隨機碼 <span style={{ fontWeight: 'bold', color: '#111827', marginLeft: '8px', fontSize: '14px' }}>{rcode}</span>
+                  </div>
                 )}
                 <div style={{ fontSize: '13px', color: '#9ca3af' }}>第 1 頁 / 共 1 頁</div>
               </div>

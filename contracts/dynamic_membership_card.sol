@@ -10,10 +10,13 @@ import {KYCRegistry} from "./kyc_registry.sol";
 import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
 
 /**
- * Info: (20260412 - Luphia)
+ * Info: (20260416 - Luphia)
  * @title DynamicMembershipCard
  * @dev ERC721 Token combined with EIP-4906 (MetadataUpdate) and linked to KYCRegistry
  * to freeze non-compliant assets dynamically. Can be bound to ERC-6551 accounts.
+ * 經驗值與身分展現：利用 experiencePoints 記錄單張卡片的總和 EXP。
+ * 當接收到更新指令時，會拋出 EIP-4906 (MetadataUpdate) 事件，供前端直接
+ * 響應並變化為獨特的視覺圖像與金銀銅卡階級 (Dynamic NFT 動態圖像轉換)。
  */
 contract DynamicMembershipCard is ERC721URIStorage, AccessControl {
     KYCRegistry public kycRegistry;
@@ -34,7 +37,9 @@ contract DynamicMembershipCard is ERC721URIStorage, AccessControl {
      * Info: (20260412 - Luphia)
      * @dev Sets a new KYC Registry address in case of an upgrade.
      */
-    function setKYCRegistry(address _kycRegistry) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setKYCRegistry(
+        address _kycRegistry
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         kycRegistry = KYCRegistry(_kycRegistry);
     }
 
@@ -112,7 +117,13 @@ contract DynamicMembershipCard is ERC721URIStorage, AccessControl {
      */
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC721URIStorage, AccessControl) returns (bool) {
+    )
+        public
+        view
+        virtual
+        override(ERC721URIStorage, AccessControl)
+        returns (bool)
+    {
         return
             interfaceId == bytes4(0x49064906) ||
             super.supportsInterface(interfaceId);

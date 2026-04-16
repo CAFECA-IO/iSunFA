@@ -1,4 +1,5 @@
 export const common = {
+  search: "搜索",
   batch_download: "批次下载",
   download: "下载",
   downloading: "下载中...",
@@ -60,4 +61,5 @@ export const common = {
     oldest: "由旧至新",
   },
   share: "分享",
+  other: "其他",
 };

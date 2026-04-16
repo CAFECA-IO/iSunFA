@@ -13,9 +13,22 @@ export async function GET(req: Request) {
       return jsonFail(ApiCode.UNAUTHORIZED, "Unauthorized");
     }
 
-    const users = await webAuthnRepo.findAllUsersForAdmin();
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "15", 10);
+    const search = searchParams.get("search") || "";
+    const sortBy = searchParams.get("sortBy") || "createdAt";
+    const sortOrder = (searchParams.get("sortOrder") as "asc" | "desc") || "desc";
 
-    return jsonOk(users);
+    const result = await webAuthnRepo.findAllUsersForAdmin({
+      page,
+      limit,
+      search,
+      sortBy,
+      sortOrder,
+    });
+
+    return jsonOk(result);
   } catch (error) {
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, (error as Error).message);
   }

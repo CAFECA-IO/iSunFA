@@ -46,6 +46,7 @@ import { adminMember } from "@/i18n/locales/en/admin_member";
 import { adminBlockchain } from "@/i18n/locales/en/admin_blockchain";
 
 import type { BaseTranslation } from "@/i18n/zh_tw";
+import { adminBilling } from "@/i18n/locales/en/admin_billing";
 
 export const en = {
   common,
@@ -94,4 +95,5 @@ export const en = {
   admin_setup: adminSetup,
   admin_member: adminMember,
   admin_blockchain: adminBlockchain,
+  admin_billing: adminBilling,
 } satisfies BaseTranslation;

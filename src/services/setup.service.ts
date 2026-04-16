@@ -31,6 +31,10 @@ import {
   updateOrAppendEnv,
   loadEnvConfig,
   getPriorityEnvConfig,
+  getEnvRawContent,
+  saveEnvRawContent,
+  existsEnv,
+  deleteEnv,
 } from "@/services/env.service";
 
 // Info: (20260414 - Luphia) 系統與 Docker 服務
@@ -64,12 +68,7 @@ export async function getSystemHardwareInfo() {
 }
 
 export async function startDockerCompose() {
-  let envContent = "";
-  if (fs.existsSync(ENV_PATH)) {
-    envContent = fs.readFileSync(ENV_PATH, "utf8");
-  } else if (fs.existsSync(ENV_EXAMPLE_PATH)) {
-    envContent = fs.readFileSync(ENV_EXAMPLE_PATH, "utf8");
-  }
+  let envContent = getEnvRawContent(ENV_PATH) || getEnvRawContent(ENV_EXAMPLE_PATH);
 
   // Info: (20260414 - Luphia) 產生 24 字元高複雜度密碼
   const charset =
@@ -94,14 +93,10 @@ export async function startDockerCompose() {
   const dbUrl = `postgresql://isunfa:${encodedPassword}@127.0.0.1:20021/isunfa?schema=public`;
   envContent = updateOrAppendEnv(envContent, "DATABASE_URL", `"${dbUrl}"`);
 
-  fs.writeFileSync(ENV_PATH, envContent, "utf8");
+  saveEnvRawContent(ENV_PATH, envContent);
 
   // Info: (20260413 - Luphia) 寫入靜態設定至 .env.setup
-  if (!fs.existsSync(ENV_SETUP_PATH)) {
-    fs.writeFileSync(ENV_SETUP_PATH, "", "utf-8");
-  }
-
-  let setupContent = fs.readFileSync(ENV_SETUP_PATH, "utf-8");
+  let setupContent = getEnvRawContent(ENV_SETUP_PATH);
   if (!setupContent.includes("# PART 1")) {
     setupContent += "# PART 1: Core Infrastructure\n";
   }
@@ -116,7 +111,7 @@ export async function startDockerCompose() {
   setupContent = updateOrAppendEnv(
     setupContent,
     "NEXT_PUBLIC_RPC_URL",
-    "https://mainnet.isuncoin.com",
+    "http://127.0.0.1:20024",
   );
   setupContent = updateOrAppendEnv(
     setupContent,
@@ -134,7 +129,7 @@ export async function startDockerCompose() {
     "reports",
   );
 
-  fs.writeFileSync(ENV_SETUP_PATH, setupContent, "utf8");
+  saveEnvRawContent(ENV_SETUP_PATH, setupContent);
 
   return await dockerService.composeUp(ROOT_PATH);
 }
@@ -257,11 +252,7 @@ export async function initDb() {
   const result = await runCommand(cmd, ROOT_PATH, 5 * 1024 * 1024);
 
   if (result.success) {
-    if (!fs.existsSync(ENV_SETUP_PATH)) {
-      fs.writeFileSync(ENV_SETUP_PATH, "", "utf-8");
-    }
-
-    let setupContent = fs.readFileSync(ENV_SETUP_PATH, "utf-8");
+    let setupContent = getEnvRawContent(ENV_SETUP_PATH);
     if (!setupContent.includes("# PART 3")) {
       setupContent += "\n\n# PART 3: Database Configuration\n";
     }
@@ -275,7 +266,7 @@ export async function initDb() {
     );
     setupContent = updateOrAppendEnv(setupContent, "DATABASE_URL", dbUrl);
 
-    fs.writeFileSync(ENV_SETUP_PATH, setupContent, "utf-8");
+    saveEnvRawContent(ENV_SETUP_PATH, setupContent);
     console.log(
       "-> Successfully synchronized database password and pushed schema.",
     );
@@ -327,9 +318,7 @@ export async function getDatabaseStatus() {
 
 export async function setDbPassword(newPassword: string) {
   try {
-    let envContent = fs.existsSync(ENV_PATH)
-      ? fs.readFileSync(ENV_PATH, "utf8")
-      : "";
+    let envContent = getEnvRawContent(ENV_PATH);
 
     envContent = updateOrAppendEnv(
       envContent,
@@ -340,7 +329,7 @@ export async function setDbPassword(newPassword: string) {
     const dbUrl = `postgresql://isunfa:${encodedPassword}@127.0.0.1:20021/isunfa?schema=public`;
     envContent = updateOrAppendEnv(envContent, "DATABASE_URL", `"${dbUrl}"`);
 
-    fs.writeFileSync(ENV_PATH, envContent, "utf8");
+    saveEnvRawContent(ENV_PATH, envContent);
     return await initDb();
   } catch (e) {
     return { success: false, output: String(e) };
@@ -414,13 +403,13 @@ export async function authorizeSuperAdmin(authentication?: {
     }
 
     const envConfig = await getPriorityEnvConfig();
-    const targetEnvPath = fs.existsSync(ENV_SETUP_PATH)
+    const targetEnvPath = existsEnv(ENV_SETUP_PATH)
       ? ENV_SETUP_PATH
       : ENV_PATH;
 
     if (user && user.credentialId) {
       if (!authentication || user.credentialId === authentication.id) {
-        let setupContent = fs.readFileSync(targetEnvPath, "utf-8");
+        let setupContent = getEnvRawContent(targetEnvPath);
         setupContent = updateOrAppendEnv(
           setupContent,
           "SUPER_ADMIN_CRED_ID",
@@ -436,7 +425,7 @@ export async function authorizeSuperAdmin(authentication?: {
           "SUPER_ADMIN_PUB_Y",
           user.pubKeyY!,
         );
-        fs.writeFileSync(targetEnvPath, setupContent, "utf-8");
+        saveEnvRawContent(targetEnvPath, setupContent);
 
         return { success: true };
       }
@@ -482,7 +471,7 @@ export async function authorizeSuperAdmin(authentication?: {
             const pubKeyXStr = matchLog.args.pubKeyX.toString();
             const pubKeyYStr = matchLog.args.pubKeyY.toString();
 
-            let setupContent = fs.readFileSync(targetEnvPath, "utf-8");
+            let setupContent = getEnvRawContent(targetEnvPath);
             setupContent = updateOrAppendEnv(
               setupContent,
               "SUPER_ADMIN_CRED_ID",
@@ -498,7 +487,7 @@ export async function authorizeSuperAdmin(authentication?: {
               "SUPER_ADMIN_PUB_Y",
               pubKeyYStr,
             );
-            fs.writeFileSync(targetEnvPath, setupContent, "utf-8");
+            saveEnvRawContent(targetEnvPath, setupContent);
 
             const scw = matchLog.args.scw;
             if (scw) {
@@ -779,11 +768,11 @@ export async function createSuperAdminRecord(
 
     void doBlockchainSetup();
 
-    const targetEnvPath = fs.existsSync(ENV_SETUP_PATH)
+    const targetEnvPath = existsEnv(ENV_SETUP_PATH)
       ? ENV_SETUP_PATH
       : ENV_PATH;
-    if (fs.existsSync(targetEnvPath)) {
-      let setupContent = fs.readFileSync(targetEnvPath, "utf-8");
+    if (existsEnv(targetEnvPath)) {
+      let setupContent = getEnvRawContent(targetEnvPath);
       if (!setupContent.includes("# PART 4"))
         setupContent += "\n\n# PART 4: Server SUPER ADMIN\n";
 
@@ -814,7 +803,7 @@ export async function createSuperAdminRecord(
         pubKeyY,
       );
 
-      fs.writeFileSync(targetEnvPath, setupContent, "utf-8");
+      saveEnvRawContent(targetEnvPath, setupContent);
     }
 
     return { success: true, address, pendingTask: true };
@@ -850,11 +839,9 @@ export async function getSuperAdminTaskStatus() {
 
 // Info: (20260413 - Luphia) 環境設定與驗證收尾
 export async function finalizeSetupEnvironment() {
-  if (fs.existsSync(ENV_SETUP_PATH)) {
-    const setupContent = fs.readFileSync(ENV_SETUP_PATH, "utf8");
-    let envContent = fs.existsSync(ENV_PATH)
-      ? fs.readFileSync(ENV_PATH, "utf-8")
-      : "";
+  if (existsEnv(ENV_SETUP_PATH)) {
+    const setupContent = getEnvRawContent(ENV_SETUP_PATH);
+    let envContent = getEnvRawContent(ENV_PATH);
 
     setupContent.split(/\r?\n/).forEach((line) => {
       const trimmed = line.trim();
@@ -872,8 +859,8 @@ export async function finalizeSetupEnvironment() {
       }
     });
 
-    fs.writeFileSync(ENV_PATH, envContent, "utf-8");
-    fs.unlinkSync(ENV_SETUP_PATH);
+    saveEnvRawContent(ENV_PATH, envContent);
+    deleteEnv(ENV_SETUP_PATH);
     return { success: true };
   }
   return { success: false, error: "Setup file not found." };
@@ -885,9 +872,9 @@ export async function getEnvHashChallenge(): Promise<{
   error?: string;
 }> {
   try {
-    const targetEnvPath = fs.existsSync(ENV_SETUP_PATH)
+    const targetEnvPath = existsEnv(ENV_SETUP_PATH)
       ? ENV_SETUP_PATH
-      : fs.existsSync(ENV_PATH)
+      : existsEnv(ENV_PATH)
         ? ENV_PATH
         : undefined;
     if (!targetEnvPath)
@@ -923,10 +910,10 @@ export async function verifyAndFinalizeConfig(
   authData: AuthenticationJSON,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const envPathObj = fs.existsSync(ENV_SETUP_PATH)
+    const envPathObj = existsEnv(ENV_SETUP_PATH)
       ? ENV_SETUP_PATH
-      : path.join(ROOT_PATH, ".env");
-    if (!fs.existsSync(envPathObj))
+      : ENV_PATH;
+    if (!existsEnv(envPathObj))
       return { success: false, error: "Configuration file not found" };
 
     const envConfig = await loadEnvConfig(envPathObj);
@@ -971,7 +958,7 @@ export async function verifyAndFinalizeConfig(
       return { success: false, error: "Signature validation failed." };
     }
 
-    let setupContent = fs.readFileSync(envPathObj, "utf-8");
+    let setupContent = getEnvRawContent(envPathObj);
     setupContent = setupContent
       .replace(/^SUPER_ADMIN_SIGNATURE=.*$/gm, "")
       .trim();
@@ -979,7 +966,7 @@ export async function verifyAndFinalizeConfig(
       "base64",
     );
     setupContent += `\n\n# PART 6: Configuration Immutable Signature via FIDO2\nSUPER_ADMIN_SIGNATURE="${signatureBlob}"`;
-    fs.writeFileSync(envPathObj, setupContent, "utf-8");
+    saveEnvRawContent(envPathObj, setupContent);
 
     return await finalizeSetupEnvironment();
   } catch (err: unknown) {
@@ -998,9 +985,7 @@ export async function saveExternalConfig(config: {
   oenMerchant: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    let content = fs.existsSync(ENV_SETUP_PATH)
-      ? fs.readFileSync(ENV_SETUP_PATH, "utf-8")
-      : "";
+    let content = getEnvRawContent(ENV_SETUP_PATH);
 
     if (!content.includes("# PART 5"))
       content += "\n\n# PART 5: External API Configuration\n";
@@ -1037,7 +1022,7 @@ export async function saveExternalConfig(config: {
     content = updateOrAppendEnv(content, "REPORT_OUTPUT_DIR", `"reports"`);
     content = updateOrAppendEnv(content, "MODEL", `"gemini-2.5-pro"`);
 
-    fs.writeFileSync(ENV_SETUP_PATH, content, "utf-8");
+    saveEnvRawContent(ENV_SETUP_PATH, content);
     return { success: true };
   } catch (err: unknown) {
     return {
@@ -1308,11 +1293,10 @@ export async function getEnvSignatureStatus() {
 }
 
 export async function getEnvContentToSign() {
-  const envPath = path.join(process.cwd(), ".env");
-  if (!fs.existsSync(envPath))
+  if (!existsEnv(ENV_PATH))
     return { success: false, error: "No .env file found" };
 
-  const dotenvConfig = await loadEnvConfig(envPath);
+  const dotenvConfig = await loadEnvConfig(ENV_PATH);
 
   const excludeKeys = ["SUPER_ADMIN_SIGNATURE"];
   for (const k of excludeKeys) {
@@ -1326,11 +1310,8 @@ export async function getEnvContentToSign() {
 }
 
 function copyEnvToSetupAndStripSignature() {
-  const envSetupPath = path.join(process.cwd(), ".env.setup");
-  const envPath = path.join(process.cwd(), ".env");
-
-  if (fs.existsSync(envPath)) {
-    let content = fs.readFileSync(envPath, "utf-8");
+  if (existsEnv(ENV_PATH)) {
+    let content = getEnvRawContent(ENV_PATH);
     // Info: (20260414 - Luphia) Strip PART 6 signature block entirely
     content = content.replace(
       /\n*# PART 6: Configuration Immutable Signature via FIDO2\nSUPER_ADMIN_SIGNATURE=.*$/gm,
@@ -1340,9 +1321,9 @@ function copyEnvToSetupAndStripSignature() {
     // Info: (20260414 - Luphia) Clean up multiple empty lines
     content = content.replace(/\n{3,}/g, "\n\n");
 
-    fs.writeFileSync(envSetupPath, content, "utf-8");
-  } else if (fs.existsSync(envSetupPath)) {
-    let content = fs.readFileSync(envSetupPath, "utf-8");
+    saveEnvRawContent(ENV_SETUP_PATH, content);
+  } else if (existsEnv(ENV_SETUP_PATH)) {
+    let content = getEnvRawContent(ENV_SETUP_PATH);
     content = content.replace(
       /\n*# PART 6: Configuration Immutable Signature via FIDO2\nSUPER_ADMIN_SIGNATURE=.*$/gm,
       "",
@@ -1350,7 +1331,7 @@ function copyEnvToSetupAndStripSignature() {
     content = content.replace(/^SUPER_ADMIN_SIGNATURE=.*$/gm, "");
     content = content.replace(/\n{3,}/g, "\n\n");
 
-    fs.writeFileSync(envSetupPath, content, "utf-8");
+    saveEnvRawContent(ENV_SETUP_PATH, content);
   }
 }
 

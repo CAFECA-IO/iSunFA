@@ -1,4 +1,5 @@
 export const common = {
+  search: "검색",
   batch_download: "일괄 다운로드",
   download: "다운로드",
   downloading: "다운로드 중...",
@@ -62,4 +63,5 @@ export const common = {
     oldest: "오래된순",
   },
   share: "공유",
+  other: "기타",
 };

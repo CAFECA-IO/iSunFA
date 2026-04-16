@@ -6,10 +6,13 @@ import {KYCRegistry} from "./kyc_registry.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
- * Info: (20260412 - Luphia)
+ * Info: (20260416 - Luphia)
  * @title SubscriptionManager
  * @dev The core logic component dealing with the Triple-Track Ledger
  * (Permanent, Subscription, Purchased) and point lifecycle management.
+ * 會員卡付費方案，負責處理商業級的月租邏輯，包含展延效期。
+ * 定期清算，落實不使用即失效的付費包月商業規則。
+ * 點數消費使用三軌分離帳本，提供階層 Cascade Burn 機制，在用戶消費時強制優先折抵快過期的月租點數，保障用戶最大權益。
  */
 contract SubscriptionManager is AccessControl {
     KYCRegistry public kycRegistry;

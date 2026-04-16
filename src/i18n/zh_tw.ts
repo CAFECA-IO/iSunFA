@@ -44,6 +44,7 @@ import { incomeStatementView } from "@/i18n/locales/zh_tw/income_statement_view"
 import { adminSetup } from "@/i18n/locales/zh_tw/admin_setup";
 import { adminMember } from "@/i18n/locales/zh_tw/admin_member";
 import { adminBlockchain } from "@/i18n/locales/zh_tw/admin_blockchain";
+import { adminBilling } from "@/i18n/locales/zh_tw/admin_billing";
 
 export const zhTw = {
   common,
@@ -92,6 +93,7 @@ export const zhTw = {
   admin_setup: adminSetup,
   admin_member: adminMember,
   admin_blockchain: adminBlockchain,
+  admin_billing: adminBilling,
 } as const;
 
 export type BaseTranslation = typeof zhTw;

@@ -9,7 +9,7 @@ export const adminBlockchain = {
     mining_active: "挖礦進行中 (5 執行緒)",
     mining_paused: "挖礦已暫停",
     admin_isc: "管理員錢包 ISC",
-    system_icp: "全域系統 ICP 總發行量",
+    system_icp: "ICP 總發行量",
     member_icp: "會員系統 ICP 儲備池",
     mint_icp: "鑄造信用點數 (ICP)",
     mint_desc:
