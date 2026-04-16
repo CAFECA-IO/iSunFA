@@ -45,7 +45,9 @@ export class TaskRepository implements ITaskRepository {
       where: {
         status: { in: [MISSION_STATUS.PENDING, MISSION_STATUS.RUNNING] },
         tasks: {
-          some: {},
+          some: {
+            status: { in: [TASK_STATUS.PENDING, TASK_STATUS.RUNNING] }
+          },
         },
       },
       orderBy: {
@@ -59,14 +61,21 @@ export class TaskRepository implements ITaskRepository {
         },
       },
     };
-    const mission = await prisma.mission.findFirst(query);
-    if (!mission) return null;
+    
+    // Fetch all eligible missions
+    const missions = await prisma.mission.findMany(query);
+    if (!missions || missions.length === 0) return null;
 
-    console.log(`\n[TaskRepo] Evaluating active Mission: ${mission.id}`);
-    const task = await this.findNextTaskInMission(mission);
-    if (!task) return null;
+    // Iterate through missions to find one that has actionable tasks
+    for (const mission of missions) {
+      console.log(`\n[TaskRepo] Evaluating active Mission: ${mission.id}`);
+      const task = await this.findNextTaskInMission(mission);
+      if (task) {
+        return { task, mission };
+      }
+    }
 
-    return { task, mission };
+    return null;
   }
 
   /**

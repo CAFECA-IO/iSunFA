@@ -18,6 +18,19 @@ export async function POST(
 
     const analysisId = (await params).analysis_id;
 
+    let hideFinancialData = true;
+    try {
+      const bodyText = await request.text();
+      if (bodyText) {
+        const body = JSON.parse(bodyText);
+        if (typeof body.hideFinancialData === "boolean") {
+          hideFinancialData = body.hideFinancialData;
+        }
+      }
+    } catch (e) {
+      console.error("[API] /user/analysis/share POST error:", e);
+    }
+
     const analysis = await prisma.analysis.findUnique({
       where: { id: analysisId },
     });
@@ -30,12 +43,20 @@ export async function POST(
       where: { analysisId: analysisId, isActive: true },
     });
 
+    if (shareToken && shareToken.isFinancialDataHidden !== hideFinancialData) {
+      shareToken = await prisma.reportShareToken.update({
+        where: { id: shareToken.id },
+        data: { isFinancialDataHidden: hideFinancialData },
+      });
+    }
+
     if (!shareToken) {
       shareToken = await prisma.reportShareToken.create({
         data: {
           analysisId: analysisId,
           category: analysis.type,
           createdById: user.id,
+          isFinancialDataHidden: hideFinancialData,
         },
       });
     }

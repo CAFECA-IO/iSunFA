@@ -79,7 +79,8 @@ export async function GET(request: Request) {
         const sanitizer = ShareSanitizerFactory.getSanitizer(shareRecord.category);
         const safeData = sanitizer.sanitize(
             shareRecord.analysis.data as TShareData,
-            shareRecord.analysis.result as TShareResult
+            shareRecord.analysis.result as TShareResult,
+            shareRecord.isFinancialDataHidden
         );
 
         const companyName = safeData.companyName;

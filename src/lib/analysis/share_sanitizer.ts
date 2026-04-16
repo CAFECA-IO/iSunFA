@@ -71,7 +71,11 @@ const redactMarkdownTables = (markdown: string): string => {
 };
 
 export interface IShareSanitizeStrategy<TMetrics> {
-  sanitize(data: TShareData, result: TShareResult): IPublicReportData<TMetrics>;
+  sanitize(
+    data: TShareData,
+    result: TShareResult,
+    isFinancialDataHidden?: boolean,
+  ): IPublicReportData<TMetrics>;
 }
 
 export class CarbonSanitizer implements IShareSanitizeStrategy<ICarbonMetrics> {
@@ -131,9 +135,15 @@ export class RatingSanitizer implements IShareSanitizeStrategy<IFinancialMetrics
 }
 
 export class FinancialReportSanitizer implements IShareSanitizeStrategy<null> {
-  sanitize(data: TShareData, result: TShareResult): IPublicReportData<null> {
+  sanitize(
+    data: TShareData,
+    result: TShareResult,
+    isFinancialDataHidden?: boolean,
+  ): IPublicReportData<null> {
     const rawMarkdown = extractMarkdown(result);
-    const redactedMarkdown = redactMarkdownTables(rawMarkdown);
+    const redactedMarkdown = isFinancialDataHidden !== false
+      ? redactMarkdownTables(rawMarkdown)
+      : rawMarkdown;
 
     return {
       companyName: extractCompanyName(data, "企業"),

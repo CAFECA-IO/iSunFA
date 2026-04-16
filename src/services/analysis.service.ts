@@ -11,6 +11,8 @@ import {
 } from "@/lib/worker/mission.generator";
 import { MISSION_STATUS } from "@/constants/status";
 import { getPeriodDateRange } from "@/lib/analysis/period";
+import { AppError } from "@/lib/utils/error";
+import { ApiCode } from "@/lib/utils/status";
 
 export interface IGenerateAnalysisParams extends IOrderParams {
   orderId?: string;
@@ -194,7 +196,8 @@ export class AnalysisService {
               parsedPrerequisiteParams.esgRecordsContext,
             );
           } else {
-            console.log(`[ESG-DEBUG] Esgs record length is 0`);
+            console.log(`[ESG-DEBUG] Esgs record length is 0. Aborting internal analysis.`);
+            throw new AppError(ApiCode.VALIDATION_ERROR, "該企業尚未建立 ESG 或財務數據紀錄。請先上傳相關資料，或是改為申請「外部分析報告」。");
           }
         }
       }
@@ -214,6 +217,9 @@ export class AnalysisService {
       }
     } catch (error) {
       console.error("[AnalysisService] Mission Generation Failed:", error);
+      if (error instanceof AppError) {
+        throw error; // Let the caller (API route) abort the operation instantly
+      }
       analysisResult = "Analysis Generation Failed. Please contact support.";
     }
 
