@@ -1,4 +1,5 @@
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { ICoefficient } from "@/interfaces/coefficient";
 
 export enum EsgScope {
   SCOPE_1 = "SCOPE_1",
@@ -62,8 +63,7 @@ export interface IEsgRecord {
   unit: string;
   emissions: string;
   dqiScore: number;
-  coefficient?: string | null;
-  coefficientSource?: string | null;
+  coefficient: ICoefficient | null;
   intensity: EsgIntensity;
   confidence: number;
   isVerified: boolean;

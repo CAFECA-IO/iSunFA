@@ -274,15 +274,16 @@ export function EsgRow({
     );
   }
 
-  const rawActivity = record.unit !== "" ? (
-    <>
-      <span className="text-sm font-semibold text-slate-800">
-        {record.amount}{" "}
-      </span>
-      <span className="text-xs font-bold text-slate-500">{record.unit}</span>
-    </>
-  ) : (
-    "-"
+  const rawActivity =
+    record.unit !== "" ? (
+      <>
+        <span className="text-sm font-semibold text-slate-800">
+          {record.amount}{" "}
+        </span>
+        <span className="text-xs font-bold text-slate-500">{record.unit}</span>
+      </>
+    ) : (
+      "-"
     );
 
   return (
@@ -336,7 +337,7 @@ export function EsgRow({
           <span className="text-sm font-semibold text-slate-800">
             {record.emissions}
           </span>
-          {record.coefficient && (
+          {/* {record.coefficient && (
             <div className="flex flex-col items-center justify-center">
               <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200 ring-inset">
                 {record.coefficient}
@@ -347,7 +348,7 @@ export function EsgRow({
                 </span>
               )}
             </div>
-          )}
+          )} */}
         </div>
       </td>
       {/* Info: (20260320 - Julian) Intensity */}

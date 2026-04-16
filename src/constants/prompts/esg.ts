@@ -1,7 +1,8 @@
 import { AccountBook } from "@/generated/client";
+import { ICoefficient } from "@/interfaces/coefficient";
 import { ESG_EMISSION_FACTORS_TEXT } from "@/constants/esg_emission_factors";
 
-export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null) => {
+export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null, coefficients?: Partial<ICoefficient>[]) => {
   const accountBookInfo = accountBook
     ? `\n  這筆碳盤查紀錄是為了「${accountBook.name}」所分析，請根據該企業情境與所在地（${accountBook.country || "TW"}）進行溫室氣體範疇的判斷。`
     : "";
@@ -10,16 +11,36 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null) => {
     ? `\n  請嚴格遵守以下帳本關於碳排或會計核算的特殊規則與偏好：\n  ${accountBook.rule}\n`
     : "";
 
+    const coefficientsListStr = coefficients && coefficients.length > 0
+    ? `【目前系統內建係數清單】:\n${JSON.stringify(coefficients.map((c) => ({
+        id: c.id,
+        name: c.name,
+        description: c.description,
+        formula: `${c.unit} * ${c.emissionFactor}`
+      })))}`
+    : "【目前系統內建係數清單】: (空)";
+
+    const coefficientsInstruction = `
+  ${coefficientsListStr}
+  
+  請從上方的系統內建係數清單中，檢查是否有符合該憑證情境的係數。
+  - 若有符合的係數，請採用它並將該 ID 填入回傳 JSON 的 \`coefficientId\`。
+  - 若無符合的係數，或清單為空，請尋找來源可靠的外部係數（例如：經濟部能源署發布之溫室氣體排放係數、固定燃燒排放源排放係數等），並將新找到的係數資訊填入回傳 JSON 的 \`newCoefficient\` 物件中，同時將 \`coefficientId\` 設為 null。
+  - 如果連外部都沒有可靠係數可以參考，請將 \`emissions\` 填為 0，並將 \`coefficientId\` 與 \`newCoefficient\` 皆設為 null。
+
+  【碳排放量計算標準】：
+  1. 活動數據 (Activity Data)：用戶提供的數據（如：用電度數、天然氣用量等）。
+  2. 排放係數 (Emission Factor)：依據您上述選擇（既有或新尋找的係數數值）。
+  3. 碳排放量 (Emissions)：活動數據 × 排放係數。
+  請將最終計算出的碳排數字填入 \`emissions\`。`;
+    
   return `
   請將用戶上傳的憑證（檔案/圖片）解析出碳盤查（Carbon Footprint Verification）相關資訊。${accountBookInfo}${rulesInstruction}
-  
+  ${coefficientsInstruction}
+
   【溫室氣體排放係數參考資料】
   請一定要參考以下環境部公告的溫室氣體排放係數表來核對計算公式與數據：
   ${ESG_EMISSION_FACTORS_TEXT}
-
-  請務必在「coefficient」欄位中，確切填寫你套用的排放係數數值與單位（例如 "2.508 kgCO2e/度" 或 "0.123"）。
-
-  請在「coefficientSource」欄位中，確切填寫你使用的係數資料來源（例如 "經濟部能源署發布" 或 "固定燃燒排放源排放係數"）。
 
   請在「dqiScore」中，根據以下標準來計算數據品質分數（數字 1-5，1 為最優，5 為最差)：
   1. 技術相關性 (Te)：數據是否真實反映了產品所使用的技術、設備或製程。優質標準：數據來自實際生產線的特定技術（如：使用特定品牌、型號的電爐數據，而非產業平均值）。
@@ -32,18 +53,25 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null) => {
   並請在 aiNote 欄位寫下 AI 分析碳盤查的邏輯，不需要任何標題，直接寫下分析邏輯或列點描述即可。 
   請務必回傳一個 JSON 格式，包含以下欄位（不要加入任何額外的文字，也不要包裝在 markdown 程式碼區塊中，直接回傳 JSON 字串）：
   {
-      "recordDate": "YYYY-MM-DD", // 交易日期 
+      "tradingDate": "YYYY-MM-DD", // 交易日期 
       "scope": "SCOPE_1", // 溫室氣體範疇 ("SCOPE_1" | "SCOPE_2" | "SCOPE_3")
       "activityType": "電力使用", // 活動類型
       "vendor": "心心小舖", // 供應商
-      "rawActivityData": "123456789", // 原始活動數據 (字串)
+      "amount": 2.01, // 活動數據 (數字)
       "unit": "度", // 單位
       "emissions": 123.45, // 排放量 (數字，單位為 kgCO2e)
-      "coefficient": "2.508 kgCO2e/度", // 使用的碳排放係數標示 (字串)
-      "coefficientSource": "環境部", // 使用的碳排放係數來源 (字串)
-      "dqiScore": 1.2, // 數據品質分數 (數字 1-5)
       "intensity": "HIGH", // 排放強度 ("HIGH" | "MEDIUM" | "LOW")
+      "dqiScore": 1.2, // 數據品質分數 (數字 1-5)
       "confidence": 85, // AI 分析的整體信心度 (數字 0-100)
+      "coefficientId": "string | null", // 使用既有係數之 ID，若使用新係數或無適合係數則為 null
+      "newCoefficient": { 
+        // 若找不到適合的既有係數，所尋找到的可靠外部係數資訊 (若有使用既有係數則為 null)
+          "name": "string", // 係數名稱，須符合「XX 係數」的格式
+          "description": "string", // 係數描述
+          "unit": "string", // 係數單位，不包含 'kgCO2e'，例如：kgCO2e/kg，即為 kg (以國際通用單位為主，不要寫中文)
+          "emissionFactor": 1.23, // 排放係數 (數字)
+          "source": "string" // 來源，如「經濟部能源署」等
+      },
       "aiNote": "string" // AI 分析的備註
   }
 `;

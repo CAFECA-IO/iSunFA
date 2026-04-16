@@ -114,8 +114,10 @@ export async function GET(
     const pageSize = searchParams.get("pageSize")
       ? parseInt(searchParams.get("pageSize")!)
       : undefined;
+    // Info: (20260416 - Julian) 單位參數，用於 Esg Detail Modal 篩選
+    const unitParam = searchParams.get("unit");
 
-    // Info: (20260414 - Julian) 依據 tab 篩選係數
+    // Info: (20260414 - Julian) 篩選條件
     const andConditions: Prisma.CoefficientWhereInput[] = [];
 
     // Info: (20260413 - Julian) 排除已刪除的係數
@@ -130,7 +132,7 @@ export async function GET(
       andConditions.push({ accountBookId: { not: null } });
     }
 
-    // Info: (20260414 - Julian) 搜尋字串過濾邏輯
+    // Info: (20260414 - Julian) 搜尋字串過濾邏輯（名稱、描述的模糊搜尋）
     if (searchParam) {
       andConditions.push({
         OR: [
@@ -138,6 +140,11 @@ export async function GET(
           { description: { contains: searchParam, mode: "insensitive" } },
         ],
       });
+    }
+
+    // Info: (20260416 - Julian) 單位參數過濾邏輯（完全匹配）
+    if (unitParam) {
+      andConditions.push({ unit: unitParam });
     }
 
     const [coefficients, totalCount] = await Promise.all([

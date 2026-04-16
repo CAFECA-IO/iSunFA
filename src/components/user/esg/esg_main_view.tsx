@@ -2,7 +2,12 @@
 
 import { Leaf, Target } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { useParams } from "next/navigation";
+import {
+  useParams,
+  useSearchParams,
+  useRouter,
+  usePathname,
+} from "next/navigation";
 import { useState, useEffect } from "react";
 import { request } from "@/lib/utils/request";
 import CoefficientManagementTab from "@/components/user/esg/coefficient_management_tab";
@@ -18,8 +23,20 @@ enum EsgTab {
 
 export default function EsgMainView() {
   const { t } = useTranslation();
+
+  // Info: (20260416 - Julian) 取得 URL 參數中的 accountBookId
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
+
+  // Info: (20260416 - Julian) 取得 URL 參數中的 tab
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Info: (20260416 - Julian) 從 URL 參數取得 tab
+  const tabParams = useSearchParams().get("tab");
+  const activeTab =
+    tabParams === "coefficient" ? EsgTab.COEFFICIENT : EsgTab.RECORDS;
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -32,7 +49,17 @@ export default function EsgMainView() {
   const [accountBook, setAccountBook] = useState<{
     esgIndustryId: string;
   } | null>(null);
-  const [activeTab, setActiveTab] = useState<EsgTab>(EsgTab.RECORDS);
+
+  const handleTabChange = (tab: EsgTab) => {
+    // Info: (20260416 - Julian) 複製目前的 URLSearchParams，再把 tab 的參數加上去
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set("tab", tab);
+
+    // Info: (20260416 - Julian) 更新 URL，並指定 scroll: false
+    router.replace(`${pathname}?${newSearchParams.toString()}`, {
+      scroll: false,
+    });
+  };
 
   useEffect(() => {
     if (accountBookId) {
@@ -141,7 +168,7 @@ export default function EsgMainView() {
 
       {/* Info: (20260413 - Julian) Tab Switch */}
       <div className="grid grid-cols-2 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5 md:ml-auto">
-        <button
+        {/* <button
           title={t("esg_main.tab.records")}
           type="button"
           className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${
@@ -149,7 +176,10 @@ export default function EsgMainView() {
               ? "bg-white text-orange-600 shadow-sm"
               : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
           }`}
-          onClick={() => setActiveTab(EsgTab.RECORDS)}
+          onClick={() => {
+            setActiveTab(EsgTab.RECORDS)
+            // Info: (20260416 - Julian) 寫入 URL 參數
+          }}
         >
           {t("esg_main.tab.records")}
         </button>
@@ -164,7 +194,22 @@ export default function EsgMainView() {
           onClick={() => setActiveTab(EsgTab.COEFFICIENT)}
         >
           {t("esg_main.tab.coefficient")}
-        </button>
+        </button> */}
+        {Object.values(EsgTab).map((tab) => (
+          <button
+            key={tab}
+            title={t(`esg_main.tab.${tab.toLowerCase()}`)}
+            type="button"
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${
+              activeTab === tab
+                ? "bg-white text-orange-600 shadow-sm"
+                : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
+            }`}
+            onClick={() => handleTabChange(tab)}
+          >
+            {t(`esg_main.tab.${tab.toLowerCase()}`)}
+          </button>
+        ))}
       </div>
 
       {/* Info: (20260413 - Julian) Tab Content */}

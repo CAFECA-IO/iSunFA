@@ -40,7 +40,7 @@ export default function CoefficientAddEditModal({
   );
 
   // Info: (20260414 - Julian) Loading State
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Info: (20260414 - Julian) 判斷是否有更改的數據
   const hasChanged =
@@ -62,7 +62,7 @@ export default function CoefficientAddEditModal({
   const confirmCoefficient = () => {
     const input: ICoefficientInput = {
       name,
-      emissionFactor: parseFloat(emissionFactor),
+      emissionFactor: Number(emissionFactor),
       unit,
       description,
       source: "", // Info: (20260414 - Julian) 預設為空，由 API 填入

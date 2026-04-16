@@ -10,6 +10,7 @@ import { IEsgRecord } from "@/interfaces/esg";
 import { IParsedVoucher } from "@/interfaces/voucher";
 import { GoogleGenerativeAI, Part, Tool } from "@google/generative-ai";
 import { AccountBook } from "@/generated/client";
+import { ICoefficient } from "@/interfaces/coefficient";
 
 export class ChatService {
   private genAI: GoogleGenerativeAI;
@@ -353,10 +354,11 @@ export class ChatService {
     images: { data: string; mimeType: string }[] = [],
     accountBook: Partial<AccountBook> | null = null,
     journalText?: string,
+    coefficients?: Partial<ICoefficient>[]
   ): Promise<{ data: IEsgRecord | null; error?: string }> {
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
-      let promptText = getEsgPrompt(accountBook);
+      let promptText = getEsgPrompt(accountBook, coefficients);
 
       if (journalText) {
         promptText += `\n\n【重要指示】\n使用者已提供/修正日記帳的最新內容如下。請優先依據以下文字資訊進行解析，若與圖片內容有衝突，以此文字為準：\n${journalText}`;
