@@ -17,8 +17,8 @@ export const features = {
       desc: "Integrates budget, approval, and transfer processes to comprehensively enhance financial operational efficiency.",
     },
     analysis: {
-      title: "Data Analysis",
-      desc: "Provides in-depth financial data analysis to assist management in making informed business decisions.",
+      title: "Advisory Analysis",
+      desc: "Provides multi-domain expert enterprise analysis to help management make informed business decisions.",
     },
     tax: {
       title: "Tax Filing",
@@ -45,7 +45,7 @@ export const features = {
       desc: "Flexibly connects external heterogeneous systems to seamlessly integrate cross-platform operational data.",
     },
     esg: {
-      title: "GHG Accounting",
+      title: "Carbon Inventory",
       desc: "Accurately converts activity data into carbon emissions to manage compliance risks and costs.",
     },
     audit: {

@@ -17,8 +17,8 @@ export const features = {
       desc: "整合預算、審核與轉帳流程，全面提升財務作業效率。",
     },
     analysis: {
-      title: "數據分析",
-      desc: "提供深度財務數據分析，協助管理層做出明智商業決策。",
+      title: "顧問分析",
+      desc: "提供多領域專家企業分析，協助管理層做出明智商業決策。",
     },
     tax: {
       title: "稅務申報",
@@ -45,7 +45,7 @@ export const features = {
       desc: "彈性串接外部異質系統，無縫整合跨平台營運數據。",
     },
     esg: {
-      title: "碳排核算",
+      title: "碳盤查",
       desc: "精準換算活動數據為碳排量，控管企業合規風險與成本。",
     },
     audit: {

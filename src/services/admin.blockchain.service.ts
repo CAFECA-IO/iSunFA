@@ -4,7 +4,7 @@ import { createPublicClient, createWalletClient, formatEther, http, parseAbi } f
 import { isuncoin } from "@/lib/viem_public";
 import { getAdminAccount } from "@/lib/wallet/admin_wallet";
 import { getPriorityEnvConfig } from "@/services/env.service";
-import { toggleMining } from "@/services/setup.service";
+import { toggleMining } from "@/services/setup.blockchain.service";
 import { cookies } from "next/headers";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -66,7 +66,7 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
      */
     let isMining = false;
     try {
-      const { getAdminWalletInfo } = await import("@/services/setup.service");
+      const { getAdminWalletInfo } = await import("@/services/setup.blockchain.service");
       const walletInfo = await getAdminWalletInfo();
       isMining = !!walletInfo?.isMining;
     } catch {

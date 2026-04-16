@@ -17,8 +17,8 @@ export const features = {
       desc: "整合预算、审核与转账流程，全面提升财务作业效率。",
     },
     analysis: {
-      title: "数据分析",
-      desc: "提供深度财务数据分析，协助管理层做出明智商业决策。",
+      title: "顾问分析",
+      desc: "提供多领域专家企业分析，协助管理层做出明智商业决策。",
     },
     tax: {
       title: "税务申报",
@@ -45,7 +45,7 @@ export const features = {
       desc: "弹性串接外部异构系统，无缝整合跨平台运营数据。",
     },
     esg: {
-      title: "碳排核算",
+      title: "碳盘查",
       desc: "精准换算活动数据为碳排量，控管企业合规风险与成本。",
     },
     audit: {

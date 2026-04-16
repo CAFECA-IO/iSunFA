@@ -1,4 +1,5 @@
 export const journal = {
+  title: "憑證管理",
   detail_modal: {
     title: "日記帳",
     empty: "沒有日記帳內容",

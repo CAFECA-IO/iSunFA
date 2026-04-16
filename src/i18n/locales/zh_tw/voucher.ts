@@ -1,4 +1,5 @@
 export const voucher = {
+  title: "傳票管理",
   account_book_selector: {
     title: "請選擇會計科目",
     search_placeholder: "搜尋科目代碼或名稱...",
