@@ -36,13 +36,10 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null) => {
       "scope": "SCOPE_1", // 溫室氣體範疇 ("SCOPE_1" | "SCOPE_2" | "SCOPE_3")
       "activityType": "電力使用", // 活動類型
       "vendor": "心心小舖", // 供應商
-      "rawActivityData": "123456789", // 原始活動數據 (字串)
+      "amount": 2.01, // 活動數據 (數字)
       "unit": "度", // 單位
       "emissions": 123.45, // 排放量 (數字，單位為 kgCO2e)
-      "coefficient": "2.508 kgCO2e/度", // 使用的碳排放係數標示 (字串)
-      "coefficientSource": "環境部", // 使用的碳排放係數來源 (字串)
       "dqiScore": 1.2, // 數據品質分數 (數字 1-5)
-      "intensity": "HIGH", // 排放強度 ("HIGH" | "MEDIUM" | "LOW")
       "confidence": 85, // AI 分析的整體信心度 (數字 0-100)
       "aiNote": "string" // AI 分析的備註
   }

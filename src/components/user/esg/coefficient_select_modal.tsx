@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Fragment } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { X, Calculator, Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -28,10 +28,13 @@ export default function CoefficientSelectModal({
 }: ICoefficientSelectModalProps) {
   // const { t } = useTranslation();
   const params = useParams();
+  const router = useRouter();
   const accountBookId = params?.account_book_id as string;
 
   const [coefficientList, setCoefficientList] = useState<ICoefficient[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const coefficientManagementUrl = `/user/account_book/${accountBookId}/esg?tab=coefficient`;
 
   // Info: (20260414 - Julian) 取得係數列表
   useEffect(() => {
@@ -53,11 +56,18 @@ export default function CoefficientSelectModal({
     fetchCoefficientList();
   }, [accountBookId]);
 
+  const gotoCoefficientPage = () => {
+    // Info: (20260416 - Julian) 關閉這個 modal
+    onClose();
+    // Info: (20260416 - Julian) 跳轉到係數管理頁面
+    router.push(coefficientManagementUrl);
+  };
+
   const displayCoefficientList = isLoading ? (
     <div className="flex items-center justify-center p-10">
       <Loader2 size={40} className="animate-spin text-orange-300" />
     </div>
-  ) : (
+  ) : coefficientList.length > 0 ? (
     <div className="flex flex-col gap-2">
       {coefficientList.map((coefficient) => {
         const onClick = () => {
@@ -85,6 +95,17 @@ export default function CoefficientSelectModal({
           </button>
         );
       })}
+    </div>
+  ) : (
+    <div className="flex flex-col items-center gap-2 px-10 py-5">
+      <p className="text-base font-bold text-slate-700">目前沒有係數</p>
+      <button
+        type="button"
+        onClick={gotoCoefficientPage}
+        className="text-sm font-semibold text-orange-500 underline underline-offset-4 transition-colors hover:text-orange-600"
+      >
+        前往係數管理頁面新增係數
+      </button>
     </div>
   );
 

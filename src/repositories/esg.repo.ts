@@ -4,7 +4,7 @@ import { IEsgDashboardSummary } from "@/interfaces/esg";
 import { ESG_INDUSTRY_BENCHMARKS } from "@/constants/esg_industry_benchmarks";
 
 export type EsgRecordWithRelations = Prisma.EsgRecordGetPayload<{
-  include: { file: true };
+  include: { file: true, coefficient: true };
 }> & { journalId?: string; voucherId?: string };
 
 export interface IEsgRepository {
@@ -149,7 +149,7 @@ export class EsgRepository implements IEsgRepository {
   async getEsgRecordById(id: string): Promise<EsgRecordWithRelations | null> {
     const record = await prisma.esgRecord.findUnique({
       where: { id },
-      include: { file: true },
+      include: { file: true, coefficient: true },
     });
 
     if (!record) return null;

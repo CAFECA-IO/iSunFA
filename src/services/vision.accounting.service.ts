@@ -42,10 +42,10 @@ export interface IEsgExtraction {
   esgScope: "SCOPE_1" | "SCOPE_2" | "SCOPE_3" | null;
   esgActivityType: string | "N/A" | null; // Info: (20260407 - Luphia) Selected from Emission Factors mapping
   esgVendor: string | "N/A" | null;
-  esgRawActivityData: string | "N/A" | null; // Info: (20260407 - Luphia) e.g. "500"
+  esgAmount: string | "N/A" | null; // Info: (20260407 - Luphia) e.g. "500"
   esgUnit: string | "N/A" | null; // Info: (20260407 - Luphia) e.g. "Liter"
-  coefficient: string | "N/A" | null; // Info: (20260407 - Luphia) Specific scalar match from reference chart
-  coefficientSource: string | "N/A" | null; // Info: (20260407 - Luphia) Justifying the derivation
+  // coefficient: string | "N/A" | null; // Info: (20260407 - Luphia) Specific scalar match from reference chart
+  // coefficientSource: string | "N/A" | null; // Info: (20260407 - Luphia) Justifying the derivation
   esgNote: string | "N/A" | null;
   carbonNote: string | "N/A" | null;
   confidence: number;
@@ -208,10 +208,10 @@ export class VisionAccountingService {
       '  "esgScope": "SCOPE_1" | "SCOPE_2" | "SCOPE_3" | null,\n' +
       '  "esgActivityType": "String or N/A (Name of the category you matched in the database)",\n' +
       '  "esgVendor": "String or N/A",\n' +
-      '  "esgRawActivityData": "String or N/A (The physical consumption volume found in image, e.g. 500 liters or 20 KWH)",\n' +
+      '  "esgAmount": "String or N/A (The physical consumption volume found in image, e.g. 500 liters or 20 KWH)",\n' +
       '  "esgUnit": "String or N/A",\n' +
-      '  "coefficient": "String or N/A (The exact coefficient numerical string extracted from the table match)",\n' +
-      '  "coefficientSource": "String or N/A (The official row/name source justification)",\n' +
+      // '  "coefficient": "String or N/A (The exact coefficient numerical string extracted from the table match)",\n' +
+      // '  "coefficientSource": "String or N/A (The official row/name source justification)",\n' +
       '  "esgNote": "String or N/A (General corporate sustainability alignment comments)",\n' +
       '  "carbonNote": "String or N/A (Any mathematical calculation limitations, missing conversions)",\n' +
       '  "confidence": Number (1-100 evaluating the precision of environmental mapping)\n' +
