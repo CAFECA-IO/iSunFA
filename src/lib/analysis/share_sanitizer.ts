@@ -27,7 +27,6 @@ export interface ICarbonMetrics {
 
 export interface IFinancialMetrics {
   rating: string | null;
-  score?: string | null;
   tags: string[];
 }
 
@@ -81,9 +80,9 @@ export class CarbonSanitizer implements IShareSanitizeStrategy<ICarbonMetrics> {
     result: TShareResult,
   ): IPublicReportData<ICarbonMetrics> {
     const rawMarkdown = extractMarkdown(result);
-    const scoreMatch = rawMarkdown.match(/碳健檢綜合評分：[*\s]*(\d+(?:\.\d+)?)/);
-    const tagsMatch = rawMarkdown.match(/減碳核心標籤：\s*\**([^*\n]+)\**/);
-    const positionMatch = rawMarkdown.match(/戰略風險定位：\s*\**([^*\n]+)\**/);
+    const scoreMatch = rawMarkdown.match(/碳健檢綜合評分\**[：:]\**\s*(\d+(?:\.\d+)?)/);
+    const tagsMatch = rawMarkdown.match(/減碳核心標籤\**[：:]\**\s*([^\n]+)/);
+    const positionMatch = rawMarkdown.match(/戰略風險定位\**[：:]\**\s*\**([^*\n]+)\**/);
 
     return {
       companyName: extractCompanyName(data, "企業"),
@@ -91,7 +90,7 @@ export class CarbonSanitizer implements IShareSanitizeStrategy<ICarbonMetrics> {
       metrics: {
         score: scoreMatch ? scoreMatch[1] : null,
         tags: tagsMatch
-          ? tagsMatch[1].split(",").map((t) => t.trim().replace(/#/g, ""))
+          ? tagsMatch[1].replace(/[\*\[\]]/g, "").split(/[#\s、,，]+/).map(t => t.trim()).filter(Boolean)
           : [],
         strategicPosition: positionMatch ? positionMatch[1].trim() : null,
       },
@@ -105,21 +104,19 @@ export class RatingSanitizer implements IShareSanitizeStrategy<IFinancialMetrics
     result: TShareResult,
   ): IPublicReportData<IFinancialMetrics> {
     const rawMarkdown = extractMarkdown(result);
-    const ratingMatch = rawMarkdown.match(/評級結果[^\n\[\]]*?([^\]\n*]+)/);
-    const scoreMatch = rawMarkdown.match(/最終得分[^\d]{0,15}?(\d+(?:\.\d+)?)/);
-    const tagsMatch = rawMarkdown.match(
-      /產品風險與量化特徵：\s*\**([^*\n]+)\**/,
-    );
+    const ratingMatch = rawMarkdown.match(/評級結果\**[：:]\**\s*([^\n]+)/);
+    const tagsMatch = rawMarkdown.match(/報告\**[：:]\**\s*([^\n]+)/);
 
     return {
       companyName: extractCompanyName(data, "投資標的"),
       safeMarkdown: rawMarkdown,
       metrics: {
         rating: ratingMatch
-          ? ratingMatch[1].replace(/[\*\[\]]/g, "").trim()
+          ? ratingMatch[1].replace(/[\*\[\]]/g, "").split(/[(（]/)[0].trim()
           : null,
-        score: scoreMatch ? scoreMatch[1] : null,
-        tags: tagsMatch ? tagsMatch[1].split(",").map((t) => t.trim()) : [],
+        tags: tagsMatch
+          ? tagsMatch[1].replace(/[\*\[\]「」]/g, "").split(/[，,]/).map((t) => t.trim()).filter(Boolean)
+          : [],
       },
     };
   }
