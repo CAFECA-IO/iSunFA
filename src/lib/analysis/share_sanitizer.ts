@@ -27,6 +27,7 @@ export interface ICarbonMetrics {
 
 export interface IFinancialMetrics {
   rating: string | null;
+  score?: string | null;
   tags: string[];
 }
 
@@ -80,7 +81,7 @@ export class CarbonSanitizer implements IShareSanitizeStrategy<ICarbonMetrics> {
     result: TShareResult,
   ): IPublicReportData<ICarbonMetrics> {
     const rawMarkdown = extractMarkdown(result);
-    const scoreMatch = rawMarkdown.match(/碳健檢綜合評分：\s*(\d+(?:\.\d+)?)/);
+    const scoreMatch = rawMarkdown.match(/碳健檢綜合評分：[*\s]*(\d+(?:\.\d+)?)/);
     const tagsMatch = rawMarkdown.match(/減碳核心標籤：\s*\**([^*\n]+)\**/);
     const positionMatch = rawMarkdown.match(/戰略風險定位：\s*\**([^*\n]+)\**/);
 
@@ -104,7 +105,8 @@ export class RatingSanitizer implements IShareSanitizeStrategy<IFinancialMetrics
     result: TShareResult,
   ): IPublicReportData<IFinancialMetrics> {
     const rawMarkdown = extractMarkdown(result);
-    const ratingMatch = rawMarkdown.match(/評級結果：\s*\[?([^\]\n]+)\]?/);
+    const ratingMatch = rawMarkdown.match(/評級結果[^\n\[\]]*?([^\]\n*]+)/);
+    const scoreMatch = rawMarkdown.match(/最終得分[^\d]{0,15}?(\d+(?:\.\d+)?)/);
     const tagsMatch = rawMarkdown.match(
       /產品風險與量化特徵：\s*\**([^*\n]+)\**/,
     );
@@ -116,6 +118,7 @@ export class RatingSanitizer implements IShareSanitizeStrategy<IFinancialMetrics
         rating: ratingMatch
           ? ratingMatch[1].replace(/[\*\[\]]/g, "").trim()
           : null,
+        score: scoreMatch ? scoreMatch[1] : null,
         tags: tagsMatch ? tagsMatch[1].split(",").map((t) => t.trim()) : [],
       },
     };
