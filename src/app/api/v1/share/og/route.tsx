@@ -99,12 +99,16 @@ export async function GET(request: Request) {
                 rawTags = safeData.metrics.tags || [];
             }
         }
-        const displayTags = rawTags
+        let displayTags = rawTags
             .reduce((acc, tag) => {
                 const parts = tag.split(/[#，、,]+/).map(t => t.trim()).filter(Boolean);
                 return [...acc, ...parts];
             }, [] as string[])
-            .slice(0, 3);
+            .slice(0, 5);
+
+        if (!displayScore || shareRecord.category === 'financial_product_rating') {
+            displayTags = [];
+        }
 
         const isShortRating = !isScoreMode && displayScore.length <= 3 && /^[a-zA-Z\+\-\*]+$/.test(displayScore);
         const getScoreFontSize = (score: string) => {
