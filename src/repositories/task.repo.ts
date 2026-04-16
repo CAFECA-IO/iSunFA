@@ -61,12 +61,12 @@ export class TaskRepository implements ITaskRepository {
         },
       },
     };
-    
-    // Fetch all eligible missions
+
+    // Info: (20260416 - Tzuhan) Fetch all eligible missions
     const missions = await prisma.mission.findMany(query);
     if (!missions || missions.length === 0) return null;
 
-    // Iterate through missions to find one that has actionable tasks
+    // Info: (20260416 - Tzuhan) Iterate through missions to find one that has actionable tasks
     for (const mission of missions) {
       console.log(`\n[TaskRepo] Evaluating active Mission: ${mission.id}`);
       const task = await this.findNextTaskInMission(mission);

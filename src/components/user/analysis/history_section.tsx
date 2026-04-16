@@ -209,20 +209,20 @@ export default function HistorySection() {
     const historyItem = history.find(item => item.id === idToShare || item.reportId === idToShare);
     const cat = category || selectedReport?.type || historyItem?.category;
     const external = isExternal ?? selectedReport?.isExternal ?? historyItem?.isExternal;
-    
+
     // Info: (20260416 - Tzuhan) Bypass privacy settings if already shared
     if (historyItem?.isShared) {
       executeShare(idToShare, historyItem.isFinancialDataHidden ?? true);
       return;
     }
-    
+
     // Info: (20260416 - Tzuhan) Apply privacy settings to all internal reports, regardless of specific category
     if (!external) {
       setPendingShareReport({ id: idToShare, category: cat || '' });
       setHideFinancialData(true);
       setIsShareSettingsModalOpen(true);
     } else {
-      executeShare(idToShare, false); 
+      executeShare(idToShare, false);
     }
   };
 
@@ -232,7 +232,7 @@ export default function HistorySection() {
       setIsSharing(true);
       const result = await request<{ code: string; payload: { token: string } }>(
         `/api/v1/user/analysis/${idToShare}/share`,
-        { 
+        {
           method: 'POST',
           body: JSON.stringify({ hideFinancialData: hideData })
         }
@@ -242,11 +242,11 @@ export default function HistorySection() {
         setShareToken(result.payload.token);
         setIsShareLinkModalOpen(true);
         setIsShareSettingsModalOpen(false);
-        
+
         // Info: (20260416 - Tzuhan) Dynamically update the list UI to show the share badge
-        setHistory(prev => prev.map(item => 
-          item.id === idToShare || item.reportId === idToShare 
-            ? { ...item, isShared: true, isFinancialDataHidden: hideData } 
+        setHistory(prev => prev.map(item =>
+          item.id === idToShare || item.reportId === idToShare
+            ? { ...item, isShared: true, isFinancialDataHidden: hideData }
             : item
         ));
       } else {
@@ -272,11 +272,11 @@ export default function HistorySection() {
       if (result.code === 'SUCCESS') {
         setShareToken(null);
         setIsShareLinkModalOpen(false);
-        
+
         // Info: (20260416 - Tzuhan) Dynamically update the list UI to remove the share badge
-        setHistory(prev => prev.map(item => 
-          item.id === idToRevoke || item.reportId === idToRevoke 
-            ? { ...item, isShared: false } 
+        setHistory(prev => prev.map(item =>
+          item.id === idToRevoke || item.reportId === idToRevoke
+            ? { ...item, isShared: false }
             : item
         ));
       }
@@ -474,18 +474,17 @@ export default function HistorySection() {
                             {item.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
                           </span>
                           {item.isShared && (
-                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${
-                              item.isExternal 
-                                ? 'bg-blue-50 text-blue-700 ring-blue-600/20' 
-                                : item.isFinancialDataHidden 
-                                  ? 'bg-green-50 text-green-700 ring-green-600/20' 
+                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${item.isExternal
+                                ? 'bg-blue-50 text-blue-700 ring-blue-600/20'
+                                : item.isFinancialDataHidden
+                                  ? 'bg-green-50 text-green-700 ring-green-600/20'
                                   : 'bg-yellow-50 text-yellow-700 ring-yellow-600/20'
-                            }`}>
-                              {item.isExternal 
-                                ? '🔗 公開連結' 
-                                : item.isFinancialDataHidden 
-                                  ? '🔒 公開 (隱私遮蔽)' 
-                                  : '⚠️ 公開 (詳細數據)'}
+                              }`}>
+                              {item.isExternal
+                                ? t('analysis.history.badges.external_link')
+                                : item.isFinancialDataHidden
+                                  ? t('analysis.history.badges.hidden_privacy')
+                                  : t('analysis.history.badges.public_data')}
                             </span>
                           )}
                         </div>
@@ -594,18 +593,17 @@ export default function HistorySection() {
                             {item.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
                           </span>
                           {item.isShared && (
-                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${
-                              item.isExternal 
-                                ? 'bg-blue-50 text-blue-700 ring-blue-600/20' 
-                                : item.isFinancialDataHidden 
-                                  ? 'bg-green-50 text-green-700 ring-green-600/20' 
+                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${item.isExternal
+                                ? 'bg-blue-50 text-blue-700 ring-blue-600/20'
+                                : item.isFinancialDataHidden
+                                  ? 'bg-green-50 text-green-700 ring-green-600/20'
                                   : 'bg-yellow-50 text-yellow-700 ring-yellow-600/20'
-                            }`}>
-                              {item.isExternal 
-                                ? '🔗 公開連結' 
-                                : item.isFinancialDataHidden 
-                                  ? '🔒 公開 (隱私遮蔽)' 
-                                  : '⚠️ 公開 (詳細數據)'}
+                              }`}>
+                              {item.isExternal
+                                ? t('analysis.history.badges.external_link')
+                                : item.isFinancialDataHidden
+                                  ? t('analysis.history.badges.hidden_privacy')
+                                  : t('analysis.history.badges.public_data')}
                             </span>
                           )}
                         </div>
@@ -817,16 +815,16 @@ export default function HistorySection() {
                 <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                   <DialogTitle as="h3" className="text-lg font-bold leading-6 text-gray-900 mb-4 flex items-center gap-2">
                     <Share2 className="h-5 w-5 text-blue-600" />
-                    分享設定
+                    {t('analysis.share_settings.title')}
                   </DialogTitle>
 
                   <div className="mt-2 space-y-4">
                     <div className="rounded-md bg-yellow-50 p-4 border border-yellow-200">
                       <div className="flex">
                         <div className="ml-3">
-                          <h3 className="text-sm font-medium text-yellow-800">隱私保護警告</h3>
+                          <h3 className="text-sm font-medium text-yellow-800">{t('analysis.share_settings.privacy_warning_title')}</h3>
                           <div className="mt-2 text-sm text-yellow-700">
-                            <p>您即將分享內部財務報告。若選擇不隱藏，包含營業額、各項花費數字的敏感財務報表將可被取得連結的任何人直接觀看。</p>
+                            <p>{t('analysis.share_settings.privacy_warning_desc')}</p>
                           </div>
                         </div>
                       </div>
@@ -835,9 +833,9 @@ export default function HistorySection() {
                     <div className="space-y-4 pt-2">
                       { }
                       <label htmlFor="hideDataTrue" className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${hideFinancialData === true ? 'border-blue-200 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                        {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
                         <input
                           id="hideDataTrue"
+                          aria-label="Hide Financial Data"
                           type="radio"
                           name="hideFinancialData"
                           checked={hideFinancialData === true}
@@ -845,16 +843,16 @@ export default function HistorySection() {
                           className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
                         />
                         <div>
-                          <span className="block text-sm font-semibold text-gray-900">隱藏詳細數據 (系統建議)</span>
-                          <span className="block text-xs text-gray-500 mt-1">強制遮蔽所有 Markdown 數字表格，僅對外公開 AI 的戰略分析與健康狀態。適合對外公關行銷。</span>
+                          <span className="block text-sm font-semibold text-gray-900">{t('analysis.share_settings.hide_data_title')}</span>
+                          <span className="block text-xs text-gray-500 mt-1">{t('analysis.share_settings.hide_data_desc')}</span>
                         </div>
                       </label>
 
                       { }
                       <label htmlFor="hideDataFalse" className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${hideFinancialData === false ? 'border-blue-200 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                        {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
                         <input
                           id="hideDataFalse"
+                          aria-label="Show Financial Data"
                           type="radio"
                           name="hideFinancialData"
                           checked={hideFinancialData === false}
@@ -862,8 +860,8 @@ export default function HistorySection() {
                           className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
                         />
                         <div>
-                          <span className="block text-sm font-semibold text-gray-900">完整公開報告</span>
-                          <span className="block text-xs text-gray-500 mt-1">不作任何遮蔽，完整顯示財務數據表格。適合專遞給投資人、會計師或內部合夥人。</span>
+                          <span className="block text-sm font-semibold text-gray-900">{t('analysis.share_settings.show_data_title')}</span>
+                          <span className="block text-xs text-gray-500 mt-1">{t('analysis.share_settings.show_data_desc')}</span>
                         </div>
                       </label>
                     </div>
@@ -884,7 +882,7 @@ export default function HistorySection() {
                       disabled={isSharing}
                     >
                       {isSharing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                      確認並產生連結
+                      {t('analysis.share_settings.confirm')}
                     </button>
                   </div>
                 </DialogPanel>
