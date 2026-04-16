@@ -363,6 +363,24 @@ export class MissionService {
                     const parsed = JSON.parse(match[0]);
                     const ed = parsed.data || parsed;
                     const confidence = parseInt(String(ed.confidence)) || 0;
+
+                    let finalCoefficientId = ed.coefficientId || null;
+
+                    // Info: (20260416 - Julian) 若有提供新係數，則自動儲存為全站共用標準係數
+                    if (ed.newCoefficient && ed.newCoefficient.name) {
+                      const newCoef = await tx.coefficient.create({
+                        data: {
+                          name: ed.newCoefficient.name,
+                          description: ed.newCoefficient.description || "",
+                          unit: ed.newCoefficient.unit || "",
+                          emissionFactor: parseFloat(String(ed.newCoefficient.emissionFactor)) || 0,
+                          source: ed.newCoefficient.source || "AI 動態擷取",
+                          accountBookId: null, // Info: (20260416 - Julian) 設定為全站共用
+                        }
+                      });
+                      finalCoefficientId = newCoef.id;
+                    }
+
                     const esgData: Prisma.EsgRecordUncheckedCreateInput = {
                       accountBookId,
                       fileId,
@@ -379,6 +397,7 @@ export class MissionService {
                       isVerified: confidence > 85,
                       aiNote: ed.aiNote ?? "無 AI 分析備註",
                       analysisStatus: "COMPLETED" as AIAnalysisStatus,
+                      coefficientId: finalCoefficientId,
                     };
 
                     if (existingEsg) {

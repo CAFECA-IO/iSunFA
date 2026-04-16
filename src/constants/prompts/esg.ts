@@ -11,24 +11,31 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null, coeffici
     ? `\n  請嚴格遵守以下帳本關於碳排或會計核算的特殊規則與偏好：\n  ${accountBook.rule}\n`
     : "";
 
-    const coefficientsInstruction = coefficients && coefficients.length > 0 ?
-    `\n  請從以下係數中，選擇最符合的係數，並填入 「coefficient」 欄位，並在 「emissions」 中，根據以下標準來計算碳排放量：
-  1. 活動數據 (Activity Data)：用戶提供的數據（如：用電度數、天然氣用量等）。
-  2. 排放係數 (Emission Factor)：用戶提供的係數（如：每度電的碳排放量）。
-  3. 碳排放量 (Emissions)：活動數據 × 排放係數。
-  如果沒有找到最符合的係數，請填入 null，並在 「emissions」 中填入 0：\n  ${coefficients.map((c) => {
-      return{
+    const coefficientsListStr = coefficients && coefficients.length > 0
+    ? `【目前系統內建係數清單】:\n${JSON.stringify(coefficients.map((c) => ({
         id: c.id,
         name: c.name,
         description: c.description,
         formula: `${c.unit} * ${c.emissionFactor}`
-      }
-    }).join(", ")}\n`
-    : "";
+      })))}`
+    : "【目前系統內建係數清單】: (空)";
+
+    const coefficientsInstruction = `
+  ${coefficientsListStr}
+  
+  請從上方的系統內建係數清單中，檢查是否有符合該憑證情境的係數。
+  - 若有符合的係數，請採用它並將該 ID 填入回傳 JSON 的 \`coefficientId\`。
+  - 若無符合的係數，或清單為空，請尋找來源可靠的外部係數（例如：經濟部能源署發布之溫室氣體排放係數、固定燃燒排放源排放係數等），並將新找到的係數資訊填入回傳 JSON 的 \`newCoefficient\` 物件中，同時將 \`coefficientId\` 設為 null。
+  - 如果連外部都沒有可靠係數可以參考，請將 \`emissions\` 填為 0，並將 \`coefficientId\` 與 \`newCoefficient\` 皆設為 null。
+
+  【碳排放量計算標準】：
+  1. 活動數據 (Activity Data)：用戶提供的數據（如：用電度數、天然氣用量等）。
+  2. 排放係數 (Emission Factor)：依據您上述選擇（既有或新尋找的係數數值）。
+  3. 碳排放量 (Emissions)：活動數據 × 排放係數。
+  請將最終計算出的碳排數字填入 \`emissions\`。`;
     
   return `
   請將用戶上傳的憑證（檔案/圖片）解析出碳盤查（Carbon Footprint Verification）相關資訊。${accountBookInfo}${rulesInstruction}
-  
   ${coefficientsInstruction}
 
   【溫室氣體排放係數參考資料】
@@ -56,7 +63,15 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null, coeffici
       "intensity": "HIGH", // 排放強度 ("HIGH" | "MEDIUM" | "LOW")
       "dqiScore": 1.2, // 數據品質分數 (數字 1-5)
       "confidence": 85, // AI 分析的整體信心度 (數字 0-100)
-      "coefficientId": "string", // 使用係數之 ID
+      "coefficientId": "string | null", // 使用既有係數之 ID，若使用新係數或無適合係數則為 null
+      "newCoefficient": { 
+        // 若找不到適合的既有係數，所尋找到的可靠外部係數資訊 (若有使用既有係數則為 null)
+          "name": "string", // 係數名稱，須符合「XX 係數」的格式
+          "description": "string", // 係數描述
+          "unit": "string", // 係數單位，不包含 'kgCO2e'，例如：kgCO2e/kg，即為 kg (以國際通用單位為主，不要寫中文)
+          "emissionFactor": 1.23, // 排放係數 (數字)
+          "source": "string" // 來源，如「經濟部能源署」等
+      },
       "aiNote": "string" // AI 分析的備註
   }
 `;

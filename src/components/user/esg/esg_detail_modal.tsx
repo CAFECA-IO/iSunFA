@@ -181,6 +181,17 @@ export default function EsgDetailModal({
 
   if (!formData) return null;
 
+  // Info: (20260416 - Julian) 檢查排放量和強度是否改變
+  const isEmissionsChanged =
+    calculatedResult.totalEmissions && originalData?.emissions
+      ? parseFloat(calculatedResult.totalEmissions.toString()) !== parseFloat(originalData?.emissions)
+      : false;
+  const isIntensityChanged =
+    calculatedResult.intensityLevel && originalData?.intensity
+      ? calculatedResult.intensityLevel.toLowerCase() !==
+        originalData?.intensity.toLowerCase()
+      : false;
+
   const handleDateChange = (dateString: string) => {
     setFormData({ ...formData, tradingDate: dateString });
   };
@@ -435,10 +446,7 @@ export default function EsgDetailModal({
                     readOnly
                     value={calculatedResult.totalEmissions}
                     className={`${
-                      calculatedResult.totalEmissions ===
-                      originalData?.emissions
-                        ? "text-slate-700"
-                        : "text-orange-400"
+                      isEmissionsChanged ? "text-orange-400" : "text-slate-700"
                     } w-full rounded-xl border border-slate-400 bg-orange-50 px-4 py-2.5 text-xs font-semibold outline-none lg:text-sm`}
                   />
                   <p className="text-xs font-bold whitespace-nowrap text-slate-500">
@@ -467,9 +475,7 @@ export default function EsgDetailModal({
                   value={calculatedResult.intensityLevel}
                   readOnly
                   className={`${
-                    calculatedResult.intensityLevel === originalData?.intensity
-                      ? "text-slate-700"
-                      : "text-orange-400"
+                    isIntensityChanged ? "text-orange-400" : "text-slate-700"
                   } w-full rounded-xl border border-slate-400 bg-orange-50 px-4 py-2.5 text-xs font-semibold outline-none lg:text-sm`}
                 />
               </div>

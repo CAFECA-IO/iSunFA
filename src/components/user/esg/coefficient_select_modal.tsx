@@ -25,7 +25,7 @@ interface ICoefficientSelectModalProps {
 export default function CoefficientSelectModal({
   isOpen,
   onClose,
-  unit ='',
+  unit = "",
   selectCoefficient,
 }: ICoefficientSelectModalProps) {
   // const { t } = useTranslation();
@@ -46,7 +46,9 @@ export default function CoefficientSelectModal({
         const unitQuery = unit ? `&unit=${unit}` : "";
         const data = await request<
           IApiResponse<{ items: ICoefficient[]; total: number }>
-        >(`/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=all${unitQuery}`);
+        >(
+          `/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=all${unitQuery}`,
+        );
         if (data.payload) {
           setCoefficientList(data.payload.items);
         }
@@ -101,7 +103,10 @@ export default function CoefficientSelectModal({
     </div>
   ) : (
     <div className="flex flex-col items-center gap-2 px-10 py-5">
-      <p className="text-base font-bold text-slate-700">目前沒有單位符合 <span className="underline underline-offset-2">{unit}</span> 的係數</p>
+      <p className="text-base font-bold text-slate-700">
+        目前沒有單位符合{" "}
+        <span className="underline underline-offset-2">{unit}</span> 的係數
+      </p>
       <button
         type="button"
         onClick={gotoCoefficientPage}
