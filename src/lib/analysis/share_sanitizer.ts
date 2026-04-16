@@ -1,5 +1,5 @@
 /**
- * Info: (20260410 - Tzuhan)
+ * Info: (20260416 - Tzuhan)
  * 分享清洗器 - 涵蓋全系統 11 種報告
  */
 
@@ -71,7 +71,11 @@ const redactMarkdownTables = (markdown: string): string => {
 };
 
 export interface IShareSanitizeStrategy<TMetrics> {
-  sanitize(data: TShareData, result: TShareResult): IPublicReportData<TMetrics>;
+  sanitize(
+    data: TShareData,
+    result: TShareResult,
+    isFinancialDataHidden?: boolean,
+  ): IPublicReportData<TMetrics>;
 }
 
 export class CarbonSanitizer implements IShareSanitizeStrategy<ICarbonMetrics> {
@@ -80,9 +84,9 @@ export class CarbonSanitizer implements IShareSanitizeStrategy<ICarbonMetrics> {
     result: TShareResult,
   ): IPublicReportData<ICarbonMetrics> {
     const rawMarkdown = extractMarkdown(result);
-    const scoreMatch = rawMarkdown.match(/碳健檢綜合評分：\s*(\d+(?:\.\d+)?)/);
-    const tagsMatch = rawMarkdown.match(/減碳核心標籤：\s*\**([^*\n]+)\**/);
-    const positionMatch = rawMarkdown.match(/戰略風險定位：\s*\**([^*\n]+)\**/);
+    const scoreMatch = rawMarkdown.match(/綜合評分.*?[:：]\s*(\d+(?:\.\d+)?)/);
+    const tagsMatch = rawMarkdown.match(/核心標籤.*?[:：]\s*([^\r\n]+)/);
+    const positionMatch = rawMarkdown.match(/戰略風險定位.*?[:：]\s*([^\r\n]+)/);
 
     return {
       companyName: extractCompanyName(data, "企業"),
@@ -90,9 +94,13 @@ export class CarbonSanitizer implements IShareSanitizeStrategy<ICarbonMetrics> {
       metrics: {
         score: scoreMatch ? scoreMatch[1] : null,
         tags: tagsMatch
-          ? tagsMatch[1].split(",").map((t) => t.trim().replace(/#/g, ""))
+          ? tagsMatch[1]
+            .replace(/[\*\[\]]/g, "")
+            .split(/[#\s、,，]+/)
+            .map((t) => t.trim())
+            .filter(Boolean)
           : [],
-        strategicPosition: positionMatch ? positionMatch[1].trim() : null,
+        strategicPosition: positionMatch ? positionMatch[1].replace(/[\*]/g, "").trim() : null,
       },
     };
   }
@@ -104,28 +112,38 @@ export class RatingSanitizer implements IShareSanitizeStrategy<IFinancialMetrics
     result: TShareResult,
   ): IPublicReportData<IFinancialMetrics> {
     const rawMarkdown = extractMarkdown(result);
-    const ratingMatch = rawMarkdown.match(/評級結果：\s*\[?([^\]\n]+)\]?/);
-    const tagsMatch = rawMarkdown.match(
-      /產品風險與量化特徵：\s*\**([^*\n]+)\**/,
-    );
+    const ratingMatch = rawMarkdown.match(/(?:評級結果|綜合評級|最終評級|評級).*?[:：]\s*([^\r\n]+)/);
+    const tagsMatch = rawMarkdown.match(/報告.*?[:：]\s*([^\r\n]+)/);
 
     return {
       companyName: extractCompanyName(data, "投資標的"),
       safeMarkdown: rawMarkdown,
       metrics: {
         rating: ratingMatch
-          ? ratingMatch[1].replace(/[\*\[\]]/g, "").trim()
+          ? ratingMatch[1].replace(/[\*\[\]]/g, "").split(/[(（]/)[0].trim()
           : null,
-        tags: tagsMatch ? tagsMatch[1].split(",").map((t) => t.trim()) : [],
+        tags: tagsMatch
+          ? tagsMatch[1]
+            .replace(/[\*\[\]「」]/g, "")
+            .split(/[，,]/)
+            .map((t) => t.trim())
+            .filter(Boolean)
+          : [],
       },
     };
   }
 }
 
 export class FinancialReportSanitizer implements IShareSanitizeStrategy<null> {
-  sanitize(data: TShareData, result: TShareResult): IPublicReportData<null> {
+  sanitize(
+    data: TShareData,
+    result: TShareResult,
+    isFinancialDataHidden?: boolean,
+  ): IPublicReportData<null> {
     const rawMarkdown = extractMarkdown(result);
-    const redactedMarkdown = redactMarkdownTables(rawMarkdown);
+    const redactedMarkdown = isFinancialDataHidden !== false
+      ? redactMarkdownTables(rawMarkdown)
+      : rawMarkdown;
 
     return {
       companyName: extractCompanyName(data, "企業"),

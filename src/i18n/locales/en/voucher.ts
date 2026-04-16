@@ -1,4 +1,5 @@
 export const voucher = {
+  title: "Voucher Management",
   account_book_selector: {
     title: "Select Account",
     search_placeholder: "Search account code or name...",

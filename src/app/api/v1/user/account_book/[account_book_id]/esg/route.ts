@@ -14,6 +14,7 @@ import {
 } from "@/interfaces/esg";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { VerifyStatus } from "@/constants/verify_status";
+import { CoefficientCategory } from "@/interfaces/coefficient";
 
 /**
  * Info: (20260312 - Julian) 新增 ESG 紀錄
@@ -69,7 +70,7 @@ export async function POST(
       tradingDate: new Date(),
       activityType: "",
       vendor: "",
-      rawActivityData: "",
+      amount: 0,
       unit: "",
       emissions: 0,
       dqiScore: 0,
@@ -219,7 +220,7 @@ export async function GET(
 
     const esgDbRecords = await esgRepo.getEsgRecords({
       where: whereClause,
-      include: { file: true },
+      include: { file: true, coefficient: true },
       orderBy: { tradingDate: sort },
       ...(page && pageSize
         ? { skip: (page - 1) * pageSize, take: pageSize }
@@ -238,7 +239,7 @@ export async function GET(
           }
         : undefined,
       scope: r.scope as ClientEsgScope,
-      amount: Number(r.rawActivityData),
+      amount: Number(r.amount),
       emissions: r.emissions.toString(),
       intensity: r.intensity as ClientEsgIntensity,
       analysisStatus: r.analysisStatus as AIAnalysisStatus,
@@ -246,6 +247,17 @@ export async function GET(
       voucherId: r.voucherId,
       isDeleted: !!r.deletedAt,
       dqiScore: Number(r.dqiScore) ?? 0,
+      coefficient: r.coefficient
+        ? {
+            ...r.coefficient,
+            category: !!r.coefficient.accountBookId
+              ? CoefficientCategory.CUSTOM
+              : CoefficientCategory.STANDARD,
+            createdAt: new Date(r.coefficient.createdAt).getTime() / 1000,
+            updatedAt: new Date(r.coefficient.updatedAt).getTime() / 1000,
+            emissionFactor: Number(r.coefficient.emissionFactor),
+          }
+        : null,
     }));
 
     return jsonOk({

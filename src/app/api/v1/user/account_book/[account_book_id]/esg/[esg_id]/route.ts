@@ -15,6 +15,7 @@ import {
   EsgScope as ClientEsgScope,
   EsgIntensity as ClientEsgIntensity,
 } from "@/interfaces/esg";
+import { CoefficientCategory } from "@/interfaces/coefficient";
 
 /**
  * Info: (20260312 - Julian) 取得單一 ESG 紀錄
@@ -73,12 +74,10 @@ export async function GET(
       scope: esgRecord.scope as unknown as ClientEsgScope,
       activityType: esgRecord.activityType,
       vendor: esgRecord.vendor,
-      amount: Number(esgRecord.rawActivityData),
+      amount: Number(esgRecord.amount),
       unit: esgRecord.unit,
       emissions: esgRecord.emissions.toString(),
       dqiScore: Number(esgRecord.dqiScore) ?? 0,
-      coefficient: esgRecord.coefficient,
-      coefficientSource: esgRecord.coefficientSource,
       intensity: esgRecord.intensity as unknown as ClientEsgIntensity,
       confidence: esgRecord.confidence,
       isVerified: esgRecord.isVerified,
@@ -86,6 +85,19 @@ export async function GET(
       aiNote: esgRecord.aiNote ?? "",
       journalId: esgRecord.journalId,
       voucherId: esgRecord.voucherId,
+      coefficient: esgRecord.coefficient
+        ? {
+            ...esgRecord.coefficient,
+            category: !!esgRecord.coefficient.accountBookId
+              ? CoefficientCategory.CUSTOM
+              : CoefficientCategory.STANDARD,
+            createdAt:
+              new Date(esgRecord.coefficient.createdAt).getTime() / 1000,
+            updatedAt:
+              new Date(esgRecord.coefficient.updatedAt).getTime() / 1000,
+            emissionFactor: Number(esgRecord.coefficient.emissionFactor),
+          }
+        : null,
     };
 
     return jsonOk(formattedRecord);
@@ -152,7 +164,7 @@ export async function PUT(
       ...(reqBody.activityType && { activityType: reqBody.activityType }),
       ...(reqBody.vendor && { vendor: reqBody.vendor }),
       ...(reqBody.amount !== undefined && {
-        rawActivityData: reqBody.amount.toString(),
+        amount: reqBody.amount,
       }),
       ...(reqBody.unit && { unit: reqBody.unit }),
       ...(reqBody.emissions && { emissions: reqBody.emissions }),
@@ -160,7 +172,7 @@ export async function PUT(
         intensity: reqBody.intensity.toUpperCase() as EsgIntensity,
       }),
       ...(reqBody.confidence !== undefined && {
-        confidence: reqBody.confidence,
+        confidence: reqBody.confidence, 
       }),
       ...(reqBody.isVerified !== undefined && {
         isVerified: reqBody.isVerified,
@@ -171,6 +183,9 @@ export async function PUT(
           reqBody.analysisStatus === AIAnalysisStatus.FAILED
             ? AIAnalysisStatus.COMPLETED
             : reqBody.analysisStatus,
+      }),
+      ...(reqBody.coefficient !== undefined && {
+        coefficientId: reqBody.coefficient?.id ?? null,
       }),
     });
 
@@ -186,12 +201,10 @@ export async function PUT(
       scope: updatedRecord.scope as unknown as ClientEsgScope,
       activityType: updatedRecord.activityType,
       vendor: updatedRecord.vendor,
-      amount: Number(updatedRecord.rawActivityData),
+      amount: Number(updatedRecord.amount),
       unit: updatedRecord.unit,
       emissions: updatedRecord.emissions.toString(),
       dqiScore: Number(updatedRecord.dqiScore) ?? 0,
-      coefficient: updatedRecord.coefficient,
-      coefficientSource: updatedRecord.coefficientSource,
       intensity: updatedRecord.intensity as unknown as ClientEsgIntensity,
       confidence: updatedRecord.confidence,
       isVerified: updatedRecord.isVerified,
@@ -200,13 +213,26 @@ export async function PUT(
       aiNote: updatedRecord.aiNote ?? "",
       journalId: updatedRecord.journalId,
       voucherId: updatedRecord.voucherId,
+      coefficient: esgRecord.coefficient
+        ? {
+            ...esgRecord.coefficient,
+            category: !!esgRecord.coefficient.accountBookId
+              ? CoefficientCategory.CUSTOM
+              : CoefficientCategory.STANDARD,
+            createdAt:
+              new Date(esgRecord.coefficient.createdAt).getTime() / 1000,
+            updatedAt:
+              new Date(esgRecord.coefficient.updatedAt).getTime() / 1000,
+            emissionFactor: Number(esgRecord.coefficient.emissionFactor),
+          }
+        : null,
     };
 
     // Info: (20260312 - Julian) 新增 log
     await auditLogRepo.createAuditLog({
       userId: updater.id,
       dataType: "ESG_RECORD",
-      dataId: formattedRecord.id,
+      dataId: updatedRecord.id,
       accountBookId: accountBook.id,
       action: "UPDATE",
     });

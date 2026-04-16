@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Fragment } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { X, Calculator, Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -10,7 +10,7 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-// import { useTranslation } from "@/i18n/i18n_context";
+import { useTranslation } from "@/i18n/i18n_context";
 import { ICoefficient } from "@/interfaces/coefficient";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -18,29 +18,37 @@ import { IApiResponse } from "@/lib/utils/response";
 interface ICoefficientSelectModalProps {
   isOpen: boolean;
   onClose: () => void;
+  unit?: string;
   selectCoefficient: (coefficient: ICoefficient) => void;
 }
 
 export default function CoefficientSelectModal({
   isOpen,
   onClose,
+  unit = "",
   selectCoefficient,
 }: ICoefficientSelectModalProps) {
-  // const { t } = useTranslation();
+  const { t } = useTranslation();
   const params = useParams();
+  const router = useRouter();
   const accountBookId = params?.account_book_id as string;
 
   const [coefficientList, setCoefficientList] = useState<ICoefficient[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const coefficientManagementUrl = `/user/account_book/${accountBookId}/esg?tab=coefficient`;
 
   // Info: (20260414 - Julian) 取得係數列表
   useEffect(() => {
     const fetchCoefficientList = async () => {
       try {
         setIsLoading(true);
+        const unitQuery = unit ? `&unit=${unit}` : "";
         const data = await request<
           IApiResponse<{ items: ICoefficient[]; total: number }>
-        >(`/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=all`);
+        >(
+          `/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=all${unitQuery}`,
+        );
         if (data.payload) {
           setCoefficientList(data.payload.items);
         }
@@ -51,13 +59,20 @@ export default function CoefficientSelectModal({
       }
     };
     fetchCoefficientList();
-  }, [accountBookId]);
+  }, [accountBookId, unit]);
+
+  const gotoCoefficientPage = () => {
+    // Info: (20260416 - Julian) 關閉這個 modal
+    onClose();
+    // Info: (20260416 - Julian) 跳轉到係數管理頁面
+    router.push(coefficientManagementUrl);
+  };
 
   const displayCoefficientList = isLoading ? (
     <div className="flex items-center justify-center p-10">
       <Loader2 size={40} className="animate-spin text-orange-300" />
     </div>
-  ) : (
+  ) : coefficientList.length > 0 ? (
     <div className="flex flex-col gap-2">
       {coefficientList.map((coefficient) => {
         const onClick = () => {
@@ -85,6 +100,21 @@ export default function CoefficientSelectModal({
           </button>
         );
       })}
+    </div>
+  ) : (
+    <div className="flex flex-col items-center gap-2 px-10 py-5">
+      <p className="text-base font-bold text-slate-700">
+        {t('coefficient.select_modal.no_unit_match_prefix')}
+        <span className="underline underline-offset-2">{unit}</span>
+        {t('coefficient.select_modal.no_unit_match_suffix')}
+      </p>
+      <button
+        type="button"
+        onClick={gotoCoefficientPage}
+        className="rounded-full bg-orange-400 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 ease-in-out hover:bg-orange-600"
+      >
+        {t('coefficient.select_modal.goto_manage')}
+      </button>
     </div>
   );
 
@@ -131,7 +161,7 @@ export default function CoefficientSelectModal({
                     as="h3"
                     className="text-2xl font-bold text-slate-700"
                   >
-                    選擇計算公式
+                    {t('coefficient.select_modal.title')}
                   </DialogTitle>
                 </div>
 

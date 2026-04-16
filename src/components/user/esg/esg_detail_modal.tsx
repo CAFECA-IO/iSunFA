@@ -19,7 +19,6 @@ import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import FilePreviewModal from "@/components/common/file_preview_modal";
 import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
-import { ICoefficient } from "@/interfaces/coefficient";
 import CoefficientSelectModal from "@/components/user/esg/coefficient_select_modal";
 
 interface IEsgDetailModalProps {
@@ -29,7 +28,7 @@ interface IEsgDetailModalProps {
   onSave?: (record: IEsgRecord) => void;
 }
 
-const UNIT_LIST = ["kWh", "L", "kg", "m³", "km", "ton", "次", "件"];
+// const UNIT_LIST = ["kWh", "L", "kg", "m³", "km", "ton", "次", "件"];
 
 export default function EsgDetailModal({
   isOpen,
@@ -54,15 +53,8 @@ export default function EsgDetailModal({
   // Info: (20260325 - Julian) Preview Modal State
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
 
-  // Info: (20260415 - Julian) Coefficient State
-  const [selectedCoefficient, setSelectedCoefficient] =
-    useState<ICoefficient | null>(null);
   const [isCoefficientSelectorOpen, setIsCoefficientSelectorOpen] =
     useState<boolean>(false);
-
-  // 之後會合併到 formData
-  const [amountValue, setAmountValue] = useState<number>(0);
-  const [selectedUnit, setSelectedUnit] = useState<string>(UNIT_LIST[0]);
 
   useEffect(() => {
     if (isOpen && esgId && accountBookId) {
@@ -87,17 +79,27 @@ export default function EsgDetailModal({
     }
   }, [isOpen, esgId, accountBookId]);
 
-  // Info: (20260415 - Julian) 套用 selectedCoefficient, amountValue 計算總排放量並評估排放強度分級
+  // Info: (20260415 - Julian) 套用 formData 中的 coefficient 與 amount 計算總排放量並評估排放強度分級
   const calculatedResult = useMemo(() => {
-    if (!selectedCoefficient)
-      return {
-        totalEmissions: 0,
-        intensityLevel: "-",
-      };
+    const coefficient = formData?.coefficient;
+    const amount = formData?.amount;
 
-    // Info: (20260415 - Julian) 取小數點後兩位
-    const totalEmissions = parseFloat((selectedCoefficient.emissionFactor * amountValue).toFixed(2));
-    const intensity = totalEmissions / amountValue;
+    if (!(coefficient && amount)) {
+      return {
+        totalEmissions: formData?.emissions || 0,
+        intensityLevel: formData?.intensity || "-",
+      };
+    }
+
+    // Info: (20260416 - Julian) 轉換為數字
+    const amountNum = Number(amount) || 0;
+    const emissionFactorNum = Number(coefficient.emissionFactor) || 0;
+
+    // Info: (20260415 - Julian) 計算總排放量，取小數點後兩位
+    const totalEmissions = Number((emissionFactorNum * amountNum).toFixed(2));
+
+    // Info: (20260415 - Julian) 計算排放強度分級
+    const intensity = amount > 0 ? totalEmissions / amount : 0;
     const intensityLevel =
       intensity < 1
         ? EsgIntensity.LOW
@@ -109,21 +111,12 @@ export default function EsgDetailModal({
       totalEmissions,
       intensityLevel,
     };
-  }, [selectedCoefficient, amountValue]);
-
-  // Info: (20260415 - Julian) 監控 calculatedResult 變化並更新 formData
-  useEffect(() => {
-    if (calculatedResult.intensityLevel !== "-") {
-      setFormData((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          emissions: calculatedResult.totalEmissions.toString(),
-          intensity: calculatedResult.intensityLevel as EsgIntensity,
-        };
-      });
-    }
-  }, [calculatedResult]);
+  }, [
+    formData?.coefficient,
+    formData?.amount,
+    formData?.emissions,
+    formData?.intensity,
+  ]);
 
   const checkHasChanges = () => {
     if (!formData || !originalData) return false;
@@ -139,7 +132,15 @@ export default function EsgDetailModal({
     if (!formData) return;
     setIsLoading(true);
     try {
-      const formPayload = { ...formData, isVerified: isVerifiedState };
+      const formPayload: IEsgRecord = {
+        ...formData,
+        isVerified: isVerifiedState,
+        emissions: calculatedResult.totalEmissions.toString(),
+        intensity:
+          calculatedResult.intensityLevel !== "-"
+            ? (calculatedResult.intensityLevel as EsgIntensity)
+            : formData.intensity,
+      };
       const isoString = `${dateValue}T00:00:00.000Z`;
       formPayload.tradingDate = isoString;
       const res = await request<IApiResponse<IEsgRecord>>(
@@ -180,119 +181,20 @@ export default function EsgDetailModal({
 
   if (!formData) return null;
 
+  // Info: (20260416 - Julian) 檢查排放量和強度是否改變
+  const isEmissionsChanged =
+    calculatedResult.totalEmissions && originalData?.emissions
+      ? parseFloat(calculatedResult.totalEmissions.toString()) !== parseFloat(originalData?.emissions)
+      : false;
+  const isIntensityChanged =
+    calculatedResult.intensityLevel && originalData?.intensity
+      ? calculatedResult.intensityLevel.toLowerCase() !==
+        originalData?.intensity.toLowerCase()
+      : false;
+
   const handleDateChange = (dateString: string) => {
     setFormData({ ...formData, tradingDate: dateString });
   };
-
-  // const calcSection = (
-  //   <div className="col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
-  //     <h4 className="mb-4 text-sm font-bold text-slate-700">
-  //       {t("esg_verify.emissions.title")}
-  //     </h4>
-  //     <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 lg:gap-4">
-  //       <div>
-  //         <label className="mb-1 block text-xs font-bold text-slate-500">
-  //           {t("esg_verify.emissions.raw_data")} /{" "}
-  //           {t("esg_verify.emissions.unit")}
-  //         </label>
-  //         <div className="flex gap-2">
-  //           <input
-  //             aria-label={t("esg_verify.emissions.raw_data")}
-  //             type="text"
-  //             value={formData.rawActivityData || ""}
-  //             onChange={(e) =>
-  //               setFormData({
-  //                 ...formData,
-  //                 rawActivityData: e.target.value,
-  //               })
-  //             }
-  //             className="w-2/3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
-  //           />
-  //           <div className="relative w-1/3">
-  //             <input
-  //               aria-label={t("esg_verify.emissions.unit")}
-  //               type="text"
-  //               value={formData.unit || ""}
-  //               onChange={(e) =>
-  //                 setFormData({
-  //                   ...formData,
-  //                   unit: e.target.value,
-  //                 })
-  //               }
-  //               className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
-  //             />
-  //           </div>
-  //         </div>
-  //       </div>
-  //       <div>
-  //         <label className="mb-1 block text-xs font-bold text-slate-500">
-  //           {t("esg_verify.emissions.total")}
-  //         </label>
-  //         <div className="flex items-center gap-2">
-  //           <input
-  //             aria-label={t("esg_verify.emissions.total")}
-  //             type="text"
-  //             value={formData.emissions || ""}
-  //             onChange={(e) =>
-  //               setFormData({
-  //                 ...formData,
-  //                 emissions: e.target.value,
-  //               })
-  //             }
-  //             className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
-  //           />
-  //           <span className="text-xs font-bold whitespace-nowrap text-slate-500">
-  //             kg CO₂e
-  //           </span>
-  //         </div>
-  //       </div>
-  //       <div className="col-span-1 lg:col-span-2">
-  //         <label className="mb-1 block text-xs font-bold text-slate-500">
-  //           {t("esg_verify.emissions.intensity")}
-  //         </label>
-  //         <select
-  //           aria-label={t("esg_verify.emissions.intensity")}
-  //           value={formData.intensity || ""}
-  //           onChange={(e) =>
-  //             setFormData({
-  //               ...formData,
-  //               intensity: e.target.value as EsgIntensity,
-  //             })
-  //           }
-  //           className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
-  //         >
-  //           <option value={EsgIntensity.LOW}>
-  //             {t("esg_verify.form.intensity_low")}
-  //           </option>
-  //           <option value={EsgIntensity.MEDIUM}>
-  //             {t("esg_verify.form.intensity_medium")}
-  //           </option>
-  //           <option value={EsgIntensity.HIGH}>
-  //             {t("esg_verify.form.intensity_high")}
-  //           </option>
-  //         </select>
-  //       </div>
-  //       {/* Info: (20260406 - Luphia) 碳排放係數紀錄 */}
-  //       {formData.coefficient && (
-  //         <div className="col-span-1 mt-2 rounded-lg bg-orange-50 p-3 ring-1 ring-orange-100 ring-inset lg:col-span-2">
-  //           <div className="mb-1 text-[10px] font-bold text-orange-600">
-  //             {t("esg_verify.emissions.coefficient")}
-  //           </div>
-  //           <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
-  //             <div className="text-sm font-bold text-slate-700">
-  //               {formData.coefficient}
-  //             </div>
-  //             {formData.coefficientSource && (
-  //               <div className="text-xs font-medium text-slate-500">
-  //                 ({formData.coefficientSource})
-  //               </div>
-  //             )}
-  //           </div>
-  //         </div>
-  //       )}
-  //     </div>
-  //   </div>
-  // );
 
   const dateValue = formData.tradingDate
     ? formData.tradingDate.split("T")[0]
@@ -439,17 +341,16 @@ export default function EsgDetailModal({
                   htmlFor="amountInput"
                   className="mb-1.5 block text-sm font-bold text-slate-500"
                 >
-                  數值 (Amount)
+                  {t("esg_verify.emissions.raw_data")}
                 </label>
                 <input
                   id="amountInput"
-                  aria-label={`數值 (Amount)`}
+                  aria-label={t("esg_verify.emissions.raw_data")}
                   type="number"
                   placeholder="0.00"
-                  value={amountValue}
+                  value={formData.amount || ""}
                   onChange={(e) => {
                     const value = Number(e.target.value);
-                    setAmountValue(value);
                     setFormData({ ...formData, amount: value });
                   }}
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
@@ -462,16 +363,26 @@ export default function EsgDetailModal({
                   htmlFor="unitSelect"
                   className="mb-1.5 block text-sm font-bold text-slate-500"
                 >
-                  單位 (Unit)
+                  {t("esg_verify.emissions.unit")}
                 </label>
-                <select
+                {/* Info: (20260416 - Julian) 先改為文字輸入 */}
+                <input
+                  id="unitInput"
+                  aria-label={t("esg_verify.emissions.unit")}
+                  type="text"
+                  value={formData.unit}
+                  onChange={(e) =>
+                    setFormData({ ...formData, unit: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
+                />
+                {/* <select
                   id="unitSelect"
                   aria-label={`單位 (Unit)`}
-                  value={selectedUnit}
-                  onChange={(e) => {
-                    setSelectedUnit(e.target.value)
+                  value={formData.unit}
+                  onChange={(e) =>
                     setFormData({ ...formData, unit: e.target.value })
-                  }}
+                  }
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
                 >
                   {UNIT_LIST.map((unit) => (
@@ -479,35 +390,35 @@ export default function EsgDetailModal({
                       {unit}
                     </option>
                   ))}
-                </select>
+                </select> */}
               </div>
 
               {/* Info: (20260415 - Julian) 計算公式與係數 */}
               <div className="col-span-2">
                 <div className="mb-1.5 flex items-center gap-2 text-sm font-bold">
                   <Calculator size={16} className="text-orange-400" />
-                  <p className="text-slate-500">{t("計算公式與係數")}</p>
+                  <p className="text-slate-500">{t("esg_verify.emissions.formula_and_coef")}</p>
                 </div>
                 {/* Info: (20260415 - Julian) Coefficient Selector */}
                 <button
                   type="button"
                   onClick={() => setIsCoefficientSelectorOpen(true)}
-                  className={`${selectedCoefficient ? "border-orange-300" : "border-slate-300"} group bg-gray-50 flex w-full items-center justify-between rounded-xl border p-4 transition-all duration-200 ease-in-out hover:border-orange-300`}
+                  className={`${formData.coefficient ? "border-orange-300" : "border-slate-300"} group flex w-full items-center justify-between rounded-xl border bg-white p-4 transition-all duration-200 ease-in-out hover:border-orange-300`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="rounded-lg bg-white p-2 shadow-sm">
-                      <Calculator size={20} className="text-orange-300" />
+                    <div className="rounded-lg bg-gray-100 p-2 shadow-sm">
+                      <Calculator size={20} className="text-slate-700" />
                     </div>
                     <div className="flex flex-col items-start font-semibold">
                       <p
-                        className={`${selectedCoefficient ? "text-orange-400" : "text-gray-400"} text-xs`}
+                        className={`${formData.coefficient ? "text-orange-400" : "text-gray-400"} text-xs`}
                       >
-                        套用計算公式
+                        {t("esg_verify.emissions.apply_formula")}
                       </p>
                       <p className="text-sm text-slate-700 transition-all duration-200 ease-in-out group-hover:text-orange-400">
-                        {selectedCoefficient
-                          ? `${selectedCoefficient.name} (${selectedCoefficient.unit} * ${selectedCoefficient.emissionFactor})`
-                          : "尚未選擇公式"}
+                        {formData.coefficient
+                          ? `${formData.coefficient.name} (${formData.coefficient.unit} * ${formData.coefficient.emissionFactor})`
+                          : t("esg_verify.emissions.no_formula_selected")}
                       </p>
                     </div>
                   </div>
@@ -524,17 +435,19 @@ export default function EsgDetailModal({
                   className="mb-1.5 flex items-center gap-1 text-sm font-bold"
                 >
                   <Leaf size={16} className="text-orange-400" />
-                  <p className="text-slate-500">總排放量</p>
+                  <p className="text-slate-500">{t("esg_verify.emissions.total")}</p>
                 </label>
                 <div className="flex items-baseline gap-2">
                   <input
                     id="totalEmissionsInput"
-                    aria-label={`總排放量`}
+                    aria-label={t("esg_verify.emissions.total")}
                     type="number"
                     placeholder="0.00"
                     readOnly
                     value={calculatedResult.totalEmissions}
-                    className="w-full rounded-xl border border-slate-400 bg-orange-50 px-4 py-2.5 text-xs font-semibold text-slate-700 outline-none lg:text-sm"
+                    className={`${
+                      isEmissionsChanged ? "text-orange-400" : "text-slate-700"
+                    } w-full rounded-xl border border-slate-400 bg-orange-50 px-4 py-2.5 text-xs font-semibold outline-none lg:text-sm`}
                   />
                   <p className="text-xs font-bold whitespace-nowrap text-slate-500">
                     kg CO₂e
@@ -552,16 +465,18 @@ export default function EsgDetailModal({
                     size={16}
                     className="text-orange-400"
                   />
-                  <p className="text-slate-500">排放強度分級</p>
+                  <p className="text-slate-500">{t("esg_verify.emissions.intensity")}</p>
                 </label>
                 <input
                   id="esgIntensityInput"
-                  aria-label={`排放強度分級`}
+                  aria-label={t("esg_verify.emissions.intensity")}
                   type="text"
                   placeholder="0.00"
                   value={calculatedResult.intensityLevel}
                   readOnly
-                  className="w-full rounded-xl border border-slate-400 bg-orange-50 px-4 py-2.5 text-xs font-semibold text-slate-700 outline-none lg:text-sm"
+                  className={`${
+                    isIntensityChanged ? "text-orange-400" : "text-slate-700"
+                  } w-full rounded-xl border border-slate-400 bg-orange-50 px-4 py-2.5 text-xs font-semibold outline-none lg:text-sm`}
                 />
               </div>
             </div>
@@ -693,7 +608,10 @@ export default function EsgDetailModal({
       <CoefficientSelectModal
         isOpen={isCoefficientSelectorOpen}
         onClose={() => setIsCoefficientSelectorOpen(false)}
-        selectCoefficient={(coefficient) => setSelectedCoefficient(coefficient)}
+        unit={formData.unit}
+        selectCoefficient={(coef) => {
+          setFormData({ ...formData, coefficient: coef });
+        }}
       />
     </>
   );

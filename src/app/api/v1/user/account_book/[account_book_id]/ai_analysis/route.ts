@@ -273,7 +273,7 @@ export async function POST(
       tradingDate: new Date(),
       activityType: "",
       vendor: "",
-      rawActivityData: "",
+      amount: 0,
       unit: "",
       emissions: 0,
       dqiScore: 0,

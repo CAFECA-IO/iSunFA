@@ -1,4 +1,5 @@
 export const voucher = {
+  title: "伝票管理",
   account_book_selector: {
     title: "勘定科目を選択",
     search_placeholder: "科目コードや名前を検索...",

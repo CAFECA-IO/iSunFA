@@ -1,4 +1,5 @@
 export const journal = {
+  title: "Journal Management",
   detail_modal: {
     title: "Journal",
     empty: "Journal is empty.",

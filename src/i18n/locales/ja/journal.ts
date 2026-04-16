@@ -1,4 +1,5 @@
 export const journal = {
+  title: "伝票管理",
   detail_modal: {
     title: "仕訳帳",
     empty: "仕訳帳の内容がありません",

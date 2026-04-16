@@ -1,4 +1,5 @@
 export const voucher = {
+  title: "전표 관리",
   account_book_selector: {
     title: "계정 선택",
     search_placeholder: "계정 코드나 이름을 검색하세요...",

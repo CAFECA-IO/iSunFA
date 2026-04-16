@@ -323,10 +323,27 @@ export default function VoucherDetailModal({
   }
 
   if (!activeVoucher || activeVoucher?.isDeleted) return null;
-  console.log(voucherType);
-  console.log(TradingType.INCOME);
-  console.log(TradingType.OUTCOME);
-  console.log(TradingType.TRANSFER);
+
+  const voucherLineItems =
+    rows.length > 0 ? (
+      rows.map((row) => (
+        <VoucherRow
+          key={row.id}
+          row={row}
+          updateRow={updateRow}
+          removeRow={removeRow}
+          onOpenSelector={(rowId) => {
+            setSelectorTargetRowId(rowId);
+            setIsAccountBookSelectorOpen(true);
+          }}
+        />
+      ))
+    ) : (
+      <div className="col-span-11 flex items-center justify-center rounded-lg border border-dashed border-red-200 bg-red-50/50 p-4 text-sm text-red-500">
+        {t("voucher.detail_modal.messages.no_entries_hint")}
+      </div>
+    );
+
   const VoucherContent = (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[#F8FAFC]">
       {/* Info: (20260327 - Luphia) Body Content */}
@@ -383,7 +400,7 @@ export default function VoucherDetailModal({
             </label>
             <div className="relative">
               <select
-                value={voucherType as TradingType ?? ""}
+                value={(voucherType as TradingType) ?? ""}
                 onChange={(e) => setVoucherType(e.target.value as TradingType)}
                 className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
               >
@@ -455,19 +472,9 @@ export default function VoucherDetailModal({
           </div>
         </div>
 
+        {/* Info: (20260416 - Julian) Voucher Line Items */}
         <div className="mb-4 grid grid-cols-11 gap-x-1 gap-y-2 px-6">
-          {rows.map((row) => (
-            <VoucherRow
-              key={row.id}
-              row={row}
-              updateRow={updateRow}
-              removeRow={removeRow}
-              onOpenSelector={(rowId) => {
-                setSelectorTargetRowId(rowId);
-                setIsAccountBookSelectorOpen(true);
-              }}
-            />
-          ))}
+          {voucherLineItems}
         </div>
 
         {/* Info: (20260327 - Luphia) Notes */}
@@ -620,7 +627,7 @@ export default function VoucherDetailModal({
         title={t("voucher.detail_modal.confirm_modals.save_voucher.title")}
         message={t("voucher.detail_modal.confirm_modals.save_voucher.message")}
         confirmText={
-          isSaving ? "Saving..." : t("voucher.detail_modal.actions.confirm")
+          isSaving ? t("voucher.detail_modal.actions.saving") : t("voucher.detail_modal.actions.confirm")
         }
         cancelText={t("common.cancel")}
         onConfirm={executeSaveVoucher}

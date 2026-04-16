@@ -1,4 +1,5 @@
 export const journal = {
+  title: "전표 관리",
   detail_modal: {
     title: "분개장",
     empty: "분개장 내용이 없습니다",

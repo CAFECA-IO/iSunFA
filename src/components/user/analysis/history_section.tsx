@@ -21,6 +21,8 @@ interface IHistoryItem {
   tags?: string[];
   isExternal?: boolean;
   retryCount?: number;
+  isShared?: boolean;
+  isFinancialDataHidden?: boolean;
 }
 
 export default function HistorySection() {
@@ -43,6 +45,10 @@ export default function HistorySection() {
   const [isRevoking, setIsRevoking] = useState(false);
   const [sharingReportId, setSharingReportId] = useState<string | null>(null);
   const [retryingReportId, setRetryingReportId] = useState<string | null>(null);
+
+  const [isShareSettingsModalOpen, setIsShareSettingsModalOpen] = useState(false);
+  const [hideFinancialData, setHideFinancialData] = useState(true);
+  const [pendingShareReport, setPendingShareReport] = useState<{ id: string; category?: string } | null>(null);
 
   const [history, setHistory] = useState<IHistoryItem[]>([]);
 
@@ -196,20 +202,53 @@ export default function HistorySection() {
     setSelectedReport(null);
   };
 
-  const handleShareReport = async (reportId?: string) => {
+  const handleShareClick = (reportId?: string, category?: string, isExternal?: boolean) => {
     const idToShare = reportId || selectedReport?.id;
     if (!idToShare) return;
+
+    const historyItem = history.find(item => item.id === idToShare || item.reportId === idToShare);
+    const cat = category || selectedReport?.type || historyItem?.category;
+    const external = isExternal ?? selectedReport?.isExternal ?? historyItem?.isExternal;
+
+    // Info: (20260416 - Tzuhan) Bypass privacy settings if already shared
+    if (historyItem?.isShared) {
+      executeShare(idToShare, historyItem.isFinancialDataHidden ?? true);
+      return;
+    }
+
+    // Info: (20260416 - Tzuhan) Apply privacy settings to all internal reports, regardless of specific category
+    if (!external) {
+      setPendingShareReport({ id: idToShare, category: cat || '' });
+      setHideFinancialData(true);
+      setIsShareSettingsModalOpen(true);
+    } else {
+      executeShare(idToShare, false);
+    }
+  };
+
+  const executeShare = async (idToShare: string, hideData: boolean) => {
     try {
       setSharingReportId(idToShare);
       setIsSharing(true);
       const result = await request<{ code: string; payload: { token: string } }>(
         `/api/v1/user/analysis/${idToShare}/share`,
-        { method: 'POST' }
+        {
+          method: 'POST',
+          body: JSON.stringify({ hideFinancialData: hideData })
+        }
       );
 
       if (result.code === 'SUCCESS' && result.payload?.token) {
         setShareToken(result.payload.token);
         setIsShareLinkModalOpen(true);
+        setIsShareSettingsModalOpen(false);
+
+        // Info: (20260416 - Tzuhan) Dynamically update the list UI to show the share badge
+        setHistory(prev => prev.map(item =>
+          item.id === idToShare || item.reportId === idToShare
+            ? { ...item, isShared: true, isFinancialDataHidden: hideData }
+            : item
+        ));
       } else {
         console.error('Failed to generate share link');
       }
@@ -233,6 +272,13 @@ export default function HistorySection() {
       if (result.code === 'SUCCESS') {
         setShareToken(null);
         setIsShareLinkModalOpen(false);
+
+        // Info: (20260416 - Tzuhan) Dynamically update the list UI to remove the share badge
+        setHistory(prev => prev.map(item =>
+          item.id === idToRevoke || item.reportId === idToRevoke
+            ? { ...item, isShared: false }
+            : item
+        ));
       }
     } catch (err) {
       console.error('Revoke error:', err);
@@ -424,9 +470,21 @@ export default function HistorySection() {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <span>{t(`analysis.categories.${item.category}`)}</span>
-                          {['carbon_health_check', 'net_zero_emissions'].includes(item.category) && (
-                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${item.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
-                              {item.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
+                          <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${item.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
+                            {item.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
+                          </span>
+                          {item.isShared && (
+                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${item.isExternal
+                                ? 'bg-blue-50 text-blue-700 ring-blue-600/20'
+                                : item.isFinancialDataHidden
+                                  ? 'bg-green-50 text-green-700 ring-green-600/20'
+                                  : 'bg-yellow-50 text-yellow-700 ring-yellow-600/20'
+                              }`}>
+                              {item.isExternal
+                                ? t('analysis.history.badges.external_link')
+                                : item.isFinancialDataHidden
+                                  ? t('analysis.history.badges.hidden_privacy')
+                                  : t('analysis.history.badges.public_data')}
                             </span>
                           )}
                         </div>
@@ -508,7 +566,7 @@ export default function HistorySection() {
                               type="button"
                               className="text-blue-600 hover:text-blue-900 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors group"
                               disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
-                              onClick={() => handleShareReport(item.reportId)}
+                              onClick={() => handleShareClick(item.reportId, item.category, item.isExternal)}
                               title={t('common.share')}
                             >
                               {isSharing && sharingReportId === item.reportId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4 group-hover:scale-110 transition-transform" />}
@@ -531,9 +589,21 @@ export default function HistorySection() {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold text-gray-900">{t(`analysis.categories.${item.category}`)}</h3>
-                          {['carbon_health_check', 'net_zero_emissions'].includes(item.category) && (
-                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${item.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
-                              {item.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
+                          <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${item.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
+                            {item.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
+                          </span>
+                          {item.isShared && (
+                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${item.isExternal
+                                ? 'bg-blue-50 text-blue-700 ring-blue-600/20'
+                                : item.isFinancialDataHidden
+                                  ? 'bg-green-50 text-green-700 ring-green-600/20'
+                                  : 'bg-yellow-50 text-yellow-700 ring-yellow-600/20'
+                              }`}>
+                              {item.isExternal
+                                ? t('analysis.history.badges.external_link')
+                                : item.isFinancialDataHidden
+                                  ? t('analysis.history.badges.hidden_privacy')
+                                  : t('analysis.history.badges.public_data')}
                             </span>
                           )}
                         </div>
@@ -614,7 +684,7 @@ export default function HistorySection() {
                             type="button"
                             className="text-blue-600 font-medium disabled:opacity-50 flex items-center gap-1 transition-colors group"
                             disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
-                            onClick={() => handleShareReport(item.reportId)}
+                            onClick={() => handleShareClick(item.reportId, item.category, item.isExternal)}
                             title={t('common.share')}
                           >
                             {isSharing && sharingReportId === item.reportId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4 group-hover:scale-110 transition-transform" />}
@@ -688,7 +758,7 @@ export default function HistorySection() {
                   >
                     <div className="flex items-center gap-2">
                       <span>{selectedReport ? t(`analysis.categories.${selectedReport.type}`) : 'Report'}</span>
-                      {selectedReport && ['carbon_health_check', 'net_zero_emissions'].includes(selectedReport.type) && (
+                      {selectedReport && (
                         <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${selectedReport.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
                           {selectedReport.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
                         </span>
@@ -698,7 +768,7 @@ export default function HistorySection() {
                       <button
                         type="button"
                         className="inline-flex items-center justify-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 transition-colors"
-                        onClick={() => handleShareReport()}
+                        onClick={() => handleShareClick()}
                         disabled={isSharing || !selectedReport}
                       >
                         {isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
@@ -734,7 +804,93 @@ export default function HistorySection() {
         </Dialog>
       </Transition>
 
-      <Transition appear show={isShareLinkModalOpen} as={Fragment}>
+      <Transition appear show={isShareSettingsModalOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-[60]" onClose={() => setIsShareSettingsModalOpen(false)}>
+          <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+          </TransitionChild>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <DialogTitle as="h3" className="text-lg font-bold leading-6 text-gray-900 mb-4 flex items-center gap-2">
+                    <Share2 className="h-5 w-5 text-blue-600" />
+                    {t('analysis.share_settings.title')}
+                  </DialogTitle>
+
+                  <div className="mt-2 space-y-4">
+                    <div className="rounded-md bg-yellow-50 p-4 border border-yellow-200">
+                      <div className="flex">
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-yellow-800">{t('analysis.share_settings.privacy_warning_title')}</h3>
+                          <div className="mt-2 text-sm text-yellow-700">
+                            <p>{t('analysis.share_settings.privacy_warning_desc')}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 pt-2">
+                      { }
+                      <label htmlFor="hideDataTrue" className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${hideFinancialData === true ? 'border-blue-200 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                        <input
+                          id="hideDataTrue"
+                          aria-label="Hide Financial Data"
+                          type="radio"
+                          name="hideFinancialData"
+                          checked={hideFinancialData === true}
+                          onChange={() => setHideFinancialData(true)}
+                          className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        />
+                        <div>
+                          <span className="block text-sm font-semibold text-gray-900">{t('analysis.share_settings.hide_data_title')}</span>
+                          <span className="block text-xs text-gray-500 mt-1">{t('analysis.share_settings.hide_data_desc')}</span>
+                        </div>
+                      </label>
+
+                      { }
+                      <label htmlFor="hideDataFalse" className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${hideFinancialData === false ? 'border-blue-200 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                        <input
+                          id="hideDataFalse"
+                          aria-label="Show Financial Data"
+                          type="radio"
+                          name="hideFinancialData"
+                          checked={hideFinancialData === false}
+                          onChange={() => setHideFinancialData(false)}
+                          className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        />
+                        <div>
+                          <span className="block text-sm font-semibold text-gray-900">{t('analysis.share_settings.show_data_title')}</span>
+                          <span className="block text-xs text-gray-500 mt-1">{t('analysis.share_settings.show_data_desc')}</span>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-4">
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+                      onClick={() => setIsShareSettingsModalOpen(false)}
+                    >
+                      {t('common.cancel')}
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none disabled:opacity-50 items-center"
+                      onClick={() => pendingShareReport && executeShare(pendingShareReport.id, hideFinancialData)}
+                      disabled={isSharing}
+                    >
+                      {isSharing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                      {t('analysis.share_settings.confirm')}
+                    </button>
+                  </div>
+                </DialogPanel>
+              </TransitionChild>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>      <Transition appear show={isShareLinkModalOpen} as={Fragment}>
         <Dialog as="div" className="relative z-[60]" onClose={() => setIsShareLinkModalOpen(false)}>
           <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
