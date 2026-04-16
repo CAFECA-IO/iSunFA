@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  Blocks,
   Wallet,
   PieChart,
   Landmark,
@@ -30,6 +31,13 @@ export const MODULES = [
   { key: "salary", icon: Users, basic: false },
   { key: "integration", icon: Network, basic: false },
   { key: "audit", icon: BadgeCheck, basic: false },
+];
+
+export const ADMIN_MODULES = [
+  { key: "blockchain", icon: Blocks, basic: true },
+  { key: "user", icon: Users, basic: true },
+  { key: "billing", icon: CreditCard, basic: true },
+  { key: "settings", icon: Settings, basic: true },
 ];
 
 export const SYSTEM_MODULES = [

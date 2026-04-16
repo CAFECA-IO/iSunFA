@@ -1,0 +1,37 @@
+export const adminMember = {
+  page: {
+    title: "User & Points Management",
+    subtitle:
+      "View all registered users in the system and manage their point balances (ERC3643 Treasury).",
+    refresh: "Refresh",
+    refresh_list_aria: "Refresh list",
+    th_user: "User Name & Address",
+    th_role: "Role",
+    th_joined_at: "Joined At",
+    th_balance: "Current Balance",
+    th_action: "Action",
+    no_users: "No users in the system",
+    unnamed_user: "Unnamed User",
+    refresh_balance_aria: "Refresh balance",
+    issue_points_btn: "Issue Points",
+    role_super_admin: "Super Admin",
+    role_admin: "Admin",
+    role_user: "User",
+    admin_icp_inventory: "Admin Wallet ICP",
+    mint: "Mint",
+  },
+
+  modal_issue: {
+    title: "Issue System Points",
+    target_user: "Target User",
+    unnamed_user: "Unnamed User",
+    amount_label: "Issue Amount (Points)",
+    amount_placeholder: "e.g., 500",
+    err_amount: "Points must be greater than 0",
+    success_msg: "Issued successfully",
+    err_msg: "Issuance failed",
+    processing: "Processing...",
+    issued: "Issued",
+    confirm_btn: "Confirm Issue",
+  },
+};

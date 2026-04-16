@@ -1,0 +1,24 @@
+export const esgReport = {
+  unit: "kgCO2e",
+  loading_title: "Generating ESG Report",
+  loading_desc:
+    "Calculating emissions distribution across scopes, please wait...",
+  error_title: "Failed to Generate ESG Report",
+  error_desc:
+    "Please verify if there are approved ESG records in this period, or try again later.",
+  gross_emissions: "Total GHG Emissions",
+  gross_desc: "Cumulative total for the period",
+  scope1: "Scope 1 (Direct)",
+  scope1_desc: "Direct emissions proportion",
+  scope2: "Scope 2 (Indirect)",
+  scope2_desc: "Purchased electricity/heat proportion",
+  scope3: "Scope 3 (Supply Chain)",
+  scope3_desc: "Other indirect emissions proportion",
+  no_records: "No emissions records for this scope",
+  scopes_title: "EMISSIONS DISTRIBUTION",
+  proportion: "% Proportion",
+  gross_emissions_bottom: "Gross Emissions",
+  scope1_title: "Scope 1 (Direct)",
+  scope2_title: "Scope 2 (Indirect)",
+  scope3_title: "Scope 3 (Supply Chain)",
+};

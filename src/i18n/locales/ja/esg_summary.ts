@@ -1,0 +1,18 @@
+export const esgSummary = {
+  no_data_prefix: "現在この帳簿のESGデータはありません。まずは",
+  upload_link: "伝票をアップロード",
+  no_data_suffix: "して炭素排出記録を作成してください",
+  total_emissions: "今月の総排出量",
+  estimate_eom: "月末予想: ",
+  emission_intensity: "炭素排出原単位",
+  better_than_industry: "業界平均より優れています ({{average}})",
+  scope_distribution: "スコープ分布 (SCOPE)",
+  annual_goal_progress: "年間目標の進捗",
+
+  today_records: "Today",
+  dqi_average: "Avg",
+  pending: "Pending",
+  ai_confidence: "Confidence",
+  record_unit: "Unit",
+
+};

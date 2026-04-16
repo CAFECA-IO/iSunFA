@@ -1,0 +1,36 @@
+export const journal = {
+  detail_modal: {
+    title: "日记账",
+    empty: "没有日记账内容",
+  },
+  summary: {
+    empty: "目前没有日记账资料",
+    today_count: "今日产生日记账",
+    unit: "张",
+    pending: "待核对",
+    ai_confidence: "AI 平均信心度",
+  },
+  main_view: {
+    title: "凭证管理",
+    upload: "上传凭证",
+    view_file: "凭证文件",
+    view_preview: "查看预览",
+    list: "凭证清单",
+    log: "异动记录",
+  },
+  log_view: {
+    title: "异动记录",
+    type: "异动项目",
+    record_time: "记录时间",
+    action_type: "操作类型",
+    operator: "操作人员",
+    journal_id: "凭证 ID",
+    empty: "暂无变动记录",
+    action_create: "新增",
+    action_update: "更新",
+    action_delete: "删除",
+    unnamed_user: "未命名用户",
+    copy_address: "点击复制地址: {{address}}",
+    copy_id: "点击复制凭证 ID: {{id}}",
+  },
+};

@@ -92,10 +92,15 @@ async function main() {
   const dmcAddress = dmcReceipt.contractAddress;
   console.log(`-> DynamicMembershipCard deployed to: ${dmcAddress}`);
 
-  // Info: (20260411 - Luphia) 3. CreditPoint (collateralRate: 5% of 1 ISC = 0.05 ISC per Point = 50000000000000000 wei)
+  // Info: (20260416 - Luphia) 3. CreditPoint (Dynamic Configuration via env: DEPLOY_COLLATERAL_RATE, or default to 5% of 1 ISC = 0.05 ISC per Point)
   const treasuryArtifact = getArtifact("credit_point", "CreditPoint");
   console.log("Deploying CreditPoint...");
-  const collateralRate = BigInt("50000000000000000");
+  const configRateStr = process.env.DEPLOY_COLLATERAL_RATE || "0.05";
+  // Info: (20260416 - Luphia) Enforce range boundaries natively during parsing
+  let rateFloat = parseFloat(configRateStr);
+  if (isNaN(rateFloat) || rateFloat < 1e-9 || rateFloat > 100) rateFloat = 0.05;
+  const collateralRate = BigInt(Math.floor(rateFloat * 10 ** 18));
+  console.log(`-> Utilizing Collateral Rate: ${rateFloat} ISC/ICP (${collateralRate} wei)`);
   const treasuryHash = await walletClient.deployContract({
     chain: isuncoin,
     abi: treasuryArtifact.abi,

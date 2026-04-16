@@ -1,0 +1,52 @@
+export const billing = {
+  subtitle: "消費履歴、アカウントポイント、支払い方法を管理します。",
+  tabs: {
+    orders: "消費履歴",
+    points: "ポイント履歴",
+    cards: "クレジットカード管理",
+  },
+  orders: {
+    empty: "消費履歴がありません",
+  },
+  points: {
+    empty: "ポイント履歴がありません",
+  },
+  cards: {
+    title: "登録済みのクレジットカード",
+    add_button: "カードを追加",
+    empty: "クレジットカードが登録されていません",
+    default_card: "デフォルト",
+    added_at: "登録日",
+    rename: "名前を変更する",
+    delete: "削除",
+    view_records: "利用履歴を見る",
+    rename_success: "名前を変更しました",
+    delete_success: "クレジットカードを削除しました",
+    delete_confirm_title: "クレジットカードを削除しますか？",
+    delete_confirm_desc:
+      "このカードを削除すると、今後の支払いに使用できなくなります。",
+    cancel: "キャンセル",
+    save: "保存",
+    edit_details: "詳細を編集",
+    email: "メールアドレス",
+    tax_id: "会社法人等番号",
+    buyer_name: "購入者名",
+    billing_address: "請求先住所",
+  },
+  table: {
+    date: "日付",
+    order_id: "注文番号",
+    amount: "支払金額",
+    status: "ステータス",
+    source: "ソース / 項目",
+    amount_change: "ポイント変動",
+  },
+  point_history: {
+    source_purchase: "ポイント購入",
+    source_analysis: "分析サービス利用",
+    source_chat: "AI相談サービス",
+    source_checkin: "チェックイン報酬",
+    source_registration: "登録報酬",
+    source_admin_issued: "管理者発行",
+  },
+};

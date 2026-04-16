@@ -1,0 +1,21 @@
+export const accountBookSelection = {
+  title: "Select Account Book",
+  subtitle: "Please select an account book to enter the management dashboard.",
+  empty_title: "No Available Account Books",
+  empty_desc:
+    "You currently have no accessible account books, or your access has been removed.",
+  role: "Role",
+  create_button: "Create Account Book",
+  edit_button: "Edit",
+  form_create_title: "Create Account Book",
+  form_edit_title: "Edit Account Book",
+  form_name: "Name",
+  form_country: "Country / Region",
+  form_currency: "Currency",
+  form_start_year: "Start Year",
+  form_rule: "Accounting Rule",
+  form_team: "Team",
+  form_enterprise_id: "Enterprise ID (Optional)",
+  form_esg_industry: "Industry Category (ESG, Optional)",
+  submit: "Confirm",
+};

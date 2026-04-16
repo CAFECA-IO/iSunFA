@@ -1,0 +1,23 @@
+export const esgReport = {
+  unit: "kgCO2e",
+  loading_title: "ESG 보고서 생성 중",
+  loading_desc: "각 스코프의 배출량 분포를 계산 중입니다...",
+  error_title: "ESG 보고서 생성 실패",
+  error_desc:
+    "해당 기간 동안 승인된 탄소 배출 기록이 있는지 확인하거나 나중에 다시 시도해 주세요.",
+  gross_emissions: "총 온실가스 배출량",
+  gross_desc: "해당 기간 누적 총량",
+  scope1: "Scope 1 (직접 배출)",
+  scope1_desc: "직접 배출 비율",
+  scope2: "Scope 2 (간접 배출)",
+  scope2_desc: "구매 전력/열 배출 비율",
+  scope3: "Scope 3 (공급망 배출)",
+  scope3_desc: "기타 간접 배출 비율",
+  no_records: "이 스코프에 대한 배출 기록이 없습니다",
+  scopes_title: "배출량 스코프 분포",
+  proportion: "% 비율",
+  gross_emissions_bottom: "총 배출량",
+  scope1_title: "Scope 1 (직접 배출)",
+  scope2_title: "Scope 2 (간접 배출)",
+  scope3_title: "Scope 3 (공급망 배출)",
+};

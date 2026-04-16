@@ -304,7 +304,7 @@ export async function getDatabaseStatus() {
       const urlObj = new URL(dbUrlString);
       dbHost = urlObj.hostname;
       dbPort = urlObj.port || "5432";
-    } catch {}
+    } catch { }
 
     return {
       success: true,
@@ -634,7 +634,7 @@ export async function createSuperAdminRecord(
         let adminAccount;
         try {
           adminAccount = await getAdminAccount();
-        } catch {}
+        } catch { }
 
         if (adminAccount) {
           globalAny.superAdminTaskStatus = {
@@ -760,28 +760,6 @@ export async function createSuperAdminRecord(
               args: [DEFAULT_ADMIN_ROLE, address],
             });
             await publicClient.waitForTransactionReceipt({ hash: tx });
-          }
-
-          // Info: (20260413 - Luphia) 3. Mint ISF
-          if (setupConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS) {
-            globalAny.superAdminTaskStatus = {
-              done: false,
-              error: null,
-              progress: "Minting collateral...",
-            };
-            const cpAddress =
-              setupConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS as `0x${string}`;
-            const cpAbi = parseAbi([
-              "function collateralizedMint(address to, uint256 amount) external payable",
-            ]);
-            const mintTx = await mainWalletClient.writeContract({
-              address: cpAddress,
-              abi: cpAbi,
-              functionName: "collateralizedMint",
-              args: [adminAccount.address, 100n * 10n ** 18n],
-              value: 5n * 10n ** 18n,
-            });
-            await publicClient.waitForTransactionReceipt({ hash: mintTx });
           }
         }
         globalAny.superAdminTaskStatus = {
@@ -1180,7 +1158,7 @@ export async function createAdminRecord(
       let adminAccount;
       try {
         adminAccount = await getAdminAccount();
-      } catch {}
+      } catch { }
       if (adminAccount) {
         const rpcUrl =
           envConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
@@ -1264,7 +1242,7 @@ export async function deleteAdminRecord(address: string) {
       let adminAccount;
       try {
         adminAccount = await getAdminAccount();
-      } catch {}
+      } catch { }
 
       if (adminAccount) {
         const rpcUrl =

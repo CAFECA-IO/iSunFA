@@ -1,0 +1,42 @@
+export const cashFlowStatementView = {
+  loading_title: "Generating Cash Flow Statement...",
+  loading_desc:
+    "The system is calculating operating, investing, and financing cash flows, please wait...",
+  error_title: "Generation Failed",
+  error_desc:
+    "Please ensure enough voucher records exist for this period or try again later.",
+  metric_fcf_title: "Free Cash Flow",
+  metric_fcf_desc: "Cash available after capital expenditures",
+  metric_ocf_ratio_title: "OCF Ratio",
+  metric_ocf_ratio_desc: "Ability to repay short-term debt",
+  metric_cf_adequacy_title: "CF Adequacy Ratio",
+  metric_cf_adequacy_desc: "Ability to cover CapEx & debt",
+  metric_ending_balance_title: "Ending Balance",
+  metric_ending_balance_desc: "Cash position at period end",
+  note_fcf_type: "Liquidity",
+  note_fcf_main: "Free Cash Flow = Operating Cash Flow - Capital Expenditures.",
+  note_fcf_sub: "Measures freely to use cash after CapEx. Recommended > 0.",
+  note_ocf_ratio_type: "Solvency",
+  note_ocf_ratio_main: "OCF Ratio = Operating Cash Flow / Current Liabilities.",
+  note_ocf_ratio_sub:
+    "Measures short-term debt repayment capability. Recommended > 100%.",
+  note_cf_adequacy_type: "Solvency",
+  note_cf_adequacy_main:
+    "CF Adequacy Ratio = Operating Cash Flow / Total Assets.",
+  note_cf_adequacy_sub:
+    "Measures ability to support debt and CapEx. Recommended > 100%.",
+  note_ending_balance_type: "Solvency",
+  note_ending_balance_main: "Ending Balance = OCF + ICF + FCF.",
+  note_ending_balance_sub: "Measures final cash availability. Recommended > 0.",
+  section_op_inv: "Operating & Investing",
+  section_ratio: "Ratio %",
+  section_operating: "Operating Cash Flow",
+  section_investing: "Investing Cash Flow",
+  section_fin_change: "Financing & Change",
+  section_financing: "Financing Cash Flow",
+  section_beginning_balance: "Beginning Cash Balance",
+  section_net_change: "Net Cash Change",
+  section_ending_balance: "Ending Cash Balance",
+  section_interest_paid: "Interest Paid",
+  section_taxes_paid: "Taxes Paid",
+};

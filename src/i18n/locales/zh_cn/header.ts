@@ -1,0 +1,8 @@
+export const header = {
+  salary_calculator: "薪资计算器",
+  ai_consultation_room: "AI 咨询室",
+  pricing: "收费模式",
+  login: "登录",
+  credits: "持有点数",
+  logout: "登出",
+};

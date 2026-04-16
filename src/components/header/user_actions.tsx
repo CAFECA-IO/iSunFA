@@ -10,7 +10,7 @@ import {
   Transition,
 } from "@headlessui/react";
 import { User, ChevronDown } from "lucide-react";
-import { MODULES, SYSTEM_MODULES } from "@/constants/modules";
+import { MODULES, ADMIN_MODULES, SYSTEM_MODULES } from "@/constants/modules";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
 import LoginButton from "@/components/common/login_button";
@@ -94,41 +94,48 @@ export default function UserActions() {
                 {t("sidebar.modules")}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {MODULES.map((module) => {
-                  const active = isModuleActive(module.key);
-                  const Icon = module.icon;
-                  return (
-                    <MenuItem key={module.key} as={Fragment}>
-                      {({ focus }) =>
-                        active ? (
-                          <Link
-                            href={`${accountBookPath}/${module.key}`}
-                            className={`
-                                ${focus ? "bg-orange-50 ring-1 ring-orange-200" : "bg-white hover:bg-gray-50 ring-1 ring-gray-100"}
-                                group flex flex-col items-center justify-center p-2 md:p-3 rounded-lg transition-all duration-200 h-full w-full
-                              `}
-                          >
-                            <Icon
-                              className={`h-5 w-5 md:h-6 md:w-6 mb-1 md:mb-2 ${focus ? "text-orange-600" : "text-gray-500 group-hover:text-orange-500"}`}
-                            />
-                            <span
-                              className={`text-xs md:text-sm font-medium ${focus ? "text-orange-900" : "text-gray-700"} text-center`}
+                {(() => {
+                  const isAdmin = user.isAdmin || user.role === 'SUPER_ADMIN' || user.role === 'ADMIN';
+                  const modulesToDisplay = isAdmin ? ADMIN_MODULES : MODULES;
+                  
+                  return modulesToDisplay.map((module) => {
+                    const active = isAdmin ? true : isModuleActive(module.key);
+                    const Icon = module.icon;
+                    const targetPath = isAdmin ? `/admin/${module.key}` : `${accountBookPath}/${module.key}`;
+                    
+                    return (
+                      <MenuItem key={module.key} as={Fragment}>
+                        {({ focus }) =>
+                          active ? (
+                            <Link
+                              href={targetPath}
+                              className={`
+                                  ${focus ? "bg-orange-50 ring-1 ring-orange-200" : "bg-white hover:bg-gray-50 ring-1 ring-gray-100"}
+                                  group flex flex-col items-center justify-center p-2 md:p-3 rounded-lg transition-all duration-200 h-full w-full
+                                `}
                             >
-                              {t(`chat.tags.${module.key}`)}
-                            </span>
-                          </Link>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center p-2 md:p-3 rounded-lg bg-gray-50/50 ring-1 ring-gray-100 opacity-60 cursor-not-allowed h-full w-full">
-                            <Icon className="h-5 w-5 md:h-6 md:w-6 mb-1 md:mb-2 text-gray-300" />
-                            <span className="text-xs md:text-sm font-medium text-gray-400 text-center">
-                              {t(`chat.tags.${module.key}`)}
-                            </span>
-                          </div>
-                        )
-                      }
-                    </MenuItem>
-                  );
-                })}
+                              <Icon
+                                className={`h-5 w-5 md:h-6 md:w-6 mb-1 md:mb-2 ${focus ? "text-orange-600" : "text-gray-500 group-hover:text-orange-500"}`}
+                              />
+                              <span
+                                className={`text-xs md:text-sm font-medium ${focus ? "text-orange-900" : "text-gray-700"} text-center`}
+                              >
+                                {t(`chat.tags.${module.key}`)}
+                              </span>
+                            </Link>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center p-2 md:p-3 rounded-lg bg-gray-50/50 ring-1 ring-gray-100 opacity-60 cursor-not-allowed h-full w-full">
+                              <Icon className="h-5 w-5 md:h-6 md:w-6 mb-1 md:mb-2 text-gray-300" />
+                              <span className="text-xs md:text-sm font-medium text-gray-400 text-center">
+                                {t(`chat.tags.${module.key}`)}
+                              </span>
+                            </div>
+                          )
+                        }
+                      </MenuItem>
+                    );
+                  });
+                })()}
               </div>
             </div>
 

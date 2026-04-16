@@ -1,0 +1,21 @@
+export const chat = {
+  tags: {
+    dashboard: "資訊戰情室",
+    voucher: "傳票管理",
+    adjustment: "智能出納",
+    cashier: "智能錢包",
+    salary: "薪資管理",
+    audit: "智能稽核",
+    esg: "碳排核算",
+    journal: "憑證管理",
+    tax: "稅務申報",
+    financial_report: "報表編製",
+    analysis: "數據分析",
+    signing: "文件簽核",
+    integration: "系統整合",
+    other: "其他",
+  },
+  input_placeholder: "輸入訊息或上傳憑證",
+  login_warning: "您尚未登入，所有對話內容將不會被儲存",
+  guest_limit_reached: "已用完試用額度，請登入以繼續使用本服務",
+};

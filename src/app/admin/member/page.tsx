@@ -133,13 +133,13 @@ export default function MemberAdminPage() {
                   <span className="text-[10px] leading-none font-bold tracking-wider text-gray-400 uppercase">
                     {String(
                       t("admin_member.page.admin_icp_inventory") ||
-                        "Admin Wallet ICP",
+                        "System ICP Reserve",
                     )}
                   </span>
                   <span className="mt-0.5 text-sm leading-tight font-bold text-gray-800">
                     {blockchainData
                       ? parseFloat(
-                          blockchainData.systemTotalIcp,
+                          blockchainData.membershipSystemIcpInventory,
                         ).toLocaleString(undefined, {
                           maximumFractionDigits: 4,
                         })

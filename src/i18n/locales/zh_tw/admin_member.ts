@@ -1,0 +1,37 @@
+export const adminMember = {
+  page: {
+    title: "用戶與點數管理",
+    subtitle:
+      "查看系統中的所有註冊用戶，並管理他們的點數餘額 (ERC3643 Treasury)。",
+    refresh: "重新整理",
+    refresh_list_aria: "重新整理列表",
+    th_user: "用戶名稱與地址",
+    th_role: "身分權限",
+    th_joined_at: "加入時間",
+    th_balance: "目前餘額",
+    th_action: "操作",
+    no_users: "系統中尚無用戶",
+    unnamed_user: "未命名用戶",
+    refresh_balance_aria: "重新整理點數",
+    issue_points_btn: "發放點數",
+    role_super_admin: "超級管理員",
+    role_admin: "管理員",
+    role_user: "一般用戶",
+    admin_icp_inventory: "系統庫存 ICP",
+    mint: "增發",
+  },
+
+  modal_issue: {
+    title: "發放系統點數",
+    target_user: "目標用戶",
+    unnamed_user: "未命名用戶",
+    amount_label: "發放數量 (Points)",
+    amount_placeholder: "例如：500",
+    err_amount: "點數必須大於 0",
+    success_msg: "發放成功",
+    err_msg: "發放失敗",
+    processing: "處理中...",
+    issued: "已發放",
+    confirm_btn: "確認發放",
+  },
+};

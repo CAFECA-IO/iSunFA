@@ -1,0 +1,34 @@
+export const journal = {
+  detail_modal: {
+    title: "Journal",
+    empty: "Journal is empty.",
+  },
+  summary: {
+    empty: "No journal data available",
+    today_count: "Journals created today",
+    unit: "pcs",
+    pending: "Pending verify",
+    ai_confidence: "AI average confidence",
+  },
+  main_view: {
+    title: "Journal Management",
+    upload: "Upload Journal",
+    list: "Journal List",
+    log: "Audit Logs",
+  },
+  log_view: {
+    title: "Audit Logs",
+    type: "Type",
+    record_time: "Record Time",
+    action_type: "Action Type",
+    operator: "Operator",
+    journal_id: "Journal ID",
+    empty: "No audit logs found",
+    action_create: "Create",
+    action_update: "Update",
+    action_delete: "Delete",
+    unnamed_user: "Unnamed User",
+    copy_address: "Click to copy address: {{address}}",
+    copy_id: "Click to copy Journal ID: {{id}}",
+  },
+};

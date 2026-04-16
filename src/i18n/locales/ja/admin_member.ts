@@ -1,0 +1,37 @@
+export const adminMember = {
+  page: {
+    title: "ユーザーとポイント管理",
+    subtitle:
+      "システム内のすべての登録ユーザーを表示し、そのポイント残高 (ERC3643 Treasury) を管理します。",
+    refresh: "更新",
+    refresh_list_aria: "リストを更新",
+    th_user: "ユーザー名とアドレス",
+    th_role: "権限",
+    th_joined_at: "参加日",
+    th_balance: "現在の残高",
+    th_action: "操作",
+    no_users: "システム内にユーザーがいません",
+    unnamed_user: "名無しのユーザー",
+    refresh_balance_aria: "残高を更新",
+    issue_points_btn: "ポイント発行",
+    role_super_admin: "スーパー管理者",
+    role_admin: "管理者",
+    role_user: "一般ユーザー",
+    admin_icp_inventory: "システム在庫 ICP",
+    mint: "ミント",
+  },
+
+  modal_issue: {
+    title: "システムポイントの発行",
+    target_user: "対象ユーザー",
+    unnamed_user: "名無しのユーザー",
+    amount_label: "発行量 (Points)",
+    amount_placeholder: "例：500",
+    err_amount: "ポイントは0より大きくなければなりません",
+    success_msg: "発行成功",
+    err_msg: "発行失敗",
+    processing: "処理中...",
+    issued: "発行済み",
+    confirm_btn: "発行を確認",
+  },
+};

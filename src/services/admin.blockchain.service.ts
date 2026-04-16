@@ -16,10 +16,8 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 export interface IBlockchainDashboardData {
   address: string;
   adminIscBalance: string;
-  adminIcpInventory: string;
   membershipSystemIcpInventory: string;
   isMining: boolean;
-  membershipIscBalance: string;
   systemTotalIcp: string;
   collateralRate: string;
   totalMembers: number;
@@ -78,27 +76,15 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
       // Info: (20260416 - Luphia) Fallback
     }
 
-    let adminIcpInventory = "0.0";
     let membershipSystemIcpInventory = "0.0";
     let systemTotalIcp = "0.0";
     let collateralRate = "0.0";
-    let membershipIscBalance = "0.0";
     let totalMembers = 0;
 
     try {
       totalMembers = await webAuthnRepo.countUsers();
     } catch (e) {
       console.warn("Failed fetching total members: ", e);
-    }
-
-    // Info: (20260416 - Luphia) 2. Membership System ISC
-    if (msAddress) {
-      try {
-        const msIscWei = await publicClient.getBalance({ address: msAddress });
-        membershipIscBalance = formatEther(msIscWei);
-      } catch (err) {
-        console.warn("Failed reading Membership System ISC:", err);
-      }
     }
 
     // Info: (20260416 - Luphia) 3. Credit Point interactions
@@ -110,14 +96,12 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
           "function collateralRate() view returns (uint256)"
         ]);
 
-        const [icpWei, msIcpWei, totalWei, collatWei] = await Promise.all([
-          publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "balanceOf", args: [adminAddress] }),
+        const [msIcpWei, totalWei, collatWei] = await Promise.all([
           msAddress ? publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "balanceOf", args: [msAddress] }) : Promise.resolve(0n),
           publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "totalSupply" }),
           publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "collateralRate" })
         ]);
 
-        adminIcpInventory = formatEther(icpWei as bigint);
         membershipSystemIcpInventory = formatEther(msIcpWei as bigint);
         systemTotalIcp = formatEther(totalWei as bigint);
         collateralRate = formatEther(collatWei as bigint);
@@ -131,10 +115,8 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
       data: {
         address: adminAddress,
         adminIscBalance,
-        adminIcpInventory,
         membershipSystemIcpInventory,
         isMining,
-        membershipIscBalance,
         systemTotalIcp,
         collateralRate,
         totalMembers
