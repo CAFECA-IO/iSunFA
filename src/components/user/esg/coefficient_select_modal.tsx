@@ -18,12 +18,14 @@ import { IApiResponse } from "@/lib/utils/response";
 interface ICoefficientSelectModalProps {
   isOpen: boolean;
   onClose: () => void;
+  unit?: string;
   selectCoefficient: (coefficient: ICoefficient) => void;
 }
 
 export default function CoefficientSelectModal({
   isOpen,
   onClose,
+  unit ='',
   selectCoefficient,
 }: ICoefficientSelectModalProps) {
   // const { t } = useTranslation();
@@ -41,9 +43,10 @@ export default function CoefficientSelectModal({
     const fetchCoefficientList = async () => {
       try {
         setIsLoading(true);
+        const unitQuery = unit ? `&unit=${unit}` : "";
         const data = await request<
           IApiResponse<{ items: ICoefficient[]; total: number }>
-        >(`/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=all`);
+        >(`/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=all${unitQuery}`);
         if (data.payload) {
           setCoefficientList(data.payload.items);
         }
@@ -54,7 +57,7 @@ export default function CoefficientSelectModal({
       }
     };
     fetchCoefficientList();
-  }, [accountBookId]);
+  }, [accountBookId, unit]);
 
   const gotoCoefficientPage = () => {
     // Info: (20260416 - Julian) 關閉這個 modal
@@ -98,11 +101,11 @@ export default function CoefficientSelectModal({
     </div>
   ) : (
     <div className="flex flex-col items-center gap-2 px-10 py-5">
-      <p className="text-base font-bold text-slate-700">目前沒有係數</p>
+      <p className="text-base font-bold text-slate-700">目前沒有單位符合 <span className="underline underline-offset-2">{unit}</span> 的係數</p>
       <button
         type="button"
         onClick={gotoCoefficientPage}
-        className="text-sm font-semibold text-orange-500 underline underline-offset-4 transition-colors hover:text-orange-600"
+        className="rounded-full bg-orange-400 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 ease-in-out hover:bg-orange-600"
       >
         前往係數管理頁面新增係數
       </button>

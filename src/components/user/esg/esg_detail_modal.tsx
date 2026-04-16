@@ -28,7 +28,7 @@ interface IEsgDetailModalProps {
   onSave?: (record: IEsgRecord) => void;
 }
 
-const UNIT_LIST = ["kWh", "L", "kg", "m³", "km", "ton", "次", "件"];
+// const UNIT_LIST = ["kWh", "L", "kg", "m³", "km", "ton", "次", "件"];
 
 export default function EsgDetailModal({
   isOpen,
@@ -87,7 +87,7 @@ export default function EsgDetailModal({
     if (!(coefficient && amount)) {
       return {
         totalEmissions: formData?.emissions || 0,
-        intensityLevel: "-",
+        intensityLevel: formData?.intensity || "-",
       };
     }
 
@@ -96,9 +96,7 @@ export default function EsgDetailModal({
     const emissionFactorNum = Number(coefficient.emissionFactor) || 0;
 
     // Info: (20260415 - Julian) 計算總排放量，取小數點後兩位
-    const totalEmissions = Number(
-      (emissionFactorNum * amountNum).toFixed(2),
-    );
+    const totalEmissions = Number((emissionFactorNum * amountNum).toFixed(2));
 
     // Info: (20260415 - Julian) 計算排放強度分級
     const intensity = amount > 0 ? totalEmissions / amount : 0;
@@ -113,7 +111,12 @@ export default function EsgDetailModal({
       totalEmissions,
       intensityLevel,
     };
-  }, [formData?.coefficient, formData?.amount, formData?.emissions]);
+  }, [
+    formData?.coefficient,
+    formData?.amount,
+    formData?.emissions,
+    formData?.intensity,
+  ]);
 
   const checkHasChanges = () => {
     if (!formData || !originalData) return false;
@@ -351,7 +354,18 @@ export default function EsgDetailModal({
                 >
                   單位 (Unit)
                 </label>
-                <select
+                {/* Info: (20260416 - Julian) 先改為文字輸入 */}
+                <input
+                  id="unitInput"
+                  aria-label={`單位 (Unit)`}
+                  type="text"
+                  value={formData.unit}
+                  onChange={(e) =>
+                    setFormData({ ...formData, unit: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
+                />
+                {/* <select
                   id="unitSelect"
                   aria-label={`單位 (Unit)`}
                   value={formData.unit}
@@ -365,7 +379,7 @@ export default function EsgDetailModal({
                       {unit}
                     </option>
                   ))}
-                </select>
+                </select> */}
               </div>
 
               {/* Info: (20260415 - Julian) 計算公式與係數 */}
@@ -421,7 +435,8 @@ export default function EsgDetailModal({
                     readOnly
                     value={calculatedResult.totalEmissions}
                     className={`${
-                      calculatedResult.totalEmissions === originalData?.emissions
+                      calculatedResult.totalEmissions ===
+                      originalData?.emissions
                         ? "text-slate-700"
                         : "text-orange-400"
                     } w-full rounded-xl border border-slate-400 bg-orange-50 px-4 py-2.5 text-xs font-semibold outline-none lg:text-sm`}
@@ -452,10 +467,10 @@ export default function EsgDetailModal({
                   value={calculatedResult.intensityLevel}
                   readOnly
                   className={`${
-                      calculatedResult.intensityLevel === originalData?.intensity
-                        ? "text-slate-700"
-                        : "text-orange-400"
-                    } w-full rounded-xl border border-slate-400 bg-orange-50 px-4 py-2.5 text-xs font-semibold outline-none lg:text-sm`}
+                    calculatedResult.intensityLevel === originalData?.intensity
+                      ? "text-slate-700"
+                      : "text-orange-400"
+                  } w-full rounded-xl border border-slate-400 bg-orange-50 px-4 py-2.5 text-xs font-semibold outline-none lg:text-sm`}
                 />
               </div>
             </div>
@@ -587,6 +602,7 @@ export default function EsgDetailModal({
       <CoefficientSelectModal
         isOpen={isCoefficientSelectorOpen}
         onClose={() => setIsCoefficientSelectorOpen(false)}
+        unit={formData.unit}
         selectCoefficient={(coef) => {
           setFormData({ ...formData, coefficient: coef });
         }}

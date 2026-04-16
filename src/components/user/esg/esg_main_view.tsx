@@ -35,7 +35,8 @@ export default function EsgMainView() {
 
   // Info: (20260416 - Julian) 從 URL 參數取得 tab
   const tabParams = useSearchParams().get("tab");
-  const activeTab = tabParams === "coefficient" ? EsgTab.COEFFICIENT : EsgTab.RECORDS;
+  const activeTab =
+    tabParams === "coefficient" ? EsgTab.COEFFICIENT : EsgTab.RECORDS;
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
