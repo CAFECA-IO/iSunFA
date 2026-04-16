@@ -86,37 +86,38 @@ export async function GET(request: Request) {
         const categoryName = t.category[shareRecord.category] || t.category.default;
 
         let displayScore = '';
-        let displayTags: string[] = [];
+        let rawTags: string[] = [];
         let isScoreMode = false;
 
         if (safeData.metrics !== null) {
             if ('score' in safeData.metrics) {
                 displayScore = (safeData.metrics as ICarbonMetrics).score || '';
-                displayTags = safeData.metrics.tags.slice(0, 3) || [];
+                rawTags = safeData.metrics.tags || [];
                 isScoreMode = true;
             } else if ('rating' in safeData.metrics) {
                 displayScore = (safeData.metrics as IFinancialMetrics).rating || '';
-                displayTags = safeData.metrics.tags.slice(0, 3) || [];
+                rawTags = safeData.metrics.tags || [];
             }
         }
+        const displayTags = rawTags
+            .reduce((acc, tag) => {
+                const parts = tag.split(/[#，、,]+/).map(t => t.trim()).filter(Boolean);
+                return [...acc, ...parts];
+            }, [] as string[])
+            .slice(0, 3);
 
-        // Info: 判斷是否為短英文評級 (如 A+, AAA)
         const isShortRating = !isScoreMode && displayScore.length <= 3 && /^[a-zA-Z\+\-\*]+$/.test(displayScore);
-
-        // Info: 這裡只更新評分數字與短英文的大小，保持一致的 96px
         const getScoreFontSize = (score: string) => {
             if (isScoreMode || isShortRating) {
-                return '96px'; // 數字與短評級保持一樣的震撼感
+                return '72px';
             } else {
-                // 長中文評級 (如：建議持有) 則縮小避免笨重
-                if (score.length <= 5) return '40px';
+                if (score.length <= 5) return '36px';
                 return '28px';
             }
         };
 
         const scoreFontSize = getScoreFontSize(displayScore);
-        const scoreFontWeight = (isScoreMode || isShortRating) ? 900 : 700;
-
+        const scoreFontWeight = (isScoreMode || isShortRating) ? 800 : 700;
         const nameFontSize = companyName.length > 20 ? '48px' : (companyName.length > 10 ? '56px' : '72px');
 
         return new ImageResponse(
