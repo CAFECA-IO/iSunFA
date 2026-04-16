@@ -242,6 +242,13 @@ export default function HistorySection() {
         setShareToken(result.payload.token);
         setIsShareLinkModalOpen(true);
         setIsShareSettingsModalOpen(false);
+        
+        // Info: (20260416 - Tzuhan) Dynamically update the list UI to show the share badge
+        setHistory(prev => prev.map(item => 
+          item.id === idToShare || item.reportId === idToShare 
+            ? { ...item, isShared: true, isFinancialDataHidden: hideData } 
+            : item
+        ));
       } else {
         console.error('Failed to generate share link');
       }
@@ -265,6 +272,13 @@ export default function HistorySection() {
       if (result.code === 'SUCCESS') {
         setShareToken(null);
         setIsShareLinkModalOpen(false);
+        
+        // Info: (20260416 - Tzuhan) Dynamically update the list UI to remove the share badge
+        setHistory(prev => prev.map(item => 
+          item.id === idToRevoke || item.reportId === idToRevoke 
+            ? { ...item, isShared: false } 
+            : item
+        ));
       }
     } catch (err) {
       console.error('Revoke error:', err);
