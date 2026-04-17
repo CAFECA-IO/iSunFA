@@ -129,6 +129,11 @@ export const analysis = {
       processing: "Processing",
       failed: "Failed",
     },
+    badges: {
+      external_link: "🔗 Public Link",
+      hidden_privacy: "🛡️ Amounts Hidden",
+      public_data: "⚠️ Confidential Data",
+    },
     empty_title: "No Analysis Yet",
     empty_description:
       "Start your journey by generating your first financial analysis report using our advanced AI tools.",

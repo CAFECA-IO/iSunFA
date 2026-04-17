@@ -127,6 +127,11 @@ export const analysis = {
       processing: "处理中",
       failed: "失败",
     },
+    badges: {
+      external_link: "🔗 公开链接",
+      hidden_privacy: "🛡️ 已隐藏金额与明细",
+      public_data: "⚠️ 包含机密金额",
+    },
     empty_title: "尚无分析报告",
     empty_description:
       "使用我们先进的 A​​I 工具生成您的第一份财务分析报告，开启您的旅程。",

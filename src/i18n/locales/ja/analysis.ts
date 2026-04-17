@@ -132,6 +132,11 @@ export const analysis = {
       processing: "処理中",
       failed: "失敗",
     },
+    badges: {
+      external_link: "🔗 公開リンク",
+      hidden_privacy: "🛡️ 金額と詳細の非表示",
+      public_data: "⚠️ 機密金額を含む",
+    },
     empty_title: "分析レポートはまだありません",
     empty_description:
       "高度なAIツールを使用して最初の財務分析レポートを作成し、旅を始めましょう。",

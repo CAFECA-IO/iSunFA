@@ -129,6 +129,11 @@ export const analysis = {
       processing: "처리 중",
       failed: "실패",
     },
+    badges: {
+      external_link: "🔗 공개 링크",
+      hidden_privacy: "🛡️ 금액 및 세부 정보 숨김",
+      public_data: "⚠️ 기밀 금액 포함",
+    },
     empty_title: "분석 보고서 없음",
     empty_description:
       "고급 AI 도구를 사용하여 첫 번째 재무 분석 보고서를 생성하고 여정을 시작하세요。",
