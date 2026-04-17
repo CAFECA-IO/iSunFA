@@ -15,6 +15,7 @@ import {
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { VerifyStatus } from "@/constants/verify_status";
 import { CoefficientCategory } from "@/interfaces/coefficient";
+import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 
 /**
  * Info: (20260312 - Julian) 新增 ESG 紀錄
@@ -239,6 +240,7 @@ export async function GET(
           }
         : undefined,
       scope: r.scope as ClientEsgScope,
+      activityType: r.activityType as unknown as EsgActivityTypeKey,
       amount: Number(r.amount),
       emissions: r.emissions.toString(),
       intensity: r.intensity as ClientEsgIntensity,

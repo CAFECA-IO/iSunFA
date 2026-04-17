@@ -16,6 +16,7 @@ import {
   EsgIntensity as ClientEsgIntensity,
 } from "@/interfaces/esg";
 import { CoefficientCategory } from "@/interfaces/coefficient";
+import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 
 /**
  * Info: (20260312 - Julian) 取得單一 ESG 紀錄
@@ -72,7 +73,7 @@ export async function GET(
           }
         : undefined,
       scope: esgRecord.scope as unknown as ClientEsgScope,
-      activityType: esgRecord.activityType,
+      activityType: esgRecord.activityType as unknown as EsgActivityTypeKey,
       vendor: esgRecord.vendor,
       amount: Number(esgRecord.amount),
       unit: esgRecord.unit,
@@ -199,7 +200,7 @@ export async function PUT(
       tradingDate: updatedRecord.tradingDate.toISOString(),
       fileId: updatedRecord.fileId ?? "",
       scope: updatedRecord.scope as unknown as ClientEsgScope,
-      activityType: updatedRecord.activityType,
+      activityType: updatedRecord.activityType as unknown as EsgActivityTypeKey,
       vendor: updatedRecord.vendor,
       amount: Number(updatedRecord.amount),
       unit: updatedRecord.unit,
