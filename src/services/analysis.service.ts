@@ -179,24 +179,49 @@ export class AnalysisService {
               })
             : [];
 
+          // Info: (20260418 - Tzuhan) 給合規抓鬼與財務模組抓取傳票與明細
+          let voucherRecords: unknown[] = [];
+          if (["financial_compliance", "balance_sheet", "cash_flow", "income_statement", "financial_health"].includes(params.category)) {
+            voucherRecords = targetAccountBookId
+              ? await prisma.voucher.findMany({
+                  where: {
+                    accountBookId: targetAccountBookId,
+                    tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
+                    deletedAt: null,
+                  },
+                  orderBy: { tradingDate: "asc" },
+                  include: { lines: true } // 包含分錄以供 AI 判定異常大額與退貨
+                })
+              : [];
+          }
+
           console.log(
-            `[ESG-DEBUG] Fetched esgRecords length: ${esgRecords.length}`,
+            `[ESG-DEBUG] Fetched esgRecords: ${esgRecords.length}, vouchers: ${voucherRecords.length}`,
           );
 
-          if (esgRecords.length > 0) {
-            const esgContextLines = esgRecords.map((r) => {
-              const dateStr = r.tradingDate.toISOString().split("T")[0];
-              return `- 日期: ${dateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
-            });
+          if (esgRecords.length > 0 || voucherRecords.length > 0) {
+            let recordStr = "";
+            
+            if (voucherRecords.length > 0) {
+              // 若有傳票，將其轉為 JSON 供 worker generator 序列化快篩
+              recordStr = JSON.stringify(voucherRecords);
+            } else if (esgRecords.length > 0) {
+              const esgContextLines = esgRecords.map((r) => {
+                const dateStr = r.tradingDate.toISOString().split("T")[0];
+                return `- 日期: ${dateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
+              });
+              recordStr = `\n【用戶提供的內部 ESG 數據紀錄】:\n${esgContextLines.join("\n")}\n`;
+            }
+
             parsedPrerequisiteParams = {
-              esgRecordsContext: `\n【用戶提供的內部 ESG 數據紀錄】:\n${esgContextLines.join("\n")}\n`,
+              esgRecordsContext: recordStr,
             };
             console.log(
-              `[ESG-DEBUG] Parsed Context:`,
-              parsedPrerequisiteParams.esgRecordsContext,
+              `[ESG-DEBUG] Parsed Context length:`,
+              recordStr.length,
             );
           } else {
-            console.log(`[ESG-DEBUG] Esgs record length is 0. Aborting internal analysis.`);
+            console.log(`[ESG-DEBUG] Records length is 0. Aborting internal analysis.`);
             throw new AppError(ApiCode.VALIDATION_ERROR, "該企業尚未建立 ESG 或財務數據紀錄。請先上傳相關資料，或是改為申請「外部分析報告」。");
           }
         }
