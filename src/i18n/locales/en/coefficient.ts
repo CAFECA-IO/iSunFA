@@ -37,4 +37,10 @@ export const coefficient = {
       "Explain the source or applicable scope of this coefficient...",
     save: "Save Coefficient",
   },
+  select_modal: {
+    title: "Select Calculation Formula",
+    no_unit_match_prefix: "No coefficient matches the unit ",
+    no_unit_match_suffix: "",
+    goto_manage: "Go to coefficient management to add a coefficient",
+  },
 };
