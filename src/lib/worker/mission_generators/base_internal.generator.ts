@@ -15,6 +15,7 @@ export function generateBaseInternalMission(
     category: params.category,
     period: params.periodValue,
     year: params.year,
+    prevYear: params.year ? params.year - 1 : null,
     targetCompany: params.keyword || "Company",
   };
 
@@ -27,7 +28,7 @@ export function generateBaseInternalMission(
 
   const dataSourceInstruction = params.isExternal
     ? "請強制啟動網路搜尋功能，抓取該公司最新公開的財報與數據進行深度的客觀分析。"
-    : "請嚴格基於系統提供的內部數據庫資料（包含但不限於內部財務報表、傳票、日記帳、綠色/ESG數據紀錄等），禁止使用網路搜尋獲取外部財報。請純粹判斷內部資料。";
+    : "請第一步先檢視系統提供的內部數據庫資料（包含內部帳務、傳票、日記帳等）。【防呆與推估機制】：若判斷內部當期或前期數據匱乏、缺漏，允許基於現有資料並參酌行業常規會計邏輯推估；但請強制在推估或缺失的段落/表格旁加上標籤 `[💡缺乏基礎數據：沿用推估或留白 N/A]` 以保障決策真實性。";
 
   const targetCompanyName = params.keyword || "該企業";
   const periodName =
