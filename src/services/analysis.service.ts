@@ -190,7 +190,7 @@ export class AnalysisService {
                     deletedAt: null,
                   },
                   orderBy: { tradingDate: "asc" },
-                  include: { lines: true } // 包含分錄以供 AI 判定異常大額與退貨
+                  include: { lines: true } // Info: (20260417 - Tzuhan) 包含分錄以供 AI 判定異常大額與退貨
                 })
               : [];
           }
@@ -203,7 +203,7 @@ export class AnalysisService {
             let recordStr = "";
             
             if (voucherRecords.length > 0) {
-              // 若有傳票，將其轉為 JSON 供 worker generator 序列化快篩
+              // Info: (20260417 - Tzuhan) 若有傳票，將其轉為 JSON 供 worker generator 序列化快篩
               recordStr = JSON.stringify(voucherRecords);
             } else if (esgRecords.length > 0) {
               const esgContextLines = esgRecords.map((r) => {
@@ -246,7 +246,7 @@ export class AnalysisService {
     } catch (error) {
       console.error("[AnalysisService] Mission Generation Failed:", error);
       if (error instanceof AppError) {
-        throw error; // Let the caller (API route) abort the operation instantly
+        throw error; // Info: (20260417 - Tzuhan) Let the caller (API route) abort the operation instantly
       }
       // Info: (20260418 - Tzuhan) [BUGFIX] 如果發生未知崩潰(例如 Payload 超過 Prisma 大小限制)，必須拋出異常，阻斷 API 回傳 200，讓前端顯示錯誤而不吞噬訂單！
       throw new AppError(ApiCode.INTERNAL_SERVER_ERROR, "發生非預期錯誤，報告生成失敗。您的訂單紀錄已保留，請稍後至後台重試。");
