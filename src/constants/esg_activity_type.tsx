@@ -11,7 +11,7 @@ export interface IEsgActivityType {
 
 // Info: (20260417 - Julian) ESG 活動類型
 export const EsgActivityTypeMapping: IEsgActivityType[] =[
-  // 範疇一：直接排放 (Direct Emissions)
+  // Info: (20260417 - Julian) 範疇一：直接排放 (Direct Emissions)
   {
     key: 'STATIONARY_COMBUSTION',
     value: "定點燃燒",
@@ -37,7 +37,7 @@ export const EsgActivityTypeMapping: IEsgActivityType[] =[
     description: "如：生產過程化學反應產生的溫室氣體",
   },
 
-  // 範疇二：能源間接排放 (Energy Indirect Emissions)
+  // Info: (20260417 - Julian) 範疇二：能源間接排放 (Energy Indirect Emissions)
   {
     key: 'ELECTRICITY_USAGE',
     value: "電力使用",
@@ -57,7 +57,7 @@ export const EsgActivityTypeMapping: IEsgActivityType[] =[
     description: "如：外購的冷能",
   },
 
-  // 範疇三：其他間接排放 (Other Indirect Emissions - GHG Protocol 15 Categories)
+  // Info: (20260417 - Julian) 範疇三：其他間接排放 (Other Indirect Emissions - GHG Protocol 15 Categories)
   {
     key: 'PURCHASED_GOODS',
     value: "購買商品與服務",
@@ -149,7 +149,7 @@ export const EsgActivityTypeMapping: IEsgActivityType[] =[
     description: "如：來自股權、債券等金融投資的排放",
   },
 
-  // 其他常規追蹤項目
+  // Info: (20260417 - Julian) 其他常規追蹤項目
   {
     key: 'WATER_CONSUMPTION',
     value: "水資源消耗",
