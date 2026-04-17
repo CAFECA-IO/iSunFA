@@ -7,15 +7,27 @@ export interface IWebAuthnRepository {
   findUserById(id: string): Promise<User | null>;
   findUsersByIds(ids: string[]): Promise<User[]>;
   findUserByName(name: string): Promise<User | null>;
-  findAllUsersForAdmin(): Promise<
-    Array<{
+  findAllUsersForAdmin(params: {
+    page: number;
+    limit: number;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<{
+    data: Array<{
       id: string;
       address: string;
       name: string | null;
       role: string;
       createdAt: Date;
-    }>
-  >;
+    }>;
+    pagination: {
+      totalElements: number;
+      totalPages: number;
+      page: number;
+      limit: number;
+    };
+  }>;
   updateChallenge(address: string, challenge: string): Promise<void>;
   clearChallenge(userId: string): Promise<void>;
   countUsers(): Promise<number>;
@@ -63,25 +75,70 @@ class WebAuthnRepository implements IWebAuthnRepository {
     });
   }
 
-  public async findAllUsersForAdmin(): Promise<
-    Array<{
+  public async findAllUsersForAdmin({
+    page = 1,
+    limit = 15,
+    search = '',
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
+  }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  } = {}): Promise<{
+    data: Array<{
       id: string;
       address: string;
       name: string | null;
       role: string;
       createdAt: Date;
-    }>
-  > {
-    return prisma.user.findMany({
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        address: true,
-        name: true,
-        role: true,
-        createdAt: true,
+    }>;
+    pagination: {
+      totalElements: number;
+      totalPages: number;
+      page: number;
+      limit: number;
+    };
+  }> {
+    const where: Prisma.UserWhereInput = search
+      ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { address: { contains: search, mode: 'insensitive' } },
+          ],
+        }
+      : {};
+
+    const skip = (page - 1) * limit;
+
+    const [totalElements, users] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+        select: {
+          id: true,
+          address: true,
+          name: true,
+          role: true,
+          createdAt: true,
+        },
+      }),
+    ]);
+
+    return {
+      data: users,
+      pagination: {
+        totalElements,
+        totalPages: Math.ceil(totalElements / limit),
+        page,
+        limit,
       },
-    });
+    };
   }
 
   public async getUserWithPaymentMethods(

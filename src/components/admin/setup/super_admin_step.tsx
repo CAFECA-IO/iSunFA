@@ -35,7 +35,7 @@ export function SetupSuperAdmin({ isActive, isCompleted, onNext, onReset }: ISte
   const [adminList, setAdminList] = useState<{ address: string; name: string | null; role: string; createdAt: string | Date }[]>([]);
   const [taskProgress, setTaskProgress] = useState<string>("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [targetDeleteAdmin, setTargetDeleteAdmin] = useState<{address: string, name: string} | null>(null);
+  const [targetDeleteAdmin, setTargetDeleteAdmin] = useState<{ address: string, name: string } | null>(null);
 
   const fetchAdminList = useCallback(async () => {
     const listRes = await getAdminList();
@@ -141,8 +141,7 @@ export function SetupSuperAdmin({ isActive, isCompleted, onNext, onReset }: ISte
   };
 
   const performFido2Registration = async (customName?: string) => {
-    const finalName = customName?.trim() || t('admin_setup.step6.placeholder_super');
-    if (!finalName) return;
+    const finalName = customName?.trim() || "iSunFA Super Admin";
     setIsReplaceModalOpen(false);
     setStatus(StepStatus.LOADING);
     try {

@@ -1,7 +1,21 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import * as SetupService from "@/services/setup.service";
+import * as CoreSetupService from "@/services/setup.service";
+import * as BlockchainSetupService from "@/services/setup.blockchain.service";
+import * as StateSetupService from "@/services/setup.state.service";
+import * as AuthSetupService from "@/services/setup.auth.service";
+import * as EnvSetupService from "@/services/setup.env.service";
+import * as DbSetupService from "@/services/setup.db.service";
+
+const SetupService = {
+  ...StateSetupService,
+  ...DbSetupService,
+  ...EnvSetupService,
+  ...BlockchainSetupService,
+  ...AuthSetupService,
+  ...CoreSetupService
+};
 import { validateEnv } from "@/validators/env";
 
 export async function POST(

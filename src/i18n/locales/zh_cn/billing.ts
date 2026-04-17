@@ -1,0 +1,52 @@
+export const billing = {
+  subtitle: "管理您的消费纪录、帐户点数与付款方式。",
+  tabs: {
+    orders: "消费纪录",
+    points: "点数纪录",
+    cards: "信用卡管理",
+  },
+  orders: {
+    empty: "尚无消费纪录",
+  },
+  points: {
+    empty: "尚无点数纪录",
+  },
+  cards: {
+    title: "已绑定信用卡",
+    add_button: "新增信用卡",
+    empty: "尚未绑定任何信用卡",
+    default_card: "默认卡片",
+    added_at: "新增于",
+    rename: "重新命名",
+    delete: "删除",
+    view_records: "查询纪录",
+    rename_success: "重新命名成功",
+    delete_success: "信用卡已删除",
+    delete_confirm_title: "确认删除信用卡？",
+    delete_confirm_desc:
+      "这将会移除此张信用卡，未来将无法再选用此卡片进行扣款。",
+    cancel: "取消",
+    save: "保存",
+    edit_details: "编辑详细资料",
+    email: "联系邮箱",
+    tax_id: "统一社会信用代码",
+    buyer_name: "购买人姓名",
+    billing_address: "账单地址",
+  },
+  table: {
+    date: "日期",
+    order_id: "订单编号",
+    amount: "付款金额",
+    status: "状态",
+    source: "来源 / 项目",
+    amount_change: "点数异动",
+  },
+  point_history: {
+    source_purchase: "购买点数",
+    source_analysis: "分析服务使用",
+    source_chat: "AI 咨询服务",
+    source_checkin: "每日签到奖励",
+    source_registration: "注册奖励",
+    source_admin_issued: "系统管理员发放",
+  },
+};

@@ -1,0 +1,44 @@
+export const esgTable = {
+  intensity: {
+    high: "高強度",
+    medium: "中強度",
+    low: "低強度",
+  },
+  scope: {
+    scope_1: "範疇一",
+    scope_2: "範疇二",
+    scope_3: "範疇三",
+  },
+  no_file: "無檔案",
+  search_placeholder: "搜尋供應商、活動類型...",
+  search_aria: "搜尋供應商、活動類型",
+  filter_intensity_aria: "依強度篩選",
+  filter_intensity_all: "全部強度",
+  filter_scope_aria: "依範疇篩選",
+  filter_scope_all: "全部範疇 (Scope 1-3)",
+  header: {
+    voucher: "憑證",
+    date: "日期",
+    activity_target: "活動類型與對象",
+    raw_data: "原始活動數據",
+    emissions: "排放量 (KGCO2E)",
+    intensity_label: "排放強度標籤",
+    ai_confidence: "AI 信心度",
+    status: "狀態",
+  },
+  loading: "載入中...",
+  no_records: "尚無資料",
+  no_records_desc:
+    "在所選期間內尚無ESG紀錄。您可以嘗試切換不同的時間區間，或是前往傳票模組上傳新資料。",
+  no_records_cta: "上傳憑證/資料",
+  no_filter_results: "找不到符合條件的紀錄",
+  no_filter_results_desc: "請嘗試調整搜尋關鍵字或篩選條件",
+  ai: {
+    processing: "AI 正在分析您的碳排紀錄...",
+    failed: "AI 無法分析碳排紀錄，請重新上傳或手動輸入",
+  },
+  footer: {
+    record_count: "顯示 {{count}} 筆碳排分析紀錄",
+    data_citation: "數據引用：IPCC 第六次評估報告排放係數",
+  },
+};

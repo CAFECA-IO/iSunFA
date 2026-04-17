@@ -1,0 +1,16 @@
+export const esgSummary = {
+  no_data_prefix: "Currently no ESG data for this account book, please ",
+  upload_link: "upload vouchers",
+  no_data_suffix: " to generate carbon emission records",
+  total_emissions: "Total Monthly Emissions",
+  estimate_eom: "Est. EOM: ",
+  emission_intensity: "Emission Intensity",
+  better_than_industry: "Better than industry average ({{average}})",
+  scope_distribution: "Scope Distribution (SCOPE)",
+  annual_goal_progress: "Annual Goal Progress",
+  today_records: "Records Created Today",
+  dqi_average: "Average DQI Score",
+  pending: "Pending Verifications",
+  ai_confidence: "AI Avg. Confidence",
+  record_unit: "records",
+};

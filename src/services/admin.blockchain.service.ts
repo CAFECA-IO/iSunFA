@@ -4,22 +4,17 @@ import { createPublicClient, createWalletClient, formatEther, http, parseAbi } f
 import { isuncoin } from "@/lib/viem_public";
 import { getAdminAccount } from "@/lib/wallet/admin_wallet";
 import { getPriorityEnvConfig } from "@/services/env.service";
-import { toggleMining } from "@/services/setup.service";
+import { toggleMining } from "@/services/setup.blockchain.service";
 import { cookies } from "next/headers";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { Role } from "@/generated/client";
 
-// Info: (20260416 - Luphia) 忽略本地端自簽憑證錯誤，讓 viem publicClient 可以正常存取 localhost https RPC
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
 export interface IBlockchainDashboardData {
   address: string;
   adminIscBalance: string;
-  adminIcpInventory: string;
   membershipSystemIcpInventory: string;
   isMining: boolean;
-  membershipIscBalance: string;
   systemTotalIcp: string;
   collateralRate: string;
   totalMembers: number;
@@ -71,34 +66,22 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
      */
     let isMining = false;
     try {
-      const { getAdminWalletInfo } = await import("@/services/setup.service");
+      const { getAdminWalletInfo } = await import("@/services/setup.blockchain.service");
       const walletInfo = await getAdminWalletInfo();
       isMining = !!walletInfo?.isMining;
     } catch {
       // Info: (20260416 - Luphia) Fallback
     }
 
-    let adminIcpInventory = "0.0";
     let membershipSystemIcpInventory = "0.0";
     let systemTotalIcp = "0.0";
     let collateralRate = "0.0";
-    let membershipIscBalance = "0.0";
     let totalMembers = 0;
 
     try {
       totalMembers = await webAuthnRepo.countUsers();
     } catch (e) {
       console.warn("Failed fetching total members: ", e);
-    }
-
-    // Info: (20260416 - Luphia) 2. Membership System ISC
-    if (msAddress) {
-      try {
-        const msIscWei = await publicClient.getBalance({ address: msAddress });
-        membershipIscBalance = formatEther(msIscWei);
-      } catch (err) {
-        console.warn("Failed reading Membership System ISC:", err);
-      }
     }
 
     // Info: (20260416 - Luphia) 3. Credit Point interactions
@@ -110,14 +93,12 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
           "function collateralRate() view returns (uint256)"
         ]);
 
-        const [icpWei, msIcpWei, totalWei, collatWei] = await Promise.all([
-          publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "balanceOf", args: [adminAddress] }),
+        const [msIcpWei, totalWei, collatWei] = await Promise.all([
           msAddress ? publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "balanceOf", args: [msAddress] }) : Promise.resolve(0n),
           publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "totalSupply" }),
           publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "collateralRate" })
         ]);
 
-        adminIcpInventory = formatEther(icpWei as bigint);
         membershipSystemIcpInventory = formatEther(msIcpWei as bigint);
         systemTotalIcp = formatEther(totalWei as bigint);
         collateralRate = formatEther(collatWei as bigint);
@@ -131,10 +112,8 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
       data: {
         address: adminAddress,
         adminIscBalance,
-        adminIcpInventory,
         membershipSystemIcpInventory,
         isMining,
-        membershipIscBalance,
         systemTotalIcp,
         collateralRate,
         totalMembers

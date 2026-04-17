@@ -1,0 +1,14 @@
+export const registrationSteps = {
+  processing_title: "계정 생성 중",
+  complete_title: "등록 완료!",
+  fetching_challenge: "보안 등록 프로세스 준비 중...",
+  creating_passkey: "Passkey 인증 생성 중...",
+  parsing_passkey: "보안 자격 증명 확인 중...",
+  predicting_address: "스마트 지갑 주소 생성 중...",
+  calculating_hash: "계정 설정 보호 중...",
+  awaiting_signature: "최종 승인 대기 중...",
+  deploying: "스마트 계정을 블록체인에 배포 중...",
+  success: "계정이 성공적으로 생성되었습니다!",
+  failed: "등록에 실패했습니다. 다시 시도해 주세요.",
+  processing: "처리 중...",
+};

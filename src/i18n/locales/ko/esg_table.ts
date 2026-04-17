@@ -1,0 +1,41 @@
+export const esgTable = {
+  intensity: {
+    high: "고강도",
+    medium: "중강도",
+    low: "저강도",
+  },
+  scope: {
+    scope_1: "스코프 1",
+    scope_2: "스코프 2",
+    scope_3: "스코프 3",
+  },
+  no_file: "파일 없음",
+  search_placeholder: "공급업체, 활동 유형 검색...",
+  search_aria: "공급업체, 활동 유형 검색",
+  filter_intensity_aria: "강도 필터 대상",
+  ai: { processing: "AI 처리 중...", failed: "AI 처리 실패" },
+  filter_intensity_all: "전체 강도",
+  filter_scope_aria: "스코프 필터링",
+  filter_scope_all: "전체 스코프 (Scope 1-3)",
+  header: {
+    voucher: "전표",
+    date: "날짜",
+    activity_target: "활동 유형 및 대상",
+    raw_data: "원시 데이터",
+    emissions: "배출량 (KGCO2E)",
+    intensity_label: "강도",
+    ai_confidence: "AI 신뢰도",
+    status: "상태",
+  },
+  loading: "로딩 중...",
+  no_records: "데이터 없음",
+  no_records_desc:
+    "선택한 기간 동안 ESG 기록이 없습니다. 다른 기간을 선택하거나 영수증 데이터를 업로드해 주세요.",
+  no_records_cta: "데이터 업로드",
+  no_filter_results: "조건에 맞는 기록을 찾을 수 없습니다",
+  no_filter_results_desc: "검색어나 필터 조건을 조정해 보세요",
+  footer: {
+    record_count: "{{count}}건의 기록 표시",
+    data_citation: "데이터 출처: IPCC 제6차 평가보고서 배출 계수",
+  },
+};

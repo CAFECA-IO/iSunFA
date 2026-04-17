@@ -1,0 +1,43 @@
+export const incomeStatementView = {
+  loading_title: "正在為您生成綜合損益表",
+  loading_desc:
+    "系統正在結算收入、支出與稅後淨利科目，並計算相關財務指標，請稍候...",
+  error_title: "綜合損益表生成失敗",
+  error_desc: "請確認該期間內是否有足夠的核發傳票資料，或是稍後再重新嘗試。",
+  metric_gm_title: "毛利率",
+  metric_gm_desc: "產品初始獲利能力",
+  metric_om_title: "營益率",
+  metric_om_desc: "本業營運獲利能力",
+  metric_npm_title: "淨利率",
+  metric_npm_desc: "最終稅後實質獲利能力",
+  metric_ebitda_title: "EBITDA 利潤率",
+  metric_ebitda_desc: "可分配之現金獲利指標",
+  note_gm_type: "獲利能力",
+  note_gm_main: "毛利率 = (營業收入 - 營業成本) / 營業收入。",
+  note_gm_sub:
+    "衡量企業產品或服務的初始獲利能力，建議大於 50%，表示產品或服務的初始獲利能力良好。",
+  note_om_type: "獲利能力",
+  note_om_main: "營益率 = 營業利益 / 營業收入。",
+  note_om_sub:
+    "衡量企業本業營運獲利能力，建議大於 15%，表示本業營運獲利能力良好。",
+  note_npm_type: "獲利能力",
+  note_npm_main: "淨利率 = 稅後淨利 / 營業收入。",
+  note_npm_sub:
+    "衡量企業最終稅後實質獲利能力，建議大於 10%，表示最終稅後實質獲利能力良好。",
+  note_ebitda_type: "獲利能力",
+  note_ebitda_main: "EBITDA 利潤率 = EBITDA / 營業收入。",
+  note_ebitda_sub:
+    "衡量企業可分配之現金獲利指標，建議大於 15%，表示可分配之現金獲利指標良好。",
+  section_op: "營業活動",
+  section_percent_rev: "% 營收",
+  section_rev: "營業收入",
+  section_cogs: "營業成本",
+  section_gp: "營業毛利",
+  section_opex: "營業費用",
+  section_oi: "營業利益",
+  section_nonop_tax: "營業外支出與稅金",
+  section_nonop_inc: "營業外收入及支出",
+  section_ibt: "稅前淨利",
+  section_tax: "所得稅費用",
+  section_ni: "本期淨利",
+};

@@ -254,7 +254,7 @@ export default function JournalScanView({
     };
   }, []);
 
-  const processFrame = useCallback(() => {
+  const processFrame = useCallback(function process() {
     if (
       !cvReady ||
       !streamReady ||
@@ -275,7 +275,7 @@ export default function JournalScanView({
       .cv;
 
     if (video.videoWidth === 0 || video.videoHeight === 0) {
-      animationFrameId.current = requestAnimationFrame(processFrame);
+      animationFrameId.current = requestAnimationFrame(process);
       return;
     }
 
@@ -644,7 +644,7 @@ export default function JournalScanView({
     }
 
     if (!isProcessing && !isAnalyzing && capturedFiles.length < 100) {
-      animationFrameId.current = requestAnimationFrame(processFrame);
+      animationFrameId.current = requestAnimationFrame(process);
     }
   }, [
     cvReady,

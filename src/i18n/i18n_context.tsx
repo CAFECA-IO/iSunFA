@@ -52,6 +52,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>("zh-TW"); // Default to zh-TW
   const [dictionary, setDictionary] = useState<Dictionary>(zhTw);
 
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    setDictionary(dictionaries[lang]);
+    localStorage.setItem("isunfa_lang", lang);
+  };
+
   useEffect(() => {
     // Info: (20260120 - Luphia) Load persisted language
     const savedLang = localStorage.getItem("isunfa_lang") as Language;
@@ -64,12 +70,6 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    setDictionary(dictionaries[lang]);
-    localStorage.setItem("isunfa_lang", lang);
-  };
 
   const t = <T = string,>(
     key: string,

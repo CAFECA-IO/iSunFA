@@ -53,3 +53,22 @@ export async function getPriorityEnvConfig(): Promise<Record<string, string>> {
   }
   return {} as Record<string, string>;
 }
+
+export function getEnvRawContent(targetPath: string): string {
+  if (!fs.existsSync(targetPath)) return "";
+  return fs.readFileSync(targetPath, "utf8");
+}
+
+export function saveEnvRawContent(targetPath: string, content: string): void {
+  fs.writeFileSync(targetPath, content, "utf8");
+}
+
+export function existsEnv(targetPath: string): boolean {
+  return fs.existsSync(targetPath);
+}
+
+export function deleteEnv(targetPath: string): void {
+  if (fs.existsSync(targetPath)) {
+    fs.unlinkSync(targetPath);
+  }
+}

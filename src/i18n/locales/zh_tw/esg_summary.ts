@@ -1,0 +1,16 @@
+export const esgSummary = {
+  no_data_prefix: "目前無這份帳本的 ESG 數據，請先",
+  upload_link: "上傳憑證",
+  no_data_suffix: "產生碳排紀錄",
+  total_emissions: "本月總排放量",
+  estimate_eom: "預估月底: ",
+  emission_intensity: "碳排放強度",
+  better_than_industry: "優於產業平均 ({{average}})",
+  scope_distribution: "各範疇分布 (SCOPE)",
+  annual_goal_progress: "年度目標進度",
+  today_records: "今日產生碳排紀錄",
+  dqi_average: "平均 DQI 評分",
+  pending: "待核對",
+  ai_confidence: "AI 平均信心度",
+  record_unit: "筆",
+};
