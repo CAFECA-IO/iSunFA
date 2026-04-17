@@ -217,7 +217,7 @@ export default function EsgDetailModal({
       activityType: isValidActivityType
         ? formData.activityType
         : EsgActivityTypeMapping.find((a) => a.scope === newScope)?.key ||
-          formData.activityType, // fallback to formData.activityType if not found, though we might want null but the type of activityType is sometimes string
+          formData.activityType, // Info: (20260417 - Julian) fallback to formData.activityType if not found, though we might want null but the type of activityType is sometimes string
     });
   };
 
