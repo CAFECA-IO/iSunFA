@@ -179,24 +179,49 @@ export class AnalysisService {
               })
             : [];
 
+          // Info: (20260418 - Tzuhan) 目前僅先對合規抓鬼與異常傳票執行 DB 傳票的完整撈取並交付快篩
+          let voucherRecords: unknown[] = [];
+          if (params.category === "financial_compliance") {
+            voucherRecords = targetAccountBookId
+              ? await prisma.voucher.findMany({
+                  where: {
+                    accountBookId: targetAccountBookId,
+                    tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
+                    deletedAt: null,
+                  },
+                  orderBy: { tradingDate: "asc" },
+                  include: { lines: true } // Info: (20260417 - Tzuhan) 包含分錄以供 AI 判定異常大額與退貨
+                })
+              : [];
+          }
+
           console.log(
-            `[ESG-DEBUG] Fetched esgRecords length: ${esgRecords.length}`,
+            `[ESG-DEBUG] Fetched esgRecords: ${esgRecords.length}, vouchers: ${voucherRecords.length}`,
           );
 
-          if (esgRecords.length > 0) {
-            const esgContextLines = esgRecords.map((r) => {
-              const dateStr = r.tradingDate.toISOString().split("T")[0];
-              return `- 日期: ${dateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
-            });
+          if (esgRecords.length > 0 || voucherRecords.length > 0) {
+            let recordStr = "";
+            
+            if (voucherRecords.length > 0) {
+              // Info: (20260417 - Tzuhan) 若有傳票，將其轉為 JSON 供 worker generator 序列化快篩
+              recordStr = JSON.stringify(voucherRecords);
+            } else if (esgRecords.length > 0) {
+              const esgContextLines = esgRecords.map((r) => {
+                const dateStr = r.tradingDate.toISOString().split("T")[0];
+                return `- 日期: ${dateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
+              });
+              recordStr = `\n【用戶提供的內部 ESG 數據紀錄】:\n${esgContextLines.join("\n")}\n`;
+            }
+
             parsedPrerequisiteParams = {
-              esgRecordsContext: `\n【用戶提供的內部 ESG 數據紀錄】:\n${esgContextLines.join("\n")}\n`,
+              esgRecordsContext: recordStr,
             };
             console.log(
-              `[ESG-DEBUG] Parsed Context:`,
-              parsedPrerequisiteParams.esgRecordsContext,
+              `[ESG-DEBUG] Parsed Context length:`,
+              recordStr.length,
             );
           } else {
-            console.log(`[ESG-DEBUG] Esgs record length is 0. Aborting internal analysis.`);
+            console.log(`[ESG-DEBUG] Records length is 0. Aborting internal analysis.`);
             throw new AppError(ApiCode.VALIDATION_ERROR, "該企業尚未建立 ESG 或財務數據紀錄。請先上傳相關資料，或是改為申請「外部分析報告」。");
           }
         }
@@ -212,15 +237,19 @@ export class AnalysisService {
         prerequisiteData: parsedPrerequisiteParams,
       });
 
-      if (missionDef) {
-        analysisResult = "Analysis Mission Generated. Pending Execution.";
+      // Info: (20260418 - Tzuhan) [BUGFIX] 如果 generator 根本不認識這個類別，或是生成的 tasks 是空的，絕對不允許進入資料庫建立幽靈 Mission
+      if (!missionDef || !missionDef.tasks || missionDef.tasks.length === 0) {
+        throw new AppError(ApiCode.VALIDATION_ERROR, `找不到有效的分析任務產生器 (Category: ${params.category}) 或是任務為空，拒絕建立幽靈定單。`);
       }
+
+      analysisResult = "Analysis Mission Generated. Pending Execution.";
     } catch (error) {
       console.error("[AnalysisService] Mission Generation Failed:", error);
       if (error instanceof AppError) {
-        throw error; // Let the caller (API route) abort the operation instantly
+        throw error; // Info: (20260417 - Tzuhan) Let the caller (API route) abort the operation instantly
       }
-      analysisResult = "Analysis Generation Failed. Please contact support.";
+      // Info: (20260418 - Tzuhan) [BUGFIX] 如果發生未知崩潰(例如 Payload 超過 Prisma 大小限制)，必須拋出異常，阻斷 API 回傳 200，讓前端顯示錯誤而不吞噬訂單！
+      throw new AppError(ApiCode.INTERNAL_SERVER_ERROR, "發生非預期錯誤，報告生成失敗。您的訂單紀錄已保留，請稍後至後台重試。");
     }
 
     // Info: (20260128 - Luphia) Create Plan Content

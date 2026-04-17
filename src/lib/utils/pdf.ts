@@ -20,25 +20,81 @@ export const downloadHtmlAsPdf = async (
       return;
     }
 
-    const dataUrl = await toPng(element, {
-      quality: 1.0,
-      pixelRatio: 2,
-      cacheBust: true,
-      backgroundColor: options?.backgroundColor || "#ffffff",
-      filter: options?.filter,
-    });
-
-    const pdfDoc = await PDFDocument.create();
-
-    const pngImage = await pdfDoc.embedPng(dataUrl);
-    const { width: imgWidth, height: imgHeight } = pngImage.scale(1);
-
+    // Info:(20260418 - Tzuhan) Intelligently inject layout margin spacers to prevent PDF chunk slicing!
     const a4Width = 595.28;
     const a4Height = 841.89;
     const margin = 42.52;
 
     const maxPdfHeight = a4Height - margin * 2;
     const maxPdfWidth = a4Width - margin * 2;
+    const scaleFactor = 2; // Info: (20260418 - Tzuhan) pixelRatio
+
+    // Info: (20260418 - Tzuhan) Original bounding rect of container
+    const containerRect = element.getBoundingClientRect();
+    const pixelToPtRatio = maxPdfWidth / containerRect.width;
+
+    // Info: (20260418 - Tzuhan) The height of 1 PDF page translated into DOM browser pixels
+    const maxDomHeightPerPage = maxPdfHeight / pixelToPtRatio;
+
+    // Info: (20260418 - Tzuhan) We will find all elements marked 'break-inside-avoid' and push them down if they cross a boundary
+    const avoidElements = element.querySelectorAll('.break-inside-avoid');
+
+    // Info: (20260418 - Tzuhan) Store original margins to revert later
+    const originalMargins = new Map<HTMLElement, string>();
+
+    // Info: (20260418 - Tzuhan) Make sure we scan elements in DOM order
+    const elementsArray = Array.from(avoidElements);
+
+    for (let i = 0; i < elementsArray.length; i++) {
+      const el = elementsArray[i] as HTMLElement;
+      const rect = el.getBoundingClientRect();
+
+      // Info: (20260418 - Tzuhan) Element's top relative to container
+      const currentRelativeTop = (el.getBoundingClientRect().top - element.getBoundingClientRect().top);
+      const relativeBottom = currentRelativeTop + rect.height;
+
+      const startPage = Math.floor(currentRelativeTop / maxDomHeightPerPage);
+      const endPage = Math.floor(relativeBottom / maxDomHeightPerPage);
+
+      // Info: (20260418 - Tzuhan) If element crosses a page boundary AND it's smaller than a full page
+      if (startPage !== endPage && rect.height < maxDomHeightPerPage) {
+        // Info: (20260418 - Tzuhan) We need to push this element down so it starts exactly on the next page
+        // Info: (20260418 - Tzuhan) We add a 2px buffer to ensure we completely clear the mathematical cut line
+        const nextPageStartTop = (startPage + 1) * maxDomHeightPerPage;
+        const pushDownAmount = Math.ceil(nextPageStartTop - currentRelativeTop) + 2;
+
+        // Info: (20260418 - Tzuhan) Store original margin
+        originalMargins.set(el, el.style.marginTop);
+
+        // Info: (20260418 - Tzuhan) Extract current computed margin
+        const currentComputedMargin = window.getComputedStyle(el).marginTop;
+        const currentMarginVal = parseFloat(currentComputedMargin) || 0;
+
+        // Info: (20260418 - Tzuhan) Apply new margin
+        el.style.marginTop = `${currentMarginVal + pushDownAmount}px`;
+      }
+    }
+
+    // Info: (20260418 - Tzuhan) Wait for DOM to re-layout with new margins
+    await new Promise(r => setTimeout(r, 100));
+
+    const dataUrl = await toPng(element, {
+      quality: 1.0,
+      pixelRatio: scaleFactor,
+      cacheBust: true,
+      backgroundColor: options?.backgroundColor || "#ffffff",
+      filter: options?.filter,
+    });
+
+    // Info: (20260418 - Tzuhan) Revert all margins to original state
+    originalMargins.forEach((originalMargin, el) => {
+      el.style.marginTop = originalMargin;
+    });
+
+    const pdfDoc = await PDFDocument.create();
+
+    const pngImage = await pdfDoc.embedPng(dataUrl);
+    const { width: imgWidth, height: imgHeight } = pngImage.scale(1);
 
     const ratio = maxPdfWidth / imgWidth;
     const scaledHeight = imgHeight * ratio;

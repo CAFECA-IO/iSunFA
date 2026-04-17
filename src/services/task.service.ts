@@ -91,11 +91,16 @@ export class TaskService {
       let result = "";
 
       const skill = skillRegistry[task.type];
-      if (skill) {
-        result = await skill.execute(task, mission, fullPrompt, chatService);
-      } else {
-        result = await chatService.generateRaw(fullPrompt);
-      }
+      const executionPromise = skill
+        ? skill.execute(task, mission, fullPrompt, chatService)
+        : chatService.generateRaw(fullPrompt);
+
+      // Info: (20260418 - Tzuhan) 增加強制 Timeout 保護，防禦外部 API (如 Gemini) 掛起導致整個 Worker 無限期等待卡死
+      const timeoutPromise = new Promise<string>((_, reject) => {
+        setTimeout(() => reject(new Error("LLM Execution Timeout (5 minutes)")), 300000);
+      });
+
+      result = await Promise.race([executionPromise, timeoutPromise]);
 
       /**
        * Info: (20260130 - Luphia) 4. Save

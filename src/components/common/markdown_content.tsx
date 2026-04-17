@@ -94,14 +94,14 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content, theme = 'da
         ),
         blockquote: ({ children, ...props }: React.ComponentPropsWithoutRef<'blockquote'>) => (
           <blockquote
-            className={`my-3 rounded-r-lg border-l-4 border-[#FF9800] ${blockquoteBg} px-4 py-3 italic ${blockquoteText}`}
+            className={`my-3 rounded-r-lg border-l-4 border-[#FF9800] ${blockquoteBg} px-4 py-3 italic ${blockquoteText} break-inside-avoid print:break-inside-avoid`}
             {...props}
           >
             {children}
           </blockquote>
         ),
         table: ({ children, ...props }: React.ComponentPropsWithoutRef<'table'>) => (
-          <div className={`my-5 w-full overflow-x-auto rounded-lg border ${tableBorder} not-prose align-middle shadow-sm sm:rounded-lg`}>
+          <div className={`my-5 w-full overflow-x-auto rounded-lg border ${tableBorder} not-prose align-middle shadow-sm sm:rounded-lg break-inside-avoid print:break-inside-avoid`}>
             <table className={`min-w-full divide-y ${isDark ? 'divide-[#444]' : 'divide-gray-200'} text-sm`} {...props}>
               {children}
             </table>
