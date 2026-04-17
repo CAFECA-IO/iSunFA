@@ -36,4 +36,10 @@ export const coefficient = {
     desc_placeholder: "이 계수의 출처 또는 적용 범위를 설명하세요...",
     save: "계수 저장",
   },
+  select_modal: {
+    title: "계산 공식 선택",
+    no_unit_match_prefix: "해당 단위와 일치하는 계수가 없습니다: ",
+    no_unit_match_suffix: "",
+    goto_manage: "계수 관리 페이지로 이동하여 계수 추가",
+  },
 };

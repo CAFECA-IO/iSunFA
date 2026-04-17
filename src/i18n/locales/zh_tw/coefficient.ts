@@ -36,4 +36,10 @@ export const coefficient = {
     desc_placeholder: "說明此係數的來源或適用範圍...",
     save: "儲存係數",
   },
+  select_modal: {
+    title: "選擇計算公式",
+    no_unit_match_prefix: "目前沒有單位符合 ",
+    no_unit_match_suffix: " 的係數",
+    goto_manage: "前往係數管理頁面新增係數"
+  },
 };

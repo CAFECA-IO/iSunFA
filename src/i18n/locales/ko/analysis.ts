@@ -133,6 +133,11 @@ export const analysis = {
       processing: "처리 중",
       failed: "실패",
     },
+    badges: {
+      external_link: "🔗 공개 링크",
+      hidden_privacy: "🛡️ 금액 및 세부 정보 숨김",
+      public_data: "⚠️ 기밀 금액 포함",
+    },
     empty_title: "분석 보고서 없음",
     empty_description:
       "고급 AI 도구를 사용하여 첫 번째 재무 분석 보고서를 생성하고 여정을 시작하세요。",
@@ -173,5 +178,15 @@ export const analysis = {
     cta_desc:
       "iSunFA는 최첨단 AI 기술을 통해 탄소 건강 진단, 재무 등급 평가, 규정 준수 감사를 포함한 포괄적인 스마트 회계 솔루션을 제공합니다.",
     cta_button: "iSunFA 스마트 회계 알아보기",
+  },
+  share_settings: {
+    title: "분석 보고서 공유 설정",
+    privacy_warning_title: "주의: 기업 내부의 민감한 기밀 데이터가 포함되어 있습니다.",
+    privacy_warning_desc: "외부에 공유하기 전에 적절한 권한을 얻었는지 반드시 확인하십시오. 영업 비밀 유출을 방지하기 위해 '익명화 및 금액 숨기기'를 선택하는 것을 강력히 권장합니다.",
+    hide_data_title: "🛡️ 익명화 및 금액 숨기기 (권장)",
+    hide_data_desc: "모든 특정 전표, 공급업체 세부 정보 및 절대 금액의 크기를 숨깁니다. AI가 생성한 관점 구조 및 위험 평가 결론만 공유합니다. 영업 비밀을 최대한 보호할 수 있습니다.",
+    show_data_title: "⚠️ 기밀 금액을 포함하여 전체 공개",
+    show_data_desc: "모든 회계 과목, 절대 잔액 및 관련 분석이 상세히 공개됩니다. 링크가 있는 사람은 누구나 완전한 내부 운영 데이터를 볼 수 있습니다.",
+    confirm: "확인 및 링크 생성"
   },
 };

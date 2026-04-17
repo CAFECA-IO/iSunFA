@@ -131,6 +131,11 @@ export const analysis = {
       processing: "处理中",
       failed: "失败",
     },
+    badges: {
+      external_link: "🔗 公开链接",
+      hidden_privacy: "🛡️ 已隐藏金额与明细",
+      public_data: "⚠️ 包含机密金额",
+    },
     empty_title: "尚无分析报告",
     empty_description:
       "使用我们先进的 A​​I 工具生成您的第一份财务分析报告，开启您的旅程。",
@@ -169,5 +174,15 @@ export const analysis = {
     cta_desc:
       "iSunFA 透过前沿 AI 技术，为您提供包含碳健检、财务评级、合规审查等全方位智能会计解决方案。",
     cta_button: "了解 iSunFA 阳光智能会计",
+  },
+  share_settings: {
+    title: "分析报告分享设置",
+    privacy_warning_title: "注意：此报告包含企业内部敏感机密数据。",
+    privacy_warning_desc: "对外分享前，请务必确认您已取得适当授权。强烈建议选择“去识别化与隐藏金额”，以确保商业机密不外流。",
+    hide_data_title: "🛡️ 去识别化与隐藏金额 (强烈建议)",
+    hide_data_desc: "将隐藏所有特定凭证、厂商明细与绝对金额大小，仅分享 AI 生成的神经结构与风险评估结论。这能最大程度保护您的商业机密。",
+    show_data_title: "⚠️ 完整公开包含机密金额",
+    show_data_desc: "您的所有会计科目、绝对余额与相关分析将详细公开，任何取得链接的人都能查看完整的内部营运数据。",
+    confirm: "确认并产生链接"
   },
 };

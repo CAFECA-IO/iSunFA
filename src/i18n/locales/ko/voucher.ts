@@ -86,6 +86,7 @@ export const voucher = {
     messages: {
       fetch_error: "전표를 가져오지 못했습니다",
       deleted_warning: "삭제된 전표는 편집할 수 없습니다",
+      no_entries_hint: "아직 회계 분개가 없습니다. 오른쪽 상단의 「분개 추가」 버튼을 클릭하세요.",
     },
     sections: {
       preview: "영수증 미리보기",

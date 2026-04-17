@@ -6,10 +6,19 @@ import {
   generateBaseExternalMission,
   IExternalPromptModule,
 } from "@/lib/worker/mission_generators/base_external.generator";
+import { generateBaseInternalMission } from "@/lib/worker/mission_generators/base_internal.generator";
 import * as Prompts from "@/constants/prompts/net_zero_emissions";
 
 export function generateMission(
   params: IMissionParams,
 ): IMissionDefinition | null {
-  return generateBaseExternalMission(params, Prompts as IExternalPromptModule);
+  if (params.isExternal) {
+    return generateBaseExternalMission(params, Prompts as IExternalPromptModule);
+  }
+
+  return generateBaseInternalMission(
+    params,
+    [{ key: "STEP_0_CAPEX", prompt: Prompts.INTERNAL_CAPEX_PROMPT }],
+    Prompts.INTERNAL_FINAL_PROMPT,
+  );
 }

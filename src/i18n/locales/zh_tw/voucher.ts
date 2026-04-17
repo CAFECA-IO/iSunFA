@@ -84,6 +84,7 @@ export const voucher = {
     messages: {
       fetch_error: "取得傳票失敗",
       deleted_warning: "已刪除傳票不可編輯",
+      no_entries_hint: "尚無會計分錄，請點擊右上方「新增分錄」按鈕",
     },
     sections: {
       preview: "憑證預覽",

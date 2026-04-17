@@ -104,16 +104,16 @@ export default function CoefficientSelectModal({
   ) : (
     <div className="flex flex-col items-center gap-2 px-10 py-5">
       <p className="text-base font-bold text-slate-700">
-        {t('coefficient.select_modal.no_unit_match_prefix')}
+        {t("coefficient.select_modal.no_unit_match_prefix")}
         <span className="underline underline-offset-2">{unit}</span>
-        {t('coefficient.select_modal.no_unit_match_suffix')}
+        {t("coefficient.select_modal.no_unit_match_suffix")}
       </p>
       <button
         type="button"
         onClick={gotoCoefficientPage}
         className="rounded-full bg-orange-400 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 ease-in-out hover:bg-orange-600"
       >
-        {t('coefficient.select_modal.goto_manage')}
+        {t("coefficient.select_modal.goto_manage")}
       </button>
     </div>
   );
@@ -161,7 +161,7 @@ export default function CoefficientSelectModal({
                     as="h3"
                     className="text-2xl font-bold text-slate-700"
                   >
-                    {t('coefficient.select_modal.title')}
+                    {t("coefficient.select_modal.title")}
                   </DialogTitle>
                 </div>
 

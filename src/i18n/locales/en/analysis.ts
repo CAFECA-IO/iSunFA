@@ -133,6 +133,11 @@ export const analysis = {
       processing: "Processing",
       failed: "Failed",
     },
+    badges: {
+      external_link: "🔗 Public Link",
+      hidden_privacy: "🛡️ Amounts Hidden",
+      public_data: "⚠️ Confidential Data",
+    },
     empty_title: "No Analysis Yet",
     empty_description:
       "Start your journey by generating your first financial analysis report using our advanced AI tools.",
@@ -174,5 +179,15 @@ export const analysis = {
     cta_desc:
       "iSunFA uses cutting-edge AI to provide smart accounting solutions including Carbon Health Checks, Financial Ratings, and Compliance Audits.",
     cta_button: "Discover iSunFA Smart Accounting",
+  },
+  share_settings: {
+    title: "Analysis Report Share Settings",
+    privacy_warning_title: "Warning: Contains sensitive enterprise data.",
+    privacy_warning_desc: "Before sharing publicly, ensure you have proper authorization. It is highly recommended to choose 'De-identify & Hide Amounts' to prevent trade secrets leaks.",
+    hide_data_title: "🛡️ De-identify & Hide Amounts (Recommended)",
+    hide_data_desc: "Hides all specific vouchers, vendor details, and absolute amounts. Only shares AI-generated structural insights and risk evaluation conclusions. Maximizes your trade secret protection.",
+    show_data_title: "⚠️ Fully Public with Confidential Amounts",
+    show_data_desc: "All accounting subjects, absolute balances, and related analysis will be detailed publicly. Anyone with the link can view your complete internal operations data.",
+    confirm: "Confirm & Generate Link"
   },
 };
