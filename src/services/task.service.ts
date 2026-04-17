@@ -2,7 +2,7 @@ import { taskRepo } from "@/repositories/task.repo";
 import { ChatService } from "@/services/chat.service";
 import { TASK_STATUS } from "@/constants/status";
 import { missionService } from "@/services/mission.service";
-import { Task, Mission } from "@/generated/client";
+import { Task, Mission, Prisma } from "@/generated/client";
 import { skillRegistry } from "@/skills";
 
 interface ITaskData {
@@ -104,9 +104,17 @@ export class TaskService {
 
       /**
        * Info: (20260130 - Luphia) 4. Save
-       * Save raw string result directly? Or wrap in object? AnalysisService uses JSON. Let's start with raw, or { content: result }?
+       * Info: (20260418 - Luphia) If the LLM returned a JSON string, try to parse it into an actual object so the DB stores valid JSON instead of a raw string literal.
        */
-      await taskRepo.updateStatus(task.id, TASK_STATUS.COMPLETED, result);
+      let finalContentToSave: Prisma.InputJsonValue = result;
+      try {
+        finalContentToSave = JSON.parse(result) as Prisma.InputJsonValue;
+      } catch {
+        // Info: (20260418 - Luphia) Fallback to raw string if it's not valid JSON
+        finalContentToSave = result;
+      }
+
+      await taskRepo.updateStatus(task.id, TASK_STATUS.COMPLETED, finalContentToSave);
       console.log(`[TaskService] Task ${task.id} Completed.`);
     } catch (error) {
       // Info: (20260320 - Julian) 處理任務失敗
@@ -158,7 +166,7 @@ export class TaskService {
     let targetKeyword = "General";
     let esgRecordsContext = "";
 
-    if (taskData.context) {
+    if (taskData.context && taskData.context.trim().startsWith("{")) {
       try {
         const parsedContext = JSON.parse(taskData.context);
         startDate = parsedContext.startDate || startDate;
@@ -166,11 +174,7 @@ export class TaskService {
         marketName = parsedContext.marketName || marketName;
         targetKeyword = parsedContext.target || targetKeyword;
         esgRecordsContext = parsedContext.esgRecordsContext || "";
-      } catch (e) {
-        console.warn(
-          "[TaskService] Could not parse task context for date validation",
-          e,
-        );
+      } catch {
         startDate = mData.startDate || "N/A";
         endDate = mData.endDate || "N/A";
       }
@@ -219,15 +223,15 @@ export class TaskService {
 
     let fullPrompt = "";
     if (taskData.context) {
-      try {
-        const parsedContext = JSON.parse(taskData.context);
-        const targetString = `Category: ${parsedContext.category || "N/A"} / Keyword: ${parsedContext.target} / Country: ${parsedContext.marketName} / Period: ${parsedContext.period} (Year: ${parsedContext.year})`;
-        fullPrompt = `${targetString}\n\n${interpolatedPrompt}`;
-      } catch (e) {
-        console.warn(
-          "[TaskService] Could not parse task context for target string",
-          e,
-        );
+      if (taskData.context.trim().startsWith("{")) {
+        try {
+          const parsedContext = JSON.parse(taskData.context);
+          const targetString = `Category: ${parsedContext.category || "N/A"} / Keyword: ${parsedContext.target} / Country: ${parsedContext.marketName} / Period: ${parsedContext.period} (Year: ${parsedContext.year})`;
+          fullPrompt = `${targetString}\n\n${interpolatedPrompt}`;
+        } catch {
+          fullPrompt = `${taskData.context}\n\n${interpolatedPrompt}`;
+        }
+      } else {
         fullPrompt = `${taskData.context}\n\n${interpolatedPrompt}`;
       }
     } else {

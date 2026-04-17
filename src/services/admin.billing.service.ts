@@ -12,7 +12,7 @@ export class AdminBillingService {
     const endDate = endDateStr ? new Date(endDateStr) : undefined;
 
     // Info: (20260416 - Luphia) 1. Calculate Metrics globally (for the selected date range)
-    const rewardTypes = ["CHECKIN_REWARD", "REGISTRATION_REWARD"];
+    const rewardTypes = ["CHECKIN_REWARD", "REGISTRATION_REWARD", "ADMIN_ISSUED"];
 
     // Info: (20260416 - Luphia) Aggregate using Repository
     const totalRevenue = await paymentRepo.getGlobalRevenueTotal(startDate, endDate);
@@ -79,7 +79,9 @@ export class AdminBillingService {
 
         if (rewardTypes.includes(order.type)) {
           isPositive = true;
-          sourceKey = order.type === "CHECKIN_REWARD" ? "billing.point_history.source_checkin" : "billing.point_history.source_registration";
+          if (order.type === "CHECKIN_REWARD") sourceKey = "billing.point_history.source_checkin";
+          else if (order.type === "REGISTRATION_REWARD") sourceKey = "billing.point_history.source_registration";
+          else if (order.type === "ADMIN_ISSUED") sourceKey = "billing.point_history.source_admin_issued";
         } else {
           // Info: (20260416 - Luphia) This is a consumption
           isPositive = false;

@@ -11,6 +11,7 @@ export interface IOrderParams {
   country?: string;
   keyword?: string;
   isExternal?: boolean;
+  data?: unknown; // Info: (20260418 - Luphia) Extraneous data mapping specific payload requirements
   items?: { name: string; unitPrice: number; quantity: number }[];
 }
 

@@ -70,7 +70,7 @@ export const ThreadCard = ({
             </div>
           </div>
           <p className="line-clamp-2 text-xs leading-relaxed text-orange-900">
-            {answer ?? ""}
+            {(!answer || answer === "-") ? t("ai_consultation_room.ai_is_thinking") : answer}
           </p>
         </div>
 

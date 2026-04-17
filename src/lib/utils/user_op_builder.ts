@@ -61,11 +61,13 @@ export async function buildTransferUserOp(
     const entryPointAbi = parseAbi([
       "function getNonce(address sender, uint192 key) external view returns (uint256)",
     ]);
-    nonce = await publicClient.readContract({
-      address: CONTRACT_ADDRESSES.ENTRY_POINT,
-      abi: entryPointAbi,
-      functionName: "getNonce",
-      args: [sender, BigInt(0)],
+      // Info: (20260418 - Luphia) Use random key to avoid AA25 pending nonce collisions
+      const randomKey = BigInt(Math.floor(Date.now() * Math.random()) % 1000000000);
+      nonce = await publicClient.readContract({
+        address: CONTRACT_ADDRESSES.ENTRY_POINT,
+        abi: entryPointAbi,
+        functionName: "getNonce",
+        args: [sender, randomKey],
     });
   } catch (e) {
     console.warn("Failed to fetch nonce, defaulting to 0", e);

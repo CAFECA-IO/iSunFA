@@ -1,4 +1,5 @@
 export const billing = {
+  title: "營收與發票",
   subtitle: "管理您的消費紀錄、帳戶點數與付款方式。",
   tabs: {
     orders: "消費紀錄",

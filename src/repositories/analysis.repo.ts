@@ -142,6 +142,16 @@ export class AnalysisRepository implements IAnalysisRepository {
     });
   }
 
+  async updateMissionUnpaid(missionId: string, errorReason: string) {
+    return prisma.mission.update({
+      where: { id: missionId },
+      data: {
+        status: MISSION_STATUS.UNPAID,
+        result: errorReason,
+      },
+    });
+  }
+
   async updateMissionPaymentSuccess(missionId: string) {
     const mission = await prisma.mission.findUnique({
       where: { id: missionId },

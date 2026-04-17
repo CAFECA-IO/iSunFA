@@ -1,10 +1,8 @@
 "use client";
 
 import { useRef, useState, useEffect, ReactNode, ChangeEvent, DragEvent } from 'react';
-
 import { useRouter } from "next/navigation";
-import { request } from "@/lib/utils/request";
-import { uploadFile, ILariaMetadata, fileToBase64 } from "@/lib/file_operator";
+import { uploadFile, ILariaMetadata } from "@/lib/file_operator";
 import {
   PlusIcon,
   MinusIcon,
@@ -17,14 +15,11 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { useAiContext } from "@/contexts/ai_context";
 import { useAuth } from "@/contexts/auth_context";
 import { IFile } from "@/interfaces/ai_talk";
-import { ApiCode } from "@/lib/utils/status";
 import LoginButton from "@/components/common/login_button";
 import ConfirmModal from "@/components/common/confirm_modal";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
-import { IApiResponse } from "@/lib/utils/response";
 import { FilePreview } from "@/components/common/file_preview";
 import { useOrderTransaction, IOrderPayload } from "@/hooks/use_order_transaction";
-import type { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 
 // Info: (20260302 - Julian) 目前先限制一次只能上傳一張圖片
 const FILE_LIMIT = 1;
@@ -37,7 +32,7 @@ export const AiChat = () => {
   const { user } = useAuth();
   const { isChatOpen, setIsChatOpen } = useAiContext();
 
-  const [files, setFiles] = useState<(IFile & { base64?: string })[]>([]);
+  const [files, setFiles] = useState<(IFile & { url?: string })[]>([]);
   const [localFiles, setLocalFiles] = useState<{ file: File; url: string }[]>(
     [],
   );
@@ -79,37 +74,23 @@ export const AiChat = () => {
     resetTransaction();
   };
 
-  const submitAiQuestion = async (authentication: AuthenticationJSON) => {
+  const submitAiQuestion = async (params: { reportId?: string }) => {
     setIsSubmitting(true);
     try {
-      const data = await request<IApiResponse<{ threadId: string }>>(
-        "/api/v1/ai_talk/thread",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            question,
-            files,
-            authentication,
-          }),
-        },
-      );
-
-      if (data.code === ApiCode.SUCCESS) {
+      if (params.reportId) {
         setQuestion("");
         setFiles([]);
         setLocalFiles([]);
 
-        // Info: (20260212 - Julian) 延遲 500 ms 後導向 /ai_consultation_room/{threadId} 頁面
+        // Info: (20260212 - Julian) 延遲 500 ms 後導向 /ai_consultation_room/{reportId} 頁面
         setTimeout(() => {
-          if (data.payload && data.payload.threadId) {
-            router.push(`/ai_consultation_room/${data.payload.threadId}`);
-          }
+          router.push(`/ai_consultation_room/${params.reportId}`);
         }, 500);
       } else {
-        console.error("Failed to create thread:", data.message);
+        console.error("Failed to acquire report ID from payment");
       }
     } catch (error) {
-      console.error("Error creating thread:", error);
+      console.error("Error redirecting:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -127,7 +108,15 @@ export const AiChat = () => {
           unitPrice: 5,
           quantity: 1,
         }
-      ]
+      ],
+      data: {
+        question: question,
+        files: files.map((f) => {
+          const copy = { ...f };
+          delete copy.url;
+          return copy;
+        }),
+      }
     };
     await executeOrderTransaction(orderPayload, 5, submitAiQuestion);
   };
@@ -191,8 +180,9 @@ export const AiChat = () => {
             });
           });
 
-          // Info: (20260213 - Julian) 同時轉換為 base64 供 AI 使用
-          const base64 = await fileToBase64(file);
+          // Info: (20260418 - Luphia) Skip base64 generation here; the worker will download it from IPFS directly to minimize payload size.
+          // Info: (20260418 - Luphia) Keep the object URL for displaying thumbnails instead.
+          const urlToKeep = newLocalFiles[i].url;
           setFiles((prev) => [
             ...prev,
             {
@@ -203,14 +193,12 @@ export const AiChat = () => {
               mimeType: file.type,
               metadata: JSON.stringify(uploadResult.metadata),
               fileSize: file.size,
-              base64,
+              url: urlToKeep,
             },
           ]);
 
-          // Info: (20260213 - Julian) 上傳成功後移除本地預覽
+          // Info: (20260213 - Julian) 上傳成功後移除本地預覽區塊的顯示，但不再撤銷 url，以便下方卡片繼續作為縮圖預覽使用
           setLocalFiles((prev) => {
-            const target = prev.find((item) => item.file === file);
-            if (target) URL.revokeObjectURL(target.url);
             return prev.filter((item) => item.file !== file);
           });
         } catch (uploadError) {
@@ -264,8 +252,8 @@ export const AiChat = () => {
         onClick={() => fileInputRef.current?.click()}
         disabled={isUploadDisabled}
         className={`flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-3 transition-all outline-none disabled:bg-gray-200 disabled:text-gray-500 ${isDragging
-            ? "scale-[1.02] border-orange-500 bg-orange-50 text-orange-600 shadow-md"
-            : "border-gray-200 text-gray-500 enabled:hover:border-orange-300 enabled:hover:bg-orange-50/50 enabled:hover:text-orange-500"
+          ? "scale-[1.02] border-orange-500 bg-orange-50 text-orange-600 shadow-md"
+          : "border-gray-200 text-gray-500 enabled:hover:border-orange-300 enabled:hover:bg-orange-50/50 enabled:hover:text-orange-500"
           }`}
       >
         {isUploadDisabled ? (
@@ -295,8 +283,8 @@ export const AiChat = () => {
         onClick={handleOpenPayment}
         disabled={isSubmitDisabled}
         className={`flex w-full items-center justify-center rounded-2xl py-4 font-bold shadow-lg transition-all ${isSubmitDisabled
-            ? "cursor-not-allowed bg-gray-200 text-gray-400 shadow-none"
-            : "bg-orange-600 text-white shadow-orange-200 hover:-translate-y-0.5 hover:bg-orange-500 active:scale-[0.98]"
+          ? "cursor-not-allowed bg-gray-200 text-gray-400 shadow-none"
+          : "bg-orange-600 text-white shadow-orange-200 hover:-translate-y-0.5 hover:bg-orange-500 active:scale-[0.98]"
           }`}
       >
         {isSubmitting ? (
@@ -313,8 +301,8 @@ export const AiChat = () => {
   return (
     <div
       className={`cubic-bezier(0.4, 0, 0.2, 1) fixed right-6 bottom-24 z-50 flex flex-col overflow-hidden border-2 border-orange-400 bg-white shadow-[0_20px_50px_rgba(234,88,12,0.15)] transition-all duration-500 ${isChatOpen
-          ? "h-[500px] w-80 rounded-3xl p-6"
-          : "h-16 w-16 items-center justify-center rounded-full p-0 hover:scale-110 hover:bg-orange-50 active:scale-95"
+        ? "h-[500px] w-80 rounded-3xl p-6"
+        : "h-16 w-16 items-center justify-center rounded-full p-0 hover:scale-110 hover:bg-orange-50 active:scale-95"
         }`}
     >
       {!isChatOpen && (

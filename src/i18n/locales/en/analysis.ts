@@ -118,6 +118,8 @@ export const analysis = {
     financial_product_rating: "Financial Product Rating",
     carbon_health_check: "Carbon Health Check",
     net_zero_emissions: "Net Zero Emissions",
+    ai_consulting: "AI Consultation",
+    journal_upload: "Journal Entry Creation",
   },
   history: {
     title: "Analysis History",

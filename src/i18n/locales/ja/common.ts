@@ -17,6 +17,7 @@ export const common = {
   cancel_edit_message:
     "編集をキャンセルしてもよろしいですか？データは元の状態に戻ります。",
   loading: "読み込み中...",
+  processing: "処理中...",
   save: "保存",
   confirm: "確認",
   verify_all: "一括確認",

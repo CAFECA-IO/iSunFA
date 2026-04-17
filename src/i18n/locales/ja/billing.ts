@@ -1,5 +1,6 @@
 export const billing = {
-  subtitle: "消費履歴、アカウントポイント、支払い方法を管理します。",
+  title: "収益と請求書",
+  subtitle: "消費履歴、アカウントポイント、および支払い方法を管理します。",
   tabs: {
     orders: "消費履歴",
     points: "ポイント履歴",

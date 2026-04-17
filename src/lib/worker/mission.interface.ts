@@ -17,6 +17,8 @@ export interface IMissionParams {
   accountBookId?: string;
   prerequisiteData?: Record<string, unknown>;
   isExternal?: boolean;
+  orderId?: string; // Info: (20260418 - Luphia) 訂單 ID
+  data?: unknown; // Info: (20260418 - Luphia) Payload data
 }
 
 export interface IMissionDefinition {

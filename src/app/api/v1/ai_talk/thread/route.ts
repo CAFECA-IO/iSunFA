@@ -5,7 +5,7 @@ import { IThread, IFile } from "@/interfaces/ai_talk";
 import { talkRepo } from "@/repositories/talk.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { ChatService } from "@/services/chat.service";
+
 import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import {
   decodeFunctionData,
@@ -16,6 +16,8 @@ import {
 } from "viem";
 import { AppError } from "@/lib/utils/error";
 import { orderGenerator } from "@/lib/order/order.generator";
+import { analysisService } from "@/services/analysis.service";
+import { MISSION_STATUS } from "@/constants/status";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS } from "@/config/contracts";
 import { webAuthnService } from "@/services/webauthn.service";
@@ -58,28 +60,53 @@ export async function GET() {
 
       // Info: (20260212 - Julian) 取得與討論串關聯的標籤名
       const threadTags = tagIds
-        .filter((tagId) => tagId.threadId === thread.id)
+        .filter((tagId) => tagId.analysisId === thread.id)
         .map((tagId) => tags.find((tag) => tag.id === tagId.tagId)?.name)
         .filter((name): name is string => !!name);
 
-      // Info: (20260212 - Julian) 取得與討論串關聯的按讚數、倒讚數
       const countOfLike =
-        likeCounts.find((reaction) => reaction.threadId === thread.id)?._count
+        likeCounts.find((reaction) => reaction.analysisId === thread.id)?._count
           ._all ?? 0;
       const countOfDislike =
-        dislikeCounts.find((reaction) => reaction.threadId === thread.id)
+        dislikeCounts.find((reaction) => reaction.analysisId === thread.id)
           ?._count._all ?? 0;
+
+      const data = (thread.data as unknown as { question?: string; data?: { question?: string } }) || {};
+      let questionStr = "";
+      if (data.question) {
+        questionStr = data.question;
+      } else if (data.data?.question) {
+        questionStr = data.data.question;
+      }
+
+      let answerStr = "-";
+      if (thread.result) {
+        if (typeof thread.result === "string") {
+          try {
+            const parsed = JSON.parse(thread.result);
+            if (parsed && typeof parsed === "object" && typeof parsed.answer === "string") {
+              answerStr = parsed.answer;
+            } else {
+              answerStr = thread.result;
+            }
+          } catch {
+            answerStr = thread.result;
+          }
+        } else {
+          answerStr = ((thread.result as unknown as { answer?: string })?.answer) || JSON.stringify(thread.result);
+        }
+      }
 
       return {
         id: thread.id,
-        question: thread.question,
-        answer: thread.answer ?? "-",
+        question: questionStr,
+        answer: answerStr,
         createdAt: new Date(thread.createdAt).getTime() / 1000,
         authorName,
         tags: threadTags,
         countOfLike,
         countOfDislike,
-        countOfShare: thread._count.shares,
+        countOfShare: thread._count.reportShareTokens,
         countOfComment: thread._count.comments,
       };
     });
@@ -189,11 +216,13 @@ export async function POST(request: NextRequest) {
           throw new Error("Transaction is not bound to this Order ID");
         }
 
-        const receipt = await publicClient.getTransactionReceipt({
+        // Info: (20260418 - Luphia) Wait for receipt since blockchain_payment returns txHash instantly
+        const receipt = await publicClient.waitForTransactionReceipt({
           hash: txHash as `0x${string}`,
+          timeout: 45000,
         });
         if (!receipt) {
-          throw new Error("Transaction receipt not found");
+          throw new Error("Transaction receipt could not be acquired");
         }
 
         let userOpSuccess = false;
@@ -213,7 +242,9 @@ export async function POST(request: NextRequest) {
                 break;
               }
             }
-          } catch {}
+          } catch {
+            // Ignored
+          }
         }
 
         if (!userOpSuccess) {
@@ -256,34 +287,27 @@ export async function POST(request: NextRequest) {
         `Verification failed: ${(error as Error).message}`,
       );
     }
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error("Missing GEMINI_API_KEY");
-      return jsonFail(
-        ApiCode.INTERNAL_SERVER_ERROR,
-        "Server configuration error",
-      );
+    // Info: (20260418 - Luphia) 觸發背景任務 (Analysis Mission)
+    const orderData = await orderGenerator.getPendingOrder(orderId, user.id);
+    const generateParams = {
+      ...(orderData.data as Record<string, unknown>),
+      orderId: orderId,
+      category: "ai_talk",
+      periodType: "daily",
+      periodValue: "1",
+      year: new Date().getFullYear(),
+      question,
+      files,
+      status: MISSION_STATUS.PENDING
+    };
+
+    const analysisRes = await analysisService.generateAnalysis(author.id, generateParams);
+
+    if (!analysisRes.success || !analysisRes.data?.reportId) {
+      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Failed to start AI Task");
     }
 
-    const chatService = new ChatService(apiKey);
-
-    // Info: (20260213 - Julian) 整理圖片資料發給 AI (直接從 body 取得，不經由 DB)
-    const imagesForAi = files.map((f: IFile) => ({
-      data: f.base64,
-      mimeType: f.mimeType,
-    }));
-
-    const { answer, tags } = await chatService.askAccountTalk(
-      question,
-      imagesForAi,
-    );
-
-    // Info: (20260212 - Julian) 建立討論串
-    const thread = await talkRepo.createThread({
-      question,
-      userId: author.id,
-      answer: answer,
-    });
+    const analysisId = analysisRes.data.reportId;
 
     // Info: (20260226 - Julian) 建立上傳檔案並與討論串關聯
     if (files.length > 0) {
@@ -291,21 +315,14 @@ export async function POST(request: NextRequest) {
         files.map((file: IFile) => ({
           hash: file.hash,
           fileName: file.fileName,
-          threadId: thread.id,
+          analysisId: analysisId,
         })),
       );
     }
 
-    // Info: (20260212 - Julian) 建立標籤並關聯
-    if (tags && tags.length > 0) {
-      for (const tagName of tags) {
-        const tag = await talkRepo.upsertTag(tagName);
+    // Info: (20260212 - Julian) 建立標籤並關聯 (由背景更新，這裡暫不處理)
 
-        await talkRepo.createThreadTag(thread.id, tag.id);
-      }
-    }
-
-    return jsonOk({ threadId: thread.id });
+    return jsonOk({ threadId: analysisId });
   } catch (error) {
     console.error("[API] /threads error:", error);
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");

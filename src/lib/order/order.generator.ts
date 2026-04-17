@@ -4,7 +4,8 @@ import { analysisRepo } from "@/repositories/analysis.repo";
 import { getAnalysisCost, IOrderParams } from "@/lib/analysis/pricing";
 import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
-import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/client";
+import { accountBookRepo } from "@/repositories/account_book.repo";
 
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 
@@ -79,22 +80,9 @@ export class OrderGenerator {
         const match = params.keyword.match(/\((.*?)\)/);
         const taxId = match ? match[1] : params.keyword;
 
-        const teamMembers = await prisma.teamMember.findMany({
-          where: { userId },
-        });
-        const teamIds = teamMembers.map((tm) => tm.teamId);
+        const hasData = await accountBookRepo.hasAssociatedEsgData(userId, taxId);
 
-        const matchedAccountBook = await prisma.accountBook.findFirst({
-          where: { teamId: { in: teamIds }, enterpriseId: taxId },
-        });
-
-        const esgRecordsCount = matchedAccountBook
-          ? await prisma.esgRecord.count({
-            where: { accountBookId: matchedAccountBook.id, deletedAt: null },
-          })
-          : 0;
-
-        if (esgRecordsCount === 0) {
+        if (!hasData) {
           throw new AppError(
             ApiCode.VALIDATION_ERROR,
             "該企業尚未建立 ESG 或財務數據紀錄。請先上傳相關資料，或是改為申請「外部分析報告」。",
@@ -131,7 +119,7 @@ export class OrderGenerator {
       type: "ANALYSIS",
       amount: -cost,
       // Info: (20260128 - Luphia) Store the full data object including timestamp
-      data: orderData,
+      data: orderData as Prisma.InputJsonObject,
       status: ORDER_STATUS.PENDING,
       challenge: challenge,
     });

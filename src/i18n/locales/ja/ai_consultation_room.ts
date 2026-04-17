@@ -45,4 +45,5 @@ export const aiConsultationRoom = {
   ai_name: "FAITH",
   q_label: "Q",
   ai_label: "AI",
+  ai_is_thinking: "AI が考え中...",
 };

@@ -4,8 +4,8 @@ import {
   Reaction,
   ReactionType,
   Tag,
-  Thread,
-  ThreadTag,
+  Analysis,
+  AnalysisTag,
   Comment,
 } from "@/generated/client";
 
@@ -20,17 +20,17 @@ export interface ITalkRepository {
   ): Promise<Reaction>;
   countReactions(commentId: string, type: ReactionType): Promise<number>;
 
-  getThreadReaction(userId: string, threadId: string): Promise<Reaction | null>;
+  getThreadReaction(userId: string, analysisId: string): Promise<Reaction | null>;
   createThreadReaction(
     userId: string,
-    threadId: string,
+    analysisId: string,
     type: ReactionType,
   ): Promise<Reaction>;
-  countThreadReactions(threadId: string, type: ReactionType): Promise<number>;
+  countThreadReactions(analysisId: string, type: ReactionType): Promise<number>;
 
-  getThreadById(threadId: string): Promise<Thread | null>;
+  getThreadById(analysisId: string): Promise<Analysis | null>;
   getCommentById(commentId: string): Promise<Comment | null>;
-  listCommentsByThreadId(threadId: string): Promise<
+  listCommentsByThreadId(analysisId: string): Promise<
     Prisma.CommentGetPayload<{
       include: { user: true; replyToUser: true; reactions: true };
     }>[]
@@ -38,30 +38,30 @@ export interface ITalkRepository {
   createComment(data: Prisma.CommentUncheckedCreateInput): Promise<Comment>;
 
   getThreadByIdWithFiles(
-    threadId: string,
-  ): Promise<Prisma.ThreadGetPayload<{ include: { files: true } }> | null>;
-  getTagsByThreadId(threadId: string): Promise<Tag[]>;
-  getReactionsByThreadId(threadId: string): Promise<Reaction[]>;
-  countSharesByThreadId(threadId: string): Promise<number>;
-  countCommentsByThreadId(threadId: string): Promise<number>;
+    analysisId: string,
+  ): Promise<Prisma.AnalysisGetPayload<{ include: { files: true } }> | null>;
+  getTagsByThreadId(analysisId: string): Promise<Tag[]>;
+  getReactionsByThreadId(analysisId: string): Promise<Reaction[]>;
+  countSharesByThreadId(analysisId: string): Promise<number>;
+  countCommentsByThreadId(analysisId: string): Promise<number>;
 
   listThreadsWithCounts(): Promise<
-    Prisma.ThreadGetPayload<{
-      include: { _count: { select: { comments: true; shares: true } } };
+    Prisma.AnalysisGetPayload<{
+      include: { _count: { select: { comments: true; reportShareTokens: true } } };
     }>[]
   >;
-  getThreadTagsByThreadIds(threadIds: string[]): Promise<ThreadTag[]>;
+  getThreadTagsByThreadIds(analysisIds: string[]): Promise<AnalysisTag[]>;
   getTagsByIds(tagIds: string[]): Promise<Tag[]>;
   getReactionCounts(): Promise<
     (Prisma.PickEnumerable<
       Prisma.ReactionGroupByOutputType,
-      "threadId" | "type"
+      "analysisId" | "type"
     > & { _count: { _all: number } })[]
   >;
-  createThread(data: Prisma.ThreadUncheckedCreateInput): Promise<Thread>;
+  createThread(data: Prisma.AnalysisUncheckedCreateInput): Promise<Analysis>;
   createFiles(data: Prisma.FileCreateManyInput[]): Promise<Prisma.BatchPayload>;
   upsertTag(name: string): Promise<Tag>;
-  createThreadTag(threadId: string, tagId: string): Promise<ThreadTag>;
+  createThreadTag(analysisId: string, tagId: string): Promise<AnalysisTag>;
 }
 
 export class TalkRepository implements ITalkRepository {
@@ -98,57 +98,58 @@ export class TalkRepository implements ITalkRepository {
     });
   }
 
-  async getThreadByIdWithFiles(threadId: string) {
-    return prisma.thread.findUnique({
-      where: { id: threadId },
+  async getThreadByIdWithFiles(analysisId: string) {
+    return prisma.analysis.findUnique({
+      where: { id: analysisId },
       include: { files: true },
     });
   }
 
-  async getTagsByThreadId(threadId: string) {
-    const threadTags = await prisma.threadTag.findMany({
-      where: { threadId },
+  async getTagsByThreadId(analysisId: string) {
+    const threadTags = await prisma.analysisTag.findMany({
+      where: { analysisId },
     });
     return prisma.tag.findMany({
       where: { id: { in: threadTags.map((tt) => tt.tagId) } },
     });
   }
 
-  async getReactionsByThreadId(threadId: string) {
+  async getReactionsByThreadId(analysisId: string) {
     return prisma.reaction.findMany({
-      where: { threadId },
+      where: { analysisId },
     });
   }
 
-  async countSharesByThreadId(threadId: string) {
-    return prisma.share.count({
-      where: { threadId },
+  async countSharesByThreadId(analysisId: string) {
+    return prisma.reportShareToken.count({
+      where: { analysisId },
     });
   }
 
-  async countCommentsByThreadId(threadId: string) {
+  async countCommentsByThreadId(analysisId: string) {
     return prisma.comment.count({
-      where: { threadId },
+      where: { analysisId },
     });
   }
 
   async listThreadsWithCounts() {
-    return prisma.thread.findMany({
+    return prisma.analysis.findMany({
+      where: { type: "ai_consulting" },
       orderBy: { createdAt: "desc" },
       include: {
         _count: {
           select: {
             comments: true,
-            shares: true,
+            reportShareTokens: true,
           },
         },
       },
     });
   }
 
-  async getThreadTagsByThreadIds(threadIds: string[]) {
-    return prisma.threadTag.findMany({
-      where: { threadId: { in: threadIds } },
+  async getThreadTagsByThreadIds(analysisIds: string[]) {
+    return prisma.analysisTag.findMany({
+      where: { analysisId: { in: analysisIds } },
     });
   }
 
@@ -160,13 +161,13 @@ export class TalkRepository implements ITalkRepository {
 
   async getReactionCounts() {
     return prisma.reaction.groupBy({
-      by: ["threadId", "type"],
+      by: ["analysisId", "type"],
       _count: { _all: true },
     });
   }
 
-  async createThread(data: Prisma.ThreadUncheckedCreateInput) {
-    return prisma.thread.create({ data });
+  async createThread(data: Prisma.AnalysisUncheckedCreateInput) {
+    return prisma.analysis.create({ data });
   }
 
   async createFiles(data: Prisma.FileCreateManyInput[]) {
@@ -181,39 +182,39 @@ export class TalkRepository implements ITalkRepository {
     });
   }
 
-  async createThreadTag(threadId: string, tagId: string) {
-    return prisma.threadTag.create({
-      data: { threadId, tagId },
+  async createThreadTag(analysisId: string, tagId: string) {
+    return prisma.analysisTag.create({
+      data: { analysisId, tagId },
     });
   }
 
-  async getThreadReaction(userId: string, threadId: string) {
+  async getThreadReaction(userId: string, analysisId: string) {
     return prisma.reaction.findUnique({
       where: {
-        userId_threadId: { userId, threadId },
+        userId_analysisId: { userId, analysisId },
       },
     });
   }
 
   async createThreadReaction(
     userId: string,
-    threadId: string,
+    analysisId: string,
     type: ReactionType,
   ) {
     return prisma.reaction.create({
-      data: { userId, threadId, type },
+      data: { userId, analysisId, type },
     });
   }
 
-  async countThreadReactions(threadId: string, type: ReactionType) {
+  async countThreadReactions(analysisId: string, type: ReactionType) {
     return prisma.reaction.count({
-      where: { threadId, type },
+      where: { analysisId, type },
     });
   }
 
-  async getThreadById(threadId: string) {
-    return prisma.thread.findUnique({
-      where: { id: threadId },
+  async getThreadById(analysisId: string) {
+    return prisma.analysis.findUnique({
+      where: { id: analysisId },
     });
   }
 
@@ -223,9 +224,9 @@ export class TalkRepository implements ITalkRepository {
     });
   }
 
-  async listCommentsByThreadId(threadId: string) {
+  async listCommentsByThreadId(analysisId: string) {
     return prisma.comment.findMany({
-      where: { threadId },
+      where: { analysisId },
       include: {
         user: true,
         replyToUser: true,

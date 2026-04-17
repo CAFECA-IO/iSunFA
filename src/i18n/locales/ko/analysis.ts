@@ -118,6 +118,8 @@ export const analysis = {
     financial_product_rating: "금융 상품 평가",
     carbon_health_check: "탄소 건강 검진",
     net_zero_emissions: "넷제로 배출",
+    ai_consulting: "AI 컨설팅",
+    journal_upload: "분개장 등록",
   },
   history: {
     title: "분석 기록",

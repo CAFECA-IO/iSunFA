@@ -16,6 +16,7 @@ export const common = {
   cancel_edit_title: "取消修改？",
   cancel_edit_message: "確定要取消修改嗎？資料將回到原始狀態。",
   loading: "載入中...",
+  processing: "處理中...",
   save: "儲存",
   confirm: "確認",
   verify_all: "一鍵核對",

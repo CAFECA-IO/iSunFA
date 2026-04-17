@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { talkRepo } from "@/repositories/talk.repo";
+import { IFile } from "@/interfaces/ai_talk";
 import { ApiCode } from "@/lib/utils/status";
 import { bundlerService } from "@/services/bundler.service";
 import { analysisService } from "@/services/analysis.service";
@@ -8,7 +10,6 @@ import { webAuthnService } from "@/services/webauthn.service";
 import { orderGenerator } from "@/lib/order/order.generator";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { publicClient } from "@/lib/viem_public";
-import { analysisRepo } from "@/repositories/analysis.repo";
 import { MISSION_STATUS } from "@/constants/status";
 
 export async function POST(
@@ -73,49 +74,43 @@ export async function POST(
      * Using any logic directly from the generated order data.
      */
     const orderData = order.data as Record<string, unknown>;
-    const generateParams = {
-      ...orderData,
-      orderId: orderId,
-      category: orderData.category as string,
-      periodType: orderData.periodType as string,
-      periodValue: orderData.periodValue as string,
-      year: orderData.year as number,
-      status: MISSION_STATUS.PAYING // Info: (20260417 - Luphia) Force PAYING status
-    };
+    const category = orderData.category as string;
 
-    const analysisRes = await analysisService.generateAnalysis(user.id, generateParams);
+    let analysisRes: { success: boolean; data?: Record<string, unknown> | unknown } = { success: true };
+    let resData: { reportId?: string } = {};
 
-    // Info: (20260417 - Luphia) 6. Spawn Background task to wait for the receipt, and advance state
-    type TAnalysisResData = { reportId?: string };
-    const resData = (analysisRes.data || {}) as TAnalysisResData;
+    // Info: (20260418 - Luphia) Automatically generate mission for ALL categories including ai_talk, but SKIP journal_upload since it generates missions per-file manually.
+    if (category !== "journal_upload") {
+      const generateParams = {
+        ...orderData,
+        orderId: orderId,
+        category: category,
+        periodType: orderData.periodType as string,
+        periodValue: orderData.periodValue as string,
+        year: orderData.year as number,
+        status: MISSION_STATUS.PAYING // Info: (20260417 - Luphia) Force PAYING status
+      };
 
-    if (analysisRes.success && resData.reportId) {
-      // Info: (20260417 - Luphia) We don't await this so the API responds instantly
-      const reportId = resData.reportId;
-
-      publicClient.waitForTransactionReceipt({ hash: txHash as `0x${string}` })
-        .then(async (receipt) => {
-          if (receipt.status !== "success") {
-            // Info: (20260417 - Luphia) Payment failed on chain
-            console.error(`[PaymentAsync] Tx ${txHash} reverted for order ${orderId}`);
-            await orderGenerator.failOrder(orderId, "UserOp transaction reverted");
-            // Info: (20260417 - Luphia) Mark mission failed
-            const analysisObj = await analysisRepo.findById(reportId);
-            if (analysisObj && analysisObj.missionId) {
-              await analysisRepo.updateMissionUploadFailed(analysisObj.missionId, "Payment Tx Reverted on chain");
-            }
-          } else {
-            // Info: (20260417 - Luphia) Payment Success logic
-            console.log(`[PaymentAsync] Tx ${txHash} SUCCESS for order ${orderId}`);
-            const analysisObj = await analysisRepo.findById(reportId);
-            if (analysisObj && analysisObj.missionId) {
-              await analysisRepo.updateMissionPaymentSuccess(analysisObj.missionId);
-            }
-          }
-        }).catch(async (e) => {
-          console.error(`[PaymentAsync] Polling error for tx ${txHash}:`, e);
-        });
+      analysisRes = await analysisService.generateAnalysis(user.id, generateParams);
+      resData = (analysisRes.data || {}) as { reportId?: string };
     }
+
+    // Info: (20260418 - Luphia) 建立上傳檔案並與討論串關聯 (Restore AI Talk logic)
+    if (category === "ai_talk" && resData.reportId && orderData.data) {
+      const payloadData = orderData.data as { files?: IFile[] };
+      if (payloadData.files && payloadData.files.length > 0) {
+        await talkRepo.createFiles(
+          payloadData.files.map((file: IFile) => ({
+            hash: file.hash,
+            fileName: file.fileName,
+            analysisId: resData.reportId!,
+          }))
+        );
+      }
+    }
+
+    // Info: (20260418 - Luphia) 6. Offload transaction verification entirely to the reliable background worker
+    // Info: (20260418 - Luphia) The worker's transactionTrackerService will poll for TxHash success/reverted state seamlessly.
 
     // Info: (20260417 - Luphia) 7. Return instantly
     return jsonOk({

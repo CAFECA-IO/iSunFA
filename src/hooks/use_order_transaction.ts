@@ -20,6 +20,7 @@ export interface IOrderPayload {
   country?: string;
   keyword?: string;
   isExternal?: boolean;
+  data?: unknown;
   items: {
     name: string;
     unitPrice: number;
@@ -50,8 +51,9 @@ export const useOrderTransaction = () => {
       authData: {
         orderId: string;
         transactionHash: string;
+        reportId?: string;
       } & AuthenticationJSON,
-    ) => Promise<void>,
+    ) => Promise<void> | void,
   ) => {
     if (executingFlagRef.current) return false;
     executingFlagRef.current = true;
@@ -133,6 +135,7 @@ export const useOrderTransaction = () => {
       await onPaymentSuccess({
         orderId,
         transactionHash,
+        reportId: submitRes.payload?.reportId,
         ...transferAuth,
       });
 

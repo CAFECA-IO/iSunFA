@@ -1,4 +1,5 @@
 export const billing = {
+  title: "Revenue & Invoices",
   subtitle:
     "Manage your consumption records, account points, and payment methods.",
   tabs: {

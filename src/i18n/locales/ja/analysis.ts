@@ -118,9 +118,11 @@ export const analysis = {
     financial_health: "財務健全性",
     market_trends: "市場動向",
     industry_development: "産業発展",
-    financial_product_rating: "金融商品評価",
+    financial_product_rating: "金融商品格付け",
     carbon_health_check: "カーボンヘルスチェック",
-    net_zero_emissions: "ネットゼロ排出",
+    net_zero_emissions: "ネットゼロエミッション",
+    ai_consulting: "AI コンサルティング",
+    journal_upload: "仕訳帳の作成",
   },
   history: {
     title: "分析履歴",

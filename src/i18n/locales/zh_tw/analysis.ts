@@ -116,6 +116,8 @@ export const analysis = {
     financial_product_rating: "金融商品評級",
     carbon_health_check: "碳健檢",
     net_zero_emissions: "淨零碳排",
+    ai_consulting: "AI 諮詢",
+    journal_upload: "日記帳建檔",
   },
   history: {
     title: "歷史分析報告",

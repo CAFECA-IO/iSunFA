@@ -5,13 +5,12 @@ import {
 import { generateIrscMission } from "@/lib/worker/mission_generators/irsc.generator";
 import { generateDocumentParsingMission } from "@/lib/worker/mission_generators/document.generator";
 import { generateJournalCorrectionMission } from "@/lib/worker/mission_generators/journal_correction.generator";
-
+import { generateAiTalkMission } from "@/lib/worker/mission_generators/ai_talk.generator";
 import { generateMission as generateMarketTrends } from "@/lib/worker/mission_generators/market_trends.generator";
 import { generateMission as generateIndustryDevelopment } from "@/lib/worker/mission_generators/industry_development.generator";
 import { generateMission as generateFinancialProductRating } from "@/lib/worker/mission_generators/financial_product_rating.generator";
 import { generateMission as generateCarbonHealthCheck } from "@/lib/worker/mission_generators/carbon_health_check.generator";
 import { generateMission as generateNetZeroEmissions } from "@/lib/worker/mission_generators/net_zero_emissions.generator";
-
 import { generateMission as generateBalanceSheet } from "@/lib/worker/mission_generators/balance_sheet.generator";
 import { generateMission as generateCashFlow } from "@/lib/worker/mission_generators/cash_flow.generator";
 import { generateMission as generateIncomeStatement } from "@/lib/worker/mission_generators/income_statement.generator";
@@ -30,6 +29,7 @@ const GENERATOR_MAP: Record<string, MissionGeneratorFn> = {
   irsc: generateIrscMission,
   document_parsing: generateDocumentParsingMission,
   journal_correction: generateJournalCorrectionMission,
+  ai_talk: generateAiTalkMission,
 
   // Info: (20260406 - Luphia) External generators
   market_trends: generateMarketTrends,

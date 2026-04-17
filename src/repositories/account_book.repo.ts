@@ -20,6 +20,7 @@ export interface IAccountBookRepository {
     teamId: string,
   ): Promise<AccountBook>;
   softDelete(accountBookId: string): Promise<AccountBook>;
+  hasAssociatedEsgData(userId: string, enterpriseId: string): Promise<boolean>;
 }
 
 export class AccountBookRepository {
@@ -134,6 +135,25 @@ export class AccountBookRepository {
       data: { deletedAt: new Date() },
     });
     return accountBook;
+  }
+
+  async hasAssociatedEsgData(userId: string, enterpriseId: string): Promise<boolean> {
+    const teamMembers = await prisma.teamMember.findMany({
+      where: { userId },
+    });
+    const teamIds = teamMembers.map((tm) => tm.teamId);
+
+    const matchedAccountBook = await prisma.accountBook.findFirst({
+      where: { teamId: { in: teamIds }, enterpriseId: enterpriseId },
+    });
+
+    const esgRecordsCount = matchedAccountBook
+      ? await prisma.esgRecord.count({
+        where: { accountBookId: matchedAccountBook.id, deletedAt: null },
+      })
+      : 0;
+
+    return esgRecordsCount > 0;
   }
 }
 

@@ -63,6 +63,7 @@ export const AttachmentItem = ({ file }: { file: IFile }) => {
     <div className="relative mb-1 flex h-[90px] w-full shrink-0 items-center justify-center overflow-hidden rounded-xl">
       <FilePreview
         fileId={file.hash}
+        base64={file.base64}
         file={{ filename: localMeta.hash, mimeType: localMeta.mimeType }}
         className="pointer-events-none h-full w-full object-cover"
       />
@@ -131,6 +132,7 @@ export const AttachmentItem = ({ file }: { file: IFile }) => {
                     <div className="relative flex h-full w-full items-center justify-center">
                       <FilePreview
                         fileId={file.hash}
+                        base64={file.base64}
                         file={{
                           filename: localMeta.hash,
                           mimeType: localMeta.mimeType,
