@@ -1,6 +1,7 @@
 import { AccountBook } from "@/generated/client";
 import { ICoefficient } from "@/interfaces/coefficient";
 import { ESG_EMISSION_FACTORS_TEXT } from "@/constants/esg_emission_factors";
+import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
 
 export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null, coefficients?: Partial<ICoefficient>[]) => {
   const accountBookInfo = accountBook
@@ -42,6 +43,9 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null, coeffici
   請一定要參考以下環境部公告的溫室氣體排放係數表來核對計算公式與數據：
   ${ESG_EMISSION_FACTORS_TEXT}
 
+  【活動類型】請從以下清單中選擇最符合的活動類型，並將該活動類型的 key 填入回傳 JSON 的 \`activityType\` 欄位：
+  ${EsgActivityTypeMapping.map((a) => (`${a.key}: ${a.value}，${a.description}`)).join("\n")}
+
   請在「dqiScore」中，根據以下標準來計算數據品質分數（數字 1-5，1 為最優，5 為最差)：
   1. 技術相關性 (Te)：數據是否真實反映了產品所使用的技術、設備或製程。優質標準：數據來自實際生產線的特定技術（如：使用特定品牌、型號的電爐數據，而非產業平均值）。
   2. 地理相關性 (Ge)：數據的地理位置是否與排放源位置相符。優質標準：數據來自排放源所在地的特定地理位置（如：使用特定國家、地區的排放係數，而非全球平均值）。
@@ -55,7 +59,7 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null, coeffici
   {
       "tradingDate": "YYYY-MM-DD", // 交易日期 
       "scope": "SCOPE_1", // 溫室氣體範疇 ("SCOPE_1" | "SCOPE_2" | "SCOPE_3")
-      "activityType": "電力使用", // 活動類型
+      "activityType": "EMPLOYEE_COMMUTING", // 活動類型
       "vendor": "心心小舖", // 供應商
       "amount": 2.01, // 活動數據 (數字)
       "unit": "度", // 單位

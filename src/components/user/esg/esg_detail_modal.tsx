@@ -20,6 +20,7 @@ import FilePreviewModal from "@/components/common/file_preview_modal";
 import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
 import CoefficientSelectModal from "@/components/user/esg/coefficient_select_modal";
+import { EsgActivityTypeMapping, EsgActivityTypeKey } from "@/constants/esg_activity_type";
 
 interface IEsgDetailModalProps {
   isOpen: boolean;
@@ -182,7 +183,8 @@ export default function EsgDetailModal({
   // Info: (20260416 - Julian) 檢查排放量和強度是否改變
   const isEmissionsChanged =
     calculatedResult.totalEmissions && originalData?.emissions
-      ? parseFloat(calculatedResult.totalEmissions.toString()) !== parseFloat(originalData?.emissions)
+      ? parseFloat(calculatedResult.totalEmissions.toString()) !==
+        parseFloat(originalData?.emissions)
       : false;
   const isIntensityChanged =
     calculatedResult.intensityLevel && originalData?.intensity
@@ -199,8 +201,6 @@ export default function EsgDetailModal({
     : "";
   const EsgContent = (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[#F8FAFC]">
-      {/* Info: (20260312 - Julian) Header (Removed for embedded) */}
-
       {/* Info: (20260326 - Julian) Body */}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-[10px]">
         <div className="flex shrink-0 flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
@@ -281,12 +281,33 @@ export default function EsgDetailModal({
           {/* Info: (20260312 - Julian) Activity Type */}
           <div className="col-span-2">
             <label
-              htmlFor="activityType"
+              htmlFor="activityTypeSelect"
               className="mb-1.5 block text-sm font-bold text-slate-500"
             >
               {t("esg_verify.form.activity_type")}
             </label>
-            <input
+            <select
+              id="activityTypeSelect"
+              aria-label={t("esg_verify.form.activity_type")}
+              value={
+                EsgActivityTypeMapping.find((a) => a.key === formData.activityType)?.key
+                 ?? formData.activityType?.toString()}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  activityType: e.target.value as EsgActivityTypeKey ?? null,
+                })
+              }
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
+            >
+              {EsgActivityTypeMapping.map((a) => (
+                <option key={a.key} value={a.key}>
+                  {a.value}
+                  {/* {t(`esg_verify.form.activity_type.${a.key}`)} */}
+                </option>
+              ))}
+            </select>
+            {/* <input
               id="activityType"
               aria-label={t("esg_verify.form.activity_type")}
               type="text"
@@ -298,7 +319,7 @@ export default function EsgDetailModal({
                 })
               }
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
-            />
+            /> */}
           </div>
 
           {/* Info: (20260312 - Julian) Vendor / Object */}
@@ -395,7 +416,9 @@ export default function EsgDetailModal({
               <div className="col-span-2">
                 <div className="mb-1.5 flex items-center gap-2 text-sm font-bold">
                   <Calculator size={16} className="text-orange-400" />
-                  <p className="text-slate-500">{t("esg_verify.emissions.formula_and_coef")}</p>
+                  <p className="text-slate-500">
+                    {t("esg_verify.emissions.formula_and_coef")}
+                  </p>
                 </div>
                 {/* Info: (20260415 - Julian) Coefficient Selector */}
                 <button
@@ -433,7 +456,9 @@ export default function EsgDetailModal({
                   className="mb-1.5 flex items-center gap-1 text-sm font-bold"
                 >
                   <Leaf size={16} className="text-orange-400" />
-                  <p className="text-slate-500">{t("esg_verify.emissions.total")}</p>
+                  <p className="text-slate-500">
+                    {t("esg_verify.emissions.total")}
+                  </p>
                 </label>
                 <div className="flex items-baseline gap-2">
                   <input
@@ -463,7 +488,9 @@ export default function EsgDetailModal({
                     size={16}
                     className="text-orange-400"
                   />
-                  <p className="text-slate-500">{t("esg_verify.emissions.intensity")}</p>
+                  <p className="text-slate-500">
+                    {t("esg_verify.emissions.intensity")}
+                  </p>
                 </label>
                 <input
                   id="esgIntensityInput"

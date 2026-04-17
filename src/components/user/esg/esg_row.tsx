@@ -17,6 +17,7 @@ import { FilePreview } from "@/components/common/file_preview";
 import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
 
 export function EsgRow({
   record,
@@ -74,6 +75,8 @@ export function EsgRow({
   };
 
   const renderScope = (scope: EsgScope | null) => {
+    const activityType = EsgActivityTypeMapping.find((a) => a.key === record.activityType)?.value ?? record.activityType?.toString()
+
     switch (scope) {
       case EsgScope.SCOPE_1:
         return (
@@ -83,7 +86,7 @@ export function EsgRow({
             </div>
             <div className="flex flex-wrap">
               <p>{t("esg_table.scope.scope_1")}：</p>
-              <p>{record.activityType}</p>
+              <p>{activityType}</p>
             </div>
           </div>
         );
@@ -95,7 +98,7 @@ export function EsgRow({
             </div>
             <div className="flex flex-wrap">
               <p>{t("esg_table.scope.scope_2")}：</p>
-              <p>{record.activityType}</p>
+              <p>{activityType}</p>
             </div>
           </div>
         );
@@ -107,7 +110,7 @@ export function EsgRow({
             </div>
             <div className="flex flex-wrap">
               <p>{t("esg_table.scope.scope_3")}：</p>
-              <p>{record.activityType}</p>
+              <p>{activityType}</p>
             </div>
           </div>
         );
@@ -337,18 +340,6 @@ export function EsgRow({
           <span className="text-sm font-semibold text-slate-800">
             {record.emissions}
           </span>
-          {/* {record.coefficient && (
-            <div className="flex flex-col items-center justify-center">
-              <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200 ring-inset">
-                {record.coefficient}
-              </span>
-              {record.coefficientSource && (
-                <span className="mt-0.5 text-[9px] text-slate-400">
-                  {record.coefficientSource}
-                </span>
-              )}
-            </div>
-          )} */}
         </div>
       </td>
       {/* Info: (20260320 - Julian) Intensity */}

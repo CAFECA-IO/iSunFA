@@ -64,9 +64,9 @@ export default function CoefficientAddEditModal({
 
   // Info: (20260414 - Julian) 送出結果
   const confirmCoefficient = () => {
-    // Info: (20260417 - Julian) 無條件捨去小數點後兩位
-    const efNum = parseFloat(emissionFactor)
-    const efFloor = Math.floor(efNum * 100) / 100
+    // Info: (20260417 - Julian) 無條件捨去小數點後四位
+    const efNum = parseFloat(emissionFactor);
+    const efFloor = Math.floor(efNum * 10000) / 10000;
 
     const input: ICoefficientInput = {
       name,
@@ -78,7 +78,9 @@ export default function CoefficientAddEditModal({
     onConfirm(input);
   };
 
-  const handleEmissionFactorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEmissionFactorChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const value = e.target.value;
 
     // Info: (20260417 - Julian) 允許清空
@@ -96,7 +98,7 @@ export default function CoefficientAddEditModal({
     } else {
       setEmissionFactor(value);
     }
-  }
+  };
 
   useEffect(() => {
     // Info: (20260414 - Julian) 從 API 取得係數資料
@@ -178,7 +180,10 @@ export default function CoefficientAddEditModal({
             htmlFor="coefficient-ef"
             className="text-xs text-slate-600 lg:text-base"
           >
-            {t("coefficient.card.ef")} <span className="text-[10px] text-slate-400">小數點後兩位無條件捨去</span>
+            {t("coefficient.card.ef")}{" "}
+            <span className="text-[10px] text-slate-400">
+              小數點後四位無條件捨去
+            </span>
           </label>
           <input
             id="coefficient-ef"
@@ -189,7 +194,7 @@ export default function CoefficientAddEditModal({
             max={MAX_VALUE}
             value={emissionFactor}
             onChange={handleEmissionFactorChange}
-            placeholder="0.00"
+            placeholder="0.0000"
             className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-xs text-slate-800 outline-none placeholder:text-gray-400 lg:text-sm"
           />
         </div>
