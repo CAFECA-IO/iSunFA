@@ -28,8 +28,6 @@ interface IEsgDetailModalProps {
   onSave?: (record: IEsgRecord) => void;
 }
 
-// const UNIT_LIST = ["kWh", "L", "kg", "m³", "km", "ton", "次", "件"];
-
 export default function EsgDetailModal({
   isOpen,
   onClose,
@@ -480,26 +478,6 @@ export default function EsgDetailModal({
                 />
               </div>
             </div>
-          </div>
-
-          {/* Info: (20260312 - Julian) Note */}
-          <div className="col-span-2">
-            <label
-              htmlFor="noteTextarea"
-              className="mb-1.5 block text-sm font-bold text-slate-500"
-            >
-              {t("common.note")}
-            </label>
-            <textarea
-              id="noteTextarea"
-              aria-label={t("common.note")}
-              value={formData.aiNote}
-              onChange={(e) =>
-                setFormData({ ...formData, aiNote: e.target.value })
-              }
-              rows={4}
-              className="w-full resize-none rounded-xl border border-slate-300 bg-white p-4 text-xs leading-relaxed text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
-            />
           </div>
         </div>
       </div>

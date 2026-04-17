@@ -87,6 +87,7 @@ export const voucher = {
     messages: {
       fetch_error: "获取凭证失败",
       deleted_warning: "已删除凭证不可编辑",
+      no_entries_hint: "尚无会计分录，请点击右上方「新增分录」按钮",
     },
     sections: {
       preview: "发票预览",
