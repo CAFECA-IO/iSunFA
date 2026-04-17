@@ -1,4 +1,4 @@
-import React from "react";
+import { Dispatch, SetStateAction, FC } from 'react';
 import Image from "next/image";
 import { useTranslation } from "@/i18n/i18n_context";
 import NumericInput from "@/components/common/numeric_input";
@@ -6,13 +6,13 @@ import NumericInput from "@/components/common/numeric_input";
 interface IAmountInputProps {
   title: string;
   value: number;
-  setValue: React.Dispatch<React.SetStateAction<number>>;
+  setValue: Dispatch<SetStateAction<number>>;
   required?: boolean;
   minimum?: number;
   maximum?: number;
 }
 
-const AmountInput: React.FC<IAmountInputProps> = ({
+const AmountInput: FC<IAmountInputProps> = ({
   title,
   value,
   setValue,

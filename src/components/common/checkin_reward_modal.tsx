@@ -1,6 +1,7 @@
 "use client";
 
-import React, { Fragment } from "react";
+import { Fragment, FC } from 'react';
+
 import { useTranslation } from "@/i18n/i18n_context";
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 import { CheckCircle2 } from "lucide-react";
@@ -11,7 +12,7 @@ interface ICheckinRewardModalProps {
   rewardAmount: number;
 }
 
-export const CheckinRewardModal: React.FC<ICheckinRewardModalProps> = ({ isOpen, onClose, rewardAmount }) => {
+export const CheckinRewardModal: FC<ICheckinRewardModalProps> = ({ isOpen, onClose, rewardAmount }) => {
   const { t } = useTranslation();
 
   return (

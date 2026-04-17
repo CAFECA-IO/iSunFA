@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, KeyboardEvent } from 'react';
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -29,7 +29,7 @@ export default function Pagination({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handleGo();
     }

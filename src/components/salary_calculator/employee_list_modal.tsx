@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, FC, KeyboardEvent, ChangeEvent } from 'react';
 import { useTranslation } from "@/i18n/i18n_context";
 import { X, Search, User, Hash } from "lucide-react";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
@@ -8,11 +8,11 @@ interface IEmployeeListModalProps {
   modalVisibleHandler: () => void;
 }
 
-const EmployeeItem: React.FC<{
+const EmployeeItem: FC<{
   employee: IEmployeeForCalc;
   handleClick: () => void;
 }> = ({ employee, handleClick }) => {
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       handleClick();
@@ -50,7 +50,7 @@ const EmployeeItem: React.FC<{
   );
 };
 
-const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({
+const EmployeeListModal: FC<IEmployeeListModalProps> = ({
   modalVisibleHandler,
 }) => {
   const { t } = useTranslation();
@@ -71,7 +71,7 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({
   );
 
   // ToDo: (20250711 - Julian) Search by keyword
-  const changeKeyword = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const changeKeyword = (e: ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value);
   };
 

@@ -1,10 +1,10 @@
-import React from "react";
+import { FC } from 'react';
 import { useTranslation } from "@/i18n/i18n_context";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { MIN_WORK_HOURS, MAX_LEAVE_HOURS } from "@/constants/salary_calculator";
 import HourCounter from "@/components/salary_calculator/hour_counter";
 
-const WorkHoursForm: React.FC = () => {
+const WorkHoursForm: FC = () => {
   const { t } = useTranslation();
 
   const {

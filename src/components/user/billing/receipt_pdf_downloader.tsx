@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, MouseEvent } from 'react';
+
 import { Download, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { formatDate } from '@/lib/utils/date';
@@ -44,7 +45,7 @@ export default function ReceiptPdfDownloader({
   const [realRandomCode, setRealRandomCode] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleDownload = async (e: React.MouseEvent) => {
+  const handleDownload = async (e: MouseEvent) => {
     e.stopPropagation();
     if (isDownloading || !containerRef.current) return;
     setIsDownloading(true);

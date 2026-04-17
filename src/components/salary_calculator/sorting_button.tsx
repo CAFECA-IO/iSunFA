@@ -1,8 +1,8 @@
-import React from "react";
+import { FC } from 'react';
 import { ArrowUpDown } from "lucide-react";
 import { SortOrder } from "@/constants/sort";
 
-const SortingButton: React.FC<{
+const SortingButton: FC<{
   string: string;
   sortOrder: null | SortOrder;
   setSortOrder: (sortOrder: null | SortOrder) => void;

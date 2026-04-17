@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent } from 'react';
+
 import { useParams } from "next/navigation";
 import { Filter, Download } from "lucide-react";
 import EmbedGenerateModal from "@/components/user/financial_report/embed_generate_modal";
@@ -158,18 +159,18 @@ export default function ReportView() {
   const handleCloseModal = () => setIsEmbedModalOpen(false);
 
   // Info: (20260330 - Julian) 變更報表種類
-  const handleReportTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleReportTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSelectedReportType(e.target.value as ReportType);
   };
 
   // Info: (20260330 - Julian) 變更報表期間
   const handleReportPeriodChange = (
-    e: React.ChangeEvent<HTMLSelectElement>,
+    e: ChangeEvent<HTMLSelectElement>,
   ) => {
     setSelectedReportPeriod(e.target.value as ReportPeriod);
   };
 
-  const handleReportYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleReportYearChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSelectedReportYear(parseInt(e.target.value, 10));
   };
 

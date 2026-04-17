@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, FC, KeyboardEvent, Dispatch, SetStateAction } from 'react';
+
 import { useTranslation } from "@/i18n/i18n_context";
 import { Calendar, Download, DollarSign } from "lucide-react";
 import { IReceivedRecord } from "@/interfaces/pay_slip";
@@ -12,7 +13,7 @@ import ViewPaySlipModal from "@/components/salary_calculator/view_pay_slip_modal
 const cellStyle =
   "table-cell align-middle border-b border-stroke-neutral-quaternary px-6 py-3";
 
-const ReceivedItem: React.FC<{
+const ReceivedItem: FC<{
   record: IReceivedRecord;
   itemClickHandler: (recordId: string) => void;
 }> = ({ record, itemClickHandler }) => {
@@ -22,7 +23,7 @@ const ReceivedItem: React.FC<{
   const amountStr = `NT $${numberWithCommas(netPay)}`;
 
   const clickHandler = () => itemClickHandler(id);
-  const keyDownHandler = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const keyDownHandler = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       itemClickHandler(id);
@@ -71,12 +72,12 @@ const ReceivedItem: React.FC<{
   );
 };
 
-const ReceivedTab: React.FC<{
+const ReceivedTab: FC<{
   receivedRecords: IReceivedRecord[];
   payPeriodSortOrder: SortOrder | null;
-  setPayPeriodSortOrder: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  setPayPeriodSortOrder: Dispatch<SetStateAction<SortOrder | null>>;
   netPaySortOrder: SortOrder | null;
-  setNetPaySortOrder: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  setNetPaySortOrder: Dispatch<SetStateAction<SortOrder | null>>;
 }> = ({
   receivedRecords,
   payPeriodSortOrder,

@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment, useState, useEffect, useRef } from "react";
+import { Fragment, useState, useEffect, useRef, FormEvent } from 'react';
+
 import {
   Dialog,
   DialogPanel,
@@ -230,7 +231,7 @@ export default function PaymentModal({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     // Info: (20260303 - Tzuhan) [流程 2-1: 確認付款] 使用者在付款彈窗中勾選同意條款並點擊確認付款
     setLoading(true);

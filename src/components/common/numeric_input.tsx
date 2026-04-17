@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, InputHTMLAttributes, Dispatch, SetStateAction, ChangeEvent, FC, ClipboardEvent, KeyboardEvent, WheelEvent } from 'react';
+
 import { numberWithCommas } from '@/lib/utils/common';
 // import BigNumberjs from 'bignumber.js';
 
@@ -14,16 +15,16 @@ const KEYBOARD_EVENT_CODE = {
   PERIOD: 'Period',
 };
 
-interface INumericInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface INumericInputProps extends InputHTMLAttributes<HTMLInputElement> {
   value: number | string;
   setValue?:
-    | React.Dispatch<React.SetStateAction<number>>
-    | React.Dispatch<React.SetStateAction<string>>;
+    | Dispatch<SetStateAction<number>>
+    | Dispatch<SetStateAction<string>>;
   isDecimal?: boolean;
   hasComma?: boolean; // Info: (20240722 - Liz) 新增逗號顯示
   triggerWhenChanged?:
-    | ((value: number, e: React.ChangeEvent<HTMLInputElement>) => void)
-    | ((value: string, e: React.ChangeEvent<HTMLInputElement>) => void);
+    | ((value: number, e: ChangeEvent<HTMLInputElement>) => void)
+    | ((value: string, e: ChangeEvent<HTMLInputElement>) => void);
   // Info: (20250811 - Shirley) 新增參數決定使用字串或數字模式
   useStringValue?: boolean;
 }
@@ -49,7 +50,7 @@ const formatDisplayValue = (
   return stringValue;
 };
 
-const NumericInput: React.FC<INumericInputProps> = ({
+const NumericInput: FC<INumericInputProps> = ({
   value,
   setValue,
   isDecimal,
@@ -81,16 +82,16 @@ const NumericInput: React.FC<INumericInputProps> = ({
   useEffect(() => {
     if (setValue) {
       if (useStringValue) {
-        (setValue as React.Dispatch<React.SetStateAction<string>>)(dbValue.toString());
+        (setValue as Dispatch<SetStateAction<string>>)(dbValue.toString());
       } else {
-        (setValue as React.Dispatch<React.SetStateAction<number>>)(
+        (setValue as Dispatch<SetStateAction<number>>)(
           typeof dbValue === 'number' ? dbValue : parseFloat(dbValue.toString()) || 0
         );
       }
     }
   }, [dbValue, setValue, useStringValue]);
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
 
     // Info: (20250709 - Julian) 取得最大值和最小值，沒有則為 undefined
@@ -151,13 +152,13 @@ const NumericInput: React.FC<INumericInputProps> = ({
 
     if (triggerWhenChanged) {
       if (useStringValue) {
-        (triggerWhenChanged as (value: string, e: React.ChangeEvent<HTMLInputElement>) => void)(
+        (triggerWhenChanged as (value: string, e: ChangeEvent<HTMLInputElement>) => void)(
           validNumericValue.toString(),
           event
         );
       } else {
         // Info: (20250319 - Anna) BigNumber ➝ number：callback 傳原生數字
-        (triggerWhenChanged as (value: number, e: React.ChangeEvent<HTMLInputElement>) => void)(
+        (triggerWhenChanged as (value: number, e: ChangeEvent<HTMLInputElement>) => void)(
           // validNumericValue.toNumber(),
           parseFloat(validNumericValue),
           event
@@ -166,7 +167,7 @@ const NumericInput: React.FC<INumericInputProps> = ({
     }
   };
 
-  const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+  const handlePaste = (event: ClipboardEvent<HTMLInputElement>) => {
     event.preventDefault();
 
     const pasteData = event.clipboardData.getData('text');
@@ -177,7 +178,7 @@ const NumericInput: React.FC<INumericInputProps> = ({
     const target = event.target as HTMLInputElement;
 
     // Info: (20250603 - Anna) 將處理過的值送到 handleChange
-    handleChange({ target: { value: cleanedValue } } as React.ChangeEvent<HTMLInputElement>);
+    handleChange({ target: { value: cleanedValue } } as ChangeEvent<HTMLInputElement>);
 
     // Info: (20250603 - Anna) 將游標移到最後
     requestAnimationFrame(() => {
@@ -187,7 +188,7 @@ const NumericInput: React.FC<INumericInputProps> = ({
   };
 
   // Info: (20250306 - Julian) 處理在中文輸入法下，填入數字的情況
-  function convertInput(event: React.KeyboardEvent<HTMLInputElement>) {
+  function convertInput(event: KeyboardEvent<HTMLInputElement>) {
     // Info: (20250603 - Anna)  忽略 Ctrl/Cmd + V（貼上）
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') {
       return;
@@ -231,7 +232,7 @@ const NumericInput: React.FC<INumericInputProps> = ({
       temp = temp.slice(0, cursorPos) + code + temp.slice(cursorPos);
 
       // Info: (20250306 - Julian) 變更顯示值
-      handleChange({ target: { value: temp } } as React.ChangeEvent<HTMLInputElement>);
+      handleChange({ target: { value: temp } } as ChangeEvent<HTMLInputElement>);
     }
   }
 
@@ -251,7 +252,7 @@ const NumericInput: React.FC<INumericInputProps> = ({
   };
 
   // Info: (20240710 - Julian) 禁止滾輪改變數值
-  const handleWheel = (e: React.WheelEvent<HTMLInputElement>) => {
+  const handleWheel = (e: WheelEvent<HTMLInputElement>) => {
     e.currentTarget.blur();
   };
 

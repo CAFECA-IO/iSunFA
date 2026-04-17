@@ -1,17 +1,17 @@
-import React from "react";
+import { Dispatch, SetStateAction, FC } from 'react';
 import { Plus, Minus } from "lucide-react";
 import NumericInput from "@/components/common/numeric_input";
 
 interface IHourCounterProps {
   title: string;
   value: number;
-  setValue: React.Dispatch<React.SetStateAction<number>>;
+  setValue: Dispatch<SetStateAction<number>>;
   maxValue?: number;
   minValue?: number;
 }
 
 // Info: (20250709 - Julian) 時數計數器
-const HourCounter: React.FC<IHourCounterProps> = ({
+const HourCounter: FC<IHourCounterProps> = ({
   title,
   value,
   setValue,

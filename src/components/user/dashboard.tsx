@@ -28,7 +28,7 @@ export default function Dashboard() {
   } = useDashboardData();
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setMounted(true);
   }, []);
 

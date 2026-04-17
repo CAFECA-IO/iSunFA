@@ -1,6 +1,7 @@
 'use client';
 
-import { Fragment, useState } from 'react';
+import { Fragment, useState, ReactNode } from 'react';
+
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { Coins, X, Loader2, Copy, Check, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
@@ -12,7 +13,7 @@ export type PaymentStatus = 'idle' | 'preparing' | 'signing_payment' | 'submitti
 
 export interface IPaymentDetailItem {
   label: string;
-  value: React.ReactNode;
+  value: ReactNode;
 }
 
 interface IPaymentConfirmModalProps {

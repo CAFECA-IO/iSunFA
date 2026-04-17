@@ -1,4 +1,4 @@
-import React from "react";
+import { FC } from 'react';
 import { AlertCircle } from "lucide-react";
 import ProgressBar from "@/components/salary_calculator/progress_bar";
 import StepTabs from "@/components/salary_calculator/step_tabs";
@@ -10,7 +10,7 @@ import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { useTranslation } from "@/i18n/i18n_context";
 import { getMinimumWage } from "@/lib/utils/salary_calculator";
 
-const SalaryFormSection: React.FC = () => {
+const SalaryFormSection: FC = () => {
   const {
     currentStep,
     baseSalary,

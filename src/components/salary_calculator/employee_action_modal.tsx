@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, FC, ChangeEvent } from 'react';
+
 import { useTranslation } from "@/i18n/i18n_context";
 import { IEmployeeForCalc } from "@/interfaces/employees";
 import AmountInput from "@/components/salary_calculator/amount_input";
@@ -12,7 +13,7 @@ interface IEmployeeActionModalProps {
   modalVisibleHandler: () => void;
 }
 
-const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
+const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
   type,
   data,
   modalVisibleHandler,
@@ -47,13 +48,13 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
       ? t("calculator.employee_list.add_employee")
       : t("calculator.employee_list.edit_employee");
 
-  const changeNameHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const changeNameHandler = (e: ChangeEvent<HTMLInputElement>) => {
     setNameInput(e.target.value);
   };
-  const changeNumberHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const changeNumberHandler = (e: ChangeEvent<HTMLInputElement>) => {
     setNumberInput(e.target.value);
   };
-  const changeEmailHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const changeEmailHandler = (e: ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value;
     setEmailInput(email);
 

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, FC, ChangeEvent } from 'react';
+
 import { useTranslation } from "@/i18n/i18n_context";
 import { Search, User, Hash, Mail, Plus, Edit, Trash } from "lucide-react";
 import { IEmployeeForCalc, dummyEmployeeForCalc } from "@/interfaces/employees";
@@ -12,7 +13,7 @@ import EmployeeActionModal from "@/components/salary_calculator/employee_action_
 const cellStyle =
   "table-cell align-middle border-b border-stroke-neutral-quaternary px-24px py-12px";
 
-const EmployeeItem: React.FC<{
+const EmployeeItem: FC<{
   employee: IEmployeeForCalc;
   editHandler: (employee: IEmployeeForCalc) => void;
 }> = ({ employee, editHandler }) => {
@@ -92,7 +93,7 @@ const EmployeeItem: React.FC<{
   );
 };
 
-const EmployeeList: React.FC = () => {
+const EmployeeList: FC = () => {
   const { t } = useTranslation();
 
   const employeeList = dummyEmployeeForCalc;
@@ -107,7 +108,7 @@ const EmployeeList: React.FC = () => {
 
   // const [totalPages, setTotalPages] = useState<number>(0);
 
-  const changeKeyword = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const changeKeyword = (e: ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value);
   };
 

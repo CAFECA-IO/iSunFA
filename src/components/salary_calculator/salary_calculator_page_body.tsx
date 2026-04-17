@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, FC } from 'react';
+
 import Image from "next/image";
 import { useTranslation } from "@/i18n/i18n_context";
 import SalaryResultSection from "@/components/salary_calculator/salary_result_section";
@@ -13,7 +14,7 @@ enum CalcTab {
   PAY_SLIP = "paySlip",
 }
 
-const SalaryCalculatorPageBody: React.FC = () => {
+const SalaryCalculatorPageBody: FC = () => {
   const { t } = useTranslation();
   const [currentTab, setCurrentTab] = useState<CalcTab>(CalcTab.CALCULATOR);
 

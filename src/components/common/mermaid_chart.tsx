@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, FC } from 'react';
+
 import mermaid from 'mermaid';
 
 interface IMermaidChartProps {
   chart: string;
 }
 
-const MermaidChart: React.FC<IMermaidChartProps> = ({ chart }) => {
+const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
   const [svgStr, setSvgStr] = useState<string>('');
   const [hasError, setHasError] = useState(false);
 

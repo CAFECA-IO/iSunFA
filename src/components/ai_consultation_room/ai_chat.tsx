@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, ReactNode, ChangeEvent, DragEvent } from 'react';
+
 import { useRouter } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { uploadFile, ILariaMetadata, fileToBase64 } from "@/lib/file_operator";
@@ -43,7 +44,7 @@ export const AiChat = () => {
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
-    message: string | React.ReactNode;
+    message: string | ReactNode;
   }>({
     isOpen: false,
     title: "",
@@ -221,22 +222,22 @@ export const AiChat = () => {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     processFiles(e.target.files);
     e.target.value = "";
   };
 
-  const onDragOver = (e: React.DragEvent) => {
+  const onDragOver = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
-  const onDragLeave = (e: React.DragEvent) => {
+  const onDragLeave = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
   };
 
-  const onDrop = (e: React.DragEvent) => {
+  const onDrop = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     processFiles(e.dataTransfer.files);

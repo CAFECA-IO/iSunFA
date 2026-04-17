@@ -1,9 +1,9 @@
-import React from "react";
+import { FC } from 'react';
 import { useTranslation } from "@/i18n/i18n_context";
 import CalculatorHeader from "@/components/salary_calculator/calculator_header";
 import EmployeeList from "@/components/salary_calculator/employee_list";
 
-const EmployeeListPageBody: React.FC = () => {
+const EmployeeListPageBody: FC = () => {
   const { t } = useTranslation();
 
   return (

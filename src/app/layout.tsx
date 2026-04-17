@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { redirect } from 'next/navigation';
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   // Info: (20260118 - Luphia) Check if .env has all required keys from .env.example
   const headersList = await headers();

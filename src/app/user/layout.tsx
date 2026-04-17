@@ -1,5 +1,7 @@
 'use client';
 
+import { ReactNode } from 'react';
+
 import AuthGuard from '@/components/auth/auth_guard';
 import UserHeader from '@/components/user/user_header';
 import UserFooter from '@/components/user/user_footer';
@@ -8,7 +10,7 @@ import FaithAgent from '@/components/user/faith_agent';
 export default function UserLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <AuthGuard>

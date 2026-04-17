@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, MouseEvent } from 'react';
+
 import { useTranslation } from '@/i18n/i18n_context';
 import { Settings, X, Check } from 'lucide-react';
 import { MarkdownContent } from '@/components/common/markdown_content';
@@ -104,7 +105,7 @@ const CookieConsent = ({ privacyPolicyContent = '' }: ICookieConsentProps) => {
     saveConsent(preferences);
   };
 
-  const openPrivacy = (e: React.MouseEvent) => {
+  const openPrivacy = (e: MouseEvent) => {
     e.preventDefault();
     setShowPrivacy(true);
   };

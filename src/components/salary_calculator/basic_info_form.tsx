@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, Fragment } from "react";
+import { useState, Fragment, FC, ChangeEvent } from 'react';
+
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   Listbox,
@@ -20,7 +21,7 @@ import {
 } from "@/interfaces/salary_calculator";
 import { INDUSTRY_CATEGORY_OPTIONS } from "@/constants/industry_category";
 
-const BasicInfoForm: React.FC = () => {
+const BasicInfoForm: FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
 
@@ -83,11 +84,11 @@ const BasicInfoForm: React.FC = () => {
     setIsShowEmployeeListModal((prev) => !prev);
 
   // Info: (20250709 - Julian) input change handlers
-  const handleEmployeeNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEmployeeNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     changeEmployeeName(e.target.value);
   };
   const handleEmployeeNumberChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: ChangeEvent<HTMLInputElement>,
   ) => {
     changeEmployeeNumber(e.target.value);
   };

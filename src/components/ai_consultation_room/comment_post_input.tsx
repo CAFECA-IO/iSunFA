@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, KeyboardEvent } from 'react';
 import { request } from "@/lib/utils/request";
 import { User, Send, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -63,7 +63,7 @@ export const CommentPostInput = ({
   };
 
   // Info: (20260213 Julian) 處理按鍵事件
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     // Info: (20260213 Julian) 如果正在輸入法組字（選字）中，就直接跳過不執行
     if (e.nativeEvent.isComposing) {
       return;

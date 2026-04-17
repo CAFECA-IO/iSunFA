@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, FormEvent } from 'react';
+
 import {
   Network,
   Loader2,
@@ -118,7 +119,7 @@ export default function BlockchainDashboardPage() {
     }
   };
 
-  const handleMintSubmit = (e: React.FormEvent) => {
+  const handleMintSubmit = (e: FormEvent) => {
     e.preventDefault();
     const amt = parseFloat(mintAmount);
     if (!amt || amt <= 0) {

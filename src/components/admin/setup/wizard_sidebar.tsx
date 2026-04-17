@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, ElementType } from 'react';
 import { useTranslation } from "@/i18n/i18n_context";
 import { CheckCircle2, CircleDashed, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 
@@ -6,7 +6,7 @@ export interface IWizardStep {
   id: number;
   title: string;
   detail: string;
-  component?: React.ElementType;
+  component?: ElementType;
 }
 
 export interface IWizardSidebarProps {

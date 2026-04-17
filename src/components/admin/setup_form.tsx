@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
+
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/i18n/i18n_context';
 import LanguageSelector from '@/components/header/language_selector';
@@ -47,7 +48,7 @@ export default function SetupForm({ envVars }: ISetupFormProps) {
     return initial;
   });
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
     setError(null);

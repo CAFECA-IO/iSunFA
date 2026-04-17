@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import { useTranslation } from "@/i18n/i18n_context";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { StepStatus } from "@/components/admin/setup/setup_types";
@@ -9,8 +10,8 @@ export interface IStepCardProps {
   isActive: boolean;
   status: StepStatus;
   errorMessage?: string;
-  children?: React.ReactNode;
-  actionContent?: React.ReactNode;
+  children?: ReactNode;
+  actionContent?: ReactNode;
   onReset?: () => void;
 }
 

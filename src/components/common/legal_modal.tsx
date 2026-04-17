@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, UIEvent } from 'react';
+
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { X, Smile } from 'lucide-react';
 import { MarkdownContent } from '@/components/common/markdown_content';
@@ -39,7 +40,7 @@ export default function LegalModal({ isOpen, onClose, documentType }: ILegalModa
     }
   }, [isOpen, documentType]);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  const handleScroll = (e: UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     // Info: (20260118 - Luphia) Allow small buffer (e.g. 5px)
     if (scrollHeight - scrollTop - clientHeight < 5) {

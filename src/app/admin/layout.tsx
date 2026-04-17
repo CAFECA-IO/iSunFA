@@ -1,5 +1,7 @@
 'use client';
 
+import { ReactNode } from 'react';
+
 import { usePathname } from 'next/navigation';
 import AdminAuthGuard from '@/components/admin/admin_auth_guard';
 import UserHeader from '@/components/user/user_header';
@@ -8,7 +10,7 @@ import UserFooter from '@/components/user/user_footer';
 export default function AdminLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const pathname = usePathname();
 

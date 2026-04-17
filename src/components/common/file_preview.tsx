@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, FC, MouseEvent } from 'react';
 import { ILariaMetadata, downloadFile } from '@/lib/file_operator';
 
 export const getExtension = (filename: string) => {
@@ -44,7 +44,7 @@ const inProgressDownloads = new Map<string, {
 
 
 
-export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fileId, url, base64: initialBase64, progress, loadPreview, className }) => {
+export const FilePreview: FC<IFilePreviewProps> = ({ file: initialFile, fileId, url, base64: initialBase64, progress, loadPreview, className }) => {
   const [downloadedBase64, setDownloadedBase64] = useState<string | undefined>(undefined);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [downloadProgress, setDownloadProgress] = useState<number>(0);
@@ -201,7 +201,7 @@ export const FilePreview: React.FC<IFilePreviewProps> = ({ file: initialFile, fi
     );
   }
 
-  const preventContext = (e: React.MouseEvent) => e.preventDefault();
+  const preventContext = (e: MouseEvent) => e.preventDefault();
   const isImg = isImage(meta.filename) || meta.mimeType?.startsWith('image/');
   const isVid = isVideo(meta.filename) || meta.mimeType?.startsWith('video/');
   const isAud = isAudio(meta.filename) || meta.mimeType?.startsWith('audio/');

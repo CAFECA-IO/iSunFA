@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, ChangeEvent, KeyboardEvent } from 'react';
+
 import Image from 'next/image';
 import { Image as ImageIcon, Send, X, FileText } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
@@ -24,7 +25,7 @@ export default function ChatInput({ onSend, disabled }: IChatInputProps) {
     setSelectedFile(null);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     // Info: (20260213 Julian) 如果正在輸入法組字（選字）中，就直接跳過不執行
     if (e.nativeEvent.isComposing) {
       return;

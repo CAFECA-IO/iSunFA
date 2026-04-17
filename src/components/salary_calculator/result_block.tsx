@@ -1,4 +1,4 @@
-import React from "react";
+import { FC } from 'react';
 import { numberWithCommas } from "@/lib/utils/common";
 import { RowItem } from "@/interfaces/salary_calculator";
 
@@ -7,7 +7,7 @@ interface IResultBlockProps {
   rowItems: RowItem[];
 }
 
-const ResultBlock: React.FC<IResultBlockProps> = ({
+const ResultBlock: FC<IResultBlockProps> = ({
   backgroundColor,
   rowItems,
 }) => {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, MouseEvent } from 'react';
+
 import Link from "next/link";
 import { Book, Users, UserCircle2, Plus, Pencil } from "lucide-react";
 import { Dialog } from "@headlessui/react";
@@ -120,7 +121,7 @@ export default function UserMainPage() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (e: React.MouseEvent, book: IAccountBook) => {
+  const openEditModal = (e: MouseEvent, book: IAccountBook) => {
     e.preventDefault();
     setEditingBook(book);
     setFormName(book.name);

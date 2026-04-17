@@ -104,13 +104,13 @@ const tslintConfigs = [
       'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      'react/react-in-jsx-scope': 'off',
+
       // ToDo: (20260417 - Luphia) 需修正並取消此設置
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/preserve-manual-memoization': 'off',
       'react/jsx-props-no-spreading': 'off',
       'react/require-default-props': 'off',
-      'react/react-in-jsx-scope': 'off',
-
       'no-restricted-imports': [
         'error',
         { patterns: [{ group: ['./*', '../*'], message: "請使用 '@/' 路徑別名取代相對路徑 '..'" }] },

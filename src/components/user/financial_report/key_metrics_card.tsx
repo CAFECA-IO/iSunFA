@@ -1,15 +1,16 @@
 "use client";
 
+import { useState, ReactNode } from 'react';
+
 import { Info, CircleCheckBig, TriangleAlert } from "lucide-react";
-import { useState } from "react";
 
 interface IKeyMetricsCardProps {
   title: string;
-  value: number | string | React.ReactNode;
+  value: number | string | ReactNode;
   description: string;
   textColor: string;
   statusGood?: boolean;
-  tooltip?: string | React.ReactNode;
+  tooltip?: string | ReactNode;
   className?: string;
   tooltipAlign?: TooltipAlign;
 }

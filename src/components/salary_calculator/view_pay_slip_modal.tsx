@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import { useRef, useState, FC } from 'react';
+
 import { toPng } from "html-to-image";
 import { useTranslation } from "@/i18n/i18n_context";
 import { X, Download, Send } from "lucide-react";
@@ -19,7 +20,7 @@ interface IViewPaySlipModal {
   sentTo?: string; // Info: (20250725 - Julian) 發送對象
 }
 
-const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
+const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
   monthStr,
   yearStr,
   paySlipData,

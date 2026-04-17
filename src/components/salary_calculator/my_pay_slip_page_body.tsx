@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, Fragment } from "react";
+import { useState, useMemo, Fragment, FC, ChangeEvent } from 'react';
+
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   Listbox,
@@ -18,7 +19,7 @@ import { dummyReceivedData, dummySentData } from "@/interfaces/pay_slip";
 import { SortOrder } from "@/constants/sort";
 import { timestampToString } from "@/lib/utils/common";
 
-const FilterSection: React.FC<{
+const FilterSection: FC<{
   selectedYear: string;
   setSelectedYear: (year: string) => void;
   selectedMonth: string;
@@ -50,7 +51,7 @@ const FilterSection: React.FC<{
       ? t("calculator.my_pay_slip.all")
       : t(`date.month_name.${val.slice(0, 3).toLowerCase()}`);
 
-  const changeSearchQuery = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const changeSearchQuery = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
@@ -148,7 +149,7 @@ const FilterSection: React.FC<{
   );
 };
 
-const MyPaySlipPageBody: React.FC = () => {
+const MyPaySlipPageBody: FC = () => {
   const { t } = useTranslation();
 
   // ToDo: (20260225 - Julian) should replace with real data

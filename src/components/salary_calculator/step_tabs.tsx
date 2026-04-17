@@ -1,4 +1,4 @@
-import React from "react";
+import { FC } from 'react';
 import { useTranslation } from "@/i18n/i18n_context";
 import { CircleCheck } from "lucide-react";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
@@ -6,7 +6,7 @@ import { useCalculatorCtx } from "@/contexts/calculator_context";
 // import { MessageType } from '@/interfaces/message_modal';
 import { getMinimumWage } from "@/lib/utils/salary_calculator";
 
-const StepTabs: React.FC = () => {
+const StepTabs: FC = () => {
   const { t } = useTranslation();
   const steps = [
     t("calculator.tabs.basic_info"),

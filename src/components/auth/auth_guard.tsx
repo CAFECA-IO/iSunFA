@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
+
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth_context';
 
-export default function AuthGuard({ children }: { children: React.ReactNode }) {
+export default function AuthGuard({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
@@ -15,7 +16,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         // Info: (20260118 - Luphia) Redirect to home if not authenticated
         router.replace('/');
       } else {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         setAuthorized(true);
       }
     }

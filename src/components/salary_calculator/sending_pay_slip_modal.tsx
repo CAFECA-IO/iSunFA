@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import { useState, FC, ChangeEvent } from 'react';
 import { Mail, X } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 
-const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
+const SendingPaySlipModal: FC<{ modalVisibleHandler: () => void }> = ({
   modalVisibleHandler,
 }) => {
   const { t } = useTranslation();
@@ -17,7 +17,7 @@ const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
   const [emailInput, setEmailInput] = useState<string>(employeeEmail);
   const [isValidEmail, setIsValidEmail] = useState<boolean>(true);
 
-  const changeEmailInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const changeEmailInput = (e: ChangeEvent<HTMLInputElement>) => {
     setEmailInput(e.target.value);
     // Info: (20250723 - Julian) 驗證電子郵件格式
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

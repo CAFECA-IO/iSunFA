@@ -1,4 +1,4 @@
-import React from "react";
+import { SubmitEvent } from 'react';
 import { Coins, ArrowRight } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { IBlockchainDashboardData } from "@/services/admin.blockchain.service";
@@ -8,7 +8,7 @@ interface IBlockchainMintFormProps {
   mintAmount: string;
   setMintAmount: (amount: string) => void;
   isMinting: boolean;
-  handleMintSubmit: (e: React.SubmitEvent) => void;
+  handleMintSubmit: (e: SubmitEvent) => void;
 }
 
 export default function BlockchainMintForm({
