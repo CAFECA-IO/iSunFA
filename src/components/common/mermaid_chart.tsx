@@ -51,7 +51,7 @@ const MermaidChart: React.FC<IMermaidChartProps> = ({ chart }) => {
   }, [chart]);
 
   useEffect(() => {
-    if (parsedPieData) return; // Skip mermaid rendering if we intercepted a pie chart
+    if (parsedPieData) return; // Info: (20260418 - Tzuhan) Skip mermaid rendering if we intercepted a pie chart
     // Info: (20260418 - Tzuhan) Applied premium aesthetic color palette for Mermaid charts to avoid muddy default dark theme
     mermaid.initialize({
       startOnLoad: false,
