@@ -73,7 +73,7 @@ export const DonutChart: React.FC<IDonutChartProps> = ({ title, data, colors = D
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-gray-100/60 p-6 my-6 w-full transition-all duration-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] ring-1 ring-black/5 flex flex-col md:flex-row items-center gap-8">
+    <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-gray-100/60 p-6 my-6 w-full transition-all duration-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] ring-1 ring-black/5 flex flex-col md:flex-row items-center gap-8 break-inside-avoid print:break-inside-avoid">
       {/* Info: (20260418 - Tzuhan) Chart Section */}
       <div className="w-full md:w-1/3 flex flex-col items-center justify-center min-w-[220px]">
         {title && (

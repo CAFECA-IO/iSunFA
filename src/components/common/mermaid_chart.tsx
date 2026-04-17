@@ -123,7 +123,7 @@ const MermaidChart: React.FC<IMermaidChartProps> = ({ chart }) => {
   }
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full break-inside-avoid print:break-inside-avoid">
       <style>{`
         .mermaid-container svg {
           max-width: 100%;
