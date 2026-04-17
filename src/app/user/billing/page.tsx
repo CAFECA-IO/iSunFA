@@ -90,10 +90,6 @@ export default function BillingPage() {
     IPaymentTransaction[]
   >([]);
 
-  useEffect(() => {
-    fetchData(activeTab);
-  }, [activeTab]);
-
   const fetchData = async (tab: Tab) => {
     if (tab === "orders") {
       setLoadingOrders(true);
@@ -139,6 +135,10 @@ export default function BillingPage() {
       }
     }
   };
+
+  useEffect(() => {
+    fetchData(activeTab);
+  }, [activeTab]);
 
   const handleBindCard = async () => {
     setIsBinding(true);
