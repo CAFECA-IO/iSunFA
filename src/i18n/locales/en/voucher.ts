@@ -87,6 +87,7 @@ export const voucher = {
     messages: {
       fetch_error: "Failed to fetch voucher",
       deleted_warning: "Deleted vouchers cannot be edited",
+      no_entries_hint: "No entries yet, please click 'Add Entry' above.",
     },
     sections: {
       preview: "Receipt Preview",

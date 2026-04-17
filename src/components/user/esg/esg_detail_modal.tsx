@@ -20,6 +20,10 @@ import FilePreviewModal from "@/components/common/file_preview_modal";
 import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
 import CoefficientSelectModal from "@/components/user/esg/coefficient_select_modal";
+import {
+  EsgActivityTypeMapping,
+  EsgActivityTypeKey,
+} from "@/constants/esg_activity_type";
 
 interface IEsgDetailModalProps {
   isOpen: boolean;
@@ -27,8 +31,6 @@ interface IEsgDetailModalProps {
   esgId: string | null;
   onSave?: (record: IEsgRecord) => void;
 }
-
-// const UNIT_LIST = ["kWh", "L", "kg", "m³", "km", "ton", "次", "件"];
 
 export default function EsgDetailModal({
   isOpen,
@@ -184,7 +186,8 @@ export default function EsgDetailModal({
   // Info: (20260416 - Julian) 檢查排放量和強度是否改變
   const isEmissionsChanged =
     calculatedResult.totalEmissions && originalData?.emissions
-      ? parseFloat(calculatedResult.totalEmissions.toString()) !== parseFloat(originalData?.emissions)
+      ? parseFloat(calculatedResult.totalEmissions.toString()) !==
+        parseFloat(originalData?.emissions)
       : false;
   const isIntensityChanged =
     calculatedResult.intensityLevel && originalData?.intensity
@@ -192,17 +195,54 @@ export default function EsgDetailModal({
         originalData?.intensity.toLowerCase()
       : false;
 
+  // Info: (20260417 - Julian) 日期格式
+  const dateValue = formData.tradingDate
+    ? formData.tradingDate.split("T")[0]
+    : "";
+
   const handleDateChange = (dateString: string) => {
     setFormData({ ...formData, tradingDate: dateString });
   };
 
-  const dateValue = formData.tradingDate
-    ? formData.tradingDate.split("T")[0]
-    : "";
+  const handleScopeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    // Info: (20260417 - Julian) 檢查活動類型是否於目前的範疇中，若不是，則更新活動類型
+    const newScope = e.target.value as EsgScope;
+    const isValidActivityType = EsgActivityTypeMapping.some(
+      (a) => a.key === formData.activityType && a.scope === newScope,
+    );
+
+    setFormData({
+      ...formData,
+      scope: newScope,
+      activityType: isValidActivityType
+        ? formData.activityType
+        : EsgActivityTypeMapping.find((a) => a.scope === newScope)?.key ||
+          formData.activityType, // Info: (20260417 - Julian) fallback to formData.activityType if not found, though we might want null but the type of activityType is sometimes string
+    });
+  };
+
+  const handleActivityTypeChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    // Info: (20260417 - Julian) 取得活動類型
+    const newActivityType = e.target.value as EsgActivityTypeKey;
+    // Info: (20260417 - Julian) 取得對應範疇
+    const relatedScope = EsgActivityTypeMapping.find(
+      (a) => a.key === newActivityType,
+    )?.scope;
+
+    setFormData({
+      ...formData,
+      activityType: newActivityType ?? null,
+      // Info: (20260417 - Julian) 若活動類型不屬於目前範疇，則更新範疇
+      ...(relatedScope && formData.scope !== relatedScope
+        ? { scope: relatedScope }
+        : {}),
+    });
+  };
+
   const EsgContent = (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[#F8FAFC]">
-      {/* Info: (20260312 - Julian) Header (Removed for embedded) */}
-
       {/* Info: (20260326 - Julian) Body */}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-[10px]">
         <div className="flex shrink-0 flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
@@ -260,12 +300,7 @@ export default function EsgDetailModal({
               id="scopeSelect"
               aria-label={t("esg_verify.form.scope")}
               value={formData.scope || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  scope: e.target.value as EsgScope,
-                })
-              }
+              onChange={handleScopeChange}
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
             >
               <option value={EsgScope.SCOPE_1}>
@@ -283,24 +318,29 @@ export default function EsgDetailModal({
           {/* Info: (20260312 - Julian) Activity Type */}
           <div className="col-span-2">
             <label
-              htmlFor="activityType"
+              htmlFor="activityTypeSelect"
               className="mb-1.5 block text-sm font-bold text-slate-500"
             >
               {t("esg_verify.form.activity_type")}
             </label>
-            <input
-              id="activityType"
+            <select
+              id="activityTypeSelect"
               aria-label={t("esg_verify.form.activity_type")}
-              type="text"
-              value={formData.activityType}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  activityType: e.target.value,
-                })
-              }
+              value={formData.activityType || ""}
+              onChange={handleActivityTypeChange}
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
-            />
+            >
+              {/* Info: (20260417 - Julian) 顯示目前選擇的範疇 */}
+              <option value="" disabled>{t(`esg_verify.form.${formData.scope?.toLowerCase()}`)}</option>
+              {EsgActivityTypeMapping.filter(
+                (a) => !formData.scope || a.scope === formData.scope,
+              ).map((a) => (
+                <option key={a.key} value={a.key}>
+                  {a.value}
+                  {/* {t(`esg_verify.form.activity_type.${a.key}`)} */}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Info: (20260312 - Julian) Vendor / Object */}
@@ -397,7 +437,9 @@ export default function EsgDetailModal({
               <div className="col-span-2">
                 <div className="mb-1.5 flex items-center gap-2 text-sm font-bold">
                   <Calculator size={16} className="text-orange-400" />
-                  <p className="text-slate-500">{t("esg_verify.emissions.formula_and_coef")}</p>
+                  <p className="text-slate-500">
+                    {t("esg_verify.emissions.formula_and_coef")}
+                  </p>
                 </div>
                 {/* Info: (20260415 - Julian) Coefficient Selector */}
                 <button
@@ -435,7 +477,9 @@ export default function EsgDetailModal({
                   className="mb-1.5 flex items-center gap-1 text-sm font-bold"
                 >
                   <Leaf size={16} className="text-orange-400" />
-                  <p className="text-slate-500">{t("esg_verify.emissions.total")}</p>
+                  <p className="text-slate-500">
+                    {t("esg_verify.emissions.total")}
+                  </p>
                 </label>
                 <div className="flex items-baseline gap-2">
                   <input
@@ -465,7 +509,9 @@ export default function EsgDetailModal({
                     size={16}
                     className="text-orange-400"
                   />
-                  <p className="text-slate-500">{t("esg_verify.emissions.intensity")}</p>
+                  <p className="text-slate-500">
+                    {t("esg_verify.emissions.intensity")}
+                  </p>
                 </label>
                 <input
                   id="esgIntensityInput"
@@ -480,26 +526,6 @@ export default function EsgDetailModal({
                 />
               </div>
             </div>
-          </div>
-
-          {/* Info: (20260312 - Julian) Note */}
-          <div className="col-span-2">
-            <label
-              htmlFor="noteTextarea"
-              className="mb-1.5 block text-sm font-bold text-slate-500"
-            >
-              {t("common.note")}
-            </label>
-            <textarea
-              id="noteTextarea"
-              aria-label={t("common.note")}
-              value={formData.aiNote}
-              onChange={(e) =>
-                setFormData({ ...formData, aiNote: e.target.value })
-              }
-              rows={4}
-              className="w-full resize-none rounded-xl border border-slate-300 bg-white p-4 text-xs leading-relaxed text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
-            />
           </div>
         </div>
       </div>

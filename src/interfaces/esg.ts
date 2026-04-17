@@ -1,4 +1,5 @@
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 import { ICoefficient } from "@/interfaces/coefficient";
 
 export enum EsgScope {
@@ -57,7 +58,7 @@ export interface IEsgRecord {
     fileName: string;
   };
   scope: EsgScope | null;
-  activityType: string;
+  activityType: EsgActivityTypeKey | null;
   vendor: string;
   amount: number;
   unit: string;

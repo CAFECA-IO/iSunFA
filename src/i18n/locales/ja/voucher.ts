@@ -84,6 +84,7 @@ export const voucher = {
     messages: {
       fetch_error: "伝票の取得に失敗しました",
       deleted_warning: "削除済みの伝票は編集できません",
+      no_entries_hint: "まだ仕訳がありません。右上の「仕訳を追加」ボタンをクリックしてください。",
     },
     sections: {
       preview: "領収書のプレビュー",

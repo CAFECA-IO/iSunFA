@@ -36,4 +36,10 @@ export const coefficient = {
     desc_placeholder: "说明此系数的来源或适用范围...",
     save: "保存系数",
   },
+  select_modal: {
+    title: "选择计算公式",
+    no_unit_match_prefix: "目前没有单位符合 ",
+    no_unit_match_suffix: " 的系数",
+    goto_manage: "前往系数管理页面新增系数"
+  },
 };

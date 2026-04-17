@@ -36,4 +36,10 @@ export const coefficient = {
     desc_placeholder: "この係数の出典または適用範囲を説明してください...",
     save: "係数を保存",
   },
+  select_modal: {
+    title: "計算式を選択",
+    no_unit_match_prefix: "単位に一致する係数がありません：",
+    no_unit_match_suffix: "",
+    goto_manage: "係数管理ページに移動して係数を追加",
+  },
 };
