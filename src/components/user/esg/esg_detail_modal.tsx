@@ -20,7 +20,10 @@ import FilePreviewModal from "@/components/common/file_preview_modal";
 import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
 import CoefficientSelectModal from "@/components/user/esg/coefficient_select_modal";
-import { EsgActivityTypeMapping, EsgActivityTypeKey } from "@/constants/esg_activity_type";
+import {
+  EsgActivityTypeMapping,
+  EsgActivityTypeKey,
+} from "@/constants/esg_activity_type";
 
 interface IEsgDetailModalProps {
   isOpen: boolean;
@@ -192,13 +195,52 @@ export default function EsgDetailModal({
         originalData?.intensity.toLowerCase()
       : false;
 
+  // Info: (20260417 - Julian) 日期格式
+  const dateValue = formData.tradingDate
+    ? formData.tradingDate.split("T")[0]
+    : "";
+
   const handleDateChange = (dateString: string) => {
     setFormData({ ...formData, tradingDate: dateString });
   };
 
-  const dateValue = formData.tradingDate
-    ? formData.tradingDate.split("T")[0]
-    : "";
+  const handleScopeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    // Info: (20260417 - Julian) 檢查活動類型是否於目前的範疇中，若不是，則更新活動類型
+    const newScope = e.target.value as EsgScope;
+    const isValidActivityType = EsgActivityTypeMapping.some(
+      (a) => a.key === formData.activityType && a.scope === newScope,
+    );
+
+    setFormData({
+      ...formData,
+      scope: newScope,
+      activityType: isValidActivityType
+        ? formData.activityType
+        : EsgActivityTypeMapping.find((a) => a.scope === newScope)?.key ||
+          formData.activityType, // fallback to formData.activityType if not found, though we might want null but the type of activityType is sometimes string
+    });
+  };
+
+  const handleActivityTypeChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    // Info: (20260417 - Julian) 取得活動類型
+    const newActivityType = e.target.value as EsgActivityTypeKey;
+    // Info: (20260417 - Julian) 取得對應範疇
+    const relatedScope = EsgActivityTypeMapping.find(
+      (a) => a.key === newActivityType,
+    )?.scope;
+
+    setFormData({
+      ...formData,
+      activityType: newActivityType ?? null,
+      // Info: (20260417 - Julian) 若活動類型不屬於目前範疇，則更新範疇
+      ...(relatedScope && formData.scope !== relatedScope
+        ? { scope: relatedScope }
+        : {}),
+    });
+  };
+
   const EsgContent = (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[#F8FAFC]">
       {/* Info: (20260326 - Julian) Body */}
@@ -258,12 +300,7 @@ export default function EsgDetailModal({
               id="scopeSelect"
               aria-label={t("esg_verify.form.scope")}
               value={formData.scope || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  scope: e.target.value as EsgScope,
-                })
-              }
+              onChange={handleScopeChange}
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
             >
               <option value={EsgScope.SCOPE_1}>
@@ -289,37 +326,21 @@ export default function EsgDetailModal({
             <select
               id="activityTypeSelect"
               aria-label={t("esg_verify.form.activity_type")}
-              value={
-                EsgActivityTypeMapping.find((a) => a.key === formData.activityType)?.key
-                 ?? formData.activityType?.toString()}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  activityType: e.target.value as EsgActivityTypeKey ?? null,
-                })
-              }
+              value={formData.activityType || ""}
+              onChange={handleActivityTypeChange}
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
             >
-              {EsgActivityTypeMapping.map((a) => (
+              {/* Info: (20260417 - Julian) 顯示目前選擇的範疇 */}
+              <option value="" disabled>{t(`esg_verify.form.${formData.scope?.toLowerCase()}`)}</option>
+              {EsgActivityTypeMapping.filter(
+                (a) => !formData.scope || a.scope === formData.scope,
+              ).map((a) => (
                 <option key={a.key} value={a.key}>
                   {a.value}
                   {/* {t(`esg_verify.form.activity_type.${a.key}`)} */}
                 </option>
               ))}
             </select>
-            {/* <input
-              id="activityType"
-              aria-label={t("esg_verify.form.activity_type")}
-              type="text"
-              value={formData.activityType}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  activityType: e.target.value,
-                })
-              }
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
-            /> */}
           </div>
 
           {/* Info: (20260312 - Julian) Vendor / Object */}

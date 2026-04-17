@@ -75,7 +75,9 @@ export function EsgRow({
   };
 
   const renderScope = (scope: EsgScope | null) => {
-    const activityType = EsgActivityTypeMapping.find((a) => a.key === record.activityType)?.value ?? record.activityType?.toString()
+    const activityType =
+      EsgActivityTypeMapping.find((a) => a.key === record.activityType)
+        ?.value ?? record.activityType?.toString();
 
     switch (scope) {
       case EsgScope.SCOPE_1:
@@ -335,7 +337,10 @@ export function EsgRow({
         {rawActivity}
       </td>
       {/* Info: (20260320 - Julian) Emissions */}
-      <td className="p-2 text-center whitespace-nowrap lg:px-6 lg:py-4">
+      <td
+        aria-label={t("esg_table.emissions")}
+        className="p-2 text-center whitespace-nowrap lg:px-6 lg:py-4"
+      >
         <div className="flex flex-col items-center justify-center gap-1">
           <span className="text-sm font-semibold text-slate-800">
             {record.emissions}
