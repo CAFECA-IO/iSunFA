@@ -18,7 +18,7 @@ export interface IReportPrintNoteProps {
 
 export default function ReportPrintNote({
   notes,
-  footerNote,
+  footerNote = undefined,
 }: IReportPrintNoteProps) {
   const { t } = useTranslation();
 

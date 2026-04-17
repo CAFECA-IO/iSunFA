@@ -12,7 +12,7 @@ import { IApiResponse } from "@/lib/utils/response";
 export const CommentItem = ({
   comment,
   isReply = false,
-  onSuccess,
+  onSuccess = undefined,
 }: {
   comment: IComment;
   isReply?: boolean;

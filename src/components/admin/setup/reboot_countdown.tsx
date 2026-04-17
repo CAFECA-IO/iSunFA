@@ -7,7 +7,7 @@ export interface IRebootCountdownProps {
   seconds?: number;
 }
 
-export function RebootCountdown({ onComplete, seconds = 5 }: IRebootCountdownProps) {
+export function RebootCountdown({ onComplete = undefined, seconds = 5 }: IRebootCountdownProps) {
   const { t } = useTranslation();
 
   const [countdown, setCountdown] = useState<number>(seconds);

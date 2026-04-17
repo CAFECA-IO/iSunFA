@@ -105,12 +105,13 @@ const tslintConfigs = [
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'react/react-in-jsx-scope': 'off',
+      'react/require-default-props': ['error', { functions: 'defaultArguments' }],
 
       // ToDo: (20260417 - Luphia) 需修正並取消此設置
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/preserve-manual-memoization': 'off',
       'react/jsx-props-no-spreading': 'off',
-      'react/require-default-props': 'off',
+
       'no-restricted-imports': [
         'error',
         { patterns: [{ group: ['./*', '../*'], message: "請使用 '@/' 路徑別名取代相對路徑 '..'" }] },

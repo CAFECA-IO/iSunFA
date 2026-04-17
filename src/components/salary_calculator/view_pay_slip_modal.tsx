@@ -25,8 +25,8 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
   yearStr,
   paySlipData,
   modalCloseHandler,
-  sentDate,
-  sentTo,
+  sentDate = undefined,
+  sentTo = undefined,
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();

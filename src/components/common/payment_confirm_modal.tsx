@@ -29,21 +29,25 @@ interface IPaymentConfirmModalProps {
   status?: PaymentStatus;
   errorMessage?: string;
   txHash?: string;
+  extraContent?: ReactNode;
 }
+
+const EMPTY_ITEMS: IPaymentDetailItem[] = [];
 
 export default function PaymentConfirmModal({
   isOpen,
   onClose,
   onConfirm,
   cost,
-  items = [],
-  title,
-  description,
-  confirmBtnText,
+  items = EMPTY_ITEMS,
+  title = undefined,
+  description = undefined,
+  confirmBtnText = undefined,
   isLoading = false,
   status = 'idle',
-  errorMessage,
-  txHash,
+  errorMessage = undefined,
+  txHash = undefined,
+  extraContent = undefined,
 }: IPaymentConfirmModalProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -189,7 +193,13 @@ export default function PaymentConfirmModal({
                           </div>
                         </div>
 
-                        <p className="text-xs text-right text-gray-400 mt-2">
+                        {extraContent && (
+                          <div className="mt-4">
+                            {extraContent}
+                          </div>
+                        )}
+
+                        <p className="text-xs text-right text-gray-400 mt-4">
                           {t('analysis.confirm_balance')}: <span className="font-medium">{user.credits} - {cost} = {user.credits - cost}</span>
                         </p>
                       </div>

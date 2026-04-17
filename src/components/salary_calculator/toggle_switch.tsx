@@ -9,7 +9,7 @@ interface IToggleSwitchProps {
 const ToggleSwitch: FC<IToggleSwitchProps> = ({
   isOn,
   handleToggle,
-  title,
+  title = undefined,
 }) => {
   return (
     <button

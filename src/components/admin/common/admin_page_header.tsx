@@ -14,7 +14,7 @@ export default function AdminPageHeader({
   iconColorClass = "text-orange-500",
   title,
   subtitle,
-  rightNode,
+  rightNode = undefined,
 }: IAdminPageHeaderProps) {
   return (
     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end min-w-0">

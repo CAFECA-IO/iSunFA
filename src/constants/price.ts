@@ -48,3 +48,9 @@ export const ANALYSIS_PERIOD_MULTIPLIERS: Record<string, number> = {
   seasonly: 5,
   yearly: 10,
 };
+
+export const ANALYSIS_ADDON_COSTS = {
+  BOOKKEEPER: 3000,
+  CPA: 30000,
+  THIRD_PARTY: 100000,
+} as const;

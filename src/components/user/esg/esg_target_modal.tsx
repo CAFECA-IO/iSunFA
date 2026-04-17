@@ -29,7 +29,7 @@ export default function EsgTargetModal({
   isOpen,
   onClose,
   accountBookId,
-  esgIndustryId,
+  esgIndustryId = undefined,
 }: {
   isOpen: boolean;
   onClose: () => void;

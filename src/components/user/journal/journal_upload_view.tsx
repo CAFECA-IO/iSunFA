@@ -34,7 +34,7 @@ type UploadedFileData = {
 };
 
 export default function JournalUploadView({
-  onUploadComplete,
+  onUploadComplete = undefined,
 }: {
   onUploadComplete?: () => void;
 }) {

@@ -21,7 +21,7 @@ export const CommentPostInput = ({
   value,
   onChange,
   parentId = "",
-  onSuccess,
+  onSuccess = undefined,
 }: ICommentPostInput) => {
   const { t } = useTranslation();
   const { user } = useAuth();

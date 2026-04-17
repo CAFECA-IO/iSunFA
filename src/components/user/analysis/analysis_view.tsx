@@ -12,6 +12,7 @@ import { getAnalysisCost } from '@/lib/analysis/pricing';
 import { useOrderTransaction, IOrderPayload } from '@/hooks/use_order_transaction';
 import { getPeriodDateRange } from '@/lib/analysis/period';
 import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES } from '@/constants/analysis';
+import { ANALYSIS_ADDON_COSTS } from '@/constants/price';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 export default function AnalysisView() {
@@ -55,6 +56,11 @@ export default function AnalysisView() {
   // Info: (20260120 - Luphia) External Analysis States
   const [selectedCountry, setSelectedCountry] = useState<string>('tw');
   const [keyword, setKeyword] = useState<string>('');
+
+  // Info: (20260417 - Luphia) Internal Analysis Add-on States
+  const [requireBookkeeper, setRequireBookkeeper] = useState(false);
+  const [requireCPA, setRequireCPA] = useState(false);
+  const [requireThirdParty, setRequireThirdParty] = useState(false);
 
   const [accountBooks, setAccountBooks] = useState<Array<{ id: string, name: string, enterpriseId?: string }>>([]);
   useEffect(() => {
@@ -126,6 +132,15 @@ export default function AnalysisView() {
       year: selectedYear,
     });
   }, [category, periodType, selectedPeriodValue, selectedYear]);
+
+  // Info: (20260417 - Luphia) Calculate extra structural costs
+  const extraCost = useMemo(() => {
+    return (isInternalCompanyAnalysis && requireBookkeeper ? ANALYSIS_ADDON_COSTS.BOOKKEEPER : 0) + 
+           (isInternalCompanyAnalysis && requireCPA ? ANALYSIS_ADDON_COSTS.CPA : 0) +
+           (isInternalCompanyAnalysis && requireThirdParty ? ANALYSIS_ADDON_COSTS.THIRD_PARTY : 0);
+  }, [isInternalCompanyAnalysis, requireBookkeeper, requireCPA, requireThirdParty]);
+
+  const finalCost = useMemo(() => calculatedCost + extraCost, [calculatedCost, extraCost]);
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -287,11 +302,14 @@ export default function AnalysisView() {
           name: t(`analysis.categories.${category}`) || category,
           unitPrice: calculatedCost,
           quantity: 1,
-        }
+        },
+        ...(isInternalCompanyAnalysis && requireBookkeeper ? [{ name: "Addon: Bookkeeper Visa", unitPrice: ANALYSIS_ADDON_COSTS.BOOKKEEPER, quantity: 1 }] : []),
+        ...(isInternalCompanyAnalysis && requireCPA ? [{ name: "Addon: CPA Visa", unitPrice: ANALYSIS_ADDON_COSTS.CPA, quantity: 1 }] : []),
+        ...(isInternalCompanyAnalysis && requireThirdParty ? [{ name: "Addon: Third Party Visa", unitPrice: ANALYSIS_ADDON_COSTS.THIRD_PARTY, quantity: 1 }] : [])
       ]
     };
 
-    const success = await executeOrderTransaction(payload, calculatedCost, async (authData) => {
+    const success = await executeOrderTransaction(payload, finalCost, async (authData) => {
       await request('/api/v1/user/analysis', {
         method: 'POST',
         body: JSON.stringify({
@@ -302,6 +320,9 @@ export default function AnalysisView() {
           country,
           keyword: derivedKeyword, // Info: (20260209 - Tzuhan) derivedKeyword for the backend
           isExternal: activeTab === 'external',
+          requireBookkeeper: isInternalCompanyAnalysis ? requireBookkeeper : false,
+          requireCPA: isInternalCompanyAnalysis ? requireCPA : false,
+          requireThirdParty: isInternalCompanyAnalysis ? requireThirdParty : false,
           authentication: authData,
         }),
       });
@@ -666,7 +687,7 @@ export default function AnalysisView() {
                   <Coins className="h-4 w-4 text-gray-500" />
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 font-medium leading-none mb-0.5">{t('analysis.confirm_cost')}</span>
-                    <span className="text-sm font-bold text-gray-900 leading-none">{calculatedCost}</span>
+                    <span className="text-sm font-bold text-gray-900 leading-none">{finalCost}</span>
                   </div>
                 </div>
               </div>
@@ -707,7 +728,7 @@ export default function AnalysisView() {
           }
         }}
         onConfirm={handleAnalysisWorkflow}
-        cost={calculatedCost}
+        cost={finalCost}
         items={[
           { label: t('analysis.category'), value: t(`analysis.categories.${category}`) },
           ...(country ? [{ label: t('analysis.country'), value: t(`analysis.countries.${country}`) }] : []),
@@ -719,6 +740,66 @@ export default function AnalysisView() {
             })
           }
         ]}
+        extraContent={isInternalCompanyAnalysis ? (
+          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm space-y-3 mt-4">
+            <h4 className="text-sm font-bold text-gray-900">{t('analysis.addons_title', { defaultValue: '加購項目' })}</h4>
+            <div className="space-y-2">
+              <label className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${requireBookkeeper ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-200' : 'border-gray-200 hover:bg-gray-50'}`}>
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="checkbox"
+                    aria-label={t('analysis.addon_bookkeeper', { defaultValue: '加購記賬士簽證' })}
+                    className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 border-gray-300"
+                    checked={requireBookkeeper}
+                    onChange={() => setRequireBookkeeper(!requireBookkeeper)}
+                  />
+                  <span className={`text-sm font-medium ${requireBookkeeper ? 'text-orange-900' : 'text-gray-700'}`}>
+                    {t('analysis.addon_bookkeeper', { defaultValue: '加購記賬士簽證' })}
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-gray-500 flex items-center gap-1">
+                  +{ANALYSIS_ADDON_COSTS.BOOKKEEPER} <Coins className="h-4 w-4" />
+                </span>
+              </label>
+
+              <label className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${requireCPA ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-200' : 'border-gray-200 hover:bg-gray-50'}`}>
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="checkbox"
+                    aria-label={t('analysis.addon_cpa', { defaultValue: '加購會計師簽證' })}
+                    className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 border-gray-300"
+                    checked={requireCPA}
+                    onChange={() => setRequireCPA(!requireCPA)}
+                  />
+                  <span className={`text-sm font-medium ${requireCPA ? 'text-orange-900' : 'text-gray-700'}`}>
+                    {t('analysis.addon_cpa', { defaultValue: '加購會計師簽證' })}
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-gray-500 flex items-center gap-1">
+                  +{ANALYSIS_ADDON_COSTS.CPA} <Coins className="h-4 w-4" />
+                </span>
+              </label>
+
+              <label className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${requireThirdParty ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-200' : 'border-gray-200 hover:bg-gray-50'}`}>
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="checkbox"
+                    aria-label={t('analysis.addon_third_party', { defaultValue: '加購第三方查驗機構簽證' })}
+                    className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 border-gray-300"
+                    checked={requireThirdParty}
+                    onChange={() => setRequireThirdParty(!requireThirdParty)}
+                  />
+                  <span className={`text-sm font-medium ${requireThirdParty ? 'text-orange-900' : 'text-gray-700'}`}>
+                    {t('analysis.addon_third_party', { defaultValue: '加購第三方查驗機構簽證' })}
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-gray-500 flex items-center gap-1">
+                  +{ANALYSIS_ADDON_COSTS.THIRD_PARTY} <Coins className="h-4 w-4" />
+                </span>
+              </label>
+            </div>
+          </div>
+        ) : undefined}
         isLoading={isLoading}
         status={workflowStatus}
         errorMessage={errorMessage}

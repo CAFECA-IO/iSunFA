@@ -34,12 +34,12 @@ export default function DataTable<T>({
   columns,
   data,
   loading = false,
-  pagination,
-  onPageChange,
-  onSort,
-  sortBy,
+  pagination = undefined,
+  onPageChange = undefined,
+  onSort = undefined,
+  sortBy = undefined,
   sortOrder = "desc",
-  emptyStateText,
+  emptyStateText = undefined,
   rowKey,
 }: IDataTableProps<T>) {
   const { t } = useTranslation();

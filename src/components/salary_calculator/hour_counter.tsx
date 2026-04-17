@@ -15,8 +15,8 @@ const HourCounter: FC<IHourCounterProps> = ({
   title,
   value,
   setValue,
-  maxValue,
-  minValue,
+  maxValue = undefined,
+  minValue = undefined,
 }) => {
   // Info: (20250822 - Julian) 如果沒有設定最小，則只在值為 0 時禁用 minus
   const minusDisabled = minValue ? value <= minValue : value === 0;

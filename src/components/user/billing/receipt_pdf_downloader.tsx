@@ -23,6 +23,8 @@ interface IReceiptPdfDownloaderProps {
   className?: string;
 }
 
+const EMPTY_ARRAY: NonNullable<IReceiptPdfDownloaderProps["items"]> = [];
+
 // Info: (20260410 - Luphia) A4 格式需符合中華民國電子發票規格
 export default function ReceiptPdfDownloader({
   receiptNumber,
@@ -31,11 +33,11 @@ export default function ReceiptPdfDownloader({
   sellerName = '卡菲卡金融科技股份有限公司',
   sellerTaxId = '52650861',
   sellerAddress = '臺北市信義區基隆路 1 段 206 號 18 樓',
-  buyerName,
-  buyerTaxId,
+  buyerName = undefined,
+  buyerTaxId = undefined,
   buyerAddress = '',
-  items,
-  className
+  items = EMPTY_ARRAY,
+  className = undefined
 }: IReceiptPdfDownloaderProps) {
   const { t } = useTranslation();
 

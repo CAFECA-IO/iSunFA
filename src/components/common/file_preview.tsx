@@ -44,7 +44,7 @@ const inProgressDownloads = new Map<string, {
 
 
 
-export const FilePreview: FC<IFilePreviewProps> = ({ file: initialFile, fileId, url, base64: initialBase64, progress, loadPreview, className }) => {
+export const FilePreview: FC<IFilePreviewProps> = ({ file: initialFile, fileId = undefined, url = undefined, base64: initialBase64 = undefined, progress = undefined, loadPreview = undefined, className = undefined }) => {
   const [downloadedBase64, setDownloadedBase64] = useState<string | undefined>(undefined);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [downloadProgress, setDownloadProgress] = useState<number>(0);

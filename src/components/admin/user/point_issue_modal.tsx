@@ -49,7 +49,7 @@ export function PointIssueModal({ isOpen, onClose, targetUser, onSuccess }: IPoi
       const { challenge, token } = await getLoginOptions();
       const authentication = await fido2ClientService.startLogin({ challenge });
 
-      const res = await request<{ success: boolean; message: string }>(`/api/v1/admin/member/${targetUser.id}/issue`, {
+      const res = await request<{ success: boolean; message: string }>(`/api/v1/admin/user/${targetUser.id}/issue`, {
         method: "POST",
         body: JSON.stringify({
           amount,

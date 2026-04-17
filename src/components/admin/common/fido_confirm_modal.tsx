@@ -29,13 +29,13 @@ export default function FidoConfirmModal({
   onClose,
   onConfirm,
   title,
-  description,
-  children,
-  alertNode,
+  description = undefined,
+  children = undefined,
+  alertNode = undefined,
   isProcessing = false,
   disabled = false,
-  confirmText,
-  cancelText,
+  confirmText = undefined,
+  cancelText = undefined,
   colorTheme = "orange",
 }: IFidoConfirmModalProps) {
   const { t } = useTranslation();

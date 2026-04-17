@@ -25,7 +25,7 @@ const updateGA4Consent = (analyticsGranted: boolean) => {
   }
 };
 
-const Toggle = ({ checked, onChange, disabled = false }: { checked: boolean; onChange?: (checked: boolean) => void; disabled?: boolean }) => {
+const Toggle = ({ checked, onChange = undefined, disabled = false }: { checked: boolean; onChange?: (checked: boolean) => void; disabled?: boolean }) => {
   return (
     <button
       type="button"

@@ -27,9 +27,9 @@ export default function ConfirmModal({
   onClose,
   title,
   message,
-  confirmText,
-  cancelText,
-  onConfirm,
+  confirmText = undefined,
+  cancelText = undefined,
+  onConfirm = undefined,
 }: IConfirmModalProps) {
   const { t } = useTranslation();
 

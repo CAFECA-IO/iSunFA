@@ -52,10 +52,10 @@ const formatDisplayValue = (
 
 const NumericInput: FC<INumericInputProps> = ({
   value,
-  setValue,
-  isDecimal,
-  hasComma,
-  triggerWhenChanged,
+  setValue = undefined,
+  isDecimal = false,
+  hasComma = false,
+  triggerWhenChanged = undefined,
   useStringValue = false,
   ...props
 }) => {

@@ -14,9 +14,9 @@ interface IZoomablePreviewProps {
 
 export default function ZoomablePreview({
   children,
-  fallbackText,
+  fallbackText = undefined,
   hasContent,
-  className,
+  className = undefined,
 }: IZoomablePreviewProps) {
   const { t } = useTranslation();
 

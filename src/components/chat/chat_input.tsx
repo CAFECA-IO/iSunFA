@@ -11,7 +11,7 @@ interface IChatInputProps {
   disabled?: boolean;
 }
 
-export default function ChatInput({ onSend, disabled }: IChatInputProps) {
+export default function ChatInput({ onSend, disabled = false }: IChatInputProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

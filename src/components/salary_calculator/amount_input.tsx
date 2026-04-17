@@ -16,9 +16,9 @@ const AmountInput: FC<IAmountInputProps> = ({
   title,
   value,
   setValue,
-  required,
-  minimum,
-  maximum,
+  required = false,
+  minimum = undefined,
+  maximum = undefined,
 }) => {
   const { t } = useTranslation();
 

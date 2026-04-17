@@ -20,7 +20,7 @@ export default function AnalysisGenerationModal({
     onClose,
     onConfirm,
     status,
-    errorMessage,
+    errorMessage = undefined,
 }: IAnalysisGenerationModalProps) {
     const { t } = useTranslation();
 

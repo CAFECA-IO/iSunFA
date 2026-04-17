@@ -35,7 +35,7 @@ interface IAuthModalProps {
 
 type AuthMode = "login" | "register";
 
-export default function AuthModal({ isOpen, onClose, onSuccess }: IAuthModalProps) {
+export default function AuthModal({ isOpen, onClose, onSuccess = undefined }: IAuthModalProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();

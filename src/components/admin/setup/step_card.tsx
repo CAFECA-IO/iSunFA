@@ -15,7 +15,7 @@ export interface IStepCardProps {
   onReset?: () => void;
 }
 
-export function StepCard({ step, title, description, isActive, status, errorMessage, children, actionContent, onReset }: IStepCardProps) {
+export function StepCard({ step, title, description, isActive, status, errorMessage = undefined, children = undefined, actionContent = undefined, onReset = undefined }: IStepCardProps) {
   const { t } = useTranslation();
 
   const renderStatusIcon = () => {

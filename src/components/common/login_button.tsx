@@ -4,7 +4,7 @@ import { useState } from "react"
 import AuthModal from '@/components/auth/auth_modal';
 import { useTranslation } from "@/i18n/i18n_context"
 
-export default function LoginButton({label}: {label?: string}) {
+export default function LoginButton({label = undefined}: {label?: string}) {
     const { t } = useTranslation();
 const btnLabel = label || t('header.login');
 

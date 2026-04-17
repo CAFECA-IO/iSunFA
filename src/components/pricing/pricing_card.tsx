@@ -11,7 +11,7 @@ interface IPricingProps {
   onSelect?: () => void;
 }
 
-export default function PricingCard({ planKey, billingInterval, features, popular, currentPlan, onSelect }: IPricingProps) {
+export default function PricingCard({ planKey, billingInterval, features, popular = false, currentPlan = undefined, onSelect = undefined }: IPricingProps) {
   const { t } = useTranslation();
   const isCurrentPlan = currentPlan === planKey;
 
