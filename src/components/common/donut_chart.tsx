@@ -31,7 +31,7 @@ interface ICustomTooltipProps {
   payload?: ICustomTooltipPayload[];
 }
 
-const CustomTooltip = ({ active, payload }: ICustomTooltipProps) => {
+const CustomTooltip = ({ active = false, payload = [] }: ICustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100/50">

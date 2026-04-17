@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22.10.0"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "npm run initial_wallet && npm run lint && prisma generate && next dev",
