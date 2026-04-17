@@ -34,9 +34,8 @@ const MermaidChart: React.FC<IMermaidChartProps> = ({ chart }) => {
           if (name.startsWith('"') && name.endsWith('"')) {
             name = name.slice(1, -1);
           }
-          // Use the last part as value, in case there are multiple colons
+          // Info: (20260418 - Tzuhan) Use the last part as value, in case there are multiple colons
           const valueStr = parts[parts.length - 1].trim();
-          // Remove a trailing percent sign if there is one (sometimes LLMs add it erroneously)
           const value = parseFloat(valueStr.replace('%', ''));
           if (!isNaN(value)) {
             data.push({ name, value });
@@ -61,17 +60,17 @@ const MermaidChart: React.FC<IMermaidChartProps> = ({ chart }) => {
         background: 'transparent',
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
 
-        // --- Vibrant Palette for Pie Charts ---
-        pie1: '#4F46E5', // Indigo 600
-        pie2: '#10B981', // Emerald 500
-        pie3: '#F59E0B', // Amber 500
-        pie4: '#EC4899', // Pink 500
-        pie5: '#8B5CF6', // Violet 500
-        pie6: '#06B6D4', // Cyan 500
-        pie7: '#EF4444', // Red 500
-        pie8: '#84CC16', // Lime 500
-        pie9: '#F97316', // Orange 500
-        pie10: '#3B82F6',// Blue 500
+        // Info: (20260418 - Tzuhan) Vibrant Palette for Pie Charts
+        pie1: '#4F46E5',
+        pie2: '#10B981',
+        pie3: '#F59E0B',
+        pie4: '#EC4899',
+        pie5: '#8B5CF6',
+        pie6: '#06B6D4',
+        pie7: '#EF4444',
+        pie8: '#84CC16',
+        pie9: '#F97316',
+        pie10: '#3B82F6',
 
         pieTitleTextSize: '20px',
         pieTitleTextColor: '#1E293B',
