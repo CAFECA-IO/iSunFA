@@ -179,9 +179,9 @@ export class AnalysisService {
               })
             : [];
 
-          // Info: (20260418 - Tzuhan) 給合規抓鬼與財務模組抓取傳票與明細
+          // Info: (20260418 - Tzuhan) 目前僅先對合規抓鬼與異常傳票執行 DB 傳票的完整撈取並交付快篩
           let voucherRecords: unknown[] = [];
-          if (["financial_compliance", "balance_sheet", "cash_flow", "income_statement", "financial_health"].includes(params.category)) {
+          if (params.category === "financial_compliance") {
             voucherRecords = targetAccountBookId
               ? await prisma.voucher.findMany({
                   where: {
@@ -237,15 +237,19 @@ export class AnalysisService {
         prerequisiteData: parsedPrerequisiteParams,
       });
 
-      if (missionDef) {
-        analysisResult = "Analysis Mission Generated. Pending Execution.";
+      // Info: (20260418 - Tzuhan) [BUGFIX] 如果 generator 根本不認識這個類別，或是生成的 tasks 是空的，絕對不允許進入資料庫建立幽靈 Mission
+      if (!missionDef || !missionDef.tasks || missionDef.tasks.length === 0) {
+        throw new AppError(ApiCode.VALIDATION_ERROR, `找不到有效的分析任務產生器 (Category: ${params.category}) 或是任務為空，拒絕建立幽靈定單。`);
       }
+
+      analysisResult = "Analysis Mission Generated. Pending Execution.";
     } catch (error) {
       console.error("[AnalysisService] Mission Generation Failed:", error);
       if (error instanceof AppError) {
         throw error; // Let the caller (API route) abort the operation instantly
       }
-      analysisResult = "Analysis Generation Failed. Please contact support.";
+      // Info: (20260418 - Tzuhan) [BUGFIX] 如果發生未知崩潰(例如 Payload 超過 Prisma 大小限制)，必須拋出異常，阻斷 API 回傳 200，讓前端顯示錯誤而不吞噬訂單！
+      throw new AppError(ApiCode.INTERNAL_SERVER_ERROR, "發生非預期錯誤，報告生成失敗。您的訂單紀錄已保留，請稍後至後台重試。");
     }
 
     // Info: (20260128 - Luphia) Create Plan Content

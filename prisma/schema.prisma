@@ -577,7 +577,7 @@ model EsgRecord {
   scope          EsgScope? // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
   activityType   String           @map("activity_type") // Info: (20260312 - Julian) 活動類型
   vendor         String // Info: (20260312 - Julian) 供應商與對象
-  amount         Decimal // Info: (20260416 - Julian) 活動數據
+  amount         Decimal          @default(0) // Info: (20260416 - Julian) 活動數據
   unit           String // Info: (20260312 - Julian) 單位
   emissions      Decimal // Info: (20260312 - Julian) 排放量 (KGCO2E)
   intensity      EsgIntensity? // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
