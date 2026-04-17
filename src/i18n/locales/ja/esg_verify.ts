@@ -1,0 +1,118 @@
+export const esgVerify = {
+  title: "炭素インベントリ",
+  preview: "プレビュー",
+  ai_confidence: "AI 信頼度",
+  no_image: "画像なし",
+  form: {
+    date: "日付",
+    scope: "スコープ",
+    scope_1: "スコープ1 (直接排出)",
+    scope_2: "スコープ2 (間接排出)",
+    scope_3: "スコープ3 (その他)",
+    activity_type: "活動タイプ",
+    activity_object: "活動対象",
+    vendor: "業者 / 対象",
+    raw_data: "基本データ",
+    unit: "単位",
+    emissions: "排出量 (kgCO2e)",
+    intensity: "強度",
+    intensity_low: "低強度",
+    intensity_medium: "中強度",
+    intensity_high: "高強度",
+  },
+  emissions: {
+    title: "排出量計算",
+    raw_data: "元データ",
+    unit: "単位",
+    total: "総排出量",
+    intensity: "排出強度グレード",
+    coefficient: "係数",
+  },
+  messages: {
+    fetch_error: "伝票の取得に失敗しました",
+    deleted_warning: "削除済みの伝票は編集できません",
+  },
+  sections: {
+    preview: "領収書のプレビュー",
+    basic_info: "基本情報",
+    accounting_entries: "仕訳",
+  },
+  validation: {
+    empty_fields: "日付または種類が空です",
+    unbalanced: "貸借が一致しません",
+    empty_rows: "仕訳が空です",
+    incomplete_row: "空の科目または金額が含まれています",
+  },
+  balance_check: {
+    title: "貸借一致チェック",
+    balanced: "一致",
+    unbalanced: "不一致",
+  },
+  actions: {
+    cancel_edit: "編集をキャンセル",
+    save_only: "変更のみ保存",
+  },
+  close_confirm: {
+    title: "保存せずに閉じますか？",
+    message: "未保存の変更は失われます。続行しますか？",
+    confirm: "終了",
+  },
+  save_confirm: {
+    title: "変更を保存しますか？",
+    message:
+      "ESG記録の確認変更を保存しようとしています。データが正しいか確認してください。",
+    confirm: "保存を確認",
+    success: "検証データが保存されました",
+  },
+  esg_industry_benchmarks: {
+    spectrum: {
+      extremely_high: "極めて高炭素",
+      very_high: "非常に高炭素",
+      high: "高炭素",
+      mid_high: "中高炭素",
+      medium: "中程度",
+      mid_low: "中低炭素",
+      extremely_low: "極めて低炭素",
+    },
+    industry_1: {
+      name: "石油化学工業",
+      desc: "高：フォルモサ・ペトロケミカル (3,650 kg) 差の理由：ナフサ分解と自家発電石炭プラントによる避けられない化学物質の漏出と化石燃料の燃焼。",
+    },
+    industry_2: {
+      name: "セメント工業",
+      desc: "高：アジアセメント (2,883 kg) 差の理由：石灰石の高温焼成（CO2直接放出）が大部分を占め、不動産低迷による収益分母縮小の影響を受けやすい。",
+    },
+    industry_3: {
+      name: "電力・エネルギー",
+      desc: "高：麦寮汽電 (2,657 kg) / 低：台湾電力 (1,068 kg) 差の理由：麦寮は100%石炭火力、台電は原子力・水力・天然ガス等の多様なエネルギー構成網で炭素集約度を希釈。",
+    },
+    industry_4: {
+      name: "鉄鋼工業",
+      desc: "高：中国鋼鉄 (520 kg) / 低：東和鋼鉄 (126 kg) 差の理由：伝統的な高炉は鉄鉱石還元に石炭が必要だが、電炉はスクラップ鋼と電力で製錬し還元炭素を7割以上削減する。",
+    },
+    industry_5: {
+      name: "海運・運輸業",
+      desc: "高：外洋コンテナ海運 / 低：陸路輸送・新幹線 差の理由：重油を燃やす大型船はスコープ1の巨大排出源であり運賃相場の影響を受けやすいが、鉄道は電化率が高く優秀。",
+    },
+    industry_6: {
+      name: "通信・ネットワーク",
+      desc: "高：中華電信 (271.8 kg) 差の理由：「工場無し＝低炭素」は神話。24時間稼働の5G基地局とIDCデータセンターの冷却装置は極めて恐ろしい電力消費源である。",
+    },
+    industry_7: {
+      name: "繊維・化学繊維",
+      desc: "低：遠東新世紀 (59.2 kg) 差の理由：伝統的染色工場は水とエネルギーを大量消費するが、PETボトル再生技術や多角化経営により重工業の宿命を好転させた。",
+    },
+    industry_8: {
+      name: "半導体製造",
+      desc: "高：TSMC (50.1 kg) 差の理由：EUV装置やクリーンルームの莫大な電力消費(スコープ2)が総排出を押し上げるが、超高単価なチップと大量のグリーン電力調達で集約度を抑制。",
+    },
+    industry_9: {
+      name: "小売・Eコマース",
+      desc: "高：統一超商 (37.6 kg) / 低：富邦媒 (約23 kg) 差の理由：実店舗は24時間空調と開放型冷蔵庫がネック。Eコマースは店舗不要だが大規模な物流車両と自動倉庫の炭素排出を負担。",
+    },
+    industry_10: {
+      name: "知識・金融 (IC設計/IT/金融)",
+      desc: "高：銀行 (~1.5 kg) / 低：MediaTek (1.86 kg) 差の理由：頭脳と資金に頼るビジネス。MediaTekは製造を外注。金融はオフィス電力のみだが、売上炭素比に含まれない「投融資炭素排出量」が潜在。",
+    },
+  },
+};

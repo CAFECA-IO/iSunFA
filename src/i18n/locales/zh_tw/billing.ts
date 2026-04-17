@@ -1,0 +1,52 @@
+export const billing = {
+  subtitle: "管理您的消費紀錄、帳戶點數與付款方式。",
+  tabs: {
+    orders: "消費紀錄",
+    points: "點數紀錄",
+    cards: "信用卡管理",
+  },
+  orders: {
+    empty: "尚無消費紀錄",
+  },
+  points: {
+    empty: "尚無點數紀錄",
+  },
+  cards: {
+    title: "已綁定信用卡",
+    add_button: "新增信用卡",
+    empty: "尚未綁定任何信用卡",
+    default_card: "預設卡片",
+    added_at: "新增於",
+    rename: "重新命名",
+    delete: "刪除",
+    view_records: "查詢紀錄",
+    rename_success: "重新命名成功",
+    delete_success: "信用卡已刪除",
+    delete_confirm_title: "確認刪除信用卡？",
+    delete_confirm_desc:
+      "這將會移除此張信用卡，未來將無法再選用此卡片進行扣款。",
+    cancel: "取消",
+    save: "儲存",
+    edit_details: "編輯詳細資料",
+    email: "聯絡信箱",
+    tax_id: "統一編號",
+    buyer_name: "購買人姓名",
+    billing_address: "帳單地址",
+  },
+  table: {
+    date: "日期",
+    order_id: "訂單編號",
+    amount: "付款金額",
+    status: "狀態",
+    source: "來源 / 項目",
+    amount_change: "點數異動",
+  },
+  point_history: {
+    source_purchase: "購買點數",
+    source_analysis: "分析服務使用",
+    source_chat: "AI 諮詢服務",
+    source_checkin: "每日簽到獎勵",
+    source_registration: "註冊獎勵",
+    source_admin_issued: "系統管理員發放",
+  },
+};

@@ -1,0 +1,18 @@
+export const esgSummary = {
+  no_data_prefix: "目前无这份账本的 ESG 数据，请先",
+  upload_link: "上传凭证",
+  no_data_suffix: "产生碳排纪录",
+  total_emissions: "本月总排放量",
+  estimate_eom: "预估月底: ",
+  emission_intensity: "碳排放强度",
+  better_than_industry: "优于产业平均 ({{average}})",
+  scope_distribution: "各范畴分布 (SCOPE)",
+  annual_goal_progress: "年度目标进度",
+
+  today_records: "Today",
+  dqi_average: "Avg",
+  pending: "Pending",
+  ai_confidence: "Confidence",
+  record_unit: "Unit",
+
+};

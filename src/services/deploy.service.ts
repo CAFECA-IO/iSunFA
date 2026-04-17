@@ -10,7 +10,20 @@ import {
 
 const globalAny = global as typeof globalThis & { deployTaskProgress?: string };
 
-export async function deployContracts(): Promise<{
+export async function checkHasExistingContracts(): Promise<boolean> {
+  const envPaths = [ENV_SETUP_PATH, ENV_PATH];
+  for (const envPath of envPaths) {
+    if (fs.existsSync(envPath)) {
+      const envConfig = await loadEnvConfig(envPath);
+      if (envConfig.NEXT_PUBLIC_SCW_FACTORY_ADDRESS) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+export async function deployContracts(collateralRate: number = 0.05): Promise<{
   success: boolean;
   output: string;
 }> {
@@ -41,7 +54,11 @@ export async function deployContracts(): Promise<{
   return new Promise<{ success: boolean; output: string }>((resolve) => {
     const child = exec(
       "npm run deploy_contract",
-      { cwd: rootPath, maxBuffer: 5 * 1024 * 1024 },
+      { 
+        cwd: rootPath, 
+        maxBuffer: 5 * 1024 * 1024,
+        env: { ...process.env, DEPLOY_COLLATERAL_RATE: collateralRate.toString() }
+      },
       (error) => {
         if (error) {
           resolve({

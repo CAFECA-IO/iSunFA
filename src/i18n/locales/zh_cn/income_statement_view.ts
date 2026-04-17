@@ -1,0 +1,43 @@
+export const incomeStatementView = {
+  loading_title: "正在为您生成综合损益表",
+  loading_desc:
+    "系统正在结算是收入、支出与税后净利科目，并计算相关财务指标，请稍候...",
+  error_title: "综合损益表生成失败",
+  error_desc: "请确认该期间内是否有足够的核发传票数据，或是稍后再重新尝试。",
+  metric_gm_title: "毛利率",
+  metric_gm_desc: "产品初始获利能力",
+  metric_om_title: "营益率",
+  metric_om_desc: "本业营运获利能力",
+  metric_npm_title: "净利率",
+  metric_npm_desc: "最终税后实质获利能力",
+  metric_ebitda_title: "EBITDA 利润率",
+  metric_ebitda_desc: "可分配之现金获利指标",
+  note_gm_type: "获利能力",
+  note_gm_main: "毛利率 = (营业收入 - 营业成本) / 营业收入。",
+  note_gm_sub:
+    "衡量企业产品或服务的初始获利能力，建议大于 50%，表示产品或服务的初始获利能力良好。",
+  note_om_type: "获利能力",
+  note_om_main: "营益率 = 营业利益 / 营业收入。",
+  note_om_sub:
+    "衡量企业本业营运获利能力，建议大于 15%，表示本业营运获利能力良好。",
+  note_npm_type: "获利能力",
+  note_npm_main: "净利率 = 税后净利 / 营业收入。",
+  note_npm_sub:
+    "衡量企业最终税后实质获利能力，建议大于 10%，表示最终税后实质获利能力良好。",
+  note_ebitda_type: "获利能力",
+  note_ebitda_main: "EBITDA 利润率 = EBITDA / 营业收入。",
+  note_ebitda_sub:
+    "衡量企业可分配之现金获利指标，建议大于 15%，表示可分配之现金获利指标良好。",
+  section_op: "营业活动",
+  section_percent_rev: "% 营收",
+  section_rev: "营业收入",
+  section_cogs: "营业成本",
+  section_gp: "营业毛利",
+  section_opex: "营业费用",
+  section_oi: "营业利益",
+  section_nonop_tax: "营业外支出与税金",
+  section_nonop_inc: "营业外收入及支出",
+  section_ibt: "税前净利",
+  section_tax: "所得税费用",
+  section_ni: "本期净利",
+};

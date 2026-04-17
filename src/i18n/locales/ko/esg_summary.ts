@@ -1,0 +1,18 @@
+export const esgSummary = {
+  no_data_prefix: "현재 이 장부의 ESG 데이터가 없습니다. 먼저 ",
+  upload_link: "전표를 업로드",
+  no_data_suffix: "하여 탄소 배출 기록을 생성하십시오",
+  total_emissions: "이번 달 총 배출량",
+  estimate_eom: "월말 예상: ",
+  emission_intensity: "탄소 배출 집약도",
+  better_than_industry: "업계 평균보다 우수함 ({{average}})",
+  scope_distribution: "스코프 분포 (SCOPE)",
+  annual_goal_progress: "연간 목표 진행률",
+
+  today_records: "Today",
+  dqi_average: "Avg",
+  pending: "Pending",
+  ai_confidence: "Confidence",
+  record_unit: "Unit",
+
+};

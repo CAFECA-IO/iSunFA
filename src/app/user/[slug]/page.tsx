@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth_context';
-import { MODULES } from '@/constants/modules';
+import { MODULES, getModuleI18nKey } from '@/constants/modules';
 import { useTranslation } from '@/i18n/i18n_context';
 
 const SYSTEM_PAGES = ['settings', 'billing', 'team'];
@@ -68,7 +68,7 @@ export default function UserDynamicPage() {
   // Info: (20260118 - Luphia) Render Placeholder for valid Content
   const title = isSystemPage
     ? t(`sidebar.${slug as string}`)
-    : t(`chat.tags.${slug as string}`);
+    : t(getModuleI18nKey(slug as string));
 
   return (
     <div className="flex h-full flex-col">

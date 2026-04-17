@@ -1,0 +1,35 @@
+export const journal = {
+  title: "전표 관리",
+  detail_modal: {
+    title: "분개장",
+    empty: "분개장 내용이 없습니다",
+  },
+  summary: {
+    empty: "현재 분개장 데이터가 없습니다",
+    today_count: "오늘 생성된 분개장",
+    unit: "건",
+    pending: "대조 대기",
+    ai_confidence: "AI 평균 신뢰도",
+  },
+  main_view: {
+    title: "전표 관리",
+    upload: "전표 업로드",
+    list: "전표 목록",
+    log: "변경 내역",
+  },
+  log_view: {
+    title: "변경 내역",
+    type: "변경 항목",
+    record_time: "기록 시간",
+    action_type: "작업 유형",
+    operator: "작업자",
+    journal_id: "전표 ID",
+    empty: "변경 내역이 없습니다",
+    action_create: "생성",
+    action_update: "업데이트",
+    action_delete: "삭제",
+    unnamed_user: "익명 사용자",
+    copy_address: "클릭하여 주소 복사: {{address}}",
+    copy_id: "클릭하여 전표 ID 복사: {{id}}",
+  },
+};

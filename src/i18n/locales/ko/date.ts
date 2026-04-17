@@ -1,0 +1,30 @@
+// TODO: Translate to ko
+export const date = {
+  year: "Year",
+  month: "Month",
+  week: "Week",
+  day: "Day",
+  month_name: {
+    jan: "January",
+    feb: "February",
+    mar: "March",
+    apr: "April",
+    may: "May",
+    jun: "June",
+    jul: "July",
+    aug: "August",
+    sep: "September",
+    oct: "October",
+    nov: "November",
+    dec: "December",
+  },
+  week_name: {
+    sun: "Sunday",
+    mon: "Monday",
+    tue: "Tuesday",
+    wed: "Wednesday",
+    thu: "Thursday",
+    fri: "Friday",
+    sat: "Saturday",
+  },
+};

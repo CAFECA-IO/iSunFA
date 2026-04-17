@@ -1,0 +1,35 @@
+export const journal = {
+  title: "伝票管理",
+  detail_modal: {
+    title: "仕訳帳",
+    empty: "仕訳帳の内容がありません",
+  },
+  summary: {
+    empty: "現在仕訳帳データはありません",
+    today_count: "本日作成された仕訳帳",
+    unit: "件",
+    pending: "確認待ち",
+    ai_confidence: "AI平均信頼度",
+  },
+  main_view: {
+    title: "伝票管理",
+    upload: "伝票をアップロード",
+    list: "伝票リスト",
+    log: "変更履歴",
+  },
+  log_view: {
+    title: "変更履歴",
+    type: "変更項目",
+    record_time: "記録時間",
+    action_type: "操作タイプ",
+    operator: "操作者",
+    journal_id: "伝票 ID",
+    empty: "変更履歴はありません",
+    action_create: "作成",
+    action_update: "更新",
+    action_delete: "削除",
+    unnamed_user: "名無しのユーザー",
+    copy_address: "クリックしてアドレスをコピー: {{address}}",
+    copy_id: "クリックして伝票 ID をコピー: {{id}}",
+  },
+};

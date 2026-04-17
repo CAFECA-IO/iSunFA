@@ -1,0 +1,14 @@
+export const registrationSteps = {
+  processing_title: "アカウント作成中",
+  complete_title: "登録完了！",
+  fetching_challenge: "安全な登録プロセスを準備中...",
+  creating_passkey: "Passkey認証を作成中...",
+  parsing_passkey: "セキュリティ資格情報を検証中...",
+  predicting_address: "スマートウォレットアドレスを生成中...",
+  calculating_hash: "アカウント設定を保護中...",
+  awaiting_signature: "最終承認を待っています...",
+  deploying: "スマートアカウントをブロックチェーンに展開中...",
+  success: "アカウントが正常に作成されました！",
+  failed: "登録に失敗しました。もう一度お試しください。",
+  processing: "処理中...",
+};

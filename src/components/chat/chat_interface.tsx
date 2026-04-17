@@ -6,11 +6,7 @@ import MessageList, { IMessage } from '@/components/chat/message_list';
 import { request } from '@/lib/utils/request';
 import { useAuth } from '@/contexts/auth_context';
 import { useTranslation } from '@/i18n/i18n_context';
-import { MODULES } from '@/constants/modules';
 
-// Info: (20260104 - Luphia) interface Message removed in favor of import
-
-// Info: (20260117 - Luphia) Allow className override for embedding in widgets
 interface IChatInterfaceProps {
   className?: string;
 }
@@ -96,11 +92,6 @@ export default function ChatInterface({ className }: IChatInterfaceProps = {}) {
 
   const isGuestLimitReached = !user && guestUsage >= 5;
 
-  // Info: (20260117 Luphia) Determine allowed tags
-  const allowedTags = user
-    ? user.modules || []
-    : MODULES.filter(m => m.basic).map(m => m.key);
-
   return (
     <div className={`flex flex-col bg-gray-50 relative ${className || 'h-[calc(100vh-64px)]'}`}>
       {!user && !authLoading && (
@@ -112,7 +103,6 @@ export default function ChatInterface({ className }: IChatInterfaceProps = {}) {
       <ChatInput
         onSend={handleSend}
         disabled={loading || isGuestLimitReached}
-        allowedTags={allowedTags}
       />
     </div>
   );

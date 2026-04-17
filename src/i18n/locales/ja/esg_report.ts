@@ -1,0 +1,23 @@
+export const esgReport = {
+  unit: "kgCO2e",
+  loading_title: "ESGレポートを作成中",
+  loading_desc: "各スコープの排出分布を計算しています。お待ちください...",
+  error_title: "ESGレポートの作成に失敗しました",
+  error_desc:
+    "この期間に承認された炭素排出記録があるか確認してください。または後でお試しください。",
+  gross_emissions: "温室効果ガス総排出量",
+  gross_desc: "対象期間の累積総量",
+  scope1: "Scope 1 (直接排出)",
+  scope1_desc: "自社施設からの直接排出比率",
+  scope2: "Scope 2 (間接排出)",
+  scope2_desc: "購入した電力/熱による排出比率",
+  scope3: "Scope 3 (サプライチェーン)",
+  scope3_desc: "その他の間接排出比率",
+  no_records: "このスコープの排出記録はありません",
+  scopes_title: "排出スコープ分布",
+  proportion: "% 割合",
+  gross_emissions_bottom: "総排出量",
+  scope1_title: "Scope 1 (直接排出)",
+  scope2_title: "Scope 2 (間接排出)",
+  scope3_title: "Scope 3 (サプライチェーン)",
+};
