@@ -35,7 +35,7 @@ export function getAnalysisCost(params: IOrderParams): number {
 
   if (params.items && params.items.length > 0) {
     return params.items.reduce(
-      (acc, item) => acc + unitCost * item.quantity,
+      (acc, item) => acc + (item.unitPrice ?? unitCost) * item.quantity,
       0,
     );
   }

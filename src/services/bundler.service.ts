@@ -71,6 +71,53 @@ export class BundlerService {
       status: receipt.status,
     };
   }
+  public async sendUserOpAsync(userOpJson: unknown, entryPointAddress: string) {
+    if (!rpcUrl) {
+      throw new Error("Server configuration error: Missing env variables");
+    }
+
+    const userOp = userOperationSchema.parse(userOpJson);
+
+    const publicClient = createPublicClient({ transport: http(rpcUrl) });
+    const relayerAccount = await getAdminAccount();
+    const relayerClient = createWalletClient({
+      account: relayerAccount,
+      transport: http(rpcUrl),
+    });
+    
+    const ops = [
+      {
+        sender: userOp.sender as `0x${string}`,
+        nonce: userOp.nonce,
+        initCode: userOp.initCode as `0x${string}`,
+        callData: userOp.callData as `0x${string}`,
+        accountGasLimits: userOp.accountGasLimits as `0x${string}`,
+        preVerificationGas: userOp.preVerificationGas,
+        gasFees: userOp.gasFees as `0x${string}`,
+        paymasterAndData: userOp.paymasterAndData as `0x${string}`,
+        signature: userOp.signature as `0x${string}`,
+      },
+    ];
+
+    const beneficiary = relayerAccount.address;
+
+    const { request } = await publicClient.simulateContract({
+      account: relayerAccount,
+      address: entryPointAddress as `0x${string}`,
+      abi: ABIS.ENTRY_POINT,
+      functionName: "handleOps",
+      args: [ops, beneficiary],
+      chain: publicClient.chain,
+    });
+
+    const txHash = await relayerClient.writeContract(request);
+
+    // Info: (20260417 - Luphia) Return instantly without waiting for receipt
+    return {
+      transactionHash: txHash,
+      status: "pending",
+    };
+  }
 }
 
 export const bundlerService = new BundlerService();

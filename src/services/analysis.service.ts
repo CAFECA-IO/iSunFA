@@ -16,6 +16,7 @@ import { ApiCode } from "@/lib/utils/status";
 
 export interface IGenerateAnalysisParams extends IOrderParams {
   orderId?: string;
+  status?: string;
 }
 
 export class AnalysisService {
@@ -170,13 +171,13 @@ export class AnalysisService {
 
           const esgRecords = targetAccountBookId
             ? await prisma.esgRecord.findMany({
-                where: {
-                  accountBookId: targetAccountBookId,
-                  tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
-                  deletedAt: null,
-                },
-                orderBy: { tradingDate: "asc" },
-              })
+              where: {
+                accountBookId: targetAccountBookId,
+                tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
+                deletedAt: null,
+              },
+              orderBy: { tradingDate: "asc" },
+            })
             : [];
 
           console.log(
@@ -218,7 +219,7 @@ export class AnalysisService {
     } catch (error) {
       console.error("[AnalysisService] Mission Generation Failed:", error);
       if (error instanceof AppError) {
-        throw error; // Let the caller (API route) abort the operation instantly
+        throw error; // Info: (20260418 - Luphia) Let the caller (API route) abort the operation instantly
       }
       analysisResult = "Analysis Generation Failed. Please contact support.";
     }
@@ -269,7 +270,7 @@ export class AnalysisService {
           missionName: missionDef
             ? missionDef.name
             : `Analysis-${params.category}-${params.periodType}`,
-          status: MISSION_STATUS.UPLOADING,
+          status: params.status || MISSION_STATUS.UPLOADING,
           missionData: {
             category: params.category,
             cost,

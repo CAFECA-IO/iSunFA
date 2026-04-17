@@ -437,7 +437,7 @@ export async function prepareTransferUserOp(
     const validSender = getAddress(sender);
     const validRecipient = CONTRACT_ADDRESSES.SUBSCRIPTION_MANAGER;
 
-    const amountWei = (Number(amount) * 10 ** 18).toString();
+    const amountWei = parseEther(amount.toString()).toString();
 
     // Info: (20260130 - Tzuhan) 1. Build UserOp
     const userOp = await buildTransferUserOp(

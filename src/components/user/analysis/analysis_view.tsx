@@ -309,24 +309,8 @@ export default function AnalysisView() {
       ]
     };
 
-    const success = await executeOrderTransaction(payload, finalCost, async (authData) => {
-      await request('/api/v1/user/analysis', {
-        method: 'POST',
-        body: JSON.stringify({
-          category,
-          periodType,
-          year: selectedYear,
-          periodValue: periodType === 'yearly' ? selectedYear.toString() : selectedPeriodValue,
-          country,
-          keyword: derivedKeyword, // Info: (20260209 - Tzuhan) derivedKeyword for the backend
-          isExternal: activeTab === 'external',
-          requireBookkeeper: isInternalCompanyAnalysis ? requireBookkeeper : false,
-          requireCPA: isInternalCompanyAnalysis ? requireCPA : false,
-          requireThirdParty: isInternalCompanyAnalysis ? requireThirdParty : false,
-          authentication: authData,
-        }),
-      });
-
+    const success = await executeOrderTransaction(payload, finalCost, async () => {
+      // Info: (20260417 - Luphia) The analysis report is now generated explicitly by the background backend API during payment dispatch.
       setTimeout(() => {
         setIsPaymentModalOpen(false);
         setActiveTab('history');

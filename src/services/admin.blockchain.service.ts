@@ -1,6 +1,6 @@
 "use server";
 
-import { createPublicClient, createWalletClient, formatEther, http, parseAbi } from "viem";
+import { createPublicClient, createWalletClient, formatEther, http, parseAbi, parseEther } from "viem";
 import { isuncoin } from "@/lib/viem_public";
 import { getAdminAccount } from "@/lib/wallet/admin_wallet";
 import { getPriorityEnvConfig } from "@/services/env.service";
@@ -159,7 +159,7 @@ export async function mintIcpAction(amount: number, clientToken?: string): Promi
     });
 
     // Info: (20260416 - Luphia) 換算所需 ISC (Wei)
-    const amountBigInt = BigInt(Math.floor(amount * 10 ** 18));
+    const amountBigInt = parseEther(amount.toString());
     const requiredISC = (amountBigInt * (collateralRateWei as bigint)) / BigInt(10 ** 18);
 
     const adminAddress = adminAccount.address;

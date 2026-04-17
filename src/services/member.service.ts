@@ -152,8 +152,10 @@ export async function issuePurchasedPointsToMember(
     const errorMsg = (error as Error).message || "";
     // Info: (20260417 - Luphia) Auto-funding mechanism if contract runs out of ISC reserves
     if (errorMsg.includes("InsufficientContractReserves") || errorMsg.includes("0x9443a76e")) {
-      console.warn(`[MembershipService] Contract reserves low during point issuance. Executing auto-funding...`);
-      const fundRes = await fundMembershipSystem(50);
+      // Info: (20260417 - Luphia) Make auto-funding dynamic to cover large issuances, plus 50 as buffer
+      const fundingAmount = Math.max(50, amount + 50);
+      console.warn(`[MembershipService] Contract reserves low during point issuance. Executing auto-funding of ${fundingAmount} ISC...`);
+      const fundRes = await fundMembershipSystem(fundingAmount);
       if (!fundRes.success) {
         return { success: false, message: `Auto-funding sequence failed: ${fundRes.message}` };
       }

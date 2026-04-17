@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/contexts/auth_context";
 import { PaymentStatus } from "@/components/common/payment_confirm_modal";
 import { fido2ClientService } from "@/lib/auth/fido2_client";
@@ -8,7 +8,6 @@ import {
 } from "@/lib/auth/crypto_utils";
 import {
   prepareTransferUserOp,
-  submitSignedUserOp,
 } from "@/services/token.service";
 import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { request } from "@/lib/utils/request";
@@ -33,11 +32,15 @@ export const useOrderTransaction = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [txHash, setTxHash] = useState("");
   const { user, refreshAuth } = useAuth();
+  
+  // Info: (20260417 - Luphia) Prevent React double-click async execution bugs
+  const executingFlagRef = useRef(false);
 
   const resetTransaction = () => {
     setWorkflowStatus("idle");
     setErrorMessage("");
     setTxHash("");
+    executingFlagRef.current = false;
   };
 
   const executeOrderTransaction = async (
@@ -50,9 +53,13 @@ export const useOrderTransaction = () => {
       } & AuthenticationJSON,
     ) => Promise<void>,
   ) => {
+    if (executingFlagRef.current) return false;
+    executingFlagRef.current = true;
+
     if (!user?.address || !user?.pubKeyX || !user?.pubKeyY) {
       setErrorMessage("請重新登入以獲取付款金鑰");
       setWorkflowStatus("error");
+      executingFlagRef.current = false;
       return false;
     }
 
@@ -100,21 +107,28 @@ export const useOrderTransaction = () => {
         BigInt(user.pubKeyY),
       );
 
-      // Info: (20260209 - Tzuhan) 5. 提交已簽署的 UserOp
+      // Info: (20260417 - Luphia) 5. 提交至背景處理 API
       setWorkflowStatus("submitting_payment");
-      const submitRes = await submitSignedUserOp({
-        ...userOp,
-        signature: encodedSignature,
-      });
+      const submitRes = await request<{ payload: { txHash: string, orderId: string, reportId?: string } }>(
+        `/api/v1/user/order/${orderId}/blockchain_payment`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            userOp: { ...userOp, signature: encodedSignature },
+            signature: encodedSignature,
+            authentication: transferAuth
+          }),
+        }
+      );
 
-      if (!submitRes.success) {
-        throw new Error(submitRes.message || "Token transfer failed");
+      if (!submitRes || !submitRes.payload) {
+        throw new Error("Token transfer dispatch failed");
       }
 
-      const transactionHash = (submitRes.data as { tx: string })?.tx;
+      const transactionHash = submitRes.payload.txHash;
       setTxHash(transactionHash || "");
 
-      // Info: (20260209 - Tzuhan) 6. 提交分析請求 (呼叫 callback 處理)
+      // Info: (20260417 - Luphia) 6. 分析請求已在背景產生 (呼叫 callback 處理 UI 刷新)
       setWorkflowStatus("payment_success");
       await onPaymentSuccess({
         orderId,
@@ -130,7 +144,10 @@ export const useOrderTransaction = () => {
       const err = error as Error;
       setErrorMessage(err.message || "Payment or Analysis failed");
       setWorkflowStatus("error");
+      executingFlagRef.current = false;
       return false;
+    } finally {
+      executingFlagRef.current = false;
     }
   };
 
