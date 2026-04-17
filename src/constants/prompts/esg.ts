@@ -3,7 +3,10 @@ import { ICoefficient } from "@/interfaces/coefficient";
 import { ESG_EMISSION_FACTORS_TEXT } from "@/constants/esg_emission_factors";
 import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
 
-export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null, coefficients?: Partial<ICoefficient>[]) => {
+export const getEsgPrompt = (
+  accountBook?: Partial<AccountBook> | null,
+  coefficients?: Partial<ICoefficient>[],
+) => {
   const accountBookInfo = accountBook
     ? `\n  這筆碳盤查紀錄是為了「${accountBook.name}」所分析，請根據該企業情境與所在地（${accountBook.country || "TW"}）進行溫室氣體範疇的判斷。`
     : "";
@@ -12,16 +15,27 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null, coeffici
     ? `\n  請嚴格遵守以下帳本關於碳排或會計核算的特殊規則與偏好：\n  ${accountBook.rule}\n`
     : "";
 
-    const coefficientsListStr = coefficients && coefficients.length > 0
-    ? `【目前系統內建係數清單】:\n${JSON.stringify(coefficients.map((c) => ({
-        id: c.id,
-        name: c.name,
-        description: c.description,
-        formula: `${c.unit} * ${c.emissionFactor}`
-      })))}`
-    : "【目前系統內建係數清單】: (空)";
+  const coefficientsListStr =
+    coefficients && coefficients.length > 0
+      ? `【目前系統內建係數清單】:\n${JSON.stringify(
+          coefficients.map((c) => ({
+            id: c.id,
+            name: c.name,
+            description: c.description,
+            formula: `${c.unit} * ${c.emissionFactor}`,
+          })),
+        )}`
+      : "【目前系統內建係數清單】: (空)";
 
-    const coefficientsInstruction = `
+  const existedUnitList =
+    coefficients && coefficients.length > 0
+      ? `
+      【目前系統內建單位清單】:
+      ${coefficients.map((c) => c.unit).join(", ")}
+      `
+      : "【目前系統內建單位清單】: (空)";
+
+  const coefficientsInstruction = `
   ${coefficientsListStr}
   
   請從上方的系統內建係數清單中，檢查是否有符合該憑證情境的係數。
@@ -34,7 +48,7 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null, coeffici
   2. 排放係數 (Emission Factor)：依據您上述選擇（既有或新尋找的係數數值）。
   3. 碳排放量 (Emissions)：活動數據 × 排放係數。
   請將最終計算出的碳排數字填入 \`emissions\`。`;
-    
+
   return `
   請將用戶上傳的憑證（檔案/圖片）解析出碳盤查（Carbon Footprint Verification）相關資訊。${accountBookInfo}${rulesInstruction}
   ${coefficientsInstruction}
@@ -44,7 +58,10 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null, coeffici
   ${ESG_EMISSION_FACTORS_TEXT}
 
   【活動類型】請從以下清單中選擇最符合的活動類型，並將該活動類型的 key 填入回傳 JSON 的 \`activityType\` 欄位：
-  ${EsgActivityTypeMapping.map((a) => (`${a.key}: ${a.value}，${a.description}`)).join("\n")}
+  ${EsgActivityTypeMapping.map((a) => `${a.key}(${a.scope}): ${a.value}，${a.description}`).join("\n")}
+
+  【活動數據單位】請從以下清單中選擇最符合的活動數據單位，並將該活動數據單位的 key 填入回傳 JSON 的 \`unit\` 欄位。如果沒有合適的單位，請自行新增一個單位，且須和係數的單位一致：
+  ${existedUnitList}
 
   請在「dqiScore」中，根據以下標準來計算數據品質分數（數字 1-5，1 為最優，5 為最差)：
   1. 技術相關性 (Te)：數據是否真實反映了產品所使用的技術、設備或製程。優質標準：數據來自實際生產線的特定技術（如：使用特定品牌、型號的電爐數據，而非產業平均值）。
@@ -62,7 +79,7 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null, coeffici
       "activityType": "EMPLOYEE_COMMUTING", // 活動類型
       "vendor": "心心小舖", // 供應商
       "amount": 2.01, // 活動數據 (數字)
-      "unit": "度", // 單位
+      "unit": "kWh", // 單位
       "emissions": 123.45, // 排放量 (數字，單位為 kgCO2e)
       "intensity": "HIGH", // 排放強度 ("HIGH" | "MEDIUM" | "LOW")
       "dqiScore": 1.2, // 數據品質分數 (數字 1-5)
@@ -72,7 +89,7 @@ export const getEsgPrompt = (accountBook?: Partial<AccountBook> | null, coeffici
         // 若找不到適合的既有係數，所尋找到的可靠外部係數資訊 (若有使用既有係數則為 null)
           "name": "string", // 係數名稱，須符合「XX 係數」的格式
           "description": "string", // 係數描述
-          "unit": "string", // 係數單位，不包含 'kgCO2e'，例如：kgCO2e/kg，即為 kg (以國際通用單位為主，不要寫中文)
+          "unit": "string", // 係數單位，不包含 'kgCO2e'，例如：kgCO2e/kg，即為 kg (盡量以國際通用單位為主，不要寫中文)
           "emissionFactor": 1.23, // 排放係數 (數字)
           "source": "string" // 來源，如「經濟部能源署」等
       },

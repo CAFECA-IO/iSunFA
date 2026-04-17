@@ -1,5 +1,6 @@
 import { Task } from "@/generated/client";
 import { accountBookRepo } from "@/repositories/account_book.repo";
+import { esgRepo } from "@/repositories/esg.repo";
 
 export interface IDocumentContext {
   fileId: string;
@@ -14,7 +15,7 @@ export interface IDocumentContext {
 
 export async function prepareDocumentContext(task: Task) {
   const taskData = task.data as { context?: string };
-  let parsedContext: IDocumentContext = { fileId: "", accountBookId: "" };
+  let parsedContext: IDocumentContext = { fileId: "", accountBookId: "", esgRecordId: "" };
   try {
     if (taskData?.context) {
       parsedContext = JSON.parse(taskData.context);
@@ -43,5 +44,10 @@ export async function prepareDocumentContext(task: Task) {
     ? await accountBookRepo.getAccountBookById(parsedContext.accountBookId)
     : null;
 
-  return { parsedContext, images, accountBook };
+  // Info: (20260417 - Julian) 取得碳排查紀錄
+  const esgRecord = parsedContext.esgRecordId
+    ? await esgRepo.getEsgRecordById(parsedContext.esgRecordId)
+    : null;
+
+  return { parsedContext, images, accountBook, esgRecord };
 }
