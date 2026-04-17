@@ -86,7 +86,7 @@ export const downloadHtmlAsPdf = async (
       filter: options?.filter,
     });
 
-    // Revert all margins to original state
+    // Info: (20260418 - Tzuhan) Revert all margins to original state
     originalMargins.forEach((originalMargin, el) => {
       el.style.marginTop = originalMargin;
     });
