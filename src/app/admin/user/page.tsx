@@ -19,7 +19,7 @@ import { request } from "@/lib/utils/request";
 import {
   PointIssueModal,
   IUserTarget,
-} from "@/components/admin/users/point_issue_modal";
+} from "@/components/admin/user/point_issue_modal";
 import { useTranslation } from "@/i18n/i18n_context";
 import { Role } from "@/generated/enums";
 import { IBlockchainDashboardData } from "@/services/admin.blockchain.service";
