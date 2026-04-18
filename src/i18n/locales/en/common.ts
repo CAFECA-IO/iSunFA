@@ -63,5 +63,8 @@ export const common = {
     oldest: "Oldest",
   },
   share: "Share",
+  donut_chart: {
+    note: "* The pie chart presents the composition distribution of {{title}}. The system only renders valid data; any deviations or undefined subjects are automatically merged.",
+  },
   other: "Other",
 };

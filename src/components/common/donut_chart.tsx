@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { useTranslation } from '@/i18n/i18n_context';
 
 export interface IDonutChartData {
   name: string;
@@ -48,6 +49,7 @@ const CustomTooltip = ({ active = false, payload = [] }: ICustomTooltipProps) =>
 };
 
 export const DonutChart: React.FC<IDonutChartProps> = ({ title, data, colors = DEFAULT_COLORS }) => {
+  const { t } = useTranslation();
   // Info: (20260418 - Tzuhan) Calculate total to determine percentages for the custom center text
   const total = useMemo(() => data.reduce((acc, current) => acc + current.value, 0), [data]);
 
@@ -138,7 +140,7 @@ export const DonutChart: React.FC<IDonutChartProps> = ({ title, data, colors = D
         </div>
         <div className="mt-8 pt-4 border-t border-gray-50 min-w-0">
           <p className="text-xs text-gray-400 font-medium leading-relaxed break-words whitespace-normal break-all md:break-words">
-            * 圓餅圖呈現核心 {title} 之組合分佈。系統僅針對有效數據進行渲染，若有偏離或未定義科目則自動合併計算。
+            {t("common.donut_chart.note", { title })}
           </p>
         </div>
       </div>
