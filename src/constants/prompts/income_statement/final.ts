@@ -5,7 +5,7 @@ export const FINAL_PROMPT = `
 [STEP_0_CONTENT]
 
 請將資訊統整為以下 Markdown 格式：
-# 🏢 【{Target_Company}】綜合損益表 (Income Statement)
+# 🏢 {Target_Company} 綜合損益表 (Income Statement)
 
 *報告期間：{Year} {Period}*
 

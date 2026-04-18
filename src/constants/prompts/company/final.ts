@@ -4,7 +4,7 @@ Output Language: Same as input.
 
 Structure:
 
-# 🏆 [Company Name] - 智能企業評級 (Smart Enterprise Rating)
+# 🏆 {Target_Company} 智能企業評級 (Smart Enterprise Rating)
 
 ## 📊 企業綜合健康度與信用評級
 * **綜合量化評分:** [Average of 8 Dimensions] / 100

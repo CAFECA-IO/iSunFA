@@ -5,7 +5,7 @@ export const FINAL_PROMPT = `
 [STEP_0_CONTENT]
 
 請將資訊統整為以下 Markdown 格式：
-# 🏢 【{Target_Company}】資產負債表 (Balance Sheet)
+# 🏢 {Target_Company} 資產負債表 (Balance Sheet)
 
 *報告期間：{Year} {Period}*
 

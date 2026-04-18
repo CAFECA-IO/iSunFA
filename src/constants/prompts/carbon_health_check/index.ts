@@ -271,7 +271,7 @@ export const INTERNAL_FINAL_PROMPT = `
 [STEP_0_CONTENT]
 
 請將資訊統整為以下 Markdown 格式：
-# 🌱 【{Target_Company}】內部碳排健康度審查報告
+# 🌱 {Target_Company} 內部碳排健康度審查報告
 
 ## 1. 📊 企業內部碳足跡分佈 (Carbon Footprint)
 > 以財務與水電單據粗估之三大範疇碳排放源分佈。

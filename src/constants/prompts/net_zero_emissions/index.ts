@@ -127,7 +127,7 @@ export const INTERNAL_FINAL_PROMPT = `
 [STEP_0_CONTENT]
 
 請將資訊統整為以下 Markdown 格式：
-# 🌍 【{Target_Company}】內部淨零行動與資本落實報告
+# 🌍 {Target_Company} 內部淨零行動與資本落實報告
 
 ## 1. 📊 實質減碳資金流向圖 (CAPEX & OPEX Tracker)
 > 企業年度現金流究竟有多少真金白銀砸在減碳與綠營運上。

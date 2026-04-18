@@ -5,7 +5,7 @@ export const FINAL_PROMPT = `
 [STEP_0_CONTENT]
 
 請將資訊統整為以下 Markdown 格式：
-# 🏢 【{Target_Company}】財務合規健康度總結報告
+# 🏢 {Target_Company} 財務合規健康度總結報告
 
 ## 1. 🕸️ 內部風控雷達網 (Risk Radar)
 > 企業內部異常行為與合規地雷的視覺化追蹤。
@@ -16,7 +16,7 @@ graph TD
     Center --> Fraud["🚨 舞弊與盈餘操縱風險<br/>[簡述風險或填無]"]
     Center --> Abn["🕵️ 異常交易檢測<br/>[簡述異常或填無]"]
     Center --> Reg["⚖️ 法規遵循與治理<br/>[簡述違規或填無]"]
-    style Center fill:#f9f,stroke:#333,stroke-width:2px;
+    style Center fill:#fff,stroke:#333,stroke-width:2px;
 \`\`\`
 *(請依據實際財務查核數據替換中括號內之文字。若發現重大異常，強烈建議利用 style 指令將該節點標示為紅色警示顏色)*
 

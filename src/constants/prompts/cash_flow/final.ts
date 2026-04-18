@@ -5,7 +5,7 @@ export const FINAL_PROMPT = `
 [STEP_0_CONTENT]
 
 請將資訊統整為以下 Markdown 格式：
-# 🏢 【{Target_Company}】現金流量表 (Statement of Cash Flows)
+# 🏢 {Target_Company} 現金流量表 (Statement of Cash Flows)
 
 *報告期間：{Year} {Period}*
 

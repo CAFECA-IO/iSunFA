@@ -5,7 +5,7 @@ export const FINAL_PROMPT = `
 [STEP_0_CONTENT]
 
 請將資訊統整為以下 Markdown 格式：
-# 🏢 【{Target_Company}】財務健康度總檢與綜合評價報告
+# 🏢 {Target_Company} 財務健康度總檢與綜合評價報告
 
 ## 1. 📊 核心健康度評等 (Health Scores)
 > 透過三大維度量化打分，快速掃描企業體質。
