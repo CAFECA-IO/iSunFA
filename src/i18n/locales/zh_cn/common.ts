@@ -62,5 +62,8 @@ export const common = {
     oldest: "由旧至新",
   },
   share: "分享",
+  donut_chart: {
+    note: "* 圆饼图呈现核心 {{title}} 的组合分布。系统仅对有效数据进行渲染，若有偏差或未定义科目则自动合并计算。",
+  },
   other: "其他",
 };

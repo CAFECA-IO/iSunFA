@@ -64,5 +64,8 @@ export const common = {
     oldest: "오래된순",
   },
   share: "공유",
+  donut_chart: {
+    note: "* 원형 차트는 {{title}} 의 구성 분포를 보여줍니다. 시스템은 유효한 데이터만 렌더링하며, 편차나 정의되지 않은 항목은 자동으로 병합되어 계산됩니다.",
+  },
   other: "기타",
 };

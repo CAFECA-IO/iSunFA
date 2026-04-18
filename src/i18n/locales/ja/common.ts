@@ -64,5 +64,8 @@ export const common = {
     oldest: "古い順",
   },
   share: "共有",
+  donut_chart: {
+    note: "* 円グラフは {{title}} の構成分布を示しています。システムは有効なデータのみを描画し、偏差や未定義の科目は自動的に統合・計算されます。",
+  },
   other: "その他",
 };

@@ -59,6 +59,22 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
         background: 'transparent',
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
 
+        // Info: (20260418 - Tzuhan) Unified Premium Flowchart Palette matching DonutChart (Navy & Orange)
+        primaryColor: '#ffffff',
+        primaryTextColor: '#152C5B',
+        primaryBorderColor: '#152C5B',
+        lineColor: '#FF9800',
+        secondaryColor: '#f8fafc',
+        tertiaryColor: '#ffffff',
+        mainBkg: '#ffffff',
+        nodeBorder: '#152C5B',
+        clusterBkg: '#ffffff',
+        clusterBorder: '#E2E8F0',
+        defaultLinkColor: '#FF9800',
+        titleColor: '#152C5B',
+        edgeLabelBackground: '#FFF3E0', // Light orange background for line labels
+        nodeTextColor: '#152C5B',
+
         // Info: (20260418 - Tzuhan) Vibrant Palette for Pie Charts
         pie1: '#4F46E5',
         pie2: '#10B981',
@@ -129,6 +145,38 @@ const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
           width: auto;
           height: auto;
           margin: 0 auto;
+        }
+        
+        /* 
+         * Info: (20260418 - Tzuhan) FOOLPROOF SLEDGEHAMMER.
+         * Eradicate any pink, red, or ugly inline colors from DB historical nodes.
+         * Force every shape inside a node to use the pristine Navy/White UI.
+         */
+        .mermaid-container .node rect,
+        .mermaid-container .node circle,
+        .mermaid-container .node polygon,
+        .mermaid-container .node path,
+        .mermaid-container .node .label-container,
+        .mermaid-container .node .basic {
+          fill: #ffffff !important;
+          stroke: #152C5B !important;
+          stroke-width: 1.5px !important;
+        }
+
+        /* Force rounded corners on react specifically */
+        .mermaid-container .node rect {
+          rx: 6px !important;
+          ry: 6px !important;
+        }
+
+        /* Force text colors specifically (HTML & SVG compatibility) */
+        .mermaid-container .node .label,
+        .mermaid-container .node span,
+        .mermaid-container .node foreignObject,
+        .mermaid-container .node tspan,
+        .mermaid-container .edgeLabel {
+          color: #152C5B !important;
+          fill: #152C5B !important;
         }
       `}</style>
       <div
