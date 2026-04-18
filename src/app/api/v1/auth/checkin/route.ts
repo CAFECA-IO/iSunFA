@@ -72,17 +72,17 @@ export async function GET(request: NextRequest) {
         const credits = Number(formatUnits(balance, 18));
 
         if (credits < 500) {
-          // Info: (20260408 - Luphia) Check if user is frozen before minting
-          const isFrozen = await publicClient.readContract({
-            address: CONTRACT_ADDRESSES.KYC_REGISTRY,
-            abi: ABIS.KYC_REGISTRY,
-            functionName: "isFrozen",
+          // Info: (20260408 - Luphia) Check if user is blacklisted before minting
+          const isBlacklisted = await publicClient.readContract({
+            address: CONTRACT_ADDRESSES.DYNAMIC_KYC_MEMBERSHIP,
+            abi: ABIS.DYNAMIC_KYC_MEMBERSHIP,
+            functionName: "isBlacklisted",
             args: [user.address as `0x${string}`],
           });
 
-          if (isFrozen) {
+          if (isBlacklisted) {
             console.warn(
-              `User ${user.address} is frozen, skipping checkin mint`,
+              `User ${user.address} is blacklisted, skipping checkin mint`,
             );
             return;
           }

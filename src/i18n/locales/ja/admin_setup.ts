@@ -97,6 +97,9 @@ export const adminSetup = {
     col_rate_label: "ICP 担保率 (1 ICP = X ISC)",
     col_rate_placeholder: "例：0.05",
     col_rate_err: "担保率は 10^-9 から 100 の間である必要があります。",
+    dependency_verified: "コントラクト依存関係が検証されました",
+    valid: "有効",
+    invalid: "無効",
   },
   step5: {
     title: "ステップ 5：データベースの初期化",

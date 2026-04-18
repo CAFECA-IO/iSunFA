@@ -96,6 +96,9 @@ export const adminSetup = {
     col_rate_label: "ICP 담보 비율 (1 ICP = X ISC)",
     col_rate_placeholder: "예: 0.05",
     col_rate_err: "담보 비율은 10^-9 에서 100 사이여야 합니다.",
+    dependency_verified: "컨트랙트 의존성이 확인되었습니다",
+    valid: "유효",
+    invalid: "오류",
   },
   step5: {
     title: "5단계: 데이터베이스 초기화",

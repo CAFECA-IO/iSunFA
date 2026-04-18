@@ -2,8 +2,15 @@ import { useState, useCallback, useEffect } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { StepCard } from "@/components/admin/setup/step_card";
 import { IStepProps, StepStatus } from "@/components/admin/setup/setup_types";
-import { deployContracts, getDeployProgress, checkHasExistingContracts } from "@/services/deploy.service";
 import { useTranslation } from "@/i18n/i18n_context";
+
+export interface IDependencyCheck {
+  source: string;
+  sourceAddress: string;
+  target: string;
+  targetAddress: string;
+  valid: boolean;
+}
 
 export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }: IStepProps) {
   const { t } = useTranslation();
@@ -11,19 +18,39 @@ export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }:
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [deployProgress, setDeployProgress] = useState<string>("");
   const [contractAddresses, setContractAddresses] = useState<{ name: string; address: string }[] | null>(null);
+  const [dependencyResults, setDependencyResults] = useState<IDependencyCheck[]>([]);
 
   // Info: (20260416 - Luphia) Expose the configuration argument for the Deployment Action
   const [collateralRate, setCollateralRate] = useState<string>("0.05");
 
   const [hasExisting, setHasExisting] = useState<boolean>(false);
 
+  const callSetupApi = useCallback(async (action: string, args: unknown[] = []) => {
+    const res = await fetch(`/api/v1/admin/setup/${action}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ args })
+    });
+    
+    let parsed;
+    try {
+      parsed = await res.json();
+    } catch (e) {
+      if (!res.ok) throw new Error(`HTTP Error ${res.status}: Server might be restarting`);
+      throw e;
+    }
+
+    if (!parsed.success) throw new Error(parsed.message || "Unknown API Error");
+    return parsed.payload;
+  }, []);
+
   useEffect(() => {
     if (isActive && !isCompleted) {
-      checkHasExistingContracts().then((exists) => setHasExisting(exists));
+      callSetupApi("checkHasExistingContracts").then((exists) => setHasExisting(exists as boolean));
     }
-  }, [isActive, isCompleted]);
+  }, [isActive, isCompleted, callSetupApi]);
 
-  const execute = useCallback(async () => {
+  const execute = useCallback(async (useExisting: boolean = false) => {
     if (status !== StepStatus.IDLE) return;
     setStatus(StepStatus.LOADING);
     setDeployProgress("");
@@ -31,56 +58,81 @@ export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }:
     // Info: (20260412 - Luphia) Start polling deployment progress
     const intervalId = setInterval(async () => {
       try {
-        const log = await getDeployProgress();
-        if (log) setDeployProgress(log);
+        const log = await callSetupApi("getDeployProgress");
+        if (log) setDeployProgress(log as string);
       } catch { }
     }, 1500);
 
-    let result: { success: boolean; output: string } = { success: false, output: "" };
+    let result: { success: boolean; output: string; pending?: boolean } = { success: false, output: "" };
 
     try {
-      result = await deployContracts(parseFloat(collateralRate));
-    } catch (err) {
-      /**
-       * Info: (20260413 - Luphia) Server reloads when .env.setup is updated at the end of deployment, 
-       * causing the fetch to drop. We pause to let it restart, then fetch the fast-path result.
-       */
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      try {
-        result = await deployContracts(parseFloat(collateralRate));
-      } catch (innerErr) {
-        result = { success: false, output: String(err) + " / " + String(innerErr) };
-      }
+      result = await callSetupApi("deployContracts", [parseFloat(collateralRate), useExisting]);
+    } catch {
+      // Info: (20260418 - Luphia) In case of unexpected proxy drop, it is likely already deploying in the background.
+      result = { success: true, pending: true, output: "Reconnecting to deployment thread..." };
     }
 
-    // Info: (20260412 - Luphia) Stop polling and grab final output
+    if (result.pending) {
+      result.output = await new Promise<string>((resolve) => {
+        const sid = setInterval(async () => {
+          try {
+            const log = await callSetupApi("getDeployProgress") as string;
+            setDeployProgress(log || "");
+            
+            if (log && log.includes("===== DEPLOYMENT SUMMARY =====")) {
+              clearInterval(sid);
+              resolve(log);
+            } else if (log && log.includes("Failed:") && !log.includes("Warning:")) {
+              clearInterval(sid);
+              resolve(log);
+            }
+          } catch {}
+        }, 1500);
+      });
+      result.success = result.output.includes("===== DEPLOYMENT SUMMARY =====");
+    }
+    
+    // Info: (20260412 - Luphia) Stop any duplicate fallback polling and grab final output
     clearInterval(intervalId);
     setDeployProgress(result.output || "");
 
     if (result.success) {
-      const kyc = result.output.match(/KYCRegistry:\s+(0x[a-fA-F0-9]{40})/)?.[1];
-      const dmc = result.output.match(/DynamicMembershipCard:\s+(0x[a-fA-F0-9]{40})/)?.[1];
+      const kyc = result.output.match(/DynamicKYCMembership:\s+(0x[a-fA-F0-9]{40})/)?.[1];
       const treasury = result.output.match(/CreditPoint:\s+(0x[a-fA-F0-9]{40})/)?.[1];
       const sub = result.output.match(/SubscriptionManager:\s+(0x[a-fA-F0-9]{40})/)?.[1];
+      const membership = result.output.match(/MembershipSystem:\s+(0x[a-fA-F0-9]{40})/)?.[1];
       const ep = result.output.match(/EntryPoint:\s+(0x[a-fA-F0-9]{40})/)?.[1];
       const factory = result.output.match(/Fido2AccountFactory:\s+(0x[a-fA-F0-9]{40})/)?.[1];
+      const missionBoard = result.output.match(/MissionBoard:\s+(0x[a-fA-F0-9]{40})/)?.[1];
 
       const addresses = [];
-      if (kyc) addresses.push({ name: "KYC Registry", address: kyc });
-      if (dmc) addresses.push({ name: "Dynamic Membership Card", address: dmc });
+      if (kyc) addresses.push({ name: "Dynamic KYC Membership", address: kyc });
       if (treasury) addresses.push({ name: "Credit Point (ERC3643)", address: treasury });
       if (sub) addresses.push({ name: "Subscription Manager", address: sub });
+      if (membership) addresses.push({ name: "Membership System", address: membership });
+      if (missionBoard) addresses.push({ name: "Mission Board", address: missionBoard });
       if (ep) addresses.push({ name: "EntryPoint (ERC4337)", address: ep });
       if (factory) addresses.push({ name: "FIDO2 Account Factory", address: factory });
 
       setContractAddresses(addresses.length > 0 ? addresses : null);
+
+      setDeployProgress((prev) => prev + "\n[Validator] Verifying contract dependencies... Please wait.");
+      try {
+        const verifyObj = await callSetupApi("verifyContractDependencies") as { success: boolean, results: IDependencyCheck[] };
+        if (verifyObj && verifyObj.success) {
+          setDependencyResults(verifyObj.results);
+        }
+      } catch (err) {
+        console.warn("Failed to verify contract dependencies:", err);
+      }
+
       setStatus(StepStatus.SUCCESS);
-      setTimeout(onNext, 1500);
+      setTimeout(onNext, 2500);
     } else {
       setStatus(StepStatus.ERROR);
       setErrorMessage(`${t("admin_setup.step4.err_deploy")}${result.output.substring(0, 300)}...`);
     }
-  }, [status, onNext, t, collateralRate]);
+  }, [status, onNext, t, collateralRate, callSetupApi]);
 
   // Info: (20260416 - Luphia) Removed auto-deployment upon active status tracking to give room to configure the deployment param
 
@@ -103,7 +155,7 @@ export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }:
           </button>
         ) : isCompleted ? (
           <button
-            onClick={() => { setContractAddresses(null); setStatus(StepStatus.IDLE); setErrorMessage(""); }}
+            onClick={() => { setContractAddresses(null); setDependencyResults([]); setStatus(StepStatus.IDLE); setErrorMessage(""); }}
             disabled={status === StepStatus.LOADING}
             className="text-sm px-4 py-1.5 bg-orange-600 text-white font-medium rounded-md hover:bg-orange-700 transition"
           >
@@ -113,14 +165,14 @@ export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }:
           <div className="flex items-center gap-3">
             {hasExisting && (
               <button
-                onClick={execute}
+                onClick={() => execute(true)}
                 className="text-sm px-4 py-2 bg-emerald-600 font-bold tracking-wider text-white rounded-lg hover:bg-emerald-700 transition shadow-sm"
               >
                 {t("admin_setup.step4.use_existing_btn")}
               </button>
             )}
             <button
-              onClick={execute}
+              onClick={() => execute(false)}
               disabled={isInputInvalid}
               className="text-sm px-4 py-2 bg-orange-600 font-bold tracking-wider text-white rounded-lg hover:bg-orange-700 transition shadow-sm disabled:opacity-50"
             >
@@ -191,10 +243,11 @@ export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }:
             </h4>
             <div className="space-y-3">
               {[
-                { id: "KYCRegistry", label: "KYC Registry" },
-                { id: "DynamicMembershipCard", label: "Dynamic Membership Card" },
+                { id: "DynamicKYCMembership", label: "Dynamic KYC Membership" },
                 { id: "CreditPoint", label: "Credit Point (ERC3643)" },
                 { id: "SubscriptionManager", label: "Subscription Manager" },
+                { id: "MembershipSystem", label: "Membership System" },
+                { id: "MissionBoard", label: "Mission Board" },
                 { id: "EntryPoint", label: "EntryPoint (ERC4337)" },
                 { id: "Fido2AccountFactory", label: "FIDO2 Account Factory" }
               ].map((contract, i) => {
@@ -248,6 +301,26 @@ export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }:
               </div>
             ))}
           </div>
+          
+          {dependencyResults.length > 0 && (
+            <div className="mt-5 border-t border-slate-200 pt-5">
+              <h4 className="text-[11px] uppercase tracking-wider text-gray-500 font-bold mb-3 flex items-center gap-2">
+                {t("admin_setup.step4.dependency_verified")}
+              </h4>
+              <div className="flex flex-col gap-2">
+                {dependencyResults.map((dep, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-[11px] px-3 py-1.5 bg-white border border-slate-100 rounded">
+                    <span className="text-slate-600 font-mono tracking-tight">{dep.source} <span className="opacity-50 mx-1">→</span> {dep.target}</span>
+                    {dep.valid ? (
+                       <span className="flex items-center gap-1.5 text-emerald-600 font-bold"><CheckCircle2 className="w-3 h-3" /> {t("admin_setup.step4.valid")}</span>
+                    ) : (
+                       <span className="flex items-center gap-1.5 text-rose-500 font-bold">{t("admin_setup.step4.invalid")}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </StepCard>

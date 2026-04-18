@@ -142,7 +142,7 @@ export async function createSuperAdminRecord(
         await ensureSmartContractWallet(credentialId, pubKeyX, pubKeyY, name);
 
         await setSuperAdminTaskStatus({ done: false, error: null, progress: "Setting KYC Levels..." });
-        await setAccountKYCLevel(address, 1);
+        await setAccountKYCLevel(address, 10);
 
         await setSuperAdminTaskStatus({ done: false, error: null, progress: "Granting Admin Role..." });
         await grantDefaultAdminRoles(address);

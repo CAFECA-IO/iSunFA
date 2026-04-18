@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {KYCRegistry} from "./kyc_registry.sol";
+import {DynamicKYCMembership} from "./dynamic_kyc_membership.sol";
 
 /**
  * Info: (20260416 - Luphia)
@@ -14,7 +14,7 @@ import {KYCRegistry} from "./kyc_registry.sol";
  * 會員卡持有點數在增發前都必需抵押等比例的 ISC，透過超額抵押鑄造維持總體經濟穩定。
  */
 contract CreditPoint is ERC20, AccessControl {
-    KYCRegistry public kycRegistry;
+    DynamicKYCMembership public kycRegistry;
 
     // Info: (20260411 - Luphia) Config: required ISC collateral per 1 full point representation
     uint256 public collateralRate;
@@ -52,7 +52,7 @@ contract CreditPoint is ERC20, AccessControl {
         uint256 _collateralRate
     ) ERC20("iSunFA Credit Point", "ICP") {
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
-        kycRegistry = KYCRegistry(_kycRegistry);
+        kycRegistry = DynamicKYCMembership(_kycRegistry);
         collateralRate = _collateralRate;
     }
 
@@ -60,6 +60,12 @@ contract CreditPoint is ERC20, AccessControl {
         address _manager
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         subscriptionManager = _manager;
+    }
+
+    function setKYCRegistry(
+        address _kycRegistry
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        kycRegistry = DynamicKYCMembership(_kycRegistry);
     }
 
     /**
@@ -73,12 +79,12 @@ contract CreditPoint is ERC20, AccessControl {
     ) internal virtual override {
         // Info: (20260411 - Luphia) Enforce compliance on receiving address
         if (to != address(0) && address(kycRegistry) != address(0)) {
-            if (kycRegistry.isFrozen(to)) revert NeedsIdentityVerification();
+            if (kycRegistry.isBlacklisted(to)) revert NeedsIdentityVerification();
         }
 
         // Info: (20260411 - Luphia) Enforce compliance on sending address
         if (from != address(0) && address(kycRegistry) != address(0)) {
-            if (kycRegistry.isFrozen(from)) revert NeedsIdentityVerification();
+            if (kycRegistry.isBlacklisted(from)) revert NeedsIdentityVerification();
         }
 
         super._update(from, to, value);

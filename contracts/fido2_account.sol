@@ -84,7 +84,7 @@ contract Fido2Account is BaseAccount, Initializable, UUPSUpgradeable {
             bytes memory authenticatorData,
             bytes memory clientDataJSON,
             uint256 challengeIndex,
-            , // Info: Skip typeIndex
+            , // Info: (20260418 - Luphia) Skip typeIndex
             uint256 r,
             uint256 s
         ) = abi.decode(
@@ -164,9 +164,7 @@ contract Fido2Account is BaseAccount, Initializable, UUPSUpgradeable {
      * @dev Overrides UUPS requirement. Only EntryPoint can authorize upgrades.
      * Alternatively, this could require the actual WebAuthn signature if called independently.
      */
-    function _authorizeUpgrade(
-        address /* newImplementation */
-    ) internal view override {
+    function _authorizeUpgrade(address) internal view override {
         _requireFromEntryPoint();
     }
 }
