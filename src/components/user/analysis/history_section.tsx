@@ -7,6 +7,7 @@ import { Check, ChevronLeft, ChevronRight, Loader2, Sparkles, X, Share2, Copy, T
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { MarkdownContent } from '@/components/common/markdown_content';
 import { downloadHtmlAsPdf } from '@/lib/utils/pdf';
+import QRCode from 'react-qr-code';
 
 interface IHistoryItem {
   id: string;
@@ -317,6 +318,7 @@ export default function HistorySection() {
     const s = status.toLowerCase();
     switch (s) {
       case 'processing':
+      case 'paying':
       case 'pending':
       case 'uploading':
       case 'doing':
@@ -909,6 +911,19 @@ export default function HistorySection() {
                       className="text-sm text-gray-500 mb-4"
                       dangerouslySetInnerHTML={{ __html: t('analysis.share.modal_desc') }}
                     />
+
+                    <div className="flex justify-center mb-6 mt-4">
+                      {shareToken && (
+                        <div className="p-3 bg-white border border-gray-100 rounded-xl shadow-sm inline-block">
+                          <QRCode 
+                            value={`${window.location.origin}/share/report/${shareToken}`} 
+                            size={160}
+                            level="M"
+                            className="w-full h-auto"
+                          />
+                        </div>
+                      )}
+                    </div>
 
                     <div className="flex items-center gap-2 p-1.5 bg-gray-50 border border-gray-200 rounded-lg">
                       <input

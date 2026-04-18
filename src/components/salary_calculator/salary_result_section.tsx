@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState, FC } from 'react';
 import { toPng } from "html-to-image";
 import { Download /* Send */ } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -8,7 +8,7 @@ import PaySlip from "@/components/salary_calculator/pay_slip";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 // import { useAuth } from "@/contexts/auth_context";
 
-const SalaryResultSection: React.FC = () => {
+const SalaryResultSection: FC = () => {
   const { t } = useTranslation();
   // const { user } = useAuth();
 

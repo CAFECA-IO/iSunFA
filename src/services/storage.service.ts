@@ -181,10 +181,12 @@ export class StorageService {
         throw new Error("Invalid metadata format");
       }
 
+      const shardSize = metaObj.algorithm?.shardSize;
+
       // Info: (20260213 - Julian) 寫入 metadata.json (recoverFile 需要它)
       await fs.writeFile(
         path.join(outputDir, "metadata.json"),
-        JSON.stringify({ originalFileSize }),
+        JSON.stringify({ originalFileSize, shardSize }),
       );
 
       // Info: (20260213 - Julian) 2. Download Shards

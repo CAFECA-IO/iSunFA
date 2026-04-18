@@ -46,12 +46,14 @@ export class PointService {
       } else if (order.type !== "OEN_BINDING") {
         // Info: (20260409 - Luphia) ANALYSIS, CHAT etc (consumed points)
         if (order.amount !== 0) {
+          const data = order.data as { category?: string } | null;
           history.push({
             id: `order-${order.id}-consume`,
             type: "CONSUME",
             sourceKey: `billing.point_history.source_${order.type.toLowerCase()}`,
             fallbackSource: `Service Usage (${order.type})`,
             amount: order.amount,
+            extendedType: data?.category,
             createdAt: order.createdAt,
           });
         }

@@ -12,8 +12,8 @@ interface IAiConfidenceProps {
 
 export default function AiConfidence({
   confidence,
-  note,
-  barOnly,
+  note = undefined,
+  barOnly = false,
 }: IAiConfidenceProps) {
   const { t } = useTranslation();
   const hasNote = note && note.trim().length > 0;

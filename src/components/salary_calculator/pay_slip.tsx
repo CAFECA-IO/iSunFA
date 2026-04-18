@@ -1,4 +1,4 @@
-import React from "react";
+import { FC } from 'react';
 // import Image from 'next/image';
 import { useTranslation } from "@/i18n/i18n_context";
 import ResultBlock from "@/components/salary_calculator/result_block";
@@ -14,7 +14,7 @@ interface IPaySlipProps {
   className?: string;
 }
 
-const PaySlip: React.FC<IPaySlipProps> = ({
+const PaySlip: FC<IPaySlipProps> = ({
   employeeName,
   employeeNumber,
   selectedMonth,

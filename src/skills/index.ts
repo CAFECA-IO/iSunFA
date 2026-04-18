@@ -6,6 +6,7 @@ import { EsgParsingSkill } from "@/skills/document/esg_parsing";
 import { EsgIntensityEvaluationSkill } from "@/skills/document/esg_intensity_evaluation";
 import { DocumentPreCheckSkill } from "@/skills/document/document_pre_check";
 import { MarketEventCollectionSkill } from "@/skills/market/market_event_collection";
+import { AiConsultingSkill } from "@/skills/ai_consulting/ai_consulting";
 
 export const skillRegistry: Record<string, ITaskSkill> = {
   JOURNAL_PARSING: new JournalParsingSkill(),
@@ -15,4 +16,5 @@ export const skillRegistry: Record<string, ITaskSkill> = {
   ESG_INTENSITY_EVALUATION: new EsgIntensityEvaluationSkill(),
   DOCUMENT_PRE_CHECK: new DocumentPreCheckSkill(),
   MARKET_EVENT_COLLECTION: new MarketEventCollectionSkill(),
+  AI_TALK_TASK: new AiConsultingSkill(),
 };

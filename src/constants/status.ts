@@ -8,6 +8,8 @@ export const ORDER_STATUS = {
 } as const;
 
 export const MISSION_STATUS = {
+  PAYING: "PAYING",
+  UNPAID: "UNPAID",
   UPLOADING: "UPLOADING",
   PENDING: "PENDING",
   RUNNING: "RUNNING",

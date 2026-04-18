@@ -1,4 +1,4 @@
-import React from "react";
+import { FC } from 'react';
 
 interface IToggleSwitchProps {
   isOn: boolean;
@@ -6,10 +6,10 @@ interface IToggleSwitchProps {
   title?: string;
 }
 
-const ToggleSwitch: React.FC<IToggleSwitchProps> = ({
+const ToggleSwitch: FC<IToggleSwitchProps> = ({
   isOn,
   handleToggle,
-  title,
+  title = undefined,
 }) => {
   return (
     <button

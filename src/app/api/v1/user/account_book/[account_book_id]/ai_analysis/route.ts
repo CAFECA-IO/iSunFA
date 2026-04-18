@@ -138,11 +138,13 @@ export async function POST(
           throw new Error("Transaction is not bound to this Order ID");
         }
 
-        const receipt = await publicClient.getTransactionReceipt({
+        // Info: (20260418 - Luphia) Wait for receipt since blockchain_payment returns txHash instantly
+        const receipt = await publicClient.waitForTransactionReceipt({
           hash: txHash as `0x${string}`,
+          timeout: 45000,
         });
         if (!receipt) {
-          throw new Error("Transaction receipt not found");
+          throw new Error("Transaction receipt could not be acquired");
         }
 
         let userOpSuccess = false;
@@ -164,7 +166,7 @@ export async function POST(
                 break;
               }
             }
-          } catch {}
+          } catch { }
         }
 
         if (!userOpSuccess) {

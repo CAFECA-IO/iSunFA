@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, MouseEvent } from 'react';
+
 import { useTranslation } from '@/i18n/i18n_context';
 import { Settings, X, Check } from 'lucide-react';
 import { MarkdownContent } from '@/components/common/markdown_content';
@@ -24,7 +25,7 @@ const updateGA4Consent = (analyticsGranted: boolean) => {
   }
 };
 
-const Toggle = ({ checked, onChange, disabled = false }: { checked: boolean; onChange?: (checked: boolean) => void; disabled?: boolean }) => {
+const Toggle = ({ checked, onChange = undefined, disabled = false }: { checked: boolean; onChange?: (checked: boolean) => void; disabled?: boolean }) => {
   return (
     <button
       type="button"
@@ -104,7 +105,7 @@ const CookieConsent = ({ privacyPolicyContent = '' }: ICookieConsentProps) => {
     saveConsent(preferences);
   };
 
-  const openPrivacy = (e: React.MouseEvent) => {
+  const openPrivacy = (e: MouseEvent) => {
     e.preventDefault();
     setShowPrivacy(true);
   };

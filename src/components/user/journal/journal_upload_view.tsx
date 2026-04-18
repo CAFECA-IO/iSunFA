@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, MouseEvent, DragEvent, ChangeEvent } from 'react';
+
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -33,7 +34,7 @@ type UploadedFileData = {
 };
 
 export default function JournalUploadView({
-  onUploadComplete,
+  onUploadComplete = undefined,
 }: {
   onUploadComplete?: () => void;
 }) {
@@ -160,22 +161,22 @@ export default function JournalUploadView({
     setIsAnalyzing(false);
   };
 
-  const removeFile = (id: string, e: React.MouseEvent) => {
+  const removeFile = (id: string, e: MouseEvent) => {
     e.stopPropagation();
     setUploadedFiles((prev) => prev.filter((f) => f.id !== id));
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleDragLeave = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -183,7 +184,7 @@ export default function JournalUploadView({
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       processFiles(Array.from(e.target.files));
       if (fileInputRef.current) fileInputRef.current.value = "";

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, FC, KeyboardEvent, Dispatch, SetStateAction } from 'react';
+
 import { User, Calendar, Send } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ISentRecord } from "@/interfaces/pay_slip";
@@ -12,7 +13,7 @@ import ViewPaySlipModal from "@/components/salary_calculator/view_pay_slip_modal
 const cellStyle =
   "table-cell border-b border-stroke-neutral-quaternary px-24px py-12px align-middle";
 
-const SentItem: React.FC<{
+const SentItem: FC<{
   record: ISentRecord;
   itemClickHandler: (recordId: string) => void;
 }> = ({ record, itemClickHandler }) => {
@@ -21,7 +22,7 @@ const SentItem: React.FC<{
   const periodStr = `${payPeriodDate.monthName.slice(0, 3)} ${payPeriodDate.year}`;
 
   const clickHandler = () => itemClickHandler(id);
-  const keyDownHandler = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const keyDownHandler = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       itemClickHandler(id);
@@ -61,13 +62,13 @@ const SentItem: React.FC<{
   );
 };
 
-const SentTab: React.FC<{
+const SentTab: FC<{
   sentRecords: ISentRecord[];
   payPeriodSortOrder: SortOrder | null;
-  setPayPeriodSortOrder: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  setPayPeriodSortOrder: Dispatch<SetStateAction<SortOrder | null>>;
   issuedDateSortOrder: SortOrder | null;
-  setIssuedDateSortOrder: React.Dispatch<
-    React.SetStateAction<SortOrder | null>
+  setIssuedDateSortOrder: Dispatch<
+    SetStateAction<SortOrder | null>
   >;
 }> = ({
   sentRecords,

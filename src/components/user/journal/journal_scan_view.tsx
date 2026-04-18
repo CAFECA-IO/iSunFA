@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, MouseEvent } from 'react';
+
 import Script from "next/script";
 import Image from "next/image";
 import {
@@ -191,7 +192,7 @@ export default function JournalScanView({
     setIsAnalyzing(false);
   };
 
-  const removeFile = (id: string, e?: React.MouseEvent) => {
+  const removeFile = (id: string, e?: MouseEvent) => {
     if (e) e.stopPropagation();
     setCapturedFiles((prev) => {
       const file = prev.find((f) => f.id === id);

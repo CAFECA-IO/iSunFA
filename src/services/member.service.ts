@@ -118,29 +118,63 @@ export async function issuePurchasedPointsToMember(
   userAddress: string,
   amount: number,
 ): Promise<ActionResponse> {
+  let account, walletClient, membershipAddress;
   try {
-    const { account, walletClient, membershipAddress } = await getClients();
-    const validTo = getAddress(userAddress);
-    const parsedAmount = parseEther(amount.toString());
+    const clients = await getClients();
+    account = clients.account;
+    walletClient = clients.walletClient;
+    membershipAddress = clients.membershipAddress;
+  } catch (error) {
+    return { success: false, message: (error as Error).message };
+  }
 
+  const validTo = getAddress(userAddress);
+  const parsedAmount = parseEther(amount.toString());
+
+  const executeIssue = async () => {
     const { request } = await publicClient.simulateContract({
-      account,
-      address: membershipAddress,
+      account: account!,
+      address: membershipAddress!,
       abi: MEMBERSHIP_ABI,
       functionName: "issuePurchasedPoints",
       args: [validTo, parsedAmount],
     });
 
-    const tx = await walletClient.writeContract(request);
+    const tx = await walletClient!.writeContract(request);
     await publicClient.waitForTransactionReceipt({ hash: tx });
+    return tx;
+  };
 
+  try {
+    const tx = await executeIssue();
     return { success: true, message: `Issued ${amount} points`, data: { tx } };
   } catch (error) {
+    const errorMsg = (error as Error).message || "";
+    // Info: (20260417 - Luphia) Auto-funding mechanism if contract runs out of ISC reserves
+    if (errorMsg.includes("InsufficientContractReserves") || errorMsg.includes("0x9443a76e")) {
+      // Info: (20260417 - Luphia) Make auto-funding dynamic to cover large issuances, plus 50 as buffer
+      const fundingAmount = Math.max(50, amount + 50);
+      console.warn(`[MembershipService] Contract reserves low during point issuance. Executing auto-funding of ${fundingAmount} ISC...`);
+      const fundRes = await fundMembershipSystem(fundingAmount);
+      if (!fundRes.success) {
+        return { success: false, message: `Auto-funding sequence failed: ${fundRes.message}` };
+      }
+      console.log(`[MembershipService] Auto-funding successful. Retrying point issuance...`);
+      
+      try {
+        const retryTx = await executeIssue();
+        return { success: true, message: `Issued ${amount} points (after auto-funding)`, data: { tx: retryTx } };
+      } catch (retryError) {
+        console.error(`[MembershipService] Retry failed for ${userAddress}:`, retryError);
+        return { success: false, message: (retryError as Error).message };
+      }
+    }
+
     console.error(
       `[MembershipService] issuePurchasedPoints failed for ${userAddress}:`,
       error,
     );
-    return { success: false, message: (error as Error).message };
+    return { success: false, message: errorMsg };
   }
 }
 
@@ -188,6 +222,36 @@ export async function getMemberInfo(userAddress: string) {
       },
     };
   } catch (error) {
+    return { success: false, message: (error as Error).message };
+  }
+}
+
+// Info: (20260417 - Luphia) Funds the MembershipSystem contract with Native ISC (Ether equivalent)
+export async function fundMembershipSystem(
+  amountISC: number,
+): Promise<ActionResponse> {
+  try {
+    const { account, walletClient, membershipAddress } = await getClients();
+    const parsedAmount = parseEther(amountISC.toString());
+
+    const hash = await walletClient.sendTransaction({
+      account,
+      to: membershipAddress,
+      value: parsedAmount,
+    });
+
+    await publicClient.waitForTransactionReceipt({ hash });
+
+    return { 
+      success: true, 
+      message: `Successfully funded MembershipSystem with ${amountISC} ISC`,
+      data: { tx: hash }
+    };
+  } catch (error) {
+    console.error(
+      `[MembershipService] fundMembershipSystem failed:`,
+      error,
+    );
     return { success: false, message: (error as Error).message };
   }
 }

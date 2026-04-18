@@ -11,6 +11,7 @@ export interface IOrderParams {
   country?: string;
   keyword?: string;
   isExternal?: boolean;
+  data?: unknown; // Info: (20260418 - Luphia) Extraneous data mapping specific payload requirements
   items?: { name: string; unitPrice: number; quantity: number }[];
 }
 
@@ -35,7 +36,7 @@ export function getAnalysisCost(params: IOrderParams): number {
 
   if (params.items && params.items.length > 0) {
     return params.items.reduce(
-      (acc, item) => acc + unitCost * item.quantity,
+      (acc, item) => acc + (item.unitPrice ?? unitCost) * item.quantity,
       0,
     );
   }

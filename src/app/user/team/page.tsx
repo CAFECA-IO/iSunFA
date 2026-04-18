@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, FormEvent } from 'react';
+
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
 import {
@@ -192,7 +193,7 @@ export default function TeamManagementPage() {
     currentUserMember?.role === "OWNER" || currentUserMember?.role === "ADMIN";
   const isOwner = currentUserMember?.role === "OWNER";
 
-  const handleCreateTeam = async (e: React.FormEvent) => {
+  const handleCreateTeam = async (e: FormEvent) => {
     e.preventDefault();
     if (!newTeamName.trim()) return;
     setCreating(true);
@@ -259,7 +260,7 @@ export default function TeamManagementPage() {
     }
   };
 
-  const handleInvite = async (e: React.FormEvent) => {
+  const handleInvite = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedTeamId || !inviteAddress.trim() || !user?.address) return;
     setInviting(true);

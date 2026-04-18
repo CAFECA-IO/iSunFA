@@ -24,8 +24,8 @@ interface IJournalDetailModalProps {
 export default function JournalDetailModal({
   isOpen,
   onClose,
-  journal,
-  journalId,
+  journal = undefined,
+  journalId = undefined,
   onUpdate,
 }: IJournalDetailModalProps) {
   const { t } = useTranslation();

@@ -33,6 +33,7 @@ interface IPointHistory {
   sourceKey: string;
   fallbackSource: string;
   amount: number;
+  extendedType?: string;
 }
 
 interface IPaymentMethod {
@@ -400,6 +401,14 @@ export default function BillingPage() {
                           </td>
                           <td className="px-6 py-4 text-gray-900">
                             {t(pt.sourceKey)}
+                            {pt.extendedType && (
+                              <span className="ml-2 text-xs text-gray-500">
+                                {pt.extendedType === "ai_talk" || pt.extendedType === "ai_consulting"
+                                  ? `(${t("billing.point_history.source_chat", { defaultValue: "AI 諮詢" })})`
+                                  : `(${t(`analysis.categories.${pt.extendedType}`, { defaultValue: pt.extendedType })})`
+                                }
+                              </span>
+                            )}
                           </td>
                           <td
                             className={`px-6 py-4 text-right font-bold ${isPositive ? "text-green-600" : "text-gray-900"}`}

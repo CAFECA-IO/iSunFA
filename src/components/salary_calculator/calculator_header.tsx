@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, FC } from 'react';
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -12,7 +13,7 @@ import HeaderNav from "@/components/header/header_nav";
 import MechanismModal from "@/components/salary_calculator/mechanism_modal";
 // import { useAuth } from "@/contexts/auth_context";
 
-const CalculatorHeader: React.FC = () => {
+const CalculatorHeader: FC = () => {
   const { t } = useTranslation();
   const pathname = usePathname();
   const [isMechanismModalOpen, setIsMechanismModalOpen] = useState(false);

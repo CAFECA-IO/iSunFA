@@ -13,9 +13,11 @@ import { MISSION_STATUS } from "@/constants/status";
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import { AppError } from "@/lib/utils/error";
 import { ApiCode } from "@/lib/utils/status";
+import { Prisma } from "@/generated/client";
 
 export interface IGenerateAnalysisParams extends IOrderParams {
   orderId?: string;
+  status?: string;
 }
 
 export class AnalysisService {
@@ -170,13 +172,13 @@ export class AnalysisService {
 
           const esgRecords = targetAccountBookId
             ? await prisma.esgRecord.findMany({
-                where: {
-                  accountBookId: targetAccountBookId,
-                  tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
-                  deletedAt: null,
-                },
-                orderBy: { tradingDate: "asc" },
-              })
+              where: {
+                accountBookId: targetAccountBookId,
+                tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
+                deletedAt: null,
+              },
+              orderBy: { tradingDate: "asc" },
+            })
             : [];
 
           // Info: (20260418 - Tzuhan) 目前僅先對合規抓鬼與異常傳票執行 DB 傳票的完整撈取並交付快篩
@@ -184,14 +186,14 @@ export class AnalysisService {
           if (params.category === "financial_compliance") {
             voucherRecords = targetAccountBookId
               ? await prisma.voucher.findMany({
-                  where: {
-                    accountBookId: targetAccountBookId,
-                    tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
-                    deletedAt: null,
-                  },
-                  orderBy: { tradingDate: "asc" },
-                  include: { lines: true } // Info: (20260417 - Tzuhan) 包含分錄以供 AI 判定異常大額與退貨
-                })
+                where: {
+                  accountBookId: targetAccountBookId,
+                  tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
+                  deletedAt: null,
+                },
+                orderBy: { tradingDate: "asc" },
+                include: { lines: true } // Info: (20260417 - Tzuhan) 包含分錄以供 AI 判定異常大額與退貨
+              })
               : [];
           }
 
@@ -201,7 +203,7 @@ export class AnalysisService {
 
           if (esgRecords.length > 0 || voucherRecords.length > 0) {
             let recordStr = "";
-            
+
             if (voucherRecords.length > 0) {
               // Info: (20260417 - Tzuhan) 若有傳票，將其轉為 JSON 供 worker generator 序列化快篩
               recordStr = JSON.stringify(voucherRecords);
@@ -235,6 +237,9 @@ export class AnalysisService {
         country: params.country,
         keyword: params.keyword,
         prerequisiteData: parsedPrerequisiteParams,
+        data: params.data, // Info: (20260418 - Luphia) Pass through extraneous Payload
+        orderId: params.orderId, // Info: (20260418 - Luphia) Pass through Order ID
+        isExternal: params.isExternal, // Info: (20260418 - Luphia) Just in case it needs this too
       });
 
       // Info: (20260418 - Tzuhan) [BUGFIX] 如果 generator 根本不認識這個類別，或是生成的 tasks 是空的，絕對不允許進入資料庫建立幽靈 Mission
@@ -298,7 +303,7 @@ export class AnalysisService {
           missionName: missionDef
             ? missionDef.name
             : `Analysis-${params.category}-${params.periodType}`,
-          status: MISSION_STATUS.UPLOADING,
+          status: params.status || MISSION_STATUS.UPLOADING,
           missionData: {
             category: params.category,
             cost,
@@ -312,6 +317,7 @@ export class AnalysisService {
             keyword: params.keyword,
             isExternal: params.isExternal === true,
             historicalTags: await analysisRepo.getGlobalTopTags(20),
+            data: params.data ? (params.data as Prisma.InputJsonValue) : undefined,
           },
           tasks: missionDef ? missionDef.tasks : undefined,
         });

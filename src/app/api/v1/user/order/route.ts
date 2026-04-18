@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
       keyword,
       isExternal,
       items,
+      data,
     } = body;
 
     // Info: (20260130 - Tzuhan) Ensure user exists in DB before creating order to avoid FK errors
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
         keyword,
         isExternal,
         items,
+        data,
       });
 
       return jsonOk(result);

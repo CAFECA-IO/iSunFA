@@ -34,6 +34,9 @@ export interface IAnalysisRepository {
     missionId: string,
     errorReason: string,
   ): Promise<Mission>;
+  updateMissionPaymentSuccess(
+    missionId: string,
+  ): Promise<Mission | null>;
   getGlobalTopTags(limit?: number): Promise<string[]>;
   findAnalysisByKeywordAndType(
     userId: string,
@@ -117,11 +120,13 @@ export class AnalysisRepository implements IAnalysisRepository {
     });
     if (!mission) return null;
 
+    // Info: (20260417 - Luphia) Keep PAYING status if we are waiting for tx receipt
+    const nextStatus = mission.status === MISSION_STATUS.PAYING ? MISSION_STATUS.PAYING : MISSION_STATUS.PENDING;
     const mData = (mission.data as Record<string, unknown>) || {};
     return prisma.mission.update({
       where: { id: missionId },
       data: {
-        status: MISSION_STATUS.PENDING,
+        status: nextStatus,
         data: { ...mData, planHash },
       },
     });
@@ -134,6 +139,31 @@ export class AnalysisRepository implements IAnalysisRepository {
         status: MISSION_STATUS.FAILED,
         result: errorReason,
       },
+    });
+  }
+
+  async updateMissionUnpaid(missionId: string, errorReason: string) {
+    return prisma.mission.update({
+      where: { id: missionId },
+      data: {
+        status: MISSION_STATUS.UNPAID,
+        result: errorReason,
+      },
+    });
+  }
+
+  async updateMissionPaymentSuccess(missionId: string) {
+    const mission = await prisma.mission.findUnique({
+      where: { id: missionId },
+    });
+    if (!mission) return null;
+
+    // Info: (20260417 - Luphia) Mark as PENDING immediately on payment success
+    const nextStatus = MISSION_STATUS.PENDING;
+
+    return prisma.mission.update({
+      where: { id: missionId },
+      data: { status: nextStatus },
     });
   }
 

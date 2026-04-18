@@ -1,4 +1,5 @@
 export const billing = {
+  title: "营收与发票",
   subtitle: "管理您的消费纪录、帐户点数与付款方式。",
   tabs: {
     orders: "消费纪录",

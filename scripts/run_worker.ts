@@ -1,5 +1,6 @@
 import { taskService } from "@/services/task.service";
 import { taskRepo } from "@/repositories/task.repo";
+import { transactionTrackerService } from "@/services/transaction.tracker.service";
 
 /**
  * Info: (20260130 - Luphia)
@@ -31,11 +32,14 @@ async function runWorker() {
 
   while (isRunning) {
     try {
-      // Info: (20260130 - Luphia) Process one task, if there is no task, wait for 1 minute
+      // Info: (20260418 - Luphia) 1. Check transactions first
+      const txProcessed = await transactionTrackerService.scanPendingTransactions();
+
+      // Info: (20260130 - Luphia) 2. Process one task, if there is no task, wait for 1 minute
       const processed = await taskService.processNextTask();
 
       // Info: (20260130 - Luphia) Wait before next check to avoid tight loop
-      const waitTime = processed ? 5000 : 60000;
+      const waitTime = processed || txProcessed ? 5000 : 60000;
       await new Promise((resolve) => setTimeout(resolve, waitTime));
     } catch (error) {
       console.error("[Worker] Error in loop:", error);

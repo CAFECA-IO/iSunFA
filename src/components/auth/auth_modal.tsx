@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, FormEvent } from 'react';
+
 import {
   Dialog,
   DialogPanel,
@@ -34,7 +35,7 @@ interface IAuthModalProps {
 
 type AuthMode = "login" | "register";
 
-export default function AuthModal({ isOpen, onClose, onSuccess }: IAuthModalProps) {
+export default function AuthModal({ isOpen, onClose, onSuccess = undefined }: IAuthModalProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
@@ -106,7 +107,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: IAuthModalProp
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
     if (!agreedToTos) {
       setError(t("auth_modal.tos_required"));

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from 'react';
+
 import {
   X,
   Hash,
@@ -31,7 +32,7 @@ interface IVoucherDetailModalProps {
   onUpdate?: (voucher: IVoucher) => void;
 }
 
-// Info: (20260327 - Luphia) 若資料量大，可以使用 React.memo 包裝避免不必要的重新渲染
+// Info: (20260327 - Luphia) 若資料量大，可以使用 memo 包裝避免不必要的重新渲染
 const VoucherRow = ({
   row,
   updateRow,

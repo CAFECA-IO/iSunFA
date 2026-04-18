@@ -26,9 +26,9 @@ interface IFilePreviewModalProps {
 export default function FilePreviewModal({
   isOpen,
   onClose,
-  file,
-  title,
-  fallbackText,
+  file = undefined,
+  title = undefined,
+  fallbackText = undefined,
 }: IFilePreviewModalProps) {
   const { t } = useTranslation();
 

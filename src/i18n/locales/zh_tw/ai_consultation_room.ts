@@ -43,4 +43,5 @@ export const aiConsultationRoom = {
   ai_name: "費思",
   q_label: "Q",
   ai_label: "AI",
+  ai_is_thinking: "AI 思考中...",
 };

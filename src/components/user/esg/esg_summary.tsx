@@ -14,7 +14,7 @@ interface IEsgSummaryProps {
   month?: number | "";
 }
 
-export default function EsgSummary({ year, month }: IEsgSummaryProps) {
+export default function EsgSummary({ year = undefined, month = undefined }: IEsgSummaryProps) {
   const params = useParams();
   const pathname = usePathname();
   const accountBookId = params?.account_book_id as string;

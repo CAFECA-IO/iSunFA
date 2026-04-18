@@ -1,15 +1,14 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, FC } from 'react';
 import mermaid from 'mermaid';
 import { DonutChart, IDonutChartData } from '@/components/common/donut_chart';
-
 
 interface IMermaidChartProps {
   chart: string;
 }
 
-const MermaidChart: React.FC<IMermaidChartProps> = ({ chart }) => {
+const MermaidChart: FC<IMermaidChartProps> = ({ chart }) => {
   const [svgStr, setSvgStr] = useState<string>('');
   const [hasError, setHasError] = useState(false);
 

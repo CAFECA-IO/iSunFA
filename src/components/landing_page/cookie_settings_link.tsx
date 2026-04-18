@@ -1,11 +1,13 @@
 'use client';
 
+import { MouseEvent } from 'react';
+
 import { useTranslation } from '@/i18n/i18n_context';
 
 export default function CookieSettingsTrigger() {
   const { t } = useTranslation();
 
-  const openSettings = (e: React.MouseEvent) => {
+  const openSettings = (e: MouseEvent) => {
     e.preventDefault();
     window.dispatchEvent(new Event('openCookieSettings'));
   };

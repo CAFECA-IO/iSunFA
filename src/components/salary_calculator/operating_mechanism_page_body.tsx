@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, FC } from 'react';
+
 import { useTranslation } from "@/i18n/i18n_context";
 import CalculatorHeader from "@/components/salary_calculator/calculator_header";
 import { timestampToString } from "@/lib/utils/common";
@@ -11,7 +12,7 @@ interface IOperatingMechanismData {
   content: string;
 }
 
-const OperatingMechanismContent: React.FC = () => {
+const OperatingMechanismContent: FC = () => {
   const { t } = useTranslation();
 
   const [data, setData] = useState<IOperatingMechanismData | null>(null);
@@ -79,7 +80,7 @@ const OperatingMechanismContent: React.FC = () => {
   );
 };
 
-const OperatingMechanismPageBody: React.FC = () => {
+const OperatingMechanismPageBody: FC = () => {
   return (
     <main className="bg-surface-neutral-main-background min-h-screen overflow-x-hidden">
       {/* Info: (20251112 - Julian) Header */}

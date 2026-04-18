@@ -1,10 +1,10 @@
-import React from "react";
+import { FC } from 'react';
 import { useTranslation } from "@/i18n/i18n_context";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { MAX_MEAL_ALLOWANCE } from "@/constants/salary_calculator";
 import AmountInput from "@/components/salary_calculator/amount_input";
 
-const BasePayForm: React.FC = () => {
+const BasePayForm: FC = () => {
   const { t } = useTranslation();
   const {
     baseSalary,

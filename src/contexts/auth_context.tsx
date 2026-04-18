@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from 'react';
+
 import { request } from '@/lib/utils/request';
 import { publicClient } from '@/lib/viem_public';
 import { ABIS, CONTRACT_ADDRESSES } from '@/config/contracts';
@@ -31,7 +32,7 @@ interface IAuthContextType {
 
 const AuthContext = createContext<IAuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [rewardAmount, setRewardAmount] = useState<number>(0);

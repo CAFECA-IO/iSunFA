@@ -132,7 +132,7 @@ export async function POST(
     // Info: (20260212 - Julian) 新增評論
     await talkRepo.createComment({
       userId: loginUserId,
-      threadId,
+      analysisId: threadId,
       content,
       isProfessional,
       parentCommentId,

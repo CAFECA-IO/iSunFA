@@ -25,8 +25,8 @@ interface IEsgTableSectionProps {
 const PAGE_SIZE = 12;
 
 export default function EsgTableSection({
-  year,
-  month,
+  year = undefined,
+  month = undefined,
 }: IEsgTableSectionProps) {
   const { t } = useTranslation();
   const params = useParams();

@@ -42,7 +42,6 @@ model User {
   orders              Order[]
   analyses            Analysis[]
   missions            Mission[]
-  threads             Thread[]
   comments            Comment[]
   receivedReplies     Comment[]            @relation("CommentRecipient")
   reactions           Reaction[]
@@ -140,6 +139,9 @@ model Analysis {
 
   tags              AnalysisTag[]
   reportShareTokens ReportShareToken[]
+  files             File[]
+  comments          Comment[]
+  reactions         Reaction[]
 
   @@map("analysis")
 }
@@ -181,23 +183,7 @@ model Task {
   @@map("task")
 }
 
-// Info: (20260211 - Julian) AI Consultation Room 討論串
-model Thread {
-  id        String      @id @default(uuid())
-  userId    String      @map("user_id")
-  user      User        @relation(fields: [userId], references: [id])
-  question  String      @db.Text
-  answer    String?     @db.Text
-  createdAt DateTime    @default(now()) @map("created_at")
-  updatedAt DateTime    @updatedAt @map("updated_at")
-  files     File[]
-  comments  Comment[]
-  reactions Reaction[]
-  tags      ThreadTag[]
-  shares    Share[]
 
-  @@map("thread")
-}
 
 // Info: (20260226 - Julian) 上傳檔案：儲存 hash
 model File {
@@ -205,8 +191,8 @@ model File {
   hash     String
   fileName String? @map("file_name")
 
-  thread   Thread? @relation(fields: [threadId], references: [id])
-  threadId String? @map("thread_id")
+  analysis   Analysis? @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  analysisId String?   @map("analysis_id")
 
   journals   Journal[]
   vouchers   Voucher[]
@@ -221,8 +207,8 @@ model Comment {
   content  String @db.Text
   userId   String @map("user_id")
   user     User   @relation(fields: [userId], references: [id])
-  threadId String @map("thread_id")
-  thread   Thread @relation(fields: [threadId], references: [id])
+  analysisId String   @map("analysis_id")
+  analysis   Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
 
   // Info: (20260212 - Julian) 巢狀邏輯
   parentCommentId String?   @map("parent_comment_id")
@@ -245,7 +231,6 @@ model Comment {
 model Tag {
   id       String        @id @default(uuid())
   name     String        @unique
-  threads  ThreadTag[]
   analyses AnalysisTag[]
 
   @@map("tag")
@@ -268,45 +253,21 @@ model Reaction {
   userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id])
 
-  // Info: (20260212 - Julian) 關聯討論串
-  threadId String? @map("thread_id")
-  thread   Thread? @relation(fields: [threadId], references: [id])
+  // Info: (20260212 - Julian) 關聯分析/對話
+  analysisId String?   @map("analysis_id")
+  analysis   Analysis? @relation(fields: [analysisId], references: [id], onDelete: Cascade)
 
   // Info: (20260212 - Julian) 關聯評論
   commentId String?  @map("comment_id")
   comment   Comment? @relation(fields: [commentId], references: [id])
 
   // Info: (20260212 - Julian) 核心約束：一個使用者對同一個物件只能有一個評價
-  @@unique([userId, threadId])
+  @@unique([userId, analysisId])
   @@unique([userId, commentId])
   @@map("reaction")
 }
 
-// Info: (20260212 - Julian) 討論串的分享紀錄
-model Share {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map("created_at")
 
-  // Info: (20260212 - Julian) 關聯討論串
-  threadId String @map("thread_id")
-  thread   Thread @relation(fields: [threadId], references: [id])
-
-  @@map("share")
-}
-
-// Info: (20260212 - Julian) Threads - Tags
-model ThreadTag {
-  threadId  String   @map("thread_id")
-  thread    Thread   @relation(fields: [threadId], references: [id])
-  tagId     String   @map("tag_id")
-  tag       Tag      @relation(fields: [tagId], references: [id])
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Info: (20260212 - Julian) 討論串和標籤是多對多的關係
-  @@id([threadId, tagId])
-  @@map("thread_tag")
-}
 
 // Info: (20260311 - Tzuhan) Analysis - Tags
 model AnalysisTag {

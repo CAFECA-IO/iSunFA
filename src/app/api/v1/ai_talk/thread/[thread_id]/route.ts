@@ -59,13 +59,34 @@ export async function GET(
       id: file.id,
       hash: file.hash,
       fileName: file.fileName ?? "",
-      threadId: file.threadId ?? "",
+      threadId: file.analysisId ?? "",
     }));
+
+    const rawData = (thread.data as unknown as { question?: string; data?: { question?: string } }) || {};
+    const questionStr = rawData?.data?.question || "";
+
+    let answerStr = "-";
+    if (thread.result) {
+      if (typeof thread.result === "string") {
+        try {
+          const parsed = JSON.parse(thread.result);
+          if (parsed && typeof parsed === "object" && typeof parsed.answer === "string") {
+            answerStr = parsed.answer;
+          } else {
+            answerStr = thread.result;
+          }
+        } catch {
+          answerStr = thread.result;
+        }
+      } else {
+        answerStr = ((thread.result as unknown as { answer?: string })?.answer) || JSON.stringify(thread.result);
+      }
+    }
 
     const response: IThreadDetail = {
       id: thread.id,
-      question: thread.question,
-      answer: thread.answer ?? "-",
+      question: questionStr,
+      answer: answerStr,
       createdAt: new Date(thread.createdAt).getTime() / 1000,
       authorName: author?.name ?? "Unknown",
       tags: tags.map((tag) => tag.name),

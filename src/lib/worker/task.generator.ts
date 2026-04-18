@@ -6,6 +6,7 @@ export interface ITaskDefinition {
     key: string;
     prompt: string;
     context?: string;
+    files?: { hash?: string; id?: string; mimeType?: string; metadata?: string | object }[];
   };
 }
 

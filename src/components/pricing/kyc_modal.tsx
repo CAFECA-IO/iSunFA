@@ -1,6 +1,7 @@
 'use client';
 
-import { Fragment, useState } from 'react';
+import { Fragment, useState, FormEvent } from 'react';
+
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { X, Upload, Loader2 } from 'lucide-react';
 // import { useTranslation } from '@/i18n/i18n_context';
@@ -23,7 +24,7 @@ export default function KYCModal({ isOpen, onClose, onSuccess }: IKYCModalProps)
         idNumber: '',
     });
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);

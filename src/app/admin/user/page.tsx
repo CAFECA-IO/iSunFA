@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, FormEvent } from 'react';
+
 import {
   Users,
   Coins,
@@ -164,7 +165,7 @@ export default function MemberAdminPage() {
     setPage(1); // Info: (20260416 - Luphia) Reset page on sort
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: FormEvent) => {
     e.preventDefault();
     setSearch(searchInput);
     setPage(1);

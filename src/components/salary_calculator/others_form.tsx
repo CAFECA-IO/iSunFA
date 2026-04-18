@@ -1,11 +1,11 @@
-import React from "react";
+import { FC } from 'react';
 import { useTranslation } from "@/i18n/i18n_context";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 import ToggleSwitch from "@/components/salary_calculator/toggle_switch";
 import AmountInput from "@/components/salary_calculator/amount_input";
 import HourCounter from "@/components/salary_calculator/hour_counter";
 
-const OthersForm: React.FC = () => {
+const OthersForm: FC = () => {
   const { t } = useTranslation();
 
   const {

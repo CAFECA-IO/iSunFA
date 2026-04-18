@@ -36,7 +36,7 @@ export default function EsgDetailModal({
   isOpen,
   onClose,
   esgId,
-  onSave,
+  onSave = undefined,
 }: IEsgDetailModalProps) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;

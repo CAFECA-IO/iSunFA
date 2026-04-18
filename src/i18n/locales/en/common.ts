@@ -17,6 +17,7 @@ export const common = {
   cancel_edit_message:
     "Are you sure you want to cancel the edit? Data will revert to the original state.",
   loading: "Loading...",
+  processing: "Processing...",
   save: "Save",
   confirm: "Confirm",
   verify_all: "Verify All",

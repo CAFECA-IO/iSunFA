@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, FC } from 'react';
+
 import Image from "next/image";
 import { useTranslation } from "@/i18n/i18n_context";
 import { X } from "lucide-react";
@@ -13,7 +14,7 @@ interface IResendingPaySlipModalProps {
   modalVisibleHandler: () => void;
 }
 
-const ResendingPaySlipModal: React.FC<IResendingPaySlipModalProps> = ({
+const ResendingPaySlipModal: FC<IResendingPaySlipModalProps> = ({
   monthName,
   sentToName,
   modalVisibleHandler,

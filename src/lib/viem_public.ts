@@ -20,7 +20,40 @@ export const isuncoin = defineChain({
 });
 
 // Info: (20260121 - Tzuhan) 2. 公開客戶端 (唯讀操作)，全域單例，避免重複連線
+// Info: (20260417 - Luphia) Use internal proxy endpoint when running in the browser to prevent exposing RPC to frontend
+const isServer = typeof window === "undefined";
+
+const customFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+  const res = await fetch(input, init);
+  const contentType = res.headers.get("content-type") || "";
+
+  // Info: (20260417 - Luphia) jsonOk responses are wrapped, we need to unwrap for viem
+  if (contentType.includes("application/json")) {
+    const json = await res.json();
+    if (json && typeof json === "object" && "success" in json && "payload" in json) {
+      if (!json.success) {
+        throw new Error(json.message || "RPC RPC returned success: false");
+      }
+      return new Response(JSON.stringify(json.payload), {
+        status: 200,
+        headers: res.headers,
+      });
+    }
+    // Info: (20260417 - Luphia) Fallback if not our specific wrapped format
+    return new Response(JSON.stringify(json), {
+      status: res.status,
+      headers: res.headers,
+    });
+  }
+
+  return res;
+};
+
 export const publicClient = createPublicClient({
   chain: isuncoin,
-  transport: http(),
+  transport: http(isServer ? RPC_URL : "/api/v1/blockchain", {
+    fetchOptions: isServer ? undefined : undefined,
+    fetchFn: isServer ? undefined : customFetch,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any), // Info: (20260417 - Luphia) cast to any because viem types for fetchFn might differ slightly between versions
 });

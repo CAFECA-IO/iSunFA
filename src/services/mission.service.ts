@@ -61,6 +61,48 @@ export class MissionService {
     // Info: (20260130 - Luphia) 4. Update Mission
     await taskRepo.completeMission(missionId, finalMissionStatus, finalResult);
 
+    // Info: (20260418 - Luphia) 4.1. Sync finalResult to Analysis and parse Tags
+    try {
+      if (finalResult && finalMissionStatus !== "FAILED") {
+        const resultStr = typeof finalResult === "string" ? finalResult : JSON.stringify(finalResult);
+        const resultObj = JSON.parse(resultStr) as { answer?: string; tags?: string[] };
+
+        const analyses = await prisma.analysis.findMany({ where: { missionId } });
+
+        for (const ana of analyses) {
+          // Info: (20260418 - Luphia) Sync the result payload back to Analysis table so the Thread API can fetch it for UI
+          await prisma.analysis.update({
+            where: { id: ana.id },
+            data: { result: finalResult }
+          });
+
+          // Info: (20260418 - Luphia) Parse tags and insert into analysis_tag mapping table
+          if (Array.isArray(resultObj.tags)) {
+            for (const tagStr of resultObj.tags) {
+              const cleanedTag = tagStr.trim();
+              if (!cleanedTag) continue;
+
+              const tagRecord = await prisma.tag.upsert({
+                where: { name: cleanedTag },
+                create: { name: cleanedTag },
+                update: {}
+              });
+
+              await prisma.analysisTag.upsert({
+                where: {
+                  analysisId_tagId: { analysisId: ana.id, tagId: tagRecord.id }
+                },
+                create: { analysisId: ana.id, tagId: tagRecord.id },
+                update: {}
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error(`[MissionService] Failed to sync results/tags to Analysis for Mission ${missionId}:`, e);
+    }
+
     // Info: (20260319 - Julian) 4.5. 處理日記帳、傳票、碳盤查
     const journalTask = tasks.find((t) => t.type === "JOURNAL_PARSING");
     const voucherBaseTask = tasks.find(
@@ -439,10 +481,9 @@ export class MissionService {
             }
           });
         }
-      } catch (e) {
+      } catch {
         console.error(
           "[MissionService] Error persisting document parsing results:",
-          e,
         );
       }
     }
@@ -509,6 +550,54 @@ export class MissionService {
                 }
               });
             }
+          }
+        }
+      }
+    }
+
+    // Info: (20260418 - Luphia) Extract tags from AI_TALK_TASK task and link to Analysis
+    const aiTalkTask = tasks.find((t) => t.type === "AI_TALK_TASK");
+    if (aiTalkTask && aiTalkTask.result) {
+      let aiTags: string[] = [];
+      try {
+        const parsedResult = typeof aiTalkTask.result === "string"
+          ? JSON.parse(aiTalkTask.result)
+          : aiTalkTask.result;
+        if (Array.isArray(parsedResult.tags)) {
+          aiTags = parsedResult.tags;
+        }
+      } catch { }
+
+      if (aiTags.length > 0) {
+        const analysesContext = await prisma.analysis.findMany({
+          where: { missionId },
+        });
+
+        if (analysesContext.length > 0) {
+          for (const analysis of analysesContext) {
+            await prisma.$transaction(async (tx) => {
+              for (const tagName of aiTags) {
+                const tag = await tx.tag.upsert({
+                  where: { name: tagName },
+                  update: {},
+                  create: { name: tagName },
+                });
+
+                await tx.analysisTag.upsert({
+                  where: {
+                    analysisId_tagId: {
+                      analysisId: analysis.id,
+                      tagId: tag.id,
+                    },
+                  },
+                  update: {},
+                  create: {
+                    analysisId: analysis.id,
+                    tagId: tag.id,
+                  },
+                });
+              }
+            });
           }
         }
       }

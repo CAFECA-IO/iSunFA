@@ -19,7 +19,7 @@ interface IMessageListProps {
   loading?: boolean;
 }
 
-export default function MessageList({ messages, loading }: IMessageListProps) {
+export default function MessageList({ messages, loading = false }: IMessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

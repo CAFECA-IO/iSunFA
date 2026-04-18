@@ -1,14 +1,14 @@
-import React from "react";
+import { FC } from 'react';
 import { ArrowUpDown } from "lucide-react";
 import { SortOrder } from "@/constants/sort";
 
-const SortingButton: React.FC<{
+const SortingButton: FC<{
   string: string;
   sortOrder: null | SortOrder;
   setSortOrder: (sortOrder: null | SortOrder) => void;
   handleReset?: () => void;
   className?: string;
-}> = ({ string, sortOrder, setSortOrder, handleReset, className = "" }) => {
+}> = ({ string, sortOrder, setSortOrder, handleReset = undefined, className = "" }) => {
   const clickHandler = () => {
     // Info: (20250724 - Julian) 如果有 handleReset，則執行，用於清除其他排序狀態
     if (handleReset) {

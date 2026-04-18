@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, ReactNode } from 'react';
+
 import {
   Dialog,
   DialogPanel,
@@ -14,8 +15,8 @@ import { useTranslation } from "@/i18n/i18n_context";
 interface IConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string | React.ReactNode;
-  message: string | React.ReactNode;
+  title: string | ReactNode;
+  message: string | ReactNode;
   confirmText?: string;
   cancelText?: string;
   onConfirm?: () => void;
@@ -26,9 +27,9 @@ export default function ConfirmModal({
   onClose,
   title,
   message,
-  confirmText,
-  cancelText,
-  onConfirm,
+  confirmText = undefined,
+  cancelText = undefined,
+  onConfirm = undefined,
 }: IConfirmModalProps) {
   const { t } = useTranslation();
 

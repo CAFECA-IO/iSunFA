@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from 'react';
+
 import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/auth_context";
@@ -36,7 +37,7 @@ export default function PricingPage() {
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
-    message: string | React.ReactNode;
+    message: string | ReactNode;
   }>({
     isOpen: false,
     title: "",

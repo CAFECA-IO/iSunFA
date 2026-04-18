@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, FC } from 'react';
+
 import { useTranslation } from "@/i18n/i18n_context";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { X, RefreshCw } from "lucide-react";
 
-const ProgressBar: React.FC = () => {
+const ProgressBar: FC = () => {
   const { t } = useTranslation();
   const { completeSteps, resetFormHandler } = useCalculatorCtx();
   const [isShowModal, setIsShowModal] = useState<boolean>(false);
