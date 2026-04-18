@@ -59,9 +59,6 @@ export default function PublicReportClientView({ shareRecord, safeData }: IPubli
                                 {localizedCategory}
                             </span>
                         </div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                            {safeData.companyName}
-                        </h1>
                         <p className="text-sm text-gray-500 flex items-center gap-2">
                             {sharedByText}
                             <span className="text-gray-300">•</span>
