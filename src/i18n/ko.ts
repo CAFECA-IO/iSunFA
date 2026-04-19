@@ -1,3 +1,4 @@
+import { adminDashboard } from "@/i18n/locales/ko/admin_dashboard";
 import { common } from "@/i18n/locales/ko/common";
 import { faith } from "@/i18n/locales/ko/faith";
 import { cookieConsent } from "@/i18n/locales/ko/cookie_consent";
@@ -96,4 +97,5 @@ export const ko = {
   admin_member: adminMember,
   admin_blockchain: adminBlockchain,
   admin_billing: adminBilling,
+  admin_dashboard: adminDashboard,
 } satisfies BaseTranslation;

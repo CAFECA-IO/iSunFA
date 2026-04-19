@@ -123,6 +123,8 @@ export async function saveExternalConfig(config: {
         `"${config.oenMerchant}"`,
       );
     content = updateOrAppendEnv(content, "REPORT_OUTPUT_DIR", `"reports"`);
+    content = updateOrAppendEnv(content, "MISSION_DIR", `"missions"`);
+    content = updateOrAppendEnv(content, "ISSUE_DIR", `"issues"`);
     content = updateOrAppendEnv(content, "MODEL", `"gemini-2.5-pro"`);
 
     saveEnvRawContent(ENV_SETUP_PATH, content);

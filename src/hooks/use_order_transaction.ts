@@ -11,21 +11,11 @@ import {
 } from "@/lib/utils/user_op_builder";
 import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { request } from "@/lib/utils/request";
+import { IOrderParams } from "@/lib/analysis/pricing";
+import { type OrderType } from "@/constants/status";
 
-export interface IOrderPayload {
-  category: string;
-  periodType: string;
-  year: number;
-  periodValue: string;
-  country?: string;
-  keyword?: string;
-  isExternal?: boolean;
-  data?: unknown;
-  items: {
-    name: string;
-    unitPrice: number;
-    quantity: number;
-  }[];
+export interface IOrderPayload extends IOrderParams {
+  type: OrderType
 }
 
 export const useOrderTransaction = () => {
@@ -72,12 +62,14 @@ export const useOrderTransaction = () => {
     await refreshAuth();
 
     try {
+      const payloadString = JSON.stringify(orderPayload);
+
       // Info: (20260209 - Tzuhan) 1. 取得 orderId
       const orderRes = await request<{
         payload: { orderId: string; challenge: string };
       }>("/api/v1/user/order", {
         method: "POST",
-        body: JSON.stringify(orderPayload),
+        body: payloadString
       });
 
       if (!orderRes?.payload) throw new Error("Failed to create order");

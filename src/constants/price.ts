@@ -1,3 +1,5 @@
+import { type AnalysisPeriod } from "@/constants/analysis";
+
 /**
  * Info: (20260128 - Luphia) Pricing Logic:
  * - Base Cost:
@@ -25,23 +27,7 @@ export const REWARD_AMOUNTS = {
   DAILY_CHECKIN_REWARD: 5,
 } as const;
 
-export const ANALYSIS_CATEGORIES = {
-  BALANCE_SHEET: "BALANCE_SHEET",
-  CASH_FLOW: "CASH_FLOW",
-  INCOME_STATEMENT: "INCOME_STATEMENT",
-  FINANCIAL_COMPLIANCE: "FINANCIAL_COMPLIANCE",
-  FINANCIAL_HEALTH: "FINANCIAL_HEALTH",
-  IRSC: "IRSC",
-  CARBON_HEALTH_CHECK: "CARBON_HEALTH_CHECK",
-  NET_ZERO_EMISSIONS: "NET_ZERO_EMISSIONS",
-  MARKET_TRENDS: "MARKET_TRENDS",
-  INDUSTRY_DEVELOPMENT: "INDUSTRY_DEVELOPMENT",
-  FINANCIAL_PRODUCT_RATING: "FINANCIAL_PRODUCT_RATING",
-  AI_CONSULTING: "AI_CONSULTING",
-  CERTIFICATE_ANALYSIS: "CERTIFICATE_ANALYSIS",
-} as const;
-
-export type AnalysisCategory = (typeof ANALYSIS_CATEGORIES)[keyof typeof ANALYSIS_CATEGORIES];
+export { ANALYSIS_CATEGORY, type AnalysisCategory, ANALYSIS_PERIOD, type AnalysisPeriod } from "@/constants/analysis";
 
 export const ANALYSIS_BASE_COSTS: Record<string, number> = {
   // Info: (20260128 - Luphia) Basic Financials
@@ -66,17 +52,9 @@ export const ANALYSIS_BASE_COSTS: Record<string, number> = {
   CERTIFICATE_ANALYSIS: 1,
 };
 
-export const PERIOD = {
-  DAILY: "DAILY",
-  WEEKLY: "WEEKLY",
-  MONTHLY: "MONTHLY",
-  SEASONLY: "SEASONLY",
-  YEARLY: "YEARLY",
-} as const;
 
-export type PeriodType = (typeof PERIOD)[keyof typeof PERIOD];
 
-export const ANALYSIS_PERIOD_MULTIPLIERS: Record<PeriodType, number> = {
+export const ANALYSIS_PERIOD_MULTIPLIERS: Record<AnalysisPeriod, number> = {
   // Info: (20260128 - Luphia) Multipliers by Period
   DAILY: 1,
   WEEKLY: 1.5,
@@ -84,8 +62,6 @@ export const ANALYSIS_PERIOD_MULTIPLIERS: Record<PeriodType, number> = {
   SEASONLY: 5,
   YEARLY: 10,
 };
-
-export type AnalysisPeriodType = keyof typeof ANALYSIS_PERIOD_MULTIPLIERS;
 
 export const ANALYSIS_ADDON_COSTS = {
   BOOKKEEPER: 3000,

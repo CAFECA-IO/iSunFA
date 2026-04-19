@@ -53,6 +53,15 @@ export const ORDER_TYPE = {
   ANALYSIS: "ANALYSIS",
 } as const;
 
+export type OrderType = (typeof ORDER_TYPE)[keyof typeof ORDER_TYPE];
+
 export const PAYMENT_PROVIDER = {
   OEN_CALLBACK: "OEN_CALLBACK",
+} as const;
+
+export const SYSTEM_STATUS = {
+  HEALTHY: "HEALTHY",
+  UNHEALTHY: "UNHEALTHY",
+  CHECKING: "CHECKING",
+  UNCONFIGURED: "UNCONFIGURED",
 } as const;

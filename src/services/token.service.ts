@@ -13,6 +13,7 @@ import { UserOperationJson } from "@/validators";
 import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { CURRENCY_UNIT, REWARD_AMOUNTS } from "@/constants/price";
+import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 
 // Info: (20260126 - Luphia) 回傳結果型別
 type ActionResponse = {
@@ -205,10 +206,10 @@ export async function syncRegistrationRewardIfNeeded(
         if (res.success) {
           await paymentRepo.createOrder({
             userId: userId,
-            type: "REGISTRATION_REWARD",
+            type: ORDER_TYPE.REGISTRATION_REWARD,
             amount: REWARD_AMOUNTS.REGISTRATION_REWARD,
             unit: CURRENCY_UNIT.ICP,
-            status: "COMPLETED",
+            status: ORDER_STATUS.COMPLETED,
             challenge: "registration",
             data: {},
             transactionHash: (res.data as { tx: string })?.tx || "",

@@ -11,7 +11,7 @@ import {
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { analysisService } from "@/services/analysis.service";
+import { analysisService, IGenerateAnalysisParams } from "@/services/analysis.service";
 import { webAuthnService } from "@/services/webauthn.service";
 import { AppError } from "@/lib/utils/error";
 import { completeOrder, failOrder, getPendingOrder } from "@/services/order.service";
@@ -20,6 +20,7 @@ import { publicClient } from "@/lib/viem_public";
 import { ABIS } from "@/config/contracts";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { analysisRepo, FullAnalysis } from "@/repositories/analysis.repo";
+import { ORDER_TYPE } from "@/constants/status";
 
 export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
@@ -232,8 +233,9 @@ export async function POST(request: NextRequest) {
       return jsonFail(ApiCode.NOT_FOUND, "Order not found");
     }
 
-    const result = await analysisService.generateAnalysis(user.id, {
+    const generateAnalysisParams: IGenerateAnalysisParams = {
       orderId,
+      type: ORDER_TYPE.ANALYSIS,
       data: {
         category,
         periodType,
@@ -243,8 +245,8 @@ export async function POST(request: NextRequest) {
         keyword,
         isExternal,
       }
-    });
-
+    };
+    const result = await analysisService.generateAnalysis(user.id, generateAnalysisParams);
     return jsonOk(result);
   } catch (error) {
     console.error("[API] /user/analysis error:", error);

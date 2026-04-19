@@ -1,0 +1,20 @@
+export const adminDashboard = {
+  title: "系統架構與容器管理",
+  subtitle: "即時基礎設施健康狀況與 Docker 常駐程式統計",
+  refresh: "重新整理",
+  start_all: "全部啟動",
+  confirm_restart_title: "確認重新啟動",
+  confirm_restart_desc: "您確定要重新啟動 {{serviceLabel}} 容器嗎？這可能導致暫時性的服務中斷。",
+  confirm_start_all_title: "確認全部啟動",
+  confirm_start_all_desc: "您確定要啟動所有系統的 Docker 容器嗎？",
+  restart_success: "重新啟動成功",
+  start_success: "啟動成功",
+  status: "運作狀態",
+  uptime: "上線時間",
+  restart_btn: "重新啟動容器",
+  restarting_btn: "重新啟動中...",
+  no_containers: "偵測不到任何容器",
+  no_containers_desc: "系統 Docker 尚未啟動，或是沒有任何運作中的容器。",
+  failed_restart: "重新啟動 Docker 失敗：{{error}}",
+  failed_start: "啟動容器失敗：{{error}}"
+};

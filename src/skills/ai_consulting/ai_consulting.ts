@@ -20,7 +20,7 @@ export class AiConsultingSkill implements ITaskSkill {
     // Info: (20260418 - Luphia) Frontend payload now omits base64 to save storage. Load base64 via Laria IPFS on the worker!
     const imagesForAiRaw = await Promise.all(
       files.map(async (f) => {
-        const cid = f.id || f.hash;
+        const cid = f.hash;
         if (!cid) {
           console.error(`[AiConsultingSkill] File has no ID or hash, skipping:`, f);
           return null;

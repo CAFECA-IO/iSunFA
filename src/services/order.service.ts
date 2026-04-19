@@ -8,7 +8,7 @@ import { AppError } from "@/lib/utils/error";
 import { Prisma } from "@/generated/client";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
-import { ANALYSIS_CATEGORIES, CURRENCY_UNIT, CurrencyUnit } from "@/constants/price";
+import { ANALYSIS_CATEGORY, CURRENCY_UNIT, CurrencyUnit } from "@/constants/price";
 
 export async function getOrdersByUserId(userId: string, type?: string | null) {
   const orders = await paymentRepo.getOrdersByUserId(userId, type);
@@ -75,7 +75,7 @@ export async function generateAnalysisOrder(
   const analysisData = params.data as IAnalysisParams;
 
   // Info: (20260320 - Tzuhan) Prerequisite check: Net Zero Emissions requires Carbon Health Check
-  if (analysisData.category === ANALYSIS_CATEGORIES.NET_ZERO_EMISSIONS) {
+  if (analysisData.category === ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS) {
     if (!analysisData.keyword) {
       throw new AppError(
         ApiCode.VALIDATION_ERROR,
@@ -84,7 +84,7 @@ export async function generateAnalysisOrder(
     }
     const prerequisite = await analysisRepo.findAnalysisByKeywordAndType(
       userId,
-      ANALYSIS_CATEGORIES.CARBON_HEALTH_CHECK,
+      ANALYSIS_CATEGORY.CARBON_HEALTH_CHECK,
       analysisData.keyword,
     );
     if (!prerequisite) {
@@ -96,7 +96,7 @@ export async function generateAnalysisOrder(
 
     const latestNetZero = await analysisRepo.findAnalysisByKeywordAndType(
       userId,
-      ANALYSIS_CATEGORIES.NET_ZERO_EMISSIONS,
+      ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS,
       analysisData.keyword,
     );
 

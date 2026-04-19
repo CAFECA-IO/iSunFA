@@ -1,3 +1,4 @@
+import { adminDashboard } from "@/i18n/locales/zh_cn/admin_dashboard";
 import { common } from "@/i18n/locales/zh_cn/common";
 import { faith } from "@/i18n/locales/zh_cn/faith";
 import { cookieConsent } from "@/i18n/locales/zh_cn/cookie_consent";
@@ -96,4 +97,5 @@ export const zhCn = {
   admin_member: adminMember,
   admin_blockchain: adminBlockchain,
   admin_billing: adminBilling,
+  admin_dashboard: adminDashboard,
 } satisfies BaseTranslation;

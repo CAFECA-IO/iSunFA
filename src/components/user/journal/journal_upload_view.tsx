@@ -20,7 +20,7 @@ import { useOrderTransaction } from "@/hooks/use_order_transaction";
 import { getAnalysisCost } from "@/lib/analysis/pricing";
 
 import { useJournalAnalysis, UploadedFileData } from "@/hooks/use_journal_analysis";
-import { ANALYSIS_CATEGORIES } from '@/constants/price';
+import { ANALYSIS_CATEGORY } from '@/constants/price';
 
 
 export default function JournalUploadView({
@@ -149,7 +149,7 @@ export default function JournalUploadView({
   };
 
   const analysisParams = {
-    category: ANALYSIS_CATEGORIES.CERTIFICATE_ANALYSIS,
+    category: ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
     accountBookId: accountBookId,
     files: [],
   };

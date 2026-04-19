@@ -10,8 +10,8 @@ import { webAuthnService } from "@/services/webauthn.service";
 import { getPendingOrder, markOrderPaying } from "@/services/order.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { publicClient } from "@/lib/viem_public";
-import { MISSION_STATUS } from "@/constants/status";
-import { AnalysisCategory, AnalysisPeriodType } from "@/constants/price";
+import { MISSION_STATUS, ORDER_TYPE } from "@/constants/status";
+import { ANALYSIS_CATEGORY, type AnalysisCategory, type AnalysisPeriod } from "@/constants/analysis";
 
 export async function POST(
   request: NextRequest,
@@ -90,22 +90,24 @@ export async function POST(
      * Using any logic directly from the generated order data.
      */
     const orderData = order.data as Record<string, unknown>;
-    const category = orderData.category as string;
+    const innerData = (orderData.data || orderData) as Record<string, unknown>;
+    const category = innerData.category as string;
 
     let analysisRes: { success: boolean; data?: Record<string, unknown> | unknown } = { success: true };
     let resData: { reportId?: string } = {};
 
     // Info: (20260418 - Luphia) Automatically generate mission for ALL categories including ai_consulting, but SKIP journal_upload since it generates missions per-file manually.
-    if (category !== "journal_upload") {
+    if (category !== ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
       const generateParams = {
         orderId: orderId,
         status: MISSION_STATUS.PAYING, // Info: (20260417 - Luphia) Force PAYING status
+        type: ORDER_TYPE.ANALYSIS,
         data: {
-          ...orderData,
+          ...innerData,
           category: category as AnalysisCategory,
-          periodType: orderData.periodType as AnalysisPeriodType,
-          periodValue: orderData.periodValue as string,
-          year: orderData.year as number,
+          periodType: innerData.periodType as AnalysisPeriod,
+          periodValue: innerData.periodValue as string,
+          year: innerData.year as number,
         }
       };
 
@@ -114,7 +116,7 @@ export async function POST(
     }
 
     // Info: (20260418 - Luphia) 建立上傳檔案並與討論串關聯 (Restore AI Talk logic)
-    if (category === "ai_consulting" && resData.reportId && orderData.data) {
+    if (category === ANALYSIS_CATEGORY.AI_CONSULTING && resData.reportId && orderData.data) {
       const payloadData = orderData.data as { files?: IFile[] };
       if (payloadData.files && payloadData.files.length > 0) {
         await talkRepo.createFiles(

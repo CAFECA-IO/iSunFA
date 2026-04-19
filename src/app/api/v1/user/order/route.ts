@@ -4,6 +4,9 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnService } from "@/services/webauthn.service";
 import { generatePaymentOrder, generateAnalysisOrder, getOrdersByUserId } from "@/services/order.service";
+import { ORDER_TYPE } from "@/constants/status";
+import { IGenerateAnalysisParams } from "@/services/analysis.service";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,7 +34,7 @@ export async function POST(request: NextRequest) {
     // Info: (20260130 - Tzuhan) Ensure user exists in DB before creating order to avoid FK errors
     await webAuthnService.ensureUserSynced(user.address);
 
-    if (type === "PAYMENT") {
+    if (type === ORDER_TYPE.OEN_PAYMENT) {
       if (!amount || amount <= 0 || !credits || credits <= 0) {
         return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid amount or credits");
       }
@@ -50,20 +53,43 @@ export async function POST(request: NextRequest) {
       return jsonOk(result);
     }
 
-    if (type === "ANALYSIS") {
+    if (type === ORDER_TYPE.ANALYSIS) {
+      // Info: (20260128 - Luphia) Generate Analysis Order and Challenge
+      const fallbackData = (data || {}) as Record<string, unknown>;
+      const composedData = {
+        category: category || fallbackData.category,
+        periodType: periodType || fallbackData.periodType,
+        year: body.year || fallbackData.year,
+        periodValue: body.periodValue || fallbackData.periodValue,
+        country: body.country || fallbackData.country,
+        keyword: body.keyword || fallbackData.keyword,
+        isExternal: body.isExternal ?? fallbackData.isExternal,
+        ...fallbackData
+      };
+
       // Info: (20260128 - Luphia) Validate required analysis parameters
-      if (!category || !periodType) {
+      if (!composedData.category) {
         return jsonFail(
           ApiCode.VALIDATION_ERROR,
           "Missing required fields for analysis",
         );
       }
 
-      // Info: (20260128 - Luphia) Generate Analysis Order and Challenge
-      const result = await generateAnalysisOrder(user.id, {
+      const isNonPeriodAnalysis = [ANALYSIS_CATEGORY.AI_CONSULTING, ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS].some((category) => composedData.category === category);
+
+      if (!isNonPeriodAnalysis && !composedData.periodType) {
+        return jsonFail(
+          ApiCode.VALIDATION_ERROR,
+          "Missing required fields for analysis (periodType)",
+        );
+      }
+
+      const generateAnalysisParams: IGenerateAnalysisParams = {
         items,
-        data
-      });
+        data: composedData,
+        type,
+      };
+      const result = await generateAnalysisOrder(user.id, generateAnalysisParams);
 
       return jsonOk(result);
     }

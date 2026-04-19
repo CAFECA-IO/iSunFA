@@ -14,7 +14,7 @@ import { getPeriodDateRange } from "@/lib/analysis/period";
 import { AppError } from "@/lib/utils/error";
 import { ApiCode } from "@/lib/utils/status";
 import { Prisma } from "@/generated/client";
-import { ANALYSIS_CATEGORIES } from "@/constants/price";
+import { ANALYSIS_CATEGORY } from "@/constants/price";
 
 export interface IGenerateAnalysisParams extends IOrderParams {
   orderId?: string;
@@ -49,8 +49,14 @@ export class AnalysisService {
     const cost = getAnalysisCost(params as unknown as import('@/lib/analysis/pricing').AnalysisCostParams);
 
     // Info: (20260120 - Luphia) Simulate basic validation
-    if (!params.category || !params.periodType) {
-      throw new Error("Missing required parameters");
+    if (!params.category) {
+      throw new Error("Missing required parameters: category");
+    }
+
+    const isNonPeriodAnalysis = [ANALYSIS_CATEGORY.AI_CONSULTING, ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS].some((category) => params.category === category);
+    
+    if (!isNonPeriodAnalysis && !params.periodType) {
+      throw new Error("Missing required parameters: periodType");
     }
 
     // Info: (20260129 - Luphia) Generate Mission Content via MissionGenerator
@@ -63,11 +69,11 @@ export class AnalysisService {
         undefined;
       let prerequisiteStr = "";
 
-      if (params.category === ANALYSIS_CATEGORIES.NET_ZERO_EMISSIONS && params.keyword) {
+      if (params.category === ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS && params.keyword) {
         const prerequisite = await prisma.analysis.findFirst({
           where: {
             userId,
-            type: ANALYSIS_CATEGORIES.CARBON_HEALTH_CHECK,
+            type: ANALYSIS_CATEGORY.CARBON_HEALTH_CHECK,
             data: {
               path: ["keyword"],
               equals: params.keyword,
@@ -125,13 +131,13 @@ export class AnalysisService {
         }
       } else if (
         [
-          ANALYSIS_CATEGORIES.CARBON_HEALTH_CHECK,
-          ANALYSIS_CATEGORIES.BALANCE_SHEET,
-          ANALYSIS_CATEGORIES.CASH_FLOW,
-          ANALYSIS_CATEGORIES.INCOME_STATEMENT,
-          ANALYSIS_CATEGORIES.FINANCIAL_COMPLIANCE,
-          ANALYSIS_CATEGORIES.FINANCIAL_HEALTH,
-          ANALYSIS_CATEGORIES.IRSC,
+          ANALYSIS_CATEGORY.CARBON_HEALTH_CHECK,
+          ANALYSIS_CATEGORY.BALANCE_SHEET,
+          ANALYSIS_CATEGORY.CASH_FLOW,
+          ANALYSIS_CATEGORY.INCOME_STATEMENT,
+          ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE,
+          ANALYSIS_CATEGORY.FINANCIAL_HEALTH,
+          ANALYSIS_CATEGORY.IRSC,
         ].some(c => c === params.category)
       ) {
         if (!params.isExternal) {
@@ -192,7 +198,7 @@ export class AnalysisService {
 
           // Info: (20260418 - Tzuhan) 目前僅先對合規抓鬼與異常傳票執行 DB 傳票的完整撈取並交付快篩
           let voucherRecords: unknown[] = [];
-          if (params.category === ANALYSIS_CATEGORIES.FINANCIAL_COMPLIANCE) {
+          if (params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE) {
             voucherRecords = targetAccountBookId
               ? await prisma.voucher.findMany({
                 where: {

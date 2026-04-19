@@ -34,6 +34,7 @@ export const MODULES = [
 ];
 
 export const ADMIN_MODULES = [
+  { key: "dashboard", icon: LayoutDashboard, basic: true },
   { key: "blockchain", icon: Blocks, basic: true },
   { key: "user", icon: Users, basic: true },
   { key: "billing", icon: CreditCard, basic: true },

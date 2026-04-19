@@ -6,7 +6,8 @@ import { IOrderPayload } from "@/hooks/use_order_transaction";
 import { getAnalysisCost } from "@/lib/analysis/pricing";
 
 import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
-import { ANALYSIS_CATEGORIES } from "@/constants/price";
+import { ANALYSIS_CATEGORY } from "@/constants/price";
+import { ORDER_TYPE } from "@/constants/status";
 
 export type UploadedFileData = {
   id: string;
@@ -45,7 +46,7 @@ export function useJournalAnalysis({
     if (files.length === 0) return;
 
     const analysisParams = {
-      category: ANALYSIS_CATEGORIES.CERTIFICATE_ANALYSIS,
+      category: ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
       accountBookId: accountBookId,
       files: [],
     };
@@ -53,10 +54,7 @@ export function useJournalAnalysis({
     const totalPrice = unitPrice * files.length;
 
     const payload: IOrderPayload = {
-      category: "journal_upload",
-      periodType: "daily",
-      periodValue: new Date().toISOString().split("T")[0],
-      year: new Date().getFullYear(),
+      type: ORDER_TYPE.ANALYSIS,
       items: [
         {
           name: itemName,
@@ -65,8 +63,9 @@ export function useJournalAnalysis({
         },
       ],
       data: {
+        category: ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
         accountBookId,
-        files: files.map((f) => ({ hash: f.hash, fileName: f.file.name })),
+        files: files.map((f) => f.hash),
       },
     };
 

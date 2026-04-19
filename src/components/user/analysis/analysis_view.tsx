@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { Dialog } from '@headlessui/react';
-import { Check, Calendar, Coins, FileBarChart, Globe, Info } from 'lucide-react';
+import { Check, Calendar, Coins, Globe, Info } from 'lucide-react';
 import { request } from '@/lib/utils/request';
 import PaymentConfirmModal from '@/components/common/payment_confirm_modal';
 import SuccessNotification from '@/components/common/success_notification';
@@ -11,9 +11,11 @@ import HistorySection from '@/components/user/analysis/history_section';
 import { getAnalysisCost, IAnalysisParams } from '@/lib/analysis/pricing';
 import { useOrderTransaction, IOrderPayload } from '@/hooks/use_order_transaction';
 import { getPeriodDateRange } from '@/lib/analysis/period';
-import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES } from '@/constants/analysis';
-import { ANALYSIS_ADDON_COSTS, AnalysisCategory, AnalysisPeriodType } from '@/constants/price';
+import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES, ANALYSIS_CATEGORY } from '@/constants/analysis';
+import { type AnalysisCategory, type AnalysisPeriod, ANALYSIS_PERIOD } from '@/constants/analysis';
+import { ANALYSIS_ADDON_COSTS } from '@/constants/price';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { ORDER_TYPE } from '@/constants/status';
 
 // Info: (20260419 - Luphia) 靜態常數外提，避免每次 Render 重複建立 ---
 const SEASONS = ['S1', 'S2', 'S3', 'S4'];
@@ -74,15 +76,15 @@ export default function AnalysisView() {
   // Info: (20260419 - Luphia) 衍生變數 (Derived States)
   const currentCategories = activeTab === 'internal' ? INTERNAL_CATEGORIES : EXTERNAL_CATEGORIES;
   const isInternalCompanyAnalysis = activeTab === 'internal';
-  const isExternalCarbonAnalysis = activeTab === 'external' && ['carbon_health_check', 'net_zero_emissions'].includes(category);
+  const isExternalCarbonAnalysis = activeTab === 'external' && ['CARBON_HEALTH_CHECK', 'NET_ZERO_EMISSIONS'].includes(category);
   const needsCompanyInput = isInternalCompanyAnalysis || isExternalCarbonAnalysis;
-  const isDaily = periodType === 'daily';
+  const isDaily = periodType === ANALYSIS_PERIOD.DAILY;
   const country = activeTab === 'external' ? selectedCountry : undefined;
 
   const data: IAnalysisParams = useMemo(() => ({
     category: category as AnalysisCategory,
-    periodType: periodType as AnalysisPeriodType,
-    periodValue: String(selectedPeriodValue),
+    periodType: periodType as AnalysisPeriod,
+    periodValue: periodType === ANALYSIS_PERIOD.YEARLY ? String(selectedYear) : String(selectedPeriodValue),
     year: selectedYear,
   }), [category, periodType, selectedPeriodValue, selectedYear]);
 
@@ -159,8 +161,8 @@ export default function AnalysisView() {
 
   // Info: (20260419 - Luphia) 防止碳盤查選擇日/週/月
   useEffect(() => {
-    if (needsCompanyInput && ['monthly', 'weekly', 'daily'].includes(periodType)) {
-      setPeriodType('yearly');
+    if (needsCompanyInput && ([ANALYSIS_PERIOD.MONTHLY, ANALYSIS_PERIOD.WEEKLY, ANALYSIS_PERIOD.DAILY] as string[]).includes(periodType)) {
+      setPeriodType(ANALYSIS_PERIOD.YEARLY);
       setSelectedPeriodValue('');
     }
   }, [needsCompanyInput, periodType]);
@@ -179,7 +181,7 @@ export default function AnalysisView() {
       ? keyword : (needsCompanyInput ? internalCompanyName : undefined);
 
     const payloadItems = [
-      { name: t(`analysis.categories.${category}`) || category, unitPrice: calculatedCost, quantity: 1 }
+      { name: t(`analysis.categories.${category.toLowerCase()}`) || category, unitPrice: calculatedCost, quantity: 1 }
     ];
 
     if (isInternalCompanyAnalysis) {
@@ -189,13 +191,16 @@ export default function AnalysisView() {
     }
 
     const payload: IOrderPayload = {
-      category,
-      periodType,
-      year: selectedYear,
-      periodValue: periodType === 'yearly' ? selectedYear.toString() : selectedPeriodValue,
-      country,
-      keyword: derivedKeyword,
-      isExternal: activeTab === 'external',
+      type: ORDER_TYPE.ANALYSIS,
+      data: {
+        category: data.category,
+        periodType: data.periodType,
+        year: data.year,
+        periodValue: data.periodValue,
+        country,
+        keyword: derivedKeyword,
+        isExternal: activeTab === 'external',
+      },
       items: payloadItems
     };
 
@@ -237,8 +242,8 @@ export default function AnalysisView() {
 
   // Info: (20260419 - Luphia) 畫面渲染輔助
   const simplePeriodString = useMemo(() => {
-    const periodVal = periodType === 'yearly' ? selectedYear.toString() : selectedPeriodValue;
-    if (periodType === 'daily' && !periodVal) return '';
+    const periodVal = periodType === ANALYSIS_PERIOD.YEARLY ? selectedYear.toString() : selectedPeriodValue;
+    if (periodType === ANALYSIS_PERIOD.DAILY && !periodVal) return '';
 
     const { start, end } = getPeriodDateRange(periodType, selectedYear, periodVal);
     if (!start || !end) return '';
@@ -253,8 +258,8 @@ export default function AnalysisView() {
     `;
 
     switch (periodType) {
-      case 'yearly': return null;
-      case 'seasonly':
+      case ANALYSIS_PERIOD.YEARLY: return null;
+      case ANALYSIS_PERIOD.SEASONLY:
         return (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {SEASONS.map((season) => (
@@ -264,7 +269,7 @@ export default function AnalysisView() {
             ))}
           </div>
         );
-      case 'monthly':
+      case ANALYSIS_PERIOD.MONTHLY:
         return (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {MONTHS.map((month) => (
@@ -274,7 +279,7 @@ export default function AnalysisView() {
             ))}
           </div>
         );
-      case 'weekly':
+      case ANALYSIS_PERIOD.WEEKLY:
         return (
           <div className="grid grid-cols-4 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-48 overflow-y-auto p-1">
             {WEEKS.map((week) => (
@@ -284,7 +289,7 @@ export default function AnalysisView() {
             ))}
           </div>
         );
-      case 'daily': {
+      case ANALYSIS_PERIOD.DAILY: {
         const baseDate = new Date();
         baseDate.setDate(baseDate.getDate() - 2);
         const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -364,10 +369,10 @@ export default function AnalysisView() {
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">{t('analysis.period_type')}</label>
                 <div className="flex flex-wrap gap-2">
-                  {PERIOD_TYPES.filter(type => !(needsCompanyInput && ['monthly', 'weekly', 'daily'].includes(type))).map((type) => (
+                  {PERIOD_TYPES.filter(type => !(needsCompanyInput && ([ANALYSIS_PERIOD.MONTHLY, ANALYSIS_PERIOD.WEEKLY, ANALYSIS_PERIOD.DAILY] as string[]).includes(type))).map((type) => (
                     <button key={type} onClick={() => { setPeriodType(type); setSelectedPeriodValue(''); }}
                       className={`px-4 py-2 text-sm font-medium rounded-full transition-all border ${periodType === type ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
-                      {t(`analysis.time_units.${type}`)}
+                      {t(`analysis.time_units.${type.toLowerCase()}`)}
                     </button>
                   ))}
                 </div>
@@ -389,7 +394,7 @@ export default function AnalysisView() {
               )}
 
               {/* Info: (20260419 - Luphia) 3. Specific Period Selection */}
-              {periodType !== 'yearly' && (
+              {periodType !== ANALYSIS_PERIOD.YEARLY && (
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">{t('analysis.select_period')}</label>
                   <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
@@ -421,7 +426,7 @@ export default function AnalysisView() {
                     <button key={cat} onClick={() => setCategory(cat)}
                       className={`relative flex flex-col items-start p-4 rounded-xl border text-left transition-all duration-200 ${category === cat ? 'border-orange-600 bg-orange-50 text-orange-900 ring-1 ring-orange-600' : 'border-gray-200 hover:border-orange-300 hover:bg-gray-50 text-gray-700'}`}>
                       <div className="flex w-full items-center justify-between">
-                        <span className="font-semibold text-sm">{t(`analysis.categories.${cat}`)}</span>
+                        <span className="font-semibold text-sm">{t(`analysis.categories.${cat.toLowerCase()}`)}</span>
                         {category === cat && <Check className="h-4 w-4 text-orange-600" />}
                       </div>
                     </button>
@@ -513,7 +518,7 @@ export default function AnalysisView() {
             {/* Info: (20260419 - Luphia) Bottom Actions & Summary */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-gray-100">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
-                {(periodType === 'yearly' || selectedPeriodValue !== '') && (
+                {(periodType === ANALYSIS_PERIOD.YEARLY || selectedPeriodValue !== '') && (
                   <div className="flex items-center gap-2 bg-orange-50 px-3 py-2 rounded-lg border border-orange-100">
                     <Calendar className="h-4 w-4 text-orange-600" />
                     <div className="flex flex-col">
@@ -533,16 +538,11 @@ export default function AnalysisView() {
 
               <button
                 onClick={handleGenerate}
-                disabled={(periodType !== 'yearly' && !selectedPeriodValue) || (activeTab === 'external' && !isExternalCarbonAnalysis && !selectedCountry) || (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends' && !keyword.trim()) || (needsCompanyInput && !selectedCompany)}
+                disabled={(periodType !== ANALYSIS_PERIOD.YEARLY && !selectedPeriodValue) || (activeTab === 'external' && !isExternalCarbonAnalysis && !selectedCountry) || (activeTab === 'external' && !isExternalCarbonAnalysis && category !== ANALYSIS_CATEGORY.MARKET_TRENDS && !keyword.trim()) || (needsCompanyInput && !selectedCompany)}
                 className="w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed rounded-lg bg-orange-600 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 transition-colors"
               >
                 {t('analysis.generate')}
               </button>
-            </div>
-
-            <div className="pt-8 text-center text-gray-500 flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed border-gray-100 rounded-lg">
-              <FileBarChart className="h-10 w-10 text-gray-300 mb-2" />
-              <p className="text-sm">{t('features.items.analysis.desc')}</p>
             </div>
           </div>
         </div>
@@ -558,11 +558,11 @@ export default function AnalysisView() {
         onConfirm={handleAnalysisWorkflow}
         cost={finalCost}
         items={[
-          { label: t('analysis.category'), value: t(`analysis.categories.${category}`) },
+          { label: t('analysis.category'), value: t(`analysis.categories.${category.toLowerCase()}`) },
           ...(country ? [{ label: t('analysis.country'), value: t(`analysis.countries.${country}`) }] : []),
-          ...(keyword && activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends' ? [{ label: t('analysis.keyword'), value: keyword }] : []),
+          ...(keyword && activeTab === 'external' && !isExternalCarbonAnalysis && category !== ANALYSIS_CATEGORY.MARKET_TRENDS ? [{ label: t('analysis.keyword'), value: keyword }] : []),
           ...(needsCompanyInput && internalCompanyName ? [{ label: t('analysis.company_input.label'), value: internalCompanyName }] : []),
-          { label: t('analysis.period'), value: t('analysis.selected_period_desc', { value: periodType === 'yearly' ? selectedYear : selectedPeriodValue, type: t(`analysis.time_units.${periodType}`) }) }
+          { label: t('analysis.period'), value: t('analysis.selected_period_desc', { value: periodType === ANALYSIS_PERIOD.YEARLY ? selectedYear : selectedPeriodValue, type: t(`analysis.time_units.${periodType.toLowerCase()}`) }) }
         ]}
         extraContent={isInternalCompanyAnalysis ? (
           <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm space-y-3 mt-4">
