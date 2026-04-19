@@ -52,6 +52,7 @@ contract MissionBoard is ERC721URIStorage, AccessControl, ReentrancyGuard {
     struct Submission {
         address submitter;
         string resultCid;
+        uint256 consumedTokens;
         bool isRejected;
         uint256 disputeUntil;
     }
@@ -94,7 +95,8 @@ contract MissionBoard is ERC721URIStorage, AccessControl, ReentrancyGuard {
         uint256 indexed taskId,
         address indexed submitter,
         uint256 submissionIndex,
-        string resultCid
+        string resultCid,
+        uint256 consumedTokens
     );
     event SubmissionApproved(
         uint256 indexed taskId,
@@ -232,7 +234,8 @@ contract MissionBoard is ERC721URIStorage, AccessControl, ReentrancyGuard {
 
     function submitResult(
         uint256 taskId,
-        string calldata resultCid
+        string calldata resultCid,
+        uint256 consumedTokens
     ) external onlyNotBlacklisted {
         Task storage task = tasks[taskId];
         require(
@@ -245,12 +248,13 @@ contract MissionBoard is ERC721URIStorage, AccessControl, ReentrancyGuard {
         taskSubmissions[taskId][subIndex] = Submission({
             submitter: msg.sender,
             resultCid: resultCid,
+            consumedTokens: consumedTokens,
             isRejected: false,
             disputeUntil: 0
         });
 
         task.status = TaskStatus.PendingReview;
-        emit ResultSubmitted(taskId, msg.sender, subIndex, resultCid);
+        emit ResultSubmitted(taskId, msg.sender, subIndex, resultCid, consumedTokens);
     }
 
     function rejectSubmission(

@@ -14,10 +14,11 @@ import { ApiCode } from "@/lib/utils/status";
 import { analysisService } from "@/services/analysis.service";
 import { webAuthnService } from "@/services/webauthn.service";
 import { AppError } from "@/lib/utils/error";
-import { orderGenerator } from "@/lib/order/order.generator";
+import { completeOrder, failOrder, getPendingOrder } from "@/services/order.service";
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS } from "@/config/contracts";
+import { paymentRepo } from "@/repositories/payment.repo";
 import { analysisRepo, FullAnalysis } from "@/repositories/analysis.repo";
 
 export const dynamic = "force-dynamic";
@@ -174,7 +175,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (!userOpSuccess) {
-          await orderGenerator.failOrder(
+          await failOrder(
             orderId,
             "UserOperation failed on-chain (e.g. out of gas or insufficient balance)",
           );
@@ -185,7 +186,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Info: (20260209 - Tzuhan) Mark order as complete
-        await orderGenerator.completeOrder(
+        await completeOrder(
           orderId,
           JSON.stringify({ verifiedVia: "tx", txHash }),
           txHash,
@@ -194,7 +195,7 @@ export async function POST(request: NextRequest) {
         // Info: (20260128 - Luphia) Fallback to Signature Verification (Legacy 2-step) or if txHash not provided
 
         // Info: (20260209 - Tzuhan) 1. Get Pending Order
-        const order = await orderGenerator.getPendingOrder(orderId, user.id);
+        const order = await getPendingOrder(orderId, user.id);
 
         // Info: (20260209 - Tzuhan) 2. Verify Signature
         await webAuthnService.verifySignature(
@@ -204,7 +205,7 @@ export async function POST(request: NextRequest) {
         );
 
         // Info: (20260209 - Tzuhan) 3. Complete Order
-        await orderGenerator.completeOrder(
+        await completeOrder(
           orderId,
           JSON.stringify(authentication),
           undefined,
@@ -226,15 +227,22 @@ export async function POST(request: NextRequest) {
      * Data is already in Order, but we can use body too or trust order data
      * Using body params ensures consistency with frontend request, but ideally we use order.data
      */
+    const orderData = await paymentRepo.getOrderById(orderId);
+    if (!orderData) {
+      return jsonFail(ApiCode.NOT_FOUND, "Order not found");
+    }
+
     const result = await analysisService.generateAnalysis(user.id, {
-      category,
-      periodType,
-      periodValue,
-      year,
-      country,
-      keyword,
       orderId,
-      isExternal,
+      data: {
+        category,
+        periodType,
+        periodValue,
+        year,
+        country,
+        keyword,
+        isExternal,
+      }
     });
 
     return jsonOk(result);

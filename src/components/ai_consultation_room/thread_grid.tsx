@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { IThread } from "@/interfaces/ai_talk";
+import { IThread } from "@/interfaces/ai_consulting";
 import { ThreadCard } from "@/components/ai_consultation_room/thread_card";
 import { useTranslation } from "@/i18n/i18n_context";
 import { Loader2 } from "lucide-react";

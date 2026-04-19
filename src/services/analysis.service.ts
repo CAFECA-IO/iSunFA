@@ -14,10 +14,18 @@ import { getPeriodDateRange } from "@/lib/analysis/period";
 import { AppError } from "@/lib/utils/error";
 import { ApiCode } from "@/lib/utils/status";
 import { Prisma } from "@/generated/client";
+import { ANALYSIS_CATEGORIES } from "@/constants/price";
 
 export interface IGenerateAnalysisParams extends IOrderParams {
   orderId?: string;
   status?: string;
+  category?: string;
+  periodType?: string;
+  periodValue?: string;
+  year?: number;
+  country?: string;
+  keyword?: string;
+  isExternal?: boolean;
 }
 
 export class AnalysisService {
@@ -30,6 +38,7 @@ export class AnalysisService {
    * 4. Return the job ID or result.
    */
   async generateAnalysis(userId: string, params: IGenerateAnalysisParams) {
+    Object.assign(params, params.data || {});
     console.log(`[AnalysisService] Generating for ${userId}:`, params);
 
     /**
@@ -37,7 +46,7 @@ export class AnalysisService {
      * Note: In production this cost should ideally be passed from the trusted Order
      * or recalculated and verified to match the Order.
      */
-    const cost = getAnalysisCost(params);
+    const cost = getAnalysisCost(params as unknown as import('@/lib/analysis/pricing').AnalysisCostParams);
 
     // Info: (20260120 - Luphia) Simulate basic validation
     if (!params.category || !params.periodType) {
@@ -54,11 +63,11 @@ export class AnalysisService {
         undefined;
       let prerequisiteStr = "";
 
-      if (params.category === "net_zero_emissions" && params.keyword) {
+      if (params.category === ANALYSIS_CATEGORIES.NET_ZERO_EMISSIONS && params.keyword) {
         const prerequisite = await prisma.analysis.findFirst({
           where: {
             userId,
-            type: "carbon_health_check",
+            type: ANALYSIS_CATEGORIES.CARBON_HEALTH_CHECK,
             data: {
               path: ["keyword"],
               equals: params.keyword,
@@ -116,20 +125,20 @@ export class AnalysisService {
         }
       } else if (
         [
-          "carbon_health_check",
-          "balance_sheet",
-          "cash_flow",
-          "income_statement",
-          "financial_compliance",
-          "financial_health",
-          "irsc",
-        ].includes(params.category)
+          ANALYSIS_CATEGORIES.CARBON_HEALTH_CHECK,
+          ANALYSIS_CATEGORIES.BALANCE_SHEET,
+          ANALYSIS_CATEGORIES.CASH_FLOW,
+          ANALYSIS_CATEGORIES.INCOME_STATEMENT,
+          ANALYSIS_CATEGORIES.FINANCIAL_COMPLIANCE,
+          ANALYSIS_CATEGORIES.FINANCIAL_HEALTH,
+          ANALYSIS_CATEGORIES.IRSC,
+        ].some(c => c === params.category)
       ) {
         if (!params.isExternal) {
           const { start, end } = getPeriodDateRange(
-            params.periodType,
-            params.year,
-            params.periodValue,
+            params.periodType!,
+            params.year!,
+            params.periodValue!,
           );
           const startTs = Math.floor(new Date(start).getTime() / 1000);
           const endTs = Math.floor(
@@ -183,7 +192,7 @@ export class AnalysisService {
 
           // Info: (20260418 - Tzuhan) 目前僅先對合規抓鬼與異常傳票執行 DB 傳票的完整撈取並交付快篩
           let voucherRecords: unknown[] = [];
-          if (params.category === "financial_compliance") {
+          if (params.category === ANALYSIS_CATEGORIES.FINANCIAL_COMPLIANCE) {
             voucherRecords = targetAccountBookId
               ? await prisma.voucher.findMany({
                 where: {
@@ -230,10 +239,10 @@ export class AnalysisService {
       }
 
       missionDef = missionGenerator.generateMission({
-        category: params.category,
-        periodType: params.periodType,
-        periodValue: params.periodValue,
-        year: params.year,
+        category: params.category!,
+        periodType: params.periodType!,
+        periodValue: params.periodValue!,
+        year: params.year!,
         country: params.country,
         keyword: params.keyword,
         prerequisiteData: parsedPrerequisiteParams,
@@ -302,7 +311,7 @@ export class AnalysisService {
           category: params.category,
           missionName: missionDef
             ? missionDef.name
-            : `Analysis-${params.category}-${params.periodType}`,
+            : `Analysis-${params.category}-${params.periodType!}`,
           status: params.status || MISSION_STATUS.UPLOADING,
           missionData: {
             category: params.category,
@@ -310,14 +319,14 @@ export class AnalysisService {
             remainingBalance: 9500,
             generatedAt: new Date().toISOString(),
             planHash: null,
-            periodType: params.periodType,
-            periodValue: params.periodValue,
-            year: params.year,
+            periodType: params.periodType!,
+            periodValue: params.periodValue!,
+            year: params.year!,
             country: params.country,
             keyword: params.keyword,
             isExternal: params.isExternal === true,
             historicalTags: await analysisRepo.getGlobalTopTags(20),
-            data: params.data ? (params.data as Prisma.InputJsonValue) : undefined,
+            data: params.data ? (params.data as unknown as Prisma.InputJsonValue) : undefined,
           },
           tasks: missionDef ? missionDef.tasks : undefined,
         });
@@ -387,9 +396,9 @@ export class AnalysisService {
         cost: cost,
         remainingBalance: 9500,
         generatedAt: new Date().toISOString(),
-        periodType: params.periodType,
-        periodValue: params.periodValue,
-        year: params.year,
+        periodType: params.periodType!,
+        periodValue: params.periodValue!,
+        year: params.year!,
       },
     };
   }

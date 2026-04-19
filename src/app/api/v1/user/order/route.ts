@@ -3,8 +3,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnService } from "@/services/webauthn.service";
-import { orderGenerator } from "@/lib/order/order.generator";
-import { orderService } from "@/services/order.service";
+import { generatePaymentOrder, generateAnalysisOrder, getOrdersByUserId } from "@/services/order.service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,17 +17,13 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const {
-      type = "ANALYSIS",
+      type,
       category,
       periodType,
-      periodValue,
-      year,
       amount,
+      unit,
       credits,
       paymentMethodId,
-      country,
-      keyword,
-      isExternal,
       items,
       data,
     } = body;
@@ -46,8 +41,9 @@ export async function POST(request: NextRequest) {
           "paymentMethodId is required",
         );
       }
-      const result = await orderGenerator.generatePaymentOrder(user.id, {
+      const result = await generatePaymentOrder(user.id, {
         amount,
+        unit,
         credits,
         paymentMethodId,
       });
@@ -64,16 +60,9 @@ export async function POST(request: NextRequest) {
       }
 
       // Info: (20260128 - Luphia) Generate Analysis Order and Challenge
-      const result = await orderGenerator.generateAnalysisOrder(user.id, {
-        category,
-        periodType,
-        periodValue,
-        year,
-        country,
-        keyword,
-        isExternal,
+      const result = await generateAnalysisOrder(user.id, {
         items,
-        data,
+        data
       });
 
       return jsonOk(result);
@@ -101,7 +90,7 @@ export async function GET(request: NextRequest) {
       type = "OEN_PAYMENT";
     }
 
-    const orders = await orderService.getOrdersByUserId(user.id, type);
+    const orders = await getOrdersByUserId(user.id, type);
 
     return jsonOk({ orders });
   } catch (error) {

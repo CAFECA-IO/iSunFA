@@ -1,7 +1,7 @@
 import { publicClient } from "@/lib/viem_public";
 import { prisma } from "@/lib/prisma";
 import { analysisRepo } from "@/repositories/analysis.repo";
-import { orderGenerator } from "@/lib/order/order.generator";
+import { failOrder } from "@/services/order.service";
 import { MISSION_STATUS } from "@/constants/status";
 
 export class TransactionTrackerService {
@@ -52,7 +52,7 @@ export class TransactionTrackerService {
               mission.id,
               "Payment Tx Reverted on chain",
             );
-            await orderGenerator.failOrder(analysis.order.id, "UserOp transaction reverted");
+            await failOrder(analysis.order.id, "UserOp transaction reverted");
             console.log(
               `[TxTracker] Mission ${mission.id} marked as UNPAID (Tx ${txHash} Reverted)`,
             );

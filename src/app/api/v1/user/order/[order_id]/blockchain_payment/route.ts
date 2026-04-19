@@ -2,15 +2,16 @@ import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { talkRepo } from "@/repositories/talk.repo";
-import { IFile } from "@/interfaces/ai_talk";
+import { IFile } from "@/interfaces/ai_consulting";
 import { ApiCode } from "@/lib/utils/status";
 import { bundlerService } from "@/services/bundler.service";
 import { analysisService } from "@/services/analysis.service";
 import { webAuthnService } from "@/services/webauthn.service";
-import { orderGenerator } from "@/lib/order/order.generator";
+import { getPendingOrder, markOrderPaying } from "@/services/order.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { publicClient } from "@/lib/viem_public";
 import { MISSION_STATUS } from "@/constants/status";
+import { AnalysisCategory, AnalysisPeriodType } from "@/constants/price";
 
 export async function POST(
   request: NextRequest,
@@ -33,7 +34,7 @@ export async function POST(
     }
 
     // Info: (20260417 - Luphia) 1. Get the pending Order
-    const order = await orderGenerator.getPendingOrder(orderId, user.id);
+    const order = await getPendingOrder(orderId, user.id);
 
     // Info: (20260417 - Luphia) 2. Validate FIDO2 Signature against the true userOpHash
     const authPayload = { ...authentication, signature }; // Info: (20260417 - Luphia) Mapped from client
@@ -62,12 +63,27 @@ export async function POST(
 
     await webAuthnService.verifySignature(user.address, authPayload, hexToBase64Url(trueUserOpHash as string));
 
+    // Info: (20260419 - Luphia) Check if pending balance is sufficient before sending
+    const { formatUnits } = await import("viem");
+    const balance = await publicClient.readContract({
+      address: CONTRACT_ADDRESSES.CREDIT_POINT as `0x${string}`,
+      abi: ABIS.CREDIT_POINT,
+      functionName: "balanceOf",
+      args: [user.address as `0x${string}`],
+      blockTag: "pending",
+    });
+    const pendingCredits = Number(formatUnits(balance as bigint, 18));
+
+    if (pendingCredits < order.amount) {
+      return jsonFail(ApiCode.VALIDATION_ERROR, "Insufficient pending balance");
+    }
+
     // Info: (20260417 - Luphia) 3. Dispatch Background Transaction without awaiting receipt
     const sendResult = await bundlerService.sendUserOpAsync(userOp, CONTRACT_ADDRESSES.ENTRY_POINT);
     const txHash = sendResult.transactionHash;
 
     // Info: (20260417 - Luphia) 4. Update order to mark it as verifying with txHash
-    await orderGenerator.completeOrder(orderId, JSON.stringify({ verifiedVia: "async_tx", txHash }), txHash);
+    await markOrderPaying(orderId, JSON.stringify({ verifiedVia: "async_tx", txHash }), txHash);
 
     /**
      * Info: (20260417 - Luphia) 5. Generate Analysis with PAYING status FIRST
@@ -79,16 +95,18 @@ export async function POST(
     let analysisRes: { success: boolean; data?: Record<string, unknown> | unknown } = { success: true };
     let resData: { reportId?: string } = {};
 
-    // Info: (20260418 - Luphia) Automatically generate mission for ALL categories including ai_talk, but SKIP journal_upload since it generates missions per-file manually.
+    // Info: (20260418 - Luphia) Automatically generate mission for ALL categories including ai_consulting, but SKIP journal_upload since it generates missions per-file manually.
     if (category !== "journal_upload") {
       const generateParams = {
-        ...orderData,
         orderId: orderId,
-        category: category,
-        periodType: orderData.periodType as string,
-        periodValue: orderData.periodValue as string,
-        year: orderData.year as number,
-        status: MISSION_STATUS.PAYING // Info: (20260417 - Luphia) Force PAYING status
+        status: MISSION_STATUS.PAYING, // Info: (20260417 - Luphia) Force PAYING status
+        data: {
+          ...orderData,
+          category: category as AnalysisCategory,
+          periodType: orderData.periodType as AnalysisPeriodType,
+          periodValue: orderData.periodValue as string,
+          year: orderData.year as number,
+        }
       };
 
       analysisRes = await analysisService.generateAnalysis(user.id, generateParams);
@@ -96,7 +114,7 @@ export async function POST(
     }
 
     // Info: (20260418 - Luphia) 建立上傳檔案並與討論串關聯 (Restore AI Talk logic)
-    if (category === "ai_talk" && resData.reportId && orderData.data) {
+    if (category === "ai_consulting" && resData.reportId && orderData.data) {
       const payloadData = orderData.data as { files?: IFile[] };
       if (payloadData.files && payloadData.files.length > 0) {
         await talkRepo.createFiles(

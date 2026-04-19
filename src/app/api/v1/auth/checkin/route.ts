@@ -10,8 +10,9 @@ import {
   claimDailyCheckIn,
   registerUserViaMembership,
 } from "@/services/member.service";
-import { REWARD_AMOUNTS } from "@/constants/price";
+import { CURRENCY_UNIT, REWARD_AMOUNTS } from "@/constants/price";
 import { paymentRepo } from "@/repositories/payment.repo";
+import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 
 export async function GET(request: NextRequest) {
   try {
@@ -93,9 +94,10 @@ export async function GET(request: NextRequest) {
           if (mintResult.success) {
             await paymentRepo.createOrder({
               userId: user.id,
-              type: "CHECKIN_REWARD",
+              type: ORDER_TYPE.CHECK_IN_REWARD,
               amount: rewardedAmount,
-              status: "COMPLETED",
+              unit: CURRENCY_UNIT.ICP,
+              status: ORDER_STATUS.COMPLETED,
               challenge: "reward",
               data: {},
               transactionHash: (mintResult.data as { tx: string })?.tx || "",

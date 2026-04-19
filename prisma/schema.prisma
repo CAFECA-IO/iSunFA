@@ -107,6 +107,7 @@ model Order {
   user            User     @relation(fields: [userId], references: [id])
   type            String
   amount          Int
+  unit            String
   data            Json
   status          String   @default("PENDING")
   challenge       String

@@ -3,6 +3,7 @@ import { Loader2, CheckCircle2 } from "lucide-react";
 import { StepCard } from "@/components/admin/setup/step_card";
 import { IStepProps, StepStatus } from "@/components/admin/setup/setup_types";
 import { useTranslation } from "@/i18n/i18n_context";
+import { CURRENCY_UNIT } from "@/constants/price";
 
 export interface IDependencyCheck {
   source: string;
@@ -31,7 +32,7 @@ export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }:
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ args })
     });
-    
+
     let parsed;
     try {
       parsed = await res.json();
@@ -78,7 +79,7 @@ export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }:
           try {
             const log = await callSetupApi("getDeployProgress") as string;
             setDeployProgress(log || "");
-            
+
             if (log && log.includes("===== DEPLOYMENT SUMMARY =====")) {
               clearInterval(sid);
               resolve(log);
@@ -86,12 +87,12 @@ export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }:
               clearInterval(sid);
               resolve(log);
             }
-          } catch {}
+          } catch { }
         }, 1500);
       });
       result.success = result.output.includes("===== DEPLOYMENT SUMMARY =====");
     }
-    
+
     // Info: (20260412 - Luphia) Stop any duplicate fallback polling and grab final output
     clearInterval(intervalId);
     setDeployProgress(result.output || "");
@@ -130,7 +131,9 @@ export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }:
       setTimeout(onNext, 2500);
     } else {
       setStatus(StepStatus.ERROR);
-      setErrorMessage(`${t("admin_setup.step4.err_deploy")}${result.output.substring(0, 300)}...`);
+      // Info: (20260418 - Luphia) 確保擷取結尾的錯誤訊息，而不是前面被截斷的成功日誌
+      const outMsg = result.output.length > 500 ? "..." + result.output.substring(result.output.length - 500) : result.output;
+      setErrorMessage(`${t("admin_setup.step4.err_deploy")}\n${outMsg}`);
     }
   }, [status, onNext, t, collateralRate, callSetupApi]);
 
@@ -220,7 +223,7 @@ export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }:
             )}
             <div className="mt-2 text-[11px] text-gray-400 bg-gray-50 p-3 rounded border border-gray-100 flex items-center gap-2 max-w-sm">
               <span className="shrink-0 text-yellow-700 px-1 py-0.5 rounded font-mono font-bold tracking-wide">
-                1 ICP = {parseFloat(collateralRate) || 0} ISC
+                1 {CURRENCY_UNIT.ICP} = {parseFloat(collateralRate) || 0} {CURRENCY_UNIT.ISC}
               </span>
             </div>
           </div>
@@ -301,7 +304,7 @@ export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }:
               </div>
             ))}
           </div>
-          
+
           {dependencyResults.length > 0 && (
             <div className="mt-5 border-t border-slate-200 pt-5">
               <h4 className="text-[11px] uppercase tracking-wider text-gray-500 font-bold mb-3 flex items-center gap-2">
@@ -312,9 +315,9 @@ export function SetupDeployContracts({ isActive, isCompleted, onNext, onReset }:
                   <div key={idx} className="flex items-center justify-between text-[11px] px-3 py-1.5 bg-white border border-slate-100 rounded">
                     <span className="text-slate-600 font-mono tracking-tight">{dep.source} <span className="opacity-50 mx-1">→</span> {dep.target}</span>
                     {dep.valid ? (
-                       <span className="flex items-center gap-1.5 text-emerald-600 font-bold"><CheckCircle2 className="w-3 h-3" /> {t("admin_setup.step4.valid")}</span>
+                      <span className="flex items-center gap-1.5 text-emerald-600 font-bold"><CheckCircle2 className="w-3 h-3" /> {t("admin_setup.step4.valid")}</span>
                     ) : (
-                       <span className="flex items-center gap-1.5 text-rose-500 font-bold">{t("admin_setup.step4.invalid")}</span>
+                      <span className="flex items-center gap-1.5 text-rose-500 font-bold">{t("admin_setup.step4.invalid")}</span>
                     )}
                   </div>
                 ))}

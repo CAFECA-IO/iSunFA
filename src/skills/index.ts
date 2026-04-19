@@ -16,5 +16,5 @@ export const skillRegistry: Record<string, ITaskSkill> = {
   ESG_INTENSITY_EVALUATION: new EsgIntensityEvaluationSkill(),
   DOCUMENT_PRE_CHECK: new DocumentPreCheckSkill(),
   MARKET_EVENT_COLLECTION: new MarketEventCollectionSkill(),
-  AI_TALK_TASK: new AiConsultingSkill(),
+  AI_CONSULTING_TASK: new AiConsultingSkill(),
 };

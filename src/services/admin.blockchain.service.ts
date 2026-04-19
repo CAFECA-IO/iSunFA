@@ -94,7 +94,7 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
         ]);
 
         const [msIcpWei, totalWei, collatWei] = await Promise.all([
-          msAddress ? publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "balanceOf", args: [msAddress] }) : Promise.resolve(0n),
+          msAddress ? publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "balanceOf", args: [msAddress], blockTag: "pending" }) : Promise.resolve(0n),
           publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "totalSupply" }),
           publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "collateralRate" })
         ]);

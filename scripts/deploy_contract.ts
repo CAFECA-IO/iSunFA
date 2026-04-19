@@ -81,7 +81,7 @@ async function main() {
       bytecode: dmcArtifact.bytecode,
       args: [account.address],
     });
-    const dmcReceipt = await publicClient.waitForTransactionReceipt({ hash: dmcHash });
+    const dmcReceipt = await publicClient.waitForTransactionReceipt({ hash: dmcHash ,  timeout: 1200000, });
     dmcAddress = dmcReceipt.contractAddress!;
     console.log(`-> DynamicKYCMembership deployed to: ${dmcAddress}`);
   } else {
@@ -107,7 +107,8 @@ async function main() {
     });
     const treasuryReceipt = await publicClient.waitForTransactionReceipt({
       hash: treasuryHash,
-    });
+      timeout: 1200000,
+      });
     treasuryAddress = treasuryReceipt.contractAddress!;
     console.log(`-> CreditPoint deployed to: ${treasuryAddress}`);
   } else {
@@ -133,7 +134,8 @@ async function main() {
     });
     const subManagerReceipt = await publicClient.waitForTransactionReceipt({
       hash: subManagerHash,
-    });
+      timeout: 1200000,
+      });
     subManagerAddress = subManagerReceipt.contractAddress!;
     console.log(`-> SubscriptionManager deployed to: ${subManagerAddress}`);
   } else {
@@ -152,7 +154,7 @@ async function main() {
       functionName: "setSubscriptionManager",
       args: [subManagerAddress],
     });
-    await publicClient.waitForTransactionReceipt({ hash: configHash });
+    await publicClient.waitForTransactionReceipt({ hash: configHash ,  timeout: 1200000, });
     console.log("-> Configuration completed successfully.");
   }
 
@@ -172,7 +174,8 @@ async function main() {
     });
     const membershipReceipt = await publicClient.waitForTransactionReceipt({
       hash: membershipHash,
-    });
+      timeout: 1200000,
+      });
     membershipAddress = membershipReceipt.contractAddress!;
     console.log(`-> MembershipSystem deployed to: ${membershipAddress}`);
 
@@ -189,7 +192,7 @@ async function main() {
         membershipAddress,
       ],
     });
-    await publicClient.waitForTransactionReceipt({ hash: grantHash });
+    await publicClient.waitForTransactionReceipt({ hash: grantHash ,  timeout: 1200000, });
     console.log("-> MembershipSystem Configuration completed successfully.");
 
     console.log(
@@ -200,7 +203,7 @@ async function main() {
       to: membershipAddress as `0x${string}`,
       value: 20n * 10n ** 18n,
     });
-    await publicClient.waitForTransactionReceipt({ hash: fundHash });
+    await publicClient.waitForTransactionReceipt({ hash: fundHash ,  timeout: 1200000, });
     console.log("-> MembershipSystem prefunded successfully.");
   } else {
     console.log(`-> Skipped: MembershipSystem already exists at ${membershipAddress}`);
@@ -226,7 +229,8 @@ async function main() {
     });
     const epReceipt = await publicClient.waitForTransactionReceipt({
       hash: epHash,
-    });
+      timeout: 1200000,
+      });
     entryPointAddress = epReceipt.contractAddress!;
     console.log(`-> EntryPoint deployed to: ${entryPointAddress}`);
   } else {
@@ -249,7 +253,8 @@ async function main() {
     });
     const factoryReceipt = await publicClient.waitForTransactionReceipt({
       hash: factoryHash,
-    });
+      timeout: 1200000,
+      });
     factoryAddress = factoryReceipt.contractAddress!;
     console.log(`-> Fido2AccountFactory deployed to: ${factoryAddress}`);
   } else {
@@ -270,7 +275,8 @@ async function main() {
     });
     const mbReceipt = await publicClient.waitForTransactionReceipt({
       hash: mbHash,
-    });
+      timeout: 1200000,
+      });
     missionBoardAddress = mbReceipt.contractAddress!;
     console.log(`-> MissionBoard deployed to: ${missionBoardAddress}`);
   } else {

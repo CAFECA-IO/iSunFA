@@ -10,10 +10,9 @@ import {
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { UserOperationJson } from "@/validators";
-import { buildTransferUserOp } from "@/lib/utils/user_op_builder";
 import { bundlerService } from "@/services/bundler.service";
-import { CONTRACT_ADDRESSES, ABIS } from "@/config/contracts";
-import { REWARD_AMOUNTS } from "@/constants/price";
+import { CONTRACT_ADDRESSES } from "@/config/contracts";
+import { CURRENCY_UNIT, REWARD_AMOUNTS } from "@/constants/price";
 
 // Info: (20260126 - Luphia) 回傳結果型別
 type ActionResponse = {
@@ -208,6 +207,7 @@ export async function syncRegistrationRewardIfNeeded(
             userId: userId,
             type: "REGISTRATION_REWARD",
             amount: REWARD_AMOUNTS.REGISTRATION_REWARD,
+            unit: CURRENCY_UNIT.ICP,
             status: "COMPLETED",
             challenge: "registration",
             data: {},
@@ -416,71 +416,6 @@ async function togglePause(
     return {
       success: false,
       message: `系統${isPause ? "暫停" : "恢復"}失敗: ${(error as Error).message}`,
-    };
-  }
-}
-
-// Info: (20260130 - Tzuhan) Client Token Transfer Support
-
-/**
- * Info: (20260130 - Tzuhan) Backend prepares the UserOp for the publicClient to sign.
- * This ensures the logic (Gas, Nonce, CallData) is handled securely and consistently on the server.
- */
-export async function prepareTransferUserOp(
-  sender: string,
-  amount: number,
-  orderId?: string,
-): Promise<
-  ActionResponse & { data?: { userOp: UserOperationJson; userOpHash: string } }
-> {
-  try {
-    const validSender = getAddress(sender);
-    const validRecipient = CONTRACT_ADDRESSES.SUBSCRIPTION_MANAGER;
-
-    const amountWei = parseEther(amount.toString()).toString();
-
-    // Info: (20260130 - Tzuhan) 1. Build UserOp
-    const userOp = await buildTransferUserOp(
-      validSender,
-      validRecipient,
-      amountWei,
-      CONTRACT_ADDRESSES.CREDIT_POINT,
-      orderId,
-    );
-
-    // Info: (20260130 - Tzuhan) 2. Calculate UserOp Hash using EntryPoint
-    const userOpHash = await publicClient.readContract({
-      address: CONTRACT_ADDRESSES.ENTRY_POINT,
-      abi: ABIS.ENTRY_POINT,
-      functionName: "getUserOpHash",
-      args: [
-        {
-          sender: userOp.sender as `0x${string}`,
-          nonce: BigInt(userOp.nonce),
-          initCode: userOp.initCode as `0x${string}`,
-          callData: userOp.callData as `0x${string}`,
-          accountGasLimits: userOp.accountGasLimits as `0x${string}`,
-          preVerificationGas: BigInt(userOp.preVerificationGas),
-          gasFees: userOp.gasFees as `0x${string}`,
-          paymasterAndData: userOp.paymasterAndData as `0x${string}`,
-          signature: userOp.signature as `0x${string}`,
-        },
-      ],
-    });
-
-    return {
-      success: true,
-      message: "UserOp prepared",
-      data: {
-        userOp,
-        userOpHash: userOpHash as string,
-      },
-    };
-  } catch (error) {
-    console.error("prepareTransferUserOp failed:", error);
-    return {
-      success: false,
-      message: `Failed to prepare transfer: ${(error as Error).message}`,
     };
   }
 }

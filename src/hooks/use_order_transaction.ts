@@ -8,7 +8,7 @@ import {
 } from "@/lib/auth/crypto_utils";
 import {
   prepareTransferUserOp,
-} from "@/services/token.service";
+} from "@/lib/utils/user_op_builder";
 import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { request } from "@/lib/utils/request";
 
@@ -32,8 +32,8 @@ export const useOrderTransaction = () => {
   const [workflowStatus, setWorkflowStatus] = useState<PaymentStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [txHash, setTxHash] = useState("");
-  const { user, refreshAuth } = useAuth();
-  
+  const { user, refreshAuth, updateLocalCredits } = useAuth();
+
   // Info: (20260417 - Luphia) Prevent React double-click async execution bugs
   const executingFlagRef = useRef(false);
 
@@ -67,6 +67,9 @@ export const useOrderTransaction = () => {
 
     setWorkflowStatus("preparing");
     setErrorMessage("");
+
+    // Info: (2026/04/19) 即時向後端同步已建立的訂單 Pending 點數，避免餘額顯示錯誤
+    await refreshAuth();
 
     try {
       // Info: (20260209 - Tzuhan) 1. 取得 orderId
@@ -132,6 +135,12 @@ export const useOrderTransaction = () => {
 
       // Info: (20260417 - Luphia) 6. 分析請求已在背景產生 (呼叫 callback 處理 UI 刷新)
       setWorkflowStatus("payment_success");
+
+      // Info: (20260419 - Agent) Optimistic UI Update to hide alt-mempool fetch latency
+      if (user?.credits !== undefined && typeof user.credits === 'number') {
+        updateLocalCredits(-calculatedCost);
+      }
+
       await onPaymentSuccess({
         orderId,
         transactionHash,
@@ -139,8 +148,9 @@ export const useOrderTransaction = () => {
         ...transferAuth,
       });
 
-      // Info: (20260209 - Tzuhan) 7. Refresh user balance
-      await refreshAuth();
+      // Info: (20260209 - Tzuhan) 7. Refresh user balance from chain (may take seconds to propagate)
+      // Info: (20260419 - Luphia) Call it in the background instead of awaiting so UI doesn't freeze
+      setTimeout(() => { refreshAuth(); }, 5000);
       return true;
     } catch (error) {
       console.error("Analysis/Transaction failed:", error);

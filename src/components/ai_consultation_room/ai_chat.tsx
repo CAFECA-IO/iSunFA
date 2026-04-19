@@ -14,7 +14,7 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAiContext } from "@/contexts/ai_context";
 import { useAuth } from "@/contexts/auth_context";
-import { IFile } from "@/interfaces/ai_talk";
+import { IFile } from "@/interfaces/ai_consulting";
 import LoginButton from "@/components/common/login_button";
 import ConfirmModal from "@/components/common/confirm_modal";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
@@ -98,7 +98,7 @@ export const AiChat = () => {
 
   const handlePaymentConfirm = async () => {
     const orderPayload: IOrderPayload = {
-      category: "ai_talk",
+      category: "ai_consulting",
       periodType: "daily",
       year: new Date().getFullYear(),
       periodValue: "1",

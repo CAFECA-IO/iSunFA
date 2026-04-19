@@ -40,7 +40,7 @@ export const CommentPostInput = ({
     try {
       setIsSubmitting(true);
       const data = await request<IApiResponse<object>>(
-        `/api/v1/ai_talk/thread/${talkId}/comment`,
+        `/api/v1/ai_consulting/thread/${talkId}/comment`,
         {
           method: "POST",
           body: JSON.stringify({
@@ -107,7 +107,7 @@ export const CommentPostInput = ({
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t("ai_consultation_room.comment_placeholder")}
-            className="min-h-[100px] w-full resize-none rounded-2xl border border-orange-100 bg-white p-4 text-sm shadow-sm transition-all placeholder:text-gray-300 focus:border-orange-500 focus:outline-none"
+            className="text-gray-500 min-h-[100px] w-full resize-none rounded-2xl border border-orange-100 bg-white p-4 text-sm shadow-sm transition-all placeholder:text-gray-300 focus:border-orange-500 focus:outline-none"
           />
           <div className="flex justify-end">{displayedSubmit}</div>
         </div>

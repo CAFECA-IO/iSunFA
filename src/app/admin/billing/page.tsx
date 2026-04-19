@@ -6,7 +6,7 @@ import AdminPageHeader from '@/components/admin/common/admin_page_header';
 import AdminMetricCard from '@/components/admin/common/admin_metric_card';
 import { Receipt, Calendar, Search, Wallet, Activity, Coins, UserCircle } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
-import DataTable, { IDataTableColumn } from '@/components/admin/common/data_table';
+import DataTable, { IDataTableColumn } from '@/components/common/data_table';
 import { formatDate } from '@/lib/utils/date';
 import ReceiptPdfDownloader from '@/components/user/billing/receipt_pdf_downloader';
 import { ORDER_STATUS } from '@/constants/status';

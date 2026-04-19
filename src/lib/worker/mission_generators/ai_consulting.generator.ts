@@ -4,7 +4,7 @@ import {
   IMissionDefinition,
 } from "@/lib/worker/mission.interface";
 
-export function generateAiTalkMission(
+export function generateAiConsultingMission(
   params: IMissionParams,
 ): IMissionDefinition | null {
   const data = (params.data as { question?: string; files?: { base64: string; mimeType: string }[] }) || {};
@@ -17,12 +17,12 @@ export function generateAiTalkMission(
 
   const tasks: ITaskDefinition[] = [
     {
-      type: "AI_TALK_TASK",
+      type: "AI_CONSULTING_TASK",
       order: 0,
       data: {
         key: "AI_CONSULTING",
         prompt: question, // Info: (20260418 - Luphia) Put the question directly as prompt
-        context: "ai_talk",
+        context: "ai_consulting",
         files: files,
       },
     },

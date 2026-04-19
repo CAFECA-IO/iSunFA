@@ -18,10 +18,9 @@ import {
   keccak256,
   stringToBytes,
   parseAbi,
-  decodeEventLog,
 } from "viem";
 import { AppError } from "@/lib/utils/error";
-import { orderGenerator } from "@/lib/order/order.generator";
+import { completeOrder, getPendingOrder } from "@/services/order.service";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS } from "@/config/contracts";
 import { webAuthnService } from "@/services/webauthn.service";
@@ -138,62 +137,24 @@ export async function POST(
           throw new Error("Transaction is not bound to this Order ID");
         }
 
-        // Info: (20260418 - Luphia) Wait for receipt since blockchain_payment returns txHash instantly
-        const receipt = await publicClient.waitForTransactionReceipt({
-          hash: txHash as `0x${string}`,
-          timeout: 45000,
-        });
-        if (!receipt) {
-          throw new Error("Transaction receipt could not be acquired");
-        }
-
-        let userOpSuccess = false;
-        for (const log of receipt.logs) {
-          try {
-            const decoded = decodeEventLog({
-              abi: ABIS.ENTRY_POINT,
-              data: log.data,
-              topics: log.topics,
-            });
-            if (decoded.eventName === "UserOperationEvent") {
-              const args = decoded.args as { sender: string; success: boolean };
-              if (
-                args.sender.toLowerCase() === sessionUser.address.toLowerCase()
-              ) {
-                if (args.success) {
-                  userOpSuccess = true;
-                }
-                break;
-              }
-            }
-          } catch { }
-        }
-
-        if (!userOpSuccess) {
-          await orderGenerator.failOrder(
-            orderId,
-            "UserOperation failed on-chain",
-          );
-          throw new AppError(
-            ApiCode.VALIDATION_ERROR,
-            "The token transfer failed on-chain. Order cancelled.",
-          );
-        }
-
-        // Wait to complete order because multiple AI scans share the same order, so only complete it once if pending!
-        const existingOrder = await orderGenerator
-          .getPendingOrder(orderId, creator.id)
+        /**
+         * Info: (20260418 - Luphia)
+         * Removed synchronous `waitForTransactionReceipt` to prevent 45s API timeout.
+         * We trust the transaction has been dispatched cleanly by blockchain_payment.
+         * The background worker or asynchronous order completion handles failures.
+         * Wait to complete order because multiple AI scans share the same order, so only complete it once if pending!
+         */
+        const existingOrder = await getPendingOrder(orderId, creator.id)
           .catch(() => null);
         if (existingOrder && existingOrder.status === "PENDING") {
-          await orderGenerator.completeOrder(
+          await completeOrder(
             orderId,
             JSON.stringify({ verifiedVia: "tx", txHash }),
             txHash,
           );
         }
       } else {
-        const order = await orderGenerator
-          .getPendingOrder(orderId, creator.id)
+        const order = await getPendingOrder(orderId, creator.id)
           .catch(() => null);
 
         if (order && order.status === "PENDING") {
@@ -203,7 +164,7 @@ export async function POST(
             order.challenge,
           );
 
-          await orderGenerator.completeOrder(
+          await completeOrder(
             orderId,
             JSON.stringify(authentication),
             undefined,

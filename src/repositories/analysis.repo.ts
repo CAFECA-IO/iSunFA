@@ -66,12 +66,12 @@ export class AnalysisRepository implements IAnalysisRepository {
         data: params.missionData,
         tasks: params.tasks
           ? {
-              create: params.tasks.map((t) => ({
-                type: t.type,
-                order: t.order,
-                data: t.data,
-              })),
-            }
+            create: params.tasks.map((t) => ({
+              type: t.type,
+              order: t.order,
+              data: t.data,
+            })),
+          }
           : undefined,
       },
     });
@@ -217,7 +217,7 @@ export class AnalysisRepository implements IAnalysisRepository {
     userId: string,
   ): Promise<FullAnalysis[]> {
     return prisma.analysis.findMany({
-      where: { userId },
+      where: { userId, type: { not: "ai_consulting" } },
       orderBy: { createdAt: "desc" },
       include: {
         mission: true,

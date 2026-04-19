@@ -3,12 +3,12 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { talkRepo } from "@/repositories/talk.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
-import { IComment } from "@/interfaces/ai_talk";
+import { IComment } from "@/interfaces/ai_consulting";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 
 /**
  * Info: (20260112 - Julian) 取得討論串的評論
- * GET /api/v1/ai_talk/thread/:thread_id/comment
+ * GET /api/v1/ai_consulting/thread/:thread_id/comment
  */
 export async function GET(
   request: Request,
@@ -72,7 +72,7 @@ export async function GET(
     return jsonOk(rootComments);
   } catch (error) {
     console.error(
-      `[API] /api/v1/ai_talk/thread/${(await params).thread_id}/comment GET error:`,
+      `[API] /api/v1/ai_consulting/thread/${(await params).thread_id}/comment GET error:`,
       error,
     );
     return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
@@ -81,7 +81,7 @@ export async function GET(
 
 /**
  * Info: (20260112 - Julian) 新增評論或回覆
- * POST /api/v1/ai_talk/thread/:thread_id/comment
+ * POST /api/v1/ai_consulting/thread/:thread_id/comment
  */
 export async function POST(
   request: NextRequest,

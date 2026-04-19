@@ -28,6 +28,7 @@ interface IAuthContextType {
   loading: boolean;
   refreshAuth: () => Promise<void>;
   logout: () => void;
+  updateLocalCredits: (delta: number) => void;
 }
 
 const AuthContext = createContext<IAuthContextType | undefined>(undefined);
@@ -76,7 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               address: CONTRACT_ADDRESSES.CREDIT_POINT,
               abi: ABIS.CREDIT_POINT,
               functionName: 'balanceOf',
-              args: [userData.address as `0x${string}`]
+              args: [userData.address as `0x${string}`],
+              blockTag: 'pending'
             });
             const credits = Number(formatUnits(balance, 18));
 
@@ -119,14 +121,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.reload();
   }, []);
 
+  const updateLocalCredits = useCallback((delta: number) => {
+    setUser(prev => {
+      if (!prev || prev.credits === undefined) return prev;
+      return { ...prev, credits: prev.credits + delta };
+    });
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
       loading,
       refreshAuth,
       logout,
+      updateLocalCredits,
     }),
-    [user, loading, refreshAuth, logout]
+    [user, loading, refreshAuth, logout, updateLocalCredits]
   );
 
   return (

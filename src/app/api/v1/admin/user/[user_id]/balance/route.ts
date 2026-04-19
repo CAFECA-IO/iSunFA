@@ -35,6 +35,7 @@ export async function GET(
       abi: ABIS.CREDIT_POINT,
       functionName: "balanceOf",
       args: [address as `0x${string}`],
+      blockTag: "pending",
     });
 
     return jsonOk(Number(formatUnits(balance, 18)));

@@ -7,7 +7,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 
 /**
  * Info: (20260112 - Julian) 對評論點讚/倒讚
- * POST /api/v1/ai_talk/comment/:comment_id/react
+ * POST /api/v1/ai_consulting/comment/:comment_id/react
  */
 export async function POST(
   request: NextRequest,

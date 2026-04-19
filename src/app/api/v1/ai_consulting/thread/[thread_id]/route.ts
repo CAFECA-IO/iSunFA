@@ -2,12 +2,12 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { talkRepo } from "@/repositories/talk.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
-import { IFile, IThreadDetail } from "@/interfaces/ai_talk";
+import { IFile, IThreadDetail } from "@/interfaces/ai_consulting";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 
 /**
  * Info: (20260112 - Julian) 取得單一討論串
- * GET /api/v1/ai_talk/thread/:thread_id
+ * GET /api/v1/ai_consulting/thread/:thread_id
  */
 
 export async function GET(

@@ -555,8 +555,8 @@ export class MissionService {
       }
     }
 
-    // Info: (20260418 - Luphia) Extract tags from AI_TALK_TASK task and link to Analysis
-    const aiTalkTask = tasks.find((t) => t.type === "AI_TALK_TASK");
+    // Info: (20260418 - Luphia) Extract tags from AI_CONSULTING_TASK task and link to Analysis
+    const aiTalkTask = tasks.find((t) => t.type === "AI_CONSULTING_TASK");
     if (aiTalkTask && aiTalkTask.result) {
       let aiTags: string[] = [];
       try {

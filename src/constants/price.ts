@@ -12,42 +12,80 @@
  *   - Yearly: x10
  */
 
+export const CURRENCY_UNIT = {
+  TWD: "TWD",
+  ICP: "ICP",
+  ISC: "ISC",
+} as const;
+
+export type CurrencyUnit = (typeof CURRENCY_UNIT)[keyof typeof CURRENCY_UNIT];
+
 export const REWARD_AMOUNTS = {
   REGISTRATION_REWARD: 100,
   DAILY_CHECKIN_REWARD: 5,
 } as const;
 
+export const ANALYSIS_CATEGORIES = {
+  BALANCE_SHEET: "BALANCE_SHEET",
+  CASH_FLOW: "CASH_FLOW",
+  INCOME_STATEMENT: "INCOME_STATEMENT",
+  FINANCIAL_COMPLIANCE: "FINANCIAL_COMPLIANCE",
+  FINANCIAL_HEALTH: "FINANCIAL_HEALTH",
+  IRSC: "IRSC",
+  CARBON_HEALTH_CHECK: "CARBON_HEALTH_CHECK",
+  NET_ZERO_EMISSIONS: "NET_ZERO_EMISSIONS",
+  MARKET_TRENDS: "MARKET_TRENDS",
+  INDUSTRY_DEVELOPMENT: "INDUSTRY_DEVELOPMENT",
+  FINANCIAL_PRODUCT_RATING: "FINANCIAL_PRODUCT_RATING",
+  AI_CONSULTING: "AI_CONSULTING",
+  CERTIFICATE_ANALYSIS: "CERTIFICATE_ANALYSIS",
+} as const;
+
+export type AnalysisCategory = (typeof ANALYSIS_CATEGORIES)[keyof typeof ANALYSIS_CATEGORIES];
+
 export const ANALYSIS_BASE_COSTS: Record<string, number> = {
   // Info: (20260128 - Luphia) Basic Financials
-  balance_sheet: 10,
-  cash_flow: 10,
-  income_statement: 10,
+  BALANCE_SHEET: 10,
+  CASH_FLOW: 10,
+  INCOME_STATEMENT: 10,
 
   // Info: (20260128 - Luphia) Advanced
-  financial_compliance: 20,
-  financial_health: 20,
-  irsc: 20,
-  carbon_health_check: 50,
-  net_zero_emissions: 50,
+  FINANCIAL_COMPLIANCE: 20,
+  FINANCIAL_HEALTH: 20,
+  IRSC: 20,
+  CARBON_HEALTH_CHECK: 50,
+  NET_ZERO_EMISSIONS: 50,
 
   // Info: (20260128 - Luphia) External
-  market_trends: 50,
-  industry_development: 50,
-  financial_product_rating: 50,
+  MARKET_TRENDS: 50,
+  INDUSTRY_DEVELOPMENT: 50,
+  FINANCIAL_PRODUCT_RATING: 50,
 
   // Info: (20260408 - Luphia) AI Features
-  ai_talk: 5,
-  journal_upload: 1,
+  AI_CONSULTING: 5,
+  CERTIFICATE_ANALYSIS: 1,
 };
 
-export const ANALYSIS_PERIOD_MULTIPLIERS: Record<string, number> = {
+export const PERIOD = {
+  DAILY: "DAILY",
+  WEEKLY: "WEEKLY",
+  MONTHLY: "MONTHLY",
+  SEASONLY: "SEASONLY",
+  YEARLY: "YEARLY",
+} as const;
+
+export type PeriodType = (typeof PERIOD)[keyof typeof PERIOD];
+
+export const ANALYSIS_PERIOD_MULTIPLIERS: Record<PeriodType, number> = {
   // Info: (20260128 - Luphia) Multipliers by Period
-  daily: 1,
-  weekly: 1.5,
-  monthly: 3,
-  seasonly: 5,
-  yearly: 10,
+  DAILY: 1,
+  WEEKLY: 1.5,
+  MONTHLY: 3,
+  SEASONLY: 5,
+  YEARLY: 10,
 };
+
+export type AnalysisPeriodType = keyof typeof ANALYSIS_PERIOD_MULTIPLIERS;
 
 export const ANALYSIS_ADDON_COSTS = {
   BOOKKEEPER: 3000,

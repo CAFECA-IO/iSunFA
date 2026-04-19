@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { paymentRepo } from "@/repositories/payment.repo";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-// import { DEFAULT_PLAN } from '@/constants/plans';
 import { MODULES } from "@/constants/modules";
+import { publicClient } from "@/lib/viem_public";
+import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
+import { formatUnits } from "viem";
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,15 +18,22 @@ export async function GET(request: NextRequest) {
       return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or missing device token");
     }
 
-    // Info: (20260302 - Tzuhan) [機制: 處理中點數] 找出所有已扣款成功但還未上鏈的訂單點數加總，讓前端介面能顯示「處理中」，避免使用者誤以為扣款失敗
-    const pendingOrders = await paymentRepo.getPendingOenOrdersByUserId(
-      user.id,
-    );
-
-    const pendingCredits = pendingOrders.reduce((sum, order) => {
-      const data = order.data as { credits?: number };
-      return sum + (data?.credits || 0);
-    }, 0);
+    // Info: (20260419 - Luphia) fetch pending balance from blockchain
+    let pendingCredits = 0;
+    try {
+      if (user.address) {
+        const balance = await publicClient.readContract({
+          address: CONTRACT_ADDRESSES.CREDIT_POINT as `0x${string}`,
+          abi: ABIS.CREDIT_POINT,
+          functionName: "balanceOf",
+          args: [user.address as `0x${string}`],
+          blockTag: "pending",
+        });
+        pendingCredits = Number(formatUnits(balance as bigint, 18));
+      }
+    } catch (err) {
+      console.warn("Failed to fetch pending balance:", err);
+    }
 
     // ToDo: (20260116 - Luphia) Use Blockchain Data for Plan & Credits
     // let plan: string = DEFAULT_PLAN;

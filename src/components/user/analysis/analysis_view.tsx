@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { Dialog } from '@headlessui/react';
 import { Check, Calendar, Coins, FileBarChart, Globe, Info } from 'lucide-react';
@@ -8,28 +8,100 @@ import { request } from '@/lib/utils/request';
 import PaymentConfirmModal from '@/components/common/payment_confirm_modal';
 import SuccessNotification from '@/components/common/success_notification';
 import HistorySection from '@/components/user/analysis/history_section';
-import { getAnalysisCost } from '@/lib/analysis/pricing';
+import { getAnalysisCost, IAnalysisParams } from '@/lib/analysis/pricing';
 import { useOrderTransaction, IOrderPayload } from '@/hooks/use_order_transaction';
 import { getPeriodDateRange } from '@/lib/analysis/period';
 import { INTERNAL_CATEGORIES, EXTERNAL_CATEGORIES, COUNTRIES, PERIOD_TYPES } from '@/constants/analysis';
-import { ANALYSIS_ADDON_COSTS } from '@/constants/price';
+import { ANALYSIS_ADDON_COSTS, AnalysisCategory, AnalysisPeriodType } from '@/constants/price';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+
+// Info: (20260419 - Luphia) 靜態常數外提，避免每次 Render 重複建立 ---
+const SEASONS = ['S1', 'S2', 'S3', 'S4'];
+const MONTHS = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
+const WEEKS = Array.from({ length: 53 }, (_, i) => `W${i + 1}`);
+
+type TabType = 'internal' | 'external' | 'history';
 
 export default function AnalysisView() {
   const { t } = useTranslation();
-
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const [activeTab, setActiveTab] = useState<'internal' | 'external' | 'history'>(() => {
-    const tabParam = searchParams.get('tab');
-    if (tabParam === 'internal' || tabParam === 'external' || tabParam === 'history') {
-      return tabParam as 'internal' | 'external' | 'history';
-    }
-    return 'internal';
+  // Info: (20260419 - Luphia) 狀態管理
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    const tabParam = searchParams.get('tab') as TabType;
+    return ['internal', 'external', 'history'].includes(tabParam) ? tabParam : 'internal';
   });
 
+  const [category, setCategory] = useState<string>(INTERNAL_CATEGORIES[0]);
+  const [periodType, setPeriodType] = useState<string>(PERIOD_TYPES[2]);
+
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const [selectedPeriodValue, setSelectedPeriodValue] = useState<string>('');
+
+  const [selectedCountry, setSelectedCountry] = useState<string>('tw');
+  const [keyword, setKeyword] = useState<string>('');
+
+  // Info: (20260419 - Luphia) 將加購項目狀態整合為單一物件
+  const [addons, setAddons] = useState({
+    bookkeeper: false,
+    cpa: false,
+    thirdParty: false
+  });
+
+  const [accountBooks, setAccountBooks] = useState<Array<{ id: string, name: string, enterpriseId?: string }>>([]);
+  const [internalCompanyName, setInternalCompanyName] = useState<string>('');
+  const [selectedCompany, setSelectedCompany] = useState<{ taxId: string, name: string } | null>(null);
+  const [companySuggestions, setCompanySuggestions] = useState<{ taxId: string, name: string }[]>([]);
+
+  const [uiState, setUiState] = useState({
+    isSearchingCompany: false,
+    showCompanyDropdown: false,
+    isTaxIdModalOpen: false,
+    isPaymentModalOpen: false,
+    isLoading: false,
+    showSuccessNotification: false,
+    isUpdatingTaxId: false
+  });
+
+  const [pendingAccountBook, setPendingAccountBook] = useState<{ id: string, name: string } | null>(null);
+  const [taxIdInput, setTaxIdInput] = useState('');
+
+  const { workflowStatus, txHash, resetTransaction, executeOrderTransaction, errorMessage, setErrorMessage } = useOrderTransaction();
+
+  // Info: (20260419 - Luphia) 衍生變數 (Derived States)
+  const currentCategories = activeTab === 'internal' ? INTERNAL_CATEGORIES : EXTERNAL_CATEGORIES;
+  const isInternalCompanyAnalysis = activeTab === 'internal';
+  const isExternalCarbonAnalysis = activeTab === 'external' && ['carbon_health_check', 'net_zero_emissions'].includes(category);
+  const needsCompanyInput = isInternalCompanyAnalysis || isExternalCarbonAnalysis;
+  const isDaily = periodType === 'daily';
+  const country = activeTab === 'external' ? selectedCountry : undefined;
+
+  const data: IAnalysisParams = useMemo(() => ({
+    category: category as AnalysisCategory,
+    periodType: periodType as AnalysisPeriodType,
+    periodValue: String(selectedPeriodValue),
+    year: selectedYear,
+  }), [category, periodType, selectedPeriodValue, selectedYear]);
+
+  const calculatedCost = useMemo(() => getAnalysisCost(data), [data]);
+
+  const extraCost = useMemo(() => {
+    if (!isInternalCompanyAnalysis) return 0;
+    let cost = 0;
+    if (addons.bookkeeper) cost += ANALYSIS_ADDON_COSTS.BOOKKEEPER;
+    if (addons.cpa) cost += ANALYSIS_ADDON_COSTS.CPA;
+    if (addons.thirdParty) cost += ANALYSIS_ADDON_COSTS.THIRD_PARTY;
+    return cost;
+  }, [isInternalCompanyAnalysis, addons]);
+
+  const finalCost = useMemo(() => calculatedCost + extraCost, [calculatedCost, extraCost]);
+
+  // Info: (20260419 - Luphia) 副作用 (Effects)
+
+  // Info: (20260419 - Luphia) URL Tab 同步
   useEffect(() => {
     const currentTabParam = searchParams.get('tab');
     if (currentTabParam !== activeTab) {
@@ -38,59 +110,28 @@ export default function AnalysisView() {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
   }, [activeTab, pathname, router, searchParams]);
-  const [category, setCategory] = useState<string>(INTERNAL_CATEGORIES[0]);
-  const [periodType, setPeriodType] = useState<string>(PERIOD_TYPES[2]);
 
-  const currentCategories = activeTab === 'internal' ? INTERNAL_CATEGORIES : EXTERNAL_CATEGORIES;
-
-  // Info: (20260120 - Luphia) Reset category when tab changes
+  // Info: (20260419 - Luphia) 切換 Tab 時重置分類
   useEffect(() => {
     setCategory(currentCategories[0]);
   }, [activeTab, currentCategories]);
 
-  const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-  const [selectedPeriodValue, setSelectedPeriodValue] = useState<string>('');
-  const { workflowStatus, txHash, resetTransaction, executeOrderTransaction, errorMessage, setErrorMessage } = useOrderTransaction();
-
-  // Info: (20260120 - Luphia) External Analysis States
-  const [selectedCountry, setSelectedCountry] = useState<string>('tw');
-  const [keyword, setKeyword] = useState<string>('');
-
-  // Info: (20260417 - Luphia) Internal Analysis Add-on States
-  const [requireBookkeeper, setRequireBookkeeper] = useState(false);
-  const [requireCPA, setRequireCPA] = useState(false);
-  const [requireThirdParty, setRequireThirdParty] = useState(false);
-
-  const [accountBooks, setAccountBooks] = useState<Array<{ id: string, name: string, enterpriseId?: string }>>([]);
+  // Info: (20260419 - Luphia) 取得 Account Books (加入 isMounted 防止 Memory Leak)
   useEffect(() => {
+    let isMounted = true;
     request<{ payload: Array<{ id: string, name: string, enterpriseId?: string }> }>('/api/v1/user/account_book')
       .then(res => {
-        if (res?.payload) setAccountBooks(res.payload);
+        if (isMounted && res?.payload) setAccountBooks(res.payload);
       })
       .catch(console.error);
+    return () => { isMounted = false; };
   }, []);
 
-  const [internalCompanyName, setInternalCompanyName] = useState<string>('');
-  const [selectedCompany, setSelectedCompany] = useState<{ taxId: string, name: string } | null>(null);
-  const [companySuggestions, setCompanySuggestions] = useState<{ taxId: string, name: string }[]>([]);
-  const [isSearchingCompany, setIsSearchingCompany] = useState(false);
-  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
-
-  // Info: (20260409) Account Book Tax ID Modal states
-  const [isTaxIdModalOpen, setIsTaxIdModalOpen] = useState(false);
-  const [pendingAccountBook, setPendingAccountBook] = useState<{ id: string, name: string } | null>(null);
-  const [taxIdInput, setTaxIdInput] = useState('');
-  const [isUpdatingTaxId, setIsUpdatingTaxId] = useState(false);
-
-  const isInternalCompanyAnalysis = activeTab === 'internal';
-  const isExternalCarbonAnalysis = activeTab === 'external' && ['carbon_health_check', 'net_zero_emissions'].includes(category);
-  const needsCompanyInput = isInternalCompanyAnalysis || isExternalCarbonAnalysis;
-
+  // Info: (20260419 - Luphia) 公司搜尋 Debounce
   useEffect(() => {
     if (!isExternalCarbonAnalysis || internalCompanyName.length < 2) {
       setCompanySuggestions([]);
-      setShowCompanyDropdown(false);
+      setUiState(prev => ({ ...prev, showCompanyDropdown: false }));
       return;
     }
 
@@ -99,23 +140,24 @@ export default function AnalysisView() {
     }
 
     const timer = setTimeout(async () => {
-      setIsSearchingCompany(true);
+      setUiState(prev => ({ ...prev, isSearchingCompany: true }));
       try {
-        const res = await request<{ payload: { taxId: string, name: string }[] }>('/api/v1/company/lookup?query=' + encodeURIComponent(internalCompanyName));
+        const res = await request<{ payload: { taxId: string, name: string }[] }>(`/api/v1/company/lookup?query=${encodeURIComponent(internalCompanyName)}`);
         if (res?.payload) {
           setCompanySuggestions(res.payload);
-          setShowCompanyDropdown(true);
+          setUiState(prev => ({ ...prev, showCompanyDropdown: true }));
         }
       } catch (e) {
         console.error(e);
       } finally {
-        setIsSearchingCompany(false);
+        setUiState(prev => ({ ...prev, isSearchingCompany: false }));
       }
     }, 500);
+
     return () => clearTimeout(timer);
   }, [internalCompanyName, isExternalCarbonAnalysis, selectedCompany]);
 
-  // Info: (20260320 - Tzuhan) Prevent selecting daily/weekly/monthly for carbon analysis
+  // Info: (20260419 - Luphia) 防止碳盤查選擇日/週/月
   useEffect(() => {
     if (needsCompanyInput && ['monthly', 'weekly', 'daily'].includes(periodType)) {
       setPeriodType('yearly');
@@ -123,171 +165,28 @@ export default function AnalysisView() {
     }
   }, [needsCompanyInput, periodType]);
 
-  // Info: (20260128 - Luphia) Calculate dynamic cost
-  const calculatedCost = useMemo(() => {
-    return getAnalysisCost({
-      category,
-      periodType,
-      periodValue: String(selectedPeriodValue),
-      year: selectedYear,
-    });
-  }, [category, periodType, selectedPeriodValue, selectedYear]);
 
-  // Info: (20260417 - Luphia) Calculate extra structural costs
-  const extraCost = useMemo(() => {
-    return (isInternalCompanyAnalysis && requireBookkeeper ? ANALYSIS_ADDON_COSTS.BOOKKEEPER : 0) + 
-           (isInternalCompanyAnalysis && requireCPA ? ANALYSIS_ADDON_COSTS.CPA : 0) +
-           (isInternalCompanyAnalysis && requireThirdParty ? ANALYSIS_ADDON_COSTS.THIRD_PARTY : 0);
-  }, [isInternalCompanyAnalysis, requireBookkeeper, requireCPA, requireThirdParty]);
-
-  const finalCost = useMemo(() => calculatedCost + extraCost, [calculatedCost, extraCost]);
-
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Info: (20260128 - Luphia) Error Modal State
-  // const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
-
-  // Info: (20260130 - Luphia) Success Notification State
-  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
-
-  // Info: (20260120 - Luphia) Generate specific period options based on type
-  const renderPeriodOptions = () => {
-    switch (periodType) {
-      case 'yearly':
-        /**
-         * Info: (20260120 - Luphia)
-         * No extra selection needed for yearly if year is selected, or maybe just reaffirm the year?
-         * Actually usually "Yearly" analysis implies the whole year.
-         * We can auto-select the period value as the year itself or just hide this step.
-         * Let's assume selecting the YEAR is enough for Yearly analysis.
-         */
-        return null;
-
-      case 'seasonly':
-        return (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {['S1', 'S2', 'S3', 'S4'].map((season) => (
-              <button
-                key={season}
-                onClick={() => setSelectedPeriodValue(season)}
-                className={`
-                  px-4 py-3 rounded-lg text-sm font-medium transition-all border
-                  ${selectedPeriodValue === season
-                    ? 'bg-orange-50 border-orange-200 text-orange-700 ring-1 ring-orange-200'
-                    : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                  }
-                `}
-              >
-                {season}
-              </button>
-            ))}
-          </div>
-        );
-      case 'monthly':
-        return (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-            {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-              <button
-                key={month}
-                onClick={() => setSelectedPeriodValue(month.toString())}
-                className={`
-                  h-10 text-sm font-medium rounded-lg transition-all border
-                  ${selectedPeriodValue === month.toString()
-                    ? 'bg-orange-50 border-orange-200 text-orange-700 ring-1 ring-orange-200'
-                    : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                  }
-                `}
-              >
-                {month}
-              </button>
-            ))}
-          </div>
-        );
-      case 'weekly':
-        return (
-          <div className="grid grid-cols-4 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-48 overflow-y-auto p-1">
-            {Array.from({ length: 53 }, (_, i) => i + 1).map((week) => (
-              <button
-                key={week}
-                onClick={() => setSelectedPeriodValue(`W${week}`)}
-                className={`
-                  h-9 text-xs font-medium rounded block w-full transition-all border
-                  ${selectedPeriodValue === `W${week}`
-                    ? 'bg-orange-50 border-orange-200 text-orange-700 ring-1 ring-orange-200'
-                    : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                  }
-                `}
-              >
-                W{week}
-              </button>
-            ))}
-          </div>
-        );
-      case 'daily': {
-        // Info: (20260120 - Luphia) Start from 48 hours (2 days) ago
-        const baseDate = new Date();
-        baseDate.setDate(baseDate.getDate() - 2);
-
-        const last7Days = Array.from({ length: 7 }, (_, i) => {
-          const d = new Date(baseDate);
-          d.setDate(baseDate.getDate() - i);
-          return {
-            label: `${d.getMonth() + 1}/${d.getDate()}`,
-            value: d.toISOString().split('T')[0],
-          };
-        });
-
-        return (
-          <div className="flex flex-wrap gap-2">
-            {last7Days.map((dateItem) => (
-              <button
-                key={dateItem.value}
-                onClick={() => setSelectedPeriodValue(dateItem.value)}
-                className={`
-                  px-4 py-2 text-sm font-medium rounded-lg transition-all border
-                  ${selectedPeriodValue === dateItem.value
-                    ? 'bg-orange-600 text-white border-orange-600 shadow-sm'
-                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                  }
-                `}
-              >
-                {dateItem.label}
-              </button>
-            ))}
-          </div>
-        );
-      }
-      default:
-        return null;
-    }
-  };
-
-  // Info: (20260120 - Luphia) Derived period string for display and modal
-  const simplePeriodString = (() => {
-    const periodVal = periodType === 'yearly' ? selectedYear.toString() : selectedPeriodValue;
-    // Info: (20260120 - Luphia) For daily buttons, we might want to ensure selectedPeriodValue is set
-    if (periodType === 'daily' && !periodVal) return '';
-
-    const { start, end } = getPeriodDateRange(periodType, selectedYear, periodVal);
-    if (!start || !end) return '';
-    if (start === end) return start;
-    return `${start} ~ ${end}`;
-  })();
-
-  const derivedKeyword = (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends')
-    ? keyword
-    : (needsCompanyInput ? internalCompanyName : undefined);
-
-  // Info: (20260120 - Tzuhan) Open Payment Modal
+  // Info: (20260419 - Luphia) 處理函式 (Handlers)
   const handleGenerate = () => {
-    setIsPaymentModalOpen(true);
+    setUiState(prev => ({ ...prev, isPaymentModalOpen: true }));
     resetTransaction();
   };
 
-  // Info: (20260209 - Tzuhan) Combined Analysis Workflow (Single Signature)
   const handleAnalysisWorkflow = async () => {
-    setIsLoading(true);
+    setUiState(prev => ({ ...prev, isLoading: true }));
+
+    const derivedKeyword = (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends')
+      ? keyword : (needsCompanyInput ? internalCompanyName : undefined);
+
+    const payloadItems = [
+      { name: t(`analysis.categories.${category}`) || category, unitPrice: calculatedCost, quantity: 1 }
+    ];
+
+    if (isInternalCompanyAnalysis) {
+      if (addons.bookkeeper) payloadItems.push({ name: "Addon: Bookkeeper Visa", unitPrice: ANALYSIS_ADDON_COSTS.BOOKKEEPER, quantity: 1 });
+      if (addons.cpa) payloadItems.push({ name: "Addon: CPA Visa", unitPrice: ANALYSIS_ADDON_COSTS.CPA, quantity: 1 });
+      if (addons.thirdParty) payloadItems.push({ name: "Addon: Third Party Visa", unitPrice: ANALYSIS_ADDON_COSTS.THIRD_PARTY, quantity: 1 });
+    }
 
     const payload: IOrderPayload = {
       category,
@@ -297,24 +196,13 @@ export default function AnalysisView() {
       country,
       keyword: derivedKeyword,
       isExternal: activeTab === 'external',
-      items: [
-        {
-          name: t(`analysis.categories.${category}`) || category,
-          unitPrice: calculatedCost,
-          quantity: 1,
-        },
-        ...(isInternalCompanyAnalysis && requireBookkeeper ? [{ name: "Addon: Bookkeeper Visa", unitPrice: ANALYSIS_ADDON_COSTS.BOOKKEEPER, quantity: 1 }] : []),
-        ...(isInternalCompanyAnalysis && requireCPA ? [{ name: "Addon: CPA Visa", unitPrice: ANALYSIS_ADDON_COSTS.CPA, quantity: 1 }] : []),
-        ...(isInternalCompanyAnalysis && requireThirdParty ? [{ name: "Addon: Third Party Visa", unitPrice: ANALYSIS_ADDON_COSTS.THIRD_PARTY, quantity: 1 }] : [])
-      ]
+      items: payloadItems
     };
 
     const success = await executeOrderTransaction(payload, finalCost, async () => {
-      // Info: (20260417 - Luphia) The analysis report is now generated explicitly by the background backend API during payment dispatch.
       setTimeout(() => {
-        setIsPaymentModalOpen(false);
+        setUiState(prev => ({ ...prev, isPaymentModalOpen: false, showSuccessNotification: true }));
         setActiveTab('history');
-        setShowSuccessNotification(true);
       }, 2000);
     });
 
@@ -322,99 +210,177 @@ export default function AnalysisView() {
       setErrorMessage(t('auth_modal.failed'));
     }
 
-    setIsLoading(false);
+    setUiState(prev => ({ ...prev, isLoading: false }));
   };
 
-  const isDaily = periodType === 'daily';
-  const country = activeTab === 'external' ? selectedCountry : undefined;
+  const handleUpdateTaxId = async () => {
+    if (!taxIdInput || !pendingAccountBook) return;
+    setUiState(prev => ({ ...prev, isUpdatingTaxId: true }));
+    try {
+      const res = await request(`/api/v1/user/account_book/${pendingAccountBook.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ enterpriseId: taxIdInput }),
+      });
+      if (res) {
+        setAccountBooks(prev => prev.map(ab => ab.id === pendingAccountBook.id ? { ...ab, enterpriseId: taxIdInput } : ab));
+        setSelectedCompany({ taxId: taxIdInput, name: pendingAccountBook.name });
+        setInternalCompanyName(`${pendingAccountBook.name} (${taxIdInput})`);
+        setUiState(prev => ({ ...prev, isTaxIdModalOpen: false }));
+        setTaxIdInput('');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setUiState(prev => ({ ...prev, isUpdatingTaxId: false }));
+    }
+  };
+
+  // Info: (20260419 - Luphia) 畫面渲染輔助
+  const simplePeriodString = useMemo(() => {
+    const periodVal = periodType === 'yearly' ? selectedYear.toString() : selectedPeriodValue;
+    if (periodType === 'daily' && !periodVal) return '';
+
+    const { start, end } = getPeriodDateRange(periodType, selectedYear, periodVal);
+    if (!start || !end) return '';
+    return start === end ? start : `${start} ~ ${end}`;
+  }, [periodType, selectedYear, selectedPeriodValue]);
+
+  const renderPeriodOptions = useCallback(() => {
+    const buttonClass = (isActive: boolean) => `
+      text-sm font-medium rounded-lg transition-all border flex items-center justify-center
+      ${isActive ? 'bg-orange-50 border-orange-200 text-orange-700 ring-1 ring-orange-200'
+        : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'}
+    `;
+
+    switch (periodType) {
+      case 'yearly': return null;
+      case 'seasonly':
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {SEASONS.map((season) => (
+              <button key={season} onClick={() => setSelectedPeriodValue(season)} className={`py-3 ${buttonClass(selectedPeriodValue === season)}`}>
+                {season}
+              </button>
+            ))}
+          </div>
+        );
+      case 'monthly':
+        return (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+            {MONTHS.map((month) => (
+              <button key={month} onClick={() => setSelectedPeriodValue(month)} className={`h-10 ${buttonClass(selectedPeriodValue === month)}`}>
+                {month}
+              </button>
+            ))}
+          </div>
+        );
+      case 'weekly':
+        return (
+          <div className="grid grid-cols-4 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-48 overflow-y-auto p-1">
+            {WEEKS.map((week) => (
+              <button key={week} onClick={() => setSelectedPeriodValue(week)} className={`h-9 text-xs ${buttonClass(selectedPeriodValue === week)}`}>
+                {week}
+              </button>
+            ))}
+          </div>
+        );
+      case 'daily': {
+        const baseDate = new Date();
+        baseDate.setDate(baseDate.getDate() - 2);
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(baseDate);
+          d.setDate(baseDate.getDate() - i);
+          return { label: `${d.getMonth() + 1}/${d.getDate()}`, value: d.toISOString().split('T')[0] };
+        });
+
+        return (
+          <div className="flex flex-wrap gap-2">
+            {last7Days.map((dateItem) => (
+              <button key={dateItem.value} onClick={() => setSelectedPeriodValue(dateItem.value)}
+                className={`px-4 py-2 ${buttonClass(selectedPeriodValue === dateItem.value).replace('bg-orange-50 border-orange-200 text-orange-700 ring-1 ring-orange-200', 'bg-orange-600 text-white border-orange-600 shadow-sm')}`}>
+                {dateItem.label}
+              </button>
+            ))}
+          </div>
+        );
+      }
+      default: return null;
+    }
+  }, [periodType, selectedPeriodValue]);
+
+  const renderAddonsCheckbox = (key: keyof typeof addons, labelKey: string, cost: number) => {
+    const isChecked = addons[key];
+    return (
+      <label className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${isChecked ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-200' : 'border-gray-200 hover:bg-gray-50'}`}>
+        <div className="flex items-center gap-3">
+          <input
+            aria-label={t(labelKey)}
+            type="checkbox"
+            className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 border-gray-300"
+            checked={isChecked}
+            onChange={() => setAddons(prev => ({ ...prev, [key]: !prev[key] }))}
+          />
+          <span className={`text-sm font-medium ${isChecked ? 'text-orange-900' : 'text-gray-700'}`}>
+            {t(labelKey)}
+          </span>
+        </div>
+        <span className="text-sm font-bold text-gray-500 flex items-center gap-1">
+          +{cost} <Coins className="h-4 w-4" />
+        </span>
+      </label>
+    );
+  };
 
   return (
     <div className="space-y-6">
-      {/* Info: (20260120 - Luphia) Header */}
+      {/* Info: (20260419 - Luphia) Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{t('analysis.title')}</h1>
         <p className="mt-2 text-sm text-gray-500">{t('analysis.desc')}</p>
       </div>
 
-      {/* Info: (20260120 - Luphia) Tabs */}
+      {/* Info: (20260419 - Luphia) Tabs */}
       <div className="flex justify-center">
         <div className="flex rounded-lg bg-gray-100 p-1">
-          <button
-            onClick={() => setActiveTab('internal')}
-            className={`${activeTab === 'internal' ? 'bg-white shadow-sm' : 'hover:bg-gray-50'
-              } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
-          >
-            {t('analysis.internal_analysis')}
-          </button>
-          <button
-            onClick={() => setActiveTab('external')}
-            className={`${activeTab === 'external' ? 'bg-white shadow-sm' : 'hover:bg-gray-50'
-              } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
-          >
-            {t('analysis.external_analysis')}
-          </button>
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`${activeTab === 'history' ? 'bg-white shadow-sm' : 'hover:bg-gray-50'
-              } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
-          >
-            {t('analysis.history_reports')}
-          </button>
+          {(['internal', 'external', 'history'] as TabType[]).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`${activeTab === tab ? 'bg-white shadow-sm' : 'hover:bg-gray-50'} rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200`}
+            >
+              {t(`analysis.${tab}_${tab === 'history' ? 'reports' : 'analysis'}`)}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Info: (20260120 - Luphia) Main Content Form (Internal/External) */}
+      {/* Info: (20260419 - Luphia) Main Content */}
       {activeTab !== 'history' && (
         <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 p-6 min-h-[400px]">
           <div className="max-w-4xl mx-auto space-y-8">
             <div className="space-y-6">
 
-              {/* Info: (20260120 - Luphia) 1. Period Type */}
+              {/* Info: (20260419 - Luphia) 1. Period Type */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  {t('analysis.period_type')}
-                </label>
+                <label className="block text-sm font-medium text-gray-700">{t('analysis.period_type')}</label>
                 <div className="flex flex-wrap gap-2">
                   {PERIOD_TYPES.filter(type => !(needsCompanyInput && ['monthly', 'weekly', 'daily'].includes(type))).map((type) => (
-                    <button
-                      key={type}
-                      onClick={() => {
-                        setPeriodType(type);
-                        setSelectedPeriodValue('');
-                      }}
-                      className={`
-                      px-4 py-2 text-sm font-medium rounded-full transition-all border
-                      ${periodType === type
-                          ? 'bg-gray-900 text-white border-gray-900 shadow-md'
-                          : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                        }
-                    `}
-                    >
+                    <button key={type} onClick={() => { setPeriodType(type); setSelectedPeriodValue(''); }}
+                      className={`px-4 py-2 text-sm font-medium rounded-full transition-all border ${periodType === type ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
                       {t(`analysis.time_units.${type}`)}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Info: (20260120 - Luphia) 2. Year Selection (Conditional) */}
+              {/* Info: (20260419 - Luphia) 2. Year Selection */}
               {!isDaily && (
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {t('analysis.select_year')}
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">{t('analysis.select_year')}</label>
                   <div className="flex flex-wrap gap-2">
                     {Array.from({ length: currentYear - 2020 + 1 }, (_, i) => currentYear - i).map((year) => (
-                      <button
-                        key={year}
-                        onClick={() => setSelectedYear(year)}
-                        className={`
-                        min-w-[4rem] px-3 py-2 text-sm font-medium rounded-lg transition-all border
-                        ${selectedYear === year
-                            ? 'bg-orange-600 text-white border-orange-600 shadow-sm'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                          }
-                      `}
-                      >
+                      <button key={year} onClick={() => setSelectedYear(year)}
+                        className={`min-w-[4rem] px-3 py-2 text-sm font-medium rounded-lg transition-all border ${selectedYear === year ? 'bg-orange-600 text-white border-orange-600 shadow-sm' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>
                         {year}
                       </button>
                     ))}
@@ -422,276 +388,158 @@ export default function AnalysisView() {
                 </div>
               )}
 
-              {/* Info: (20260120 - Luphia) 3. Specific Period Selection */}
+              {/* Info: (20260419 - Luphia) 3. Specific Period Selection */}
               {periodType !== 'yearly' && (
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {t('analysis.select_period')}
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">{t('analysis.select_period')}</label>
                   <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
                     {renderPeriodOptions()}
                   </div>
                 </div>
               )}
 
-              {/* Info: (20260120 - Luphia) External Analysis: Country Selection */}
+              {/* Info: (20260419 - Luphia) Country Selection */}
               {activeTab === 'external' && !isExternalCarbonAnalysis && (
                 <div className="space-y-2 pt-4 border-t border-gray-100">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {t('analysis.country')}
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">{t('analysis.country')}</label>
                   <div className="flex flex-wrap gap-2">
                     {COUNTRIES.map((code) => (
-                      <button
-                        key={code}
-                        onClick={() => setSelectedCountry(code)}
-                        className={`
-                        px-4 py-2 text-sm font-medium rounded-lg transition-all border flex items-center gap-2
-                        ${selectedCountry === code
-                            ? 'bg-orange-600 text-white border-orange-600 shadow-sm'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                          }
-                      `}
-                      >
-                        <Globe className="h-4 w-4" />
-                        {t(`analysis.countries.${code}`)}
+                      <button key={code} onClick={() => setSelectedCountry(code)}
+                        className={`px-4 py-2 text-sm font-medium rounded-lg transition-all border flex items-center gap-2 ${selectedCountry === code ? 'bg-orange-600 text-white border-orange-600 shadow-sm' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>
+                        <Globe className="h-4 w-4" /> {t(`analysis.countries.${code}`)}
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Info: (20260120 - Luphia) Category Selection */}
+              {/* Info: (20260419 - Luphia) Category Selection */}
               <div className="space-y-3 pt-4 border-t border-gray-100">
-                <label className="block text-sm font-medium text-gray-700">
-                  {t('analysis.category')}
-                </label>
+                <label className="block text-sm font-medium text-gray-700">{t('analysis.category')}</label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {currentCategories.map((cat) => {
-                    const isSelected = category === cat;
-                    return (
-                      <button
-                        key={cat}
-                        onClick={() => setCategory(cat)}
-                        className={`
-                        relative flex flex-col items-start p-4 rounded-xl border text-left transition-all duration-200
-                        ${isSelected
-                            ? 'border-orange-600 bg-orange-50 text-orange-900 ring-1 ring-orange-600'
-                            : 'border-gray-200 hover:border-orange-300 hover:bg-gray-50 text-gray-700'
-                          }
-                      `}
-                      >
-                        <div className="flex w-full items-center justify-between">
-                          <span className="font-semibold text-sm">{t(`analysis.categories.${cat}`)}</span>
-                          {isSelected && (
-                            <Check className="h-4 w-4 text-orange-600" />
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
+                  {currentCategories.map((cat) => (
+                    <button key={cat} onClick={() => setCategory(cat)}
+                      className={`relative flex flex-col items-start p-4 rounded-xl border text-left transition-all duration-200 ${category === cat ? 'border-orange-600 bg-orange-50 text-orange-900 ring-1 ring-orange-600' : 'border-gray-200 hover:border-orange-300 hover:bg-gray-50 text-gray-700'}`}>
+                      <div className="flex w-full items-center justify-between">
+                        <span className="font-semibold text-sm">{t(`analysis.categories.${cat}`)}</span>
+                        {category === cat && <Check className="h-4 w-4 text-orange-600" />}
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
-              {/* Info: (20260320 - Tzuhan) Internal Analysis: Company Dropdown */}
+
+              {/* Info: (20260419 - Luphia) Internal Company Dropdown */}
               {isInternalCompanyAnalysis && (
-                <div className="space-y-4 pt-4 border-t border-gray-100 relative">
-                  <div className="space-y-2">
-                    <select
-                      className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      onChange={(e) => {
-                        const ab = accountBooks.find(b => b.id === e.target.value);
-                        if (ab) {
-                          const combinedName = ab.enterpriseId ? `${ab.name} (${ab.enterpriseId})` : ab.name;
-                          setInternalCompanyName(combinedName);
-                          if (ab.enterpriseId) {
-                            setSelectedCompany({ taxId: ab.enterpriseId, name: ab.name });
-                          } else {
-                            setSelectedCompany(null);
-                            setPendingAccountBook({ id: ab.id, name: ab.name });
-                            setIsTaxIdModalOpen(true);
-                          }
+                <div className="space-y-4 pt-4 border-t border-gray-100">
+                  <select
+                    className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                    value={accountBooks.find(b => internalCompanyName.startsWith(b.name))?.id || ""}
+                    onChange={(e) => {
+                      const ab = accountBooks.find(b => b.id === e.target.value);
+                      if (ab) {
+                        setInternalCompanyName(ab.enterpriseId ? `${ab.name} (${ab.enterpriseId})` : ab.name);
+                        if (ab.enterpriseId) {
+                          setSelectedCompany({ taxId: ab.enterpriseId, name: ab.name });
+                        } else {
+                          setSelectedCompany(null);
+                          setPendingAccountBook({ id: ab.id, name: ab.name });
+                          setUiState(prev => ({ ...prev, isTaxIdModalOpen: true }));
                         }
-                      }}
-                      value={accountBooks.find(b => internalCompanyName.startsWith(b.name))?.id || ""}
-                    >
-                      <option value="" disabled>-- {t('analysis.select_from_account_books') || '選擇帳本'} --</option>
-                      {accountBooks.map(ab => (
-                        <option key={ab.id} value={ab.id}>
-                          {ab.name} {ab.enterpriseId ? `(${ab.enterpriseId})` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                      }
+                    }}
+                  >
+                    <option value="" disabled>-- {t('analysis.select_from_account_books') || '選擇帳本'} --</option>
+                    {accountBooks.map(ab => <option key={ab.id} value={ab.id}>{ab.name} {ab.enterpriseId ? `(${ab.enterpriseId})` : ''}</option>)}
+                  </select>
                 </div>
               )}
 
-              {/* Info: (20260324 - Tzuhan) External Analysis: Carbon Analysis Company Input */}
+              {/* Info: (20260419 - Luphia) External Carbon Company Input */}
               {isExternalCarbonAnalysis && (
                 <div className="space-y-4 pt-4 border-t border-gray-100 relative">
-                  <div className="space-y-2 relative">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('analysis.company_input.label')}
-                    </label>
-                    <div className="flex items-center">
-                      <input
-                        id="internalCompanyName"
-                        aria-label={t('analysis.company_input.label')}
-                        type="text"
-                        value={internalCompanyName}
-                        onChange={(e) => {
-                          setSelectedCompany(null);
-                          setInternalCompanyName(e.target.value);
-                        }}
-                        placeholder={t('analysis.company_input.placeholder')}
-                        className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      />
-                      {isSearchingCompany && <span className="text-xs text-gray-500 ml-2">{t('analysis.company_input.searching')}</span>}
-                    </div>
-
-                    {showCompanyDropdown && companySuggestions.length > 0 && (
-                      <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
-                        {companySuggestions.map(c => (
-                          <button
-                            key={c.taxId}
-                            type="button"
-                            className="w-full text-left px-4 py-2 hover:bg-orange-50 cursor-pointer text-sm text-gray-700 font-medium border-b border-gray-100 last:border-0"
-                            onClick={() => {
-                              setSelectedCompany(c);
-                              setInternalCompanyName(`${c.name} (${c.taxId})`);
-                              setShowCompanyDropdown(false);
-                            }}
-                          >
-                            {c.name} <span className="text-gray-400 font-normal">({c.taxId})</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {showCompanyDropdown && companySuggestions.length === 0 && internalCompanyName.length >= 2 && !isSearchingCompany && (
-                      <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 p-3">
-                        <p className="text-sm text-red-500">{t('analysis.company_input.not_found')}</p>
-                      </div>
-                    )}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('analysis.company_input.label')}</label>
+                  <div className="flex items-center">
+                    <input
+                      aria-label={t('analysis.company_input.label')}
+                      type="text"
+                      value={internalCompanyName}
+                      onChange={(e) => { setSelectedCompany(null); setInternalCompanyName(e.target.value); }}
+                      placeholder={t('analysis.company_input.placeholder')}
+                      className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                    />
+                    {uiState.isSearchingCompany && <span className="text-xs text-gray-500 ml-2">{t('analysis.company_input.searching')}</span>}
                   </div>
+
+                  {uiState.showCompanyDropdown && companySuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full max-w-md mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                      {companySuggestions.map(c => (
+                        <button key={c.taxId} type="button" onClick={() => {
+                          setSelectedCompany(c);
+                          setInternalCompanyName(`${c.name} (${c.taxId})`);
+                          setUiState(prev => ({ ...prev, showCompanyDropdown: false }));
+                        }} className="w-full text-left px-4 py-2 hover:bg-orange-50 text-sm text-gray-700 font-medium border-b border-gray-100 last:border-0">
+                          {c.name} <span className="text-gray-400 font-normal">({c.taxId})</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {uiState.showCompanyDropdown && companySuggestions.length === 0 && internalCompanyName.length >= 2 && !uiState.isSearchingCompany && (
+                    <div className="absolute z-10 w-full max-w-md mt-1 bg-white p-3 rounded-md shadow-lg border border-gray-200"><p className="text-sm text-red-500">{t('analysis.company_input.not_found')}</p></div>
+                  )}
                 </div>
               )}
 
-              {/* Info: (20260120 - Luphia) External Analysis: Keyword Input (Move to after Category) */}
+              {/* Info: (20260419 - Luphia) Keyword Input */}
               {activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends' && (
                 <div className="space-y-2 pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      {t('analysis.keyword')}
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700">{t('analysis.keyword')}</label>
                     {['industry_development', 'irsc', 'financial_product_rating'].includes(category) && (
                       <div className="group relative">
-                        <Info className="h-4 w-4 text-gray-400 hover:text-orange-500 cursor-help transition-colors" />
+                        <Info className="h-4 w-4 text-gray-400 hover:text-orange-500 cursor-help" />
                         <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden group-hover:block w-[400px] bg-white text-gray-800 text-xs rounded-lg shadow-xl ring-1 ring-gray-900/5 p-4 z-50 overflow-y-auto max-h-[80vh]">
                           <p className="font-bold text-sm mb-2 text-orange-600">{t(`analysis.tooltips.${category === 'irsc' ? 'smart_enterprise_rating' : category}.title`)}</p>
                           <p className="mb-3 text-gray-600">{t(`analysis.tooltips.${category === 'irsc' ? 'smart_enterprise_rating' : category}.desc`)}</p>
-
-                          {category === 'industry_development' && (
-                            <>
-                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.industry_development.sectors_title')}</p>
-                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.industry_development.sectors_desc')}</p>
-
-                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.industry_development.sub_title')}</p>
-                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.industry_development.sub_desc')}</p>
-
-                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.industry_development.trends_title')}</p>
-                              <p className="text-gray-600">{t('analysis.tooltips.industry_development.trends_desc')}</p>
-                            </>
-                          )}
-
-                          {category === 'irsc' && (
-                            <>
-                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.smart_enterprise_rating.us_tickers_title')}</p>
-                              <p className="mb-2 text-gray-600 whitespace-pre-line">{t('analysis.tooltips.smart_enterprise_rating.us_tickers_desc')}</p>
-
-                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.smart_enterprise_rating.tw_tickers_title')}</p>
-                              <p className="mb-2 text-gray-600 whitespace-pre-line">{t('analysis.tooltips.smart_enterprise_rating.tw_tickers_desc')}</p>
-
-                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.smart_enterprise_rating.fuzzy_title')}</p>
-                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.smart_enterprise_rating.fuzzy_desc')}</p>
-
-                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.smart_enterprise_rating.analyst_view_title')}</p>
-                              <p className="text-gray-600">{t('analysis.tooltips.smart_enterprise_rating.analyst_view_desc')}</p>
-                            </>
-                          )}
-
-                          {category === 'financial_product_rating' && (
-                            <>
-                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.etf_title')}</p>
-                              <p className="mb-2 text-gray-600 whitespace-pre-line">{t('analysis.tooltips.financial_product_rating.etf_desc')}</p>
-
-                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.mutual_funds_title')}</p>
-                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.financial_product_rating.mutual_funds_desc')}</p>
-
-                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.bonds_title')}</p>
-                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.financial_product_rating.bonds_desc')}</p>
-
-                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.derivatives_title')}</p>
-                              <p className="mb-2 text-gray-600">{t('analysis.tooltips.financial_product_rating.derivatives_desc')}</p>
-
-                              <p className="font-semibold text-gray-700">{t('analysis.tooltips.financial_product_rating.analyst_view_title')}</p>
-                              <p className="text-gray-600">{t('analysis.tooltips.financial_product_rating.analyst_view_desc')}</p>
-                            </>
-                          )}
                         </div>
                       </div>
                     )}
                   </div>
-                  <input
-                    type="text"
-                    aria-label={t('analysis.keyword')}
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                    placeholder={t('analysis.enter_keyword')}
-                    className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all relative z-10"
-                  />
+                  <input aria-label={t('analysis.keyword')} type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder={t('analysis.enter_keyword')} className="w-full max-w-md px-4 py-2 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 relative z-10" />
                 </div>
               )}
             </div>
 
+            {/* Info: (20260419 - Luphia) Bottom Actions & Summary */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-gray-100">
-              {/* Info: (20260120 - Luphia) Left Side: Summary Info */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
-                {/* Info: (20260120 - Luphia) Period Display */}
                 {(periodType === 'yearly' || selectedPeriodValue !== '') && (
                   <div className="flex items-center gap-2 bg-orange-50 px-3 py-2 rounded-lg border border-orange-100">
                     <Calendar className="h-4 w-4 text-orange-600" />
                     <div className="flex flex-col">
-                      <span className="text-xs text-orange-600 font-medium leading-none mb-0.5">{t('analysis.period')}</span>
-                      <span className="text-sm font-bold text-orange-900 leading-none">{simplePeriodString}</span>
+                      <span className="text-xs text-orange-600 font-medium mb-0.5">{t('analysis.period')}</span>
+                      <span className="text-sm font-bold text-orange-900">{simplePeriodString}</span>
                     </div>
                   </div>
                 )}
-
-                {/* Info: (20260120 - Luphia) Cost Display */}
                 <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
                   <Coins className="h-4 w-4 text-gray-500" />
                   <div className="flex flex-col">
-                    <span className="text-xs text-gray-500 font-medium leading-none mb-0.5">{t('analysis.confirm_cost')}</span>
-                    <span className="text-sm font-bold text-gray-900 leading-none">{finalCost}</span>
+                    <span className="text-xs text-gray-500 font-medium mb-0.5">{t('analysis.confirm_cost')}</span>
+                    <span className="text-sm font-bold text-gray-900">{finalCost}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Info: (20260120 - Luphia) Right Side: Action */}
               <button
                 onClick={handleGenerate}
-                disabled={
-                  (periodType !== 'yearly' && !selectedPeriodValue) ||
-                  (activeTab === 'external' && !isExternalCarbonAnalysis && !selectedCountry) ||
-                  (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends' && !keyword.trim()) ||
-                  (needsCompanyInput && !selectedCompany)
-                }
-                className="w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed rounded-lg bg-orange-600 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-colors"
+                disabled={(periodType !== 'yearly' && !selectedPeriodValue) || (activeTab === 'external' && !isExternalCarbonAnalysis && !selectedCountry) || (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends' && !keyword.trim()) || (needsCompanyInput && !selectedCompany)}
+                className="w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed rounded-lg bg-orange-600 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 transition-colors"
               >
                 {t('analysis.generate')}
               </button>
             </div>
 
-            {/* Info: (20260120 - Luphia) Placeholder for results */}
             <div className="pt-8 text-center text-gray-500 flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed border-gray-100 rounded-lg">
               <FileBarChart className="h-10 w-10 text-gray-300 mb-2" />
               <p className="text-sm">{t('features.items.analysis.desc')}</p>
@@ -700,185 +548,73 @@ export default function AnalysisView() {
         </div>
       )}
 
-      {/* Info: (20260120 - Luphia) Payment Confirmation Modal */}
+      {/* Info: (20260419 - Luphia) Payment Modal */}
       <PaymentConfirmModal
-        isOpen={isPaymentModalOpen}
+        isOpen={uiState.isPaymentModalOpen}
         onClose={() => {
-          if (workflowStatus === 'error' || workflowStatus === 'payment_success') {
-            resetTransaction();
-            setIsPaymentModalOpen(false);
-          } else if (workflowStatus === 'idle') {
-            setIsPaymentModalOpen(false);
-          }
+          if (workflowStatus === 'error' || workflowStatus === 'payment_success') resetTransaction();
+          setUiState(prev => ({ ...prev, isPaymentModalOpen: false }));
         }}
         onConfirm={handleAnalysisWorkflow}
         cost={finalCost}
         items={[
           { label: t('analysis.category'), value: t(`analysis.categories.${category}`) },
           ...(country ? [{ label: t('analysis.country'), value: t(`analysis.countries.${country}`) }] : []),
-          ...(derivedKeyword ? [{ label: t('analysis.keyword'), value: derivedKeyword }] : []),
-          {
-            label: t('analysis.period'), value: t('analysis.selected_period_desc', {
-              value: periodType === 'yearly' ? selectedYear : selectedPeriodValue,
-              type: t(`analysis.time_units.${periodType}`)
-            })
-          }
+          ...(keyword && activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends' ? [{ label: t('analysis.keyword'), value: keyword }] : []),
+          ...(needsCompanyInput && internalCompanyName ? [{ label: t('analysis.company_input.label'), value: internalCompanyName }] : []),
+          { label: t('analysis.period'), value: t('analysis.selected_period_desc', { value: periodType === 'yearly' ? selectedYear : selectedPeriodValue, type: t(`analysis.time_units.${periodType}`) }) }
         ]}
         extraContent={isInternalCompanyAnalysis ? (
           <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm space-y-3 mt-4">
             <h4 className="text-sm font-bold text-gray-900">{t('analysis.addons_title', { defaultValue: '加購項目' })}</h4>
             <div className="space-y-2">
-              <label className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${requireBookkeeper ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-200' : 'border-gray-200 hover:bg-gray-50'}`}>
-                <div className="flex items-center gap-3">
-                  <input 
-                    type="checkbox"
-                    aria-label={t('analysis.addon_bookkeeper', { defaultValue: '加購記賬士簽證' })}
-                    className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 border-gray-300"
-                    checked={requireBookkeeper}
-                    onChange={() => setRequireBookkeeper(!requireBookkeeper)}
-                  />
-                  <span className={`text-sm font-medium ${requireBookkeeper ? 'text-orange-900' : 'text-gray-700'}`}>
-                    {t('analysis.addon_bookkeeper', { defaultValue: '加購記賬士簽證' })}
-                  </span>
-                </div>
-                <span className="text-sm font-bold text-gray-500 flex items-center gap-1">
-                  +{ANALYSIS_ADDON_COSTS.BOOKKEEPER} <Coins className="h-4 w-4" />
-                </span>
-              </label>
-
-              <label className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${requireCPA ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-200' : 'border-gray-200 hover:bg-gray-50'}`}>
-                <div className="flex items-center gap-3">
-                  <input 
-                    type="checkbox"
-                    aria-label={t('analysis.addon_cpa', { defaultValue: '加購會計師簽證' })}
-                    className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 border-gray-300"
-                    checked={requireCPA}
-                    onChange={() => setRequireCPA(!requireCPA)}
-                  />
-                  <span className={`text-sm font-medium ${requireCPA ? 'text-orange-900' : 'text-gray-700'}`}>
-                    {t('analysis.addon_cpa', { defaultValue: '加購會計師簽證' })}
-                  </span>
-                </div>
-                <span className="text-sm font-bold text-gray-500 flex items-center gap-1">
-                  +{ANALYSIS_ADDON_COSTS.CPA} <Coins className="h-4 w-4" />
-                </span>
-              </label>
-
-              <label className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${requireThirdParty ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-200' : 'border-gray-200 hover:bg-gray-50'}`}>
-                <div className="flex items-center gap-3">
-                  <input 
-                    type="checkbox"
-                    aria-label={t('analysis.addon_third_party', { defaultValue: '加購第三方查驗機構簽證' })}
-                    className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 border-gray-300"
-                    checked={requireThirdParty}
-                    onChange={() => setRequireThirdParty(!requireThirdParty)}
-                  />
-                  <span className={`text-sm font-medium ${requireThirdParty ? 'text-orange-900' : 'text-gray-700'}`}>
-                    {t('analysis.addon_third_party', { defaultValue: '加購第三方查驗機構簽證' })}
-                  </span>
-                </div>
-                <span className="text-sm font-bold text-gray-500 flex items-center gap-1">
-                  +{ANALYSIS_ADDON_COSTS.THIRD_PARTY} <Coins className="h-4 w-4" />
-                </span>
-              </label>
+              {renderAddonsCheckbox('bookkeeper', 'analysis.addon_bookkeeper', ANALYSIS_ADDON_COSTS.BOOKKEEPER)}
+              {renderAddonsCheckbox('cpa', 'analysis.addon_cpa', ANALYSIS_ADDON_COSTS.CPA)}
+              {renderAddonsCheckbox('thirdParty', 'analysis.addon_third_party', ANALYSIS_ADDON_COSTS.THIRD_PARTY)}
             </div>
           </div>
         ) : undefined}
-        isLoading={isLoading}
+        isLoading={uiState.isLoading}
         status={workflowStatus}
         errorMessage={errorMessage}
         txHash={txHash}
       />
 
-      {/* Info: (20260130 - Luphia) Success Notification */}
+      {/* Info: (20260419 - Luphia) Success Notification */}
       <SuccessNotification
-        show={showSuccessNotification}
+        show={uiState.showSuccessNotification}
         title={t('analysis.success.title')}
         message={(
           <div className="flex flex-col gap-2">
             <span>{t('analysis.success.message')}</span>
             {txHash && (
-              <a
-                href={`${process.env.NEXT_PUBLIC_BAIFA_EXPLORER || 'https://baifa.io'}/chain/isuncoin/txs/${txHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-orange-600 hover:text-orange-700 underline text-xs break-all"
-              >
+              <a href={`${process.env.NEXT_PUBLIC_BAIFA_EXPLORER || 'https://baifa.io'}/chain/isuncoin/txs/${txHash}`} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline text-xs break-all">
                 {t('analysis.success.view_tx')}: {txHash}
               </a>
             )}
           </div>
         )}
-        onClose={() => setShowSuccessNotification(false)}
+        onClose={() => setUiState(prev => ({ ...prev, showSuccessNotification: false }))}
         autoCloseDelay={10000}
       />
 
-      {/* Info: (20260120 - Luphia) History Section */}
-      {activeTab === 'history' && (
-        <HistorySection />
-      )}
+      {/* Info: (20260419 - Luphia) History Section */}
+      {activeTab === 'history' && <HistorySection />}
 
-      {/* Info: (20260409 - Luphia) Tax ID Edit Modal */}
-      <Dialog open={isTaxIdModalOpen} onClose={() => !isUpdatingTaxId && setIsTaxIdModalOpen(false)} className="relative z-50">
+      {/* Info: (20260419 - Luphia) Tax ID Edit Modal */}
+      <Dialog open={uiState.isTaxIdModalOpen} onClose={() => !uiState.isUpdatingTaxId && setUiState(prev => ({ ...prev, isTaxIdModalOpen: false }))} className="relative z-50">
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
-              <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
-                {t('account_book_selection.form_enterprise_id') || '統一編號 (Tax ID)'}
-              </h3>
-              <p className="text-sm text-gray-500 mb-4">
-                {t('analysis.company_input.missing_tax_id_desc', { name: pendingAccountBook?.name || '' })}
-              </p>
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">{t('account_book_selection.form_enterprise_id') || '統一編號 (Tax ID)'}</h3>
+              <p className="text-sm text-gray-500 mb-4">{t('analysis.company_input.missing_tax_id_desc', { name: pendingAccountBook?.name || '' })}</p>
               <div className="space-y-4">
-                <div>
-                  <input
-                    id="taxIdInput"
-                    name="taxIdInput"
-                    aria-label="Tax ID"
-                    type="text"
-                    value={taxIdInput}
-                    onChange={(e) => setTaxIdInput(e.target.value)}
-                    placeholder="12345678"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 sm:text-sm text-gray-900 bg-white"
-                  />
-                </div>
+                <input aria-label={t('account_book_selection.form_enterprise_id')} type="text" value={taxIdInput} onChange={(e) => setTaxIdInput(e.target.value)} placeholder="12345678" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 bg-white" />
                 <div className="flex justify-end gap-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setIsTaxIdModalOpen(false)}
-                    disabled={isUpdatingTaxId}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg"
-                  >
-                    {t('common.cancel')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (!taxIdInput) return;
-                      setIsUpdatingTaxId(true);
-                      try {
-                        const res = await request(`/api/v1/user/account_book/${pendingAccountBook?.id}`, {
-                          method: 'PUT',
-                          body: JSON.stringify({ enterpriseId: taxIdInput }),
-                        });
-                        if (res) {
-                          setAccountBooks(prev => prev.map(ab => ab.id === pendingAccountBook?.id ? { ...ab, enterpriseId: taxIdInput } : ab));
-                          setSelectedCompany({ taxId: taxIdInput, name: pendingAccountBook!.name });
-                          setInternalCompanyName(`${pendingAccountBook!.name} (${taxIdInput})`);
-                          setIsTaxIdModalOpen(false);
-                          setTaxIdInput('');
-                        }
-                      } catch (e) {
-                        console.error(e);
-                      } finally {
-                        setIsUpdatingTaxId(false);
-                      }
-                    }}
-                    disabled={isUpdatingTaxId || !taxIdInput}
-                    className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg disabled:opacity-50"
-                  >
-                    {isUpdatingTaxId ? t('common.loading') : (t('common.confirm') || '確認')}
+                  <button type="button" onClick={() => setUiState(prev => ({ ...prev, isTaxIdModalOpen: false }))} disabled={uiState.isUpdatingTaxId} className="px-4 py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50">{t('common.cancel')}</button>
+                  <button type="button" onClick={handleUpdateTaxId} disabled={uiState.isUpdatingTaxId || !taxIdInput} className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 disabled:opacity-50">
+                    {uiState.isUpdatingTaxId ? t('common.loading') : (t('common.confirm') || '確認')}
                   </button>
                 </div>
               </div>

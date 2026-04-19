@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/landing_page/header";
 import Footer from "@/components/landing_page/footer";
-import { IThreadDetail } from "@/interfaces/ai_talk";
+import { IThreadDetail } from "@/interfaces/ai_consulting";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ThreadGrid } from "@/components/ai_consultation_room/thread_grid";
 import { AiChat } from "@/components/ai_consultation_room/ai_chat";
 import { ApiCode } from "@/lib/utils/status";
 
 
-export default function AccountingAiTalkPage() {
+export default function AccountingAiConsultingPage() {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [threads, setThreads] = useState<IThreadDetail[]>([]);
@@ -19,7 +19,7 @@ export default function AccountingAiTalkPage() {
     const fetchThreads = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("/api/v1/ai_talk/thread");
+        const response = await fetch("/api/v1/ai_consulting/thread");
         const data = await response.json();
         if (data.code === ApiCode.SUCCESS) {
           setThreads(data.payload);
