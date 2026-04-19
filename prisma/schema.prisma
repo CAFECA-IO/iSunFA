@@ -113,6 +113,7 @@ model Order {
   challenge       String
   signature       String?
   transactionHash String?  @map("transaction_hash")
+  mission         String?
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
@@ -184,8 +185,6 @@ model Task {
   @@map("task")
 }
 
-
-
 // Info: (20260226 - Julian) 上傳檔案：儲存 hash
 model File {
   id       String  @id @default(uuid())
@@ -204,10 +203,10 @@ model File {
 
 // Info: (20260212 - Julian) 評論：支援巢狀回覆
 model Comment {
-  id       String @id @default(uuid())
-  content  String @db.Text
-  userId   String @map("user_id")
-  user     User   @relation(fields: [userId], references: [id])
+  id         String   @id @default(uuid())
+  content    String   @db.Text
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id])
   analysisId String   @map("analysis_id")
   analysis   Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
 
@@ -267,8 +266,6 @@ model Reaction {
   @@unique([userId, commentId])
   @@map("reaction")
 }
-
-
 
 // Info: (20260311 - Tzuhan) Analysis - Tags
 model AnalysisTag {
