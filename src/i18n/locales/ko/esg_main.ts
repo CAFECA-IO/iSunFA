@@ -1,6 +1,7 @@
 export const esgMain = {
   tab: {
     records: "탄소 인벤토리 기록",
+    emission_sources: "배출원 분류",
     coefficient: "계수 데이터베이스",
   },
   title: "탄소 배출 관리 및 ESG 분석",

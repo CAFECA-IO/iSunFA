@@ -14,7 +14,10 @@ interface IEsgSummaryProps {
   month?: number | "";
 }
 
-export default function EsgSummary({ year = undefined, month = undefined }: IEsgSummaryProps) {
+export default function EsgSummary({
+  year = undefined,
+  month = undefined,
+}: IEsgSummaryProps) {
   const params = useParams();
   const pathname = usePathname();
   const accountBookId = params?.account_book_id as string;
@@ -59,7 +62,7 @@ export default function EsgSummary({ year = undefined, month = undefined }: IEsg
   if (isLoading) {
     return (
       <div className="flex h-32 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+        <Loader2 className="size-6 animate-spin text-orange-500" />
       </div>
     );
   }
@@ -67,7 +70,7 @@ export default function EsgSummary({ year = undefined, month = undefined }: IEsg
   if (!summaryData) {
     return (
       <div className="flex h-72 w-full flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm">
-        <Cloud className="mb-2 h-8 w-8 text-slate-300" />
+        <Cloud className="mb-2 size-8 text-slate-300" />
         <span className="text-sm font-bold">
           {t("esg_summary.no_data_prefix")}
           <Link

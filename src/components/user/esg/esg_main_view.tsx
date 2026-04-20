@@ -11,6 +11,7 @@ import {
 import { useState, useEffect } from "react";
 import { request } from "@/lib/utils/request";
 import CoefficientManagementTab from "@/components/user/esg/coefficient_management_tab";
+import EmissionSourcesTab from "@/components/user/esg/emission_sources_tab";
 import EsgSummary from "@/components/user/esg/esg_summary";
 import EsgTableSection from "@/components/user/esg/esg_table_section";
 import EsgTargetModal from "@/components/user/esg/esg_target_modal";
@@ -18,6 +19,7 @@ import { IApiResponse } from "@/lib/utils/response";
 
 enum EsgTab {
   RECORDS = "records",
+  EMISSION_SOURCES = "emission_sources",
   COEFFICIENT = "coefficient",
 }
 
@@ -36,7 +38,11 @@ export default function EsgMainView() {
   // Info: (20260416 - Julian) 從 URL 參數取得 tab
   const tabParams = useSearchParams().get("tab");
   const activeTab =
-    tabParams === "coefficient" ? EsgTab.COEFFICIENT : EsgTab.RECORDS;
+    tabParams === "coefficient"
+      ? EsgTab.COEFFICIENT
+      : tabParams === "records"
+        ? EsgTab.RECORDS
+        : EsgTab.EMISSION_SOURCES;
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -114,7 +120,13 @@ export default function EsgMainView() {
   );
 
   const tabContent =
-    activeTab === EsgTab.RECORDS ? recordTab : <CoefficientManagementTab />;
+    activeTab === EsgTab.RECORDS ? (
+      recordTab
+    ) : activeTab === EsgTab.EMISSION_SOURCES ? (
+      <EmissionSourcesTab />
+    ) : (
+      <CoefficientManagementTab />
+    );
 
   return (
     <div className="flex max-w-[calc(100vw-30px)] flex-col gap-y-4 px-0 lg:gap-y-6 lg:px-12">
@@ -167,34 +179,7 @@ export default function EsgMainView() {
       </div>
 
       {/* Info: (20260413 - Julian) Tab Switch */}
-      <div className="grid grid-cols-2 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5 md:ml-auto">
-        {/* <button
-          title={t("esg_main.tab.records")}
-          type="button"
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${
-            activeTab === EsgTab.RECORDS
-              ? "bg-white text-orange-600 shadow-sm"
-              : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
-          }`}
-          onClick={() => {
-            setActiveTab(EsgTab.RECORDS)
-            // Info: (20260416 - Julian) 寫入 URL 參數
-          }}
-        >
-          {t("esg_main.tab.records")}
-        </button>
-        <button
-          title={t("esg_main.tab.coefficient")}
-          type="button"
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${
-            activeTab === EsgTab.COEFFICIENT
-              ? "bg-white text-orange-600 shadow-sm"
-              : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
-          }`}
-          onClick={() => setActiveTab(EsgTab.COEFFICIENT)}
-        >
-          {t("esg_main.tab.coefficient")}
-        </button> */}
+      <div className="grid grid-cols-3 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5 md:ml-auto">
         {Object.values(EsgTab).map((tab) => (
           <button
             key={tab}
@@ -206,6 +191,7 @@ export default function EsgMainView() {
                 : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
             }`}
             onClick={() => handleTabChange(tab)}
+            disabled={tab === activeTab} // Info: (20260420 - Julian) 避免重複 call API
           >
             {t(`esg_main.tab.${tab.toLowerCase()}`)}
           </button>
