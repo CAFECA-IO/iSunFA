@@ -120,6 +120,18 @@ export class JournalRepository {
     });
   }
 
+  async verifyAllJournals(accountBookId: string) {
+    return prisma.journal.updateMany({
+      where: {
+        accountBookId,
+        isVerified: false,
+      },
+      data: {
+        isVerified: true,
+      },
+    });
+  }
+
   async getJournalSummary(accountBookId: string) {
     const now = new Date();
     // Info: (20260327 - Luphia) 更乾淨的今日零時寫法
