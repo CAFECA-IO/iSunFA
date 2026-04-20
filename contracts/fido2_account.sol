@@ -119,7 +119,7 @@ contract Fido2Account is BaseAccount, Initializable, UUPSUpgradeable {
         address dest,
         uint256 value,
         bytes calldata func
-    ) external {
+    ) external virtual override {
         _requireFromEntryPoint();
         _call(dest, value, func);
     }
