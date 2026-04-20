@@ -1,11 +1,10 @@
 import { ITaskSkill } from "@/skills/types";
-import { Task, Mission } from "@/generated/client";
+import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { voucherRepo } from "@/repositories/voucher.repo";
 import { journalRepo } from "@/repositories/journal.repo";
 import { esgRepo } from "@/repositories/esg.repo";
-import { taskRepo } from "@/repositories/task.repo";
 
 export class DocumentPreCheckSkill implements ITaskSkill {
   name = "DOCUMENT_PRE_CHECK";
@@ -24,8 +23,8 @@ export class DocumentPreCheckSkill implements ITaskSkill {
   };
 
   async execute(
-    task: Task,
-    mission: Mission,
+    task: IPseudoTask,
+    mission: IPseudoMission,
     fullPrompt: string,
     chatService: ChatService,
   ): Promise<string> {
@@ -74,7 +73,6 @@ export class DocumentPreCheckSkill implements ITaskSkill {
           }
         }
 
-        await taskRepo.cancelPendingTasks(mission.id, msg);
         throw new Error(msg);
       }
     }

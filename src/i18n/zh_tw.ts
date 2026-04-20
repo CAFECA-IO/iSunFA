@@ -1,3 +1,4 @@
+import { adminDashboard } from "@/i18n/locales/zh_tw/admin_dashboard";
 import { common } from "@/i18n/locales/zh_tw/common";
 import { faith } from "@/i18n/locales/zh_tw/faith";
 import { cookieConsent } from "@/i18n/locales/zh_tw/cookie_consent";
@@ -94,6 +95,7 @@ export const zhTw = {
   admin_member: adminMember,
   admin_blockchain: adminBlockchain,
   admin_billing: adminBilling,
+  admin_dashboard: adminDashboard,
 } as const;
 
 export type BaseTranslation = typeof zhTw;

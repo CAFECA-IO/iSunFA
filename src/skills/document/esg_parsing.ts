@@ -1,5 +1,5 @@
 import { ITaskSkill } from "@/skills/types";
-import { Task, Mission } from "@/generated/client";
+import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { esgRepo } from "@/repositories/esg.repo";
@@ -24,8 +24,8 @@ export class EsgParsingSkill implements ITaskSkill {
   };
 
   async execute(
-    task: Task,
-    mission: Mission,
+    task: IPseudoTask,
+    mission: IPseudoMission,
     fullPrompt: string,
     chatService: ChatService,
   ): Promise<string> {

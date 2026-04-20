@@ -9,7 +9,7 @@ import {
   /* Share2, */ MessageSquare,
 } from "lucide-react";
 import { formatTime } from "@/lib/utils/common";
-import { IThread } from "@/interfaces/ai_talk";
+import { IThread } from "@/interfaces/ai_consulting";
 import { useTranslation } from "@/i18n/i18n_context";
 
 export const ThreadCard = ({

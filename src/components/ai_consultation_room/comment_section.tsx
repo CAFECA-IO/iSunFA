@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { MessageSquare } from "lucide-react";
-import { IComment } from "@/interfaces/ai_talk";
+import { IComment } from "@/interfaces/ai_consulting";
 import { CommentItem } from "@/components/ai_consultation_room/comment_item";
 import { CommentPostInput } from "@/components/ai_consultation_room/comment_post_input";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -30,7 +30,7 @@ export const CommentSection = () => {
     const loadComments = async () => {
       try {
         const data = await request<IApiResponse<IComment[]>>(
-          `/api/v1/ai_talk/thread/${threadId}/comment`,
+          `/api/v1/ai_consulting/thread/${threadId}/comment`,
         );
         if (data.code === ApiCode.SUCCESS && data.payload) {
           setComments(data.payload);

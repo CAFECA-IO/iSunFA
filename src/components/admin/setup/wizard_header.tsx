@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { Terminal } from "lucide-react";
 import LanguageSelector from "@/components/header/language_selector";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -8,8 +9,46 @@ export interface IWizardHeaderProps {
   progressPercentage: number;
 }
 
+function useAnimatedNumber(value: number, duration: number = 1000) {
+  const [displayValue, setDisplayValue] = useState(value);
+  const startValueRef = useRef(value);
+
+  useEffect(() => {
+    let startTimestamp: number | null = null;
+    const startValue = startValueRef.current;
+    const endValue = value;
+    let animationFrameId: number;
+
+    if (startValue === endValue) return;
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const elapsed = timestamp - startTimestamp;
+      const progress = Math.min(elapsed / duration, 1);
+
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(startValue + (endValue - startValue) * easeOut);
+
+      setDisplayValue(current);
+      startValueRef.current = current;
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(step);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(step);
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [value, duration]);
+
+  return displayValue;
+}
+
 export function WizardHeader({ progressPercentage }: IWizardHeaderProps) {
   const { t } = useTranslation();
+  const animatedProgress = useAnimatedNumber(progressPercentage, 1000);
+
   return (
     <div className="relative flex flex-row items-center justify-between bg-white/60 backdrop-blur-xl rounded-2xl border border-white/80 px-4 py-3 shrink-0 z-50">
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-orange-100/50 to-amber-50/50 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/3"></div>
@@ -37,7 +76,7 @@ export function WizardHeader({ progressPercentage }: IWizardHeaderProps) {
             <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold shrink-0">Progress</span>
             <div className="flex items-baseline gap-0.5 ml-2">
               <span className="text-xl font-black text-orange-500 tracking-tighter tabular-nums leading-none">
-                {progressPercentage}
+                {animatedProgress}
               </span>
               <span className="text-xs font-bold text-orange-500">%</span>
             </div>

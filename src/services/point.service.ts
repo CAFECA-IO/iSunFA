@@ -1,6 +1,7 @@
 import { paymentRepo } from "@/repositories/payment.repo";
 import { getMemberInfo } from "@/services/member.service";
-import { REWARD_AMOUNTS } from "@/constants/price";
+import { CURRENCY_UNIT, REWARD_AMOUNTS } from "@/constants/price";
+import { ORDER_STATUS } from "@/constants/status";
 
 export class PointService {
   async getPointHistory(user: { id: string; address?: string | null }) {
@@ -10,7 +11,7 @@ export class PointService {
     let hasRegistrationReward = false;
 
     for (const order of orders) {
-      if (order.status !== "COMPLETED" && order.status !== "PAID") continue;
+      if (order.unit !== CURRENCY_UNIT.ICP) continue;
 
       if (order.type === "PAYMENT" || order.type === "OEN_PAYMENT") {
         const data = order.data as { credits?: number } | null | undefined;
@@ -21,6 +22,7 @@ export class PointService {
             sourceKey: "billing.point_history.source_purchase",
             fallbackSource: "Points Purchase",
             amount: data.credits,
+            status: order.status,
             createdAt: order.createdAt,
           });
         }
@@ -31,6 +33,7 @@ export class PointService {
           sourceKey: "billing.point_history.source_checkin",
           fallbackSource: "Daily Check-in Reward",
           amount: order.amount,
+          status: order.status,
           createdAt: order.createdAt,
         });
       } else if (order.type === "REGISTRATION_REWARD") {
@@ -41,19 +44,22 @@ export class PointService {
           sourceKey: "billing.point_history.source_registration",
           fallbackSource: "Registration Reward",
           amount: order.amount,
+          status: order.status,
           createdAt: order.createdAt,
         });
       } else if (order.type !== "OEN_BINDING") {
         // Info: (20260409 - Luphia) ANALYSIS, CHAT etc (consumed points)
         if (order.amount !== 0) {
-          const data = order.data as { category?: string } | null;
+          const data = order.data as { category?: string, data?: { category?: string } } | null;
+          const category = data?.category || data?.data?.category;
           history.push({
             id: `order-${order.id}-consume`,
             type: "CONSUME",
             sourceKey: `billing.point_history.source_${order.type.toLowerCase()}`,
             fallbackSource: `Service Usage (${order.type})`,
             amount: order.amount,
-            extendedType: data?.category,
+            extendedType: category,
+            status: order.status,
             createdAt: order.createdAt,
           });
         }
@@ -71,6 +77,7 @@ export class PointService {
               sourceKey: "billing.point_history.source_registration",
               fallbackSource: "Registration Reward",
               amount: REWARD_AMOUNTS.REGISTRATION_REWARD,
+              status: ORDER_STATUS.COMPLETED,
               createdAt: new Date(memberInfoResp.data.registrationTime),
             });
           }

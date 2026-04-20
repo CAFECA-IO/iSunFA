@@ -1,6 +1,6 @@
 import { ITaskSkill } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
-import { Task, Mission } from "@/generated/client";
+import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
 import { storageService } from "@/services/storage.service";
 
@@ -9,8 +9,8 @@ export class AiConsultingSkill implements ITaskSkill {
   description = "A skill to handle AI consultation interactions for the user.";
 
   async execute(
-    task: Task,
-    mission: Mission,
+    task: IPseudoTask,
+    mission: IPseudoMission,
     fullPrompt: string,
     chatService: ChatService,
   ): Promise<string> {
@@ -19,17 +19,18 @@ export class AiConsultingSkill implements ITaskSkill {
 
     // Info: (20260418 - Luphia) Frontend payload now omits base64 to save storage. Load base64 via Laria IPFS on the worker!
     const imagesForAiRaw = await Promise.all(
-      files.map(async (f) => {
-        const cid = f.id || f.hash;
+      files.map(async (f: unknown) => {
+        const cid = typeof f === 'string' ? f : (f as Record<string, string>).hash;
         if (!cid) {
           console.error(`[AiConsultingSkill] File has no ID or hash, skipping:`, f);
           return null;
         }
 
-        let mimeType = f.mimeType;
-        if (!mimeType && f.metadata) {
+        let mimeType = typeof f === 'string' ? "image/jpeg" : (f as Record<string, string>).mimeType;
+        if (!mimeType && typeof f !== 'string' && (f as Record<string, unknown>).metadata) {
           try {
-            const meta = typeof f.metadata === 'string' ? JSON.parse(f.metadata) : f.metadata;
+            const metaRaw = (f as Record<string, unknown>).metadata;
+            const meta = typeof metaRaw === 'string' ? JSON.parse(metaRaw) : metaRaw;
             mimeType = meta.mimeType;
           } catch { }
         }

@@ -43,6 +43,11 @@ const extractMarkdown = (result: TShareResult): string => {
   if (typeof result === "object" && result !== null) {
     if (typeof result.content === "string") return result.content;
     if (typeof result.markdown === "string") return result.markdown;
+    
+    const keys = Object.keys(result).sort();
+    if (keys.length > 0) {
+      return keys.map(k => (result as Record<string, string>)[k]).join('\n\n---\n\n');
+    }
   }
   return "";
 };

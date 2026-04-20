@@ -9,15 +9,22 @@ import {
   missionGenerator,
   IMissionDefinition,
 } from "@/lib/worker/mission.generator";
-import { MISSION_STATUS } from "@/constants/status";
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import { AppError } from "@/lib/utils/error";
 import { ApiCode } from "@/lib/utils/status";
 import { Prisma } from "@/generated/client";
+import { ANALYSIS_CATEGORY } from "@/constants/price";
 
 export interface IGenerateAnalysisParams extends IOrderParams {
   orderId?: string;
   status?: string;
+  category?: string;
+  periodType?: string;
+  periodValue?: string;
+  year?: number;
+  country?: string;
+  keyword?: string;
+  isExternal?: boolean;
 }
 
 export class AnalysisService {
@@ -30,6 +37,7 @@ export class AnalysisService {
    * 4. Return the job ID or result.
    */
   async generateAnalysis(userId: string, params: IGenerateAnalysisParams) {
+    Object.assign(params, params.data || {});
     console.log(`[AnalysisService] Generating for ${userId}:`, params);
 
     /**
@@ -37,11 +45,17 @@ export class AnalysisService {
      * Note: In production this cost should ideally be passed from the trusted Order
      * or recalculated and verified to match the Order.
      */
-    const cost = getAnalysisCost(params);
+    const cost = getAnalysisCost(params as unknown as import('@/lib/analysis/pricing').AnalysisCostParams);
 
     // Info: (20260120 - Luphia) Simulate basic validation
-    if (!params.category || !params.periodType) {
-      throw new Error("Missing required parameters");
+    if (!params.category) {
+      throw new Error("Missing required parameters: category");
+    }
+
+    const isNonPeriodAnalysis = [ANALYSIS_CATEGORY.AI_CONSULTING, ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS].some((category) => params.category === category);
+
+    if (!isNonPeriodAnalysis && !params.periodType) {
+      throw new Error("Missing required parameters: periodType");
     }
 
     // Info: (20260129 - Luphia) Generate Mission Content via MissionGenerator
@@ -54,26 +68,20 @@ export class AnalysisService {
         undefined;
       let prerequisiteStr = "";
 
-      if (params.category === "net_zero_emissions" && params.keyword) {
+      if (params.category === ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS && params.keyword) {
         const prerequisite = await prisma.analysis.findFirst({
           where: {
             userId,
-            type: "carbon_health_check",
+            type: ANALYSIS_CATEGORY.CARBON_HEALTH_CHECK,
             data: {
               path: ["keyword"],
               equals: params.keyword,
             },
           },
           orderBy: { createdAt: "desc" },
-          include: { mission: true },
         });
 
-        if (prerequisite?.mission?.result) {
-          prerequisiteStr =
-            typeof prerequisite.mission.result === "string"
-              ? prerequisite.mission.result
-              : JSON.stringify(prerequisite.mission.result);
-        } else if (prerequisite?.result) {
+        if (prerequisite?.result) {
           prerequisiteStr =
             typeof prerequisite.result === "string"
               ? prerequisite.result
@@ -116,20 +124,20 @@ export class AnalysisService {
         }
       } else if (
         [
-          "carbon_health_check",
-          "balance_sheet",
-          "cash_flow",
-          "income_statement",
-          "financial_compliance",
-          "financial_health",
-          "irsc",
-        ].includes(params.category)
+          ANALYSIS_CATEGORY.CARBON_HEALTH_CHECK,
+          ANALYSIS_CATEGORY.BALANCE_SHEET,
+          ANALYSIS_CATEGORY.CASH_FLOW,
+          ANALYSIS_CATEGORY.INCOME_STATEMENT,
+          ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE,
+          ANALYSIS_CATEGORY.FINANCIAL_HEALTH,
+          ANALYSIS_CATEGORY.IRSC,
+        ].some(c => c === params.category)
       ) {
         if (!params.isExternal) {
           const { start, end } = getPeriodDateRange(
-            params.periodType,
-            params.year,
-            params.periodValue,
+            params.periodType!,
+            params.year!,
+            params.periodValue!,
           );
           const startTs = Math.floor(new Date(start).getTime() / 1000);
           const endTs = Math.floor(
@@ -183,7 +191,7 @@ export class AnalysisService {
 
           // Info: (20260418 - Tzuhan) 目前僅先對合規抓鬼與異常傳票執行 DB 傳票的完整撈取並交付快篩
           let voucherRecords: unknown[] = [];
-          if (params.category === "financial_compliance") {
+          if (params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE) {
             voucherRecords = targetAccountBookId
               ? await prisma.voucher.findMany({
                 where: {
@@ -230,10 +238,10 @@ export class AnalysisService {
       }
 
       missionDef = missionGenerator.generateMission({
-        category: params.category,
-        periodType: params.periodType,
-        periodValue: params.periodValue,
-        year: params.year,
+        category: params.category!,
+        periodType: params.periodType!,
+        periodValue: params.periodValue!,
+        year: params.year!,
         country: params.country,
         keyword: params.keyword,
         prerequisiteData: parsedPrerequisiteParams,
@@ -290,38 +298,33 @@ export class AnalysisService {
       throw new Error("Failed to initialize report storage");
     }
 
-    let createdMissionId: string | undefined;
-
     if (params.orderId) {
       try {
         // Info: (20260327 - Tzuhan) Cache disabled for reports (Always generate fresh report)
-        const result = await analysisRepo.create({
+        await analysisRepo.create({
           reportId,
           userId,
           orderId: params.orderId,
           category: params.category,
-          missionName: missionDef
-            ? missionDef.name
-            : `Analysis-${params.category}-${params.periodType}`,
-          status: params.status || MISSION_STATUS.UPLOADING,
-          missionData: {
+          data: {
+            missionName: missionDef
+              ? missionDef.name
+              : `Analysis-${params.category}-${params.periodType!}`,
             category: params.category,
             cost,
             remainingBalance: 9500,
             generatedAt: new Date().toISOString(),
             planHash: null,
-            periodType: params.periodType,
-            periodValue: params.periodValue,
-            year: params.year,
+            periodType: params.periodType!,
+            periodValue: params.periodValue!,
+            year: params.year!,
             country: params.country,
             keyword: params.keyword,
             isExternal: params.isExternal === true,
             historicalTags: await analysisRepo.getGlobalTopTags(20),
-            data: params.data ? (params.data as Prisma.InputJsonValue) : undefined,
+            data: params.data ? (params.data as unknown as Prisma.InputJsonValue) : undefined,
           },
-          tasks: missionDef ? missionDef.tasks : undefined,
         });
-        createdMissionId = result.missionId || undefined;
       } catch (error) {
         console.error(`[AnalysisService] Failed to save report to DB:`, error);
         throw new Error("Failed to save report metadata");
@@ -336,46 +339,18 @@ export class AnalysisService {
       .uploadLaria(planFile)
       .then(async (hash) => {
         console.log(
-          `[Info: (20260304 - Tzuhan)] BACKGROUND Plan uploaded, hash: ${hash} for Mission ${createdMissionId}`,
+          `[Info: (20260304 - Tzuhan)] BACKGROUND Plan uploaded, hash: ${hash} for Order ${params.orderId}`,
         );
-        if (createdMissionId) {
-          try {
-            await analysisRepo.updateMissionUploadSuccess(
-              createdMissionId,
-              hash,
-            );
-            console.log(
-              `[Info: (20260304 - Tzuhan)] BACKGROUND Mission ${createdMissionId} updated with planHash and set to PENDING`,
-            );
-          } catch (e) {
-            console.error(
-              `[Info: (20260304 - Tzuhan)] BACKGROUND Failed to update mission with planHash:`,
-              e,
-            );
-          }
-        }
+        /**
+         * Info: (20260420 - Luphia) The worker logic should pick up from the IPFS if we need to manually trigger, or the order polling handles it.
+         * Wait, analysis data already stores the plan internally or the worker IPFS logic handles it.
+         */
       })
       .catch(async (error) => {
         console.error(
           `[Info: (20260304 - Tzuhan)] BACKGROUND Failed to upload plan:`,
           error,
         );
-        if (createdMissionId) {
-          try {
-            await analysisRepo.updateMissionUploadFailed(
-              createdMissionId,
-              "File Upload Failed. Please contact support.",
-            );
-            console.log(
-              `[Info: (20260304 - Tzuhan)] BACKGROUND Mission ${createdMissionId} marked as FAILED due to upload error`,
-            );
-          } catch (e) {
-            console.error(
-              `[Info: (20260304 - Tzuhan)] BACKGROUND Failed to mark mission as FAILED:`,
-              e,
-            );
-          }
-        }
       });
 
     // Info: (20260120 - Luphia) Mock Response returned instantly
@@ -387,9 +362,9 @@ export class AnalysisService {
         cost: cost,
         remainingBalance: 9500,
         generatedAt: new Date().toISOString(),
-        periodType: params.periodType,
-        periodValue: params.periodValue,
-        year: params.year,
+        periodType: params.periodType!,
+        periodValue: params.periodValue!,
+        year: params.year!,
       },
     };
   }

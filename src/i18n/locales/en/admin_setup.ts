@@ -96,6 +96,9 @@ export const adminSetup = {
     col_rate_label: "ICP Collateral Rate (1 ICP = X ISC)",
     col_rate_placeholder: "e.g. 0.05",
     col_rate_err: "Rate must be between 10^-9 and 100.",
+    dependency_verified: "Contract Dependency Verified",
+    valid: "Valid",
+    invalid: "Invalid",
   },
   step5: {
     title: "Step 5: Initialize Database",

@@ -5,9 +5,7 @@ export const RPC_URL = "http://127.0.0.1:20024";
 
 // Info: (20260124 - Tzuhan) ERC-4337 & RWA System Addresses from latest deployment
 export const CONTRACT_ADDRESSES = {
-  KYC_REGISTRY: process.env.NEXT_PUBLIC_KYC_REGISTRY_ADDRESS as Address,
-  DYNAMIC_MEMBERSHIP_CARD: process.env
-    .NEXT_PUBLIC_DYNAMIC_MEMBERSHIP_CARD_ADDRESS as Address,
+  DYNAMIC_KYC_MEMBERSHIP: process.env.NEXT_PUBLIC_DYNAMIC_KYC_MEMBERSHIP_ADDRESS as Address,
   CREDIT_POINT: process.env.NEXT_PUBLIC_CREDIT_POINT_ADDRESS as Address,
   MEMBERSHIP_SYSTEM: process.env
     .NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS as Address,
@@ -15,6 +13,7 @@ export const CONTRACT_ADDRESSES = {
     .NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS as Address,
   SCW_FACTORY: process.env.NEXT_PUBLIC_SCW_FACTORY_ADDRESS as Address,
   ENTRY_POINT: process.env.NEXT_PUBLIC_ENTRY_POINT_ADDRESS as Address,
+  MISSION_BOARD: process.env.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as Address,
 } as const;
 
 export const ABIS = {
@@ -46,17 +45,21 @@ export const ABIS = {
     "function isValidSignature(bytes32 hash, bytes memory signature) public view returns (bytes4)",
   ]),
 
-  // Info: (20260126 - Tzuhan) RWA Identity Registry (Mapped to KYCRegistry in Enterprise Edition)
-  KYC_REGISTRY: parseAbi([
+  // Info: (20260418 - Luphia) Evolved RWA Identity Registry & NFT Card
+  DYNAMIC_KYC_MEMBERSHIP: parseAbi([
     "function getKYCLevel(address user) external view returns (uint8)",
-    "function isFrozen(address user) external view returns (bool)",
+    "function isBlacklisted(address user) external view returns (bool)",
     "function updateKYC(address user, uint8 _level) external",
-    "function setFreezeStatus(address user, bool _freeze) external",
+    "function setBlacklistStatus(address user, bool _isBlacklisted) external",
+    "function getPointsLimit(address user) external view returns (uint256)",
+    "function mintCard(address to, string memory uri) external returns (uint256)",
+    "function updateExperience(uint256 tokenId, uint256 addedExp) external",
   ]),
 
   // Info: (20251230 - Tzuhan) Credit Point Token
   CREDIT_POINT: parseAbi([
     "function mint(address to, uint256 amount) external",
+    "function setKYCRegistry(address _kycRegistry) external",
     "function burn(address userAddress, uint256 amount) external",
     "function forcedTransfer(address from, address to, uint256 amount) external returns (bool)",
     "function freezePartialTokens(address userAddress, uint256 amount) external",

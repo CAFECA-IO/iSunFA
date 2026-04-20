@@ -158,6 +158,16 @@ export class ChatService {
     return response.text();
   }
 
+  async countTokens(text: string): Promise<number> {
+    try {
+      const model = this.genAI.getGenerativeModel({ model: this.modelName });
+      const response = await model.countTokens(text);
+      return response.totalTokens;
+    } catch {
+      return 0;
+    }
+  }
+
   async generateRawWithSearch(prompt: string): Promise<string> {
     // Info: (20260311 - Tzuhan) Use explicitly typed googleSearch tool for Gemini Grounding
     const searchTool = { googleSearch: {} } as Tool & { googleSearch: unknown };

@@ -1,24 +1,28 @@
 import { runCommand } from "@/services/cli.service";
 
 export class DockerService {
+  private wrapCmd(cmd: string) {
+    return process.platform === "darwin" ? `zsh -ic "${cmd}"` : cmd;
+  }
+
   public async checkInstalled() {
-    return await runCommand("docker --version");
+    return await runCommand(this.wrapCmd("docker --version"));
   }
 
   public async checkRunning() {
-    return await runCommand("docker info");
+    return await runCommand(this.wrapCmd("docker info"));
   }
 
   public async getRunningContainers() {
     return await runCommand(
-      "docker ps --format '{{.ID}}|{{.Image}}|{{.Names}}|{{.Status}}'",
+      this.wrapCmd("docker ps --format '{{.ID}}|{{.Image}}|{{.Names}}|{{.Status}}'")
     );
   }
 
   public async startEngine() {
     const platform = process.platform;
     if (platform === "darwin") {
-      return await runCommand("open -a Docker");
+      return await runCommand('zsh -ic "open -a Docker"');
     } else if (platform === "linux") {
       let result = await runCommand("sudo systemctl start docker");
       if (!result.success) {
@@ -30,15 +34,25 @@ export class DockerService {
   }
 
   public async composeUp(cwd: string) {
-    let result = await runCommand("docker compose up -d", cwd);
+    let result = await runCommand(this.wrapCmd("docker compose up -d"), cwd);
     if (!result.success && result.output.includes("not a docker command")) {
-      result = await runCommand("docker-compose up -d", cwd);
+      result = await runCommand(this.wrapCmd("docker-compose up -d"), cwd);
     }
     return result;
   }
 
   public async execContainer(containerName: string, command: string) {
-    return await runCommand(`docker exec ${containerName} ${command}`);
+    const escapedCmd = command.replace(/"/g, '\\"');
+    return await runCommand(this.wrapCmd(`docker exec ${containerName} ${escapedCmd}`));
+  }
+
+  public async composeRestart(cwd: string, serviceName?: string) {
+    const target = serviceName ? ` ${serviceName}` : "";
+    let result = await runCommand(this.wrapCmd(`docker compose restart${target}`), cwd);
+    if (!result.success && result.output.includes("not a docker command")) {
+      result = await runCommand(this.wrapCmd(`docker-compose restart${target}`), cwd);
+    }
+    return result;
   }
 }
 

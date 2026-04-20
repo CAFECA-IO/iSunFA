@@ -127,10 +127,36 @@ export default function HistorySection() {
   const handleViewReport = async (item: IHistoryItem) => {
     try {
       setLoadingReport(true);
-      const result = await request<{ code: string; payload: { id: string; result: string; type: string; isExternal?: boolean } }>(`/api/v1/user/analysis/${item.reportId}`);
+      const result = await request<{ code: string; payload: { id: string; result: unknown; type: string; isExternal?: boolean } }>(`/api/v1/user/analysis/${item.reportId}`);
 
       if (result.code === 'SUCCESS') {
-        const content = typeof result.payload.result === 'string' ? result.payload.result : JSON.stringify(result.payload.result, null, 2);
+        let content = '';
+        let payloadResult = result.payload.result;
+
+        if (typeof payloadResult === 'string') {
+          try {
+            const parsed = JSON.parse(payloadResult);
+            if (typeof parsed === 'object' && parsed !== null) {
+              payloadResult = parsed;
+            }
+          } catch { }
+        }
+
+        if (typeof payloadResult === 'string') {
+          content = payloadResult;
+        } else if (payloadResult && typeof payloadResult === 'object') {
+          const resultObj = payloadResult as Record<string, unknown>;
+          if (resultObj.answer) {
+            content = resultObj.answer as string;
+            if (resultObj.tags && Array.isArray(resultObj.tags) && resultObj.tags.length > 0) {
+              content += `\n\n### 標籤\n` + (resultObj.tags as string[]).map(t => `- ${t}`).join('\n');
+            }
+          } else {
+            const keys = Object.keys(resultObj).sort();
+            content = keys.map(k => resultObj[k] as string).join('\n\n---\n\n');
+          }
+        }
+        
         setSelectedReport({
           id: result.payload.id,
           content: content || 'No content available.',
@@ -164,7 +190,7 @@ export default function HistorySection() {
     el.classList.remove('max-h-[70vh]', 'overflow-y-auto');
 
     try {
-      const localizedType = t(`analysis.categories.${reportType}`) || reportType;
+      const localizedType = t(`analysis.categories.${reportType.toLowerCase()}`);
       let companyName = keyword || '';
       if (companyName.includes('(')) {
         companyName = companyName.split('(')[0].trim();
@@ -471,16 +497,16 @@ export default function HistorySection() {
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                          <span>{t(`analysis.categories.${item.category}`)}</span>
+                          <span>{t(`analysis.categories.${item.category.toLowerCase()}`)}</span>
                           <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${item.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
                             {item.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
                           </span>
                           {item.isShared && (
                             <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${item.isExternal
-                                ? 'bg-blue-50 text-blue-700 ring-blue-600/20'
-                                : item.isFinancialDataHidden
-                                  ? 'bg-green-50 text-green-700 ring-green-600/20'
-                                  : 'bg-yellow-50 text-yellow-700 ring-yellow-600/20'
+                              ? 'bg-blue-50 text-blue-700 ring-blue-600/20'
+                              : item.isFinancialDataHidden
+                                ? 'bg-green-50 text-green-700 ring-green-600/20'
+                                : 'bg-yellow-50 text-yellow-700 ring-yellow-600/20'
                               }`}>
                               {item.isExternal
                                 ? t('analysis.history.badges.external_link')
@@ -517,7 +543,7 @@ export default function HistorySection() {
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                       <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 mr-2">
-                        {item.periodType && item.periodType !== 'unknown' ? t(`analysis.time_units.${item.periodType}`) : '-'}
+                        {item.periodType && item.periodType !== 'unknown' ? t(`analysis.time_units.${item.periodType.toLowerCase()}`) : '-'}
                       </span>
                       {item.period}
                     </td>
@@ -590,16 +616,16 @@ export default function HistorySection() {
                     <div>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-gray-900">{t(`analysis.categories.${item.category}`)}</h3>
+                          <h3 className="font-semibold text-gray-900">{t(`analysis.categories.${item.category.toLowerCase()}`)}</h3>
                           <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${item.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
                             {item.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
                           </span>
                           {item.isShared && (
                             <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${item.isExternal
-                                ? 'bg-blue-50 text-blue-700 ring-blue-600/20'
-                                : item.isFinancialDataHidden
-                                  ? 'bg-green-50 text-green-700 ring-green-600/20'
-                                  : 'bg-yellow-50 text-yellow-700 ring-yellow-600/20'
+                              ? 'bg-blue-50 text-blue-700 ring-blue-600/20'
+                              : item.isFinancialDataHidden
+                                ? 'bg-green-50 text-green-700 ring-green-600/20'
+                                : 'bg-yellow-50 text-yellow-700 ring-yellow-600/20'
                               }`}>
                               {item.isExternal
                                 ? t('analysis.history.badges.external_link')
@@ -635,7 +661,7 @@ export default function HistorySection() {
                       </div>
                       <div className="flex flex-wrap items-center gap-2 mt-2">
                         <span className="inline-flex items-center rounded-md bg-white px-2 py-0.5 text-xs font-medium text-gray-600 border border-gray-200">
-                          {item.periodType && item.periodType !== 'unknown' ? t(`analysis.time_units.${item.periodType}`) : '-'}
+                          {item.periodType && item.periodType !== 'unknown' ? t(`analysis.time_units.${item.periodType.toLowerCase()}`) : '-'}
                         </span>
                         <span className="text-sm text-gray-500 wrap-break-word">{item.period}</span>
                       </div>
@@ -759,7 +785,7 @@ export default function HistorySection() {
                     className="text-lg font-medium leading-6 text-gray-900 flex justify-between items-center mb-4"
                   >
                     <div className="flex items-center gap-2">
-                      <span>{selectedReport ? t(`analysis.categories.${selectedReport.type}`) : 'Report'}</span>
+                      <span>{selectedReport ? t(`analysis.categories.${selectedReport.type.toLowerCase()}`) : 'Report'}</span>
                       {selectedReport && (
                         <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${selectedReport.isExternal ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'}`}>
                           {selectedReport.isExternal ? t('analysis.external_analysis') : t('analysis.internal_analysis')}
@@ -915,8 +941,8 @@ export default function HistorySection() {
                     <div className="flex justify-center mb-6 mt-4">
                       {shareToken && (
                         <div className="p-3 bg-white border border-gray-100 rounded-xl shadow-sm inline-block">
-                          <QRCode 
-                            value={`${window.location.origin}/share/report/${shareToken}`} 
+                          <QRCode
+                            value={`${window.location.origin}/share/report/${shareToken}`}
                             size={160}
                             level="M"
                             className="w-full h-auto"

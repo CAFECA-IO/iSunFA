@@ -14,12 +14,15 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAiContext } from "@/contexts/ai_context";
 import { useAuth } from "@/contexts/auth_context";
-import { IFile } from "@/interfaces/ai_talk";
+import { IFile } from "@/interfaces/ai_consulting";
 import LoginButton from "@/components/common/login_button";
 import ConfirmModal from "@/components/common/confirm_modal";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { FilePreview } from "@/components/common/file_preview";
 import { useOrderTransaction, IOrderPayload } from "@/hooks/use_order_transaction";
+import { ANALYSIS_CATEGORY } from '@/constants/analysis';
+import { AnalysisCostParams, getAnalysisCost } from '@/lib/analysis/pricing';
+import { ORDER_TYPE } from '@/constants/status';
 
 // Info: (20260302 - Julian) 目前先限制一次只能上傳一張圖片
 const FILE_LIMIT = 1;
@@ -97,26 +100,22 @@ export const AiChat = () => {
   };
 
   const handlePaymentConfirm = async () => {
+    const orderParams: AnalysisCostParams = {
+      category: ANALYSIS_CATEGORY.AI_CONSULTING,
+      question: question,
+      files: files.map((f) => f.hash),
+    };
+    const unitPrice = getAnalysisCost(orderParams);
     const orderPayload: IOrderPayload = {
-      category: "ai_talk",
-      periodType: "daily",
-      year: new Date().getFullYear(),
-      periodValue: "1",
+      type: ORDER_TYPE.ANALYSIS,
+      data: orderParams,
       items: [
         {
           name: t("ai_consultation_room.consultant_fee"),
-          unitPrice: 5,
+          unitPrice: unitPrice,
           quantity: 1,
         }
       ],
-      data: {
-        question: question,
-        files: files.map((f) => {
-          const copy = { ...f };
-          delete copy.url;
-          return copy;
-        }),
-      }
     };
     await executeOrderTransaction(orderPayload, 5, submitAiQuestion);
   };

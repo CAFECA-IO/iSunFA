@@ -6,7 +6,7 @@ import {
   TransitionChild,
 } from "@headlessui/react";
 import { X } from "lucide-react";
-import { IFile } from "@/interfaces/ai_talk";
+import { IFile } from "@/interfaces/ai_consulting";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ILariaMetadata } from "@/lib/file_operator";
 import { FilePreview } from "@/components/common/file_preview";

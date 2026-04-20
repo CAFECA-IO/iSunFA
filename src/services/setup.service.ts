@@ -87,6 +87,8 @@ export async function startDockerCompose() {
   setupContent = updateOrAppendEnv(setupContent, "NEXT_PUBLIC_BAIFA_EXPLORER", "https://baifa.io");
   setupContent = updateOrAppendEnv(setupContent, "NEXT_PUBLIC_ISUNCOIN_CHAIN_ID", "8017");
   setupContent = updateOrAppendEnv(setupContent, "REPORT_OUTPUT_DIR", "reports");
+  setupContent = updateOrAppendEnv(setupContent, "MISSION_DIR", "missions");
+  setupContent = updateOrAppendEnv(setupContent, "ISSUE_DIR", "issues");
 
   saveEnvRawContent(ENV_SETUP_PATH, setupContent);
 
@@ -142,7 +144,7 @@ export async function createSuperAdminRecord(
         await ensureSmartContractWallet(credentialId, pubKeyX, pubKeyY, name);
 
         await setSuperAdminTaskStatus({ done: false, error: null, progress: "Setting KYC Levels..." });
-        await setAccountKYCLevel(address, 1);
+        await setAccountKYCLevel(address, 10);
 
         await setSuperAdminTaskStatus({ done: false, error: null, progress: "Granting Admin Role..." });
         await grantDefaultAdminRoles(address);

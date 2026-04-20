@@ -60,6 +60,8 @@ export default function SetupWizardPage() {
             NEXT_PUBLIC_BAIFA_EXPLORER: 2,
             NEXT_PUBLIC_ISUNCOIN_CHAIN_ID: 2,
             REPORT_OUTPUT_DIR: 2,
+            MISSION_DIR: 2,
+            ISSUE_DIR: 2,
             NEXT_PUBLIC_KYC_REGISTRY_ADDRESS: 4,
             NEXT_PUBLIC_DYNAMIC_MEMBERSHIP_CARD_ADDRESS: 4,
             NEXT_PUBLIC_CREDIT_POINT_ADDRESS: 4,

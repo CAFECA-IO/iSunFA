@@ -2,6 +2,7 @@ import { SubmitEvent } from 'react';
 import { Coins, ArrowRight } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { IBlockchainDashboardData } from "@/services/admin.blockchain.service";
+import { CURRENCY_UNIT } from '@/constants/price';
 
 interface IBlockchainMintFormProps {
   data: IBlockchainDashboardData | null;
@@ -60,7 +61,7 @@ export default function BlockchainMintForm({
                 className="w-full rounded-2xl border-2 border-gray-200 py-3.5 pl-5 pr-16 font-semibold text-gray-900 transition hover:border-gray-300 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 focus:outline-none disabled:opacity-50"
               />
               <span className="absolute top-1/2 right-5 -translate-y-1/2 font-bold text-gray-400">
-                ICP
+                {CURRENCY_UNIT.ICP}
               </span>
             </div>
             <button
@@ -79,7 +80,7 @@ export default function BlockchainMintForm({
                 {t("admin_blockchain.page.live_rate")}
               </span>
               <span className="ml-auto font-bold">
-                1 ICP ≈ {parseFloat(data.collateralRate).toLocaleString()} ISC
+                1 {CURRENCY_UNIT.ICP} ≈ {parseFloat(data.collateralRate).toLocaleString()} {CURRENCY_UNIT.ISC}
               </span>
             </div>
           )}
