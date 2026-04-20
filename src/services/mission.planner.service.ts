@@ -84,7 +84,9 @@ export class MissionPlannerService {
                 type: missionObj.type,
                 unit: missionObj.unit,
                 amount: missionObj.amount,
-                ...(missionObj.data || {})
+                ...(missionObj.data || {}),
+                category: missionObj.data?.category, // Info: (20260420 - Luphia) Ensure category is strictly at root
+                data: missionObj.data || {}
               } as IMissionParams;
 
               // Info: (20260420 - Luphia) 3. Generate Mission Definition using missionGenerator

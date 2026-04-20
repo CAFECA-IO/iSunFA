@@ -371,6 +371,13 @@ export class PaymentRepository {
     });
   }
 
+  async updateOrderStatus(orderId: string, status: string, additionalData?: Prisma.OrderUpdateInput) {
+    return prisma.order.update({
+      where: { id: orderId },
+      data: { status, ...additionalData },
+    });
+  }
+
   async createPaymentTransactionAndUpdateOrder(
     userId: string,
     paymentMethodId: string,

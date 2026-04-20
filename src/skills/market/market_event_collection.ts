@@ -1,5 +1,5 @@
 import { ITaskSkill } from "@/skills/types";
-import { Task, Mission } from "@/generated/client";
+import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 
 export class MarketEventCollectionSkill implements ITaskSkill {
@@ -26,8 +26,8 @@ export class MarketEventCollectionSkill implements ITaskSkill {
   };
 
   async execute(
-    task: Task,
-    mission: Mission,
+    task: IPseudoTask,
+    mission: IPseudoMission,
     fullPrompt: string,
     chatService: ChatService,
   ): Promise<string> {

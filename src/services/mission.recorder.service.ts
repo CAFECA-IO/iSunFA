@@ -2,7 +2,9 @@ import { getPriorityEnvConfig } from "@/services/env.service";
 import fs from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/client";
 import { ORDER_STATUS } from "@/constants/status";
+import { analysisRepo } from "@/repositories/analysis.repo";
 
 export class MissionRecorderService {
   async processNext() {
@@ -74,16 +76,24 @@ export class MissionRecorderService {
           });
 
           if (analysis) {
+            let parsedResult: unknown = resultContent;
+            try {
+              parsedResult = JSON.parse(resultContent);
+            } catch {
+              // Info: (20260420 - Luphia) fallback to string
+            }
+
             await prisma.analysis.update({
               where: { id: analysis.id },
-              data: { result: resultContent }
+              data: { result: parsedResult as Prisma.InputJsonValue }
             });
 
-            if (analysis.missionId) {
-              await prisma.mission.update({
-                where: { id: analysis.missionId },
-                data: { status: "COMPLETED", result: resultContent }
-              });
+            // Info: (20260420 - Luphia) Save Analysis tags if present
+            if (typeof parsedResult === 'object' && parsedResult !== null) {
+              const tags = (parsedResult as Record<string, unknown>).tags;
+              if (Array.isArray(tags)) {
+                await analysisRepo.syncAnalysisTags(analysis.id, tags.map(t => String(t)));
+              }
             }
           }
 

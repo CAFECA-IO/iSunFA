@@ -41,7 +41,6 @@ model User {
 
   orders              Order[]
   analyses            Analysis[]
-  missions            Mission[]
   comments            Comment[]
   receivedReplies     Comment[]            @relation("CommentRecipient")
   reactions           Reaction[]
@@ -134,8 +133,7 @@ model Analysis {
   type      String
   data      Json
   result    Json?
-  missionId String?  @map("mission_id")
-  mission   Mission? @relation(fields: [missionId], references: [id])
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -148,42 +146,7 @@ model Analysis {
   @@map("analysis")
 }
 
-model Mission {
-  id     String @id @default(uuid())
-  userId String @map("user_id")
-  user   User   @relation(fields: [userId], references: [id])
-  name   String
 
-  // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
-  status    String     @default("PENDING")
-  tasks     Task[]
-  analyses  Analysis[]
-  data      Json?
-  result    Json?
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
-
-  @@map("mission")
-}
-
-model Task {
-  id        String  @id @default(uuid())
-  missionId String  @map("mission_id")
-  mission   Mission @relation(fields: [missionId], references: [id])
-  type      String
-
-  // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
-  status String @default("PENDING")
-
-  // Info: (20260128 - Luphia) Execution order. Equal values = parallel
-  order     Int      @default(0)
-  data      Json?
-  result    Json?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("task")
-}
 
 // Info: (20260226 - Julian) 上傳檔案：儲存 hash
 model File {

@@ -9,7 +9,6 @@ import {
   missionGenerator,
   IMissionDefinition,
 } from "@/lib/worker/mission.generator";
-import { MISSION_STATUS } from "@/constants/status";
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import { AppError } from "@/lib/utils/error";
 import { ApiCode } from "@/lib/utils/status";
@@ -54,7 +53,7 @@ export class AnalysisService {
     }
 
     const isNonPeriodAnalysis = [ANALYSIS_CATEGORY.AI_CONSULTING, ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS].some((category) => params.category === category);
-    
+
     if (!isNonPeriodAnalysis && !params.periodType) {
       throw new Error("Missing required parameters: periodType");
     }
@@ -80,15 +79,9 @@ export class AnalysisService {
             },
           },
           orderBy: { createdAt: "desc" },
-          include: { mission: true },
         });
 
-        if (prerequisite?.mission?.result) {
-          prerequisiteStr =
-            typeof prerequisite.mission.result === "string"
-              ? prerequisite.mission.result
-              : JSON.stringify(prerequisite.mission.result);
-        } else if (prerequisite?.result) {
+        if (prerequisite?.result) {
           prerequisiteStr =
             typeof prerequisite.result === "string"
               ? prerequisite.result
@@ -305,21 +298,18 @@ export class AnalysisService {
       throw new Error("Failed to initialize report storage");
     }
 
-    let createdMissionId: string | undefined;
-
     if (params.orderId) {
       try {
         // Info: (20260327 - Tzuhan) Cache disabled for reports (Always generate fresh report)
-        const result = await analysisRepo.create({
+        await analysisRepo.create({
           reportId,
           userId,
           orderId: params.orderId,
           category: params.category,
-          missionName: missionDef
-            ? missionDef.name
-            : `Analysis-${params.category}-${params.periodType!}`,
-          status: params.status || MISSION_STATUS.UPLOADING,
-          missionData: {
+          data: {
+            missionName: missionDef
+              ? missionDef.name
+              : `Analysis-${params.category}-${params.periodType!}`,
             category: params.category,
             cost,
             remainingBalance: 9500,
@@ -334,9 +324,7 @@ export class AnalysisService {
             historicalTags: await analysisRepo.getGlobalTopTags(20),
             data: params.data ? (params.data as unknown as Prisma.InputJsonValue) : undefined,
           },
-          tasks: missionDef ? missionDef.tasks : undefined,
         });
-        createdMissionId = result.missionId || undefined;
       } catch (error) {
         console.error(`[AnalysisService] Failed to save report to DB:`, error);
         throw new Error("Failed to save report metadata");
@@ -351,46 +339,18 @@ export class AnalysisService {
       .uploadLaria(planFile)
       .then(async (hash) => {
         console.log(
-          `[Info: (20260304 - Tzuhan)] BACKGROUND Plan uploaded, hash: ${hash} for Mission ${createdMissionId}`,
+          `[Info: (20260304 - Tzuhan)] BACKGROUND Plan uploaded, hash: ${hash} for Order ${params.orderId}`,
         );
-        if (createdMissionId) {
-          try {
-            await analysisRepo.updateMissionUploadSuccess(
-              createdMissionId,
-              hash,
-            );
-            console.log(
-              `[Info: (20260304 - Tzuhan)] BACKGROUND Mission ${createdMissionId} updated with planHash and set to PENDING`,
-            );
-          } catch (e) {
-            console.error(
-              `[Info: (20260304 - Tzuhan)] BACKGROUND Failed to update mission with planHash:`,
-              e,
-            );
-          }
-        }
+        /**
+         * Info: (20260420 - Luphia) The worker logic should pick up from the IPFS if we need to manually trigger, or the order polling handles it.
+         * Wait, analysis data already stores the plan internally or the worker IPFS logic handles it.
+         */
       })
       .catch(async (error) => {
         console.error(
           `[Info: (20260304 - Tzuhan)] BACKGROUND Failed to upload plan:`,
           error,
         );
-        if (createdMissionId) {
-          try {
-            await analysisRepo.updateMissionUploadFailed(
-              createdMissionId,
-              "File Upload Failed. Please contact support.",
-            );
-            console.log(
-              `[Info: (20260304 - Tzuhan)] BACKGROUND Mission ${createdMissionId} marked as FAILED due to upload error`,
-            );
-          } catch (e) {
-            console.error(
-              `[Info: (20260304 - Tzuhan)] BACKGROUND Failed to mark mission as FAILED:`,
-              e,
-            );
-          }
-        }
       });
 
     // Info: (20260120 - Luphia) Mock Response returned instantly

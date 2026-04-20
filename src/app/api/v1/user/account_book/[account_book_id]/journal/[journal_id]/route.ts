@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { Prisma } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -10,9 +11,9 @@ import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
-import { missionRepo } from "@/repositories/mission.repo";
-import { missionGenerator } from "@/lib/worker/mission.generator";
-
+import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import { paymentRepo } from "@/repositories/payment.repo";
+import { CURRENCY_UNIT } from "@/constants/price";
 /**
  * Info: (20260304 - Julian) 取得日記帳
  * GET /api/v1/user/account_book/:account_book_id/journal/:journal_id
@@ -60,10 +61,10 @@ export async function GET(
       ...journalDbRecord,
       file: journalDbRecord.file
         ? {
-            id: journalDbRecord.file.id,
-            hash: journalDbRecord.file.hash,
-            fileName: journalDbRecord.file.fileName || "Unknown",
-          }
+          id: journalDbRecord.file.id,
+          hash: journalDbRecord.file.hash,
+          fileName: journalDbRecord.file.fileName || "Unknown",
+        }
         : undefined,
       voucherId: journalDbRecord.voucherId,
       esgRecordId: journalDbRecord.esgRecordId,
@@ -144,36 +145,29 @@ export async function PUT(
       action: "UPDATE",
     });
 
-    // Info: (20260407 - Julian) 觸發 journal_correction 生成 Voucher 和 ESG
-    const missionDef = missionGenerator.generateMission({
-      category: "journal_correction",
-      periodType: "N/A",
-      periodValue: "N/A",
-      year: new Date().getFullYear(),
-      fileId: updatedJournal.fileId || undefined,
-      journalId: updatedJournal.id,
-      journalText: text,
-      voucherId: updatedJournal.voucherId,
-      esgRecordId: updatedJournal.esgRecordId,
-      accountBookId: accountBook.id,
-      prerequisiteData: { accountBook },
+    /**
+     * Info: (20260420 - Luphia) 觸發 journal_correction 生成 Voucher 和 ESG
+     * Create a 0-cost PAID order to trigger MissionIssuer cron instead of legacy local Mission
+     */
+    const fallbackOrder = await paymentRepo.createOrder({
+      userId: updater.id,
+      type: ORDER_TYPE.ANALYSIS,
+      amount: 0,
+      unit: CURRENCY_UNIT.ICP,
+      status: ORDER_STATUS.PAID,
+      challenge: crypto.randomUUID(),
+      data: {
+        category: "journal_correction",
+        fileId: updatedJournal.fileId || undefined,
+        journalId: updatedJournal.id,
+        journalText: text,
+        voucherId: updatedJournal.voucherId,
+        esgRecordId: updatedJournal.esgRecordId,
+        accountBookId: accountBook.id,
+      } as Prisma.InputJsonObject
     });
 
-    if (missionDef) {
-      await missionRepo.createMission({
-        userId: updater.id,
-        name: missionDef.name,
-        status: AIAnalysisStatus.PENDING,
-        tasks: {
-          create: missionDef.tasks.map((task) => ({
-            type: task.type,
-            order: task.order,
-            data: task.data,
-            status: AIAnalysisStatus.PENDING,
-          })),
-        },
-      });
-
+    if (fallbackOrder) {
       // Info: (20260407 - Julian) 將現有傳票狀態更新為 PROCESSING
       if (updatedJournal.voucherId) {
         await voucherRepo.updateVoucher(updatedJournal.voucherId, {
@@ -211,10 +205,10 @@ export async function PUT(
       fileId: updatedJournal.fileId ?? "",
       file: updatedJournal.file
         ? {
-            id: updatedJournal.file.id,
-            hash: updatedJournal.file.hash,
-            fileName: updatedJournal.file.fileName ?? "",
-          }
+          id: updatedJournal.file.id,
+          hash: updatedJournal.file.hash,
+          fileName: updatedJournal.file.fileName ?? "",
+        }
         : undefined,
       voucherId: updatedJournal.voucherId,
       esgRecordId: updatedJournal.esgRecordId,

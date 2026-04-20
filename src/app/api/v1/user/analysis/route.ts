@@ -282,17 +282,18 @@ export async function GET(request: NextRequest) {
     // Info: (20260128 - Luphia) Map DB result to response format
     const history = fullAnalyses.map((analysis: FullAnalysis) => {
       const status = analysis.order?.status?.toLowerCase() || "unknown";
+      const analysisData = analysis.data as Record<string, unknown> | null;
       let periodType = "unknown";
 
-      if (analysis.mission?.name) {
-        const parts = analysis.mission.name.split("-");
+      if (analysisData?.missionName) {
+        const parts = (analysisData.missionName as string).split("-");
         if (parts.length >= 3) {
           periodType = parts[2];
         }
       }
 
-      // Info: (20260128 - Luphia) Safely access mission data, we assume mission.data has generatedAt
-      const missionData = analysis.mission?.data as Record<
+      // Info: (20260128 - Luphia) Safely access mission data, we assume analysis.data has generatedAt
+      const missionData = analysis.data as Record<
         string,
         unknown
       > | null;

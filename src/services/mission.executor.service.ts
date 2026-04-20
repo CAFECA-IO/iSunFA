@@ -5,7 +5,8 @@ import { ChatService } from "@/services/chat.service";
 import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
-import { Task, Prisma, Mission } from "@/generated/client";
+import { Prisma } from "@/generated/client";
+import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { syncDocumentResultToDatabase } from "@/skills/utils/document_parser_db_sync";
 
 export class MissionExecutorService {
@@ -65,7 +66,7 @@ export class MissionExecutorService {
           // Info: (20260420 - Luphia) Read mission data
           const missionJsonStr = await fs.readFile(missionJsonPath, "utf8");
           const missionData = JSON.parse(missionJsonStr);
-          const pseudoMission = { id: missionData.orderId || "MOCK_MISSION", data: missionData } as unknown as Mission;
+          const pseudoMission = { id: missionData.orderId || "MOCK_MISSION", data: missionData } as unknown as IPseudoMission;
 
           let aggregatedResult: Prisma.InputJsonValue = "Execution completed statically.";
           const aggregatedResultsByFileId: Record<string, Record<string, unknown>> = {};
@@ -90,7 +91,7 @@ export class MissionExecutorService {
                 type: subTaskConfig.type,
                 data: subTaskConfig.data as unknown as Prisma.InputJsonValue,
                 order: subTaskConfig.order
-              } as Task;
+              } as IPseudoTask;
 
               // Info: (20260420 - Luphia) Build Prompt
               const fullPrompt = await this.buildTaskPrompt(subTaskConfig, missionData, priorResults);
@@ -169,6 +170,49 @@ export class MissionExecutorService {
 
             // Info: (20260420 - Luphia) Write execution logs array
             await fs.writeFile(path.join(taskDir, "execution_log.json"), JSON.stringify(executionLogs, null, 2), "utf8");
+
+            // Info: (20260420 - Luphia) Transform multi-step result into standardized { answer, tags } UI format
+            if (tasksConfig.length > 1 && typeof aggregatedResult === 'object' && aggregatedResult !== null) {
+              const agg = aggregatedResult as Record<string, unknown>;
+
+              const stepKeys = Object.keys(agg).filter(k => k.startsWith("STEP_") || k === "MARKET_FORMATTED_OUTPUT").sort();
+              const finalKey = agg["STEP_5"] ? "STEP_5" : (stepKeys.length > 0 ? stepKeys[stepKeys.length - 1] : null);
+              const finalAnswer = finalKey ? String(agg[finalKey]) : "";
+
+              let tags: string[] = [];
+              if (agg["STEP_2"]) {
+                const step2Str = String(agg["STEP_2"]);
+                const lines = step2Str.split('\n');
+                let capturingTags = false;
+                for (const line of lines) {
+                  // Info: (20260420 - Luphia) Some models output tags under a specific heading
+                  if (line.includes("最終決定的標籤清單") || line.includes("Final Tags")) {
+                    capturingTags = true;
+                  }
+
+                  const match = line.match(/^(?:[*-]|\d+\.)\s+(?:\*\*)?(#.*?[^\*])(?:\*\*)?\s*$/);
+                  if (match && (capturingTags || step2Str.length < 500)) {
+                    tags.push(match[1].trim());
+                  } else if (!match && capturingTags && line.match(/^(?:[*-]|\d+\.)\s+(?:\*\*)?([^#\*\s].*?[^\*])(?:\*\*)?\s*$/)) {
+                    // Info: (20260420 - Luphia) Sometimes AI forgets the # symbol
+                    const tagMatch = line.match(/^(?:[*-]|\d+\.)\s+(?:\*\*)?([^#\*\s].*?[^\*])(?:\*\*)?\s*$/);
+                    if (tagMatch) tags.push(`#${tagMatch[1].trim()}`);
+                  }
+                }
+
+                if (tags.length === 0) {
+                  const matchArray = step2Str.match(/最終決定的標籤清單[：:][\[【](.*?)[\]】]/);
+                  if (matchArray) {
+                    tags = matchArray[1].split(/[,、]/).map(t => t.trim());
+                  }
+                }
+              }
+
+              aggregatedResult = {
+                answer: finalAnswer,
+                tags: tags
+              };
+            }
           } else {
             // Info: (20260420 - Luphia) Fallback MD behavior
             console.log(`[MissionExecutor] Executing basic simulated logic for category: ${missionData.category}...`);

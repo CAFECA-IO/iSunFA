@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { talkRepo } from "@/repositories/talk.repo";
-import { IFile } from "@/interfaces/ai_consulting";
 import { ApiCode } from "@/lib/utils/status";
 import { bundlerService } from "@/services/bundler.service";
 import { analysisService } from "@/services/analysis.service";
@@ -10,7 +9,7 @@ import { webAuthnService } from "@/services/webauthn.service";
 import { getPendingOrder, markOrderPaying } from "@/services/order.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { publicClient } from "@/lib/viem_public";
-import { MISSION_STATUS, ORDER_TYPE } from "@/constants/status";
+import { ORDER_TYPE } from "@/constants/status";
 import { ANALYSIS_CATEGORY, type AnalysisCategory, type AnalysisPeriod } from "@/constants/analysis";
 
 export async function POST(
@@ -100,7 +99,6 @@ export async function POST(
     if (category !== ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
       const generateParams = {
         orderId: orderId,
-        status: MISSION_STATUS.PAYING, // Info: (20260417 - Luphia) Force PAYING status
         type: ORDER_TYPE.ANALYSIS,
         data: {
           ...innerData,
@@ -117,14 +115,19 @@ export async function POST(
 
     // Info: (20260418 - Luphia) 建立上傳檔案並與討論串關聯 (Restore AI Talk logic)
     if (category === ANALYSIS_CATEGORY.AI_CONSULTING && resData.reportId && orderData.data) {
-      const payloadData = orderData.data as { files?: IFile[] };
+      type TPayloadFile = string | { hash: string; fileName?: string };
+      const payloadData = orderData.data as { files?: TPayloadFile[] };
       if (payloadData.files && payloadData.files.length > 0) {
         await talkRepo.createFiles(
-          payloadData.files.map((file: IFile) => ({
-            hash: file.hash,
-            fileName: file.fileName,
-            analysisId: resData.reportId!,
-          }))
+          payloadData.files.map((file: TPayloadFile) => {
+            const isString = typeof file === 'string';
+            const fileHash = isString ? file : file.hash;
+            return {
+              hash: fileHash,
+              fileName: isString ? `${fileHash.substring(0, 8)}.png` : (file as { fileName?: string }).fileName || `${fileHash.substring(0, 8)}.png`,
+              analysisId: resData.reportId!,
+            };
+          })
         );
       }
     }

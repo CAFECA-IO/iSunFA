@@ -1,4 +1,4 @@
-import { Task } from "@/generated/client";
+import { IPseudoTask } from "@/skills/types";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { storageService } from "@/services/storage.service";
@@ -14,7 +14,7 @@ export interface IDocumentContext {
   esgRecordId?: string;
 }
 
-export async function prepareDocumentContext(task: Task) {
+export async function prepareDocumentContext(task: IPseudoTask) {
   const taskData = task.data as { context?: string };
   let parsedContext: IDocumentContext = { fileId: "", accountBookId: "", esgRecordId: "" };
   try {

@@ -36,13 +36,13 @@ export async function GET(
       );
     }
 
-    const missionData = analysis.mission?.data as Record<
+    const analysisData = analysis.data as Record<
       string,
       unknown
     > | null;
     let isExternal = false;
-    if (typeof missionData?.isExternal === "boolean") {
-      isExternal = missionData.isExternal;
+    if (typeof analysisData?.isExternal === "boolean") {
+      isExternal = analysisData.isExternal;
     } else {
       // Info: (20260324 - Tzuhan) Fallback to order data if available
       const orderData = analysis.order?.data as Record<string, unknown> | null;

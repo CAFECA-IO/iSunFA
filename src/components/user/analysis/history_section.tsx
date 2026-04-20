@@ -127,10 +127,36 @@ export default function HistorySection() {
   const handleViewReport = async (item: IHistoryItem) => {
     try {
       setLoadingReport(true);
-      const result = await request<{ code: string; payload: { id: string; result: string; type: string; isExternal?: boolean } }>(`/api/v1/user/analysis/${item.reportId}`);
+      const result = await request<{ code: string; payload: { id: string; result: unknown; type: string; isExternal?: boolean } }>(`/api/v1/user/analysis/${item.reportId}`);
 
       if (result.code === 'SUCCESS') {
-        const content = typeof result.payload.result === 'string' ? result.payload.result : JSON.stringify(result.payload.result, null, 2);
+        let content = '';
+        let payloadResult = result.payload.result;
+
+        if (typeof payloadResult === 'string') {
+          try {
+            const parsed = JSON.parse(payloadResult);
+            if (typeof parsed === 'object' && parsed !== null) {
+              payloadResult = parsed;
+            }
+          } catch { }
+        }
+
+        if (typeof payloadResult === 'string') {
+          content = payloadResult;
+        } else if (payloadResult && typeof payloadResult === 'object') {
+          const resultObj = payloadResult as Record<string, unknown>;
+          if (resultObj.answer) {
+            content = resultObj.answer as string;
+            if (resultObj.tags && Array.isArray(resultObj.tags) && resultObj.tags.length > 0) {
+              content += `\n\n### 標籤\n` + (resultObj.tags as string[]).map(t => `- ${t}`).join('\n');
+            }
+          } else {
+            const keys = Object.keys(resultObj).sort();
+            content = keys.map(k => resultObj[k] as string).join('\n\n---\n\n');
+          }
+        }
+        
         setSelectedReport({
           id: result.payload.id,
           content: content || 'No content available.',
