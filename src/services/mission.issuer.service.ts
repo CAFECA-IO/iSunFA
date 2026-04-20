@@ -192,7 +192,8 @@ export class MissionIssuerService {
 
       // Info: (20260420 - Luphia) 7. Store Files Locally (ISSUE_DIR)
       const issueDirBase = setupConfig.ISSUE_DIR || "issues";
-      const taskDir = path.join(process.cwd(), issueDirBase, taskId);
+      const folderName = `${mbAddress}_${taskId}`;
+      const taskDir = path.join(process.cwd(), issueDirBase, folderName);
       await fs.mkdir(taskDir, { recursive: true });
 
       await fs.writeFile(path.join(taskDir, "mission.json"), missionJsonStr, "utf8");

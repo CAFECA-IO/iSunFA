@@ -1,0 +1,35 @@
+export const adminMissionBoard = {
+  page: {
+    title: "任務看板",
+    subtitle: "管理與檢閱所有已發布至區塊鏈的自動化任務與懸賞。",
+  },
+  kpi: {
+    total_missions: "總任務數",
+    open_missions: "懸賞中",
+    pending_reviews: "待審核",
+    total_rewards: "總懸賞金",
+  },
+  tabs: {
+    all: "全部",
+    open: "懸賞中",
+    pending_review: "待審核",
+    disputed: "爭議中",
+    closed: "已關閉",
+  },
+  labels: {
+    creator: "發布者",
+    reward: "懸賞金額",
+    submissions: "提交次數",
+    subIndex: "提交編號 #",
+    submitter: "提交者",
+    consumedTokens: "消耗 Tokens",
+    tokens_per_icp: "Tokens / ICP",
+    status: "狀態",
+    disputeUntil: "爭議期限",
+    view_content: "查看任務內容",
+    view_result: "查看完成結果",
+    no_missions: "目前沒有任何任務。",
+    loading: "載入任務中...",
+    unknown: "未知",
+  },
+};

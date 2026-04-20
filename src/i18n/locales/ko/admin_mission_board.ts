@@ -1,0 +1,35 @@
+export const adminMissionBoard = {
+  page: {
+    title: "미션 보드",
+    subtitle: "블록체인에 게시된 모든 자동화 작업 및 바운티를 관리하고 검토합니다.",
+  },
+  kpi: {
+    total_missions: "총 미션 수",
+    open_missions: "모집 중",
+    pending_reviews: "심사 대기 중",
+    total_rewards: "총 보상금",
+  },
+  tabs: {
+    all: "전체",
+    open: "모집 중",
+    pending_review: "심사 대기 중",
+    disputed: "분쟁 중",
+    closed: "종료됨",
+  },
+  labels: {
+    creator: "게시자",
+    reward: "보상금",
+    submissions: "제출 횟수",
+    subIndex: "제출 인덱스 #",
+    submitter: "제출자",
+    consumedTokens: "소모된 토큰",
+    tokens_per_icp: "Tokens / ICP",
+    status: "상태",
+    disputeUntil: "분쟁 기한",
+    view_content: "작업 내용 보기",
+    view_result: "제출 결과 보기",
+    no_missions: "현재 미션이 없습니다.",
+    loading: "미션을 불러오는 중입니다...",
+    unknown: "알 수 없음",
+  },
+};

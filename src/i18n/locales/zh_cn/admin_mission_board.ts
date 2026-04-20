@@ -1,0 +1,35 @@
+export const adminMissionBoard = {
+  page: {
+    title: "任务看板",
+    subtitle: "管理与检阅所有已发布至区块链的自动化任务与悬赏。",
+  },
+  kpi: {
+    total_missions: "总任务数",
+    open_missions: "悬赏中",
+    pending_reviews: "待审核",
+    total_rewards: "总悬赏金",
+  },
+  tabs: {
+    all: "全部",
+    open: "悬赏中",
+    pending_review: "待审核",
+    disputed: "争议中",
+    closed: "已关闭",
+  },
+  labels: {
+    creator: "发布者",
+    reward: "悬赏金额",
+    submissions: "提交次数",
+    subIndex: "提交编号 #",
+    submitter: "提交者",
+    consumedTokens: "消耗 Tokens",
+    tokens_per_icp: "Tokens / ICP",
+    status: "状态",
+    disputeUntil: "争议期限",
+    view_content: "查看任务内容",
+    view_result: "查看完成结果",
+    no_missions: "目前没有任何任务。",
+    loading: "载入任务中...",
+    unknown: "未知",
+  },
+};

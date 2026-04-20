@@ -7,8 +7,10 @@ import {
   stringToBytes,
   getAddress,
   parseEther,
+  encodeAbiParameters,
+  parseAbiParameters,
 } from "viem";
-import { publicClient } from "@/lib/viem_public";
+import { publicClient, isuncoin } from "@/lib/viem_public";
 import { CONTRACT_ADDRESSES, ABIS } from "@/config/contracts";
 
 // Info: (20260419 - Agent) Merged to provide a single, pure client-side UserOp builder
@@ -91,27 +93,33 @@ export async function prepareTransferUserOp(
       signature: "0x",
     };
 
-    // Info: (20260130 - Tzuhan) 5. Calculate UserOp Hash using EntryPoint
-    const userOpHash = await publicClient.readContract({
-      address: CONTRACT_ADDRESSES.ENTRY_POINT,
-      abi: ABIS.ENTRY_POINT,
-      functionName: "getUserOpHash",
-      args: [
-        {
-          sender: userOp.sender as `0x${string}`,
-          nonce: BigInt(userOp.nonce),
-          initCode: userOp.initCode as `0x${string}`,
-          callData: userOp.callData as `0x${string}`,
-          callGasLimit: BigInt(userOp.callGasLimit),
-          verificationGasLimit: BigInt(userOp.verificationGasLimit),
-          preVerificationGas: BigInt(userOp.preVerificationGas),
-          maxFeePerGas: BigInt(userOp.maxFeePerGas),
-          maxPriorityFeePerGas: BigInt(userOp.maxPriorityFeePerGas),
-          paymasterAndData: userOp.paymasterAndData as `0x${string}`,
-          signature: userOp.signature as `0x${string}`,
-        },
-      ],
-    });
+    // Info: (20260130 - Tzuhan) 5. Calculate UserOp Hash locally instead of RPC call
+    const packed = encodeAbiParameters(
+      parseAbiParameters(
+        "address, uint256, bytes32, bytes32, uint256, uint256, uint256, uint256, uint256, bytes32"
+      ),
+      [
+        userOp.sender as `0x${string}`,
+        BigInt(userOp.nonce),
+        keccak256(userOp.initCode as `0x${string}`),
+        keccak256(userOp.callData as `0x${string}`),
+        BigInt(userOp.callGasLimit),
+        BigInt(userOp.verificationGasLimit),
+        BigInt(userOp.preVerificationGas),
+        BigInt(userOp.maxFeePerGas),
+        BigInt(userOp.maxPriorityFeePerGas),
+        keccak256(userOp.paymasterAndData as `0x${string}`),
+      ]
+    );
+
+    const hash = keccak256(packed);
+    const userOpHash = keccak256(
+      encodeAbiParameters(parseAbiParameters("bytes32, address, uint256"), [
+        hash,
+        CONTRACT_ADDRESSES.ENTRY_POINT,
+        BigInt(isuncoin.id),
+      ])
+    );
 
     return {
       success: true,
