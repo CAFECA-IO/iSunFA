@@ -13,7 +13,7 @@ import { MISSION_STATUS } from "@/constants/status";
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import { AppError } from "@/lib/utils/error";
 import { ApiCode } from "@/lib/utils/status";
-import { Prisma } from "@/generated/client";
+import { Prisma, Voucher, VoucherLine } from "@/generated/client";
 
 export interface IGenerateAnalysisParams extends IOrderParams {
   orderId?: string;
@@ -181,21 +181,19 @@ export class AnalysisService {
             })
             : [];
 
-          // Info: (20260418 - Tzuhan) 目前僅先對合規抓鬼與異常傳票執行 DB 傳票的完整撈取並交付快篩
-          let voucherRecords: unknown[] = [];
-          if (params.category === "financial_compliance") {
-            voucherRecords = targetAccountBookId
-              ? await prisma.voucher.findMany({
+          // Info: (20260420 - Tzuhan) 取消分類限制，對所有內部報告開放 DB 傳票撈取，讓碳健檢也能抓到電費、水費、磅單等 ESG 單據
+          let voucherRecords: (Voucher & { lines: VoucherLine[] })[] = [];
+          voucherRecords = targetAccountBookId
+            ? await prisma.voucher.findMany({
                 where: {
                   accountBookId: targetAccountBookId,
                   tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
                   deletedAt: null,
                 },
                 orderBy: { tradingDate: "asc" },
-                include: { lines: true } // Info: (20260417 - Tzuhan) 包含分錄以供 AI 判定異常大額與退貨
+                include: { lines: true } // Info: (20260417 - Tzuhan) 包含分錄以供 AI 判定異常大金額或原物料採購
               })
-              : [];
-          }
+            : [];
 
           console.log(
             `[ESG-DEBUG] Fetched esgRecords: ${esgRecords.length}, vouchers: ${voucherRecords.length}`,
@@ -205,14 +203,24 @@ export class AnalysisService {
             let recordStr = "";
 
             if (voucherRecords.length > 0) {
-              // Info: (20260417 - Tzuhan) 若有傳票，將其轉為 JSON 供 worker generator 序列化快篩
-              recordStr = JSON.stringify(voucherRecords);
-            } else if (esgRecords.length > 0) {
+              // Info: (20260420 - Tzuhan) 資料清洗：將 Voucher 轉為緊湊的文字格式，大幅節省 Token 並提升 AI 注意力
+              const voucherContext = voucherRecords.map(v => {
+                const dateStr = v.tradingDate ? new Date(v.tradingDate).toISOString().split("T")[0] : "未知日期";
+                let lineStr = "";
+                if (v.lines && Array.isArray(v.lines)) {
+                  lineStr = v.lines.map((l, idx) => `[分錄${idx+1}] 摘要:${l.particular || '無'}, 金額:${l.amount || 0}`).join("；");
+                }
+                return `- 傳票號: V${v.id.substring(0, 8)} | 日期: ${dateStr} | 備註: ${v.note || '無'} | ${lineStr}`;
+              }).join("\n");
+              
+              recordStr += `\n### 內部會計傳票與明細紀錄\n${voucherContext}\n`;
+            }
+            if (esgRecords.length > 0) {
               const esgContextLines = esgRecords.map((r) => {
                 const dateStr = r.tradingDate.toISOString().split("T")[0];
                 return `- 日期: ${dateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
               });
-              recordStr = `\n【用戶提供的內部 ESG 數據紀錄】:\n${esgContextLines.join("\n")}\n`;
+              recordStr += `\n【內部 ESG 碳盤查數據紀錄】:\n${esgContextLines.join("\n")}\n`;
             }
 
             parsedPrerequisiteParams = {

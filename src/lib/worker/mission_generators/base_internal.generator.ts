@@ -52,10 +52,15 @@ export function generateBaseInternalMission(
     );
   });
 
+  const rawDataStr = params.data ? JSON.stringify(params.data, null, 2) : "未提供相關 JSON 原始數據";
+  const stepTags = promptMap.map(item => `### [${item.key} 分析報告]\n[${item.key}_CONTENT]`).join("\n\n");
+  const step0ContentReplacement = `【原始財報與明細數據】：\n${rawDataStr}\n\n【子維度先期分析報告】：\n${stepTags}`;
+
   const injectedFinalPrompt = finalPrompt
     .replace(/\{Target_Company\}/g, targetCompanyName)
     .replace(/\{Period\}/g, periodName)
-    .replace(/\{Year\}/g, String(params.year || "未提供"));
+    .replace(/\{Year\}/g, String(params.year || "未提供"))
+    .replace("[STEP_0_CONTENT]", step0ContentReplacement);
 
   tasks.push(
     taskGenerator.generateTask("FINAL", injectedFinalPrompt, targetInfo, 1),
