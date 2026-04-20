@@ -1,6 +1,7 @@
 export const esgMain = {
   tab: {
     records: "碳盤查紀錄",
+    emission_sources: "排放源歸口",
     coefficient: "係數資料庫",
   },
   title: "碳排管理與 ESG 分析",
