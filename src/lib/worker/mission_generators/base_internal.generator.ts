@@ -22,6 +22,10 @@ export function generateBaseInternalMission(
   if (params.prerequisiteData?.esgRecordsContext) {
     targetObj.internalDataContext = params.prerequisiteData.esgRecordsContext;
   }
+  
+  if (params.data) {
+    targetObj.financialDataPayload = params.data;
+  }
 
   const targetInfo = JSON.stringify(targetObj, null, 2);
   const tasks: ITaskDefinition[] = [];

@@ -226,8 +226,17 @@ export class TaskService {
       if (taskData.context.trim().startsWith("{")) {
         try {
           const parsedContext = JSON.parse(taskData.context);
-          const targetString = `Category: ${parsedContext.category || "N/A"} / Keyword: ${parsedContext.target} / Country: ${parsedContext.marketName} / Period: ${parsedContext.period} (Year: ${parsedContext.year})`;
-          fullPrompt = `${targetString}\n\n${interpolatedPrompt}`;
+          const targetString = `Category: ${parsedContext.category || "N/A"} / Keyword: ${parsedContext.target || parsedContext.targetCompany || "N/A"} / Country: ${parsedContext.marketName || "N/A"} / Period: ${parsedContext.period} (Year: ${parsedContext.year})`;
+          
+          let additionalContext = "";
+          if (parsedContext.internalDataContext) {
+             additionalContext += `\n${parsedContext.internalDataContext}`;
+          }
+          if (parsedContext.financialDataPayload) {
+             additionalContext += `\n\n【用戶提供的系統原始數據 (JSON)】\n${JSON.stringify(parsedContext.financialDataPayload, null, 2)}`;
+          }
+
+          fullPrompt = `${targetString}${additionalContext}\n\n${interpolatedPrompt}`;
         } catch {
           fullPrompt = `${taskData.context}\n\n${interpolatedPrompt}`;
         }
