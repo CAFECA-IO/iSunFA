@@ -2,7 +2,7 @@ import { IEsgActivityType } from "@/constants/esg_activity_type";
 import { EsgScope } from "@/interfaces/esg";
 import { CoefficientCategory, ICoefficient } from "@/interfaces/coefficient";
 
-export interface IEmissionSource {
+export interface IEmissionSources {
   id: string;
   name: string;
   activityType: IEsgActivityType;
@@ -53,9 +53,9 @@ export const mockSummaryData: IEsgEmissionSourcesSummary = {
       count: 2,
     },
   ],
-}
+};
 
-export const mockEmissionSources: IEmissionSource[] = [
+export const mockEmissionSources: IEmissionSources[] = [
   {
     id: "2026042100000001",
     name: "台中廠區 - A 棟電表",

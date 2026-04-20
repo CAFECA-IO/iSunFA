@@ -1,21 +1,76 @@
 "use client";
 
-import { numberWithCommas } from "@/lib/utils/common";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import {
   ChartColumn,
   ChartPie,
+  Cloud,
   Database,
+  Loader2,
   Zap,
 } from "lucide-react";
+import { numberWithCommas } from "@/lib/utils/common";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
 import { EsgScope } from "@/interfaces/esg";
-import { mockSummaryData } from "@/interfaces/emission_source";
+import { IEsgEmissionSourcesSummary } from "@/interfaces/emission_source";
 
 export default function EmissionSourcesSummary() {
-  // ToDo: (20260420 - Julian) 串接 API 取得 summary data
-  const summaryData = mockSummaryData;
+  const params = useParams();
+  const accountBookId = params?.account_book_id as string;
 
-    // (20260420 - Julian) 計算總數
-  const totalCount = summaryData.scopeDistribution.reduce((acc, curr) => acc + curr.count, 0);
+  // ToDo: (20260420 - Julian) 串接 API 取得 summary data
+  const [summaryData, setSummaryData] =
+    useState<IEsgEmissionSourcesSummary | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (accountBookId) {
+      const fetchSummary = async () => {
+        try {
+          setIsLoading(true);
+
+          const res = await request<IApiResponse<IEsgEmissionSourcesSummary>>(
+            `/api/v1/user/account_book/${accountBookId}/esg/emission_sources/summary`,
+          );
+          if (res.payload) {
+            setSummaryData(res.payload);
+          }
+        } catch (error) {
+          console.error("Failed to fetch ESG summary:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchSummary();
+    } else {
+      setIsLoading(false);
+    }
+  }, [accountBookId]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-32 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <Loader2 className="size-6 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  if (!summaryData) {
+    return (
+      <div className="flex h-72 w-full flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm">
+        <Cloud className="mb-2 size-8 text-slate-300" />
+        <p>目前沒有資料</p>
+      </div>
+    );
+  }
+
+  // (20260420 - Julian) 計算總數
+  const totalCount = summaryData.scopeDistribution.reduce(
+    (acc, curr) => acc + curr.count,
+    0,
+  );
 
   // (20260420 - Julian) 繪製範疇分佈圖
   const scopeChart = summaryData.scopeDistribution.map((scope) => {
@@ -41,15 +96,17 @@ export default function EmissionSourcesSummary() {
   });
 
   // (20260420 - Julian) 繪製前三大排放源
-  const top3EmissionList = summaryData.top3EmissionSources.map((source, index) => (
-    <li key={index} className="pl-2 not-last:mb-2">
-      <div className="flex items-center justify-between font-bold text-slate-800">
-        <div className="max-w-7/10 truncate">{source.name}</div>
-        <div>{numberWithCommas(source.value)}</div>
-      </div>
-    </li>
-  ));
-  
+  const top3EmissionList = summaryData.top3EmissionSources.map(
+    (source, index) => (
+      <li key={index} className="pl-2 not-last:mb-2">
+        <div className="flex items-center justify-between font-bold text-slate-800">
+          <div className="max-w-7/10 truncate">{source.name}</div>
+          <div>{numberWithCommas(source.value)}</div>
+        </div>
+      </li>
+    ),
+  );
+
   return (
     <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
       {/* Info: (20260420 - Julian) 排放源總數 */}

@@ -13,16 +13,17 @@ import {
   Settings,
 } from "lucide-react";
 import { EsgScope } from "@/interfaces/esg";
+import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
 import {
-  EsgActivityTypeMapping,
-} from "@/constants/esg_activity_type";
-import { IEmissionSource, mockEmissionSources } from "@/interfaces/emission_source";
+  IEmissionSources,
+  mockEmissionSources,
+} from "@/interfaces/emission_source";
 import EmissionSourcesSummary from "@/components/user/esg/emission_sources_summary";
 
 const EmissionSourcesItem = ({
   emissionSource,
 }: {
-  emissionSource: IEmissionSource;
+  emissionSource: IEmissionSources;
 }) => {
   const { coefficient } = emissionSource;
 
@@ -75,7 +76,7 @@ const ActivityTypeItem = ({
   emissionSources,
 }: {
   activityTypeValue: string;
-  emissionSources: IEmissionSource[];
+  emissionSources: IEmissionSources[];
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
@@ -147,19 +148,27 @@ export default function EmissionSourcesTab() {
   const { t } = useTranslation();
 
   const [keyword, setKeyword] = useState<string>("");
-  const [activeScopeTab, setActiveScopeTab] = useState<EsgScope>(EsgScope.SCOPE_1);
+  const [activeScopeTab, setActiveScopeTab] = useState<EsgScope>(
+    EsgScope.SCOPE_1,
+  );
 
   // Info: (20260420 - Julian) 根據目前選取的範疇，取得對應的 activityType 陣列
   const getActivityTypeData = (scope: EsgScope) => {
     switch (scope) {
       case EsgScope.SCOPE_1:
-        return EsgActivityTypeMapping.filter((at) => at.scope === EsgScope.SCOPE_1);
+        return EsgActivityTypeMapping.filter(
+          (at) => at.scope === EsgScope.SCOPE_1,
+        );
       case EsgScope.SCOPE_2:
-        return EsgActivityTypeMapping.filter((at) => at.scope === EsgScope.SCOPE_2);
+        return EsgActivityTypeMapping.filter(
+          (at) => at.scope === EsgScope.SCOPE_2,
+        );
       case EsgScope.SCOPE_3:
-        return EsgActivityTypeMapping.filter((at) => at.scope === EsgScope.SCOPE_3);
+        return EsgActivityTypeMapping.filter(
+          (at) => at.scope === EsgScope.SCOPE_3,
+        );
     }
-  }
+  };
 
   const scopeTab = (
     <div className="grid w-fit grid-cols-3 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5">
