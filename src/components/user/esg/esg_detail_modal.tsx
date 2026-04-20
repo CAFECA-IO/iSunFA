@@ -331,7 +331,9 @@ export default function EsgDetailModal({
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
             >
               {/* Info: (20260417 - Julian) 顯示目前選擇的範疇 */}
-              <option value="" disabled>{t(`esg_verify.form.${formData.scope?.toLowerCase()}`)}</option>
+              <option value="" disabled>
+                {t(`esg_verify.form.${formData.scope?.toLowerCase()}`)}
+              </option>
               {EsgActivityTypeMapping.filter(
                 (a) => !formData.scope || a.scope === formData.scope,
               ).map((a) => (

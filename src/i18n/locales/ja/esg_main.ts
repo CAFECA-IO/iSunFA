@@ -1,6 +1,7 @@
 export const esgMain = {
   tab: {
     records: "炭素インベントリ記録",
+    emission_sources: "排出源の所管",
     coefficient: "係数データベース",
   },
   title: "炭素排出管理およびESG分析",
