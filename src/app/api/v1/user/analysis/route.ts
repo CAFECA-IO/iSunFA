@@ -19,6 +19,7 @@ import { getPeriodDateRange } from "@/lib/analysis/period";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS } from "@/config/contracts";
 import { analysisRepo, FullAnalysis } from "@/repositories/analysis.repo";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
@@ -222,10 +223,16 @@ export async function POST(request: NextRequest) {
     }
 
     /**
-     * Info: (20260128 - Luphia) Proceed with Analysis Generation
-     * Data is already in Order, but we can use body too or trust order data
-     * Using body params ensures consistency with frontend request, but ideally we use order.data
+     * Info: (20260420 - Tzuhan) [BUGFIX] Frontend uploads FIN_DATA during Order creation. 
+     * We MUST fetch the Order from DB to retrieve the payload and pass it to generateAnalysis!
      */
+    const dbOrder = await prisma.order.findUnique({
+      where: { id: orderId }
+    });
+
+    // Info: (20260420 - Tzuhan) Fallback to body.data just in case the client sends it directly
+    const analysisPayload = body.data || dbOrder?.data;
+
     const result = await analysisService.generateAnalysis(user.id, {
       category,
       periodType,
@@ -235,6 +242,7 @@ export async function POST(request: NextRequest) {
       keyword,
       orderId,
       isExternal,
+      data: analysisPayload,
     });
 
     return jsonOk(result);
