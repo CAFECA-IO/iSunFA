@@ -1,86 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
-import { numberWithCommas } from "@/lib/utils/common";
 import {
   ChevronDown,
-  Folder,
+  Loader2,
   Minus,
   Plus,
   Search,
   SearchX,
-  Settings,
 } from "lucide-react";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
 import { EsgScope } from "@/interfaces/esg";
-import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
-import {
-  IEmissionSources,
-  mockEmissionSources,
-} from "@/interfaces/emission_source";
+import { IActivityData } from "@/interfaces/emission_source";
 import EmissionSourcesSummary from "@/components/user/esg/emission_sources_summary";
+import EmissionSourcesItem from "@/components/user/esg/emission_sources_item";
 
-const EmissionSourcesItem = ({
-  emissionSource,
-}: {
-  emissionSource: IEmissionSources;
-}) => {
-  const { coefficient } = emissionSource;
-
-  // ToDo: (20260420 - Julian) Open Emission Source Setting Modal
-  const clickAction = () => {
-    console.log("clickAction");
-  };
-
-  return (
-    <tr className="group/item border-b border-gray-100 transition-colors last:border-b-0 hover:bg-orange-50">
-      <td className="px-8 py-4">
-        <div className="flex items-center gap-4">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-gray-100 text-slate-400 transition-colors group-hover/item:bg-white">
-            <Folder size={20} />
-          </div>
-          <div className="flex flex-col font-bold">
-            <p className="text-sm text-slate-800 transition-colors group-hover/item:text-orange-400">
-              {emissionSource.name}
-            </p>
-            <p className="text-xs text-slate-400">{emissionSource.id}</p>
-          </div>
-        </div>
-      </td>
-      <td className="px-8 py-4 text-xs font-bold text-slate-500">
-        {coefficient.source}
-      </td>
-      <td className="px-8 py-4">
-        <p className="text-sm font-bold text-slate-800 uppercase">
-          {numberWithCommas(coefficient.emissionFactor)}
-          <span className="ml-1 text-[10px] text-slate-400">
-            {coefficient.unit}
-          </span>
-        </p>
-      </td>
-      <td className="px-8 py-4 text-center text-sm">
-        <button
-          type="button"
-          onClick={clickAction}
-          className="rounded-lg bg-transparent p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-800"
-        >
-          <Settings size={20} />
-        </button>
-      </td>
-    </tr>
-  );
-};
-
-const ActivityTypeItem = ({
-  activityTypeValue,
-  emissionSources,
-}: {
-  activityTypeValue: string;
-  emissionSources: IEmissionSources[];
-}) => {
+const ActivityTypeItem = ({ activityType, emissionSources }: IActivityData) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const toggleOpen = () => setIsOpen((prev) => !prev);
+
+  // Info: (20260420 - Julian) 無障礙設計：讓用戶可以用鍵盤操作
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleOpen();
+    }
+  };
 
   // Info: (20260420 - Julian) 取得該 activityType 的排放源數量
   const countOfEmissionSources = emissionSources.length;
@@ -95,7 +44,10 @@ const ActivityTypeItem = ({
     <div className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-colors duration-200 focus-within:border-orange-200 hover:border-orange-200">
       {/* Info: (20260420 - Julian) Header */}
       <div
+        role="button"
+        tabIndex={0}
         onClick={toggleOpen}
+        onKeyDown={handleKeyDown}
         className="flex cursor-pointer items-center justify-between rounded-xl p-6 transition-colors duration-200 hover:bg-orange-50"
       >
         <div className="flex items-center gap-4">
@@ -106,7 +58,7 @@ const ActivityTypeItem = ({
             />
           </div>
           <div className="flex flex-col font-bold">
-            <p className="text-base text-slate-800">{activityTypeValue}</p>
+            <p className="text-base text-slate-800">{activityType.value}</p>
             <p className="text-xs text-slate-400">
               {countOfEmissionSources} 個排放源 ID
             </p>
@@ -144,33 +96,88 @@ const ActivityTypeItem = ({
   );
 };
 
+const ActivityTypeList = ({
+  isLoading,
+  activityData,
+}: {
+  isLoading: boolean;
+  activityData: IActivityData[];
+}) => {
+  if (isLoading) {
+    return (
+      <div className="flex h-32 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <Loader2 className="size-6 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  const isDisplayedEmissionSources =
+    activityData.length > 0 ? (
+      <div className="flex flex-col gap-4">
+        {activityData.map((ad) => (
+          <ActivityTypeItem
+            key={ad.activityType.key}
+            activityType={ad.activityType}
+            emissionSources={ad.emissionSources}
+          />
+        ))}
+      </div>
+    ) : (
+      <div className="flex flex-col items-center justify-center gap-2 p-6 text-lg font-bold text-slate-400">
+        <SearchX size={40} />
+        <p>No emission sources found</p>
+      </div>
+    );
+
+  return isDisplayedEmissionSources;
+};
+
 export default function EmissionSourcesTab() {
+  const params = useParams();
+  const accountBookId = params?.account_book_id as string;
+
   const { t } = useTranslation();
 
   const [keyword, setKeyword] = useState<string>("");
   const [activeScopeTab, setActiveScopeTab] = useState<EsgScope>(
     EsgScope.SCOPE_1,
   );
+  const [activityData, setActivityData] = useState<IActivityData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Info: (20260420 - Julian) 根據目前選取的範疇，取得對應的 activityType 陣列
-  const getActivityTypeData = (scope: EsgScope) => {
-    switch (scope) {
-      case EsgScope.SCOPE_1:
-        return EsgActivityTypeMapping.filter(
-          (at) => at.scope === EsgScope.SCOPE_1,
-        );
-      case EsgScope.SCOPE_2:
-        return EsgActivityTypeMapping.filter(
-          (at) => at.scope === EsgScope.SCOPE_2,
-        );
-      case EsgScope.SCOPE_3:
-        return EsgActivityTypeMapping.filter(
-          (at) => at.scope === EsgScope.SCOPE_3,
-        );
+  useEffect(() => {
+    if (accountBookId) {
+      const fetchSummary = async () => {
+        try {
+          setIsLoading(true);
+
+          const res = await request<IApiResponse<IActivityData[]>>(
+            `/api/v1/user/account_book/${accountBookId}/esg/emission_sources?scope=${activeScopeTab}&keyword=${keyword}`,
+          );
+          if (res.payload) {
+            setActivityData(res.payload);
+          }
+        } catch (error) {
+          console.error("Failed to fetch ESG summary:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchSummary();
+    } else {
+      setIsLoading(false);
     }
-  };
+  }, [accountBookId, activeScopeTab, keyword]);
 
-  const scopeTab = (
+  if (isLoading) {
+    return (
+      <div className="flex h-32 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <Loader2 className="size-6 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  const scopeTabSwitch = (
     <div className="grid w-fit grid-cols-3 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5">
       {Object.values(EsgScope).map((scope) => (
         <button
@@ -191,50 +198,9 @@ export default function EmissionSourcesTab() {
     </div>
   );
 
-  // Info: (20260420 - Julian) 將相同的 activityType 的排放源集合成一組
-  const groupedActivityTypes = getActivityTypeData(activeScopeTab)
-    .map((activityType) => {
-      const emissionSources = mockEmissionSources.filter(
-        (source) => source.activityType.key === activityType.key,
-      );
-
-      // Info: (20260420 - Julian) 所屬 activityType 下的排放源數量
-      const countOfEmissionSources = emissionSources.length;
-
-      // Info: (20260420 - Julian) 如果沒有排放源，就回傳 null
-      if (countOfEmissionSources === 0) {
-        return null;
-      }
-
-      // Info: (20260420 - Julian) 回傳 activityType 和所屬的排放源
-      return {
-        activityType,
-        emissionSources,
-      };
-    })
-    .filter((group) => group !== null); // Info: (20260420 - Julian) 排除掉沒有排放源的項目
-
-  const emissionSourcesList =
-    groupedActivityTypes.length > 0 ? (
-      <div className="flex flex-col gap-4">
-        {groupedActivityTypes.map((group) => (
-          <ActivityTypeItem
-            key={group.activityType.key}
-            activityTypeValue={group.activityType.value}
-            emissionSources={group.emissionSources}
-          />
-        ))}
-      </div>
-    ) : (
-      <div className="flex flex-col items-center justify-center gap-2 p-6 text-lg font-bold text-slate-400">
-        <SearchX size={40} />
-        <p>No emission sources found</p>
-      </div>
-    );
-
   return (
     <div className="flex flex-col gap-8">
-      {/* Info: (20260420 - Julian) Banner */}
+      {/* Info: (20260420 - Julian) Summary */}
       <EmissionSourcesSummary />
 
       {/* Info: (20260420 - Julian) Toolbar */}
@@ -266,10 +232,10 @@ export default function EmissionSourcesTab() {
       </div>
 
       {/* Info: (20260420 - Julian) Tab Switch */}
-      {scopeTab}
+      {scopeTabSwitch}
 
       {/* Info: (20260420 - Julian) Emission Sources List */}
-      {emissionSourcesList}
+      <ActivityTypeList isLoading={isLoading} activityData={activityData} />
     </div>
   );
 }

@@ -37,10 +37,10 @@ export async function GET(
 
     return jsonOk(result);
   } catch (error) {
-    console.error("Error fetching esg coefficients:", error);
+    console.error("Error fetching emission sources summary:", error);
     return jsonFail(
       ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to fetch esg coefficients",
+      "Failed to fetch emission sources summary",
     );
   }
 }

@@ -9,6 +9,11 @@ export interface IEmissionSources {
   coefficient: ICoefficient;
 }
 
+export interface IActivityData {
+  activityType: IEsgActivityType;
+  emissionSources: IEmissionSources[];
+}
+
 export interface IEsgEmissionSourcesSummary {
   totalEmissionSourcesCount: number;
   estimatedAnnualTotalEmission: number;
