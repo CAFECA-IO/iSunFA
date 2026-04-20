@@ -511,7 +511,7 @@ export class PaymentRepository {
 
   async getGlobalRevenueTotal(startDate?: Date, endDate?: Date): Promise<number> {
     const where = this.buildDateWhereClause(startDate, endDate);
-    where.type = { in: ["PAYMENT", "OEN_PAYMENT"] };
+    where.type = ORDER_TYPE.OEN_PAYMENT;
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
 
     const agg = await prisma.order.aggregate({
@@ -523,7 +523,7 @@ export class PaymentRepository {
 
   async getGlobalTransactingUsersCount(startDate?: Date, endDate?: Date): Promise<number> {
     const where = this.buildDateWhereClause(startDate, endDate);
-    where.type = { in: ["PAYMENT", "OEN_PAYMENT"] };
+    where.type = ORDER_TYPE.OEN_PAYMENT;
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
 
     const agg = await prisma.order.groupBy({
@@ -535,7 +535,7 @@ export class PaymentRepository {
 
   async getGlobalPointsPurchasedTotal(startDate?: Date, endDate?: Date): Promise<number> {
     const where = this.buildDateWhereClause(startDate, endDate);
-    where.type = { in: ["PAYMENT", "OEN_PAYMENT"] };
+    where.type = ORDER_TYPE.OEN_PAYMENT;
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
 
     const orders = await prisma.order.findMany({
@@ -555,7 +555,7 @@ export class PaymentRepository {
 
   async getGlobalPointsConsumedTotal(startDate?: Date, endDate?: Date): Promise<number> {
     const where = this.buildDateWhereClause(startDate, endDate);
-    where.type = { notIn: ["PAYMENT", "OEN_PAYMENT", "OEN_BINDING", "CHECKIN_REWARD", "REGISTRATION_REWARD"] };
+    where.type = { notIn: [ORDER_TYPE.OEN_PAYMENT, ORDER_TYPE.OEN_BINDING, ORDER_TYPE.CHECK_IN_REWARD, ORDER_TYPE.REGISTRATION_REWARD, ORDER_TYPE.ADMIN_ISSUED] };
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
     where.amount = { gt: 0 };
 
@@ -568,14 +568,14 @@ export class PaymentRepository {
 
   async countGlobalOrders(startDate?: Date, endDate?: Date): Promise<number> {
     const where = this.buildDateWhereClause(startDate, endDate);
-    where.type = { in: ["PAYMENT", "OEN_PAYMENT"] };
+    where.type = ORDER_TYPE.OEN_PAYMENT;
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
     return prisma.order.count({ where });
   }
 
   async getGlobalOrdersPaginated(startDate?: Date, endDate?: Date, skip: number = 0, take: number = 20) {
     const where = this.buildDateWhereClause(startDate, endDate);
-    where.type = { in: ["PAYMENT", "OEN_PAYMENT"] };
+    where.type = ORDER_TYPE.OEN_PAYMENT;
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
     return prisma.order.findMany({
       where,
@@ -588,14 +588,14 @@ export class PaymentRepository {
 
   async countGlobalPointUsages(startDate?: Date, endDate?: Date): Promise<number> {
     const where = this.buildDateWhereClause(startDate, endDate);
-    where.type = { notIn: ["PAYMENT", "OEN_PAYMENT", "OEN_BINDING"] };
+    where.type = { notIn: [ORDER_TYPE.OEN_PAYMENT, ORDER_TYPE.OEN_BINDING] };
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
     return prisma.order.count({ where });
   }
 
   async getGlobalPointUsagesPaginated(startDate?: Date, endDate?: Date, skip: number = 0, take: number = 20) {
     const where = this.buildDateWhereClause(startDate, endDate);
-    where.type = { notIn: ["PAYMENT", "OEN_PAYMENT", "OEN_BINDING"] };
+    where.type = { notIn: [ORDER_TYPE.OEN_PAYMENT, ORDER_TYPE.OEN_BINDING] };
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
     return prisma.order.findMany({
       where,

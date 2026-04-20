@@ -1,0 +1,37 @@
+export const adminMissionBoard = {
+  page: {
+    title: "ミッションボード",
+    subtitle: "ブロックチェーンに公開されたすべての自動化タスクとバウンティを管理および確認します。",
+  },
+  kpi: {
+    total_missions: "総ミッション数",
+    open_missions: "オープン",
+    pending_reviews: "レビュー待ち",
+    total_participants: "総参加者",
+    total_rewards: "総報酬",
+  },
+  tabs: {
+    all: "すべて",
+    open: "募集中",
+    pending_review: "審査待ち",
+    disputed: "異議申し立て中",
+    closed: "クローズ済み",
+  },
+  labels: {
+    creator: "作成者",
+    reward: "報酬",
+    participants: "参加者",
+    submissions: "提出物",
+    subIndex: "提出インデックス #",
+    submitter: "提出者",
+    consumedTokens: "消費トークン",
+    tokens_per_icp: "Tokens / ICP",
+    status: "ステータス",
+    disputeUntil: "異議の期限",
+    view_content: "タスク内容を見る",
+    view_result: "提出結果を見る",
+    no_missions: "現在ミッションはありません。",
+    loading: "ミッションを読み込んでいます...",
+    unknown: "不明",
+  },
+};

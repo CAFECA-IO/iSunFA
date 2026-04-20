@@ -87,27 +87,22 @@ export class RegistrationService {
       const initCode =
         `${CONTRACT_ADDRESSES.SCW_FACTORY}${factoryCallData.slice(2)}` as Hex;
 
+      const callGasLimit = 500_000n;
       const verificationGasLimit = 3_500_000n;
-      const callGasLimit = 200_000n;
-      const accountGasLimitsBigInt =
-        (verificationGasLimit << 128n) | callGasLimit;
-      const accountGasLimits =
-        `0x${accountGasLimitsBigInt.toString(16).padStart(64, "0")}` as Hex;
-
-      const maxPriorityFeePerGas = 0n;
+      const preVerificationGas = 100_000n;
       const maxFeePerGas = 0n;
-      const gasFeesBigInt = (maxPriorityFeePerGas << 128n) | maxFeePerGas;
-      const gasFees =
-        `0x${gasFeesBigInt.toString(16).padStart(64, "0")}` as Hex;
+      const maxPriorityFeePerGas = 0n;
 
       const partialUserOp = {
         sender: scwAddress,
         nonce: BigInt(0),
         initCode: initCode,
         callData: "0x" as Hex,
-        accountGasLimits,
-        preVerificationGas: BigInt(100_000),
-        gasFees,
+        callGasLimit,
+        verificationGasLimit,
+        preVerificationGas,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
         paymasterAndData: "0x" as Hex,
         signature: "0x" as Hex,
       };
@@ -141,7 +136,11 @@ export class RegistrationService {
       const finalUserOp = {
         ...partialUserOp,
         nonce: `0x${partialUserOp.nonce.toString(16)}`,
+        callGasLimit: `0x${partialUserOp.callGasLimit.toString(16)}`,
+        verificationGasLimit: `0x${partialUserOp.verificationGasLimit.toString(16)}`,
         preVerificationGas: `0x${partialUserOp.preVerificationGas.toString(16)}`,
+        maxFeePerGas: `0x${partialUserOp.maxFeePerGas.toString(16)}`,
+        maxPriorityFeePerGas: `0x${partialUserOp.maxPriorityFeePerGas.toString(16)}`,
         signature: encodedSignature,
       };
 

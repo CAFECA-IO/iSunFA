@@ -46,7 +46,8 @@ export class MissionPlannerService {
         // Info: (20260420 - Luphia) status == 0 means Open
         if (status === 0) {
           const taskIdStr = this.lastCheckedTaskId.toString();
-          const taskDir = path.join(process.cwd(), missionDirBase, taskIdStr);
+          const folderName = `${mbAddress}_${taskIdStr}`;
+          const taskDir = path.join(process.cwd(), missionDirBase, folderName);
 
           // Info: (20260420 - Luphia) Check if we already processed this
           let alreadyExists = false;

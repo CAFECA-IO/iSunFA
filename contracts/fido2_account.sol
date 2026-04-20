@@ -6,12 +6,9 @@ import {
     IEntryPoint
 } from "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {
-    PackedUserOperation
-} from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
-import {
-    SIG_VALIDATION_FAILED,
-    SIG_VALIDATION_SUCCESS
-} from "@account-abstraction/contracts/core/Helpers.sol";
+    UserOperation
+} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
+
 import {FCL_WebAuthn} from "./lib/fcl_webauthn.sol";
 import {
     Initializable
@@ -73,7 +70,7 @@ contract Fido2Account is BaseAccount, Initializable, UUPSUpgradeable {
      * @dev Validates the UserOperation signature using P256/WebAuthn.
      */
     function _validateSignature(
-        PackedUserOperation calldata userOp,
+        UserOperation calldata userOp,
         bytes32 userOpHash
     ) internal virtual override returns (uint256 validationData) {
         /**
@@ -106,9 +103,9 @@ contract Fido2Account is BaseAccount, Initializable, UUPSUpgradeable {
         );
 
         if (isValid) {
-            return SIG_VALIDATION_SUCCESS;
+            return 0;
         }
-        return SIG_VALIDATION_FAILED;
+        return 1;
     }
 
     /**

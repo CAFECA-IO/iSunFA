@@ -45,6 +45,7 @@ import { incomeStatementView } from "@/i18n/locales/en/income_statement_view";
 import { adminSetup } from "@/i18n/locales/en/admin_setup";
 import { adminMember } from "@/i18n/locales/en/admin_member";
 import { adminBlockchain } from "@/i18n/locales/en/admin_blockchain";
+import { adminMissionBoard } from "@/i18n/locales/en/admin_mission_board";
 
 import type { BaseTranslation } from "@/i18n/zh_tw";
 import { adminBilling } from "@/i18n/locales/en/admin_billing";
@@ -98,4 +99,5 @@ export const en = {
   admin_blockchain: adminBlockchain,
   admin_billing: adminBilling,
   admin_dashboard: adminDashboard,
+  admin_mission_board: adminMissionBoard,
 } satisfies BaseTranslation;

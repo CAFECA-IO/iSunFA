@@ -85,7 +85,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess = undefined }: IA
       onClose();
       // Info: (20260118 - Luphia) Redirect to dashboard if at /
       if (payload.user.role === Role.SUPER_ADMIN || payload.user.role === Role.ADMIN) {
-        router.push('/admin/blockchain');
+        router.push('/admin/dashboard');
       } else if (pathname === "/") {
         router.push('/user/account_book/');
       }
@@ -282,117 +282,117 @@ export default function AuthModal({ isOpen, onClose, onSuccess = undefined }: IA
                                 <div className="text-sm text-gray-500 text-center">
                                   {t("auth_modal.login_desc")}
                                 </div>
-                            <button
-                              onClick={handleLogin}
-                              disabled={loading}
-                              className="flex w-full justify-center rounded-md bg-orange-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {loading
-                                ? t("auth_modal.authenticating")
-                                : t("auth_modal.login_btn")}
-                            </button>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        {loading ? (
-                          <AuthTransition
-                            mode="register"
-                            step={currentStep}
-                          />
-                        ) : (
-                          <form onSubmit={handleRegister} className="space-y-6">
-                            <div>
-                              <label
-                                htmlFor="username"
-                                className="block text-sm font-medium leading-6 text-gray-900"
-                              >
-                                {t("auth_modal.username")}
-                              </label>
-                              <div className="mt-2 relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                  <User className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                  id="username"
-                                  name="username"
-                                  type="text"
-                                  required
-                                  value={username}
-                                  onChange={(e) => setUsername(e.target.value)}
-                                  className="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"
-                                  placeholder={t(
-                                    "auth_modal.username_placeholder"
-                                  )}
-                                  aria-label={t("auth_modal.username")}
-                                />
-                              </div>
-                            </div>
-
-                            <div className="relative flex items-start">
-                              <div className="flex h-6 items-center">
-                                <input
-                                  id="tos"
-                                  name="tos"
-                                  type="checkbox"
-                                  checked={agreedToTos}
-                                  onChange={(e) =>
-                                    setAgreedToTos(e.target.checked)
-                                  }
-                                  className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-600"
-                                  aria-label={
-                                    t("auth_modal.tos_agree") +
-                                    " " +
-                                    t("auth_modal.tos_link")
-                                  }
-                                />
-                              </div>
-                              <div className="ml-3 text-sm leading-6">
-                                <label
-                                  htmlFor="tos"
-                                  className="font-medium text-gray-900"
+                                <button
+                                  onClick={handleLogin}
+                                  disabled={loading}
+                                  className="flex w-full justify-center rounded-md bg-orange-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                  {t("auth_modal.tos_agree")}{" "}
-                                  <button
-                                    type="button"
-                                    className="font-semibold text-orange-600 hover:text-orange-500 underline decoration-transparent hover:decoration-orange-500 transition-all"
-                                    onClick={() =>
-                                      setLegalDoc("terms_of_service")
-                                    }
-                                  >
-                                    {t("auth_modal.tos_link")}
-                                  </button>{" "}
-                                  {t("auth_modal.and")}{" "}
-                                  <button
-                                    type="button"
-                                    className="font-semibold text-orange-600 hover:text-orange-500 underline decoration-transparent hover:decoration-orange-500 transition-all"
-                                    onClick={() =>
-                                      setLegalDoc("privacy_policy")
-                                    }
-                                  >
-                                    {t("auth_modal.privacy_link")}
-                                  </button>
-                                </label>
+                                  {loading
+                                    ? t("auth_modal.authenticating")
+                                    : t("auth_modal.login_btn")}
+                                </button>
                               </div>
-                            </div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            {loading ? (
+                              <AuthTransition
+                                mode="register"
+                                step={currentStep}
+                              />
+                            ) : (
+                              <form onSubmit={handleRegister} className="space-y-6">
+                                <div>
+                                  <label
+                                    htmlFor="username"
+                                    className="block text-sm font-medium leading-6 text-gray-900"
+                                  >
+                                    {t("auth_modal.username")}
+                                  </label>
+                                  <div className="mt-2 relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                      <User className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                      id="username"
+                                      name="username"
+                                      type="text"
+                                      required
+                                      value={username}
+                                      onChange={(e) => setUsername(e.target.value)}
+                                      className="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"
+                                      placeholder={t(
+                                        "auth_modal.username_placeholder"
+                                      )}
+                                      aria-label={t("auth_modal.username")}
+                                    />
+                                  </div>
+                                </div>
 
-                            <button
-                              type="submit"
-                              disabled={loading}
-                              className="flex w-full justify-center rounded-md bg-orange-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {loading
-                                ? t(`auth_modal.${currentStep.toLowerCase()}`)
-                                : t("auth_modal.create_btn")}
-                            </button>
-                          </form>
+                                <div className="relative flex items-start">
+                                  <div className="flex h-6 items-center">
+                                    <input
+                                      id="tos"
+                                      name="tos"
+                                      type="checkbox"
+                                      checked={agreedToTos}
+                                      onChange={(e) =>
+                                        setAgreedToTos(e.target.checked)
+                                      }
+                                      className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-600"
+                                      aria-label={
+                                        t("auth_modal.tos_agree") +
+                                        " " +
+                                        t("auth_modal.tos_link")
+                                      }
+                                    />
+                                  </div>
+                                  <div className="ml-3 text-sm leading-6">
+                                    <label
+                                      htmlFor="tos"
+                                      className="font-medium text-gray-900"
+                                    >
+                                      {t("auth_modal.tos_agree")}{" "}
+                                      <button
+                                        type="button"
+                                        className="font-semibold text-orange-600 hover:text-orange-500 underline decoration-transparent hover:decoration-orange-500 transition-all"
+                                        onClick={() =>
+                                          setLegalDoc("terms_of_service")
+                                        }
+                                      >
+                                        {t("auth_modal.tos_link")}
+                                      </button>{" "}
+                                      {t("auth_modal.and")}{" "}
+                                      <button
+                                        type="button"
+                                        className="font-semibold text-orange-600 hover:text-orange-500 underline decoration-transparent hover:decoration-orange-500 transition-all"
+                                        onClick={() =>
+                                          setLegalDoc("privacy_policy")
+                                        }
+                                      >
+                                        {t("auth_modal.privacy_link")}
+                                      </button>
+                                    </label>
+                                  </div>
+                                </div>
+
+                                <button
+                                  type="submit"
+                                  disabled={loading}
+                                  className="flex w-full justify-center rounded-md bg-orange-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {loading
+                                    ? t(`auth_modal.${currentStep.toLowerCase()}`)
+                                    : t("auth_modal.create_btn")}
+                                </button>
+                              </form>
+                            )}
+                          </>
                         )}
                       </>
                     )}
-                  </>
-                )}
-              </div>
+                  </div>
                 </DialogPanel>
               </TransitionChild>
             </div>

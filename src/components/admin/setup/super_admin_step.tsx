@@ -13,6 +13,7 @@ import {
   deleteAdminRecord,
   getSuperAdminTaskStatus
 } from "@/app/admin/setup/_api/identity.api";
+import { saveExternalConfig } from "@/app/admin/setup/_api/config.api";
 import {
   fido2ClientService,
   getRegisterChallenge,
@@ -20,7 +21,7 @@ import {
   parsePasskey,
 } from "@/lib/auth/fido2_client";
 
-export function SetupSuperAdmin({ isActive, isCompleted, onNext, onReset }: IStepProps) {
+export function SetupSuperAdmin({ isActive, isCompleted, onNext, onReset, envData }: IStepProps) {
   const { t } = useTranslation();
 
   const [status, setStatus] = useState<StepStatus>(StepStatus.IDLE);
@@ -36,6 +37,34 @@ export function SetupSuperAdmin({ isActive, isCompleted, onNext, onReset }: ISte
   const [taskProgress, setTaskProgress] = useState<string>("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [targetDeleteAdmin, setTargetDeleteAdmin] = useState<{ address: string, name: string } | null>(null);
+  const [appUrlValue, setAppUrlValue] = useState<string>("https://isunfa.localhost");
+  const [isSavingAppUrl, setIsSavingAppUrl] = useState(false);
+
+  useEffect(() => {
+    if (envData?.NEXT_PUBLIC_APP_URL) {
+      setAppUrlValue(envData.NEXT_PUBLIC_APP_URL.replace(/^"(.*)"$/, '$1'));
+    }
+  }, [envData?.NEXT_PUBLIC_APP_URL]);
+
+  const handleSaveAppUrl = async () => {
+    setIsSavingAppUrl(true);
+    try {
+      const res = await saveExternalConfig({
+        appUrl: appUrlValue,
+        gaId: "",
+        geminiKey: "",
+        oenToken: "",
+        oenMerchant: ""
+      });
+      if (!res.success) {
+        setErrorMessage(res.error || t('admin_setup.step7.err_save'));
+      }
+    } catch (e) {
+      setErrorMessage(e instanceof Error ? e.message : String(e));
+    } finally {
+      setIsSavingAppUrl(false);
+    }
+  };
 
   const fetchAdminList = useCallback(async () => {
     const listRes = await getAdminList();
@@ -304,6 +333,31 @@ export function SetupSuperAdmin({ isActive, isCompleted, onNext, onReset }: ISte
           <p className="text-xs text-orange-600">
             {t('admin_setup.step6.super_admin_found_desc')}
           </p>
+        </div>
+      )}
+
+      {isActive && (
+        <div className="mt-5 mb-5 bg-white border border-slate-200 rounded-lg p-5">
+          <h3 className="text-sm font-bold text-gray-800 tracking-wide mb-3">{t('admin_setup.step7.domain_label') || "Application Origin (NEXT_PUBLIC_APP_URL)"}</h3>
+          <p className="text-xs text-gray-500 mb-4">{t('admin_setup.step7.domain_hint') || "Must match your browser's top-level address"}</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              aria-label="Application URL"
+              value={appUrlValue}
+              onChange={(e) => setAppUrlValue(e.target.value)}
+              className="text-gray-800 flex-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
+              placeholder="https://isunfa.tw"
+              disabled={isSavingAppUrl}
+            />
+            <button
+              onClick={handleSaveAppUrl}
+              disabled={isSavingAppUrl}
+              className="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-md hover:bg-slate-700 disabled:bg-slate-400"
+            >
+              {isSavingAppUrl ? "Saving..." : t('admin_setup.step7.save_btn')}
+            </button>
+          </div>
         </div>
       )}
 

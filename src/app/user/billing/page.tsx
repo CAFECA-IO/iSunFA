@@ -98,7 +98,7 @@ export default function BillingPage() {
       setLoadingOrders(true);
       try {
         const res = await request<{ payload: { orders: IOrder[] } }>(
-          "/api/v1/user/order?type=PAYMENT",
+          `/api/v1/user/order?type=${ORDER_TYPE.OEN_PAYMENT}`,
         );
         if (res?.payload) {
           setOrders(res.payload.orders);
@@ -306,8 +306,7 @@ export default function BillingPage() {
                           <div className="mb-1 font-mono text-xs text-gray-900">
                             {order.id}
                           </div>
-                          {order.type === ORDER_TYPE.OEN_PAYMENT ||
-                            order.type === "PAYMENT" ? (
+                          {order.type === ORDER_TYPE.OEN_PAYMENT ? (
                             <div className="text-xs text-gray-500">
                               {t("billing.point_history.source_purchase")}
                             </div>
@@ -342,7 +341,7 @@ export default function BillingPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 flex justify-end">
-                          {(order.type === ORDER_TYPE.OEN_PAYMENT || order.type === "PAYMENT") && order.status === "SUCCESS" && (
+                          {order.type === ORDER_TYPE.OEN_PAYMENT && order.status === "SUCCESS" && (
                             <ReceiptPdfDownloader
                               receiptNumber={order.id}
                               date={order.createdAt}

@@ -43,6 +43,7 @@ import { incomeStatementView } from "@/i18n/locales/zh_cn/income_statement_view"
 import { adminSetup } from "@/i18n/locales/zh_cn/admin_setup";
 import { adminMember } from "@/i18n/locales/zh_cn/admin_member";
 import { adminBlockchain } from "@/i18n/locales/zh_cn/admin_blockchain";
+import { adminMissionBoard } from "@/i18n/locales/zh_cn/admin_mission_board";
 
 import { date } from "@/i18n/locales/zh_cn/date";
 import { currencyAlias } from "@/i18n/locales/zh_cn/currency_alias";
@@ -98,4 +99,5 @@ export const zhCn = {
   admin_blockchain: adminBlockchain,
   admin_billing: adminBilling,
   admin_dashboard: adminDashboard,
+  admin_mission_board: adminMissionBoard,
 } satisfies BaseTranslation;

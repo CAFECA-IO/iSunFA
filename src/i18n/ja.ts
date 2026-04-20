@@ -43,6 +43,7 @@ import { incomeStatementView } from "@/i18n/locales/ja/income_statement_view";
 import { adminSetup } from "@/i18n/locales/ja/admin_setup";
 import { adminMember } from "@/i18n/locales/ja/admin_member";
 import { adminBlockchain } from "@/i18n/locales/ja/admin_blockchain";
+import { adminMissionBoard } from "@/i18n/locales/ja/admin_mission_board";
 
 import { date } from "@/i18n/locales/ja/date";
 import { currencyAlias } from "@/i18n/locales/ja/currency_alias";
@@ -98,4 +99,5 @@ export const ja = {
   admin_blockchain: adminBlockchain,
   admin_billing: adminBilling,
   admin_dashboard: adminDashboard,
+  admin_mission_board: adminMissionBoard,
 } satisfies BaseTranslation;

@@ -11,8 +11,14 @@ import { ApiCode } from "@/lib/utils/status";
 // Info: (20260416 - Luphia) 設定與共用工具 (Configuration & Utils)
 
 const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-// Info: (20260416 - Luphia) 確保 Origin 唯一性並包含 localhost 開發環境
-const allowedOrigins = Array.from(new Set([configuredOrigin, "http://localhost:3000"]));
+// Info: (20260416 - Luphia) 確保 Origin 唯一性並包含 localhost 開發環境與正式網址
+const allowedOrigins = Array.from(new Set([
+  configuredOrigin,
+  "http://localhost:3000",
+  "https://isunfa.localhost",
+  "https://isunfa.tw",
+  "https://isunfa.com"
+]));
 const isAllowedOrigin = (origin: string) => allowedOrigins.includes(origin);
 
 // Info: (20260416 - Luphia) WebAuthn 核心驗證 (Core Verification)

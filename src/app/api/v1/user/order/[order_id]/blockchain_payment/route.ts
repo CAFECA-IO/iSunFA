@@ -41,24 +41,35 @@ export async function POST(
     // Info: (20260417 - Luphia) Calculate real userOpHash from the submitted userOp matching what Bundler will do
     const { ABIS } = await import("@/config/contracts");
     const { hexToBase64Url } = await import("@/lib/auth/crypto_utils");
-    const trueUserOpHash = await publicClient.readContract({
-      address: CONTRACT_ADDRESSES.ENTRY_POINT,
-      abi: ABIS.ENTRY_POINT,
-      functionName: "getUserOpHash",
-      args: [
-        {
-          sender: userOp.sender as `0x${string}`,
-          nonce: BigInt(userOp.nonce),
-          initCode: userOp.initCode as `0x${string}`,
-          callData: userOp.callData as `0x${string}`,
-          accountGasLimits: userOp.accountGasLimits as `0x${string}`,
-          preVerificationGas: BigInt(userOp.preVerificationGas),
-          gasFees: userOp.gasFees as `0x${string}`,
-          paymasterAndData: userOp.paymasterAndData as `0x${string}`,
-          signature: userOp.signature as `0x${string}`,
-        },
-      ],
-    });
+    const { encodeAbiParameters, parseAbiParameters, keccak256 } = await import("viem");
+    const { isuncoin } = await import("@/lib/viem_public");
+
+    const packed = encodeAbiParameters(
+      parseAbiParameters(
+        "address, uint256, bytes32, bytes32, uint256, uint256, uint256, uint256, uint256, bytes32"
+      ),
+      [
+        userOp.sender as `0x${string}`,
+        BigInt(userOp.nonce),
+        keccak256(userOp.initCode as `0x${string}`),
+        keccak256(userOp.callData as `0x${string}`),
+        BigInt(userOp.callGasLimit),
+        BigInt(userOp.verificationGasLimit),
+        BigInt(userOp.preVerificationGas),
+        BigInt(userOp.maxFeePerGas),
+        BigInt(userOp.maxPriorityFeePerGas),
+        keccak256(userOp.paymasterAndData as `0x${string}`),
+      ]
+    );
+
+    const hash = keccak256(packed);
+    const trueUserOpHash = keccak256(
+      encodeAbiParameters(parseAbiParameters("bytes32, address, uint256"), [
+        hash,
+        CONTRACT_ADDRESSES.ENTRY_POINT,
+        BigInt(isuncoin.id),
+      ])
+    );
 
     await webAuthnService.verifySignature(user.address, authPayload, hexToBase64Url(trueUserOpHash as string));
 

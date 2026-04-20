@@ -1,0 +1,37 @@
+export const adminMissionBoard = {
+  page: {
+    title: "Mission Board",
+    subtitle: "Manage and review all automated tasks and bounties published to the blockchain.",
+  },
+  kpi: {
+    total_missions: "Total Missions",
+    open_missions: "Open",
+    pending_reviews: "Pending Review",
+    total_participants: "Total Participants",
+    total_rewards: "Total Rewards",
+  },
+  tabs: {
+    all: "All",
+    open: "Open",
+    pending_review: "Pending Review",
+    disputed: "Disputed",
+    closed: "Closed",
+  },
+  labels: {
+    creator: "Creator",
+    reward: "Reward",
+    participants: "Participants",
+    submissions: "Submissions",
+    subIndex: "Sub Index #",
+    submitter: "Submitter",
+    consumedTokens: "Consumed Tokens",
+    tokens_per_icp: "Tokens / ICP",
+    status: "Status",
+    disputeUntil: "Dispute Until",
+    view_content: "View Task Content",
+    view_result: "View Submission Result",
+    no_missions: "No missions available.",
+    loading: "Loading missions...",
+    unknown: "Unknown",
+  },
+};

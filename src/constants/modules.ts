@@ -16,6 +16,7 @@ import {
   CreditCard,
   Settings,
   LogOut,
+  Target,
 } from "lucide-react";
 
 export const MODULES = [
@@ -35,6 +36,7 @@ export const MODULES = [
 
 export const ADMIN_MODULES = [
   { key: "dashboard", icon: LayoutDashboard, basic: true },
+  { key: "mission_board", icon: Target, basic: true },
   { key: "blockchain", icon: Blocks, basic: true },
   { key: "user", icon: Users, basic: true },
   { key: "billing", icon: CreditCard, basic: true },
@@ -89,6 +91,7 @@ export function getModuleI18nKey(key: string, isAdminContext: boolean = false) {
     case "billing": return isAdminContext ? "admin_billing.page.title" : "billing.title";
     case "user": return "admin_member.page.title";
     case "blockchain": return "admin_blockchain.page.title";
+    case "mission_board": return "admin_mission_board.page.title";
     case "financial_report": return "report_view.title";
     case "other": return "common.other";
     case "cashier": return "features.items.cashier.title";

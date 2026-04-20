@@ -42,8 +42,12 @@ export class DockerService {
   }
 
   public async execContainer(containerName: string, command: string) {
-    const escapedCmd = command.replace(/"/g, '\\"');
-    return await runCommand(this.wrapCmd(`docker exec ${containerName} ${escapedCmd}`));
+    if (process.platform === "darwin") {
+      const escapedCmd = command.replace(/"/g, '\\"');
+      return await runCommand(`zsh -ic "docker exec ${containerName} ${escapedCmd}"`);
+    } else {
+      return await runCommand(`docker exec ${containerName} ${command}`);
+    }
   }
 
   public async composeRestart(cwd: string, serviceName?: string) {

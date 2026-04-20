@@ -111,10 +111,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    let type = searchParams.get("type");
-    if (type === "PAYMENT") {
-      type = "OEN_PAYMENT";
-    }
+    const type = searchParams.get("type");
 
     const orders = await getOrdersByUserId(user.id, type);
 
