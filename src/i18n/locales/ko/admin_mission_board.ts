@@ -5,9 +5,10 @@ export const adminMissionBoard = {
   },
   kpi: {
     total_missions: "총 미션 수",
-    open_missions: "모집 중",
+    open_missions: "진행 중",
     pending_reviews: "심사 대기 중",
-    total_rewards: "총 보상금",
+    total_participants: "총 참가자",
+    total_rewards: "총 보상",
   },
   tabs: {
     all: "전체",
@@ -18,7 +19,8 @@ export const adminMissionBoard = {
   },
   labels: {
     creator: "게시자",
-    reward: "보상금",
+    reward: "보상",
+    participants: "참가자",
     submissions: "제출 횟수",
     subIndex: "제출 인덱스 #",
     submitter: "제출자",

@@ -5,9 +5,10 @@ export const adminMissionBoard = {
   },
   kpi: {
     total_missions: "总任务数",
-    open_missions: "悬赏中",
+    open_missions: "进行中",
     pending_reviews: "待审核",
-    total_rewards: "总悬赏金",
+    total_participants: "总参与人数",
+    total_rewards: "总奖励",
   },
   tabs: {
     all: "全部",
@@ -18,7 +19,8 @@ export const adminMissionBoard = {
   },
   labels: {
     creator: "发布者",
-    reward: "悬赏金额",
+    reward: "奖励",
+    participants: "参与者",
     submissions: "提交次数",
     subIndex: "提交编号 #",
     submitter: "提交者",

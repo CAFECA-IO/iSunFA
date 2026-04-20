@@ -7,7 +7,8 @@ export const adminMissionBoard = {
     total_missions: "總任務數",
     open_missions: "懸賞中",
     pending_reviews: "待審核",
-    total_rewards: "總懸賞金",
+    total_participants: "總參與人數",
+    total_rewards: "總發行獎勵",
   },
   tabs: {
     all: "全部",
@@ -18,7 +19,8 @@ export const adminMissionBoard = {
   },
   labels: {
     creator: "發布者",
-    reward: "懸賞金額",
+    reward: "獎勵",
+    participants: "參與者",
     submissions: "提交次數",
     subIndex: "提交編號 #",
     submitter: "提交者",

@@ -7,6 +7,7 @@ export const adminMissionBoard = {
     total_missions: "Total Missions",
     open_missions: "Open",
     pending_reviews: "Pending Review",
+    total_participants: "Total Participants",
     total_rewards: "Total Rewards",
   },
   tabs: {
@@ -19,6 +20,7 @@ export const adminMissionBoard = {
   labels: {
     creator: "Creator",
     reward: "Reward",
+    participants: "Participants",
     submissions: "Submissions",
     subIndex: "Sub Index #",
     submitter: "Submitter",

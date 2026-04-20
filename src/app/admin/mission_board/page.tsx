@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Target, FileText, Activity, AlertCircle, CheckCircle2, Copy, Check, ChevronDown, ChevronUp, Clock, FileWarning } from 'lucide-react';
+import { Target, FileText, Activity, AlertCircle, CheckCircle2, Copy, Check, ChevronDown, ChevronUp, Clock, FileWarning, Users } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
 import AdminPageHeader from '@/components/admin/common/admin_page_header';
 import AdminMetricCard from '@/components/admin/common/admin_metric_card';
@@ -18,6 +18,7 @@ export default function AdminMissionBoardPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
+    let isInitialLoad = true;
     const fetchTasks = async () => {
       try {
         const { payload } = await request<{ payload: ITask[] }>("/api/v1/admin/mission_board");
@@ -27,10 +28,16 @@ export default function AdminMissionBoardPage() {
       } catch (error) {
         console.error("Failed to fetch mission board:", error);
       } finally {
-        setLoading(false);
+        if (isInitialLoad) {
+          setLoading(false);
+          isInitialLoad = false;
+        }
       }
     };
+
     fetchTasks();
+    const intervalId = setInterval(fetchTasks, 5000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const toggleExpand = (taskId: number) => {
@@ -57,6 +64,7 @@ export default function AdminMissionBoardPage() {
     openMissions: tasks.filter(t => t.status === TaskStatus.Open).length,
     pendingMissions: tasks.filter(t => t.status === TaskStatus.PendingReview).length,
     totalRewards: tasks.reduce((sum, t) => sum + parseFloat(t.reward), 0),
+    totalParticipants: new Set(tasks.flatMap(t => t.submissions.map(s => s.submitter))).size,
   };
 
   const getStatusColor = (status: TaskStatus) => {
@@ -88,7 +96,7 @@ export default function AdminMissionBoardPage() {
           subtitle={String(t("admin_mission_board.page.subtitle"))}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <AdminMetricCard
             title={t("admin_mission_board.kpi.total_missions")}
             value={kpis.totalMissions.toString()}
@@ -106,6 +114,12 @@ export default function AdminMissionBoardPage() {
             value={kpis.pendingMissions.toString()}
             icon={Activity}
             colorTheme="orange"
+          />
+          <AdminMetricCard
+            title={t("admin_mission_board.kpi.total_participants")}
+            value={kpis.totalParticipants.toString()}
+            icon={Users}
+            colorTheme="gray"
           />
           <AdminMetricCard
             title={t("admin_mission_board.kpi.total_rewards")}
