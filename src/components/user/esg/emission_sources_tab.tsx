@@ -4,169 +4,20 @@ import { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { numberWithCommas } from "@/lib/utils/common";
 import {
-  ChartColumn,
-  ChartPie,
   ChevronDown,
-  Database,
   Folder,
   Minus,
   Plus,
   Search,
   SearchX,
   Settings,
-  Zap,
 } from "lucide-react";
 import { EsgScope } from "@/interfaces/esg";
 import {
   EsgActivityTypeMapping,
-  IEsgActivityType,
 } from "@/constants/esg_activity_type";
-import { CoefficientCategory, ICoefficient } from "@/interfaces/coefficient";
-
-const top3EmissionSources = [
-  {
-    name: "台中廠區 - A 棟電表",
-    value: 8420.5,
-  },
-  {
-    name: "熱軋鋼捲採購 - 中鋼",
-    value: 3250.2,
-  },
-  {
-    name: "公司貨車 ABC-1234",
-    value: 1240.8,
-  },
-];
-
-const scopeData = [
-  {
-    scope: EsgScope.SCOPE_1,
-    count: 3,
-  },
-  {
-    scope: EsgScope.SCOPE_2,
-    count: 2,
-  },
-  {
-    scope: EsgScope.SCOPE_3,
-    count: 5,
-  },
-];
-
-interface IEmissionSource {
-  id: string;
-  name: string;
-  activityType: IEsgActivityType;
-  coefficient: ICoefficient;
-}
-
-const emissionSourceData: IEmissionSource[] = [
-  {
-    id: "2026042100000001",
-    name: "台中廠區 - A 棟電表",
-    activityType: {
-      key: "ELECTRICITY_USAGE",
-      value: "電力使用",
-      scope: EsgScope.SCOPE_2,
-      description: "如：電費單度數",
-    },
-    coefficient: {
-      id: "1",
-      category: CoefficientCategory.STANDARD,
-      name: "電力使用",
-      description: "電力使用",
-      emissionFactor: 1.3,
-      unit: "kgCO2e/kWh",
-      source: "電力使用",
-      createdAt: 0,
-      updatedAt: 0,
-    },
-  },
-  {
-    id: "2026042100000002",
-    name: "熱軋鋼捲採購 - 中鋼",
-    activityType: {
-      key: "PURCHASED_GOODS",
-      value: "購買的商品",
-      scope: EsgScope.SCOPE_3,
-      description: "如：電費單度數",
-    },
-    coefficient: {
-      id: "2",
-      category: CoefficientCategory.STANDARD,
-      name: "熱軋鋼捲採購 - 中鋼",
-      description: "熱軋鋼捲採購 - 中鋼",
-      emissionFactor: 2.2,
-      unit: "kgCO2e/kWh",
-      source: "熱軋鋼捲採購 - 中鋼",
-      createdAt: 0,
-      updatedAt: 0,
-    },
-  },
-  {
-    id: "2026042100000003",
-    name: "公司貨車 ABC-1234",
-    activityType: {
-      key: "PURCHASED_GOODS",
-      value: "購買的商品",
-      scope: EsgScope.SCOPE_3,
-      description: "如：電費單度數",
-    },
-    coefficient: {
-      id: "3",
-      category: CoefficientCategory.STANDARD,
-      name: "公司貨車 ABC-1234",
-      description: "公司貨車 ABC-1234",
-      emissionFactor: 3.5,
-      unit: "kgCO2e/kWh",
-      source: "公司貨車 ABC-1234",
-      createdAt: 0,
-      updatedAt: 0,
-    },
-  },
-  {
-    id: "2026042100000004",
-    name: "台中廠區 - 鍋爐",
-    activityType: {
-      key: "STATIONARY_COMBUSTION",
-      value: "定點燃燒",
-      scope: EsgScope.SCOPE_1,
-      description: "如：鍋爐、發電機、瓦斯",
-    },
-    coefficient: {
-      id: "4",
-      category: CoefficientCategory.CUSTOM,
-      name: "台中廠區 - 鍋爐",
-      description: "台中廠區 - 鍋爐",
-      emissionFactor: 0.5,
-      unit: "kgCO2e/kWh",
-      source: "台中廠區 - 鍋爐",
-      createdAt: 0,
-      updatedAt: 0,
-    },
-  },
-  {
-    id: "2026042100000005",
-    name: "售出產品加工",
-    activityType: {
-      key: "PROCESSING_OF_SOLD_PRODUCTS",
-      value: "售出產品加工",
-      scope: EsgScope.SCOPE_3,
-      description: "如：售出產品加工",
-    },
-    coefficient: {
-      id: "4",
-      category: CoefficientCategory.CUSTOM,
-      name: "售出產品加工",
-      description: "售出產品加工",
-      emissionFactor: 0.03,
-      unit: "kgCO2e/kWh",
-      source: "售出產品加工",
-      createdAt: 0,
-      updatedAt: 0,
-    },
-  },
-];
+import { IEmissionSource, mockEmissionSources } from "@/interfaces/emission_source";
+import EmissionSourcesSummary from "@/components/user/esg/emission_sources_summary";
 
 const EmissionSourcesItem = ({
   emissionSource,
@@ -310,110 +161,6 @@ export default function EmissionSourcesTab() {
     }
   }
 
-  // (20260420 - Julian) 計算總數
-  const totalCount = scopeData.reduce((acc, curr) => acc + curr.count, 0);
-
-  const scopeChart = scopeData.map((scope) => {
-    const color =
-      scope.scope === EsgScope.SCOPE_1
-        ? "bg-pink-100"
-        : scope.scope === EsgScope.SCOPE_2
-          ? "bg-orange-100"
-          : "bg-indigo-100";
-    return (
-      <div key={scope.scope} className="flex flex-col gap-1">
-        <div className="flex h-16 flex-col justify-end">
-          <div
-            className={`w-full rounded-t-sm ${color}`}
-            style={{ height: `${(scope.count / totalCount) * 100}%` }}
-          />
-        </div>
-        <p className="text-center text-[10px] font-bold text-gray-400">
-          {scope.scope}: {scope.count}
-        </p>
-      </div>
-    );
-  });
-
-  const top3EmissionList = top3EmissionSources.map((source, index) => (
-    <li key={index} className="pl-2 not-last:mb-2">
-      <div className="flex items-center justify-between font-bold text-slate-800">
-        <div>{source.name}</div>
-        <div>{numberWithCommas(source.value)}</div>
-      </div>
-    </li>
-  ));
-
-  const banner = (
-    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
-      {/* Info: (20260420 - Julian) 排放源總數 */}
-      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
-        <div className="relative flex items-center justify-between gap-2">
-          <p className="text-xs font-bold text-slate-500 lg:text-sm">
-            排放源總數
-          </p>
-          <div className="absolute -top-2 -right-2 rounded-xl bg-slate-100 p-1.5 text-slate-800">
-            <Database size={20} />
-          </div>
-        </div>
-        <p className="text-2xl font-black text-slate-800">
-          10
-          <span className="ml-1 text-sm font-semibold text-slate-400">
-            個 ID
-          </span>
-        </p>
-      </div>
-
-      {/* Info: (20260420 - Julian) 預估年度總排放 */}
-      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
-        <div className="relative flex items-center justify-between gap-2">
-          <p className="text-xs font-bold text-slate-500 lg:text-sm">
-            預估年度總排放
-          </p>
-          <div className="absolute -top-2 -right-2 rounded-xl bg-orange-50 p-1.5 text-orange-500">
-            <Zap size={20} />
-          </div>
-        </div>
-        <p className="text-2xl font-black text-slate-800">
-          {numberWithCommas(15420.8)}
-          <span className="ml-1 text-sm font-semibold text-slate-400">
-            kgCO2e
-          </span>
-        </p>
-      </div>
-
-      {/* Info: (20260420 - Julian) 排放量前三名 */}
-      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
-        <div className="relative flex items-center justify-between gap-2">
-          <p className="text-xs font-bold text-slate-500 lg:text-sm">
-            排放量前三名
-          </p>
-          <div className="absolute -top-2 -right-2 rounded-xl p-1.5 text-orange-400">
-            <ChartColumn size={20} />
-          </div>
-        </div>
-        <ul className="mt-4 ml-4 list-outside list-decimal text-xs marker:font-bold marker:text-orange-400">
-          {top3EmissionList}
-        </ul>
-      </div>
-
-      {/* Info: (20260420 - Julian) 範疇分佈 */}
-      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
-        <div className="relative flex items-center justify-between gap-2">
-          <p className="text-xs font-bold text-slate-500 lg:text-sm">
-            範疇分佈
-          </p>
-          <div className="absolute -top-2 -right-2 rounded-xl p-1.5 text-gray-400">
-            <ChartPie size={20} />
-          </div>
-        </div>
-        <div className="mt-4 grid grid-cols-3 items-end gap-1">
-          {scopeChart}
-        </div>
-      </div>
-    </div>
-  );
-
   const scopeTab = (
     <div className="grid w-fit grid-cols-3 space-x-1 rounded-xl border border-gray-200 bg-gray-100 p-1.5">
       {Object.values(EsgScope).map((scope) => (
@@ -438,7 +185,7 @@ export default function EmissionSourcesTab() {
   // Info: (20260420 - Julian) 將相同的 activityType 的排放源集合成一組
   const groupedActivityTypes = getActivityTypeData(activeScopeTab)
     .map((activityType) => {
-      const emissionSources = emissionSourceData.filter(
+      const emissionSources = mockEmissionSources.filter(
         (source) => source.activityType.key === activityType.key,
       );
 
@@ -479,7 +226,7 @@ export default function EmissionSourcesTab() {
   return (
     <div className="flex flex-col gap-8">
       {/* Info: (20260420 - Julian) Banner */}
-      {banner}
+      <EmissionSourcesSummary />
 
       {/* Info: (20260420 - Julian) Toolbar */}
       <div className="flex flex-col gap-x-8 gap-y-2 rounded-xl bg-white p-3 shadow-sm md:flex-row md:p-6">
