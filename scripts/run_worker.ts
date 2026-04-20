@@ -1,5 +1,11 @@
 import { taskRepo } from "@/repositories/task.repo";
 import { transactionTrackerService } from "@/services/transaction.tracker.service";
+import { missionIssuerService } from "@/services/mission.issuer.service";
+import { missionPlannerService } from "@/services/mission.planner.service";
+import { missionExecutorService } from "@/services/mission.executor.service";
+import { missionCommitorService } from "@/services/mission.commitor.service";
+import { missionValidatorService } from "@/services/mission.validator.service";
+import { missionRecorderService } from "@/services/mission.recorder.service";
 
 /**
  * Info: (20260130 - Luphia)
@@ -34,12 +40,16 @@ async function runWorker() {
       // Info: (20260418 - Luphia) 1. Check transactions first
       await transactionTrackerService.scanPendingTransactions();
 
-      // Info: (20260130 - Luphia) 2. Process one task, if there is no task, wait for 1 minute
-      // const processed = await taskService.processNextTask();
+      // Info: (20260420 - Luphia) 2. Run Decentralized Mission Engine Pipeline
+      await missionIssuerService.processNext();
+      await missionPlannerService.processNext();
+      await missionExecutorService.processNext();
+      await missionCommitorService.processNext();
+      await missionValidatorService.processNext();
+      await missionRecorderService.processNext();
 
       // Info: (20260130 - Luphia) Wait before next check to avoid tight loop
-      // const waitTime = processed || txProcessed ? 5000 : 60000;
-      await new Promise((resolve) => setTimeout(resolve, 60000));
+      await new Promise((resolve) => setTimeout(resolve, 10000));
     } catch (error) {
       console.error("[Worker] Error in loop:", error);
       // Info: (20260130 - Luphia) Wait longer on error
