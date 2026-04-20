@@ -17,12 +17,12 @@ export const CONTRACT_ADDRESSES = {
 } as const;
 
 export const ABIS = {
-  // Info: (20251230 - Tzuhan) ERC-4337 EntryPoint
+  // Info: (20251230 - Tzuhan) ERC-4337 EntryPoint (v0.6.0)
   ENTRY_POINT: parseAbi([
-    "struct PackedUserOperation { address sender; uint256 nonce; bytes initCode; bytes callData; bytes32 accountGasLimits; uint256 preVerificationGas; bytes32 gasFees; bytes paymasterAndData; bytes signature; }",
-    "function handleOps(PackedUserOperation[] calldata ops, address payable beneficiary)",
+    "struct UserOperation { address sender; uint256 nonce; bytes initCode; bytes callData; uint256 callGasLimit; uint256 verificationGasLimit; uint256 preVerificationGas; uint256 maxFeePerGas; uint256 maxPriorityFeePerGas; bytes paymasterAndData; bytes signature; }",
+    "function handleOps(UserOperation[] calldata ops, address payable beneficiary)",
     "function getNonce(address sender, uint192 key) external view returns (uint256 nonce)",
-    "function getUserOpHash(PackedUserOperation userOp) external view returns (bytes32)",
+    "function getUserOpHash(UserOperation userOp) external view returns (bytes32)",
     "function getSenderAddress(bytes calldata initCode) external view returns (address)",
     "error FailedOp(uint256 opIndex, string reason)",
     "error FailedOpWithRevert(uint256 opIndex, string reason, bytes innerCallRet)",
