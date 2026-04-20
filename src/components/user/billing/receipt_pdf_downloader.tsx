@@ -209,7 +209,7 @@ export default function ReceiptPdfDownloader({
               {/* Info: (20260410 - Luphia) Period: Bold, min 0.5cm */}
               <div style={{ fontSize: '19px', fontWeight: 'bold' }}>{displayInvoiceTerm}</div>
               {/* Info: (20260410 - Luphia) Invoice Num: Bold, min 0.5cm */}
-              <div style={{ fontSize: '19px', fontWeight: 'bold', marginBottom: '4px' }}>{displayReceiptNumber}</div>
+              <div style={{ fontSize: '19px', fontWeight: 'bold', marginBottom: '4px' }}>{/*{displayReceiptNumber}*/} 本服務由應援科技代開電子發票，此為參考證明聯</div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 4px', fontSize: '9px', marginBottom: '2px' }}>
                 <span>{formattedDateString}</span>
@@ -310,7 +310,7 @@ export default function ReceiptPdfDownloader({
             </div>
             <h1 style={{ fontSize: '26px', fontWeight: 'bold', margin: '0 0 8px 0', letterSpacing: '4px', color: '#ea580c' }}>電子發票證明聯</h1>
             <h2 style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '2px', margin: '0 0 4px 0', color: '#1f2937' }}>{displayInvoiceTerm}</h2>
-            <h2 style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '3px', margin: '0 0 4px 0', color: '#1f2937' }}>{displayReceiptNumber}</h2>
+            <h2 style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '3px', margin: '0 0 4px 0', color: '#1f2937' }}>{/*{displayReceiptNumber}*/} 本服務由應援科技代開電子發票，此為參考證明聯</h2>
             <h3 style={{ fontSize: '14px', fontWeight: '500', margin: '0', color: '#6b7280', letterSpacing: '1px' }}>開立日期：{formattedDateString}</h3>
           </div>
 

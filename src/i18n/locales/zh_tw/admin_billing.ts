@@ -31,6 +31,7 @@ export const adminBilling = {
     "th_purpose": "項目用途",
     "th_provider": "付款管道",
     "th_card_info": "卡片資訊",
-    "unnamed_user": "未命名使用者"
+    "unnamed_user": "未命名使用者",
+    "download_receipt": "下載收據"
   }
 };

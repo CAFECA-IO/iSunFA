@@ -31,6 +31,7 @@ export const adminBilling = {
     "th_purpose": "Purpose",
     "th_provider": "Payment Provider",
     "th_card_info": "Card Info",
-    "unnamed_user": "Unnamed User"
+    "unnamed_user": "Unnamed User",
+    "download_receipt": "Download Receipt"
   }
 };

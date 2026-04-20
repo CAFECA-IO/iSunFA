@@ -31,6 +31,7 @@ export const adminBilling = {
     "th_purpose": "目的",
     "th_provider": "プロバイダー",
     "th_card_info": "カード情報",
-    "unnamed_user": "名無しのユーザー"
+    "unnamed_user": "名無しのユーザー",
+    "download_receipt": "領収書をダウンロード"
   }
 };
