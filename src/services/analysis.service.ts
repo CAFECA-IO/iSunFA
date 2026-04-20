@@ -114,7 +114,10 @@ export class AnalysisService {
             companyIndustry: "科技製造與能源產業", // Info: (20260320 - Tzuhan) We will replace this dynamically if available, or rely on web search
           };
         }
-      } else if (
+      } 
+      
+      // Info: (20260420 - Tzuhan) 將內部報告的 Context 撈取邏輯從互斥的 else-if 獨立出來，確保淨零排放(net_zero)等報告也能吃到 Voucher。
+      if (
         [
           "carbon_health_check",
           "balance_sheet",
@@ -123,6 +126,7 @@ export class AnalysisService {
           "financial_compliance",
           "financial_health",
           "irsc",
+          "net_zero_emissions"
         ].includes(params.category)
       ) {
         if (!params.isExternal) {
@@ -224,6 +228,7 @@ export class AnalysisService {
             }
 
             parsedPrerequisiteParams = {
+              ...parsedPrerequisiteParams,
               esgRecordsContext: recordStr,
             };
             console.log(
