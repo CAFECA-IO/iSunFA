@@ -16,6 +16,7 @@ import { generateMission as generateCashFlow } from "@/lib/worker/mission_genera
 import { generateMission as generateIncomeStatement } from "@/lib/worker/mission_generators/income_statement.generator";
 import { generateMission as generateFinancialCompliance } from "@/lib/worker/mission_generators/financial_compliance.generator";
 import { generateMission as generateFinancialHealth } from "@/lib/worker/mission_generators/financial_health.generator";
+import { generateCertificateAnalysisMission } from "@/lib/worker/mission_generators/certificate_analysis.generator";
 
 export * from "@/lib/worker/mission.interface";
 
@@ -30,6 +31,7 @@ const GENERATOR_MAP: Record<string, MissionGeneratorFn> = {
   document_parsing: generateDocumentParsingMission,
   journal_correction: generateJournalCorrectionMission,
   ai_consulting: generateAiConsultingMission,
+  certificate_analysis: generateCertificateAnalysisMission,
 
   // Info: (20260406 - Luphia) External generators
   market_trends: generateMarketTrends,

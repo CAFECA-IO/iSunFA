@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
       keyword,
       authentication,
       isExternal,
+      question,
+      files,
     } = body;
 
     // Info: (20260128 - Luphia) Validate FIDO2 Signature OR Transaction Binding
@@ -244,6 +246,8 @@ export async function POST(request: NextRequest) {
         country,
         keyword,
         isExternal,
+        question,
+        files,
       }
     };
     const result = await analysisService.generateAnalysis(user.id, generateAnalysisParams);
@@ -277,7 +281,7 @@ export async function GET(request: NextRequest) {
 
     // Info: (20260128 - Luphia) Map DB result to response format
     const history = fullAnalyses.map((analysis: FullAnalysis) => {
-      const status = analysis.mission?.status?.toLowerCase() || "unknown";
+      const status = analysis.order?.status?.toLowerCase() || "unknown";
       let periodType = "unknown";
 
       if (analysis.mission?.name) {

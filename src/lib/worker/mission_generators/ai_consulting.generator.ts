@@ -12,8 +12,9 @@ export function generateAiConsultingMission(
   const files = data.files || [];
 
   if (!question) {
-    throw new Error("Missing question for AI Talk");
+    console.warn("[AIGenerator] Missing question for AI Talk, using default fallback.");
   }
+  const actualQuestion = question || "I would like to have a general financial consultation. Please analyze my current status based on any provided context.";
 
   const tasks: ITaskDefinition[] = [
     {
@@ -21,7 +22,7 @@ export function generateAiConsultingMission(
       order: 0,
       data: {
         key: "AI_CONSULTING",
-        prompt: question, // Info: (20260418 - Luphia) Put the question directly as prompt
+        prompt: actualQuestion, // Info: (20260418 - Luphia) Put the question directly as prompt
         context: "ai_consulting",
         files: files,
       },

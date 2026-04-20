@@ -8,6 +8,7 @@ import {
   AnalysisTag,
   Comment,
 } from "@/generated/client";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 
 export interface ITalkRepository {
   getReaction(userId: string, commentId: string): Promise<Reaction | null>;
@@ -134,7 +135,7 @@ export class TalkRepository implements ITalkRepository {
 
   async listThreadsWithCounts() {
     return prisma.analysis.findMany({
-      where: { type: "ai_consulting" },
+      where: { type: ANALYSIS_CATEGORY.AI_CONSULTING },
       orderBy: { createdAt: "desc" },
       include: {
         _count: {

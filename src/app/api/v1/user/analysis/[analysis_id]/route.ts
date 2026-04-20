@@ -51,11 +51,11 @@ export async function GET(
       }
     }
 
-    // Info: (20260130 - Luphia) Return full details including mission result
+    // Info: (20260130 - Luphia) Return full details including analysis result
     return jsonOk({
       id: analysis.id,
-      status: analysis.mission?.status ?? "UNKNOWN",
-      result: analysis.mission?.result,
+      status: analysis.order?.status ?? "UNKNOWN",
+      result: analysis.result,
       createdAt: analysis.createdAt,
       type: analysis.type,
       isExternal,

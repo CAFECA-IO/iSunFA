@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, Analysis, Mission } from "@/generated/client";
 import { MISSION_STATUS } from "@/constants/status";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 
 export type FullAnalysis = Prisma.AnalysisGetPayload<{
   include: {
@@ -217,7 +218,7 @@ export class AnalysisRepository implements IAnalysisRepository {
     userId: string,
   ): Promise<FullAnalysis[]> {
     return prisma.analysis.findMany({
-      where: { userId, type: { not: "ai_consulting" } },
+      where: { userId, type: { not: ANALYSIS_CATEGORY.AI_CONSULTING } },
       orderBy: { createdAt: "desc" },
       include: {
         mission: true,
