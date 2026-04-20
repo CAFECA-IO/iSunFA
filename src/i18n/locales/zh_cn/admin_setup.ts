@@ -93,6 +93,9 @@ export const adminSetup = {
     col_rate_label: "ICP 抵押率 (1 ICP = X ISC)",
     col_rate_placeholder: "例如 0.05",
     col_rate_err: "抵押率必须介于 10^-9 和 100 之间。",
+    dependency_verified: "合约架构依赖性已验证",
+    valid: "验证通过",
+    invalid: "异常",
   },
   step5: {
     title: "步骤 5：初始化数据库",

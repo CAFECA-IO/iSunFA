@@ -6,6 +6,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { ORDER_TYPE } from "@/constants/status";
 import { isProduction } from "@/lib/utils/common";
+import { CURRENCY_UNIT } from "@/constants/price";
 
 const OEN_ACCESS_TOKEN = process.env.OEN_ACCESS_TOKEN;
 const OEN_BASE_URL = isProduction()
@@ -56,6 +57,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       type: ORDER_TYPE.OEN_BINDING,
       amount: 0,
+      unit: CURRENCY_UNIT.TWD,
       challenge: "N/A",
       data: {
         credits: 0,

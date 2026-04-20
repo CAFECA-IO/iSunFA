@@ -36,13 +36,13 @@ export async function GET(
       );
     }
 
-    const missionData = analysis.mission?.data as Record<
+    const analysisData = analysis.data as Record<
       string,
       unknown
     > | null;
     let isExternal = false;
-    if (typeof missionData?.isExternal === "boolean") {
-      isExternal = missionData.isExternal;
+    if (typeof analysisData?.isExternal === "boolean") {
+      isExternal = analysisData.isExternal;
     } else {
       // Info: (20260324 - Tzuhan) Fallback to order data if available
       const orderData = analysis.order?.data as Record<string, unknown> | null;
@@ -51,11 +51,11 @@ export async function GET(
       }
     }
 
-    // Info: (20260130 - Luphia) Return full details including mission result
+    // Info: (20260130 - Luphia) Return full details including analysis result
     return jsonOk({
       id: analysis.id,
-      status: analysis.mission?.status ?? "UNKNOWN",
-      result: analysis.mission?.result,
+      status: analysis.order?.status ?? "UNKNOWN",
+      result: analysis.result,
       createdAt: analysis.createdAt,
       type: analysis.type,
       isExternal,

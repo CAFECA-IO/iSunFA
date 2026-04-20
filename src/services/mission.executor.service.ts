@@ -1,0 +1,338 @@
+import { getPriorityEnvConfig } from "@/services/env.service";
+import fs from "fs/promises";
+import path from "path";
+import { ChatService } from "@/services/chat.service";
+import { skillRegistry } from "@/skills";
+import { IMissionDefinition } from "@/lib/worker/mission.generator";
+import { ITaskDefinition } from "@/lib/worker/task.generator";
+import { Prisma } from "@/generated/client";
+import { IPseudoTask, IPseudoMission } from "@/skills/types";
+import { syncDocumentResultToDatabase } from "@/skills/utils/document_parser_db_sync";
+
+export class MissionExecutorService {
+  async processNext() {
+    console.log("[MissionExecutor] Scanning MISSION_DIR for tasks to execute...");
+
+    const setupConfig = await getPriorityEnvConfig();
+    const missionDirBase = setupConfig.MISSION_DIR || "missions";
+    const missionDirPath = path.join(process.cwd(), missionDirBase);
+
+    const apiKey = setupConfig.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.warn("[MissionExecutor] Missing GEMINI_API_KEY. Execution might fail if ChatService is required.");
+    }
+    const chatService = new ChatService(apiKey || "");
+
+    let foundTaskToExecute = false;
+
+    try {
+      const folders = await fs.readdir(missionDirPath, { withFileTypes: true });
+
+      for (const folder of folders) {
+        if (!folder.isDirectory()) continue;
+        const taskDir = path.join(missionDirPath, folder.name);
+
+        const executorPlanPath = path.join(taskDir, "plan.executor.json");
+        const fallbackPlanPath = path.join(taskDir, "plan.executor.md");
+        const resultPath = path.join(taskDir, "result.md");
+        const notePath = path.join(taskDir, "note.md");
+        const missionJsonPath = path.join(taskDir, "mission.json");
+
+        // Info: (20260420 - Luphia) Prefer JSON planner plan over fallback MD
+        let useJsonPlan = true;
+        try {
+          await fs.access(executorPlanPath);
+        } catch {
+          try {
+            await fs.access(fallbackPlanPath);
+            useJsonPlan = false;
+          } catch {
+            continue; // Info: (20260420 - Luphia) No plan available
+          }
+        }
+
+        try {
+          await fs.access(resultPath);
+          // Info: (20260420 - Luphia) Already executed
+          continue;
+        } catch {
+          // Info: (20260420 - Luphia) Needs execution
+        }
+
+        foundTaskToExecute = true;
+        console.log(`[MissionExecutor] Found pending execution for Task ID: ${folder.name} (Using ${useJsonPlan ? 'JSON' : 'MD'} Plan)`);
+
+        try {
+          // Info: (20260420 - Luphia) Read mission data
+          const missionJsonStr = await fs.readFile(missionJsonPath, "utf8");
+          const missionData = JSON.parse(missionJsonStr);
+          const pseudoMission = { id: missionData.orderId || "MOCK_MISSION", data: missionData } as unknown as IPseudoMission;
+
+          let aggregatedResult: Prisma.InputJsonValue = "Execution completed statically.";
+          const aggregatedResultsByFileId: Record<string, Record<string, unknown>> = {};
+
+          if (useJsonPlan) {
+            // Info: (20260420 - Luphia) Complex LLM & Skill sequence execution
+            const planStr = await fs.readFile(executorPlanPath, "utf8");
+            const missionDef = JSON.parse(planStr) as IMissionDefinition;
+
+            const tasksConfig = missionDef.tasks || [];
+            console.log(`[MissionExecutor] Executing ${tasksConfig.length} tasks in sequence...`);
+
+            // Info: (20260420 - Luphia) In-memory kv store for passing context between tasks (simulates DB previous task results)
+            const priorResults = new Map<string, string>();
+            const executionLogs: Record<string, unknown>[] = [];
+
+            for (const subTaskConfig of tasksConfig) {
+              const taskKey = subTaskConfig.data?.key || "UNKNOWN";
+              console.log(`[MissionExecutor]   -> Running sub-task [${taskKey}] (${subTaskConfig.type})`);
+              const pseudoTask = {
+                id: taskKey,
+                type: subTaskConfig.type,
+                data: subTaskConfig.data as unknown as Prisma.InputJsonValue,
+                order: subTaskConfig.order
+              } as IPseudoTask;
+
+              // Info: (20260420 - Luphia) Build Prompt
+              const fullPrompt = await this.buildTaskPrompt(subTaskConfig, missionData, priorResults);
+              let taskResultStr = "";
+
+              const skill = skillRegistry[subTaskConfig.type];
+              if (skill) {
+                console.log(`[MissionExecutor]      Invoking Skill: ${skill.name}`);
+                taskResultStr = await skill.execute(pseudoTask, pseudoMission, fullPrompt, chatService);
+              } else {
+                console.log(`[MissionExecutor]      Invoking raw ChatService LLM...`);
+                taskResultStr = await chatService.generateRaw(fullPrompt);
+              }
+
+              // Info: (20260420 - Luphia) Track execution tokens and content
+              const inputTokens = await chatService.countTokens(fullPrompt);
+              const outputTokens = await chatService.countTokens(taskResultStr);
+
+              executionLogs.push({
+                taskKey,
+                type: subTaskConfig.type,
+                order: subTaskConfig.order,
+                inputTokens,
+                outputTokens,
+                totalTokens: inputTokens + outputTokens,
+                input: fullPrompt,
+                output: taskResultStr,
+                timestamp: new Date().toISOString()
+              });
+
+              // Info: (20260420 - Luphia) Save in memory for next step
+              priorResults.set(taskKey, taskResultStr);
+
+              // Info: (20260420 - Luphia) Update the final aggregated result (usually the last order task sets the final goal)
+              let cleanedTaskResultStr = taskResultStr;
+              const globalMatch = taskResultStr.match(/\{[\s\S]*\}/);
+              if (globalMatch) {
+                cleanedTaskResultStr = globalMatch[0];
+              }
+
+              try {
+                const parsedVal = JSON.parse(cleanedTaskResultStr);
+
+                // Info: (20260420 - Luphia) Track for database sync grouped by fileId
+                if (useJsonPlan && subTaskConfig.data?.context) {
+                  try {
+                    const ctx = JSON.parse(subTaskConfig.data.context as string);
+                    if (ctx.fileId && ctx.accountBookId) {
+                      if (!aggregatedResultsByFileId[ctx.fileId]) {
+                        aggregatedResultsByFileId[ctx.fileId] = { accountBookId: ctx.accountBookId };
+                      }
+
+                      if (subTaskConfig.type === "JOURNAL_PARSING") aggregatedResultsByFileId[ctx.fileId].journal = parsedVal;
+                      if (subTaskConfig.type === "VOUCHER_BASE_PARSING") aggregatedResultsByFileId[ctx.fileId].voucherBase = parsedVal;
+                      if (subTaskConfig.type === "VOUCHER_LINES_PARSING") aggregatedResultsByFileId[ctx.fileId].voucherLines = parsedVal;
+                      if (subTaskConfig.type === "ESG_PARSING") aggregatedResultsByFileId[ctx.fileId].esg = parsedVal;
+                    }
+                  } catch { }
+                }
+
+                if (useJsonPlan && tasksConfig.length > 1) {
+                  if (typeof aggregatedResult === 'string') aggregatedResult = {};
+                  (aggregatedResult as Record<string, unknown>)[taskKey] = parsedVal;
+                } else {
+                  aggregatedResult = parsedVal as Prisma.InputJsonValue;
+                }
+              } catch {
+                if (useJsonPlan && tasksConfig.length > 1) {
+                  if (typeof aggregatedResult === 'string') aggregatedResult = {};
+                  (aggregatedResult as Record<string, unknown>)[taskKey] = cleanedTaskResultStr;
+                } else {
+                  aggregatedResult = cleanedTaskResultStr; // Info: (20260420 - Luphia) Fallback to raw string
+                }
+              }
+            }
+
+            // Info: (20260420 - Luphia) Write execution logs array
+            await fs.writeFile(path.join(taskDir, "execution_log.json"), JSON.stringify(executionLogs, null, 2), "utf8");
+
+            // Info: (20260420 - Luphia) Transform multi-step result into standardized { answer, tags } UI format
+            if (tasksConfig.length > 1 && typeof aggregatedResult === 'object' && aggregatedResult !== null) {
+              const agg = aggregatedResult as Record<string, unknown>;
+
+              const stepKeys = Object.keys(agg).filter(k => k.startsWith("STEP_") || k === "MARKET_FORMATTED_OUTPUT").sort();
+              const finalKey = agg["STEP_5"] ? "STEP_5" : (stepKeys.length > 0 ? stepKeys[stepKeys.length - 1] : null);
+              const finalAnswer = finalKey ? String(agg[finalKey]) : "";
+
+              let tags: string[] = [];
+              if (agg["STEP_2"]) {
+                const step2Str = String(agg["STEP_2"]);
+                const lines = step2Str.split('\n');
+                let capturingTags = false;
+                for (const line of lines) {
+                  // Info: (20260420 - Luphia) Some models output tags under a specific heading
+                  if (line.includes("最終決定的標籤清單") || line.includes("Final Tags")) {
+                    capturingTags = true;
+                  }
+
+                  const match = line.match(/^(?:[*-]|\d+\.)\s+(?:\*\*)?(#.*?[^\*])(?:\*\*)?\s*$/);
+                  if (match && (capturingTags || step2Str.length < 500)) {
+                    tags.push(match[1].trim());
+                  } else if (!match && capturingTags && line.match(/^(?:[*-]|\d+\.)\s+(?:\*\*)?([^#\*\s].*?[^\*])(?:\*\*)?\s*$/)) {
+                    // Info: (20260420 - Luphia) Sometimes AI forgets the # symbol
+                    const tagMatch = line.match(/^(?:[*-]|\d+\.)\s+(?:\*\*)?([^#\*\s].*?[^\*])(?:\*\*)?\s*$/);
+                    if (tagMatch) tags.push(`#${tagMatch[1].trim()}`);
+                  }
+                }
+
+                if (tags.length === 0) {
+                  const matchArray = step2Str.match(/最終決定的標籤清單[：:][\[【](.*?)[\]】]/);
+                  if (matchArray) {
+                    tags = matchArray[1].split(/[,、]/).map(t => t.trim());
+                  }
+                }
+              }
+
+              aggregatedResult = {
+                answer: finalAnswer,
+                tags: tags
+              };
+            }
+          } else {
+            // Info: (20260420 - Luphia) Fallback MD behavior
+            console.log(`[MissionExecutor] Executing basic simulated logic for category: ${missionData.category}...`);
+            aggregatedResult = {
+              answer: `The systematic analysis for ${missionData.category} has been successfully conducted.`,
+              tags: ["simulated", "fallback"],
+              aiNote: "Simulated output due to missing JSON execution plan."
+            };
+          }
+
+          const resultPayloadStr = typeof aggregatedResult === "string" ? aggregatedResult : JSON.stringify(aggregatedResult, null, 2);
+          await fs.writeFile(resultPath, resultPayloadStr, "utf8");
+
+          // Info: (20260420 - Luphia) Perform Database sync for valid parsed batch documents natively on worker!
+          for (const fileId of Object.keys(aggregatedResultsByFileId)) {
+            const fileResult = aggregatedResultsByFileId[fileId];
+            await syncDocumentResultToDatabase(
+              fileId,
+              fileResult.accountBookId as string,
+              fileResult
+            );
+          }
+
+          console.log(`[MissionExecutor] Execution successful. Final Result extracted to result.md`);
+          break; // Info: (20260420 - Luphia) process one at a time allowing UI to catch breath
+
+        } catch (execErr) {
+          console.error(`[MissionExecutor] Execution error for Task ID ${folder.name}:`, execErr);
+          const errorMessage = `[Error at ${new Date().toISOString()}]\n${execErr instanceof Error ? execErr.message : String(execErr)}\n`;
+          await fs.appendFile(notePath, errorMessage, "utf8");
+          break;
+        }
+      }
+    } catch (e) {
+      console.log("[MissionExecutor] Invalid MISSION_DIR or none exists yet.", e);
+    }
+
+    if (!foundTaskToExecute) {
+      console.log("[MissionExecutor] No pending executions found.");
+    }
+  }
+
+  private async buildTaskPrompt(taskConfig: ITaskDefinition, missionData: Record<string, unknown>, priorResults: Map<string, string>): Promise<string> {
+    let interpolatedPrompt = taskConfig.data.prompt || "";
+
+    const currentDate = new Date().toISOString().split("T")[0];
+    let startDate = missionData.startDate || "N/A";
+    let endDate = missionData.endDate || "N/A";
+    let marketName = missionData.marketName || "臺灣";
+    let targetKeyword = missionData.target || "General";
+    let esgRecordsContext = missionData.esgRecordsContext || "";
+
+    if (taskConfig.data.context && taskConfig.data.context.trim().startsWith("{")) {
+      try {
+        const parsedCtx = JSON.parse(taskConfig.data.context);
+        startDate = parsedCtx.startDate || startDate;
+        endDate = parsedCtx.endDate || endDate;
+        marketName = parsedCtx.marketName || marketName;
+        targetKeyword = parsedCtx.target || targetKeyword;
+        esgRecordsContext = parsedCtx.esgRecordsContext || esgRecordsContext;
+      } catch { /* Info: (20260420 - Luphia) nothing to do */ }
+    }
+
+    interpolatedPrompt = interpolatedPrompt
+      .replace(/\{Period_Start\}/g, () => String(startDate))
+      .replace(/\{Period_End\}/g, () => String(endDate))
+      .replace(/\{Market_Name\}/g, () => String(marketName))
+      .replace(/\{Current_Date\}/g, () => String(currentDate))
+      .replace(/\{Target_Keyword\}/g, () => String(targetKeyword))
+      .replace(/\{Esg_Records_Context\}/g, () => String(esgRecordsContext));
+
+    const histTags = Array.isArray(missionData.historicalTags) ? missionData.historicalTags : [];
+    const tagsString = histTags.length > 0
+      ? histTags.join(", ")
+      : "無歷史標籤";
+
+    interpolatedPrompt = interpolatedPrompt.replace(
+      /\{Historical_Tags_List\}/g,
+      () => tagsString,
+    );
+
+    // Info: (20260420 - Luphia) Context replacement from prior tasks
+    if (taskConfig.order && taskConfig.order > 0) {
+      for (const [key, value] of priorResults.entries()) {
+        interpolatedPrompt = interpolatedPrompt.replace(
+          `[${key}_CONTENT]`,
+          value,
+        );
+
+        // Info: (20260420 - Luphia) Specific step 2 tag extraction magic
+        if (key === "STEP_2") {
+          const match = value.match(/最終決定的標籤清單：\[(.*?)\]/);
+          const tags = match ? match[1] : "";
+          interpolatedPrompt = interpolatedPrompt.replace(
+            /\{Step_2_Final_Tags\}/g,
+            tags,
+          );
+        }
+      }
+    }
+
+    let fullPrompt = "";
+    if (taskConfig.data.context) {
+      if (taskConfig.data.context.trim().startsWith("{")) {
+        try {
+          const parsedContext = JSON.parse(taskConfig.data.context);
+          const targetString = `Category: ${parsedContext.category || "N/A"} / Keyword: ${parsedContext.target} / Country: ${parsedContext.marketName} / Period: ${parsedContext.period} (Year: ${parsedContext.year})`;
+          fullPrompt = `${targetString}\n\n${interpolatedPrompt}`;
+        } catch {
+          fullPrompt = `${taskConfig.data.context}\n\n${interpolatedPrompt}`;
+        }
+      } else {
+        fullPrompt = `${taskConfig.data.context}\n\n${interpolatedPrompt}`;
+      }
+    } else {
+      fullPrompt = interpolatedPrompt;
+    }
+
+    return fullPrompt;
+  }
+}
+
+export const missionExecutorService = new MissionExecutorService();

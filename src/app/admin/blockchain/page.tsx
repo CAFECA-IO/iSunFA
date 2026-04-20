@@ -19,6 +19,7 @@ import { request } from "@/lib/utils/request";
 import { type IBlockchainDashboardData } from "@/services/admin.blockchain.service";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
 import { useTranslation } from "@/i18n/i18n_context";
+import { CURRENCY_UNIT } from '@/constants/price';
 function usePolling<T>(fetcher: () => Promise<T>, interval = 5000) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<unknown>(null);
@@ -238,7 +239,7 @@ export default function BlockchainDashboardPage() {
           <AdminMetricCard
             title={t("admin_blockchain.page.system_icp")}
             value={data ? parseFloat(data.systemTotalIcp).toLocaleString(undefined, { maximumFractionDigits: 4 }) : "---"}
-            unit="ICP"
+            unit={CURRENCY_UNIT.ICP}
             icon={Coins}
             showSmallIcon={false}
             bgIconPosition="top-right"
@@ -251,7 +252,7 @@ export default function BlockchainDashboardPage() {
           <AdminMetricCard
             title={t("admin_blockchain.page.member_icp")}
             value={data ? parseFloat(data.membershipSystemIcpInventory).toLocaleString(undefined, { maximumFractionDigits: 4 }) : "---"}
-            unit="ICP"
+            unit={CURRENCY_UNIT.ICP}
             icon={Network}
             colorTheme="emerald"
             showSmallIcon={false}

@@ -28,6 +28,7 @@ interface IAuthContextType {
   loading: boolean;
   refreshAuth: () => Promise<void>;
   logout: () => void;
+  updateLocalCredits: (delta: number) => void;
 }
 
 const AuthContext = createContext<IAuthContextType | undefined>(undefined);
@@ -76,20 +77,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               address: CONTRACT_ADDRESSES.CREDIT_POINT,
               abi: ABIS.CREDIT_POINT,
               functionName: 'balanceOf',
-              args: [userData.address as `0x${string}`]
+              args: [userData.address as `0x${string}`],
+              blockTag: 'pending'
             });
             const credits = Number(formatUnits(balance, 18));
 
-            // Info: (20260129 - Tzuhan) Fetch verification status from KYC_REGISTRY
-            const isFrozen = await publicClient.readContract({
-              address: CONTRACT_ADDRESSES.KYC_REGISTRY,
-              abi: ABIS.KYC_REGISTRY,
-              functionName: 'isFrozen',
+            // Info: (20260418 - Luphia) Fetch verification status from DYNAMIC_KYC_MEMBERSHIP
+            const isBlacklisted = await publicClient.readContract({
+              address: CONTRACT_ADDRESSES.DYNAMIC_KYC_MEMBERSHIP,
+              abi: ABIS.DYNAMIC_KYC_MEMBERSHIP,
+              functionName: 'isBlacklisted',
               args: [userData.address as `0x${string}`]
             });
 
             // Info: (20260302 - Tzuhan) 將從區塊鏈取得的 credits 寫入 userData，同時也包含後端傳來的 pendingCredits
-            userData = { ...userData, credits, isVerified: !isFrozen };
+            userData = { ...userData, credits, isVerified: !isBlacklisted };
           }
         } catch (e) {
           console.warn("Deprecate: (20260310 - Tzuhan) ", 'Failed to fetch user balance:', e);
@@ -119,14 +121,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.reload();
   }, []);
 
+  const updateLocalCredits = useCallback((delta: number) => {
+    setUser(prev => {
+      if (!prev || prev.credits === undefined) return prev;
+      return { ...prev, credits: prev.credits + delta };
+    });
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
       loading,
       refreshAuth,
       logout,
+      updateLocalCredits,
     }),
-    [user, loading, refreshAuth, logout]
+    [user, loading, refreshAuth, logout, updateLocalCredits]
   );
 
   return (

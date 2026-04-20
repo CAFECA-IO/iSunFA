@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/landing_page/header";
 import Footer from "@/components/landing_page/footer";
-import { IThreadDetail, UserReaction } from "@/interfaces/ai_talk";
+import { IThreadDetail, UserReaction } from "@/interfaces/ai_consulting";
 import { timestampToString } from "@/lib/utils/common";
 import {
   ChevronLeft,
@@ -31,7 +31,7 @@ import { AiChat } from "@/components/ai_consultation_room/ai_chat";
 import { ApiCode } from "@/lib/utils/status";
 import { IApiResponse } from "@/lib/utils/response";
 
-export default function AiTalkDetailPage() {
+export default function AiConsultingDetailPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const params = useParams();
@@ -50,7 +50,7 @@ export default function AiTalkDetailPage() {
 
     const fetchThreadDetail = async () => {
       try {
-        const result = await request<IApiResponse<IThreadDetail>>(`/api/v1/ai_talk/thread/${talkId}`);
+        const result = await request<IApiResponse<IThreadDetail>>(`/api/v1/ai_consulting/thread/${talkId}`);
 
         if (result.code === ApiCode.SUCCESS) {
           setData(result.payload);
@@ -82,7 +82,7 @@ export default function AiTalkDetailPage() {
     if (!(talkId && user)) return;
 
     try {
-      const result = await request<IApiResponse<{ countOfLike: number; countOfDislike: number; userReaction: UserReaction }>>(`/api/v1/ai_talk/thread/${talkId}/react`, {
+      const result = await request<IApiResponse<{ countOfLike: number; countOfDislike: number; userReaction: UserReaction }>>(`/api/v1/ai_consulting/thread/${talkId}/react`, {
         method: "POST",
         body: JSON.stringify({ reaction }),
       });

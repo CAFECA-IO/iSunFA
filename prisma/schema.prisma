@@ -41,7 +41,6 @@ model User {
 
   orders              Order[]
   analyses            Analysis[]
-  missions            Mission[]
   comments            Comment[]
   receivedReplies     Comment[]            @relation("CommentRecipient")
   reactions           Reaction[]
@@ -107,11 +106,13 @@ model Order {
   user            User     @relation(fields: [userId], references: [id])
   type            String
   amount          Int
+  unit            String   @default("ICP")
   data            Json
   status          String   @default("PENDING")
   challenge       String
   signature       String?
   transactionHash String?  @map("transaction_hash")
+  mission         String?
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
@@ -132,8 +133,7 @@ model Analysis {
   type      String
   data      Json
   result    Json?
-  missionId String?  @map("mission_id")
-  mission   Mission? @relation(fields: [missionId], references: [id])
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -144,43 +144,6 @@ model Analysis {
   reactions         Reaction[]
 
   @@map("analysis")
-}
-
-model Mission {
-  id     String @id @default(uuid())
-  userId String @map("user_id")
-  user   User   @relation(fields: [userId], references: [id])
-  name   String
-
-  // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
-  status    String     @default("PENDING")
-  tasks     Task[]
-  analyses  Analysis[]
-  data      Json?
-  result    Json?
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
-
-  @@map("mission")
-}
-
-model Task {
-  id        String  @id @default(uuid())
-  missionId String  @map("mission_id")
-  mission   Mission @relation(fields: [missionId], references: [id])
-  type      String
-
-  // Info: (20260128 - Luphia) PENDING, RUNNING, COMPLETED, FAILED
-  status String @default("PENDING")
-
-  // Info: (20260128 - Luphia) Execution order. Equal values = parallel
-  order     Int      @default(0)
-  data      Json?
-  result    Json?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("task")
 }
 
 
@@ -203,10 +166,10 @@ model File {
 
 // Info: (20260212 - Julian) 評論：支援巢狀回覆
 model Comment {
-  id       String @id @default(uuid())
-  content  String @db.Text
-  userId   String @map("user_id")
-  user     User   @relation(fields: [userId], references: [id])
+  id         String   @id @default(uuid())
+  content    String   @db.Text
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id])
   analysisId String   @map("analysis_id")
   analysis   Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
 
@@ -266,8 +229,6 @@ model Reaction {
   @@unique([userId, commentId])
   @@map("reaction")
 }
-
-
 
 // Info: (20260311 - Tzuhan) Analysis - Tags
 model AnalysisTag {

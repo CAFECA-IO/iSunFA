@@ -11,14 +11,16 @@ import {
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { analysisService } from "@/services/analysis.service";
+import { analysisService, IGenerateAnalysisParams } from "@/services/analysis.service";
 import { webAuthnService } from "@/services/webauthn.service";
 import { AppError } from "@/lib/utils/error";
-import { orderGenerator } from "@/lib/order/order.generator";
+import { completeOrder, failOrder, getPendingOrder } from "@/services/order.service";
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS } from "@/config/contracts";
+import { paymentRepo } from "@/repositories/payment.repo";
 import { analysisRepo, FullAnalysis } from "@/repositories/analysis.repo";
+import { ORDER_TYPE } from "@/constants/status";
 
 export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
@@ -40,6 +42,8 @@ export async function POST(request: NextRequest) {
       keyword,
       authentication,
       isExternal,
+      question,
+      files,
     } = body;
 
     // Info: (20260128 - Luphia) Validate FIDO2 Signature OR Transaction Binding
@@ -174,7 +178,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (!userOpSuccess) {
-          await orderGenerator.failOrder(
+          await failOrder(
             orderId,
             "UserOperation failed on-chain (e.g. out of gas or insufficient balance)",
           );
@@ -185,7 +189,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Info: (20260209 - Tzuhan) Mark order as complete
-        await orderGenerator.completeOrder(
+        await completeOrder(
           orderId,
           JSON.stringify({ verifiedVia: "tx", txHash }),
           txHash,
@@ -194,7 +198,7 @@ export async function POST(request: NextRequest) {
         // Info: (20260128 - Luphia) Fallback to Signature Verification (Legacy 2-step) or if txHash not provided
 
         // Info: (20260209 - Tzuhan) 1. Get Pending Order
-        const order = await orderGenerator.getPendingOrder(orderId, user.id);
+        const order = await getPendingOrder(orderId, user.id);
 
         // Info: (20260209 - Tzuhan) 2. Verify Signature
         await webAuthnService.verifySignature(
@@ -204,7 +208,7 @@ export async function POST(request: NextRequest) {
         );
 
         // Info: (20260209 - Tzuhan) 3. Complete Order
-        await orderGenerator.completeOrder(
+        await completeOrder(
           orderId,
           JSON.stringify(authentication),
           undefined,
@@ -226,17 +230,27 @@ export async function POST(request: NextRequest) {
      * Data is already in Order, but we can use body too or trust order data
      * Using body params ensures consistency with frontend request, but ideally we use order.data
      */
-    const result = await analysisService.generateAnalysis(user.id, {
-      category,
-      periodType,
-      periodValue,
-      year,
-      country,
-      keyword,
-      orderId,
-      isExternal,
-    });
+    const orderData = await paymentRepo.getOrderById(orderId);
+    if (!orderData) {
+      return jsonFail(ApiCode.NOT_FOUND, "Order not found");
+    }
 
+    const generateAnalysisParams: IGenerateAnalysisParams = {
+      orderId,
+      type: ORDER_TYPE.ANALYSIS,
+      data: {
+        category,
+        periodType,
+        periodValue,
+        year,
+        country,
+        keyword,
+        isExternal,
+        question,
+        files,
+      }
+    };
+    const result = await analysisService.generateAnalysis(user.id, generateAnalysisParams);
     return jsonOk(result);
   } catch (error) {
     console.error("[API] /user/analysis error:", error);
@@ -267,18 +281,19 @@ export async function GET(request: NextRequest) {
 
     // Info: (20260128 - Luphia) Map DB result to response format
     const history = fullAnalyses.map((analysis: FullAnalysis) => {
-      const status = analysis.mission?.status?.toLowerCase() || "unknown";
+      const status = analysis.order?.status?.toLowerCase() || "unknown";
+      const analysisData = analysis.data as Record<string, unknown> | null;
       let periodType = "unknown";
 
-      if (analysis.mission?.name) {
-        const parts = analysis.mission.name.split("-");
+      if (analysisData?.missionName) {
+        const parts = (analysisData.missionName as string).split("-");
         if (parts.length >= 3) {
           periodType = parts[2];
         }
       }
 
-      // Info: (20260128 - Luphia) Safely access mission data, we assume mission.data has generatedAt
-      const missionData = analysis.mission?.data as Record<
+      // Info: (20260128 - Luphia) Safely access mission data, we assume analysis.data has generatedAt
+      const missionData = analysis.data as Record<
         string,
         unknown
       > | null;

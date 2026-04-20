@@ -7,6 +7,7 @@ import {
 } from "@/constants/status";
 import { IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
 import { buildReceiptDataToSave } from "@/lib/utils/payment_helpers";
+import { CurrencyUnit, CURRENCY_UNIT } from "@/constants/price";
 
 export interface IOrderWithUser extends Order {
   user: User | null;
@@ -181,12 +182,33 @@ export class PaymentRepository {
     });
   }
 
-  async createOrder(data: Prisma.OrderUncheckedCreateInput) {
+  async createOrder(data: Prisma.OrderUncheckedCreateInput & { unit: CurrencyUnit }) {
+    if (!data.unit) {
+      throw new Error("Order unit is explicitly required");
+    }
+    if (!Object.values(CURRENCY_UNIT).includes(data.unit)) {
+      throw new Error(`Invalid order unit. Must be one of: ${Object.values(CURRENCY_UNIT).join(", ")}`);
+    }
     return prisma.order.create({ data });
   }
 
   async getOrderById(orderId: string) {
     return prisma.order.findUnique({ where: { id: orderId } });
+  }
+
+  async setOrderPaying(
+    orderId: string,
+    signature: string,
+    transactionHash?: string,
+  ) {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: ORDER_STATUS.PAYING,
+        signature: signature,
+        transactionHash: transactionHash,
+      },
+    });
   }
 
   async completeOrderWithReceipt(
@@ -349,6 +371,13 @@ export class PaymentRepository {
     });
   }
 
+  async updateOrderStatus(orderId: string, status: string, additionalData?: Prisma.OrderUpdateInput) {
+    return prisma.order.update({
+      where: { id: orderId },
+      data: { status, ...additionalData },
+    });
+  }
+
   async createPaymentTransactionAndUpdateOrder(
     userId: string,
     paymentMethodId: string,
@@ -484,7 +513,7 @@ export class PaymentRepository {
     const where = this.buildDateWhereClause(startDate, endDate);
     where.type = { in: ["PAYMENT", "OEN_PAYMENT"] };
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
-    
+
     const agg = await prisma.order.aggregate({
       _sum: { amount: true },
       where,
@@ -496,7 +525,7 @@ export class PaymentRepository {
     const where = this.buildDateWhereClause(startDate, endDate);
     where.type = { in: ["PAYMENT", "OEN_PAYMENT"] };
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
-    
+
     const agg = await prisma.order.groupBy({
       by: ["userId"],
       where,
@@ -508,12 +537,12 @@ export class PaymentRepository {
     const where = this.buildDateWhereClause(startDate, endDate);
     where.type = { in: ["PAYMENT", "OEN_PAYMENT"] };
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
-    
+
     const orders = await prisma.order.findMany({
       where,
       select: { data: true },
     });
-    
+
     let total = 0;
     orders.forEach((o) => {
       const data = o.data as { credits?: number };
@@ -529,7 +558,7 @@ export class PaymentRepository {
     where.type = { notIn: ["PAYMENT", "OEN_PAYMENT", "OEN_BINDING", "CHECKIN_REWARD", "REGISTRATION_REWARD"] };
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
     where.amount = { gt: 0 };
-    
+
     const agg = await prisma.order.aggregate({
       _sum: { amount: true },
       where,

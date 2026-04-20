@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {CreditPoint} from "./credit_point.sol";
-import {KYCRegistry} from "./kyc_registry.sol";
+import {DynamicKYCMembership} from "./dynamic_kyc_membership.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
@@ -15,7 +15,7 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
  * 點數消費使用三軌分離帳本，提供階層 Cascade Burn 機制，在用戶消費時強制優先折抵快過期的月租點數，保障用戶最大權益。
  */
 contract SubscriptionManager is AccessControl {
-    KYCRegistry public kycRegistry;
+    DynamicKYCMembership public kycRegistry;
     CreditPoint public treasury;
 
     address public treasuryReceiver;
@@ -58,9 +58,15 @@ contract SubscriptionManager is AccessControl {
 
     constructor(address defaultAdmin, address _kyc, address _treasury) {
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
-        kycRegistry = KYCRegistry(_kyc);
+        kycRegistry = DynamicKYCMembership(_kyc);
         treasury = CreditPoint(_treasury);
         treasuryReceiver = defaultAdmin;
+    }
+
+    function setKYCRegistry(
+        address _kyc
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        kycRegistry = DynamicKYCMembership(_kyc);
     }
 
     /**

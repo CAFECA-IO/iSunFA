@@ -2,98 +2,126 @@ import { UserOperationJson } from "@/validators";
 import {
   encodeFunctionData,
   parseAbi,
-  Address,
   toHex,
   keccak256,
   stringToBytes,
+  getAddress,
+  parseEther,
 } from "viem";
 import { publicClient } from "@/lib/viem_public";
 import { CONTRACT_ADDRESSES, ABIS } from "@/config/contracts";
 
-/**
- * Info: (20260128 - Tzuhan)
- * 構建 ERC-20 轉帳的 UserOperation (尚未簽名)
- */
-export async function buildTransferUserOp(
-  sender: Address,
-  to: Address,
-  amount: string, // Info: (20260130 - Tzuhan) Parsed 18 decimals string
-  tokenAddress: Address = CONTRACT_ADDRESSES.CREDIT_POINT,
-  orderId?: string, // Info: (20260209 - Tzuhan) Optional Order ID to bind payment
-): Promise<UserOperationJson> {
-  /** Info: (20260130 - Tzuhan)
-   * 1. Encode Inner Call (Token Transfer)
-   * Info: Standard ERC20 Transfer
-   */
-  const tokenAbi = parseAbi([
-    "function transfer(address to, uint256 amount) external returns (bool)",
-  ]);
-  let executeCallData = encodeFunctionData({
-    abi: tokenAbi,
-    functionName: "transfer",
-    args: [to, BigInt(amount)],
-  });
-
-  // Info: (20260209 - Tzuhan) If orderId is provided, append its hash to the call data
-  if (orderId) {
-    // Info: (20260209 - Tzuhan) 將 Order ID Hash 附加在交易資料末端。ERC-20 合約會忽略多餘資料，但後端可用此驗證交易與訂單的綁定關係。
-    const orderHash = keccak256(stringToBytes(orderId));
-    executeCallData = (executeCallData + orderHash.slice(2)) as `0x${string}`;
-  }
-
-  /** Info: (20260130 - Tzuhan)
-   * 2. Encode SCW Execute (The actual call data for the EntryPoint)
-   * SCW.execute(dest, value, func)
-   */
-  const scwCallData = encodeFunctionData({
-    abi: ABIS.SCW,
-    functionName: "execute",
-    args: [tokenAddress, BigInt(0), executeCallData],
-  });
-
-  /** Info: (20260130 - Tzuhan)
-   * 3. Get Nonce
-   * EntryPoint.getNonce(sender, 0)
-   * Note: If nonce is not sequential, this might fail, but for simple use case it's fine.
-   */
-  let nonce = BigInt(0);
+// Info: (20260419 - Agent) Merged to provide a single, pure client-side UserOp builder
+export async function prepareTransferUserOp(
+  sender: string,
+  amount: number,
+  orderId?: string,
+): Promise<{ success: boolean; message: string; data?: { userOp: UserOperationJson; userOpHash: string } }> {
   try {
-    const entryPointAbi = parseAbi([
-      "function getNonce(address sender, uint192 key) external view returns (uint256)",
+    const validSender = getAddress(sender);
+    const amountBigInt = parseEther(amount.toString());
+
+    /** Info: (20260130 - Tzuhan)
+     * 1. Encode Inner Call (Token Transfer)
+     * Info: Standard ERC20 Transfer
+     */
+    const tokenAbi = parseAbi([
+      "function transfer(address to, uint256 amount) external returns (bool)",
     ]);
-      // Info: (20260418 - Luphia) Use random key to avoid AA25 pending nonce collisions
+    let executeCallData = encodeFunctionData({
+      abi: tokenAbi,
+      functionName: "transfer",
+      args: [CONTRACT_ADDRESSES.MEMBERSHIP_SYSTEM, amountBigInt],
+    });
+
+    // Info: (20260209 - Tzuhan) 如果有 orderId，附加 Hash 在後方做對帳標記
+    if (orderId) {
+      const orderHash = keccak256(stringToBytes(orderId));
+      executeCallData = (executeCallData + orderHash.slice(2)) as `0x${string}`;
+    }
+
+    /** Info: (20260130 - Tzuhan)
+     * 2. Encode SCW Execute (The actual call data for the EntryPoint)
+     */
+    const scwCallData = encodeFunctionData({
+      abi: ABIS.SCW,
+      functionName: "execute",
+      args: [CONTRACT_ADDRESSES.CREDIT_POINT, BigInt(0), executeCallData],
+    });
+
+    /** Info: (20260130 - Tzuhan)
+     * 3. Get Nonce
+     */
+    let nonce = BigInt(0);
+    try {
+      const entryPointAbi = parseAbi([
+        "function getNonce(address sender, uint192 key) external view returns (uint256)",
+      ]);
       const randomKey = BigInt(Math.floor(Date.now() * Math.random()) % 1000000000);
       nonce = await publicClient.readContract({
         address: CONTRACT_ADDRESSES.ENTRY_POINT,
         abi: entryPointAbi,
         functionName: "getNonce",
-        args: [sender, randomKey],
+        args: [validSender, randomKey],
+      });
+    } catch (e) {
+      console.warn("Failed to fetch nonce, defaulting to 0", e);
+    }
+
+    /** Info: (20260130 - Tzuhan)
+     * 4. Gas Estimation (Simplified)
+     */
+    const callGasLimit = BigInt(500_000);
+    const verificationGasLimit = BigInt(1_000_000);
+    const preVerificationGas = BigInt(300_000);
+    const maxFeePerGas = BigInt(0);
+    const maxPriorityFeePerGas = BigInt(0);
+
+    const userOp: UserOperationJson = {
+      sender: validSender,
+      nonce: toHex(nonce),
+      initCode: "0x",
+      callData: scwCallData,
+      accountGasLimits: `0x${((verificationGasLimit << 128n) | callGasLimit).toString(16).padStart(64, "0")}`,
+      preVerificationGas: toHex(preVerificationGas),
+      gasFees: `0x${((maxPriorityFeePerGas << 128n) | maxFeePerGas).toString(16).padStart(64, "0")}`,
+      paymasterAndData: "0x",
+      signature: "0x",
+    };
+
+    // Info: (20260130 - Tzuhan) 5. Calculate UserOp Hash using EntryPoint
+    const userOpHash = await publicClient.readContract({
+      address: CONTRACT_ADDRESSES.ENTRY_POINT,
+      abi: ABIS.ENTRY_POINT,
+      functionName: "getUserOpHash",
+      args: [
+        {
+          sender: userOp.sender as `0x${string}`,
+          nonce: BigInt(userOp.nonce),
+          initCode: userOp.initCode as `0x${string}`,
+          callData: userOp.callData as `0x${string}`,
+          accountGasLimits: userOp.accountGasLimits as `0x${string}`,
+          preVerificationGas: BigInt(userOp.preVerificationGas),
+          gasFees: userOp.gasFees as `0x${string}`,
+          paymasterAndData: userOp.paymasterAndData as `0x${string}`,
+          signature: userOp.signature as `0x${string}`,
+        },
+      ],
     });
-  } catch (e) {
-    console.warn("Failed to fetch nonce, defaulting to 0", e);
+
+    return {
+      success: true,
+      message: "UserOp prepared",
+      data: {
+        userOp,
+        userOpHash: userOpHash as string,
+      },
+    };
+  } catch (error) {
+    console.error("prepareTransferUserOp failed:", error);
+    return {
+      success: false,
+      message: `Failed to prepare transfer: ${(error as Error).message}`,
+    };
   }
-
-  /** Info: (20260130 - Tzuhan)
-   * 4. Gas Estimation (Simplified)
-   * In a real bundler, we might use eth_estimateUserOperationGas
-   * Here we use safe defaults for a token transfer.
-   * Bumped from 200_000 to 500_000 to support complex ERC-3643 Token transfer logic.
-   */
-  const callGasLimit = BigInt(500_000); // Info: (20260304 - Tzuhan) Token transfer + ERC-3643 compliance overhead
-  const verificationGasLimit = BigInt(1_000_000); // Info: (20260130 - Tzuhan) Signature verification (P-256 is heavy, bumping significantly)
-  const preVerificationGas = BigInt(300_000); // Info: (20260130 - Tzuhan) Bumped for safety with large signatures
-  const maxFeePerGas = BigInt(0);
-  const maxPriorityFeePerGas = BigInt(0);
-
-  return {
-    sender: sender,
-    nonce: toHex(nonce),
-    initCode: "0x",
-    callData: scwCallData,
-    accountGasLimits: `0x${((verificationGasLimit << 128n) | callGasLimit).toString(16).padStart(64, "0")}`,
-    preVerificationGas: toHex(preVerificationGas),
-    gasFees: `0x${((maxPriorityFeePerGas << 128n) | maxFeePerGas).toString(16).padStart(64, "0")}`,
-    paymasterAndData: "0x",
-    signature: "0x",
-  };
 }

@@ -1,5 +1,5 @@
 import { ITaskSkill } from "@/skills/types";
-import { Task /*, Mission */ } from "@/generated/client";
+import { IPseudoTask } from "@/skills/types";
 // import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
@@ -24,7 +24,7 @@ export class EsgIntensityEvaluationSkill implements ITaskSkill {
   };
 
   async execute(
-    task: Task,
+    task: IPseudoTask,
     // mission: Mission,
     // fullPrompt: string,
     // chatService: ChatService,

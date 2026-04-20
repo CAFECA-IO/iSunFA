@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { Prisma } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -8,20 +9,18 @@ import { journalRepo } from "@/repositories/journal.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
-import { missionRepo } from "@/repositories/mission.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { missionGenerator } from "@/lib/worker/mission.generator";
-import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
+import { paymentRepo } from "@/repositories/payment.repo";
+import { ORDER_STATUS } from "@/constants/status";
 import {
   decodeFunctionData,
   keccak256,
   stringToBytes,
   parseAbi,
-  decodeEventLog,
 } from "viem";
 import { AppError } from "@/lib/utils/error";
-import { orderGenerator } from "@/lib/order/order.generator";
+import { getPendingOrder } from "@/services/order.service";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS } from "@/config/contracts";
 import { webAuthnService } from "@/services/webauthn.service";
@@ -138,62 +137,25 @@ export async function POST(
           throw new Error("Transaction is not bound to this Order ID");
         }
 
-        // Info: (20260418 - Luphia) Wait for receipt since blockchain_payment returns txHash instantly
-        const receipt = await publicClient.waitForTransactionReceipt({
-          hash: txHash as `0x${string}`,
-          timeout: 45000,
-        });
-        if (!receipt) {
-          throw new Error("Transaction receipt could not be acquired");
-        }
-
-        let userOpSuccess = false;
-        for (const log of receipt.logs) {
-          try {
-            const decoded = decodeEventLog({
-              abi: ABIS.ENTRY_POINT,
-              data: log.data,
-              topics: log.topics,
-            });
-            if (decoded.eventName === "UserOperationEvent") {
-              const args = decoded.args as { sender: string; success: boolean };
-              if (
-                args.sender.toLowerCase() === sessionUser.address.toLowerCase()
-              ) {
-                if (args.success) {
-                  userOpSuccess = true;
-                }
-                break;
-              }
-            }
-          } catch { }
-        }
-
-        if (!userOpSuccess) {
-          await orderGenerator.failOrder(
-            orderId,
-            "UserOperation failed on-chain",
-          );
-          throw new AppError(
-            ApiCode.VALIDATION_ERROR,
-            "The token transfer failed on-chain. Order cancelled.",
-          );
-        }
-
-        // Wait to complete order because multiple AI scans share the same order, so only complete it once if pending!
-        const existingOrder = await orderGenerator
-          .getPendingOrder(orderId, creator.id)
+        /**
+         * Info: (20260418 - Luphia)
+         * Removed synchronous `waitForTransactionReceipt` to prevent 45s API timeout.
+         * We trust the transaction has been dispatched cleanly by blockchain_payment.
+         * The background worker or asynchronous order completion handles failures.
+         * Wait to complete order because multiple AI scans share the same order, so only complete it once if pending!
+         */
+        const existingOrder = await getPendingOrder(orderId, creator.id)
           .catch(() => null);
         if (existingOrder && existingOrder.status === "PENDING") {
-          await orderGenerator.completeOrder(
+          // Info: (20260420 - Luphia) Mark as PAID so MissionIssuer picks it up
+          await paymentRepo.updateOrderStatus(
             orderId,
-            JSON.stringify({ verifiedVia: "tx", txHash }),
-            txHash,
+            ORDER_STATUS.PAID,
+            { transactionHash: txHash }
           );
         }
       } else {
-        const order = await orderGenerator
-          .getPendingOrder(orderId, creator.id)
+        const order = await getPendingOrder(orderId, creator.id)
           .catch(() => null);
 
         if (order && order.status === "PENDING") {
@@ -203,10 +165,11 @@ export async function POST(
             order.challenge,
           );
 
-          await orderGenerator.completeOrder(
+          // Info: (20260420 - Luphia) Mark as PAID so MissionIssuer picks it up
+          await paymentRepo.updateOrderStatus(
             orderId,
-            JSON.stringify(authentication),
-            undefined,
+            ORDER_STATUS.PAID,
+            { signature: JSON.stringify(authentication) }
           );
         }
       }
@@ -314,33 +277,22 @@ export async function POST(
       },
     ]);
 
-    // Info: (20260320 - Julian) 觸發 Mission Generator 寫入任務
-    const missionDef = missionGenerator.generateMission({
-      category: "document_parsing",
-      periodType: "N/A", // Info: (20260320 - Julian) 憑證解析可不用
-      periodValue: "N/A",
-      year: new Date().getFullYear(),
-      fileId: uploadedFile.id,
-      fileBase64: file.base64,
-      fileMimeType: file.file.type,
-      accountBookId: accountBook.id,
-      prerequisiteData: { accountBook },
-    });
+    /**
+     * Info: (20260420 - Luphia) 觸發 Task 生成機制，將需要的 Context 包進 Order.data 中
+     * MissionIssuer cron 會掃描 PAID 的 Order 並生成真正的 MissionBoard NFT
+     */
+    const orderRecord = await paymentRepo.getOrderById(orderId);
+    if (orderRecord) {
+      const existingData = (orderRecord.data as Record<string, unknown>) || {};
 
-    if (missionDef) {
-      await missionRepo.createMission({
-        userId: creator.id,
-        name: missionDef.name,
-        status: AIAnalysisStatus.PENDING,
-        tasks: {
-          create: missionDef.tasks.map((task) => ({
-            type: task.type,
-            order: task.order,
-            data: task.data,
-            status: AIAnalysisStatus.PENDING,
-          })),
-        },
-      });
+      await paymentRepo.updateOrderData(orderId, {
+        ...existingData,
+        category: "document_parsing",
+        fileId: uploadedFile.id,
+        fileBase64: file.base64,
+        fileMimeType: file.file.type,
+        accountBookId: accountBook.id,
+      } as Prisma.InputJsonObject);
     }
 
     return jsonOk({

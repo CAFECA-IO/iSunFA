@@ -7,6 +7,7 @@ import * as StateSetupService from "@/services/setup.state.service";
 import * as AuthSetupService from "@/services/setup.auth.service";
 import * as EnvSetupService from "@/services/setup.env.service";
 import * as DbSetupService from "@/services/setup.db.service";
+import * as DeploySetupService from "@/services/deploy.service";
 
 const SetupService = {
   ...StateSetupService,
@@ -14,6 +15,7 @@ const SetupService = {
   ...EnvSetupService,
   ...BlockchainSetupService,
   ...AuthSetupService,
+  ...DeploySetupService,
   ...CoreSetupService
 };
 import { validateEnv } from "@/validators/env";
@@ -36,7 +38,11 @@ export async function POST(
      */
     if (
       action !== "isSystemSetupComplete" &&
-      action !== "getSuperAdminTaskStatus"
+      action !== "getSuperAdminTaskStatus" &&
+      action !== "deployContracts" &&
+      action !== "getDeployProgress" &&
+      action !== "checkHasExistingContracts" &&
+      action !== "verifyContractDependencies"
     ) {
       const isComplete = await validateEnv();
       if (isComplete) {

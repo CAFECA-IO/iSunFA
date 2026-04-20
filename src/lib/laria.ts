@@ -292,9 +292,9 @@ export async function recoverFile(
     await outputHandle.truncate(originalFileSize);
     console.log(`[恢復] 檔案已成功恢復。 總大小: ${originalFileSize} bytes`);
   } catch (err: unknown) {
-    console.error(
-      `[恢復] 處理失敗: ${err instanceof Error ? err.message : String(err)}`,
-    );
+    const errMsg = `[恢復] 處理失敗: ${err instanceof Error ? err.message : String(err)}`;
+    console.error(errMsg);
+    throw new Error(errMsg);
   } finally {
     // Info: (20251028 - Luphia) 關閉所有檔案句柄
     if (outputHandle) await outputHandle.close();

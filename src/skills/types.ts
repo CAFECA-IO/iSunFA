@@ -1,5 +1,17 @@
-import { Task, Mission } from "@/generated/client";
+
 import { ChatService } from "@/services/chat.service";
+
+export interface IPseudoTask {
+  id: string;
+  type: string;
+  data: Record<string, unknown>;
+  order: number;
+}
+
+export interface IPseudoMission {
+  id: string;
+  data: Record<string, unknown>;
+}
 
 export interface ITaskSkill {
   name: string;
@@ -7,8 +19,8 @@ export interface ITaskSkill {
   parameters?: Record<string, unknown>;
 
   execute(
-    task: Task,
-    mission: Mission,
+    task: IPseudoTask,
+    mission: IPseudoMission,
     fullPrompt: string,
     chatService: ChatService,
   ): Promise<string>;

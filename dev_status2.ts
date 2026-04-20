@@ -1,0 +1,1 @@
+import { prisma } from "./src/lib/prisma"; async function main() { console.log("Order status:", (await prisma.order.findUnique({where:{id:"81f51a84-de47-49dc-88a2-34b2f8ea5335"}}))?.status); console.log("Analysis status:", (await prisma.analysis.findFirst({where:{orderId:"81f51a84-de47-49dc-88a2-34b2f8ea5335"}}))?.status); } main();

@@ -140,10 +140,10 @@ export async function grantDefaultAdminRoles(address: string) {
   const DEFAULT_ADMIN_ROLE = "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
 
   const contractsToTransfer = [
-    envConfig.NEXT_PUBLIC_KYC_REGISTRY_ADDRESS,
-    envConfig.NEXT_PUBLIC_DYNAMIC_MEMBERSHIP_CARD_ADDRESS,
+    envConfig.NEXT_PUBLIC_DYNAMIC_KYC_MEMBERSHIP_ADDRESS,
     envConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS,
     envConfig.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
+    envConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS,
   ].filter(Boolean);
 
   for (const contractAddr of contractsToTransfer) {
@@ -169,10 +169,10 @@ export async function revokeDefaultAdminRoles(address: string) {
   const DEFAULT_ADMIN_ROLE = "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
 
   const contractsToTransfer = [
-    envConfig.NEXT_PUBLIC_KYC_REGISTRY_ADDRESS,
-    envConfig.NEXT_PUBLIC_DYNAMIC_MEMBERSHIP_CARD_ADDRESS,
+    envConfig.NEXT_PUBLIC_DYNAMIC_KYC_MEMBERSHIP_ADDRESS,
     envConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS,
     envConfig.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
+    envConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS,
   ].filter(Boolean);
 
   for (const contractAddr of contractsToTransfer) {
@@ -188,7 +188,7 @@ export async function revokeDefaultAdminRoles(address: string) {
 
 export async function setAccountKYCLevel(address: string, level: number) {
   const envConfig = await getPriorityEnvConfig();
-  if (!envConfig.NEXT_PUBLIC_KYC_REGISTRY_ADDRESS) return;
+  if (!envConfig.NEXT_PUBLIC_DYNAMIC_KYC_MEMBERSHIP_ADDRESS) return;
 
   let adminAccount;
   try { adminAccount = await getAdminAccount(); } catch { return; }
@@ -196,7 +196,7 @@ export async function setAccountKYCLevel(address: string, level: number) {
   const rpcUrl = envConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
   const mainWalletClient = createWalletClient({ chain: isuncoin, account: adminAccount, transport: http(rpcUrl) });
 
-  const irAddress = envConfig.NEXT_PUBLIC_KYC_REGISTRY_ADDRESS as `0x${string}`;
+  const irAddress = envConfig.NEXT_PUBLIC_DYNAMIC_KYC_MEMBERSHIP_ADDRESS as `0x${string}`;
   const irAbi = parseAbi([
     "function updateKYC(address, uint8) external",
     "function getKYCLevel(address) view returns (uint8)",

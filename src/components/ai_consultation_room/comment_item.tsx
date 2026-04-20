@@ -2,7 +2,7 @@ import { useState } from "react";
 import { request } from "@/lib/utils/request";
 import { ThumbsUp, ThumbsDown, CheckCircle2 } from "lucide-react";
 import { formatTime } from "@/lib/utils/common";
-import { IComment, UserReaction } from "@/interfaces/ai_talk";
+import { IComment, UserReaction } from "@/interfaces/ai_consulting";
 import { CommentPostInput } from "@/components/ai_consultation_room/comment_post_input";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
@@ -58,7 +58,7 @@ export const CommentItem = ({
           countOfDislike: number;
           userReaction: UserReaction;
         }>
-      >(`/api/v1/ai_talk/comment/${comment.id}/react`, {
+      >(`/api/v1/ai_consulting/comment/${comment.id}/react`, {
         method: "POST",
         body: JSON.stringify({ reaction }),
       });

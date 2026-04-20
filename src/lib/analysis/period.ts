@@ -1,18 +1,20 @@
+import { ANALYSIS_PERIOD } from "@/constants/analysis";
+
 // Info: (20260120 - Luphia) Helper to calculate date range
 export const getPeriodDateRange = (
   pType: string,
   year: number,
   pValue: string | number,
 ) => {
-  if (pType === "daily") return { start: String(pValue), end: String(pValue) };
+  if (pType === ANALYSIS_PERIOD.DAILY) return { start: String(pValue), end: String(pValue) };
 
   let start = "";
   let end = "";
 
-  if (pType === "yearly") {
+  if (pType === ANALYSIS_PERIOD.YEARLY) {
     start = `${year}-01-01`;
     end = `${year}-12-31`;
-  } else if (pType === "seasonly") {
+  } else if (pType === ANALYSIS_PERIOD.SEASONLY) {
     const sMap: Record<string, [string, string]> = {
       S1: ["01-01", "03-31"],
       S2: ["04-01", "06-30"],
@@ -24,7 +26,7 @@ export const getPeriodDateRange = (
       start = `${year}-${s}`;
       end = `${year}-${e}`;
     }
-  } else if (pType === "monthly") {
+  } else if (pType === ANALYSIS_PERIOD.MONTHLY) {
     const m = Number(pValue);
     if (m) {
       const lastDay = new Date(year, m, 0).getDate();
@@ -32,7 +34,7 @@ export const getPeriodDateRange = (
       start = `${year}-${mStr}-01`;
       end = `${year}-${mStr}-${lastDay}`;
     }
-  } else if (pType === "weekly") {
+  } else if (pType === ANALYSIS_PERIOD.WEEKLY) {
     const weekNum = Number(String(pValue).substring(1));
     if (weekNum) {
       const simpleDate = new Date(year, 0, 1 + (weekNum - 1) * 7);

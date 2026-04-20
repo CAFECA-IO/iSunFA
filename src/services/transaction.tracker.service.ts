@@ -1,8 +1,8 @@
 import { publicClient } from "@/lib/viem_public";
+import { decodeEventLog, parseAbi, parseEther, formatEther } from "viem";
 import { prisma } from "@/lib/prisma";
-import { analysisRepo } from "@/repositories/analysis.repo";
-import { orderGenerator } from "@/lib/order/order.generator";
-import { MISSION_STATUS } from "@/constants/status";
+import { failOrder } from "@/services/order.service";
+import { ORDER_STATUS } from "@/constants/status";
 
 export class TransactionTrackerService {
   private isScanning = false;
@@ -16,54 +16,94 @@ export class TransactionTrackerService {
     let processedCount = 0;
 
     try {
-      // Info: (20260418 - Luphia) Find all missions stuck in PAYING state
-      const pendingMissions = await prisma.mission.findMany({
-        where: { status: MISSION_STATUS.PAYING },
-        include: {
-          analyses: {
-            include: { order: true },
-          },
-        },
+      // Info: (20260420 - Luphia) Find all orders stuck in PAYING state
+      const pendingOrders = await prisma.order.findMany({
+        where: { status: ORDER_STATUS.PAYING },
       });
 
-      for (const mission of pendingMissions) {
-        // Info: (20260418 - Luphia) Get the associated order from the first analysis
-        const analysis = mission.analyses[0];
-        if (!analysis || !analysis.order || !analysis.order.transactionHash) {
-          continue; // Info: (20260418 - Luphia) Missing required transaction hash
+      for (const order of pendingOrders) {
+        if (!order.transactionHash) {
+          continue; // Info: (20260420 - Luphia) Missing required transaction hash
         }
 
-        const txHash = analysis.order.transactionHash;
+        const txHash = order.transactionHash;
+
+        if (order.unit === "TWD") {
+          continue; // Info: (20260420 - Luphia) TWD is handled by Ecpay webhooks, bypass blockchain scan
+        }
 
         try {
-          // Info: (20260418 - Luphia) Query blockchain for transaction status
+          // Info: (20260420 - Luphia) Query blockchain for ISC/ICP transaction status
           const receipt = await publicClient.getTransactionReceipt({
             hash: txHash as `0x${string}`,
           });
 
           if (receipt.status === "success") {
-            await analysisRepo.updateMissionPaymentSuccess(mission.id);
+            let actualPaid = 0n;
+            for (const log of receipt.logs) {
+              try {
+                const decoded = decodeEventLog({
+                  abi: parseAbi([
+                    "event Transfer(address indexed from, address indexed to, uint256 value)",
+                  ]),
+                  data: log.data,
+                  topics: log.topics,
+                });
+                if (decoded.eventName === "Transfer") {
+                  const msAddress = process.env.NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS;
+                  if (
+                    msAddress &&
+                    decoded.args.to.toLowerCase() === msAddress.toLowerCase()
+                  ) {
+                    actualPaid = decoded.args.value;
+                    break;
+                  }
+                }
+              } catch { }
+            }
+
+            const expectedPaid = parseEther(Math.abs(order.amount).toString());
             console.log(
-              `[TxTracker] Mission ${mission.id} marked as PENDING (Tx ${txHash} Success)`,
+              `[TxTracker] Found amount: ${formatEther(actualPaid)} ${order.unit}`,
             );
-            processedCount++;
+
+            if (actualPaid !== expectedPaid) {
+              await failOrder(order.id, "Payment amounts do not match");
+              await prisma.order.update({
+                where: { id: order.id },
+                data: { status: ORDER_STATUS.PAYMENT_FAILED },
+              });
+              console.log(
+                `[TxTracker] Order ${order.id} marked as PAYMENT_FAILED (Tx ${txHash} amount mismatch)`,
+              );
+              processedCount++;
+            } else {
+              await prisma.order.update({
+                where: { id: order.id },
+                data: { status: ORDER_STATUS.PAID },
+              });
+              console.log(
+                `[TxTracker] Order ${order.id} marked as PAID (Tx ${txHash} Success)`,
+              );
+              processedCount++;
+            }
           } else if (receipt.status === "reverted") {
-            await analysisRepo.updateMissionUnpaid(
-              mission.id,
-              "Payment Tx Reverted on chain",
-            );
-            await orderGenerator.failOrder(analysis.order.id, "UserOp transaction reverted");
+            await failOrder(order.id, "UserOp transaction reverted");
+            await prisma.order.update({
+              where: { id: order.id },
+              data: { status: ORDER_STATUS.PAYMENT_FAILED },
+            });
             console.log(
-              `[TxTracker] Mission ${mission.id} marked as UNPAID (Tx ${txHash} Reverted)`,
+              `[TxTracker] Order ${order.id} marked as PAYMENT_FAILED (Tx ${txHash} Reverted)`,
             );
             processedCount++;
           }
         } catch (e: unknown) {
-          // Info: (20260418 - Luphia) If it throws, it usually means TransactionReceiptNotFoundError. We wait.
+          // Info: (20260420 - Luphia) If it throws, it usually means TransactionReceiptNotFoundError. We wait.
           const errorMsg = e instanceof Error ? e.message : String(e);
           if (!errorMsg.includes("not found")) {
             console.error(
-              `[TxTracker] Error scanning tx ${txHash} for mission ${mission.id}:`,
+              `[TxTracker] Error scanning tx ${txHash} for order ${order.id}:`,
               errorMsg,
             );
           }

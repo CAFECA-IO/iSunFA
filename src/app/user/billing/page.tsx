@@ -7,6 +7,7 @@ import { request } from '@/lib/utils/request';
 import { formatDate } from '@/lib/utils/date';
 import EditCardModal from '@/components/user/billing/edit_card_modal';
 import ReceiptPdfDownloader from '@/components/user/billing/receipt_pdf_downloader';
+import { ORDER_STATUS, ORDER_TYPE } from '@/constants/status';
 
 type Tab = "orders" | "points" | "cards";
 
@@ -34,6 +35,7 @@ interface IPointHistory {
   fallbackSource: string;
   amount: number;
   extendedType?: string;
+  status?: string;
 }
 
 interface IPaymentMethod {
@@ -237,8 +239,8 @@ export default function BillingPage() {
         <button
           onClick={() => setActiveTab("orders")}
           className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${activeTab === "orders"
-              ? "bg-white text-orange-600 shadow-sm"
-              : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
+            ? "bg-white text-orange-600 shadow-sm"
+            : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
             }`}
         >
           <Receipt className="size-4 shrink-0" />
@@ -247,8 +249,8 @@ export default function BillingPage() {
         <button
           onClick={() => setActiveTab("points")}
           className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${activeTab === "points"
-              ? "bg-white text-orange-600 shadow-sm"
-              : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
+            ? "bg-white text-orange-600 shadow-sm"
+            : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
             }`}
         >
           <Coins className="size-4 shrink-0" />
@@ -257,8 +259,8 @@ export default function BillingPage() {
         <button
           onClick={() => setActiveTab("cards")}
           className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${activeTab === "cards"
-              ? "bg-white text-orange-600 shadow-sm"
-              : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
+            ? "bg-white text-orange-600 shadow-sm"
+            : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
             }`}
         >
           <CreditCard className="size-4 shrink-0" />
@@ -304,7 +306,7 @@ export default function BillingPage() {
                           <div className="mb-1 font-mono text-xs text-gray-900">
                             {order.id}
                           </div>
-                          {order.type === "OEN_PAYMENT" ||
+                          {order.type === ORDER_TYPE.OEN_PAYMENT ||
                             order.type === "PAYMENT" ? (
                             <div className="text-xs text-gray-500">
                               {t("billing.point_history.source_purchase")}
@@ -329,18 +331,18 @@ export default function BillingPage() {
                         </td>
                         <td className="px-6 py-4">
                           <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${order.status === "SUCCESS"
-                                ? "bg-green-50 text-green-700"
-                                : order.status === "PENDING"
-                                  ? "bg-yellow-50 text-yellow-700"
-                                  : "bg-red-50 text-red-700"
+                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${order.status === "SUCCESS" || order.status === ORDER_STATUS.PAID || order.status === ORDER_STATUS.COMPLETED
+                              ? "bg-green-50 text-green-700"
+                              : order.status === ORDER_STATUS.PENDING || order.status === ORDER_STATUS.PAYING
+                                ? "bg-yellow-50 text-yellow-700"
+                                : "bg-red-50 text-red-700"
                               }`}
                           >
                             {order.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 flex justify-end">
-                          {(order.type === 'OEN_PAYMENT' || order.type === 'PAYMENT') && order.status === 'SUCCESS' && (
+                          {(order.type === ORDER_TYPE.OEN_PAYMENT || order.type === "PAYMENT") && order.status === "SUCCESS" && (
                             <ReceiptPdfDownloader
                               receiptNumber={order.id}
                               date={order.createdAt}
@@ -386,6 +388,9 @@ export default function BillingPage() {
                       <th className="px-6 py-4 text-right font-medium">
                         {t("billing.table.amount_change")}
                       </th>
+                      <th className="px-6 py-4 font-medium">
+                        {t("billing.table.status")}
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -403,9 +408,9 @@ export default function BillingPage() {
                             {t(pt.sourceKey)}
                             {pt.extendedType && (
                               <span className="ml-2 text-xs text-gray-500">
-                                {pt.extendedType === "ai_talk" || pt.extendedType === "ai_consulting"
-                                  ? `(${t("billing.point_history.source_chat", { defaultValue: "AI 諮詢" })})`
-                                  : `(${t(`analysis.categories.${pt.extendedType}`, { defaultValue: pt.extendedType })})`
+                                {pt.extendedType === "ai_consulting"
+                                  ? `(${t("billing.point_history.source_chat")})`
+                                  : `(${t(`analysis.categories.${pt.extendedType.toLowerCase()}`)})`
                                 }
                               </span>
                             )}
@@ -415,6 +420,21 @@ export default function BillingPage() {
                           >
                             {isPositive ? "+" : ""}
                             {pt.amount}
+                          </td>
+                          <td className="px-6 py-4">
+                            {pt.status && (
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+                                  pt.status === ORDER_STATUS.PAID || pt.status === ORDER_STATUS.COMPLETED || pt.status === "SUCCESS"
+                                    ? "bg-green-50 text-green-700"
+                                    : pt.status === ORDER_STATUS.PENDING || pt.status === ORDER_STATUS.PAYING
+                                      ? "bg-yellow-50 text-yellow-700"
+                                      : "bg-red-50 text-red-700"
+                                }`}
+                              >
+                                {pt.status}
+                              </span>
+                            )}
                           </td>
                         </tr>
                       );
@@ -588,18 +608,18 @@ export default function BillingPage() {
                                     </td>
                                     <td className="px-6 py-3">
                                       <span
-                                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${tx.status === "SUCCESS"
-                                            ? "bg-green-50 text-green-700"
-                                            : tx.status === "PENDING"
-                                              ? "bg-yellow-50 text-yellow-700"
-                                              : "bg-red-50 text-red-700"
+                                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${tx.status === "SUCCESS" || tx.status === ORDER_STATUS.PAID || tx.status === ORDER_STATUS.COMPLETED
+                                          ? "bg-green-50 text-green-700"
+                                          : tx.status === ORDER_STATUS.PENDING || tx.status === ORDER_STATUS.PAYING
+                                            ? "bg-yellow-50 text-yellow-700"
+                                            : "bg-red-50 text-red-700"
                                           }`}
                                       >
                                         {tx.status}
                                       </span>
                                     </td>
                                     <td className="px-6 py-3 flex justify-end">
-                                      {tx.status === 'SUCCESS' && (
+                                      {tx.status === "SUCCESS" && (
                                         <ReceiptPdfDownloader
                                           receiptNumber={tx.id}
                                           date={tx.createdAt}

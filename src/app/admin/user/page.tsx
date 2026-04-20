@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import AdminPageHeader from "@/components/admin/common/admin_page_header";
-import DataTable, { IDataTableColumn } from "@/components/admin/common/data_table";
+import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import { request } from "@/lib/utils/request";
 import {
   PointIssueModal,
@@ -379,6 +379,7 @@ export default function MemberAdminPage() {
         onSuccess={() => {
           if (selectedUser?.id) {
             handleRefreshBalance(selectedUser.id);
+            fetchBlockchainData();
           }
         }}
       />

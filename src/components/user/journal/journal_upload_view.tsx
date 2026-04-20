@@ -15,23 +15,13 @@ import {
   Plus,
 } from "lucide-react";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
-import { request } from "@/lib/utils/request";
-import { IApiResponse } from "@/lib/utils/response";
 import { uploadFile, fileToBase64 } from "@/lib/file_operator";
-import { ApiCode } from "@/lib/utils/status";
-import {
-  useOrderTransaction,
-  IOrderPayload,
-} from "@/hooks/use_order_transaction";
+import { useOrderTransaction } from "@/hooks/use_order_transaction";
 import { getAnalysisCost } from "@/lib/analysis/pricing";
 
-type UploadedFileData = {
-  id: string;
-  file: File;
-  previewUrl: string | null;
-  hash: string;
-  base64: string;
-};
+import { useJournalAnalysis, UploadedFileData } from "@/hooks/use_journal_analysis";
+import { ANALYSIS_CATEGORY } from '@/constants/price';
+
 
 export default function JournalUploadView({
   onUploadComplete = undefined,
@@ -45,10 +35,7 @@ export default function JournalUploadView({
   const accountBookId = params?.account_book_id as string;
 
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
-  const [analyzedCount, setAnalyzedCount] = useState(0);
 
-  // Info: (20260408 - Luphia) Payment workflow states
   const {
     workflowStatus,
     errorMessage,
@@ -56,11 +43,24 @@ export default function JournalUploadView({
     resetTransaction,
     executeOrderTransaction,
   } = useOrderTransaction();
+
+  const {
+    isAnalyzing,
+    analyzedCount,
+    showConfirmModal,
+    setShowConfirmModal,
+    handleAnalyzeAll,
+  } = useJournalAnalysis({
+    accountBookId,
+    executeOrderTransaction,
+    itemName: "AI Journal OCR scan (Upload)",
+    onComplete: onUploadComplete,
+  });
+
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFileData[]>([]);
-  const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
   useEffect(() => {
     return () => {
@@ -110,55 +110,8 @@ export default function JournalUploadView({
     }
   };
 
-  const handleAnalyzeAll = async () => {
-    if (uploadedFiles.length === 0) return;
-
-    const costPerFile = getAnalysisCost({
-      category: "journal_upload",
-      periodType: "daily",
-      year: new Date().getFullYear(),
-      periodValue: "",
-    });
-    const totalCost = costPerFile * uploadedFiles.length;
-
-    const payload: IOrderPayload = {
-      category: "journal_upload",
-      periodType: "daily",
-      periodValue: new Date().toISOString().split("T")[0],
-      year: new Date().getFullYear(),
-      items: [
-        {
-          name: "AI Journal OCR scan (Upload)",
-          unitPrice: costPerFile,
-          quantity: uploadedFiles.length,
-        },
-      ],
-    };
-
-    await executeOrderTransaction(payload, totalCost, async (authData) => {
-      setShowConfirmModal(false);
-      setIsAnalyzing(true);
-      setAnalyzedCount(0);
-      for (let i = 0; i < uploadedFiles.length; i++) {
-        const fileData = uploadedFiles[i];
-        const response = await request<IApiResponse<object>>(
-          `/api/v1/user/account_book/${accountBookId}/ai_analysis`,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              file: fileData,
-              authentication: authData,
-            }),
-          },
-        );
-        if (response.code === ApiCode.SUCCESS) {
-          setAnalyzedCount((prev) => prev + 1);
-        }
-      }
-      onUploadComplete?.();
-    });
-
-    setIsAnalyzing(false);
+  const onAnalyzeClick = () => {
+    handleAnalyzeAll(uploadedFiles);
   };
 
   const removeFile = (id: string, e: MouseEvent) => {
@@ -195,6 +148,14 @@ export default function JournalUploadView({
     fileInputRef.current?.click();
   };
 
+  const analysisParams = {
+    category: ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
+    accountBookId: accountBookId,
+    files: [],
+  };
+  const unitPrice = getAnalysisCost(analysisParams);
+  const totalPrice = uploadedFiles.length * unitPrice;
+
   return (
     <>
       {/* Info: (20260304 - Julian) Full screen loading overlay during AI analysis */}
@@ -221,13 +182,12 @@ export default function JournalUploadView({
 
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
-        className={`flex h-full flex-col rounded-2xl border-2 transition-colors sm:min-h-[500px] lg:h-[calc(100vh-250px)] ${
-          uploadedFiles.length > 0
-            ? "border-transparent bg-white p-4 shadow-[0_0_15px_rgba(0,0,0,0.05)] sm:p-6 lg:p-10"
-            : isDragging
-              ? "items-center justify-center border-dashed border-orange-500 bg-orange-50 p-10 sm:p-20 lg:p-[100px]"
-              : "items-center justify-center border-dashed border-slate-300 bg-white p-10 hover:border-orange-400 hover:bg-slate-50 sm:p-20 lg:p-[100px]"
-        }`}
+        className={`flex h-full flex-col rounded-2xl border-2 transition-colors sm:min-h-[500px] lg:h-[calc(100vh-250px)] ${uploadedFiles.length > 0
+          ? "border-transparent bg-white p-4 shadow-[0_0_15px_rgba(0,0,0,0.05)] sm:p-6 lg:p-10"
+          : isDragging
+            ? "items-center justify-center border-dashed border-orange-500 bg-orange-50 p-10 sm:p-20 lg:p-[100px]"
+            : "items-center justify-center border-dashed border-slate-300 bg-white p-10 hover:border-orange-400 hover:bg-slate-50 sm:p-20 lg:p-[100px]"
+          }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -398,16 +358,8 @@ export default function JournalUploadView({
             setShowConfirmModal(false);
           }
         }}
-        onConfirm={handleAnalyzeAll}
-        cost={
-          uploadedFiles.length *
-          getAnalysisCost({
-            category: "journal_upload",
-            periodType: "daily",
-            year: new Date().getFullYear(),
-            periodValue: "",
-          })
-        }
+        onConfirm={onAnalyzeClick}
+        cost={totalPrice}
         title={t("ocr.confirm_analyze_title")}
         description={t("ocr.confirm_analyze_desc")}
         confirmBtnText={t("ocr.confirm_btn")}

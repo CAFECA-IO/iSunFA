@@ -23,6 +23,8 @@
 /reports
 /downloads
 /logs
+/issues
+/missions
 
 # misc
 .DS_Store
