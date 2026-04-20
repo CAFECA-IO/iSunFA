@@ -1,7 +1,7 @@
 import { paymentRepo } from "@/repositories/payment.repo";
 import { getMemberInfo } from "@/services/member.service";
 import { CURRENCY_UNIT, REWARD_AMOUNTS } from "@/constants/price";
-import { ORDER_STATUS } from "@/constants/status";
+import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 
 export class PointService {
   async getPointHistory(user: { id: string; address?: string | null }) {
@@ -13,7 +13,7 @@ export class PointService {
     for (const order of orders) {
       if (order.unit !== CURRENCY_UNIT.ICP) continue;
 
-      if (order.type === "PAYMENT" || order.type === "OEN_PAYMENT") {
+      if (order.type === ORDER_TYPE.OEN_PAYMENT) {
         const data = order.data as { credits?: number } | null | undefined;
         if (data && data.credits) {
           history.push({

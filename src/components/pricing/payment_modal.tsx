@@ -17,7 +17,7 @@ import LegalModal from "@/components/common/legal_modal";
 import { fido2ClientService } from '@/lib/auth/fido2_client';
 import { encodeWebAuthnSignature } from '@/lib/auth/crypto_utils';
 import { IPaymentModalProps, IOenCheckoutResponse, IOrderStatusResponse, PaymentStep, IOenCallbackData } from "@/interfaces/payment";
-import { ORDER_STATUS } from "@/constants/status";
+import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import { IJSONObject } from "@/validators/common";
 import EditCardModal from "@/components/user/billing/edit_card_modal";
 
@@ -276,7 +276,7 @@ export default function PaymentModal({
       const orderRes = await request<{ payload: { orderId: string, challenge: string } }>('/api/v1/user/order', {
         method: 'POST',
         body: JSON.stringify({
-          type: 'PAYMENT',
+          type: ORDER_TYPE.OEN_PAYMENT,
           amount,
           credits,
           paymentMethodId: selectedPaymentMethodId,
@@ -284,30 +284,30 @@ export default function PaymentModal({
           baseCredits,
           bonusCredits,
           planId,
-          items: planId 
+          items: planId
             ? [{
-                name: title || '會員訂閱',
+              name: title || '會員訂閱',
+              quantity: 1,
+              unitPrice: amount,
+              amount: amount,
+              remark: '購買會員資格'
+            }]
+            : [
+              {
+                name: `iSunFA ${baseCredits || credits} 點`,
                 quantity: 1,
                 unitPrice: amount,
                 amount: amount,
-                remark: '購買會員資格'
-              }]
-            : [
-                {
-                  name: `iSunFA ${baseCredits || credits} 點`,
-                  quantity: 1,
-                  unitPrice: amount,
-                  amount: amount,
-                  remark: `購買 ${baseCredits || credits} 點`
-                },
-                ...(bonusCredits && bonusCredits > 0 ? [{
-                  name: `iSunFA ${bonusCredits} 點（贈品）`,
-                  quantity: 1,
-                  unitPrice: 0,
-                  amount: 0,
-                  remark: `贈送 ${bonusCredits} 點`
-                }] : [])
-              ]
+                remark: `購買 ${baseCredits || credits} 點`
+              },
+              ...(bonusCredits && bonusCredits > 0 ? [{
+                name: `iSunFA ${bonusCredits} 點（贈品）`,
+                quantity: 1,
+                unitPrice: 0,
+                amount: 0,
+                remark: `贈送 ${bonusCredits} 點`
+              }] : [])
+            ]
         })
       });
 
