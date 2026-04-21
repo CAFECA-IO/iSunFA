@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState, ReactNode } from 'react';
+import { Fragment, useState, useEffect, ReactNode } from 'react';
 
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { Coins, X, Loader2, Copy, Check, CheckCircle2 } from 'lucide-react';
@@ -50,7 +50,13 @@ export default function PaymentConfirmModal({
   extraContent = undefined,
 }: IPaymentConfirmModalProps) {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, refreshAuth } = useAuth();
+
+  useEffect(() => {
+    if (isOpen) {
+      refreshAuth();
+    }
+  }, [isOpen, refreshAuth]);
   const router = useRouter();
   const [isCopied, setIsCopied] = useState(false);
   const [showInsufficient, setShowInsufficient] = useState(false);
