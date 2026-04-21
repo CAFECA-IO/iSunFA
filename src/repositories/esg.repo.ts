@@ -431,9 +431,12 @@ export class EsgRepository implements IEsgRepository {
   }
 
   async getEsgEmissionSources(
-    // accountBookId: string,
-    // scope: EsgScope | string,
-    // keyword: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    accountBookId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    scope: EsgScope | string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    keyword: string,
   ): Promise<IEsgEmissionSourcesUI[]> {
     // ToDo: (20260422 - Julian) 開發取得排放源清單
     return [];

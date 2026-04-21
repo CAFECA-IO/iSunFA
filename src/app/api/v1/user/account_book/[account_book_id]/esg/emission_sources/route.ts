@@ -53,3 +53,49 @@ export async function GET(
     );
   }
 }
+
+/**
+ * Info: (20260421 - Julian) 建立排放源
+ * POST /api/v1/user/account_book/:account_book_id/esg/emission_sources
+ */
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ account_book_id: string }> },
+) {
+  try {
+    // Info: (20260304 - Julian) Verify Token & Get User
+    const authHeader = request.headers.get("Authorization");
+    const sessionUser = await getIdentityFromDeWT(authHeader);
+
+    if (!sessionUser) {
+      console.error("User not found");
+      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+    }
+
+    // Info: (20260312 - Julian) 取得帳簿
+    const { account_book_id: accountBookId } = await params;
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
+
+    if (!accountBook) {
+      console.error("Accountbook not found");
+      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+    }
+
+    // Info: (20260421 - Julian) 解析 Request Body
+    const body = await request.json();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { name, source, ef } = body;
+
+    // Info: (20260421 - Julian) 建立排放源
+    const result = null
+    // await esgRepo.createEsgEmissionSource(accountBookId, name, source, ef);
+
+    return jsonOk(result);
+  } catch (error) {
+    console.error("Error creating esg emission source:", error);
+    return jsonFail(
+      ApiCode.INTERNAL_SERVER_ERROR,
+      "Failed to create esg emission source",
+    );
+  }
+}

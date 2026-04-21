@@ -47,6 +47,7 @@ import { adminMember } from "@/i18n/locales/zh_tw/admin_member";
 import { adminBlockchain } from "@/i18n/locales/zh_tw/admin_blockchain";
 import { adminBilling } from "@/i18n/locales/zh_tw/admin_billing";
 import { adminMissionBoard } from "@/i18n/locales/zh_tw/admin_mission_board";
+import { emissionSources } from "@/i18n/locales/zh_tw/emission_sources";
 
 export const zhTw = {
   common,
@@ -98,6 +99,7 @@ export const zhTw = {
   admin_billing: adminBilling,
   admin_dashboard: adminDashboard,
   admin_mission_board: adminMissionBoard,
+  emission_sources: emissionSources,
 } as const;
 
 export type BaseTranslation = typeof zhTw;

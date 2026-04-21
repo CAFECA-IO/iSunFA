@@ -15,90 +15,10 @@ import {
 // import EmissionSourcesSummary from "@/components/user/esg/emission_sources_summary";
 import EmissionSourcesItem from "@/components/user/esg/emission_sources_item";
 import { mockEmissionSources } from "@/interfaces/emission_source";
-
-const AddEmissionSourceModal = ({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) => {
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
-  const [error, setError] = useState("");
-
-  if (!isOpen) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      setError("請輸入排放源名稱");
-      return;
-    }
-    console.log("Submit:", { name, address });
-    onClose();
-    setName("");
-    setAddress("");
-    setError("");
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <h2 className="text-xl font-bold text-slate-800">新增排放源</h2>
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="es-name" className="text-sm font-semibold text-slate-600">
-              排放源名稱 (廠區) <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="es-name"
-              type="text"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                setError("");
-              }}
-              placeholder="例如：台中二廠"
-              className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-            />
-            {error && <p className="text-xs text-red-500">{error}</p>}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="es-address" className="text-sm font-semibold text-slate-600">
-              地址 (選填)
-            </label>
-            <input
-              id="es-address"
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="例如：台中市西屯區工業區一路1號"
-              className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-            />
-          </div>
-          <div className="mt-4 flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-200"
-            >
-              取消
-            </button>
-            <button
-              type="submit"
-              className="flex-1 rounded-xl bg-orange-500 py-3 text-sm font-bold text-white transition-colors hover:bg-orange-600"
-            >
-              確認新增
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
+import AddEmissionSourceModal from "@/components/user/esg/add_emission_source_modal";
 
 const EmissionSourcesList = ({ keyword }: { keyword: string }) => {
+  const { t } = useTranslation();
   const filteredData = mockEmissionSources.filter((source) =>
     source.name.toLowerCase().includes(keyword.toLowerCase()) || 
     source.id.toLowerCase().includes(keyword.toLowerCase())
@@ -108,7 +28,7 @@ const EmissionSourcesList = ({ keyword }: { keyword: string }) => {
     return (
       <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white p-12 text-lg font-bold text-slate-400">
         <SearchX size={40} />
-        <p>目前沒有資料</p>
+        <p>{t("emission_sources.list.no_data")}</p>
       </div>
     );
   }

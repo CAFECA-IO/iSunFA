@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "@/i18n/i18n_context";
 import {
   ChevronDown,
   Minus,
@@ -11,6 +12,7 @@ import { EsgIntensity } from "@/interfaces/esg";
 import { numberWithCommas, timestampToString } from "@/lib/utils/common";
 
 export default function EmissionSourcesItem({ data }: { data: IEsgEmissionSourcesUI }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleOpen = () => setIsOpen((prev) => !prev);
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -55,13 +57,13 @@ export default function EmissionSourcesItem({ data }: { data: IEsgEmissionSource
             <p className="text-base font-bold text-slate-800">{data.name}</p>
             <div className="flex items-center font-semibold divide-x divide-slate-200 text-xs">
               <p className="pr-1.5 text-slate-400">
-                地址: <span className="text-slate-800">{data.address || "未設定"}</span> 
+                {t("emission_sources.item.address")}: <span className="text-slate-800">{data.address || t("emission_sources.item.no_setting")}</span> 
               </p>
               <p className="px-1.5 text-slate-400">
-                <span className="text-slate-800">{totalRecordsCount}</span> 筆記錄
+                <span className="text-slate-800">{totalRecordsCount}</span> {t("emission_sources.item.records_count")}
               </p>
                <p className="pl-1.5 text-slate-400">
-                總排放量: <span className={esColor}>{numberWithCommas(totalEmission)}</span> 
+                {t("emission_sources.item.total_emission")}: <span className={esColor}>{numberWithCommas(totalEmission)}</span> 
                 <span className="text-[10px] ml-1">kgCO2e</span>
               </p>
             </div>
@@ -83,7 +85,7 @@ export default function EmissionSourcesItem({ data }: { data: IEsgEmissionSource
               <div key={tag} className="mb-6 last:mb-0">
                 <div className="mb-3 flex items-center gap-2">
                   <div className="flex h-6 items-center rounded-md bg-blue-100 px-2 text-xs font-bold text-blue-700">
-                    {tag === "other" ? "其他 (Other)" : tag}
+                    {tag === "other" ? t("emission_sources.item.other_tag") : tag}
                   </div>
                   <div className="h-px flex-1 bg-gray-200"></div>
                 </div>
@@ -91,11 +93,11 @@ export default function EmissionSourcesItem({ data }: { data: IEsgEmissionSource
                   <table className="w-full text-left text-sm">
                     <thead className="border-b border-gray-100 bg-gray-50/80 text-xs font-semibold text-slate-500">
                       <tr>
-                        <th className="px-5 py-3">活動日期</th>
-                        <th className="px-5 py-3">活動類型</th>
-                        <th className="px-5 py-3">對象 (Vendor)</th>
-                        <th className="px-5 py-3 text-right">活動數據</th>
-                        <th className="px-5 py-3 text-right">排放量 (kgCO2e)</th>
+                        <th className="px-5 py-3">{t("emission_sources.item.table.date")}</th>
+                        <th className="px-5 py-3">{t("emission_sources.item.table.activity")}</th>
+                        <th className="px-5 py-3">{t("emission_sources.item.table.vendor")}</th>
+                        <th className="px-5 py-3 text-right">{t("emission_sources.item.table.data")}</th>
+                        <th className="px-5 py-3 text-right">{t("emission_sources.item.table.emission")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">

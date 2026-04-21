@@ -492,22 +492,23 @@ enum EsgIntensity {
 }
 
 model EsgRecord {
-  id             String           @id @default(uuid())
-  createdAt      DateTime         @default(now()) @map("created_at")
-  updatedAt      DateTime         @updatedAt @map("updated_at")
-  deletedAt      DateTime?        @map("deleted_at")
-  tradingDate    DateTime         @map("trading_date") // Info: (20260407 - Julian) 交易日期
-  scope          EsgScope? // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
-  activityType   String           @map("activity_type") // Info: (20260312 - Julian) 活動類型
-  vendor         String // Info: (20260312 - Julian) 供應商與對象
-  amount         Decimal          @default(0) // Info: (20260416 - Julian) 活動數據
-  unit           String // Info: (20260312 - Julian) 單位
-  emissions      Decimal // Info: (20260312 - Julian) 排放量 (KGCO2E)
-  intensity      EsgIntensity? // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
-  confidence     Int // Info: (20260312 - Julian) AI 信心度
-  dqiScore       Decimal?         @map("dqi_score") // Info: (20260410 - Julian) DQI 數據品質指標
-  isVerified     Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
-  analysisStatus AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態
+  id                String           @id @default(uuid())
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  deletedAt         DateTime?        @map("deleted_at")
+  tradingDate       DateTime         @map("trading_date") // Info: (20260407 - Julian) 交易日期
+  scope             EsgScope? // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
+  activityType      String           @map("activity_type") // Info: (20260312 - Julian) 活動類型
+  vendor            String // Info: (20260312 - Julian) 供應商與對象
+  amount            Decimal          @default(0) // Info: (20260416 - Julian) 活動數據
+  unit              String // Info: (20260312 - Julian) 單位
+  emissions         Decimal // Info: (20260312 - Julian) 排放量 (KGCO2E)
+  intensity         EsgIntensity? // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
+  confidence        Int // Info: (20260312 - Julian) AI 信心度
+  dqiScore          Decimal?         @map("dqi_score") // Info: (20260410 - Julian) DQI 數據品質指標
+  isVerified        Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
+  analysisStatus    AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態
+  emissionSourceTag String?          @map("emission_source_tag") // Info: (20260421 - Julian) 排放源標籤（廠）
 
   // Info: (20260312 - Julian) 關聯檔案憑證
   fileId String? @map("file_id")
@@ -653,9 +654,6 @@ model Coefficient {
   // Info: (20260416 - Julian) 關聯的 esg 紀錄
   esgRecords EsgRecord[]
 
-  // Info: (20260421 - Julian) 關聯的排放源
-  emissionSources EmissionSource[]
-
   @@map("coefficient")
 }
 
@@ -687,21 +685,14 @@ model EmissionSource {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  name         String // Info: (20260421 - Julian) 排放源名稱 (e.g., 公司貨車 ABC-1234) 
-  sourceCode   String   @map("source_code") // Info: (20260421 - Julian) 排放源代碼 (e.g., 1101-01-01)
-  scope        EsgScope // Info: (20260421 - Julian) 所屬範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
-  activityType String   @map("activity_type") // Info: (20260421 - Julian) 對應的活動類型 key
+  name    String // Info: (20260421 - Julian) 排放源名稱 (e.g., 公司貨車 ABC-1234) 
+  address String? // Info: (20260421 - Julian) 廠區地址
 
-  // Info: (20260421 - Julian) 是否停用
-  isDisabled Boolean @default(false) @map("is_disabled") // Info: (20260421 - Julian) 是否停用
+  // ToDo: (20260421 - Julian) 之後會擴充更多欄位
 
   // Info: (20260421 - Julian) 隸屬的帳本
   accountBookId String      @map("account_book_id")
   accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
-
-  // Info: (20260421 - Julian) 對應的碳排係數
-  coefficientId String?      @map("coefficient_id")
-  coefficient   Coefficient? @relation(fields: [coefficientId], references: [id])
 
   // Info: (20260421 - Julian) 關聯的碳盤查紀錄 (一對多)
   esgRecords EsgRecord[]
