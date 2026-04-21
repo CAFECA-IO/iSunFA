@@ -18,14 +18,16 @@ function fastScreenAnomalies(rawData: unknown): string {
     "關係人", "資金貸與", "期末", "年底", "大額", "減損", "異常"
   ];
 
-  // Info: (20260420 - Tzuhan) 配合字串壓縮，改採逐行字串分析演算法，並加入大額判定。
-  // 我們只針對「傳票」行進行過濾，其餘標題或 ESG 盤查行直接放行保留。
+  /**
+   * Info: (20260420 - Tzuhan) 配合字串壓縮，改採逐行字串分析演算法，並加入大額判定。
+   * 我們只針對「傳票」行進行過濾，其餘標題或 ESG 盤查行直接放行保留。
+   */
   let suspiciousVoucherCount = 0;
   let totalVoucherCount = 0;
 
   const lines = rawData.split("\n");
   const processedLines = lines.filter((line) => {
-    // 判斷是否為傳票格式行
+    // Info: (20260420 - Tzuhan) 判斷是否為傳票格式行
     if (line.includes("- 傳票號:")) {
       totalVoucherCount++;
       const hasRiskKeyword = fraudKeywords.some((keyword) => line.includes(keyword));
@@ -44,7 +46,7 @@ function fastScreenAnomalies(rawData: unknown): string {
       return keep;
     }
     
-    // 不是傳票行 (例如標題或 ESG 紀錄段落)，直接保留
+    // Info: (20260420 - Tzuhan) 不是傳票行 (例如標題或 ESG 紀錄段落)，直接保留
     return true;
   });
 
