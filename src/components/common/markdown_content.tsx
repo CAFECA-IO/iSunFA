@@ -1,6 +1,7 @@
 import { FC, ComponentPropsWithoutRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import Image from 'next/image';
 import { MermaidChart } from '@/components/common/mermaid_chart';
 
 interface IMarkdownContentProps {
@@ -138,7 +139,7 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({ content, theme = 'dark' })
         ),
         pre: ({ children, ...props }: ComponentPropsWithoutRef<'pre'>) => (
           <pre
-            className={`p-4 rounded-lg my-4 overflow-x-auto text-sm font-mono leading-relaxed ${isDark ? 'bg-[#1E1E1E] text-gray-200 border border-[#333]' : 'bg-white border border-orange-100 text-gray-800 shadow-sm'}`}
+            className={`p-4 rounded-lg my-4 overflow-x-auto print:overflow-visible text-sm font-mono leading-relaxed break-inside-avoid print:break-inside-avoid ${isDark ? 'bg-[#1E1E1E] text-gray-200 border border-[#333]' : 'bg-white border border-orange-100 text-gray-800 shadow-sm'}`}
             {...props}
           >
             {children}
@@ -160,6 +161,21 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({ content, theme = 'dark' })
             <code className={className} {...props}>
               {children}
             </code>
+          );
+        },
+        img: ({ src, alt, className }: ComponentPropsWithoutRef<'img'>) => {
+          if (!src) return null;
+          return (
+            <Image
+              src={src as string}
+              alt={alt || 'Markdown Image'}
+              width={0}
+              height={0}
+              sizes="100vw"
+              unoptimized
+              style={{ width: '100%', height: 'auto' }}
+              className={`break-inside-avoid print:break-inside-avoid max-w-full rounded-lg my-4 ${className || ''}`.trim()}
+            />
           );
         },
       }}

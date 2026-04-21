@@ -1,5 +1,6 @@
 import { exec, spawn } from "child_process";
 import { promisify } from "util";
+import { processManager } from "@/lib/utils/process_manager";
 
 const execAsync = promisify(exec);
 
@@ -66,6 +67,8 @@ RUN pip install --no-cache-dir sympy scipy numpy
         "import sys; exec(sys.stdin.read())",
       ]);
 
+      processManager.register(dockerProcess);
+
       let output = "";
       let errorOutput = "";
 
@@ -82,7 +85,7 @@ RUN pip install --no-cache-dir sympy scipy numpy
         if (!resolved) {
           resolved = true;
           // Info: (20260407 - Luphia) Forceally stop Python execution to release container
-          dockerProcess.kill("SIGKILL");
+          dockerProcess.kill("SIGTERM");
           reject(
             new Error(
               `Python Script Exhausted Timeout Limit of ${this.timeoutMs}ms.`,

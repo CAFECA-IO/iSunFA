@@ -162,7 +162,7 @@ export class ShareSanitizerFactory {
   static getSanitizer(
     category: string,
   ): IShareSanitizeStrategy<TAllShareMetrics> {
-    switch (category) {
+    switch ((category || "").toLowerCase()) {
       case "carbon_health_check":
       case "net_zero_emissions":
         return new CarbonSanitizer();

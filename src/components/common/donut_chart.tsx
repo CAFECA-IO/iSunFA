@@ -35,12 +35,10 @@ interface ICustomTooltipProps {
 const CustomTooltip = ({ active = false, payload = [] }: ICustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100/50">
+      <div className="z-100 bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100/50">
         <p className="text-sm font-semibold text-gray-800">{payload[0].name}</p>
         <p className="text-sm text-gray-500 mt-0.5">
-          {new Intl.NumberFormat('en-US').format(Number(payload[0].value))} ({
-            payload[0].payload.percent ?? 0
-          }%)
+          {new Intl.NumberFormat('en-US').format(Number(payload[0].value))} %
         </p>
       </div>
     );
@@ -84,6 +82,15 @@ export const DonutChart: React.FC<IDonutChartProps> = ({ title, data, colors = D
           </h3>
         )}
         <div className="relative w-[200px] h-[200px] flex-shrink-0 mx-auto">
+          {/* Info: (20260418 - Tzuhan) Custom Center UI */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span className="text-3xl font-black text-[#0B1F45] tracking-tight leading-none">
+              {primaryItem.percent}%
+            </span>
+            <span className="text-xs font-semibold text-gray-500 mt-1 uppercase tracking-wider">
+              {getShortName(primaryItem.name)}
+            </span>
+          </div>
           <PieChart width={200} height={200}>
             <Pie
               data={enrichedData}
@@ -101,15 +108,6 @@ export const DonutChart: React.FC<IDonutChartProps> = ({ title, data, colors = D
             </Pie>
             <Tooltip content={<CustomTooltip />} />
           </PieChart>
-          {/* Info: (20260418 - Tzuhan) Custom Center UI */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-3xl font-black text-[#0B1F45] tracking-tight leading-none">
-              {primaryItem.percent}%
-            </span>
-            <span className="text-xs font-semibold text-gray-500 mt-1 uppercase tracking-wider">
-              {getShortName(primaryItem.name)}
-            </span>
-          </div>
         </div>
       </div>
 
@@ -127,9 +125,6 @@ export const DonutChart: React.FC<IDonutChartProps> = ({ title, data, colors = D
                   {item.name}
                 </span>
                 <div className="flex items-baseline gap-2 flex-shrink-0">
-                  <span className="text-xs text-gray-400">
-                    {new Intl.NumberFormat('en-US').format(item.value)}
-                  </span>
                   <span className="font-bold text-gray-700 text-sm">
                     {item.percent}%
                   </span>

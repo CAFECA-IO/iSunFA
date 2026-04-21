@@ -39,8 +39,8 @@ export const downloadHtmlAsPdf = async (
     // Info: (20260418 - Tzuhan) We will find all elements marked 'break-inside-avoid' and push them down if they cross a boundary
     const avoidElements = element.querySelectorAll('.break-inside-avoid');
 
-    // Info: (20260418 - Tzuhan) Store original margins to revert later
-    const originalMargins = new Map<HTMLElement, string>();
+    // Info: (20260420 - Tzuhan) Keep track of inserted spacers
+    const insertedSpacers: HTMLDivElement[] = [];
 
     // Info: (20260418 - Tzuhan) Make sure we scan elements in DOM order
     const elementsArray = Array.from(avoidElements);
@@ -63,15 +63,14 @@ export const downloadHtmlAsPdf = async (
         const nextPageStartTop = (startPage + 1) * maxDomHeightPerPage;
         const pushDownAmount = Math.ceil(nextPageStartTop - currentRelativeTop) + 2;
 
-        // Info: (20260418 - Tzuhan) Store original margin
-        originalMargins.set(el, el.style.marginTop);
-
-        // Info: (20260418 - Tzuhan) Extract current computed margin
-        const currentComputedMargin = window.getComputedStyle(el).marginTop;
-        const currentMarginVal = parseFloat(currentComputedMargin) || 0;
-
-        // Info: (20260418 - Tzuhan) Apply new margin
-        el.style.marginTop = `${currentMarginVal + pushDownAmount}px`;
+        // Info: (20260420 - Tzuhan) Insert a physical spacer div to push element without margin collapsing issues
+        const spacer = document.createElement('div');
+        spacer.style.height = `${pushDownAmount}px`;
+        spacer.style.width = '100%';
+        spacer.style.backgroundColor = 'transparent';
+        spacer.classList.add('pdf-avoid-spacer');
+        el.parentNode?.insertBefore(spacer, el);
+        insertedSpacers.push(spacer);
       }
     }
 
@@ -86,10 +85,8 @@ export const downloadHtmlAsPdf = async (
       filter: options?.filter,
     });
 
-    // Info: (20260418 - Tzuhan) Revert all margins to original state
-    originalMargins.forEach((originalMargin, el) => {
-      el.style.marginTop = originalMargin;
-    });
+    // Info: (20260420 - Tzuhan) Revert inserted spacers
+    insertedSpacers.forEach(spacer => spacer.remove());
 
     const pdfDoc = await PDFDocument.create();
 
