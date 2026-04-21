@@ -8,11 +8,12 @@ export const esgSummary = {
   better_than_industry: "优于产业平均 ({{average}})",
   scope_distribution: "各范畴分布 (SCOPE)",
   annual_goal_progress: "年度目标进度",
-
   today_records: "Today",
   dqi_average: "Avg",
   pending: "Pending",
   ai_confidence: "Confidence",
   record_unit: "Unit",
-
+  scope_1: "S1",
+  scope_2: "S2",
+  scope_3: "S3",
 };

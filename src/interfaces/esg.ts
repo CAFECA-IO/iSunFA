@@ -27,22 +27,16 @@ export interface IEsgEmissionIntensity {
   industryAverage: number;
 }
 
-export interface IEsgScopeData {
+export interface IEsgScopeDistributionData {
+  scope: EsgScope;
   value: number;
-  unit: string;
   percentage: number;
-}
-
-export interface IEsgScopeDistribution {
-  scope1: IEsgScopeData;
-  scope2: IEsgScopeData;
-  scope3: IEsgScopeData;
 }
 
 export interface IEsgDashboardSummary {
   totalEmissions: IEsgTotalEmissions;
   emissionIntensity: IEsgEmissionIntensity;
-  scopeDistribution: IEsgScopeDistribution;
+  scopeDistribution: IEsgScopeDistributionData[];
   goalProgress: {
     percentage: number;
   };
@@ -73,4 +67,5 @@ export interface IEsgRecord {
   journalId?: string;
   voucherId?: string;
   isDeleted?: boolean;
+  emissionSourceTag?: string; // Info: (20260421 - Julian) 排放源標籤（例：第一號鍋爐）
 }

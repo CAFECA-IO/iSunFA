@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { webAuthnService } from "@/services/webauthn.service";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -10,10 +11,7 @@ export async function POST(request: NextRequest) {
     const { registration, challenge } = body;
 
     if (!registration || !challenge) {
-      throw new AppError(
-        ApiCode.VALIDATION_ERROR,
-        "Registration data and challenge are required",
-      );
+      throw new AppError(API_ERRORS.VL_MISSING_PARAMS);
     }
 
     // Info: (20251223 - Tzuhan) 呼叫 Service 解析 Passkey，取得 x, y 座標與 Credential ID
@@ -27,12 +25,9 @@ export async function POST(request: NextRequest) {
     console.error("[API] Parse Passkey Error:", error);
 
     if (error instanceof AppError) {
-      return jsonFail(error.code, error.message);
+      return jsonFail(API_ERRORS.IS_UNKNOWN);
     }
 
-    return jsonFail(
-      ApiCode.VALIDATION_ERROR,
-      "Failed to parse passkey credential",
-    );
+    return jsonFail({ code: "VA000099", message: "Failed to parse passkey cre...", status: ApiCode.VALIDATION_ERROR },  );
   }
 }

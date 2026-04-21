@@ -94,6 +94,7 @@ export const analysis = {
     monthly: "月次",
     weekly: "週次",
     daily: "日次",
+    ac65: "AC65",
   },
   cost_hint: "消費: {{cost}} クレジット",
   confirm_title: "分析レポート生成の確認",
@@ -123,6 +124,7 @@ export const analysis = {
     net_zero_emissions: "ネットゼロエミッション",
     ai_consulting: "AI コンサルティング",
     journal_upload: "仕訳帳の作成",
+    certificate_analysis: "証憑分析",
   },
   history: {
     title: "分析履歴",

@@ -13,4 +13,7 @@ export const esgSummary = {
   pending: "待核對",
   ai_confidence: "AI 平均信心度",
   record_unit: "筆",
+  scope_1: "S1",
+  scope_2: "S2",
+  scope_3: "S3",
 };

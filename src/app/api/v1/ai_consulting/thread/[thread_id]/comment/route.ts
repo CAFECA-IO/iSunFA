@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -21,13 +22,13 @@ export async function GET(
 
     if (!user) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const { thread_id: threadId } = await params;
 
     if (!threadId) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid thread ID");
+      return jsonFail({ code: "VA000099", message: "Invalid thread ID", status: ApiCode.VALIDATION_ERROR });
     }
 
     // Info: (20260212 - Julian) 取得登入的使用者
@@ -75,7 +76,7 @@ export async function GET(
       `[API] /api/v1/ai_consulting/thread/${(await params).thread_id}/comment GET error:`,
       error,
     );
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }
 
@@ -94,7 +95,7 @@ export async function POST(
 
     if (!user) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const body = await request.json();
@@ -102,7 +103,7 @@ export async function POST(
 
     if (!content) {
       console.error("Content is required");
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Content is required");
+      return jsonFail({ code: "IN000099", message: "Content is required", status: ApiCode.INTERNAL_SERVER_ERROR });
     }
 
     const { thread_id: threadId } = await params;
@@ -111,7 +112,7 @@ export async function POST(
 
     if (!thread) {
       console.error("Thread not found");
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Thread not found");
+      return jsonFail({ code: "IN000099", message: "Thread not found", status: ApiCode.INTERNAL_SERVER_ERROR });
     }
 
     const parentComment = parentId
@@ -145,6 +146,6 @@ export async function POST(
       `[API] /thread/${(await params).thread_id}/comment error:`,
       error,
     );
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

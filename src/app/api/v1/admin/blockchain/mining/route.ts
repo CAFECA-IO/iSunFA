@@ -9,7 +9,7 @@ export async function POST(req: Request) {
 
     // Info: (20260416 - Luphia) Parse body for state
     if (typeof body.state !== "boolean") {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid mining state");
+      return jsonFail({ code: "VA000099", message: "Invalid mining state", status: ApiCode.VALIDATION_ERROR });
     }
 
     const authHeader = req.headers.get("authorization");
@@ -18,11 +18,11 @@ export async function POST(req: Request) {
     const result = await toggleMiningAction(body.state, token);
 
     if (!result.success) {
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, result.error || "Failed to toggle mining");
+      return jsonFail({ code: "IS000099", message: String(result.error || "Failed to toggle mining").slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
     }
 
     return jsonOk({ output: result.output });
   } catch (error) {
-    return jsonFail(ApiCode.UNAUTHORIZED, (error as Error).message);
+    return jsonFail({ code: "AU000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.UNAUTHORIZED });
   }
 }

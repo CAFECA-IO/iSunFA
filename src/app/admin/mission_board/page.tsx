@@ -94,6 +94,7 @@ export default function AdminMissionBoardPage() {
           type: "DROP", targetZone: "OPEN", blockId: apiTask.taskId,
           onComplete: () => {
             setDisplayTasks(prev => {
+              if (prev.some(t => t.taskId === apiTask.taskId)) return prev;
               const updated = [...prev, { ...apiTask, status: TaskStatus.Open }];
               displayTasksRef.current = updated;
               return updated;
@@ -119,7 +120,7 @@ export default function AdminMissionBoardPage() {
           type: "DROP", targetZone: "PENDING_REVIEW", blockId: apiTask.taskId,
           onComplete: () => {
             setDisplayTasks(prev => {
-              const updated = [...prev, { ...apiTask, status: TaskStatus.PendingReview }];
+              const updated = [...prev.filter(t => t.taskId !== apiTask.taskId), { ...apiTask, status: TaskStatus.PendingReview }];
               displayTasksRef.current = updated;
               return updated;
             });
@@ -144,7 +145,7 @@ export default function AdminMissionBoardPage() {
           type: "DROP", targetZone: "CLOSED", blockId: apiTask.taskId,
           onComplete: () => {
             setDisplayTasks(prev => {
-              const updated = [...prev, { ...apiTask, status: TaskStatus.Closed }];
+              const updated = [...prev.filter(t => t.taskId !== apiTask.taskId), { ...apiTask, status: TaskStatus.Closed }];
               displayTasksRef.current = updated;
               return updated;
             });
@@ -187,6 +188,7 @@ export default function AdminMissionBoardPage() {
           blockId: apiTask.taskId,
           onComplete: () => {
             setDisplayTasks(prev => {
+              if (prev.some(t => t.taskId === apiTask.taskId)) return prev;
               const updated = [apiTask, ...prev];
               displayTasksRef.current = updated;
               return updated;
@@ -220,7 +222,7 @@ export default function AdminMissionBoardPage() {
           onComplete: () => {
             // Info: (20260420 - Luphia) Card appears in new zone
             setDisplayTasks(prev => {
-              const updated = [apiTask, ...prev];
+              const updated = [apiTask, ...prev.filter(t => t.taskId !== apiTask.taskId)];
               displayTasksRef.current = updated;
               return updated;
             });

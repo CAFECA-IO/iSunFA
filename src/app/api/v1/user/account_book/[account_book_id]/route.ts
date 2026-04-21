@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -18,19 +19,19 @@ export async function GET(
     const { account_book_id: accountBookId } = await params;
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const accountBooks = await getAccountBooksByUserId(sessionUser.id);
     const accountBook = accountBooks.find((ab) => ab.id === accountBookId);
     if (!accountBook) {
-      return jsonFail(ApiCode.NOT_FOUND, "Account book not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     return jsonOk(accountBook);
   } catch (error) {
     console.error("[API] /account_book GET error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }
 
@@ -44,20 +45,17 @@ export async function PUT(
     const { account_book_id: accountBookId } = await params;
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const accountBooks = await getAccountBooksByUserId(sessionUser.id);
     const accountBook = accountBooks.find((ab) => ab.id === accountBookId);
     if (!accountBook) {
-      return jsonFail(ApiCode.NOT_FOUND, "Account book not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     if (accountBook.userRole !== "OWNER") {
-      return jsonFail(
-        ApiCode.FORBIDDEN,
-        "Only the owner can edit the account book",
-      );
+      return jsonFail({ code: "FO000099", message: "Only the owner can edit the...", status: ApiCode.FORBIDDEN },  );
     }
 
     const body = await request.json();
@@ -88,6 +86,6 @@ export async function PUT(
     return jsonOk(updatedAccountBook);
   } catch (error) {
     console.error("[API] /account_book PUT error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

@@ -1,5 +1,5 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { IThread } from "@/interfaces/ai_consulting";
 import { talkRepo } from "@/repositories/talk.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -96,6 +96,6 @@ export async function GET() {
     return jsonOk(response);
   } catch (error) {
     console.error("[API] /threads error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

@@ -1,10 +1,16 @@
 import { prisma } from "@/lib/prisma";
 import { EsgTarget, Prisma, EsgRecord } from "@/generated/client";
-import { IEsgDashboardSummary } from "@/interfaces/esg";
+import { IEsgDashboardSummary, EsgScope, IEsgScopeDistributionData } from "@/interfaces/esg";
 import { ESG_INDUSTRY_BENCHMARKS } from "@/constants/esg_industry_benchmarks";
+import {
+  IEsgEmissionSourcesSummary,
+  IEsgEmissionSourcesUI,
+} from "@/interfaces/emission_source";
+// import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
+// import { CoefficientCategory, ICoefficient } from "@/interfaces/coefficient";
 
 export type EsgRecordWithRelations = Prisma.EsgRecordGetPayload<{
-  include: { file: true, coefficient: true };
+  include: { file: true; coefficient: true };
 }> & { journalId?: string; voucherId?: string };
 
 export interface IEsgRepository {
@@ -39,6 +45,11 @@ export interface IEsgRepository {
     accountBookId: string,
     data: Prisma.EsgRecordUpdateInput,
   ): Promise<Prisma.BatchPayload>;
+  getEsgEmissionSources(
+    accountBookId: string,
+    scope: EsgScope | string,
+    keyword: string,
+  ): Promise<IEsgEmissionSourcesUI[]>;
 }
 
 export class EsgRepository implements IEsgRepository {
@@ -295,6 +306,25 @@ export class EsgRepository implements IEsgRepository {
       }
     }
 
+    // Info: (20260421 - Julian) 繪製範疇分佈圖
+    const scopeDistribution: IEsgScopeDistributionData[] = [
+      {
+        scope: EsgScope.SCOPE_1,
+        value: Number(scope1Tons.toFixed(2)),
+        percentage: Number(s1Pct.toFixed(1)),
+      },
+      {
+        scope: EsgScope.SCOPE_2,
+        value: Number(scope2Tons.toFixed(2)),
+        percentage: Number(s2Pct.toFixed(1)),
+      },
+      {
+        scope: EsgScope.SCOPE_3,
+        value: Number(scope3Tons.toFixed(2)),
+        percentage: Number(s3Pct.toFixed(1)),
+      },
+    ]
+
     const summary: IEsgDashboardSummary = {
       totalEmissions: {
         value: Number(totalEmissionsTons.toFixed(2)),
@@ -307,23 +337,7 @@ export class EsgRepository implements IEsgRepository {
         unit: "tCO2e / 萬元營收",
         industryAverage: Number(industryAverage.toFixed(2)),
       },
-      scopeDistribution: {
-        scope1: {
-          value: Number(scope1Tons.toFixed(2)),
-          unit: "tCO2e",
-          percentage: Number(s1Pct.toFixed(1)),
-        },
-        scope2: {
-          value: Number(scope2Tons.toFixed(2)),
-          unit: "tCO2e",
-          percentage: Number(s2Pct.toFixed(1)),
-        },
-        scope3: {
-          value: Number(scope3Tons.toFixed(2)),
-          unit: "tCO2e",
-          percentage: Number(s3Pct.toFixed(1)),
-        },
-      },
+      scopeDistribution,
       goalProgress: {
         percentage: Number(goalProgress.toFixed(1)),
       },
@@ -415,6 +429,110 @@ export class EsgRepository implements IEsgRepository {
       where: { id },
     });
   }
+
+  async getEsgEmissionSources(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    accountBookId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    scope: EsgScope | string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    keyword: string,
+  ): Promise<IEsgEmissionSourcesUI[]> {
+    // ToDo: (20260422 - Julian) 開發取得排放源清單
+    return [];
+  }
+
+  async getEsgEmissionSourcesSummary(
+    accountBookId: string,
+  ): Promise<IEsgEmissionSourcesSummary> {
+    const thisYear = new Date().getFullYear();
+    const periodOfThisYear = {
+      gte: new Date(thisYear, 0, 1),
+      lte: new Date(thisYear, 11, 31),
+    };
+
+    // Info: (20260421 - Julian) 所有排放源數量
+    const totalEmissionSourcesCount = await prisma.emissionSource.count({
+      where: { accountBookId },
+    });
+
+    // Info: (20260421 - Julian) 估計年總排放量：計算今年度所有 ESG record 排放量總和
+    const estimatedAnnualTotalEmission = await prisma.esgRecord.aggregate({
+      where: { accountBookId, tradingDate: periodOfThisYear },
+      _sum: { emissions: true },
+    });
+
+    // Info: (20260421 - Julian) 前三大排放源：計算每個排放源底下的 esgRecords 排放量總和，並排序找出前三名
+    const top3Aggregations = await prisma.esgRecord.groupBy({
+      by: ["emissionSourceId"],
+      where: {
+        accountBookId,
+        tradingDate: periodOfThisYear,
+        emissionSourceId: { not: null },
+      },
+      _sum: { emissions: true },
+      orderBy: {
+        _sum: { emissions: "desc" },
+      },
+      take: 3,
+    });
+
+    // Info: (20260421 - Julian) 取得前三大排放源的 id
+    const emissionSourceIds = top3Aggregations
+      .map((aggr) => aggr.emissionSourceId)
+      .filter((id): id is string => id !== null);
+
+    // Info: (20260421 - Julian) 取得前三大排放源的詳細資料
+    const top3Sources = await prisma.emissionSource.findMany({
+      where: { id: { in: emissionSourceIds } },
+    });
+
+    const top3EmissionSources = top3Aggregations.map((aggr) => {
+      const source = top3Sources.find((s) => s.id === aggr.emissionSourceId);
+      return {
+        name: source ? source.name : "未知排放源",
+        value: Number(aggr._sum.emissions) ?? 0,
+      };
+    });
+
+    // Info: (20260421 - Julian) 排放源類別分佈：計算每個範疇的排放源數量
+    // const distribution = await prisma.emissionSource.groupBy({
+    //   by: ["scope"],
+    //   where: { accountBookId },
+    //   _count: { id: true },
+    // });
+
+    const scopeDistribution: {
+      scope: EsgScope;
+      count: number;
+    }[] = []
+
+    const summary: IEsgEmissionSourcesSummary = {
+      totalEmissionSourcesCount: totalEmissionSourcesCount ?? 0,
+      estimatedAnnualTotalEmission:
+        Number(estimatedAnnualTotalEmission._sum.emissions) ?? 0,
+      top3EmissionSources,
+      scopeDistribution,
+    };
+
+    return summary;
+  }
+
+  // async createEsgEmissionSource(
+  //   accountBookId: string,
+  //   name: string,
+  //   sourceCode: string,
+  //   isDisabled: boolean,
+  // ) {
+  //   return prisma.emissionSource.create({
+  //     data: {
+  //       accountBookId,
+  //       name,
+  //       sourceCode,
+  //       isDisabled,
+  //     },
+  //   });
+  // }
 }
 
 export const esgRepo = new EsgRepository();

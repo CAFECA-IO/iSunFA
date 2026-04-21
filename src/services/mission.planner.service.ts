@@ -85,6 +85,7 @@ export class MissionPlannerService {
                 type: missionObj.type,
                 unit: missionObj.unit,
                 amount: missionObj.amount,
+                fileId: missionObj.fileId || missionObj.data?.fileId,
                 ...(missionObj.data || {}),
                 category: missionObj.data?.category, // Info: (20260420 - Luphia) Ensure category is strictly at root
                 data: missionObj.data || {}

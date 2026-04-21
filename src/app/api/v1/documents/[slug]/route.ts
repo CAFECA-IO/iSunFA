@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { promises as fs } from "fs";
 import path from "path";
 import { NextRequest } from "next/server";
@@ -14,7 +15,7 @@ export async function GET(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!ALLOWED_DOCS.includes(slug as any)) {
-    return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid document type");
+    return jsonFail({ code: "VA000099", message: "Invalid document type", status: ApiCode.VALIDATION_ERROR });
   }
 
   try {
@@ -24,6 +25,6 @@ export async function GET(
     return jsonOk({ content });
   } catch (error) {
     console.error(`Failed to read document ${slug}:`, error);
-    return jsonFail(ApiCode.NOT_FOUND, "Document not found");
+    return jsonFail(API_ERRORS.NF_DOCUMENT);
   }
 }

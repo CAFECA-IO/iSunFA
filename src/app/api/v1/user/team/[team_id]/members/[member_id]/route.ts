@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -18,37 +19,31 @@ export async function PATCH(
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const { team_id: teamId, member_id: memberId } = await params;
 
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator || operator.role !== "OWNER") {
-      return jsonFail(
-        ApiCode.FORBIDDEN,
-        "Permission denied. Only OWNER can modify roles.",
-      );
+      return jsonFail({ code: "FO000099", message: "Permission denied. Only OWN...", status: ApiCode.FORBIDDEN },  );
     }
 
     const body = await request.json();
     const { role, authentication } = body;
 
     if (!role || !["OWNER", "ADMIN", "EDITOR", "VIEWER"].includes(role)) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid role");
+      return jsonFail(API_ERRORS.AUTH_INVALID_ROLE);
     }
 
     if (!authentication) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Missing FIDO2 signature");
+      return jsonFail(API_ERRORS.VL_MISSING_FIDO2);
     }
 
     // Info: (20260326 - Tzuhan) Fetch operator's current challenge
     const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
-      return jsonFail(
-        ApiCode.UNAUTHORIZED,
-        "Missing WebAuthn challenge. Please retry.",
-      );
+      return jsonFail({ code: "UN000099", message: "Missing WebAuthn challenge....", status: ApiCode.UNAUTHORIZED },  );
     }
 
     // Info: (20260326 - Tzuhan) Verify FIDO2 signature
@@ -64,7 +59,7 @@ export async function PATCH(
     // Info: (20260325 - Tzuhan) Validate if the member exists and belongs to the team
     const targetMember = await teamRepo.getTeamMemberById(memberId);
     if (!targetMember || targetMember.teamId !== teamId) {
-      return jsonFail(ApiCode.NOT_FOUND, "Member not found in this team");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260325 - Tzuhan) If changing the target role to OWNER, operator might want to transfer, but typically we allow OWNER to make others OWNER.
@@ -75,10 +70,7 @@ export async function PATCH(
         "OWNER",
       );
       if (ownersCount <= 1) {
-        return jsonFail(
-          ApiCode.VALIDATION_ERROR,
-          "Cannot change role of the last OWNER. Please transfer ownership first.",
-        );
+        return jsonFail({ code: "VA000099", message: "Cannot change role of the l...", status: ApiCode.VALIDATION_ERROR },  );
       }
     }
 
@@ -123,7 +115,7 @@ export async function PATCH(
       "[API] /team/[team_id]/members/[member_id] PATCH error:",
       error,
     );
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }
 
@@ -136,38 +128,32 @@ export async function DELETE(
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const { team_id: teamId, member_id: memberId } = await params;
 
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator) {
-      return jsonFail(
-        ApiCode.FORBIDDEN,
-        "Permission denied. You are not connected to this team.",
-      );
+      return jsonFail({ code: "FO000099", message: "Permission denied. You are ...", status: ApiCode.FORBIDDEN },  );
     }
 
     const targetMember = await teamRepo.getTeamMemberById(memberId);
     if (!targetMember || targetMember.teamId !== teamId) {
-      return jsonFail(ApiCode.NOT_FOUND, "Member not found in this team");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const body = await request.json();
     const { authentication } = body;
 
     if (!authentication) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Missing FIDO2 signature");
+      return jsonFail(API_ERRORS.VL_MISSING_FIDO2);
     }
 
     // Info: (20260326 - Tzuhan) Fetch operator's current challenge
     const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
-      return jsonFail(
-        ApiCode.UNAUTHORIZED,
-        "Missing WebAuthn challenge. Please retry.",
-      );
+      return jsonFail({ code: "UN000099", message: "Missing WebAuthn challenge....", status: ApiCode.UNAUTHORIZED },  );
     }
 
     // Info: (20260326 - Tzuhan) Verify FIDO2 signature
@@ -189,16 +175,13 @@ export async function DELETE(
     // Info: (20260325 - Tzuhan) 3. ADMIN can only delete MEMBER users inside the team
     if (!isSelfDelete) {
       if (operator.role === "EDITOR" || operator.role === "VIEWER") {
-        return jsonFail(ApiCode.FORBIDDEN, "Permission denied");
+        return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
       }
       if (
         operator.role === "ADMIN" &&
         (targetMember.role === "OWNER" || targetMember.role === "ADMIN")
       ) {
-        return jsonFail(
-          ApiCode.FORBIDDEN,
-          "ADMIN cannot remove other ADMIN or OWNER",
-        );
+        return jsonFail({ code: "FO000099", message: "ADMIN cannot remove other A...", status: ApiCode.FORBIDDEN },  );
       }
     }
 
@@ -209,10 +192,7 @@ export async function DELETE(
         "OWNER",
       );
       if (ownersCount <= 1) {
-        return jsonFail(
-          ApiCode.VALIDATION_ERROR,
-          "Cannot remove the last OWNER. Please transfer ownership or delete the team entirely.",
-        );
+        return jsonFail({ code: "VA000099", message: "Cannot remove the last OWNE...", status: ApiCode.VALIDATION_ERROR },  );
       }
     }
 
@@ -257,6 +237,6 @@ export async function DELETE(
       "[API] /team/[team_id]/members/[member_id] DELETE error:",
       error,
     );
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

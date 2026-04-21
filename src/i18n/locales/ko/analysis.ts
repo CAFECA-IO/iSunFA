@@ -92,6 +92,7 @@ export const analysis = {
     monthly: "월별",
     weekly: "주별",
     daily: "일별",
+    ac65: "AC65",
   },
   cost_hint: "비용: {{cost}} 크레딧",
   confirm_title: "분석 보고서 생성 확인",
@@ -120,6 +121,7 @@ export const analysis = {
     net_zero_emissions: "넷제로 배출",
     ai_consulting: "AI 컨설팅",
     journal_upload: "분개장 등록",
+    certificate_analysis: "증빙 분석",
   },
   history: {
     title: "분석 기록",

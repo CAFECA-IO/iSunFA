@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -28,7 +29,7 @@ export async function GET(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260311 - Julian) 取得帳簿
@@ -37,21 +38,21 @@ export async function GET(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260311 - Julian) 取得傳票
     const { voucher_id: voucherId } = await params;
     if (!voucherId) {
       console.error("Missing voucherId");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "VoucherId is required");
+      return jsonFail(API_ERRORS.VL_INVALID_ID);
     }
 
     const voucher = await voucherRepo.getVoucherById(voucherId);
 
     if (!voucher) {
       console.error("Voucher not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Voucher not found");
+      return jsonFail(API_ERRORS.NF_VOUCHER);
     }
 
     const lineItems: IVoucherLineUI[] = voucher.lines.map((l) => {
@@ -99,7 +100,7 @@ export async function GET(
     return jsonOk(result);
   } catch (error) {
     console.error("Get voucher failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get voucher failed");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }
 
@@ -120,7 +121,7 @@ export async function PUT(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260306 - Julian) 驗證更新人員
@@ -128,7 +129,7 @@ export async function PUT(
 
     if (!updater) {
       console.error("Updater not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Updater not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260309 - Julian) 取得帳簿
@@ -137,14 +138,14 @@ export async function PUT(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260309 - Julian) 取得傳票
     const { voucher_id: voucherId } = await params;
     if (!voucherId) {
       console.error("Missing voucherId");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "VoucherId is required");
+      return jsonFail(API_ERRORS.VL_INVALID_ID);
     }
 
     // Info: (20260311 - Julian) 取得更新的內容
@@ -160,7 +161,7 @@ export async function PUT(
       isVerified === undefined
     ) {
       console.error("Invalid input data");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid input data");
+      return jsonFail({ code: "VA000099", message: "Invalid input data", status: ApiCode.VALIDATION_ERROR });
     }
 
     // Info: (20260311 - Julian) Update voucher
@@ -184,7 +185,7 @@ export async function PUT(
 
     if (!updatedVoucher) {
       console.error("Voucher update failed");
-      return jsonFail(ApiCode.NOT_FOUND, "Voucher update failed");
+      return jsonFail(API_ERRORS.IS_DB_FAILED);
     }
 
     // Info: (20260311 - Julian) 新增 log
@@ -199,7 +200,7 @@ export async function PUT(
     return jsonOk(updatedVoucher);
   } catch (error) {
     console.error("Put voucher failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Put voucher failed");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }
 
@@ -220,7 +221,7 @@ export async function DELETE(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const { account_book_id: accountBookId, voucher_id: voucherId } =
@@ -230,20 +231,20 @@ export async function DELETE(
     const deleter = await webAuthnRepo.findUserByAddress(sessionUser.address);
     if (!deleter) {
       console.error("Deleter not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Deleter not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260404 - Luphia) 驗證帳簿
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260404 - Luphia) 取出現有傳票進行檢查
     const existingVoucher = await voucherRepo.getVoucherById(voucherId);
     if (!existingVoucher) {
-      return jsonFail(ApiCode.NOT_FOUND, "Voucher not found");
+      return jsonFail(API_ERRORS.NF_VOUCHER);
     }
 
     const now = new Date();
@@ -274,6 +275,6 @@ export async function DELETE(
     return jsonOk({ success: true });
   } catch (error) {
     console.error("Delete voucher failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Delete voucher failed");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }

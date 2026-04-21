@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -19,7 +20,7 @@ export async function POST(
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const { team_id: teamId } = await params;
@@ -27,30 +28,24 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Check permission (OWNER or ADMIN)
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
-      return jsonFail(
-        ApiCode.FORBIDDEN,
-        "Permission denied. Only OWNER or ADMIN can invite members.",
-      );
+      return jsonFail({ code: "FO000099", message: "Permission denied. Only OWN...", status: ApiCode.FORBIDDEN },  );
     }
 
     const body = await request.json();
     const { address, role, authentication } = body;
 
     if (!address || typeof address !== "string") {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid address");
+      return jsonFail(API_ERRORS.VL_INVALID_ADDRESS);
     }
 
     if (!authentication) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Missing FIDO2 signature");
+      return jsonFail(API_ERRORS.VL_MISSING_FIDO2);
     }
 
     // Info: (20260325 - Tzuhan) Fetch operator's current challenge
     const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
-      return jsonFail(
-        ApiCode.UNAUTHORIZED,
-        "Missing WebAuthn challenge. Please retry.",
-      );
+      return jsonFail({ code: "UN000099", message: "Missing WebAuthn challenge....", status: ApiCode.UNAUTHORIZED },  );
     }
 
     // Info: (20260325 - Tzuhan) Verify FIDO2 signature
@@ -75,10 +70,7 @@ export async function POST(
         teamId,
       );
       if (existingMember) {
-        return jsonFail(
-          ApiCode.VALIDATION_ERROR,
-          "User is already a member of this team",
-        );
+        return jsonFail({ code: "VA000099", message: "User is already a member of...", status: ApiCode.VALIDATION_ERROR },  );
       }
     }
 
@@ -90,10 +82,7 @@ export async function POST(
     );
 
     if (existingInvite) {
-      return jsonFail(
-        ApiCode.VALIDATION_ERROR,
-        "An invitation is already pending for this address",
-      );
+      return jsonFail({ code: "VA000099", message: "An invitation is already pe...", status: ApiCode.VALIDATION_ERROR },  );
     }
 
     // Info: (20260325 - Tzuhan) Fetch team needed for the contract message
@@ -145,7 +134,7 @@ export async function POST(
     return jsonOk(newInvitation);
   } catch (error) {
     console.error("[API] /team/[team_id]/invitations POST error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }
 
@@ -158,13 +147,13 @@ export async function GET(
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const { teamId } = await params;
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator) {
-      return jsonFail(ApiCode.FORBIDDEN, "Permission denied.");
+      return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
     const invitations = await teamRepo.listTeamInvitations(
@@ -175,6 +164,6 @@ export async function GET(
     return jsonOk(invitations);
   } catch (error) {
     console.error("[API] /team/[team_id]/invitations GET error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

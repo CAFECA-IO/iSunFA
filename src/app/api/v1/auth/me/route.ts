@@ -1,7 +1,7 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { MODULES } from "@/constants/modules";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or missing device token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     // Info: (20260419 - Luphia) fetch pending balance from blockchain
@@ -82,6 +82,6 @@ export async function GET(request: NextRequest) {
       "[API] /auth/me error:",
       error,
     );
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

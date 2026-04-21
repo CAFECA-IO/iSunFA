@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { Role } from "@/generated/enums";
@@ -10,7 +11,7 @@ export async function GET(req: Request) {
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user || (user.role !== Role.SUPER_ADMIN && user.role !== Role.ADMIN)) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Unauthorized");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const { searchParams } = new URL(req.url);
@@ -30,6 +31,6 @@ export async function GET(req: Request) {
 
     return jsonOk(result);
   } catch (error) {
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, (error as Error).message);
+    return jsonFail({ code: "IS000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }

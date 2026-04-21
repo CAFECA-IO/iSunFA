@@ -1,8 +1,7 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { promises as fs } from "fs";
 import path from "path";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -14,7 +13,7 @@ export async function POST(request: Request) {
     try {
       exampleContent = await fs.readFile(envExamplePath, "utf8");
     } catch {
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Failed to read template");
+      return jsonFail(API_ERRORS.IS_UNKNOWN);
     }
 
     const lines = exampleContent.split("\n");
@@ -46,6 +45,6 @@ export async function POST(request: Request) {
     return jsonOk({ success: true });
   } catch (error) {
     console.error("Failed to save .env", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

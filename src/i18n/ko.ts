@@ -44,6 +44,7 @@ import { adminSetup } from "@/i18n/locales/ko/admin_setup";
 import { adminMember } from "@/i18n/locales/ko/admin_member";
 import { adminBlockchain } from "@/i18n/locales/ko/admin_blockchain";
 import { adminMissionBoard } from "@/i18n/locales/ko/admin_mission_board";
+import { emissionSources } from "@/i18n/locales/ko/emission_sources";
 
 import { date } from "@/i18n/locales/ko/date";
 import { currencyAlias } from "@/i18n/locales/ko/currency_alias";
@@ -100,4 +101,5 @@ export const ko = {
   admin_billing: adminBilling,
   admin_dashboard: adminDashboard,
   admin_mission_board: adminMissionBoard,
+  emission_sources: emissionSources,
 } satisfies BaseTranslation;

@@ -24,70 +24,64 @@ export function generateCertificateAnalysisMission(
     accountBookId?: string;
   };
   const data = (params.data as { files?: string[]; accountBookId?: string }) || {};
-  const files = data.files || paramsObj.files || [];
   const accountBookId = data.accountBookId || paramsObj.accountBookId || accountBook?.id || "";
+  const fileId = params.fileId; // Info: (20260422 - Luphia) The single targeted file hash passed by MissionIssuer
 
   const tasks: ITaskDefinition[] = [];
 
-  files.forEach((fileId, index) => {
-    /**
-     * Info: We only have fileId (hash) from the batch order array, 
-     * real base64/mimeType should be handled downstream if needed, or this acts as trackable onchain skeleton.
-     */
-    const context = JSON.stringify({
-      fileId,
-      accountBookId,
-    });
+  const context = JSON.stringify({
+    fileId,
+    accountBookId,
+  });
 
-    tasks.push({
-      type: "DOCUMENT_PRE_CHECK",
-      order: index,
-      data: {
-        key: `PRE_CHECK_${index}`,
-        prompt: getDocumentDuplicateCheckPrompt(),
-        context,
-      },
-    });
+  tasks.push({
+    type: "DOCUMENT_PRE_CHECK",
+    order: 0,
+    data: {
+      key: `PRE_CHECK`,
+      prompt: getDocumentDuplicateCheckPrompt(),
+      context,
+    },
+  });
 
-    tasks.push({
-      type: "JOURNAL_PARSING",
-      order: index,
-      data: {
-        key: `JOURNAL_${index}`,
-        prompt: getJournalPrompt(accountBook),
-        context,
-      },
-    });
+  tasks.push({
+    type: "JOURNAL_PARSING",
+    order: 1,
+    data: {
+      key: `JOURNAL`,
+      prompt: getJournalPrompt(accountBook),
+      context,
+    },
+  });
 
-    tasks.push({
-      type: "VOUCHER_BASE_PARSING",
-      order: index,
-      data: {
-        key: `VOUCHER_BASE_${index}`,
-        prompt: getBaseVoucherPrompt(accountBook),
-        context,
-      },
-    });
+  tasks.push({
+    type: "VOUCHER_BASE_PARSING",
+    order: 1,
+    data: {
+      key: `VOUCHER_BASE`,
+      prompt: getBaseVoucherPrompt(accountBook),
+      context,
+    },
+  });
 
-    tasks.push({
-      type: "VOUCHER_LINES_PARSING",
-      order: index,
-      data: {
-        key: `VOUCHER_LINES_${index}`,
-        prompt: getVoucherLinesPrompt(accountBook),
-        context,
-      },
-    });
+  tasks.push({
+    type: "VOUCHER_LINES_PARSING",
+    order: 1,
+    data: {
+      key: `VOUCHER_LINES`,
+      prompt: getVoucherLinesPrompt(accountBook),
+      context,
+    },
+  });
 
-    tasks.push({
-      type: "ESG_PARSING",
-      order: index,
-      data: {
-        key: `ESG_${index}`,
-        prompt: getEsgPrompt(accountBook),
-        context,
-      },
-    });
+  tasks.push({
+    type: "ESG_PARSING",
+    order: 1,
+    data: {
+      key: `ESG`,
+      prompt: getEsgPrompt(accountBook),
+      context,
+    },
   });
 
   return {

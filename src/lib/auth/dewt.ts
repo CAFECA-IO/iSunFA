@@ -3,7 +3,7 @@ import type { JWTPayload, KeyObject, CryptoKey, JWK } from "jose";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { logger } from "@/lib/utils/logger";
 import { AppError } from "@/lib/utils/error";
-import { ApiCode } from "@/lib/utils/status";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { User } from "@/generated/client";
 
 const origin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -29,10 +29,7 @@ async function loadKeys(): Promise<ILoadedKeys> {
   if (loadedKeys) return loadedKeys;
 
   if (!PEM_PRIVATE_KEY) {
-    throw new AppError(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Server configuration error: Missing Private Key",
-    );
+    throw new AppError(API_ERRORS.IS_CONFIG_MISSING);
   }
 
   try {
@@ -56,10 +53,7 @@ async function loadKeys(): Promise<ILoadedKeys> {
     return loadedKeys;
   } catch (error) {
     logger.error(`Failed to load keys: ${JSON.stringify(error)}`);
-    throw new AppError(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to load cryptographic keys",
-    );
+    throw new AppError(API_ERRORS.IS_CONFIG_MISSING);
   }
 }
 
@@ -100,7 +94,7 @@ export const verifyDeWT = async (dewt: string): Promise<JWTPayload> => {
     return payload;
   } catch (error) {
     logger.error(`DeWT verification failed: ${JSON.stringify(error)}`);
-    throw new AppError(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+    throw new AppError(API_ERRORS.AUTH_INVALID_TOKEN);
   }
 };
 

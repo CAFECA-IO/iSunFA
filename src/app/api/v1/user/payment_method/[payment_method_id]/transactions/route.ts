@@ -1,7 +1,7 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { paymentRepo } from "@/repositories/payment.repo";
 
 export async function GET(
@@ -13,7 +13,7 @@ export async function GET(
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const { payment_method_id: paymentMethodId } = await params;
@@ -97,6 +97,6 @@ export async function GET(
       "[API] /user/payment_method/[id]/transactions GET error:",
       error,
     );
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

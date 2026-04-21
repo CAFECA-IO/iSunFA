@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -21,7 +22,7 @@ export async function POST(
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const { order_id: orderId } = await params;
@@ -29,7 +30,7 @@ export async function POST(
     const { userOp, signature, authentication } = body;
 
     if (!userOp || !signature || !authentication) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "userOp, signature, and authentication are required");
+      return jsonFail(API_ERRORS.VL_MISSING_FIDO2);
     }
 
     // Info: (20260417 - Luphia) 1. Get the pending Order
@@ -85,7 +86,7 @@ export async function POST(
     const pendingCredits = Number(formatUnits(balance as bigint, 18));
 
     if (pendingCredits < order.amount) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Insufficient pending balance");
+      return jsonFail(API_ERRORS.VL_INSUFFICIENT_PENDING);
     }
 
     // Info: (20260417 - Luphia) 3. Dispatch Background Transaction without awaiting receipt
@@ -107,6 +108,8 @@ export async function POST(
     let resData: { reportId?: string } = {};
 
     // Info: (20260418 - Luphia) Automatically generate mission for ALL categories including ai_consulting, but SKIP journal_upload since it generates missions per-file manually.
+    type TPayloadFile = string | { hash: string; fileName?: string };
+
     if (category !== ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
       const generateParams = {
         orderId: orderId,
@@ -122,11 +125,30 @@ export async function POST(
 
       analysisRes = await analysisService.generateAnalysis(user.id, generateParams);
       resData = (analysisRes.data || {}) as { reportId?: string };
+    } else if (category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
+      const files = (innerData.files as TPayloadFile[]) || [];
+      const promises = files.map((file) => {
+        const fileHash = typeof file === "string" ? file : file.hash;
+        const documentData = {
+          ...innerData,
+          category: category as AnalysisCategory,
+          files: [fileHash],
+          accountBookId: String(innerData.accountBookId || ""),
+        } as unknown as import("@/lib/analysis/pricing").IDocumentParams;
+
+        const generateParams = {
+          orderId: orderId,
+          type: ORDER_TYPE.ANALYSIS,
+          data: documentData,
+        };
+        return analysisService.generateAnalysis(user.id, generateParams);
+      });
+
+      await Promise.all(promises);
     }
 
     // Info: (20260418 - Luphia) 建立上傳檔案並與討論串關聯 (Restore AI Talk logic)
     if (category === ANALYSIS_CATEGORY.AI_CONSULTING && resData.reportId && orderData.data) {
-      type TPayloadFile = string | { hash: string; fileName?: string };
       const payloadData = orderData.data as { files?: TPayloadFile[] };
       if (payloadData.files && payloadData.files.length > 0) {
         await talkRepo.createFiles(
@@ -155,6 +177,6 @@ export async function POST(
 
   } catch (error) {
     console.error("[API] POST blockchain_payment Error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, (error as Error).message);
+    return jsonFail({ code: "IS000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }

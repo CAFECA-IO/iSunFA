@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -13,7 +14,7 @@ export async function PATCH(
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const { analysisId, token } = await params;
@@ -30,9 +31,6 @@ export async function PATCH(
     return jsonOk({ isActive: updated.isActive });
   } catch (error) {
     console.error("[API] /user/analysis/share/revoke PATCH error:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to revoke. Token may not exist or access denied.",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to revoke. Token may...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }

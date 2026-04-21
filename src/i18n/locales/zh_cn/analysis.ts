@@ -90,6 +90,7 @@ export const analysis = {
     monthly: "月度",
     weekly: "周度",
     daily: "日度",
+    ac65: "AC65",
   },
   cost_hint: "消耗: {{cost}} 点数",
   confirm_title: "确认生成分析报告",
@@ -118,6 +119,7 @@ export const analysis = {
     net_zero_emissions: "净零碳排",
     ai_consulting: "AI 咨询",
     journal_upload: "日记账建档",
+    certificate_analysis: "凭证分析",
   },
   history: {
     title: "历史分析报告",

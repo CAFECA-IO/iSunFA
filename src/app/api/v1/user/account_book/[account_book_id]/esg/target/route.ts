@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -14,22 +15,19 @@ export async function GET(
   try {
     const authHeader = req.headers.get("Authorization");
     const sessionUser = await getIdentityFromDeWT(authHeader);
-    if (!sessionUser) return jsonFail(ApiCode.UNAUTHORIZED, "Unauthorized");
+    if (!sessionUser) return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
 
     const { account_book_id: accountBookId } = await params;
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook)
-      return jsonFail(ApiCode.NOT_FOUND, "Account book not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
 
     const teamMember = await teamRepo.getTeamMember(
       sessionUser.id,
       accountBook.teamId,
     );
     if (!teamMember)
-      return jsonFail(
-        ApiCode.FORBIDDEN,
-        "No permission to view this account book",
-      );
+      return jsonFail({ code: "FO000099", message: "No permission to view this ...", status: ApiCode.FORBIDDEN },  );
 
     const esgRecords =
       await esgRepo.getVerifiedEsgRecordsByAccountBookId(accountBookId);
@@ -99,7 +97,7 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching target info:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }
 
@@ -110,28 +108,25 @@ export async function POST(
   try {
     const authHeader = req.headers.get("Authorization");
     const sessionUser = await getIdentityFromDeWT(authHeader);
-    if (!sessionUser) return jsonFail(ApiCode.UNAUTHORIZED, "Unauthorized");
+    if (!sessionUser) return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
 
     const { account_book_id: accountBookId } = await params;
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook)
-      return jsonFail(ApiCode.NOT_FOUND, "Account book not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
 
     const teamMember = await teamRepo.getTeamMember(
       sessionUser.id,
       accountBook.teamId,
     );
     if (!teamMember)
-      return jsonFail(
-        ApiCode.FORBIDDEN,
-        "No permission to view this account book",
-      );
+      return jsonFail({ code: "FO000099", message: "No permission to view this ...", status: ApiCode.FORBIDDEN },  );
 
     const body = await req.json();
     const { year, totalEmissionTarget, revenueEmissionTarget } = body;
 
     if (!year) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Year is required");
+      return jsonFail({ code: "VA000099", message: "Year is required", status: ApiCode.VALIDATION_ERROR });
     }
 
     const target = await esgRepo.upsertEsgTarget({
@@ -150,6 +145,6 @@ export async function POST(
     return jsonOk(target);
   } catch (error) {
     console.error("Error saving target info:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

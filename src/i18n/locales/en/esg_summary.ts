@@ -13,4 +13,7 @@ export const esgSummary = {
   pending: "Pending Verifications",
   ai_confidence: "AI Avg. Confidence",
   record_unit: "records",
+  scope_1: "S1",
+  scope_2: "S2",
+  scope_3: "S3",
 };

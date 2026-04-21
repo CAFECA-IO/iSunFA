@@ -35,14 +35,14 @@ export default function EsgMainView() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Info: (20260416 - Julian) 從 URL 參數取得 tab
+  // Info: (20260421 - Julian) 從 URL 參數取得 tab，預設顯示 records
   const tabParams = useSearchParams().get("tab");
   const activeTab =
     tabParams === "coefficient"
       ? EsgTab.COEFFICIENT
-      : tabParams === "records"
-        ? EsgTab.RECORDS
-        : EsgTab.EMISSION_SOURCES;
+      : tabParams === "emission_sources"
+        ? EsgTab.EMISSION_SOURCES
+        : EsgTab.RECORDS;
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -185,11 +185,10 @@ export default function EsgMainView() {
             key={tab}
             title={t(`esg_main.tab.${tab.toLowerCase()}`)}
             type="button"
-            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${
-              activeTab === tab
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${activeTab === tab
                 ? "bg-white text-orange-600 shadow-sm"
                 : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
-            }`}
+              }`}
             onClick={() => handleTabChange(tab)}
             disabled={tab === activeTab} // Info: (20260420 - Julian) 避免重複 call API
           >
@@ -197,6 +196,13 @@ export default function EsgMainView() {
           </button>
         ))}
       </div>
+
+      {/* ToDo: (20260421 - Julian) Demo 結束後移除 */}
+      {activeTab === EsgTab.EMISSION_SOURCES && (
+        <p className="text-xs font-medium rounded-lg p-4 bg-orange-100 text-orange-500 lg:text-sm">
+          ⚠️ 注意：本頁顯示均為示範資料，僅供參考展示
+        </p>
+      )}
 
       {/* Info: (20260413 - Julian) Tab Content */}
       {tabContent}

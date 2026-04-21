@@ -1,6 +1,6 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { publicClient } from "@/lib/viem_public";
@@ -19,17 +19,17 @@ export async function GET(req: NextRequest) {
     const authHeader = req.headers.get("Authorization");
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
-    if (!sessionUser) return jsonFail(ApiCode.UNAUTHORIZED, "Unauthorized");
+    if (!sessionUser) return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
 
     const user = await webAuthnRepo.findUserByAddress(sessionUser.address);
     if (!user || (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN")) {
-      return jsonFail(ApiCode.FORBIDDEN, "Admin access required");
+      return jsonFail(API_ERRORS.AUTH_ADMIN_REQUIRED);
     }
 
     const missionBoardAddress = process.env.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
 
     if (!missionBoardAddress) {
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "MissionBoard address not set");
+      return jsonFail(API_ERRORS.IS_CONFIG_MISSING);
     }
 
     const allTasks: ITask[] = [];
@@ -153,6 +153,6 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error("MissionBoard API Error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Failed to load MissionBoard data");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }

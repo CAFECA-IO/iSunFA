@@ -125,14 +125,14 @@ model Order {
 
 // Info: (20260128 - Luphia) Analysis 直接將 data 與 result 放在 mission 裡面
 model Analysis {
-  id        String   @id
-  userId    String   @map("user_id")
-  user      User     @relation(fields: [userId], references: [id])
-  orderId   String   @map("order_id")
-  order     Order    @relation(fields: [orderId], references: [id])
-  type      String
-  data      Json
-  result    Json?
+  id      String @id
+  userId  String @map("user_id")
+  user    User   @relation(fields: [userId], references: [id])
+  orderId String @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id])
+  type    String
+  data    Json
+  result  Json?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -145,8 +145,6 @@ model Analysis {
 
   @@map("analysis")
 }
-
-
 
 // Info: (20260226 - Julian) 上傳檔案：儲存 hash
 model File {
@@ -358,6 +356,9 @@ model AccountBook {
   // Info: (20260413 - Julian) 帳本對應的係數
   coefficients Coefficient[]
 
+  // Info: (20260421 - Julian) 帳本對應的排放源
+  emissionSources EmissionSource[]
+
   @@map("account_book")
 }
 
@@ -491,22 +492,23 @@ enum EsgIntensity {
 }
 
 model EsgRecord {
-  id             String           @id @default(uuid())
-  createdAt      DateTime         @default(now()) @map("created_at")
-  updatedAt      DateTime         @updatedAt @map("updated_at")
-  deletedAt      DateTime?        @map("deleted_at")
-  tradingDate    DateTime         @map("trading_date") // Info: (20260407 - Julian) 交易日期
-  scope          EsgScope? // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
-  activityType   String           @map("activity_type") // Info: (20260312 - Julian) 活動類型
-  vendor         String // Info: (20260312 - Julian) 供應商與對象
-  amount         Decimal          @default(0) // Info: (20260416 - Julian) 活動數據
-  unit           String // Info: (20260312 - Julian) 單位
-  emissions      Decimal // Info: (20260312 - Julian) 排放量 (KGCO2E)
-  intensity      EsgIntensity? // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
-  confidence     Int // Info: (20260312 - Julian) AI 信心度
-  dqiScore       Decimal?         @map("dqi_score") // Info: (20260410 - Julian) DQI 數據品質指標
-  isVerified     Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
-  analysisStatus AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態
+  id                String           @id @default(uuid())
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  deletedAt         DateTime?        @map("deleted_at")
+  tradingDate       DateTime         @map("trading_date") // Info: (20260407 - Julian) 交易日期
+  scope             EsgScope? // Info: (20260312 - Julian) 範疇 (SCOPE_1, SCOPE_2, SCOPE_3)
+  activityType      String           @map("activity_type") // Info: (20260312 - Julian) 活動類型
+  vendor            String // Info: (20260312 - Julian) 供應商與對象
+  amount            Decimal          @default(0) // Info: (20260416 - Julian) 活動數據
+  unit              String // Info: (20260312 - Julian) 單位
+  emissions         Decimal // Info: (20260312 - Julian) 排放量 (KGCO2E)
+  intensity         EsgIntensity? // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
+  confidence        Int // Info: (20260312 - Julian) AI 信心度
+  dqiScore          Decimal?         @map("dqi_score") // Info: (20260410 - Julian) DQI 數據品質指標
+  isVerified        Boolean          @default(false) @map("is_verified") // Info: (20260318 - Julian) 是否已經驗證
+  analysisStatus    AIAnalysisStatus @default(PENDING) @map("analysis_status") // Info: (20260318 - Julian) AI 分析狀態
+  emissionSourceTag String?          @map("emission_source_tag") // Info: (20260421 - Julian) 排放源標籤（廠）
 
   // Info: (20260312 - Julian) 關聯檔案憑證
   fileId String? @map("file_id")
@@ -523,6 +525,10 @@ model EsgRecord {
   // Info: (20260416 - Julian) 關聯的碳排放係數
   coefficientId String?      @map("coefficient_id")
   coefficient   Coefficient? @relation(fields: [coefficientId], references: [id])
+
+  // Info: (20260421 - Julian) 關聯的排放源
+  emissionSourceId String?         @map("emission_source_id")
+  emissionSource   EmissionSource? @relation(fields: [emissionSourceId], references: [id])
 
   // Info: (20260324 - Julian) AI 分析的備註
   aiNote String @default("") @map("ai_note") @db.Text
@@ -670,4 +676,26 @@ model ReportShareToken {
   @@index([token])
   @@index([analysisId])
   @@map("report_share_token")
+}
+
+// Info: (20260421 - Julian) 排放源
+model EmissionSource {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  name    String // Info: (20260421 - Julian) 排放源名稱 (e.g., 公司貨車 ABC-1234) 
+  address String? // Info: (20260421 - Julian) 廠區地址
+
+  // ToDo: (20260421 - Julian) 之後會擴充更多欄位
+
+  // Info: (20260421 - Julian) 隸屬的帳本
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  // Info: (20260421 - Julian) 關聯的碳盤查紀錄 (一對多)
+  esgRecords EsgRecord[]
+
+  @@map("emission_source")
 }

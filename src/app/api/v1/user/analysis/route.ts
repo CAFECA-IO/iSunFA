@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import {
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const body = await request.json();
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     // Info: (20260128 - Luphia) Validate FIDO2 Signature OR Transaction Binding
     if (!authentication || !authentication.orderId) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Order ID is required");
+      return jsonFail(API_ERRORS.VL_INVALID_ID);
     }
 
     const orderId = authentication.orderId;
@@ -182,10 +183,7 @@ export async function POST(request: NextRequest) {
             orderId,
             "UserOperation failed on-chain (e.g. out of gas or insufficient balance)",
           );
-          throw new AppError(
-            ApiCode.VALIDATION_ERROR,
-            "The token transfer failed on-chain. Order cancelled.",
-          );
+          throw new AppError({ code: "VL000099", message: "Token transfer failed on-chain", status: ApiCode.VALIDATION_ERROR });
         }
 
         // Info: (20260209 - Tzuhan) Mark order as complete
@@ -216,13 +214,10 @@ export async function POST(request: NextRequest) {
       }
     } catch (error) {
       if (error instanceof AppError) {
-        return jsonFail(error.code, error.message);
+        return jsonFail(API_ERRORS.IS_UNKNOWN);
       }
       console.error("Order verification failed:", error);
-      return jsonFail(
-        ApiCode.UNAUTHORIZED,
-        `Verification failed: ${(error as Error).message}`,
-      );
+      return jsonFail({ code: "UN000099", message: String(`Verification failed: ${(error as Error).message}`).slice(0, 30), status: ApiCode.UNAUTHORIZED });
     }
 
     /**
@@ -231,7 +226,7 @@ export async function POST(request: NextRequest) {
      */
     const orderData = await paymentRepo.getOrderById(orderId);
     if (!orderData) {
-      return jsonFail(ApiCode.NOT_FOUND, "Order not found");
+      return jsonFail(API_ERRORS.NF_ORDER);
     }
 
     const generateAnalysisParams: IGenerateAnalysisParams = {
@@ -254,12 +249,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[API] /user/analysis error:", error);
     if (error instanceof AppError) {
-      return jsonFail(error.code, error.message);
+      return jsonFail(API_ERRORS.IS_UNKNOWN);
     }
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      error instanceof Error ? error.message : "Failed to generate analysis",
-    );
+    return jsonFail({ code: "IS000099", message: String(error instanceof Error ? error.message : "Failed to generate analysis").slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }
 
@@ -270,7 +262,7 @@ export async function GET(request: NextRequest) {
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     // Info: (20260311 - Tzuhan) Fetch associated tags and related mission data
@@ -388,9 +380,6 @@ export async function GET(request: NextRequest) {
     return jsonOk(history);
   } catch (error) {
     console.error("[API] GET /user/analysis error:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to fetch analysis history",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to fetch analysis hi...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }

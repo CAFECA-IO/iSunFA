@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonFail, jsonOk } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -6,7 +7,7 @@ export async function POST(req: NextRequest) {
   try {
     const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
     if (!rpcUrl) {
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Missing RPC_URL config");
+      return jsonFail(API_ERRORS.IS_CONFIG_MISSING);
     }
 
     const bodyText = await req.text();
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
     return jsonOk(data);
   } catch (error: Error | unknown) {
     console.error("[API] /v1/blockchain Error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, (error as Error).message || "Internal Server Error");
+    return jsonFail({ code: "IS000099", message: String((error as Error).message || "Internal Server Error").slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }
 
