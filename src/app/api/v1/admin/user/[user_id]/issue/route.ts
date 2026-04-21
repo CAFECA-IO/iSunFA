@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { validateAdminFido2 } from "@/lib/auth/admin_validator";
 import { issuePurchasedPointsToMember } from "@/services/member.service";
@@ -16,21 +17,18 @@ export async function POST(
 
     const { user_id: userId } = await params;
     if (!userId) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Missing user_id");
+      return jsonFail(API_ERRORS.VL_MISSING_PARAMS);
     }
 
     const amount = Number(body.amount);
 
     if (isNaN(amount) || amount <= 0) {
-      return jsonFail(
-        ApiCode.VALIDATION_ERROR,
-        "Issue amount must be greater than 0",
-      );
+      return jsonFail({ code: "VA000099", message: "Issue amount must be greate...", status: ApiCode.VALIDATION_ERROR },  );
     }
 
     const targetUser = await webAuthnRepo.findUserById(userId);
     if (!targetUser) {
-      return jsonFail(ApiCode.NOT_FOUND, "Missing user");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const result = await issuePurchasedPointsToMember(
@@ -38,7 +36,7 @@ export async function POST(
       amount,
     );
     if (!result.success) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, result.message);
+      return jsonFail({ code: "VL000099", message: String(result.message).slice(0, 30), status: ApiCode.VALIDATION_ERROR });
     }
 
     await paymentRepo.createOrder({
@@ -54,6 +52,6 @@ export async function POST(
 
     return jsonOk(null, "Issue success");
   } catch (error) {
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, (error as Error).message);
+    return jsonFail({ code: "IS000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }

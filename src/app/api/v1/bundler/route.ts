@@ -14,10 +14,7 @@ export async function POST(req: NextRequest) {
     const { userOp, entryPointAddress } = await req.json();
 
     if (!entryPointAddress) {
-      return jsonFail(
-        ApiCode.VALIDATION_ERROR,
-        "entryPointAddress is required",
-      );
+      return jsonFail({ code: "VA000099", message: "entryPointAddress is required", status: ApiCode.VALIDATION_ERROR },  );
     }
 
     const result = await bundlerService.sendUserOp(userOp, entryPointAddress);
@@ -44,20 +41,14 @@ export async function POST(req: NextRequest) {
 
     // Info: (20251118 - Tzuhan) 區分伺服器設定錯誤 (500) 和 Zod 驗證錯誤 (400)
     if (isConfigError) {
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, errorMessage);
+      return jsonFail({ code: "IS000099", message: String(errorMessage).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
     }
     if (isZodError) {
-      return jsonFail(
-        ApiCode.VALIDATION_ERROR,
-        "Invalid UserOperation structure",
-      );
+      return jsonFail({ code: "VA000099", message: "Invalid UserOperation struc...", status: ApiCode.VALIDATION_ERROR },  );
     }
 
     if (isZodError)
-      return jsonFail(
-        ApiCode.VALIDATION_ERROR,
-        "Invalid UserOperation structure",
-      );
+      return jsonFail({ code: "VA000099", message: "Invalid UserOperation struc...", status: ApiCode.VALIDATION_ERROR },  );
 
     return jsonOk({
       error: "Transaction failed or reverted",

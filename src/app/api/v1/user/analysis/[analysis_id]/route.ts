@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -14,26 +15,23 @@ export async function GET(
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     if (!analysisId) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Analysis ID is required");
+      return jsonFail(API_ERRORS.VL_INVALID_ID);
     }
 
     // Info: (20260130 - Luphia) Fetch analysis details
     const analysis = await analysisRepo.findById(analysisId);
 
     if (!analysis) {
-      return jsonFail(ApiCode.NOT_FOUND, "Analysis not found");
+      return jsonFail(API_ERRORS.NF_ANALYSIS);
     }
 
     // Info: (20260130 - Luphia) Authorization Check
     if (analysis.userId !== user.id) {
-      return jsonFail(
-        ApiCode.FORBIDDEN,
-        "You do not have permission to view this analysis",
-      );
+      return jsonFail({ code: "FO000099", message: "You do not have permission ...", status: ApiCode.FORBIDDEN },  );
     }
 
     const analysisData = analysis.data as Record<
@@ -66,9 +64,6 @@ export async function GET(
       `[API] GET /user/analysis/${(await params).analysis_id} error:`,
       error,
     );
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      (error as Error).message || "Internal Server Error",
-    );
+    return jsonFail({ code: "IN000099", message: String((error as Error).message || "Internal Server Error").slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }

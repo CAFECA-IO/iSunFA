@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { webAuthnService } from "@/services/webauthn.service";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -37,15 +38,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    throw new AppError(ApiCode.VALIDATION_ERROR, "Invalid action parameter");
+    throw new AppError(API_ERRORS.VL_MISSING_PARAMS);
   } catch (error) {
     console.error("[API] Options generation error:", error);
     if (error instanceof AppError) {
-      return jsonFail(error.code, error.message);
+      return jsonFail(API_ERRORS.IS_UNKNOWN);
     }
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to generate auth options",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to generate auth opt...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }

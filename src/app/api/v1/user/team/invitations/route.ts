@@ -1,6 +1,6 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const invitations = await teamRepo.getPendingInvitationsByAddress(
@@ -21,6 +21,6 @@ export async function GET(request: NextRequest) {
     return jsonOk(invitations);
   } catch (error) {
     console.error("[API] /team/invitations GET error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

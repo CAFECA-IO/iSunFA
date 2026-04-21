@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { Prisma } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -40,7 +41,7 @@ export async function POST(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260310 - Julian) 取得建立者
@@ -48,7 +49,7 @@ export async function POST(
 
     if (!creator) {
       console.error("Creator not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Creator not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260318 - Julian) 取得帳簿
@@ -57,7 +58,7 @@ export async function POST(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     const body = await request.json();
@@ -66,12 +67,12 @@ export async function POST(
     // Info: (20260318 - Julian) 驗證 file 參數
     if (!file) {
       console.error("Missing file or file hash");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
+      return jsonFail({ code: "VA000099", message: "File is required", status: ApiCode.VALIDATION_ERROR });
     }
 
     // Info: (20260413 - Luphia) Verify Payment Order before doing AI processing
     if (!authentication || !authentication.orderId) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Order ID is required");
+      return jsonFail(API_ERRORS.VL_INVALID_ID);
     }
 
     const orderId = authentication.orderId;
@@ -175,12 +176,9 @@ export async function POST(
       }
     } catch (error) {
       if (error instanceof AppError) {
-        return jsonFail(error.code, error.message);
+        return jsonFail(API_ERRORS.IS_UNKNOWN);
       }
-      return jsonFail(
-        ApiCode.UNAUTHORIZED,
-        `Verification failed: ${(error as Error).message}`,
-      );
+      return jsonFail({ code: "UN000099", message: String(`Verification failed: ${(error as Error).message}`).slice(0, 30), status: ApiCode.UNAUTHORIZED });
     }
 
     // Info: (20260318 - Julian) 將 file 存入 DB
@@ -191,7 +189,7 @@ export async function POST(
 
     if (!uploadedFile) {
       console.error("File upload failed");
-      return jsonFail(ApiCode.NOT_FOUND, "File upload failed");
+      return jsonFail(API_ERRORS.IS_UPLOAD_FAILED);
     }
 
     // Info: (20260318 - Julian) 建立日記帳
@@ -207,7 +205,7 @@ export async function POST(
 
     if (!newJournal) {
       console.error("Journal creation failed");
-      return jsonFail(ApiCode.NOT_FOUND, "Journal creation failed");
+      return jsonFail(API_ERRORS.IS_DB_FAILED);
     }
 
     // Info: (20260318 - Julian) 建立空白傳票
@@ -225,7 +223,7 @@ export async function POST(
 
     if (!newVoucher) {
       console.error("Voucher creation failed");
-      return jsonFail(ApiCode.NOT_FOUND, "Voucher creation failed");
+      return jsonFail(API_ERRORS.IS_DB_FAILED);
     }
 
     // Info: (20260318 - Julian) 建立空白 ESG 紀錄
@@ -249,7 +247,7 @@ export async function POST(
 
     if (!newRecord) {
       console.error("ESG record creation failed");
-      return jsonFail(ApiCode.NOT_FOUND, "ESG record creation failed");
+      return jsonFail(API_ERRORS.IS_DB_FAILED);
     }
 
     // Info: (20260318 - Julian) 新增 AuditLog
@@ -302,9 +300,6 @@ export async function POST(
     });
   } catch (error) {
     console.error("Error creating AI analysis:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to create AI analysis",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to create AI analysis", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }

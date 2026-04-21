@@ -1,8 +1,8 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { publicClient } from "@/lib/viem";
 import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
 import { formatUnits } from "viem";
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or missing device token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     // Info: (20260408 - Luphia) 2. Client info
@@ -120,6 +120,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("[API] /auth/checkin error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

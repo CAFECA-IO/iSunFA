@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -28,7 +29,7 @@ export async function GET(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得建立者
@@ -36,7 +37,7 @@ export async function GET(
 
     if (!creator) {
       console.error("Creator not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Creator not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得帳簿
@@ -46,7 +47,7 @@ export async function GET(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260414 - Julian) 取得係數
@@ -54,7 +55,7 @@ export async function GET(
 
     if (!coefficient) {
       console.error("Coefficient not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Coefficient not found");
+      return jsonFail(API_ERRORS.NF_COEFFICIENT);
     }
 
     const formattedCoefficient: ICoefficient = {
@@ -70,10 +71,7 @@ export async function GET(
     return jsonOk(formattedCoefficient);
   } catch (error) {
     console.error("Error fetching coefficient:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to fetch coefficient",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to fetch coefficient", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }
 
@@ -94,7 +92,7 @@ export async function PUT(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得帳簿
@@ -104,7 +102,7 @@ export async function PUT(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260414 - Julian) 取得 body
@@ -114,7 +112,7 @@ export async function PUT(
     // Info: (20260414 - Julian) 驗證 coefficient 參數
     if (!input || !input.name) {
       console.error("Missing coefficient or coefficient name");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Coefficient is required");
+      return jsonFail({ code: "VA000099", message: "Coefficient is required", status: ApiCode.VALIDATION_ERROR });
     }
 
     // Info: (20260414 - Julian) 更新係數
@@ -130,16 +128,13 @@ export async function PUT(
 
     if (!updatedCoefficient) {
       console.error("Coefficient not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Coefficient not found");
+      return jsonFail(API_ERRORS.NF_COEFFICIENT);
     }
 
     return jsonOk({ updatedCoefficientId: updatedCoefficient.id });
   } catch (error) {
     console.error("Error updating coefficient:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to update coefficient",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to update coefficient", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }
 
@@ -159,14 +154,14 @@ export async function DELETE(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const deleter = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!deleter) {
       console.error("Deleter not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Deleter not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const { account_book_id: accountBookId, coefficient_id: coefficientId } =
@@ -175,19 +170,19 @@ export async function DELETE(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     const deletedCoefficient = await esgRepo.deleteEsgCoefficient(coefficientId);
 
     if (!deletedCoefficient) {
       console.error("Coefficient not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Coefficient not found");
+      return jsonFail(API_ERRORS.NF_COEFFICIENT);
     }
 
     return jsonOk({ deletedCoefficientId: deletedCoefficient.id });
   } catch (error) {
     console.error("Delete coefficient failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Delete coefficient failed");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }

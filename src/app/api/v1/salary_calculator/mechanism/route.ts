@@ -1,8 +1,7 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { promises as fs } from "fs";
 import path from "path";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
-
 export async function GET() {
   try {
     const filePath = path.join(
@@ -14,6 +13,6 @@ export async function GET() {
     return jsonOk({ content });
   } catch (error) {
     console.error("Failed to read mechanism document:", error);
-    return jsonFail(ApiCode.NOT_FOUND, "Document not found");
+    return jsonFail(API_ERRORS.NF_DOCUMENT);
   }
 }

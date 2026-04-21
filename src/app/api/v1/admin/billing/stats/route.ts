@@ -1,15 +1,15 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Role } from "@/generated/enums";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { adminBillingService } from "@/services/admin.billing.service";
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getIdentityFromDeWT(request.headers.get("Authorization"));
     if (!user || (user.role !== Role.SUPER_ADMIN && user.role !== Role.ADMIN)) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Admin access required");
+      return jsonFail(API_ERRORS.AUTH_ADMIN_REQUIRED);
     }
 
     const { searchParams } = new URL(request.url);
@@ -30,9 +30,6 @@ export async function GET(request: NextRequest) {
     return jsonOk(stats);
   } catch (error) {
     console.error("[API] /admin/billing/stats GET error:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to fetch global billing stats",
-    );
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

@@ -232,7 +232,7 @@ export class AnalysisService {
             );
           } else {
             console.log(`[ESG-DEBUG] Records length is 0. Aborting internal analysis.`);
-            throw new AppError(ApiCode.VALIDATION_ERROR, "該企業尚未建立 ESG 或財務數據紀錄。請先上傳相關資料，或是改為申請「外部分析報告」。");
+            throw new AppError({ code: "VA000099", message: "該企業尚未建立 ESG 或財務數據紀錄。請先上傳相關資...", status: ApiCode.VALIDATION_ERROR });
           }
         }
       }
@@ -252,7 +252,7 @@ export class AnalysisService {
 
       // Info: (20260418 - Tzuhan) [BUGFIX] 如果 generator 根本不認識這個類別，或是生成的 tasks 是空的，絕對不允許進入資料庫建立幽靈 Mission
       if (!missionDef || !missionDef.tasks || missionDef.tasks.length === 0) {
-        throw new AppError(ApiCode.VALIDATION_ERROR, `找不到有效的分析任務產生器 (Category: ${params.category}) 或是任務為空，拒絕建立幽靈定單。`);
+        throw new AppError({ code: "VA000099", message: String(`找不到有效的分析任務產生器 (Category: ${params.category})`).slice(0, 30), status: ApiCode.VALIDATION_ERROR });
       }
 
       analysisResult = "Analysis Mission Generated. Pending Execution.";
@@ -262,7 +262,7 @@ export class AnalysisService {
         throw error; // Info: (20260417 - Tzuhan) Let the caller (API route) abort the operation instantly
       }
       // Info: (20260418 - Tzuhan) [BUGFIX] 如果發生未知崩潰(例如 Payload 超過 Prisma 大小限制)，必須拋出異常，阻斷 API 回傳 200，讓前端顯示錯誤而不吞噬訂單！
-      throw new AppError(ApiCode.INTERNAL_SERVER_ERROR, "發生非預期錯誤，報告生成失敗。您的訂單紀錄已保留，請稍後至後台重試。");
+      throw new AppError({ code: "IN000099", message: "發生非預期錯誤，報告生成失敗。您的訂單紀錄已保留，請稍...", status: ApiCode.INTERNAL_SERVER_ERROR });
     }
 
     // Info: (20260128 - Luphia) Create Plan Content

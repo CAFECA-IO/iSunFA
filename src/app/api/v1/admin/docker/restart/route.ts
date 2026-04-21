@@ -16,9 +16,9 @@ export async function POST(req: NextRequest) {
     if (res.success) {
       return jsonOk({ output: res.output }, `Docker container ${serviceName || "all"} restarted successfully`);
     } else {
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, `Failed to restart Docker container: ${res.output}`);
+      return jsonFail({ code: "IS000099", message: String(`Failed to restart Docker container: ${res.output}`).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
     }
   } catch (err: unknown) {
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, `Docker restart error: ${err instanceof Error ? err.message : String(err)}`);
+    return jsonFail({ code: "IS000099", message: String(`Docker restart error: ${err instanceof Error ? err.message : String(err)}`).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }

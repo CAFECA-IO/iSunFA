@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const body = await request.json();
@@ -40,10 +41,7 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       console.error("Identity registration failed:", result.message);
-      return jsonFail(
-        ApiCode.INTERNAL_SERVER_ERROR,
-        `KYC saved but Identity deployment failed: ${result.message}`,
-      );
+      return jsonFail({ code: "IS000099", message: String(`KYC saved but Identity deployment failed: ${result.message}`).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
     }
 
     try {
@@ -56,13 +54,10 @@ export async function POST(request: NextRequest) {
       });
     } catch (e) {
       console.warn("Failed to update identity address:", e);
-      return jsonFail(
-        ApiCode.INTERNAL_SERVER_ERROR,
-        "Failed to update identity address",
-      );
+      return jsonFail({ code: "IN000099", message: "Failed to update identity a...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
     }
   } catch (error) {
     console.error("[API] /user/kyc error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

@@ -6,7 +6,7 @@ import type {
   CredentialInfo,
 } from "@passwordless-id/webauthn/dist/esm/types";
 import { AppError } from "@/lib/utils/error";
-import { ApiCode } from "@/lib/utils/status";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 
 // Info: (20260416 - Luphia) 設定與共用工具 (Configuration & Utils)
 
@@ -38,10 +38,7 @@ export async function verifyRegistration(
     });
   } catch (error) {
     console.error("Registration verification failed:", error);
-    throw new AppError(
-      ApiCode.VALIDATION_ERROR,
-      "Invalid registration data: " + String(error),
-    );
+    throw new AppError(API_ERRORS.VL_MISSING_FIDO2);
   }
 }
 
@@ -70,19 +67,13 @@ export async function verifyAuthentication(
         return verifySignatureNativeFallback(authentication, credential, expectedChallenge);
       } catch (fallbackError) {
         console.error("Native fallback verification failed:", fallbackError);
-        throw new AppError(
-          ApiCode.UNAUTHORIZED,
-          "Invalid signature or challenge (Fallback failed): " + String(fallbackError),
-        );
+        throw new AppError(API_ERRORS.AUTH_INVALID_TOKEN);
       }
     }
 
     // Info: (20260416 - Luphia) 非簽章問題的其他錯誤，直接拋出
     console.error("Authentication verification failed:", error);
-    throw new AppError(
-      ApiCode.UNAUTHORIZED,
-      "Authentication failed: " + errorMessage,
-    );
+    throw new AppError(API_ERRORS.AUTH_INVALID_TOKEN);
   }
 }
 

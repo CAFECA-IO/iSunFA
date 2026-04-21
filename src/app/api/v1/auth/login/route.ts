@@ -1,7 +1,7 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { webAuthnService } from "@/services/webauthn.service";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
 import { createTeamForUsersWithoutTeam } from "@/services/team.service";
 import { createAccountBookForTeamsWithoutOne } from "@/services/account_book.service";
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
         authentication,
       );
     } else {
-      throw new AppError(ApiCode.VALIDATION_ERROR, "Missing login parameters");
+      throw new AppError(API_ERRORS.VL_MISSING_PARAMS);
     }
 
     // Info: (20260308 - Luphia) 為沒有團隊的使用者建立一個團隊與帳簿
@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[API] Login error:", error);
     if (error instanceof AppError) {
-      return jsonFail(error.code, error.message);
+      return jsonFail(API_ERRORS.IS_UNKNOWN);
     }
-    return jsonFail(ApiCode.UNAUTHORIZED, "Login failed");
+    return jsonFail(API_ERRORS.AUTH_LOGIN_FAILED);
   }
 }

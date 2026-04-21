@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -13,7 +14,7 @@ export async function POST(
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const analysisId = (await params).analysis_id;
@@ -36,7 +37,7 @@ export async function POST(
     });
 
     if (!analysis || analysis.userId !== user.id) {
-      return jsonFail(ApiCode.FORBIDDEN, "Access denied or Analysis not found");
+      return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
     let shareToken = await prisma.reportShareToken.findFirst({
@@ -64,9 +65,6 @@ export async function POST(
     return jsonOk({ token: shareToken.token });
   } catch (error) {
     console.error("[API] /user/analysis/share POST error:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to generate share link",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to generate share link", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }

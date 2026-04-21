@@ -9,7 +9,7 @@ export async function POST(req: Request) {
 
     // Info: (20260416 - Luphia) Parse body for amount
     if (typeof body.amount !== "number" || body.amount <= 0) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid minting amount");
+      return jsonFail({ code: "VA000099", message: "Invalid minting amount", status: ApiCode.VALIDATION_ERROR });
     }
 
     /**
@@ -23,11 +23,11 @@ export async function POST(req: Request) {
     const result = await mintIcpAction(body.amount, token);
 
     if (!result.success) {
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, result.message || "Minting failed");
+      return jsonFail({ code: "IS000099", message: String(result.message || "Minting failed").slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
     }
 
     return jsonOk({ message: result.message });
   } catch (error) {
-    return jsonFail(ApiCode.UNAUTHORIZED, (error as Error).message);
+    return jsonFail({ code: "AU000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.UNAUTHORIZED });
   }
 }

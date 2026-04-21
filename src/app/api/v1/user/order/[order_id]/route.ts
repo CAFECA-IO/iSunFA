@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -15,20 +16,20 @@ export async function GET(
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const orderId = (await params).order_id;
 
     if (!orderId) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Order ID is required");
+      return jsonFail(API_ERRORS.VL_INVALID_ID);
     }
 
     // Info: (20260302 - Tzuhan) [流程 4-2: 查詢訂單資料] 從資料庫撈取特定訂單並檢查是否屬於該使用者
     const order = await paymentRepo.getOrderByIdAndUserId(orderId, user.id);
 
     if (!order) {
-      return jsonFail(ApiCode.NOT_FOUND, "Order not found");
+      return jsonFail(API_ERRORS.NF_ORDER);
     }
 
     // Info: (20260302 - Tzuhan) [流程 4-3: 判斷失敗狀態並附帶錯誤] 如果狀態是失敗，嘗試從其 data 欄位把詳細的 Error 摘要帶回前端
@@ -57,9 +58,6 @@ export async function GET(
       "[API] GET /user/order/[id] error:",
       error,
     );
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to fetch order details",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to fetch order details", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }

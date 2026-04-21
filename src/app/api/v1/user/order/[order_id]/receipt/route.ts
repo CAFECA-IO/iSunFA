@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -13,7 +14,7 @@ export async function GET(
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const { order_id: orderId } = await params;
@@ -26,6 +27,6 @@ export async function GET(
     console.error("[API] /user/order/[order_id]/receipt GET error:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Internal Server Error";
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, errorMessage);
+    return jsonFail({ code: "IS000099", message: String(errorMessage).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }

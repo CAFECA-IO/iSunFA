@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -27,7 +28,7 @@ export async function POST(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260310 - Julian) 取得建立者
@@ -35,7 +36,7 @@ export async function POST(
 
     if (!creator) {
       console.error("Creator not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Creator not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260310 - Julian) 取得帳簿
@@ -44,7 +45,7 @@ export async function POST(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     const body = await request.json();
@@ -53,7 +54,7 @@ export async function POST(
     // Info: (20260311 - Julian) 驗證 file 參數
     if (!fileId) {
       console.error("Missing file or file hash");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
+      return jsonFail({ code: "VA000099", message: "File is required", status: ApiCode.VALIDATION_ERROR });
     }
 
     // Info: (20260311 - Julian) 建立空白傳票
@@ -70,7 +71,7 @@ export async function POST(
 
     if (!newVoucher) {
       console.error("Voucher creation failed");
-      return jsonFail(ApiCode.NOT_FOUND, "Voucher creation failed");
+      return jsonFail(API_ERRORS.IS_DB_FAILED);
     }
 
     // Info: (20260311 - Julian) 新增 AuditLog
@@ -88,7 +89,7 @@ export async function POST(
     });
   } catch (error) {
     console.error("Error creating voucher:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Failed to create voucher");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }
 
@@ -107,7 +108,7 @@ export async function GET(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260310 - Julian) 取得建立者
@@ -115,7 +116,7 @@ export async function GET(
 
     if (!author) {
       console.error("Author not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Author not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260310 - Julian) 取得帳簿
@@ -124,7 +125,7 @@ export async function GET(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -309,6 +310,6 @@ export async function GET(
     return jsonOk({ data: formattedVouchers, total: totalCount });
   } catch (error) {
     console.error("Get vouchers failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get vouchers failed");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }

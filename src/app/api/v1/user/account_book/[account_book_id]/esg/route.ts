@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -32,7 +33,7 @@ export async function POST(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得建立者
@@ -40,7 +41,7 @@ export async function POST(
 
     if (!creator) {
       console.error("Creator not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Creator not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得帳簿
@@ -49,7 +50,7 @@ export async function POST(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     const body = await request.json();
@@ -58,7 +59,7 @@ export async function POST(
     // Info: (20260312 - Julian) 驗證 file 參數
     if (!file || !file.hash) {
       console.error("Missing file or file hash");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
+      return jsonFail({ code: "VA000099", message: "File is required", status: ApiCode.VALIDATION_ERROR });
     }
 
     // Info: (20260312 - Julian) 建立空白 ESG 紀錄
@@ -92,10 +93,7 @@ export async function POST(
     return jsonOk({ esgRecordId: newRecord.id });
   } catch (error) {
     console.error("Error creating esg record:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to create esg record",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to create esg record", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }
 
@@ -114,7 +112,7 @@ export async function GET(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得帳簿
@@ -123,7 +121,7 @@ export async function GET(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260312 - Julian) 取得 ESG 紀錄
@@ -268,9 +266,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching esg records:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to fetch esg records",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to fetch esg records", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }

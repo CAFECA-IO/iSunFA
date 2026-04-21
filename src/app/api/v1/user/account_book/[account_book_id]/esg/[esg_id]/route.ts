@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -33,7 +34,7 @@ export async function GET(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得建立者
@@ -41,7 +42,7 @@ export async function GET(
 
     if (!creator) {
       console.error("Creator not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Creator not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得帳簿
@@ -50,7 +51,7 @@ export async function GET(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260312 - Julian) 取得 ESG 紀錄
@@ -58,7 +59,7 @@ export async function GET(
 
     if (!esgRecord) {
       console.error("Esg record not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Esg record not found");
+      return jsonFail(API_ERRORS.NF_ESG);
     }
 
     const formattedRecord: IEsgRecord = {
@@ -104,10 +105,7 @@ export async function GET(
     return jsonOk(formattedRecord);
   } catch (error) {
     console.error("Error fetching esg record:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to fetch esg record",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to fetch esg record", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }
 
@@ -126,7 +124,7 @@ export async function PUT(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得更新人員
@@ -134,7 +132,7 @@ export async function PUT(
 
     if (!updater) {
       console.error("Updater not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Updater not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得帳簿
@@ -143,7 +141,7 @@ export async function PUT(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260312 - Julian) 取得 ESG 紀錄
@@ -151,7 +149,7 @@ export async function PUT(
 
     if (!esgRecord) {
       console.error("Esg record not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Esg record not found");
+      return jsonFail(API_ERRORS.NF_ESG);
     }
 
     const reqBody: Partial<IEsgRecord> = await request.json();
@@ -192,7 +190,7 @@ export async function PUT(
 
     if (!updatedRecord) {
       console.error("Record update failed");
-      return jsonFail(ApiCode.NOT_FOUND, "Record update failed");
+      return jsonFail(API_ERRORS.IS_DB_FAILED);
     }
 
     const formattedRecord: IEsgRecord = {
@@ -241,10 +239,7 @@ export async function PUT(
     return jsonOk(formattedRecord);
   } catch (error) {
     console.error("Error updating esg record:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to update esg record",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to update esg record", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }
 
@@ -262,14 +257,14 @@ export async function DELETE(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const deleter = await webAuthnRepo.findUserByAddress(sessionUser.address);
 
     if (!deleter) {
       console.error("Deleter not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Deleter not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const { account_book_id: accountBookId, esg_id: esgId } = await params;
@@ -277,14 +272,14 @@ export async function DELETE(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     const existingEsg = await esgRepo.getEsgRecordById(esgId);
 
     if (!existingEsg) {
       console.error("Esg record not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Esg record not found");
+      return jsonFail(API_ERRORS.NF_ESG);
     }
 
     const deletedEsg = await esgRepo.updateEsgRecord(esgId, {
@@ -292,7 +287,7 @@ export async function DELETE(
     });
 
     if (!deletedEsg) {
-      return jsonFail(ApiCode.NOT_FOUND, "Esg record not found to delete");
+      return jsonFail(API_ERRORS.NF_ESG);
     }
 
     if (existingEsg.fileId) {
@@ -320,6 +315,6 @@ export async function DELETE(
     return jsonOk({ success: true, esgRecord: deletedEsg });
   } catch (error) {
     console.error("Delete ESG record failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Delete ESG record failed");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }

@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -13,21 +14,21 @@ export async function PUT(
   try {
     const authHeader = req.headers.get("Authorization");
     const sessionUser = await getIdentityFromDeWT(authHeader);
-    if (!sessionUser) return jsonFail(ApiCode.UNAUTHORIZED, "Unauthorized");
+    if (!sessionUser) return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
 
     const { account_book_id: accountBookId } = await params;
 
     // Info: (20260322 - Luphia) 檢查帳本是否存在
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook)
-      return jsonFail(ApiCode.NOT_FOUND, "Account book not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
 
     // Info: (20260322 - Luphia) 檢查使用者是否有權限
     const teamMember = await teamRepo.getTeamMember(
       sessionUser.id,
       accountBook.teamId,
     );
-    if (!teamMember) return jsonFail(ApiCode.FORBIDDEN, "No permission");
+    if (!teamMember) return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
 
     // Info: (20260322 - Luphia) 更新所有未完成的 ESG 紀錄
     const result = await esgRepo.verifyAllEsgRecords(accountBookId);
@@ -35,9 +36,6 @@ export async function PUT(
     return jsonOk({ count: result.count });
   } catch (error) {
     console.error("API Error:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to verify ESG records",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to verify ESG records", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }

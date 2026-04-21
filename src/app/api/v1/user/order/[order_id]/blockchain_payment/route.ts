@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -21,7 +22,7 @@ export async function POST(
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const { order_id: orderId } = await params;
@@ -29,7 +30,7 @@ export async function POST(
     const { userOp, signature, authentication } = body;
 
     if (!userOp || !signature || !authentication) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "userOp, signature, and authentication are required");
+      return jsonFail(API_ERRORS.VL_MISSING_FIDO2);
     }
 
     // Info: (20260417 - Luphia) 1. Get the pending Order
@@ -85,7 +86,7 @@ export async function POST(
     const pendingCredits = Number(formatUnits(balance as bigint, 18));
 
     if (pendingCredits < order.amount) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Insufficient pending balance");
+      return jsonFail(API_ERRORS.VL_INSUFFICIENT_PENDING);
     }
 
     // Info: (20260417 - Luphia) 3. Dispatch Background Transaction without awaiting receipt
@@ -155,6 +156,6 @@ export async function POST(
 
   } catch (error) {
     console.error("[API] POST blockchain_payment Error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, (error as Error).message);
+    return jsonFail({ code: "IS000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }

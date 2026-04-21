@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -20,7 +21,7 @@ export async function GET(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260309 - Julian) 取得帳簿
@@ -29,7 +30,7 @@ export async function GET(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     const countOfVerifiedVouchers = await voucherRepo.countVouchers({
@@ -40,9 +41,6 @@ export async function GET(
     return jsonOk({ count: countOfVerifiedVouchers });
   } catch (error) {
     console.error("Get count of verified vouchers failed", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Get count of verified vouchers failed",
-    );
+    return jsonFail({ code: "IN000099", message: "Get count of verified vouch...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }

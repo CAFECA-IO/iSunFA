@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -19,7 +20,7 @@ export async function POST(
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const { invite_id: inviteId } = await params;
@@ -30,30 +31,21 @@ export async function POST(
     const invitation = await teamRepo.getInvitationByIdWithDetails(inviteId);
 
     if (!invitation || invitation.status !== TEAM_INVITATION_STATUS.PENDING) {
-      return jsonFail(
-        ApiCode.NOT_FOUND,
-        "Invitation not found or no longer pending",
-      );
+      return jsonFail({ code: "NO000099", message: "Invitation not found or no ...", status: ApiCode.NOT_FOUND },  );
     }
 
     if (invitation.inviteeAddress !== sessionUser.address) {
-      return jsonFail(
-        ApiCode.FORBIDDEN,
-        "You are not the intended recipient of this invitation",
-      );
+      return jsonFail({ code: "FO000099", message: "You are not the intended re...", status: ApiCode.FORBIDDEN },  );
     }
 
     if (!authentication) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Missing FIDO2 signature");
+      return jsonFail(API_ERRORS.VL_MISSING_FIDO2);
     }
 
     // Info: (20260326 - Tzuhan) Fetch invitee's current challenge
     const inviteeUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!inviteeUser || !inviteeUser.currentChallenge) {
-      return jsonFail(
-        ApiCode.UNAUTHORIZED,
-        "Missing WebAuthn challenge. Please retry.",
-      );
+      return jsonFail({ code: "UN000099", message: "Missing WebAuthn challenge....", status: ApiCode.UNAUTHORIZED },  );
     }
 
     // Info: (20260326 - Tzuhan) Verify FIDO2 signature
@@ -112,6 +104,6 @@ export async function POST(
       "[API] /team/invitations/[invite_id]/accept POST error:",
       error,
     );
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

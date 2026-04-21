@@ -1,6 +1,6 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
@@ -22,24 +22,24 @@ export async function POST(
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const { account_book_id: accountBookId, esg_id: esgId } = await params;
 
     const restorer = await webAuthnRepo.findUserByAddress(sessionUser.address);
     if (!restorer) {
-      return jsonFail(ApiCode.NOT_FOUND, "Restorer not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook) {
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     const existingEsg = await esgRepo.getEsgRecordById(esgId);
     if (!existingEsg) {
-      return jsonFail(ApiCode.NOT_FOUND, "ESG record not found");
+      return jsonFail(API_ERRORS.NF_ESG);
     }
 
     await esgRepo.updateEsgRecord(esgId, { deletedAt: null });
@@ -68,6 +68,6 @@ export async function POST(
     return jsonOk({ success: true });
   } catch (error) {
     console.error("Restore ESG record failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Restore ESG record failed");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }

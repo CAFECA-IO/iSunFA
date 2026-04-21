@@ -1,7 +1,7 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { Prisma } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { journalRepo } from "@/repositories/journal.repo";
@@ -31,7 +31,7 @@ export async function GET(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260309 - Julian) 取得帳簿
@@ -40,21 +40,21 @@ export async function GET(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260309 - Julian) 取得日記帳
     const { journal_id: journalId } = await params;
     if (!journalId) {
       console.error("Missing journalId");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "JournalId is required");
+      return jsonFail(API_ERRORS.VL_INVALID_ID);
     }
 
     const journalDbRecord = await journalRepo.getJournalById(journalId);
 
     if (!journalDbRecord) {
       console.error("Journal not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Journal not found");
+      return jsonFail(API_ERRORS.NF_JOURNAL);
     }
 
     const journal = {
@@ -73,7 +73,7 @@ export async function GET(
     return jsonOk(journal);
   } catch (error) {
     console.error("Get journal failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get journal failed");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }
 
@@ -94,7 +94,7 @@ export async function PUT(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260306 - Julian) 驗證更新人員
@@ -102,7 +102,7 @@ export async function PUT(
 
     if (!updater) {
       console.error("Updater not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Updater not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260309 - Julian) 取得帳簿
@@ -111,14 +111,14 @@ export async function PUT(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260309 - Julian) 取得日記帳
     const { journal_id: journalId } = await params;
     if (!journalId) {
       console.error("Missing journalId");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "JournalId is required");
+      return jsonFail(API_ERRORS.VL_INVALID_ID);
     }
 
     const body = await request.json();
@@ -133,7 +133,7 @@ export async function PUT(
 
     if (!updatedJournal) {
       console.error("Journal update failed");
-      return jsonFail(ApiCode.NOT_FOUND, "Journal update failed");
+      return jsonFail(API_ERRORS.IS_DB_FAILED);
     }
 
     // Info: (20260306 - Julian) 新增 log
@@ -221,7 +221,7 @@ export async function PUT(
     return jsonOk(formattedJournal);
   } catch (error) {
     console.error("Put journal failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Put journal failed");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }
 
@@ -242,7 +242,7 @@ export async function DELETE(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260306 - Julian) 驗證刪除人員
@@ -250,13 +250,13 @@ export async function DELETE(
 
     if (!deleter) {
       console.error("Deleter not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Deleter not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const { journal_id: journalId } = await params;
     if (!journalId) {
       console.error("Missing journalId");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "JournalId is required");
+      return jsonFail(API_ERRORS.VL_INVALID_ID);
     }
 
     // Info: (20260309 - Julian) 取得帳簿
@@ -265,12 +265,12 @@ export async function DELETE(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     const existingJournal = await journalRepo.getJournalById(journalId);
     if (!existingJournal) {
-      return jsonFail(ApiCode.NOT_FOUND, "Journal not found");
+      return jsonFail(API_ERRORS.NF_JOURNAL);
     }
 
     // Info: (20260404 - Luphia) 將 Journal 標記刪除
@@ -279,7 +279,7 @@ export async function DELETE(
     });
 
     if (!deletedJournal) {
-      return jsonFail(ApiCode.NOT_FOUND, "Journal record not found to delete");
+      return jsonFail(API_ERRORS.NF_JOURNAL);
     }
 
     // Info: (20260404 - Luphia) 同步刪除關聯 Voucher 和 EsgRecord
@@ -309,6 +309,6 @@ export async function DELETE(
     return jsonOk({ success: true, journal: deletedJournal });
   } catch (error) {
     console.error("Delete journal failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Delete journal failed");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }

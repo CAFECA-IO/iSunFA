@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -14,7 +15,7 @@ export async function PATCH(
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const { team_id: teamId } = await params;
@@ -22,21 +23,18 @@ export async function PATCH(
     const { name } = body;
 
     if (!name || typeof name !== "string") {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid team name");
+      return jsonFail({ code: "VA000099", message: "Invalid team name", status: ApiCode.VALIDATION_ERROR });
     }
 
     const member = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
-      return jsonFail(
-        ApiCode.FORBIDDEN,
-        "Permission denied. Only OWNER or ADMIN can edit the team name.",
-      );
+      return jsonFail({ code: "FO000099", message: "Permission denied. Only OWN...", status: ApiCode.FORBIDDEN },  );
     }
 
     const updatedTeam = await teamRepo.updateTeam(teamId, { name });
     return jsonOk(updatedTeam);
   } catch (error) {
     console.error("[API] /team/[team_id] PATCH error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { talkRepo } from "@/repositories/talk.repo";
@@ -24,7 +25,7 @@ export async function GET(
 
     if (!thread) {
       console.error(`Thread ${threadId} not found`);
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Thread not found");
+      return jsonFail({ code: "IN000099", message: "Thread not found", status: ApiCode.INTERNAL_SERVER_ERROR });
     }
 
     // Info: (20260212 - Julian) 取得登入的使用者
@@ -101,6 +102,6 @@ export async function GET(
     return jsonOk(response);
   } catch (error) {
     console.error(`[API] /threads/${(await params).thread_id} error:`, error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

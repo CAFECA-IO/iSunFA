@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { fileRepo } from "@/repositories/file.repo";
@@ -16,10 +17,7 @@ export async function GET(
     const STORAGE_DOMAIN = process.env.STORAGE_DOMAIN;
 
     if (!STORAGE_DOMAIN) {
-      return jsonFail(
-        ApiCode.INTERNAL_SERVER_ERROR,
-        "STORAGE_DOMAIN is not defined",
-      );
+      return jsonFail({ code: "IN000099", message: "STORAGE_DOMAIN is not defined", status: ApiCode.INTERNAL_SERVER_ERROR },  );
     }
 
     const targetUrl = `${STORAGE_DOMAIN}/api/v1/file/${fileId}`;
@@ -58,7 +56,7 @@ export async function GET(
         headers: response.headers,
       });
     } else {
-      let errorMessage = "Storage Error";
+      let errorMessage = "Unknown error";
       let code = ApiCode.INTERNAL_SERVER_ERROR;
       try {
         const responseBody = await response.text();
@@ -70,12 +68,11 @@ export async function GET(
       } catch (e) {
         console.error(`[API] Proxy /file/:file_id error:`, e);
       }
-
-      return jsonFail(code, errorMessage, { status: response.status });
+      return jsonFail({ code: "IS000099", message: String(errorMessage).slice(0, 30), status: code }, { status: response.status });
     }
   } catch (error) {
     console.error(`[API] Proxy /file/:file_id error:`, error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }
 
@@ -96,7 +93,7 @@ export async function DELETE(
 
     if (!file) {
       console.error(`File ${fileId} not found`);
-      return jsonFail(ApiCode.NOT_FOUND, "File not found");
+      return jsonFail(API_ERRORS.NF_FILE);
     }
 
     // Info: (20260213 - Julian) 從資料庫移除記錄
@@ -110,6 +107,6 @@ export async function DELETE(
     });
   } catch (error) {
     console.error(`[API] /file/delete error:`, error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }
