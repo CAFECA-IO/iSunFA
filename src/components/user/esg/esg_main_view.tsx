@@ -185,11 +185,10 @@ export default function EsgMainView() {
             key={tab}
             title={t(`esg_main.tab.${tab.toLowerCase()}`)}
             type="button"
-            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${
-              activeTab === tab
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-all duration-200 lg:px-4 lg:py-2.5 lg:text-sm ${activeTab === tab
                 ? "bg-white text-orange-600 shadow-sm"
                 : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
-            }`}
+              }`}
             onClick={() => handleTabChange(tab)}
             disabled={tab === activeTab} // Info: (20260420 - Julian) 避免重複 call API
           >
@@ -201,7 +200,7 @@ export default function EsgMainView() {
       {/* ToDo: (20260421 - Julian) Demo 結束後移除 */}
       {activeTab === EsgTab.EMISSION_SOURCES && (
         <p className="text-xs font-medium rounded-lg p-4 bg-orange-100 text-orange-500 lg:text-sm">
-          ⚠️ 注意：本頁還在開發中，目前顯示均為示範資料，並非真實資訊
+          ⚠️ 注意：本頁顯示均為示範資料，僅供參考展示
         </p>
       )}
 

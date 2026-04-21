@@ -1,4 +1,7 @@
 export const emissionSources = {
+  summary: {
+    scope_distribution: "스코프별 분포",
+  },
   toolbar: {
     search: "배출원 검색",
     placeholder: "ID 또는 이름으로 검색...",

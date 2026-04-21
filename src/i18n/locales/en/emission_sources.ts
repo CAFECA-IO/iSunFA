@@ -1,4 +1,7 @@
 export const emissionSources = {
+  summary: {
+    scope_distribution: "Scope Distribution",
+  },
   toolbar: {
     search: "Search Emission Sources",
     placeholder: "Search by ID or Name...",

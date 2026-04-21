@@ -1,4 +1,7 @@
 export const emissionSources = {
+  summary: {
+    scope_distribution: "各范畴分布",
+  },
   toolbar: {
     search: "搜索排放源",
     placeholder: "搜索排放源 ID 或名称...",
