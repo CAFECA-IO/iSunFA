@@ -607,7 +607,6 @@ export default function HistorySection() {
                             <button
                               type="button"
                               className="text-blue-600 hover:text-blue-900 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors group"
-                              disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
                               onClick={() => handleShareClick(item.reportId, item.category, item.isExternal)}
                               title={t('common.share')}
                             >
@@ -725,7 +724,6 @@ export default function HistorySection() {
                           <button
                             type="button"
                             className="text-blue-600 font-medium disabled:opacity-50 flex items-center gap-1 transition-colors group"
-                            disabled={!['completed', 'done', 'success'].includes(item.status.toLowerCase())}
                             onClick={() => handleShareClick(item.reportId, item.category, item.isExternal)}
                             title={t('common.share')}
                           >
