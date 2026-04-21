@@ -48,7 +48,7 @@ export async function GET(
     return jsonOk(result);
   } catch (error) {
     console.error("Error fetching esg emission sources:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to fetch esg emissio...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({ code: "IN000099", message: "Failed to fetch esg emission sources", status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }
 
@@ -67,7 +67,7 @@ export async function POST(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得帳簿
@@ -76,7 +76,7 @@ export async function POST(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260421 - Julian) 解析 Request Body
@@ -91,9 +91,6 @@ export async function POST(
     return jsonOk(result);
   } catch (error) {
     console.error("Error creating esg emission source:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to create esg emission source",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to create esg emission source", status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }
