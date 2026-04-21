@@ -2,8 +2,8 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { accountBookRepo } from "@/repositories/account_book.repo";
+import { esgRepo } from "@/repositories/esg.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { IEsgEmissionSourcesSummary, mockSummaryData } from "@/interfaces/emission_source";
 
 /**
  * Info: (20260420 - Julian) 取得排放源之摘要
@@ -32,8 +32,8 @@ export async function GET(
       return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
     }
 
-    // TODO: (20260420 - Julian) get data from esgRepo
-    const result: IEsgEmissionSourcesSummary = mockSummaryData
+    // Info: (20260421 - Julian) 取得排放源之摘要
+    const result = await esgRepo.getEsgEmissionSourcesSummary(accountBookId);
 
     return jsonOk(result);
   } catch (error) {

@@ -15,12 +15,13 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { EsgScope } from "@/interfaces/esg";
 import { IEsgEmissionSourcesSummary } from "@/interfaces/emission_source";
+import { useTranslation } from "@/i18n/i18n_context";
 
 export default function EmissionSourcesSummary() {
+  const { t } = useTranslation();
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
 
-  // ToDo: (20260420 - Julian) 串接 API 取得 summary data
   const [summaryData, setSummaryData] =
     useState<IEsgEmissionSourcesSummary | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -89,7 +90,7 @@ export default function EmissionSourcesSummary() {
           />
         </div>
         <p className="text-center text-[10px] font-bold text-gray-400">
-          {scope.scope}: {scope.count}
+          {t(`emission_sources.summary.${scope.scope}`)}: {scope.count}
         </p>
       </div>
     );
