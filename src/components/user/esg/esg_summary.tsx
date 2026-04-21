@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Cloud, BarChart3, Target, TrendingUp, Loader2 } from "lucide-react";
+import { Cloud, BarChart3, Target, TrendingUp, Loader2,ChartPie } from "lucide-react";
 import { IEsgDashboardSummary, EsgScope } from "@/interfaces/esg";
 import { useParams, usePathname } from "next/navigation";
 import { request } from "@/lib/utils/request";
@@ -85,47 +85,23 @@ export default function EsgSummary({
     );
   }
 
-  const renderScopeProgress = (scope: EsgScope) => {
-    const title =
-      scope === EsgScope.SCOPE_1
-        ? "Scope 1"
-        : scope === EsgScope.SCOPE_2
-          ? "Scope 2"
-          : "Scope 3";
-    const color =
-      scope === EsgScope.SCOPE_1
-        ? "bg-blue-500"
-        : scope === EsgScope.SCOPE_2
-          ? "bg-amber-400"
-          : "bg-orange-500";
-    const data =
-      scope === EsgScope.SCOPE_1
-        ? summaryData.scopeDistribution.scope1
-        : scope === EsgScope.SCOPE_2
-          ? summaryData.scopeDistribution.scope2
-          : summaryData.scopeDistribution.scope3;
-
-    const value = data.value;
-    const unit = data.unit;
-    const percentage = data.percentage;
-
+  // (20260420 - Julian) 繪製範疇分佈圖
+  const scopeChart = summaryData.scopeDistribution.map(({ scope, value, percentage }) => {
+    const color= scope === EsgScope.SCOPE_1 ? "bg-pink-200" : scope === EsgScope.SCOPE_2 ? "bg-orange-200" : "bg-indigo-200";
     return (
-      <div>
-        <div className="mb-1.5 flex justify-between text-[11px] font-bold">
-          <span className="text-slate-600">{title}</span>
-          <span className="text-slate-800">
-            {value} {unit}
-          </span>
-        </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-          <div
-            className={`h-full rounded-full ${color}`}
-            style={{ width: `${percentage}%` }}
-          ></div>
-        </div>
+    <div key={scope} className="flex flex-col gap-1">
+      <div className="flex h-16 flex-col justify-end">
+        <div
+          className={`w-full rounded-t-sm ${color}`}
+          style={{ height: `${percentage}%` }}
+        />
       </div>
-    );
-  };
+      <p className="text-center text-[10px] font-bold text-gray-400">
+        {t(`esg_summary.${scope.toLowerCase()}`)}: {value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+      </p>
+    </div>
+  )
+  });
 
   return (
     <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
@@ -190,14 +166,17 @@ export default function EsgSummary({
       </div>
 
       {/* Info: (20260312 - Julian) 各範疇分布 */}
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
-        <div className="mb-5 text-center text-xs font-bold text-slate-500 lg:text-sm">
-          {t("esg_summary.scope_distribution")}
+      <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
+        <div className="relative flex items-center justify-between gap-2">
+          <p className="text-xs font-bold text-slate-500 lg:text-sm">
+            {t("emission_sources.summary.scope_distribution")}
+          </p>
+          <div className="absolute -top-2 -right-2 rounded-xl p-1.5 text-gray-400">
+            <ChartPie size={20} />
+          </div>
         </div>
-        <div className="flex flex-col gap-2">
-          {renderScopeProgress(EsgScope.SCOPE_1)}
-          {renderScopeProgress(EsgScope.SCOPE_2)}
-          {renderScopeProgress(EsgScope.SCOPE_3)}
+        <div className="mt-4 grid grid-cols-3 items-end gap-1">
+          {scopeChart}
         </div>
       </div>
 

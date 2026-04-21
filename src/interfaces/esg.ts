@@ -27,22 +27,16 @@ export interface IEsgEmissionIntensity {
   industryAverage: number;
 }
 
-export interface IEsgScopeData {
+export interface IEsgScopeDistributionData {
+  scope: EsgScope;
   value: number;
-  unit: string;
   percentage: number;
-}
-
-export interface IEsgScopeDistribution {
-  scope1: IEsgScopeData;
-  scope2: IEsgScopeData;
-  scope3: IEsgScopeData;
 }
 
 export interface IEsgDashboardSummary {
   totalEmissions: IEsgTotalEmissions;
   emissionIntensity: IEsgEmissionIntensity;
-  scopeDistribution: IEsgScopeDistribution;
+  scopeDistribution: IEsgScopeDistributionData[];
   goalProgress: {
     percentage: number;
   };
