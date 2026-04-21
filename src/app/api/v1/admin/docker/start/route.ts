@@ -9,9 +9,9 @@ export async function POST() {
     if (res.success) {
       return jsonOk({ output: res.output }, "Docker containers started successfully");
     } else {
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, `Failed to start Docker containers: ${res.output}`);
+      return jsonFail({ code: "IS000099", message: String(`Failed to start Docker containers: ${res.output}`).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
     }
   } catch (err: unknown) {
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, `Docker start error: ${err instanceof Error ? err.message : String(err)}`);
+    return jsonFail({ code: "IS000099", message: String(`Docker start error: ${err instanceof Error ? err.message : String(err)}`).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }

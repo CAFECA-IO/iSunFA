@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -10,10 +11,7 @@ export async function POST(request: NextRequest) {
 
     if (!apiKey) {
       console.error("Missing GEMINI_API_KEY");
-      return jsonFail(
-        ApiCode.INTERNAL_SERVER_ERROR,
-        "Server configuration error",
-      );
+      return jsonFail({ code: "IN000099", message: "Server configuration error", status: ApiCode.INTERNAL_SERVER_ERROR },  );
     }
 
     const chatService = new ChatService(apiKey);
@@ -27,6 +25,6 @@ export async function POST(request: NextRequest) {
     return jsonOk({ reply });
   } catch (error) {
     console.error("[API] /chat error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

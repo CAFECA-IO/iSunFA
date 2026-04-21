@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IOenOrderData } from "@/interfaces/payment";
@@ -25,28 +26,25 @@ export async function POST(
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const paymentMethodId = (await params).payment_method_id;
     if (!paymentMethodId) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "paymentMethodId is required");
+      return jsonFail(API_ERRORS.VL_INVALID_ID);
     }
 
     // Info: (20260305 - Tzuhan) Expect authentication (FIDO payload) from client
     const { authentication, orderId } = await request.json();
 
     if (!orderId || !authentication) {
-      return jsonFail(
-        ApiCode.VALIDATION_ERROR,
-        "Missing orderId or FIDO authentication payload",
-      );
+      return jsonFail({ code: "VA000099", message: "Missing orderId or FIDO aut...", status: ApiCode.VALIDATION_ERROR },  );
     }
 
     const dbUser = await webAuthnRepo.getUserWithPaymentMethods(user.id);
 
     if (!dbUser) {
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const oenPaymentMethod = dbUser.paymentMethods.find(
@@ -55,10 +53,7 @@ export async function POST(
     const providerToken = oenPaymentMethod?.token;
 
     if (!providerToken) {
-      return jsonFail(
-        ApiCode.NOT_FOUND,
-        "Payment method not found or missing token",
-      );
+      return jsonFail({ code: "NO000099", message: "Payment method not found or...", status: ApiCode.NOT_FOUND },  );
     }
 
     const order = await paymentRepo.getOrderById(orderId);
@@ -68,7 +63,7 @@ export async function POST(
       order.userId !== user.id ||
       order.status !== ORDER_STATUS.PENDING
     ) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid or expired order");
+      return jsonFail({ code: "VA000099", message: "Invalid or expired order", status: ApiCode.VALIDATION_ERROR });
     }
 
     const orderData = order.data as IOenOrderData;
@@ -83,10 +78,7 @@ export async function POST(
       );
     } catch (error) {
       console.error("FIDO Verification failed during checkout:", error);
-      return jsonFail(
-        ApiCode.UNAUTHORIZED,
-        "FIDO2 Signature verification failed",
-      );
+      return jsonFail({ code: "UN000099", message: "FIDO2 Signature verificatio...", status: ApiCode.UNAUTHORIZED },  );
     }
 
     // Info: (20260305 - Tzuhan) Create an initial transaction record, marking it PENDING, and save FIDO payload
@@ -134,10 +126,7 @@ export async function POST(
         oenData,
         authentication,
       );
-      return jsonFail(
-        ApiCode.INTERNAL_SERVER_ERROR,
-        "Payment failed via OEN",
-        oenData,
+      return jsonFail({ code: "IN000099", message: "Payment failed via OEN", status: ApiCode.INTERNAL_SERVER_ERROR }, oenData,
       );
     }
 
@@ -168,10 +157,7 @@ export async function POST(
         oenData,
         mintResult.message,
       );
-      return jsonFail(
-        ApiCode.INTERNAL_SERVER_ERROR,
-        "Payment succeeded but minting failed: " + mintResult.message,
-      );
+      return jsonFail({ code: "IS000099", message: String("Payment succeeded but minting failed: " + mintResult.message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
     }
 
     // Info: (20260306 - Tzuhan) 全部成功
@@ -188,6 +174,6 @@ export async function POST(
     });
   } catch (error) {
     console.error("Internal Server Error in Checkout:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

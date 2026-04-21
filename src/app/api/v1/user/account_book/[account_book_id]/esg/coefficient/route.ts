@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -11,6 +12,7 @@ import {
   ICoefficientInput,
 } from "@/interfaces/coefficient";
 import { Prisma } from "@/generated/client";
+import { TRUE_COEFFICIENT_DATA_PART_1, TRUE_COEFFICIENT_DATA_PART_2, TRUE_COEFFICIENT_DATA_PART_3, TRUE_COEFFICIENT_DATA_PART_4, TRUE_COEFFICIENT_DATA_PART_5, TRUE_COEFFICIENT_DATA_DEFRA_PART_1, TRUE_COEFFICIENT_DATA_DEFRA_PART_2, TRUE_COEFFICIENT_DATA_DEFRA_PART_3, TRUE_COEFFICIENT_DATA_DEFRA_PART_4, TRUE_COEFFICIENT_DATA_DEFRA_PART_5, TRUE_COEFFICIENT_DATA_DEFRA_PART_6, TRUE_COEFFICIENT_DATA_TAIWAN } from "@/constants/true_esg_coefficients";
 
 /**
  * Info: (20260413 - Julian) 新增自訂係數
@@ -27,7 +29,7 @@ export async function POST(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得建立者
@@ -35,7 +37,7 @@ export async function POST(
 
     if (!creator) {
       console.error("Creator not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Creator not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得帳簿
@@ -44,7 +46,7 @@ export async function POST(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260413 - Julian) 新增自訂公式
@@ -54,7 +56,7 @@ export async function POST(
     // Info: (20260413 - Julian) 驗證 coefficient 參數
     if (!input || !input.name) {
       console.error("Missing coefficient or coefficient name");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Coefficient is required");
+      return jsonFail({ code: "VA000099", message: "Coefficient is required", status: ApiCode.VALIDATION_ERROR });
     }
 
     // Info: (20260413 - Julian) 建立自訂公式
@@ -70,10 +72,7 @@ export async function POST(
     return jsonOk({ coefficientId: newCoefficient.id });
   } catch (error) {
     console.error("Error creating esg coefficient:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to create esg coefficient",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to create esg coeffi...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }
 
@@ -92,7 +91,7 @@ export async function GET(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260312 - Julian) 取得帳簿
@@ -101,7 +100,7 @@ export async function GET(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260312 - Julian) 取得 ESG 紀錄
@@ -147,39 +146,72 @@ export async function GET(
       andConditions.push({ unit: unitParam });
     }
 
-    const [coefficients, totalCount] = await Promise.all([
-      esgRepo.getEsgCoefficients({
-        where: { AND: andConditions },
-        // Info: (20260413 - Julian) 分頁邏輯
-        ...(page && pageSize
-          ? { skip: (page - 1) * pageSize, take: pageSize }
-          : {}),
-        // Info: (20260413 - Julian) 排序邏輯：將標準係數排在前面，並依據更新時間倒序排列
-        orderBy: [{ accountBookId: "desc" }, { updatedAt: "desc" }],
-      }),
-      esgRepo.countEsgCoefficients({ AND: andConditions }),
-    ]);
+    // const [coefficients, totalCount] = await Promise.all([
+    //   esgRepo.getEsgCoefficients({
+    //     where: { AND: andConditions },
+    //     // Info: (20260413 - Julian) 分頁邏輯
+    //     ...(page && pageSize
+    //       ? { skip: (page - 1) * pageSize, take: pageSize }
+    //       : {}),
+    //     // Info: (20260413 - Julian) 排序邏輯：將標準係數排在前面，並依據更新時間倒序排列
+    //     orderBy: [{ accountBookId: "desc" }, { updatedAt: "desc" }],
+    //   }),
+    //   esgRepo.countEsgCoefficients({ AND: andConditions }),
+    // ]);
+    //
+    // const result: ICoefficient[] = coefficients.map((coefficient) => ({
+    //   id: coefficient.id,
+    //   name: coefficient.name,
+    //   description: coefficient.description,
+    //   emissionFactor: Number(coefficient.emissionFactor),
+    //   unit: coefficient.unit,
+    //   source: coefficient.source,
+    //   category: !!coefficient.accountBookId
+    //     ? CoefficientCategory.CUSTOM
+    //     : CoefficientCategory.STANDARD,
+    //   createdAt: new Date(coefficient.createdAt).getTime() / 1000,
+    //   updatedAt: new Date(coefficient.updatedAt).getTime() / 1000,
+    // }));
 
-    const result: ICoefficient[] = coefficients.map((coefficient) => ({
-      id: coefficient.id,
-      name: coefficient.name,
-      description: coefficient.description,
-      emissionFactor: Number(coefficient.emissionFactor),
-      unit: coefficient.unit,
-      source: coefficient.source,
-      category: !!coefficient.accountBookId
-        ? CoefficientCategory.CUSTOM
-        : CoefficientCategory.STANDARD,
-      createdAt: new Date(coefficient.createdAt).getTime() / 1000,
-      updatedAt: new Date(coefficient.updatedAt).getTime() / 1000,
+    let filteredStaticData = [...TRUE_COEFFICIENT_DATA_PART_1, ...TRUE_COEFFICIENT_DATA_PART_2, ...TRUE_COEFFICIENT_DATA_PART_3, ...TRUE_COEFFICIENT_DATA_PART_4, ...TRUE_COEFFICIENT_DATA_PART_5, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_1, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_2, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_3, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_4, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_5, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_6, ...TRUE_COEFFICIENT_DATA_TAIWAN];
+
+    if (tabParam === CoefficientCategory.CUSTOM) {
+      filteredStaticData = [];
+    }
+
+    if (searchParam) {
+      const lowerSearch = searchParam.toLowerCase();
+      filteredStaticData = filteredStaticData.filter(
+        c => c.name.toLowerCase().includes(lowerSearch) || c.description.toLowerCase().includes(lowerSearch)
+      );
+    }
+
+    if (unitParam) {
+      filteredStaticData = filteredStaticData.filter(c => c.unit === unitParam);
+    }
+
+    const totalCount = filteredStaticData.length;
+    let paginatedData = filteredStaticData;
+
+    if (page && pageSize) {
+      paginatedData = paginatedData.slice((page - 1) * pageSize, page * pageSize);
+    }
+
+    const result: ICoefficient[] = paginatedData.map(c => ({
+      id: c.id,
+      name: c.name,
+      description: c.description,
+      emissionFactor: Number(c.emissionFactor),
+      unit: c.unit,
+      source: c.source,
+      category: CoefficientCategory.STANDARD,
+      createdAt: Number(c.createdAt),
+      updatedAt: Number(c.updatedAt),
     }));
 
     return jsonOk({ items: result, total: totalCount });
   } catch (error) {
     console.error("Error fetching esg coefficients:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to fetch esg coefficients",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to fetch esg coeffic...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }

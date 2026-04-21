@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Role } from "@/generated/enums";
@@ -15,18 +16,18 @@ export async function GET(
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user || (user.role !== Role.SUPER_ADMIN && user.role !== Role.ADMIN)) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Unauthorized");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const userId = (await params).user_id;
     const targetUser = await webAuthnRepo.findUserById(userId);
     if (!targetUser) {
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const info = await getMemberInfo(targetUser.address);
     if (!info.success || !info.data) {
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Failed to get membership info");
+      return jsonFail(API_ERRORS.IS_DB_FAILED);
     }
 
     const { registrationTime, totalCheckInRewards, totalPurchasedPoints } = info.data;
@@ -51,6 +52,6 @@ export async function GET(
       modeZh: modeZh,
     });
   } catch (error) {
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, (error as Error).message);
+    return jsonFail({ code: "IS000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }

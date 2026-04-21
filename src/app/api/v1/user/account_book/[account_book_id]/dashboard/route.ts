@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -86,7 +87,7 @@ export async function GET(
   try {
     const authHeader = req.headers.get("Authorization");
     const sessionUser = await getIdentityFromDeWT(authHeader);
-    if (!sessionUser) return jsonFail(ApiCode.UNAUTHORIZED, "Unauthorized");
+    if (!sessionUser) return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
 
     const { account_book_id: accountBookId } = await params;
     const searchParams = req.nextUrl.searchParams;
@@ -98,13 +99,13 @@ export async function GET(
 
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook)
-      return jsonFail(ApiCode.NOT_FOUND, "Account book not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
 
     const teamMember = await teamRepo.getTeamMember(
       sessionUser.id,
       accountBook.teamId,
     );
-    if (!teamMember) return jsonFail(ApiCode.FORBIDDEN, "No permission");
+    if (!teamMember) return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
 
     // Info: (20260321 - Luphia) Configuration
     const { start, end, bucketMs, count, labelFormat } = getBucketConfig(
@@ -441,9 +442,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("API Error:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to generate dashboard data",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to generate dashboar...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }

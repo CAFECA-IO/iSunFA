@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { ApiCode } from "@/lib/utils/status";
 import { name, version } from "@/package";
+import { IErrorDef } from "@/lib/utils/error_dictionary";
 
 export const POWERBY = `${name} v${version}`;
 
 export interface IApiResponse<T> {
   powerby: string;
   success: boolean;
-  code: ApiCode;
+  code: ApiCode | string;
+  errorCode?: string;
   message: string;
   payload: T | null;
 }
@@ -29,20 +31,21 @@ export const ok = <T>(payload: T, message = "OK"): IApiResponse<T> => {
   };
 };
 
-export const fail = (code: ApiCode, message: string): IApiResponse<null> => ({
+export const fail = (def: IErrorDef): IApiResponse<null> => ({
   powerby: POWERBY,
   success: false,
-  code,
-  message,
+  code: def.status,
+  errorCode: def.code,
+  message: def.message,
   payload: null,
 });
 
 export const jsonOk = <T>(payload: T, message = "OK", init?: ResponseInit) =>
   NextResponse.json<IApiResponse<T>>(ok(payload, message), init);
 
-export const jsonFail = (code: ApiCode, message: string, init?: ResponseInit) =>
-  NextResponse.json<IApiResponse<null>>(fail(code, message), {
-    status: httpStatusOf(code),
+export const jsonFail = (def: IErrorDef, init?: ResponseInit) =>
+  NextResponse.json<IApiResponse<null>>(fail(def), {
+    status: httpStatusOf(def.status),
     ...init,
   });
 

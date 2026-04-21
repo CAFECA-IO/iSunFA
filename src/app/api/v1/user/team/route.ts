@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -10,14 +11,14 @@ export async function GET(request: NextRequest) {
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const teams = await teamRepo.listMemberTeam(sessionUser.id);
     return jsonOk(teams);
   } catch (error) {
     console.error("[API] /team GET error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }
 
@@ -27,12 +28,12 @@ export async function POST(request: NextRequest) {
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const body = await request.json();
     if (!body.name || typeof body.name !== "string" || !body.name.trim()) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Team name is required");
+      return jsonFail({ code: "VA000099", message: "Team name is required", status: ApiCode.VALIDATION_ERROR });
     }
 
     const team = await teamRepo.createTeam({ name: body.name.trim() });
@@ -45,6 +46,6 @@ export async function POST(request: NextRequest) {
     return jsonOk(team);
   } catch (error) {
     console.error("[API] /team POST error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

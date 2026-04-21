@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/client";
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or missing device token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const paymentMethods = await paymentRepo.getPaymentMethodsByUserId(
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("[API] /user/payment_method GET error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }
 
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const order = await paymentRepo.createOrder({
@@ -101,13 +102,10 @@ export async function POST(request: NextRequest) {
         redirectUrl: `${SUBSCRIBE_URL}/checkout/subscription/create/${paymentId}`,
       });
     } else {
-      return jsonFail(
-        ApiCode.INTERNAL_SERVER_ERROR,
-        "Failed to get OEN checkout token",
-        oenData,
+      return jsonFail({ code: "IN000099", message: "Failed to get OEN checkout ...", status: ApiCode.INTERNAL_SERVER_ERROR }, oenData,
       );
     }
   } catch {
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

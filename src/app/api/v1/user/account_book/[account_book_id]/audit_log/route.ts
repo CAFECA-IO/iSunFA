@@ -1,6 +1,6 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -22,7 +22,7 @@ export async function GET(
 
     if (!sessionUser) {
       console.error("User not found");
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     // Info: (20260309 - Julian) 取得帳簿
@@ -31,7 +31,7 @@ export async function GET(
 
     if (!accountBook) {
       console.error("Accountbook not found");
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     const { searchParams } = new URL(request.url);
@@ -80,6 +80,6 @@ export async function GET(
     return jsonOk({ logs });
   } catch (error) {
     console.error("Get audit logs failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get audit logs failed");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }

@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -29,7 +30,7 @@ export async function POST(
 
     // Info: (20260413 - Luphia) 1. Validate if the action exists in our service
     if (!(action in SetupService)) {
-      return jsonFail(ApiCode.NOT_FOUND, `Action '${action}' not found`);
+      return jsonFail(API_ERRORS.NF_ACTION);
     }
 
     /**
@@ -46,10 +47,7 @@ export async function POST(
     ) {
       const isComplete = await validateEnv();
       if (isComplete) {
-        return jsonFail(
-          ApiCode.FORBIDDEN,
-          "System initialization is already completed. Further setup actions are disabled.",
-        );
+        return jsonFail({ code: "FO000099", message: "System initialized already", status: ApiCode.FORBIDDEN });
       }
     }
 
@@ -67,7 +65,7 @@ export async function POST(
         }
       }
     } catch {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid JSON body payload");
+      return jsonFail(API_ERRORS.VL_INVALID_JSON);
     }
 
     // Info: (20260413 - Luphia) 4. Dispatch the call dynamically
@@ -75,10 +73,7 @@ export async function POST(
       SetupService as Record<string, (...args: unknown[]) => unknown>
     )[action];
     if (typeof fn !== "function") {
-      return jsonFail(
-        ApiCode.VALIDATION_ERROR,
-        `Target '${action}' is not executable`,
-      );
+      return jsonFail({ code: "VL000099", message: String(`Target '${action}' is not executable`).slice(0, 30), status: ApiCode.VALIDATION_ERROR });
     }
 
     const result = await fn(...args);
@@ -92,6 +87,6 @@ export async function POST(
     console.error(`[API] Setup Action Error:`, error);
     const msg =
       error instanceof Error ? error.message : "Unknown error occurred";
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, msg);
+    return jsonFail({ code: "IS000099", message: String(msg).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }

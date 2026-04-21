@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -20,7 +21,7 @@ export async function GET(
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Unauthorized");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     // Info: (20260316 - Julian) 取得帳簿
@@ -31,10 +32,7 @@ export async function GET(
     );
 
     if (!accountBook) {
-      return jsonFail(
-        ApiCode.NOT_FOUND,
-        "Accountbook not found or no permission",
-      );
+      return jsonFail({ code: "NO000099", message: "Accountbook not found or no...", status: ApiCode.NOT_FOUND },  );
     }
 
     const {
@@ -55,9 +53,6 @@ export async function GET(
     return jsonOk(dashboardSummary);
   } catch (error) {
     console.error("Error fetching Voucher summary:", error);
-    return jsonFail(
-      ApiCode.INTERNAL_SERVER_ERROR,
-      "Failed to fetch Voucher summary",
-    );
+    return jsonFail({ code: "IN000099", message: "Failed to fetch Voucher sum...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
   }
 }

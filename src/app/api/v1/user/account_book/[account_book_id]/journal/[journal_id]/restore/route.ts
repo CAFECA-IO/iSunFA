@@ -1,6 +1,6 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
@@ -24,7 +24,7 @@ export async function POST(
     const sessionUser = await getIdentityFromDeWT(authHeader);
 
     if (!sessionUser) {
-      return jsonFail(ApiCode.NOT_FOUND, "User not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const { account_book_id: accountBookId, journal_id: journalId } =
@@ -32,18 +32,18 @@ export async function POST(
 
     const restorer = await webAuthnRepo.findUserByAddress(sessionUser.address);
     if (!restorer) {
-      return jsonFail(ApiCode.NOT_FOUND, "Restorer not found");
+      return jsonFail(API_ERRORS.NF_USER);
     }
 
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
     if (!accountBook) {
-      return jsonFail(ApiCode.NOT_FOUND, "Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
     // Info: (20260404 - Luphia) 取得現有 Journal
     const existingJournal = await journalRepo.getJournalById(journalId);
     if (!existingJournal) {
-      return jsonFail(ApiCode.NOT_FOUND, "Journal not found");
+      return jsonFail(API_ERRORS.NF_JOURNAL);
     }
 
     // Info: (20260404 - Luphia) 將 Journal 復原
@@ -75,6 +75,6 @@ export async function POST(
     return jsonOk({ success: true });
   } catch (error) {
     console.error("Restore journal failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Restore journal failed");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, ReactNode } from "react";
-import { Activity, Server, Database, HardDrive, LayoutDashboard, RefreshCw, Container, Play } from "lucide-react";
+import { Activity, Server, Database, HardDrive, LayoutDashboard, Container } from "lucide-react";
 import AdminPageHeader from "@/components/admin/common/admin_page_header";
 import ConfirmModal from "@/components/common/confirm_modal";
 import AdminContainerCard from "@/components/admin/dashboard/admin_container_card";
@@ -33,7 +33,6 @@ export default function AdminDashboardPage() {
   const [status, setStatus] = useState<ISystemStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [restartingContainer, setRestartingContainer] = useState<string | null>(null);
-  const [starting, setStarting] = useState(false);
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -148,29 +147,7 @@ export default function AdminDashboardPage() {
     );
   };
 
-  const executeStartAll = async () => {
-    setStarting(true);
-    try {
-      const res = await request<{ success: boolean; message: string }>("/api/v1/admin/docker/start", {
-        method: "POST"
-      });
-      if (res.success) {
-        showAlert("Success", res.message || t("admin_dashboard.start_success"), fetchStatus);
-      }
-    } catch (e: unknown) {
-      showAlert("Error", t("admin_dashboard.failed_start", { error: (e instanceof ApiError ? e.message : String(e)) }));
-    } finally {
-      setStarting(false);
-    }
-  };
 
-  const handleStartAll = () => {
-    showConfirm(
-      t("admin_dashboard.confirm_start_all_title"),
-      t("admin_dashboard.confirm_start_all_desc"),
-      () => executeStartAll()
-    );
-  };
 
   useEffect(() => {
     fetchStatus();
@@ -184,11 +161,11 @@ export default function AdminDashboardPage() {
     return Container;
   };
 
-  const mapContainerLogicName = (name: string) => {
-    if (name.includes('postgres')) return 'DATABASE';
-    if (name.includes('blockchain')) return 'BLOCKCHAIN';
-    if (name.includes('storage')) return 'STORAGE';
-    if (name.includes('gateway')) return 'GATEWAY';
+  const mapContainerServiceName = (name: string) => {
+    if (name.includes('database') || name.includes('postgres')) return 'postgres';
+    if (name.includes('blockchain')) return 'blockchain';
+    if (name.includes('storage')) return 'storage';
+    if (name.includes('gateway')) return 'gateway';
     return name;
   }
 
@@ -199,26 +176,6 @@ export default function AdminDashboardPage() {
           icon={LayoutDashboard}
           title={t("admin_dashboard.title")}
           subtitle={t("admin_dashboard.subtitle")}
-          rightNode={
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleStartAll}
-                disabled={starting || restartingContainer !== null}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-600 shadow-sm hover:bg-emerald-100 disabled:opacity-50 transition"
-              >
-                {starting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                {t("admin_dashboard.start_all")}
-              </button>
-              <button
-                onClick={fetchStatus}
-                disabled={loading || starting}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50 transition"
-              >
-                <Activity className={`w-4 h-4 ${loading ? "animate-ping text-orange-600" : "text-gray-400"}`} />
-                {t("admin_dashboard.refresh")}
-              </button>
-            </div>
-          }
         />
 
         {loading && !status ? (
@@ -232,7 +189,7 @@ export default function AdminDashboardPage() {
           <div className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-3 xl:grid-cols-4">
             {status.containers.map((container) => {
               const Icon = mapContainerIcon(container.name);
-              const isRestarting = restartingContainer === mapContainerLogicName(container.name);
+              const isRestarting = restartingContainer === mapContainerServiceName(container.name);
 
               return (
                 <AdminContainerCard
@@ -244,8 +201,8 @@ export default function AdminDashboardPage() {
                   uptime={container.uptime}
                   icon={Icon}
                   isRestarting={isRestarting}
-                  isGlobalRestarting={starting}
-                  onRestart={() => handleRestartDocker(mapContainerLogicName(container.name), container.name)}
+                  isGlobalRestarting={false}
+                  onRestart={() => handleRestartDocker(mapContainerServiceName(container.name), container.name)}
                   texts={{
                     statusLabel: t("admin_dashboard.status"),
                     uptimeLabel: t("admin_dashboard.uptime"),

@@ -76,7 +76,8 @@ export default function AnalysisView() {
   // Info: (20260419 - Luphia) 衍生變數 (Derived States)
   const currentCategories = activeTab === 'internal' ? INTERNAL_CATEGORIES : EXTERNAL_CATEGORIES;
   const isInternalCompanyAnalysis = activeTab === 'internal';
-  const isExternalCarbonAnalysis = activeTab === 'external' && ['CARBON_HEALTH_CHECK', 'NET_ZERO_EMISSIONS'].includes(category);
+  const isCarbonAnalysis = ['CARBON_HEALTH_CHECK', 'NET_ZERO_EMISSIONS'].includes(category);
+  const isExternalCarbonAnalysis = activeTab === 'external' && isCarbonAnalysis;
   const needsCompanyInput = isInternalCompanyAnalysis || isExternalCarbonAnalysis;
   const isDaily = periodType === ANALYSIS_PERIOD.DAILY;
   const country = activeTab === 'external' ? selectedCountry : undefined;
@@ -161,11 +162,11 @@ export default function AnalysisView() {
 
   // Info: (20260419 - Luphia) 防止碳盤查選擇日/週/月
   useEffect(() => {
-    if (needsCompanyInput && ([ANALYSIS_PERIOD.MONTHLY, ANALYSIS_PERIOD.WEEKLY, ANALYSIS_PERIOD.DAILY] as string[]).includes(periodType)) {
+    if (isCarbonAnalysis && ([ANALYSIS_PERIOD.MONTHLY, ANALYSIS_PERIOD.WEEKLY, ANALYSIS_PERIOD.DAILY] as string[]).includes(periodType)) {
       setPeriodType(ANALYSIS_PERIOD.YEARLY);
       setSelectedPeriodValue('');
     }
-  }, [needsCompanyInput, periodType]);
+  }, [isCarbonAnalysis, periodType]);
 
 
   // Info: (20260419 - Luphia) 處理函式 (Handlers)
@@ -177,7 +178,7 @@ export default function AnalysisView() {
   const handleAnalysisWorkflow = async () => {
     setUiState(prev => ({ ...prev, isLoading: true }));
 
-    const derivedKeyword = (activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends')
+    const derivedKeyword = (activeTab === 'external' && !isExternalCarbonAnalysis && category !== ANALYSIS_CATEGORY.MARKET_TRENDS)
       ? keyword : (needsCompanyInput ? internalCompanyName : undefined);
 
     const payloadItems = [
@@ -336,6 +337,52 @@ export default function AnalysisView() {
     );
   };
 
+  const renderTooltipContent = () => {
+    switch (category) {
+      case ANALYSIS_CATEGORY.INDUSTRY_DEVELOPMENT:
+        return (
+          <>
+            <p className="font-bold text-sm mb-2 text-orange-600">{t('analysis.tooltips.industry_development.title')}</p>
+            <p className="mb-3 text-gray-600">{t('analysis.tooltips.industry_development.desc')}</p>
+            <div className="space-y-4 text-gray-700">
+              <div><span className="font-semibold block text-orange-700">{t('analysis.tooltips.industry_development.sectors_title')}</span><span className="text-gray-600 whitespace-pre-line">{t('analysis.tooltips.industry_development.sectors_desc')}</span></div>
+              <div><span className="font-semibold block text-orange-700">{t('analysis.tooltips.industry_development.sub_title')}</span><span className="text-gray-600 whitespace-pre-line">{t('analysis.tooltips.industry_development.sub_desc')}</span></div>
+              <div><span className="font-semibold block text-orange-700">{t('analysis.tooltips.industry_development.trends_title')}</span><span className="text-gray-600 whitespace-pre-line">{t('analysis.tooltips.industry_development.trends_desc')}</span></div>
+            </div>
+          </>
+        );
+      case ANALYSIS_CATEGORY.IRSC:
+        return (
+          <>
+            <p className="font-bold text-sm mb-2 text-orange-600">{t('analysis.tooltips.smart_enterprise_rating.title')}</p>
+            <p className="mb-3 text-gray-600">{t('analysis.tooltips.smart_enterprise_rating.desc')}</p>
+            <div className="space-y-4 text-gray-700">
+              <div><span className="font-semibold block text-orange-700">{t('analysis.tooltips.smart_enterprise_rating.us_tickers_title')}</span><span className="text-gray-600 whitespace-pre-line">{t('analysis.tooltips.smart_enterprise_rating.us_tickers_desc')}</span></div>
+              <div><span className="font-semibold block text-orange-700">{t('analysis.tooltips.smart_enterprise_rating.tw_tickers_title')}</span><span className="text-gray-600 whitespace-pre-line">{t('analysis.tooltips.smart_enterprise_rating.tw_tickers_desc')}</span></div>
+              <div><span className="font-semibold block text-orange-700">{t('analysis.tooltips.smart_enterprise_rating.fuzzy_title')}</span><span className="text-gray-600 whitespace-pre-line">{t('analysis.tooltips.smart_enterprise_rating.fuzzy_desc')}</span></div>
+              <div className="mt-3 p-3 bg-orange-50 rounded"><span className="font-semibold text-orange-800">{t('analysis.tooltips.smart_enterprise_rating.analyst_view_title')}</span><br /><span className="text-orange-700 whitespace-pre-line">{t('analysis.tooltips.smart_enterprise_rating.analyst_view_desc')}</span></div>
+            </div>
+          </>
+        );
+      case ANALYSIS_CATEGORY.FINANCIAL_PRODUCT_RATING:
+        return (
+          <>
+            <p className="font-bold text-sm mb-2 text-orange-600">{t('analysis.tooltips.financial_product_rating.title')}</p>
+            <p className="mb-3 text-gray-600">{t('analysis.tooltips.financial_product_rating.desc')}</p>
+            <div className="space-y-4 text-gray-700">
+              <div><span className="font-semibold block text-orange-700">{t('analysis.tooltips.financial_product_rating.etf_title')}</span><span className="text-gray-600 whitespace-pre-line">{t('analysis.tooltips.financial_product_rating.etf_desc')}</span></div>
+              <div><span className="font-semibold block text-orange-700">{t('analysis.tooltips.financial_product_rating.mutual_funds_title')}</span><span className="text-gray-600 whitespace-pre-line">{t('analysis.tooltips.financial_product_rating.mutual_funds_desc')}</span></div>
+              <div><span className="font-semibold block text-orange-700">{t('analysis.tooltips.financial_product_rating.bonds_title')}</span><span className="text-gray-600 whitespace-pre-line">{t('analysis.tooltips.financial_product_rating.bonds_desc')}</span></div>
+              <div><span className="font-semibold block text-orange-700">{t('analysis.tooltips.financial_product_rating.derivatives_title')}</span><span className="text-gray-600 whitespace-pre-line">{t('analysis.tooltips.financial_product_rating.derivatives_desc')}</span></div>
+              <div className="mt-3 p-3 bg-orange-50 rounded"><span className="font-semibold text-orange-800">{t('analysis.tooltips.financial_product_rating.analyst_view_title')}</span><br /><span className="text-orange-700 whitespace-pre-line">{t('analysis.tooltips.financial_product_rating.analyst_view_desc')}</span></div>
+            </div>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Info: (20260419 - Luphia) Header */}
@@ -369,7 +416,7 @@ export default function AnalysisView() {
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">{t('analysis.period_type')}</label>
                 <div className="flex flex-wrap gap-2">
-                  {PERIOD_TYPES.filter(type => !(needsCompanyInput && ([ANALYSIS_PERIOD.MONTHLY, ANALYSIS_PERIOD.WEEKLY, ANALYSIS_PERIOD.DAILY] as string[]).includes(type))).map((type) => (
+                  {PERIOD_TYPES.filter(type => !(isCarbonAnalysis && ([ANALYSIS_PERIOD.MONTHLY, ANALYSIS_PERIOD.WEEKLY, ANALYSIS_PERIOD.DAILY] as string[]).includes(type))).map((type) => (
                     <button key={type} onClick={() => { setPeriodType(type); setSelectedPeriodValue(''); }}
                       className={`px-4 py-2 text-sm font-medium rounded-full transition-all border ${periodType === type ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
                       {t(`analysis.time_units.${type.toLowerCase()}`)}
@@ -496,16 +543,15 @@ export default function AnalysisView() {
               )}
 
               {/* Info: (20260419 - Luphia) Keyword Input */}
-              {activeTab === 'external' && !isExternalCarbonAnalysis && category !== 'market_trends' && (
+              {activeTab === 'external' && !isExternalCarbonAnalysis && category !== ANALYSIS_CATEGORY.MARKET_TRENDS && (
                 <div className="space-y-2 pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-2">
                     <label className="block text-sm font-medium text-gray-700">{t('analysis.keyword')}</label>
-                    {['industry_development', 'irsc', 'financial_product_rating'].includes(category) && (
+                    {([ANALYSIS_CATEGORY.INDUSTRY_DEVELOPMENT, ANALYSIS_CATEGORY.IRSC, ANALYSIS_CATEGORY.FINANCIAL_PRODUCT_RATING] as string[]).includes(category) && (
                       <div className="group relative">
                         <Info className="h-4 w-4 text-gray-400 hover:text-orange-500 cursor-help" />
-                        <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden group-hover:block w-[400px] bg-white text-gray-800 text-xs rounded-lg shadow-xl ring-1 ring-gray-900/5 p-4 z-50 overflow-y-auto max-h-[80vh]">
-                          <p className="font-bold text-sm mb-2 text-orange-600">{t(`analysis.tooltips.${category === 'irsc' ? 'smart_enterprise_rating' : category}.title`)}</p>
-                          <p className="mb-3 text-gray-600">{t(`analysis.tooltips.${category === 'irsc' ? 'smart_enterprise_rating' : category}.desc`)}</p>
+                        <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden group-hover:block w-[450px] bg-white text-gray-800 text-xs rounded-lg shadow-xl ring-1 ring-gray-900/5 p-4 z-50 overflow-y-auto max-h-[80vh]">
+                          {renderTooltipContent()}
                         </div>
                       </div>
                     )}

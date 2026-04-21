@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -20,14 +21,14 @@ async function validateRequestAndGetContext(
   const sessionUser = await getIdentityFromDeWT(authHeader);
 
   if (!sessionUser)
-    return { error: jsonFail(ApiCode.NOT_FOUND, "User not found") };
+    return { error: jsonFail(API_ERRORS.NF_USER) };
 
   const user = await webAuthnRepo.findUserByAddress(sessionUser.address);
-  if (!user) return { error: jsonFail(ApiCode.NOT_FOUND, "User not found") };
+  if (!user) return { error: jsonFail(API_ERRORS.NF_USER) };
 
   const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
   if (!accountBook)
-    return { error: jsonFail(ApiCode.NOT_FOUND, "Accountbook not found") };
+    return { error: jsonFail(API_ERRORS.NF_ACCOUNT_BOOK) };
 
   return { user, accountBook };
 }
@@ -54,7 +55,7 @@ export async function POST(
 
     if (!fileId) {
       console.error("Missing fileId");
-      return jsonFail(ApiCode.VALIDATION_ERROR, "File is required");
+      return jsonFail({ code: "VA000099", message: "File is required", status: ApiCode.VALIDATION_ERROR });
     }
 
     /**
@@ -83,7 +84,7 @@ export async function POST(
     return jsonOk({ journalId: journal.id });
   } catch (error) {
     console.error("Upload failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Upload failed");
+    return jsonFail(API_ERRORS.IS_UPLOAD_FAILED);
   }
 }
 
@@ -183,6 +184,6 @@ export async function GET(
     return jsonOk({ data: formattedJournals, total: totalCount });
   } catch (error) {
     console.error("Get journals failed", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Get journals failed");
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
   }
 }

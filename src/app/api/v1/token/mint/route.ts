@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -11,13 +12,13 @@ export async function POST(request: NextRequest) {
     const user = await getIdentityFromDeWT(authHeader);
 
     if (!user) {
-      return jsonFail(ApiCode.UNAUTHORIZED, "Invalid or expired token");
+      return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
     const { credits } = await request.json();
 
     if (!credits || credits <= 0) {
-      return jsonFail(ApiCode.VALIDATION_ERROR, "Invalid credits amount");
+      return jsonFail(API_ERRORS.VL_BAD_AMOUNT);
     }
 
     const result = await mintToAddress(
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (!result.success) {
-      return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, result.message);
+      return jsonFail({ code: "IS000099", message: String(result.message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
     }
 
     return jsonOk({
@@ -36,6 +37,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("[API] /token/mint error:", error);
-    return jsonFail(ApiCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }
