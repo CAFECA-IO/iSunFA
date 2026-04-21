@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { EsgTarget, Prisma, EsgRecord } from "@/generated/client";
-import { IEsgDashboardSummary } from "@/interfaces/esg";
+import { IEsgDashboardSummary, EsgScope } from "@/interfaces/esg";
 import { ESG_INDUSTRY_BENCHMARKS } from "@/constants/esg_industry_benchmarks";
+import { IActivityData } from "@/interfaces/emission_source";
+import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
+import { CoefficientCategory, ICoefficient } from "@/interfaces/coefficient";
 
 export type EsgRecordWithRelations = Prisma.EsgRecordGetPayload<{
-  include: { file: true, coefficient: true };
+  include: { file: true; coefficient: true };
 }> & { journalId?: string; voucherId?: string };
 
 export interface IEsgRepository {
@@ -39,6 +42,11 @@ export interface IEsgRepository {
     accountBookId: string,
     data: Prisma.EsgRecordUpdateInput,
   ): Promise<Prisma.BatchPayload>;
+  getEsgEmissionSources(
+    accountBookId: string,
+    scope: EsgScope | string,
+    keyword: string,
+  ): Promise<IActivityData[]>;
 }
 
 export class EsgRepository implements IEsgRepository {
@@ -414,6 +422,78 @@ export class EsgRepository implements IEsgRepository {
     return prisma.coefficient.delete({
       where: { id },
     });
+  }
+
+  async getEsgEmissionSources(
+    accountBookId: string,
+    scope: EsgScope | string,
+    keyword: string,
+  ): Promise<IActivityData[]> {
+    const where: Prisma.EmissionSourceWhereInput = {
+      accountBookId,
+      scope: scope as EsgScope,
+    };
+
+    if (keyword) {
+      where.OR = [
+        { name: { contains: keyword, mode: "insensitive" } },
+        { sourceCode: { contains: keyword, mode: "insensitive" } },
+      ];
+    }
+
+    const emissionSources = await prisma.emissionSource.findMany({
+      where,
+      include: { coefficient: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const activityTypesInScope = EsgActivityTypeMapping.filter(
+      (at) => at.scope === scope,
+    );
+
+    const result: IActivityData[] = activityTypesInScope
+      .map((activityType) => {
+        const es = emissionSources.filter(
+          (source) => source.activityType === activityType.key,
+        );
+
+        if (es.length === 0) {
+          return null;
+        }
+
+        const mappedEs = es.map((source) => {
+          const coefficient: ICoefficient | null = source.coefficient
+            ? {
+                id: source.coefficient.id,
+                category: source.coefficient.accountBookId
+                  ? CoefficientCategory.CUSTOM
+                  : CoefficientCategory.STANDARD,
+                name: source.coefficient.name,
+                description: source.coefficient.description,
+                emissionFactor: Number(source.coefficient.emissionFactor),
+                unit: source.coefficient.unit,
+                source: source.coefficient.source,
+                createdAt: source.coefficient.createdAt.getTime() / 1000,
+                updatedAt: source.coefficient.updatedAt.getTime() / 1000,
+              }
+            : null;
+
+          return {
+            id: source.id,
+            name: source.name,
+            activityType,
+            coefficient,
+          };
+        });
+
+        return {
+          activityType,
+          emissionSources: mappedEs,
+        };
+      })
+      .filter((group) => group !== null) as IActivityData[];
+
+    return result;
   }
 }
 

@@ -35,14 +35,14 @@ export default function EsgMainView() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Info: (20260416 - Julian) 從 URL 參數取得 tab
+  // Info: (20260421 - Julian) 從 URL 參數取得 tab，預設顯示 records
   const tabParams = useSearchParams().get("tab");
   const activeTab =
     tabParams === "coefficient"
       ? EsgTab.COEFFICIENT
-      : tabParams === "records"
-        ? EsgTab.RECORDS
-        : EsgTab.EMISSION_SOURCES;
+      : tabParams === "emission_sources"
+        ? EsgTab.EMISSION_SOURCES
+        : EsgTab.RECORDS;
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;

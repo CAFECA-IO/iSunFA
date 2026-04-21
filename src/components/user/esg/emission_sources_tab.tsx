@@ -158,7 +158,7 @@ export default function EmissionSourcesTab() {
             setActivityData(res.payload);
           }
         } catch (error) {
-          console.error("Failed to fetch ESG summary:", error);
+          console.error("Failed to fetch emission sources:", error);
         } finally {
           setIsLoading(false);
         }
