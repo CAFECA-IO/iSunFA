@@ -67,4 +67,5 @@ export interface IEsgRecord {
   journalId?: string;
   voucherId?: string;
   isDeleted?: boolean;
+  emissionSourceTag?: string; // Info: (20260421 - Julian) 排放源標籤（例：第一號鍋爐）
 }

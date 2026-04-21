@@ -198,6 +198,13 @@ export default function EsgMainView() {
         ))}
       </div>
 
+      {/* ToDo: (20260421 - Julian) Demo 結束後移除 */}
+      {activeTab === EsgTab.EMISSION_SOURCES && (
+        <p className="text-xs font-medium rounded-lg p-4 bg-orange-100 text-orange-500 lg:text-sm">
+          ⚠️ 注意：本頁還在開發中，目前顯示均為示範資料，並非真實資訊
+        </p>
+      )}
+
       {/* Info: (20260413 - Julian) Tab Content */}
       {tabContent}
     </div>

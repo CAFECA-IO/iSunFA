@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { EsgTarget, Prisma, EsgRecord } from "@/generated/client";
-import { IEsgDashboardSummary, EsgScope } from "@/interfaces/esg";
+import { IEsgDashboardSummary, EsgScope, IEsgScopeDistributionData } from "@/interfaces/esg";
 import { ESG_INDUSTRY_BENCHMARKS } from "@/constants/esg_industry_benchmarks";
 import {
-  IActivityData,
   IEsgEmissionSourcesSummary,
+  IEsgEmissionSourcesUI,
 } from "@/interfaces/emission_source";
-import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
-import { CoefficientCategory, ICoefficient } from "@/interfaces/coefficient";
+// import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
+// import { CoefficientCategory, ICoefficient } from "@/interfaces/coefficient";
 
 export type EsgRecordWithRelations = Prisma.EsgRecordGetPayload<{
   include: { file: true; coefficient: true };
@@ -49,7 +49,7 @@ export interface IEsgRepository {
     accountBookId: string,
     scope: EsgScope | string,
     keyword: string,
-  ): Promise<IActivityData[]>;
+  ): Promise<IEsgEmissionSourcesUI[]>;
 }
 
 export class EsgRepository implements IEsgRepository {
@@ -306,6 +306,25 @@ export class EsgRepository implements IEsgRepository {
       }
     }
 
+    // Info: (20260421 - Julian) 繪製範疇分佈圖
+    const scopeDistribution: IEsgScopeDistributionData[] = [
+      {
+        scope: EsgScope.SCOPE_1,
+        value: Number(scope1Tons.toFixed(2)),
+        percentage: Number(s1Pct.toFixed(1)),
+      },
+      {
+        scope: EsgScope.SCOPE_2,
+        value: Number(scope2Tons.toFixed(2)),
+        percentage: Number(s2Pct.toFixed(1)),
+      },
+      {
+        scope: EsgScope.SCOPE_3,
+        value: Number(scope3Tons.toFixed(2)),
+        percentage: Number(s3Pct.toFixed(1)),
+      },
+    ]
+
     const summary: IEsgDashboardSummary = {
       totalEmissions: {
         value: Number(totalEmissionsTons.toFixed(2)),
@@ -318,23 +337,7 @@ export class EsgRepository implements IEsgRepository {
         unit: "tCO2e / 萬元營收",
         industryAverage: Number(industryAverage.toFixed(2)),
       },
-      scopeDistribution: {
-        scope1: {
-          value: Number(scope1Tons.toFixed(2)),
-          unit: "tCO2e",
-          percentage: Number(s1Pct.toFixed(1)),
-        },
-        scope2: {
-          value: Number(scope2Tons.toFixed(2)),
-          unit: "tCO2e",
-          percentage: Number(s2Pct.toFixed(1)),
-        },
-        scope3: {
-          value: Number(scope3Tons.toFixed(2)),
-          unit: "tCO2e",
-          percentage: Number(s3Pct.toFixed(1)),
-        },
-      },
+      scopeDistribution,
       goalProgress: {
         percentage: Number(goalProgress.toFixed(1)),
       },
@@ -428,75 +431,12 @@ export class EsgRepository implements IEsgRepository {
   }
 
   async getEsgEmissionSources(
-    accountBookId: string,
-    scope: EsgScope | string,
-    keyword: string,
-  ): Promise<IActivityData[]> {
-    const where: Prisma.EmissionSourceWhereInput = {
-      accountBookId,
-      scope: scope as EsgScope,
-    };
-
-    if (keyword) {
-      where.OR = [
-        { name: { contains: keyword, mode: "insensitive" } },
-        { sourceCode: { contains: keyword, mode: "insensitive" } },
-      ];
-    }
-
-    const emissionSources = await prisma.emissionSource.findMany({
-      where,
-      include: { coefficient: true },
-      orderBy: { createdAt: "desc" },
-    });
-
-    const activityTypesInScope = EsgActivityTypeMapping.filter(
-      (at) => at.scope === scope,
-    );
-
-    const result: IActivityData[] = activityTypesInScope
-      .map((activityType) => {
-        const es = emissionSources.filter(
-          (source) => source.activityType === activityType.key,
-        );
-
-        if (es.length === 0) {
-          return null;
-        }
-
-        const mappedEs = es.map((source) => {
-          const coefficient: ICoefficient | null = source.coefficient
-            ? {
-                id: source.coefficient.id,
-                category: source.coefficient.accountBookId
-                  ? CoefficientCategory.CUSTOM
-                  : CoefficientCategory.STANDARD,
-                name: source.coefficient.name,
-                description: source.coefficient.description,
-                emissionFactor: Number(source.coefficient.emissionFactor),
-                unit: source.coefficient.unit,
-                source: source.coefficient.source,
-                createdAt: source.coefficient.createdAt.getTime() / 1000,
-                updatedAt: source.coefficient.updatedAt.getTime() / 1000,
-              }
-            : null;
-
-          return {
-            id: source.id,
-            name: source.name,
-            activityType,
-            coefficient,
-          };
-        });
-
-        return {
-          activityType,
-          emissionSources: mappedEs,
-        };
-      })
-      .filter((group) => group !== null) as IActivityData[];
-
-    return result;
+    // accountBookId: string,
+    // scope: EsgScope | string,
+    // keyword: string,
+  ): Promise<IEsgEmissionSourcesUI[]> {
+    // ToDo: (20260422 - Julian) 開發取得排放源清單
+    return [];
   }
 
   async getEsgEmissionSourcesSummary(
@@ -574,6 +514,22 @@ export class EsgRepository implements IEsgRepository {
 
     return summary;
   }
+
+  // async createEsgEmissionSource(
+  //   accountBookId: string,
+  //   name: string,
+  //   sourceCode: string,
+  //   isDisabled: boolean,
+  // ) {
+  //   return prisma.emissionSource.create({
+  //     data: {
+  //       accountBookId,
+  //       name,
+  //       sourceCode,
+  //       isDisabled,
+  //     },
+  //   });
+  // }
 }
 
 export const esgRepo = new EsgRepository();
