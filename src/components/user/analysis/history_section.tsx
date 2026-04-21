@@ -32,6 +32,7 @@ export default function HistorySection() {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Info: (20260130 - Luphia) Report View Modal State
@@ -80,28 +81,30 @@ export default function HistorySection() {
   }, [itemsPerPage, history.length, currentPage]);
 
   // Info: (20260130 - Luphia) Fetch history from API
-  useEffect(() => {
-    async function fetchHistory() {
-      try {
-        setLoading(true);
-        const result = await request<{ code: string; message: string; payload: IHistoryItem[] }>('/api/v1/user/analysis', {
-          cache: 'no-store'
-        });
+  const fetchHistory = async () => {
+    try {
+      setLoading(true);
+      const result = await request<{ code: string; message: string; payload: IHistoryItem[] }>('/api/v1/user/analysis', {
+        cache: 'no-store'
+      });
 
-        if (result.code === 'SUCCESS') {
-          setHistory(result.payload);
-        } else {
-          throw new Error(result.message || 'Failed to load history');
-        }
-      } catch (err) {
-        console.error('History fetch error:', err);
-        setError('Failed to load history');
-      } finally {
-        setLoading(false);
+      if (result.code === 'SUCCESS') {
+        setHistory(result.payload);
+      } else {
+        throw new Error(result.message || 'Failed to load history');
       }
+    } catch (err) {
+      console.error('History fetch error:', err);
+      setError('Failed to load history');
+    } finally {
+      setLoading(false);
+      setIsInitialLoad(false);
     }
+  };
 
+  useEffect(() => {
     fetchHistory();
+     
   }, [t]);
 
   const handleRetryReport = async (item: IHistoryItem) => {
@@ -377,7 +380,7 @@ export default function HistorySection() {
     }
   };
 
-  if (loading) {
+  if (loading && isInitialLoad) {
     return (
       <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 p-6 flex justify-center py-12">
         <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -429,7 +432,18 @@ export default function HistorySection() {
   return (
     <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-lg font-bold text-gray-900 shrink-0">{t('analysis.history.title')}</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-bold text-gray-900 shrink-0">{t('analysis.history.title')}</h2>
+          <button
+            type="button"
+            onClick={fetchHistory}
+            disabled={loading}
+            className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-full transition-colors disabled:opacity-50"
+            title={t('common.refresh') || 'Refresh'}
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-orange-500' : ''}`} />
+          </button>
+        </div>
 
         {allTags.length > 0 && (
           <div className="flex items-center w-full min-w-0 mt-2">

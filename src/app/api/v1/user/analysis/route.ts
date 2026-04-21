@@ -226,9 +226,8 @@ export async function POST(request: NextRequest) {
     }
 
     /**
-     * Info: (20260128 - Luphia) Proceed with Analysis Generation
-     * Data is already in Order, but we can use body too or trust order data
-     * Using body params ensures consistency with frontend request, but ideally we use order.data
+     * Info: (20260420 - Tzuhan) [BUGFIX] Frontend uploads FIN_DATA during Order creation. 
+     * We MUST fetch the Order from DB to retrieve the payload and pass it to generateAnalysis!
      */
     const orderData = await paymentRepo.getOrderById(orderId);
     if (!orderData) {
