@@ -260,6 +260,7 @@ export async function GET(
             emissionFactor: Number(r.coefficient.emissionFactor),
           }
         : null,
+      emissionSourceTag: r.emissionSourceTag ?? "",
     }));
 
     return jsonOk({
