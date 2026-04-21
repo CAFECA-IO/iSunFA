@@ -69,9 +69,11 @@ export default function PaymentConfirmModal({
     }
   };
 
-  if (!user || user.credits === undefined) {
+  if (!user) {
     return null;
   }
+
+  const currentCredits = user.credits ?? 0;
 
   const isProcessing = status !== 'idle' && status !== 'error' && status !== 'payment_success';
   const isSuccess = status === 'payment_success';
@@ -206,7 +208,7 @@ export default function PaymentConfirmModal({
                         )}
 
                         <p className="text-xs text-right text-gray-400 mt-4">
-                          {t('analysis.confirm_balance')}: <span className="font-medium">{user.credits} - {cost} = {user.credits - cost}</span>
+                          {t('analysis.confirm_balance')}: <span className="font-medium">{currentCredits} - {cost} = {currentCredits - cost}</span>
                         </p>
                       </div>
                     )}
@@ -231,7 +233,7 @@ export default function PaymentConfirmModal({
                             disabled={isLoading}
                             className="inline-flex w-full justify-center items-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:col-start-2 transition-all disabled:opacity-70 disabled:cursor-wait"
                             onClick={() => {
-                              if ((user.credits ?? 0) < cost) {
+                              if (currentCredits < cost) {
                                 setShowInsufficient(true);
                               } else {
                                 onConfirm();
