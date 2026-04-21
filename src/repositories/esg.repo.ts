@@ -496,16 +496,16 @@ export class EsgRepository implements IEsgRepository {
     });
 
     // Info: (20260421 - Julian) 排放源類別分佈：計算每個範疇的排放源數量
-    const distribution = await prisma.emissionSource.groupBy({
-      by: ["scope"],
-      where: { accountBookId },
-      _count: { id: true },
-    });
+    // const distribution = await prisma.emissionSource.groupBy({
+    //   by: ["scope"],
+    //   where: { accountBookId },
+    //   _count: { id: true },
+    // });
 
-    const scopeDistribution = distribution.map((d) => ({
-      scope: d.scope as EsgScope,
-      count: d._count.id,
-    }));
+    const scopeDistribution: {
+      scope: EsgScope;
+      count: number;
+    }[] = []
 
     const summary: IEsgEmissionSourcesSummary = {
       totalEmissionSourcesCount: totalEmissionSourcesCount ?? 0,
