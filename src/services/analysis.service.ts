@@ -199,42 +199,88 @@ export class AnalysisService {
               })
             : [];
 
+          const journalRecords = targetAccountBookId
+            ? await prisma.journal.findMany({
+                where: {
+                  accountBookId: targetAccountBookId,
+                  tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
+                  deletedAt: null,
+                },
+                orderBy: { tradingDate: "asc" },
+                select: { id: true, tradingDate: true, text: true, aiNote: true }
+              })
+            : [];
+
           console.log(
-            `[ESG-DEBUG] Fetched esgRecords: ${esgRecords.length}, vouchers: ${voucherRecords.length}`,
+            `[ESG-DEBUG] Fetched esgRecords: ${esgRecords.length}, vouchers: ${voucherRecords.length}, journals: ${journalRecords.length}`
           );
 
-          if (esgRecords.length > 0 || voucherRecords.length > 0) {
-            let recordStr = "";
+          if (esgRecords.length > 0 || voucherRecords.length > 0 || journalRecords.length > 0) {
+            // Info: (20260421 - Tzuhan) Pruning: 移除無關的系統欄位，避免浪費 Token 以及膨脹 DB
+            // Pre-aggregation: 預先加總大科目
+            let totalRevenue = 0;
+            let totalOpex = 0;
+            let totalAssets = 0;
+            let totalLiabilities = 0;
 
-            if (voucherRecords.length > 0) {
-              // Info: (20260420 - Tzuhan) 資料清洗：將 Voucher 轉為緊湊的文字格式，大幅節省 Token 並提升 AI 注意力
-              const voucherContext = voucherRecords.map(v => {
-                const dateStr = v.tradingDate ? new Date(v.tradingDate).toISOString().split("T")[0] : "未知日期";
-                let lineStr = "";
-                if (v.lines && Array.isArray(v.lines)) {
-                  lineStr = v.lines.map((l, idx) => `[分錄${idx+1}] 摘要:${l.particular || '無'}, 金額:${l.amount || 0}`).join("；");
-                }
-                return `- 傳票號: V${v.id.substring(0, 8)} | 日期: ${dateStr} | 備註: ${v.note || '無'} | ${lineStr}`;
-              }).join("\n");
-              
-              recordStr += `\n### 內部會計傳票與明細紀錄\n${voucherContext}\n`;
-            }
-            if (esgRecords.length > 0) {
-              const esgContextLines = esgRecords.map((r) => {
-                const dateStr = r.tradingDate.toISOString().split("T")[0];
-                return `- 日期: ${dateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
+            const cleanVouchers = voucherRecords.map(v => {
+              const lines = v.lines.map(l => {
+                const codeStr = l.accountingCode || "";
+                if (codeStr.startsWith("4") && !l.isDebit) totalRevenue += l.amount;
+                if ((codeStr.startsWith("5") || codeStr.startsWith("6")) && l.isDebit) totalOpex += l.amount;
+                if (codeStr.startsWith("1") && l.isDebit) totalAssets += l.amount;
+                if (codeStr.startsWith("2") && !l.isDebit) totalLiabilities += l.amount;
+
+                return {
+                  c: l.accountingCode, // c = code
+                  p: l.particular, // p = particular
+                  a: l.amount, // a = amount
+                  d: l.isDebit // d = debit
+                };
               });
-              recordStr += `\n【內部 ESG 碳盤查數據紀錄】:\n${esgContextLines.join("\n")}\n`;
-            }
 
-            parsedPrerequisiteParams = {
-              ...parsedPrerequisiteParams,
-              esgRecordsContext: recordStr,
+              return {
+                d: v.tradingDate ? v.tradingDate.toISOString().split("T")[0] : "N/A", // d = date
+                n: v.note, // n = note
+                l: lines // l = lines
+              };
+            });
+
+            const cleanEsgs = esgRecords.map(r => ({
+              date: r.tradingDate.toISOString().split("T")[0],
+              activity: r.activityType,
+              emissions: Number(r.emissions),
+              unit: r.unit,
+              scope: r.scope,
+              vendor: r.vendor
+            }));
+
+            const cleanJournals = journalRecords.map(j => ({
+              date: j.tradingDate.toISOString().split("T")[0],
+              text: j.text,
+              note: j.aiNote || undefined
+            }));
+
+            // Info: (20260421 - Tzuhan) 將結構化數據整合進 params.data，自然回寫到 History 並丟給 LLM
+            const newPayloadData: Record<string, unknown> = typeof params.data === "object" && params.data !== null ? { ...params.data as Record<string, unknown> } : {};
+
+            newPayloadData.summary = {
+              total_revenue: totalRevenue,
+              total_opex: totalOpex,
+              total_assets: totalAssets,
+              total_liabilities: totalLiabilities
             };
-            console.log(
-              `[ESG-DEBUG] Parsed Context length:`,
-              recordStr.length,
-            );
+
+            if (cleanEsgs.length > 0) newPayloadData.esg = cleanEsgs;
+            if (cleanVouchers.length > 0) newPayloadData.vouchers = cleanVouchers;
+            if (cleanJournals.length > 0) newPayloadData.journals = cleanJournals;
+
+            params.data = newPayloadData;
+
+            // Info: (20260421 - Tzuhan) 檢查 DB data 欄位是否過量，如果真的超級巨大(>1MB)，為防 DB 爆掉可採取裁切，但先以輕量化屬性名處理
+            const payloadSize = JSON.stringify(newPayloadData).length;
+            console.log(`[ESG-DEBUG] New Payload Size after JSON Pruning: ${payloadSize} bytes`);
+
           } else {
             console.log(`[ESG-DEBUG] Records length is 0. Aborting internal analysis.`);
             throw new AppError(ApiCode.VALIDATION_ERROR, "該企業尚未建立 ESG 或財務數據紀錄。請先上傳相關資料，或是改為申請「外部分析報告」。");
