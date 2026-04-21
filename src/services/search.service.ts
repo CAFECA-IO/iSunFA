@@ -1,4 +1,5 @@
 import { spawn } from "child_process";
+import { processManager } from "@/lib/utils/process_manager";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export interface ISearchSummaryParams {
@@ -110,6 +111,8 @@ export class SearchService {
         "-",
       ]);
 
+      processManager.register(dockerProcess);
+
       let output = "";
       let errorOutput = "";
 
@@ -124,7 +127,7 @@ export class SearchService {
       const timeoutId = setTimeout(() => {
         if (!resolved) {
           resolved = true;
-          dockerProcess.kill("SIGKILL");
+          dockerProcess.kill("SIGTERM");
           reject(
             new Error(
               `Crawler script exceeded total sandbox timeout of ${this.timeoutMs}ms.`,
