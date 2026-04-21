@@ -226,10 +226,10 @@ export class AnalysisService {
             const cleanVouchers = voucherRecords.map(v => {
               const lines = v.lines.map(l => {
                 const codeStr = l.accountingCode || "";
-                if (codeStr.startsWith("4") && !l.isDebit) totalRevenue += l.amount;
-                if ((codeStr.startsWith("5") || codeStr.startsWith("6")) && l.isDebit) totalOpex += l.amount;
-                if (codeStr.startsWith("1") && l.isDebit) totalAssets += l.amount;
-                if (codeStr.startsWith("2") && !l.isDebit) totalLiabilities += l.amount;
+                if (codeStr.startsWith("4")) totalRevenue += l.isDebit ? -l.amount : l.amount;
+                if (codeStr.startsWith("5") || codeStr.startsWith("6")) totalOpex += l.isDebit ? l.amount : -l.amount;
+                if (codeStr.startsWith("1")) totalAssets += l.isDebit ? l.amount : -l.amount;
+                if (codeStr.startsWith("2")) totalLiabilities += l.isDebit ? -l.amount : l.amount;
 
                 return {
                   c: l.accountingCode, // c = code
