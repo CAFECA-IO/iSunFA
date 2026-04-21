@@ -91,6 +91,7 @@ export const analysis = {
     monthly: "Monthly",
     weekly: "Weekly",
     daily: "Daily",
+    ac65: "AC65",
   },
   cost_hint: "Cost: {{cost}} Credits",
   confirm_title: "Confirm Analysis",
@@ -120,6 +121,7 @@ export const analysis = {
     net_zero_emissions: "Net Zero Emissions",
     ai_consulting: "AI Consultation",
     journal_upload: "Journal Entry Creation",
+    certificate_analysis: "Certificate Analysis",
   },
   history: {
     title: "Analysis History",

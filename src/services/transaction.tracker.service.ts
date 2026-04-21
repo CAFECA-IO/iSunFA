@@ -101,7 +101,11 @@ export class TransactionTrackerService {
         } catch (e: unknown) {
           // Info: (20260420 - Luphia) If it throws, it usually means TransactionReceiptNotFoundError. We wait.
           const errorMsg = e instanceof Error ? e.message : String(e);
-          if (!errorMsg.includes("not found")) {
+          if (
+            !errorMsg.includes("could not be found") &&
+            !errorMsg.includes("not found") &&
+            !errorMsg.includes("TransactionReceiptNotFound")
+          ) {
             console.error(
               `[TxTracker] Error scanning tx ${txHash} for order ${order.id}:`,
               errorMsg,

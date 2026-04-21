@@ -65,7 +65,7 @@ export function useJournalAnalysis({
       data: {
         category: ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
         accountBookId,
-        files: files.map((f) => f.hash),
+        files: files.map((f) => ({ hash: f.hash, name: f.file.name })),
       },
     };
 

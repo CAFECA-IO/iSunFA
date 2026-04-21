@@ -1,6 +1,5 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
-import { Prisma } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -275,24 +274,6 @@ export async function POST(
       },
     ]);
 
-    /**
-     * Info: (20260420 - Luphia) 觸發 Task 生成機制，將需要的 Context 包進 Order.data 中
-     * MissionIssuer cron 會掃描 PAID 的 Order 並生成真正的 MissionBoard NFT
-     */
-    const orderRecord = await paymentRepo.getOrderById(orderId);
-    if (orderRecord) {
-      const existingData = (orderRecord.data as Record<string, unknown>) || {};
-
-      await paymentRepo.updateOrderData(orderId, {
-        ...existingData,
-        category: "document_parsing",
-        fileId: uploadedFile.id,
-        fileBase64: file.base64,
-        fileMimeType: file.file.type,
-        accountBookId: accountBook.id,
-      } as Prisma.InputJsonObject);
-    }
-
     return jsonOk({
       journalId: newJournal.id,
       voucherId: newVoucher.id,
@@ -300,6 +281,6 @@ export async function POST(
     });
   } catch (error) {
     console.error("Error creating AI analysis:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to create AI analysis", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({ code: "IN000099", message: "Failed to create AI analysis", status: ApiCode.INTERNAL_SERVER_ERROR },);
   }
 }

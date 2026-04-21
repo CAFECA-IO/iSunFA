@@ -47,20 +47,20 @@ export class MissionRecorderService {
         try {
           // Info: (20260420 - Luphia) Find the Order
           const order = await prisma.order.findFirst({
-            where: { mission: taskId, status: ORDER_STATUS.EXECUTING }
+            where: { mission: { contains: `"${taskId}"` }, status: { in: [ORDER_STATUS.EXECUTING, ORDER_STATUS.COMPLETED] } }
           });
 
           if (!order) {
-            console.warn(`[MissionRecorder] Task ID ${taskId} has no executing Order in database.`);
+            console.warn(`[MissionRecorder] Task ID ${taskId} has no EXECUTING/COMPLETED Order in database.`);
             // Info: (20260420 - Luphia) mark flag anyway to skip
-            await fs.writeFile(flagFile, "No matching EXECUTING order found", "utf8");
+            await fs.writeFile(flagFile, "No matching order found", "utf8");
             continue;
           }
 
           // Info: (20260420 - Luphia) Read the actual result text
           const resultContent = await fs.readFile(resultFile, "utf8");
 
-          // Info: (20260420 - Luphia) Update Order Status
+          // Info: (20260420 - Luphia) Update Order Status loosely
           await prisma.order.update({
             where: { id: order.id },
             data: { status: ORDER_STATUS.COMPLETED }
@@ -71,9 +71,18 @@ export class MissionRecorderService {
            * "Cancel, temporarily keep mission and task table". Thus Analysis might still exist.
            * Let's find analysis by orderId and update its result
            */
-          const analysis = await prisma.analysis.findFirst({
-            where: { orderId: order.id }
+          let analysis = await prisma.analysis.findFirst({
+            where: { 
+              orderId: order.id,
+              data: { path: ["missionTaskId"], equals: taskId }
+            }
           });
+
+          if (!analysis) {
+             analysis = await prisma.analysis.findFirst({
+               where: { orderId: order.id }
+             });
+          }
 
           if (analysis) {
             let parsedResult: unknown = resultContent;

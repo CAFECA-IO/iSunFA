@@ -127,7 +127,7 @@ export class AnalysisRepository implements IAnalysisRepository {
     userId: string,
   ): Promise<FullAnalysis[]> {
     return prisma.analysis.findMany({
-      where: { userId, type: { not: ANALYSIS_CATEGORY.AI_CONSULTING } },
+      where: { userId, type: { notIn: [ANALYSIS_CATEGORY.AI_CONSULTING, ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS] } },
       orderBy: { createdAt: "desc" },
       include: {
         order: true,

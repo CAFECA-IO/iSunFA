@@ -23,6 +23,11 @@ export function generateIrscMission(
   }
 
   const targetObj: Record<string, unknown> = {
+    category: params.category || "IRSC",
+    target: params.keyword || "Company",
+    marketName: params.country || "N/A",
+    period: params.periodValue || "latest",
+    year: params.year,
     context: targetInfoStr,
   };
 

@@ -108,6 +108,8 @@ export async function POST(
     let resData: { reportId?: string } = {};
 
     // Info: (20260418 - Luphia) Automatically generate mission for ALL categories including ai_consulting, but SKIP journal_upload since it generates missions per-file manually.
+    type TPayloadFile = string | { hash: string; fileName?: string };
+
     if (category !== ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
       const generateParams = {
         orderId: orderId,
@@ -123,11 +125,30 @@ export async function POST(
 
       analysisRes = await analysisService.generateAnalysis(user.id, generateParams);
       resData = (analysisRes.data || {}) as { reportId?: string };
+    } else if (category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
+      const files = (innerData.files as TPayloadFile[]) || [];
+      const promises = files.map((file) => {
+        const fileHash = typeof file === "string" ? file : file.hash;
+        const documentData = {
+          ...innerData,
+          category: category as AnalysisCategory,
+          files: [fileHash],
+          accountBookId: String(innerData.accountBookId || ""),
+        } as unknown as import("@/lib/analysis/pricing").IDocumentParams;
+
+        const generateParams = {
+          orderId: orderId,
+          type: ORDER_TYPE.ANALYSIS,
+          data: documentData,
+        };
+        return analysisService.generateAnalysis(user.id, generateParams);
+      });
+
+      await Promise.all(promises);
     }
 
     // Info: (20260418 - Luphia) 建立上傳檔案並與討論串關聯 (Restore AI Talk logic)
     if (category === ANALYSIS_CATEGORY.AI_CONSULTING && resData.reportId && orderData.data) {
-      type TPayloadFile = string | { hash: string; fileName?: string };
       const payloadData = orderData.data as { files?: TPayloadFile[] };
       if (payloadData.files && payloadData.files.length > 0) {
         await talkRepo.createFiles(

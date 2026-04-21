@@ -18,7 +18,7 @@ export interface IAnalysisParams {
 export interface IDocumentParams {
   category: AnalysisCategory;
   accountBookId: string;
-  files: string[];
+  files: { hash: string; name: string }[];
 }
 
 export interface IConsultationParams {
