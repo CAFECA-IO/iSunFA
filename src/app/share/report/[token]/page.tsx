@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
 
     const shareRecord = await prisma.reportShareToken.findUnique({
         where: { token, isActive: true },
-        include: { analysis: true }
+        include: { analysis: { include: { order: true } } }
     });
 
     if (!shareRecord) return { title: 'iSunFA' };
@@ -66,7 +66,9 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
     const shareRecord = await prisma.reportShareToken.findUnique({
         where: { token, isActive: true },
         include: {
-            analysis: true,
+            analysis: {
+                include: { order: true }
+            },
             createdBy: {
                 select: { name: true }
             }
@@ -83,6 +85,15 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
             shareRecord.analysis.result as TShareResult,
             shareRecord.isFinancialDataHidden
         );
+
+        const status = (shareRecord.analysis.order as { status?: string })?.status?.toLowerCase() || 'unknown';
+        if (['processing', 'pending', 'doing', 'uploading', 'paying'].includes(status)) {
+            safeData.safeMarkdown = "> **⏳ 報告正在生成中，請稍後重新整理本頁面查看結果...**";
+        } else if (['failed', 'error'].includes(status)) {
+            safeData.safeMarkdown = "> **❌ 報告生成失敗。**";
+        } else if (!safeData.safeMarkdown) {
+            safeData.safeMarkdown = "> **⚠️ 尚未產生任何內容。**";
+        }
     } catch (error) {
         console.error(`[PublicReportPage] Error sanitizing data: ${error}`);
         safeData = null;

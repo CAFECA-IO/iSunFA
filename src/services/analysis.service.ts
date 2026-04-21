@@ -131,6 +131,7 @@ export class AnalysisService {
           ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE,
           ANALYSIS_CATEGORY.FINANCIAL_HEALTH,
           ANALYSIS_CATEGORY.IRSC,
+          ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS,
         ].some(c => c === params.category)
       ) {
         if (!params.isExternal) {

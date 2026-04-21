@@ -17,10 +17,24 @@ export function generateIrscMission(
   params: IMissionParams,
 ): IMissionDefinition | null {
   const taskGenerator = new TaskGenerator();
-  let targetInfo = `Target Company: ${params.periodValue} (Fiscal Year: ${params.year})`;
+  let targetInfoStr = `Target Company: ${params.periodValue} (Fiscal Year: ${params.year})`;
   if (params.country || params.keyword) {
-    targetInfo = `Target External: ${params.keyword || "Company"} / Country: ${params.country || "N/A"} / Period: ${params.periodValue} (Year: ${params.year})`;
+    targetInfoStr = `Target External: ${params.keyword || "Company"} / Country: ${params.country || "N/A"} / Period: ${params.periodValue} (Year: ${params.year})`;
   }
+
+  const targetObj: Record<string, unknown> = {
+    context: targetInfoStr,
+  };
+
+  if (params.prerequisiteData?.esgRecordsContext) {
+    targetObj.internalDataContext = params.prerequisiteData.esgRecordsContext;
+  }
+  
+  if (params.data) {
+    targetObj.financialDataPayload = params.data;
+  }
+
+  const targetInfo = JSON.stringify(targetObj, null, 2);
   const tasks: ITaskDefinition[] = [];
 
   const promptMap = [

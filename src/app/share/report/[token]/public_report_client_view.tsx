@@ -35,8 +35,7 @@ export default function PublicReportClientView({ shareRecord, safeData }: IPubli
         );
     }
 
-    const localizedCategory = t(`analysis.categories.${shareRecord.category}`) || shareRecord.category;
-
+    const localizedCategory = t(`analysis.categories.${(shareRecord.category).toLowerCase()}`) || shareRecord.category;
     const sharedByText = (t('analysis.share.shared_by') || 'Shared by {{name}}')
         .replace('{{name}}', shareRecord.createdBy?.name || 'iSunFA User');
 

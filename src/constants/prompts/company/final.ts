@@ -39,7 +39,7 @@ graph TD
     EM --> Assets2["總資產: [數值]"]
     EM --> Equity["股東權益: [數值]"]
 \`\`\`
-*(請依據實際財務數據動態延展並填寫數值)*
+*(請依據實際財務數據動態延展並填寫數值。若完全無數據支撐，請直接整段刪除上方 Mermaid 區塊，嚴禁為了產出圖表而捏造預設數值)*
 
 ## 📉 共識期望與另類數據情緒 (Consensus & Alternative Sentiment)
 ### 華爾街共識落差分析 (Consensus Divergence)

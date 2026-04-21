@@ -1,4 +1,5 @@
 import { spawn } from "child_process";
+import { processManager } from "@/lib/utils/process_manager";
 
 export class SnapshotService {
   private readonly imageName = "ghcr.io/puppeteer/puppeteer:latest";
@@ -66,6 +67,8 @@ export class SnapshotService {
         "-",
       ]);
 
+      processManager.register(dockerProcess);
+
       let output = "";
       let errorOutput = "";
 
@@ -81,7 +84,7 @@ export class SnapshotService {
       const timeoutId = setTimeout(() => {
         if (!resolved) {
           resolved = true;
-          dockerProcess.kill("SIGKILL");
+          dockerProcess.kill("SIGTERM");
           reject(
             new Error(
               `Snapshot execution exceeded timeout limit of ${this.timeoutMs}ms.`,

@@ -11,6 +11,7 @@ import {
   ICoefficientInput,
 } from "@/interfaces/coefficient";
 import { Prisma } from "@/generated/client";
+import { TRUE_COEFFICIENT_DATA_PART_1, TRUE_COEFFICIENT_DATA_PART_2, TRUE_COEFFICIENT_DATA_PART_3, TRUE_COEFFICIENT_DATA_PART_4, TRUE_COEFFICIENT_DATA_PART_5, TRUE_COEFFICIENT_DATA_DEFRA_PART_1, TRUE_COEFFICIENT_DATA_DEFRA_PART_2, TRUE_COEFFICIENT_DATA_DEFRA_PART_3, TRUE_COEFFICIENT_DATA_DEFRA_PART_4, TRUE_COEFFICIENT_DATA_DEFRA_PART_5, TRUE_COEFFICIENT_DATA_DEFRA_PART_6, TRUE_COEFFICIENT_DATA_TAIWAN } from "@/constants/true_esg_coefficients";
 
 /**
  * Info: (20260413 - Julian) 新增自訂係數
@@ -147,31 +148,67 @@ export async function GET(
       andConditions.push({ unit: unitParam });
     }
 
-    const [coefficients, totalCount] = await Promise.all([
-      esgRepo.getEsgCoefficients({
-        where: { AND: andConditions },
-        // Info: (20260413 - Julian) 分頁邏輯
-        ...(page && pageSize
-          ? { skip: (page - 1) * pageSize, take: pageSize }
-          : {}),
-        // Info: (20260413 - Julian) 排序邏輯：將標準係數排在前面，並依據更新時間倒序排列
-        orderBy: [{ accountBookId: "desc" }, { updatedAt: "desc" }],
-      }),
-      esgRepo.countEsgCoefficients({ AND: andConditions }),
-    ]);
+    // const [coefficients, totalCount] = await Promise.all([
+    //   esgRepo.getEsgCoefficients({
+    //     where: { AND: andConditions },
+    //     // Info: (20260413 - Julian) 分頁邏輯
+    //     ...(page && pageSize
+    //       ? { skip: (page - 1) * pageSize, take: pageSize }
+    //       : {}),
+    //     // Info: (20260413 - Julian) 排序邏輯：將標準係數排在前面，並依據更新時間倒序排列
+    //     orderBy: [{ accountBookId: "desc" }, { updatedAt: "desc" }],
+    //   }),
+    //   esgRepo.countEsgCoefficients({ AND: andConditions }),
+    // ]);
+    //
+    // const result: ICoefficient[] = coefficients.map((coefficient) => ({
+    //   id: coefficient.id,
+    //   name: coefficient.name,
+    //   description: coefficient.description,
+    //   emissionFactor: Number(coefficient.emissionFactor),
+    //   unit: coefficient.unit,
+    //   source: coefficient.source,
+    //   category: !!coefficient.accountBookId
+    //     ? CoefficientCategory.CUSTOM
+    //     : CoefficientCategory.STANDARD,
+    //   createdAt: new Date(coefficient.createdAt).getTime() / 1000,
+    //   updatedAt: new Date(coefficient.updatedAt).getTime() / 1000,
+    // }));
 
-    const result: ICoefficient[] = coefficients.map((coefficient) => ({
-      id: coefficient.id,
-      name: coefficient.name,
-      description: coefficient.description,
-      emissionFactor: Number(coefficient.emissionFactor),
-      unit: coefficient.unit,
-      source: coefficient.source,
-      category: !!coefficient.accountBookId
-        ? CoefficientCategory.CUSTOM
-        : CoefficientCategory.STANDARD,
-      createdAt: new Date(coefficient.createdAt).getTime() / 1000,
-      updatedAt: new Date(coefficient.updatedAt).getTime() / 1000,
+    let filteredStaticData = [...TRUE_COEFFICIENT_DATA_PART_1, ...TRUE_COEFFICIENT_DATA_PART_2, ...TRUE_COEFFICIENT_DATA_PART_3, ...TRUE_COEFFICIENT_DATA_PART_4, ...TRUE_COEFFICIENT_DATA_PART_5, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_1, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_2, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_3, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_4, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_5, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_6, ...TRUE_COEFFICIENT_DATA_TAIWAN];
+
+    if (tabParam === CoefficientCategory.CUSTOM) {
+      filteredStaticData = [];
+    }
+
+    if (searchParam) {
+      const lowerSearch = searchParam.toLowerCase();
+      filteredStaticData = filteredStaticData.filter(
+        c => c.name.toLowerCase().includes(lowerSearch) || c.description.toLowerCase().includes(lowerSearch)
+      );
+    }
+
+    if (unitParam) {
+      filteredStaticData = filteredStaticData.filter(c => c.unit === unitParam);
+    }
+
+    const totalCount = filteredStaticData.length;
+    let paginatedData = filteredStaticData;
+
+    if (page && pageSize) {
+      paginatedData = paginatedData.slice((page - 1) * pageSize, page * pageSize);
+    }
+
+    const result: ICoefficient[] = paginatedData.map(c => ({
+      id: c.id,
+      name: c.name,
+      description: c.description,
+      emissionFactor: Number(c.emissionFactor),
+      unit: c.unit,
+      source: c.source,
+      category: CoefficientCategory.STANDARD,
+      createdAt: Number(c.createdAt),
+      updatedAt: Number(c.updatedAt),
     }));
 
     return jsonOk({ items: result, total: totalCount });
