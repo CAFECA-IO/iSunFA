@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import JournalUploadView from "@/components/user/journal/journal_upload_view";
 import JournalListView from "@/components/user/journal/journal_list_view";
 import JournalLogView from "@/components/user/journal/journal_log_view";
@@ -16,20 +16,37 @@ enum EJournalTab {
 
 export default function JournalMainView() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<EJournalTab>(EJournalTab.UPLOAD);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Info: (20260423 - Julian) 取得 URL 參數中的 activeTab，如果沒有就預設為 UPLOAD
+  const activeTabParam = searchParams.get("tab") as EJournalTab | null;
+  const activeTab = Object.values(EJournalTab).includes(
+    activeTabParam as EJournalTab,
+  )
+    ? (activeTabParam as EJournalTab)
+    : EJournalTab.UPLOAD;
+
+  // Info: (20260423 - Julian) 切換 tab 時更新 URL 參數
+  const handleTabChange = (tab: EJournalTab) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const renderView = () => {
     switch (activeTab) {
       case EJournalTab.UPLOAD:
         return (
           <JournalUploadView
-            onUploadComplete={() => setActiveTab(EJournalTab.LIST)}
+            onUploadComplete={() => handleTabChange(EJournalTab.LIST)}
           />
         );
       case EJournalTab.SCAN:
         return (
           <JournalScanView
-            onScanComplete={() => setActiveTab(EJournalTab.LIST)}
+            onScanComplete={() => handleTabChange(EJournalTab.LIST)}
           />
         );
       case EJournalTab.LIST:
@@ -66,9 +83,10 @@ export default function JournalMainView() {
         className={`flex min-w-max shrink-0 items-center justify-center gap-3 rounded-lg p-2.5 text-sm font-medium transition-colors lg:w-full lg:justify-start lg:px-4 lg:py-3 ${
           activeTab === item.key
             ? "bg-white text-orange-600 shadow-sm"
-            : "text-gray-600 hover:bg-gray-100"
+            : "text-gray-600 hover:bg-gray-200"
         }`}
-        onClick={() => setActiveTab(item.key)}
+        onClick={() => handleTabChange(item.key)}
+        disabled={activeTab === item.key}
       >
         {item.label}
       </button>
