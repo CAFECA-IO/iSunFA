@@ -16,7 +16,6 @@ export default function LanguageSelector() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-     
     setMounted(true);
   }, []);
 
@@ -35,7 +34,7 @@ export default function LanguageSelector() {
 
   return (
     <Menu as="div" className="relative">
-      <MenuButton className="flex items-center gap-x-1 text-sm font-semibold leading-6 text-gray-900 hover:text-orange-600 transition-colors focus:outline-none">
+      <MenuButton className="flex items-center gap-x-1 text-sm leading-6 font-semibold text-gray-900 transition-colors hover:text-orange-600 focus:outline-none">
         <Globe className="h-5 w-5 text-gray-500" aria-hidden="true" />
         <span className="hidden sm:inline">{currentLangLabel}</span>
         <ChevronDown className="h-4 w-4 text-gray-400" aria-hidden="true" />
@@ -49,17 +48,13 @@ export default function LanguageSelector() {
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
       >
-        <MenuItems className="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+        <MenuItems className="ring-opacity-5 absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black focus:outline-none">
           {languages.map((lang) => (
             <MenuItem key={lang.code}>
               {({ focus }) => (
                 <button
                   onClick={() => setLanguage(lang.code)}
-                  className={`
-                    ${focus ? "bg-orange-50" : ""}
-                    ${language === lang.code ? "font-bold text-orange-600" : "text-gray-700"}
-                    group flex w-full items-center justify-between px-4 py-2 text-sm
-                  `}
+                  className={` ${focus ? "bg-orange-50" : ""} ${language === lang.code ? "font-bold text-orange-600" : "text-gray-700"} group flex w-full items-center justify-between px-4 py-2 text-sm`}
                 >
                   <span>{lang.label}</span>
                   {language === lang.code && <Check className="h-4 w-4" />}
