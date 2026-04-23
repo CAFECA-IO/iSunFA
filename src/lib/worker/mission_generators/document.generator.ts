@@ -10,8 +10,7 @@ import {
 } from "@/constants/prompts/voucher";
 import { getEsgPrompt } from "@/constants/prompts/esg";
 import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
-
-import { AccountBook } from "@/generated/client";
+import { AccountBook, Coefficient } from "@/generated/client";
 
 export function generateDocumentParsingMission(
   params: IMissionParams,
@@ -19,13 +18,29 @@ export function generateDocumentParsingMission(
   const accountBook = params.prerequisiteData?.accountBook as
     | Partial<AccountBook>
     | undefined;
+  const coef = params.prerequisiteData?.coefficients as
+    | Partial<Coefficient>[]
+    | undefined;
 
   const tasks: ITaskDefinition[] = [];
+  const data = (params.data as { accountBookId?: string }) || {};
+  const accountBookId = data.accountBookId || params.accountBookId || accountBook?.id || "";
+
+  const coefficients = coef?.map((c) => {
+    return {
+      ...c,
+      emissionFactor: Number(c.emissionFactor),
+      createdAt: c.createdAt ? c.createdAt.getTime() / 1000 : 0,
+      updatedAt: c.updatedAt ? c.updatedAt.getTime() / 1000 : 0,
+      deletedAt: c.deletedAt ? c.deletedAt.getTime() / 1000 : null,
+    }
+  })
+
   const context = JSON.stringify({
     fileId: params.fileId,
     fileBase64: params.fileBase64,
     fileMimeType: params.fileMimeType,
-    accountBookId: params.accountBookId,
+    accountBookId: accountBookId,
   });
 
   tasks.push({
@@ -73,7 +88,7 @@ export function generateDocumentParsingMission(
     order: 1,
     data: {
       key: "ESG",
-      prompt: getEsgPrompt(accountBook),
+      prompt: getEsgPrompt(accountBook, coefficients),
       context,
     },
   });
