@@ -12,7 +12,7 @@ import {
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import { AppError } from "@/lib/utils/error";
 import { ApiCode } from "@/lib/utils/status";
-import { Prisma } from "@/generated/client";
+import { AccountBook, Prisma } from "@/generated/client";
 import { ANALYSIS_CATEGORY } from "@/constants/price";
 
 export interface IGenerateAnalysisParams extends IOrderParams {
@@ -151,6 +151,7 @@ export class AnalysisService {
           const teamIds = teamMembers.map((tm) => tm.teamId);
 
           let targetAccountBookId: string | null = null;
+          let matchedAccountBook: AccountBook | null = null;
           if (params.keyword) {
             const match = params.keyword.match(/\((.*?)\)/);
             const taxId = match ? match[1] : params.keyword;
@@ -159,7 +160,7 @@ export class AnalysisService {
               `[ESG-DEBUG] Keyword: ${params.keyword}, Extracted Tax ID: ${taxId}`,
             );
 
-            const matchedAccountBook = await prisma.accountBook.findFirst({
+            matchedAccountBook = await prisma.accountBook.findFirst({
               where: {
                 teamId: { in: teamIds },
                 enterpriseId: taxId,
@@ -226,6 +227,7 @@ export class AnalysisService {
 
             parsedPrerequisiteParams = {
               esgRecordsContext: recordStr,
+              accountBook: matchedAccountBook || undefined,
             };
             console.log(
               `[ESG-DEBUG] Parsed Context length:`,

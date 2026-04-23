@@ -8,7 +8,7 @@ import {
   getVoucherLinesPrompt,
 } from "@/constants/prompts/voucher";
 import { getEsgPrompt } from "@/constants/prompts/esg";
-import { AccountBook } from "@/generated/client";
+import { AccountBook, Coefficient } from "@/generated/client";
 
 export function generateJournalCorrectionMission(
   params: IMissionParams,
@@ -16,8 +16,25 @@ export function generateJournalCorrectionMission(
   const accountBook = params.prerequisiteData?.accountBook as
     | Partial<AccountBook>
     | undefined;
+  const coef = params.prerequisiteData?.coefficients as 
+    | Partial<Coefficient>[]
+    | undefined;
 
   const tasks: ITaskDefinition[] = [];
+  const data = (params.data as { accountBookId?: string }) || {};
+  const accountBookId = data.accountBookId || params.accountBookId || accountBook?.id || "";
+
+  // Info: (20260423 - Julian) 重新整理係數
+  const coefficients = coef?.map((c) => {
+    return {
+      ...c,
+      emissionFactor: Number(c.emissionFactor),
+      createdAt: c.createdAt ? c.createdAt.getTime() / 1000 : 0,
+      updatedAt: c.updatedAt ? c.updatedAt.getTime() / 1000 : 0,
+      deletedAt: c.deletedAt ? c.deletedAt.getTime() / 1000 : null,
+    }
+  })
+
   const context = JSON.stringify({
     fileId: params.fileId,
     fileBase64: params.fileBase64,
@@ -26,7 +43,7 @@ export function generateJournalCorrectionMission(
     journalText: params.journalText,
     voucherId: params.voucherId,
     esgRecordId: params.esgRecordId,
-    accountBookId: params.accountBookId,
+    accountBookId: accountBookId,
   });
 
   // Info: (20260407 - Julian) 跳過 PRE_CHECK 和 JOURNAL_PARSING，直接重產傳票與 ESG
@@ -55,7 +72,7 @@ export function generateJournalCorrectionMission(
     order: 1,
     data: {
       key: "ESG",
-      prompt: getEsgPrompt(accountBook),
+      prompt: getEsgPrompt(accountBook, coefficients),
       context,
     },
   });

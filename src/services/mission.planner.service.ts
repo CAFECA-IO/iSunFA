@@ -91,6 +91,19 @@ export class MissionPlannerService {
                 data: missionObj.data || {}
               } as IMissionParams;
 
+              // Info: (20260423 - Julian) 帳本資訊需要注入到 prerequisiteData
+              const extractedAccountBookId = missionParams.accountBookId || (missionParams.data as { accountBookId?: string })?.accountBookId;
+              if (extractedAccountBookId) {
+                const { accountBookRepo } = await import("@/repositories/account_book.repo");
+                const accountBook = await accountBookRepo.getAccountBookById(extractedAccountBookId);
+                if (accountBook) {
+                  missionParams.prerequisiteData = {
+                    ...missionParams.prerequisiteData,
+                    accountBook,
+                  };
+                }
+              }
+
               // Info: (20260420 - Luphia) 3. Generate Mission Definition using missionGenerator
               const missionDef = missionGenerator.generateMission(missionParams);
 

@@ -26,6 +26,7 @@ export function generateDocumentParsingMission(
   const data = (params.data as { accountBookId?: string }) || {};
   const accountBookId = data.accountBookId || params.accountBookId || accountBook?.id || "";
 
+  // Info: (20260423 - Julian) 重新整理係數
   const coefficients = coef?.map((c) => {
     return {
       ...c,
