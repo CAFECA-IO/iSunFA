@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -36,11 +36,17 @@ export default function AddEmissionSourceModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <h2 className="text-xl font-bold text-slate-800">{t("emission_sources.modal.title")}</h2>
+        <h2 className="text-xl font-bold text-slate-800">
+          {t("emission_sources.modal.title")}
+        </h2>
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="es-name" className="text-sm font-semibold text-slate-600">
-              {t("emission_sources.modal.name_label")} <span className="text-red-500">*</span>
+            <label
+              htmlFor="es-name"
+              className="text-sm font-semibold text-slate-600"
+            >
+              {t("emission_sources.modal.name_label")}{" "}
+              <span className="text-red-500">*</span>
             </label>
             <input
               id="es-name"
@@ -54,10 +60,17 @@ export default function AddEmissionSourceModal({
               placeholder={t("emission_sources.modal.name_placeholder")}
               className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
             />
-            {isNameError && <p className="text-xs text-red-500">{t("emission_sources.modal.name_error")}</p>}
+            {isNameError && (
+              <p className="text-xs text-red-500">
+                {t("emission_sources.modal.name_error")}
+              </p>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="es-address" className="text-sm font-semibold text-slate-600">
+            <label
+              htmlFor="es-address"
+              className="text-sm font-semibold text-slate-600"
+            >
               {t("emission_sources.modal.address_label")}
             </label>
             <input
@@ -89,4 +102,4 @@ export default function AddEmissionSourceModal({
       </div>
     </div>
   );
-};
+}

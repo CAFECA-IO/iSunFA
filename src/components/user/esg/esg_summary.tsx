@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Cloud, BarChart3, Target, TrendingUp, Loader2,ChartPie } from "lucide-react";
+import {
+  Cloud,
+  BarChart3,
+  Target,
+  TrendingUp,
+  Loader2,
+  ChartPie,
+} from "lucide-react";
 import { IEsgDashboardSummary, EsgScope } from "@/interfaces/esg";
 import { useParams, usePathname } from "next/navigation";
 import { request } from "@/lib/utils/request";
@@ -86,22 +93,30 @@ export default function EsgSummary({
   }
 
   // (20260420 - Julian) 繪製範疇分佈圖
-  const scopeChart = summaryData.scopeDistribution.map(({ scope, value, percentage }) => {
-    const color= scope === EsgScope.SCOPE_1 ? "bg-pink-200" : scope === EsgScope.SCOPE_2 ? "bg-orange-200" : "bg-indigo-200";
-    return (
-    <div key={scope} className="flex flex-col gap-1">
-      <div className="flex h-16 flex-col justify-end">
-        <div
-          className={`w-full rounded-t-sm ${color}`}
-          style={{ height: `${percentage}%` }}
-        />
-      </div>
-      <p className="text-center text-[10px] font-bold text-gray-400">
-        {t(`esg_summary.${scope.toLowerCase()}`)}: {value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-      </p>
-    </div>
-  )
-  });
+  const scopeChart = summaryData.scopeDistribution.map(
+    ({ scope, value, percentage }) => {
+      const color =
+        scope === EsgScope.SCOPE_1
+          ? "bg-pink-200"
+          : scope === EsgScope.SCOPE_2
+            ? "bg-orange-200"
+            : "bg-indigo-200";
+      return (
+        <div key={scope} className="flex flex-col gap-1">
+          <div className="flex h-16 flex-col justify-end">
+            <div
+              className={`w-full rounded-t-sm ${color}`}
+              style={{ height: `${percentage}%` }}
+            />
+          </div>
+          <p className="text-center text-[10px] font-bold text-gray-400">
+            {t(`esg_summary.${scope.toLowerCase()}`)}:{" "}
+            {value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          </p>
+        </div>
+      );
+    },
+  );
 
   return (
     <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
@@ -112,7 +127,7 @@ export default function EsgSummary({
             <span className="text-xs font-bold text-slate-500 lg:text-sm">
               {t("esg_summary.total_emissions")}
             </span>
-            <Cloud className="h-5 w-5 shrink-0 text-emerald-500" />
+            <Cloud size={20} className="shrink-0 text-emerald-500" />
           </div>
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl font-bold tracking-tight text-slate-800">
@@ -140,7 +155,7 @@ export default function EsgSummary({
             <span className="text-xs font-bold text-slate-500 lg:text-sm">
               {t("esg_summary.emission_intensity")}
             </span>
-            <BarChart3 className="h-5 w-5 shrink-0 text-orange-500" />
+            <BarChart3 size={20} className="shrink-0 text-pink-300" />
           </div>
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl font-bold tracking-tight text-slate-800">
@@ -148,9 +163,7 @@ export default function EsgSummary({
                 ? "N/A"
                 : summaryData.emissionIntensity.value.toLocaleString(
                     undefined,
-                    {
-                      minimumFractionDigits: 2,
-                    },
+                    { minimumFractionDigits: 2 },
                   )}
             </span>
             <span className="text-xs font-bold text-slate-500 lg:text-sm">
@@ -167,13 +180,11 @@ export default function EsgSummary({
 
       {/* Info: (20260312 - Julian) 各範疇分布 */}
       <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
-        <div className="relative flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2">
           <p className="text-xs font-bold text-slate-500 lg:text-sm">
             {t("emission_sources.summary.scope_distribution")}
           </p>
-          <div className="absolute -top-2 -right-2 rounded-xl p-1.5 text-gray-400">
-            <ChartPie size={20} />
-          </div>
+          <ChartPie size={20} className="shrink-0 text-blue-400" />
         </div>
         <div className="mt-4 grid grid-cols-3 items-end gap-1">
           {scopeChart}
@@ -187,7 +198,7 @@ export default function EsgSummary({
             <span className="text-xs font-bold text-slate-500 lg:text-sm">
               {t("esg_summary.annual_goal_progress")}
             </span>
-            <Target className="h-5 w-5 shrink-0 text-orange-600" />
+            <Target size={20} className="shrink-0 text-orange-600" />
           </div>
           <div className="mt-2 flex items-baseline gap-1">
             <span className="text-2xl font-bold tracking-tight text-orange-600">
