@@ -93,7 +93,7 @@ export default function UserActions() {
     });
   })();
 
-  // Info: (20260424 - Julian) 系統功能選單
+  // Info: (20260423 - Julian) 系統功能選單
   const systemMenuItems = SYSTEM_MODULES.filter((action) => {
     if (!action.enable) return false;
     // Info: (20260416 - Luphia) 角色為 ADMIN, SUPER ADMIN 時，系统设置只需顯示登出
@@ -181,7 +181,7 @@ export default function UserActions() {
                 </div>
               </div>
 
-              {/* Desktop right info */}
+              {/* Info: (20260423 - Julian) Desktop right info */}
               <div className="hidden shrink-0 text-right md:block">
                 <div className="mb-1 inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700 ring-1 ring-orange-600/20 ring-inset">
                   {t(`pricing.plans.${user.plan || "personal"}.name`)}
@@ -194,7 +194,7 @@ export default function UserActions() {
                 </p>
               </div>
 
-              {/* Mobile close button */}
+              {/* Info: (20260423 - Julian) Mobile close button */}
               <MenuItem>
                 <button className="-mr-2 rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 md:hidden">
                   <span className="sr-only">Close menu</span>
@@ -203,7 +203,7 @@ export default function UserActions() {
               </MenuItem>
             </div>
 
-            {/* Mobile right info */}
+            {/* Info: (20260423 - Julian) Mobile right info */}
             <div className="mt-2 flex items-center justify-between md:hidden">
               <div className="inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-[10px] font-medium text-orange-700 ring-1 ring-orange-600/20 ring-inset">
                 {t(`pricing.plans.${user.plan || "personal"}.name`)}
