@@ -20,4 +20,9 @@ export const esgReport = {
   scope1_title: "Scope 1 (直接排出)",
   scope2_title: "Scope 2 (間接排出)",
   scope3_title: "Scope 3 (サプライチェーン)",
+  bom_title: "排出量詳細 BOM表",
+  bom_scope: "スコープ",
+  bom_activity: "排出活動",
+  bom_emissions: "排出量 (kgCO2e)",
+  bom_percentage: "割合 (%)",
 };

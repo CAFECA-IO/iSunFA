@@ -14,6 +14,7 @@ import {
   ReportLoadingPlaceholder,
   ReportErrorPlaceholder,
 } from "@/components/user/financial_report/report_placeholders";
+import EsgBomTable from "@/components/user/financial_report/esg_bom_table";
 
 const EsgReportSection = ({
   titleText,
@@ -255,6 +256,9 @@ export default function EsgReportView({
     <div className="flex w-full flex-col gap-4">
       {keyMetricsBanner}
       {scopeSection}
+
+      {/* Info: (20260424 - Julian) 排放細項 BOM 表 */}
+      {sections && <EsgBomTable sections={sections} baseDivisor={baseEmissions} />}
     </div>
   );
 }
