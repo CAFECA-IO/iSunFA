@@ -142,9 +142,9 @@ export async function GET(
       });
     }
 
-    // Info: (20260416 - Julian) 單位參數過濾邏輯（完全匹配）
+    // Info: (20260416 - Julian) 單位過濾邏輯（模糊搜尋）
     if (unitParam) {
-      andConditions.push({ unit: unitParam });
+      andConditions.push({ unit: { contains: unitParam, mode: "insensitive" } });
     }
 
     // const [coefficients, totalCount] = await Promise.all([
