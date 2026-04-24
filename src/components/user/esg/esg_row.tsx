@@ -11,7 +11,7 @@ import {
   Trash2,
   Undo2,
 } from "lucide-react";
-import { timestampToString } from "@/lib/utils/common";
+import { numberWithCommas, timestampToString } from "@/lib/utils/common";
 import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
 import AiConfidence from "@/components/common/ai_confidence";
@@ -283,7 +283,7 @@ export function EsgRow({
     record.unit !== "" ? (
       <>
         <span className="text-sm font-semibold text-slate-800">
-          {record.amount}{" "}
+          {numberWithCommas(record.amount)}{" "}
         </span>
         <span className="text-xs font-bold text-slate-500">{record.unit}</span>
       </>
@@ -343,7 +343,7 @@ export function EsgRow({
       >
         <div className="flex flex-col items-center justify-center gap-1">
           <span className="text-sm font-semibold text-slate-800">
-            {record.emissions}
+            {numberWithCommas(record.emissions)}
           </span>
         </div>
       </td>

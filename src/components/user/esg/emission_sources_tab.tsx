@@ -3,11 +3,7 @@
 import { useState } from "react";
 // import { useParams } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
-import {
-  Plus,
-  Search,
-  SearchX,
-} from "lucide-react";
+import { Plus, Search, SearchX } from "lucide-react";
 // import { request } from "@/lib/utils/request";
 // import { IApiResponse } from "@/lib/utils/response";
 // import { EsgScope } from "@/interfaces/esg";
@@ -19,9 +15,10 @@ import AddEmissionSourceModal from "@/components/user/esg/add_emission_source_mo
 
 const EmissionSourcesList = ({ keyword }: { keyword: string }) => {
   const { t } = useTranslation();
-  const filteredData = mockEmissionSources.filter((source) =>
-    source.name.toLowerCase().includes(keyword.toLowerCase()) || 
-    source.id.toLowerCase().includes(keyword.toLowerCase())
+  const filteredData = mockEmissionSources.filter(
+    (source) =>
+      source.name.toLowerCase().includes(keyword.toLowerCase()) ||
+      source.id.toLowerCase().includes(keyword.toLowerCase()),
   );
 
   if (filteredData.length === 0) {
@@ -41,7 +38,6 @@ const EmissionSourcesList = ({ keyword }: { keyword: string }) => {
     </div>
   );
 };
-
 
 export default function EmissionSourcesTab() {
   // const params = useParams();

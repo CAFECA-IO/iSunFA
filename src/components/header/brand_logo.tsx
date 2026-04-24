@@ -9,7 +9,7 @@ export default function BrandLogo() {
     <div className="flex lg:flex-1">
       <Link
         href="/"
-        className="-m-1.5 p-1.5 transition-opacity hover:opacity-80 flex lg:flex-row flex-col items-end gap-x-2"
+        className="-m-1.5 flex flex-col items-end gap-x-2 p-1.5 transition-opacity hover:opacity-80 lg:flex-row"
       >
         <span className="sr-only">iSunFA</span>
         <Image
@@ -20,7 +20,7 @@ export default function BrandLogo() {
           height={40}
           priority
         />
-        <span className="text-xs text-gray-500 font-mono lg:mb-1.5 lg:ml-1">
+        <span className="font-mono text-[10px] text-gray-500 md:text-xs lg:mb-1.5 lg:ml-1">
           v{pkg.version}
         </span>
       </Link>

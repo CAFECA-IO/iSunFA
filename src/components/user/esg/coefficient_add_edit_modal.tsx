@@ -15,8 +15,6 @@ interface ICoefficientAddEditModalProps {
   onConfirm: (coefficient: ICoefficientInput) => void;
 }
 
-const MIN_VALUE = 0.01;
-const MAX_VALUE = 10;
 const STEP_VALUE = 0.01;
 
 export default function CoefficientAddEditModal({
@@ -64,13 +62,9 @@ export default function CoefficientAddEditModal({
 
   // Info: (20260414 - Julian) 送出結果
   const confirmCoefficient = () => {
-    // Info: (20260417 - Julian) 無條件捨去小數點後四位
-    const efNum = parseFloat(emissionFactor);
-    const efFloor = Math.floor(efNum * 10000) / 10000;
-
     const input: ICoefficientInput = {
       name,
-      emissionFactor: efFloor,
+      emissionFactor: parseFloat(emissionFactor),
       unit,
       description,
       source: "", // Info: (20260414 - Julian) 預設為空，由 API 填入
@@ -89,12 +83,10 @@ export default function CoefficientAddEditModal({
       return;
     }
 
-    // Info: (20260417 - Julian) 限制只能輸入數字和小數點，且在 MIN_VALUE 和 MAX_VALUE 之間
+    // Info: (20260417 - Julian) 限制只能為零以上之正數
     const num = parseFloat(value);
-    if (num < MIN_VALUE) {
-      setEmissionFactor(MIN_VALUE.toString());
-    } else if (num > MAX_VALUE) {
-      setEmissionFactor(MAX_VALUE.toString());
+    if (num < 0) {
+      setEmissionFactor("0");
     } else {
       setEmissionFactor(value);
     }
@@ -180,18 +172,14 @@ export default function CoefficientAddEditModal({
             htmlFor="coefficient-ef"
             className="text-xs text-slate-600 lg:text-base"
           >
-            {t("coefficient.card.ef")}{" "}
-            <span className="text-[10px] text-slate-400">
-              小數點後四位無條件捨去
-            </span>
+            {t("coefficient.card.ef")}
           </label>
           <input
             id="coefficient-ef"
             aria-label={t("coefficient.card.ef")}
             type="number"
-            min={MIN_VALUE}
+            min={0}
             step={STEP_VALUE}
-            max={MAX_VALUE}
             value={emissionFactor}
             onChange={handleEmissionFactorChange}
             placeholder="0.0000"

@@ -178,6 +178,7 @@ export async function GET(
     if (searchParam) {
       andConditions.push({
         OR: [
+          { id: { contains: searchParam, mode: "insensitive" } },
           { vendor: { contains: searchParam, mode: "insensitive" } },
           { activityType: { contains: searchParam, mode: "insensitive" } },
         ],

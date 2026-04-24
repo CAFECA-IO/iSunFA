@@ -11,7 +11,7 @@ export default function FaithAgent() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
+    <div className="fixed bottom-6 right-6 flex flex-col items-end gap-4 md:z-50">
       {/* Info: (20260117 - Luphia) Chat Window */}
       <Transition
         show={isOpen}
