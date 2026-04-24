@@ -113,7 +113,7 @@ export default function CoefficientSelectModal({
         );
       })
     ) : (
-      <div className="flex flex-col gap-2 items-center p-10 text-base font-semibold text-slate-400">
+      <div className="flex flex-col items-center gap-2 p-10 text-base font-semibold text-slate-400">
         <SearchX size={40} />
         <p>{t("coefficient.select_modal.no_match")}</p>
       </div>

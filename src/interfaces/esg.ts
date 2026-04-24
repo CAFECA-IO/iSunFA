@@ -42,6 +42,43 @@ export interface IEsgDashboardSummary {
   };
 }
 
+// Info: (20260424 - Julian) 用於「排放源歸口」列表頁
+export interface IEsgRecordBrief {
+  id: string;
+  tradingDate: number;
+  activityType: EsgActivityTypeKey | null;
+  vendor: string; // Info: (20260424 - Julian) 排放源名稱
+  amount: number; // Info: (20260424 - Julian) 排放量
+  unit: string; // Info: (20260424 - Julian) 單位
+  emissions: number; // Info: (20260424 - Julian) 碳排放量
+  emissionSourceTag?: string; // Info: (20260424 - Julian) 排放源標籤（例：第一號鍋爐）
+}
+
+// Info: (20260424 - Julian) 用於「碳盤查紀錄」列表頁
+export interface IEsgRecordItem extends IEsgRecordBrief {
+  scope: EsgScope | null; // Info: (20260424 - Julian) 範疇
+  intensity: EsgIntensity; // Info: (20260424 - Julian) 碳排放強度
+  fileId: string;
+  file?: {
+    id: string;
+    hash: string;
+    fileName: string;
+  };
+  confidence: number; // Info: (20260424 - Julian) AI 信心分數
+  isVerified: boolean; // Info: (20260424 - Julian) 是否已驗證
+}
+
+// Info: (20260424 - Julian) 用於「編輯碳盤查紀錄」 modal
+export interface IEsgRecordDetail extends IEsgRecordItem {
+  dqiScore: number; // Info: (20260424 - Julian) 數據品質分數
+  coefficient: ICoefficient | null; // Info: (20260424 - Julian) 排放係數
+  analysisStatus: AIAnalysisStatus | null; // Info: (20260424 - Julian) AI 分析狀態
+  aiNote: string; // Info: (20260424 - Julian) AI 分析備註
+  journalId?: string; // Info: (20260424 - Julian) 會計分錄 ID
+  voucherId?: string; // Info: (20260424 - Julian) 傳票 ID
+  isDeleted?: boolean; // Info: (20260424 - Julian) 是否已刪除
+}
+
 export interface IEsgRecord {
   id: string;
   tradingDate: string;

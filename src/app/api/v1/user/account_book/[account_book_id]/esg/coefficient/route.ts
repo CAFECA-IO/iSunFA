@@ -187,9 +187,9 @@ export async function GET(
       );
     }
 
-    // if (unitParam) {
-    //   filteredStaticData = filteredStaticData.filter(c => c.unit === unitParam);
-    // }
+    if (unitParam) {
+      filteredStaticData = filteredStaticData.filter(c => c.unit === unitParam);
+    }
 
     const totalCount = filteredStaticData.length;
     let paginatedData = filteredStaticData;
