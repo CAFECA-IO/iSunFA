@@ -131,12 +131,13 @@ export async function GET(
       andConditions.push({ accountBookId: { not: null } });
     }
 
-    // Info: (20260414 - Julian) 搜尋字串過濾邏輯（名稱、描述的模糊搜尋）
+    // Info: (20260414 - Julian) 搜尋字串過濾邏輯（名稱、描述、來源的模糊搜尋）
     if (searchParam) {
       andConditions.push({
         OR: [
           { name: { contains: searchParam, mode: "insensitive" } },
           { description: { contains: searchParam, mode: "insensitive" } },
+          { source: { contains: searchParam, mode: "insensitive" } },
         ],
       });
     }
@@ -186,9 +187,9 @@ export async function GET(
       );
     }
 
-    if (unitParam) {
-      filteredStaticData = filteredStaticData.filter(c => c.unit === unitParam);
-    }
+    // if (unitParam) {
+    //   filteredStaticData = filteredStaticData.filter(c => c.unit === unitParam);
+    // }
 
     const totalCount = filteredStaticData.length;
     let paginatedData = filteredStaticData;

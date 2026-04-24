@@ -41,5 +41,6 @@ export const coefficient = {
     no_unit_match_prefix: "単位に一致する係数がありません：",
     no_unit_match_suffix: "",
     goto_manage: "係数管理ページに移動して係数を追加",
+    no_match: "一致する係数がありません",
   },
 };

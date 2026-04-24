@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Fragment } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { X, Calculator, Loader2 } from "lucide-react";
+import { X, Calculator, Loader2, Search, SearchX } from "lucide-react";
 import {
   Dialog,
   DialogPanel,
@@ -33,24 +33,32 @@ export default function CoefficientSelectModal({
   const router = useRouter();
   const accountBookId = params?.account_book_id as string;
 
-  const [coefficientList, setCoefficientList] = useState<ICoefficient[]>([]);
+  const [originalData, setOriginalData] = useState<ICoefficient[]>([]);
+  const [filteredData, setFilteredData] = useState<ICoefficient[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [keyword, setKeyword] = useState<string>("");
 
   const coefficientManagementUrl = `/user/account_book/${accountBookId}/esg?tab=coefficient`;
 
-  // Info: (20260414 - Julian) 取得係數列表
+  // Info: (20260424 - Julian) 取得係數列表
   useEffect(() => {
     const fetchCoefficientList = async () => {
       try {
         setIsLoading(true);
         const unitQuery = unit ? `&unit=${unit}` : "";
+        const searchQuery = keyword
+          ? `&search=${encodeURIComponent(keyword)}`
+          : "";
         const data = await request<
           IApiResponse<{ items: ICoefficient[]; total: number }>
         >(
-          `/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=all${unitQuery}`,
+          `/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=all${unitQuery}${searchQuery}`,
         );
         if (data.payload) {
-          setCoefficientList(data.payload.items);
+          if (!keyword) {
+            setOriginalData(data.payload.items);
+          }
+          setFilteredData(data.payload.items);
         }
       } catch (err) {
         console.error("Failed to fetch coefficient list:", err);
@@ -58,8 +66,16 @@ export default function CoefficientSelectModal({
         setIsLoading(false);
       }
     };
-    fetchCoefficientList();
-  }, [accountBookId, unit]);
+
+    // Info: (20260424 - Julian) 搜尋框延遲 1 秒，避免頻繁請求
+    const handler = setTimeout(() => {
+      fetchCoefficientList();
+    }, 1000);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [accountBookId, unit, keyword]);
 
   const gotoCoefficientPage = () => {
     // Info: (20260416 - Julian) 關閉這個 modal
@@ -68,13 +84,9 @@ export default function CoefficientSelectModal({
     router.push(coefficientManagementUrl);
   };
 
-  const displayCoefficientList = isLoading ? (
-    <div className="flex items-center justify-center p-10">
-      <Loader2 size={40} className="animate-spin text-orange-300" />
-    </div>
-  ) : coefficientList.length > 0 ? (
-    <div className="flex flex-col gap-2">
-      {coefficientList.map((coefficient) => {
+  const coefficientList =
+    filteredData.length > 0 ? (
+      filteredData.map((coefficient) => {
         const onClick = () => {
           selectCoefficient(coefficient);
           onClose();
@@ -90,16 +102,47 @@ export default function CoefficientSelectModal({
               <Calculator size={16} />
             </div>
             <div className="flex flex-col items-start">
-              <p className="text-sm font-bold text-slate-700">
+              <p className="text-left text-sm font-bold text-slate-700">
                 {coefficient.name}
               </p>
-              <p className="text-xs font-semibold text-slate-400">
+              <p className="text-left text-xs font-semibold text-slate-400">
                 {coefficient.unit} * {coefficient.emissionFactor}
               </p>
             </div>
           </button>
         );
-      })}
+      })
+    ) : (
+      <div className="flex flex-col gap-2 items-center p-10 text-base font-semibold text-slate-400">
+        <SearchX size={40} />
+        <p>{t("coefficient.select_modal.no_match")}</p>
+      </div>
+    );
+
+  const displayCoefficientList = isLoading ? (
+    <div className="flex items-center justify-center p-10">
+      <Loader2 size={40} className="animate-spin text-orange-300" />
+    </div>
+  ) : originalData.length > 0 ? (
+    <div className="flex flex-col gap-4">
+      {/* Info: (20260424 - Julian) 搜尋框 */}
+      <div className="relative w-full lg:max-w-sm">
+        <Search
+          size={16}
+          className="absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-400"
+        />
+        <input
+          type="text"
+          placeholder={t("coefficient.search.placeholder")}
+          aria-label={t("coefficient.search.label")}
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+        />
+      </div>
+      <div className="flex max-h-[400px] flex-col gap-2 overflow-y-auto">
+        {coefficientList}
+      </div>
     </div>
   ) : (
     <div className="flex flex-col items-center gap-2 px-10 py-5">

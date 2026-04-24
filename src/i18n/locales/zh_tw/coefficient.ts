@@ -9,7 +9,7 @@ export const coefficient = {
   },
   search: {
     label: "搜尋係數",
-    placeholder: "搜尋係數名稱、描述...",
+    placeholder: "搜尋係數名稱、描述或來源...",
   },
   action: {
     add: "新增係數",
@@ -40,6 +40,7 @@ export const coefficient = {
     title: "選擇計算公式",
     no_unit_match_prefix: "目前沒有單位符合 ",
     no_unit_match_suffix: " 的係數",
-    goto_manage: "前往係數管理頁面新增係數"
+    goto_manage: "前往係數管理頁面新增係數",
+    no_match: "沒有相符係數",
   },
 };

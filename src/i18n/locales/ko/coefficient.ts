@@ -41,5 +41,6 @@ export const coefficient = {
     no_unit_match_prefix: "해당 단위와 일치하는 계수가 없습니다: ",
     no_unit_match_suffix: "",
     goto_manage: "계수 관리 페이지로 이동하여 계수 추가",
+    no_match: "일치하는 계수가 없습니다",
   },
 };
