@@ -26,6 +26,7 @@ import { aiConsultationSection } from "@/i18n/locales/zh_cn/ai_consultation_sect
 import { ocr } from "@/i18n/locales/zh_cn/ocr";
 import { journal } from "@/i18n/locales/zh_cn/journal";
 import { coefficient } from "@/i18n/locales/zh_cn/coefficient";
+import { esgActivityType } from "@/i18n/locales/zh_cn/esg_activity_type";
 import { esgMain } from "@/i18n/locales/zh_cn/esg_main";
 import { esgSummary } from "@/i18n/locales/zh_cn/esg_summary";
 import { esgTable } from "@/i18n/locales/zh_cn/esg_table";
@@ -81,6 +82,7 @@ export const zhCn = {
   ocr,
   journal,
   coefficient,
+  esg_activity_type: esgActivityType,
   esg_main: esgMain,
   esg_summary: esgSummary,
   esg_table: esgTable,
