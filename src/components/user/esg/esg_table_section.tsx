@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Search, Info, ArrowDown, ArrowUp, FileStack } from "lucide-react";
 import Link from "next/link";
-import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
+import { IEsgRecordDetail, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { EsgRow } from "@/components/user/esg/esg_row";
 import RecordTabModal from "@/components/user/common/record_tab_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
@@ -32,7 +32,7 @@ export default function EsgTableSection({
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
 
-  const [records, setRecords] = useState<IEsgRecord[]>([]);
+  const [records, setRecords] = useState<IEsgRecordDetail[]>([]);
   const [recordCount, setRecordCount] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -51,8 +51,8 @@ export default function EsgTableSection({
     useState<boolean>(false);
   const [selectedEsgId, setSelectedEsgId] = useState<string | null>(null);
 
-  const [esgToDelete, setEsgToDelete] = useState<IEsgRecord | null>(null);
-  const [esgToRestore, setEsgToRestore] = useState<IEsgRecord | null>(null);
+  const [esgToDelete, setEsgToDelete] = useState<IEsgRecordDetail | null>(null);
+  const [esgToRestore, setEsgToRestore] = useState<IEsgRecordDetail | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [isRestoring, setIsRestoring] = useState<boolean>(false);
 
@@ -80,7 +80,7 @@ export default function EsgTableSection({
         : "";
 
       const res = await request<
-        IApiResponse<{ esgRecords: IEsgRecord[]; recordCount: number }>
+        IApiResponse<{ esgRecords: IEsgRecordDetail[]; recordCount: number }>
       >(`/api/v1/user/account_book/${accountBookId}/esg${queryString}`);
       if (res.payload) {
         setRecords(res.payload.esgRecords);
@@ -158,7 +158,7 @@ export default function EsgTableSection({
         // Info: (20260325 - Luphia) 平行發送請求，取代 for...of 的阻塞
         const results = await Promise.all(
           ids.map((id) =>
-            request<IApiResponse<{ esgRecord: IEsgRecord }>>(
+            request<IApiResponse<{ esgRecord: IEsgRecordDetail }>>(
               `/api/v1/user/account_book/${accountBookId}/esg/${id}`,
             ),
           ),
@@ -166,7 +166,7 @@ export default function EsgTableSection({
 
         const updatedRecords = results
           .map((res) => res.payload?.esgRecord)
-          .filter(Boolean) as IEsgRecord[];
+          .filter(Boolean) as IEsgRecordDetail[];
 
         if (updatedRecords.length > 0 && !isCancelled) {
           setRecords((prev) => {
@@ -196,7 +196,7 @@ export default function EsgTableSection({
     };
   }, [pendingIdsJoined, accountBookId]);
 
-  const handleVerifyOpen = (record: IEsgRecord) => {
+  const handleVerifyOpen = (record: IEsgRecordDetail) => {
     setSelectedEsgId(record.id);
     setIsVerifyModalOpen(true);
   };

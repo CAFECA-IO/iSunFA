@@ -12,7 +12,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import dynamic from "next/dynamic";
 import { IJournal } from "@/interfaces/journal";
 import { IVoucher } from "@/interfaces/voucher";
-import { IEsgRecord } from "@/interfaces/esg";
+import { IEsgRecordDetail } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
 import { downloadFile } from "@/lib/file_operator";
 
@@ -41,7 +41,7 @@ interface IRecordTabModalProps {
   file?: { id: string; hash?: string; fileName?: string } | null;
   onJournalUpdate?: (journal: IJournal) => void;
   onVoucherUpdate?: (voucher: IVoucher) => void;
-  onEsgUpdate?: (esg: IEsgRecord) => void;
+  onEsgUpdate?: (esg: IEsgRecordDetail) => void;
   onDelete?: () => void;
   onRestore?: () => void;
   isDeleted?: boolean;
@@ -151,7 +151,7 @@ export default function RecordTabModal({
     if (v.file) setFile(v.file);
   }, [onVoucherUpdate]);
 
-  const handleEsgUpdate = useCallback((e: IEsgRecord) => {
+  const handleEsgUpdate = useCallback((e: IEsgRecordDetail) => {
     onEsgUpdate?.(e);
     if (e.journalId) setJournalId(e.journalId);
     if (e.voucherId) setVoucherId(e.voucherId);
