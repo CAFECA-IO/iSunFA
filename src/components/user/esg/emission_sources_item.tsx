@@ -73,12 +73,15 @@ export default function EmissionSourcesItem({
 
   // Info: (20260421 - Julian) 總排放量
   const totalEmission = data.totalEmission;
-
+  // Info: (20260424 - Julian) 根據總排放量決定顏色
   const esColor =
     data.intensity === EsgIntensity.HIGH ? "text-red-500" : "text-green-500";
 
-  // Info: (20260424 - Julian) 分類列表
-  const groupedRecordList = Object.entries(groupedRecords).map(
+  // Info: (20260424 - Julian) 取得分類列表
+  const groupedList = Object.entries(groupedRecords);
+
+  // Info: (20260424 - Julian) 渲染分類列表
+  const groupedRecordList =groupedList.length>0? groupedList.map(
     ([tag, records]) => (
       <div key={tag} className="mb-6 last:mb-0">
         <div className="mb-3 flex items-center gap-2">
@@ -117,7 +120,7 @@ export default function EmissionSourcesItem({
         </div>
       </div>
     ),
-  );
+  ):<div className="flex flex-col items-center justify-center py-2 font-semibold text-slate-400">{t("emission_sources.item.no_records")}</div>
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-colors duration-200 focus-within:border-orange-200 hover:border-orange-200">

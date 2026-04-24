@@ -66,7 +66,11 @@ const EmissionSourcesList = ({ keyword, refreshFlag }: { keyword: string; refres
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="ml-auto text-sm text-slate-400">目前共有 <span className="font-bold text-slate-700">{totalCount}</span> 個排放源</div>
+      <div className="ml-auto text-sm text-slate-400">
+        {t("emission_sources.list.total_count").split("{{count}}")[0]}
+        <span className="font-bold text-slate-700">{totalCount}</span>
+        {t("emission_sources.list.total_count").split("{{count}}")[1]}
+      </div>
       {data.map((item) => (
         <EmissionSourcesItem key={item.id} data={item} />
       ))}

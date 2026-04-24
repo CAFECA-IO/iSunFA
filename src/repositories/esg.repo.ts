@@ -478,7 +478,7 @@ export class EsgRepository implements IEsgRepository {
       where,
       skip: (page - 1) * pageSize,
       take: pageSize,
-      orderBy: { createdAt: "desc" },
+      orderBy: { updatedAt: "desc" },
       include: { esgRecords: { where: { deletedAt: null } } },
     });
 

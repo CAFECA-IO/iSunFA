@@ -9,6 +9,7 @@ export const emissionSources = {
   },
   list: {
     no_data: "No data available",
+    total_count: "Currently showing {{count}} emission sources",
   },
   modal: {
     title: "Add Emission Source",
@@ -21,6 +22,7 @@ export const emissionSources = {
     confirm: "Confirm & Add",
   },
   item: {
+    no_records: "No ESG records logged yet",
     address: "Address",
     no_setting: "Not Set",
     records_count: "Records",
