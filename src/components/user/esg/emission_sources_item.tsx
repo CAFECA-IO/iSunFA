@@ -14,9 +14,13 @@ interface IEmissionSourcesItemProps {
 const RecordItem = ({ rec }: { rec: IEsgRecordBrief }) => {
   const { t } = useTranslation();
 
-  const activityTypeStr = rec.activityType
-    ? t(`esg_activity_type.${rec.activityType.toLowerCase()}`)
-    : "-";
+  // Info: (20260424 - Julian) 檢查翻譯內容是否與原本的 key 一致，如果是，則代表翻譯不存在或未設定，那就直接使用原本的 activityType
+  const activityTypeKey = `esg_activity_type.${rec.activityType?.toLowerCase()}`;
+  let activityTypeStr = "-";
+  if (rec.activityType) {
+    const translated = t(activityTypeKey);
+    activityTypeStr = translated === activityTypeKey ? rec.activityType : translated;
+  }
 
   return (
     <tr className="transition-colors hover:bg-orange-50/50">

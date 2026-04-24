@@ -4,7 +4,7 @@ export const emissionSources = {
   },
   toolbar: {
     search: "搜尋排放源",
-    placeholder: "搜尋排放源 ID 或名稱...",
+    placeholder: "搜尋排放源 ID、名稱或地址...",
     add_button: "新增排放源",
   },
   list: {

@@ -4,7 +4,7 @@ export const emissionSources = {
   },
   toolbar: {
     search: "Search Emission Sources",
-    placeholder: "Search by ID or Name...",
+    placeholder: "Search by ID, Name or Address...",
     add_button: "Add Emission Source",
   },
   list: {

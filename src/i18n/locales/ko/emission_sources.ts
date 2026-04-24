@@ -4,7 +4,7 @@ export const emissionSources = {
   },
   toolbar: {
     search: "배출원 검색",
-    placeholder: "ID 또는 이름으로 검색...",
+    placeholder: "ID、이름 또는 주소로 검색...",
     add_button: "배출원 추가",
   },
   list: {

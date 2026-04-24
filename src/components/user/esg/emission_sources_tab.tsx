@@ -1,27 +1,61 @@
 "use client";
 
-import { useState } from "react";
-// import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
-import { Plus, Search, SearchX } from "lucide-react";
-// import { request } from "@/lib/utils/request";
-// import { IApiResponse } from "@/lib/utils/response";
-// import { EsgScope } from "@/interfaces/esg";
-// import { IActivityData } from "@/interfaces/emission_source";
+import { Plus, Search, SearchX, Loader2 } from "lucide-react";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
 // import EmissionSourcesSummary from "@/components/user/esg/emission_sources_summary";
 import EmissionSourcesItem from "@/components/user/esg/emission_sources_item";
-import { mockEmissionSources } from "@/interfaces/emission_source";
+import { IEsgEmissionSourcesUI } from "@/interfaces/emission_source";
 import AddEmissionSourceModal from "@/components/user/esg/add_emission_source_modal";
+import Pagination from "@/components/common/pagination";
 
-const EmissionSourcesList = ({ keyword }: { keyword: string }) => {
+const PAGE_SIZE = 10;
+
+const EmissionSourcesList = ({ keyword, refreshFlag }: { keyword: string; refreshFlag: boolean }) => {
   const { t } = useTranslation();
-  const filteredData = mockEmissionSources.filter(
-    (source) =>
-      source.name.toLowerCase().includes(keyword.toLowerCase()) ||
-      source.id.toLowerCase().includes(keyword.toLowerCase()),
-  );
+  const params = useParams();
+  const accountBookId = params?.account_book_id as string;
 
-  if (filteredData.length === 0) {
+  const [data, setData] = useState<IEsgEmissionSourcesUI[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(1);
+
+  useEffect(() => {
+      const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await request<IApiResponse<{ data: IEsgEmissionSourcesUI[],total: number, totalPages: number }>>(
+        `/api/v1/user/account_book/${accountBookId}/esg/emission_sources?keyword=${encodeURIComponent(keyword)}&page=${currentPage}&pageSize=${PAGE_SIZE}`
+      );
+      if (res.success && res.payload) {
+        setData(res.payload.data);
+        setTotalCount(res.payload.total);
+        setTotalPages(res.payload.totalPages);
+      }
+    } catch (error) {
+      console.error("Failed to fetch emission sources", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  fetchData()
+  }, [keyword, currentPage, refreshFlag, accountBookId]);
+
+  if (isLoading && data.length === 0) {
+    return (
+      <div className="flex justify-center p-12">
+        <Loader2 className="animate-spin text-gray-400" size={40} />
+      </div>
+    );
+  }
+
+  if (data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white p-12 text-lg font-bold text-slate-400">
         <SearchX size={40} />
@@ -32,22 +66,28 @@ const EmissionSourcesList = ({ keyword }: { keyword: string }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      {filteredData.map((data) => (
-        <EmissionSourcesItem key={data.id} data={data} />
+      <div className="ml-auto text-sm text-slate-400">目前共有 <span className="font-bold text-slate-700">{totalCount}</span> 個排放源</div>
+      {data.map((item) => (
+        <EmissionSourcesItem key={item.id} data={item} />
       ))}
+      
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </div>
   );
 };
 
 export default function EmissionSourcesTab() {
-  // const params = useParams();
-  // const accountBookId = params?.account_book_id as string;
-
   const { t } = useTranslation();
 
   const [keyword, setKeyword] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  // const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [refreshFlag, setRefreshFlag] = useState<boolean>(false);
 
   return (
     <>
@@ -85,12 +125,13 @@ export default function EmissionSourcesTab() {
         </div>
 
         {/* Info: (20260420 - Julian) Emission Sources List */}
-        <EmissionSourcesList keyword={keyword} />
+        <EmissionSourcesList keyword={keyword} refreshFlag={refreshFlag} />
       </div>
 
       <AddEmissionSourceModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onSuccess={() => setRefreshFlag((prev) => !prev)}
       />
     </>
   );
