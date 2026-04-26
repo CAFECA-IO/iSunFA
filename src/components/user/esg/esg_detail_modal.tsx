@@ -15,7 +15,7 @@ import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import ConfirmModal from "@/components/common/confirm_modal";
-import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
+import { IEsgRecordDetail, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import FilePreviewModal from "@/components/common/file_preview_modal";
 import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -29,7 +29,7 @@ interface IEsgDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   esgId: string | null;
-  onSave?: (record: IEsgRecord) => void;
+  onSave?: (record: IEsgRecordDetail) => void;
 }
 
 export default function EsgDetailModal({
@@ -42,8 +42,8 @@ export default function EsgDetailModal({
   const accountBookId = params?.account_book_id as string;
   const { t } = useTranslation();
 
-  const [formData, setFormData] = useState<IEsgRecord | null>(null);
-  const [originalData, setOriginalData] = useState<IEsgRecord | null>(null);
+  const [formData, setFormData] = useState<IEsgRecordDetail | null>(null);
+  const [originalData, setOriginalData] = useState<IEsgRecordDetail | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
@@ -63,7 +63,7 @@ export default function EsgDetailModal({
       const fetchEsgRecord = async () => {
         setIsLoading(true);
         try {
-          const res = await request<IApiResponse<IEsgRecord>>(
+          const res = await request<IApiResponse<IEsgRecordDetail>>(
             `/api/v1/user/account_book/${accountBookId}/esg/${esgId}`,
           );
           if (res.payload) {
@@ -134,18 +134,17 @@ export default function EsgDetailModal({
     if (!formData) return;
     setIsLoading(true);
     try {
-      const formPayload: IEsgRecord = {
+      const formPayload: IEsgRecordDetail = {
         ...formData,
         isVerified: isVerifiedState,
-        emissions: calculatedResult.totalEmissions.toString(),
+        emissions: calculatedResult.totalEmissions,
         intensity:
           calculatedResult.intensityLevel !== "-"
             ? (calculatedResult.intensityLevel as EsgIntensity)
             : formData.intensity,
       };
-      const isoString = `${dateValue}T00:00:00.000Z`;
-      formPayload.tradingDate = isoString;
-      const res = await request<IApiResponse<IEsgRecord>>(
+      formPayload.tradingDate = Number(new Date(dateValue).getTime() / 1000);
+      const res = await request<IApiResponse<IEsgRecordDetail>>(
         `/api/v1/user/account_book/${accountBookId}/esg/${formData.id}`,
         {
           method: "PUT",
@@ -187,7 +186,7 @@ export default function EsgDetailModal({
   const isEmissionsChanged =
     calculatedResult.totalEmissions && originalData?.emissions
       ? parseFloat(calculatedResult.totalEmissions.toString()) !==
-        parseFloat(originalData?.emissions)
+        parseFloat(originalData?.emissions.toString())
       : false;
   const isIntensityChanged =
     calculatedResult.intensityLevel && originalData?.intensity
@@ -196,12 +195,13 @@ export default function EsgDetailModal({
       : false;
 
   // Info: (20260417 - Julian) 日期格式
-  const dateValue = formData.tradingDate
-    ? formData.tradingDate.split("T")[0]
-    : "";
+  const dateValue = new Date(
+    formData.tradingDate * 1000,
+  ).toISOString().split("T")[0];
 
-  const handleDateChange = (dateString: string) => {
-    setFormData({ ...formData, tradingDate: dateString });
+  const handleDateChange = (dateStr: string) => {
+    const tradingDate = Number(new Date(dateStr).getTime() / 1000);
+    setFormData({ ...formData, tradingDate });
   };
 
   const handleScopeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

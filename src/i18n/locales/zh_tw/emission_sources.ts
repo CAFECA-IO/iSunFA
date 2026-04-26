@@ -4,11 +4,12 @@ export const emissionSources = {
   },
   toolbar: {
     search: "搜尋排放源",
-    placeholder: "搜尋排放源 ID 或名稱...",
+    placeholder: "搜尋排放源 ID、名稱或地址...",
     add_button: "新增排放源",
   },
   list: {
     no_data: "目前沒有資料",
+    total_count: "目前共有 {{count}} 個排放源",
   },
   modal: {
     title: "新增排放源",
@@ -21,6 +22,7 @@ export const emissionSources = {
     confirm: "確認新增",
   },
   item: {
+    no_records: "尚未登錄任何 ESG 紀錄",
     address: "地址",
     no_setting: "未設定",
     records_count: "筆記錄",

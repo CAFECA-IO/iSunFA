@@ -40,6 +40,7 @@ export const coefficient = {
     title: "选择计算公式",
     no_unit_match_prefix: "目前没有单位符合 ",
     no_unit_match_suffix: " 的系数",
-    goto_manage: "前往系数管理页面新增系数"
+    goto_manage: "前往系数管理页面新增系数",
+    no_match: "没有相符系数",
   },
 };

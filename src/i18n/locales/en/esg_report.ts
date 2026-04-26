@@ -21,4 +21,9 @@ export const esgReport = {
   scope1_title: "Scope 1 (Direct)",
   scope2_title: "Scope 2 (Indirect)",
   scope3_title: "Scope 3 (Supply Chain)",
+  bom_title: "Detailed BOM (Bill of Materials)",
+  bom_scope: "Scope",
+  bom_activity: "Activity Type",
+  bom_emissions: "Emissions (kgCO2e)",
+  bom_percentage: "Percentage (%)",
 };

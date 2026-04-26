@@ -4,11 +4,12 @@ export const emissionSources = {
   },
   toolbar: {
     search: "배출원 검색",
-    placeholder: "ID 또는 이름으로 검색...",
+    placeholder: "ID、이름 또는 주소로 검색...",
     add_button: "배출원 추가",
   },
   list: {
     no_data: "데이터가 없습니다",
+    total_count: "현재 {{count}} 개의 배출원이 있습니다",
   },
   modal: {
     title: "배출원 추가",
@@ -21,6 +22,7 @@ export const emissionSources = {
     confirm: "추가 확인",
   },
   item: {
+    no_records: "등록된 ESG 기록이 없습니다",
     address: "주소",
     no_setting: "설정되지 않음",
     records_count: "개의 기록",

@@ -9,7 +9,7 @@ import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Prisma } from "@/generated/client";
 import {
-  IEsgRecord,
+  IEsgRecordDetail,
   EsgScope as ClientEsgScope,
   EsgIntensity as ClientEsgIntensity,
 } from "@/interfaces/esg";
@@ -227,9 +227,9 @@ export async function GET(
         : {}),
     });
 
-    const esgRecords: IEsgRecord[] = esgDbRecords.map((r) => ({
+    const esgRecords: IEsgRecordDetail[] = esgDbRecords.map((r) => ({
       ...r,
-      tradingDate: r.tradingDate.toString(),
+      tradingDate: Math.floor(r.tradingDate.getTime() / 1000),
       fileId: r.fileId ?? "",
       file: r.file
         ? {
@@ -241,7 +241,7 @@ export async function GET(
       scope: r.scope as ClientEsgScope,
       activityType: r.activityType as unknown as EsgActivityTypeKey,
       amount: Number(r.amount),
-      emissions: r.emissions.toString(),
+      emissions: Number(r.emissions),
       intensity: r.intensity as ClientEsgIntensity,
       analysisStatus: r.analysisStatus as AIAnalysisStatus,
       journalId: r.journalId,

@@ -4,11 +4,12 @@ export const emissionSources = {
   },
   toolbar: {
     search: "排出源を検索",
-    placeholder: "IDまたは名前で検索...",
+    placeholder: "ID、名称または住所で検索...",
     add_button: "排出源を追加",
   },
   list: {
     no_data: "データがありません",
+    total_count: "現在 {{count}} 個の排出源があります",
   },
   modal: {
     title: "排出源を追加",
@@ -21,6 +22,7 @@ export const emissionSources = {
     confirm: "追加を確認",
   },
   item: {
+    no_records: "ESG記録がまだ登録されていません",
     address: "住所",
     no_setting: "未設定",
     records_count: "件の記録",
