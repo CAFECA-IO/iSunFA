@@ -22,6 +22,8 @@ export const esgReport = {
   bom_title: "排放細項 BOM 表",
   bom_scope: "範疇",
   bom_activity: "排放活動",
+  bom_original_data: "原始活動數據",
+  bom_coefficient: "使用之係數",
   bom_emissions: "排放量 (kgCO2e)",
   bom_percentage: "佔比 (%)",
 };
