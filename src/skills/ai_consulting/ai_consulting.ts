@@ -3,6 +3,7 @@ import { ChatService } from "@/services/chat.service";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
 import { storageService } from "@/services/storage.service";
+import { prisma } from "@/lib/prisma";
 
 export class AiConsultingSkill implements ITaskSkill {
   name = "AiConsulting";
@@ -55,13 +56,42 @@ export class AiConsultingSkill implements ITaskSkill {
       (img): img is { data: string; mimeType: string } => !!img?.data
     );
 
-    console.log(`[AiConsultingSkill] Executing ChatService.askAccountTalk...`);
-    const { answer, tags } = await chatService.askAccountTalk(
+    console.log(`[AiConsultingSkill] Executing ChatService.askAccountTalkStream...`);
+
+    let lastUpdateTime = 0;
+    const UPDATE_INTERVAL_MS = 1000;
+    
+    // Info: (20260427 - Julian) 取出關聯的 Analysis
+    const analysis = await prisma.analysis.findFirst({
+      where: { orderId: mission.id }
+    });
+
+    const { answer, tags } = await chatService.askAccountTalkStream(
       fullPrompt,
       imagesForAi,
+      async (partialAnswer) => {
+        const now = Date.now();
+        if (now - lastUpdateTime > UPDATE_INTERVAL_MS && analysis) {
+          lastUpdateTime = now;
+          try {
+            await prisma.analysis.update({
+              where: { id: analysis.id },
+              data: {
+                result: {
+                  answer: partialAnswer,
+                  tags: ["生成中..."],
+                  isGenerating: true,
+                }
+              }
+            });
+          } catch (e) {
+            console.error(`[AiConsultingSkill] Failed to update partial result to DB:`, e);
+          }
+        }
+      }
     );
 
-    const stringifiedResult = JSON.stringify({ answer, tags });
+    const stringifiedResult = JSON.stringify({ answer, tags, isGenerating: false });
     console.log(
       `[AiConsultingSkill] Completed Talk. Result JSON length=${stringifiedResult.length}`,
     );
