@@ -45,6 +45,7 @@ import { adminMember } from "@/i18n/locales/ja/admin_member";
 import { adminBlockchain } from "@/i18n/locales/ja/admin_blockchain";
 import { adminMissionBoard } from "@/i18n/locales/ja/admin_mission_board";
 import { emissionSources } from "@/i18n/locales/ja/emission_sources";
+import { orderManagement } from "@/i18n/locales/ja/order_management";
 
 import { date } from "@/i18n/locales/ja/date";
 import { currencyAlias } from "@/i18n/locales/ja/currency_alias";
@@ -102,4 +103,5 @@ export const ja = {
   admin_dashboard: adminDashboard,
   admin_mission_board: adminMissionBoard,
   emission_sources: emissionSources,
+  order_management: orderManagement,
 } satisfies BaseTranslation;

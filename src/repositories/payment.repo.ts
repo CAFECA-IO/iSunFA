@@ -217,10 +217,15 @@ export class PaymentRepository {
     transactionHash?: string,
   ) {
     await prisma.$transaction(async (tx) => {
+      const existingOrder = await tx.order.findUnique({ where: { id: orderId } });
+      if (!existingOrder) throw new Error("Order not found");
+
+      const finalStatus = existingOrder.type === ORDER_TYPE.ANALYSIS ? ORDER_STATUS.PAID : ORDER_STATUS.COMPLETED;
+
       const order = await tx.order.update({
         where: { id: orderId },
         data: {
-          status: ORDER_STATUS.COMPLETED,
+          status: finalStatus,
           signature: signature,
           transactionHash: transactionHash,
         },

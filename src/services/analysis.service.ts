@@ -3,8 +3,11 @@ import { promises as fs } from "fs";
 import path from "path";
 import { getAnalysisCost, IOrderParams } from "@/lib/analysis/pricing";
 import { storageService } from "@/services/storage.service";
-import { prisma } from "@/lib/prisma";
 import { analysisRepo } from "@/repositories/analysis.repo";
+import { teamRepo } from "@/repositories/team.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
+import { esgRepo } from "@/repositories/esg.repo";
+import { voucherRepo } from "@/repositories/voucher.repo";
 import {
   missionGenerator,
   IMissionDefinition,
@@ -69,7 +72,7 @@ export class AnalysisService {
       let prerequisiteStr = "";
 
       if (params.category === ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS && params.keyword) {
-        const prerequisite = await prisma.analysis.findFirst({
+        const prerequisite = await analysisRepo.findFirst({
           where: {
             userId,
             type: ANALYSIS_CATEGORY.CARBON_HEALTH_CHECK,
@@ -145,7 +148,7 @@ export class AnalysisService {
             new Date(end + "T23:59:59.999Z").getTime() / 1000,
           );
 
-          const teamMembers = await prisma.teamMember.findMany({
+          const teamMembers = await teamRepo.findManyMembers({
             where: { userId },
           });
           const teamIds = teamMembers.map((tm) => tm.teamId);
@@ -160,7 +163,7 @@ export class AnalysisService {
               `[ESG-DEBUG] Keyword: ${params.keyword}, Extracted Tax ID: ${taxId}`,
             );
 
-            matchedAccountBook = await prisma.accountBook.findFirst({
+            matchedAccountBook = await accountBookRepo.findFirst({
               where: {
                 teamId: { in: teamIds },
                 enterpriseId: taxId,
@@ -181,7 +184,7 @@ export class AnalysisService {
           console.log(`[ESG-DEBUG] Start TS: ${startTs}, End TS: ${endTs}`);
 
           const esgRecords = targetAccountBookId
-            ? await prisma.esgRecord.findMany({
+            ? await esgRepo.findManyEsgRecords({
               where: {
                 accountBookId: targetAccountBookId,
                 tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
@@ -195,7 +198,7 @@ export class AnalysisService {
           let voucherRecords: unknown[] = [];
           if (params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE) {
             voucherRecords = targetAccountBookId
-              ? await prisma.voucher.findMany({
+              ? await voucherRepo.findManyVouchers({
                 where: {
                   accountBookId: targetAccountBookId,
                   tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },

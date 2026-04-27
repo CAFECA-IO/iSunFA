@@ -7,7 +7,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { Wallet } from "ethers";
 import { isuncoin } from "@/lib/viem_public";
 
-// Info: (20260413 - Local) Get the deployed Admin private key from the stored Keystore.
+// Info: (20260413 - Luphia) Get the deployed Admin private key from the stored Keystore.
 export async function getAdminPrivateKey(): Promise<`0x${string}`> {
   const envAdminPath = path.join(process.cwd(), ".env.admin");
   const envSeedPath = path.join(process.cwd(), ".env.seed");
@@ -30,6 +30,12 @@ export async function getAdminPrivateKey(): Promise<`0x${string}`> {
 export async function getAdminAccount() {
   const privateKey = await getAdminPrivateKey();
   return privateKeyToAccount(privateKey);
+}
+
+// Info: (20260424 - Luphia) Get the deployed Admin address for client components
+export async function getAdminAddressString(): Promise<string> {
+  const account = await getAdminAccount();
+  return account.address;
 }
 
 // Info: (20260413 - Luphia) Get the deployed Admin Wallet client.

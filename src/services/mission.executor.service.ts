@@ -7,10 +7,7 @@ import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
 import { Prisma } from "@/generated/client";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
-import { syncDocumentResultToDatabase } from "@/skills/utils/document_parser_db_sync";
-
-export class MissionExecutorService {
-  async processNext() {
+export async function processNext() {
     console.log("[MissionExecutor] Scanning MISSION_DIR for tasks to execute...");
 
     const setupConfig = await getPriorityEnvConfig();
@@ -111,7 +108,7 @@ export class MissionExecutorService {
             } as IPseudoTask;
 
             // Info: (20260420 - Luphia) Build Prompt
-            const fullPrompt = await this.buildTaskPrompt(subTaskConfig, missionData, priorResults);
+            const fullPrompt = await buildTaskPrompt(subTaskConfig, missionData, priorResults);
             let taskResultStr = "";
 
             const skill = skillRegistry[subTaskConfig.type];
@@ -192,18 +189,25 @@ export class MissionExecutorService {
           if (tasksConfig.length > 1 && typeof aggregatedResult === 'object' && aggregatedResult !== null) {
             const agg = aggregatedResult as Record<string, unknown>;
 
+            const serializeVal = (val: unknown): string => {
+              if (typeof val === 'object' && val !== null) {
+                return JSON.stringify(val, null, 2);
+              }
+              return String(val);
+            };
+
             const finalTaskKey = tasksConfig[tasksConfig.length - 1]?.data?.key as string;
-            let finalAnswer = finalTaskKey && agg[finalTaskKey] ? String(agg[finalTaskKey]) : "";
+            let finalAnswer = finalTaskKey && agg[finalTaskKey] ? serializeVal(agg[finalTaskKey]) : "";
 
             if (!finalAnswer) {
               const stepKeys = Object.keys(agg).filter(k => k.startsWith("STEP_") || k === "MARKET_FORMATTED_OUTPUT").sort();
               const fallbackKey = agg["STEP_5"] ? "STEP_5" : (stepKeys.length > 0 ? stepKeys[stepKeys.length - 1] : null);
-              finalAnswer = fallbackKey ? String(agg[fallbackKey]) : "";
+              finalAnswer = fallbackKey ? serializeVal(agg[fallbackKey]) : "";
             }
 
             let tags: string[] = [];
             if (agg["STEP_2"]) {
-              const step2Str = String(agg["STEP_2"]);
+              const step2Str = serializeVal(agg["STEP_2"]);
               const lines = step2Str.split('\n');
               let capturingTags = false;
               for (const line of lines) {
@@ -232,8 +236,9 @@ export class MissionExecutorService {
 
             aggregatedResult = {
               answer: finalAnswer,
-              tags: tags
-            };
+              tags: tags,
+              dbSyncPayload: Object.keys(aggregatedResultsByFileId).length > 0 ? aggregatedResultsByFileId : undefined
+            } as unknown as Prisma.InputJsonValue;
           }
         } else {
           // Info: (20260420 - Luphia) Fallback MD behavior
@@ -246,17 +251,9 @@ export class MissionExecutorService {
         }
 
         const resultPayloadStr = typeof aggregatedResult === "string" ? aggregatedResult : JSON.stringify(aggregatedResult, null, 2);
-        await fs.writeFile(resultPath, resultPayloadStr, "utf8");
 
-        // Info: (20260420 - Luphia) Perform Database sync for valid parsed batch documents natively on worker!
-        for (const fileId of Object.keys(aggregatedResultsByFileId)) {
-          const fileResult = aggregatedResultsByFileId[fileId];
-          await syncDocumentResultToDatabase(
-            fileId,
-            fileResult.accountBookId as string,
-            fileResult
-          );
-        }
+        // Info: (20260426 - Luphia) Write result.md ONLY after database sync payload is saved to avoid premature commit by Commitor
+        await fs.writeFile(resultPath, resultPayloadStr, "utf8");
         console.log(`[MissionExecutor] Execution successful. Final Result extracted to result.md`);
       } catch (execErr) {
         console.error(`[MissionExecutor] Execution error for Task ID ${folderName}:`, execErr);
@@ -268,7 +265,7 @@ export class MissionExecutorService {
     }
   }
 
-  private async buildTaskPrompt(taskConfig: ITaskDefinition, missionData: Record<string, unknown>, priorResults: Map<string, string>): Promise<string> {
+  async function buildTaskPrompt(taskConfig: ITaskDefinition, missionData: Record<string, unknown>, priorResults: Map<string, string>): Promise<string> {
     let interpolatedPrompt = taskConfig.data.prompt || "";
 
     const currentDate = new Date().toISOString().split("T")[0];
@@ -345,7 +342,4 @@ export class MissionExecutorService {
     }
 
     return fullPrompt;
-  }
 }
-
-export const missionExecutorService = new MissionExecutorService();

@@ -49,6 +49,7 @@ export const billing = {
     source_chat: "AI Consultation Usage",
     source_checkin: "Daily Check-in Reward",
     source_registration: "Registration Reward",
-    source_admin_issued: "Issued by Admin",
+    source_admin_issued: "Issued by Administrator",
+    source_check_in_reward: "Daily Check-in Reward",
   },
 };

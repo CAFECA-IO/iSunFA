@@ -11,15 +11,15 @@ interface IMarkdownContentProps {
 
 const MarkdownContent: FC<IMarkdownContentProps> = ({ content, theme = 'dark' }) => {
   const isDark = theme === 'dark';
-  const textColor = isDark ? 'text-white' : 'text-gray-900';
-  const secondaryTextColor = isDark ? 'text-[#E0E0E0]' : 'text-gray-700';
-  const linkColor = isDark ? 'text-[#64B5F6]' : 'text-blue-600';
-  const borderColor = isDark ? 'border-[#444]' : 'border-gray-200';
-  const blockquoteBg = isDark ? 'bg-[#FF9800]/10' : 'bg-orange-50';
-  const blockquoteText = isDark ? 'text-[#FFE0B2]' : 'text-orange-800';
-  const tableBorder = isDark ? 'border-[#444]' : 'border-gray-300';
-  const theadBg = isDark ? 'bg-white/5' : 'bg-gray-50';
-  const thText = isDark ? 'text-[#FFB74D]' : 'text-orange-700';
+  const textColor = isDark ? 'text-[#ffffff]' : 'text-[#111827]';
+  const secondaryTextColor = isDark ? 'text-[#E0E0E0]' : 'text-[#374151]';
+  const linkColor = isDark ? 'text-[#64B5F6]' : 'text-[#2563eb]';
+  const borderColor = isDark ? 'border-[#444]' : 'border-[#e5e7eb]';
+  const blockquoteBg = isDark ? 'bg-[#FF9800]/10' : 'bg-[#fff7ed]';
+  const blockquoteText = isDark ? 'text-[#FFE0B2]' : 'text-[#9a3412]';
+  const tableBorder = isDark ? 'border-[#444]' : 'border-[#d1d5db]';
+  const theadBg = isDark ? 'bg-[#ffffff]/5' : 'bg-[#f9fafb]';
+  const thText = isDark ? 'text-[#FFB74D]' : 'text-[#c2410c]';
 
   const result = (
     <ReactMarkdown

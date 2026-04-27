@@ -34,4 +34,37 @@ export const adminMissionBoard = {
     loading: "ミッションを読み込んでいます...",
     unknown: "不明",
   },
+  local_task: {
+    executing: "実行中",
+    completed: "完了",
+    failed: "一時停止",
+    pending: "待機中",
+    failure_count: "失敗回数:",
+    view_log: "ログを表示",
+    cancel_task: "タスクをキャンセル",
+    restart_task: "タスクを再起動",
+    no_tasks: "現在、割り当てられたタスクはありません。",
+    failure_logs: "失敗ログ",
+  },
+  pdf_editor: {
+    title: "PDFエディタ",
+    subtitle: "マークダウンを記述し、iSunFA専用フォーマットのPDFとしてエクスポートします。",
+    edit_markdown: "マークダウンを編集",
+    preview_pdf: "PDFをプレビュー",
+    download_pdf: "PDFをダウンロード",
+    generating: "生成中...",
+    markdown_input: "マークダウン入力",
+    type_here: "ここにマークダウンを入力してください...",
+    pdf_preview: "PDFプレビュー",
+    brand: "iSunFAスマート会計",
+    internal_document: "内部文書",
+    system_report: "システムレポート",
+    footer_title: "AIによる炭素会計の再構築",
+    footer_text: "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal."
+  },
+  gc: {
+    btn_text: "GCクリーンアップを実行",
+    result_title: "タスクシステムクリーンアップ結果",
+    success_msg: "{{count}} 個の期限切れまたは無効なフォルダを正常にクリアしました。",
+  }
 };

@@ -149,6 +149,10 @@ export class EsgRepository implements IEsgRepository {
     }) as EsgRecordWithRelations[];
   }
 
+  async findManyEsgRecords(args: Prisma.EsgRecordFindManyArgs) {
+    return prisma.esgRecord.findMany(args);
+  }
+
   async createEsgRecord(data: Prisma.EsgRecordUncheckedCreateInput) {
     return prisma.esgRecord.create({ data });
   }

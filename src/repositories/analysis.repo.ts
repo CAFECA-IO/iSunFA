@@ -34,6 +34,18 @@ export interface IAnalysisRepository {
 }
 
 export class AnalysisRepository implements IAnalysisRepository {
+  async findFirst(args: Prisma.AnalysisFindFirstArgs) {
+    return prisma.analysis.findFirst(args);
+  }
+
+  async findMany(args: Prisma.AnalysisFindManyArgs) {
+    return prisma.analysis.findMany(args);
+  }
+
+  async update(args: Prisma.AnalysisUpdateArgs) {
+    return prisma.analysis.update(args);
+  }
+
   async create(params: {
     reportId: string;
     userId: string;

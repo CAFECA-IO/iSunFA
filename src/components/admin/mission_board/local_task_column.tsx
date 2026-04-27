@@ -1,0 +1,151 @@
+import { ILocalMission } from "@/interfaces/mission_board";
+import { Play, FileText, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { request } from "@/lib/utils/request";
+import { useState } from "react";
+import ConfirmModal from "@/components/common/confirm_modal";
+import { useTranslation } from "@/i18n/i18n_context";
+import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
+import { XCircle, Loader2 } from "lucide-react";
+
+interface IProps {
+  title: string;
+  missions: ILocalMission[];
+}
+
+export default function LocalTaskColumn({ title, missions }: IProps) {
+  const { t } = useTranslation();
+  const [logModal, setLogModal] = useState<{ isOpen: boolean; logs: { filename: string, content: string }[] }>({ isOpen: false, logs: [] });
+  const [actionLoading, setActionLoading] = useState<{ id: string, type: 'restart' | 'cancel' } | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [fadeCanceledIds, setFadeCanceledIds] = useState<string[]>([]);
+
+  const performAction = async (folderId: string, action: 'restart' | 'cancel') => {
+    setActionLoading({ id: folderId, type: action });
+    try {
+      const { challenge, token } = await getLoginOptions();
+      const authentication = await fido2ClientService.startLogin({ challenge });
+
+      await request(`/api/v1/admin/mission_board/local/${folderId}/actions`, {
+        method: "POST",
+        body: JSON.stringify({
+          action,
+          fido2Signature: {
+            authentication,
+            challengeToken: token
+          }
+        }),
+      });
+      // Info: (20260426 - Luphia) Optimistically trigger a refetch or reload if needed, but the polling will catch it
+      if (action === 'cancel') {
+        setFadeCanceledIds(prev => [...prev, folderId]);
+      }
+    } catch (e) {
+      console.error(e);
+      setActionError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  return (
+    <div className="flex flex-col bg-gray-100/50 rounded-2xl p-4 min-h-[500px] border border-gray-200/60 shadow-inner">
+      <div className="flex items-center justify-between mb-4 px-2">
+        <h3 className="font-extrabold text-gray-700 tracking-wide text-sm">{title}</h3>
+        <span className="bg-white text-gray-500 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm border border-gray-100">
+          {missions.length}
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-4 relative">
+        {missions.map((mission) => (
+          <div key={mission.folderId} className={`bg-white rounded-xl p-4 border border-gray-200/80 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-500 hover:border-emerald-200 ${fadeCanceledIds.includes(mission.folderId) ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-mono text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                {mission.folderId.substring(0, 8)}..._{mission.folderId.split("_").pop()}
+              </span>
+              {mission.status === 'executing' && <span className="flex items-center gap-1 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full"><Clock className="w-3 h-3 animate-spin" /> {String(t("admin_mission_board.local_task.executing"))}</span>}
+              {mission.status === 'completed' && <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full"><CheckCircle className="w-3 h-3" /> {String(t("admin_mission_board.local_task.completed"))}</span>}
+              {mission.status === 'failed' && <span className="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full"><AlertTriangle className="w-3 h-3" /> {String(t("admin_mission_board.local_task.failed"))}</span>}
+              {mission.status === 'pending' && <span className="flex items-center gap-1 text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded-full"><Clock className="w-3 h-3" /> {String(t("admin_mission_board.local_task.pending"))}</span>}
+            </div>
+
+            <div className="mt-4 flex flex-col gap-2">
+              {mission.failureCount > 0 && (
+                <div className="flex justify-between items-center text-xs text-red-500 bg-red-50 p-2 rounded-lg">
+                  <span>{String(t("admin_mission_board.local_task.failure_count"))} {mission.failureCount}</span>
+                  <button onClick={() => setLogModal({ isOpen: true, logs: mission.failedLogs })} className="flex items-center gap-1 hover:text-red-700 underline underline-offset-2">
+                    <FileText className="w-3.5 h-3.5" /> {String(t("admin_mission_board.local_task.view_log"))}
+                  </button>
+                </div>
+              )}
+
+              {mission.status === 'failed' && (
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => performAction(mission.folderId, 'cancel')}
+                    disabled={actionLoading?.id === mission.folderId}
+                    className="flex flex-1 justify-center items-center gap-1.5 px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-full text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-200 disabled:opacity-50 shadow-sm"
+                  >
+                    {actionLoading?.id === mission.folderId && actionLoading?.type === 'cancel' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                    {String(t("admin_mission_board.local_task.cancel_task"))}
+                  </button>
+                  <button
+                    onClick={() => performAction(mission.folderId, 'restart')}
+                    disabled={actionLoading?.id === mission.folderId}
+                    className="flex flex-1 justify-center items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-full text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200 disabled:opacity-50 shadow-sm"
+                  >
+                    {actionLoading?.id === mission.folderId && actionLoading?.type === 'restart' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                    {String(t("admin_mission_board.local_task.restart_task"))}
+                  </button>
+                </div>
+              )}
+
+              {mission.status !== 'failed' && mission.status !== 'completed' && (
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => performAction(mission.folderId, 'cancel')}
+                    disabled={actionLoading?.id === mission.folderId}
+                    className="flex flex-1 justify-center items-center gap-1.5 px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                  >
+                    {actionLoading?.id === mission.folderId && actionLoading?.type === 'cancel' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                    {String(t("admin_mission_board.local_task.cancel_task"))}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        {missions.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+            <p className="text-sm">{String(t("admin_mission_board.local_task.no_tasks"))}</p>
+          </div>
+        )}
+      </div>
+
+      <ConfirmModal
+        isOpen={logModal.isOpen}
+        onClose={() => setLogModal({ isOpen: false, logs: [] })}
+        title={String(t("admin_mission_board.local_task.failure_logs"))}
+        message={
+          <div className="max-h-96 overflow-y-auto mt-2 text-left space-y-4">
+            {logModal.logs.map((log, i) => (
+              <div key={i} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <div className="text-xs font-bold text-gray-500 mb-2">{log.filename}</div>
+                <pre className="text-xs text-red-600 whitespace-pre-wrap font-mono">{log.content}</pre>
+              </div>
+            ))}
+          </div>
+        }
+        confirmText={String(t("common.close") || "Close")}
+      />
+
+      <ConfirmModal
+        isOpen={!!actionError}
+        onClose={() => setActionError(null)}
+        title={String(t("common.error") || "Error")}
+        message={actionError}
+        confirmText={String(t("common.ok") || "OK")}
+      />
+    </div>
+  );
+}

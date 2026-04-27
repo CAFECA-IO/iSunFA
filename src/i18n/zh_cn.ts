@@ -45,6 +45,7 @@ import { adminMember } from "@/i18n/locales/zh_cn/admin_member";
 import { adminBlockchain } from "@/i18n/locales/zh_cn/admin_blockchain";
 import { adminMissionBoard } from "@/i18n/locales/zh_cn/admin_mission_board";
 import { emissionSources } from "@/i18n/locales/zh_cn/emission_sources";
+import { orderManagement } from "@/i18n/locales/zh_cn/order_management";
 
 import { date } from "@/i18n/locales/zh_cn/date";
 import { currencyAlias } from "@/i18n/locales/zh_cn/currency_alias";
@@ -102,4 +103,5 @@ export const zhCn = {
   admin_dashboard: adminDashboard,
   admin_mission_board: adminMissionBoard,
   emission_sources: emissionSources,
+  order_management: orderManagement,
 } satisfies BaseTranslation;
