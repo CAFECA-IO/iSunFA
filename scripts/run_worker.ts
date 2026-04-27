@@ -1,10 +1,10 @@
-import { transactionTrackerService } from "@/services/transaction.tracker.service";
-import { missionIssuerService } from "@/services/mission.issuer.service";
-import { missionPlannerService } from "@/services/mission.planner.service";
-import { missionExecutorService } from "@/services/mission.executor.service";
-import { missionCommitorService } from "@/services/mission.commitor.service";
-import { missionValidatorService } from "@/services/mission.validator.service";
-import { missionRecorderService } from "@/services/mission.recorder.service";
+import { scanPendingTransactions } from "@/services/transaction.tracker.service";
+import { processNext as processIssueNext } from "@/services/issue.service";
+import { processNext as processMissionPlannerNext } from "@/services/mission.planner.service";
+import { processNext as processMissionExecutorNext } from "@/services/mission.executor.service";
+import { processNext as processMissionCommitorNext } from "@/services/mission.commitor.service";
+import { processNext as processIssueValidatorNext } from "@/services/issue.validator.service";
+import { issueRecorderService } from "@/services/issue.recorder.service";
 
 /**
  * Info: (20260130 - Luphia)
@@ -36,13 +36,13 @@ async function runWorker() {
   console.log("[Worker] Starting independent service loops...");
 
   await Promise.all([
-    startServiceLoop("TransactionTracker", () => transactionTrackerService.scanPendingTransactions()),
-    startServiceLoop("MissionIssuer", () => missionIssuerService.processNext()),
-    startServiceLoop("MissionPlanner", () => missionPlannerService.processNext()),
-    startServiceLoop("MissionExecutor", () => missionExecutorService.processNext()),
-    startServiceLoop("MissionCommitor", () => missionCommitorService.processNext()),
-    startServiceLoop("MissionValidator", () => missionValidatorService.processNext()),
-    startServiceLoop("MissionRecorder", () => missionRecorderService.processNext()),
+    startServiceLoop("TransactionTracker", () => scanPendingTransactions()),
+    startServiceLoop("IssueService", () => processIssueNext()),
+    startServiceLoop("MissionPlanner", () => processMissionPlannerNext()),
+    startServiceLoop("MissionExecutor", () => processMissionExecutorNext()),
+    startServiceLoop("MissionCommitor", () => processMissionCommitorNext()),
+    startServiceLoop("IssueValidator", () => processIssueValidatorNext()),
+    startServiceLoop("IssueRecorder", () => issueRecorderService.processNext()),
   ]);
 
   console.log("[Worker] Stopped.");

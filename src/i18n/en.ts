@@ -48,6 +48,7 @@ import { adminMember } from "@/i18n/locales/en/admin_member";
 import { adminBlockchain } from "@/i18n/locales/en/admin_blockchain";
 import { adminMissionBoard } from "@/i18n/locales/en/admin_mission_board";
 import { emissionSources } from "@/i18n/locales/en/emission_sources";
+import { orderManagement } from "@/i18n/locales/en/order_management";
 
 import type { BaseTranslation } from "@/i18n/zh_tw";
 import { adminBilling } from "@/i18n/locales/en/admin_billing";
@@ -104,4 +105,5 @@ export const en = {
   admin_dashboard: adminDashboard,
   admin_mission_board: adminMissionBoard,
   emission_sources: emissionSources,
+  order_management: orderManagement,
 } satisfies BaseTranslation;

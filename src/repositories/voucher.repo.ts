@@ -119,6 +119,10 @@ export class VoucherRepository implements IVoucherRepository {
     }) as VoucherWithRelations[];
   }
 
+  async findManyVouchers(args: Prisma.VoucherFindManyArgs) {
+    return prisma.voucher.findMany(args);
+  }
+
   async getVoucherById(id: string): Promise<VoucherWithRelations | null> {
     const voucher = await prisma.voucher.findUnique({
       where: { id },

@@ -34,4 +34,37 @@ export const adminMissionBoard = {
     loading: "미션을 불러오는 중입니다...",
     unknown: "알 수 없음",
   },
+  local_task: {
+    executing: "실행 중",
+    completed: "완료됨",
+    failed: "일시 중지됨",
+    pending: "대기 중",
+    failure_count: "실패 횟수:",
+    view_log: "로그 보기",
+    cancel_task: "작업 취소",
+    restart_task: "작업 재시작",
+    no_tasks: "현재 할당된 작업이 없습니다.",
+    failure_logs: "실패 로그",
+  },
+  pdf_editor: {
+    title: "PDF 편집기",
+    subtitle: "마크다운을 작성하고 iSunFA 전용 양식의 PDF로 내보냅니다.",
+    edit_markdown: "마크다운 편집",
+    preview_pdf: "PDF 미리보기",
+    download_pdf: "PDF 다운로드",
+    generating: "생성 중...",
+    markdown_input: "마크다운 입력",
+    type_here: "여기에 마크다운을 입력하세요...",
+    pdf_preview: "PDF 미리보기",
+    brand: "iSunFA 스마트 회계",
+    internal_document: "내부 문서",
+    system_report: "시스템 보고서",
+    footer_title: "AI로 탄소 회계를 재구성하다",
+    footer_text: "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal."
+  },
+  gc: {
+    btn_text: "GC 정리 실행",
+    result_title: "작업 시스템 정리 결과",
+    success_msg: "만료되거나 유효하지 않은 폴더 {{count}}개를 성공적으로 지웠습니다.",
+  }
 };

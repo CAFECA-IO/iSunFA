@@ -9,11 +9,9 @@ const MB_ABI = parseAbi([
   "function tasks(uint256) view returns (address creator, string contentCid, uint256 reward, uint256 createdAt, uint256 updatedAt, uint8 status, uint256 submissionCount)"
 ]);
 
-export class MissionPlannerService {
-  // Info: (20260420 - Luphia) Simple in-memory tracker for the current run, ideally backed by a DB or file.
-  private lastCheckedTaskId = 0n;
+let lastCheckedTaskId = 0n;
 
-  async processNext() {
+export async function processNext() {
     console.log("[MissionPlanner] Fetching open tasks from MissionBoard...");
 
     const setupConfig = await getPriorityEnvConfig();
@@ -33,7 +31,7 @@ export class MissionPlannerService {
           address: mbAddress,
           abi: MB_ABI,
           functionName: "tasks",
-          args: [this.lastCheckedTaskId]
+          args: [lastCheckedTaskId]
         });
 
         const [creator, contentCid, reward, , , status,] = taskData;
@@ -45,7 +43,7 @@ export class MissionPlannerService {
 
         // Info: (20260420 - Luphia) status == 0 means Open
         if (status === 0) {
-          const taskIdStr = this.lastCheckedTaskId.toString();
+          const taskIdStr = lastCheckedTaskId.toString();
           const folderName = `${mbAddress}_${taskIdStr}`;
           const taskDir = path.join(process.cwd(), missionDirBase, folderName);
 
@@ -59,12 +57,12 @@ export class MissionPlannerService {
           }
 
           if (!alreadyExists) {
-            console.log(`[MissionPlanner] Found new Open task! ID: ${this.lastCheckedTaskId}, CID: ${contentCid}`);
+            console.log(`[MissionPlanner] Found new Open task! ID: ${lastCheckedTaskId}, CID: ${contentCid}`);
             await fs.mkdir(taskDir, { recursive: true });
 
             // Info: (20260420 - Luphia) 1. Write meta.json
             const meta = {
-              taskId: this.lastCheckedTaskId.toString(),
+              taskId: lastCheckedTaskId.toString(),
               creator,
               reward: reward.toString(),
               contentCid
@@ -145,7 +143,7 @@ export class MissionPlannerService {
           }
         }
 
-        this.lastCheckedTaskId++;
+        lastCheckedTaskId++;
       } catch {
         // Info: (20260420 - Luphia) likely out of bounds or RPC error
         break;
@@ -155,7 +153,4 @@ export class MissionPlannerService {
     if (!foundOpenTask) {
       console.log("[MissionPlanner] No new Open tasks to process.");
     }
-  }
 }
-
-export const missionPlannerService = new MissionPlannerService();

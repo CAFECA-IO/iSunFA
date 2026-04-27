@@ -34,4 +34,37 @@ export const adminMissionBoard = {
     loading: "载入任务中...",
     unknown: "未知",
   },
+  local_task: {
+    executing: "执行中",
+    completed: "已完成",
+    failed: "暂停执行",
+    pending: "等待中",
+    failure_count: "失败次数:",
+    view_log: "查看日志",
+    cancel_task: "取消任务",
+    restart_task: "重启任务",
+    no_tasks: "目前没有承接任务",
+    failure_logs: "失败日志",
+  },
+  pdf_editor: {
+    title: "PDF 编辑器",
+    subtitle: "编写 Markdown 内容并导出为 iSunFA 专属版型 PDF。",
+    edit_markdown: "编辑 Markdown",
+    preview_pdf: "预览 PDF",
+    download_pdf: "下载 PDF",
+    generating: "生成中...",
+    markdown_input: "Markdown 输入区",
+    type_here: "请在此输入您的 markdown...",
+    pdf_preview: "PDF 预览区",
+    brand: "阳光智能会计",
+    internal_document: "内部文件",
+    system_report: "系统报告",
+    footer_title: "用人工智能重塑碳会计",
+    footer_text: "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal."
+  },
+  gc: {
+    btn_text: "执行 GC 清理",
+    result_title: "任务系统清理结果",
+    success_msg: "成功清除了 {{count}} 个过期或不符合约的文件夹。",
+  }
 };

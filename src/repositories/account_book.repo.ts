@@ -31,6 +31,10 @@ export class AccountBookRepository {
     return accountBook;
   }
 
+  async findFirst(args: Prisma.AccountBookFindFirstArgs) {
+    return prisma.accountBook.findFirst(args);
+  }
+
   async listTeamsAccountBooksByUserId(userId: string) {
     // Info: (20260306 - Luphia) 這裡在 include 加入 filter，只取未刪除的帳本
     const teamMembers = await prisma.teamMember.findMany({

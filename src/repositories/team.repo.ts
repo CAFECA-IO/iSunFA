@@ -66,9 +66,17 @@ export class TeamRepository implements ITeamRepository {
     return team;
   }
 
+  async findManyTeams(args: Prisma.TeamFindManyArgs) {
+    return prisma.team.findMany(args);
+  }
+
   async createTeamMember(data: Prisma.TeamMemberCreateInput) {
     const teamMember = await prisma.teamMember.create({ data });
     return teamMember;
+  }
+
+  async findManyMembers(args: Prisma.TeamMemberFindManyArgs) {
+    return prisma.teamMember.findMany(args);
   }
 
   async listTeamMember(teamId: string) {

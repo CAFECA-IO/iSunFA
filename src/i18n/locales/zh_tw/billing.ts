@@ -49,5 +49,6 @@ export const billing = {
     source_checkin: "每日簽到獎勵",
     source_registration: "註冊獎勵",
     source_admin_issued: "系統管理員發放",
+    source_check_in_reward: "每日簽到獎勵",
   },
 };
