@@ -23,6 +23,8 @@ export const esgReport = {
   bom_title: "排出量詳細 BOM表",
   bom_scope: "スコープ",
   bom_activity: "排出活動",
+  bom_original_data: "元のアクティビティデータ",
+  bom_coefficient: "適用された係数",
   bom_emissions: "排出量 (kgCO2e)",
   bom_percentage: "割合 (%)",
 };
