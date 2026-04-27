@@ -30,6 +30,7 @@ import { ocr } from "@/i18n/locales/zh_tw/ocr";
 import { journal } from "@/i18n/locales/zh_tw/journal";
 import { voucher } from "@/i18n/locales/zh_tw/voucher";
 import { coefficient } from "@/i18n/locales/zh_tw/coefficient";
+import { esgActivityType } from "@/i18n/locales/zh_tw/esg_activity_type";
 import { esgMain } from "@/i18n/locales/zh_tw/esg_main";
 import { esgSummary } from "@/i18n/locales/zh_tw/esg_summary";
 import { esgTable } from "@/i18n/locales/zh_tw/esg_table";
@@ -82,6 +83,7 @@ export const zhTw = {
   journal,
   voucher,
   coefficient,
+  esg_activity_type: esgActivityType,
   esg_main: esgMain,
   esg_summary: esgSummary,
   esg_table: esgTable,

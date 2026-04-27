@@ -6,7 +6,7 @@ import {
   getVoucherLinesPrompt,
 } from "@/constants/prompts/voucher";
 import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
-import { IEsgRecord } from "@/interfaces/esg";
+import { IEsgRecordDetail } from "@/interfaces/esg";
 import { IParsedVoucher } from "@/interfaces/voucher";
 import { GoogleGenerativeAI, Part, Tool } from "@google/generative-ai";
 import { AccountBook } from "@/generated/client";
@@ -365,7 +365,7 @@ export class ChatService {
     accountBook: Partial<AccountBook> | null = null,
     journalText?: string,
     coefficients?: Partial<ICoefficient>[]
-  ): Promise<{ data: IEsgRecord | null; error?: string }> {
+  ): Promise<{ data: IEsgRecordDetail | null; error?: string }> {
     try {
       const model = this.genAI.getGenerativeModel({ model: this.modelName });
       let promptText = getEsgPrompt(accountBook, coefficients);

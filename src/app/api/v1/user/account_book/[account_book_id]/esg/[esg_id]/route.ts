@@ -12,7 +12,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { EsgScope, EsgIntensity } from "@/generated/client";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import {
-  IEsgRecord,
+  IEsgRecordDetail,
   EsgScope as ClientEsgScope,
   EsgIntensity as ClientEsgIntensity,
 } from "@/interfaces/esg";
@@ -62,9 +62,9 @@ export async function GET(
       return jsonFail(API_ERRORS.NF_ESG);
     }
 
-    const formattedRecord: IEsgRecord = {
+    const formattedRecord: IEsgRecordDetail = {
       id: esgRecord.id,
-      tradingDate: esgRecord.tradingDate.toISOString(),
+      tradingDate: Math.floor(esgRecord.tradingDate.getTime() / 1000),
       fileId: esgRecord.fileId ?? "",
       file: esgRecord.file
         ? {
@@ -78,7 +78,7 @@ export async function GET(
       vendor: esgRecord.vendor,
       amount: Number(esgRecord.amount),
       unit: esgRecord.unit,
-      emissions: esgRecord.emissions.toString(),
+      emissions: Number(esgRecord.emissions),
       dqiScore: Number(esgRecord.dqiScore) ?? 0,
       intensity: esgRecord.intensity as unknown as ClientEsgIntensity,
       confidence: esgRecord.confidence,
@@ -152,11 +152,11 @@ export async function PUT(
       return jsonFail(API_ERRORS.NF_ESG);
     }
 
-    const reqBody: Partial<IEsgRecord> = await request.json();
+    const reqBody: Partial<IEsgRecordDetail> = await request.json();
 
     // Info: (20260312 - Julian) 更新 ESG 紀錄
     const updatedRecord = await esgRepo.updateEsgRecord(esgId, {
-      ...(reqBody.tradingDate && { tradingDate: reqBody.tradingDate }),
+      ...(reqBody.tradingDate && { tradingDate: new Date(reqBody.tradingDate * 1000) }),
       ...(reqBody.scope && {
         scope: reqBody.scope.toUpperCase() as EsgScope,
       }),
@@ -193,16 +193,16 @@ export async function PUT(
       return jsonFail(API_ERRORS.IS_DB_FAILED);
     }
 
-    const formattedRecord: IEsgRecord = {
+    const formattedRecord: IEsgRecordDetail = {
       id: updatedRecord.id,
-      tradingDate: updatedRecord.tradingDate.toISOString(),
+      tradingDate: Math.floor(updatedRecord.tradingDate.getTime() / 1000),
       fileId: updatedRecord.fileId ?? "",
       scope: updatedRecord.scope as unknown as ClientEsgScope,
       activityType: updatedRecord.activityType as unknown as EsgActivityTypeKey,
       vendor: updatedRecord.vendor,
       amount: Number(updatedRecord.amount),
       unit: updatedRecord.unit,
-      emissions: updatedRecord.emissions.toString(),
+      emissions: Number(updatedRecord.emissions),
       dqiScore: Number(updatedRecord.dqiScore) ?? 0,
       intensity: updatedRecord.intensity as unknown as ClientEsgIntensity,
       confidence: updatedRecord.confidence,

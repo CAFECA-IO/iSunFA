@@ -12,7 +12,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { numberWithCommas, timestampToString } from "@/lib/utils/common";
-import { IEsgRecord, EsgScope, EsgIntensity } from "@/interfaces/esg";
+import { IEsgRecordDetail, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { FilePreview } from "@/components/common/file_preview";
 import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -25,8 +25,8 @@ export function EsgRow({
   onDelete,
   onRestore,
 }: {
-  record: IEsgRecord;
-  onVerifyClick: (record: IEsgRecord) => void;
+  record: IEsgRecordDetail;
+  onVerifyClick: (record: IEsgRecordDetail) => void;
   onDelete: (id: string) => void;
   onRestore: (id: string) => void;
 }) {
@@ -152,9 +152,7 @@ export function EsgRow({
     </td>
   );
 
-  const dateString = timestampToString(
-    new Date(record.tradingDate).getTime() / 1000,
-  ).dateWithDash;
+  const dateString = timestampToString(record.tradingDate).dateWithDash;
 
   // Info: (20260320 - Julian) 尚未開始
   if (record.analysisStatus === AIAnalysisStatus.PENDING) {

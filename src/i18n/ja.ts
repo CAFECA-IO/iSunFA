@@ -26,6 +26,7 @@ import { aiConsultationSection } from "@/i18n/locales/ja/ai_consultation_section
 import { ocr } from "@/i18n/locales/ja/ocr";
 import { journal } from "@/i18n/locales/ja/journal";
 import { coefficient } from "@/i18n/locales/ja/coefficient";
+import { esgActivityType } from "@/i18n/locales/ja/esg_activity_type";
 import { esgMain } from "@/i18n/locales/ja/esg_main";
 import { esgSummary } from "@/i18n/locales/ja/esg_summary";
 import { esgTable } from "@/i18n/locales/ja/esg_table";
@@ -82,6 +83,7 @@ export const ja = {
   ocr,
   journal,
   coefficient,
+  esg_activity_type: esgActivityType,
   esg_main: esgMain,
   esg_summary: esgSummary,
   esg_table: esgTable,

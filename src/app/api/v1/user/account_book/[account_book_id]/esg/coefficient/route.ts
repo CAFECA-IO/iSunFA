@@ -131,19 +131,20 @@ export async function GET(
       andConditions.push({ accountBookId: { not: null } });
     }
 
-    // Info: (20260414 - Julian) 搜尋字串過濾邏輯（名稱、描述的模糊搜尋）
+    // Info: (20260414 - Julian) 搜尋字串過濾邏輯（名稱、描述、來源的模糊搜尋）
     if (searchParam) {
       andConditions.push({
         OR: [
           { name: { contains: searchParam, mode: "insensitive" } },
           { description: { contains: searchParam, mode: "insensitive" } },
+          { source: { contains: searchParam, mode: "insensitive" } },
         ],
       });
     }
 
-    // Info: (20260416 - Julian) 單位參數過濾邏輯（完全匹配）
+    // Info: (20260416 - Julian) 單位過濾邏輯（模糊搜尋）
     if (unitParam) {
-      andConditions.push({ unit: unitParam });
+      andConditions.push({ unit: { contains: unitParam, mode: "insensitive" } });
     }
 
     // const [coefficients, totalCount] = await Promise.all([

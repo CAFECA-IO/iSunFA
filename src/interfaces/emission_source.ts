@@ -1,25 +1,15 @@
 import { EsgIntensity, EsgScope } from "@/interfaces/esg";
+import { IEsgRecordBrief } from "@/interfaces/esg";
 
 export interface IEmissionSources {
   id: string;
   name: string;
-  address: string;
+  address?: string;
   intensity: EsgIntensity; // Info: (20260421 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
 }
 
-export interface IMockEsgRecord {
-  id: string;
-  timestamp: number;
-  activityType: string;
-  vendor: string;
-  amount: number;
-  unit: string;
-  emissions: number;
-  emissionSourceTag?: string;
-}
-
 export interface IEsgEmissionSourcesUI extends IEmissionSources {
-  records: IMockEsgRecord[];
+  records: IEsgRecordBrief[];
   totalEmission: number;
 }
 
@@ -44,8 +34,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
      records: [
       {
         id: "rec-001",
-        timestamp: 1713168000,
-        activityType: "燃料燃燒",
+        tradingDate: 1760411000,
+        activityType: 'STATIONARY_COMBUSTION',
         vendor: "台灣中油",
         amount: 1500,
         unit: "公秉",
@@ -54,8 +44,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
       },
       {
         id: "rec-002",
-        timestamp: 1713168000,
-        activityType: "電力使用",
+        tradingDate: 1713168000,
+        activityType: "PURCHASED_GOODS",
         vendor: "台灣電力公司",
         amount: 800,
         unit: "度",
@@ -64,8 +54,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
       },
       {
         id: "rec-003",
-        timestamp: 1713254400,
-        activityType: "燃料燃燒",
+        tradingDate: 1713254400,
+        activityType: "PROCESS_EMISSION",
         vendor: "自產煤氣",
         amount: 3200,
         unit: "千立方公尺",
@@ -74,12 +64,13 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
       },
       {
         id: "rec-004",
-        timestamp: 1713340800,
-        activityType: "柴油發電機",
+        tradingDate: 1713340800,
+        activityType: "MOBILE_COMBUSTION",
         vendor: "台塑石化",
         amount: 300,
         unit: "公升",
         emissions: 790.2,
+        emissionSourceTag: "公務車"
       }
     ],
     totalEmission: 5036.5,
@@ -92,8 +83,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
     records: [
       {
         id: "rec-005",
-        timestamp: 1713168000,
-        activityType: "煤炭燃燒",
+        tradingDate: 1713168000,
+        activityType: "STATIONARY_COMBUSTION",
         vendor: "進口無煙煤",
         amount: 45000,
         unit: "噸",
@@ -102,8 +93,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
       },
       {
         id: "rec-006",
-        timestamp: 1713427200,
-        activityType: "電力使用",
+        tradingDate: 1713427200,
+        activityType: "ELECTRICITY_USAGE",
         vendor: "台灣電力公司",
         amount: 92000,
         unit: "千度",
@@ -121,8 +112,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
     records: [
       {
         id: "rec-007",
-        timestamp: 1713168000,
-        activityType: "一般電力",
+        tradingDate: 1713168000,
+        activityType: "ELECTRICITY_USAGE",
         vendor: "台灣電力公司",
         amount: 4500,
         unit: "千度",
@@ -131,8 +122,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
       },
       {
         id: "rec-008",
-        timestamp: 1713513600,
-        activityType: "天然氣燃燒",
+        tradingDate: 1713513600,
+        activityType: "STATIONARY_COMBUSTION",
         vendor: "台灣中油",
         amount: 210,
         unit: "千立方公尺",
@@ -150,8 +141,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
     records: [
       {
         id: "rec-009",
-        timestamp: 1713168000,
-        activityType: "工業電力",
+        tradingDate: 1713168000,
+        activityType: "ELECTRICITY_USAGE",
         vendor: "越南國家電力局 (EVN)",
         amount: 11200,
         unit: "千度",
@@ -160,8 +151,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
       },
       {
         id: "rec-010",
-        timestamp: 1713600000,
-        activityType: "柴油燃燒",
+        tradingDate: 1713600000,
+        activityType: "MOBILE_COMBUSTION",
         vendor: "Petrolimex",
         amount: 1500,
         unit: "公升",
@@ -178,8 +169,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
     records: [
       {
         id: "rec-011",
-        timestamp: 1713168000,
-        activityType: "蒸汽使用",
+        tradingDate: 1713168000,
+        activityType: "STATIONARY_COMBUSTION",
         vendor: "中鋼公司",
         amount: 850,
         unit: "噸",
@@ -188,8 +179,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
       },
       {
         id: "rec-012",
-        timestamp: 1713686400,
-        activityType: "一般電力",
+        tradingDate: 1713686400,
+        activityType: "ELECTRICITY_USAGE",
         vendor: "台灣電力公司",
         amount: 3200,
         unit: "千度",
@@ -207,8 +198,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
     records: [
       {
         id: "rec-013",
-        timestamp: 1713168000,
-        activityType: "銲條材料",
+        tradingDate: 1713168000,
+        activityType: "STATIONARY_COMBUSTION",
         vendor: "天泰銲材",
         amount: 120,
         unit: "公斤",
@@ -217,8 +208,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
       },
       {
         id: "rec-014",
-        timestamp: 1713772800,
-        activityType: "一般電力",
+        tradingDate: 1713772800,
+        activityType: "ELECTRICITY_USAGE",
         vendor: "台灣電力公司",
         amount: 450,
         unit: "千度",
@@ -236,8 +227,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
     records: [
       {
         id: "rec-015",
-        timestamp: 1713168000,
-        activityType: "天然氣燃燒",
+        tradingDate: 1713168000,
+        activityType: "STATIONARY_COMBUSTION",
         vendor: "台灣中油",
         amount: 520,
         unit: "千立方公尺",
@@ -246,8 +237,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
       },
       {
         id: "rec-016",
-        timestamp: 1713859200,
-        activityType: "電力使用",
+        tradingDate: 1713859200,
+        activityType: "ELECTRICITY_USAGE",
         vendor: "台灣電力公司",
         amount: 2100,
         unit: "千度",
@@ -265,8 +256,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
     records: [
       {
         id: "rec-017",
-        timestamp: 1713168000,
-        activityType: "電力使用",
+        tradingDate: 1713168000,
+        activityType: "ELECTRICITY_USAGE",
         vendor: "MGVCL",
         amount: 1850,
         unit: "千度",
@@ -275,8 +266,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
       },
       {
         id: "rec-018",
-        timestamp: 1713945600,
-        activityType: "公務車柴油用量",
+        tradingDate: 1713945600,
+        activityType: "MOBILE_COMBUSTION",
         vendor: "Indian Oil",
         amount: 450,
         unit: "公升",

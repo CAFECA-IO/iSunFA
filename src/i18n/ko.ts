@@ -26,6 +26,7 @@ import { aiConsultationSection } from "@/i18n/locales/ko/ai_consultation_section
 import { ocr } from "@/i18n/locales/ko/ocr";
 import { journal } from "@/i18n/locales/ko/journal";
 import { coefficient } from "@/i18n/locales/ko/coefficient";
+import { esgActivityType } from "@/i18n/locales/ko/esg_activity_type";
 import { esgMain } from "@/i18n/locales/ko/esg_main";
 import { esgSummary } from "@/i18n/locales/ko/esg_summary";
 import { esgTable } from "@/i18n/locales/ko/esg_table";
@@ -82,6 +83,7 @@ export const ko = {
   ocr,
   journal,
   coefficient,
+  esg_activity_type: esgActivityType,
   esg_main: esgMain,
   esg_summary: esgSummary,
   esg_table: esgTable,

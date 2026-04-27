@@ -29,6 +29,7 @@ import { ocr } from "@/i18n/locales/en/ocr";
 import { journal } from "@/i18n/locales/en/journal";
 import { voucher } from "@/i18n/locales/en/voucher";
 import { coefficient } from "@/i18n/locales/en/coefficient";
+import { esgActivityType } from "@/i18n/locales/en/esg_activity_type";
 import { esgMain } from "@/i18n/locales/en/esg_main";
 import { esgSummary } from "@/i18n/locales/en/esg_summary";
 import { esgTable } from "@/i18n/locales/en/esg_table";
@@ -83,6 +84,7 @@ export const en = {
   journal,
   voucher,
   coefficient,
+  esg_activity_type: esgActivityType,
   esg_main: esgMain,
   esg_summary: esgSummary,
   esg_table: esgTable,

@@ -5,7 +5,6 @@ import { ApiCode } from "@/lib/utils/status";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { EsgScope } from "@/interfaces/esg";
 
 /**
  * Info: (20260420 - Julian) 取得排放源清單
@@ -36,16 +35,15 @@ export async function GET(
 
     // Info: (20260420 - Julian) 解析 Query Parameters
     const { searchParams } = new URL(request.url);
-    const scopeParam = searchParams.get("scope") as EsgScope | null;
     const keyword = searchParams.get("keyword")?.toLowerCase() || "";
-
-    // Info: (20260421 - Julian) 預設取得 Scope 1
-    const activeScope = scopeParam || EsgScope.SCOPE_1;
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
 
     // Info: (20260421 - Julian) 取得排放源清單
-    const result = await esgRepo.getEsgEmissionSources(accountBookId, activeScope, keyword);
+    const { data, meta } = await esgRepo.getEsgEmissionSources(accountBookId, keyword, page, pageSize);
+    const { total, totalPages } = meta;
 
-    return jsonOk(result);
+    return jsonOk({ data, total, totalPages });
   } catch (error) {
     console.error("Error fetching esg emission sources:", error);
     return jsonFail({ code: "IN000099", message: "Failed to fetch esg emission sources", status: ApiCode.INTERNAL_SERVER_ERROR });
@@ -79,14 +77,16 @@ export async function POST(
       return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
-    // Info: (20260421 - Julian) 解析 Request Body
+    // Info: (20260424 - Julian) 解析 Request Body
     const body = await request.json();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { name, source, ef } = body;
+    const { name, address } = body;
 
-    // Info: (20260421 - Julian) 建立排放源
-    const result = null
-    // await esgRepo.createEsgEmissionSource(accountBookId, name, source, ef);
+    if (!name) {
+        return jsonFail({ code: "VA000099", message: "Name is required", status: ApiCode.VALIDATION_ERROR });
+    }
+
+    // Info: (20260424 - Julian) 建立排放源
+    const result = await esgRepo.createEsgEmissionSource(accountBookId, name, address);
 
     return jsonOk(result);
   } catch (error) {

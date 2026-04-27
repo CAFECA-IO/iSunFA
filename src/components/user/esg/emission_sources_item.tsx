@@ -3,20 +3,52 @@
 import { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ChevronDown, Minus, Plus } from "lucide-react";
-import {
-  IEsgEmissionSourcesUI,
-  IMockEsgRecord,
-} from "@/interfaces/emission_source";
-import { EsgIntensity } from "@/interfaces/esg";
+import { IEsgEmissionSourcesUI } from "@/interfaces/emission_source";
+import { EsgIntensity, IEsgRecordBrief } from "@/interfaces/esg";
 import { numberWithCommas, timestampToString } from "@/lib/utils/common";
+
+interface IEmissionSourcesItemProps {
+  data: IEsgEmissionSourcesUI;
+}
+
+const RecordItem = ({ rec }: { rec: IEsgRecordBrief }) => {
+  const { t } = useTranslation();
+
+  // Info: (20260424 - Julian) 檢查翻譯內容是否與原本的 key 一致，如果是，則代表翻譯不存在或未設定，那就直接使用原本的 activityType
+  const activityTypeKey = `esg_activity_type.${rec.activityType?.toLowerCase()}`;
+  let activityTypeStr = "-";
+  if (rec.activityType) {
+    const translated = t(activityTypeKey);
+    activityTypeStr = translated === activityTypeKey ? rec.activityType : translated;
+  }
+
+  return (
+    <tr className="transition-colors hover:bg-orange-50/50">
+      <td className="px-5 py-3 text-slate-600">
+        {timestampToString(rec.tradingDate).dateWithDash}
+      </td>
+      <td className="px-5 py-3 font-medium text-slate-800">
+        {activityTypeStr}
+      </td>
+      <td className="px-5 py-3 text-slate-600">{rec.vendor}</td>
+      <td className="px-5 py-3 text-right font-medium text-slate-800">
+        {rec.amount.toLocaleString()}{" "}
+        <span className="text-xs text-slate-400">{rec.unit}</span>
+      </td>
+      <td className="px-5 py-3 text-right font-semibold text-orange-600">
+        {rec.emissions.toLocaleString()}
+      </td>
+    </tr>
+  );
+};
 
 export default function EmissionSourcesItem({
   data,
-}: {
-  data: IEsgEmissionSourcesUI;
-}) {
+}: IEmissionSourcesItemProps) {
   const { t } = useTranslation();
+
   const [isOpen, setIsOpen] = useState<boolean>(false);
+
   const toggleOpen = () => setIsOpen((prev) => !prev);
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -25,6 +57,7 @@ export default function EmissionSourcesItem({
     }
   };
 
+  // Info: (20260424 - Julian) 將紀錄依據 emissionSourceTag 分類
   const groupedRecords = data.records.reduce(
     (acc, curr) => {
       const tag = curr.emissionSourceTag || "other";
@@ -32,7 +65,7 @@ export default function EmissionSourcesItem({
       acc[tag].push(curr);
       return acc;
     },
-    {} as Record<string, IMockEsgRecord[]>,
+    {} as Record<string, IEsgRecordBrief[]>,
   );
 
   // Info: (20260421 - Julian) 總紀錄數
@@ -40,9 +73,54 @@ export default function EmissionSourcesItem({
 
   // Info: (20260421 - Julian) 總排放量
   const totalEmission = data.totalEmission;
-
+  // Info: (20260424 - Julian) 根據總排放量決定顏色
   const esColor =
     data.intensity === EsgIntensity.HIGH ? "text-red-500" : "text-green-500";
+
+  // Info: (20260424 - Julian) 取得分類列表
+  const groupedList = Object.entries(groupedRecords);
+
+  // Info: (20260424 - Julian) 渲染分類列表
+  const groupedRecordList =groupedList.length>0? groupedList.map(
+    ([tag, records]) => (
+      <div key={tag} className="mb-6 last:mb-0">
+        <div className="mb-3 flex items-center gap-2">
+          <div className="flex h-6 items-center rounded-md bg-blue-100 px-2 text-xs font-bold text-blue-700">
+            {tag === "other" ? t("emission_sources.item.other_tag") : tag}
+          </div>
+          <div className="h-px flex-1 bg-gray-200"></div>
+        </div>
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-gray-100 bg-gray-50/80 text-xs font-semibold text-slate-500">
+              <tr>
+                <th className="px-5 py-3">
+                  {t("emission_sources.item.table.date")}
+                </th>
+                <th className="px-5 py-3">
+                  {t("emission_sources.item.table.activity")}
+                </th>
+                <th className="px-5 py-3">
+                  {t("emission_sources.item.table.vendor")}
+                </th>
+                <th className="px-5 py-3 text-right">
+                  {t("emission_sources.item.table.data")}
+                </th>
+                <th className="px-5 py-3 text-right">
+                  {t("emission_sources.item.table.emission")}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {records.map((rec) => (
+                <RecordItem key={rec.id} rec={rec} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    ),
+  ):<div className="flex flex-col items-center justify-center py-2 font-semibold text-slate-400">{t("emission_sources.item.no_records")}</div>
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-colors duration-200 focus-within:border-orange-200 hover:border-orange-200">
@@ -94,70 +172,7 @@ export default function EmissionSourcesItem({
         }`}
       >
         <div className="overflow-hidden bg-gray-50/50">
-          <div className="p-6">
-            {Object.entries(groupedRecords).map(([tag, records]) => (
-              <div key={tag} className="mb-6 last:mb-0">
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="flex h-6 items-center rounded-md bg-blue-100 px-2 text-xs font-bold text-blue-700">
-                    {tag === "other"
-                      ? t("emission_sources.item.other_tag")
-                      : tag}
-                  </div>
-                  <div className="h-px flex-1 bg-gray-200"></div>
-                </div>
-                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                  <table className="w-full text-left text-sm">
-                    <thead className="border-b border-gray-100 bg-gray-50/80 text-xs font-semibold text-slate-500">
-                      <tr>
-                        <th className="px-5 py-3">
-                          {t("emission_sources.item.table.date")}
-                        </th>
-                        <th className="px-5 py-3">
-                          {t("emission_sources.item.table.activity")}
-                        </th>
-                        <th className="px-5 py-3">
-                          {t("emission_sources.item.table.vendor")}
-                        </th>
-                        <th className="px-5 py-3 text-right">
-                          {t("emission_sources.item.table.data")}
-                        </th>
-                        <th className="px-5 py-3 text-right">
-                          {t("emission_sources.item.table.emission")}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {records.map((rec) => (
-                        <tr
-                          key={rec.id}
-                          className="transition-colors hover:bg-orange-50/50"
-                        >
-                          <td className="px-5 py-3 text-slate-600">
-                            {timestampToString(rec.timestamp).dateWithDash}
-                          </td>
-                          <td className="px-5 py-3 font-medium text-slate-800">
-                            {rec.activityType}
-                          </td>
-                          <td className="px-5 py-3 text-slate-600">
-                            {rec.vendor}
-                          </td>
-                          <td className="px-5 py-3 text-right font-medium text-slate-800">
-                            {rec.amount.toLocaleString()}{" "}
-                            <span className="text-xs text-slate-400">
-                              {rec.unit}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3 text-right font-semibold text-orange-600">
-                            {rec.emissions.toLocaleString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ))}
-          </div>
+          <div className="p-6">{groupedRecordList}</div>
         </div>
       </div>
     </div>

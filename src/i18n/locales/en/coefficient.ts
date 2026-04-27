@@ -42,5 +42,6 @@ export const coefficient = {
     no_unit_match_prefix: "No coefficient matches the unit ",
     no_unit_match_suffix: "",
     goto_manage: "Go to coefficient management to add a coefficient",
+    no_match: "No matching coefficient",
   },
 };
