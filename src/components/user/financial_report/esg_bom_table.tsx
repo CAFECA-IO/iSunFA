@@ -16,33 +16,19 @@ export default function EsgBomTable({ sections }: IEsgBomTableProps) {
     title: string,
     records: IEsgReportDetailedRecord[] = [],
   ) => {
-    if (records.length === 0)
-      return (
-        <tbody key={title}>
-          <tr className="bg-gray-100">
-            <td colSpan={5} className="px-4 py-2 font-bold text-gray-800">
-              {title}
-            </td>
-          </tr>
-          <tr>
-            <td
-              colSpan={5}
-              className="px-4 py-2 text-center text-xs text-gray-600"
-            >
-              {t("esg_report.no_records")}
-            </td>
-          </tr>
-        </tbody>
-      );
-
-    return (
-      <tbody key={title}>
-        <tr className="bg-gray-100">
-          <td colSpan={5} className="px-4 py-2 font-bold text-gray-800">
-            {title}
+    const displayedRecords =
+      // Info: (20260427 - Julian) 沒有任何排放紀錄
+      records.length === 0 ? (
+        <tr>
+          <td
+            colSpan={5}
+            className="px-4 py-2 text-center text-xs text-gray-600"
+          >
+            {t("esg_report.no_records")}
           </td>
         </tr>
-        {records.map((item, index) => {
+      ) : (
+        records.map((item, index) => {
           return (
             <tr
               key={`${item.id}-${index}`}
@@ -66,7 +52,17 @@ export default function EsgBomTable({ sections }: IEsgBomTableProps) {
               </td>
             </tr>
           );
-        })}
+        })
+      );
+
+    return (
+      <tbody key={title}>
+        <tr className="bg-gray-100">
+          <td colSpan={5} className="px-4 py-2 font-bold text-gray-800">
+            {title}
+          </td>
+        </tr>
+        {displayedRecords}
       </tbody>
     );
   };

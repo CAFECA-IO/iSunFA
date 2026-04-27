@@ -373,7 +373,7 @@ export default function ReportView() {
         {/* Info:(20260319 - Julian) 報表內容 */}
         <div
           id="report-content-to-print"
-          className="flex w-full flex-col gap-4 print:p-4"
+          className="flex w-full min-w-0 flex-1 flex-col gap-4 print:p-4"
         >
           {reportContent}
         </div>
