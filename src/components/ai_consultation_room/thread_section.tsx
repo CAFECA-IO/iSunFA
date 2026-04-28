@@ -126,7 +126,7 @@ export default function ThreadSection() {
   const sortButton = (
     <button
       type="button"
-      className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-400 enabled:cursor-pointer enabled:hover:border-orange-500 enabled:hover:text-orange-500"
+      className="flex w-fit items-center gap-2 rounded-lg border border-slate-300 px-2 py-2 text-xs text-slate-400 enabled:cursor-pointer enabled:hover:border-orange-500 enabled:hover:text-orange-500 lg:px-4 lg:text-sm"
       onClick={() =>
         setSortOption(
           sortOption === SortOptionQuery.NEWEST
@@ -212,13 +212,13 @@ export default function ThreadSection() {
   );
 
   return (
-    <div className="flex flex-col gap-8 px-24 pt-6 pb-16">
+    <div className="flex flex-col justify-center gap-8 px-8 pt-6 pb-16 lg:justify-start lg:px-24">
       {/* Info: (20260428 - Julian) Filter Bar */}
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-4">
-          <div className="flex gap-2">
+          <div className="flex flex-col items-center gap-2 lg:flex-row">
             {/* Info: (20260428 - Julian) Keyword Search */}
-            <div className="flex flex-1 items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-slate-400">
+            <div className="flex w-full flex-1 items-center gap-2 rounded-lg border border-slate-300 px-2 py-2 text-slate-400 lg:px-4">
               <Search size={24} />
               <input
                 type="text"
@@ -226,12 +226,12 @@ export default function ThreadSection() {
                 aria-label="搜尋討論串"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
-                className="w-full bg-transparent text-base text-slate-700 outline-none placeholder:text-slate-400"
+                className="w-full bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400 lg:text-base"
               />
             </div>
 
             {/* Info: (20260428 - Julian) Date Search */}
-            <div className="flex items-center gap-2 text-slate-400">
+            <div className="flex items-center justify-center gap-2 text-slate-400">
               <div className="flex items-center rounded-lg border border-slate-300 px-4 py-3">
                 <input
                   type="date"
@@ -239,7 +239,7 @@ export default function ThreadSection() {
                   value={startDate}
                   max={endDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-transparent text-sm outline-none"
+                  className="bg-transparent text-xs outline-none lg:text-sm"
                 />
               </div>
               <span>-</span>
@@ -250,7 +250,7 @@ export default function ThreadSection() {
                   value={endDate}
                   min={startDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-transparent text-sm outline-none"
+                  className="bg-transparent text-xs outline-none lg:text-sm"
                 />
               </div>
             </div>
@@ -263,11 +263,9 @@ export default function ThreadSection() {
             {/* Info: (20260428 - Julian) Tag Filter */}
             <div className="flex flex-2 flex-wrap gap-2">{tagList}</div>
             {/* Info: (20260428 - Julian) Total Threads Count */}
-            <div className="flex flex-col gap-2">
-              <p className="ml-auto text-xs text-gray-500">
-                共 {totalItems} 則討論
-              </p>
-            </div>
+            <p className="ml-auto text-xs text-gray-500">
+              共 {totalItems} 則討論
+            </p>
           </div>
         </div>
       </div>

@@ -11,7 +11,6 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
  */
 export async function GET(request: NextRequest) {
   try {
-
     const searchParams = request.nextUrl.searchParams;
     const keyword = searchParams.get("keyword");
     const startDate = searchParams.get("startDate");
