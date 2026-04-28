@@ -166,6 +166,16 @@ export default function QaSection() {
 
   const { dateWithDash } = timestampToString(data.createdAt);
 
+  const tags = data.tags.map((tag) => (
+    <Link
+      key={tag}
+      href={`/ai_consultation_room?tags=${encodeURIComponent(tag)}`}
+      className="rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-600 hover:bg-orange-50 hover:text-orange-600"
+    >
+      #{tag}
+    </Link>
+  ));
+
   // Info: (20260427 - Julian) 顯示「AI 思考中」或「AI 回答的內容」
   const answerContent =
     isPolling && data.answer === "-" ? (
@@ -304,14 +314,7 @@ export default function QaSection() {
       <article className="space-y-12">
         <header className="flex flex-wrap items-center gap-3 text-sm">
           <div className="flex gap-2">
-            {data.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-600"
-              >
-                #{tag}
-              </span>
-            ))}
+            {tags}
           </div>
           <div className="flex items-center gap-1.5 text-gray-400">
             <Clock size={16} />

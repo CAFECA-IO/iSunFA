@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Loader2,
@@ -23,6 +24,9 @@ const PAGE_SIZE = 20;
 
 export default function ThreadSection() {
   const { t } = useTranslation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
   const { setIsChatOpen } = useAiContext();
   const openChat = () => setIsChatOpen(true);
 
@@ -30,7 +34,6 @@ export default function ThreadSection() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [keyword, setKeyword] = useState<string>("");
   const [debouncedKeyword, setDebouncedKeyword] = useState<string>("");
-  const [tags, setTags] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOptionQuery>(
@@ -39,6 +42,37 @@ export default function ThreadSection() {
   const [totalItems, setTotalItems] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
+
+  // Info: (20260428 - Julian) 取得 URL 的標籤參數
+  const [tags, setTags] = useState<string[]>(() => {
+    const queryTags = searchParams.get("tags");
+    return queryTags ? queryTags.split(",") : [];
+  });
+
+  const tagOnClick = (tag: string) => {
+    if (tags.includes(tag)) return;
+    const updatedTags = [...tags, tag];
+    
+    // Info: (20260428 - Julian) 沒有該標籤時才增加
+    setTags(updatedTags);
+    
+    // Info: (20260428 - Julian) 將 tag 加到 URL 上
+    const queryParams = new URLSearchParams(searchParams);
+    queryParams.set("tags", updatedTags.join(","));
+    router.push(`?${queryParams.toString()}`);
+  }
+
+  const tagRemoveOnClick = (tag: string) => {
+    const updatedTags = tags.filter((t) => t !== tag);
+    setTags(updatedTags);
+    const queryParams = new URLSearchParams(searchParams);
+    if (updatedTags.length > 0) {
+      queryParams.set("tags", updatedTags.join(","));
+    } else {
+      queryParams.delete("tags");
+    }
+    router.push(`?${queryParams.toString()}`);
+  }
 
   // Info: (20260428 - Julian) 設定關鍵字輸入延遲
   useEffect(() => {
@@ -119,7 +153,7 @@ export default function ThreadSection() {
     <button
       key={tag}
       type="button"
-      onClick={() => setTags(tags.filter((t) => t !== tag))}
+      onClick={() => tagRemoveOnClick(tag)}
       className="group/tag flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-600 cursor-pointer"
     >
       <p>{tag}</p>
@@ -135,7 +169,7 @@ export default function ThreadSection() {
           <ThreadCard
             key={item.id}
             thread={item}
-            tagOnClick={(tag: string) => setTags([...tags, tag])}
+            tagOnClick={tagOnClick}
           />
         ))}
       </div>
@@ -152,7 +186,7 @@ export default function ThreadSection() {
   const mainContent = isLoading ? (
     // Info: (20260428 - Julian) Loading
     <div className="flex h-[500px] items-center justify-center">
-      <Loader2 size={32} className="animate-spin text-orange-500" />
+      <Loader2 size={40} className="animate-spin text-orange-500" />
     </div>
   ) : threads.length === 0 ? (
     // Info: (20260428 - Julian) No Threads
@@ -204,6 +238,7 @@ export default function ThreadSection() {
               <div className="flex items-center rounded-lg border border-slate-300 px-4 py-3">
                 <input
                   type="date"
+                  aria-label="startDate"
                   value={startDate}
                   max={endDate}
                   onChange={(e) => setStartDate(e.target.value)}
@@ -214,6 +249,7 @@ export default function ThreadSection() {
               <div className="flex items-center rounded-lg border border-slate-300 px-4 py-3">
                 <input
                   type="date"
+                  aria-label="endDate"
                   value={endDate}
                   min={startDate}
                   onChange={(e) => setEndDate(e.target.value)}

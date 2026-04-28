@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Header from "@/components/landing_page/header";
 import Footer from "@/components/landing_page/footer";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -14,7 +15,7 @@ export default function AccountingAiConsultingPage() {
       <Header />
 
       <main className="relative pt-12 min-h-screen">
-        <div className="flex flex-col mb-2 items-center gap-4">
+        <div className="flex flex-col items-center gap-2">
           <h1 className="text-4xl font-bold text-gray-800">
             {t("ai_consultation_room.title")}
           </h1>
@@ -23,7 +24,10 @@ export default function AccountingAiConsultingPage() {
           </p>
         </div>
 
-        <ThreadSection />
+        <Suspense fallback={<div className="flex h-[500px] items-center justify-center">載入中...</div>}>
+          <ThreadSection />
+        </Suspense>
+        
         <AiChat />
       </main>
 
