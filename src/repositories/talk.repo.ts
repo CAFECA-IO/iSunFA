@@ -157,7 +157,10 @@ export class TalkRepository implements ITalkRepository {
 
     if (options?.keyword) {
       where.OR = [
-        { data: { string_contains: options.keyword } },
+        // Info: (20260428 - Julian) 由於 data 和 result 為 JSON 類型，所以使用 path 來指定要搜尋的欄位
+        { data: { path: ['question'], string_contains: options.keyword } },
+        { data: { path: ['data', 'question'], string_contains: options.keyword } },
+        { result: { path: ['answer'], string_contains: options.keyword } },
         { result: { string_contains: options.keyword } },
       ];
     }
@@ -206,7 +209,8 @@ export class TalkRepository implements ITalkRepository {
         include: {
           _count: {
             select: {
-              comments: true,
+              // Info: (20260428 - Julian) 排除已刪除的留言
+              comments: { where: { deletedAt: null } },
               reportShareTokens: true,
             },
           },
@@ -309,6 +313,13 @@ export class TalkRepository implements ITalkRepository {
 
   async createComment(data: Prisma.CommentUncheckedCreateInput) {
     return prisma.comment.create({ data });
+  }
+
+  async deleteComment(commentId: string) {
+    return prisma.comment.update({
+      where: { id: commentId },
+      data: { deletedAt: new Date() },
+    });
   }
 }
 

@@ -26,7 +26,7 @@ export default function ThreadSection() {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const { setIsChatOpen } = useAiContext();
   const openChat = () => setIsChatOpen(true);
 
@@ -52,15 +52,15 @@ export default function ThreadSection() {
   const tagOnClick = (tag: string) => {
     if (tags.includes(tag)) return;
     const updatedTags = [...tags, tag];
-    
+
     // Info: (20260428 - Julian) 沒有該標籤時才增加
     setTags(updatedTags);
-    
+
     // Info: (20260428 - Julian) 將 tag 加到 URL 上
     const queryParams = new URLSearchParams(searchParams);
     queryParams.set("tags", updatedTags.join(","));
     router.push(`?${queryParams.toString()}`);
-  }
+  };
 
   const tagRemoveOnClick = (tag: string) => {
     const updatedTags = tags.filter((t) => t !== tag);
@@ -72,7 +72,7 @@ export default function ThreadSection() {
       queryParams.delete("tags");
     }
     router.push(`?${queryParams.toString()}`);
-  }
+  };
 
   // Info: (20260428 - Julian) 設定關鍵字輸入延遲
   useEffect(() => {
@@ -154,7 +154,7 @@ export default function ThreadSection() {
       key={tag}
       type="button"
       onClick={() => tagRemoveOnClick(tag)}
-      className="group/tag flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-600 cursor-pointer"
+      className="group/tag flex cursor-pointer items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-600"
     >
       <p>{tag}</p>
       <X size={14} className="shrink-0 group-hover/tag:text-orange-800" />
@@ -166,11 +166,7 @@ export default function ThreadSection() {
       {/* Info: (20260428 - Julian) Threads List */}
       <div className="flex flex-wrap gap-x-4 gap-y-8">
         {threads.map((item) => (
-          <ThreadCard
-            key={item.id}
-            thread={item}
-            tagOnClick={tagOnClick}
-          />
+          <ThreadCard key={item.id} thread={item} tagOnClick={tagOnClick} />
         ))}
       </div>
 
@@ -215,7 +211,8 @@ export default function ThreadSection() {
     displayedThreads
   );
 
-  return <div className="flex flex-col gap-8 px-24 pt-6 pb-16">
+  return (
+    <div className="flex flex-col gap-8 px-24 pt-6 pb-16">
       {/* Info: (20260428 - Julian) Filter Bar */}
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-4">
@@ -229,7 +226,7 @@ export default function ThreadSection() {
                 aria-label="搜尋討論串"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
-                className="w-full bg-transparent text-base outline-none text-slate-700 placeholder:text-slate-400"
+                className="w-full bg-transparent text-base text-slate-700 outline-none placeholder:text-slate-400"
               />
             </div>
 
@@ -276,5 +273,6 @@ export default function ThreadSection() {
       </div>
 
       {mainContent}
-  </div>
+    </div>
+  );
 }

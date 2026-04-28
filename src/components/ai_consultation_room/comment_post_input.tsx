@@ -32,8 +32,9 @@ export const CommentPostInput = ({
   const talkId = params?.talk_id as string;
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // ToDo: (20260112 - Julian) 新增 @ 其他用戶的功能
-  const replyTo = value.includes("@") ? value.split("@")[1] : "";
+  // Info: (20260428 - Julian) 支援 @ 其他用戶的功能，透過 regex 抓取第一個 @ 後面的文字直到空白
+  const replyToMatch = value.match(/@([^\s]+)/);
+  const replyTo = replyToMatch ? replyToMatch[1] : "";
 
   // Info: (20260212 - Julian) 處理提交
   const handleSubmit = async () => {

@@ -313,9 +313,7 @@ export default function QaSection() {
       {/* Info: (20260206 - Julian) 1. 問題區塊 */}
       <article className="space-y-12">
         <header className="flex flex-wrap items-center gap-3 text-sm">
-          <div className="flex gap-2">
-            {tags}
-          </div>
+          <div className="flex gap-2">{tags}</div>
           <div className="flex items-center gap-1.5 text-gray-400">
             <Clock size={16} />
             <span>
