@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Info, ArrowDown, ArrowUp, FileStack } from "lucide-react";
+import { 
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide, 
+  FileStack, 
+  Info,
+  Search 
+} from "lucide-react";
 import Link from "next/link";
 import { IEsgRecordDetail, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { EsgRow } from "@/components/user/esg/esg_row";
@@ -388,9 +394,9 @@ export default function EsgTableSection({
               ? t("common.sort.newest")
               : t("common.sort.oldest")}
             {sortOrder === SortOrder.DESC ? (
-              <ArrowDown className="ml-1 h-4 w-4" />
+              <ArrowDownWideNarrow size={16} className="ml-1 shrink-0" />
             ) : (
-              <ArrowUp className="ml-1 h-4 w-4" />
+              <ArrowUpNarrowWide size={16} className="ml-1 shrink-0" />
             )}
           </button>
           <button

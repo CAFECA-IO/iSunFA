@@ -215,7 +215,7 @@ export default function ThreadSection() {
     displayedThreads
   );
 
-  return <div className="flex flex-col gap-8 px-24 py-6">
+  return <div className="flex flex-col gap-8 px-24 pt-6 pb-16">
       {/* Info: (20260428 - Julian) Filter Bar */}
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-4">

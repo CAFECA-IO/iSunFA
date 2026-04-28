@@ -4,12 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
-  Search,
-  ArrowDown,
-  ArrowUp,
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
+  Download,
   LayoutGrid,
   List as ListIcon,
-  Download,
+  Search,
 } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -396,9 +396,9 @@ export default function JournalListView() {
                 ? t("common.sort.newest")
                 : t("common.sort.oldest")}
               {sortOrder === SortOrder.DESC ? (
-                <ArrowDown className="ml-1 h-4 w-4" />
+                <ArrowDownWideNarrow size={16} className="ml-1 shrink-0" />
               ) : (
-                <ArrowUp className="ml-1 h-4 w-4" />
+                <ArrowUpNarrowWide size={16} className="ml-1 shrink-0" />
               )}
             </button>
             {/* Info: (20260401 - Julian) Verify All Button */}

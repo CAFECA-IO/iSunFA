@@ -32,7 +32,7 @@ export default function EsgBomTable({ sections }: IEsgBomTableProps) {
           return (
             <tr
               key={`${item.id}-${index}`}
-              className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 print:break-inside-avoid"
+              className="border-b border-gray-100 last:border-0 print:break-inside-avoid"
             >
               <td className="px-4 py-3 pl-8 font-medium text-gray-700">
                 {t(`esg_activity_type.${item.activityType.toLowerCase()}`)}
