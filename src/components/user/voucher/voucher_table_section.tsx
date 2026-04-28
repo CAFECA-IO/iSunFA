@@ -347,7 +347,7 @@ export default function VoucherTableSection() {
       <div className="flex w-full flex-col gap-4">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
           {/* Info: (20260401 - Julian) Toolbar */}
-          <div className="flex flex-col items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row">
+          <div className="flex flex-wrap justify-center gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:justify-start lg:gap-4">
             {/* Info: (20260401 - Julian) Searchbar */}
             <div className="relative w-full max-w-sm">
               <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -357,7 +357,7 @@ export default function VoucherTableSection() {
                 aria-label={t("voucher.main_view.filters.search")}
                 value={keyWord}
                 onChange={(e) => setKeyWord(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-xs font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:text-sm"
               />
             </div>
 
@@ -369,7 +369,7 @@ export default function VoucherTableSection() {
                 value={startDate}
                 max={endDate || undefined}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-[14px] py-[8.5px] text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
               />
               <span className="text-slate-400">-</span>
               <input
@@ -378,11 +378,11 @@ export default function VoucherTableSection() {
                 value={endDate}
                 min={startDate || undefined}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-[14px] py-[8.5px] text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
               />
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-2 text-xs lg:text-sm">
+            <div className="flex items-center gap-2 text-xs lg:text-sm">
               {/* Info: (20260401 - Julian) Filter by verify status */}
               <select
                 aria-label="Filter by verify status"
@@ -392,7 +392,7 @@ export default function VoucherTableSection() {
                     e.target.value as VerifyStatus | "all",
                   )
                 }
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
               >
                 <option value="all">
                   {t("verify.status.all", { type: t("verify.type.voucher") })}
@@ -411,7 +411,7 @@ export default function VoucherTableSection() {
                 onChange={(e) =>
                   setFilteredType(e.target.value as TradingType | "all")
                 }
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
               >
                 <option value="all">
                   {t("voucher.main_view.filters.all")}
@@ -426,7 +426,10 @@ export default function VoucherTableSection() {
                   {t("voucher.main_view.filters.transfer")}
                 </option>
               </select>
-              {/* Info: (20260401 - Julian) Verify All Button */}
+            </div>
+
+            {/* Info: (20260401 - Julian) Verify All Button */}
+            <div className="lg:ml-auto">
               <button
                 type="button"
                 disabled={isLoading}

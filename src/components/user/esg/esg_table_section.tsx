@@ -1,18 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { 
-  ArrowDownWideNarrow,
-  ArrowUpNarrowWide, 
-  FileStack, 
-  Info,
-  Search 
-} from "lucide-react";
+import { FileStack, Info, Search } from "lucide-react";
 import Link from "next/link";
 import { IEsgRecordDetail, EsgScope, EsgIntensity } from "@/interfaces/esg";
 import { EsgRow } from "@/components/user/esg/esg_row";
 import RecordTabModal from "@/components/user/common/record_tab_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
+import DateSortButton from "@/components/user/common/date_sort_button";
 import { request } from "@/lib/utils/request";
 import { useParams } from "next/navigation";
 import { IApiResponse } from "@/lib/utils/response";
@@ -58,7 +53,9 @@ export default function EsgTableSection({
   const [selectedEsgId, setSelectedEsgId] = useState<string | null>(null);
 
   const [esgToDelete, setEsgToDelete] = useState<IEsgRecordDetail | null>(null);
-  const [esgToRestore, setEsgToRestore] = useState<IEsgRecordDetail | null>(null);
+  const [esgToRestore, setEsgToRestore] = useState<IEsgRecordDetail | null>(
+    null,
+  );
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [isRestoring, setIsRestoring] = useState<boolean>(false);
 
@@ -315,9 +312,12 @@ export default function EsgTableSection({
   return (
     <div className="flex flex-col gap-4">
       {/* Info: (20260312 - Julian) Toolbar */}
-      <div className="flex flex-col items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row">
+      <div className="flex flex-wrap justify-center gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:justify-start lg:gap-4">
         <div className="relative w-full max-w-sm">
-          <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search
+            size={20}
+            className="absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-400"
+          />
           <input
             type="text"
             placeholder={t("esg_table.search_placeholder")}
@@ -327,88 +327,75 @@ export default function EsgTableSection({
             className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm">
-          <select
-            aria-label="Filter by verify status"
-            value={verifyStatusFilter}
-            onChange={(e) =>
-              setVerifyStatusFilter(e.target.value as VerifyStatus | "all")
-            }
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-          >
-            <option value="all">
-              {t("verify.status.all", { type: t("verify.type.esg") })}
-            </option>
-            <option value={VerifyStatus.VERIFIED}>
-              {t("verify.status.verified")}
-            </option>
-            <option value={VerifyStatus.UNVERIFIED}>
-              {t("verify.status.unverified")}
-            </option>
-          </select>
-          <select
-            aria-label={t("esg_table.filter_intensity_aria")}
-            value={filteredIntensity}
-            onChange={(e) => setFilteredIntensity(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-          >
-            <option value="all">{t("esg_table.filter_intensity_all")}</option>
-            <option value={EsgIntensity.HIGH}>
-              {t("esg_table.intensity.high")}
-            </option>
-            <option value={EsgIntensity.MEDIUM}>
-              {t("esg_table.intensity.medium")}
-            </option>
-            <option value={EsgIntensity.LOW}>
-              {t("esg_table.intensity.low")}
-            </option>
-          </select>
-          <select
-            aria-label={t("esg_table.filter_scope_aria")}
-            value={filteredScope}
-            onChange={(e) => setFilteredScope(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-          >
-            <option value="all">{t("esg_table.filter_scope_all")}</option>
-            <option value={EsgScope.SCOPE_1}>
-              {t("esg_table.scope.scope_1")}
-            </option>
-            <option value={EsgScope.SCOPE_2}>
-              {t("esg_table.scope.scope_2")}
-            </option>
-            <option value={EsgScope.SCOPE_3}>
-              {t("esg_table.scope.scope_3")}
-            </option>
-          </select>
-          <button
-            type="button"
-            aria-label={t("common.sort.date_aria")}
-            onClick={() =>
-              setSortOrder(
-                sortOrder === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC,
-              )
-            }
-            className="flex items-center rounded-lg border border-slate-300 px-4 py-2 font-bold text-slate-600 transition-colors hover:bg-orange-50"
-          >
-            {sortOrder === SortOrder.DESC
-              ? t("common.sort.newest")
-              : t("common.sort.oldest")}
-            {sortOrder === SortOrder.DESC ? (
-              <ArrowDownWideNarrow size={16} className="ml-1 shrink-0" />
-            ) : (
-              <ArrowUpNarrowWide size={16} className="ml-1 shrink-0" />
-            )}
-          </button>
-          <button
-            type="button"
-            aria-label={t("common.verify_all")}
-            onClick={() => setIsVerifyAllConfirmOpen(true)}
-            disabled={isLoading}
-            className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
-          >
-            {t("common.verify_all")}
-          </button>
-        </div>
+
+        <select
+          aria-label="Filter by verify status"
+          value={verifyStatusFilter}
+          onChange={(e) =>
+            setVerifyStatusFilter(e.target.value as VerifyStatus | "all")
+          }
+          className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
+        >
+          <option value="all">
+            {t("verify.status.all", { type: t("verify.type.esg") })}
+          </option>
+          <option value={VerifyStatus.VERIFIED}>
+            {t("verify.status.verified")}
+          </option>
+          <option value={VerifyStatus.UNVERIFIED}>
+            {t("verify.status.unverified")}
+          </option>
+        </select>
+        <select
+          aria-label={t("esg_table.filter_intensity_aria")}
+          value={filteredIntensity}
+          onChange={(e) => setFilteredIntensity(e.target.value)}
+          className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
+        >
+          <option value="all">{t("esg_table.filter_intensity_all")}</option>
+          <option value={EsgIntensity.HIGH}>
+            {t("esg_table.intensity.high")}
+          </option>
+          <option value={EsgIntensity.MEDIUM}>
+            {t("esg_table.intensity.medium")}
+          </option>
+          <option value={EsgIntensity.LOW}>
+            {t("esg_table.intensity.low")}
+          </option>
+        </select>
+        <select
+          aria-label={t("esg_table.filter_scope_aria")}
+          value={filteredScope}
+          onChange={(e) => setFilteredScope(e.target.value)}
+          className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
+        >
+          <option value="all">{t("esg_table.filter_scope_all")}</option>
+          <option value={EsgScope.SCOPE_1}>
+            {t("esg_table.scope.scope_1")}
+          </option>
+          <option value={EsgScope.SCOPE_2}>
+            {t("esg_table.scope.scope_2")}
+          </option>
+          <option value={EsgScope.SCOPE_3}>
+            {t("esg_table.scope.scope_3")}
+          </option>
+        </select>
+
+        <DateSortButton
+          currentOrder={sortOrder}
+          onOrderChange={(order) => setSortOrder(order)}
+        />
+
+        {/* Info: (20260428 - Julian) 統一驗證鈕的位置 */}
+        <button
+          type="button"
+          aria-label={t("common.verify_all")}
+          onClick={() => setIsVerifyAllConfirmOpen(true)}
+          disabled={isLoading}
+          className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-sm enabled:hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 lg:ml-auto"
+        >
+          {t("common.verify_all")}
+        </button>
       </div>
 
       {/* Info: (20260401 - Julian) Table */}
@@ -427,7 +414,7 @@ export default function EsgTableSection({
               className={`relative h-6 w-11 rounded-full transition-colors ${hideDeleted ? "bg-orange-500" : "bg-slate-200"}`}
             >
               <div
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${hideDeleted ? "translate-x-5.5" : "translate-x-0.5"}`}
+                className={`absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform ${hideDeleted ? "translate-x-5.5" : "translate-x-0.5"}`}
               />
             </button>
             <label
@@ -500,7 +487,7 @@ export default function EsgTableSection({
                     {/* Info: (20260325 - Luphia) 區分真的沒資料 vs 搜尋不到資料 */}
                     {isFiltering ? (
                       <div className="flex flex-col items-center justify-center">
-                        <Search className="mb-4 h-12 w-12 text-slate-300" />
+                        <Search size={40} className="mb-4 text-slate-300" />
                         <h3 className="mb-2 text-lg font-medium text-slate-900">
                           {t("esg_table.no_filter_results")}
                         </h3>
@@ -516,7 +503,7 @@ export default function EsgTableSection({
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center">
-                        <FileStack className="mb-4 h-12 w-12 text-slate-300" />
+                        <FileStack size={40} className="mb-4 text-slate-300" />
                         <h3 className="mb-2 text-lg font-medium text-slate-900">
                           {t("esg_table.no_records")}
                         </h3>
@@ -544,7 +531,7 @@ export default function EsgTableSection({
             {t("esg_table.footer.record_count", { count: recordCount })}
           </span>
           <span className="flex items-center text-xs font-bold text-slate-500">
-            <Info className="mr-1 h-3.5 w-3.5" />
+            <Info className="mr-1 size-3.5" />
             {t("esg_table.footer.data_citation")}
           </span>
         </div>

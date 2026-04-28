@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, ReactNode, MouseEvent, TouchEvent } from 'react';
+import { useState, useRef, ReactNode, MouseEvent, TouchEvent } from "react";
 
 import { useTranslation } from "@/i18n/i18n_context";
 import { ZoomIn, ZoomOut, Maximize } from "lucide-react";
@@ -130,7 +130,7 @@ export default function ZoomablePreview({
           className={`flex flex-1 items-center justify-center overflow-hidden border-0 border-gray-200 bg-white p-0 lg:rounded-lg lg:border lg:p-4 ${
             scale > 1
               ? isDragging
-                ? "cursor-grabbing select-none touch-none"
+                ? "cursor-grabbing touch-none select-none"
                 : "cursor-grab touch-none"
               : ""
           }`}

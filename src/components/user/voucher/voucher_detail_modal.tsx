@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from "react";
 
 import {
   X,
@@ -628,7 +628,9 @@ export default function VoucherDetailModal({
         title={t("voucher.detail_modal.confirm_modals.save_voucher.title")}
         message={t("voucher.detail_modal.confirm_modals.save_voucher.message")}
         confirmText={
-          isSaving ? t("voucher.detail_modal.actions.saving") : t("voucher.detail_modal.actions.confirm")
+          isSaving
+            ? t("voucher.detail_modal.actions.saving")
+            : t("voucher.detail_modal.actions.confirm")
         }
         cancelText={t("common.cancel")}
         onConfirm={executeSaveVoucher}

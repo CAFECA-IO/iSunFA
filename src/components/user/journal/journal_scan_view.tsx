@@ -1,21 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback, MouseEvent } from 'react';
+import { useEffect, useRef, useState, useCallback, MouseEvent } from "react";
 import Image from "next/image";
-import {
-  Loader2,
-  X,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Loader2, X, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { useParams } from "next/navigation";
 import { uploadFile, fileToBase64 } from "@/lib/file_operator";
 import { useOrderTransaction } from "@/hooks/use_order_transaction";
 
-import { useJournalAnalysis, UploadedFileData } from "@/hooks/use_journal_analysis";
+import {
+  useJournalAnalysis,
+  UploadedFileData,
+} from "@/hooks/use_journal_analysis";
 import DocumentScanner from "@/components/common/document_scanner";
 
 export default function JournalScanView({
@@ -166,7 +163,7 @@ export default function JournalScanView({
             ))}
           </div>
         )}
-        <div className="flex items-center justify-end px-2 pointer-events-none">
+        <div className="pointer-events-none flex items-center justify-end px-2">
           <div className="flex w-1/3 justify-end">
             {capturedFiles.length > 0 && (
               <button

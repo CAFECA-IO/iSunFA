@@ -3,14 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
-import {
-  ArrowDownWideNarrow,
-  ArrowUpNarrowWide,
-  Download,
-  LayoutGrid,
-  List as ListIcon,
-  Search,
-} from "lucide-react";
+import { Download, LayoutGrid, List as ListIcon, Search } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { IJournal } from "@/interfaces/journal";
@@ -19,6 +12,7 @@ import JournalGridLayout from "@/components/user/journal/journal_grid_layout";
 import RecordTabModal from "@/components/user/common/record_tab_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
 import Pagination from "@/components/common/pagination";
+import DateSortButton from "@/components/user/common/date_sort_button";
 import { ApiCode } from "@/lib/utils/status";
 import { VerifyStatus } from "@/constants/verify_status";
 import JournalSummary from "@/components/user/journal/journal_summary";
@@ -301,10 +295,11 @@ export default function JournalListView() {
             <button
               title={t("ocr.list_view") as string}
               type="button"
-              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${displayType === DisplayType.LIST
-                ? "bg-white text-orange-600 shadow-sm"
-                : "text-gray-400 hover:text-gray-600"
-                }`}
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
+                displayType === DisplayType.LIST
+                  ? "bg-white text-orange-600 shadow-sm"
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
               onClick={() => setDisplayType(DisplayType.LIST)}
             >
               <ListIcon size={16} />
@@ -312,10 +307,11 @@ export default function JournalListView() {
             <button
               title={t("ocr.grid_view") as string}
               type="button"
-              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${displayType === DisplayType.GRID
-                ? "bg-white text-orange-600 shadow-sm"
-                : "text-gray-400 hover:text-gray-600"
-                }`}
+              className={`flex h-7 w-8 items-center justify-center rounded transition-colors ${
+                displayType === DisplayType.GRID
+                  ? "bg-white text-orange-600 shadow-sm"
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
               onClick={() => setDisplayType(DisplayType.GRID)}
             >
               <LayoutGrid size={16} />
@@ -324,7 +320,7 @@ export default function JournalListView() {
         </div>
 
         {/* Info: (20260312 - Julian) Toolbar */}
-        <div className="flex flex-col items-stretch justify-between gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:gap-4">
+        <div className="flex flex-wrap justify-center gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-start lg:gap-4">
           {/* Info: (20260401 - Julian) Search Bar */}
           <div className="relative w-full lg:max-w-sm">
             <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -334,7 +330,7 @@ export default function JournalListView() {
               aria-label={t("ocr.search_placeholder")}
               value={keyWord}
               onChange={(e) => setKeyWord(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-xs font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:text-sm"
             />
           </div>
 
@@ -347,7 +343,7 @@ export default function JournalListView() {
                 value={startDate}
                 max={endDate || undefined}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4"
+                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
               />
               <span className="text-gray-400">-</span>
               <input
@@ -356,52 +352,39 @@ export default function JournalListView() {
                 value={endDate}
                 min={startDate || undefined}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4"
+                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
               />
             </div>
           </div>
 
-          {/* Info: (20260401 - Julian) Verify Status Filter */}
-          <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm">
-            <select
-              aria-label="Filter by verify status"
-              value={filteredVerifyStatus}
-              onChange={(e) =>
-                setFilteredVerifyStatus(e.target.value as VerifyStatus | "all")
-              }
-              className="rounded-lg border border-slate-300 bg-white px-2 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4"
-            >
-              <option value="all">
-                {t("verify.status.all", { type: t("verify.type.journal") })}
-              </option>
-              <option value={VerifyStatus.VERIFIED}>
-                {t("verify.status.verified")}
-              </option>
-              <option value={VerifyStatus.UNVERIFIED}>
-                {t("verify.status.unverified")}
-              </option>
-            </select>
-            {/* Info: (20260401 - Julian) Sort by date */}
-            <button
-              type="button"
-              aria-label={t("common.sort.date_aria")}
-              onClick={() =>
-                setSortOrder(
-                  sortOrder === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC,
-                )
-              }
-              className="flex items-center rounded-lg border border-slate-300 px-2 py-2 font-bold text-slate-600 transition-colors hover:bg-orange-50 lg:px-4"
-            >
-              {sortOrder === SortOrder.DESC
-                ? t("common.sort.newest")
-                : t("common.sort.oldest")}
-              {sortOrder === SortOrder.DESC ? (
-                <ArrowDownWideNarrow size={16} className="ml-1 shrink-0" />
-              ) : (
-                <ArrowUpNarrowWide size={16} className="ml-1 shrink-0" />
-              )}
-            </button>
-            {/* Info: (20260401 - Julian) Verify All Button */}
+          {/* Info: (20260428 - Julian) Verify Status Filter */}
+          <select
+            aria-label="Filter by verify status"
+            value={filteredVerifyStatus}
+            onChange={(e) =>
+              setFilteredVerifyStatus(e.target.value as VerifyStatus | "all")
+            }
+            className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
+          >
+            <option value="all">
+              {t("verify.status.all", { type: t("verify.type.journal") })}
+            </option>
+            <option value={VerifyStatus.VERIFIED}>
+              {t("verify.status.verified")}
+            </option>
+            <option value={VerifyStatus.UNVERIFIED}>
+              {t("verify.status.unverified")}
+            </option>
+          </select>
+
+          {/* Info: (20260401 - Julian) Sort by date */}
+          <DateSortButton
+            currentOrder={sortOrder}
+            onOrderChange={(order) => setSortOrder(order)}
+          />
+
+          {/* Info: (20260401 - Julian) Verify All Button */}
+          <div className="flex items-center gap-2 text-xs lg:ml-auto lg:text-sm">
             <button
               type="button"
               aria-label="common.verify_all"

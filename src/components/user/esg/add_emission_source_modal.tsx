@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { request } from '@/lib/utils/request';
+import { request } from "@/lib/utils/request";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
 import { IApiResponse } from "@/lib/utils/response";
@@ -39,14 +39,14 @@ export default function AddEmissionSourceModal({
       setIsNameError(true);
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
-      const data = await request<IApiResponse<{newId: string}>>(
+      const data = await request<IApiResponse<{ newId: string }>>(
         `/api/v1/user/account_book/${accountBookId}/esg/emission_sources`,
         { method: "POST", body: JSON.stringify({ name, address }) },
       );
-      
+
       if (data.success) {
         onClose();
         setName("");
@@ -125,10 +125,11 @@ export default function AddEmissionSourceModal({
             <button
               type="submit"
               disabled={disabledSubmit}
-              className={`flex-1 rounded-xl py-3 text-sm font-bold transition-colors ${disabledSubmit
-                ? "cursor-not-allowed bg-gray-300 text-gray-500"
-                : "bg-orange-500 text-white enabled:hover:bg-orange-600"
-                }`}
+              className={`flex-1 rounded-xl py-3 text-sm font-bold transition-colors ${
+                disabledSubmit
+                  ? "cursor-not-allowed bg-gray-300 text-gray-500"
+                  : "bg-orange-500 text-white enabled:hover:bg-orange-600"
+              }`}
             >
               {t("emission_sources.modal.confirm")}
             </button>
