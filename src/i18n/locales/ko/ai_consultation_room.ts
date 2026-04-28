@@ -15,6 +15,8 @@ export const aiConsultationRoom = {
   share_knowledge: "이 지식 공유하기",
   no_threads: "현재 대화 기록이 없습니다",
   back_home: "홈으로 돌아가기",
+  or: "또는",
+  ask_now: "지금 질문하기",
   open_chat: "AI 상담실 열기",
   close_chat: "AI 상담실 닫기",
   input_placeholder: "질문을 입력해 주세요...",

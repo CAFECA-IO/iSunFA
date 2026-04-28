@@ -5,10 +5,11 @@ import Header from "@/components/landing_page/header";
 import Footer from "@/components/landing_page/footer";
 import { IThreadDetail } from "@/interfaces/ai_consulting";
 import { useTranslation } from "@/i18n/i18n_context";
-import { ThreadGrid } from "@/components/ai_consultation_room/thread_grid";
+import ThreadGrid from "@/components/ai_consultation_room/thread_grid";
 import { AiChat } from "@/components/ai_consultation_room/ai_chat";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-
 
 export default function AccountingAiConsultingPage() {
   const { t } = useTranslation();
@@ -19,10 +20,11 @@ export default function AccountingAiConsultingPage() {
     const fetchThreads = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("/api/v1/ai_consulting/thread");
-        const data = await response.json();
-        if (data.code === ApiCode.SUCCESS) {
-          setThreads(data.payload);
+        const res = await request<IApiResponse<IThreadDetail[]>>(
+          "/api/v1/ai_consulting/thread",
+        );
+        if (res.code === ApiCode.SUCCESS && res.payload) {
+          setThreads(res.payload);
         }
       } catch (error) {
         console.error("Failed to fetch threads:", error);

@@ -15,6 +15,8 @@ export const aiConsultationRoom = {
   share_knowledge: "Share this Insight",
   no_threads: "No discussion recording available",
   back_home: "Back to Home",
+  or: "or",
+  ask_now: "Ask Now",
   open_chat: "Open AI Consultation Room",
   close_chat: "Close AI Consultation Room",
   input_placeholder: "Please enter your question...",

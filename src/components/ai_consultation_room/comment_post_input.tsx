@@ -1,4 +1,6 @@
-import { useState, KeyboardEvent } from 'react';
+"use client";
+
+import { useState, KeyboardEvent } from "react";
 import { request } from "@/lib/utils/request";
 import { User, Send, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -107,7 +109,7 @@ export const CommentPostInput = ({
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t("ai_consultation_room.comment_placeholder")}
-            className="text-gray-500 min-h-[100px] w-full resize-none rounded-2xl border border-orange-100 bg-white p-4 text-sm shadow-sm transition-all placeholder:text-gray-300 focus:border-orange-500 focus:outline-none"
+            className="min-h-[100px] w-full resize-none rounded-2xl border border-orange-100 bg-white p-4 text-sm text-gray-500 shadow-sm transition-all placeholder:text-gray-300 focus:border-orange-500 focus:outline-none"
           />
           <div className="flex justify-end">{displayedSubmit}</div>
         </div>

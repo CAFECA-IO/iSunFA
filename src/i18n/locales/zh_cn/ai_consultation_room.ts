@@ -14,6 +14,8 @@ export const aiConsultationRoom = {
   share_knowledge: "分享此知识点",
   no_threads: "目前没有任何对话记录",
   back_home: "回首页",
+  or: "或",
+  ask_now: "立即提问",
   open_chat: "开启 AI 咨询室",
   close_chat: "关闭 AI 咨询室",
   input_placeholder: "请输入你的问题...",
