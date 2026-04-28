@@ -1,7 +1,7 @@
 import { COUNTRY, CURRENCY, RULE } from "@/constants/accounts";
 import { Prisma } from "@/generated/client";
-import { prisma } from "@/lib/prisma";
 import { accountBookRepo } from "@/repositories/account_book.repo";
+import { teamRepo } from "@/repositories/team.repo";
 
 export interface IAccountBook {
   id: string;
@@ -19,7 +19,7 @@ export interface IAccountBook {
 
 // Info: (20260308 - Luphia) 找出所有帳簿的團隊，使用 createAccountBook 為他建立一個
 export const createAccountBookForTeamsWithoutOne = async () => {
-  const teamsWithoutAccountBook = await prisma.team.findMany({
+  const teamsWithoutAccountBook = await teamRepo.findManyTeams({
     where: {
       accountBooks: {
         none: {},

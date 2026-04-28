@@ -49,6 +49,7 @@ import { emissionSources } from "@/i18n/locales/ko/emission_sources";
 
 import { date } from "@/i18n/locales/ko/date";
 import { currencyAlias } from "@/i18n/locales/ko/currency_alias";
+import { orderManagement } from "@/i18n/locales/ko/order_management";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 import { adminBilling } from "@/i18n/locales/ko/admin_billing";
 
@@ -104,4 +105,5 @@ export const ko = {
   admin_dashboard: adminDashboard,
   admin_mission_board: adminMissionBoard,
   emission_sources: emissionSources,
+  order_management: orderManagement,
 } satisfies BaseTranslation;

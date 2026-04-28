@@ -48,5 +48,6 @@ export const billing = {
     source_checkin: "일일 출석 보상",
     source_registration: "가입 보상",
     source_admin_issued: "관리자 지급",
+    source_check_in_reward: "일일 출석 보상",
   },
 };

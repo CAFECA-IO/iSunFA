@@ -1,0 +1,22 @@
+export const orderManagement = {
+  title: "주문 관리",
+  subtitle: "모든 주문, 결제 상태 및 블록체인 실행 상태를 관리하고 검토합니다",
+  table: {
+    date: "날짜",
+    user: "사용자",
+    order_id: "주문 ID",
+    type: "유형",
+    amount: "금액",
+    order_status: "주문 상태",
+    payment_record: "결제 기록",
+    execution_status: "실행 상태",
+    execution_confidence: "실행 신뢰도",
+    executed: "실행됨",
+    pending: "대기 중",
+    confirming: "확인 중",
+    processing: "처리 중",
+    failed: "실패",
+    unnamed_user: "이름 없는 사용자",
+    no_data: "주문을 찾을 수 없습니다."
+  }
+};

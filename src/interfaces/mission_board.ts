@@ -24,4 +24,14 @@ export interface ITask {
   status: TaskStatus;
   submissionCount: number;
   submissions: ISubmission[];
+  _trueStatus?: TaskStatus; // Info: (20260424 - Luphia) For diff engine animations
+}
+
+export type LocalMissionStatus = 'executing' | 'completed' | 'failed' | 'pending';
+
+export interface ILocalMission {
+  folderId: string;
+  status: LocalMissionStatus;
+  failureCount: number;
+  failedLogs: { filename: string; content: string }[];
 }

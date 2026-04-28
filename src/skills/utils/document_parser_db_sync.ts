@@ -52,6 +52,13 @@ export async function syncDocumentResultToDatabase(
   const { journal, voucherBase, voucherLines, esg, failureReason } = result;
 
   await prisma.$transaction(async (tx) => {
+    // Info: (20260426 - Luphia) Validate if accountBookId exists to prevent FK violation on mock test tasks
+    const accountBook = await tx.accountBook.findUnique({ where: { id: accountBookId } });
+    if (!accountBook) {
+      console.warn(`[syncDocumentResultToDatabase] accountBookId ${accountBookId} not found. Skipping DB sync.`);
+      return;
+    }
+
     let realFileId: string | undefined = undefined;
     if (fileId) {
       let fileNode = await tx.file.findFirst({ where: { hash: fileId } });

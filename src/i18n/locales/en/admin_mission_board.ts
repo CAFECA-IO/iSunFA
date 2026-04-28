@@ -34,4 +34,37 @@ export const adminMissionBoard = {
     loading: "Loading missions...",
     unknown: "Unknown",
   },
+  local_task: {
+    executing: "Executing",
+    completed: "Completed",
+    failed: "Suspended",
+    pending: "Pending",
+    failure_count: "Failures:",
+    view_log: "View Log",
+    cancel_task: "Cancel Task",
+    restart_task: "Restart Task",
+    no_tasks: "No assigned tasks at the moment.",
+    failure_logs: "Failure Logs",
+  },
+  pdf_editor: {
+    title: "PDF Editor",
+    subtitle: "Write markdown and export as an iSunFA branded PDF.",
+    edit_markdown: "Edit Markdown",
+    preview_pdf: "Preview PDF",
+    download_pdf: "Download PDF",
+    generating: "Generating...",
+    markdown_input: "Markdown Input",
+    type_here: "Type your markdown here...",
+    pdf_preview: "PDF Preview",
+    brand: "iSunFA Smart Accounting",
+    internal_document: "Internal Document",
+    system_report: "System Report",
+    footer_title: "Reinventing Carbon Accounting with AI",
+    footer_text: "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal."
+  },
+  gc: {
+    btn_text: "Execute GC Cleanup",
+    result_title: "GC Cleanup Results",
+    success_msg: "Successfully cleared {{count}} expired or invalid contract folders.",
+  }
 };

@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useRef, useImperativeHandle, forwardRef } from "react";
 
-export type RobotActionTarget = "wander" | "SPAWN" | "OPEN" | "PENDING_REVIEW" | "CLOSED";
+export type RobotActionTarget = "wander" | "SPAWN" | "OPEN" | "PENDING_REVIEW" | "CLOSED" | "MY_POSTED" | "MY_ACCEPTED";
 
 export interface IRobotAction {
   type: "PICKUP" | "DROP";
   targetZone: RobotActionTarget;
   blockId: number;
+  scale?: number;
   onComplete?: () => void;
 }
 
@@ -16,10 +17,36 @@ export interface IRobotRef {
   setZonePosition: (zone: RobotActionTarget, pos: { x: number, y: number }) => void;
 }
 
-const WalkingRobot = forwardRef<IRobotRef>((props, ref) => {
+export interface IWalkingRobotProps {
+  colorTheme: "blue" | "emerald";
+  className: string;
+}
+
+const THEMES = {
+  blue: {
+    headFill: "#f8fafc", headStroke: "#cbd5e1",
+    torsoFill: "#e2e8f0", torsoStroke: "#cbd5e1",
+    legRightTop: "#64748b", legRightKnee: "#94a3b8", legRightAnkle: "#334155",
+    armRightTop: "#9ca3af", armRightElbow: "#cbd5e1", armRightWrist: "#f8fafc", armRightStroke: "#94a3b8",
+    legLeftTop: "#475569", legLeftKnee: "#64748b", legLeftAnkle: "#0f172a",
+    armLeftTop: "#64748b", armLeftElbow: "#94a3b8", armLeftWrist: "#cbd5e1", armLeftStroke: "#64748b"
+  },
+  emerald: {
+    headFill: "#ecfdf5", headStroke: "#a7f3d0",
+    torsoFill: "#d1fae5", torsoStroke: "#a7f3d0",
+    legRightTop: "#059669", legRightKnee: "#34d399", legRightAnkle: "#064e3b",
+    armRightTop: "#10b981", armRightElbow: "#6ee7b7", armRightWrist: "#ecfdf5", armRightStroke: "#34d399",
+    legLeftTop: "#047857", legLeftKnee: "#059669", legLeftAnkle: "#022c22",
+    armLeftTop: "#059669", armLeftElbow: "#34d399", armLeftWrist: "#a7f3d0", armLeftStroke: "#059669"
+  }
+};
+
+const WalkingRobot = forwardRef<IRobotRef, IWalkingRobotProps>(({ colorTheme = "blue", className = "" }, ref) => {
+  const theme = THEMES[colorTheme];
   const [position, setPosition] = useState({ x: -100, y: -100 });
   const [facingRight, setFacingRight] = useState(true);
   const [isCarrying, setIsCarrying] = useState(false);
+  const [carriedScale, setCarriedScale] = useState(1);
 
   const phaseRef = useRef(0);
 
@@ -110,6 +137,7 @@ const WalkingRobot = forwardRef<IRobotRef>((props, ref) => {
           if (act.type === "PICKUP") {
             isCarryingRef.current = true;
             setIsCarrying(true);
+            setCarriedScale(act.scale || 1);
           } else if (act.type === "DROP") {
             isCarryingRef.current = false;
             setIsCarrying(false);
@@ -193,44 +221,44 @@ const WalkingRobot = forwardRef<IRobotRef>((props, ref) => {
   }, []);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-100 overflow-hidden">
+    <div className={`fixed inset-0 pointer-events-none z-100 overflow-hidden ${className}`}>
       <svg className="w-full h-full drop-shadow-lg transition-transform duration-300">
         <g transform={`translate(${position.x}, ${position.y}) scale(${facingRight ? 1 : -1}, 1)`}>
 
           <g transform={`rotate(${joints.torso})`}>
             {/* Info: (20260420 - Luphia) RIGHT ARM (Background) */}
             <g transform={`translate(0, 5) rotate(${joints.rightShoulder})`}>
-              <rect x="-5" y="0" width="10" height="30" rx="5" fill="#9ca3af" />
+              <rect x="-5" y="0" width="10" height="30" rx="5" fill={theme.armRightTop} />
               <g transform={`translate(0, 26) rotate(${joints.rightElbow})`}>
-                <rect x="-4" y="0" width="8" height="25" rx="4" fill="#cbd5e1" />
+                <rect x="-4" y="0" width="8" height="25" rx="4" fill={theme.armRightElbow} />
                 <g transform={`translate(0, 23) rotate(${joints.rightWrist})`}>
-                  <circle cx="0" cy="0" r="5" fill="#f8fafc" />
-                  <path d="M-3,1 Q-10,8 -3,15" stroke="#94a3b8" strokeWidth="3" fill="none" strokeLinecap="round" transform={`rotate(${joints.fingers * 0.5})`} />
-                  <path d="M3,1 Q10,8 3,15" stroke="#94a3b8" strokeWidth="3" fill="none" strokeLinecap="round" transform={`rotate(${-joints.fingers * 0.5})`} />
+                  <circle cx="0" cy="0" r="5" fill={theme.armRightWrist} />
+                  <path d="M-3,1 Q-10,8 -3,15" stroke={theme.armRightStroke} strokeWidth="3" fill="none" strokeLinecap="round" transform={`rotate(${joints.fingers * 0.5})`} />
+                  <path d="M3,1 Q10,8 3,15" stroke={theme.armRightStroke} strokeWidth="3" fill="none" strokeLinecap="round" transform={`rotate(${-joints.fingers * 0.5})`} />
                 </g>
               </g>
             </g>
 
             {/* Info: (20260420 - Luphia) RIGHT LEG */}
             <g transform={`translate(0, 45) rotate(${joints.rightHip})`}>
-              <rect x="-6" y="0" width="12" height="35" rx="6" fill="#64748b" />
+              <rect x="-6" y="0" width="12" height="35" rx="6" fill={theme.legRightTop} />
               <g transform={`translate(0, 30) rotate(${joints.rightKnee})`}>
-                <rect x="-5" y="0" width="10" height="35" rx="5" fill="#94a3b8" />
+                <rect x="-5" y="0" width="10" height="35" rx="5" fill={theme.legRightKnee} />
                 <g transform={`translate(0, 32) rotate(${joints.rightAnkle})`}>
-                  <rect x="-6" y="0" width="22" height="9" rx="4" fill="#334155" />
+                  <rect x="-6" y="0" width="22" height="9" rx="4" fill={theme.legRightAnkle} />
                 </g>
               </g>
             </g>
 
             {/* Info: (20260420 - Luphia) TORSO */}
-            <rect x="-15" y="0" width="30" height="50" rx="8" fill="#e2e8f0" stroke="#cbd5e1" strokeWidth="2" />
-            <path d="M -8 15 L 8 15" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
-            <path d="M -8 22 L 8 22" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
+            <rect x="-15" y="0" width="30" height="50" rx="8" fill={theme.torsoFill} stroke={theme.torsoStroke} strokeWidth="2" />
+            <path d="M -8 15 L 8 15" stroke={theme.torsoStroke} strokeWidth="2" strokeLinecap="round" />
+            <path d="M -8 22 L 8 22" stroke={theme.torsoStroke} strokeWidth="2" strokeLinecap="round" />
             <circle cx="0" cy="35" r="4" fill="#f97316" className={isCarrying ? "animate-spin" : "animate-pulse"} />
 
             {/* Info: (20260420 - Luphia) CARRIED BLOCK (When carrying) */}
             {isCarrying && (
-              <g transform="translate(15, 20)">
+              <g transform={`translate(15, 20) scale(${carriedScale})`}>
                 <rect x="0" y="-15" width="24" height="24" rx="4" fill="#6366f1" stroke="#4f46e5" strokeWidth="2" className="animate-pulse shadow-lg" />
                 <path d="M 6,-5 L 18,-5" stroke="#e0e7ff" strokeWidth="2" strokeLinecap="round" />
                 <path d="M 6,0 L 14,0" stroke="#e0e7ff" strokeWidth="2" strokeLinecap="round" />
@@ -239,10 +267,10 @@ const WalkingRobot = forwardRef<IRobotRef>((props, ref) => {
 
             {/* Info: (20260420 - Luphia) HEAD */}
             <g transform={`translate(0, -2) rotate(${joints.head})`}>
-              <path d="M 0,-25 L 0,-36" stroke="#94a3b8" strokeWidth="2" />
+              <path d="M 0,-25 L 0,-36" stroke={theme.headStroke} strokeWidth="2" />
               <circle cx="0" cy="-38" r="3" fill="#f97316" className="animate-ping shadow-orange-500" />
               <circle cx="0" cy="-38" r="3" fill="#f97316" />
-              <rect x="-14" y="-28" width="28" height="26" rx="6" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2" />
+              <rect x="-14" y="-28" width="28" height="26" rx="6" fill={theme.headFill} stroke={theme.headStroke} strokeWidth="2" />
               <rect x="-10" y="-18" width="24" height="8" rx="4" fill="#1e293b" />
               <circle cx="4" cy="-14" r="2.5" fill="#f97316" />
               <circle cx="-2" cy="-14" r="2.5" fill="#f97316" />
@@ -250,24 +278,24 @@ const WalkingRobot = forwardRef<IRobotRef>((props, ref) => {
 
             {/* Info: (20260420 - Luphia) LEFT LEG (Foreground) */}
             <g transform={`translate(0, 45) rotate(${joints.leftHip})`}>
-              <rect x="-6" y="0" width="12" height="35" rx="6" fill="#475569" />
+              <rect x="-6" y="0" width="12" height="35" rx="6" fill={theme.legLeftTop} />
               <g transform={`translate(0, 30) rotate(${joints.leftKnee})`}>
-                <rect x="-5" y="0" width="10" height="35" rx="5" fill="#64748b" />
+                <rect x="-5" y="0" width="10" height="35" rx="5" fill={theme.legLeftKnee} />
                 <g transform={`translate(0, 32) rotate(${joints.leftAnkle})`}>
-                  <rect x="-6" y="0" width="22" height="9" rx="4" fill="#0f172a" />
+                  <rect x="-6" y="0" width="22" height="9" rx="4" fill={theme.legLeftAnkle} />
                 </g>
               </g>
             </g>
 
             {/* Info: (20260420 - Luphia) LEFT ARM (Foreground) */}
             <g transform={`translate(0, 5) rotate(${joints.leftShoulder})`}>
-              <rect x="-5" y="0" width="10" height="30" rx="5" fill="#64748b" />
+              <rect x="-5" y="0" width="10" height="30" rx="5" fill={theme.armLeftTop} />
               <g transform={`translate(0, 26) rotate(${joints.leftElbow})`}>
-                <rect x="-4" y="0" width="8" height="25" rx="4" fill="#94a3b8" />
+                <rect x="-4" y="0" width="8" height="25" rx="4" fill={theme.armLeftElbow} />
                 <g transform={`translate(0, 23) rotate(${joints.leftWrist})`}>
-                  <circle cx="0" cy="0" r="5" fill="#cbd5e1" />
-                  <path d="M-3,1 Q-10,8 -3,15" stroke="#64748b" strokeWidth="3" fill="none" strokeLinecap="round" transform={`rotate(${joints.fingers * 0.5})`} />
-                  <path d="M3,1 Q10,8 3,15" stroke="#64748b" strokeWidth="3" fill="none" strokeLinecap="round" transform={`rotate(${-joints.fingers * 0.5})`} />
+                  <circle cx="0" cy="0" r="5" fill={theme.armLeftWrist} />
+                  <path d="M-3,1 Q-10,8 -3,15" stroke={theme.armLeftStroke} strokeWidth="3" fill="none" strokeLinecap="round" transform={`rotate(${joints.fingers * 0.5})`} />
+                  <path d="M3,1 Q10,8 3,15" stroke={theme.armLeftStroke} strokeWidth="3" fill="none" strokeLinecap="round" transform={`rotate(${-joints.fingers * 0.5})`} />
                 </g>
               </g>
             </g>
@@ -280,4 +308,5 @@ const WalkingRobot = forwardRef<IRobotRef>((props, ref) => {
 });
 
 WalkingRobot.displayName = "WalkingRobot";
+
 export default WalkingRobot;

@@ -34,4 +34,37 @@ export const adminMissionBoard = {
     loading: "載入任務中...",
     unknown: "未知",
   },
+  local_task: {
+    executing: "執行中",
+    completed: "已完成",
+    failed: "暫停執行",
+    pending: "等待中",
+    failure_count: "失敗次數:",
+    view_log: "檢視 Log",
+    cancel_task: "取消任務",
+    restart_task: "重啟任務",
+    no_tasks: "目前沒有承接任務",
+    failure_logs: "失敗紀錄",
+  },
+  pdf_editor: {
+    title: "PDF 編輯器",
+    subtitle: "編寫 Markdown 內容並匯出為 iSunFA 專屬版型 PDF。",
+    edit_markdown: "編輯 Markdown",
+    preview_pdf: "預覽 PDF",
+    download_pdf: "下載 PDF",
+    generating: "產生中...",
+    markdown_input: "Markdown 輸入區",
+    type_here: "請在此輸入您的 markdown...",
+    pdf_preview: "PDF 預覽區",
+    brand: "陽光智能會計",
+    internal_document: "內部文件",
+    system_report: "系統報告",
+    footer_title: "用人工智能重塑碳會計",
+    footer_text: "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal."
+  },
+  gc: {
+    btn_text: "執行 GC 清理",
+    result_title: "任務系統清理結果",
+    success_msg: "成功清除了 {{count}} 個過期或不符合約的資料夾。",
+  }
 };

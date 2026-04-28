@@ -1,10 +1,10 @@
 import { Prisma, TeamRole } from "@/generated/client";
-import { prisma } from "@/lib/prisma";
+import { userRepo } from "@/repositories/user.repo";
 import { teamRepo } from "@/repositories/team.repo";
 
 // Info: (20260308 - Luphia) 找出所有沒團隊的使用者，使用 getOrCreateUserTeam 為他建立一個
 export const createTeamForUsersWithoutTeam = async () => {
-  const usersWithoutTeam = await prisma.user.findMany({
+  const usersWithoutTeam = await userRepo.findMany({
     where: {
       teamMembers: {
         none: {},

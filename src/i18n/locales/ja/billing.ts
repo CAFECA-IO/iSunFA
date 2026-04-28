@@ -49,5 +49,6 @@ export const billing = {
     source_checkin: "チェックイン報酬",
     source_registration: "登録報酬",
     source_admin_issued: "管理者発行",
+    source_check_in_reward: "チェックイン報酬",
   },
 };
