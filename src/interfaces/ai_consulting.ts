@@ -43,5 +43,4 @@ export interface IFile {
 export interface IThreadDetail extends IThread {
   userReaction: UserReaction; // Info: (20260212 - Julian) 使用者對該討論串的按讚、倒讚
   file: IFile[];
-  isGenerating?: boolean; // Info: (20260427 - Julian) 是否 AI 正在生成中
 }

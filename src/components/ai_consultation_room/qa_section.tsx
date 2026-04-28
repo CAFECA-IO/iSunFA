@@ -60,12 +60,7 @@ export default function QaSection() {
           setUserReaction(result?.payload?.userReaction ?? null);
           if (result.payload?.answer === "-") {
             setIsPolling(true);
-            // Info: (20260427 - Julian) 初始化回答，先 3000ms 輪詢一次
             timer = setTimeout(fetchThreadDetail, 3000);
-          } else if (result.payload?.isGenerating) {
-            setIsPolling(true);
-            // Info: (20260427 - Julian) AI 回答生成中，輪詢加快至 1000ms
-            timer = setTimeout(fetchThreadDetail, 1000);
           } else {
             setIsPolling(false);
           }
@@ -190,15 +185,11 @@ export default function QaSection() {
     ) : (
       <article className="relative">
         <MarkdownContent content={data.answer} theme="light" />
-        {data.isGenerating && (
-          // Info: (20260427 - Julian) 回答生成中，顯示閃爍打字機效果
-          <span className="ml-1 inline-block h-4 w-2 animate-pulse bg-orange-500" />
-        )}
       </article>
     );
 
   // Info: (20260427 - Julian) 只在取得完整回答以後才顯示工具列
-  const toolbar = !isPolling && !data.isGenerating && data.answer !== "-" && (
+  const toolbar = !isPolling && data.answer !== "-" && (
     <footer className="mt-10 flex flex-wrap items-center justify-between gap-6 border-t border-orange-200/50 pt-8">
       <div className="flex items-center gap-4">
         <button

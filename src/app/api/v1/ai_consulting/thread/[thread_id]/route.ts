@@ -67,14 +67,12 @@ export async function GET(
     const questionStr = rawData?.data?.question || "";
 
     let answerStr = "-";
-    let isGenerating = false;
     if (thread.result) {
       if (typeof thread.result === "string") {
         try {
           const parsed = JSON.parse(thread.result);
           if (parsed && typeof parsed === "object" && typeof parsed.answer === "string") {
             answerStr = parsed.answer;
-            isGenerating = !!parsed.isGenerating;
           } else {
             answerStr = thread.result;
           }
@@ -82,9 +80,7 @@ export async function GET(
           answerStr = thread.result;
         }
       } else {
-        const parsedObj = thread.result as Record<string, unknown>;
-        answerStr = (parsedObj?.answer as string) || JSON.stringify(thread.result);
-        isGenerating = !!parsedObj?.isGenerating;
+        answerStr = ((thread.result as unknown as { answer?: string })?.answer) || JSON.stringify(thread.result);
       }
     }
 
@@ -101,7 +97,6 @@ export async function GET(
       countOfComment: countOfComment,
       userReaction: userReaction,
       file: formattedFiles,
-      isGenerating: isGenerating,
     };
 
     return jsonOk(response);
