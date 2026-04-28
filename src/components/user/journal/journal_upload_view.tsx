@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect, MouseEvent, DragEvent, ChangeEvent } from 'react';
+import {
+  useState,
+  useRef,
+  useEffect,
+  MouseEvent,
+  DragEvent,
+  ChangeEvent,
+} from "react";
 
 import { useParams } from "next/navigation";
 import Image from "next/image";
@@ -19,9 +26,11 @@ import { uploadFile, fileToBase64 } from "@/lib/file_operator";
 import { useOrderTransaction } from "@/hooks/use_order_transaction";
 import { getAnalysisCost } from "@/lib/analysis/pricing";
 
-import { useJournalAnalysis, UploadedFileData } from "@/hooks/use_journal_analysis";
-import { ANALYSIS_CATEGORY } from '@/constants/price';
-
+import {
+  useJournalAnalysis,
+  UploadedFileData,
+} from "@/hooks/use_journal_analysis";
+import { ANALYSIS_CATEGORY } from "@/constants/price";
 
 export default function JournalUploadView({
   onUploadComplete = undefined,
@@ -180,34 +189,28 @@ export default function JournalUploadView({
         </div>
       )}
 
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
-        className={`flex h-full flex-col rounded-2xl border-2 transition-colors sm:min-h-[500px] lg:h-[calc(100vh-250px)] ${uploadedFiles.length > 0
-          ? "border-transparent bg-white p-4 shadow-[0_0_15px_rgba(0,0,0,0.05)] sm:p-6 lg:p-10"
-          : isDragging
-            ? "items-center justify-center border-dashed border-orange-500 bg-orange-50 p-10 sm:p-20 lg:p-[100px]"
-            : "items-center justify-center border-dashed border-slate-300 bg-white p-10 hover:border-orange-400 hover:bg-slate-50 sm:p-20 lg:p-[100px]"
-          }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={
-          uploadedFiles.length === 0 && !isUploading
-            ? triggerFileInput
-            : undefined
-        }
-        onKeyDown={(e) => {
-          if (
-            uploadedFiles.length === 0 &&
-            (e.key === "Enter" || e.key === " ")
-          ) {
-            e.preventDefault();
-            if (!isUploading) triggerFileInput();
-          }
+        className={`relative flex h-full flex-col rounded-2xl border-2 transition-colors sm:min-h-[500px] lg:h-[calc(100vh-250px)] ${
+          uploadedFiles.length > 0
+            ? "border-transparent bg-white p-4 shadow-[0_0_15px_rgba(0,0,0,0.05)] sm:p-6 lg:p-10"
+            : isDragging
+              ? "items-center justify-center border-dashed border-orange-500 bg-orange-50 p-10 sm:p-20 lg:p-[100px]"
+              : "items-center justify-center border-dashed border-slate-300 bg-white p-10 hover:border-orange-400 hover:bg-slate-50 sm:p-20 lg:p-[100px]"
+        }`}
+        {...{
+          onDragOver: handleDragOver,
+          onDragLeave: handleDragLeave,
+          onDrop: handleDrop,
         }}
-        role={uploadedFiles.length === 0 ? "button" : "presentation"}
-        tabIndex={uploadedFiles.length === 0 ? 0 : -1}
       >
+        {uploadedFiles.length === 0 && !isUploading && (
+          <button
+            type="button"
+            className="absolute inset-0 z-10 h-full w-full cursor-pointer rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+            onClick={triggerFileInput}
+            aria-label="Upload multiple files"
+          />
+        )}
         <input
           type="file"
           multiple

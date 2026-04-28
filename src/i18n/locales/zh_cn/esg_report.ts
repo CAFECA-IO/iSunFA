@@ -19,9 +19,11 @@ export const esgReport = {
   scope1_title: "范畴一 (直接排放)",
   scope2_title: "范畴二 (间接排放)",
   scope3_title: "范畴三 (供应链排放)",
-  bom_title: "排放明细 BOM 表",
+  bom_title: "排放细项 BOM 表",
   bom_scope: "范畴",
   bom_activity: "排放活动",
+  bom_original_data: "原始活动数据",
+  bom_coefficient: "使用之系数",
   bom_emissions: "排放量 (kgCO2e)",
   bom_percentage: "占比 (%)",
 };

@@ -1,16 +1,16 @@
 enum SortOptions {
-  newest = "newest",
-  oldest = "oldest",
+  NEWEST = "newest",
+  OLDEST = "oldest",
 }
 
 export enum SortOptionQuery {
-  newest = "desc",
-  oldest = "asc",
+  NEWEST = "desc",
+  OLDEST = "asc",
 }
 
 export const sortOptionQuery = {
-  [SortOptions.newest]: SortOptionQuery.newest,
-  [SortOptions.oldest]: SortOptionQuery.oldest,
+  [SortOptions.NEWEST]: SortOptionQuery.NEWEST,
+  [SortOptions.OLDEST]: SortOptionQuery.OLDEST,
 };
 
 export enum SortOrder {

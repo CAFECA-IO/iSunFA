@@ -1,3 +1,4 @@
+import { NextRequest } from "next/server";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { IThread } from "@/interfaces/ai_consulting";
@@ -8,10 +9,31 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
  * Info: (20260112 - Julian) 取得所有討論串
  * GET /api/v1/ai_consulting/thread
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const searchParams = request.nextUrl.searchParams;
+    const keyword = searchParams.get("keyword");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const tagsParams = searchParams.get("tags")?.split(",") ?? [];
+    const page = searchParams.get("pageNumber")
+      ? parseInt(searchParams.get("pageNumber")!)
+      : undefined;
+    const pageSize = searchParams.get("pageSize")
+      ? parseInt(searchParams.get("pageSize")!)
+      : undefined;
+    const sortOption = searchParams.get("sort");
+
     // Info: (20260212 - Julian) 取得所有討論串
-    const threads = await talkRepo.listThreadsWithCounts();
+    const { items: threads, total } = await talkRepo.listThreadsWithCounts({
+      keyword,
+      startDate,
+      endDate,
+      tags: tagsParams,
+      sortOption,
+      page,
+      pageSize,
+    });
 
     // Info: (20260212 - Julian) 取得與討論串關聯的標籤
     const tagIds = await talkRepo.getThreadTagsByThreadIds(
@@ -36,7 +58,7 @@ export async function GET() {
     );
 
     // Info: (20260212 - Julian) 整理資料
-    const response: IThread[] = threads.map((thread) => {
+    const items: IThread[] = threads.map((thread) => {
       const authorName =
         users.find((user) => user.id === thread.userId)?.name ?? "Unknown";
 
@@ -93,7 +115,11 @@ export async function GET() {
       };
     });
 
-    return jsonOk(response);
+    return jsonOk({
+      items,
+      total,
+      totalPages: Math.ceil(total / (pageSize || 20)),
+    });
   } catch (error) {
     console.error("[API] /threads error:", error);
     return jsonFail(API_ERRORS.IS_UNKNOWN);

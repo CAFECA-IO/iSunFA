@@ -1,1 +1,0 @@
-import { prisma } from "./src/lib/prisma"; async function main() { await prisma.mission.updateMany({ where: { status: "RUNNING", analyses: { some: { result: { not: null } } } }, data: { status: "COMPLETED" } }); console.log("Fixed dangling states!"); } main();

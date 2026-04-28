@@ -20,11 +20,6 @@ export async function GET(
     const authHeader = request.headers.get("Authorization");
     const user = await getIdentityFromDeWT(authHeader);
 
-    if (!user) {
-      console.error("User not found");
-      return jsonFail(API_ERRORS.NF_USER);
-    }
-
     const { thread_id: threadId } = await params;
 
     if (!threadId) {
@@ -32,7 +27,7 @@ export async function GET(
     }
 
     // Info: (20260212 - Julian) 取得登入的使用者
-    const loginUserId = user.id;
+    const loginUserId = user?.id ?? null;
 
     // Info: (20260212 - Julian) 一次取得該討論串所有評論及其關聯資料
     const comments = await talkRepo.listCommentsByThreadId(threadId);

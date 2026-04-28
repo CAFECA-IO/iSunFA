@@ -206,7 +206,7 @@ export default function JournalDetailModal({
                 aria-label={t("ocr.journal") as string}
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
-                onBlur={() => setIsEditMode(false)} // Info: (20260409 - Julian) textarea blur 即關閉編輯模式 
+                onBlur={() => setIsEditMode(false)} // Info: (20260409 - Julian) textarea blur 即關閉編輯模式
                 // Info: (20260327 - Luphia) 加入 flex-1 讓它填滿高度，並將 resize-y 改為 resize-none 防止手動拉伸破壞版面
                 className="flex-1 resize-none rounded-xl border border-slate-300 bg-white p-4 leading-relaxed text-slate-700 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
               />

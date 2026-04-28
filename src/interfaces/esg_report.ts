@@ -5,8 +5,19 @@ export interface IEsgReportItem {
   percentageOfScope: number;
 }
 
+export interface IEsgReportDetailedRecord {
+  id: string;
+  activityType: string;
+  originalData: number;
+  unit: string;
+  emissions: number;
+  coefficient: number;
+  percentage: number;
+}
+
 export interface IEsgReportSection {
   items: IEsgReportItem[];
+  records?: IEsgReportDetailedRecord[];
   total: number;
 }
 
