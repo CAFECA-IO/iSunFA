@@ -47,4 +47,13 @@ export const aiConsultationRoom = {
   q_label: "Q",
   ai_label: "AI",
   ai_is_thinking: "AI가 생각 중입니다...",
+  deleted_comment: "이 댓글은 작성자에 의해 삭제되었습니다.",
+  view_replies: "답글 보기",
+  delete_comment_title: "댓글 삭제",
+  delete_comment_confirm: "이 댓글을 삭제하시겠습니까?",
+  confirm_delete_btn: "예, 삭제합니다",
+  sort_oldest: "오래된 순",
+  sort_newest: "최신 순",
+  search_placeholder: "스레드 검색",
+  total_threads: "총 {count} 개의 스레드",
 };

@@ -48,4 +48,13 @@ export const aiConsultationRoom = {
   q_label: "Q",
   ai_label: "AI",
   ai_is_thinking: "AI が考え中...",
+  deleted_comment: "このコメントは投稿者によって削除されました。",
+  view_replies: "返信を表示",
+  delete_comment_title: "コメントを削除",
+  delete_comment_confirm: "このコメントを削除してもよろしいですか？",
+  confirm_delete_btn: "はい、削除します",
+  sort_oldest: "古い順",
+  sort_newest: "新しい順",
+  search_placeholder: "スレッドを検索",
+  total_threads: "全 {count} 件のスレッド",
 };

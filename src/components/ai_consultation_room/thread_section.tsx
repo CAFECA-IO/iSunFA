@@ -138,12 +138,12 @@ export default function ThreadSection() {
       {sortOption === SortOptionQuery.NEWEST ? (
         <>
           <ArrowUpNarrowWide size={24} />
-          <p>由舊至新</p>
+          <p>{t("ai_consultation_room.sort_oldest")}</p>
         </>
       ) : (
         <>
           <ArrowDownWideNarrow size={24} />
-          <p>由新至舊</p>
+          <p>{t("ai_consultation_room.sort_newest")}</p>
         </>
       )}
     </button>
@@ -222,8 +222,8 @@ export default function ThreadSection() {
               <Search size={24} />
               <input
                 type="text"
-                placeholder="搜尋討論串"
-                aria-label="搜尋討論串"
+                placeholder={t("ai_consultation_room.search_placeholder")}
+                aria-label={t("ai_consultation_room.search_placeholder")}
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 className="w-full bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400 lg:text-base"
@@ -264,7 +264,7 @@ export default function ThreadSection() {
             <div className="flex flex-2 flex-wrap gap-2">{tagList}</div>
             {/* Info: (20260428 - Julian) Total Threads Count */}
             <p className="ml-auto text-xs text-gray-500">
-              共 {totalItems} 則討論
+              {t("ai_consultation_room.total_threads", { count: totalItems })}
             </p>
           </div>
         </div>

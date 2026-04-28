@@ -145,14 +145,14 @@ export const CommentItem = ({
   const originalComment = isDeleted ? (
     // Info: (20260428 - Julian) 已刪除樣式
     <div className="group flex flex-col gap-5 rounded-3xl border border-gray-100 bg-white p-6 transition-all">
-      <p className="text-gray-400 italic">這則留言已被原作者刪除。</p>
+      <p className="text-gray-400 italic">{t("ai_consultation_room.deleted_comment")}</p>
       {hasReplies && (
         <button
           type="button"
           onClick={toggleReplies}
           className="w-fit text-xs font-bold text-gray-400 transition-colors hover:text-orange-500"
         >
-          查看留言
+          {t("ai_consultation_room.view_replies")}
         </button>
       )}
     </div>
@@ -276,9 +276,9 @@ export const CommentItem = ({
       <ConfirmModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        title={t("刪除留言")}
-        message={t("確定要刪除這則留言嗎？")}
-        confirmText={t("是的，確認刪除")}
+        title={t("ai_consultation_room.delete_comment_title")}
+        message={t("ai_consultation_room.delete_comment_confirm")}
+        confirmText={t("ai_consultation_room.confirm_delete_btn")}
         cancelText={t("common.cancel")}
         onConfirm={handleDelete}
       />

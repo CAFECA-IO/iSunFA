@@ -47,4 +47,13 @@ export const aiConsultationRoom = {
   q_label: "Q",
   ai_label: "AI",
   ai_is_thinking: "AI is thinking...",
+  deleted_comment: "This comment has been deleted by the author.",
+  view_replies: "View replies",
+  delete_comment_title: "Delete Comment",
+  delete_comment_confirm: "Are you sure you want to delete this comment?",
+  confirm_delete_btn: "Yes, delete it",
+  sort_oldest: "Oldest to Newest",
+  sort_newest: "Newest to Oldest",
+  search_placeholder: "Search threads",
+  total_threads: "Total {count} threads",
 };

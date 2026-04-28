@@ -46,4 +46,13 @@ export const aiConsultationRoom = {
   q_label: "Q",
   ai_label: "AI",
   ai_is_thinking: "AI 思考中...",
+  deleted_comment: "這則留言已被原作者刪除。",
+  view_replies: "查看留言",
+  delete_comment_title: "刪除留言",
+  delete_comment_confirm: "確定要刪除這則留言嗎？",
+  confirm_delete_btn: "是的，確認刪除",
+  sort_oldest: "由舊至新",
+  sort_newest: "由新至舊",
+  search_placeholder: "搜尋討論串",
+  total_threads: "共 {count} 則討論",
 };
