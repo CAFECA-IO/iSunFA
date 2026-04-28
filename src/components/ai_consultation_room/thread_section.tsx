@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Loader2, Search, ArrowDownWideNarrow, ArrowUpNarrowWide, X } from "lucide-react";
+import {
+  Loader2,
+  Search,
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
+  X,
+} from "lucide-react";
 import { IThreadDetail } from "@/interfaces/ai_consulting";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { ThreadCard } from "@/components/ai_consultation_room/thread_card";
+import ThreadCard from "@/components/ai_consultation_room/thread_card";
 import Pagination from "@/components/common/pagination";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAiContext } from "@/contexts/ai_context";
@@ -25,7 +31,6 @@ export default function ThreadSection() {
   const [keyword, setKeyword] = useState<string>("");
   const [debouncedKeyword, setDebouncedKeyword] = useState<string>("");
   const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOptionQuery>(
@@ -68,9 +73,7 @@ export default function ThreadSection() {
             total: number;
             totalPages: number;
           }>
-        >(
-          `/api/v1/ai_consulting/threads?${params.toString()}`,
-        );
+        >(`/api/v1/ai_consulting/thread?${params.toString()}`);
         if (res.code === ApiCode.SUCCESS && res.payload) {
           setThreads(res.payload.items);
           setTotalItems(res.payload.total);
@@ -87,10 +90,16 @@ export default function ThreadSection() {
   }, [pageNumber, sortOption, debouncedKeyword, startDate, endDate, tags]);
 
   const sortButton = (
-    <button 
+    <button
       type="button"
       className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-400 enabled:cursor-pointer enabled:hover:border-orange-500 enabled:hover:text-orange-500"
-      onClick={() => setSortOption(sortOption === SortOptionQuery.NEWEST ? SortOptionQuery.OLDEST : SortOptionQuery.NEWEST)}
+      onClick={() =>
+        setSortOption(
+          sortOption === SortOptionQuery.NEWEST
+            ? SortOptionQuery.OLDEST
+            : SortOptionQuery.NEWEST,
+        )
+      }
     >
       {sortOption === SortOptionQuery.NEWEST ? (
         <>
@@ -106,90 +115,28 @@ export default function ThreadSection() {
     </button>
   );
 
+  const tagList = tags.map((tag) => (
+    <button
+      key={tag}
+      type="button"
+      onClick={() => setTags(tags.filter((t) => t !== tag))}
+      className="group/tag flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-600 cursor-pointer"
+    >
+      <p>{tag}</p>
+      <X size={14} className="shrink-0 group-hover/tag:text-orange-800" />
+    </button>
+  ));
+
   const displayedThreads = (
-    <div className="flex flex-col gap-8 px-24 py-6">
-      {/* Info: (20260428 - Julian) Filter Bar */}
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-col gap-4">
-          <div className="flex gap-2">
-            {/* Info: (20260428 - Julian) Keyword Search */}
-            <div className="flex items-center py-2 px-4 rounded-lg border border-slate-300 gap-2 flex-1 text-slate-400">
-              <Search size={24} />
-              <input
-                type="text"
-                placeholder="搜尋討論串"
-                aria-label="搜尋討論串"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                className="w-full bg-transparent text-base placeholder:text-slate-400 outline-none"
-              />
-            </div>
-            
-            {/* Info: (20260428 - Julian) Date Search */}
-            <div className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-slate-400">
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="bg-transparent text-sm outline-none"
-              />
-              <span>-</span>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="bg-transparent text-sm outline-none"
-              />
-            </div>
-
-            {/* Info: (20260428 - Julian) Sort Options */}
-            {sortButton}
-          </div>
-
-          {/* Info: (20260428 - Julian) Tag Search */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center py-2 px-4 rounded-lg border border-slate-300 flex-1 text-slate-400">
-              <input
-                type="text"
-                placeholder="輸入標籤後按 Enter 加入篩選"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && tagInput.trim()) {
-                    e.preventDefault();
-                    if (!tags.includes(tagInput.trim())) {
-                      setTags([...tags, tagInput.trim()]);
-                    }
-                    setTagInput("");
-                  }
-                }}
-                className="w-full bg-transparent text-sm placeholder:text-slate-400 outline-none"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2 flex-2">
-              {tags.map((tag) => (
-                <span key={tag} className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-600">
-                  {tag}
-                  <button type="button" onClick={() => setTags(tags.filter(t => t !== tag))} className="hover:text-orange-800">
-                    <X size={14} />
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-          {/* Info: (20260428 - Julian) Total Threads Count */}
-        <div className="flex flex-col gap-2">
-          <p className="ml-auto text-xs text-gray-500">
-            共 {totalItems} 則討論
-          </p>
-        </div>
-      </div>
-
+    <>
       {/* Info: (20260428 - Julian) Threads List */}
       <div className="flex flex-wrap gap-x-4 gap-y-8">
         {threads.map((item) => (
-          <ThreadCard key={item.id} {...item} />
+          <ThreadCard
+            key={item.id}
+            thread={item}
+            tagOnClick={(tag: string) => setTags([...tags, tag])}
+          />
         ))}
       </div>
 
@@ -199,7 +146,7 @@ export default function ThreadSection() {
         totalPages={totalPages}
         onPageChange={setPageNumber}
       />
-    </div>
+    </>
   );
 
   const mainContent = isLoading ? (
@@ -234,5 +181,64 @@ export default function ThreadSection() {
     displayedThreads
   );
 
-  return mainContent;
+  return <div className="flex flex-col gap-8 px-24 py-6">
+      {/* Info: (20260428 - Julian) Filter Bar */}
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-2">
+            {/* Info: (20260428 - Julian) Keyword Search */}
+            <div className="flex flex-1 items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-slate-400">
+              <Search size={24} />
+              <input
+                type="text"
+                placeholder="搜尋討論串"
+                aria-label="搜尋討論串"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                className="w-full bg-transparent text-base outline-none text-slate-700 placeholder:text-slate-400"
+              />
+            </div>
+
+            {/* Info: (20260428 - Julian) Date Search */}
+            <div className="flex items-center gap-2 text-slate-400">
+              <div className="flex items-center rounded-lg border border-slate-300 px-4 py-3">
+                <input
+                  type="date"
+                  value={startDate}
+                  max={endDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="bg-transparent text-sm outline-none"
+                />
+              </div>
+              <span>-</span>
+              <div className="flex items-center rounded-lg border border-slate-300 px-4 py-3">
+                <input
+                  type="date"
+                  value={endDate}
+                  min={startDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="bg-transparent text-sm outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Info: (20260428 - Julian) Sort Options */}
+            {sortButton}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Info: (20260428 - Julian) Tag Filter */}
+            <div className="flex flex-2 flex-wrap gap-2">{tagList}</div>
+            {/* Info: (20260428 - Julian) Total Threads Count */}
+            <div className="flex flex-col gap-2">
+              <p className="ml-auto text-xs text-gray-500">
+                共 {totalItems} 則討論
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {mainContent}
+  </div>
 }

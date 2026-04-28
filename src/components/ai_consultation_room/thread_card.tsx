@@ -3,27 +3,29 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  ThumbsUp,
-  ThumbsDown,
-  /* Share2, */ MessageSquare,
-} from "lucide-react";
+import { ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
 import { formatTime } from "@/lib/utils/common";
 import { IThread } from "@/interfaces/ai_consulting";
 import { useTranslation } from "@/i18n/i18n_context";
 
-export const ThreadCard = ({
-  id,
-  question,
-  answer,
-  authorName,
-  tags,
-  createdAt,
-  countOfLike,
-  countOfDislike,
-  // countOfShare,
-  countOfComment,
-}: IThread) => {
+interface IThreadCardProps {
+  thread: IThread;
+  tagOnClick: (tag: string) => void;
+}
+
+export default function ThreadCard({ thread, tagOnClick }: IThreadCardProps) {
+  const {
+    id,
+    question,
+    answer,
+    authorName,
+    tags,
+    createdAt,
+    countOfLike,
+    countOfDislike,
+    countOfComment,
+  } = thread;
+
   const { t } = useTranslation();
   const pathname = usePathname();
   const linkPath = `${pathname}/${id}`;
@@ -32,6 +34,22 @@ export const ThreadCard = ({
   const displayedTime = (
     <span className="text-gray-400"> • {formatTime(createdAt, now)}</span>
   );
+
+  const displayedTags = tags?.map((tag) => (
+    <button
+      key={tag}
+      type="button"
+      onClick={(e: React.MouseEvent) => {
+        // Info: (20260428 - Julian) 阻止事件冒泡與預設行為，避免點擊 tag 跳轉到 chat
+        e.preventDefault();
+        e.stopPropagation();
+        tagOnClick(tag);
+      }}
+      className="text-sm text-orange-400 hover:cursor-pointer hover:text-orange-700"
+    >
+      #{tag}
+    </button>
+  ));
 
   return (
     <Link
@@ -61,13 +79,7 @@ export const ThreadCard = ({
             <span className="rounded bg-orange-200 px-2 py-1 text-xs font-bold text-orange-700">
               {t("ai_consultation_room.ai_label")}
             </span>
-            <div className="flex gap-1">
-              {tags?.map((tag) => (
-                <span key={tag} className="text-[10px] text-orange-400">
-                  #{tag}
-                </span>
-              ))}
-            </div>
+            <div className="flex gap-2">{displayedTags}</div>
           </div>
           <p className="line-clamp-2 text-xs leading-relaxed text-orange-900">
             {!answer || answer === "-"
@@ -90,13 +102,8 @@ export const ThreadCard = ({
             <MessageSquare size={14} />
             <span className="text-xs">{countOfComment ?? 0}</span>
           </div>
-          {/* ToDo: (20260302 - Julian) 實作分享功能 */}
-          {/* <div className="flex items-center gap-1 text-orange-400 ">
-            <Share2 size={14} />
-            <span className="text-xs">{countOfShare ?? 0}</span>
-          </div> */}
         </div>
       </div>
     </Link>
   );
-};
+}
