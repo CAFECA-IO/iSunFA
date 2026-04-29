@@ -7,6 +7,7 @@ export const ORDER_STATUS = {
   COMPLETED: "COMPLETED",
   FAILED: "FAILED",
   MINT_FAILED: "MINT_FAILED",
+  CANCEL: "CANCEL",
 } as const;
 
 export const PAYMENT_TRANSACTION_STATUS = {
