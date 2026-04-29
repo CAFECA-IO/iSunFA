@@ -1,4 +1,4 @@
-import QRCode from "react-qr-code";
+import { QRCodeSVG } from "qrcode.react";
 import { Landmark, Copy } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { IBlockchainDashboardData } from "@/services/admin.blockchain.service";
@@ -29,7 +29,7 @@ export default function BlockchainTreasury({
         <div className="group relative mx-auto flex aspect-square w-full max-w-[240px] items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-4 transition hover:border-orange-300 hover:bg-orange-50/30">
           {data ? (
             <div className="overflow-hidden rounded-xl bg-white p-2 shadow-sm transition transform group-hover:scale-105">
-              <QRCode
+              <QRCodeSVG
                 value={data.address}
                 size={200}
                 style={{ height: "100%", width: "100%" }}

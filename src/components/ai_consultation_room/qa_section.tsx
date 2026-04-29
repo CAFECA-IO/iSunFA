@@ -19,7 +19,7 @@ import {
   Copy,
   X,
 } from "lucide-react";
-import QRCode from "react-qr-code";
+import { QRCodeSVG } from "qrcode.react";
 import { MarkdownContent } from "@/components/common/markdown_content";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
@@ -258,7 +258,7 @@ export default function QaSection() {
           {t("ai_consultation_room.share_knowledge")}
         </h3>
         <div className="mb-6 flex justify-center rounded-2xl border border-gray-100 bg-white p-4">
-          <QRCode value={shareUrl} size={200} />
+          <QRCodeSVG value={shareUrl} size={200} />
         </div>
         <div className="flex items-center gap-2 overflow-hidden rounded-xl bg-gray-50 p-3">
           <input

@@ -7,7 +7,7 @@ import { Check, ChevronLeft, ChevronRight, Loader2, Sparkles, X, Share2, Copy, T
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { MarkdownContent } from '@/components/common/markdown_content';
 import { downloadHtmlAsPdf } from '@/lib/utils/pdf';
-import QRCode from 'react-qr-code';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface IHistoryItem {
   id: string;
@@ -953,7 +953,7 @@ export default function HistorySection() {
                     <div className="flex justify-center mb-6 mt-4">
                       {shareToken && (
                         <div className="p-3 bg-white border border-gray-100 rounded-xl shadow-sm inline-block">
-                          <QRCode
+                          <QRCodeSVG
                             value={`${window.location.origin}/share/report/${shareToken}`}
                             size={160}
                             level="M"
