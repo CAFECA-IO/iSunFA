@@ -17,6 +17,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { VerifyStatus } from "@/constants/verify_status";
 import JournalSummary from "@/components/user/journal/journal_summary";
 import BatchDownloadModal from "@/components/user/journal/batch_download_modal";
+import DateRangePicker from "@/components/common/date_range_picker";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { SortOrder } from "@/constants/sort";
 
@@ -335,27 +336,13 @@ export default function JournalListView() {
           </div>
 
           {/* Info: (20260304 - Julian) Date Picker */}
-          <div className="flex w-full items-center gap-2 lg:w-auto">
-            <div className="flex w-full items-center gap-1 text-sm lg:gap-2">
-              <input
-                type="date"
-                aria-label="Start Date"
-                value={startDate}
-                max={endDate || undefined}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
-              />
-              <span className="text-gray-400">-</span>
-              <input
-                type="date"
-                aria-label="End Date"
-                value={endDate}
-                min={startDate || undefined}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
-              />
-            </div>
-          </div>
+                   <DateRangePicker
+                        startDate={startDate}
+                        endDate={endDate}
+                        setStartDate={setStartDate}
+                        setEndDate={setEndDate}
+                        className="flex items-center justify-center gap-2 text-slate-400"
+                      />
 
           {/* Info: (20260428 - Julian) Verify Status Filter */}
           <select

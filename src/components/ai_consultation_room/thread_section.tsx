@@ -16,6 +16,7 @@ import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import ThreadCard from "@/components/ai_consultation_room/thread_card";
 import Pagination from "@/components/common/pagination";
+import DateRangePicker from "@/components/common/date_range_picker";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAiContext } from "@/contexts/ai_context";
 import { SortOptionQuery } from "@/constants/sort";
@@ -231,37 +232,13 @@ export default function ThreadSection() {
             </div>
 
             {/* Info: (20260428 - Julian) Date Search */}
-            <div className="flex items-center justify-center gap-2 text-slate-400">
-              <div className="flex items-center rounded-lg border border-slate-300 px-4 py-3">
-                <input
-                  type={startDate ? "date" : "text"}
-                  placeholder="開始日期"
-                  aria-label="startDate"
-                  value={startDate}
-                  max={endDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  onFocus={(e) => (e.target.type = "date")}
-                  onBlur={(e) => {
-                    if (!e.target.value) e.target.type = "text";
-                  }}
-                  className="bg-transparent text-xs outline-none lg:text-sm"
-                />
-              </div>
-              <span>-</span>
-              <div className="flex items-center rounded-lg border border-slate-300 px-4 py-3">
-                <input
-                  type={endDate ? "date" : "text"}
-                  placeholder="結束日期"
-                  aria-label="endDate"
-                  value={endDate}
-                  min={startDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  onFocus={(e) => (e.target.type = "date")}
-                  onBlur={(e) => {if (!e.target.value) e.target.type = "text"}}
-                  className="bg-transparent text-xs outline-none lg:text-sm"
-                />
-              </div>
-            </div>
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              setStartDate={setStartDate}
+              setEndDate={setEndDate}
+              className="flex items-center justify-center gap-2 text-slate-400"
+            />
 
             {/* Info: (20260428 - Julian) Sort Options */}
             {sortButton}

@@ -11,6 +11,7 @@ import { VoucherRow } from "@/components/user/voucher/voucher_row";
 import RecordTabModal from "@/components/user/common/record_tab_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
 import Pagination from "@/components/common/pagination";
+import DateRangePicker from "@/components/common/date_range_picker";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
 import { VerifyStatus } from "@/constants/verify_status";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
@@ -361,26 +362,13 @@ export default function VoucherTableSection() {
               />
             </div>
 
-            {/* Info: (20260401 - Julian) Filter by date */}
-            <div className="flex items-center gap-2 lg:gap-4">
-              <input
-                aria-label="Start Date"
-                type="date"
-                value={startDate}
-                max={endDate || undefined}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
-              />
-              <span className="text-slate-400">-</span>
-              <input
-                aria-label="End Date"
-                type="date"
-                value={endDate}
-                min={startDate || undefined}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none lg:px-4 lg:text-sm"
-              />
-            </div>
+            {/* Info: (20260429 - Julian) Filter by date */}
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              setStartDate={setStartDate}
+              setEndDate={setEndDate}
+            />
 
             <div className="flex items-center gap-2 text-xs lg:text-sm">
               {/* Info: (20260401 - Julian) Filter by verify status */}

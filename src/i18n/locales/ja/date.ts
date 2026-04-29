@@ -4,6 +4,8 @@ export const date = {
   month: "Month",
   week: "Week",
   day: "Day",
+  start_date: "Start Date",
+  end_date: "End Date",
   month_name: {
     jan: "January",
     feb: "February",

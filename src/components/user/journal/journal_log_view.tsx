@@ -10,6 +10,7 @@ import { Loader2, Search } from "lucide-react";
 import { timestampToString } from "@/lib/utils/common";
 import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
 import { IAuditLog } from "@/interfaces/audit_log";
+import DateRangePicker from "@/components/common/date_range_picker";
 
 const LogItem = ({ log }: { log: IAuditLog }) => {
   const { t } = useTranslation();
@@ -270,28 +271,14 @@ export default function JournalLogView() {
           </select>
           </div>
 
-          {/* Info: (20260407 - Julian) Date Picker */}
-          <div className="flex w-full items-center gap-2 lg:w-auto">
-            <div className="flex w-full items-center gap-2 text-sm">
-              <input
-                type="date"
-                aria-label="Start Date"
-                value={startDate}
-                max={endDate || undefined}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs lg:text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-              />
-              <span className="text-gray-400">-</span>
-              <input
-                type="date"
-                aria-label="End Date"
-                value={endDate}
-                min={startDate || undefined}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs lg:text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-              />
-            </div>
-          </div>
+          {/* Info: (20260429 - Julian) Date Picker */}
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            className="w-full"
+          />
       </div>
 
       {/* Info: (20260407 - Julian) Log Table */}
