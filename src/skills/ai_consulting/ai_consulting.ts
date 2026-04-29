@@ -1,4 +1,5 @@
 import { ITaskSkill } from "@/skills/types";
+import { AI_CONSULTATION_ROOM_PROMPT } from "@/constants/prompts/ai_consultation_room";
 import { ChatService } from "@/services/chat.service";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
@@ -55,11 +56,27 @@ export class AiConsultingSkill implements ITaskSkill {
       (img): img is { data: string; mimeType: string } => !!img?.data
     );
 
-    console.log(`[AiConsultingSkill] Executing ChatService.askAccountTalk...`);
-    const { answer, tags } = await chatService.askAccountTalk(
-      fullPrompt,
-      imagesForAi,
-    );
+    console.log(`[AiConsultingSkill] Executing AI Consultation...`);
+    
+    const promptText = AI_CONSULTATION_ROOM_PROMPT.replace("{{message}}", fullPrompt);
+    
+    let answer = "AI 暫時無法回答，請稍後再試。";
+    let tags = ["錯誤"];
+    
+    try {
+      const responseText = await chatService.generateRawWithImages(promptText, imagesForAi);
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        answer = parsed.answer || responseText;
+        tags = Array.isArray(parsed.tags) ? parsed.tags : ["其他"];
+      } else {
+        answer = responseText;
+        tags = ["其他"];
+      }
+    } catch (error) {
+      console.error("[AiConsultingSkill] Error in AI consultation:", error);
+    }
 
     const stringifiedResult = JSON.stringify({ answer, tags });
     console.log(

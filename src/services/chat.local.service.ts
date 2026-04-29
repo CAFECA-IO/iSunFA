@@ -1,15 +1,5 @@
-import { AI_CONSULTATION_ROOM_PROMPT } from "@/constants/prompts/ai_consultation_room";
-import { getEsgPrompt } from "@/constants/prompts/esg";
-import { getJournalPrompt } from "@/constants/prompts/journal";
-import {
-  getBaseVoucherPrompt,
-  getVoucherLinesPrompt,
-} from "@/constants/prompts/voucher";
-import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
-import { IEsgRecordDetail } from "@/interfaces/esg";
-import { IParsedVoucher } from "@/interfaces/voucher";
-import { AccountBook } from "@/generated/client";
-import { ICoefficient } from "@/interfaces/coefficient";
+import { DirectChatSkill } from "@/skills/chat/direct_chat";
+import { ChatService } from "@/services/chat.service";
 
 export class ChatLocalService {
   private modelName: string;
@@ -19,106 +9,6 @@ export class ChatLocalService {
     void _apiKey; // Info: (20260429 - Luphia) Ignore API key, use local model
     this.modelName = process.env.OLLAMA_MODEL || "gemma4:e4b";
     this.ollamaUrl = process.env.OLLAMA_URL || "http://127.0.0.1:11434";
-  }
-
-  private getPrompt(message: string, tags: string[] = []): string {
-    const basePrompt = `
-      User Input: "${message}"
-      Selected Tags: ${tags.join(", ") || "None"}
-      
-      Output Guidelines:
-      - Reply in Traditional Chinese (Taiwan).
-      - Maintain a professional yet accessible accountant persona.
-    `;
-
-    // Info: (20260105 - Luphia) Tax Consultant
-    if (tags.includes("tax")) {
-      return `
-        You are an expert tax consultant specializing in Taiwan tax laws and regulations.
-        ${basePrompt}
-        Task:
-        1. Identify the documented evidence (e.g., Invoice, Receipt) if present.
-        2. Analyze the specific tax implications (VAT, Corporate Income Tax, Withholding Tax).
-        3. Explain relevant tax filing requirements or deadlines.
-        4. Suggest appropriate accounting entries with tax codes.
-      `;
-    }
-
-    // Info: (20260105 - Luphia) Financial Analyst
-    if (tags.includes("financial_report") || tags.includes("analysis")) {
-      return `
-        You are a senior financial analyst.
-        ${basePrompt}
-        Task:
-        1. Analyze financial statements and key performance indicators.
-        2. Provide insights on financial health, profitability, and liquidity.
-        3. Create forecasts or trend analysis based on provided data.
-        4. Suggest strategic financial improvements.
-      `;
-    }
-
-    // Info: (20260105 - Luphia) Operational Accountant (Bookkeeping)
-    if (
-      tags.includes("bookkeeping") ||
-      tags.includes("adjustment") ||
-      tags.includes("salary") ||
-      tags.includes("cashier")
-    ) {
-      return `
-        You are a meticulous operational accountant.
-        ${basePrompt}
-        
-        Task:
-        1. **Analyze & Extract**: deeply analyze the user input or image. Extract key financial data (Date, Amount, Vendor, Tax ID, Description).
-        2. **Repeated Identification**: Perform a self-check. Compare your extracted data against the source twice to ensure accuracy.
-        3. **Confidence Scoring**: specific confidence score (0-100%) based on the clarity of the evidence and your certainty.
-        
-        Output Requirements:
-        
-        If Confidence Score < 80%:
-        Display this warning at the top in RED style (use markdown or emoji):
-        "⚠️ **Low Confidence Warning**: The system detected ambiguity or low clarity. Please manually review the data below."
-        
-        Regardless of score, provide these two tables in Markdown:
-        
-        ### 1. Accounting Certificate (會計憑證)
-        | Date (日期) | Type (憑證種類) | ID/VAT No. (統編/稅號) | Description (摘要) | Amount (金額) |
-        |---|---|---|---|---|
-        | YYYY/MM/DD | e.g. Invoice/Receipt | 12345678 | ... | $... |
-        
-        ### 2. Accounting Voucher (會計傳票)
-        | Date (日期) | Voucher No. (傳票編號) | Account Title (會計科目) | Debit (借方) | Credit (貸方) | Summary (摘要) |
-        |---|---|---|---|---|---|
-        | YYYY/MM/DD | Auto-Gen | ... | $... | | ... |
-        | | | ... | | $... | ... |
-        
-        Finally, verify supporting documents and suggest any necessary adjustments.
-      `;
-    }
-
-    // Info: (20260105 - Luphia) Commercial/Company Registration (Legacy/Other)
-    if (tags.includes("commercial") || tags.includes("other")) {
-      return `
-        You are an expert in Taiwan Company Application and Commercial Law.
-        ${basePrompt}
-        Task:
-        1. Advise on company registration procedures and requirements.
-        2. Explain capital requirements and shareholding structures.
-        3. Clarify rights and obligations under the Company Act.
-        4. Outline the steps for business setup or modification.
-      `;
-    }
-
-    // Info: (20260105 - Luphia) Default IFRS Accountant
-    return `
-      You are an expert accountant specializing in IFRS (International Financial Reporting Standards).
-      ${basePrompt}
-      Task:
-      1. Identify the documented evidence (e.g., Invoice, Receipt, Contract).
-      2. Analyze the content based on IFRS standards.
-      3. Suggest appropriate accounting entries (Debit/Credit).
-      4. If user asks a generic question, answer it as an accountant.
-    `;
   }
 
   private async ollamaGenerate(prompt: string, images?: { data: string; mimeType: string }[]): Promise<string> {
@@ -132,10 +22,7 @@ export class ChatLocalService {
     };
 
     if (images && images.length > 0) {
-      payload.images = images.map(img => {
-        // Info: (20260429 - Luphia) Ollama expects raw base64 strings
-        return img.data;
-      });
+      payload.images = images.map(img => img.data);
     }
 
     try {
@@ -165,8 +52,11 @@ export class ChatLocalService {
     file?: string,
     mimeType?: string,
   ): Promise<string> {
-    const prompt = this.getPrompt(message, tags);
-    const images = file ? [{ data: file, mimeType: mimeType || "image/jpeg" }] : [];
+    const skill = new DirectChatSkill();
+    return skill.execute(message, tags, file, mimeType, this as unknown as ChatService);
+  }
+
+  async generateRawWithImages(prompt: string, images?: { data: string; mimeType: string }[]): Promise<string> {
     return this.ollamaGenerate(prompt, images);
   }
 
@@ -175,175 +65,10 @@ export class ChatLocalService {
   }
 
   async countTokens(text: string): Promise<number> {
-    // Info: (20260429 - Luphia) Ollama API doesn't have a direct token count endpoint. Fallback to estimation.
     return Math.ceil(text.length / 4);
   }
 
   async generateRawWithSearch(prompt: string): Promise<string> {
-    // Info: (20260429 - Luphia) Local models generally don't have built-in web search plugins.
     return this.ollamaGenerate(prompt);
-  }
-
-  /**
-   * Info: (20260213 - Julian) 向 AI 提問，並取得答案與關聯標籤
-   */
-  async askAccountTalk(
-    message: string,
-    images: { data: string; mimeType: string }[] = [],
-  ): Promise<{ answer: string; tags: string[] }> {
-    const prompt = AI_CONSULTATION_ROOM_PROMPT.replace("{{message}}", message);
-
-    try {
-      const responseText = await this.ollamaGenerate(prompt, images);
-
-      // Info: (20260213 - Julian) 尋找 JSON 區塊
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const result = JSON.parse(jsonMatch[0]);
-        return {
-          answer: result.answer || responseText,
-          tags: Array.isArray(result.tags) ? result.tags : ["其他"],
-        };
-      }
-      return { answer: responseText, tags: ["其他"] };
-    } catch (error) {
-      console.error("[ChatLocalService] Error in askAccountTalk:", error);
-      return { answer: "AI 暫時無法回答，請稍後再試。", tags: ["錯誤"] };
-    }
-  }
-
-  /**
-   * Info: (20260304 - Julian) 將憑證圖片轉換為日記帳
-   */
-  async analyzeJournal(
-    images: { data: string; mimeType: string }[] = [],
-    accountBook: Partial<AccountBook> | null = null,
-  ): Promise<{ text: string }> {
-    try {
-      const promptText = getJournalPrompt(accountBook);
-      const text = await this.ollamaGenerate(promptText, images);
-
-      if (text.includes("上傳內容無法解析狀態")) {
-        return { text: "上傳內容無法解析，請重新上傳或手動調整" };
-      }
-
-      return { text: text.trim() };
-    } catch (error) {
-      console.error("[ChatLocalService] Error in analyzeJournal:", error);
-      return { text: "AI 暫時無法解析，請稍後再試或手動調整" };
-    }
-  }
-
-  /**
-   * Info: (20260407 - Julian) 將憑證圖片轉換為傳票基本資料 JSON
-   */
-  async analyzeVoucherBase(
-    images: { data: string; mimeType: string }[] = [],
-    accountBook: Partial<AccountBook> | null = null,
-    journalText?: string,
-  ): Promise<{ data: Partial<IParsedVoucher> | null; error?: string }> {
-    try {
-      let promptText = getBaseVoucherPrompt(accountBook);
-
-      if (journalText) {
-        promptText += `\n\n【重要指示】\n使用者已提供/修正日記帳的最新內容如下。請優先依據以下文字資訊進行解析，若與圖片內容有衝突，以此文字為準：\n${journalText}`;
-      }
-
-      const text = await this.ollamaGenerate(promptText, images);
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return { data: JSON.parse(jsonMatch[0]) };
-      }
-
-      return { data: null, error: "無法從 AI 回應中解析出有效的 JSON 格式" };
-    } catch (error) {
-      console.error("[ChatLocalService] Error in analyzeVoucherBase:", error);
-      return { data: null, error: "AI 解析傳票基礎資料失敗，請稍後再試" };
-    }
-  }
-
-  /**
-   * Info: (20260407 - Julian) 將憑證圖片轉換為傳票分錄 JSON
-   */
-  async analyzeVoucherLines(
-    images: { data: string; mimeType: string }[] = [],
-    accountBook: Partial<AccountBook> | null = null,
-    journalText?: string,
-  ): Promise<{ data: Partial<IParsedVoucher> | null; error?: string }> {
-    try {
-      let promptText = getVoucherLinesPrompt(accountBook);
-
-      if (journalText) {
-        promptText += `\n\n【重要指示】\n使用者已提供/修正日記帳的最新內容如下。請優先依據以下文字資訊進行解析，若與圖片內容有衝突，以此文字為準：\n${journalText}`;
-      }
-
-      const text = await this.ollamaGenerate(promptText, images);
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return { data: JSON.parse(jsonMatch[0]) };
-      }
-
-      return { data: null, error: "無法從 AI 回應中解析出有效的 JSON 格式" };
-    } catch (error) {
-      console.error("[ChatLocalService] Error in analyzeVoucherLines:", error);
-      return { data: null, error: "AI 解析傳票分錄失敗，請稍後再試" };
-    }
-  }
-
-  /**
-   * Info: (20260320 - Julian) 將憑證圖片轉換為碳盤查 JSON
-   */
-  async analyzeESG(
-    images: { data: string; mimeType: string }[] = [],
-    accountBook: Partial<AccountBook> | null = null,
-    journalText?: string,
-    coefficients?: Partial<ICoefficient>[]
-  ): Promise<{ data: IEsgRecordDetail | null; error?: string }> {
-    try {
-      let promptText = getEsgPrompt(accountBook, coefficients);
-
-      if (journalText) {
-        promptText += `\n\n【重要指示】\n使用者已提供/修正日記帳的最新內容如下。請優先依據以下文字資訊進行解析，若與圖片內容有衝突，以此文字為準：\n${journalText}`;
-      }
-
-      const text = await this.ollamaGenerate(promptText, images);
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return { data: JSON.parse(jsonMatch[0]) };
-      }
-
-      return { data: null, error: "無法從 AI 回應中解析出有效的 JSON 格式" };
-    } catch (error) {
-      console.error("[ChatLocalService] Error in analyzeESG:", error);
-      return { data: null, error: "AI 解析碳盤查失敗，請稍後再試" };
-    }
-  }
-
-  // Info: (20260406 - Luphia) 前置防呆：快速掃描憑證是否可能重複
-  async analyzeDocumentPreCheck(
-    images: { data: string; mimeType: string }[] = [],
-  ): Promise<{
-    data: {
-      invoiceNumber?: string | null;
-      vendorTaxId?: string | null;
-      tradingDate?: string | null;
-      totalAmount?: number | null;
-    } | null;
-    error?: string;
-  }> {
-    try {
-      const promptText = getDocumentDuplicateCheckPrompt();
-      const text = await this.ollamaGenerate(promptText, images);
-
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return { data: JSON.parse(jsonMatch[0]) };
-      }
-
-      return { data: null, error: "無法從 AI 回應中解析出有效的 JSON 格式" };
-    } catch (error) {
-      console.error("[ChatLocalService] Error in analyzeDocumentPreCheck:", error);
-      return { data: null, error: "AI 前置防呆掃描失敗，請稍後再試" };
-    }
   }
 }

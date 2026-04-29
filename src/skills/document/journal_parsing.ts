@@ -1,4 +1,5 @@
 import { ITaskSkill } from "@/skills/types";
+import { getJournalPrompt } from "@/constants/prompts/journal";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
@@ -25,7 +26,19 @@ export class JournalParsingSkill implements ITaskSkill {
     chatService: ChatService,
   ): Promise<string> {
     const { images, accountBook } = await prepareDocumentContext(task);
-    const res = await chatService.analyzeJournal(images, accountBook);
-    return res.text;
+    
+    // Info: (20260429 - Luphia) Moved from ChatService to Skill
+    const promptText = getJournalPrompt(accountBook);
+    
+    try {
+      const text = await chatService.generateRawWithImages(promptText, images);
+      if (text.includes("上傳內容無法解析狀態")) {
+        return "上傳內容無法解析，請重新上傳或手動調整";
+      }
+      return text.trim();
+    } catch (error) {
+      console.error("[JournalParsingSkill] Error:", error);
+      return "AI 暫時無法解析，請稍後再試或手動調整";
+    }
   }
 }

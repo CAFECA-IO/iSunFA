@@ -1,4 +1,5 @@
 import { ITaskSkill } from "@/skills/types";
+import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
@@ -29,10 +30,29 @@ export class DocumentPreCheckSkill implements ITaskSkill {
     chatService: ChatService,
   ): Promise<string> {
     const { images, parsedContext } = await prepareDocumentContext(task);
-    const res = await chatService.analyzeDocumentPreCheck(images);
-    const result = JSON.stringify(res);
-
-    // Info: (20260406 - Luphia) Check duplication with backend database
+    const promptText = getDocumentDuplicateCheckPrompt();
+    
+    let res: {
+      data: {
+        invoiceNumber?: string | null;
+        vendorTaxId?: string | null;
+        tradingDate?: string | null;
+        totalAmount?: number | null;
+      } | null;
+      error?: string;
+    } = { data: null, error: "AI 前置防呆掃描失敗，請稍後再試" };
+    try {
+      const text = await chatService.generateRawWithImages(promptText, images);
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        res = { data: JSON.parse(jsonMatch[0]) };
+      } else {
+        res = { data: null, error: "無法從 AI 回應中解析出有效的 JSON 格式" };
+      }
+    } catch (error) {
+      console.error("[DocumentPreCheckSkill] Error:", error);
+    }
+    const result = JSON.stringify(res);    // Info: (20260406 - Luphia) Check duplication with backend database
     if (res.data && parsedContext.accountBookId) {
       const dupResult = await voucherRepo.checkDocumentDuplication(
         parsedContext.accountBookId,

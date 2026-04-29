@@ -46,6 +46,12 @@ export async function processNext() {
   console.log(`[MissionIssuer] Processing Order ${order.id}...`);
 
   try {
+    // Info: (20260429 - Luphia) Optimistic lock: set to EXECUTING immediately to prevent double processing in next loop
+    await orderRepo.update({
+      where: { id: order.id },
+      data: { status: ORDER_STATUS.EXECUTING }
+    });
+
     const orderDataObj = (order.data as Record<string, unknown>) || {};
     const payloadData = (orderDataObj.data as Record<string, unknown>) || {};
     const category = (payloadData.category || orderDataObj.category) as string;
@@ -258,7 +264,6 @@ This is an automated validation plan.
     await orderRepo.update({
       where: { id: order.id },
       data: {
-        status: ORDER_STATUS.EXECUTING,
         mission: JSON.stringify(generatedTaskIds)
       }
     });
@@ -268,6 +273,15 @@ This is an automated validation plan.
 
   } catch (e) {
     console.error(`[MissionIssuer] Error processing order ${order.id}:`, e);
+    // Info: (20260429 - Luphia) Rollback to PAID so it can be retried
+    try {
+      await orderRepo.update({
+        where: { id: order.id },
+        data: { status: ORDER_STATUS.PAID }
+      });
+    } catch (rollbackErr) {
+      console.error(`[MissionIssuer] Failed to rollback order ${order.id} to PAID:`, rollbackErr);
+    }
     throw e;
   }
 }

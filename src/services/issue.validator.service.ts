@@ -87,6 +87,19 @@ export async function processNext() {
             if (status === 3) {
               console.log(`[IssueValidator] State Recovery for Task ID: ${currentTaskId}. It is Closed on chain but missing local approved file. Recovering...`);
               await fs.mkdir(taskIssueDir, { recursive: true });
+              
+              try {
+                console.log(`[IssueValidator] State Recovery: Downloading result CID: ${resultCid} from IPFS (Laria)...`);
+                const fileBuffer = await storageService.recoverLaria(resultCid);
+                const resultContent = fileBuffer.toString("utf8");
+                const resultFileLocalPath = path.join(taskIssueDir, `${subIndex}.md`);
+                await fs.writeFile(resultFileLocalPath, resultContent, "utf8");
+              } catch (e) {
+                console.error(`[IssueValidator] State Recovery: Failed to download result CID ${resultCid}:`, e);
+                const resultFileLocalPath = path.join(taskIssueDir, `${subIndex}.md`);
+                await fs.writeFile(resultFileLocalPath, '{"error": "Failed to recover result from IPFS during state recovery"}', "utf8");
+              }
+
               const approvedContent = `# Approved Submission (Recovered)
 - Result CID: ${resultCid}
 - Submission Index: ${subIndex}
