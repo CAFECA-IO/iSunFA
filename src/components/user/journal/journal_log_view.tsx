@@ -11,6 +11,7 @@ import { timestampToString } from "@/lib/utils/common";
 import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
 import { IAuditLog } from "@/interfaces/audit_log";
 import DateRangePicker from "@/components/common/date_range_picker";
+import Pagination from "@/components/common/pagination";
 
 const LogItem = ({ log }: { log: IAuditLog }) => {
   const { t } = useTranslation();
@@ -100,7 +101,7 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
         aria-label={`${t("journal.log_view.type")} / ${t("journal.log_view.action_type")}`}
         className="table-cell px-2.5 py-4 sm:hidden sm:px-4"
       >
-        <div className="flex flex-col gap-y-1 gap-x-2">
+        <div className="flex flex-col gap-x-2 gap-y-1">
           <span
             className={`inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap uppercase sm:text-sm ${getDataTypeColor(
               log.dataType,
@@ -117,9 +118,10 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
           </span>
         </div>
       </td>
-      <td 
-      aria-label={t("journal.log_view.record_time")}
-      className="px-2.5 py-4 text-xs font-medium text-gray-900 sm:px-4 sm:text-sm">
+      <td
+        aria-label={t("journal.log_view.record_time")}
+        className="px-2.5 py-4 text-xs font-medium text-gray-900 sm:px-4 sm:text-sm"
+      >
         <div className="flex flex-col items-start gap-x-1 text-xs sm:flex-col">
           <span>{formattedDate}</span>
           <span>{formattedTime}</span>
@@ -160,6 +162,8 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
   );
 };
 
+const PAGE_SIZE = 20;
+
 export default function JournalLogView() {
   const { t } = useTranslation();
   const params = useParams();
@@ -170,16 +174,20 @@ export default function JournalLogView() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-   
+
   const [keyword, setKeyword] = useState<string>("");
   const [actionType, setActionType] = useState<string>("");
   const [dataType, setDataType] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
     const fetchLogs = async () => {
       setIsLoading(true);
       try {
         const queryParams = new URLSearchParams();
+        queryParams.append("page", currentPage.toString());
+        queryParams.append("limit", PAGE_SIZE.toString());
         if (startDate) {
           queryParams.append("startDate", new Date(startDate).toISOString());
         }
@@ -200,9 +208,17 @@ export default function JournalLogView() {
         const qs = queryParams.toString();
         const url = `/api/v1/user/account_book/${accountBookId}/audit_log${qs ? `?${qs}` : ""}`;
 
-        const data = await request<IApiResponse<{ logs: IAuditLog[] }>>(url);
-        if (data.code === ApiCode.SUCCESS && data.payload?.logs) {
+        const data =
+          await request<
+            IApiResponse<{
+              logs: IAuditLog[];
+              totalItems: number;
+              totalPages: number;
+            }>
+          >(url);
+        if (data.code === ApiCode.SUCCESS && data.payload) {
           setLogs(data.payload.logs);
+          setTotalPages(data.payload.totalPages || 1);
         }
       } catch (error) {
         console.error("Failed to fetch logs", error);
@@ -212,7 +228,15 @@ export default function JournalLogView() {
     };
 
     fetchLogs();
-  }, [startDate, endDate, keyword, actionType, dataType, accountBookId]);
+  }, [
+    startDate,
+    endDate,
+    keyword,
+    actionType,
+    dataType,
+    accountBookId,
+    currentPage,
+  ]);
 
   return (
     <div className="flex w-full max-w-full min-w-0 flex-col gap-4">
@@ -221,26 +245,32 @@ export default function JournalLogView() {
         {t("journal.log_view.title")}
       </h2>
       {/* Info: (20260407 - Julian) Filter */}
-      <div className="flex flex-wrap items-center justify-center sm:justify-start sm:gap-4 gap-2 lg:flex-row">
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start sm:gap-4 lg:flex-row">
         {/* Info: (20260429 - Julian) Search bar */}
-        <div className="flex w-full bg-white items-center gap-2 rounded-lg border border-slate-300 px-2 py-2 text-slate-400 sm:flex-1 sm:px-4 sm:w-auto">
+        <div className="flex w-full items-center gap-2 rounded-lg border border-slate-300 bg-white px-2 py-2 text-slate-400 sm:w-auto sm:flex-1 sm:px-4">
           <Search size={24} />
           <input
             type="text"
             placeholder={t("搜尋 ID、操作人員名稱...")}
             aria-label={t("搜尋 ID、操作人員名稱...")}
             value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
+            onChange={(e) => {
+              setKeyword(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400 sm:text-sm"
           />
         </div>
 
         {/* Info: (20260407 - Julian) Type Filter */}
         <div className="flex items-center gap-2">
-            <select
+          <select
             value={dataType}
-            onChange={(e) => setDataType(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 sm:px-4 sm:text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+            onChange={(e) => {
+              setDataType(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none sm:px-4 sm:text-sm"
           >
             <option value="">{t("全部資料")}</option>
             <option value={AuditLogDataType.JOURNAL}>
@@ -255,30 +285,32 @@ export default function JournalLogView() {
           </select>
           <select
             value={actionType}
-            onChange={(e) => setActionType(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 sm:px-4 sm:text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+            onChange={(e) => {
+              setActionType(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none sm:px-4 sm:text-sm"
           >
             <option value="">{t("全部動作")}</option>
-            <option value={AuditLogAction.CREATE}>
-              {t("新增")}
-            </option>
-            <option value={AuditLogAction.UPDATE}>
-              {t("修改")}
-            </option>
-            <option value={AuditLogAction.DELETE}>
-              {t("刪除")}
-            </option>
+            <option value={AuditLogAction.CREATE}>{t("新增")}</option>
+            <option value={AuditLogAction.UPDATE}>{t("修改")}</option>
+            <option value={AuditLogAction.DELETE}>{t("刪除")}</option>
           </select>
-          </div>
+        </div>
 
-          {/* Info: (20260429 - Julian) Date Picker */}
-          <DateRangePicker
-            startDate={startDate}
-            endDate={endDate}
-            setStartDate={setStartDate}
-            setEndDate={setEndDate}
-            className="w-full"
-          />
+        {/* Info: (20260429 - Julian) Date Picker */}
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          setStartDate={(val) => {
+            setStartDate(val);
+            setCurrentPage(1);
+          }}
+          setEndDate={(val) => {
+            setEndDate(val);
+            setCurrentPage(1);
+          }}
+        />
       </div>
 
       {/* Info: (20260407 - Julian) Log Table */}
@@ -343,6 +375,15 @@ export default function JournalLogView() {
           </tbody>
         </table>
       </div>
+
+      {/* Info: (20260429 - Julian) Pagination */}
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
+      )}
     </div>
   );
 }

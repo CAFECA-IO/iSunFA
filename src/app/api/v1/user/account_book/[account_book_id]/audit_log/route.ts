@@ -37,9 +37,10 @@ export async function GET(
     }
 
     const { searchParams } = new URL(request.url);
-    const take = searchParams.get("take")
-      ? parseInt(searchParams.get("take")!, 10)
-      : 100;
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const skip = (page - 1) * limit;
+
     const keyword = searchParams.get("keyword");
     const actionType = searchParams.get("actionType") as AuditLogAction;
     const dataType = searchParams.get("dataType") as AuditLogDataType;
@@ -80,20 +81,26 @@ export async function GET(
       }
     }
 
-    const logs = await auditLogRepo.getAuditLogs({
-      where,
-      orderBy: { createdAt: "desc" },
-      take,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            address: true,
+    const [totalItems, logs] = await Promise.all([
+      auditLogRepo.countAuditLogs(where),
+      auditLogRepo.getAuditLogs({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              address: true,
+            },
           },
         },
-      },
-    });
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
 
     // Info: (20260429 - Julian) 轉換成前端格式
     const result: IAuditLog[] = logs.map((log) => {
@@ -111,7 +118,7 @@ export async function GET(
       };
     });
 
-    return jsonOk({ logs: result });
+    return jsonOk({ logs: result, totalItems, totalPages, currentPage: page });
   } catch (error) {
     console.error("Get audit logs failed", error);
     return jsonFail(API_ERRORS.IS_DB_FAILED);
