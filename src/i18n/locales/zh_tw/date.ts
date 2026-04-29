@@ -3,6 +3,8 @@ export const date = {
   month: "月",
   week: "週",
   day: "日",
+  start_date: "開始日期",
+  end_date: "結束日期",
   month_name: {
     jan: "一月",
     feb: "二月",

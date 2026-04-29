@@ -100,6 +100,10 @@ export async function GET(
             emissionFactor: Number(esgRecord.coefficient.emissionFactor),
           }
         : null,
+      emissionSource: esgRecord.emissionSource ? {
+        id: esgRecord.emissionSource.id,
+        name: esgRecord.emissionSource.name,
+      } : null,
     };
 
     return jsonOk(formattedRecord);
@@ -186,6 +190,9 @@ export async function PUT(
       ...(reqBody.coefficient !== undefined && {
         coefficientId: reqBody.coefficient?.id ?? null,
       }),
+      ...(reqBody.emissionSource !== undefined && {
+        emissionSourceId: reqBody.emissionSource?.id ?? null,
+      }),
     });
 
     if (!updatedRecord) {
@@ -225,6 +232,10 @@ export async function PUT(
             emissionFactor: Number(esgRecord.coefficient.emissionFactor),
           }
         : null,
+      emissionSource: updatedRecord.emissionSource ? {
+        id: updatedRecord.emissionSource.id,
+        name: updatedRecord.emissionSource.name,
+      } : null,
     };
 
     // Info: (20260312 - Julian) 新增 log

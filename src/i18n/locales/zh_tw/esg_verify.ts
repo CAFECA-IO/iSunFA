@@ -30,6 +30,9 @@ export const esgVerify = {
     total: "總排放量",
     intensity: "排放強度分級",
     coefficient: "排放係數",
+    emission_source: "排放源歸口",
+    select_emission_source: "選擇排放源歸口",
+    no_emission_source_selected: "尚未選擇排放源",
   },
   actions: {
     cancel_edit: "取消修改",

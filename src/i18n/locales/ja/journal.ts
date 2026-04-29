@@ -31,5 +31,8 @@ export const journal = {
     unnamed_user: "名無しのユーザー",
     copy_address: "クリックしてアドレスをコピー: {{address}}",
     copy_id: "クリックして伝票 ID をコピー: {{id}}",
+    filter_all_data: "すべての項目",
+    filter_all_actions: "すべての操作",
+    search_placeholder: "ID、操作者を検索...",
   },
 };

@@ -11,7 +11,7 @@ import { EsgIntensity } from "@/interfaces/esg";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 
 export type EsgRecordWithRelations = Prisma.EsgRecordGetPayload<{
-  include: { file: true; coefficient: true };
+  include: { file: true; coefficient: true; emissionSource: true };
 }> & { journalId?: string; voucherId?: string };
 
 export interface IEsgRepository {
@@ -179,7 +179,7 @@ export class EsgRepository implements IEsgRepository {
   async getEsgRecordById(id: string): Promise<EsgRecordWithRelations | null> {
     const record = await prisma.esgRecord.findUnique({
       where: { id },
-      include: { file: true, coefficient: true },
+      include: { file: true, coefficient: true, emissionSource: true },
     });
 
     if (!record) return null;

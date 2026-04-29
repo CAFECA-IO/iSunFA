@@ -58,11 +58,6 @@ export const CommentSection = () => {
             onSuccess={fetchComments}
           />
         ))}
-
-        {/* Info: (20260206 - Julian) 更多留言載入 */}
-        <button className="w-full rounded-2xl border-2 border-dashed border-gray-100 py-4 font-bold text-gray-300 transition-all hover:border-orange-200 hover:text-orange-400">
-          {t("ai_consultation_room.load_more")}
-        </button>
       </div>
     ) : (
       <div className="mt-6 flex h-20 items-center justify-center text-gray-400">
@@ -71,8 +66,8 @@ export const CommentSection = () => {
     );
 
   return (
-    <section className="pt-20">
-      <div className="mb-8 flex items-center justify-between">
+    <section className="pt-10 lg:pt-20">
+      <div className="mb-2 flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-2xl font-extrabold text-gray-900">
           {t("ai_consultation_room.discussion_title")}{" "}
           <span className="font-normal text-gray-300">{comments.length}</span>

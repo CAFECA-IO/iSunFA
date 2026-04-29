@@ -30,6 +30,9 @@ export const esgVerify = {
     total: "총 배출량",
     intensity: "배출 강도 등급",
     coefficient: "계수",
+    emission_source: "배출원",
+    select_emission_source: "배출원 적용",
+    no_emission_source_selected: "배출원이 선택되지 않았습니다",
   },
   coefficient: "계수",
   messages: {
