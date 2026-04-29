@@ -5,4 +5,5 @@ export const header = {
   login: "Login",
   credits: "Credits",
   logout: "Sign out",
+  transportation_carbon_footprint_calculator: "Transportation Carbon Footprint",
 };

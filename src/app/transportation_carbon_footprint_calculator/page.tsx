@@ -97,7 +97,7 @@ export default function TransportationCalculatorPage() {
             <Leaf className="w-8 h-8 text-orange-600" />
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-orange-700 via-orange-500 to-amber-400 drop-shadow-sm pb-2">
-            物流碳足跡計算機
+            物流碳足跡
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto text-lg leading-relaxed">
             透過 AI 智能分析運輸路線，自動分割陸運、海運與空運路段，並依據 IPCC 基準估算各區段里程與碳排放量。

@@ -5,4 +5,5 @@ export const header = {
   login: "ログイン",
   credits: "ポイント",
   logout: "ログアウト",
+  transportation_carbon_footprint_calculator: "物流カーボンフットプリント",
 };
