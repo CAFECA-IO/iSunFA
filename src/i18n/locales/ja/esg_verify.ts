@@ -30,6 +30,9 @@ export const esgVerify = {
     total: "総排出量",
     intensity: "排出強度グレード",
     coefficient: "係数",
+    emission_source: "排出源",
+    select_emission_source: "排出源を適用",
+    no_emission_source_selected: "排出源が選択されていません",
   },
   messages: {
     fetch_error: "伝票の取得に失敗しました",

@@ -15,7 +15,7 @@ export default function AccountingAiConsultingPage() {
       <Header />
 
       <main className="relative pt-12 min-h-screen">
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col text-center items-center gap-2">
           <h1 className="text-4xl font-bold text-gray-800">
             {t("ai_consultation_room.title")}
           </h1>
