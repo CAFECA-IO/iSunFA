@@ -1,11 +1,7 @@
-import ReactQRCode from "react-qr-code";
+import QRCode from "react-qr-code";
 import { Landmark, Copy } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { IBlockchainDashboardData } from "@/services/admin.blockchain.service";
-
-// Info: (20260429 - Julian) 處理 ReactQRCode 的型別問題
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const QRCode = ReactQRCode as unknown as React.FC<any>;
 
 interface IBlockchainTreasuryProps {
   data: IBlockchainDashboardData | null;
