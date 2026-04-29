@@ -24,6 +24,7 @@ export function timestampToString(timestamp: number | undefined) {
       dateWithSlash: "-",
       dateWithDash: "-",
       dateAndTime: "-",
+      time: "-",
     };
   }
 
@@ -51,6 +52,7 @@ export function timestampToString(timestamp: number | undefined) {
   const dateWithSlash = `${year}/${monthWithPad}/${dayWithPad}`;
   const dateWithDash = `${year}-${monthWithPad}-${dayWithPad}`;
   const dateAndTime = `${year}-${monthWithPad}-${dayWithPad} ${hoursWithPad}:${minutesWithPad}`;
+  const time = `${hoursWithPad}:${minutesWithPad}`;
 
   return {
     year, // Info: (20260224 - Julian) e.g., "2026"
@@ -58,6 +60,7 @@ export function timestampToString(timestamp: number | undefined) {
     dateWithSlash, // Info: (20260206 - Julian) e.g., "2026/01/01"
     dateWithDash, // Info: (20260206 - Julian) e.g., "2026-01-01"
     dateAndTime, // Info: (20260206 - Julian) e.g., "2026-01-01 12:34"
+    time, // Info: (20260429 - Julian) e.g., "12:34"
   };
 }
 
