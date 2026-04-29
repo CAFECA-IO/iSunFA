@@ -258,7 +258,7 @@ export default function EsgReportView({
       {scopeSection}
 
       {/* Info: (20260424 - Julian) 排放細項 BOM 表 */}
-      {sections && <EsgBomTable sections={sections} baseDivisor={baseEmissions} />}
+      {sections && <EsgBomTable sections={sections} />}
     </div>
   );
 }

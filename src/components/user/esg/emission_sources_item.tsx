@@ -19,7 +19,8 @@ const RecordItem = ({ rec }: { rec: IEsgRecordBrief }) => {
   let activityTypeStr = "-";
   if (rec.activityType) {
     const translated = t(activityTypeKey);
-    activityTypeStr = translated === activityTypeKey ? rec.activityType : translated;
+    activityTypeStr =
+      translated === activityTypeKey ? rec.activityType : translated;
   }
 
   return (
@@ -81,46 +82,51 @@ export default function EmissionSourcesItem({
   const groupedList = Object.entries(groupedRecords);
 
   // Info: (20260424 - Julian) 渲染分類列表
-  const groupedRecordList =groupedList.length>0? groupedList.map(
-    ([tag, records]) => (
-      <div key={tag} className="mb-6 last:mb-0">
-        <div className="mb-3 flex items-center gap-2">
-          <div className="flex h-6 items-center rounded-md bg-blue-100 px-2 text-xs font-bold text-blue-700">
-            {tag === "other" ? t("emission_sources.item.other_tag") : tag}
+  const groupedRecordList =
+    groupedList.length > 0 ? (
+      groupedList.map(([tag, records]) => (
+        <div key={tag} className="mb-6 last:mb-0">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex h-6 items-center rounded-md bg-blue-100 px-2 text-xs font-bold text-blue-700">
+              {tag === "other" ? t("emission_sources.item.other_tag") : tag}
+            </div>
+            <div className="h-px flex-1 bg-gray-200"></div>
           </div>
-          <div className="h-px flex-1 bg-gray-200"></div>
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-gray-100 bg-gray-50/80 text-xs font-semibold text-slate-500">
+                <tr>
+                  <th className="px-5 py-3">
+                    {t("emission_sources.item.table.date")}
+                  </th>
+                  <th className="px-5 py-3">
+                    {t("emission_sources.item.table.activity")}
+                  </th>
+                  <th className="px-5 py-3">
+                    {t("emission_sources.item.table.vendor")}
+                  </th>
+                  <th className="px-5 py-3 text-right">
+                    {t("emission_sources.item.table.data")}
+                  </th>
+                  <th className="px-5 py-3 text-right">
+                    {t("emission_sources.item.table.emission")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {records.map((rec) => (
+                  <RecordItem key={rec.id} rec={rec} />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-100 bg-gray-50/80 text-xs font-semibold text-slate-500">
-              <tr>
-                <th className="px-5 py-3">
-                  {t("emission_sources.item.table.date")}
-                </th>
-                <th className="px-5 py-3">
-                  {t("emission_sources.item.table.activity")}
-                </th>
-                <th className="px-5 py-3">
-                  {t("emission_sources.item.table.vendor")}
-                </th>
-                <th className="px-5 py-3 text-right">
-                  {t("emission_sources.item.table.data")}
-                </th>
-                <th className="px-5 py-3 text-right">
-                  {t("emission_sources.item.table.emission")}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {records.map((rec) => (
-                <RecordItem key={rec.id} rec={rec} />
-              ))}
-            </tbody>
-          </table>
-        </div>
+      ))
+    ) : (
+      <div className="flex flex-col items-center justify-center py-2 font-semibold text-slate-400">
+        {t("emission_sources.item.no_records")}
       </div>
-    ),
-  ):<div className="flex flex-col items-center justify-center py-2 font-semibold text-slate-400">{t("emission_sources.item.no_records")}</div>
+    );
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-colors duration-200 focus-within:border-orange-200 hover:border-orange-200">

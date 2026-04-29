@@ -20,9 +20,11 @@ export const esgReport = {
   scope1_title: "Scope 1 (직접 배출)",
   scope2_title: "Scope 2 (간접 배출)",
   scope3_title: "Scope 3 (공급망 배출)",
-  bom_title: "배출량 세부 BOM표",
+  bom_title: "배출량 세부 BOM",
   bom_scope: "스코프",
   bom_activity: "배출 활동",
+  bom_original_data: "원본 활동 데이터",
+  bom_coefficient: "적용된 계수",
   bom_emissions: "배출량 (kgCO2e)",
   bom_percentage: "비율 (%)",
 };

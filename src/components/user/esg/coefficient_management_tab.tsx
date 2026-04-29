@@ -70,7 +70,7 @@ const CoefficientCard = ({
     );
   const tag =
     coefficient.category === CoefficientCategory.STANDARD ? (
-      <div className="rounded-md bg-green-100 px-2 py-0.5 text-[10px] text-green-600 lg:text-xs">
+      <div className="rounded-md bg-green-100 px-2 py-0.5 text-[10px] whitespace-nowrap text-green-600 lg:text-xs">
         {t("coefficient.tag.standard")}
       </div>
     ) : null;

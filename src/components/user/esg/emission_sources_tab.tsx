@@ -14,7 +14,13 @@ import Pagination from "@/components/common/pagination";
 
 const PAGE_SIZE = 10;
 
-const EmissionSourcesList = ({ keyword, refreshFlag }: { keyword: string; refreshFlag: boolean }) => {
+const EmissionSourcesList = ({
+  keyword,
+  refreshFlag,
+}: {
+  keyword: string;
+  refreshFlag: boolean;
+}) => {
   const { t } = useTranslation();
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
@@ -26,25 +32,31 @@ const EmissionSourcesList = ({ keyword, refreshFlag }: { keyword: string; refres
   const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
-      const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const res = await request<IApiResponse<{ data: IEsgEmissionSourcesUI[],total: number, totalPages: number }>>(
-        `/api/v1/user/account_book/${accountBookId}/esg/emission_sources?keyword=${encodeURIComponent(keyword)}&page=${currentPage}&pageSize=${PAGE_SIZE}`
-      );
-      if (res.success && res.payload) {
-        setData(res.payload.data);
-        setTotalCount(res.payload.total);
-        setTotalPages(res.payload.totalPages);
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const res = await request<
+          IApiResponse<{
+            data: IEsgEmissionSourcesUI[];
+            total: number;
+            totalPages: number;
+          }>
+        >(
+          `/api/v1/user/account_book/${accountBookId}/esg/emission_sources?keyword=${encodeURIComponent(keyword)}&page=${currentPage}&pageSize=${PAGE_SIZE}`,
+        );
+        if (res.success && res.payload) {
+          setData(res.payload.data);
+          setTotalCount(res.payload.total);
+          setTotalPages(res.payload.totalPages);
+        }
+      } catch (error) {
+        console.error("Failed to fetch emission sources", error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch emission sources", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+    };
 
-  fetchData()
+    fetchData();
   }, [keyword, currentPage, refreshFlag, accountBookId]);
 
   if (isLoading && data.length === 0) {
@@ -74,7 +86,7 @@ const EmissionSourcesList = ({ keyword, refreshFlag }: { keyword: string; refres
       {data.map((item) => (
         <EmissionSourcesItem key={item.id} data={item} />
       ))}
-      
+
       {totalPages > 1 && (
         <Pagination
           currentPage={currentPage}

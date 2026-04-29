@@ -93,7 +93,7 @@ export default function ChatInterface({ className }: IChatInterfaceProps = {}) {
   const isGuestLimitReached = !user && guestUsage >= 5;
 
   return (
-    <div className={`flex flex-col bg-gray-50 relative ${className || 'h-[calc(100vh-64px)]'}`}>
+    <div className={`flex flex-col bg-gray-50 relative z-[9999] ${className || 'h-[calc(100vh-64px)]'}`}>
       {!user && !authLoading && (
         <div className={`px-4 py-2 text-sm text-center border-b ${isGuestLimitReached ? 'bg-red-50 text-red-800 border-red-100' : 'bg-yellow-50 text-yellow-800 border-yellow-100'}`}>
           {isGuestLimitReached ? t('chat.guest_limit_reached') : t('chat.login_warning')}

@@ -43,7 +43,9 @@ export default function EsgDetailModal({
   const { t } = useTranslation();
 
   const [formData, setFormData] = useState<IEsgRecordDetail | null>(null);
-  const [originalData, setOriginalData] = useState<IEsgRecordDetail | null>(null);
+  const [originalData, setOriginalData] = useState<IEsgRecordDetail | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
@@ -195,9 +197,9 @@ export default function EsgDetailModal({
       : false;
 
   // Info: (20260417 - Julian) 日期格式
-  const dateValue = new Date(
-    formData.tradingDate * 1000,
-  ).toISOString().split("T")[0];
+  const dateValue = new Date(formData.tradingDate * 1000)
+    .toISOString()
+    .split("T")[0];
 
   const handleDateChange = (dateStr: string) => {
     const tradingDate = Number(new Date(dateStr).getTime() / 1000);

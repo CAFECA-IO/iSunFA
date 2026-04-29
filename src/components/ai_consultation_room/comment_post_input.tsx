@@ -1,4 +1,6 @@
-import { useState, KeyboardEvent } from 'react';
+"use client";
+
+import { useState, KeyboardEvent } from "react";
 import { request } from "@/lib/utils/request";
 import { User, Send, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -30,8 +32,9 @@ export const CommentPostInput = ({
   const talkId = params?.talk_id as string;
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // ToDo: (20260112 - Julian) 新增 @ 其他用戶的功能
-  const replyTo = value.includes("@") ? value.split("@")[1] : "";
+  // Info: (20260428 - Julian) 支援 @ 其他用戶的功能，透過 regex 抓取第一個 @ 後面的文字直到空白
+  const replyToMatch = value.match(/@([^\s]+)/);
+  const replyTo = replyToMatch ? replyToMatch[1] : "";
 
   // Info: (20260212 - Julian) 處理提交
   const handleSubmit = async () => {
@@ -107,7 +110,7 @@ export const CommentPostInput = ({
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t("ai_consultation_room.comment_placeholder")}
-            className="text-gray-500 min-h-[100px] w-full resize-none rounded-2xl border border-orange-100 bg-white p-4 text-sm shadow-sm transition-all placeholder:text-gray-300 focus:border-orange-500 focus:outline-none"
+            className="min-h-[100px] w-full resize-none rounded-2xl border border-orange-100 bg-white p-4 text-sm text-gray-500 shadow-sm transition-all placeholder:text-gray-300 focus:border-orange-500 focus:outline-none"
           />
           <div className="flex justify-end">{displayedSubmit}</div>
         </div>

@@ -46,11 +46,20 @@ export interface ITalkRepository {
   countSharesByThreadId(analysisId: string): Promise<number>;
   countCommentsByThreadId(analysisId: string): Promise<number>;
 
-  listThreadsWithCounts(): Promise<
-    Prisma.AnalysisGetPayload<{
+  listThreadsWithCounts(options?: {
+    keyword?: string | null;
+    startDate?: string | null;
+    endDate?: string | null;
+    tags?: string[];
+    sortOption?: string | null;
+    page?: number;
+    pageSize?: number;
+  }): Promise<{
+    items: Prisma.AnalysisGetPayload<{
       include: { _count: { select: { comments: true; reportShareTokens: true } } };
-    }>[]
-  >;
+    }>[];
+    total: number;
+  }>;
   getThreadTagsByThreadIds(analysisIds: string[]): Promise<AnalysisTag[]>;
   getTagsByIds(tagIds: string[]): Promise<Tag[]>;
   getReactionCounts(): Promise<
@@ -133,19 +142,84 @@ export class TalkRepository implements ITalkRepository {
     });
   }
 
-  async listThreadsWithCounts() {
-    return prisma.analysis.findMany({
-      where: { type: ANALYSIS_CATEGORY.AI_CONSULTING },
-      orderBy: { createdAt: "desc" },
-      include: {
-        _count: {
-          select: {
-            comments: true,
-            reportShareTokens: true,
+  async listThreadsWithCounts(options?: {
+    keyword?: string | null;
+    startDate?: string | null;
+    endDate?: string | null;
+    tags?: string[];
+    sortOption?: string | null;
+    page?: number;
+    pageSize?: number;
+  }) {
+    const where: Prisma.AnalysisWhereInput = {
+      type: ANALYSIS_CATEGORY.AI_CONSULTING,
+    };
+
+    if (options?.keyword) {
+      where.OR = [
+        // Info: (20260428 - Julian) 由於 data 和 result 為 JSON 類型，所以使用 path 來指定要搜尋的欄位
+        { data: { path: ['question'], string_contains: options.keyword } },
+        { data: { path: ['data', 'question'], string_contains: options.keyword } },
+        { result: { path: ['answer'], string_contains: options.keyword } },
+        { result: { string_contains: options.keyword } },
+      ];
+    }
+
+    if (options?.startDate || options?.endDate) {
+      where.createdAt = {};
+      if (options.startDate) {
+        where.createdAt.gte = new Date(options.startDate);
+      }
+      if (options.endDate) {
+        const endDate = new Date(options.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        where.createdAt.lte = endDate;
+      }
+    }
+
+    if (options?.tags && options.tags.length > 0) {
+      const validTags = options.tags.filter(t => t.trim() !== "");
+      if (validTags.length > 0) {
+        where.tags = {
+          some: {
+            tag: {
+              name: {
+                in: validTags,
+              },
+            },
+          },
+        };
+      }
+    }
+
+    const orderBy: Prisma.AnalysisOrderByWithRelationInput = {
+      createdAt: options?.sortOption === "asc" ? "asc" : "desc",
+    };
+
+    const page = options?.page && options.page > 0 ? options.page : 1;
+    const pageSize = options?.pageSize && options.pageSize > 0 ? options.pageSize : 20;
+    const skip = (page - 1) * pageSize;
+
+    const [items, total] = await prisma.$transaction([
+      prisma.analysis.findMany({
+        where,
+        orderBy,
+        skip,
+        take: pageSize,
+        include: {
+          _count: {
+            select: {
+              // Info: (20260428 - Julian) 排除已刪除的留言
+              comments: { where: { deletedAt: null } },
+              reportShareTokens: true,
+            },
           },
         },
-      },
-    });
+      }),
+      prisma.analysis.count({ where }),
+    ]);
+
+    return { items, total };
   }
 
   async getThreadTagsByThreadIds(analysisIds: string[]) {
@@ -239,6 +313,13 @@ export class TalkRepository implements ITalkRepository {
 
   async createComment(data: Prisma.CommentUncheckedCreateInput) {
     return prisma.comment.create({ data });
+  }
+
+  async deleteComment(commentId: string) {
+    return prisma.comment.update({
+      where: { id: commentId },
+      data: { deletedAt: new Date() },
+    });
   }
 }
 
