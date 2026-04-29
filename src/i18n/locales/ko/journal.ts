@@ -31,5 +31,8 @@ export const journal = {
     unnamed_user: "익명 사용자",
     copy_address: "클릭하여 주소 복사: {{address}}",
     copy_id: "클릭하여 전표 ID 복사: {{id}}",
+    filter_all_data: "모든 데이터",
+    filter_all_actions: "모든 작업",
+    search_placeholder: "ID, 운영자 이름 검색...",
   },
 };

@@ -251,8 +251,8 @@ export default function JournalLogView() {
           <Search size={24} />
           <input
             type="text"
-            placeholder={t("搜尋 ID、操作人員名稱...")}
-            aria-label={t("搜尋 ID、操作人員名稱...")}
+            placeholder={t("journal.log_view.search_placeholder")}
+            aria-label={t("journal.log_view.search_placeholder")}
             value={keyword}
             onChange={(e) => {
               setKeyword(e.target.value);
@@ -272,7 +272,7 @@ export default function JournalLogView() {
             }}
             className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none sm:px-4 sm:text-sm"
           >
-            <option value="">{t("全部資料")}</option>
+            <option value="">{t("journal.log_view.filter_all_data")}</option>
             <option value={AuditLogDataType.JOURNAL}>
               {t("verify.type.journal")}
             </option>
@@ -291,10 +291,10 @@ export default function JournalLogView() {
             }}
             className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none sm:px-4 sm:text-sm"
           >
-            <option value="">{t("全部動作")}</option>
-            <option value={AuditLogAction.CREATE}>{t("新增")}</option>
-            <option value={AuditLogAction.UPDATE}>{t("修改")}</option>
-            <option value={AuditLogAction.DELETE}>{t("刪除")}</option>
+            <option value="">{t("journal.log_view.filter_all_actions")}</option>
+            <option value={AuditLogAction.CREATE}>{t("journal.log_view.action_create")}</option>
+            <option value={AuditLogAction.UPDATE}>{t("journal.log_view.action_update")}</option>
+            <option value={AuditLogAction.DELETE}>{t("journal.log_view.action_delete")}</option>
           </select>
         </div>
 

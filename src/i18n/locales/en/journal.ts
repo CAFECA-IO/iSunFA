@@ -31,5 +31,8 @@ export const journal = {
     unnamed_user: "Unnamed User",
     copy_address: "Click to copy address: {{address}}",
     copy_id: "Click to copy Journal ID: {{id}}",
+    filter_all_data: "All Data",
+    filter_all_actions: "All Actions",
+    search_placeholder: "Search ID, Operator Name...",
   },
 };
