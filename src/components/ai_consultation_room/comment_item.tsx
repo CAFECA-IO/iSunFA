@@ -157,15 +157,15 @@ export const CommentItem = ({
       )}
     </div>
   ) : (
-    <div className="group relative flex gap-5 rounded-3xl border border-gray-100 bg-white p-6 transition-all hover:border-orange-300">
+    <div className="group relative flex gap-3 lg:gap-5 rounded-3xl border border-gray-100 bg-white p-3 lg:p-6 transition-all hover:border-orange-300">
       {isShowProTag}
 
-      <div className="relative flex size-14 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-xl font-bold text-blue-600">
+      <div className="relative flex size-8 lg:size-14 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-xl font-bold text-blue-600">
         {initial}
         {isShowVerifiedIcon}
       </div>
 
-      <div className="relative flex-1 space-y-2">
+      <div className="relative flex-1 gap-y-2">
         <div className="flex items-center gap-2">
           <span className="font-extrabold text-gray-900">
             {comment.authorName}
@@ -240,13 +240,13 @@ export const CommentItem = ({
 
   return (
     <>
-      <div className={`space-y-4 ${isReply ? "ml-14" : ""}`}>
+      <div className={`lg:space-y-4 space-y-2 ${isReply ? "lg:ml-14 ml-6" : ""}`}>
         {/* Info: (20260428 - Julian) 原始留言 */}
         {originalComment}
 
         {/* Info: (20260209 - Julian) input 與巢狀回覆 */}
         {showReplies && (
-          <div className="space-y-4">
+          <div className="lg:space-y-4 space-y-2">
             {hasReplies && (
               <div className="space-y-4">
                 {comment.replies.map((reply) => (
@@ -259,7 +259,7 @@ export const CommentItem = ({
                 ))}
               </div>
             )}
-            <div className={isReply ? "" : "ml-14"}>
+            <div className={isReply ? "" : "g:ml-14 ml-6"}>
               <CommentPostInput
                 isShowInput={showReplies}
                 value={replyInput}

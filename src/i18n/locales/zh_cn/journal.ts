@@ -33,5 +33,8 @@ export const journal = {
     unnamed_user: "未命名用户",
     copy_address: "点击复制地址: {{address}}",
     copy_id: "点击复制凭证 ID: {{id}}",
+    filter_all_data: "全部资料",
+    filter_all_actions: "全部动作",
+    search_placeholder: "搜索 ID、操作人员名称...",
   },
 };

@@ -81,7 +81,7 @@ export default function UserActions() {
               </Link>
             ) : (
               <div className="flex h-full w-full cursor-not-allowed flex-col items-center justify-center rounded-xl bg-gray-50/80 p-2 opacity-60 ring-1 ring-gray-100 md:rounded-lg md:bg-gray-50/50 md:p-3">
-                <Icon className="mb-1 h-6 w-6 text-gray-300 md:mb-2 md:h-6 md:w-6" />
+                <Icon size={24} className="mb-1 text-gray-300 md:mb-2" />
                 <span className="text-center text-xs font-normal text-gray-400 md:text-sm md:font-medium">
                   {t(getModuleI18nKey(module.key))}
                 </span>
@@ -107,18 +107,22 @@ export default function UserActions() {
           action.href ? (
             <Link
               href={action.href}
-              className={` ${focus ? "bg-gray-50 text-gray-900 ring-1 ring-gray-300 md:ring-0" : "text-gray-600 ring-1 ring-gray-200 md:ring-0"} group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-xs font-normal shadow-sm transition-colors hover:bg-gray-50 md:rounded-lg md:bg-transparent md:font-medium md:shadow-none`}
+              className={`${focus ? "bg-gray-50 text-gray-900 ring-1 ring-gray-300 md:ring-0" : "text-gray-600 ring-1 ring-gray-200 md:ring-0"} group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal shadow-sm transition-colors hover:bg-gray-50 md:rounded-lg md:bg-transparent md:font-medium md:shadow-none`}
             >
-              <Icon className="mb-1 h-6 w-6 text-gray-400 group-hover:text-gray-600 md:h-5 md:w-5" />
+              <Icon
+                size={24}
+                className="mb-1 text-gray-400 group-hover:text-gray-600 md:h-5 md:w-5"
+              />
               {t(action.labelKey)}
             </Link>
           ) : (
             <button
               onClick={action.action === "logout" ? logout : undefined}
-              className={` ${focus ? (action.isDestructive ? "bg-red-50 text-red-700 ring-1 ring-red-200 md:ring-0" : "bg-gray-50 text-gray-900 ring-1 ring-gray-300 md:ring-0") : "text-gray-600 ring-1 ring-gray-200 md:ring-0"} group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-xs font-normal shadow-sm transition-colors md:rounded-lg md:bg-transparent md:font-medium md:shadow-none ${action.isDestructive ? "hover:bg-red-50" : "hover:bg-gray-50"}`}
+              className={`${focus ? (action.isDestructive ? "bg-red-50 text-red-700 ring-1 ring-red-200 md:ring-0" : "bg-gray-50 text-gray-900 ring-1 ring-gray-300 md:ring-0") : "text-gray-600 ring-1 ring-gray-200 md:ring-0"} group flex h-full w-full flex-col items-center justify-center rounded-xl bg-white p-2 text-center text-xs font-normal shadow-sm transition-colors md:rounded-lg md:bg-transparent md:font-medium md:shadow-none ${action.isDestructive ? "hover:bg-red-50" : "hover:bg-gray-50"}`}
             >
               <Icon
-                className={`mb-1 h-6 w-6 md:h-5 md:w-5 ${focus ? (action.isDestructive ? "text-red-500" : "text-gray-600") : "group-hover: text-gray-400" + (action.isDestructive ? "text-red-500" : "text-gray-600")}`}
+                size={24}
+                className={`mb-1 text-gray-400 group-hover:text-gray-600 md:h-5 md:w-5 ${focus ? (action.isDestructive ? "text-red-500" : "text-gray-600") : "group-hover: text-gray-400" + (action.isDestructive ? "text-red-500" : "text-gray-600")}`}
               />
               {t(action.labelKey)}
             </button>
@@ -198,7 +202,7 @@ export default function UserActions() {
               <MenuItem>
                 <button className="-mr-2 rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 md:hidden">
                   <span className="sr-only">Close menu</span>
-                  <X className="size-6" />
+                  <X size={24} />
                 </button>
               </MenuItem>
             </div>

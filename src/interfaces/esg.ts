@@ -70,6 +70,7 @@ export interface IEsgRecordDetail extends IEsgRecordBrief {
   isVerified: boolean; // Info: (20260424 - Julian) 是否已驗證
   dqiScore: number; // Info: (20260424 - Julian) 數據品質分數
   coefficient: ICoefficient | null; // Info: (20260424 - Julian) 排放係數
+  emissionSource: { id: string; name: string } | null; // Info: (20260429 - Julian) 排放源資訊
   journalId?: string; // Info: (20260424 - Julian) 會計分錄 ID
   voucherId?: string; // Info: (20260424 - Julian) 傳票 ID
   isDeleted?: boolean; // Info: (20260424 - Julian) 是否已刪除

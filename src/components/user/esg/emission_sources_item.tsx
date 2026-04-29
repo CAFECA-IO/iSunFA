@@ -135,10 +135,10 @@ export default function EmissionSourcesItem({
         tabIndex={0}
         onClick={toggleOpen}
         onKeyDown={handleKeyDown}
-        className="flex cursor-pointer items-center justify-between rounded-xl p-6 transition-colors duration-200 hover:bg-orange-50"
+        className="flex cursor-pointer items-center justify-between rounded-xl p-3 lg:p-6 transition-colors duration-200 hover:bg-orange-50"
       >
         <div className="flex items-center gap-4">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-gray-100 text-slate-800 transition-colors group-hover:bg-white">
+          <div className="flex shrink-0 size-8 lg:size-10 items-center justify-center rounded-lg bg-gray-100 text-slate-800 transition-colors group-hover:bg-white">
             <ChevronDown
               size={24}
               className={`${isOpen ? "" : "-rotate-90"} transition-all duration-200`}
@@ -146,7 +146,7 @@ export default function EmissionSourcesItem({
           </div>
           <div className="flex flex-col gap-1">
             <p className="text-base font-bold text-slate-800">{data.name}</p>
-            <div className="flex items-center divide-x divide-slate-200 text-xs font-semibold">
+            <div className="flex flex-wrap items-center divide-x divide-slate-200 text-xs font-semibold">
               <p className="pr-1.5 text-slate-400">
                 {t("emission_sources.item.address")}:{" "}
                 <span className="text-slate-800">
@@ -167,7 +167,7 @@ export default function EmissionSourcesItem({
             </div>
           </div>
         </div>
-        <div className="text-slate-400 transition-colors duration-200 group-hover:text-orange-600">
+        <div className="text-slate-400 p-2 shrink-0 transition-colors duration-200 group-hover:text-orange-600">
           {isOpen ? <Minus size={20} /> : <Plus size={20} />}
         </div>
       </div>
@@ -178,7 +178,7 @@ export default function EmissionSourcesItem({
         }`}
       >
         <div className="overflow-hidden bg-gray-50/50">
-          <div className="p-6">{groupedRecordList}</div>
+          <div className="lg:p-6 p-3">{groupedRecordList}</div>
         </div>
       </div>
     </div>

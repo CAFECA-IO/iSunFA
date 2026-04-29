@@ -30,6 +30,9 @@ export const esgVerify = {
     total: "Total Emissions",
     intensity: "Intensity Level",
     coefficient: "Emission Coefficient",
+    emission_source: "Emission Source",
+    select_emission_source: "Select Emission Source",
+    no_emission_source_selected: "No emission source selected",
   },
   actions: {
     cancel_edit: "Cancel Edit",

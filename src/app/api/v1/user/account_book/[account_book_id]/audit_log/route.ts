@@ -6,6 +6,8 @@ import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { AuditLogDataType } from "@/generated/enums";
 import { Prisma } from "@/generated/browser";
+import { IAuditLog } from "@/interfaces/audit_log";
+import { AuditLogAction } from "@/constants/audit_log";
 
 /**
  * Info: (20260306 - Julian) 取得日記帳的異動紀錄
@@ -35,9 +37,12 @@ export async function GET(
     }
 
     const { searchParams } = new URL(request.url);
-    const take = searchParams.get("take")
-      ? parseInt(searchParams.get("take")!, 10)
-      : 100;
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const skip = (page - 1) * limit;
+
+    const keyword = searchParams.get("keyword");
+    const actionType = searchParams.get("actionType") as AuditLogAction;
     const dataType = searchParams.get("dataType") as AuditLogDataType;
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
@@ -45,6 +50,20 @@ export async function GET(
     const where: Prisma.AuditLogWhereInput = {
       accountBookId: accountBook.id,
     };
+
+    // Info: (20260429 - Julian) 篩選關鍵字：可查詢 Log ID、操作人員的名稱和地址
+    if (keyword) {
+      where.OR = [
+        { dataId: { contains: keyword } },
+        { user: { name: { contains: keyword } } },
+        { user: { address: { contains: keyword } } },
+      ];
+    }
+
+    // Info: (20260429 - Julian) 篩選動作類型
+    if (actionType) {
+      where.action = actionType;
+    }
 
     // Info: (20260407 - Julian) 篩選資料類型
     if (dataType) {
@@ -62,22 +81,44 @@ export async function GET(
       }
     }
 
-    const logs = await auditLogRepo.getAuditLogs({
-      where,
-      orderBy: { createdAt: "desc" },
-      take,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            address: true,
+    const [totalItems, logs] = await Promise.all([
+      auditLogRepo.countAuditLogs(where),
+      auditLogRepo.getAuditLogs({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              address: true,
+            },
           },
         },
-      },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // Info: (20260429 - Julian) 轉換成前端格式
+    const result: IAuditLog[] = logs.map((log) => {
+      return {
+        id: log.id,
+        action: log.action as AuditLogAction,
+        dataType: log.dataType as AuditLogDataType,
+        dataId: log.dataId,
+        user: {
+          id: log.user.id,
+          name: log.user.name,
+          address: log.user.address,
+        },
+        createdAt: Math.floor(log.createdAt.getTime() / 1000),
+      };
     });
 
-    return jsonOk({ logs });
+    return jsonOk({ logs: result, totalItems, totalPages, currentPage: page });
   } catch (error) {
     console.error("Get audit logs failed", error);
     return jsonFail(API_ERRORS.IS_DB_FAILED);

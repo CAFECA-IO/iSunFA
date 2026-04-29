@@ -16,6 +16,7 @@ import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import ThreadCard from "@/components/ai_consultation_room/thread_card";
 import Pagination from "@/components/common/pagination";
+import DateRangePicker from "@/components/common/date_range_picker";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAiContext } from "@/contexts/ai_context";
 import { SortOptionQuery } from "@/constants/sort";
@@ -164,7 +165,7 @@ export default function ThreadSection() {
   const displayedThreads = (
     <>
       {/* Info: (20260428 - Julian) Threads List */}
-      <div className="flex flex-wrap gap-x-4 gap-y-8">
+      <div className="flex justify-center flex-wrap lg:gap-x-4 gap-y-4 lg:gap-y-8 lg:justify-start">
         {threads.map((item) => (
           <ThreadCard key={item.id} thread={item} tagOnClick={tagOnClick} />
         ))}
@@ -212,7 +213,7 @@ export default function ThreadSection() {
   );
 
   return (
-    <div className="flex flex-col justify-center gap-8 px-8 pt-6 pb-16 lg:justify-start lg:px-24">
+    <div className="flex flex-col justify-center gap-4 sm:gap-8 px-4 sm:px-8 pt-6 pb-16 lg:justify-start lg:px-24">
       {/* Info: (20260428 - Julian) Filter Bar */}
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-4">
@@ -231,29 +232,13 @@ export default function ThreadSection() {
             </div>
 
             {/* Info: (20260428 - Julian) Date Search */}
-            <div className="flex items-center justify-center gap-2 text-slate-400">
-              <div className="flex items-center rounded-lg border border-slate-300 px-4 py-3">
-                <input
-                  type="date"
-                  aria-label="startDate"
-                  value={startDate}
-                  max={endDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-transparent text-xs outline-none lg:text-sm"
-                />
-              </div>
-              <span>-</span>
-              <div className="flex items-center rounded-lg border border-slate-300 px-4 py-3">
-                <input
-                  type="date"
-                  aria-label="endDate"
-                  value={endDate}
-                  min={startDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-transparent text-xs outline-none lg:text-sm"
-                />
-              </div>
-            </div>
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              setStartDate={setStartDate}
+              setEndDate={setEndDate}
+              className="flex items-center justify-center gap-2 text-slate-400"
+            />
 
             {/* Info: (20260428 - Julian) Sort Options */}
             {sortButton}
@@ -266,6 +251,7 @@ export default function ThreadSection() {
             <p className="ml-auto text-xs text-gray-500">
               {t("ai_consultation_room.total_threads", { count: totalItems })}
             </p>
+            
           </div>
         </div>
       </div>

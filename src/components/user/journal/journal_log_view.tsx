@@ -6,38 +6,17 @@ import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { timestampToString } from "@/lib/utils/common";
 import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
-
-interface IAuditLog {
-  id: string;
-  createdAt: string;
-  action: AuditLogAction;
-  dataType: string;
-  dataId: string;
-  user: {
-    id: string;
-    name: string | null;
-    address: string;
-  };
-}
+import { IAuditLog } from "@/interfaces/audit_log";
+import DateRangePicker from "@/components/common/date_range_picker";
+import Pagination from "@/components/common/pagination";
 
 const LogItem = ({ log }: { log: IAuditLog }) => {
   const { t } = useTranslation();
-  const createdAtTimestamp = new Date(log.createdAt).getTime() / 1000;
-  const formattedDate = timestampToString(createdAtTimestamp).dateAndTime;
-  const formattedDateSplit = formattedDate.split(" ");
-
-  const dateStrForDesktop = (
-    <p className="hidden text-sm sm:block">{formattedDate}</p>
-  );
-  const dateStrForMobile = (
-    <div className="flex flex-col items-center text-xs sm:hidden">
-      <span>{formattedDateSplit[0]}</span>
-      <span>{formattedDateSplit[1]}</span>
-    </div>
-  );
+  const formattedDate = timestampToString(log.createdAt).dateWithDash;
+  const formattedTime = timestampToString(log.createdAt).time;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -98,7 +77,7 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
   return (
     <tr className="border-b border-gray-100 odd:bg-white even:bg-slate-50">
       {/* Info: (20260409 - Julian) 異動項目(Desktop) */}
-      <td className="hidden px-3 py-4 sm:table-cell sm:px-6">
+      <td className="hidden px-2.5 py-4 sm:table-cell sm:px-4">
         <span
           className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap uppercase sm:text-sm ${getDataTypeColor(
             log.dataType,
@@ -108,7 +87,7 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
         </span>
       </td>
       {/* Info: (20260409 - Julian) 動作(Desktop) */}
-      <td className="hidden px-3 py-4 sm:table-cell sm:px-6">
+      <td className="hidden px-2.5 py-4 sm:table-cell sm:px-4">
         <span
           className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap sm:text-sm ${getActionColor(
             log.action,
@@ -120,9 +99,9 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
       {/* Info: (20260409 - Julian) 異動項目 / 動作(Mobile) */}
       <td
         aria-label={`${t("journal.log_view.type")} / ${t("journal.log_view.action_type")}`}
-        className="table-cell px-3 py-4 sm:hidden sm:px-6"
+        className="table-cell px-2.5 py-4 sm:hidden sm:px-4"
       >
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-x-2 gap-y-1">
           <span
             className={`inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap uppercase sm:text-sm ${getDataTypeColor(
               log.dataType,
@@ -139,11 +118,16 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
           </span>
         </div>
       </td>
-      <td className="px-3 py-4 text-xs font-medium text-gray-900 sm:px-6 sm:text-sm">
-        {dateStrForDesktop}
-        {dateStrForMobile}
+      <td
+        aria-label={t("journal.log_view.record_time")}
+        className="px-2.5 py-4 text-xs font-medium text-gray-900 sm:px-4 sm:text-sm"
+      >
+        <div className="flex flex-col items-start gap-x-1 text-xs sm:flex-col">
+          <span>{formattedDate}</span>
+          <span>{formattedTime}</span>
+        </div>
       </td>
-      <td className="px-3 py-4 sm:px-6">
+      <td className="px-2.5 py-4 sm:px-4">
         <div className="flex flex-col items-start">
           <span className="font-medium text-gray-800">
             {log.user.name || t("journal.log_view.unnamed_user")}
@@ -157,19 +141,19 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
             title={t("journal.log_view.copy_address", {
               address: log.user.address,
             })}
-            className="font-mono text-[10px] break-all text-slate-500 hover:text-orange-600 sm:text-sm"
+            className="text-[10px] break-all text-slate-500 hover:text-orange-600 sm:text-xs"
           >
             {log.user.address}
           </button>
         </div>
       </td>
-      <td className="px-3 py-4 font-mono text-xs text-slate-500 sm:px-6">
+      <td className="px-2.5 py-4 text-xs text-slate-500 sm:px-4">
         <button
           type="button"
           onClick={() => copyToClipboard(log.dataId)}
           aria-label={t("journal.log_view.copy_id", { id: log.dataId })}
           title={t("journal.log_view.copy_id", { id: log.dataId })}
-          className="rounded bg-gray-100 px-2 py-1 font-mono text-[10px] break-all hover:bg-gray-200 sm:text-sm"
+          className="rounded bg-gray-100 px-2 py-1 text-[10px] break-all hover:bg-gray-200 sm:text-xs"
         >
           {log.dataId}
         </button>
@@ -177,6 +161,8 @@ const LogItem = ({ log }: { log: IAuditLog }) => {
     </tr>
   );
 };
+
+const PAGE_SIZE = 20;
 
 export default function JournalLogView() {
   const { t } = useTranslation();
@@ -188,13 +174,20 @@ export default function JournalLogView() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+
+  const [keyword, setKeyword] = useState<string>("");
+  const [actionType, setActionType] = useState<string>("");
   const [dataType, setDataType] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
     const fetchLogs = async () => {
       setIsLoading(true);
       try {
         const queryParams = new URLSearchParams();
+        queryParams.append("page", currentPage.toString());
+        queryParams.append("limit", PAGE_SIZE.toString());
         if (startDate) {
           queryParams.append("startDate", new Date(startDate).toISOString());
         }
@@ -203,15 +196,29 @@ export default function JournalLogView() {
           endDay.setHours(23, 59, 59, 999);
           queryParams.append("endDate", endDay.toISOString());
         }
+        if (keyword) {
+          queryParams.append("keyword", keyword);
+        }
+        if (actionType) {
+          queryParams.append("actionType", actionType);
+        }
         if (dataType) {
           queryParams.append("dataType", dataType);
         }
         const qs = queryParams.toString();
         const url = `/api/v1/user/account_book/${accountBookId}/audit_log${qs ? `?${qs}` : ""}`;
 
-        const data = await request<IApiResponse<{ logs: IAuditLog[] }>>(url);
-        if (data.code === ApiCode.SUCCESS && data.payload?.logs) {
+        const data =
+          await request<
+            IApiResponse<{
+              logs: IAuditLog[];
+              totalItems: number;
+              totalPages: number;
+            }>
+          >(url);
+        if (data.code === ApiCode.SUCCESS && data.payload) {
           setLogs(data.payload.logs);
+          setTotalPages(data.payload.totalPages || 1);
         }
       } catch (error) {
         console.error("Failed to fetch logs", error);
@@ -221,25 +228,51 @@ export default function JournalLogView() {
     };
 
     fetchLogs();
-  }, [startDate, endDate, dataType, accountBookId]);
+  }, [
+    startDate,
+    endDate,
+    keyword,
+    actionType,
+    dataType,
+    accountBookId,
+    currentPage,
+  ]);
 
   return (
     <div className="flex w-full max-w-full min-w-0 flex-col gap-4">
-      <div className="flex flex-col items-center justify-between gap-2 lg:flex-row">
-        {/* Info: (20260407 - Julian) Title */}
-        <h2 className="font-sans text-xl font-semibold text-gray-800">
-          {t("journal.log_view.title")}
-        </h2>
+      {/* Info: (20260407 - Julian) Title */}
+      <h2 className="font-sans text-xl font-semibold text-gray-800">
+        {t("journal.log_view.title")}
+      </h2>
+      {/* Info: (20260407 - Julian) Filter */}
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start sm:gap-4 lg:flex-row">
+        {/* Info: (20260429 - Julian) Search bar */}
+        <div className="flex w-full items-center gap-2 rounded-lg border border-slate-300 bg-white px-2 py-2 text-slate-400 sm:w-auto sm:flex-1 sm:px-4">
+          <Search size={24} />
+          <input
+            type="text"
+            placeholder={t("journal.log_view.search_placeholder")}
+            aria-label={t("journal.log_view.search_placeholder")}
+            value={keyword}
+            onChange={(e) => {
+              setKeyword(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400 sm:text-sm"
+          />
+        </div>
 
-        {/* Info: (20260407 - Julian) Filter */}
-        <div className="flex flex-col items-center gap-x-8 gap-y-4 sm:flex-row sm:p-4">
-          {/* Info: (20260407 - Julian) Type Filter */}
+        {/* Info: (20260407 - Julian) Type Filter */}
+        <div className="flex items-center gap-2">
           <select
             value={dataType}
-            onChange={(e) => setDataType(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+            onChange={(e) => {
+              setDataType(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none sm:px-4 sm:text-sm"
           >
-            <option value="">{t("common.all")}</option>
+            <option value="">{t("journal.log_view.filter_all_data")}</option>
             <option value={AuditLogDataType.JOURNAL}>
               {t("verify.type.journal")}
             </option>
@@ -250,30 +283,34 @@ export default function JournalLogView() {
               {t("verify.type.esg")}
             </option>
           </select>
-
-          {/* Info: (20260407 - Julian) Date Picker */}
-          <div className="flex w-full items-center gap-2 lg:w-auto">
-            <div className="flex w-full items-center gap-2 text-sm">
-              <input
-                type="date"
-                aria-label="Start Date"
-                value={startDate}
-                max={endDate || undefined}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-              />
-              <span className="text-gray-400">-</span>
-              <input
-                type="date"
-                aria-label="End Date"
-                value={endDate}
-                min={startDate || undefined}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-              />
-            </div>
-          </div>
+          <select
+            value={actionType}
+            onChange={(e) => {
+              setActionType(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-orange-500 focus:outline-none sm:px-4 sm:text-sm"
+          >
+            <option value="">{t("journal.log_view.filter_all_actions")}</option>
+            <option value={AuditLogAction.CREATE}>{t("journal.log_view.action_create")}</option>
+            <option value={AuditLogAction.UPDATE}>{t("journal.log_view.action_update")}</option>
+            <option value={AuditLogAction.DELETE}>{t("journal.log_view.action_delete")}</option>
+          </select>
         </div>
+
+        {/* Info: (20260429 - Julian) Date Picker */}
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          setStartDate={(val) => {
+            setStartDate(val);
+            setCurrentPage(1);
+          }}
+          setEndDate={(val) => {
+            setEndDate(val);
+            setCurrentPage(1);
+          }}
+        />
       </div>
 
       {/* Info: (20260407 - Julian) Log Table */}
@@ -284,32 +321,32 @@ export default function JournalLogView() {
               {/* Info: (20260409 - Julian) 異動項目(Desktop) */}
               <th
                 scope="col"
-                className="hidden px-3 py-4 sm:table-cell sm:px-6"
+                className="hidden px-2.5 py-4 whitespace-nowrap sm:table-cell sm:px-4"
               >
                 {t("journal.log_view.type")}
               </th>
               {/* Info: (20260409 - Julian) 動作(Desktop) */}
               <th
                 scope="col"
-                className="hidden px-3 py-4 sm:table-cell sm:px-6"
+                className="hidden px-2.5 py-4 whitespace-nowrap sm:table-cell sm:px-4"
               >
                 {t("journal.log_view.action_type")}
               </th>
               {/* Info: (20260409 - Julian) 異動項目 / 動作(Mobile) */}
               <th
                 scope="col"
-                className="table-cell px-3 py-4 sm:hidden sm:px-6"
+                className="table-cell px-2.5 py-4 sm:hidden sm:px-4"
               >
                 {t("journal.log_view.type")} /{" "}
                 {t("journal.log_view.action_type")}
               </th>
-              <th scope="col" className="px-3 py-4 sm:px-6">
+              <th scope="col" className="px-2.5 py-4 whitespace-nowrap sm:px-4">
                 {t("journal.log_view.record_time")}
               </th>
-              <th scope="col" className="px-3 py-4 sm:px-6">
+              <th scope="col" className="px-2.5 py-4 whitespace-nowrap sm:px-4">
                 {t("journal.log_view.operator")}
               </th>
-              <th scope="col" className="px-3 py-4 sm:px-6">
+              <th scope="col" className="px-2.5 py-4 whitespace-nowrap sm:px-4">
                 {t("journal.log_view.journal_id")}
               </th>
             </tr>
@@ -338,6 +375,15 @@ export default function JournalLogView() {
           </tbody>
         </table>
       </div>
+
+      {/* Info: (20260429 - Julian) Pagination */}
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
+      )}
     </div>
   );
 }

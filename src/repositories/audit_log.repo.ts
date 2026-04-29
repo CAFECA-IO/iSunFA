@@ -17,6 +17,10 @@ export class AuditLogRepository {
       }>[]
     >;
   }
+
+  async countAuditLogs(where: Prisma.AuditLogWhereInput) {
+    return prisma.auditLog.count({ where });
+  }
 }
 
 export const auditLogRepo = new AuditLogRepository();

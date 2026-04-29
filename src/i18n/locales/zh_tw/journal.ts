@@ -31,5 +31,8 @@ export const journal = {
     unnamed_user: "未命名使用者",
     copy_address: "點擊複製地址: {{address}}",
     copy_id: "點擊複製憑證 ID: {{id}}",
+    filter_all_data: "全部資料",
+    filter_all_actions: "全部動作",
+    search_placeholder: "搜尋 ID、操作人員名稱...",
   },
 };

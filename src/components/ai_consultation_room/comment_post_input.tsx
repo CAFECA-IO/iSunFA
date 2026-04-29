@@ -81,7 +81,7 @@ export const CommentPostInput = ({
     <button
       onClick={handleSubmit}
       disabled={!value.trim() || isSubmitting}
-      className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 font-bold text-white shadow-md shadow-orange-200 transition-all active:scale-95 enabled:hover:bg-orange-500 disabled:opacity-50 disabled:active:scale-100"
+      className="flex items-center gap-2 rounded-xl bg-orange-600 px-3 py-2.5 text-sm font-bold text-white shadow-md shadow-orange-200 transition-all active:scale-95 enabled:hover:bg-orange-500 disabled:opacity-50 disabled:active:scale-100 lg:px-5 lg:text-base"
     >
       {isSubmitting ? (
         <Loader2 size={16} className="animate-spin" />
@@ -98,11 +98,11 @@ export const CommentPostInput = ({
     <div
       className={`overflow-hidden transition-all duration-300 ${isShowInput ? "mb-6 max-h-60 opacity-100" : "mb-0 max-h-0 opacity-0"}`}
     >
-      <div className="flex gap-4 rounded-4xl border border-orange-100 bg-orange-50/50 p-6 shadow-inner">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-orange-50 bg-white text-orange-200 shadow-sm">
-          <User size={24} />
+      <div className="flex gap-4 rounded-4xl border border-orange-100 bg-orange-50/50 p-4 shadow-inner lg:p-6">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-xl border border-orange-50 bg-white text-orange-200 shadow-sm lg:size-12 lg:rounded-2xl">
+          <User className="size-4 shrink-0 lg:size-6" />
         </div>
-        <div className="flex-1 space-y-3">
+        <div className="flex-1 space-y-2">
           <textarea
             id="ai-comment-input"
             aria-label={t("ai_consultation_room.submit_comment")}

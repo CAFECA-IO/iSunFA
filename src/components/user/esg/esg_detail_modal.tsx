@@ -7,6 +7,7 @@ import {
   ChartColumnDecreasing,
   CheckCircle2,
   ChevronDown,
+  Factory,
   Leaf,
   Save,
   X,
@@ -20,6 +21,7 @@ import FilePreviewModal from "@/components/common/file_preview_modal";
 import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
 import CoefficientSelectModal from "@/components/user/esg/coefficient_select_modal";
+import EmissionSourceSelectModal from "@/components/user/esg/emission_source_select_modal";
 import {
   EsgActivityTypeMapping,
   EsgActivityTypeKey,
@@ -58,6 +60,8 @@ export default function EsgDetailModal({
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
 
   const [isCoefficientSelectorOpen, setIsCoefficientSelectorOpen] =
+    useState<boolean>(false);
+  const [isEmissionSourceSelectorOpen, setIsEmissionSourceSelectorOpen] =
     useState<boolean>(false);
 
   useEffect(() => {
@@ -177,7 +181,7 @@ export default function EsgDetailModal({
   if (esgId && (!formData || isLoading)) {
     return (
       <div className="flex h-full min-h-[50vh] flex-col items-center justify-center p-10 text-slate-400">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
+        <div className="size-6 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
       </div>
     );
   }
@@ -244,7 +248,7 @@ export default function EsgDetailModal({
   };
 
   const EsgContent = (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-[#F8FAFC]">
+    <div className="flex size-full flex-col overflow-hidden bg-[#F8FAFC]">
       {/* Info: (20260326 - Julian) Body */}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-[10px]">
         <div className="flex shrink-0 flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
@@ -438,7 +442,7 @@ export default function EsgDetailModal({
               </div>
 
               {/* Info: (20260415 - Julian) 計算公式與係數 */}
-              <div className="col-span-2">
+              <div className="lg:col-span-2">
                 <div className="mb-1.5 flex items-center gap-2 text-sm font-bold">
                   <Calculator size={16} className="text-orange-400" />
                   <p className="text-slate-500">
@@ -530,6 +534,43 @@ export default function EsgDetailModal({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Info: (20260429 - Julian) 排放源歸口 */}
+          <div className="col-span-2">
+            <div className="mb-1.5 flex items-center gap-2 text-sm font-bold">
+              <Factory size={16} className="text-orange-400" />
+              <p className="text-slate-500">
+                {t("esg_verify.emissions.emission_source")}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsEmissionSourceSelectorOpen(true)}
+              className={`${formData.emissionSource?.id ? "border-orange-300" : "border-slate-300"} group flex w-full items-center justify-between rounded-xl border bg-white p-4 transition-all duration-200 ease-in-out hover:border-orange-300`}
+            >
+              <div className="flex items-center gap-4">
+                <div className="rounded-lg bg-gray-100 p-2 shadow-sm">
+                  <Factory size={20} className="text-slate-700" />
+                </div>
+                <div className="flex flex-col items-start font-semibold">
+                  <p
+                    className={`${formData.emissionSource?.id ? "text-orange-400" : "text-gray-400"} text-xs`}
+                  >
+                    {t("esg_verify.emissions.select_emission_source")}
+                  </p>
+                  <p className="text-sm text-slate-700 transition-all duration-200 ease-in-out group-hover:text-orange-400">
+                    {formData.emissionSource
+                      ? formData.emissionSource.name
+                      : formData.emissionSourceTag ||
+                        t("esg_verify.emissions.no_emission_source_selected")}
+                  </p>
+                </div>
+              </div>
+              <div className="text-slate-500 transition-all duration-200 ease-in-out group-hover:text-orange-500">
+                <ChevronDown size={16} />
+              </div>
+            </button>
           </div>
         </div>
       </div>
@@ -641,6 +682,18 @@ export default function EsgDetailModal({
         unit={formData.unit}
         selectCoefficient={(coef) => {
           setFormData({ ...formData, coefficient: coef });
+        }}
+      />
+
+      <EmissionSourceSelectModal
+        isOpen={isEmissionSourceSelectorOpen}
+        onClose={() => setIsEmissionSourceSelectorOpen(false)}
+        selectEmissionSource={(source) => {
+          setFormData({
+            ...formData,
+            emissionSource: source,
+            emissionSourceTag: source.name,
+          });
         }}
       />
     </>

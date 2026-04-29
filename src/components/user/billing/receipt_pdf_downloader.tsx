@@ -5,7 +5,7 @@ import { useState, useRef, MouseEvent } from 'react';
 import { Download, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
 import { formatDate } from '@/lib/utils/date';
-import QRCode from 'react-qr-code';
+import { QRCodeSVG } from 'qrcode.react';
 import Barcode from 'react-barcode';
 import Image from 'next/image';
 
@@ -232,8 +232,8 @@ export default function ReceiptPdfDownloader({
 
             {/* Info: (20260410 - Luphia) 2D Barcodes: Two horizonal */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-              <QRCode value={qr1} size={65} level="M" />
-              <QRCode value={qr2} size={65} level="M" />
+              <QRCodeSVG value={qr1} size={65} level="M" />
+              <QRCodeSVG value={qr2} size={65} level="M" />
             </div>
           </div>
 

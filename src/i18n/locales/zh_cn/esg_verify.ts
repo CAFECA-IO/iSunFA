@@ -30,6 +30,9 @@ export const esgVerify = {
     total: "总排放量",
     intensity: "排放强度分级",
     coefficient: "排放系数",
+    emission_source: "排放源归口",
+    select_emission_source: "选择排放源归口",
+    no_emission_source_selected: "尚未选择排放源",
   },
   messages: {
     fetch_error: "获取凭证失败",

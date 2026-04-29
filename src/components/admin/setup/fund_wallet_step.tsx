@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import QRCode from "react-qr-code";
+import { QRCodeSVG } from "qrcode.react";
 import { Loader2, ExternalLink } from "lucide-react";
 import { StepCard } from "@/components/admin/setup/step_card";
 import { IStepProps, StepStatus } from "@/components/admin/setup/setup_types";
@@ -206,7 +206,7 @@ export function SetupFundWallet({ isActive, isCompleted, onNext, onReset }: ISte
 
             <div className="flex-grow flex items-center justify-center pb-4">
               <div className="bg-white p-3 border border-gray-100 rounded-xl inline-block">
-                <QRCode value={walletInfo.address} size={200} level="H" />
+                <QRCodeSVG value={walletInfo.address} size={200} level="H" />
               </div>
             </div>
 
