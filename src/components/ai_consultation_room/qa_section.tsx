@@ -190,42 +190,38 @@ export default function QaSection() {
 
   // Info: (20260427 - Julian) 只在取得完整回答以後才顯示工具列
   const toolbar = !isPolling && data.answer !== "-" && (
-    <footer className="mt-10 flex flex-wrap items-center justify-between gap-6 border-t border-orange-200/50 pt-8">
-      <div className="flex items-center gap-4">
+    <footer className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-orange-200/50 pt-4 lg:mt-10 lg:justify-between lg:pt-8">
+      <div className="flex items-center gap-2 lg:gap-4">
         <button
           onClick={() => handleReaction("LIKE")}
           disabled={!user}
           title={!user ? t("ai_consultation_room.login_to_react") : ""}
-          className={`flex items-center gap-2 rounded-2xl border px-5 py-2.5 font-bold text-orange-500 transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+          className={`flex items-center gap-2 rounded-2xl border px-3 py-2.5 text-sm font-bold text-orange-500 transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 lg:px-5 lg:text-base ${
             userReaction === "LIKE"
               ? "border-transparent bg-orange-600 text-white"
               : "border-orange-200 bg-white enabled:hover:bg-orange-50"
           }`}
         >
-          <ThumbsUp size={18} />
+          <ThumbsUp size={18} className="shrink-0" />
           <span>
-            {t("ai_consultation_room.agree_count").replace(
-              "{count}",
-              data.countOfLike.toString(),
-            )}
+            {t("ai_consultation_room.agree_count", { count: data.countOfLike })}
           </span>
         </button>
         <button
           onClick={() => handleReaction("DISLIKE")}
           disabled={!user}
           title={!user ? t("ai_consultation_room.login_to_react") : ""}
-          className={`flex items-center gap-2 rounded-2xl border px-5 py-2.5 font-bold text-orange-500 transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+          className={`flex items-center gap-2 rounded-2xl border px-3 py-2.5 text-sm font-bold text-orange-500 transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 lg:px-5 lg:text-base ${
             userReaction === "DISLIKE"
               ? "border-transparent bg-orange-600 text-white"
               : "border-orange-200 bg-white enabled:hover:bg-orange-50"
           }`}
         >
-          <ThumbsDown size={18} />
+          <ThumbsDown size={18} className="shrink-0" />
           <span>
-            {t("ai_consultation_room.disagree_count").replace(
-              "{count}",
-              data.countOfDislike.toString(),
-            )}
+            {t("ai_consultation_room.disagree_count", {
+              count: data.countOfDislike,
+            })}
           </span>
         </button>
       </div>
@@ -234,7 +230,7 @@ export default function QaSection() {
         <button
           onClick={handleShare}
           disabled={isSharing || isPolling || !data}
-          className="flex items-center gap-2 rounded-2xl border border-orange-200 bg-white px-5 py-2.5 font-bold text-orange-600 transition-all hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-2 rounded-2xl border border-orange-200 bg-white px-3 py-2.5 text-xs font-bold text-orange-600 transition-all hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50 lg:px-5 lg:text-base"
         >
           {isSharing ? (
             <Loader2 size={18} className="animate-spin" />
@@ -285,9 +281,9 @@ export default function QaSection() {
   );
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
+    <main className="mx-auto max-w-4xl p-4 lg:px-6 lg:py-12">
       {/* Info: (20260206 - Julian) Navigation / Breadcrumbs */}
-      <nav className="mb-10">
+      <nav className="mb-4 lg:mb-10">
         <Link
           href={homePagePath}
           className="group flex items-center gap-2 text-gray-500 transition-colors hover:text-orange-500"
@@ -302,26 +298,28 @@ export default function QaSection() {
       </nav>
 
       {/* Info: (20260206 - Julian) 1. 問題區塊 */}
-      <article className="space-y-12">
-        <header className="flex flex-wrap items-center gap-3 text-sm">
+      <article className="space-y-6 lg:space-y-12">
+        <header className="flex flex-wrap items-center gap-3 text-xs lg:text-sm">
           <div className="flex gap-2">{tags}</div>
-          <div className="flex items-center gap-1.5 text-gray-400">
-            <Clock size={16} />
-            <span>
-              {t("ai_consultation_room.published_at")} {dateWithDash}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 text-gray-400">
-            <User size={16} />
-            <span>{data.authorName}</span>
+          <div className="flex gap-2">
+            <div className="flex items-center gap-1.5 text-gray-400">
+              <Clock size={16} />
+              <span>
+                {t("ai_consultation_room.published_at")} {dateWithDash}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 text-gray-400">
+              <User size={16} />
+              <span>{data.authorName}</span>
+            </div>
           </div>
         </header>
 
-        <div className="relative rounded-3xl border border-gray-100 bg-gray-50 p-8 italic">
-          <span className="absolute -top-4 left-6 rounded-full border border-gray-100 bg-white px-3 py-1 text-xs font-bold text-gray-400">
+        <div className="relative rounded-3xl border border-gray-100 bg-gray-50 px-6 py-4 italic lg:p-8">
+          <span className="absolute -top-4 left-6 rounded-full border border-gray-100 bg-white px-3 py-1 text-[10px] font-bold text-gray-400 lg:text-xs">
             {t("ai_consultation_room.original_question")}
           </span>
-          <p className="text-lg leading-relaxed text-gray-700">
+          <p className="text-sm leading-relaxed text-gray-700 lg:text-lg">
             {data.question}
           </p>
 
@@ -337,27 +335,27 @@ export default function QaSection() {
       </article>
 
       {/* Info: (20260427 - Julian) ==== 分隔線 ==== */}
-      <div className="relative py-12">
+      <div className="relative py-4 lg:py-12">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <div className="w-full border-t border-gray-100"></div>
         </div>
         <div className="relative flex justify-center">
-          <span className="flex items-center gap-2 bg-white px-4 text-sm text-gray-300">
+          <span className="flex items-center gap-2 bg-white px-4 text-[10px] text-gray-300 lg:text-sm">
             <Sparkles size={16} /> {t("ai_consultation_room.ai_result")}
           </span>
         </div>
       </div>
 
       {/* Info: (20260206 - Julian) 2. AI 回覆區塊 */}
-      <section className="relative overflow-hidden rounded-[2.5rem] border border-orange-100 bg-linear-to-br from-orange-50 to-amber-50 p-10 shadow-sm">
+      <section className="relative overflow-hidden rounded-[2.5rem] border border-orange-100 bg-linear-to-br from-orange-50 to-amber-50 px-6 py-4 shadow-sm lg:p-10">
         {/* Info: (20260206 - Julian) 裝飾用的 Sparkles */}
         <div className="pointer-events-none absolute top-0 right-0 p-8 opacity-5">
           <Sparkles size={180} className="text-orange-600" />
         </div>
         {/* Info: (20260427 - Julian) 回答標題 */}
         <header className="mb-8 flex items-center gap-4">
-          <div className="flex size-14 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-lg shadow-orange-200">
-            <Sparkles size={32} />
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-600 text-white shadow-lg shadow-orange-200 lg:size-14 lg:rounded-2xl">
+            <Sparkles className="size-[24px] lg:size-[32px]" />
           </div>
           <div>
             <h2 className="text-xl font-extrabold text-orange-900">
