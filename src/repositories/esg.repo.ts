@@ -63,7 +63,7 @@ export interface IEsgRepository {
     id: string,
     data: Prisma.CoefficientUpdateInput,
   ): Promise<Coefficient | null>;
-  deleteEsgCoefficient(id: string): Promise<Coefficient | null>;
+  deleteEsgCoefficient(id: string): Promise<{ id: string } | null>;
   getEsgCoefficients(args: Prisma.CoefficientFindManyArgs): Promise<Coefficient[]>;
   getEsgEmissionSources(
     accountBookId: string,
@@ -89,6 +89,7 @@ export interface IEsgRepository {
     id: string,
     data: Prisma.EmissionSourceUpdateInput,
   ): Promise<IEmissionSources | null>;
+  deleteEsgEmissionSources(id: string): Promise<{ id: string } | null>;
 }
 
 export class EsgRepository implements IEsgRepository {
@@ -467,10 +468,15 @@ export class EsgRepository implements IEsgRepository {
     });
   }
 
-  async deleteEsgCoefficient(id: string) {
-    return prisma.coefficient.delete({
+  async deleteEsgCoefficient(id: string): Promise<{ id: string } | null> {
+    const deletedCoefficient = await prisma.coefficient.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
+
+    if (!deletedCoefficient) return null;
+
+    return { id: deletedCoefficient.id };
   }
 
   async getEsgEmissionSources(
@@ -724,6 +730,17 @@ export class EsgRepository implements IEsgRepository {
       address: updatedSource.address ?? undefined,
       intensity,
     };
+  }
+
+  async deleteEsgEmissionSources(id: string): Promise<{ id: string } | null> {
+    const deletedSource = await prisma.emissionSource.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+
+    if (!deletedSource) return null;
+
+    return { id: deletedSource.id };
   }
 }
 

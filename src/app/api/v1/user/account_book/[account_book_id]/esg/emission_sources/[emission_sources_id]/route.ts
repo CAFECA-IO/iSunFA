@@ -112,3 +112,45 @@ export async function PUT(
     return jsonFail({ code: "IN000099", message: "Failed to update emission sources", status: ApiCode.INTERNAL_SERVER_ERROR });
   }
 }
+
+/**
+ * Info: (20260430 - Julian) 刪除單一排放源
+ * DELETE /api/v1/user/account_book/:account_book_id/esg/emission_sources/:emission_sources_id
+ */
+export async function DELETE(
+  request: NextRequest,
+  {
+    params,
+  }: { params: Promise<{ account_book_id: string; emission_sources_id: string }> },
+) {
+  try {
+    const authHeader = request.headers.get("Authorization");
+    const sessionUser = await getIdentityFromDeWT(authHeader);
+
+    if (!sessionUser) {
+      console.error("User not found");
+      return jsonFail(API_ERRORS.NF_USER);
+    }
+
+    const { account_book_id: accountBookId, emission_sources_id: emissionSourcesId } =
+      await params;
+    const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
+
+    if (!accountBook) {
+      console.error("Accountbook not found");
+      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
+    }
+
+    const deletedEmissionSources = await esgRepo.deleteEsgEmissionSources(emissionSourcesId);
+
+    if (!deletedEmissionSources) {
+      console.error("Emission sources not found");
+      return jsonFail(API_ERRORS.NF_ESG);
+    }
+
+    return jsonOk({ deletedEmissionSourcesId: deletedEmissionSources.id });
+  } catch (error) {
+    console.error("Delete emission sources failed", error);
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
+  }
+}
