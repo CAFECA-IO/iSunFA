@@ -750,3 +750,25 @@ model Airport {
   @@index([size])
   @@map("airports")
 }
+
+// ==========================================================
+// Info: (20260430 - Tzuhan) 物流碳排引擎：快取機制 (Logistics Cache)
+// ==========================================================
+model LogisticsCache {
+  id        String   @id @default(uuid())
+  originLat Float    @map("origin_lat")
+  originLng Float    @map("origin_lng")
+  destLat   Float    @map("dest_lat")
+  destLng   Float    @map("dest_lng")
+  weightKg  Float    @map("weight_kg")
+  
+  // Info: (20260430 - Tzuhan) 將完整的 ILogisticsPlan (包含 GeoJSON) 快取起來
+  planData  Json     @map("plan_data")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Info: (20260430 - Tzuhan) 建立複合索引以加速查詢
+  @@index([originLat, originLng, destLat, destLng, weightKg])
+  @@map("logistics_cache")
+}

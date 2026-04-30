@@ -3,7 +3,9 @@
 import { getNearestPort, getNearestAirport, INearestPortResult } from '@/lib/actions/logistics';
 import type { Geometry } from 'geojson';
 import searoute from 'searoute-js';
-import { prisma } from "@/lib/prisma";
+import { logisticsRepo } from "@/repositories/logistics.repo";
+import { esgRepo } from "@/repositories/esg.repo";
+// import { Prisma } from "@/generated/client";
 
 export interface ITransportSegment {
     success: boolean;
@@ -191,6 +193,14 @@ export async function calculateLogisticsPlan(
     weightKg: number = 1000
 ): Promise<ILogisticsPlan> {
     try {
+        // Info: (20260430 - Tzuhan) 檢查資料庫快取，避免重複呼叫 OSRM 與重新繪製路徑
+        const cachedPlan = await logisticsRepo.getCachedPlan(originLat, originLng, destLat, destLng, weightKg);
+
+        if (cachedPlan && cachedPlan.planData) {
+            console.log("[Logistics] Cache hit! Returning cached logistics plan.");
+            return cachedPlan.planData as unknown as ILogisticsPlan;
+        }
+
         const [exportPort, importPort, exportAirport, importAirport] = await Promise.all([
             getNearestPort(originLat, originLng),
             getNearestPort(destLat, destLng),
@@ -203,9 +213,12 @@ export async function calculateLogisticsPlan(
         }
 
         // Info: (20260430 - Tzuhan) 取得 DB 中碳排係數
-        const coeffSea = await prisma.coefficient.findFirst({ where: { name: 'SEA', accountBookId: null } });
-        const coeffAir = await prisma.coefficient.findFirst({ where: { name: 'AIR', accountBookId: null } });
-        const coeffLand = await prisma.coefficient.findFirst({ where: { name: 'LAND', accountBookId: null } });
+        const coefficients = await esgRepo.getEsgCoefficients({
+            where: { name: { in: ['SEA', 'AIR', 'LAND'] }, accountBookId: null }
+        });
+        const coeffSea = coefficients.find(c => c.name === 'SEA');
+        const coeffAir = coefficients.find(c => c.name === 'AIR');
+        const coeffLand = coefficients.find(c => c.name === 'LAND');
 
         const factors = {
             SEA: coeffSea ? Number(coeffSea.emissionFactor) : 0.01045,
@@ -276,7 +289,7 @@ export async function calculateLogisticsPlan(
         }
         airPlan.total_co2eKg = airCo2e;
 
-        return {
+        const finalPlan: ILogisticsPlan = {
             exportPort,
             importPort,
             exportAirport,
@@ -290,6 +303,18 @@ export async function calculateLogisticsPlan(
                 }
             }
         };
+
+        // Info: (20260430 - Tzuhan) 將算出的結果非同步寫入快取 (不阻塞回傳)
+        logisticsRepo.saveCachedPlan({
+            originLat,
+            originLng,
+            destLat,
+            destLng,
+            weightKg,
+            planData: JSON.parse(JSON.stringify(finalPlan))
+        }).catch(err => console.error("[Logistics] Failed to write cache:", err));
+
+        return finalPlan;
 
     } catch (error) {
         console.error("[Action Error] calculateILogisticsPlan:", error);

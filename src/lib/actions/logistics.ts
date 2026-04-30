@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from "@/lib/prisma";
+import { logisticsRepo } from "@/repositories/logistics.repo";
 
 export interface INearestPortResult {
   id: string;
@@ -29,9 +29,7 @@ export async function getNearestPort(lat: number, lng: number): Promise<INearest
   try {
     if (isNaN(lat) || isNaN(lng)) throw new Error("Invalid coordinates provided.");
 
-    const ports = await prisma.seaport.findMany({
-      where: { size: { in: ['Large', 'Medium'] } }
-    });
+    const ports = await logisticsRepo.getSeaports(['Large', 'Medium']);
 
     if (ports.length === 0) return null;
 
@@ -60,9 +58,7 @@ export async function getNearestAirport(lat: number, lng: number): Promise<INear
   try {
     if (isNaN(lat) || isNaN(lng)) throw new Error("Invalid coordinates provided.");
 
-    const airports = await prisma.airport.findMany({
-      where: { size: { in: ['large_airport', 'medium_airport', 'Large', 'Medium'] } }
-    });
+    const airports = await logisticsRepo.getAirports(['large_airport', 'medium_airport']);
 
     if (airports.length === 0) return null;
 
