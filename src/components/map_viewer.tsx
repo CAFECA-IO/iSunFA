@@ -86,6 +86,7 @@ export default function MapViewer({ routeGeojson = null, focusGeojson = null, cl
                 ref={mapRef}
                 // @ts-expect-error: Required for html2canvas to capture WebGL context, types might be missing in react-map-gl
                 preserveDrawingBuffer={true}
+                renderWorldCopies={false}
                 initialViewState={initialBbox ? {
                     bounds: initialBbox,
                     fitBoundsOptions: { padding: fitBoundsPadding }

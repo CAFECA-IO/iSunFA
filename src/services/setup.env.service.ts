@@ -84,6 +84,7 @@ export async function saveExternalConfig(config: {
   appUrl: string;
   gaId: string;
   geminiKey: string;
+  maptilerKey: string;
   oenToken: string;
   oenMerchant: string;
 }): Promise<{ success: boolean; error?: string }> {
@@ -109,6 +110,12 @@ export async function saveExternalConfig(config: {
         content,
         "GEMINI_API_KEY",
         `"${config.geminiKey}"`,
+      );
+    if (config.maptilerKey)
+      content = updateOrAppendEnv(
+        content,
+        "NEXT_PUBLIC_MAPTILER_KEY",
+        `"${config.maptilerKey}"`,
       );
     if (config.oenToken)
       content = updateOrAppendEnv(
@@ -147,6 +154,7 @@ export async function getExternalConfig() {
           appUrl: config.NEXT_PUBLIC_APP_URL || "https://isunfa.localhost",
           gaId: config.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-ZNVVW7JP0N",
           geminiKey: config.GEMINI_API_KEY || "",
+          maptilerKey: config.NEXT_PUBLIC_MAPTILER_KEY || "",
           oenToken: config.OEN_ACCESS_TOKEN || "",
           oenMerchant: config.OEN_MERCHANT_ID || "mermer",
         },
