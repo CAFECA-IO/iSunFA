@@ -57,6 +57,8 @@ const tslintConfigs = [
       'tailwind.config.ts',
       'postcss.config.mjs',
       'jest.*.ts',
+      'src/generated',
+      'src/types',
     ],
   },
 

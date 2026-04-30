@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated"
+  provider        = "prisma-client-js"
+  output          = "../src/generated"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [postgis]
 }
 
 enum Role {
@@ -698,4 +700,53 @@ model EmissionSource {
   esgRecords EsgRecord[]
 
   @@map("emission_source")
+}
+
+// ==========================================================
+// Info: (20260430 - Tzuhan) 基礎設施：全球港口節點 (支援 PostGIS)
+// ==========================================================
+model Seaport {
+  id      String @id // Info: (20260430 - Tzuhan) 聯合國港口代碼 (UN/LOCODE, e.g., TWTPE)
+  name    String // Info: (20260430 - Tzuhan) 港口名稱
+  country String // Info: (20260430 - Tzuhan) 國家代碼
+  size    String // Info: (20260430 - Tzuhan) 規模 (Large, Medium, Small)
+  lat     Float
+  lng     Float
+
+  // Info: (20260430 - Tzuhan) PostGIS 專用的空間點位欄位，SRID 4326 代表 WGS84 經緯度座標系
+  geom Unsupported("geometry(Point, 4326)")?
+
+  source    String?
+  sourceUrl String? @map("source_url")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([geom], type: Gist)
+  @@map("seaports")
+}
+
+// ==========================================================
+// Info: (20260430 - Tzuhan) 基礎設施：空運機場 (Airports)
+// ==========================================================
+model Airport {
+  id       String                                @id // Info: (20260430 - Tzuhan) 機場內部代號或 ICAO (e.g., KLAX, 00A)
+  iataCode String?                               @map("iata_code") // Info: (20260430 - Tzuhan) IATA 代碼 (e.g., TPE, LAX)，可能為空
+  name     String // Info: (20260430 - Tzuhan) 機場名稱
+  country  String // Info: (20260430 - Tzuhan) 國家代碼
+  size     String // Info: (20260430 - Tzuhan) 規模 (large_airport, medium_airport, small_airport, heliport 等)
+  lat      Float
+  lng      Float
+  geom     Unsupported("geometry(Point, 4326)")?
+
+  source    String?
+  sourceUrl String? @map("source_url")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([geom], type: Gist)
+  @@index([iataCode])
+  @@index([size])
+  @@map("airports")
 }

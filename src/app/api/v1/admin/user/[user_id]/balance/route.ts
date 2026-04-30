@@ -3,7 +3,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { publicClient } from "@/lib/viem";
 import { CONTRACT_ADDRESSES, ABIS } from "@/config/contracts";
 import { formatUnits } from "viem";
-import { Role } from "@/generated/enums";
+import { Role } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 

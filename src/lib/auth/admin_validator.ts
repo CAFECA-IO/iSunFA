@@ -1,6 +1,6 @@
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
-import { Role } from "@/generated/enums";
+import { Role } from "@/generated/client";
 import { webAuthnService } from "@/services/webauthn.service";
 import { verifyChallengeToken } from "@/lib/auth/challenge_token";
 import type { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";

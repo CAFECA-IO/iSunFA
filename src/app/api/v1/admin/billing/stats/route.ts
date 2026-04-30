@@ -1,7 +1,7 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { Role } from "@/generated/enums";
+import { Role } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { adminBillingService } from "@/services/admin.billing.service";
 
