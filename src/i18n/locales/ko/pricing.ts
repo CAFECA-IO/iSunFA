@@ -1,4 +1,5 @@
 export const pricing = {
+  free_cost: "무료",
   title: "단순하고 투명한 요금제",
   subtitle: "자신에게 맞는 요금제를 선택하세요",
   monthly: "월 결제",
@@ -22,8 +23,6 @@ export const pricing = {
     personal: {
       name: "무료 버전",
       desc: "개인 사용자용",
-      price_monthly: "무료",
-      price_yearly: "무료",
       features: {
         fido: "FIDO2 키 1개",
         vouchers: "월 10 건의 전표",
@@ -37,8 +36,6 @@ export const pricing = {
     free: {
       name: "무료 버전",
       desc: "개인 사용자용",
-      price_monthly: "무료",
-      price_yearly: "무료",
       features: {
         fido: "FIDO2 키 1개",
         credit_limit: "크레딧 한도: 500 크레딧",
@@ -56,8 +53,6 @@ export const pricing = {
     team: {
       name: "팀 버전",
       desc: "성장하는 팀을 위해",
-      price_monthly: "NT$ 840",
-      price_yearly: "NT$ 8,400",
       features: {
         fido: "무제한 FIDO2 키",
         fido_tooltip: "FIDO2 키 수량에 따라 구독료가 부과됩니다",
@@ -79,8 +74,6 @@ export const pricing = {
     business: {
       name: "엔터프라이즈",
       desc: "대규모 조직을 위해",
-      price_monthly: "NT$ 2,940",
-      price_yearly: "NT$ 29,400",
       features: {
         fido: "무제한 FIDO2 키",
         fido_tooltip: "FIDO2 키 수량에 따라 구독료가 부과됩니다",

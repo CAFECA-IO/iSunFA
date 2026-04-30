@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
 import { MODULES } from "@/constants/modules";
+import { ENTERPRISE_PLAN_PRICE } from "@/constants/price";
 import { CREDIT_PLANS } from "@/config/credit_plans";
 import PricingCard from "@/components/pricing/pricing_card";
 import { Check, Minus, Plus, Lock, Loader2 } from "lucide-react";
@@ -78,12 +79,7 @@ export default function PricingPage() {
     );
   };
 
-  const PRICE = {
-    MACHINE: 8500 * 1.05,
-    USER: 100 * 1.05,
-    MODULE: 1800 * 1.05,
-  };
-  const totalPrice = PRICE.MACHINE + userCount * PRICE.USER + selectedModules.length * PRICE.MODULE;
+  const totalPrice = ENTERPRISE_PLAN_PRICE.MACHINE + userCount * ENTERPRISE_PLAN_PRICE.USER + selectedModules.length * ENTERPRISE_PLAN_PRICE.MODULE;
 
   const showComingSoon = () => {
     if (!user) {
@@ -421,7 +417,7 @@ export default function PricingPage() {
                                 {t("pricing.ai_adoption.user_count")}
                               </span>
                               <span className="text-sm text-gray-400 mt-1 block">
-                                {t("pricing.ai_adoption.add_user_price", { price: PRICE.USER.toLocaleString() })}
+                                {t("pricing.ai_adoption.add_user_price", { price: ENTERPRISE_PLAN_PRICE.USER.toLocaleString() })}
                               </span>
                             </div>
                             <div className="flex items-center justify-between gap-x-4 bg-black/20 rounded-xl p-1.5 ring-1 ring-white/10 w-full sm:w-auto">
@@ -454,7 +450,7 @@ export default function PricingPage() {
                                   {t("pricing.ai_adoption.add_module")}
                                 </span>
                                 <span className="text-sm text-gray-400 mt-1 block">
-                                  {t("pricing.ai_adoption.add_module_price", { price: PRICE.MODULE.toLocaleString() })}
+                                  {t("pricing.ai_adoption.add_module_price", { price: ENTERPRISE_PLAN_PRICE.MODULE.toLocaleString() })}
                                 </span>
                               </div>
                               <span className="inline-flex items-center rounded-full bg-orange-400/10 px-3 py-1 text-sm font-medium text-orange-400 ring-1 ring-inset ring-orange-400/20">
@@ -515,10 +511,11 @@ export default function PricingPage() {
                     <div className="w-full flex-none lg:w-96 lg:sticky lg:top-24 flex flex-col gap-6">
                       <div className="relative aspect-[4/5] w-full rounded-2xl bg-gray-800 object-cover shadow-2xl ring-1 ring-white/10 overflow-hidden">
                         <Image
-                          src="/images/hardware_lease.png"
+                          src="/images/hardware_lease.webp"
                           alt="Hardware Lease"
                           fill
                           priority
+                          unoptimized
                           sizes="(max-width: 1024px) 100vw, 384px"
                           className="object-cover grayscale-[0.2] opacity-80"
                         />

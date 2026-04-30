@@ -1,4 +1,5 @@
 export const pricing = {
+  free_cost: "無料",
   title: "シンプルで透明な料金プラン",
   subtitle: "あなたに最適なプランをお選びください",
   monthly: "月払い",
@@ -21,8 +22,6 @@ export const pricing = {
     personal: {
       name: "フリープラン",
       desc: "個人ユーザー向け",
-      price_monthly: "無料",
-      price_yearly: "無料",
       features: {
         fido: "FIDO2 キー 1個",
         vouchers: "月 10 件の証憑",
@@ -36,8 +35,6 @@ export const pricing = {
     free: {
       name: "フリープラン",
       desc: "個人ユーザー向け",
-      price_monthly: "無料",
-      price_yearly: "無料",
       features: {
         fido: "FIDO2 キー 1個",
         credit_limit: "ポイント上限 500 pt",
@@ -55,8 +52,6 @@ export const pricing = {
     team: {
       name: "チームプラン",
       desc: "成長中のチーム向け",
-      price_monthly: "NT$ 840",
-      price_yearly: "NT$ 8,400",
       features: {
         fido: "無制限の FIDO2 キー",
         fido_tooltip:
@@ -79,8 +74,6 @@ export const pricing = {
     business: {
       name: "エンタープライズ",
       desc: "大規模な組織向け",
-      price_monthly: "NT$ 2,940",
-      price_yearly: "NT$ 29,400",
       features: {
         fido: "無制限の FIDO2 キー",
         fido_tooltip:

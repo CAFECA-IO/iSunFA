@@ -1,4 +1,5 @@
 export const pricing = {
+  free_cost: "Free",
   title: "Simple, transparent pricing",
   subtitle: "Choose the plan that right for you",
   monthly: "Monthly",
@@ -21,8 +22,6 @@ export const pricing = {
     personal: {
       name: "Free",
       desc: "Perfect for individuals",
-      price_monthly: "Free",
-      price_yearly: "Free",
       features: {
         fido: "1 FIDO2 Key",
         vouchers: "10 Vouchers / Month",
@@ -36,8 +35,6 @@ export const pricing = {
     free: {
       name: "Free",
       desc: "Perfect for individuals",
-      price_monthly: "Free",
-      price_yearly: "Free",
       features: {
         fido: "1 FIDO2 Key",
         credit_limit: "Credit Limit: 500 Credits",
@@ -55,8 +52,6 @@ export const pricing = {
     team: {
       name: "Team",
       desc: "For growing teams",
-      price_monthly: "NT$ 840",
-      price_yearly: "NT$ 8,400",
       features: {
         fido: "Unlimited FIDO2 Keys",
         fido_tooltip:
@@ -79,8 +74,6 @@ export const pricing = {
     business: {
       name: "Enterprise",
       desc: "For large scale operations",
-      price_monthly: "NT$ 2,940",
-      price_yearly: "NT$ 29,400",
       features: {
         fido: "Unlimited FIDO2 Keys",
         fido_tooltip:

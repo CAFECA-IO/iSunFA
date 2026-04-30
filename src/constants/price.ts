@@ -52,8 +52,6 @@ export const ANALYSIS_BASE_COSTS: Record<string, number> = {
   CERTIFICATE_ANALYSIS: 1,
 };
 
-
-
 export const ANALYSIS_PERIOD_MULTIPLIERS: Record<AnalysisPeriod, number> = {
   // Info: (20260128 - Luphia) Multipliers by Period
   DAILY: 1,
@@ -67,4 +65,25 @@ export const ANALYSIS_ADDON_COSTS = {
   BOOKKEEPER: 3000,
   CPA: 30000,
   THIRD_PARTY: 100000,
+} as const;
+
+export const ENTERPRISE_PLAN_PRICE = {
+  MACHINE: 10200 * 1.05,
+  USER: 100 * 1.05,
+  MODULE: 2000 * 1.05,
+} as const;
+
+export const SUBSCRIPTION_PLAN_PRICE = {
+  free: {
+    monthly: 0,
+    yearly: 0,
+  },
+  team: {
+    monthly: 840,
+    yearly: 8400,
+  },
+  business: {
+    monthly: 2940,
+    yearly: 29400,
+  },
 } as const;

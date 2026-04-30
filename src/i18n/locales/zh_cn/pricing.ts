@@ -1,4 +1,5 @@
 export const pricing = {
+  free_cost: "免费",
   title: "简单透明的收费模式",
   subtitle: "选择最适合您的方案",
   monthly: "月缴",
@@ -21,8 +22,6 @@ export const pricing = {
     personal: {
       name: "免费版",
       desc: "适合个人使用者",
-      price_monthly: "免费",
-      price_yearly: "免费",
       features: {
         fido: "1 组 FIDO2 密钥",
         vouchers: "每月 10 份会计凭证",
@@ -36,8 +35,6 @@ export const pricing = {
     free: {
       name: "免费版",
       desc: "适合个人使用者",
-      price_monthly: "免费",
-      price_yearly: "免费",
       features: {
         fido: "1 组 FIDO2 密钥",
         credit_limit: "点数上限 500 点",
@@ -55,8 +52,6 @@ export const pricing = {
     team: {
       name: "团队版",
       desc: "适合成长中的团队",
-      price_monthly: "NT$ 840",
-      price_yearly: "NT$ 8,400",
       features: {
         fido: "无限 FIDO2 密钥",
         fido_tooltip: "根据 fido2 密钥数量收取订阅费",
@@ -78,8 +73,6 @@ export const pricing = {
     business: {
       name: "企业版",
       desc: "适合大型机构与事务所",
-      price_monthly: "NT$ 2,940",
-      price_yearly: "NT$ 29,400",
       features: {
         fido: "无限 FIDO2 密钥",
         fido_tooltip: "根据 fido2 密钥数量收取订阅费",

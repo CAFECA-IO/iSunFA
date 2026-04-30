@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI, Part } from "@google/generative-ai";
 import { ACCOUNTS } from "@/constants/accounts";
-import { ESG_EMISSION_FACTORS_TEXT } from "@/constants/esg_emission_factors";
 
 // Info: (20260407 - Luphia) Stage 1. Journal Paradigm
 export interface IJournalExtraction {
@@ -196,13 +195,6 @@ export class VisionAccountingService {
     const prompt =
       "You are a Sustainability & Carbon Footprint Auditor. \n" +
       "Review the original image and foundational data to determine environmental tracking parameters.\n\n" +
-      "[Extracted Foundation]:\n" +
-      JSON.stringify(journalResult, null, 2) +
-      "\n\n" +
-      "[GHG EMISSION COEFFICIENTS FACTOR DATABASE]:\n" +
-      "Below is the official Taiwanese EPA coefficients chart. You must match the activity seen in the image to the most appropriate activity type here, and explicitly quote the exact Coefficient parameter.\n\n" +
-      ESG_EMISSION_FACTORS_TEXT +
-      "\n\n" +
       "Based strictly on the data and factors provided above, generate the following JSON payload:\n" +
       "{\n" +
       '  "esgScope": "SCOPE_1" | "SCOPE_2" | "SCOPE_3" | null,\n' +

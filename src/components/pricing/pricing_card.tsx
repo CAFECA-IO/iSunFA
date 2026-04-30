@@ -1,5 +1,6 @@
 import { useTranslation } from '@/i18n/i18n_context';
 import { Check, HelpCircle } from 'lucide-react';
+import { SUBSCRIPTION_PLAN_PRICE } from '@/constants/price';
 
 // Info: (20260102 - Luphia) Renamed to IPricingProps for lint compliance
 interface IPricingProps {
@@ -16,10 +17,10 @@ export default function PricingCard({ planKey, billingInterval, features, popula
   const isCurrentPlan = currentPlan === planKey;
 
   // Info: (20260102 - Luphia) Dynamic keys are safe here as planKey is typed
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  const price = billingInterval === 'month'
-    ? t(`pricing.plans.${planKey}.price_monthly` as any)
-    : t(`pricing.plans.${planKey}.price_yearly` as any);
+  const planPriceValue = SUBSCRIPTION_PLAN_PRICE[planKey][billingInterval === 'month' ? 'monthly' : 'yearly'];
+  const price = planPriceValue === 0
+    ? t('pricing.free_cost')
+    : `NT$ ${planPriceValue.toLocaleString()}`;
 
   return (
     <div className={`relative isolate flex flex-col justify-between rounded-3xl bg-white p-8 ring-1 xl:p-10 ${popular ? 'ring-2 ring-orange-600' : 'ring-gray-200'}`}>
@@ -31,7 +32,7 @@ export default function PricingCard({ planKey, billingInterval, features, popula
       <div>
         <div className="flex items-center justify-between gap-x-4">
           <h3 id={planKey} className={`text-lg font-semibold leading-8 ${popular ? 'text-orange-600' : 'text-gray-900'}`}>
-            {t(`pricing.plans.${planKey}.name` as any)}
+            {t(`pricing.plans.${planKey}.name`)}
           </h3>
           {isCurrentPlan && (
             <span className="rounded-full bg-orange-600/10 px-2.5 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-inset ring-orange-600/20">
@@ -40,7 +41,7 @@ export default function PricingCard({ planKey, billingInterval, features, popula
           )}
         </div>
         <p className="mt-4 text-sm leading-6 text-gray-600">
-          {t(`pricing.plans.${planKey}.desc` as any)}
+          {t(`pricing.plans.${planKey}.desc`)}
         </p>
         <p className="mt-6 flex items-baseline gap-x-1">
           <span className="text-4xl font-bold tracking-tight text-gray-900">{price}</span>
