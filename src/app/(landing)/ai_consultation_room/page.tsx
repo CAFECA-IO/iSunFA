@@ -1,8 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-import Header from "@/components/landing_page/header";
-import Footer from "@/components/landing_page/footer";
 import { useTranslation } from "@/i18n/i18n_context";
 import ThreadSection from "@/components/ai_consultation_room/thread_section";
 import { AiChat } from "@/components/ai_consultation_room/ai_chat";
@@ -12,7 +10,6 @@ export default function AccountingAiConsultingPage() {
 
   return (
     <div className="bg-white">
-      <Header />
 
       <main className="relative pt-12 min-h-screen">
         <div className="flex flex-col text-center items-center gap-2">
@@ -31,7 +28,6 @@ export default function AccountingAiConsultingPage() {
         <AiChat />
       </main>
 
-      <Footer />
     </div>
   );
 }
