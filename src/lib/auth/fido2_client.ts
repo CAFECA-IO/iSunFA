@@ -9,6 +9,7 @@ import type {
 } from "@passwordless-id/webauthn/dist/esm/types";
 import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { UserOperationJson } from "@/validators";
 import { fetchWithRetry } from "@/lib/utils/http_client";
 
@@ -56,6 +57,9 @@ class Fido2ClientService {
       return registration;
     } catch (error) {
       console.error("FIDO2 Registration failed:", error);
+      if (error instanceof Error && error.name === "NotAllowedError") {
+        throw new AppError(API_ERRORS.AUTH_USER_CANCELED);
+      }
       throw error;
     }
   }
@@ -69,6 +73,9 @@ class Fido2ClientService {
       return authentication;
     } catch (error) {
       console.error("FIDO2 Authentication failed:", error);
+      if (error instanceof Error && error.name === "NotAllowedError") {
+        throw new AppError(API_ERRORS.AUTH_USER_CANCELED);
+      }
       throw error;
     }
   }

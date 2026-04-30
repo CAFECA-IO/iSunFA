@@ -31,6 +31,7 @@ export const authModal = {
     "このパスキーに関連付けられたアカウントが見つかりません。このデバイスを使用して新しいアカウントを作成しますか？",
   unregistered_confirm_yes: "はい、アカウントを作成します",
   unregistered_confirm_no: "キャンセル",
+  user_canceled: "ユーザーがログインをキャンセルしました",
 
   deploying: "Deploying...",
   success: "Success",

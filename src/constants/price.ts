@@ -25,6 +25,7 @@ export type CurrencyUnit = (typeof CURRENCY_UNIT)[keyof typeof CURRENCY_UNIT];
 export const REWARD_AMOUNTS = {
   REGISTRATION_REWARD: 100,
   DAILY_CHECKIN_REWARD: 5,
+  FREE_PLAN_LIMIT: 500,
 } as const;
 
 export { ANALYSIS_CATEGORY, type AnalysisCategory, ANALYSIS_PERIOD, type AnalysisPeriod } from "@/constants/analysis";
@@ -49,7 +50,9 @@ export const ANALYSIS_BASE_COSTS: Record<string, number> = {
 
   // Info: (20260408 - Luphia) AI Features
   AI_CONSULTING: 5,
-  CERTIFICATE_ANALYSIS: 1,
+  CERTIFICATE_ANALYSIS: 3,
+  LOGISTICS_ANALYSIS: 5,
+  AI_REPORT: 100,
 };
 
 export const ANALYSIS_PERIOD_MULTIPLIERS: Record<AnalysisPeriod, number> = {
@@ -86,4 +89,10 @@ export const SUBSCRIPTION_PLAN_PRICE = {
     monthly: 2940,
     yearly: 29400,
   },
+} as const;
+
+export const SUBSCRIPTION_PLAN_CREDITS = {
+  free: 150,
+  team: 3000,
+  business: 30000,
 } as const;
