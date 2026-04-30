@@ -1,15 +1,7 @@
 'use server';
 
 import { logisticsRepo } from "@/repositories/logistics.repo";
-
-export interface INearestPortResult {
-  id: string;
-  name: string;
-  country: string;
-  lat: number;
-  lng: number;
-  distance_km: number;
-}
+import { INearestPortResult } from '@/interfaces/logistics';
 
 // Info: (20260430 - Tzuhan) Haversine formula to calculate distance in km
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
