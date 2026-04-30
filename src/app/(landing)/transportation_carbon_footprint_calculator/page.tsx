@@ -24,6 +24,7 @@ interface ISegment {
     coefficientUnit: string;
     coefficientSource: string;
     geometry?: GeoJSON.Geometry | null;
+    isFallback?: boolean;
 }
 
 export default function ReportPage() {
@@ -171,7 +172,8 @@ export default function ReportPage() {
                     mode: 'land', from: '起點', to: '終點',
                     estimatedDist: landPlan.distanceKm ?? landPlan.distanceNm, distUnit: landPlan.distanceNm !== undefined ? 'NM' : 'KM', emissions: landPlan.co2eKg,
                     emissionsUnit: 'kg CO₂e', coefficient: 0.11289, coefficientUnit: 'kg CO₂e / t-km',
-                    coefficientSource: 'UK DEFRA 2025 (HGV)', geometry: landPlan.geometry
+                    coefficientSource: 'UK DEFRA 2025 (HGV)', geometry: landPlan.geometry,
+                    isFallback: landPlan.isFallback
                 }
             ];
             mapFeatures = [{ type: 'Feature', properties: { color: '#F97316' }, geometry: landPlan.geometry as GeoJSON.Geometry }];
@@ -185,7 +187,8 @@ export default function ReportPage() {
                     mode: 'land', from: '起點', to: plan.exportPort?.name || '起運港口',
                     estimatedDist: seaPlan.land_origin_to_port?.distanceKm ?? seaPlan.land_origin_to_port?.distanceNm, distUnit: seaPlan.land_origin_to_port?.distanceNm !== undefined ? 'NM' : 'KM', emissions: seaPlan.land_origin_to_port?.co2eKg,
                     emissionsUnit: 'kg CO₂e', coefficient: 0.11289, coefficientUnit: 'kg CO₂e / t-km',
-                    coefficientSource: 'UK DEFRA 2025 (HGV)', geometry: seaPlan.land_origin_to_port?.geometry
+                    coefficientSource: 'UK DEFRA 2025 (HGV)', geometry: seaPlan.land_origin_to_port?.geometry,
+                    isFallback: seaPlan.land_origin_to_port?.isFallback
                 },
                 {
                     mode: 'sea', from: plan.exportPort?.name || '起運港口', to: plan.importPort?.name || '目的港口',
@@ -197,7 +200,8 @@ export default function ReportPage() {
                     mode: 'land', from: plan.importPort?.name || '目的港口', to: '終點',
                     estimatedDist: seaPlan.land_port_to_dest?.distanceKm ?? seaPlan.land_port_to_dest?.distanceNm, distUnit: seaPlan.land_port_to_dest?.distanceNm !== undefined ? 'NM' : 'KM', emissions: seaPlan.land_port_to_dest?.co2eKg,
                     emissionsUnit: 'kg CO₂e', coefficient: 0.11289, coefficientUnit: 'kg CO₂e / t-km',
-                    coefficientSource: 'UK DEFRA 2025 (HGV)', geometry: seaPlan.land_port_to_dest?.geometry
+                    coefficientSource: 'UK DEFRA 2025 (HGV)', geometry: seaPlan.land_port_to_dest?.geometry,
+                    isFallback: seaPlan.land_port_to_dest?.isFallback
                 }
             ];
             mapFeatures = [
@@ -215,7 +219,8 @@ export default function ReportPage() {
                     mode: 'land', from: '起點', to: plan.exportAirport?.name || '起運機場',
                     estimatedDist: airPlan.land_origin_to_airport?.distanceKm ?? airPlan.land_origin_to_airport?.distanceNm, distUnit: airPlan.land_origin_to_airport?.distanceNm !== undefined ? 'NM' : 'KM', emissions: airPlan.land_origin_to_airport?.co2eKg,
                     emissionsUnit: 'kg CO₂e', coefficient: 0.11289, coefficientUnit: 'kg CO₂e / t-km',
-                    coefficientSource: 'UK DEFRA 2025 (HGV)', geometry: airPlan.land_origin_to_airport?.geometry
+                    coefficientSource: 'UK DEFRA 2025 (HGV)', geometry: airPlan.land_origin_to_airport?.geometry,
+                    isFallback: airPlan.land_origin_to_airport?.isFallback
                 },
                 {
                     mode: 'air', from: plan.exportAirport?.name || '起運機場', to: plan.importAirport?.name || '目的機場',
@@ -227,7 +232,8 @@ export default function ReportPage() {
                     mode: 'land', from: plan.importAirport?.name || '目的機場', to: '終點',
                     estimatedDist: airPlan.land_airport_to_dest?.distanceKm ?? airPlan.land_airport_to_dest?.distanceNm, distUnit: airPlan.land_airport_to_dest?.distanceNm !== undefined ? 'NM' : 'KM', emissions: airPlan.land_airport_to_dest?.co2eKg,
                     emissionsUnit: 'kg CO₂e', coefficient: 0.11289, coefficientUnit: 'kg CO₂e / t-km',
-                    coefficientSource: 'UK DEFRA 2025 (HGV)', geometry: airPlan.land_airport_to_dest?.geometry
+                    coefficientSource: 'UK DEFRA 2025 (HGV)', geometry: airPlan.land_airport_to_dest?.geometry,
+                    isFallback: airPlan.land_airport_to_dest?.isFallback
                 }
             ];
             mapFeatures = [
@@ -344,8 +350,13 @@ export default function ReportPage() {
                                                     <ArrowRight className="w-3 h-3 text-gray-400 shrink-0" />
                                                     <span className="font-bold truncate max-w-[150px]">{seg.to}</span>
                                                 </div>
-                                                <div className="text-sm text-gray-500 font-medium">
+                                                <div className="text-sm text-gray-500 font-medium flex flex-wrap items-center gap-1">
                                                     預估里程: <span className="text-gray-700">{seg.estimatedDist?.toLocaleString(undefined, { maximumFractionDigits: 1 })} {seg.distUnit || 'KM'}</span>
+                                                    {seg.isFallback && (
+                                                        <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 flex items-center gap-1 border border-amber-200" title="OSRM 解析超時或支援度不足，目前採用「大圓距離 × 蜿蜒係數 (Tortuosity Factor)」做為里程估算依據">
+                                                            ⚠️ 蜿蜒估算 (API Timeout)
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className="text-sm text-gray-500 font-medium mt-1">
                                                     排放係數: <span className="text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md text-xs">{seg.coefficient} {seg.coefficientUnit}</span>

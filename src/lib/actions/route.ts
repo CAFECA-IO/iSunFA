@@ -11,6 +11,7 @@ export interface ITransportSegment {
     distanceNm?: number;
     co2eKg?: number;
     geometry: Geometry | null;
+    isFallback?: boolean;
 }
 
 export interface IComparePlansResponse {
@@ -152,7 +153,7 @@ async function getLandRoute(start: { lat: number, lng: number }, end: { lat: num
             type: "LineString",
             coordinates: [[start.lng, start.lat], [end.lng, end.lat]]
         };
-        return { success: true, distanceKm: distKm, geometry: splitAtAntimeridian(geometry) };
+        return { success: true, distanceKm: distKm, geometry: splitAtAntimeridian(geometry), isFallback: true };
     } catch {
         return { success: false, distanceKm: 0, geometry: null };
     }
