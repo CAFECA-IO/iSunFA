@@ -58,9 +58,17 @@ export async function seedLogisticsInfrastructure(dataDir: string) {
         const features: GeoJSON.Feature[] = geojson.features || [];
 
         const validPorts = features.filter((f: GeoJSON.Feature) => f.properties?.port && f.geometry && 'coordinates' in f.geometry);
-        console.log(`⚓ 成功解析 ${validPorts.length} 筆海港資料，準備寫入資料庫...`);
+        
+        // Info: (20260430 - Tzuhan) Deduplicate by port id to prevent PostgreSQL ON CONFLICT error
+        const uniquePortsMap = new Map();
+        for (const f of validPorts) {
+            uniquePortsMap.set(f.properties.port, f);
+        }
+        const uniquePorts = Array.from(uniquePortsMap.values());
+        
+        console.log(`⚓ 成功解析 ${uniquePorts.length} 筆海港資料 (已去重)，準備寫入資料庫...`);
 
-        const portChunks = chunkArray(validPorts, 500);
+        const portChunks = chunkArray(uniquePorts, 500);
         let processed = 0;
 
         for (const chunk of portChunks) {
@@ -90,7 +98,7 @@ export async function seedLogisticsInfrastructure(dataDir: string) {
                 await prisma.$executeRawUnsafe(query);
             }
             processed += chunk.length;
-            process.stdout.write(`\r⚓ 進度: ${processed} / ${validPorts.length}`);
+            process.stdout.write(`\r⚓ 進度: ${processed} / ${uniquePorts.length}`);
         }
         console.log('\n✅ 全球海港資料匯入完成！');
     } else {
@@ -133,8 +141,15 @@ export async function seedLogisticsInfrastructure(dataDir: string) {
             }
         }
 
-        console.log(`✈️ 成功解析 ${validAirports.length} 筆機場資料，準備進行高併發批次寫入...`);
-        const airportChunks = chunkArray(validAirports, 1000);
+        // Info: (20260430 - Tzuhan) Deduplicate by airport id to prevent PostgreSQL ON CONFLICT error
+        const uniqueAirportsMap = new Map();
+        for (const a of validAirports) {
+            uniqueAirportsMap.set(a.id, a);
+        }
+        const uniqueAirports = Array.from(uniqueAirportsMap.values());
+
+        console.log(`✈️ 成功解析 ${uniqueAirports.length} 筆機場資料 (已去重)，準備進行高併發批次寫入...`);
+        const airportChunks = chunkArray(uniqueAirports, 1000);
         let processed = 0;
 
         for (const chunk of airportChunks) {
@@ -164,7 +179,7 @@ export async function seedLogisticsInfrastructure(dataDir: string) {
                 await prisma.$executeRawUnsafe(query);
             }
             processed += chunk.length;
-            process.stdout.write(`\r✈️ 進度: ${processed} / ${validAirports.length}`);
+            process.stdout.write(`\r✈️ 進度: ${processed} / ${uniqueAirports.length}`);
         }
         console.log('\n✅ 全球機場資料匯入完成！');
     } catch (error) {
