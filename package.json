@@ -10,6 +10,7 @@
     "dev": "npm run initial_wallet && npm run lint && prisma generate && next dev",
     "build": "npm run initial_wallet && npm run lint && prisma generate && next build",
     "start": "npm run build && next start",
+    "seed": "npx tsx scripts/seed/seed.ts",
     "lint": "eslint",
     "test": "npm run lint && jest --passWithNoTests",
     "swarm": "npm run build && next start -p 10020",
@@ -60,9 +61,6 @@
     "recharts": "^3.6.0",
     "remark-gfm": "^4.0.1",
     "searoute-js": "^0.1.0"
-  },
-  "prisma": {
-    "seed": "tsx scripts/seed/seed.ts"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^16.1.1",
