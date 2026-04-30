@@ -15,6 +15,7 @@ import {
   TRUE_COEFFICIENT_DATA_TAIWAN
 } from "@/constants/true_esg_coefficients";
 import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
+import { IEmissionSources } from "@/interfaces/emission_sources";
 
 // Info: (20260423 - Julian) 集合所有係數清單
 const ALL_TRUE_COEFFICIENT_DATA = [
@@ -35,6 +36,7 @@ const ALL_TRUE_COEFFICIENT_DATA = [
 export const getEsgPrompt = (
   accountBook?: Partial<AccountBook> | null,
   coefficients?: Partial<ICoefficient>[],
+  emissionSources?: Partial<IEmissionSources>[],
 ) => {
   // Info: (20260423 - Julian) 將外部傳入的 coefficients 與 ALL_TRUE_COEFFICIENT_DATA 合併
   const allCoefficients = [...ALL_TRUE_COEFFICIENT_DATA, ...(coefficients || [])];
@@ -51,6 +53,18 @@ export const getEsgPrompt = (
   const rulesInstruction = accountBook?.rule
     ? `\n  請嚴格遵守以下帳本關於碳排或會計核算的特殊規則與偏好：\n  ${accountBook.rule}\n`
     : "";
+
+  // Info: (20260430 - Julian) 建立排放源清單
+  const emissionSourcesListStr =
+    emissionSources && emissionSources.length > 0
+      ? `\n【用戶既有排放源清單】:\n${JSON.stringify(
+          emissionSources.map((es) => ({
+            id: es.id,
+            name: es.name,
+            address: es.address,
+          })),
+        )}`
+      : "\n【用戶既有排放源清單】: (空)";
 
   // Info: (20260423 - Julian) 建立係數清單
   const coefficientsListStr =
@@ -89,8 +103,18 @@ export const getEsgPrompt = (
   3. 碳排放量 (Emissions)：活動數據 × 排放係數。
   請將最終計算出的碳排數字填入 \`emissions\`。`;
 
+  // Info: (20260430 - Julian) 建立排放源 instruction
+  const emissionSourcesInstruction = `
+  ${emissionSourcesListStr}
+  
+  請從上方的用戶既有排放源歸口清單中，檢查是否有符合該憑證情境的排放源歸口。
+  - 若有符合的排放源歸口，請採用它並將該 ID 填入回傳 JSON 的 \`emissionSourceId\`。
+  - 若無符合的排放源歸口，或清單為空，請自行建立一個新的排放源歸口，並將新建立的排放源歸口資訊填入回傳 JSON 的 \`newEmissionSource\` 物件中，同時將 \`emissionSourceId\` 設為 null。
+  `;
+
   return `
   請將用戶上傳的憑證（檔案/圖片）解析出碳盤查（Carbon Footprint Verification）相關資訊。${accountBookInfo}${rulesInstruction}
+  ${emissionSourcesInstruction}
   ${coefficientsInstruction}
 
   【活動類型】請從以下清單中選擇最符合的活動類型，並將該活動類型的 key 填入回傳 JSON 的 \`activityType\` 欄位：
@@ -122,12 +146,17 @@ export const getEsgPrompt = (
     "confidence": 85, // AI 分析的整體信心度 (數字 0-100)
     "coefficientId": "string | null", // 使用既有係數之 ID，若使用新係數或無適合係數則為 null
     "newCoefficient": { 
-        // 若找不到適合的既有係數，所尋找到的可靠外部係數資訊 (若有使用既有係數則為 null)
+        // 若找不到適合的既有係數，所尋找到的可靠外部係數資訊 (若有使用既有係數，則為 null)
         "name": "string", // 係數名稱，須符合「XX 係數」的格式
         "description": "string", // 係數描述
         "unit": "string", // 係數單位，不包含 'kgCO2e'，例如：kgCO2e/kg，即為 kg (盡量以國際通用單位為主，不要寫中文)
         "emissionFactor": 1.23, // 排放係數 (數字)
         "source": "string" // 來源，如「經濟部能源署」等
+    },
+    "emissionSourceId": "string | null", // 使用既有排放源歸口 ID，若使用新排放源歸口或無適合排放源歸口則為 null
+    "newEmissionSource": {
+        // 若找不到適合的既有排放源歸口，所建立的新排放源歸口資訊 (若有使用既有排放源歸口，則為 null)
+        "name": "string", // 排放源名稱
     },
     "aiNote": "string" // AI 分析的備註
   }
