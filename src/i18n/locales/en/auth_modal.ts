@@ -34,4 +34,5 @@ export const authModal = {
     "The system cannot find an account associated with this Passkey. Would you like to create a new account using this device?",
   unregistered_confirm_yes: "Yes, Create Account",
   unregistered_confirm_no: "Cancel",
+  user_canceled: "User canceled login",
 };

@@ -34,4 +34,5 @@ export const authModal = {
     "系統找不到此 Passkey 對應的帳戶。您是否要使用此裝置註冊一個新帳戶？",
   unregistered_confirm_yes: "好，建立帳戶",
   unregistered_confirm_no: "取消",
+  user_canceled: "用戶取消登入",
 };

@@ -15,6 +15,7 @@ export const API_ERRORS = {
   AUTH_PERMISSION_DENIED: { code: "AU000005", message: "Permission denied", status: ApiCode.FORBIDDEN } as IErrorDef,
   AUTH_LOGIN_FAILED: { code: "AU000006", message: "Login failed", status: ApiCode.UNAUTHORIZED } as IErrorDef,
   AUTH_INVALID_ROLE: { code: "AU000007", message: "Invalid role", status: ApiCode.VALIDATION_ERROR } as IErrorDef, // Could be VL
+  AUTH_USER_CANCELED: { code: "AU000008", message: "User canceled", status: ApiCode.UNAUTHORIZED } as IErrorDef,
 
   // Info: (20260421 - Luphia) VL: Validation & Input (000001 ~ 000099)
   VL_MISSING_PARAMS: { code: "VL000001", message: "Missing required parameters", status: ApiCode.VALIDATION_ERROR } as IErrorDef,

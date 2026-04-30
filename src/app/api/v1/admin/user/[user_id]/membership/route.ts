@@ -6,6 +6,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { getMemberInfo } from "@/services/member.service";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { REWARD_AMOUNTS } from "@/constants/price";
 
 export async function GET(
   req: NextRequest,
@@ -33,7 +34,7 @@ export async function GET(
     const { registrationTime, totalCheckInRewards, totalPurchasedPoints } = info.data;
     
     // Info: (20260417 - Luphia) Calculate EXP dynamically from MembershipSystem smart contract rewards & top-ups
-    const registrationExp = registrationTime > 0 ? 100 : 0;
+    const registrationExp = registrationTime > 0 ? REWARD_AMOUNTS.REGISTRATION_REWARD : 0;
     const totalExp = registrationExp + totalCheckInRewards + totalPurchasedPoints;
 
     let mode = "Bronze";
