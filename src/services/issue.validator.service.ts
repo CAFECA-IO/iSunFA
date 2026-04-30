@@ -52,8 +52,8 @@ export async function processNext() {
         break; // Info: (20260420 - Luphia) End of tasks
       }
 
-      // Info: (20260420 - Luphia) status == 1 means PendingReview
-      if (status === 1 && submissionCount > 0n) {
+      // Info: (20260420 - Luphia) status == 1 means PendingReview, status == 3 means Closed (Approved)
+      if ((status === 1 || status === 3) && submissionCount > 0n) {
         const subIndex = submissionCount - 1n;
         const subData = await publicClient.readContract({
           address: mbAddress,
@@ -65,8 +65,6 @@ export async function processNext() {
         const [, resultCid, , isRejected] = subData;
 
         if (!isRejected) {
-          console.log(`[IssueValidator] Found PendingReview for Task ID: ${currentTaskId}, SubIndex: ${subIndex}`);
-
           const taskIssueDir = path.join(issueDirPath, `${mbAddress}_${currentTaskId.toString()}`);
           const approvedPath = path.join(taskIssueDir, `approved.${subIndex}.md`);
           const rejectedPath = path.join(taskIssueDir, `rejected.${subIndex}.md`);
@@ -83,6 +81,38 @@ export async function processNext() {
           } catch { /* Info: (20260420 - Luphia) nothing to do */ }
 
           if (!alreadyValidated) {
+            console.log(`[IssueValidator] Found Unsynced Task ID: ${currentTaskId}, SubIndex: ${subIndex}, Status: ${status}`);
+
+            // Info: (20260429 - Luphia) State Recovery: If status is 3, it was already approved on chain but local file is missing!
+            if (status === 3) {
+              console.log(`[IssueValidator] State Recovery for Task ID: ${currentTaskId}. It is Closed on chain but missing local approved file. Recovering...`);
+              await fs.mkdir(taskIssueDir, { recursive: true });
+              
+              try {
+                console.log(`[IssueValidator] State Recovery: Downloading result CID: ${resultCid} from IPFS (Laria)...`);
+                const fileBuffer = await storageService.recoverLaria(resultCid);
+                const resultContent = fileBuffer.toString("utf8");
+                const resultFileLocalPath = path.join(taskIssueDir, `${subIndex}.md`);
+                await fs.writeFile(resultFileLocalPath, resultContent, "utf8");
+              } catch (e) {
+                console.error(`[IssueValidator] State Recovery: Failed to download result CID ${resultCid}:`, e);
+                const resultFileLocalPath = path.join(taskIssueDir, `${subIndex}.md`);
+                await fs.writeFile(resultFileLocalPath, '{"error": "Failed to recover result from IPFS during state recovery"}', "utf8");
+              }
+
+              const approvedContent = `# Approved Submission (Recovered)
+- Result CID: ${resultCid}
+- Submission Index: ${subIndex}
+- Validator Note: Recovered from on-chain state (Task is Closed).
+- AI Confidence: 100
+- Transaction Hash: N/A
+`;
+              await fs.writeFile(approvedPath, approvedContent, "utf8");
+              validatedTask = true;
+              currentTaskId++;
+              continue;
+            }
+
             await fs.mkdir(taskIssueDir, { recursive: true });
             const validatorPlanPath = path.join(taskIssueDir, "plan.validator.md");
             let validatorPlan = "";

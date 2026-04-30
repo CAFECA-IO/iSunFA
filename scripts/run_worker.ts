@@ -1,4 +1,4 @@
-import { scanPendingTransactions } from "@/services/transaction.tracker.service";
+import { scanPendingTransactions } from "@/services/order.tracker.service";
 import { processNext as processIssueNext } from "@/services/issue.service";
 import { processNext as processMissionPlannerNext } from "@/services/mission.planner.service";
 import { processNext as processMissionExecutorNext } from "@/services/mission.executor.service";

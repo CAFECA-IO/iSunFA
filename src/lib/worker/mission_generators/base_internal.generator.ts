@@ -19,12 +19,16 @@ export function generateBaseInternalMission(
     targetCompany: params.keyword || "Company",
   };
 
-  if (params.prerequisiteData?.esgRecordsContext) {
+  if (params.prerequisiteData?.balanceSheetReport) {
+    targetObj.internalDataContext = `【系統自動結算之資產負債表報表】\n(已自動將指定期間內之傳票彙整為下列科目餘額與指標)\n\n${JSON.stringify(params.prerequisiteData.balanceSheetReport, null, 2)}`;
+  } else if (params.prerequisiteData?.esgRecordsContext) {
     targetObj.internalDataContext = params.prerequisiteData.esgRecordsContext;
   }
   
   if (params.data) {
-    targetObj.financialDataPayload = params.data;
+    const safeData = { ...params.data };
+    delete (safeData as Record<string, unknown>).prerequisiteData; // Info: (20260429 - Luphia) 移除原始巨量資料，避免干擾 AI 或超出 Token
+    targetObj.financialDataPayload = safeData;
   }
 
   const targetInfo = JSON.stringify(targetObj, null, 2);

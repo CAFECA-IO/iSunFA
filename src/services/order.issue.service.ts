@@ -4,7 +4,7 @@ import path from "path";
 export class OrderIssueService {
   async getExecutionStatusesForOrders<T extends { status: string; mission?: unknown }>(orders: T[]): Promise<(T & { executionStatus: string; executionConfidence: number | null })[]> {
     const issueDirBase = process.env.ISSUE_DIR || "issues";
-    const issuesDir = path.join(process.cwd(), issueDirBase);
+    const issuesDir = path.join(/* webpackIgnore: true */ /* turbopackIgnore: true */ process.cwd(), issueDirBase);
     let folders: string[] = [];
     try {
       folders = await fs.readdir(issuesDir);
@@ -34,7 +34,7 @@ export class OrderIssueService {
               let taskConf: number | null = null;
 
               if (folderName) {
-                const folderPath = path.join(issuesDir, folderName);
+                const folderPath = path.join(/* webpackIgnore: true */ /* turbopackIgnore: true */ issuesDir, folderName);
                 try {
                   const files = await fs.readdir(folderPath);
 
@@ -59,7 +59,7 @@ export class OrderIssueService {
 
                   if (confidenceFileToRead) {
                     try {
-                      const content = await fs.readFile(path.join(folderPath, confidenceFileToRead), "utf8");
+                      const content = await fs.readFile(path.join(/* webpackIgnore: true */ /* turbopackIgnore: true */ folderPath, confidenceFileToRead), "utf8");
                       const match = content.match(/- AI Confidence:\s*(\d+)/);
                       if (match && match[1]) {
                         taskConf = parseInt(match[1], 10);

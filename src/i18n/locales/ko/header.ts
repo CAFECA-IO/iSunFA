@@ -5,4 +5,5 @@ export const header = {
   login: "로그인",
   credits: "크레딧",
   logout: "로그아웃",
+  transportation_carbon_footprint_calculator: "물류 탄소 발자국",
 };

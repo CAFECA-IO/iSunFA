@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     const deletedFolders: string[] = [];
 
     for (const dirName of directoriesToClean) {
-      const dirPath = path.join(process.cwd(), dirName);
+      const dirPath = path.join(/* webpackIgnore: true */ /* turbopackIgnore: true */ process.cwd(), dirName);
 
       let folders: import("fs").Dirent[] = [];
       try {
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
         // Info: (20260426 - Luphia) Exclude system folders like ".DS_Store", "0", "1", etc if they are not formatted properly
         if (!folderName.includes("_")) {
           // Info: (20260424 - Luphia) some folders in issues are just "10", "11". We should clean those too if they don't match the new `{address}_{taskId}` format.
-          await fs.rm(path.join(dirPath, folderName), { recursive: true, force: true });
+          await fs.rm(path.join(/* webpackIgnore: true */ /* turbopackIgnore: true */ dirPath, folderName), { recursive: true, force: true });
           deletedFolders.push(`${dirName}/${folderName}`);
           continue;
         }
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
 
         // Info: (20260426 - Luphia) Delete if address doesn't match OR taskId is not valid
         if (addr.toLowerCase() !== missionBoardAddress.toLowerCase() || !validTaskIds.has(taskId)) {
-          await fs.rm(path.join(dirPath, folderName), { recursive: true, force: true });
+          await fs.rm(path.join(/* webpackIgnore: true */ /* turbopackIgnore: true */ dirPath, folderName), { recursive: true, force: true });
           deletedFolders.push(`${dirName}/${folderName}`);
         }
       }

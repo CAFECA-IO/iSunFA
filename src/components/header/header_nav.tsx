@@ -17,6 +17,10 @@ export default function HeaderNav() {
 
   const NAV_ITEMS = [
     {
+      label: t("header.transportation_carbon_footprint_calculator"),
+      href: "/transportation_carbon_footprint_calculator",
+    },
+    {
       label: t("header.salary_calculator"),
       href: "/salary_calculator",
     },

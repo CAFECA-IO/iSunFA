@@ -16,6 +16,24 @@ export async function scanPendingTransactions() {
     let processedCount = 0;
 
     try {
+      // Info: (20260429 - Luphia) Cancel PENDING orders older than 30 minutes
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+      const stalePendingOrders = await orderRepo.findMany({
+        where: {
+          status: ORDER_STATUS.PENDING,
+          createdAt: { lt: thirtyMinutesAgo },
+        },
+      });
+
+      for (const order of stalePendingOrders) {
+        await orderRepo.update({
+          where: { id: order.id },
+          data: { status: ORDER_STATUS.CANCEL },
+        });
+        console.log(`[TxTracker] Order ${order.id} marked as CANCEL (Pending > 30 mins)`);
+        processedCount++;
+      }
+
       // Info: (20260420 - Luphia) Find all orders stuck in PAYING state
       const pendingOrders = await orderRepo.findMany({
         where: { status: ORDER_STATUS.PAYING },
