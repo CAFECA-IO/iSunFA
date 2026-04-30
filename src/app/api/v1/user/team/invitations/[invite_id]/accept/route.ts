@@ -31,11 +31,19 @@ export async function POST(
     const invitation = await teamRepo.getInvitationByIdWithDetails(inviteId);
 
     if (!invitation || invitation.status !== TEAM_INVITATION_STATUS.PENDING) {
-      return jsonFail({ code: "NO000099", message: "Invitation not found or no ...", status: ApiCode.NOT_FOUND },  );
+      return jsonFail({
+        code: "NO000099",
+        message: "Invitation not found or no ...",
+        status: ApiCode.NOT_FOUND,
+      });
     }
 
     if (invitation.inviteeAddress !== sessionUser.address) {
-      return jsonFail({ code: "FO000099", message: "You are not the intended re...", status: ApiCode.FORBIDDEN },  );
+      return jsonFail({
+        code: "FO000099",
+        message: "You are not the intended re...",
+        status: ApiCode.FORBIDDEN,
+      });
     }
 
     if (!authentication) {
@@ -45,7 +53,11 @@ export async function POST(
     // Info: (20260326 - Tzuhan) Fetch invitee's current challenge
     const inviteeUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!inviteeUser || !inviteeUser.currentChallenge) {
-      return jsonFail({ code: "UN000099", message: "Missing WebAuthn challenge....", status: ApiCode.UNAUTHORIZED },  );
+      return jsonFail({
+        code: "UN000099",
+        message: "Missing WebAuthn challenge....",
+        status: ApiCode.UNAUTHORIZED,
+      });
     }
 
     // Info: (20260326 - Tzuhan) Verify FIDO2 signature

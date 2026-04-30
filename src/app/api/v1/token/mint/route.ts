@@ -28,7 +28,11 @@ export async function POST(request: NextRequest) {
     );
 
     if (!result.success) {
-      return jsonFail({ code: "IS000099", message: String(result.message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+      return jsonFail({
+        code: "IS000099",
+        message: String(result.message).slice(0, 30),
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     return jsonOk({

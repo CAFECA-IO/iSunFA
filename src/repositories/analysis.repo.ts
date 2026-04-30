@@ -87,8 +87,6 @@ export class AnalysisRepository implements IAnalysisRepository {
     });
   }
 
-
-
   async getGlobalTopTags(limit: number = 20): Promise<string[]> {
     const topTags = await prisma.analysisTag.groupBy({
       by: ["tagId"],
@@ -139,7 +137,15 @@ export class AnalysisRepository implements IAnalysisRepository {
     userId: string,
   ): Promise<FullAnalysis[]> {
     return prisma.analysis.findMany({
-      where: { userId, type: { notIn: [ANALYSIS_CATEGORY.AI_CONSULTING, ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS] } },
+      where: {
+        userId,
+        type: {
+          notIn: [
+            ANALYSIS_CATEGORY.AI_CONSULTING,
+            ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
+          ],
+        },
+      },
       orderBy: { createdAt: "desc" },
       include: {
         order: true,

@@ -1,7 +1,8 @@
 export const adminMissionBoard = {
   page: {
     title: "미션 보드",
-    subtitle: "블록체인에 게시된 모든 자동화 작업 및 바운티를 관리하고 검토합니다.",
+    subtitle:
+      "블록체인에 게시된 모든 자동화 작업 및 바운티를 관리하고 검토합니다.",
   },
   kpi: {
     total_missions: "총 미션 수",
@@ -60,11 +61,13 @@ export const adminMissionBoard = {
     internal_document: "내부 문서",
     system_report: "시스템 보고서",
     footer_title: "AI로 탄소 회계를 재구성하다",
-    footer_text: "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal."
+    footer_text:
+      "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",
   },
   gc: {
     btn_text: "GC 정리 실행",
     result_title: "작업 시스템 정리 결과",
-    success_msg: "만료되거나 유효하지 않은 폴더 {{count}}개를 성공적으로 지웠습니다.",
-  }
+    success_msg:
+      "만료되거나 유효하지 않은 폴더 {{count}}개를 성공적으로 지웠습니다.",
+  },
 };

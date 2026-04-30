@@ -51,7 +51,7 @@ const GENERATOR_MAP: Record<string, MissionGeneratorFn> = {
 export class MissionGenerator {
   generateMission(params: IMissionParams): IMissionDefinition | null {
     if (!params.category) return null;
-    
+
     const generatorFn = GENERATOR_MAP[params.category.toLowerCase()];
     if (generatorFn) {
       return generatorFn(params);

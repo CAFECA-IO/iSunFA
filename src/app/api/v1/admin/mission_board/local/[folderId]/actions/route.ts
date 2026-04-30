@@ -7,7 +7,7 @@ import path from "path";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ folderId: string }> }
+  { params }: { params: Promise<{ folderId: string }> },
 ) {
   try {
     const { body } = await validateAdminFido2(req);
@@ -31,7 +31,10 @@ export async function POST(
       const files = await fs.readdir(folderPath);
       // Info: (20260424 - Luphia) Delete all failed_*.md files and execution_log.json
       for (const file of files) {
-        if ((file.startsWith("failed_") && file.endsWith(".md")) || file === "execution_log.json") {
+        if (
+          (file.startsWith("failed_") && file.endsWith(".md")) ||
+          file === "execution_log.json"
+        ) {
           await fs.unlink(path.join(folderPath, file));
         }
       }

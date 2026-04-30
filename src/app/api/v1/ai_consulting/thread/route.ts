@@ -75,7 +75,11 @@ export async function GET(request: NextRequest) {
         dislikeCounts.find((reaction) => reaction.analysisId === thread.id)
           ?._count._all ?? 0;
 
-      const data = (thread.data as unknown as { question?: string; data?: { question?: string } }) || {};
+      const data =
+        (thread.data as unknown as {
+          question?: string;
+          data?: { question?: string };
+        }) || {};
       let questionStr = "";
       if (data.question) {
         questionStr = data.question;
@@ -88,7 +92,11 @@ export async function GET(request: NextRequest) {
         if (typeof thread.result === "string") {
           try {
             const parsed = JSON.parse(thread.result);
-            if (parsed && typeof parsed === "object" && typeof parsed.answer === "string") {
+            if (
+              parsed &&
+              typeof parsed === "object" &&
+              typeof parsed.answer === "string"
+            ) {
               answerStr = parsed.answer;
             } else {
               answerStr = thread.result;
@@ -97,7 +105,9 @@ export async function GET(request: NextRequest) {
             answerStr = thread.result;
           }
         } else {
-          answerStr = ((thread.result as unknown as { answer?: string })?.answer) || JSON.stringify(thread.result);
+          answerStr =
+            (thread.result as unknown as { answer?: string })?.answer ||
+            JSON.stringify(thread.result);
         }
       }
 

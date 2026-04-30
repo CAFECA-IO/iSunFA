@@ -19,12 +19,44 @@ export function generateBaseInternalMission(
     targetCompany: params.keyword || "Company",
   };
 
+  const internalDataContextParts: string[] = [];
+
   if (params.prerequisiteData?.balanceSheetReport) {
-    targetObj.internalDataContext = `【系統自動結算之資產負債表報表】\n(已自動將指定期間內之傳票彙整為下列科目餘額與指標)\n\n${JSON.stringify(params.prerequisiteData.balanceSheetReport, null, 2)}`;
-  } else if (params.prerequisiteData?.esgRecordsContext) {
-    targetObj.internalDataContext = params.prerequisiteData.esgRecordsContext;
+    internalDataContextParts.push(
+      `【系統自動結算之資產負債表報表】\n(已自動將指定期間內之傳票彙整為下列科目餘額與指標)\n\n${JSON.stringify(params.prerequisiteData.balanceSheetReport, null, 2)}`,
+    );
   }
-  
+  if (params.prerequisiteData?.cashFlowReport) {
+    internalDataContextParts.push(
+      `【系統自動結算之現金流量表報表】\n(已自動將指定期間內之傳票彙整為下列科目餘額與指標)\n\n${JSON.stringify(params.prerequisiteData.cashFlowReport, null, 2)}`,
+    );
+  }
+  if (params.prerequisiteData?.incomeStatementReport) {
+    internalDataContextParts.push(
+      `【系統自動結算之綜合損益表報表】\n(已自動將指定期間內之傳票彙整為下列科目餘額與指標)\n\n${JSON.stringify(params.prerequisiteData.incomeStatementReport, null, 2)}`,
+    );
+  }
+  if (params.prerequisiteData?.esgReport) {
+    internalDataContextParts.push(
+      `【系統自動結算之碳盤查報告】\n(已自動將指定期間內之紀錄彙整為下列排放量與指標)\n\n${JSON.stringify(params.prerequisiteData.esgReport, null, 2)}`,
+    );
+  }
+  if (params.prerequisiteData?.esgRecordsContext) {
+    internalDataContextParts.push(
+      params.prerequisiteData.esgRecordsContext as string,
+    );
+  }
+  if (params.prerequisiteData?.voucherRecordsContext) {
+    internalDataContextParts.push(
+      params.prerequisiteData.voucherRecordsContext as string,
+    );
+  }
+
+  if (internalDataContextParts.length > 0) {
+    targetObj.internalDataContext =
+      internalDataContextParts.join("\n\n---\n\n");
+  }
+
   if (params.data) {
     const safeData = { ...params.data };
     delete (safeData as Record<string, unknown>).prerequisiteData; // Info: (20260429 - Luphia) 移除原始巨量資料，避免干擾 AI 或超出 Token
@@ -40,12 +72,12 @@ export function generateBaseInternalMission(
 
   const targetCompanyName = params.keyword || "該企業";
   const periodName =
-    params.periodType === "yearly"
+    params.periodType?.toLowerCase() === "yearly"
       ? "年度"
-      : params.periodType === "seasonly"
-        ? "季度"
-        : params.periodType === "monthly"
-          ? "月份"
+      : params.periodType?.toLowerCase() === "seasonly"
+        ? `第 ${params.periodValue} 季度`
+        : params.periodType?.toLowerCase() === "monthly"
+          ? `${params.periodValue} 月份`
           : params.periodValue;
 
   promptMap.forEach((item) => {
@@ -60,8 +92,12 @@ export function generateBaseInternalMission(
     );
   });
 
-  const rawDataStr = params.data ? JSON.stringify(params.data, null, 2) : "未提供相關 JSON 原始數據";
-  const stepTags = promptMap.map(item => `### [${item.key} 分析報告]\n[${item.key}_CONTENT]`).join("\n\n");
+  const rawDataStr = params.data
+    ? JSON.stringify(params.data, null, 2)
+    : "未提供相關 JSON 原始數據";
+  const stepTags = promptMap
+    .map((item) => `### [${item.key} 分析報告]\n[${item.key}_CONTENT]`)
+    .join("\n\n");
   const step0ContentReplacement = `【原始財報與明細數據】：\n${rawDataStr}\n\n【子維度先期分析報告】：\n${stepTags}`;
 
   const injectedFinalPrompt = finalPrompt

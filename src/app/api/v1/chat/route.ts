@@ -11,7 +11,11 @@ export async function POST(request: NextRequest) {
 
     if (!apiKey) {
       console.error("Missing GEMINI_API_KEY");
-      return jsonFail({ code: "IN000099", message: "Server configuration error", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+      return jsonFail({
+        code: "IN000099",
+        message: "Server configuration error",
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     const chatService = new ChatService(apiKey);

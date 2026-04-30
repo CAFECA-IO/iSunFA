@@ -100,16 +100,22 @@ export async function GET(
             emissionFactor: Number(esgRecord.coefficient.emissionFactor),
           }
         : null,
-      emissionSource: esgRecord.emissionSource ? {
-        id: esgRecord.emissionSource.id,
-        name: esgRecord.emissionSource.name,
-      } : null,
+      emissionSource: esgRecord.emissionSource
+        ? {
+            id: esgRecord.emissionSource.id,
+            name: esgRecord.emissionSource.name,
+          }
+        : null,
     };
 
     return jsonOk(formattedRecord);
   } catch (error) {
     console.error("Error fetching esg record:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to fetch esg record", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to fetch esg record",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }
 
@@ -160,7 +166,9 @@ export async function PUT(
 
     // Info: (20260312 - Julian) 更新 ESG 紀錄
     const updatedRecord = await esgRepo.updateEsgRecord(esgId, {
-      ...(reqBody.tradingDate && { tradingDate: new Date(reqBody.tradingDate * 1000) }),
+      ...(reqBody.tradingDate && {
+        tradingDate: new Date(reqBody.tradingDate * 1000),
+      }),
       ...(reqBody.scope && {
         scope: reqBody.scope.toUpperCase() as EsgScope,
       }),
@@ -175,7 +183,7 @@ export async function PUT(
         intensity: reqBody.intensity.toUpperCase() as EsgIntensity,
       }),
       ...(reqBody.confidence !== undefined && {
-        confidence: reqBody.confidence, 
+        confidence: reqBody.confidence,
       }),
       ...(reqBody.isVerified !== undefined && {
         isVerified: reqBody.isVerified,
@@ -232,10 +240,12 @@ export async function PUT(
             emissionFactor: Number(esgRecord.coefficient.emissionFactor),
           }
         : null,
-      emissionSource: updatedRecord.emissionSource ? {
-        id: updatedRecord.emissionSource.id,
-        name: updatedRecord.emissionSource.name,
-      } : null,
+      emissionSource: updatedRecord.emissionSource
+        ? {
+            id: updatedRecord.emissionSource.id,
+            name: updatedRecord.emissionSource.name,
+          }
+        : null,
     };
 
     // Info: (20260312 - Julian) 新增 log
@@ -250,7 +260,11 @@ export async function PUT(
     return jsonOk(formattedRecord);
   } catch (error) {
     console.error("Error updating esg record:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to update esg record", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to update esg record",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }
 

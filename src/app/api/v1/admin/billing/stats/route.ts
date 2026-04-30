@@ -7,7 +7,9 @@ import { adminBillingService } from "@/services/admin.billing.service";
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getIdentityFromDeWT(request.headers.get("Authorization"));
+    const user = await getIdentityFromDeWT(
+      request.headers.get("Authorization"),
+    );
     if (!user || (user.role !== Role.SUPER_ADMIN && user.role !== Role.ADMIN)) {
       return jsonFail(API_ERRORS.AUTH_ADMIN_REQUIRED);
     }
@@ -15,7 +17,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
-    const tab = (searchParams.get("tab") as "orders" | "points" | "credit_cards") || "orders";
+    const tab =
+      (searchParams.get("tab") as "orders" | "points" | "credit_cards") ||
+      "orders";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "20", 10);
 
@@ -24,7 +28,7 @@ export async function GET(request: NextRequest) {
       endDate,
       tab,
       page,
-      limit
+      limit,
     );
 
     return jsonOk(stats);

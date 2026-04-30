@@ -17,11 +17,16 @@ export async function proxy(request: NextRequest) {
         ? hostHeader.split(":")[0]
         : request.nextUrl.hostname;
 
-      const isPublicShare = request.nextUrl.pathname.startsWith("/share/report");
+      const isPublicShare =
+        request.nextUrl.pathname.startsWith("/share/report");
       const isSetup = request.nextUrl.pathname.startsWith("/admin/setup");
 
       // Info: (20260413 - Luphia) 當進來的網域與環境變數設定的網域不同時，強制重導向至正確的網址 (但設定、分享頁面例外)
-      if (!isSetup && !isPublicShare && currentHostname !== targetUrl.hostname) {
+      if (
+        !isSetup &&
+        !isPublicShare &&
+        currentHostname !== targetUrl.hostname
+      ) {
         const redirectUrl = new URL(request.url);
         redirectUrl.hostname = targetUrl.hostname;
         redirectUrl.protocol = targetUrl.protocol;

@@ -12,10 +12,17 @@ import {
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { analysisService, IGenerateAnalysisParams } from "@/services/analysis.service";
+import {
+  analysisService,
+  IGenerateAnalysisParams,
+} from "@/services/analysis.service";
 import { webAuthnService } from "@/services/webauthn.service";
 import { AppError } from "@/lib/utils/error";
-import { completeOrder, failOrder, getPendingOrder } from "@/services/order.service";
+import {
+  completeOrder,
+  failOrder,
+  getPendingOrder,
+} from "@/services/order.service";
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS } from "@/config/contracts";
@@ -183,7 +190,11 @@ export async function POST(request: NextRequest) {
             orderId,
             "UserOperation failed on-chain (e.g. out of gas or insufficient balance)",
           );
-          throw new AppError({ code: "VL000099", message: "Token transfer failed on-chain", status: ApiCode.VALIDATION_ERROR });
+          throw new AppError({
+            code: "VL000099",
+            message: "Token transfer failed on-chain",
+            status: ApiCode.VALIDATION_ERROR,
+          });
         }
 
         // Info: (20260209 - Tzuhan) Mark order as complete
@@ -206,22 +217,24 @@ export async function POST(request: NextRequest) {
         );
 
         // Info: (20260209 - Tzuhan) 3. Complete Order
-        await completeOrder(
-          orderId,
-          JSON.stringify(authentication),
-          undefined,
-        );
+        await completeOrder(orderId, JSON.stringify(authentication), undefined);
       }
     } catch (error) {
       if (error instanceof AppError) {
         return jsonFail(API_ERRORS.IS_UNKNOWN);
       }
       console.error("Order verification failed:", error);
-      return jsonFail({ code: "UN000099", message: String(`Verification failed: ${(error as Error).message}`).slice(0, 30), status: ApiCode.UNAUTHORIZED });
+      return jsonFail({
+        code: "UN000099",
+        message: String(
+          `Verification failed: ${(error as Error).message}`,
+        ).slice(0, 30),
+        status: ApiCode.UNAUTHORIZED,
+      });
     }
 
     /**
-     * Info: (20260420 - Tzuhan) [BUGFIX] Frontend uploads FIN_DATA during Order creation. 
+     * Info: (20260420 - Tzuhan) [BUGFIX] Frontend uploads FIN_DATA during Order creation.
      * We MUST fetch the Order from DB to retrieve the payload and pass it to generateAnalysis!
      */
     const orderData = await paymentRepo.getOrderById(orderId);
@@ -242,16 +255,25 @@ export async function POST(request: NextRequest) {
         isExternal,
         question,
         files,
-      }
+      },
     };
-    const result = await analysisService.generateAnalysis(user.id, generateAnalysisParams);
+    const result = await analysisService.generateAnalysis(
+      user.id,
+      generateAnalysisParams,
+    );
     return jsonOk(result);
   } catch (error) {
     console.error("[API] /user/analysis error:", error);
     if (error instanceof AppError) {
       return jsonFail(API_ERRORS.IS_UNKNOWN);
     }
-    return jsonFail({ code: "IS000099", message: String(error instanceof Error ? error.message : "Failed to generate analysis").slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IS000099",
+      message: String(
+        error instanceof Error ? error.message : "Failed to generate analysis",
+      ).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }
 
@@ -284,10 +306,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Info: (20260128 - Luphia) Safely access mission data, we assume analysis.data has generatedAt
-      const missionData = analysis.data as Record<
-        string,
-        unknown
-      > | null;
+      const missionData = analysis.data as Record<string, unknown> | null;
       const generatedAt =
         typeof missionData?.generatedAt === "string"
           ? missionData.generatedAt.split("T")[0]
@@ -311,7 +330,7 @@ export async function GET(request: NextRequest) {
       const orderData = analysis.order?.data as Record<string, unknown> | null;
       const pValue =
         typeof missionData?.periodValue === "string" ||
-          typeof missionData?.periodValue === "number"
+        typeof missionData?.periodValue === "number"
           ? (missionData.periodValue as string | number)
           : (orderData?.periodValue as string | number) || "";
 
@@ -354,8 +373,11 @@ export async function GET(request: NextRequest) {
             : false;
 
       // Info: (20260416 - Tzuhan) Parse sharing status
-      const isShared = analysis.reportShareTokens && analysis.reportShareTokens.length > 0;
-      const isFinancialDataHidden = isShared ? analysis.reportShareTokens[0].isFinancialDataHidden : true;
+      const isShared =
+        analysis.reportShareTokens && analysis.reportShareTokens.length > 0;
+      const isFinancialDataHidden = isShared
+        ? analysis.reportShareTokens[0].isFinancialDataHidden
+        : true;
 
       return {
         id: analysis.id,
@@ -373,13 +395,20 @@ export async function GET(request: NextRequest) {
         isExternal,
         isShared,
         isFinancialDataHidden,
-        retryCount: typeof missionData?.retryCount === 'number' ? missionData.retryCount : 0,
+        retryCount:
+          typeof missionData?.retryCount === "number"
+            ? missionData.retryCount
+            : 0,
       };
     });
 
     return jsonOk(history);
   } catch (error) {
     console.error("[API] GET /user/analysis error:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to fetch analysis hi...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to fetch analysis hi...",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

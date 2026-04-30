@@ -14,7 +14,8 @@ export const ANALYSIS_CATEGORY = {
   CERTIFICATE_ANALYSIS: "CERTIFICATE_ANALYSIS",
 } as const;
 
-export type AnalysisCategory = (typeof ANALYSIS_CATEGORY)[keyof typeof ANALYSIS_CATEGORY];
+export type AnalysisCategory =
+  (typeof ANALYSIS_CATEGORY)[keyof typeof ANALYSIS_CATEGORY];
 
 export const ANALYSIS_PERIOD = {
   DAILY: "DAILY",
@@ -24,7 +25,8 @@ export const ANALYSIS_PERIOD = {
   YEARLY: "YEARLY",
 } as const;
 
-export type AnalysisPeriod = (typeof ANALYSIS_PERIOD)[keyof typeof ANALYSIS_PERIOD];
+export type AnalysisPeriod =
+  (typeof ANALYSIS_PERIOD)[keyof typeof ANALYSIS_PERIOD];
 
 export const INTERNAL_CATEGORIES = [
   ANALYSIS_CATEGORY.BALANCE_SHEET,

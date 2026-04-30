@@ -28,7 +28,11 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Check permission (OWNER or ADMIN)
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
-      return jsonFail({ code: "FO000099", message: "Permission denied. Only OWN...", status: ApiCode.FORBIDDEN },  );
+      return jsonFail({
+        code: "FO000099",
+        message: "Permission denied. Only OWN...",
+        status: ApiCode.FORBIDDEN,
+      });
     }
 
     const body = await request.json();
@@ -45,7 +49,11 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Fetch operator's current challenge
     const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
-      return jsonFail({ code: "UN000099", message: "Missing WebAuthn challenge....", status: ApiCode.UNAUTHORIZED },  );
+      return jsonFail({
+        code: "UN000099",
+        message: "Missing WebAuthn challenge....",
+        status: ApiCode.UNAUTHORIZED,
+      });
     }
 
     // Info: (20260325 - Tzuhan) Verify FIDO2 signature
@@ -70,7 +78,11 @@ export async function POST(
         teamId,
       );
       if (existingMember) {
-        return jsonFail({ code: "VA000099", message: "User is already a member of...", status: ApiCode.VALIDATION_ERROR },  );
+        return jsonFail({
+          code: "VA000099",
+          message: "User is already a member of...",
+          status: ApiCode.VALIDATION_ERROR,
+        });
       }
     }
 
@@ -82,7 +94,11 @@ export async function POST(
     );
 
     if (existingInvite) {
-      return jsonFail({ code: "VA000099", message: "An invitation is already pe...", status: ApiCode.VALIDATION_ERROR },  );
+      return jsonFail({
+        code: "VA000099",
+        message: "An invitation is already pe...",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     // Info: (20260325 - Tzuhan) Fetch team needed for the contract message

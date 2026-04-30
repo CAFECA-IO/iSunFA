@@ -12,7 +12,7 @@ import {
   TRUE_COEFFICIENT_DATA_DEFRA_PART_4,
   TRUE_COEFFICIENT_DATA_DEFRA_PART_5,
   TRUE_COEFFICIENT_DATA_DEFRA_PART_6,
-  TRUE_COEFFICIENT_DATA_TAIWAN
+  TRUE_COEFFICIENT_DATA_TAIWAN,
 } from "@/constants/true_esg_coefficients";
 import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
 
@@ -37,7 +37,10 @@ export const getEsgPrompt = (
   coefficients?: Partial<ICoefficient>[],
 ) => {
   // Info: (20260423 - Julian) 將外部傳入的 coefficients 與 ALL_TRUE_COEFFICIENT_DATA 合併
-  const allCoefficients = [...ALL_TRUE_COEFFICIENT_DATA, ...(coefficients || [])];
+  const allCoefficients = [
+    ...ALL_TRUE_COEFFICIENT_DATA,
+    ...(coefficients || []),
+  ];
 
   // Info: (20260423 - Julian) 建立「單位」清單，並篩掉空值與重複項目
   const allUnits = [...new Set(allCoefficients.map((c) => c.unit))];

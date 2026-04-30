@@ -19,15 +19,18 @@ export async function GET(
 
     const { account_book_id: accountBookId } = await params;
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
-    if (!accountBook)
-      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
+    if (!accountBook) return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
 
     const teamMember = await teamRepo.getTeamMember(
       sessionUser.id,
       accountBook.teamId,
     );
     if (!teamMember)
-      return jsonFail({ code: "FO000099", message: "No permission to view this ...", status: ApiCode.FORBIDDEN },  );
+      return jsonFail({
+        code: "FO000099",
+        message: "No permission to view this ...",
+        status: ApiCode.FORBIDDEN,
+      });
 
     const esgRecords =
       await esgRepo.getVerifiedEsgRecordsByAccountBookId(accountBookId);
@@ -112,21 +115,28 @@ export async function POST(
 
     const { account_book_id: accountBookId } = await params;
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
-    if (!accountBook)
-      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
+    if (!accountBook) return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
 
     const teamMember = await teamRepo.getTeamMember(
       sessionUser.id,
       accountBook.teamId,
     );
     if (!teamMember)
-      return jsonFail({ code: "FO000099", message: "No permission to view this ...", status: ApiCode.FORBIDDEN },  );
+      return jsonFail({
+        code: "FO000099",
+        message: "No permission to view this ...",
+        status: ApiCode.FORBIDDEN,
+      });
 
     const body = await req.json();
     const { year, totalEmissionTarget, revenueEmissionTarget } = body;
 
     if (!year) {
-      return jsonFail({ code: "VA000099", message: "Year is required", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "Year is required",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     const target = await esgRepo.upsertEsgTarget({

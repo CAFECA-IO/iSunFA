@@ -33,7 +33,11 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     if (!body.name || typeof body.name !== "string" || !body.name.trim()) {
-      return jsonFail({ code: "VA000099", message: "Team name is required", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "Team name is required",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     const team = await teamRepo.createTeam({ name: body.name.trim() });

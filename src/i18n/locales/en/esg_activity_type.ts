@@ -17,7 +17,8 @@ export const esgActivityType = {
   downstream_logistics: "Downstream logistics",
   processing_of_sold_products: "Processing of sold products",
   use_of_sold_products: "Use of sold products",
-  end_of_life_treatment_of_sold_products: "End of life treatment of sold products",
+  end_of_life_treatment_of_sold_products:
+    "End of life treatment of sold products",
   downstream_leased_assets: "Downstream leased assets",
   franchises: "Franchises",
   investments: "Investments",

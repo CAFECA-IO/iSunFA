@@ -188,8 +188,7 @@ export const pricing = {
       payment_method: "결제 방식",
       use_saved_card: "저장된 신용카드 사용",
       bind_new_card: "새로운 신용카드 등록",
-      agree_tos:
-        "이용 약관 및 환불 정책에 동의합니다",
+      agree_tos: "이용 약관 및 환불 정책에 동의합니다",
     },
   },
 };

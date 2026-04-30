@@ -1,6 +1,13 @@
 "use server";
 
-import { createPublicClient, createWalletClient, formatEther, http, parseAbi, parseEther } from "viem";
+import {
+  createPublicClient,
+  createWalletClient,
+  formatEther,
+  http,
+  parseAbi,
+  parseEther,
+} from "viem";
 import { isuncoin } from "@/lib/viem_public";
 import { getAdminAccount } from "@/lib/wallet/admin_wallet";
 import { getPriorityEnvConfig } from "@/services/env.service";
@@ -34,7 +41,10 @@ async function enforceAdminRole(clientToken?: string) {
   // Info: (20260416 - Luphia) 強制向 DB 最新的 role 確認，不依賴 JWT Payload 容錯機制
   const dbUser = await webAuthnRepo.findUserById(dewtUser.id);
 
-  if (!dbUser || (dbUser.role !== Role.SUPER_ADMIN && dbUser.role !== Role.ADMIN)) {
+  if (
+    !dbUser ||
+    (dbUser.role !== Role.SUPER_ADMIN && dbUser.role !== Role.ADMIN)
+  ) {
     console.log("User role:", dbUser?.role);
     throw new Error("Forbidden: Admin access mandatory");
   }
@@ -42,7 +52,13 @@ async function enforceAdminRole(clientToken?: string) {
 }
 
 // Info: (20260416 - Luphia) 取得 Blockchain Dashboard 所需全部維度資料
-export async function getBlockchainDashboardData(clientToken?: string): Promise<{ success: boolean, data?: IBlockchainDashboardData, error?: string }> {
+export async function getBlockchainDashboardData(
+  clientToken?: string,
+): Promise<{
+  success: boolean;
+  data?: IBlockchainDashboardData;
+  error?: string;
+}> {
   try {
     await enforceAdminRole(clientToken);
 
@@ -51,22 +67,27 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
     const rpcUrl = setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
     const publicClient = createPublicClient({ transport: http(rpcUrl) });
 
-    const cpAddress = setupConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS as `0x${string}`;
-    const msAddress = setupConfig.NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS as `0x${string}`;
+    const cpAddress =
+      setupConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS as `0x${string}`;
+    const msAddress =
+      setupConfig.NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS as `0x${string}`;
 
     // Info: (20260416 - Luphia) 1. Admin Wallet ISC & Mining info
     const adminAddress = adminAccount.address;
-    const adminIscWei = await publicClient.getBalance({ address: adminAddress });
+    const adminIscWei = await publicClient.getBalance({
+      address: adminAddress,
+    });
     const adminIscBalance = formatEther(adminIscWei);
 
     /**
      * Info: (20260416 - Luphia) For Mining we reuse toggleMining approach (check via API/Node or we can wrap the existing helper)
-     * In setup.service, toggleMining returns status or we query it. 
+     * In setup.service, toggleMining returns status or we query it.
      * Here we query directly if needed, or import the helper. Wait, `getAdminWalletInfo` in setup.service has logic for it.
      */
     let isMining = false;
     try {
-      const { getAdminWalletInfo } = await import("@/services/setup.blockchain.service");
+      const { getAdminWalletInfo } =
+        await import("@/services/setup.blockchain.service");
       const walletInfo = await getAdminWalletInfo();
       isMining = !!walletInfo?.isMining;
     } catch {
@@ -90,13 +111,29 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
         const cpAbi = parseAbi([
           "function balanceOf(address account) view returns (uint256)",
           "function totalSupply() view returns (uint256)",
-          "function collateralRate() view returns (uint256)"
+          "function collateralRate() view returns (uint256)",
         ]);
 
         const [msIcpWei, totalWei, collatWei] = await Promise.all([
-          msAddress ? publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "balanceOf", args: [msAddress], blockTag: "pending" }) : Promise.resolve(0n),
-          publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "totalSupply" }),
-          publicClient.readContract({ address: cpAddress, abi: cpAbi, functionName: "collateralRate" })
+          msAddress
+            ? publicClient.readContract({
+                address: cpAddress,
+                abi: cpAbi,
+                functionName: "balanceOf",
+                args: [msAddress],
+                blockTag: "pending",
+              })
+            : Promise.resolve(0n),
+          publicClient.readContract({
+            address: cpAddress,
+            abi: cpAbi,
+            functionName: "totalSupply",
+          }),
+          publicClient.readContract({
+            address: cpAddress,
+            abi: cpAbi,
+            functionName: "collateralRate",
+          }),
         ]);
 
         membershipSystemIcpInventory = formatEther(msIcpWei as bigint);
@@ -116,17 +153,23 @@ export async function getBlockchainDashboardData(clientToken?: string): Promise<
         isMining,
         systemTotalIcp,
         collateralRate,
-        totalMembers
-      }
+        totalMembers,
+      },
     };
   } catch (error: unknown) {
     console.error("Dashboard Fetch Error: ", error);
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 
 // Info: (20260416 - Luphia) 安全鑄造代幣功能。透過 publicClient 等待交易完成 (Transaction Receipt) 確保上鏈。
-export async function mintIcpAction(amount: number, clientToken?: string): Promise<{ success: boolean, message?: string }> {
+export async function mintIcpAction(
+  amount: number,
+  clientToken?: string,
+): Promise<{ success: boolean; message?: string }> {
   try {
     await enforceAdminRole(clientToken);
     if (typeof amount !== "number" || amount <= 0) {
@@ -138,32 +181,49 @@ export async function mintIcpAction(amount: number, clientToken?: string): Promi
     const rpcUrl = setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
 
     const publicClient = createPublicClient({ transport: http(rpcUrl) });
-    const walletClient = createWalletClient({ account: adminAccount, chain: isuncoin, transport: http(rpcUrl) });
-    const cpAddress = setupConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS as `0x${string}`;
-    const msAddress = setupConfig.NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS as `0x${string}`;
+    const walletClient = createWalletClient({
+      account: adminAccount,
+      chain: isuncoin,
+      transport: http(rpcUrl),
+    });
+    const cpAddress =
+      setupConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS as `0x${string}`;
+    const msAddress =
+      setupConfig.NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS as `0x${string}`;
 
-    if (!walletClient || !publicClient || !adminAccount || !cpAddress || !msAddress) {
-      throw new Error("Client initialization failed or missing required Addresses (CreditPoint or MembershipSystem).");
+    if (
+      !walletClient ||
+      !publicClient ||
+      !adminAccount ||
+      !cpAddress ||
+      !msAddress
+    ) {
+      throw new Error(
+        "Client initialization failed or missing required Addresses (CreditPoint or MembershipSystem).",
+      );
     }
 
     const tokenAbi = parseAbi([
       "function collateralizedMint(address to, uint256 amount) external payable",
-      "function collateralRate() view returns (uint256)"
+      "function collateralRate() view returns (uint256)",
     ]);
 
     // Info: (20260416 - Luphia) 取得即時抵押率
     const collateralRateWei = await publicClient.readContract({
       address: cpAddress,
       abi: tokenAbi,
-      functionName: "collateralRate"
+      functionName: "collateralRate",
     });
 
     // Info: (20260416 - Luphia) 換算所需 ISC (Wei)
     const amountBigInt = parseEther(amount.toString());
-    const requiredISC = (amountBigInt * (collateralRateWei as bigint)) / BigInt(10 ** 18);
+    const requiredISC =
+      (amountBigInt * (collateralRateWei as bigint)) / BigInt(10 ** 18);
 
     const adminAddress = adminAccount.address;
-    const adminIscWei = await publicClient.getBalance({ address: adminAddress });
+    const adminIscWei = await publicClient.getBalance({
+      address: adminAddress,
+    });
 
     if (adminIscWei < requiredISC) {
       throw new Error("Insufficient Admin ISC Balance to cover collateral.");
@@ -176,7 +236,7 @@ export async function mintIcpAction(amount: number, clientToken?: string): Promi
       abi: tokenAbi,
       functionName: "collateralizedMint",
       args: [msAddress, amountBigInt],
-      value: requiredISC
+      value: requiredISC,
     });
 
     // Info: (20260416 - Luphia) 等待上鏈收據
@@ -185,25 +245,47 @@ export async function mintIcpAction(amount: number, clientToken?: string): Promi
       throw new Error(`Transaction reverted on-chain. TX: ${tx}`);
     }
 
-    return { success: true, message: `Successfully minted ${amount} ICP. TX: ${tx}` };
+    return {
+      success: true,
+      message: `Successfully minted ${amount} ICP. TX: ${tx}`,
+    };
   } catch (error: unknown) {
-    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 
 // Info: (20260416 - Luphia) 切換挖礦開關。嚴格只接受 boolean 防止 Command Injection。
-export async function toggleMiningAction(start: boolean, clientToken?: string): Promise<{ success: boolean, output?: string, error?: string }> {
+export async function toggleMiningAction(
+  start: boolean,
+  clientToken?: string,
+): Promise<{ success: boolean; output?: string; error?: string }> {
   try {
     await enforceAdminRole(clientToken);
 
     // Info: (20260416 - Luphia) Mapping boolean state to strictly predefined commands within toggleMining service
     const res = await toggleMining(Boolean(start));
     if (!res.success) {
-      throw new Error("error" in res && typeof res.error === "string" ? res.error : "Failed to toggle mining via setup.service");
+      throw new Error(
+        "error" in res && typeof res.error === "string"
+          ? res.error
+          : "Failed to toggle mining via setup.service",
+      );
     }
 
-    return { success: true, output: "output" in res && typeof res.output === "string" ? res.output : undefined };
+    return {
+      success: true,
+      output:
+        "output" in res && typeof res.output === "string"
+          ? res.output
+          : undefined,
+    };
   } catch (error: unknown) {
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }

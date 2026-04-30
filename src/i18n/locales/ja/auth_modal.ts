@@ -36,5 +36,4 @@ export const authModal = {
   deploying: "Deploying...",
   success: "Success",
   failed: "Failed",
-
 };

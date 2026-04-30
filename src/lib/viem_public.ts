@@ -30,7 +30,12 @@ const customFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   // Info: (20260417 - Luphia) jsonOk responses are wrapped, we need to unwrap for viem
   if (contentType.includes("application/json")) {
     const json = await res.json();
-    if (json && typeof json === "object" && "success" in json && "payload" in json) {
+    if (
+      json &&
+      typeof json === "object" &&
+      "success" in json &&
+      "payload" in json
+    ) {
       if (!json.success) {
         throw new Error(json.message || "RPC RPC returned success: false");
       }

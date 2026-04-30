@@ -2,7 +2,11 @@ import {
   ANALYSIS_BASE_COSTS,
   ANALYSIS_PERIOD_MULTIPLIERS,
 } from "@/constants/price";
-import { ANALYSIS_CATEGORY, AnalysisCategory, AnalysisPeriod } from "@/constants/analysis";
+import {
+  ANALYSIS_CATEGORY,
+  AnalysisCategory,
+  AnalysisPeriod,
+} from "@/constants/analysis";
 import { OrderType } from "@/constants/status";
 
 export interface IAnalysisParams {
@@ -33,7 +37,10 @@ export interface IOrderParams {
   items?: { name: string; unitPrice: number; quantity: number }[];
 }
 
-export type AnalysisCostParams = IAnalysisParams | IDocumentParams | IConsultationParams;
+export type AnalysisCostParams =
+  | IAnalysisParams
+  | IDocumentParams
+  | IConsultationParams;
 
 /**
  * Info: (20260128 - Luphia) Pricing Logic:
@@ -54,13 +61,18 @@ export function getAnalysisCost(params: AnalysisCostParams): number {
   const baseCost = ANALYSIS_BASE_COSTS[category] ?? 9999;
 
   // Info: (20260419 - Luphia) 2. 若傳入的參數包含 periodType (IAnalysisParams)，則乘上時間週期倍率
-  if ('periodType' in params && params.periodType) {
+  if ("periodType" in params && params.periodType) {
     const multiplier = ANALYSIS_PERIOD_MULTIPLIERS[params.periodType] ?? 1;
     return Math.round(baseCost * multiplier);
   }
 
   // Info: (20260420 - Luphia) 3. 對於憑證分析，若是傳入多個檔案，基礎定價需乘上檔案數量
-  if (category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS && 'files' in params && Array.isArray(params.files) && params.files.length > 0) {
+  if (
+    category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS &&
+    "files" in params &&
+    Array.isArray(params.files) &&
+    params.files.length > 0
+  ) {
     return baseCost * params.files.length;
   }
 

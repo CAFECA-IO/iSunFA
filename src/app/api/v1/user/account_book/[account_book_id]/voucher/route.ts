@@ -54,7 +54,11 @@ export async function POST(
     // Info: (20260311 - Julian) 驗證 file 參數
     if (!fileId) {
       console.error("Missing file or file hash");
-      return jsonFail({ code: "VA000099", message: "File is required", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "File is required",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     // Info: (20260311 - Julian) 建立空白傳票
@@ -251,10 +255,10 @@ export async function GET(
         fileId: v.fileId ?? "",
         file: v.file
           ? {
-            id: v.file.id,
-            hash: v.file.hash,
-            fileName: v.file.fileName || "Unknown",
-          }
+              id: v.file.id,
+              hash: v.file.hash,
+              fileName: v.file.fileName || "Unknown",
+            }
           : undefined,
         lineItems: {
           lines: voucherLineItems,

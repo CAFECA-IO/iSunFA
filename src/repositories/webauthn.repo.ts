@@ -12,7 +12,7 @@ export interface IWebAuthnRepository {
     limit: number;
     search?: string;
     sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
+    sortOrder?: "asc" | "desc";
   }): Promise<{
     data: Array<{
       id: string;
@@ -78,15 +78,15 @@ class WebAuthnRepository implements IWebAuthnRepository {
   public async findAllUsersForAdmin({
     page = 1,
     limit = 15,
-    search = '',
-    sortBy = 'createdAt',
-    sortOrder = 'desc',
+    search = "",
+    sortBy = "createdAt",
+    sortOrder = "desc",
   }: {
     page?: number;
     limit?: number;
     search?: string;
     sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
+    sortOrder?: "asc" | "desc";
   } = {}): Promise<{
     data: Array<{
       id: string;
@@ -105,8 +105,8 @@ class WebAuthnRepository implements IWebAuthnRepository {
     const where: Prisma.UserWhereInput = search
       ? {
           OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { address: { contains: search, mode: 'insensitive' } },
+            { name: { contains: search, mode: "insensitive" } },
+            { address: { contains: search, mode: "insensitive" } },
           ],
         }
       : {};

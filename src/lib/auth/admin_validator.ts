@@ -34,7 +34,11 @@ export async function validateAdminFido2(req: Request) {
   // Info: (20260416 - Luphia) 2. Body Parsing & FIDO2 Struct Evaluation
   const body: IAdminActionPayload = await req.json().catch(() => ({}));
 
-  if (!body.fido2Signature || !body.fido2Signature.authentication || !body.fido2Signature.challengeToken) {
+  if (
+    !body.fido2Signature ||
+    !body.fido2Signature.authentication ||
+    !body.fido2Signature.challengeToken
+  ) {
     throw new Error("FIDO2 signature required to perform this action.");
   }
 
@@ -43,7 +47,11 @@ export async function validateAdminFido2(req: Request) {
   // Info: (20260416 - Luphia) 3. FIDO2 Signature Integrity Check
   const expectedChallenge = await verifyChallengeToken(challengeToken);
 
-  const isValid = await webAuthnService.verifySignature(user.address, authentication, expectedChallenge);
+  const isValid = await webAuthnService.verifySignature(
+    user.address,
+    authentication,
+    expectedChallenge,
+  );
 
   if (!isValid) {
     throw new Error("Invalid FIDO2 biological signature");

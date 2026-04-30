@@ -23,7 +23,11 @@ export async function GET(
     const { thread_id: threadId } = await params;
 
     if (!threadId) {
-      return jsonFail({ code: "VA000099", message: "Invalid thread ID", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "Invalid thread ID",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     // Info: (20260212 - Julian) 取得登入的使用者
@@ -98,7 +102,11 @@ export async function POST(
 
     if (!content) {
       console.error("Content is required");
-      return jsonFail({ code: "IN000099", message: "Content is required", status: ApiCode.INTERNAL_SERVER_ERROR });
+      return jsonFail({
+        code: "IN000099",
+        message: "Content is required",
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     const { thread_id: threadId } = await params;
@@ -107,7 +115,11 @@ export async function POST(
 
     if (!thread) {
       console.error("Thread not found");
-      return jsonFail({ code: "IN000099", message: "Thread not found", status: ApiCode.INTERNAL_SERVER_ERROR });
+      return jsonFail({
+        code: "IN000099",
+        message: "Thread not found",
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     const parentComment = parentId

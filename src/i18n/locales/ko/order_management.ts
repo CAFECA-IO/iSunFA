@@ -17,6 +17,6 @@ export const orderManagement = {
     processing: "처리 중",
     failed: "실패",
     unnamed_user: "이름 없는 사용자",
-    no_data: "주문을 찾을 수 없습니다."
-  }
+    no_data: "주문을 찾을 수 없습니다.",
+  },
 };
