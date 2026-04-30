@@ -160,7 +160,7 @@ export async function issuePurchasedPointsToMember(
         return { success: false, message: `Auto-funding sequence failed: ${fundRes.message}` };
       }
       console.log(`[MembershipService] Auto-funding successful. Retrying point issuance...`);
-      
+
       try {
         const retryTx = await executeIssue();
         return { success: true, message: `Issued ${amount} points (after auto-funding)`, data: { tx: retryTx } };
@@ -242,8 +242,8 @@ export async function fundMembershipSystem(
 
     await publicClient.waitForTransactionReceipt({ hash });
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: `Successfully funded MembershipSystem with ${amountISC} ISC`,
       data: { tx: hash }
     };
