@@ -1,12 +1,21 @@
 import { prisma } from "@/lib/prisma";
-import { EsgTarget, Prisma, EsgRecord } from "@/generated/client";
-import { IEsgDashboardSummary, EsgScope, IEsgScopeDistributionData } from "@/interfaces/esg";
+import {
+  EsgTarget,
+  Prisma,
+  EsgRecord,
+  AIAnalysisStatus,
+} from "@/generated/client";
+import {
+  IEsgDashboardSummary,
+  EsgScope,
+  IEsgScopeDistributionData,
+} from "@/interfaces/esg";
 import { ESG_INDUSTRY_BENCHMARKS } from "@/constants/esg_industry_benchmarks";
 import {
   IEmissionSources,
   IEsgEmissionSourcesSummary,
   IEsgEmissionSourcesUI,
-} from "@/interfaces/emission_source";
+} from "@/interfaces/emission_sources";
 import { EsgIntensity } from "@/interfaces/esg";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 
@@ -342,7 +351,7 @@ export class EsgRepository implements IEsgRepository {
         value: Number(scope3Tons.toFixed(2)),
         percentage: Number(s3Pct.toFixed(1)),
       },
-    ]
+    ];
 
     const summary: IEsgDashboardSummary = {
       totalEmissions: {
@@ -466,6 +475,7 @@ export class EsgRepository implements IEsgRepository {
     const where: Prisma.EmissionSourceWhereInput = {
       accountBookId,
       deletedAt: null,
+      // Info: (20260430 - Julian) 搜尋關鍵字：ID、名稱、地址
       ...(keyword
         ? {
             OR: [
@@ -489,25 +499,34 @@ export class EsgRepository implements IEsgRepository {
     const data: IEsgEmissionSourcesUI[] = emissionSources.map((source) => {
       let totalEmission = 0;
       let intensity = EsgIntensity.LOW;
-      const records = source.esgRecords.map((record) => {
-        totalEmission += Number(record.emissions || 0);
-        if (record.intensity === EsgIntensity.HIGH) {
-          intensity = EsgIntensity.HIGH;
-        } else if (record.intensity === EsgIntensity.MEDIUM && intensity === EsgIntensity.LOW) {
-          intensity = EsgIntensity.MEDIUM;
-        }
+      
+      const records = source.esgRecords
+      // Info: (20260430 - Julian) 只選出有完成分析的紀錄
+        .filter(
+          (record) => record.analysisStatus === AIAnalysisStatus.COMPLETED,
+        )
+        .map((record) => {
+          totalEmission += Number(record.emissions || 0);
+          if (record.intensity === EsgIntensity.HIGH) {
+            intensity = EsgIntensity.HIGH;
+          } else if (
+            record.intensity === EsgIntensity.MEDIUM &&
+            intensity === EsgIntensity.LOW
+          ) {
+            intensity = EsgIntensity.MEDIUM;
+          }
 
-        return {
-          id: record.id,
-          tradingDate: Math.floor(record.tradingDate.getTime() / 1000),
-          activityType: record.activityType as EsgActivityTypeKey,
-          vendor: record.vendor,
-          amount: Number(record.amount || 0),
-          unit: record.unit,
-          emissions: Number(record.emissions || 0),
-          emissionSourceTag: record.emissionSourceTag || undefined,
-        };
-      });
+          return {
+            id: record.id,
+            tradingDate: Math.floor(record.tradingDate.getTime() / 1000),
+            activityType: record.activityType as EsgActivityTypeKey,
+            vendor: record.vendor,
+            amount: Number(record.amount || 0),
+            unit: record.unit,
+            emissions: Number(record.emissions || 0),
+            emissionSourceTag: record.emissionSourceTag || undefined,
+          };
+        });
 
       return {
         id: source.id,
@@ -586,7 +605,7 @@ export class EsgRepository implements IEsgRepository {
     const scopeDistribution: {
       scope: EsgScope;
       count: number;
-    }[] = []
+    }[] = [];
 
     const summary: IEsgEmissionSourcesSummary = {
       totalEmissionSourcesCount: totalEmissionSourcesCount ?? 0,
@@ -604,7 +623,7 @@ export class EsgRepository implements IEsgRepository {
     name: string,
     address?: string,
   ) {
-    const emissionSource= await prisma.emissionSource.create({
+    const emissionSource = await prisma.emissionSource.create({
       data: {
         accountBookId,
         name,
@@ -618,9 +637,9 @@ export class EsgRepository implements IEsgRepository {
     const result: IEmissionSources = {
       id: emissionSource.id,
       name: emissionSource.name,
-      address: emissionSource.address??'',
+      address: emissionSource.address ?? "",
       intensity,
-    }
+    };
 
     return result;
   }
