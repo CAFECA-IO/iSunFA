@@ -294,6 +294,10 @@ export default function PricingPage() {
                       tooltip: t("pricing.plans.free.features.vouchers_overage_tooltip"),
                     },
                     {
+                      text: t("pricing.plans.free.features.logistics"),
+                      tooltip: t("pricing.plans.free.features.logistics_tooltip"),
+                    },
+                    {
                       text: t("pricing.plans.free.features.ai_reports"),
                       tooltip: t("pricing.plans.free.features.ai_overage_tooltip"),
                     },
@@ -324,6 +328,10 @@ export default function PricingPage() {
                       tooltip: t("pricing.plans.team.features.vouchers_overage_tooltip"),
                     },
                     {
+                      text: t("pricing.plans.team.features.logistics"),
+                      tooltip: t("pricing.plans.team.features.logistics_tooltip"),
+                    },
+                    {
                       text: t("pricing.plans.team.features.ai_reports"),
                       tooltip: t("pricing.plans.team.features.ai_overage_tooltip"),
                     },
@@ -352,6 +360,10 @@ export default function PricingPage() {
                     {
                       text: t("pricing.plans.business.features.vouchers"),
                       tooltip: t("pricing.plans.business.features.vouchers_overage_tooltip"),
+                    },
+                    {
+                      text: t("pricing.plans.business.features.logistics"),
+                      tooltip: t("pricing.plans.business.features.logistics_tooltip"),
                     },
                     {
                       text: t("pricing.plans.business.features.ai_reports"),
