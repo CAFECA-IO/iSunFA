@@ -2,12 +2,12 @@
 
 import { useState, useRef } from 'react';
 import Head from 'next/head';
-import { Truck, Ship, Plane, MapPin, Leaf, ArrowRight, Loader2, Weight, Activity, Download, Settings2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { Truck, Ship, Plane, MapPin, Leaf, ArrowRight, Loader2, Weight, Activity, Settings2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import MapViewer from '@/components/map_viewer';
 import { calculateLogisticsPlan, ILogisticsPlan } from '@/lib/actions/route';
 import { parseSmartInput } from '@/lib/actions/smart';
-import * as htmlToImage from 'html-to-image';
-import { jsPDF } from 'jspdf';
+// import * as htmlToImage from 'html-to-image';
+// import { jsPDF } from 'jspdf';
 
 
 type RouteType = 'sea' | 'air' | 'land';
@@ -102,30 +102,30 @@ export default function ReportPage() {
         setSelectedRoutes(newSelected);
     };
 
-    const handleDownloadPDF = async () => {
-        if (!reportRef.current) return;
-        try {
-            // Info: (20260430 - Tzuhan) 小提示：等待 500ms 確保所有地圖都已經飛梭完成再截圖
-            await new Promise(resolve => setTimeout(resolve, 500));
-            const imgData = await htmlToImage.toPng(reportRef.current, {
-                quality: 1,
-                backgroundColor: '#ffffff',
-                pixelRatio: 2
-            });
+    // const handleDownloadPDF = async () => {
+    //     if (!reportRef.current) return;
+    //     try {
+    //         // Info: (20260430 - Tzuhan) 小提示：等待 500ms 確保所有地圖都已經飛梭完成再截圖
+    //         await new Promise(resolve => setTimeout(resolve, 500));
+    //         const imgData = await htmlToImage.toPng(reportRef.current, {
+    //             quality: 1,
+    //             backgroundColor: '#ffffff',
+    //             pixelRatio: 2
+    //         });
 
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const elWidth = reportRef.current.offsetWidth;
-            const elHeight = reportRef.current.offsetHeight;
-            const pdfHeight = (elHeight * pdfWidth) / elWidth;
+    //         const pdf = new jsPDF('p', 'mm', 'a4');
+    //         const pdfWidth = pdf.internal.pageSize.getWidth();
+    //         const elWidth = reportRef.current.offsetWidth;
+    //         const elHeight = reportRef.current.offsetHeight;
+    //         const pdfHeight = (elHeight * pdfWidth) / elWidth;
 
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save('iSunFA_Logistics_Carbon_Report.pdf');
-        } catch (err) {
-            console.error("Failed to generate PDF", err);
-            alert("生成 PDF 失敗，錯誤訊息：" + (err instanceof Error ? err.message : '未知錯誤'));
-        }
-    };
+    //         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    //         pdf.save('iSunFA_Logistics_Carbon_Report.pdf');
+    //     } catch (err) {
+    //         console.error("Failed to generate PDF", err);
+    //         alert("生成 PDF 失敗，錯誤訊息：" + (err instanceof Error ? err.message : '未知錯誤'));
+    //     }
+    // };
 
     const getModeIcon = (mode: string) => {
         switch (mode) {
@@ -454,14 +454,14 @@ export default function ReportPage() {
                             <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                                 <Settings2 className="w-5 h-5 text-orange-500" /> 參數配置與分析控制
                             </h2>
-                            {plan && (
+                            {/* plan && (
                                 <button
                                     onClick={handleDownloadPDF}
                                     className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2 rounded-xl font-semibold transition-all shadow-md flex items-center gap-2 transform hover:-translate-y-0.5 text-sm"
                                 >
                                     <Download className="w-4 h-4" /> 匯出報告
                                 </button>
-                            )}
+                            ) */}
                         </div>
 
                         <div className="space-y-6">
