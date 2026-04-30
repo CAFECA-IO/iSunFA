@@ -10,8 +10,6 @@ import { request } from "@/lib/utils/request";
 import { MODULES } from "@/constants/modules";
 import { CREDIT_PLANS } from "@/config/credit_plans";
 import PricingCard from "@/components/pricing/pricing_card";
-import Header from "@/components/landing_page/header";
-import Footer from "@/components/landing_page/footer";
 import { Check, Minus, Plus, Lock, Loader2 } from "lucide-react";
 import ConfirmModal from "@/components/common/confirm_modal";
 import AuthModal from "@/components/auth/auth_modal";
@@ -205,7 +203,6 @@ export default function PricingPage() {
 
   return (
     <div className="bg-white">
-      <Header />
 
       <main className="isolate">
         <div className="relative pt-14 text-center sm:pt-20 lg:pt-32">
@@ -297,6 +294,10 @@ export default function PricingPage() {
                       tooltip: t("pricing.plans.free.features.vouchers_overage_tooltip"),
                     },
                     {
+                      text: t("pricing.plans.free.features.logistics"),
+                      tooltip: t("pricing.plans.free.features.logistics_tooltip"),
+                    },
+                    {
                       text: t("pricing.plans.free.features.ai_reports"),
                       tooltip: t("pricing.plans.free.features.ai_overage_tooltip"),
                     },
@@ -327,6 +328,10 @@ export default function PricingPage() {
                       tooltip: t("pricing.plans.team.features.vouchers_overage_tooltip"),
                     },
                     {
+                      text: t("pricing.plans.team.features.logistics"),
+                      tooltip: t("pricing.plans.team.features.logistics_tooltip"),
+                    },
+                    {
                       text: t("pricing.plans.team.features.ai_reports"),
                       tooltip: t("pricing.plans.team.features.ai_overage_tooltip"),
                     },
@@ -355,6 +360,10 @@ export default function PricingPage() {
                     {
                       text: t("pricing.plans.business.features.vouchers"),
                       tooltip: t("pricing.plans.business.features.vouchers_overage_tooltip"),
+                    },
+                    {
+                      text: t("pricing.plans.business.features.logistics"),
+                      tooltip: t("pricing.plans.business.features.logistics_tooltip"),
                     },
                     {
                       text: t("pricing.plans.business.features.ai_reports"),
@@ -696,7 +705,6 @@ export default function PricingPage() {
         />
       </main>
 
-      <Footer />
     </div>
   );
 }

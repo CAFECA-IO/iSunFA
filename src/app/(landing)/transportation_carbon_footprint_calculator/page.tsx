@@ -4,8 +4,6 @@ import { useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { Truck, Ship, Plane, MapPin, Leaf, ArrowRight, Loader2, Weight, Activity } from 'lucide-react';
-import Header from '@/components/landing_page/header';
-import Footer from '@/components/landing_page/footer';
 
 type Segment = { mode: string; from: string; to: string; estimatedKm: number; emissions: number; emissionsUnit: string; thumbnailUrl: string; coefficient: number; coefficientUnit: string; coefficientSource: string; };
 type ResultType = { startPoint: string; endPoint: string; totalWeightTonnes: number; totalEmissions: number; thumbnailUrl: string; segments: Segment[]; };
@@ -74,7 +72,6 @@ export default function TransportationCalculatorPage() {
         <title>Transportation Carbon Footprint Calculator | iSunFA</title>
       </Head>
 
-      <Header />
 
       {/* Info: (20260428 - Luphia) Background Gradients from Homepage */}
       <div
@@ -312,7 +309,6 @@ export default function TransportationCalculatorPage() {
         </div>
       </div>
 
-      <Footer />
     </main>
   );
 }
