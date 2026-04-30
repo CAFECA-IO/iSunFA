@@ -86,7 +86,7 @@ export async function POST(
     }
 
     // Info: (20260424 - Julian) 建立排放源
-    const result = await esgRepo.createEsgEmissionSource(accountBookId, name, address);
+    const result = await esgRepo.createEsgEmissionSources(accountBookId, name, address);
 
     return jsonOk(result);
   } catch (error) {

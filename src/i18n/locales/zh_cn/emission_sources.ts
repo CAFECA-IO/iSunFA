@@ -13,13 +13,14 @@ export const emissionSources = {
   },
   modal: {
     title: "新增排放源",
+    title_edit: "编辑排放源",
     name_label: "排放源名称 (厂区)",
     name_placeholder: "例如：台中二厂",
     name_error: "请输入排放源名称",
     address_label: "地址 (选填)",
     address_placeholder: "例如：台中市西屯区工业区一路1号",
     cancel: "取消",
-    confirm: "确认新增",
+    confirm: "储存",
   },
   item: {
     no_records: "尚未登录任何 ESG 纪录",

@@ -222,7 +222,7 @@ export default function RecordTabModal({
                       disabled={!journalId}
                       className={`flex items-center gap-2 rounded-t-lg border-b-2 px-3 py-2 text-sm font-bold transition-colors ${activeTab === "journal"
                         ? "border-orange-500 text-orange-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        : "border-transparent text-gray-500 enabled:hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
                         }`}
                     >
                       <BookCopy size={16} />
@@ -233,7 +233,7 @@ export default function RecordTabModal({
                       disabled={!voucherId}
                       className={`flex items-center gap-2 rounded-t-lg border-b-2 px-3 py-2 text-sm font-bold transition-colors ${activeTab === "voucher"
                         ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        : "border-transparent text-gray-500 enabled:hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
                         }`}
                     >
                       <FileText size={16} />
@@ -244,7 +244,7 @@ export default function RecordTabModal({
                       disabled={!esgId}
                       className={`flex items-center gap-2 rounded-t-lg border-b-2 px-3 py-2 text-sm font-bold transition-colors ${activeTab === "esg"
                         ? "border-emerald-500 text-emerald-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        : "border-transparent text-gray-500 enabled:hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
                         }`}
                     >
                       <Leaf size={16} />
@@ -255,7 +255,7 @@ export default function RecordTabModal({
                       disabled={!file?.hash}
                       className={`flex items-center gap-2 rounded-t-lg border-b-2 px-3 py-2 text-sm font-bold transition-colors ${activeTab === "preview"
                         ? "border-indigo-500 text-indigo-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        : "border-transparent text-gray-500 enabled:hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
                         }`}
                     >
                       <ImageIcon size={16} />

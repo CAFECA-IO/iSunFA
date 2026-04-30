@@ -1,6 +1,12 @@
 import { EsgIntensity, EsgScope } from "@/interfaces/esg";
 import { IEsgRecordBrief } from "@/interfaces/esg";
 
+// Info: (20260430 - Julian) 排放源的輸入，用於 DB 建立或編輯
+export interface IEmissionSourcesInput {
+  name: string; // Info: (20260430 - Julian) 排放源名稱
+  address?: string; // Info: (20260430 - Julian) 排放源地址
+}
+
 export interface IEmissionSources {
   id: string;
   name: string;

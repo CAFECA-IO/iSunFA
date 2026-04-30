@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { ChevronDown, Minus, Plus } from "lucide-react";
+import { ChevronDown, Minus, Plus, Edit2 } from "lucide-react";
 import RecordTabModal from "@/components/user/common/record_tab_modal";
 import { IEsgEmissionSourcesUI } from "@/interfaces/emission_sources";
 import { EsgIntensity, IEsgRecordBrief } from "@/interfaces/esg";
@@ -10,6 +10,7 @@ import { numberWithCommas, timestampToString } from "@/lib/utils/common";
 
 interface IEmissionSourcesItemProps {
   data: IEsgEmissionSourcesUI;
+  onEdit?: () => void;
 }
 
 const RecordItem = ({ rec, onClick }: { rec: IEsgRecordBrief; onClick: () => void }) => {
@@ -46,6 +47,7 @@ const RecordItem = ({ rec, onClick }: { rec: IEsgRecordBrief; onClick: () => voi
 
 export default function EmissionSourcesItem({
   data,
+  onEdit = () => { },
 }: IEmissionSourcesItemProps) {
   const { t } = useTranslation();
 
@@ -177,8 +179,22 @@ export default function EmissionSourcesItem({
             </div>
           </div>
         </div>
-        <div className="text-slate-400 p-2 shrink-0 transition-colors duration-200 group-hover:text-orange-600">
-          {isOpen ? <Minus size={20} /> : <Plus size={20} />}
+        <div className="flex items-center gap-2">
+          {onEdit && (
+            <button
+              type="button"
+              className="text-slate-400 p-2 shrink-0 transition-colors duration-200 hover:text-blue-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+            >
+              <Edit2 size={18} />
+            </button>
+          )}
+          <div className="text-slate-400 p-2 shrink-0 transition-colors duration-200 group-hover:text-orange-600">
+            {isOpen ? <Minus size={20} /> : <Plus size={20} />}
+          </div>
         </div>
       </div>
 

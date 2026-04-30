@@ -13,13 +13,14 @@ export const emissionSources = {
   },
   modal: {
     title: "배출원 추가",
+    title_edit: "배출원 편집",
     name_label: "배출원 이름 (공장)",
     name_placeholder: "예: 타이중 제2공장",
     name_error: "배출원 이름을 입력하십시오",
     address_label: "주소 (선택 사항)",
     address_placeholder: "예: 타이중 시 시툰 구 공업구 1로 1호",
     cancel: "취소",
-    confirm: "추가 확인",
+    confirm: "저장",
   },
   item: {
     no_records: "등록된 ESG 기록이 없습니다",
