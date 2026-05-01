@@ -1,7 +1,8 @@
 'use server';
 
-import { logisticsRepo } from "@/repositories/logistics.repo";
 import { INearestPortResult } from '@/interfaces/logistics';
+import seaportsData from '@/lib/data/seaports.json';
+import airportsData from '@/lib/data/airports.json';
 
 // Info: (20260430 - Tzuhan) Haversine formula to calculate distance in km
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -21,7 +22,7 @@ export async function getNearestPort(lat: number, lng: number): Promise<INearest
   try {
     if (isNaN(lat) || isNaN(lng)) throw new Error("Invalid coordinates provided.");
 
-    const ports = await logisticsRepo.getSeaports(['Large', 'Medium']);
+    const ports = seaportsData as unknown as INearestPortResult[];
 
     if (ports.length === 0) return null;
 
@@ -50,7 +51,7 @@ export async function getNearestAirport(lat: number, lng: number): Promise<INear
   try {
     if (isNaN(lat) || isNaN(lng)) throw new Error("Invalid coordinates provided.");
 
-    const airports = await logisticsRepo.getAirports(['large_airport', 'medium_airport']);
+    const airports = airportsData as unknown as INearestPortResult[];
 
     if (airports.length === 0) return null;
 

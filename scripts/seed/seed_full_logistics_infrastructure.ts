@@ -62,7 +62,7 @@ export async function seedLogisticsInfrastructure(dataDir: string) {
         // Info: (20260430 - Tzuhan) Deduplicate by port id to prevent PostgreSQL ON CONFLICT error
         const uniquePortsMap = new Map();
         for (const f of validPorts) {
-            uniquePortsMap.set(f.properties.port, f);
+            uniquePortsMap.set(f.properties!.port, f);
         }
         const uniquePorts = Array.from(uniquePortsMap.values());
         

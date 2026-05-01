@@ -1,9 +1,9 @@
 'use server';
 
-import { getNearestPort, getNearestAirport } from '@/lib/actions/logistics';
-import searoute from 'searoute-js';
-import { logisticsRepo } from "@/repositories/logistics.repo";
-import { esgRepo } from "@/repositories/esg.repo";
+import { parseSmartInput, ISmartParseResult } from '@/services/route.smart.service';
+import { getNearestPort, getNearestAirport } from '@/services/logistics.service';
+import { calculateSeaPath } from '@/lib/utils/route.sea';
+import { calculateAirPath } from '@/lib/utils/route.air';
 import { ILogisticsPlan, ITransportSegment } from '@/interfaces/logistics';
 
 function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -17,10 +17,6 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const d = R * c;
     return d;
-}
-
-function calculateDistanceNm(lat1: number, lon1: number, lat2: number, lon2: number) {
-    return calculateDistanceKm(lat1, lon1, lat2, lon2) / 1.852;
 }
 
 function splitAtAntimeridian(geometry: GeoJSON.Geometry | null | undefined): GeoJSON.Geometry | null {
@@ -124,31 +120,7 @@ async function getLandRoute(start: { lat: number, lng: number }, end: { lat: num
     }
 }
 
-function getSeaRoute(start: { lat: number, lng: number }, end: { lat: number, lng: number }): ITransportSegment {
-    try {
-        // Info: (20260430 - Tzuhan) searoute requires [lng, lat]
-        const origin = [start.lng, start.lat];
-        const destination = [end.lng, end.lat];
-        const route = searoute(origin, destination);
 
-        return { success: true, distanceNm: route.properties.length, geometry: splitAtAntimeridian(route.geometry as GeoJSON.Geometry) };
-    } catch {
-        return { success: false, distanceNm: 0, geometry: null };
-    }
-}
-
-function getAirRoute(start: { lat: number, lng: number }, end: { lat: number, lng: number }): ITransportSegment {
-    try {
-        const distNm = calculateDistanceNm(start.lat, start.lng, end.lat, end.lng);
-        const geometry: GeoJSON.LineString = {
-            type: "LineString",
-            coordinates: [[start.lng, start.lat], [end.lng, end.lat]]
-        };
-        return { success: true, distanceNm: distNm, geometry: splitAtAntimeridian(geometry) };
-    } catch {
-        return { success: false, distanceNm: 0, geometry: null };
-    }
-}
 
 export async function calculateLogisticsPlan(
     originLat: number, originLng: number,
@@ -156,14 +128,6 @@ export async function calculateLogisticsPlan(
     weightKg: number = 1000
 ): Promise<ILogisticsPlan> {
     try {
-        // Info: (20260430 - Tzuhan) 檢查資料庫快取，避免重複呼叫 OSRM 與重新繪製路徑
-        const cachedPlan = await logisticsRepo.getCachedPlan(originLat, originLng, destLat, destLng, weightKg);
-
-        if (cachedPlan && cachedPlan.planData) {
-            console.log("[Logistics] Cache hit! Returning cached logistics plan.");
-            return cachedPlan.planData as unknown as ILogisticsPlan;
-        }
-
         const [exportPort, importPort, exportAirport, importAirport] = await Promise.all([
             getNearestPort(originLat, originLng),
             getNearestPort(destLat, destLng),
@@ -175,18 +139,10 @@ export async function calculateLogisticsPlan(
             throw new Error("無法找到匹配的進出口節點 (海港或機場缺失)");
         }
 
-        // Info: (20260430 - Tzuhan) 取得 DB 中碳排係數
-        const coefficients = await esgRepo.getEsgCoefficients({
-            where: { name: { in: ['SEA', 'AIR', 'LAND'] }, accountBookId: null }
-        });
-        const coeffSea = coefficients.find(c => c.name === 'SEA');
-        const coeffAir = coefficients.find(c => c.name === 'AIR');
-        const coeffLand = coefficients.find(c => c.name === 'LAND');
-
         const factors = {
-            SEA: coeffSea ? Number(coeffSea.emissionFactor) : 0.01045,
-            AIR: coeffAir ? Number(coeffAir.emissionFactor) : 0.6023,
-            LAND: coeffLand ? Number(coeffLand.emissionFactor) : 0.11289
+            SEA: 0.01045,
+            AIR: 0.6023,
+            LAND: 0.11289
         };
 
         const weightTonne = weightKg / 1000.0;
@@ -202,7 +158,7 @@ export async function calculateLogisticsPlan(
 
         const seaPlan = {
             land_origin_to_port: await getLandRoute(origin, exportPort),
-            sea_port_to_port: getSeaRoute(exportPort, importPort),
+            sea_port_to_port: calculateSeaPath(exportPort, importPort),
             land_port_to_dest: await getLandRoute(importPort, dest),
             total_co2eKg: 0
         };
@@ -214,7 +170,7 @@ export async function calculateLogisticsPlan(
             seaCo2e += c;
         }
         if (seaPlan.sea_port_to_port.success) {
-            const seaDistKm = (seaPlan.sea_port_to_port.distanceNm || 0) * 1.852;
+            const seaDistKm = seaPlan.sea_port_to_port.distanceKm || 0;
             const c = seaDistKm * weightTonne * factors.SEA;
             seaPlan.sea_port_to_port.co2eKg = c;
             seaCo2e += c;
@@ -228,7 +184,7 @@ export async function calculateLogisticsPlan(
 
         const airPlan = {
             land_origin_to_airport: await getLandRoute(origin, exportAirport),
-            air_airport_to_airport: getAirRoute(exportAirport, importAirport),
+            air_airport_to_airport: calculateAirPath(exportAirport, importAirport),
             land_airport_to_dest: await getLandRoute(importAirport, dest),
             total_co2eKg: 0
         };
@@ -240,7 +196,7 @@ export async function calculateLogisticsPlan(
             airCo2e += c;
         }
         if (airPlan.air_airport_to_airport.success) {
-            const airDistKm = (airPlan.air_airport_to_airport.distanceNm || 0) * 1.852;
+            const airDistKm = airPlan.air_airport_to_airport.distanceKm || 0;
             const c = airDistKm * weightTonne * factors.AIR;
             airPlan.air_airport_to_airport.co2eKg = c;
             airCo2e += c;
@@ -267,20 +223,27 @@ export async function calculateLogisticsPlan(
             }
         };
 
-        // Info: (20260430 - Tzuhan) 將算出的結果非同步寫入快取 (不阻塞回傳)
-        logisticsRepo.saveCachedPlan({
-            originLat,
-            originLng,
-            destLat,
-            destLng,
-            weightKg,
-            planData: JSON.parse(JSON.stringify(finalPlan))
-        }).catch(err => console.error("[Logistics] Failed to write cache:", err));
-
         return finalPlan;
 
     } catch (error) {
         console.error("[Action Error] calculateILogisticsPlan:", error);
         throw new Error("計算物流計畫時發生錯誤");
     }
+}
+
+export async function calculateLogisticsPlanFromText(text: string, externalWeight?: number | string): Promise<{ plan: ILogisticsPlan, parsed: ISmartParseResult }> {
+    const parsed = await parseSmartInput(text);
+
+    if (!parsed.origin || !parsed.dest) {
+        throw new Error('Could not resolve origin or destination from text.');
+    }
+
+    const weight = Number(externalWeight || parsed.weightKg || 1000);
+    const plan = await calculateLogisticsPlan(
+        parsed.origin.lat, parsed.origin.lng,
+        parsed.dest.lat, parsed.dest.lng,
+        weight
+    );
+
+    return { plan, parsed };
 }

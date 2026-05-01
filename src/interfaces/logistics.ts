@@ -12,7 +12,6 @@ export interface INearestPortResult {
 export interface ITransportSegment {
   success: boolean;
   distanceKm?: number;
-  distanceNm?: number;
   co2eKg?: number;
   geometry: Geometry | null;
   isFallback?: boolean;

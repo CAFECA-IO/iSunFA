@@ -1,0 +1,193 @@
+'use client';
+
+import { useRef, useEffect, useMemo } from 'react';
+import Map, { Source, Layer, MapRef, Marker } from 'react-map-gl/maplibre';
+import { MapPin } from 'lucide-react';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import type { FeatureCollection, Feature, Geometry } from 'geojson';
+
+export interface IMapViewerProps {
+	// Info: (20260430 - Tzuhan) 支援多式聯運的 FeatureCollection 或是單一軌跡
+	routeGeojson?: FeatureCollection<Geometry> | Feature<Geometry> | null;
+	// Info: (20260430 - Tzuhan) 使用者點擊要聚焦的特定區段 Geometry
+	focusGeojson?: GeoJSON.FeatureCollection | GeoJSON.Feature | GeoJSON.Geometry | null;
+	className?: string; // Info: (20260430 - Tzuhan) 自定義外觀 (例如高度)
+	interactive?: boolean; // Info: (20260430 - Tzuhan) 是否允許互動 (平移、縮放)
+	hideLabel?: boolean; // Info: (20260430 - Tzuhan) 隱藏左下角的標籤
+	fitBoundsPadding?: number; // Info: (20260430 - Tzuhan) 控制飛梭邊距，小地圖需設小一點
+	showRouteMarkers?: boolean; // Info: (20260430 - Luphia) 顯示起終點標記
+	duration?: number; // Info: (20260501 - Luphia) 飛梭動畫時長
+}
+
+function getStartAndEndCoordinates(geojson: GeoJSON.FeatureCollection | GeoJSON.Feature | GeoJSON.Geometry | null) {
+	let start: number[] | null = null;
+	let end: number[] | null = null;
+
+	const processCoords = (coords: number[][]) => {
+		if (coords.length > 0) {
+			if (!start) start = coords[0];
+			end = coords[coords.length - 1];
+		}
+	};
+
+	const processGeometry = (geom: GeoJSON.GeoJSON | null) => {
+		if (!geom) return;
+		if (geom.type === 'LineString') {
+			processCoords(geom.coordinates);
+		} else if (geom.type === 'MultiLineString') {
+			if (geom.coordinates.length > 0) {
+				if (!start) start = geom.coordinates[0][0];
+				const lastLine = geom.coordinates[geom.coordinates.length - 1];
+				end = lastLine[lastLine.length - 1];
+			}
+		} else if (geom.type === 'GeometryCollection') {
+			geom.geometries.forEach(processGeometry);
+		} else if (geom.type === 'FeatureCollection') {
+			geom.features.forEach((f: GeoJSON.Feature) => processGeometry(f.geometry));
+		} else if (geom.type === 'Feature') {
+			processGeometry(geom.geometry);
+		}
+	};
+
+	processGeometry(geojson);
+	return { start, end };
+}
+
+// Info: (20260430 - Tzuhan) 輔助函數：計算 Geometry 的 Bounding Box [[minLng, minLat], [maxLng, maxLat]]
+function getBoundingBox(geojson: GeoJSON.FeatureCollection | GeoJSON.Feature | GeoJSON.Geometry | null): [[number, number], [number, number]] | null {
+	if (!geojson) return null;
+	let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+	const updateBounds = (coord: number[]) => {
+		if (coord[0] < minX) minX = coord[0];
+		if (coord[0] > maxX) maxX = coord[0];
+		if (coord[1] < minY) minY = coord[1];
+		if (coord[1] > maxY) maxY = coord[1];
+	};
+
+	const processGeometry = (geom: GeoJSON.GeoJSON | null) => {
+		if (!geom) return;
+		if (geom.type === 'LineString') {
+			geom.coordinates.forEach(updateBounds);
+		} else if (geom.type === 'MultiLineString') {
+			geom.coordinates.forEach((line: number[][]) => line.forEach(updateBounds));
+		} else if (geom.type === 'Point') {
+			updateBounds(geom.coordinates);
+		} else if (geom.type === 'GeometryCollection') {
+			geom.geometries.forEach(processGeometry);
+		} else if (geom.type === 'FeatureCollection') {
+			geom.features.forEach((f: GeoJSON.Feature) => processGeometry(f.geometry));
+		} else if (geom.type === 'Feature') {
+			processGeometry(geom.geometry);
+		}
+	};
+
+	processGeometry(geojson);
+
+	if (minX === Infinity) return null;
+
+	// Info: (20260430 - Tzuhan) 防呆：如果起終點太近，給予微小的 bbox 避免報錯或無法縮放
+	if (maxX - minX < 0.001) { minX -= 0.01; maxX += 0.01; }
+	if (maxY - minY < 0.001) { minY -= 0.01; maxY += 0.01; }
+
+	return [[minX, minY], [maxX, maxY]];
+}
+
+export default function MapViewer({ routeGeojson = null, focusGeojson = null, className = "w-full h-full min-h-[600px]", interactive = true, fitBoundsPadding = 80, showRouteMarkers = false, duration = 2500 }: IMapViewerProps) {
+	const mapTilerKey = process.env.NEXT_PUBLIC_MAPTILER_KEY;
+
+	const mapRef = useRef<MapRef>(null);
+	const targetGeojson = focusGeojson || routeGeojson;
+	const initialBbox = targetGeojson ? getBoundingBox(targetGeojson) : null;
+	const { start: startCoord, end: endCoord } = useMemo(() => getStartAndEndCoordinates(routeGeojson), [routeGeojson]);
+
+	useEffect(() => {
+		if (targetGeojson && mapRef.current) {
+			const bbox = getBoundingBox(targetGeojson);
+			if (bbox) {
+				// Info: (20260501 - Luphia) 確保重新匯出時能正確縮放，但避免重複觸發動畫
+				mapRef.current.fitBounds(bbox, { padding: fitBoundsPadding, duration: 0, maxZoom: 12, essential: true });
+			}
+		}
+	}, [targetGeojson, fitBoundsPadding]);
+
+	const handleMapLoad = () => {
+		if (targetGeojson && mapRef.current) {
+			const bbox = getBoundingBox(targetGeojson);
+			if (bbox) {
+				mapRef.current.fitBounds(bbox, { padding: fitBoundsPadding, duration, maxZoom: 12, essential: true });
+			}
+		}
+	};
+
+	if (!mapTilerKey) {
+		return <div className="p-4 text-red-500 bg-red-100 rounded">MapTiler Key 尚未設定！</div>;
+	}
+
+	// Info: (20260430 - Tzuhan) dataviz-light
+	// Info: (20260430 - Tzuhan) （要付費）使用 MapTiler 的 dataviz-light (高對比亮色，且保留國家邊界與地理脈絡) 底圖
+	const mapStyle = `https://api.maptiler.com/maps/dataviz-light/style.json?key=${mapTilerKey}`;
+
+	return (
+		<div className={`${className} rounded-xl overflow-hidden shadow-2xl relative`}>
+			<Map
+				ref={mapRef}
+				// @ts-expect-error: Required for html2canvas to capture WebGL context
+				preserveDrawingBuffer={true}
+				renderWorldCopies={false}
+				initialViewState={initialBbox ? {
+					bounds: initialBbox,
+					fitBoundsOptions: { padding: fitBoundsPadding }
+				} : {
+					longitude: 150,
+					latitude: 20,
+					zoom: 2
+				}}
+				mapStyle={mapStyle}
+				interactive={interactive}
+				onLoad={handleMapLoad}
+			>
+				{/* Info: (20260430 - Tzuhan) 如果傳入了 GeoJSON，就把它畫在圖層上 */}
+				{routeGeojson && (
+					<Source id="route-source" type="geojson" data={routeGeojson}>
+						<Layer
+							id="route-layer"
+							type="line"
+							paint={{
+								// Info: (20260430 - Tzuhan) 如果 feature 有 properties.color 則使用，否則使用預設 ESG 螢光綠
+								'line-color': ['coalesce', ['get', 'color'], '#00E676'],
+								'line-width': 3, // Info: (20260430 - Tzuhan) 線條寬度
+								'line-opacity': 0.8,
+							}}
+						/>
+					</Source>
+				)}
+
+				{/* Info: (20260430 - Luphia) 若啟用，則在軌跡起訖點渲染獨立的圖標 */}
+				{showRouteMarkers && startCoord && (
+					<Marker longitude={startCoord[0]} latitude={startCoord[1]} anchor="bottom">
+						<div className="flex flex-col items-center pointer-events-none drop-shadow-md">
+							<div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm mb-1">
+								<MapPin className="w-3 h-3 text-orange-600" />
+								<span className="text-[10px] font-bold text-gray-800">起點</span>
+							</div>
+							<div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-white/90"></div>
+						</div>
+					</Marker>
+				)}
+
+				{showRouteMarkers && endCoord && (
+					<Marker longitude={endCoord[0]} latitude={endCoord[1]} anchor="bottom">
+						<div className="flex flex-col items-center pointer-events-none drop-shadow-md">
+							<div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm mb-1">
+								<MapPin className="w-3 h-3 text-rose-600" />
+								<span className="text-[10px] font-bold text-gray-800">終點</span>
+							</div>
+							<div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-white/90"></div>
+						</div>
+					</Marker>
+				)}
+			</Map>
+		</div>
+	);
+}
