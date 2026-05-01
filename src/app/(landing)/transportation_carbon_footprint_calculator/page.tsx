@@ -9,6 +9,12 @@ import { ILogisticsPlan } from '@/interfaces/logistics';
 import { PlanSection, RouteType } from '@/components/transportation_carbon_footprint_calculator/plan_section';
 import type { IMapViewerRef } from '@/components/transportation_carbon_footprint_calculator/map_viewer';
 import { ReportLayout } from '@/components/common/report_layout';
+import { useAuth } from "@/contexts/auth_context";
+import LoginButton from "@/components/common/login_button";
+import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
+import { useOrderTransaction, IOrderPayload } from "@/hooks/use_order_transaction";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
+import { ORDER_TYPE } from "@/constants/status";
 
 export default function ReportPage() {
 	const [aiInput, setAiInput] = useState('從臺北國父紀念館運送 5000 公斤的石板到曼徹斯特博物館');
@@ -18,6 +24,10 @@ export default function ReportPage() {
 	const [isExporting, setIsExporting] = useState(false); // Info: (20260501 - Luphia) PDF 匯出狀態
 	const [plan, setPlan] = useState<ILogisticsPlan | null>(null);
 	const [error, setError] = useState<string | null>(null);
+
+	const { user } = useAuth();
+	const { workflowStatus, resetTransaction, executeOrderTransaction } = useOrderTransaction();
+	const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
 	// Info: (20260430 - Tzuhan) 手動參數
 	const [showManual, setShowManual] = useState(false);
@@ -34,7 +44,7 @@ export default function ReportPage() {
 	};
 
 	// Info: (20260430 - Tzuhan) 開始產生報告 (合併 AI 解析與運算)
-	const calculateFootprint = async () => {
+	const calculateFootprint = async (orderId?: string) => {
 		let currentOrigin = { ...origin };
 		let currentDest = { ...dest };
 		let currentWeight = weightKg;
@@ -95,6 +105,7 @@ export default function ReportPage() {
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					action: 'calculate',
+					orderId: orderId, // Info: (20260501 - Luphia) 傳遞給 API 以驗證付款
 					originLat: Number(currentOrigin.lat),
 					originLng: Number(currentOrigin.lng),
 					destLat: Number(currentDest.lat),
@@ -115,6 +126,36 @@ export default function ReportPage() {
 			setLoading(false);
 			setIsParsing(false);
 		}
+	};
+
+	const handleOpenPayment = () => {
+		if (!user) return;
+		setIsPaymentModalOpen(true);
+		resetTransaction();
+	};
+
+	const handlePaymentConfirm = async () => {
+		const orderPayload: IOrderPayload = {
+			type: ORDER_TYPE.ANALYSIS,
+			data: {
+				category: ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT,
+				origin,
+				dest,
+				weightKg
+			},
+			items: [
+				{
+					name: "碳足跡分析費用", // 可以換成 i18n
+					unitPrice: 10,
+					quantity: 1,
+				},
+			],
+		};
+
+		await executeOrderTransaction(orderPayload, 10, async (authData) => {
+			await calculateFootprint(authData.orderId);
+			setIsPaymentModalOpen(false);
+		});
 	};
 
 	const toggleRoute = (route: RouteType) => {
@@ -278,6 +319,36 @@ export default function ReportPage() {
 
 			{/* Info: (20260501 - Luphia) PDF 匯出時的滿版覆蓋載入提示 */}
 			{isExporting && (
+				<div className="fixed inset-0 z-[9999] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center pointer-events-none">
+					<Loader2 className="w-16 h-16 text-orange-500 animate-spin mb-4" />
+					<h2 className="text-2xl font-bold text-gray-800">正在生成高畫質 PDF...</h2>
+					<p className="text-gray-500 mt-2">這可能需要幾秒鐘的時間，請稍候</p>
+				</div>
+			)}
+
+			<PaymentConfirmModal
+				isOpen={isPaymentModalOpen}
+				onClose={() => {
+					if (workflowStatus === "error" || workflowStatus === "payment_success") {
+						resetTransaction();
+						setIsPaymentModalOpen(false);
+					} else if (workflowStatus === "idle") {
+						setIsPaymentModalOpen(false);
+					}
+				}}
+				onConfirm={handlePaymentConfirm}
+				cost={10}
+				items={[
+					{
+						label: "物流碳足跡分析",
+						value: "物流分析",
+					},
+				]}
+				status={workflowStatus}
+			/>
+
+			{/* Info: (20260501 - Luphia) PDF 匯出時的滿版覆蓋載入提示 */}
+			{isExporting && (
 				<div className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
 					<Loader2 className="w-16 h-16 text-orange-600 animate-spin mb-6 drop-shadow-md" />
 					<h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">正在為您產生高畫質 PDF 報告</h2>
@@ -434,12 +505,18 @@ export default function ReportPage() {
 									>
 										{isExporting ? <><Loader2 className="w-5 h-5 animate-spin" /> 匯出中...</> : <><Download className="w-5 h-5" /> 匯出報告</>}
 									</button>
-									<button
-										onClick={calculateFootprint} disabled={loading || isParsing || isExporting}
-										className="px-8 py-3 bg-orange-600 hover:bg-orange-500 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:hover:translate-y-0 flex items-center gap-2 shadow-md transform hover:-translate-y-0.5 w-full sm:w-auto justify-center"
-									>
-										{(loading || isParsing) ? <><Loader2 className="w-5 h-5 animate-spin" /> 運算中...</> : <><Activity className="w-5 h-5" /> 產生分析報告</>}
-									</button>
+									{user ? (
+										<button
+											onClick={handleOpenPayment} disabled={loading || isParsing || isExporting}
+											className="px-8 py-3 bg-orange-600 hover:bg-orange-500 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:hover:translate-y-0 flex items-center gap-2 shadow-md transform hover:-translate-y-0.5 w-full sm:w-auto justify-center"
+										>
+											{(loading || isParsing) ? <><Loader2 className="w-5 h-5 animate-spin" /> 運算中...</> : <><Activity className="w-5 h-5" /> 產生分析報告</>}
+										</button>
+									) : (
+										<div className="w-full sm:w-auto">
+											<LoginButton label="請先登入以產生分析報告" />
+										</div>
+									)}
 								</div>
 							</div>
 
