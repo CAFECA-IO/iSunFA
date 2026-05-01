@@ -81,8 +81,10 @@ function splitAtAntimeridian(geometry: GeoJSON.Geometry | null | undefined): Geo
 
 async function getLandRoute(start: { lat: number, lng: number }, end: { lat: number, lng: number }): Promise<ITransportSegment> {
     try {
-        const url = `http://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?geometries=geojson&steps=true`;
-        const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+        // Info: (20260501) 改用本地 Docker OSRM 伺服器，由環境變數注入
+        const osrmUrl = process.env.OSRM_ROUTER_URL;
+        const url = `${osrmUrl}/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?geometries=geojson&steps=true`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
         const data = await res.json();
 
         if (data.code === 'Ok') {
