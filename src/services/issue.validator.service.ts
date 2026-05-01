@@ -282,46 +282,90 @@ ${resultContent.substring(0, 8000)} // Truncating to avoid token limit
               console.log(
                 `[IssueValidator] Validation passed for Task ID: ${currentTaskId}. Approving submission...`,
               );
-              const { request } = await publicClient.simulateContract({
-                account: adminAccount,
-                address: mbAddress,
-                abi: MB_ABI,
-                functionName: "approveSubmission",
-                args: [currentTaskId, subIndex],
-              });
-              const txHash = await walletClient.writeContract(request);
-              await publicClient.waitForTransactionReceipt({ hash: txHash });
+              try {
+                const { request } = await publicClient.simulateContract({
+                  account: adminAccount,
+                  address: mbAddress,
+                  abi: MB_ABI,
+                  functionName: "approveSubmission",
+                  args: [currentTaskId, subIndex],
+                });
+                const txHash = await walletClient.writeContract(request);
+                await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-              const approvedContent = `# Approved Submission
+                const approvedContent = `# Approved Submission
 - Result CID: ${resultCid}
 - Submission Index: ${subIndex}
 - Validator Note: Everything matches \`plan.validator.md\` successfully.
 - AI Confidence: ${aiConfidence}
 - Transaction Hash: ${txHash}
 `;
-              await fs.writeFile(approvedPath, approvedContent, "utf8");
+                await fs.writeFile(approvedPath, approvedContent, "utf8");
+              } catch (contractErr: unknown) {
+                const errMessage =
+                  contractErr instanceof Error
+                    ? contractErr.message
+                    : String(contractErr);
+                if (errMessage.includes("Invalid status")) {
+                  console.log(
+                    `[IssueValidator] Task ID: ${currentTaskId} was already approved/closed by another node/process. Skipping gracefully.`,
+                  );
+                  // Info: (20260502 - Luphia) Write a local record so we don't try again
+                  const approvedContent = `# Approved Submission
+- Result CID: ${resultCid}
+- Submission Index: ${subIndex}
+- Validator Note: Already approved on-chain by another validator.
+- AI Confidence: ${aiConfidence}
+`;
+                  await fs.writeFile(approvedPath, approvedContent, "utf8");
+                } else {
+                  throw contractErr;
+                }
+              }
             } else {
               console.log(
                 `[IssueValidator] Validation failed for Task ID: ${currentTaskId}. Rejecting submission... Reason: ${rejectReason}`,
               );
-              const { request } = await publicClient.simulateContract({
-                account: adminAccount,
-                address: mbAddress,
-                abi: MB_ABI,
-                functionName: "rejectSubmission",
-                args: [currentTaskId, subIndex],
-              });
-              const txHash = await walletClient.writeContract(request);
-              await publicClient.waitForTransactionReceipt({ hash: txHash });
+              try {
+                const { request } = await publicClient.simulateContract({
+                  account: adminAccount,
+                  address: mbAddress,
+                  abi: MB_ABI,
+                  functionName: "rejectSubmission",
+                  args: [currentTaskId, subIndex],
+                });
+                const txHash = await walletClient.writeContract(request);
+                await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-              const rejectedContent = `# Rejected Submission
+                const rejectedContent = `# Rejected Submission
 - Result CID: ${resultCid}
 - Submission Index: ${subIndex}
 - Reason: ${rejectReason}
 - AI Confidence: ${aiConfidence}
 - Transaction Hash: ${txHash}
 `;
-              await fs.writeFile(rejectedPath, rejectedContent, "utf8");
+                await fs.writeFile(rejectedPath, rejectedContent, "utf8");
+              } catch (contractErr: unknown) {
+                const errMessage =
+                  contractErr instanceof Error
+                    ? contractErr.message
+                    : String(contractErr);
+                if (errMessage.includes("Already rejected")) {
+                  console.log(
+                    `[IssueValidator] Task ID: ${currentTaskId} was already rejected by another node/process. Skipping gracefully.`,
+                  );
+                  // Info: (20260502 - Luphia) Write a local record so we don't try again
+                  const rejectedContent = `# Rejected Submission
+- Result CID: ${resultCid}
+- Submission Index: ${subIndex}
+- Reason: Already rejected on-chain by another validator.
+- AI Confidence: ${aiConfidence}
+`;
+                  await fs.writeFile(rejectedPath, rejectedContent, "utf8");
+                } else {
+                  throw contractErr;
+                }
+              }
             }
 
             validatedTask = true;

@@ -40,6 +40,11 @@ export async function processNext() {
         continue; // Info: (20260420 - Luphia) Already executed
       } catch {}
 
+      try {
+        await fs.access(path.join(taskDir, "giveup.md"));
+        continue; // Info: (20260502 - Luphia) Given up after 3 rejections
+      } catch {}
+
       let useJsonPlan = true;
       try {
         await fs.access(path.join(taskDir, "plan.executor.json"));

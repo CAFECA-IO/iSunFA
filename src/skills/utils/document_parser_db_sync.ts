@@ -265,6 +265,16 @@ export async function syncDocumentResultToDatabase(
           finalEmissionSourceId = newEmissionSource.id;
         }
 
+        if (finalCoefficientId) {
+          const coefExists = await tx.coefficient.findUnique({ where: { id: finalCoefficientId } });
+          if (!coefExists) finalCoefficientId = null;
+        }
+
+        if (finalEmissionSourceId) {
+          const sourceExists = await tx.emissionSource.findUnique({ where: { id: finalEmissionSourceId } });
+          if (!sourceExists) finalEmissionSourceId = null;
+        }
+
         const esgData: Prisma.EsgRecordUncheckedCreateInput = {
           accountBookId,
           fileId: realFileId,
