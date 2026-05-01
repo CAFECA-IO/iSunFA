@@ -287,7 +287,8 @@ export default function ReportPage() {
 				el.className = className;
 			});
 
-			pdf.save(`iSunFA_Logistics_Carbon_Report_${Date.now()}.pdf`);
+			const timestamp = new Date().getTime();
+			pdf.save(`iSunFA_Logistics_Carbon_Report_${timestamp}.pdf`);
 		} catch (err) {
 			console.error("Failed to generate PDF", err);
 			alert(t('transportation_carbon_footprint_calculator.pdf.error_failed') + (err instanceof Error ? err.message : t('transportation_carbon_footprint_calculator.pdf.error_unknown')));
