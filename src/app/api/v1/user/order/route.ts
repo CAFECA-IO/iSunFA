@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
       const isNonPeriodAnalysis = [
         ANALYSIS_CATEGORY.AI_CONSULTING,
         ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
+        ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT,
       ].some((category) => composedData.category === category);
 
       if (!isNonPeriodAnalysis && !composedData.periodType) {

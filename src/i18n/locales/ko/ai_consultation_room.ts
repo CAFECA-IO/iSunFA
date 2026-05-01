@@ -56,4 +56,5 @@ export const aiConsultationRoom = {
   sort_newest: "최신 순",
   search_placeholder: "스레드 검색",
   total_threads: "총 {{count}} 개의 스레드",
+  login_to_use: "AI 채팅을 사용하려면 로그인하세요",
 };

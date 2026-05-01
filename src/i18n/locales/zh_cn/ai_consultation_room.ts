@@ -55,4 +55,5 @@ export const aiConsultationRoom = {
   sort_newest: "由新至旧",
   search_placeholder: "搜索讨论串",
   total_threads: "共 {{count}} 则讨论",
+  login_to_use: "请先登入才能使用 AI 咨询",
 };

@@ -3,7 +3,7 @@ import {
   IEsgReportItem,
   IEsgReportDetailedRecord,
 } from "@/interfaces/esg_report";
-import { Prisma } from "@/generated/browser";
+import { Prisma } from "@/generated/client";
 import { safeDivide } from "@/lib/utils/math";
 
 export function generateEsgReport(

@@ -56,4 +56,5 @@ export const aiConsultationRoom = {
   sort_newest: "Newest to Oldest",
   search_placeholder: "Search threads",
   total_threads: "Total {{count}} threads",
+  login_to_use: "Please login to use the AI chat",
 };

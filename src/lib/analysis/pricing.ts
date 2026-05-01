@@ -31,16 +31,24 @@ export interface IConsultationParams {
   files: string[];
 }
 
+export interface ITransportationParams {
+  category: AnalysisCategory;
+  origin: { lat: number | ''; lng: number | '' };
+  dest: { lat: number | ''; lng: number | '' };
+  weightKg: number | '';
+}
+
 export interface IOrderParams {
   type: OrderType;
-  data: IAnalysisParams | IDocumentParams | IConsultationParams;
+  data: IAnalysisParams | IDocumentParams | IConsultationParams | ITransportationParams;
   items?: { name: string; unitPrice: number; quantity: number }[];
 }
 
 export type AnalysisCostParams =
   | IAnalysisParams
   | IDocumentParams
-  | IConsultationParams;
+  | IConsultationParams
+  | ITransportationParams;
 
 /**
  * Info: (20260128 - Luphia) Pricing Logic:

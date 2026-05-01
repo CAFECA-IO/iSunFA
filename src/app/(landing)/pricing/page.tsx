@@ -290,8 +290,8 @@ export default function PricingPage() {
                       tooltip: t("pricing.plans.free.features.vouchers_overage_tooltip", { price: ANALYSIS_BASE_COSTS.CERTIFICATE_ANALYSIS }),
                     },
                     {
-                      text: t("pricing.plans.free.features.logistics", { amount: Math.floor(SUBSCRIPTION_PLAN_CREDITS.free / ANALYSIS_BASE_COSTS.LOGISTICS_ANALYSIS) }),
-                      tooltip: t("pricing.plans.free.features.logistics_tooltip", { price: ANALYSIS_BASE_COSTS.LOGISTICS_ANALYSIS }),
+                      text: t("pricing.plans.free.features.logistics", { amount: Math.floor(SUBSCRIPTION_PLAN_CREDITS.free / ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT) }),
+                      tooltip: t("pricing.plans.free.features.logistics_tooltip", { price: ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT }),
                     },
                     {
                       text: t("pricing.plans.free.features.ai_reports", { amount: Math.floor(SUBSCRIPTION_PLAN_CREDITS.free / ANALYSIS_BASE_COSTS.AI_REPORT) }),
@@ -324,8 +324,8 @@ export default function PricingPage() {
                       tooltip: t("pricing.plans.team.features.vouchers_overage_tooltip", { price: ANALYSIS_BASE_COSTS.CERTIFICATE_ANALYSIS }),
                     },
                     {
-                      text: t("pricing.plans.team.features.logistics", { amount: Math.floor(SUBSCRIPTION_PLAN_CREDITS.team / ANALYSIS_BASE_COSTS.LOGISTICS_ANALYSIS) }),
-                      tooltip: t("pricing.plans.team.features.logistics_tooltip", { price: ANALYSIS_BASE_COSTS.LOGISTICS_ANALYSIS }),
+                      text: t("pricing.plans.team.features.logistics", { amount: Math.floor(SUBSCRIPTION_PLAN_CREDITS.team / ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT) }),
+                      tooltip: t("pricing.plans.team.features.logistics_tooltip", { price: ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT }),
                     },
                     {
                       text: t("pricing.plans.team.features.ai_reports", { amount: Math.floor(SUBSCRIPTION_PLAN_CREDITS.team / ANALYSIS_BASE_COSTS.AI_REPORT) }),
@@ -358,8 +358,8 @@ export default function PricingPage() {
                       tooltip: t("pricing.plans.business.features.vouchers_overage_tooltip", { price: ANALYSIS_BASE_COSTS.CERTIFICATE_ANALYSIS }),
                     },
                     {
-                      text: t("pricing.plans.business.features.logistics", { amount: Math.floor(SUBSCRIPTION_PLAN_CREDITS.business / ANALYSIS_BASE_COSTS.LOGISTICS_ANALYSIS) }),
-                      tooltip: t("pricing.plans.business.features.logistics_tooltip", { price: ANALYSIS_BASE_COSTS.LOGISTICS_ANALYSIS }),
+                      text: t("pricing.plans.business.features.logistics", { amount: Math.floor(SUBSCRIPTION_PLAN_CREDITS.business / ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT) }),
+                      tooltip: t("pricing.plans.business.features.logistics_tooltip", { price: ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT }),
                     },
                     {
                       text: t("pricing.plans.business.features.ai_reports", { amount: Math.floor(SUBSCRIPTION_PLAN_CREDITS.business / ANALYSIS_BASE_COSTS.AI_REPORT) }),

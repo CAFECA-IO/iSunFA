@@ -49,11 +49,12 @@ import { adminBlockchain } from "@/i18n/locales/en/admin_blockchain";
 import { adminMissionBoard } from "@/i18n/locales/en/admin_mission_board";
 import { emissionSources } from "@/i18n/locales/en/emission_sources";
 import { orderManagement } from "@/i18n/locales/en/order_management";
-
-import type { BaseTranslation } from "@/i18n/zh_tw";
 import { adminBilling } from "@/i18n/locales/en/admin_billing";
+import { transportationCarbonFootprintCalculator } from "@/i18n/locales/en/transportation_carbon_footprint_calculator";
+import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const en = {
+  transportation_carbon_footprint_calculator: transportationCarbonFootprintCalculator,
   common,
   faith,
   cookie_consent: cookieConsent,
