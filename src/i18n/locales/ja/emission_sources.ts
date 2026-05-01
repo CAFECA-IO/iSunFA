@@ -34,6 +34,6 @@ export const emissionSources = {
       vendor: "対象 (Vendor)",
       data: "活動データ",
       emission: "排出量 (kgCO2e)",
-    }
-  }
+    },
+  },
 };

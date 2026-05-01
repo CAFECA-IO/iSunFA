@@ -23,12 +23,20 @@ export async function PATCH(
     const { name } = body;
 
     if (!name || typeof name !== "string") {
-      return jsonFail({ code: "VA000099", message: "Invalid team name", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "Invalid team name",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     const member = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
-      return jsonFail({ code: "FO000099", message: "Permission denied. Only OWN...", status: ApiCode.FORBIDDEN },  );
+      return jsonFail({
+        code: "FO000099",
+        message: "Permission denied. Only OWN...",
+        status: ApiCode.FORBIDDEN,
+      });
     }
 
     const updatedTeam = await teamRepo.updateTeam(teamId, { name });

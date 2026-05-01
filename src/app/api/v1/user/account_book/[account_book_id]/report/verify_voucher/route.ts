@@ -41,6 +41,10 @@ export async function GET(
     return jsonOk({ count: countOfVerifiedVouchers });
   } catch (error) {
     console.error("Get count of verified vouchers failed", error);
-    return jsonFail({ code: "IN000099", message: "Get count of verified vouch...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Get count of verified vouch...",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

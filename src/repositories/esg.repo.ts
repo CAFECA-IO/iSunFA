@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { EsgTarget, Prisma, EsgRecord } from "@/generated/client";
-import { IEsgDashboardSummary, EsgScope, IEsgScopeDistributionData } from "@/interfaces/esg";
+import {
+  IEsgDashboardSummary,
+  EsgScope,
+  IEsgScopeDistributionData,
+} from "@/interfaces/esg";
 import { ESG_INDUSTRY_BENCHMARKS } from "@/constants/esg_industry_benchmarks";
 import {
   IEmissionSources,
@@ -342,7 +346,7 @@ export class EsgRepository implements IEsgRepository {
         value: Number(scope3Tons.toFixed(2)),
         percentage: Number(s3Pct.toFixed(1)),
       },
-    ]
+    ];
 
     const summary: IEsgDashboardSummary = {
       totalEmissions: {
@@ -493,7 +497,10 @@ export class EsgRepository implements IEsgRepository {
         totalEmission += Number(record.emissions || 0);
         if (record.intensity === EsgIntensity.HIGH) {
           intensity = EsgIntensity.HIGH;
-        } else if (record.intensity === EsgIntensity.MEDIUM && intensity === EsgIntensity.LOW) {
+        } else if (
+          record.intensity === EsgIntensity.MEDIUM &&
+          intensity === EsgIntensity.LOW
+        ) {
           intensity = EsgIntensity.MEDIUM;
         }
 
@@ -586,7 +593,7 @@ export class EsgRepository implements IEsgRepository {
     const scopeDistribution: {
       scope: EsgScope;
       count: number;
-    }[] = []
+    }[] = [];
 
     const summary: IEsgEmissionSourcesSummary = {
       totalEmissionSourcesCount: totalEmissionSourcesCount ?? 0,
@@ -604,7 +611,7 @@ export class EsgRepository implements IEsgRepository {
     name: string,
     address?: string,
   ) {
-    const emissionSource= await prisma.emissionSource.create({
+    const emissionSource = await prisma.emissionSource.create({
       data: {
         accountBookId,
         name,
@@ -618,9 +625,9 @@ export class EsgRepository implements IEsgRepository {
     const result: IEmissionSources = {
       id: emissionSource.id,
       name: emissionSource.name,
-      address: emissionSource.address??'',
+      address: emissionSource.address ?? "",
       intensity,
-    }
+    };
 
     return result;
   }

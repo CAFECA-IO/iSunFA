@@ -27,6 +27,10 @@ export async function GET(
     console.error("[API] /user/order/[order_id]/receipt GET error:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Internal Server Error";
-    return jsonFail({ code: "IS000099", message: String(errorMessage).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IS000099",
+      message: String(errorMessage).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

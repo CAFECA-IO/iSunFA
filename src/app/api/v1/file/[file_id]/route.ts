@@ -17,7 +17,11 @@ export async function GET(
     const STORAGE_DOMAIN = process.env.STORAGE_DOMAIN;
 
     if (!STORAGE_DOMAIN) {
-      return jsonFail({ code: "IN000099", message: "STORAGE_DOMAIN is not defined", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+      return jsonFail({
+        code: "IN000099",
+        message: "STORAGE_DOMAIN is not defined",
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     const targetUrl = `${STORAGE_DOMAIN}/api/v1/file/${fileId}`;
@@ -68,7 +72,14 @@ export async function GET(
       } catch (e) {
         console.error(`[API] Proxy /file/:file_id error:`, e);
       }
-      return jsonFail({ code: "IS000099", message: String(errorMessage).slice(0, 30), status: code }, { status: response.status });
+      return jsonFail(
+        {
+          code: "IS000099",
+          message: String(errorMessage).slice(0, 30),
+          status: code,
+        },
+        { status: response.status },
+      );
     }
   } catch (error) {
     console.error(`[API] Proxy /file/:file_id error:`, error);

@@ -19,6 +19,10 @@ export async function GET(request: NextRequest) {
     return jsonOk({ pointHistory: history });
   } catch (error) {
     console.error("[API] /user/point_history GET error:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to fetch point history", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to fetch point history",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

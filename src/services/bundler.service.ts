@@ -86,7 +86,7 @@ export class BundlerService {
       account: relayerAccount,
       transport: http(rpcUrl),
     });
-    
+
     const ops = [
       {
         sender: userOp.sender as `0x${string}`,

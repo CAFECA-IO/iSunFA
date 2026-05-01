@@ -31,16 +31,16 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
     name: "中鋼公司高雄小港廠",
     address: "高雄市小港區中鋼路1號",
     intensity: EsgIntensity.HIGH,
-     records: [
+    records: [
       {
         id: "rec-001",
         tradingDate: 1760411000,
-        activityType: 'STATIONARY_COMBUSTION',
+        activityType: "STATIONARY_COMBUSTION",
         vendor: "台灣中油",
         amount: 1500,
         unit: "公秉",
         emissions: 2310.5,
-        emissionSourceTag: "一號鍋爐"
+        emissionSourceTag: "一號鍋爐",
       },
       {
         id: "rec-002",
@@ -50,7 +50,7 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 800,
         unit: "度",
         emissions: 405.6,
-        emissionSourceTag: "一號鍋爐"
+        emissionSourceTag: "一號鍋爐",
       },
       {
         id: "rec-003",
@@ -60,7 +60,7 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 3200,
         unit: "千立方公尺",
         emissions: 1530.2,
-        emissionSourceTag: "熱軋產線"
+        emissionSourceTag: "熱軋產線",
       },
       {
         id: "rec-004",
@@ -70,8 +70,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 300,
         unit: "公升",
         emissions: 790.2,
-        emissionSourceTag: "公務車"
-      }
+        emissionSourceTag: "公務車",
+      },
     ],
     totalEmission: 5036.5,
   },
@@ -89,7 +89,7 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 45000,
         unit: "噸",
         emissions: 102500.5,
-        emissionSourceTag: "二號高爐"
+        emissionSourceTag: "二號高爐",
       },
       {
         id: "rec-006",
@@ -99,8 +99,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 92000,
         unit: "千度",
         emissions: 45540.0,
-        emissionSourceTag: "電弧爐"
-      }
+        emissionSourceTag: "電弧爐",
+      },
     ],
     totalEmission: 148040.5,
   },
@@ -118,7 +118,7 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 4500,
         unit: "千度",
         emissions: 2227.5,
-        emissionSourceTag: "冷軋線"
+        emissionSourceTag: "冷軋線",
       },
       {
         id: "rec-008",
@@ -128,8 +128,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 210,
         unit: "千立方公尺",
         emissions: 450.8,
-        emissionSourceTag: "空調系統"
-      }
+        emissionSourceTag: "空調系統",
+      },
     ],
     totalEmission: 2678.3,
   },
@@ -147,7 +147,7 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 11200,
         unit: "千度",
         emissions: 8064.0,
-        emissionSourceTag: "連續退火線"
+        emissionSourceTag: "連續退火線",
       },
       {
         id: "rec-010",
@@ -157,7 +157,7 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 1500,
         unit: "公升",
         emissions: 3995.5,
-      }
+      },
     ],
     totalEmission: 12059.5,
   },
@@ -175,7 +175,7 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 850,
         unit: "噸",
         emissions: 2210.0,
-        emissionSourceTag: "精餾塔"
+        emissionSourceTag: "精餾塔",
       },
       {
         id: "rec-012",
@@ -185,8 +185,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 3200,
         unit: "千度",
         emissions: 1584.0,
-        emissionSourceTag: "瀝青加工線"
-      }
+        emissionSourceTag: "瀝青加工線",
+      },
     ],
     totalEmission: 3794.0,
   },
@@ -204,7 +204,7 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 120,
         unit: "公斤",
         emissions: 32.5,
-        emissionSourceTag: "自動銲接區"
+        emissionSourceTag: "自動銲接區",
       },
       {
         id: "rec-014",
@@ -214,8 +214,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 450,
         unit: "千度",
         emissions: 222.7,
-        emissionSourceTag: "自動銲接區"
-      }
+        emissionSourceTag: "自動銲接區",
+      },
     ],
     totalEmission: 255.2,
   },
@@ -233,7 +233,7 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 520,
         unit: "千立方公尺",
         emissions: 1092.5,
-        emissionSourceTag: "熔鋁爐"
+        emissionSourceTag: "熔鋁爐",
       },
       {
         id: "rec-016",
@@ -243,8 +243,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 2100,
         unit: "千度",
         emissions: 1039.5,
-        emissionSourceTag: "熱軋線"
-      }
+        emissionSourceTag: "熱軋線",
+      },
     ],
     totalEmission: 2132.0,
   },
@@ -262,7 +262,7 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 1850,
         unit: "千度",
         emissions: 1480.0,
-        emissionSourceTag: "冷軋退火線"
+        emissionSourceTag: "冷軋退火線",
       },
       {
         id: "rec-018",
@@ -272,8 +272,8 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         amount: 450,
         unit: "公升",
         emissions: 1195.8,
-      }
+      },
     ],
     totalEmission: 2675.8,
-  }
+  },
 ];

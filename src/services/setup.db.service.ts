@@ -26,7 +26,8 @@ export async function initDb() {
 
   // Info: (20260413 - Luphia) 安全跳脫 SQL 字元
   const sqlPassword = dbPassword.replace(/'/g, "''");
-  const bashSafeSqlStr = `ALTER USER isunfa WITH PASSWORD '${sqlPassword}';`.replace(/'/g, "'\\''");
+  const bashSafeSqlStr =
+    `ALTER USER isunfa WITH PASSWORD '${sqlPassword}';`.replace(/'/g, "'\\''");
   const dockerCmd = `psql -U isunfa -d isunfa -c '${bashSafeSqlStr}'`;
   await dockerService.execContainer("database", dockerCmd);
 
@@ -41,11 +42,17 @@ export async function initDb() {
 
     setupContent = updateOrAppendEnv(setupContent, "POSTGRES_DB", "isunfa");
     setupContent = updateOrAppendEnv(setupContent, "POSTGRES_USER", "isunfa");
-    setupContent = updateOrAppendEnv(setupContent, "POSTGRES_PASSWORD", dbPassword);
+    setupContent = updateOrAppendEnv(
+      setupContent,
+      "POSTGRES_PASSWORD",
+      dbPassword,
+    );
     setupContent = updateOrAppendEnv(setupContent, "DATABASE_URL", dbUrl);
 
     saveEnvRawContent(ENV_SETUP_PATH, setupContent);
-    console.log("-> Successfully synchronized database password and pushed schema.");
+    console.log(
+      "-> Successfully synchronized database password and pushed schema.",
+    );
   }
 
   return result;

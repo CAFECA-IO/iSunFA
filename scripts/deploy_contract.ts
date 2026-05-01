@@ -60,12 +60,16 @@ async function main() {
   };
 
   const envSetupPath = path.join(process.cwd(), ".env.setup");
-  let envContent = fs.existsSync(envSetupPath) ? fs.readFileSync(envSetupPath, "utf-8") : "";
+  let envContent = fs.existsSync(envSetupPath)
+    ? fs.readFileSync(envSetupPath, "utf-8")
+    : "";
   let forceRedeployCore = process.env.FORCE_REDEPLOY_CORE === "1";
   const getEnv = (key: string) => {
     if (forceRedeployCore) return "";
-    const match = envContent.match(new RegExp(`^${key}="(.*)"$`, "m")) || envContent.match(new RegExp(`^${key}=(.*)$`, "m"));
-    return match ? match[1] : (process.env[key] || "");
+    const match =
+      envContent.match(new RegExp(`^${key}="(.*)"$`, "m")) ||
+      envContent.match(new RegExp(`^${key}=(.*)$`, "m"));
+    return match ? match[1] : process.env[key] || "";
   };
 
   // Info: (20260418 - Luphia) 1. DynamicKYCMembership
@@ -73,7 +77,10 @@ async function main() {
 
   if (!dmcAddress || dmcAddress === "") {
     forceRedeployCore = true; // Info: (20260418 - Luphia) New Architecture detected. We must redeploy downstream contracts.
-    const dmcArtifact = getArtifact("dynamic_kyc_membership", "DynamicKYCMembership");
+    const dmcArtifact = getArtifact(
+      "dynamic_kyc_membership",
+      "DynamicKYCMembership",
+    );
     console.log("Deploying DynamicKYCMembership...");
     const dmcHash = await walletClient.deployContract({
       chain: isuncoin,
@@ -81,11 +88,16 @@ async function main() {
       bytecode: dmcArtifact.bytecode,
       args: [account.address],
     });
-    const dmcReceipt = await publicClient.waitForTransactionReceipt({ hash: dmcHash ,  timeout: 1200000, });
+    const dmcReceipt = await publicClient.waitForTransactionReceipt({
+      hash: dmcHash,
+      timeout: 1200000,
+    });
     dmcAddress = dmcReceipt.contractAddress!;
     console.log(`-> DynamicKYCMembership deployed to: ${dmcAddress}`);
   } else {
-    console.log(`-> Skipped: DynamicKYCMembership already exists at ${dmcAddress}`);
+    console.log(
+      `-> Skipped: DynamicKYCMembership already exists at ${dmcAddress}`,
+    );
   }
   const kycAddress = dmcAddress;
 
@@ -96,9 +108,12 @@ async function main() {
     console.log("Deploying CreditPoint...");
     const configRateStr = process.env.DEPLOY_COLLATERAL_RATE || "0.05";
     let rateFloat = parseFloat(configRateStr);
-    if (isNaN(rateFloat) || rateFloat < 1e-9 || rateFloat > 100) rateFloat = 0.05;
+    if (isNaN(rateFloat) || rateFloat < 1e-9 || rateFloat > 100)
+      rateFloat = 0.05;
     const collateralRate = BigInt(Math.floor(rateFloat * 10 ** 18));
-    console.log(`-> Utilizing Collateral Rate: ${rateFloat} ISC/ICP (${collateralRate} wei)`);
+    console.log(
+      `-> Utilizing Collateral Rate: ${rateFloat} ISC/ICP (${collateralRate} wei)`,
+    );
     const treasuryHash = await walletClient.deployContract({
       chain: isuncoin,
       abi: treasuryArtifact.abi,
@@ -108,7 +123,7 @@ async function main() {
     const treasuryReceipt = await publicClient.waitForTransactionReceipt({
       hash: treasuryHash,
       timeout: 1200000,
-      });
+    });
     treasuryAddress = treasuryReceipt.contractAddress!;
     console.log(`-> CreditPoint deployed to: ${treasuryAddress}`);
   } else {
@@ -135,11 +150,13 @@ async function main() {
     const subManagerReceipt = await publicClient.waitForTransactionReceipt({
       hash: subManagerHash,
       timeout: 1200000,
-      });
+    });
     subManagerAddress = subManagerReceipt.contractAddress!;
     console.log(`-> SubscriptionManager deployed to: ${subManagerAddress}`);
   } else {
-    console.log(`-> Skipped: SubscriptionManager already exists at ${subManagerAddress}`);
+    console.log(
+      `-> Skipped: SubscriptionManager already exists at ${subManagerAddress}`,
+    );
   }
 
   // Info: (20260411 - Luphia) 5. Connect SubscriptionManager to Treasury
@@ -154,7 +171,10 @@ async function main() {
       functionName: "setSubscriptionManager",
       args: [subManagerAddress],
     });
-    await publicClient.waitForTransactionReceipt({ hash: configHash ,  timeout: 1200000, });
+    await publicClient.waitForTransactionReceipt({
+      hash: configHash,
+      timeout: 1200000,
+    });
     console.log("-> Configuration completed successfully.");
   }
 
@@ -175,7 +195,7 @@ async function main() {
     const membershipReceipt = await publicClient.waitForTransactionReceipt({
       hash: membershipHash,
       timeout: 1200000,
-      });
+    });
     membershipAddress = membershipReceipt.contractAddress!;
     console.log(`-> MembershipSystem deployed to: ${membershipAddress}`);
 
@@ -192,7 +212,10 @@ async function main() {
         membershipAddress,
       ],
     });
-    await publicClient.waitForTransactionReceipt({ hash: grantHash ,  timeout: 1200000, });
+    await publicClient.waitForTransactionReceipt({
+      hash: grantHash,
+      timeout: 1200000,
+    });
     console.log("-> MembershipSystem Configuration completed successfully.");
 
     console.log(
@@ -203,10 +226,15 @@ async function main() {
       to: membershipAddress as `0x${string}`,
       value: 20n * 10n ** 18n,
     });
-    await publicClient.waitForTransactionReceipt({ hash: fundHash ,  timeout: 1200000, });
+    await publicClient.waitForTransactionReceipt({
+      hash: fundHash,
+      timeout: 1200000,
+    });
     console.log("-> MembershipSystem prefunded successfully.");
   } else {
-    console.log(`-> Skipped: MembershipSystem already exists at ${membershipAddress}`);
+    console.log(
+      `-> Skipped: MembershipSystem already exists at ${membershipAddress}`,
+    );
   }
 
   // Info: (20260412 - Luphia) 6. Deploy EntryPoint
@@ -230,11 +258,13 @@ async function main() {
     const epReceipt = await publicClient.waitForTransactionReceipt({
       hash: epHash,
       timeout: 1200000,
-      });
+    });
     entryPointAddress = epReceipt.contractAddress!;
     console.log(`-> EntryPoint deployed to: ${entryPointAddress}`);
   } else {
-    console.log(`-> Skipped: EntryPoint already exists at ${entryPointAddress}`);
+    console.log(
+      `-> Skipped: EntryPoint already exists at ${entryPointAddress}`,
+    );
   }
 
   // Info: (20260412 - Luphia) 7. Deploy Fido2AccountFactory
@@ -254,11 +284,13 @@ async function main() {
     const factoryReceipt = await publicClient.waitForTransactionReceipt({
       hash: factoryHash,
       timeout: 1200000,
-      });
+    });
     factoryAddress = factoryReceipt.contractAddress!;
     console.log(`-> Fido2AccountFactory deployed to: ${factoryAddress}`);
   } else {
-    console.log(`-> Skipped: Fido2AccountFactory already exists at ${factoryAddress}`);
+    console.log(
+      `-> Skipped: Fido2AccountFactory already exists at ${factoryAddress}`,
+    );
   }
 
   // Info: (20260418 - Luphia) 8. Deploy MissionBoard
@@ -276,11 +308,13 @@ async function main() {
     const mbReceipt = await publicClient.waitForTransactionReceipt({
       hash: mbHash,
       timeout: 1200000,
-      });
+    });
     missionBoardAddress = mbReceipt.contractAddress!;
     console.log(`-> MissionBoard deployed to: ${missionBoardAddress}`);
   } else {
-    console.log(`-> Skipped: MissionBoard already exists at ${missionBoardAddress}`);
+    console.log(
+      `-> Skipped: MissionBoard already exists at ${missionBoardAddress}`,
+    );
   }
 
   console.log("\n===== DEPLOYMENT SUMMARY =====");
@@ -313,7 +347,10 @@ async function main() {
   updateEnv("NEXT_PUBLIC_DYNAMIC_KYC_MEMBERSHIP_ADDRESS", dmcAddress || "");
   updateEnv("NEXT_PUBLIC_CREDIT_POINT_ADDRESS", treasuryAddress || "");
   updateEnv("NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS", membershipAddress || "");
-  updateEnv("NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS", subManagerAddress || "");
+  updateEnv(
+    "NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS",
+    subManagerAddress || "",
+  );
   updateEnv("NEXT_PUBLIC_SCW_FACTORY_ADDRESS", factoryAddress || "");
   updateEnv("NEXT_PUBLIC_ENTRY_POINT_ADDRESS", entryPointAddress || "");
   updateEnv("NEXT_PUBLIC_MISSION_BOARD_ADDRESS", missionBoardAddress || "");

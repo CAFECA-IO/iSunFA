@@ -31,6 +31,10 @@ export async function PATCH(
     return jsonOk({ isActive: updated.isActive });
   } catch (error) {
     console.error("[API] /user/analysis/share/revoke PATCH error:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to revoke. Token may...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to revoke. Token may...",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

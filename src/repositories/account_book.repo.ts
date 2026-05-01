@@ -141,7 +141,10 @@ export class AccountBookRepository {
     return accountBook;
   }
 
-  async hasAssociatedEsgData(userId: string, enterpriseId: string): Promise<boolean> {
+  async hasAssociatedEsgData(
+    userId: string,
+    enterpriseId: string,
+  ): Promise<boolean> {
     const teamMembers = await prisma.teamMember.findMany({
       where: { userId },
     });
@@ -153,8 +156,8 @@ export class AccountBookRepository {
 
     const esgRecordsCount = matchedAccountBook
       ? await prisma.esgRecord.count({
-        where: { accountBookId: matchedAccountBook.id, deletedAt: null },
-      })
+          where: { accountBookId: matchedAccountBook.id, deletedAt: null },
+        })
       : 0;
 
     return esgRecordsCount > 0;

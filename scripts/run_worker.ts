@@ -3,6 +3,7 @@ import { processNext as processIssueNext } from "@/services/issue.service";
 import { processNext as processMissionPlannerNext } from "@/services/mission.planner.service";
 import { processNext as processMissionExecutorNext } from "@/services/mission.executor.service";
 import { processNext as processMissionCommitorNext } from "@/services/mission.commitor.service";
+import { processNext as processMissionCloserNext } from "@/services/mission.closer.service";
 import { processNext as processIssueValidatorNext } from "@/services/issue.validator.service";
 import { issueRecorderService } from "@/services/issue.recorder.service";
 
@@ -11,7 +12,11 @@ import { issueRecorderService } from "@/services/issue.recorder.service";
  * Worker script to continuously process pending analysis tasks.
  * Run with: npx tsx scripts/workers.run.ts
  */
-async function startServiceLoop(name: string, fn: () => Promise<unknown>, intervalMs = 10000) {
+async function startServiceLoop(
+  name: string,
+  fn: () => Promise<unknown>,
+  intervalMs = 10000,
+) {
   let isRunning = true;
   process.on("SIGINT", () => {
     isRunning = false;
@@ -41,6 +46,7 @@ async function runWorker() {
     startServiceLoop("MissionPlanner", () => processMissionPlannerNext()),
     startServiceLoop("MissionExecutor", () => processMissionExecutorNext()),
     startServiceLoop("MissionCommitor", () => processMissionCommitorNext()),
+    startServiceLoop("MissionCloser", () => processMissionCloserNext()),
     startServiceLoop("IssueValidator", () => processIssueValidatorNext()),
     startServiceLoop("IssueRecorder", () => issueRecorderService.processNext()),
   ]);

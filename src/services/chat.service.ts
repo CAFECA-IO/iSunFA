@@ -20,7 +20,10 @@ export class ChatService {
     return skill.execute(message, tags, file, mimeType, this);
   }
 
-  async generateRawWithImages(prompt: string, images?: { data: string; mimeType: string }[]): Promise<string> {
+  async generateRawWithImages(
+    prompt: string,
+    images?: { data: string; mimeType: string }[],
+  ): Promise<string> {
     const model = this.genAI.getGenerativeModel({ model: this.modelName });
     const parts: Part[] = [{ text: prompt }];
 

@@ -15,7 +15,11 @@ export async function GET(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!ALLOWED_DOCS.includes(slug as any)) {
-    return jsonFail({ code: "VA000099", message: "Invalid document type", status: ApiCode.VALIDATION_ERROR });
+    return jsonFail({
+      code: "VA000099",
+      message: "Invalid document type",
+      status: ApiCode.VALIDATION_ERROR,
+    });
   }
 
   try {

@@ -4,7 +4,11 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { webAuthnService } from "@/services/webauthn.service";
-import { generatePaymentOrder, generateAnalysisOrder, getOrdersByUserId } from "@/services/order.service";
+import {
+  generatePaymentOrder,
+  generateAnalysisOrder,
+  getOrdersByUserId,
+} from "@/services/order.service";
 import { ORDER_TYPE } from "@/constants/status";
 import { IGenerateAnalysisParams } from "@/services/analysis.service";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
@@ -40,7 +44,11 @@ export async function POST(request: NextRequest) {
         return jsonFail(API_ERRORS.VL_BAD_AMOUNT);
       }
       if (!paymentMethodId) {
-        return jsonFail({ code: "VA000099", message: "paymentMethodId is required", status: ApiCode.VALIDATION_ERROR },  );
+        return jsonFail({
+          code: "VA000099",
+          message: "paymentMethodId is required",
+          status: ApiCode.VALIDATION_ERROR,
+        });
       }
       const result = await generatePaymentOrder(user.id, {
         amount,
@@ -62,18 +70,29 @@ export async function POST(request: NextRequest) {
         country: body.country || fallbackData.country,
         keyword: body.keyword || fallbackData.keyword,
         isExternal: body.isExternal ?? fallbackData.isExternal,
-        ...fallbackData
+        ...fallbackData,
       };
 
       // Info: (20260128 - Luphia) Validate required analysis parameters
       if (!composedData.category) {
-        return jsonFail({ code: "VA000099", message: "Missing required fields for...", status: ApiCode.VALIDATION_ERROR },  );
+        return jsonFail({
+          code: "VA000099",
+          message: "Missing required fields for...",
+          status: ApiCode.VALIDATION_ERROR,
+        });
       }
 
-      const isNonPeriodAnalysis = [ANALYSIS_CATEGORY.AI_CONSULTING, ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS].some((category) => composedData.category === category);
+      const isNonPeriodAnalysis = [
+        ANALYSIS_CATEGORY.AI_CONSULTING,
+        ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
+      ].some((category) => composedData.category === category);
 
       if (!isNonPeriodAnalysis && !composedData.periodType) {
-        return jsonFail({ code: "VA000099", message: "Missing required fields for...", status: ApiCode.VALIDATION_ERROR },  );
+        return jsonFail({
+          code: "VA000099",
+          message: "Missing required fields for...",
+          status: ApiCode.VALIDATION_ERROR,
+        });
       }
 
       const generateAnalysisParams: IGenerateAnalysisParams = {
@@ -81,15 +100,26 @@ export async function POST(request: NextRequest) {
         data: composedData,
         type,
       };
-      const result = await generateAnalysisOrder(user.id, generateAnalysisParams);
+      const result = await generateAnalysisOrder(
+        user.id,
+        generateAnalysisParams,
+      );
 
       return jsonOk(result);
     }
 
-    return jsonFail({ code: "VA000099", message: "Invalid order type", status: ApiCode.VALIDATION_ERROR });
+    return jsonFail({
+      code: "VA000099",
+      message: "Invalid order type",
+      status: ApiCode.VALIDATION_ERROR,
+    });
   } catch (error) {
     console.error("[API] /user/order POST error:", error);
-    return jsonFail({ code: "IS000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IS000099",
+      message: String((error as Error).message).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }
 

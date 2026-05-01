@@ -21,7 +21,11 @@ export async function POST(
 
     if (!user) {
       console.error("User not found");
-      return jsonFail({ code: "IN000099", message: "User not found", status: ApiCode.INTERNAL_SERVER_ERROR });
+      return jsonFail({
+        code: "IN000099",
+        message: "User not found",
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     const body = await request.json();
@@ -29,20 +33,32 @@ export async function POST(
 
     if (!reaction) {
       console.error("Reaction is required");
-      return jsonFail({ code: "IN000099", message: "Reaction is required", status: ApiCode.INTERNAL_SERVER_ERROR });
+      return jsonFail({
+        code: "IN000099",
+        message: "Reaction is required",
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     const { thread_id: threadId } = await params;
 
     if (!threadId) {
       console.error("ThreadId is required");
-      return jsonFail({ code: "IN000099", message: "ThreadId is required", status: ApiCode.INTERNAL_SERVER_ERROR });
+      return jsonFail({
+        code: "IN000099",
+        message: "ThreadId is required",
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     const author = await webAuthnRepo.findUserByAddress(user.address);
     if (!author) {
       console.error("Author not found");
-      return jsonFail({ code: "IN000099", message: "Author not found", status: ApiCode.INTERNAL_SERVER_ERROR });
+      return jsonFail({
+        code: "IN000099",
+        message: "Author not found",
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
     const userId = user.id;
 

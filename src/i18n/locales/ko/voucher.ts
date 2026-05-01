@@ -67,10 +67,9 @@ export const voucher = {
       no_data_cta: "데이터 업로드",
       no_filter_results: "조건에 맞는 기록을 찾을 수 없습니다",
       no_filter_results_desc: "검색어나 필터 조건을 조정해 보세요",
-    
-      ai: { processing: "AI...", failed: "Failed" },
 
-},
+      ai: { processing: "AI...", failed: "Failed" },
+    },
   },
   summary: {
     empty_prefix: "현재 전표 데이터가 없습니다. 먼저 ",
@@ -86,7 +85,8 @@ export const voucher = {
     messages: {
       fetch_error: "전표를 가져오지 못했습니다",
       deleted_warning: "삭제된 전표는 편집할 수 없습니다",
-      no_entries_hint: "아직 회계 분개가 없습니다. 오른쪽 상단의 「분개 추가」 버튼을 클릭하세요.",
+      no_entries_hint:
+        "아직 회계 분개가 없습니다. 오른쪽 상단의 「분개 추가」 버튼을 클릭하세요.",
     },
     sections: {
       preview: "영수증 미리보기",

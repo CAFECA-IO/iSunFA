@@ -4,9 +4,11 @@ export const adminDashboard = {
   refresh: "Refresh",
   start_all: "Start All",
   confirm_restart_title: "Confirm Restart",
-  confirm_restart_desc: "Are you sure you want to restart the {{serviceLabel}} container? This may cause temporary service interruptions.",
+  confirm_restart_desc:
+    "Are you sure you want to restart the {{serviceLabel}} container? This may cause temporary service interruptions.",
   confirm_start_all_title: "Confirm Start All",
-  confirm_start_all_desc: "Are you sure you want to start all system Docker containers?",
+  confirm_start_all_desc:
+    "Are you sure you want to start all system Docker containers?",
   restart_success: "Restarted successfully",
   start_success: "Started successfully",
   status: "Status",
@@ -14,7 +16,8 @@ export const adminDashboard = {
   restart_btn: "Restart Container",
   restarting_btn: "Restarting...",
   no_containers: "No Containers Detected",
-  no_containers_desc: "The Docker daemon is not running or no containers are active.",
+  no_containers_desc:
+    "The Docker daemon is not running or no containers are active.",
   failed_restart: "Failed to restart Docker: {{error}}",
-  failed_start: "Failed to start containers: {{error}}"
+  failed_start: "Failed to start containers: {{error}}",
 };

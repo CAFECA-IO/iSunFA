@@ -10,13 +10,21 @@ export async function GET(req: Request) {
 
     const token = authHeader.replace("Bearer ", "");
     const result = await getBlockchainDashboardData(token);
-    
+
     if (!result.success) {
-      return jsonFail({ code: "IS000099", message: String(result.error || "Dashboard error").slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+      return jsonFail({
+        code: "IS000099",
+        message: String(result.error || "Dashboard error").slice(0, 30),
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     return jsonOk(result.data);
   } catch (error) {
-    return jsonFail({ code: "IS000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IS000099",
+      message: String((error as Error).message).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

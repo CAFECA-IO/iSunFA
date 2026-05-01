@@ -1,6 +1,6 @@
 {
   "name": "isunfa",
-  "version": "0.12.0+100",
+  "version": "0.12.0+101",
   "private": true,
   "type": "module",
   "engines": {
@@ -15,7 +15,7 @@
     "swarm": "npm run build && next start -p 10020",
     "worker": "npx tsx scripts/run_worker.ts",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
-    "bot": "npx tsx scripts/run_bot.ts",
+    "integration_test": "npx tsx scripts/run_integration_test.ts",
     "service": "npx tsx scripts/run_service.ts",
     "initial_wallet": "npx tsx scripts/initial_wallet.ts",
     "build_contract": "npx hardhat compile",

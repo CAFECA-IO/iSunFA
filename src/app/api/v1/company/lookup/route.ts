@@ -20,7 +20,11 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get("query");
 
     if (!query) {
-      return jsonFail({ code: "VA000099", message: "Query parameter is required", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "Query parameter is required",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     const results = await lookupCompany(query);

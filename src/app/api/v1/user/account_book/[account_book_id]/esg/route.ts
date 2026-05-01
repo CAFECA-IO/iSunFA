@@ -59,7 +59,11 @@ export async function POST(
     // Info: (20260312 - Julian) 驗證 file 參數
     if (!file || !file.hash) {
       console.error("Missing file or file hash");
-      return jsonFail({ code: "VA000099", message: "File is required", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "File is required",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     // Info: (20260312 - Julian) 建立空白 ESG 紀錄
@@ -93,7 +97,11 @@ export async function POST(
     return jsonOk({ esgRecordId: newRecord.id });
   } catch (error) {
     console.error("Error creating esg record:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to create esg record", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to create esg record",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }
 
@@ -268,6 +276,10 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching esg records:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to fetch esg records", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to fetch esg records",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

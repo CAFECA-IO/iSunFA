@@ -84,23 +84,41 @@ export const SYSTEM_MODULES = [
 
 export function getModuleI18nKey(key: string, isAdminContext: boolean = false) {
   switch (key) {
-    case "dashboard": return "dashboard.title";
-    case "voucher": return "voucher.title";
-    case "esg": return "esg.title";
-    case "journal": return "journal.title";
-    case "analysis": return "analysis.title";
-    case "billing": return isAdminContext ? "admin_billing.page.title" : "billing.title";
-    case "user": return "admin_member.page.title";
-    case "blockchain": return "admin_blockchain.page.title";
-    case "mission_board": return "admin_mission_board.page.title";
-    case "financial_report": return "report_view.title";
-    case "other": return "common.other";
-    case "cashier": return "features.items.cashier.title";
-    case "salary": return "features.items.salary.title";
-    case "audit": return "features.items.audit.title";
-    case "tax": return "features.items.tax.title";
-    case "signing": return "features.items.signing.title";
-    case "integration": return "features.items.integration.title";
-    default: return `${key}.title`;
+    case "dashboard":
+      return "dashboard.title";
+    case "voucher":
+      return "voucher.title";
+    case "esg":
+      return "esg.title";
+    case "journal":
+      return "journal.title";
+    case "analysis":
+      return "analysis.title";
+    case "billing":
+      return isAdminContext ? "admin_billing.page.title" : "billing.title";
+    case "user":
+      return "admin_member.page.title";
+    case "blockchain":
+      return "admin_blockchain.page.title";
+    case "mission_board":
+      return "admin_mission_board.page.title";
+    case "financial_report":
+      return "report_view.title";
+    case "other":
+      return "common.other";
+    case "cashier":
+      return "features.items.cashier.title";
+    case "salary":
+      return "features.items.salary.title";
+    case "audit":
+      return "features.items.audit.title";
+    case "tax":
+      return "features.items.tax.title";
+    case "signing":
+      return "features.items.signing.title";
+    case "integration":
+      return "features.items.integration.title";
+    default:
+      return `${key}.title`;
   }
 }

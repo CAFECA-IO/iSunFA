@@ -17,7 +17,7 @@ const SetupService = {
   ...BlockchainSetupService,
   ...AuthSetupService,
   ...DeploySetupService,
-  ...CoreSetupService
+  ...CoreSetupService,
 };
 import { validateEnv } from "@/validators/env";
 
@@ -47,7 +47,11 @@ export async function POST(
     ) {
       const isComplete = await validateEnv();
       if (isComplete) {
-        return jsonFail({ code: "FO000099", message: "System initialized already", status: ApiCode.FORBIDDEN });
+        return jsonFail({
+          code: "FO000099",
+          message: "System initialized already",
+          status: ApiCode.FORBIDDEN,
+        });
       }
     }
 
@@ -73,7 +77,11 @@ export async function POST(
       SetupService as Record<string, (...args: unknown[]) => unknown>
     )[action];
     if (typeof fn !== "function") {
-      return jsonFail({ code: "VL000099", message: String(`Target '${action}' is not executable`).slice(0, 30), status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VL000099",
+        message: String(`Target '${action}' is not executable`).slice(0, 30),
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     const result = await fn(...args);
@@ -87,6 +95,10 @@ export async function POST(
     console.error(`[API] Setup Action Error:`, error);
     const msg =
       error instanceof Error ? error.message : "Unknown error occurred";
-    return jsonFail({ code: "IS000099", message: String(msg).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IS000099",
+      message: String(msg).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

@@ -20,8 +20,8 @@ export class OrderRepository {
   async countCommissionOrders(): Promise<number> {
     return prisma.order.count({
       where: {
-        amount: { lt: 0 }
-      }
+        amount: { lt: 0 },
+      },
     });
   }
 
@@ -34,7 +34,7 @@ export class OrderRepository {
         user: true,
         paymentTransactions: {
           orderBy: { createdAt: "desc" },
-          take: 1
+          take: 1,
         },
       },
     });
@@ -43,7 +43,7 @@ export class OrderRepository {
   async getAllCommissionOrdersPaginated(skip: number, limit: number) {
     return prisma.order.findMany({
       where: {
-        amount: { lt: 0 }
+        amount: { lt: 0 },
       },
       skip,
       take: limit,
@@ -52,7 +52,7 @@ export class OrderRepository {
         user: true,
         paymentTransactions: {
           orderBy: { createdAt: "desc" },
-          take: 1
+          take: 1,
         },
       },
     });

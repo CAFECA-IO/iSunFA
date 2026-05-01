@@ -7,6 +7,10 @@ export async function GET() {
     return jsonOk(CREDIT_PLANS);
   } catch (error) {
     console.error("Failed to fetch pricing plans:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to fetch pricing plans", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to fetch pricing plans",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

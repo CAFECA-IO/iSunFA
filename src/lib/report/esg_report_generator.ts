@@ -1,4 +1,8 @@
-import { IEsgReport, IEsgReportItem, IEsgReportDetailedRecord } from "@/interfaces/esg_report";
+import {
+  IEsgReport,
+  IEsgReportItem,
+  IEsgReportDetailedRecord,
+} from "@/interfaces/esg_report";
 import { Prisma } from "@/generated/browser";
 import { safeDivide } from "@/lib/utils/math";
 

@@ -14,7 +14,7 @@ export const adminBlockchain = {
     mint_icp: "铸造信用积分 (ICP)",
     mint_desc:
       "铸造 ICP 需要根据即时抵押率提供等值的 ISC。新铸造的 ICP 将会注入会员系统储备池。",
-        mint_est_days: "预估可支撑天数：",
+    mint_est_days: "预估可支撑天数：",
     days: "天",
     amount_placeholder: "输入欲铸造的 ICP 数量...",
     amount_aria: "输入欲铸造的 ICP 数量",

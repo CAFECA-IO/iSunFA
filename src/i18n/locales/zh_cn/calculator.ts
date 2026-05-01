@@ -186,9 +186,7 @@ export const calculator = {
     re_send_pay_slip_success_title: "薪资单发送成功！",
     re_send_pay_slip_success_content: "薪资单已成功发送至员工的电子邮件。",
     re_send_pay_slip_cancel_btn: "Cancel",
-  
-
-},
+  },
   operating_mechanism: {
     main_title: "薪资计算器运作机制",
   },

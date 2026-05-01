@@ -1,37 +1,37 @@
 export const adminBilling = {
-  "page": {
-    "title": "Revenue & Invoices",
-    "subtitle": "Monitor total revenue, point consumption, and active buyers.",
-    "filter_date": "Filter Over Time",
-    "start_date": "Start Date",
-    "end_date": "End Date",
-    "apply_filter": "Apply Filter",
-    "all_time": "All Time"
+  page: {
+    title: "Revenue & Invoices",
+    subtitle: "Monitor total revenue, point consumption, and active buyers.",
+    filter_date: "Filter Over Time",
+    start_date: "Start Date",
+    end_date: "End Date",
+    apply_filter: "Apply Filter",
+    all_time: "All Time",
   },
-  "kpi": {
-    "revenue": "Total Revenue",
-    "consumption": "Total Point Consumption",
-    "arpu": "Average Revenue Per User (ARPU)",
-    "burn_ratio": "Burn-to-Buy Ratio",
-    "users": "Transacting Users"
+  kpi: {
+    revenue: "Total Revenue",
+    consumption: "Total Point Consumption",
+    arpu: "Average Revenue Per User (ARPU)",
+    burn_ratio: "Burn-to-Buy Ratio",
+    users: "Transacting Users",
   },
-  "tabs": {
-    "orders": "Revenue Amount",
-    "points": "Point Usage History",
-    "credit_cards": "Credit Card Records"
+  tabs: {
+    orders: "Revenue Amount",
+    points: "Point Usage History",
+    credit_cards: "Credit Card Records",
   },
-  "table": {
-    "th_date": "Date",
-    "th_user": "User",
-    "th_order": "Order ID",
-    "th_amount": "Amount",
-    "th_status": "Status",
-    "th_source": "Service Type",
-    "th_action": "Action",
-    "th_purpose": "Purpose",
-    "th_provider": "Payment Provider",
-    "th_card_info": "Card Info",
-    "unnamed_user": "Unnamed User",
-    "download_receipt": "Download Receipt"
-  }
+  table: {
+    th_date: "Date",
+    th_user: "User",
+    th_order: "Order ID",
+    th_amount: "Amount",
+    th_status: "Status",
+    th_source: "Service Type",
+    th_action: "Action",
+    th_purpose: "Purpose",
+    th_provider: "Payment Provider",
+    th_card_info: "Card Info",
+    unnamed_user: "Unnamed User",
+    download_receipt: "Download Receipt",
+  },
 };

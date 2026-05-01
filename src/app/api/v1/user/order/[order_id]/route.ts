@@ -58,6 +58,10 @@ export async function GET(
       "[API] GET /user/order/[id] error:",
       error,
     );
-    return jsonFail({ code: "IN000099", message: "Failed to fetch order details", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to fetch order details",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

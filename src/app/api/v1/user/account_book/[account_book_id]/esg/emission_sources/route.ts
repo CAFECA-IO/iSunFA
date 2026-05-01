@@ -40,13 +40,22 @@ export async function GET(
     const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
 
     // Info: (20260421 - Julian) 取得排放源清單
-    const { data, meta } = await esgRepo.getEsgEmissionSources(accountBookId, keyword, page, pageSize);
+    const { data, meta } = await esgRepo.getEsgEmissionSources(
+      accountBookId,
+      keyword,
+      page,
+      pageSize,
+    );
     const { total, totalPages } = meta;
 
     return jsonOk({ data, total, totalPages });
   } catch (error) {
     console.error("Error fetching esg emission sources:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to fetch esg emission sources", status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to fetch esg emission sources",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }
 
@@ -82,15 +91,27 @@ export async function POST(
     const { name, address } = body;
 
     if (!name) {
-        return jsonFail({ code: "VA000099", message: "Name is required", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "Name is required",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     // Info: (20260424 - Julian) 建立排放源
-    const result = await esgRepo.createEsgEmissionSource(accountBookId, name, address);
+    const result = await esgRepo.createEsgEmissionSource(
+      accountBookId,
+      name,
+      address,
+    );
 
     return jsonOk(result);
   } catch (error) {
     console.error("Error creating esg emission source:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to create esg emission source", status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to create esg emission source",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

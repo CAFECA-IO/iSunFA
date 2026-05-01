@@ -57,7 +57,8 @@ export const pricing = {
         fido_tooltip:
           "Subscription fee charged based on the number of FIDO2 keys",
         credit_limit: "Unlimited Credits",
-        monthly_credits: "Automatically Receive {{amount}} Credits on the 1st of Every Month",
+        monthly_credits:
+          "Automatically Receive {{amount}} Credits on the 1st of Every Month",
         monthly_credits_tooltip: "Credits are valid for 30 days",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
@@ -79,7 +80,8 @@ export const pricing = {
         fido_tooltip:
           "Subscription fee charged based on the number of FIDO2 keys",
         credit_limit: "Unlimited Credits",
-        monthly_credits: "Automatically Receive {{amount}} Credits on the 1st of Every Month",
+        monthly_credits:
+          "Automatically Receive {{amount}} Credits on the 1st of Every Month",
         monthly_credits_tooltip: "Credits are valid for 30 days",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",

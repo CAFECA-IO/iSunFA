@@ -27,7 +27,11 @@ export interface ITask {
   _trueStatus?: TaskStatus; // Info: (20260424 - Luphia) For diff engine animations
 }
 
-export type LocalMissionStatus = 'executing' | 'completed' | 'failed' | 'pending';
+export type LocalMissionStatus =
+  | "executing"
+  | "completed"
+  | "failed"
+  | "pending";
 
 export interface ILocalMission {
   folderId: string;

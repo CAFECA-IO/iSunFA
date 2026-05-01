@@ -28,6 +28,10 @@ export async function POST(request: NextRequest) {
       return jsonFail(API_ERRORS.IS_UNKNOWN);
     }
 
-    return jsonFail({ code: "VA000099", message: "Failed to parse passkey cre...", status: ApiCode.VALIDATION_ERROR },  );
+    return jsonFail({
+      code: "VA000099",
+      message: "Failed to parse passkey cre...",
+      status: ApiCode.VALIDATION_ERROR,
+    });
   }
 }

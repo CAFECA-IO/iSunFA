@@ -48,7 +48,13 @@ class WebAuthnService {
     const user = await this.ensureUserSynced(address);
 
     if (!user) {
-      throw new AppError({ code: "NO000099", message: String("User not found on chain. Please register first.").slice(0, 30), status: ApiCode.NOT_FOUND });
+      throw new AppError({
+        code: "NO000099",
+        message: String(
+          "User not found on chain. Please register first.",
+        ).slice(0, 30),
+        status: ApiCode.NOT_FOUND,
+      });
     }
 
     const challenge = randomBytes(32).toString("base64url");
@@ -68,7 +74,14 @@ class WebAuthnService {
     const user = await this.repo.findUserByAddress(address);
 
     if (!user || !user.pubKeyX || !user.pubKeyY || !user.currentChallenge) {
-      throw new AppError({ code: "NO000099", message: String("User data incomplete. Please retry login flow.").slice(0, 30), status: ApiCode.NOT_FOUND });
+      throw new AppError({
+        code: "NO000099",
+        message: String("User data incomplete. Please retry login flow.").slice(
+          0,
+          30,
+        ),
+        status: ApiCode.NOT_FOUND,
+      });
     }
 
     const credentialPublicKey = reconstructKeyFromXY(
@@ -91,7 +104,11 @@ class WebAuthnService {
       );
     } catch (error) {
       console.error("Login verification failed:", error);
-      throw new AppError({ code: "UN000099", message: "Invalid signature", status: ApiCode.UNAUTHORIZED });
+      throw new AppError({
+        code: "UN000099",
+        message: "Invalid signature",
+        status: ApiCode.UNAUTHORIZED,
+      });
     }
 
     const dewt = await signDeWT(user);
@@ -293,7 +310,14 @@ class WebAuthnService {
     }
 
     if (!user || !user.pubKeyX || !user.pubKeyY) {
-      throw new AppError({ code: "NO000099", message: String("User not found or passkey not registered").slice(0, 30), status: ApiCode.NOT_FOUND });
+      throw new AppError({
+        code: "NO000099",
+        message: String("User not found or passkey not registered").slice(
+          0,
+          30,
+        ),
+        status: ApiCode.NOT_FOUND,
+      });
     }
 
     const credentialPublicKey = reconstructKeyFromXY(
@@ -315,7 +339,11 @@ class WebAuthnService {
       );
     } catch (error) {
       console.error("Login verification failed:", error);
-      throw new AppError({ code: "UN000099", message: "Invalid signature", status: ApiCode.UNAUTHORIZED });
+      throw new AppError({
+        code: "UN000099",
+        message: "Invalid signature",
+        status: ApiCode.UNAUTHORIZED,
+      });
     }
 
     // Info: (20260105 - Tzuhan) 5. 簽發 DeWT
@@ -339,7 +367,14 @@ class WebAuthnService {
     const user = await this.repo.findUserByAddress(address);
 
     if (!user || !user.pubKeyX || !user.pubKeyY) {
-      throw new AppError({ code: "NO000099", message: String("User not found or passkey not registered").slice(0, 30), status: ApiCode.NOT_FOUND });
+      throw new AppError({
+        code: "NO000099",
+        message: String("User not found or passkey not registered").slice(
+          0,
+          30,
+        ),
+        status: ApiCode.NOT_FOUND,
+      });
     }
 
     const credentialPublicKey = reconstructKeyFromXY(
@@ -362,7 +397,11 @@ class WebAuthnService {
       return true;
     } catch (error) {
       console.error("Signature verification failed:", error);
-      throw new AppError({ code: "UN000099", message: "Invalid signature", status: ApiCode.UNAUTHORIZED });
+      throw new AppError({
+        code: "UN000099",
+        message: "Invalid signature",
+        status: ApiCode.UNAUTHORIZED,
+      });
     }
   }
 }
