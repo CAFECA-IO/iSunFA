@@ -309,7 +309,8 @@ export default function ReportPage() {
 				pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeightInMm);
 				heightLeft -= pdfHeight;
 
-				while (heightLeft > 0) {
+				// Info: (20260502 - Luphia) 避免浮點數誤差或 1 毫米的溢白邊產生無意義的整面空白頁
+				while (heightLeft > 1) {
 					position -= pdfHeight;
 					pdf.addPage();
 					pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeightInMm);
