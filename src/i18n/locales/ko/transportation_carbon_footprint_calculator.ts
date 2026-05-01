@@ -50,6 +50,9 @@ export const transportationCarbonFootprintCalculator = {
     "calculating": "계산 중...",
     "generate_report": "분석 보고서 생성",
     "login_to_generate": "분석 보고서를 생성하려면 로그인하십시오"
+  },
+  "history": {
+    "title": "Historical Analysis Paths"
   }
 ,
   "plan_section": {

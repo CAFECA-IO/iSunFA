@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Head from 'next/head';
 import { Truck, Ship, Plane, Leaf, Loader2, Weight, Activity, Settings2, ChevronDown, ChevronUp, Sparkles, Download, MapPin, ArrowRight } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { ILogisticsPlan } from '@/interfaces/logistics';
+import { request } from '@/lib/utils/request';
 import { PlanSection, RouteType } from '@/components/transportation_carbon_footprint_calculator/plan_section';
 import type { IMapViewerRef } from '@/components/transportation_carbon_footprint_calculator/map_viewer';
 import { ReportLayout } from '@/components/common/report_layout';
+import DataTable, { IDataTableColumn } from '@/components/common/data_table';
 import { useAuth } from "@/contexts/auth_context";
 import LoginButton from "@/components/common/login_button";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
@@ -17,6 +19,16 @@ import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { ORDER_TYPE } from "@/constants/status";
 import { ANALYSIS_BASE_COSTS } from '@/constants/price';
 import { useTranslation } from "@/i18n/i18n_context";
+
+interface IHistoryItem {
+	id: string;
+	generatedAt: string;
+	status: string;
+	category: string;
+	origin?: { lat: number | ''; lng: number | '' };
+	dest?: { lat: number | ''; lng: number | '' };
+	weightKg?: number;
+}
 
 export default function ReportPage() {
 	const { t } = useTranslation();
@@ -27,6 +39,8 @@ export default function ReportPage() {
 	const [isExporting, setIsExporting] = useState(false); // Info: (20260501 - Luphia) PDF 匯出狀態
 	const [plan, setPlan] = useState<ILogisticsPlan | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	const [history, setHistory] = useState<IHistoryItem[]>([]);
+
 
 	const { user } = useAuth();
 	const { workflowStatus, resetTransaction, executeOrderTransaction } = useOrderTransaction();
@@ -39,6 +53,8 @@ export default function ReportPage() {
 
 	const [selectedRoutes, setSelectedRoutes] = useState<Set<RouteType>>(new Set(['land', 'sea', 'air']));
 	const reportRef = useRef<HTMLDivElement>(null);
+	const scrollTargetRef = useRef<HTMLDivElement>(null);
+	const historyTableRef = useRef<HTMLDivElement>(null);
 	// Info: (20260501 - Luphia) 建立各區段地圖的 Ref 供截圖使用
 	const mapRefs = {
 		land: useRef<IMapViewerRef>(null),
@@ -46,33 +62,79 @@ export default function ReportPage() {
 		air: useRef<IMapViewerRef>(null)
 	};
 
-	// Info: (20260430 - Tzuhan) 開始產生報告 (合併 AI 解析與運算)
-	const calculateFootprint = async (orderId?: string) => {
+	// Info: (20260501 - Luphia) Fetch History
+	const fetchHistory = async () => {
+		try {
+			const res = await request<{ payload: IHistoryItem[] }>('/api/v1/user/analysis');
+			if (res && res.payload) {
+				const transportHistory = res.payload.filter(item => item.category === ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT);
+				setHistory(transportHistory);
+			}
+		} catch (e) {
+			console.error("Failed to fetch history", e);
+		}
+	};
+
+	// Info: (20260501 - Luphia) Fetch history on mount and when polling stops
+	useEffect(() => {
+		if (user) fetchHistory();
+	}, [user]);
+
+	const hasExecuting = history.some(item => item.status?.toUpperCase() !== 'COMPLETED' && item.status?.toUpperCase() !== 'FAILED');
+
+	useEffect(() => {
+		let interval: NodeJS.Timeout;
+		if (hasExecuting) {
+			interval = setInterval(() => {
+				fetchHistory();
+			}, 10000);
+		}
+		return () => clearInterval(interval);
+	}, [hasExecuting]);
+
+	const calculateFootprint = async () => {
+		setAiInput('');
+		setOrigin({ lat: '', lng: '' });
+		setDest({ lat: '', lng: '' });
+		setWeightKg('');
+		setShowManual(false);
+		setPlan(null);
+		setError(null);
+
+		await fetchHistory();
+
+		setTimeout(() => {
+			if (historyTableRef.current) {
+				historyTableRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}
+		}, 100);
+	};
+
+	const handleOpenPayment = async () => {
+		if (!user) return;
+
 		let currentOrigin = { ...origin };
 		let currentDest = { ...dest };
 		let currentWeight = weightKg;
 
-		setLoading(true);
-		setError(null);
-		setPlan(null);
+		const hasManualParams = currentOrigin.lat !== '' && currentOrigin.lng !== '' &&
+			currentDest.lat !== '' && currentDest.lng !== '' &&
+			currentWeight !== '';
 
-		try {
-			const hasManualParams = currentOrigin.lat !== '' && currentOrigin.lng !== '' &&
-				currentDest.lat !== '' && currentDest.lng !== '' &&
-				currentWeight !== '';
-
-			if (!hasManualParams) {
-				if (!aiInput.trim()) {
-					throw new Error('請輸入運輸路線描述，或展開進階設定手動輸入完整參數。');
-				}
-
-				setIsParsing(true);
+		if (!hasManualParams) {
+			if (!aiInput.trim()) {
+				setError('請輸入運輸路線描述，或展開進階設定手動輸入完整參數。');
+				return;
+			}
+			setLoading(true);
+			setIsParsing(true);
+			setError(null);
+			try {
 				const resParse = await fetch('/api/v1/transportation_carbon_footprint_calculator', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ action: 'parse', text: aiInput })
 				});
-				setIsParsing(false);
 
 				if (!resParse.ok) {
 					const errorData = await resParse.json().catch(() => ({}));
@@ -80,7 +142,7 @@ export default function ReportPage() {
 				}
 
 				const responseParse = await resParse.json();
-				const data = responseParse.payload; // Info: (20260501 - Luphia) data = { parsed, plan }
+				const data = responseParse.payload;
 
 				if (data.parsed?.origin) currentOrigin = data.parsed.origin;
 				if (data.parsed?.dest) currentDest = data.parsed.dest;
@@ -89,50 +151,23 @@ export default function ReportPage() {
 				setOrigin(currentOrigin);
 				setDest(currentDest);
 				setWeightKg(currentWeight);
-				setShowManual(true); // Info: (20260430 - Tzuhan) 解析完展開讓用戶確認
-
-				if (data.plan) {
-					setPlan(data.plan);
-					setLoading(false);
-					setIsParsing(false);
-					return; // Info: (20260501 - Luphia) 若解析順便完成了運算，直接套用結果並結束，實現一鍵完成
-				}
+				setShowManual(true);
+			} catch (err) {
+				setError(err instanceof Error ? err.message : 'AI 解析失敗');
+				setLoading(false);
+				setIsParsing(false);
+				return;
+			} finally {
+				setLoading(false);
+				setIsParsing(false);
 			}
-
-			if (currentOrigin.lat === '' || currentOrigin.lng === '' || currentDest.lat === '' || currentDest.lng === '' || currentWeight === '') {
-				throw new Error('無法取得完整參數，請確認 AI 解析結果或手動輸入。');
-			}
-
-			const res = await fetch('/api/v1/transportation_carbon_footprint_calculator', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					action: 'calculate',
-					orderId: orderId, // Info: (20260501 - Luphia) 傳遞給 API 以驗證付款
-					originLat: Number(currentOrigin.lat),
-					originLng: Number(currentOrigin.lng),
-					destLat: Number(currentDest.lat),
-					destLng: Number(currentDest.lng),
-					weightKg: Number(currentWeight)
-				})
-			});
-			if (!res.ok) {
-				const errorData = await res.json().catch(() => ({}));
-				throw new Error(errorData.message || errorData.error || `分析失敗 (${res.status})`);
-			}
-			const response = await res.json();
-			const result = response.payload;
-			setPlan(result);
-		} catch (err) {
-			setError(err instanceof Error ? err.message : t('transportation_carbon_footprint_calculator.analysis_failed'));
-		} finally {
-			setLoading(false);
-			setIsParsing(false);
 		}
-	};
 
-	const handleOpenPayment = () => {
-		if (!user) return;
+		if (currentOrigin.lat === '' || currentOrigin.lng === '' || currentDest.lat === '' || currentDest.lng === '' || currentWeight === '') {
+			setError('無法取得完整參數，請確認 AI 解析結果或手動輸入。');
+			return;
+		}
+
 		setIsPaymentModalOpen(true);
 		resetTransaction();
 	};
@@ -155,8 +190,8 @@ export default function ReportPage() {
 			],
 		};
 
-		await executeOrderTransaction(orderPayload, ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT, async (authData) => {
-			await calculateFootprint(authData.orderId);
+		await executeOrderTransaction(orderPayload, ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT, async () => {
+			await calculateFootprint();
 			setIsPaymentModalOpen(false);
 		});
 	};
@@ -312,6 +347,117 @@ export default function ReportPage() {
 	const isLandAvailable = plan ? isLandValid(plan) : true;
 	const isLocked = loading; // Info: (20260430 - Tzuhan) 只有在「運算中」才反灰，算完後重新開放輸入以便用戶微調再算一次
 
+	const handleLoadHistory = async (item: IHistoryItem) => {
+		setLoading(true);
+		setError(null);
+		setPlan(null);
+		try {
+			const res = await request<{ payload: { result: string } }>(`/api/v1/user/analysis/${item.id}`);
+			if (res?.payload?.result) {
+				setPlan(JSON.parse(res.payload.result));
+				setOrigin(item.origin || { lat: '', lng: '' });
+				setDest(item.dest || { lat: '', lng: '' });
+				setWeightKg(item.weightKg || '');
+				setTimeout(() => {
+					if (scrollTargetRef.current) {
+						scrollTargetRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+					}
+				}, 100);
+				return true;
+			}
+		} catch (err) {
+			console.error("Failed to load history", err);
+			setError("無法載入歷史報告");
+		} finally {
+			setLoading(false);
+		}
+		return false;
+	};
+
+	const historyColumns: IDataTableColumn<IHistoryItem>[] = [
+		{
+			key: "generatedAt",
+			label: t('common.date'),
+			render: (row) => <span className="text-gray-600 text-sm">{row.generatedAt}</span>
+		},
+		{
+			key: "status",
+			label: t('common.status'),
+			render: (row) => {
+				const isCompleted = row.status?.toUpperCase() === 'COMPLETED' || row.status?.toUpperCase() === 'SUCCESS' || row.status?.toUpperCase() === 'DONE';
+				const isFailed = row.status?.toUpperCase() === 'FAILED' || row.status?.toUpperCase() === 'ERROR';
+				const isIncomplete = !isCompleted && !isFailed;
+				return (
+					<span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${isCompleted ? 'bg-green-100 text-green-700' : isFailed ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+						{isIncomplete && <Loader2 className="w-3 h-3 animate-spin" />}
+						{row.status}
+					</span>
+				);
+			}
+		},
+		{
+			key: "origin",
+			label: t('common.origin'),
+			render: (row) => (
+				<div className="flex items-center gap-1.5 text-gray-700 text-sm">
+					<MapPin className="w-4 h-4 text-orange-500 shrink-0" />
+					<span className="truncate max-w-[200px]">{row.origin?.lat ? `${row.origin.lat}, ${row.origin.lng}` : "未知"}</span>
+				</div>
+			)
+		},
+		{
+			key: "dest",
+			label: t('common.destination'),
+			render: (row) => (
+				<div className="flex items-center gap-1.5 text-gray-700 text-sm">
+					<MapPin className="w-4 h-4 text-emerald-500 shrink-0" />
+					<span className="truncate max-w-[200px]">{row.dest?.lat ? `${row.dest.lat}, ${row.dest.lng}` : "未知"}</span>
+				</div>
+			)
+		},
+		{
+			key: "weight",
+			label: t('common.weight'),
+			render: (row) => (
+				<div className="flex items-center gap-1.5 text-gray-700 text-sm">
+					<Weight className="w-4 h-4 text-gray-400" />
+					<span>{row.weightKg} kg</span>
+				</div>
+			)
+		},
+		{
+			key: "actions",
+			label: t('common.actions'),
+			align: "right",
+			render: (row) => (
+				<div className="flex justify-end gap-2">
+					<button
+						onClick={() => handleLoadHistory(row)}
+						disabled={loading || isExporting || row.status?.toUpperCase() !== 'COMPLETED'}
+						className="px-4 py-2 bg-white text-orange-600 border border-orange-200 font-bold text-sm rounded-full hover:bg-orange-50 hover:border-orange-300 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						{t('common.load')}
+					</button>
+					<button
+						onClick={async () => {
+							const loaded = await handleLoadHistory(row);
+							if (loaded) {
+								setTimeout(() => {
+									handleDownloadPDF();
+								}, 1000);
+							}
+						}}
+						disabled={loading || isExporting || row.status?.toUpperCase() !== 'COMPLETED'}
+						className="flex items-center gap-1.5 px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm rounded-full hover:-translate-y-0.5 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						{isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+						{t('transportation_carbon_footprint_calculator.ui.export_report')}
+					</button>
+				</div>
+			)
+		}
+	];
+
 	return (
 		<main
 			className="flex min-h-screen flex-col bg-white text-gray-900 font-sans selection:bg-orange-500/30 overflow-hidden relative isolate select-none"
@@ -366,7 +512,7 @@ export default function ReportPage() {
 				/>
 			</div>
 
-			<div className="flex-1 w-full max-w-5xl mx-auto px-6 py-12 md:py-24 space-y-12 z-10 relative">
+			<div className="flex-1 w-full max-w-7xl mx-auto px-6 py-12 md:py-24 space-y-12 z-10 relative">
 
 				{/* Info: (20260501 - Luphia) User Requested Header Design */}
 				<div className="text-center space-y-4 pt-10">
@@ -384,7 +530,7 @@ export default function ReportPage() {
 				<div ref={reportRef} className={`bg-transparent -mx-2 md:mx-0 transition-all ${isExporting ? 'bg-white rounded-3xl shadow-2xl overflow-hidden relative' : ''}`}>
 					{/* Info: (20260501 - Luphia) 如果不是在匯出狀態，顯示輸入控制面板 */}
 					{!isExporting && (
-						<div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-6 md:p-8 shadow-xl">
+						<div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-6 md:p-8">
 							<div className="flex justify-between items-center mb-6">
 								<h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
 									<Settings2 className="w-5 h-5 text-orange-500" /> {t('transportation_carbon_footprint_calculator.ui.config_title')}
@@ -392,8 +538,8 @@ export default function ReportPage() {
 							</div>
 
 							<div className="space-y-6">
-								{/* Info: (20260501 - Luphia) 第一列：語意輸入框 */}
-								<div className="flex flex-col md:flex-row gap-4">
+								{/* Info: (20260501 - Luphia) 第一列：語意輸入框與產生按鈕 */}
+								<div className="flex flex-col md:flex-row gap-4 items-end">
 									<label className="flex-1 w-full flex flex-col gap-2">
 										<div className="text-sm font-semibold text-gray-700 flex items-center gap-2">
 											<Sparkles className="w-4 h-4 text-orange-500" /> {t('transportation_carbon_footprint_calculator.ui.route_description')}
@@ -408,9 +554,25 @@ export default function ReportPage() {
 											placeholder={t('transportation_carbon_footprint_calculator.ui.route_placeholder')}
 											aria-label={t('transportation_carbon_footprint_calculator.ui.route_description')}
 											disabled={isLocked || isParsing}
-											className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all text-gray-900 shadow-sm disabled:bg-gray-100 disabled:text-gray-500"
+											className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all text-gray-900 disabled:bg-gray-100 disabled:text-gray-500 h-[50px]"
 										/>
 									</label>
+									<div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto h-[50px]">
+										{user && (
+											<button
+												onClick={handleOpenPayment}
+												disabled={loading || isParsing || isExporting || (!aiInput.trim() && !(origin.lat !== '' && origin.lng !== '' && dest.lat !== '' && dest.lng !== '' && weightKg !== ''))}
+												className="h-full px-8 bg-orange-600 hover:bg-orange-500 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2 w-full sm:w-auto"
+											>
+												{(loading || isParsing) ? <><Loader2 className="w-5 h-5 animate-spin" /> {t('transportation_carbon_footprint_calculator.ui.calculating')}</> : <><Activity className="w-5 h-5" /> {t('transportation_carbon_footprint_calculator.ui.generate_report')}</>}
+											</button>
+										)}
+										{!user && (
+											<div className="h-full w-full sm:w-auto flex items-stretch">
+												<LoginButton label={t('transportation_carbon_footprint_calculator.ui.login_to_generate')} />
+											</div>
+										)}
+									</div>
 								</div>
 
 								{/* Info: (20260501 - Luphia) 折疊式手動參數確認 */}
@@ -450,73 +612,62 @@ export default function ReportPage() {
 								</div>
 							</div>
 
-							<div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-4 pt-6 border-t border-gray-100">
-								<div className="flex flex-wrap gap-3">
-									<button
-										onClick={() => toggleRoute('land')}
-										disabled={!plan || loading || !isLandAvailable}
-										className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border 
-                                        ${(!!plan && !isLandAvailable) ? 'bg-gray-50 border-gray-200 text-gray-400 line-through cursor-not-allowed' :
-												(!plan || loading) ? 'bg-gray-50 border-gray-200 text-gray-400 opacity-60 cursor-not-allowed' :
-													selectedRoutes.has('land') ? 'bg-orange-50 border-orange-200 text-orange-700 shadow-sm' :
-														'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
-									>
-										<Truck className="w-4 h-4" /> {t('transportation_carbon_footprint_calculator.ui.land_route')}
-									</button>
-									<button
-										onClick={() => toggleRoute('sea')}
-										disabled={!plan || loading}
-										className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border 
-                                        ${(!plan || loading) ? 'bg-gray-50 border-gray-200 text-gray-400 opacity-60 cursor-not-allowed' :
-												selectedRoutes.has('sea') ? 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm' :
-													'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
-									>
-										<Ship className="w-4 h-4" /> {t('transportation_carbon_footprint_calculator.ui.sea_route')}
-									</button>
-									<button
-										onClick={() => toggleRoute('air')}
-										disabled={!plan || loading}
-										className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border 
-                                        ${(!plan || loading) ? 'bg-gray-50 border-gray-200 text-gray-400 opacity-60 cursor-not-allowed' :
-												selectedRoutes.has('air') ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm' :
-													'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
-									>
-										<Plane className="w-4 h-4" /> {t('transportation_carbon_footprint_calculator.ui.air_route')}
-									</button>
-								</div>
-
-								<div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-									{user && (
-										<button
-											onClick={handleDownloadPDF}
-											disabled={!plan || loading || isParsing || isExporting}
-											className="px-8 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:hover:translate-y-0 flex items-center gap-2 shadow-md transform hover:-translate-y-0.5 w-full sm:w-auto justify-center"
-										>
-											{isExporting ? <><Loader2 className="w-5 h-5 animate-spin" /> {t('transportation_carbon_footprint_calculator.ui.exporting')}</> : <><Download className="w-5 h-5" /> {t('transportation_carbon_footprint_calculator.ui.export_report')}</>}
-										</button>
-									)}
-									{user ? (
-										<button
-											onClick={handleOpenPayment} disabled={loading || isParsing || isExporting}
-											className="px-8 py-3 bg-orange-600 hover:bg-orange-500 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:hover:translate-y-0 flex items-center gap-2 shadow-md transform hover:-translate-y-0.5 w-full sm:w-auto justify-center"
-										>
-											{(loading || isParsing) ? <><Loader2 className="w-5 h-5 animate-spin" /> {t('transportation_carbon_footprint_calculator.ui.calculating')}</> : <><Activity className="w-5 h-5" /> {t('transportation_carbon_footprint_calculator.ui.generate_report')}</>}
-										</button>
-									) : (
-										<div className="w-full sm:w-auto">
-											<LoginButton label={t('transportation_carbon_footprint_calculator.ui.login_to_generate')} />
-										</div>
-									)}
-								</div>
-							</div>
 
 							{error && <div className="mt-4 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium">{error}</div>}
 						</div>
 					)}
 
-					<div className="transition-all duration-500 ease-in-out mt-8">
+					{/* Info: (20260501 - Luphia) 歷史分析路徑區塊 */}
+					{!isExporting && history.length > 0 && (
+						<div ref={historyTableRef} className="w-full mt-10">
+							<DataTable
+								columns={historyColumns}
+								data={history}
+								rowKey={(row) => row.id}
+							/>
+						</div>
+					)}
+
+					{/* Info: (20260501 - Luphia) 報告內容區塊 */}
+					<div ref={scrollTargetRef} className="transition-all duration-500 ease-in-out mt-10">
 						{plan ? (
 							<div className="flex flex-col gap-8 pb-12">
+								{!isExporting && (
+									<div className="flex justify-center flex-wrap gap-3 mb-2 mt-4">
+										<button
+											onClick={() => toggleRoute('land')}
+											disabled={!plan || loading || !isLandAvailable}
+											className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border 
+											${(!!plan && !isLandAvailable) ? 'bg-gray-50 border-gray-200 text-gray-400 line-through cursor-not-allowed' :
+													(!plan || loading) ? 'bg-gray-50 border-gray-200 text-gray-400 opacity-60 cursor-not-allowed' :
+														selectedRoutes.has('land') ? 'bg-orange-50 border-orange-200 text-orange-700' :
+															'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+										>
+											<Truck className="w-4 h-4" /> {t('transportation_carbon_footprint_calculator.ui.land_route')}
+										</button>
+										<button
+											onClick={() => toggleRoute('sea')}
+											disabled={!plan || loading}
+											className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border 
+											${(!plan || loading) ? 'bg-gray-50 border-gray-200 text-gray-400 opacity-60 cursor-not-allowed' :
+													selectedRoutes.has('sea') ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+														'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+										>
+											<Ship className="w-4 h-4" /> {t('transportation_carbon_footprint_calculator.ui.sea_route')}
+										</button>
+										<button
+											onClick={() => toggleRoute('air')}
+											disabled={!plan || loading}
+											className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border 
+											${(!plan || loading) ? 'bg-gray-50 border-gray-200 text-gray-400 opacity-60 cursor-not-allowed' :
+													selectedRoutes.has('air') ? 'bg-blue-50 border-blue-200 text-blue-700' :
+														'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+										>
+											<Plane className="w-4 h-4" /> {t('transportation_carbon_footprint_calculator.ui.air_route')}
+										</button>
+									</div>
+								)}
+
 								{/* Info: (20260501 - Luphia) 根據選擇的路線，動態渲染，並在匯出時每一頁獨立用 ReportLayout 包覆 */}
 								{(() => {
 									const routesToRender = ['land', 'sea', 'air'].filter(type => selectedRoutes.has(type as RouteType) && (type !== 'land' || isLandAvailable));
@@ -577,6 +728,7 @@ export default function ReportPage() {
 						)}
 					</div>
 				</div>
+
 			</div>
 		</main>
 	);

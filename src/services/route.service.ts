@@ -89,6 +89,14 @@ async function getLandRoute(start: { lat: number, lng: number }, end: { lat: num
 
         if (data.code === 'Ok') {
             const routeData = data.routes[0];
+            const distanceKm = routeData.distance / 1000;
+            const directDistKm = calculateDistanceKm(start.lat, start.lng, end.lat, end.lng);
+
+            // Info: (20260502 - Luphia) 攔截異常：如果 OSRM 回傳極短距離（如 0）或駕駛距離不到直線距離的一半，代表座標被錯誤捕捉到地圖邊界
+            if (distanceKm < directDistKm * 0.5 || (distanceKm === 0 && directDistKm > 0.01)) {
+                throw new Error("OSRM route is invalid due to out-of-bounds coordinate snapping.");
+            }
+
             let usesFerry = false;
             for (const leg of routeData.legs || []) {
                 for (const step of leg.steps || []) {
@@ -101,7 +109,6 @@ async function getLandRoute(start: { lat: number, lng: number }, end: { lat: num
             }
 
             if (!usesFerry) {
-                const distanceKm = routeData.distance / 1000;
                 return { success: true, distanceKm, geometry: splitAtAntimeridian(routeData.geometry as GeoJSON.Geometry) };
             }
         }

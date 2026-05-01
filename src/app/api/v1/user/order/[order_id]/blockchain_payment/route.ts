@@ -129,10 +129,7 @@ export async function POST(
     // Info: (20260418 - Luphia) Automatically generate mission for ALL categories including ai_consulting, but SKIP journal_upload since it generates missions per-file manually.
     type TPayloadFile = string | { hash: string; fileName?: string };
 
-    if (category === ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT) {
-      // Info: (20260501 - Luphia) Sync API, no background mission needed
-      resData = { reportId: orderId };
-    } else if (category !== ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
+    if (category !== ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
       const generateParams = {
         orderId: orderId,
         type: ORDER_TYPE.ANALYSIS,

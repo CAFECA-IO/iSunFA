@@ -122,6 +122,7 @@ export const analysis = {
     ai_consulting: "AI 컨설팅",
     journal_upload: "분개장 등록",
     certificate_analysis: "증빙 분석",
+    transportation_carbon_footprint: "운송 탄소 발자국",
   },
   history: {
     title: "분석 기록",
