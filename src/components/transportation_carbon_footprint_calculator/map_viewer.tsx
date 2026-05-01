@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react';
 import Map, { Source, Layer, MapRef, Marker } from 'react-map-gl/maplibre';
 import { MapPin } from 'lucide-react';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -17,6 +17,10 @@ export interface IMapViewerProps {
 	fitBoundsPadding?: number; // Info: (20260430 - Tzuhan) 控制飛梭邊距，小地圖需設小一點
 	showRouteMarkers?: boolean; // Info: (20260430 - Luphia) 顯示起終點標記
 	duration?: number; // Info: (20260501 - Luphia) 飛梭動畫時長
+}
+
+export interface IMapViewerRef {
+	captureMap: () => Promise<string | null>;
 }
 
 function getStartAndEndCoordinates(geojson: GeoJSON.FeatureCollection | GeoJSON.Feature | GeoJSON.Geometry | null) {
@@ -93,13 +97,33 @@ function getBoundingBox(geojson: GeoJSON.FeatureCollection | GeoJSON.Feature | G
 	return [[minX, minY], [maxX, maxY]];
 }
 
-export default function MapViewer({ routeGeojson = null, focusGeojson = null, className = "w-full h-full min-h-[600px]", interactive = true, fitBoundsPadding = 80, showRouteMarkers = false, duration = 2500 }: IMapViewerProps) {
+const MapViewerBase = ({ routeGeojson = null, focusGeojson = null, className = "w-full h-full min-h-[600px]", interactive = true, hideLabel = false, fitBoundsPadding = 80, showRouteMarkers = false, duration = 2500 }: IMapViewerProps, ref: React.Ref<IMapViewerRef>) => {
 	const mapTilerKey = process.env.NEXT_PUBLIC_MAPTILER_KEY;
 
 	const mapRef = useRef<MapRef>(null);
 	const targetGeojson = focusGeojson || routeGeojson;
-	const initialBbox = targetGeojson ? getBoundingBox(targetGeojson) : null;
 	const { start: startCoord, end: endCoord } = useMemo(() => getStartAndEndCoordinates(routeGeojson), [routeGeojson]);
+	const initialBbox = useMemo(() => getBoundingBox(targetGeojson), [targetGeojson]);
+
+	useImperativeHandle(ref, () => ({
+		captureMap: () => {
+			return new Promise<string | null>((resolve) => {
+				if (!mapRef.current) return resolve(null);
+				const map = mapRef.current.getMap();
+				// Info: (20260501 - Luphia) 確保 MapLibre 完整渲染完畢後截取 WebGL Canvas
+				map.once('render', () => {
+					try {
+						// Info: (20260501 - Luphia) 使用 image/jpeg 壓縮，避免 PNG 過大導致最終 PDF 超過 1MB
+						resolve(map.getCanvas().toDataURL('image/jpeg', 0.8));
+					} catch (e) {
+						console.error('Failed to capture map data URL:', e);
+						resolve(null);
+					}
+				});
+				map.triggerRepaint();
+			});
+		}
+	}), []);
 
 	useEffect(() => {
 		if (targetGeojson && mapRef.current) {
@@ -127,13 +151,14 @@ export default function MapViewer({ routeGeojson = null, focusGeojson = null, cl
 	// Info: (20260430 - Tzuhan) dataviz-light
 	// Info: (20260430 - Tzuhan) （要付費）使用 MapTiler 的 dataviz-light (高對比亮色，且保留國家邊界與地理脈絡) 底圖
 	const mapStyle = `https://api.maptiler.com/maps/dataviz-light/style.json?key=${mapTilerKey}`;
+	const mapProps = { preserveDrawingBuffer: true } as unknown as React.ComponentProps<typeof Map>;
 
 	return (
 		<div className={`${className} rounded-xl overflow-hidden shadow-2xl relative`}>
 			<Map
+				{...mapProps}
 				ref={mapRef}
-				// @ts-expect-error: Required for html2canvas to capture WebGL context
-				preserveDrawingBuffer={true}
+				attributionControl={hideLabel ? false : undefined}
 				renderWorldCopies={false}
 				initialViewState={initialBbox ? {
 					bounds: initialBbox,
@@ -190,4 +215,9 @@ export default function MapViewer({ routeGeojson = null, focusGeojson = null, cl
 			</Map>
 		</div>
 	);
-}
+};
+
+const MapViewer = forwardRef(MapViewerBase);
+MapViewer.displayName = 'MapViewer';
+
+export default MapViewer;

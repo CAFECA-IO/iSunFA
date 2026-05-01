@@ -1,5 +1,5 @@
 import { Truck, Ship, Plane, MapPin, ArrowRight, Activity } from 'lucide-react';
-import MapViewer from '@/components/transportation_carbon_footprint_calculator/map_viewer';
+import MapViewer, { IMapViewerRef } from '@/components/transportation_carbon_footprint_calculator/map_viewer';
 import { ILogisticsPlan } from '@/interfaces/logistics';
 
 export type RouteType = 'sea' | 'air' | 'land';
@@ -24,6 +24,7 @@ interface IPlanSectionProps {
 	plan: ILogisticsPlan;
 	weightKg: number | string;
 	isExporting?: boolean;
+	mapRef?: React.Ref<IMapViewerRef>;
 }
 
 interface ILegData {
@@ -33,7 +34,7 @@ interface ILegData {
 	isFallback?: boolean;
 }
 
-export function PlanSection({ type, plan, weightKg, isExporting = false }: IPlanSectionProps) {
+export function PlanSection({ type, plan, weightKg, isExporting = false, mapRef = null }: IPlanSectionProps) {
 	const getModeIcon = (mode: string) => {
 		switch (mode) {
 			case 'land': return <Truck className="w-5 h-5 text-orange-600" />;
@@ -135,6 +136,7 @@ export function PlanSection({ type, plan, weightKg, isExporting = false }: IPlan
 				<div className="bg-white border border-gray-200 rounded-3xl p-2 overflow-hidden shadow-lg group">
 					<div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-gray-100">
 						<MapViewer
+							ref={mapRef}
 							routeGeojson={{
 								type: 'FeatureCollection',
 								features: mapFeatures.filter(f => f.geometry) as GeoJSON.Feature[]

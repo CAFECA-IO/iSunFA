@@ -7,6 +7,7 @@ import * as htmlToImage from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { ILogisticsPlan } from '@/interfaces/logistics';
 import { PlanSection, RouteType } from '@/components/transportation_carbon_footprint_calculator/plan_section';
+import type { IMapViewerRef } from '@/components/transportation_carbon_footprint_calculator/map_viewer';
 import { ReportLayout } from '@/components/common/report_layout';
 
 export default function ReportPage() {
@@ -25,6 +26,12 @@ export default function ReportPage() {
 
 	const [selectedRoutes, setSelectedRoutes] = useState<Set<RouteType>>(new Set(['land', 'sea', 'air']));
 	const reportRef = useRef<HTMLDivElement>(null);
+	// Info: (20260501 - Luphia) 建立各區段地圖的 Ref 供截圖使用
+	const mapRefs = {
+		land: useRef<IMapViewerRef>(null),
+		sea: useRef<IMapViewerRef>(null),
+		air: useRef<IMapViewerRef>(null)
+	};
 
 	// Info: (20260430 - Tzuhan) 開始產生報告 (合併 AI 解析與運算)
 	const calculateFootprint = async () => {
@@ -153,54 +160,58 @@ export default function ReportPage() {
 				pageEl.style.width = '1024px';
 				pageEl.style.maxWidth = '1024px';
 
-				// Info: (20260501 - Luphia) 寬度改變會觸發 MapLibre 的 ResizeObserver，這會清空 WebGL Buffer！
-				// 我們必須等待足夠長的時間讓 MapLibre 重新渲染地圖跟路線，否則會抓到透明的圖，且 HTML Markers 也會錯位。
+				/**
+				 * Info: (20260501 - Luphia)
+				 * 寬度改變會觸發 MapLibre 的 ResizeObserver，這會清空 WebGL Buffer！
+				 * 我們必須等待足夠長的時間讓 MapLibre 重新渲染地圖跟路線，否則會抓到透明的圖，且 HTML Markers 也會錯位。
+				 */
 				await new Promise(resolve => setTimeout(resolve, 1500));
 
-				// Info: (20260501 - Luphia) 解決 MapLibre WebGL Canvas 被 html-to-image 截取時變成空白的問題
-				const canvases = Array.from(pageEl.querySelectorAll('canvas'));
-				const originalCanvases: { canvas: HTMLCanvasElement, img: HTMLImageElement, originalDisplay: string }[] = [];
+				// Info: (20260501 - Luphia) 直接向 MapLibre 請求渲染結果！徹底解決 WebGL 被 html-to-image 忽略的問題！
+				const currentMapRef = mapRefs[routeType as RouteType];
+				let imgEl: HTMLImageElement | null = null;
+				let originalCanvasDisplay = '';
+				let targetCanvas: HTMLCanvasElement | null = null;
 
-				canvases.forEach(canvas => {
-					try {
-						const dataUrl = canvas.toDataURL('image/png');
-						const img = document.createElement('img');
-						img.src = dataUrl;
-						img.style.width = canvas.style.width || canvas.offsetWidth + 'px';
-						img.style.height = canvas.style.height || canvas.offsetHeight + 'px';
-						img.style.position = canvas.style.position;
-						img.style.top = canvas.style.top;
-						img.style.left = canvas.style.left;
-						img.className = canvas.className;
-						img.style.zIndex = canvas.style.zIndex;
+				if (currentMapRef.current && currentMapRef.current.captureMap) {
+					const dataUrl = await currentMapRef.current.captureMap();
+					if (dataUrl) {
+						targetCanvas = pageEl.querySelector('.maplibregl-canvas') as HTMLCanvasElement;
+						if (targetCanvas) {
+							imgEl = document.createElement('img');
+							imgEl.src = dataUrl;
+							imgEl.style.width = targetCanvas.style.width || targetCanvas.offsetWidth + 'px';
+							imgEl.style.height = targetCanvas.style.height || targetCanvas.offsetHeight + 'px';
+							imgEl.style.position = targetCanvas.style.position;
+							imgEl.style.top = targetCanvas.style.top;
+							imgEl.style.left = targetCanvas.style.left;
+							imgEl.className = targetCanvas.className;
+							imgEl.style.zIndex = targetCanvas.style.zIndex;
 
-						const parent = canvas.parentElement;
-						if (parent) {
-							parent.insertBefore(img, canvas);
-							originalCanvases.push({ canvas, img, originalDisplay: canvas.style.display });
-							canvas.style.display = 'none';
+							const parent = targetCanvas.parentElement;
+							if (parent) {
+								parent.insertBefore(imgEl, targetCanvas);
+								originalCanvasDisplay = targetCanvas.style.display;
+								targetCanvas.style.display = 'none';
+							}
 						}
-					} catch (e) {
-						console.warn("無法轉換 canvas:", e);
 					}
-				});
+				}
 
 				// Info: (20260501 - Luphia) 等待 DOM 更新
-				await new Promise(resolve => setTimeout(resolve, 50));
+				await new Promise(resolve => setTimeout(resolve, 100));
 
-				const imgData = await htmlToImage.toPng(pageEl, {
-					quality: 1,
+				const imgData = await htmlToImage.toJpeg(pageEl, {
+					quality: 0.8,
 					backgroundColor: '#ffffff',
 					pixelRatio: 2
 				});
 
 				// Info: (20260501 - Luphia) 還原 canvas
-				originalCanvases.forEach(({ canvas, img, originalDisplay }) => {
-					canvas.style.display = originalDisplay;
-					if (img.parentElement) {
-						img.parentElement.removeChild(img);
-					}
-				});
+				if (targetCanvas && imgEl && imgEl.parentElement) {
+					targetCanvas.style.display = originalCanvasDisplay;
+					imgEl.parentElement.removeChild(imgEl);
+				}
 
 				pageEl.style.width = oldWidth;
 				pageEl.style.maxWidth = oldMaxWidth;
@@ -216,13 +227,13 @@ export default function ReportPage() {
 				let heightLeft = imgHeightInMm;
 				let position = 0;
 
-				pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeightInMm);
+				pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeightInMm);
 				heightLeft -= pdfHeight;
 
 				while (heightLeft > 0) {
 					position -= pdfHeight;
 					pdf.addPage();
-					pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeightInMm);
+					pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeightInMm);
 					heightLeft -= pdfHeight;
 				}
 			}
@@ -264,6 +275,24 @@ export default function ReportPage() {
 			<Head>
 				<title>iSunFA ESG Logistics Static Report</title>
 			</Head>
+
+			{/* Info: (20260501 - Luphia) PDF 匯出時的滿版覆蓋載入提示 */}
+			{isExporting && (
+				<div className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+					<Loader2 className="w-16 h-16 text-orange-600 animate-spin mb-6 drop-shadow-md" />
+					<h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">正在為您產生高畫質 PDF 報告</h2>
+					<p className="text-gray-500 font-medium max-w-md text-sm md:text-base leading-relaxed">
+						系統正在擷取地圖路線與詳細分析數據...<br />
+						由於包含高畫質渲染內容，這可能需要幾秒鐘的時間，請稍候片刻。
+					</p>
+
+					{/* Info: (20260501 - Luphia) Progress Indicator */}
+					<div className="w-64 max-w-full h-2 bg-gray-100 rounded-full mt-8 overflow-hidden border border-gray-200">
+						<div className="h-full bg-orange-500 rounded-full animate-[pulse_1.5s_ease-in-out_infinite] w-full origin-left scale-x-50"></div>
+					</div>
+				</div>
+			)}
+
 			{/* Info: (20260501 - Luphia) Watermark for confidentiality */}
 			<div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center opacity-[0.02] overflow-hidden mix-blend-multiply">
 				<div className="transform -rotate-45 text-[10vw] md:text-[7vw] lg:text-[5vw] xl:text-[6rem] font-black tracking-widest text-gray-900 whitespace-nowrap">
@@ -466,7 +495,7 @@ export default function ReportPage() {
 													</div>
 												)}
 
-												<PlanSection type={type as RouteType} plan={plan} weightKg={weightKg} isExporting={isExporting} />
+												<PlanSection type={type as RouteType} plan={plan} weightKg={weightKg} isExporting={isExporting} mapRef={mapRefs[type as RouteType]} />
 											</ReportLayout>
 											{!isExporting && index < routesToRender.length - 1 && <div className="w-full border-b-2 border-dashed border-gray-200 my-4"></div>}
 										</div>
@@ -476,7 +505,7 @@ export default function ReportPage() {
 						) : (
 							<div className="mt-12 text-center py-24 bg-gray-50 rounded-3xl border border-gray-100 border-dashed">
 								<Leaf className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-								<h3 className="text-gray-500 font-medium">請進行智能解析並產生分析報告</h3>
+								<h3 className="text-gray-500 font-medium">分析報告尚未生成</h3>
 							</div>
 						)}
 					</div>
