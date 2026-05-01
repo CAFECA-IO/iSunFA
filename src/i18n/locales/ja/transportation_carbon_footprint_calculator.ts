@@ -51,4 +51,29 @@ export const transportationCarbonFootprintCalculator = {
     "generate_report": "分析レポートを生成",
     "login_to_generate": "分析レポートを生成するにはログインしてください"
   }
+,
+  "plan_section": {
+    "mode_land": "陸上輸送",
+    "mode_sea": "海上輸送",
+    "mode_air": "航空輸送",
+    "title_land": "陸上輸送プラン",
+    "title_sea": "海上輸送プラン",
+    "title_air": "航空輸送プラン",
+    "origin_port": "出発港",
+    "dest_port": "到着港",
+    "origin_airport": "出発空港",
+    "dest_airport": "到着空港",
+    "origin": "出発地",
+    "dest": "目的地",
+    "total_emissions_est": "{{title}} 総炭素排出量推計",
+    "total_weight": "総重量",
+    "metric_ton": "トン",
+    "coefficient_disclosure": "炭素排出係数と計算式の公開",
+    "formula": "計算式：総走行距離(km) × (重量(kg)/1000) × 排出係数",
+    "source": "データソース",
+    "section_analysis": "{{title}} セグメント分析",
+    "est_mileage": "推定走行距離:",
+    "emission_coefficient": "排出係数:",
+    "carbon_emissions": "炭素排出量"
+  }
 };

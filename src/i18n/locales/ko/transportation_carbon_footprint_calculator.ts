@@ -51,4 +51,29 @@ export const transportationCarbonFootprintCalculator = {
     "generate_report": "분석 보고서 생성",
     "login_to_generate": "분석 보고서를 생성하려면 로그인하십시오"
   }
+,
+  "plan_section": {
+    "mode_land": "육상 운송",
+    "mode_sea": "해상 운송",
+    "mode_air": "항공 운송",
+    "title_land": "육상 운송 계획",
+    "title_sea": "해상 운송 계획",
+    "title_air": "항공 운송 계획",
+    "origin_port": "출발 항구",
+    "dest_port": "도착 항구",
+    "origin_airport": "출발 공항",
+    "dest_airport": "도착 공항",
+    "origin": "출발지",
+    "dest": "도착지",
+    "total_emissions_est": "{{title}} 총 탄소 배출량 추정치",
+    "total_weight": "총 중량",
+    "metric_ton": "톤",
+    "coefficient_disclosure": "탄소 배출 계수 및 공식 공개",
+    "formula": "공식: 총 주행 거리(km) × (중량(kg)/1000) × 배출 계수",
+    "source": "데이터 출처",
+    "section_analysis": "{{title}} 구간 분석",
+    "est_mileage": "예상 주행 거리:",
+    "emission_coefficient": "배출 계수:",
+    "carbon_emissions": "탄소 배출량"
+  }
 };

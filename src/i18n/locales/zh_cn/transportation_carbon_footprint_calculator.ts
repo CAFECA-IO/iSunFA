@@ -51,4 +51,29 @@ export const transportationCarbonFootprintCalculator = {
     "generate_report": "产生分析报告",
     "login_to_generate": "请先登入以产生分析报告"
   }
+,
+  "plan_section": {
+    "mode_land": "纯陆运",
+    "mode_sea": "海运",
+    "mode_air": "空运",
+    "title_land": "纯陆运专案",
+    "title_sea": "海运专案",
+    "title_air": "空运专案",
+    "origin_port": "起运港口",
+    "dest_port": "目的港口",
+    "origin_airport": "起运机场",
+    "dest_airport": "目的机场",
+    "origin": "起点",
+    "dest": "终点",
+    "total_emissions_est": "{{title}}总碳排放量估算",
+    "total_weight": "总重量",
+    "metric_ton": "公吨",
+    "coefficient_disclosure": "碳排系数与公式揭露",
+    "formula": "公式: 总里程(km) × (重量(kg)/1000) × 碳排系数",
+    "source": "资料来源",
+    "section_analysis": "{{title}}区段分析",
+    "est_mileage": "预估里程:",
+    "emission_coefficient": "排放系数:",
+    "carbon_emissions": "碳排放量"
+  }
 };

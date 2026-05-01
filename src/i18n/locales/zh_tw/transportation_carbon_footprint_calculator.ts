@@ -51,4 +51,29 @@ export const transportationCarbonFootprintCalculator = {
     "generate_report": "產生分析報告",
     "login_to_generate": "請先登入以產生分析報告"
   }
+,
+  "plan_section": {
+    "mode_land": "純陸運",
+    "mode_sea": "海運",
+    "mode_air": "空運",
+    "title_land": "純陸運專案",
+    "title_sea": "海運專案",
+    "title_air": "空運專案",
+    "origin_port": "起運港口",
+    "dest_port": "目的港口",
+    "origin_airport": "起運機場",
+    "dest_airport": "目的機場",
+    "origin": "起點",
+    "dest": "終點",
+    "total_emissions_est": "{{title}}總碳排放量估算",
+    "total_weight": "總重量",
+    "metric_ton": "公噸",
+    "coefficient_disclosure": "碳排係數與公式揭露",
+    "formula": "公式: 總里程(km) × (重量(kg)/1000) × 碳排係數",
+    "source": "資料來源",
+    "section_analysis": "{{title}}區段分析",
+    "est_mileage": "預估里程:",
+    "emission_coefficient": "排放係數:",
+    "carbon_emissions": "碳排放量"
+  }
 };

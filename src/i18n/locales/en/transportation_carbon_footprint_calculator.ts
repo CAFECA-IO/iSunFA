@@ -51,4 +51,29 @@ export const transportationCarbonFootprintCalculator = {
     "generate_report": "Generate Analysis Report",
     "login_to_generate": "Please login to generate analysis report"
   }
+,
+  "plan_section": {
+    "mode_land": "Land Route",
+    "mode_sea": "Sea Route",
+    "mode_air": "Air Route",
+    "title_land": "Land Transport Plan",
+    "title_sea": "Sea Transport Plan",
+    "title_air": "Air Transport Plan",
+    "origin_port": "Origin Port",
+    "dest_port": "Destination Port",
+    "origin_airport": "Origin Airport",
+    "dest_airport": "Destination Airport",
+    "origin": "Origin",
+    "dest": "Destination",
+    "total_emissions_est": "{{title}} Total Carbon Emissions Estimate",
+    "total_weight": "Total Weight",
+    "metric_ton": "Metric Tons",
+    "coefficient_disclosure": "Carbon Emission Coefficient and Formula Disclosure",
+    "formula": "Formula: Total Mileage (km) × (Weight (kg) / 1000) × Emission Coefficient",
+    "source": "Data Source",
+    "section_analysis": "{{title}} Segment Analysis",
+    "est_mileage": "Estimated Mileage:",
+    "emission_coefficient": "Emission Coefficient:",
+    "carbon_emissions": "Carbon Emissions"
+  }
 };
