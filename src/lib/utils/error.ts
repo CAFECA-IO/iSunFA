@@ -16,6 +16,10 @@ export class AppError extends Error {
   }
 
   mapToResponse(): IApiResponse<null> {
-    return fail({ code: this.apiCode, message: this.message, status: this.code });
+    return fail({
+      code: this.apiCode,
+      message: this.message,
+      status: this.code,
+    });
   }
 }

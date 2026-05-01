@@ -499,12 +499,12 @@ export class EsgRepository implements IEsgRepository {
       // Info: (20260430 - Julian) 搜尋關鍵字：ID、名稱、地址
       ...(keyword
         ? {
-            OR: [
-              { id: { contains: keyword, mode: "insensitive" } },
-              { name: { contains: keyword, mode: "insensitive" } },
-              { address: { contains: keyword, mode: "insensitive" } },
-            ],
-          }
+          OR: [
+            { id: { contains: keyword, mode: "insensitive" } },
+            { name: { contains: keyword, mode: "insensitive" } },
+            { address: { contains: keyword, mode: "insensitive" } },
+          ],
+        }
         : {}),
     };
 
@@ -520,9 +520,9 @@ export class EsgRepository implements IEsgRepository {
     const data: IEsgEmissionSourcesUI[] = emissionSources.map((source) => {
       let totalEmission = 0;
       let intensity = EsgIntensity.LOW;
-      
+
       const records = source.esgRecords
-      // Info: (20260430 - Julian) 只選出有完成分析的紀錄
+        // Info: (20260430 - Julian) 只選出有完成分析的紀錄
         .filter(
           (record) => record.analysisStatus === AIAnalysisStatus.COMPLETED,
         )

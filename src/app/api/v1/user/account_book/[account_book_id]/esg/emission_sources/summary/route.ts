@@ -39,6 +39,10 @@ export async function GET(
     return jsonOk(result);
   } catch (error) {
     console.error("Error fetching emission sources summary:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to fetch emission so...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to fetch emission so...",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

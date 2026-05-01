@@ -15,7 +15,7 @@ export const adminBlockchain = {
     mint_icp: "Mint Credit Points (ICP)",
     mint_desc:
       "Minting ICP requires providing an equivalent amount of ISC based on the real-time collateral rate. The minted ICP will be placed in the Member System inventory.",
-        mint_est_days: "Est. Supported Days: ",
+    mint_est_days: "Est. Supported Days: ",
     days: "days",
     amount_placeholder: "Enter ICP amount to mint...",
     amount_aria: "Enter ICP amount to mint",

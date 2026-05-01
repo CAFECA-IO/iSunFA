@@ -65,6 +65,10 @@ export async function POST(
     return jsonOk({ token: shareToken.token });
   } catch (error) {
     console.error("[API] /user/analysis/share POST error:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to generate share link", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to generate share link",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

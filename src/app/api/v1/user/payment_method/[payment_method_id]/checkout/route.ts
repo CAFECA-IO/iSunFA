@@ -38,7 +38,11 @@ export async function POST(
     const { authentication, orderId } = await request.json();
 
     if (!orderId || !authentication) {
-      return jsonFail({ code: "VA000099", message: "Missing orderId or FIDO aut...", status: ApiCode.VALIDATION_ERROR },  );
+      return jsonFail({
+        code: "VA000099",
+        message: "Missing orderId or FIDO aut...",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     const dbUser = await webAuthnRepo.getUserWithPaymentMethods(user.id);
@@ -53,7 +57,11 @@ export async function POST(
     const providerToken = oenPaymentMethod?.token;
 
     if (!providerToken) {
-      return jsonFail({ code: "NO000099", message: "Payment method not found or...", status: ApiCode.NOT_FOUND },  );
+      return jsonFail({
+        code: "NO000099",
+        message: "Payment method not found or...",
+        status: ApiCode.NOT_FOUND,
+      });
     }
 
     const order = await paymentRepo.getOrderById(orderId);
@@ -63,7 +71,11 @@ export async function POST(
       order.userId !== user.id ||
       order.status !== ORDER_STATUS.PENDING
     ) {
-      return jsonFail({ code: "VA000099", message: "Invalid or expired order", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "Invalid or expired order",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     const orderData = order.data as IOenOrderData;
@@ -78,7 +90,11 @@ export async function POST(
       );
     } catch (error) {
       console.error("FIDO Verification failed during checkout:", error);
-      return jsonFail({ code: "UN000099", message: "FIDO2 Signature verificatio...", status: ApiCode.UNAUTHORIZED },  );
+      return jsonFail({
+        code: "UN000099",
+        message: "FIDO2 Signature verificatio...",
+        status: ApiCode.UNAUTHORIZED,
+      });
     }
 
     // Info: (20260305 - Tzuhan) Create an initial transaction record, marking it PENDING, and save FIDO payload
@@ -126,7 +142,13 @@ export async function POST(
         oenData,
         authentication,
       );
-      return jsonFail({ code: "IN000099", message: "Payment failed via OEN", status: ApiCode.INTERNAL_SERVER_ERROR }, oenData,
+      return jsonFail(
+        {
+          code: "IN000099",
+          message: "Payment failed via OEN",
+          status: ApiCode.INTERNAL_SERVER_ERROR,
+        },
+        oenData,
       );
     }
 
@@ -157,7 +179,13 @@ export async function POST(
         oenData,
         mintResult.message,
       );
-      return jsonFail({ code: "IS000099", message: String("Payment succeeded but minting failed: " + mintResult.message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+      return jsonFail({
+        code: "IS000099",
+        message: String(
+          "Payment succeeded but minting failed: " + mintResult.message,
+        ).slice(0, 30),
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     // Info: (20260306 - Tzuhan) 全部成功

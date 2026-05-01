@@ -4,8 +4,8 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { AuditLogDataType } from "@/generated/enums";
-import { Prisma } from "@/generated/browser";
+import { AuditLogDataType } from "@/generated/client";
+import { Prisma } from "@/generated/client";
 import { IAuditLog } from "@/interfaces/audit_log";
 import { AuditLogAction } from "@/constants/audit_log";
 

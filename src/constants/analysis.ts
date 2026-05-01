@@ -12,9 +12,11 @@ export const ANALYSIS_CATEGORY = {
   FINANCIAL_PRODUCT_RATING: "FINANCIAL_PRODUCT_RATING",
   AI_CONSULTING: "AI_CONSULTING",
   CERTIFICATE_ANALYSIS: "CERTIFICATE_ANALYSIS",
+  TRANSPORTATION_CARBON_FOOTPRINT: "TRANSPORTATION_CARBON_FOOTPRINT",
 } as const;
 
-export type AnalysisCategory = (typeof ANALYSIS_CATEGORY)[keyof typeof ANALYSIS_CATEGORY];
+export type AnalysisCategory =
+  (typeof ANALYSIS_CATEGORY)[keyof typeof ANALYSIS_CATEGORY];
 
 export const ANALYSIS_PERIOD = {
   DAILY: "DAILY",
@@ -24,7 +26,8 @@ export const ANALYSIS_PERIOD = {
   YEARLY: "YEARLY",
 } as const;
 
-export type AnalysisPeriod = (typeof ANALYSIS_PERIOD)[keyof typeof ANALYSIS_PERIOD];
+export type AnalysisPeriod =
+  (typeof ANALYSIS_PERIOD)[keyof typeof ANALYSIS_PERIOD];
 
 export const INTERNAL_CATEGORIES = [
   ANALYSIS_CATEGORY.BALANCE_SHEET,

@@ -55,6 +55,7 @@ export async function saveExternalConfig(config: {
   appUrl: string;
   gaId: string;
   geminiKey: string;
+  maptilerKey: string;
   oenToken: string;
   oenMerchant: string;
 }): Promise<{ success: boolean; error?: string }> {

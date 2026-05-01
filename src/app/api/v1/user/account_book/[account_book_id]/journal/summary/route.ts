@@ -32,7 +32,11 @@ export async function GET(
     );
 
     if (!accountBook) {
-      return jsonFail({ code: "NO000099", message: "Accountbook not found or no...", status: ApiCode.NOT_FOUND },  );
+      return jsonFail({
+        code: "NO000099",
+        message: "Accountbook not found or no...",
+        status: ApiCode.NOT_FOUND,
+      });
     }
 
     const { todayJournalCount, pendingJournalCount, aiAverageConfidence } =
@@ -48,6 +52,10 @@ export async function GET(
     return jsonOk(dashboardSummary);
   } catch (error) {
     console.error("Error fetching Journal summary:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to fetch Journal sum...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to fetch Journal sum...",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

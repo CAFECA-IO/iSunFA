@@ -124,7 +124,7 @@ export const uploadFile = async (file: File, callbacks: IUploadCallbacks) => {
     // Info: (20260415 - Luphia) 確保單一 Shard 最大不超過 DEFAULT_SHARD_SIZE (4MB)
     const currentShardSize = Math.min(
       DEFAULT_SHARD_SIZE,
-      Math.max(1, Math.ceil(originalFileSize / DATA_SHARDS))
+      Math.max(1, Math.ceil(originalFileSize / DATA_SHARDS)),
     );
 
     // Info: (20260415 - Luphia) 每個 Stripe 處理的實際資料量 (最多 5 * 4MB = 20MB)
@@ -275,9 +275,9 @@ export const downloadFile = async (
         // Info: (20260302 - Julian) Handle standard IApiResponse wrapping
         const data =
           parsed &&
-            typeof parsed === "object" &&
-            "success" in parsed &&
-            "payload" in parsed
+          typeof parsed === "object" &&
+          "success" in parsed &&
+          "payload" in parsed
             ? parsed.payload
             : parsed;
 

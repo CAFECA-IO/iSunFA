@@ -161,7 +161,11 @@ export async function PUT(
       isVerified === undefined
     ) {
       console.error("Invalid input data");
-      return jsonFail({ code: "VA000099", message: "Invalid input data", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "Invalid input data",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     // Info: (20260311 - Julian) Update voucher

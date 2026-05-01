@@ -85,7 +85,7 @@ export async function encodeFile(
     // Info: (20260415 - Gemini) 與前端同步：動態計算 Shard 大小，最大不超過 4MB
     const currentShardSize = Math.min(
       MAX_SHARD_SIZE,
-      Math.max(1, Math.ceil(originalFileSize / DATA_SHARDS))
+      Math.max(1, Math.ceil(originalFileSize / DATA_SHARDS)),
     );
     const currentDataStripeSize = DATA_SHARDS * currentShardSize;
 
@@ -128,7 +128,9 @@ export async function encodeFile(
       // Info: (20260415 - Luphia) 準備 shards 陣列，依照 currentShardSize 切割
       const shards: Buffer[] = [];
       for (let i = 0; i < DATA_SHARDS; i++) {
-        shards.push(dataStripe.subarray(i * currentShardSize, (i + 1) * currentShardSize));
+        shards.push(
+          dataStripe.subarray(i * currentShardSize, (i + 1) * currentShardSize),
+        );
       }
       for (let i = 0; i < PARITY_SHARDS; i++) {
         shards.push(Buffer.alloc(currentShardSize));
@@ -147,7 +149,9 @@ export async function encodeFile(
 
     // Info: (20251028 - Luphia) 關閉所有檔案
     await Promise.all(writerHandles.map((handle) => handle.close()));
-    console.log(`[編碼] ${TOTAL_SHARDS} 個切片已成功寫入 ${outputDir} (單一切片大小: ${currentShardSize} bytes)`);
+    console.log(
+      `[編碼] ${TOTAL_SHARDS} 個切片已成功寫入 ${outputDir} (單一切片大小: ${currentShardSize} bytes)`,
+    );
   } catch (err: unknown) {
     console.error(
       `[編碼] 處理失敗: ${err instanceof Error ? err.message : String(err)}`,
@@ -176,9 +180,8 @@ export async function recoverFile(
     const metaBuffer: Buffer = await fs.readFile(metaPath);
 
     // Info: (20251028 - Luphia) 型別安全的解析
-    const metaData: { originalFileSize?: number; shardSize?: number } = JSON.parse(
-      metaBuffer.toString(),
-    );
+    const metaData: { originalFileSize?: number; shardSize?: number } =
+      JSON.parse(metaBuffer.toString());
 
     if (typeof metaData.originalFileSize !== "number") {
       throw new Error("metadata 格式錯誤，缺少 originalFileSize");
@@ -188,7 +191,9 @@ export async function recoverFile(
     // Info: (20260415 - Luphia) 優先讀取 metadata 的 shardSize，若無則降級為預設最大值
     currentShardSize = metaData.shardSize || MAX_SHARD_SIZE;
 
-    console.log(`[恢復] 目標檔案大小: ${originalFileSize} bytes, 預期切片大小: ${currentShardSize} bytes`);
+    console.log(
+      `[恢復] 目標檔案大小: ${originalFileSize} bytes, 預期切片大小: ${currentShardSize} bytes`,
+    );
   } catch (err: unknown) {
     console.error(
       `[錯誤] 讀取 metadata 失敗，檔案無法恢復: ${err instanceof Error ? err.message : String(err)}`,
@@ -252,7 +257,9 @@ export async function recoverFile(
         const result = results[i];
         if (result && result.bytesRead > 0) {
           if (result.bytesRead !== currentShardSize) {
-            throw new Error(`切片 ${i + 1} 損毀: 讀取到不完整的區塊 (${result.bytesRead} / ${currentShardSize} bytes)。`);
+            throw new Error(
+              `切片 ${i + 1} 損毀: 讀取到不完整的區塊 (${result.bytesRead} / ${currentShardSize} bytes)。`,
+            );
           }
           shards[i] = readBuffers[i];
           shardsAvailableThisStripe++;

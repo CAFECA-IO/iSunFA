@@ -1,7 +1,8 @@
 export const adminMissionBoard = {
   page: {
     title: "ミッションボード",
-    subtitle: "ブロックチェーンに公開されたすべての自動化タスクとバウンティを管理および確認します。",
+    subtitle:
+      "ブロックチェーンに公開されたすべての自動化タスクとバウンティを管理および確認します。",
   },
   kpi: {
     total_missions: "総ミッション数",
@@ -48,7 +49,8 @@ export const adminMissionBoard = {
   },
   pdf_editor: {
     title: "PDFエディタ",
-    subtitle: "マークダウンを記述し、iSunFA専用フォーマットのPDFとしてエクスポートします。",
+    subtitle:
+      "マークダウンを記述し、iSunFA専用フォーマットのPDFとしてエクスポートします。",
     edit_markdown: "マークダウンを編集",
     preview_pdf: "PDFをプレビュー",
     download_pdf: "PDFをダウンロード",
@@ -60,11 +62,13 @@ export const adminMissionBoard = {
     internal_document: "内部文書",
     system_report: "システムレポート",
     footer_title: "AIによる炭素会計の再構築",
-    footer_text: "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal."
+    footer_text:
+      "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",
   },
   gc: {
     btn_text: "GCクリーンアップを実行",
     result_title: "タスクシステムクリーンアップ結果",
-    success_msg: "{{count}} 個の期限切れまたは無効なフォルダを正常にクリアしました。",
-  }
+    success_msg:
+      "{{count}} 個の期限切れまたは無効なフォルダを正常にクリアしました。",
+  },
 };

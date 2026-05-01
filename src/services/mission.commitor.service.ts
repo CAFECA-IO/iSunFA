@@ -7,11 +7,13 @@ import { createPublicClient, createWalletClient, http, parseAbi } from "viem";
 import { isuncoin } from "@/lib/viem_public";
 
 const MB_ABI = parseAbi([
-  "function submitResult(uint256 taskId, string calldata resultCid, uint256 consumedTokens) external"
+  "function submitResult(uint256 taskId, string calldata resultCid, uint256 consumedTokens) external",
 ]);
 
 export async function processNext() {
-  console.log("[MissionCommitor] Scanning MISSION_DIR for completed executions to commit...");
+  console.log(
+    "[MissionCommitor] Scanning MISSION_DIR for completed executions to commit...",
+  );
 
   const setupConfig = await getPriorityEnvConfig();
   const missionDirBase = setupConfig.MISSION_DIR || "missions";
@@ -46,7 +48,9 @@ export async function processNext() {
       }
 
       const taskFiles = await fs.readdir(taskDir);
-      const failedCommitFiles = taskFiles.filter(f => f.startsWith("commit_failed_") && f.endsWith(".md"));
+      const failedCommitFiles = taskFiles.filter(
+        (f) => f.startsWith("commit_failed_") && f.endsWith(".md"),
+      );
 
       if (failedCommitFiles.length >= 1) {
         // Info: (20260427 - Luphia) Max submit retries exceeded
@@ -54,7 +58,9 @@ export async function processNext() {
       }
 
       submittedTask = true;
-      console.log(`[MissionCommitor] Found result ready to commit for Task ID: ${folder.name}`);
+      console.log(
+        `[MissionCommitor] Found result ready to commit for Task ID: ${folder.name}`,
+      );
 
       try {
         // Info: (20260420 - Luphia) 1. Read Meta
@@ -66,7 +72,9 @@ export async function processNext() {
         console.log(`[MissionCommitor] Uploading result.md to Laria...`);
         const resultStr = await fs.readFile(resultPath, "utf8");
         const resultBlob = new Blob([resultStr], { type: "text/markdown" });
-        const resultFile = new globalThis.File([resultBlob], "result.md", { type: "text/markdown" });
+        const resultFile = new globalThis.File([resultBlob], "result.md", {
+          type: "text/markdown",
+        });
 
         const resultCid = await storageService.uploadLaria(resultFile);
         console.log(`[MissionCommitor] result.md uploaded. CID: ${resultCid}`);
@@ -84,24 +92,34 @@ export async function processNext() {
             }
           }
         } catch {
-          console.log(`[MissionCommitor] No execution_log.json found or failed to parse for Task ID ${taskId}, defaulting to 0 tokens.`);
+          console.log(
+            `[MissionCommitor] No execution_log.json found or failed to parse for Task ID ${taskId}, defaulting to 0 tokens.`,
+          );
         }
 
         // Info: (20260420 - Luphia) 3. Submit to MissionBoard
         const adminAccount = await getAdminAccount();
-        const rpcUrl = setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
+        const rpcUrl =
+          setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
         const publicClient = createPublicClient({ transport: http(rpcUrl) });
-        const walletClient = createWalletClient({ account: adminAccount, chain: isuncoin, transport: http(rpcUrl) });
+        const walletClient = createWalletClient({
+          account: adminAccount,
+          chain: isuncoin,
+          transport: http(rpcUrl),
+        });
 
-        const mbAddress = setupConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
+        const mbAddress =
+          setupConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
 
-        console.log(`[MissionCommitor] Submitting result for Task ID: ${taskId} with ${totalConsumedTokens} tokens...`);
+        console.log(
+          `[MissionCommitor] Submitting result for Task ID: ${taskId} with ${totalConsumedTokens} tokens...`,
+        );
         const { request } = await publicClient.simulateContract({
           account: adminAccount,
           address: mbAddress,
           abi: MB_ABI,
           functionName: "submitResult",
-          args: [taskId, resultCid, totalConsumedTokens]
+          args: [taskId, resultCid, totalConsumedTokens],
         });
 
         const txHash = await walletClient.writeContract(request);
@@ -120,11 +138,20 @@ export async function processNext() {
         await fs.writeFile(submitPath, submitContent, "utf8");
         break; // Info: (20260420 - Luphia) process one at a time
       } catch (submitErr) {
-        console.error(`[MissionCommitor] Commit error for Task ID ${folder.name}:`, submitErr);
+        console.error(
+          `[MissionCommitor] Commit error for Task ID ${folder.name}:`,
+          submitErr,
+        );
         const notePath = path.join(taskDir, "note.md");
         const errorMessage = `[Commit Error at ${new Date().toISOString()}]\n${submitErr instanceof Error ? submitErr.message : String(submitErr)}\n`;
-        await fs.appendFile(notePath, errorMessage, "utf8").catch(() => { });
-        await fs.writeFile(path.join(taskDir, `commit_failed_${Date.now()}.md`), errorMessage, "utf8").catch(() => { });
+        await fs.appendFile(notePath, errorMessage, "utf8").catch(() => {});
+        await fs
+          .writeFile(
+            path.join(taskDir, `commit_failed_${Date.now()}.md`),
+            errorMessage,
+            "utf8",
+          )
+          .catch(() => {});
         break;
       }
     }

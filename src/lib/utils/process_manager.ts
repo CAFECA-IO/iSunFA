@@ -5,7 +5,7 @@ export class ProcessManager {
   private isShuttingDown = false;
   private initialized = false;
 
-  constructor() { }
+  constructor() {}
 
   public register(child: ChildProcess) {
     this.ensureInitialized();
@@ -37,7 +37,9 @@ export class ProcessManager {
       const handleShutdown = (signal: string) => {
         if (this.isShuttingDown) return;
         this.isShuttingDown = true;
-        console.log(`\n[ProcessManager] ${signal} received. Terminating ${this.activeProcesses.size} active subprocesses...`);
+        console.log(
+          `\n[ProcessManager] ${signal} received. Terminating ${this.activeProcesses.size} active subprocesses...`,
+        );
 
         for (const child of this.activeProcesses) {
           if (!child.killed) {

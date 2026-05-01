@@ -307,7 +307,7 @@ export const AiChat = () => {
       </button>
     </>
   ) : (
-    <LoginButton label="Please login to use the AI chat" />
+    <LoginButton label={t("ai_consultation_room.login_to_use")} />
   );
 
   return (

@@ -58,6 +58,4 @@ export const ocr = {
   zoom_in: "拡大",
   zoom_out: "縮小",
   zoom_reset: "リセット",
-
-
 };

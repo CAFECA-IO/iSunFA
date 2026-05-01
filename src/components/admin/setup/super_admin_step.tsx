@@ -53,6 +53,7 @@ export function SetupSuperAdmin({ isActive, isCompleted, onNext, onReset, envDat
         appUrl: appUrlValue,
         gaId: "",
         geminiKey: "",
+        maptilerKey: "",
         oenToken: "",
         oenMerchant: ""
       });

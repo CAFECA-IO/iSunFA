@@ -28,7 +28,12 @@ export const REWARD_AMOUNTS = {
   FREE_PLAN_LIMIT: 500,
 } as const;
 
-export { ANALYSIS_CATEGORY, type AnalysisCategory, ANALYSIS_PERIOD, type AnalysisPeriod } from "@/constants/analysis";
+export {
+  ANALYSIS_CATEGORY,
+  type AnalysisCategory,
+  ANALYSIS_PERIOD,
+  type AnalysisPeriod,
+} from "@/constants/analysis";
 
 export const ANALYSIS_BASE_COSTS: Record<string, number> = {
   // Info: (20260128 - Luphia) Basic Financials
@@ -51,7 +56,7 @@ export const ANALYSIS_BASE_COSTS: Record<string, number> = {
   // Info: (20260408 - Luphia) AI Features
   AI_CONSULTING: 5,
   CERTIFICATE_ANALYSIS: 3,
-  LOGISTICS_ANALYSIS: 5,
+  TRANSPORTATION_CARBON_FOOTPRINT: 5,
   AI_REPORT: 100,
 };
 

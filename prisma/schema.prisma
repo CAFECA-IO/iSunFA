@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated"
+  provider        = "prisma-client-js"
+  output          = "../src/generated"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
 }
 
 enum Role {
@@ -698,4 +698,63 @@ model EmissionSource {
   esgRecords EsgRecord[]
 
   @@map("emission_source")
+}
+
+// Info: (20260430 - Tzuhan) 基礎設施：全球港口節點 (支援 PostGIS)
+model Seaport {
+  id      String @id // Info: (20260430 - Tzuhan) 聯合國港口代碼 (UN/LOCODE, e.g., TWTPE)
+  name    String // Info: (20260430 - Tzuhan) 港口名稱
+  country String // Info: (20260430 - Tzuhan) 國家代碼
+  size    String // Info: (20260430 - Tzuhan) 規模 (Large, Medium, Small)
+  lat     Float
+  lng     Float
+
+  source    String?
+  sourceUrl String? @map("source_url")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("seaports")
+}
+
+// Info: (20260430 - Tzuhan) 基礎設施：空運機場 (Airports)
+model Airport {
+  id       String                                @id // Info: (20260430 - Tzuhan) 機場內部代號或 ICAO (e.g., KLAX, 00A)
+  iataCode String?                               @map("iata_code") // Info: (20260430 - Tzuhan) IATA 代碼 (e.g., TPE, LAX)，可能為空
+  name     String // Info: (20260430 - Tzuhan) 機場名稱
+  country  String // Info: (20260430 - Tzuhan) 國家代碼
+  size     String // Info: (20260430 - Tzuhan) 規模 (large_airport, medium_airport, small_airport, heliport 等)
+  lat      Float
+  lng      Float
+
+  source    String?
+  sourceUrl String? @map("source_url")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([iataCode])
+  @@index([size])
+  @@map("airports")
+}
+
+// Info: (20260430 - Tzuhan) 物流碳排引擎：快取機制 (Logistics Cache)
+model LogisticsCache {
+  id        String   @id @default(uuid())
+  originLat Float    @map("origin_lat")
+  originLng Float    @map("origin_lng")
+  destLat   Float    @map("dest_lat")
+  destLng   Float    @map("dest_lng")
+  weightKg  Float    @map("weight_kg")
+  
+  // Info: (20260430 - Tzuhan) 將完整的 ILogisticsPlan (包含 GeoJSON) 快取起來
+  planData  Json     @map("plan_data")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Info: (20260430 - Tzuhan) 建立複合索引以加速查詢
+  @@index([originLat, originLng, destLat, destLng, weightKg])
+  @@map("logistics_cache")
 }

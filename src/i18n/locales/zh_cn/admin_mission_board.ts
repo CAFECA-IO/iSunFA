@@ -60,11 +60,12 @@ export const adminMissionBoard = {
     internal_document: "内部文件",
     system_report: "系统报告",
     footer_title: "用人工智能重塑碳会计",
-    footer_text: "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal."
+    footer_text:
+      "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",
   },
   gc: {
     btn_text: "执行 GC 清理",
     result_title: "任务系统清理结果",
     success_msg: "成功清除了 {{count}} 个过期或不符合约的文件夹。",
-  }
+  },
 };

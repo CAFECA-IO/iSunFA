@@ -10,14 +10,22 @@ export async function POST(request: Request) {
   const STORAGE_DOMAIN = process.env.STORAGE_DOMAIN;
 
   if (!STORAGE_DOMAIN) {
-    return jsonFail({ code: "IN000099", message: "STORAGE_DOMAIN is not defined", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "STORAGE_DOMAIN is not defined",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
     if (!file) {
-      return jsonFail({ code: "VA000099", message: "No file uploaded", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "No file uploaded",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     const newFormData = new FormData();
@@ -80,10 +88,23 @@ export async function POST(request: Request) {
       } catch (e) {
         console.error(`[API] Proxy /file POST error:`, e);
       }
-      return jsonFail({ code: "IS000099", message: String(errorMessage).slice(0, 30), status: code }, { status: response.status });
+      return jsonFail(
+        {
+          code: "IS000099",
+          message: String(errorMessage).slice(0, 30),
+          status: code,
+        },
+        { status: response.status },
+      );
     }
   } catch (error) {
     console.error(`[API] Proxy /file/ POST error:`, error);
-    return jsonFail({ code: "IN000099", message: String(`Internal Server Error: ${error instanceof Error ? error.message : String(error)}`).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IN000099",
+      message: String(
+        `Internal Server Error: ${error instanceof Error ? error.message : String(error)}`,
+      ).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

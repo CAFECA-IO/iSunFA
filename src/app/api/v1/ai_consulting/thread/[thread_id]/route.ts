@@ -25,7 +25,11 @@ export async function GET(
 
     if (!thread) {
       console.error(`Thread ${threadId} not found`);
-      return jsonFail({ code: "IN000099", message: "Thread not found", status: ApiCode.INTERNAL_SERVER_ERROR });
+      return jsonFail({
+        code: "IN000099",
+        message: "Thread not found",
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     // Info: (20260212 - Julian) 取得登入的使用者
@@ -63,7 +67,11 @@ export async function GET(
       threadId: file.analysisId ?? "",
     }));
 
-    const rawData = (thread.data as unknown as { question?: string; data?: { question?: string } }) || {};
+    const rawData =
+      (thread.data as unknown as {
+        question?: string;
+        data?: { question?: string };
+      }) || {};
     const questionStr = rawData?.data?.question || "";
 
     let answerStr = "-";
@@ -71,7 +79,11 @@ export async function GET(
       if (typeof thread.result === "string") {
         try {
           const parsed = JSON.parse(thread.result);
-          if (parsed && typeof parsed === "object" && typeof parsed.answer === "string") {
+          if (
+            parsed &&
+            typeof parsed === "object" &&
+            typeof parsed.answer === "string"
+          ) {
             answerStr = parsed.answer;
           } else {
             answerStr = thread.result;
@@ -80,7 +92,9 @@ export async function GET(
           answerStr = thread.result;
         }
       } else {
-        answerStr = ((thread.result as unknown as { answer?: string })?.answer) || JSON.stringify(thread.result);
+        answerStr =
+          (thread.result as unknown as { answer?: string })?.answer ||
+          JSON.stringify(thread.result);
       }
     }
 

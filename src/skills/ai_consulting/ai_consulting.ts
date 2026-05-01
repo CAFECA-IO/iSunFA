@@ -21,24 +21,38 @@ export class AiConsultingSkill implements ITaskSkill {
     // Info: (20260418 - Luphia) Frontend payload now omits base64 to save storage. Load base64 via Laria IPFS on the worker!
     const imagesForAiRaw = await Promise.all(
       files.map(async (f: unknown) => {
-        const cid = typeof f === 'string' ? f : (f as Record<string, string>).hash;
+        const cid =
+          typeof f === "string" ? f : (f as Record<string, string>).hash;
         if (!cid) {
-          console.error(`[AiConsultingSkill] File has no ID or hash, skipping:`, f);
+          console.error(
+            `[AiConsultingSkill] File has no ID or hash, skipping:`,
+            f,
+          );
           return null;
         }
 
-        let mimeType = typeof f === 'string' ? "image/jpeg" : (f as Record<string, string>).mimeType;
-        if (!mimeType && typeof f !== 'string' && (f as Record<string, unknown>).metadata) {
+        let mimeType =
+          typeof f === "string"
+            ? "image/jpeg"
+            : (f as Record<string, string>).mimeType;
+        if (
+          !mimeType &&
+          typeof f !== "string" &&
+          (f as Record<string, unknown>).metadata
+        ) {
           try {
             const metaRaw = (f as Record<string, unknown>).metadata;
-            const meta = typeof metaRaw === 'string' ? JSON.parse(metaRaw) : metaRaw;
+            const meta =
+              typeof metaRaw === "string" ? JSON.parse(metaRaw) : metaRaw;
             mimeType = meta.mimeType;
-          } catch { }
+          } catch {}
         }
         mimeType = mimeType || "image/jpeg";
 
         try {
-          console.log(`[AiConsultingSkill] Recovering Laria file from IPFS hash: ${cid}`);
+          console.log(
+            `[AiConsultingSkill] Recovering Laria file from IPFS hash: ${cid}`,
+          );
           const buffer = await storageService.recoverLaria(cid);
           const b64Str = buffer.toString("base64");
           return {
@@ -46,25 +60,34 @@ export class AiConsultingSkill implements ITaskSkill {
             mimeType,
           };
         } catch (e) {
-          console.error(`[AiConsultingSkill] Failed to recover file ${cid} for AI:`, e);
+          console.error(
+            `[AiConsultingSkill] Failed to recover file ${cid} for AI:`,
+            e,
+          );
         }
-      })
+      }),
     );
 
     // Info: (20260418 - Luphia) Filter out any images that failed to recover
     const imagesForAi = imagesForAiRaw.filter(
-      (img): img is { data: string; mimeType: string } => !!img?.data
+      (img): img is { data: string; mimeType: string } => !!img?.data,
     );
 
     console.log(`[AiConsultingSkill] Executing AI Consultation...`);
-    
-    const promptText = AI_CONSULTATION_ROOM_PROMPT.replace("{{message}}", fullPrompt);
-    
+
+    const promptText = AI_CONSULTATION_ROOM_PROMPT.replace(
+      "{{message}}",
+      fullPrompt,
+    );
+
     let answer = "AI 暫時無法回答，請稍後再試。";
     let tags = ["錯誤"];
-    
+
     try {
-      const responseText = await chatService.generateRawWithImages(promptText, imagesForAi);
+      const responseText = await chatService.generateRawWithImages(
+        promptText,
+        imagesForAi,
+      );
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);

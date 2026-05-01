@@ -57,6 +57,4 @@ export const ocr = {
   zoom_in: "확대",
   zoom_out: "축소",
   zoom_reset: "초기화",
-
-
 };

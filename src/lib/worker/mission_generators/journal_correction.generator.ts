@@ -16,13 +16,14 @@ export function generateJournalCorrectionMission(
   const accountBook = params.prerequisiteData?.accountBook as
     | Partial<AccountBook>
     | undefined;
-  const coef = params.prerequisiteData?.coefficients as 
+  const coef = params.prerequisiteData?.coefficients as
     | Partial<Coefficient>[]
     | undefined;
 
   const tasks: ITaskDefinition[] = [];
   const data = (params.data as { accountBookId?: string }) || {};
-  const accountBookId = data.accountBookId || params.accountBookId || accountBook?.id || "";
+  const accountBookId =
+    data.accountBookId || params.accountBookId || accountBook?.id || "";
 
   // Info: (20260423 - Julian) 重新整理係數
   const coefficients = coef?.map((c) => {
@@ -32,8 +33,8 @@ export function generateJournalCorrectionMission(
       createdAt: c.createdAt ? c.createdAt.getTime() / 1000 : 0,
       updatedAt: c.updatedAt ? c.updatedAt.getTime() / 1000 : 0,
       deletedAt: c.deletedAt ? c.deletedAt.getTime() / 1000 : null,
-    }
-  })
+    };
+  });
 
   const context = JSON.stringify({
     fileId: params.fileId,

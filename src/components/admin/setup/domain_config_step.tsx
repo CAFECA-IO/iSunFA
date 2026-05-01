@@ -13,6 +13,7 @@ export function SetupDomainConfig({ isActive, isCompleted, onNext, onReset, envD
   const [appUrlValue, setAppUrlValue] = useState<string>("https://isunfa.localhost");
   const [gaIdValue, setGaIdValue] = useState<string>("G-ZNVVW7JP0N");
   const [geminiKey, setGeminiKey] = useState<string>("");
+  const [maptilerKey, setMaptilerKey] = useState<string>("");
   const [oenToken, setOenToken] = useState<string>("");
   const [oenMerchant, setOenMerchant] = useState<string>("mermer");
 
@@ -20,6 +21,7 @@ export function SetupDomainConfig({ isActive, isCompleted, onNext, onReset, envD
   const appUrl = envData?.NEXT_PUBLIC_APP_URL;
   const gaId = envData?.NEXT_PUBLIC_GA_MEASUREMENT_ID;
   const apiGeminiKey = envData?.GEMINI_API_KEY;
+  const apiMaptilerKey = envData?.NEXT_PUBLIC_MAPTILER_KEY;
   const tokenOen = envData?.OEN_ACCESS_TOKEN;
   const merchantOen = envData?.OEN_MERCHANT_ID;
 
@@ -29,6 +31,7 @@ export function SetupDomainConfig({ isActive, isCompleted, onNext, onReset, envD
       if (appUrl) setAppUrlValue(appUrl.replace(/^"(.*)"$/, '$1'));
       if (gaId) setGaIdValue(gaId.replace(/^"(.*)"$/, '$1'));
       if (apiGeminiKey) setGeminiKey(apiGeminiKey.replace(/^"(.*)"$/, '$1'));
+      if (apiMaptilerKey) setMaptilerKey(apiMaptilerKey.replace(/^"(.*)"$/, '$1'));
       if (tokenOen) setOenToken(tokenOen.replace(/^"(.*)"$/, '$1'));
       if (merchantOen) setOenMerchant(merchantOen.replace(/^"(.*)"$/, '$1'));
     }, 0);
@@ -37,6 +40,7 @@ export function SetupDomainConfig({ isActive, isCompleted, onNext, onReset, envD
     appUrl,
     gaId,
     apiGeminiKey,
+    apiMaptilerKey,
     tokenOen,
     merchantOen
   ]);
@@ -47,6 +51,7 @@ export function SetupDomainConfig({ isActive, isCompleted, onNext, onReset, envD
       appUrl: appUrlValue,
       gaId: gaIdValue,
       geminiKey: geminiKey,
+      maptilerKey: maptilerKey,
       oenToken: oenToken,
       oenMerchant: oenMerchant
     });
@@ -153,6 +158,22 @@ export function SetupDomainConfig({ isActive, isCompleted, onNext, onReset, envD
                 />
                 <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">
                   {t('admin_setup.step7.gemini_hint')}
+                </p>
+              </div>
+              <div className="p-5 border-t border-slate-100 flex-1 flex flex-col gap-1.5">
+                <label htmlFor="maptilerInput" className="text-xs font-bold text-gray-700 uppercase tracking-wider">MAPTILER API KEY</label>
+                <input
+                  id="maptilerInput"
+                  aria-label="MapTiler API Key"
+                  type="password"
+                  value={maptilerKey}
+                  onChange={e => setMaptilerKey(e.target.value)}
+                  className="px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white text-gray-900 transition- outline-none"
+                  disabled={status === StepStatus.LOADING}
+                  placeholder="MapTiler Key..."
+                />
+                <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">
+                  Required for rendering the maps.
                 </p>
               </div>
             </div>

@@ -31,13 +31,14 @@ export async function GET(
 
     // Info: (20260130 - Luphia) Authorization Check
     if (analysis.userId !== user.id) {
-      return jsonFail({ code: "FO000099", message: "You do not have permission ...", status: ApiCode.FORBIDDEN },  );
+      return jsonFail({
+        code: "FO000099",
+        message: "You do not have permission ...",
+        status: ApiCode.FORBIDDEN,
+      });
     }
 
-    const analysisData = analysis.data as Record<
-      string,
-      unknown
-    > | null;
+    const analysisData = analysis.data as Record<string, unknown> | null;
     let isExternal = false;
     if (typeof analysisData?.isExternal === "boolean") {
       isExternal = analysisData.isExternal;
@@ -64,6 +65,12 @@ export async function GET(
       `[API] GET /user/analysis/${(await params).analysis_id} error:`,
       error,
     );
-    return jsonFail({ code: "IN000099", message: String((error as Error).message || "Internal Server Error").slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IN000099",
+      message: String(
+        (error as Error).message || "Internal Server Error",
+      ).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

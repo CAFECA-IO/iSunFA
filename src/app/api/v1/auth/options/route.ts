@@ -44,6 +44,10 @@ export async function GET(request: NextRequest) {
     if (error instanceof AppError) {
       return jsonFail(API_ERRORS.IS_UNKNOWN);
     }
-    return jsonFail({ code: "IN000099", message: "Failed to generate auth opt...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to generate auth opt...",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

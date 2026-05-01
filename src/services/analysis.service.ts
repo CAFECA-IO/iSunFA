@@ -8,6 +8,11 @@ import { teamRepo } from "@/repositories/team.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
+import { orderRepo } from "@/repositories/order.repo";
+import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
+import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
+import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
+import { generateEsgReport } from "@/lib/report/esg_report_generator";
 import {
   missionGenerator,
   IMissionDefinition,
@@ -15,7 +20,7 @@ import {
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import { AppError } from "@/lib/utils/error";
 import { ApiCode } from "@/lib/utils/status";
-import { AccountBook, Prisma } from "@/generated/client";
+import { AccountBook, Prisma, EsgRecord } from "@/generated/client";
 import { ANALYSIS_CATEGORY } from "@/constants/price";
 import type { IVoucherLineUI } from "@/interfaces/voucher";
 
@@ -49,14 +54,19 @@ export class AnalysisService {
      * Note: In production this cost should ideally be passed from the trusted Order
      * or recalculated and verified to match the Order.
      */
-    const cost = getAnalysisCost(params as unknown as import('@/lib/analysis/pricing').AnalysisCostParams);
+    const cost = getAnalysisCost(
+      params as unknown as import("@/lib/analysis/pricing").AnalysisCostParams,
+    );
 
     // Info: (20260120 - Luphia) Simulate basic validation
     if (!params.category) {
       throw new Error("Missing required parameters: category");
     }
 
-    const isNonPeriodAnalysis = [ANALYSIS_CATEGORY.AI_CONSULTING, ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS].some((category) => params.category === category);
+    const isNonPeriodAnalysis = [
+      ANALYSIS_CATEGORY.AI_CONSULTING,
+      ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
+    ].some((category) => params.category === category);
 
     if (!isNonPeriodAnalysis && !params.periodType) {
       throw new Error("Missing required parameters: periodType");
@@ -65,13 +75,17 @@ export class AnalysisService {
     // Info: (20260129 - Luphia) Generate Mission Content via MissionGenerator
     let missionDef: IMissionDefinition | null = null;
     let analysisResult = "AI Analysis Content Placeholder...";
-    let parsedPrerequisiteParams: Record<string, unknown> | undefined = undefined;
+    let parsedPrerequisiteParams: Record<string, unknown> | undefined =
+      undefined;
 
     try {
       // Info: (20260320 - Tzuhan) Fetch prerequisite data for net_zero_emissions
       let prerequisiteStr = "";
 
-      if (params.category === ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS && params.keyword) {
+      if (
+        params.category === ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS &&
+        params.keyword
+      ) {
         const prerequisite = await analysisRepo.findFirst({
           where: {
             userId,
@@ -135,7 +149,7 @@ export class AnalysisService {
           ANALYSIS_CATEGORY.FINANCIAL_HEALTH,
           ANALYSIS_CATEGORY.IRSC,
           ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS,
-        ].some(c => c === params.category)
+        ].some((c) => c === params.category)
       ) {
         if (!params.isExternal) {
           const { start, end } = getPeriodDateRange(
@@ -185,28 +199,40 @@ export class AnalysisService {
 
           const esgRecords = targetAccountBookId
             ? await esgRepo.findManyEsgRecords({
-              where: {
-                accountBookId: targetAccountBookId,
-                tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
-                deletedAt: null,
-              },
-              orderBy: { tradingDate: "asc" },
-            })
+                where: {
+                  accountBookId: targetAccountBookId,
+                  tradingDate: {
+                    gte: new Date(start + "T00:00:00.000Z"),
+                    lte: new Date(end + "T23:59:59.999Z"),
+                  },
+                  deletedAt: null,
+                },
+                orderBy: { tradingDate: "asc" },
+              })
             : [];
 
           // Info: (20260418 - Tzuhan) 目前僅先對合規抓鬼與異常傳票執行 DB 傳票的完整撈取並交付快篩
           let voucherRecords: unknown[] = [];
-          if (params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE || params.category === ANALYSIS_CATEGORY.BALANCE_SHEET) {
+          if (
+            params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE ||
+            params.category === ANALYSIS_CATEGORY.FINANCIAL_HEALTH ||
+            params.category === ANALYSIS_CATEGORY.BALANCE_SHEET ||
+            params.category === ANALYSIS_CATEGORY.CASH_FLOW ||
+            params.category === ANALYSIS_CATEGORY.INCOME_STATEMENT
+          ) {
             voucherRecords = targetAccountBookId
               ? await voucherRepo.findManyVouchers({
-                where: {
-                  accountBookId: targetAccountBookId,
-                  tradingDate: { gte: new Date(start + "T00:00:00.000Z"), lte: new Date(end + "T23:59:59.999Z") },
-                  deletedAt: null,
-                },
-                orderBy: { tradingDate: "asc" },
-                include: { lines: true } // Info: (20260417 - Tzuhan) 包含分錄以供 AI 判定異常大額與退貨
-              })
+                  where: {
+                    accountBookId: targetAccountBookId,
+                    tradingDate: {
+                      gte: new Date(start + "T00:00:00.000Z"),
+                      lte: new Date(end + "T23:59:59.999Z"),
+                    },
+                    deletedAt: null,
+                  },
+                  orderBy: { tradingDate: "asc" },
+                  include: { lines: true }, // Info: (20260417 - Tzuhan) 包含分錄以供 AI 判定異常大額與退貨
+                })
               : [];
           }
 
@@ -215,19 +241,29 @@ export class AnalysisService {
           );
 
           if (esgRecords.length > 0 || voucherRecords.length > 0) {
-            if (params.category === ANALYSIS_CATEGORY.BALANCE_SHEET && voucherRecords.length > 0) {
-              const { generateBalanceSheet } = await import("@/lib/report/balance_sheet_generator");
+            parsedPrerequisiteParams = {
+              accountBook: matchedAccountBook || undefined,
+            };
+
+            if (
+              (params.category === ANALYSIS_CATEGORY.BALANCE_SHEET ||
+                params.category === ANALYSIS_CATEGORY.CASH_FLOW ||
+                params.category === ANALYSIS_CATEGORY.INCOME_STATEMENT ||
+                params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE ||
+                params.category === ANALYSIS_CATEGORY.FINANCIAL_HEALTH) &&
+              voucherRecords.length > 0
+            ) {
               const allLines: Record<string, unknown>[] = [];
-              
+
               for (const v of voucherRecords) {
                 const vData = v as Record<string, unknown>;
                 if (!vData.lines || !Array.isArray(vData.lines)) continue;
                 for (const line of vData.lines as Record<string, unknown>[]) {
                   allLines.push({
                     id: String(line.id || ""),
-                    accounting: { 
-                      code: String(line.accountingCode || line.accountId || ""), 
-                      name: String(line.accountingCode || line.accountId || "") 
+                    accounting: {
+                      code: String(line.accountingCode || line.accountId || ""),
+                      name: String(line.accountingCode || line.accountId || ""),
                     },
                     particular: String(line.particular || line.summary || ""),
                     amount: Number(line.amount || 0),
@@ -235,31 +271,88 @@ export class AnalysisService {
                   });
                 }
               }
-              
-              const bsReport = generateBalanceSheet(allLines as unknown as IVoucherLineUI[]);
-              parsedPrerequisiteParams = {
-                balanceSheetReport: bsReport,
-                accountBook: matchedAccountBook || undefined,
-              };
-              console.log(`[ESG-DEBUG] Parsed Context as Balance Sheet Report`);
-            } else if (esgRecords.length > 0) {
+
+              const voucherLinesStr = (
+                voucherRecords as Record<string, unknown>[]
+              )
+                .map((v: Record<string, unknown>) => {
+                  const linesStr = (Array.isArray(v.lines) ? v.lines : [])
+                    .map(
+                      (l: Record<string, unknown>) =>
+                        `    - 科目: ${l.accountId || l.accountingCode || ""}, 金額:${Number(l.amount || 0)}, 摘要: ${l.summary || l.particular || ""}, 借貸: ${l.isDebit ? "借方" : "貸方"}`,
+                    )
+                    .join("\n");
+                  const dateStr =
+                    v.tradingDate instanceof Date
+                      ? v.tradingDate.toISOString().split("T")[0]
+                      : String(v.tradingDate).split("T")[0];
+                  return `- 傳票號: ${v.voucherNumber || v.id}, 日期: ${dateStr}\n${linesStr}`;
+                })
+                .join("\n");
+
+              parsedPrerequisiteParams.voucherRecordsContext = `\n【內部傳票與明細數據紀錄】:\n${voucherLinesStr}\n`;
+
+              if (params.category === ANALYSIS_CATEGORY.BALANCE_SHEET) {
+                parsedPrerequisiteParams.balanceSheetReport =
+                  generateBalanceSheet(allLines as unknown as IVoucherLineUI[]);
+                console.log(
+                  `[ESG-DEBUG] Parsed Context as Balance Sheet Report`,
+                );
+              } else if (params.category === ANALYSIS_CATEGORY.CASH_FLOW) {
+                parsedPrerequisiteParams.cashFlowReport =
+                  generateCashFlowStatement(
+                    allLines as unknown as IVoucherLineUI[],
+                  );
+                console.log(`[ESG-DEBUG] Parsed Context as Cash Flow Report`);
+              } else if (
+                params.category === ANALYSIS_CATEGORY.INCOME_STATEMENT
+              ) {
+                parsedPrerequisiteParams.incomeStatementReport =
+                  generateIncomeStatement(
+                    allLines as unknown as IVoucherLineUI[],
+                  );
+                console.log(
+                  `[ESG-DEBUG] Parsed Context as Income Statement Report`,
+                );
+              } else if (
+                params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE ||
+                params.category === ANALYSIS_CATEGORY.FINANCIAL_HEALTH
+              ) {
+                parsedPrerequisiteParams.balanceSheetReport =
+                  generateBalanceSheet(allLines as unknown as IVoucherLineUI[]);
+                parsedPrerequisiteParams.cashFlowReport =
+                  generateCashFlowStatement(
+                    allLines as unknown as IVoucherLineUI[],
+                  );
+                parsedPrerequisiteParams.incomeStatementReport =
+                  generateIncomeStatement(
+                    allLines as unknown as IVoucherLineUI[],
+                  );
+                console.log(
+                  `[ESG-DEBUG] Parsed Context as All 3 Financial Reports`,
+                );
+              }
+            }
+
+            if (esgRecords.length > 0) {
+              const esgReport = generateEsgReport(esgRecords as EsgRecord[]);
               const esgContextLines = esgRecords.map((r) => {
                 const dateStr = r.tradingDate.toISOString().split("T")[0];
                 return `- 日期: ${dateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
               });
               const recordStr = `\n【用戶提供的內部 ESG 數據紀錄】:\n${esgContextLines.join("\n")}\n`;
-              parsedPrerequisiteParams = {
-                esgRecordsContext: recordStr,
-                accountBook: matchedAccountBook || undefined,
-              };
-              console.log(`[ESG-DEBUG] Parsed Context length:`, recordStr.length);
-            } else {
-              parsedPrerequisiteParams = {
-                accountBook: matchedAccountBook || undefined,
-              };
+
+              parsedPrerequisiteParams.esgReport = esgReport;
+              parsedPrerequisiteParams.esgRecordsContext = recordStr;
+              console.log(
+                `[ESG-DEBUG] Parsed Context length:`,
+                recordStr.length,
+              );
             }
           } else {
-            console.log(`[ESG-DEBUG] Records length is 0 for the selected period. Proceeding with empty internal analysis.`);
+            console.log(
+              `[ESG-DEBUG] Records length is 0 for the selected period. Proceeding with empty internal analysis.`,
+            );
           }
         }
       }
@@ -279,7 +372,13 @@ export class AnalysisService {
 
       // Info: (20260418 - Tzuhan) [BUGFIX] 如果 generator 根本不認識這個類別，或是生成的 tasks 是空的，絕對不允許進入資料庫建立幽靈 Mission
       if (!missionDef || !missionDef.tasks || missionDef.tasks.length === 0) {
-        throw new AppError({ code: "VA000099", message: String(`找不到有效的分析任務產生器 (Category: ${params.category})`).slice(0, 30), status: ApiCode.VALIDATION_ERROR });
+        throw new AppError({
+          code: "VA000099",
+          message: String(
+            `找不到有效的分析任務產生器 (Category: ${params.category})`,
+          ).slice(0, 30),
+          status: ApiCode.VALIDATION_ERROR,
+        });
       }
 
       analysisResult = "Analysis Mission Generated. Pending Execution.";
@@ -289,7 +388,11 @@ export class AnalysisService {
         throw error; // Info: (20260417 - Tzuhan) Let the caller (API route) abort the operation instantly
       }
       // Info: (20260418 - Tzuhan) [BUGFIX] 如果發生未知崩潰(例如 Payload 超過 Prisma 大小限制)，必須拋出異常，阻斷 API 回傳 200，讓前端顯示錯誤而不吞噬訂單！
-      throw new AppError({ code: "IN000099", message: "發生非預期錯誤，報告生成失敗。您的訂單紀錄已保留，請稍...", status: ApiCode.INTERNAL_SERVER_ERROR });
+      throw new AppError({
+        code: "IN000099",
+        message: "發生非預期錯誤，報告生成失敗。您的訂單紀錄已保留，請稍...",
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     // Info: (20260128 - Luphia) Create Plan Content
@@ -349,7 +452,9 @@ export class AnalysisService {
             keyword: params.keyword,
             isExternal: params.isExternal === true,
             historicalTags: await analysisRepo.getGlobalTopTags(20),
-            data: params.data ? (params.data as unknown as Prisma.InputJsonValue) : undefined,
+            data: params.data
+              ? (params.data as unknown as Prisma.InputJsonValue)
+              : undefined,
           },
         });
       } catch (error) {
@@ -358,12 +463,15 @@ export class AnalysisService {
       }
 
       try {
-        const { orderRepo } = await import("@/repositories/order.repo");
-        const existingOrder = await orderRepo.findFirst({ where: { id: params.orderId } });
+        const existingOrder = await orderRepo.findFirst({
+          where: { id: params.orderId },
+        });
         if (existingOrder && parsedPrerequisiteParams) {
-          const orderDataObj = (existingOrder.data as Record<string, unknown>) || {};
-          const innerData = (orderDataObj.data as Record<string, unknown>) || {};
-          
+          const orderDataObj =
+            (existingOrder.data as Record<string, unknown>) || {};
+          const innerData =
+            (orderDataObj.data as Record<string, unknown>) || {};
+
           await orderRepo.update({
             where: { id: params.orderId },
             data: {
@@ -371,15 +479,20 @@ export class AnalysisService {
                 ...orderDataObj,
                 data: {
                   ...innerData,
-                  prerequisiteData: parsedPrerequisiteParams
-                }
-              } as unknown as Prisma.InputJsonObject
-            }
+                  prerequisiteData: parsedPrerequisiteParams,
+                },
+              } as unknown as Prisma.InputJsonObject,
+            },
           });
-          console.log(`[AnalysisService] Injected prerequisiteData into Order ${params.orderId} successfully.`);
+          console.log(
+            `[AnalysisService] Injected prerequisiteData into Order ${params.orderId} successfully.`,
+          );
         }
       } catch (error) {
-        console.error(`[AnalysisService] Failed to update Order prerequisiteData:`, error);
+        console.error(
+          `[AnalysisService] Failed to update Order prerequisiteData:`,
+          error,
+        );
         throw new Error("Failed to update order metadata");
       }
     }

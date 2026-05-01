@@ -16,7 +16,11 @@ export interface IDocumentContext {
 
 export async function prepareDocumentContext(task: IPseudoTask) {
   const taskData = task.data as { context?: string };
-  let parsedContext: IDocumentContext = { fileId: "", accountBookId: "", esgRecordId: "" };
+  let parsedContext: IDocumentContext = {
+    fileId: "",
+    accountBookId: "",
+    esgRecordId: "",
+  };
   try {
     if (taskData?.context) {
       parsedContext = JSON.parse(taskData.context);
@@ -35,24 +39,48 @@ export async function prepareDocumentContext(task: IPseudoTask) {
     ];
   } else if (parsedContext.fileId) {
     try {
-      console.log(`[DocumentHelper] Recovering file ${parsedContext.fileId} from Laria...`);
-      const recoveredBuffer = await storageService.recoverLaria(parsedContext.fileId);
+      console.log(
+        `[DocumentHelper] Recovering file ${parsedContext.fileId} from Laria...`,
+      );
+      const recoveredBuffer = await storageService.recoverLaria(
+        parsedContext.fileId,
+      );
       const base64Data = recoveredBuffer.toString("base64");
-      
+
       let detectedMimeType = "image/jpeg";
       if (recoveredBuffer.length > 4) {
-        if (recoveredBuffer[0] === 0x25 && recoveredBuffer[1] === 0x50 && recoveredBuffer[2] === 0x44 && recoveredBuffer[3] === 0x46) detectedMimeType = "application/pdf";
-        else if (recoveredBuffer[0] === 0x89 && recoveredBuffer[1] === 0x50 && recoveredBuffer[2] === 0x4E && recoveredBuffer[3] === 0x47) detectedMimeType = "image/png";
-        else if (recoveredBuffer[0] === 0xFF && recoveredBuffer[1] === 0xD8 && recoveredBuffer[2] === 0xFF) detectedMimeType = "image/jpeg";
+        if (
+          recoveredBuffer[0] === 0x25 &&
+          recoveredBuffer[1] === 0x50 &&
+          recoveredBuffer[2] === 0x44 &&
+          recoveredBuffer[3] === 0x46
+        )
+          detectedMimeType = "application/pdf";
+        else if (
+          recoveredBuffer[0] === 0x89 &&
+          recoveredBuffer[1] === 0x50 &&
+          recoveredBuffer[2] === 0x4e &&
+          recoveredBuffer[3] === 0x47
+        )
+          detectedMimeType = "image/png";
+        else if (
+          recoveredBuffer[0] === 0xff &&
+          recoveredBuffer[1] === 0xd8 &&
+          recoveredBuffer[2] === 0xff
+        )
+          detectedMimeType = "image/jpeg";
       }
-      
+
       const mimeType = parsedContext.fileMimeType || detectedMimeType;
-      images = [
-        { data: base64Data, mimeType },
-      ];
-      console.log(`[DocumentHelper] Recovered file successfully for ${parsedContext.fileId}`);
+      images = [{ data: base64Data, mimeType }];
+      console.log(
+        `[DocumentHelper] Recovered file successfully for ${parsedContext.fileId}`,
+      );
     } catch (e) {
-      console.warn(`[DocumentHelper] Failed to recover file from Laria for hash ${parsedContext.fileId}:`, e);
+      console.warn(
+        `[DocumentHelper] Failed to recover file from Laria for hash ${parsedContext.fileId}:`,
+        e,
+      );
     }
   }
 

@@ -46,14 +46,15 @@ import { adminMember } from "@/i18n/locales/ko/admin_member";
 import { adminBlockchain } from "@/i18n/locales/ko/admin_blockchain";
 import { adminMissionBoard } from "@/i18n/locales/ko/admin_mission_board";
 import { emissionSources } from "@/i18n/locales/ko/emission_sources";
-
 import { date } from "@/i18n/locales/ko/date";
 import { currencyAlias } from "@/i18n/locales/ko/currency_alias";
 import { orderManagement } from "@/i18n/locales/ko/order_management";
-import type { BaseTranslation } from "@/i18n/zh_tw";
 import { adminBilling } from "@/i18n/locales/ko/admin_billing";
+import { transportationCarbonFootprintCalculator } from "@/i18n/locales/ko/transportation_carbon_footprint_calculator";
+import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const ko = {
+  transportation_carbon_footprint_calculator: transportationCarbonFootprintCalculator,
   date,
   currency_alias: currencyAlias,
   common,

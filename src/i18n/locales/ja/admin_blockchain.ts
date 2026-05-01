@@ -15,7 +15,7 @@ export const adminBlockchain = {
     mint_icp: "クレジットポイント(ICP)の鋳造",
     mint_desc:
       "ICP を鋳造するには、リアルタイムの担保率に基づいて同等額の ISC を提供する必要があります。鋳造された ICP はメンバーシステムのインベントリに配置されます。",
-        mint_est_days: "推定サポート日数：",
+    mint_est_days: "推定サポート日数：",
     days: "日",
     amount_placeholder: "鋳造する ICP の量を入力...",
     amount_aria: "鋳造する ICP の量を入力",

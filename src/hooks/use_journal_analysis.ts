@@ -22,11 +22,13 @@ interface IUseJournalAnalysisProps {
   executeOrderTransaction: (
     payload: IOrderPayload,
     calculatedCost: number,
-    onPaymentSuccess: (authData: {
-      orderId: string;
-      transactionHash: string;
-      reportId?: string;
-    } & AuthenticationJSON) => Promise<void> | void
+    onPaymentSuccess: (
+      authData: {
+        orderId: string;
+        transactionHash: string;
+        reportId?: string;
+      } & AuthenticationJSON,
+    ) => Promise<void> | void,
   ) => Promise<boolean>;
   itemName: string;
   onComplete?: () => void;
@@ -90,7 +92,7 @@ export function useJournalAnalysis({
               },
               authentication: authData,
             }),
-          }
+          },
         );
 
         if (response.code === ApiCode.SUCCESS) {

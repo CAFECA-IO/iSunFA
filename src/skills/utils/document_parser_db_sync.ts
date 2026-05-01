@@ -1,5 +1,11 @@
 import { prisma } from "@/lib/prisma";
-import { VoucherTradingType, AIAnalysisStatus, Prisma, EsgScope, EsgIntensity } from "@/generated/client";
+import {
+  VoucherTradingType,
+  AIAnalysisStatus,
+  Prisma,
+  EsgScope,
+  EsgIntensity,
+} from "@/generated/client";
 import { IParsedVoucherLine } from "@/interfaces/voucher";
 
 export interface IDocNode {
@@ -51,7 +57,7 @@ export async function syncDocumentResultToDatabase(
   accountBookId: string,
   result: IAggregatedDocumentResult,
   voucherIdContext?: string,
-  esgRecordIdContext?: string
+  esgRecordIdContext?: string,
 ) {
   if (!accountBookId || (!fileId && !voucherIdContext && !esgRecordIdContext)) {
     return false;
@@ -61,9 +67,13 @@ export async function syncDocumentResultToDatabase(
 
   await prisma.$transaction(async (tx) => {
     // Info: (20260426 - Luphia) Validate if accountBookId exists to prevent FK violation on mock test tasks
-    const accountBook = await tx.accountBook.findUnique({ where: { id: accountBookId } });
+    const accountBook = await tx.accountBook.findUnique({
+      where: { id: accountBookId },
+    });
     if (!accountBook) {
-      console.warn(`[syncDocumentResultToDatabase] accountBookId ${accountBookId} not found. Skipping DB sync.`);
+      console.warn(
+        `[syncDocumentResultToDatabase] accountBookId ${accountBookId} not found. Skipping DB sync.`,
+      );
       return;
     }
 
@@ -80,14 +90,19 @@ export async function syncDocumentResultToDatabase(
     if (journal || failureReason) {
       let existingJournal = null;
       if (realFileId && accountBookId) {
-        existingJournal = await tx.journal.findFirst({ where: { fileId: realFileId, accountBookId } });
+        existingJournal = await tx.journal.findFirst({
+          where: { fileId: realFileId, accountBookId },
+        });
       }
 
       if (failureReason && !journal) {
         if (existingJournal) {
           await tx.journal.update({
             where: { id: existingJournal.id },
-            data: { analysisStatus: "FAILED" as AIAnalysisStatus, aiNote: failureReason }
+            data: {
+              analysisStatus: "FAILED" as AIAnalysisStatus,
+              aiNote: failureReason,
+            },
           });
         }
       } else if (journal) {
@@ -121,16 +136,23 @@ export async function syncDocumentResultToDatabase(
     if (voucherBase || voucherLines || failureReason) {
       let existingVoucher = null;
       if (voucherIdContext) {
-        existingVoucher = await tx.voucher.findUnique({ where: { id: voucherIdContext } });
+        existingVoucher = await tx.voucher.findUnique({
+          where: { id: voucherIdContext },
+        });
       } else if (realFileId && accountBookId) {
-        existingVoucher = await tx.voucher.findFirst({ where: { fileId: realFileId, accountBookId } });
+        existingVoucher = await tx.voucher.findFirst({
+          where: { fileId: realFileId, accountBookId },
+        });
       }
 
       if (failureReason && !voucherBase && !voucherLines) {
         if (existingVoucher) {
           await tx.voucher.update({
             where: { id: existingVoucher.id },
-            data: { analysisStatus: "FAILED" as AIAnalysisStatus, aiNote: failureReason }
+            data: {
+              analysisStatus: "FAILED" as AIAnalysisStatus,
+              aiNote: failureReason,
+            },
           });
         }
       } else if (voucherBase || voucherLines) {
@@ -141,9 +163,12 @@ export async function syncDocumentResultToDatabase(
         };
         const tradingDate = new Date(vd.tradingDate || new Date());
         const typeMap: Record<string, VoucherTradingType> = {
-          income: "INCOME", outcome: "OUTCOME", transfer: "TRANSFER",
+          income: "INCOME",
+          outcome: "OUTCOME",
+          transfer: "TRANSFER",
         };
-        const trType = typeMap[String(vd.tradingType).toLowerCase()] || "INCOME";
+        const trType =
+          typeMap[String(vd.tradingType).toLowerCase()] || "INCOME";
         const confidence = parseInt(String(vd.confidence)) || 0;
 
         const dataPayload: Prisma.VoucherUncheckedCreateInput = {
@@ -188,16 +213,23 @@ export async function syncDocumentResultToDatabase(
     if (esg || failureReason) {
       let existingEsg = null;
       if (esgRecordIdContext) {
-        existingEsg = await tx.esgRecord.findUnique({ where: { id: esgRecordIdContext } });
+        existingEsg = await tx.esgRecord.findUnique({
+          where: { id: esgRecordIdContext },
+        });
       } else if (realFileId && accountBookId) {
-        existingEsg = await tx.esgRecord.findFirst({ where: { fileId: realFileId, accountBookId } });
+        existingEsg = await tx.esgRecord.findFirst({
+          where: { fileId: realFileId, accountBookId },
+        });
       }
 
       if (failureReason && !esg) {
         if (existingEsg) {
           await tx.esgRecord.update({
             where: { id: existingEsg.id },
-            data: { analysisStatus: "FAILED" as AIAnalysisStatus, aiNote: failureReason }
+            data: {
+              analysisStatus: "FAILED" as AIAnalysisStatus,
+              aiNote: failureReason,
+            },
           });
         }
       } else if (esg) {
@@ -213,10 +245,11 @@ export async function syncDocumentResultToDatabase(
               name: ed.newCoefficient.name,
               description: ed.newCoefficient.description || "",
               unit: ed.newCoefficient.unit || "",
-              emissionFactor: parseFloat(String(ed.newCoefficient.emissionFactor)) || 0,
+              emissionFactor:
+                parseFloat(String(ed.newCoefficient.emissionFactor)) || 0,
               source: ed.newCoefficient.source || "AI 動態擷取",
               accountBookId: null,
-            }
+            },
           });
           finalCoefficientId = newCoef.id;
         }

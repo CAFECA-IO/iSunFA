@@ -7,7 +7,7 @@ import { accountBookRepo } from "@/repositories/account_book.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { Prisma } from "@/generated/browser";
+import { Prisma } from "@/generated/client";
 import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
@@ -54,7 +54,11 @@ export async function POST(
     // Info: (20260311 - Julian) 驗證 file 參數
     if (!fileId) {
       console.error("Missing file or file hash");
-      return jsonFail({ code: "VA000099", message: "File is required", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "File is required",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     // Info: (20260311 - Julian) 建立空白傳票
@@ -251,10 +255,10 @@ export async function GET(
         fileId: v.fileId ?? "",
         file: v.file
           ? {
-            id: v.file.id,
-            hash: v.file.hash,
-            fileName: v.file.fileName || "Unknown",
-          }
+              id: v.file.id,
+              hash: v.file.hash,
+              fileName: v.file.fileName || "Unknown",
+            }
           : undefined,
         lineItems: {
           lines: voucherLineItems,

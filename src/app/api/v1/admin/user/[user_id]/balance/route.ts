@@ -3,7 +3,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { publicClient } from "@/lib/viem";
 import { CONTRACT_ADDRESSES, ABIS } from "@/config/contracts";
 import { formatUnits } from "viem";
-import { Role } from "@/generated/enums";
+import { Role } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 
@@ -41,6 +41,10 @@ export async function GET(
 
     return jsonOk(Number(formatUnits(balance, 18)));
   } catch (error) {
-    return jsonFail({ code: "IS000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IS000099",
+      message: String((error as Error).message).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

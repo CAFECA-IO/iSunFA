@@ -32,7 +32,11 @@ export async function GET(
     );
 
     if (!accountBook) {
-      return jsonFail({ code: "NO000099", message: "Accountbook not found or no...", status: ApiCode.NOT_FOUND },  );
+      return jsonFail({
+        code: "NO000099",
+        message: "Accountbook not found or no...",
+        status: ApiCode.NOT_FOUND,
+      });
     }
 
     const {
@@ -53,6 +57,10 @@ export async function GET(
     return jsonOk(dashboardSummary);
   } catch (error) {
     console.error("Error fetching Voucher summary:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to fetch Voucher sum...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to fetch Voucher sum...",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

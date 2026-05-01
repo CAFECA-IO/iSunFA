@@ -20,8 +20,7 @@ export async function PUT(
 
     // Info: (20260322 - Luphia) 檢查帳本是否存在
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
-    if (!accountBook)
-      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
+    if (!accountBook) return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
 
     // Info: (20260322 - Luphia) 檢查使用者是否有權限
     const teamMember = await teamRepo.getTeamMember(
@@ -36,6 +35,10 @@ export async function PUT(
     return jsonOk({ count: result.count });
   } catch (error) {
     console.error("API Error:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to verify vouchers", status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to verify vouchers",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

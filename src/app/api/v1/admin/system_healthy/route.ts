@@ -46,7 +46,7 @@ export async function GET() {
 
       await fetch(storageDomain, {
         method: "GET",
-        signal: controller.signal
+        signal: controller.signal,
       });
       clearTimeout(timeoutId);
 
@@ -59,44 +59,66 @@ export async function GET() {
   }
 
   // Info: (20260419 - Luphia) 4. Check Docker Containers
-  type IDockerContainerInfo = { id: string; image: string; name: string; status: string; uptime: string; rawStatus: string };
-  const dockerInfo: { status: string; uptime?: string; containers: IDockerContainerInfo[] } = { status: SYSTEM_STATUS.CHECKING, containers: [] };
+  type IDockerContainerInfo = {
+    id: string;
+    image: string;
+    name: string;
+    status: string;
+    uptime: string;
+    rawStatus: string;
+  };
+  const dockerInfo: {
+    status: string;
+    uptime?: string;
+    containers: IDockerContainerInfo[];
+  } = { status: SYSTEM_STATUS.CHECKING, containers: [] };
   try {
     const isRunning = await dockerService.checkRunning();
     if (isRunning.success) {
       dockerInfo.status = SYSTEM_STATUS.HEALTHY;
       const containers = await dockerService.getRunningContainers();
       if (containers.success && containers.output) {
-        const VALID_CONTAINERS = ['gateway', 'database', 'postgres', 'storage', 'blockchain'];
-        const lines = containers.output.split('\n').filter(Boolean);
+        const VALID_CONTAINERS = [
+          "gateway",
+          "database",
+          "postgres",
+          "storage",
+          "blockchain",
+        ];
+        const lines = containers.output.split("\n").filter(Boolean);
         if (lines.length > 0) {
-          dockerInfo.containers = lines.map(line => {
-            const parts = line.split('|'); // ID|Image|Names|Status
-            if (parts.length >= 4) {
-              const name = parts[2];
-              if (!VALID_CONTAINERS.some(c => name.includes(c))) return null;
+          dockerInfo.containers = lines
+            .map((line) => {
+              const parts = line.split("|"); // ID|Image|Names|Status
+              if (parts.length >= 4) {
+                const name = parts[2];
+                if (!VALID_CONTAINERS.some((c) => name.includes(c)))
+                  return null;
 
-              const statusStr = parts[3];
-              let uptime = statusStr;
-              const match = statusStr.match(/Up\s+(.+)$/i);
-              if (match) {
-                uptime = match[1];
+                const statusStr = parts[3];
+                let uptime = statusStr;
+                const match = statusStr.match(/Up\s+(.+)$/i);
+                if (match) {
+                  uptime = match[1];
+                }
+                const isUp = statusStr.toLowerCase().startsWith("up");
+                return {
+                  id: parts[0],
+                  image: parts[1],
+                  name: name,
+                  status: isUp
+                    ? SYSTEM_STATUS.HEALTHY
+                    : SYSTEM_STATUS.UNHEALTHY,
+                  uptime: uptime,
+                  rawStatus: statusStr,
+                };
               }
-              const isUp = statusStr.toLowerCase().startsWith("up");
-              return {
-                id: parts[0],
-                image: parts[1],
-                name: name,
-                status: isUp ? SYSTEM_STATUS.HEALTHY : SYSTEM_STATUS.UNHEALTHY,
-                uptime: uptime,
-                rawStatus: statusStr
-              };
-            }
-            return null;
-          }).filter(c => c !== null) as IDockerContainerInfo[];
+              return null;
+            })
+            .filter((c) => c !== null) as IDockerContainerInfo[];
 
           const firstLine = lines[0];
-          const parts = firstLine.split('|');
+          const parts = firstLine.split("|");
           if (parts.length >= 4) {
             const statusStr = parts[3];
             const match = statusStr.match(/Up\s+(.+)$/i);

@@ -11,19 +11,28 @@ const MB_ABI = parseAbi([
   "function tasks(uint256) view returns (address creator, string contentCid, uint256 reward, uint256 createdAt, uint256 updatedAt, uint8 status, uint256 submissionCount)",
   "function taskSubmissions(uint256, uint256) view returns (address submitter, string resultCid, uint256 consumedTokens, bool isRejected, uint256 disputeUntil)",
   "function approveSubmission(uint256 taskId, uint256 subIndex) external",
-  "function rejectSubmission(uint256 taskId, uint256 subIndex) external"
+  "function rejectSubmission(uint256 taskId, uint256 subIndex) external",
 ]);
 
 export async function processNext() {
-  console.log("[IssueValidator] Fetching PendingReview tasks from MissionBoard...");
+  console.log(
+    "[IssueValidator] Fetching PendingReview tasks from MissionBoard...",
+  );
 
   const adminAccount = await getAdminAccount();
   const setupConfig = await getPriorityEnvConfig();
-  const rpcUrl = setupConfig.NEXT_PUBLIC_RPC_URL || "[http://127.0.0.1:20024](http://127.0.0.1:20024)";
+  const rpcUrl =
+    setupConfig.NEXT_PUBLIC_RPC_URL ||
+    "[http://127.0.0.1:20024](http://127.0.0.1:20024)";
   const publicClient = createPublicClient({ transport: http(rpcUrl) });
-  const walletClient = createWalletClient({ account: adminAccount, chain: isuncoin, transport: http(rpcUrl) });
+  const walletClient = createWalletClient({
+    account: adminAccount,
+    chain: isuncoin,
+    transport: http(rpcUrl),
+  });
 
-  const mbAddress = setupConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
+  const mbAddress =
+    setupConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
 
   const issueDirBase = setupConfig.ISSUE_DIR || "issues";
   const issueDirPath = path.join(process.cwd(), issueDirBase);
@@ -43,7 +52,7 @@ export async function processNext() {
         address: mbAddress,
         abi: MB_ABI,
         functionName: "tasks",
-        args: [currentTaskId]
+        args: [currentTaskId],
       });
 
       const [creator, , , , , status, submissionCount] = taskData;
@@ -59,45 +68,77 @@ export async function processNext() {
           address: mbAddress,
           abi: MB_ABI,
           functionName: "taskSubmissions",
-          args: [currentTaskId, subIndex]
+          args: [currentTaskId, subIndex],
         });
 
         const [, resultCid, , isRejected] = subData;
 
         if (!isRejected) {
-          const taskIssueDir = path.join(issueDirPath, `${mbAddress}_${currentTaskId.toString()}`);
-          const approvedPath = path.join(taskIssueDir, `approved.${subIndex}.md`);
-          const rejectedPath = path.join(taskIssueDir, `rejected.${subIndex}.md`);
+          const taskIssueDir = path.join(
+            issueDirPath,
+            `${mbAddress}_${currentTaskId.toString()}`,
+          );
+          const approvedPath = path.join(
+            taskIssueDir,
+            `approved.${subIndex}.md`,
+          );
+          const rejectedPath = path.join(
+            taskIssueDir,
+            `rejected.${subIndex}.md`,
+          );
 
           // Info: (20260420 - Luphia) Check if we already validated this
           let alreadyValidated = false;
           try {
             await fs.access(approvedPath);
             alreadyValidated = true;
-          } catch { /* Info: (20260420 - Luphia) nothing to do */ }
+          } catch {
+            /* Info: (20260420 - Luphia) nothing to do */
+          }
           try {
             await fs.access(rejectedPath);
             alreadyValidated = true;
-          } catch { /* Info: (20260420 - Luphia) nothing to do */ }
+          } catch {
+            /* Info: (20260420 - Luphia) nothing to do */
+          }
 
           if (!alreadyValidated) {
-            console.log(`[IssueValidator] Found Unsynced Task ID: ${currentTaskId}, SubIndex: ${subIndex}, Status: ${status}`);
+            console.log(
+              `[IssueValidator] Found Unsynced Task ID: ${currentTaskId}, SubIndex: ${subIndex}, Status: ${status}`,
+            );
 
             // Info: (20260429 - Luphia) State Recovery: If status is 3, it was already approved on chain but local file is missing!
             if (status === 3) {
-              console.log(`[IssueValidator] State Recovery for Task ID: ${currentTaskId}. It is Closed on chain but missing local approved file. Recovering...`);
+              console.log(
+                `[IssueValidator] State Recovery for Task ID: ${currentTaskId}. It is Closed on chain but missing local approved file. Recovering...`,
+              );
               await fs.mkdir(taskIssueDir, { recursive: true });
-              
+
               try {
-                console.log(`[IssueValidator] State Recovery: Downloading result CID: ${resultCid} from IPFS (Laria)...`);
+                console.log(
+                  `[IssueValidator] State Recovery: Downloading result CID: ${resultCid} from IPFS (Laria)...`,
+                );
                 const fileBuffer = await storageService.recoverLaria(resultCid);
                 const resultContent = fileBuffer.toString("utf8");
-                const resultFileLocalPath = path.join(taskIssueDir, `${subIndex}.md`);
+                const resultFileLocalPath = path.join(
+                  taskIssueDir,
+                  `${subIndex}.md`,
+                );
                 await fs.writeFile(resultFileLocalPath, resultContent, "utf8");
               } catch (e) {
-                console.error(`[IssueValidator] State Recovery: Failed to download result CID ${resultCid}:`, e);
-                const resultFileLocalPath = path.join(taskIssueDir, `${subIndex}.md`);
-                await fs.writeFile(resultFileLocalPath, '{"error": "Failed to recover result from IPFS during state recovery"}', "utf8");
+                console.error(
+                  `[IssueValidator] State Recovery: Failed to download result CID ${resultCid}:`,
+                  e,
+                );
+                const resultFileLocalPath = path.join(
+                  taskIssueDir,
+                  `${subIndex}.md`,
+                );
+                await fs.writeFile(
+                  resultFileLocalPath,
+                  '{"error": "Failed to recover result from IPFS during state recovery"}',
+                  "utf8",
+                );
               }
 
               const approvedContent = `# Approved Submission (Recovered)
@@ -114,21 +155,34 @@ export async function processNext() {
             }
 
             await fs.mkdir(taskIssueDir, { recursive: true });
-            const validatorPlanPath = path.join(taskIssueDir, "plan.validator.md");
+            const validatorPlanPath = path.join(
+              taskIssueDir,
+              "plan.validator.md",
+            );
             let validatorPlan = "";
             try {
               validatorPlan = await fs.readFile(validatorPlanPath, "utf8");
             } catch {
-              console.warn(`[IssueValidator] No plan.validator.md found for Task ID: ${currentTaskId}. Falling back to default rules.`);
+              console.warn(
+                `[IssueValidator] No plan.validator.md found for Task ID: ${currentTaskId}. Falling back to default rules.`,
+              );
               validatorPlan = "Default acceptance rules apply.";
             }
-            console.log("[IssueValidator] Using plan for validation:", validatorPlan.substring(0, 50));
+            console.log(
+              "[IssueValidator] Using plan for validation:",
+              validatorPlan.substring(0, 50),
+            );
 
-            console.log(`[IssueValidator] Downloading result CID: ${resultCid} from IPFS (Laria)...`);
+            console.log(
+              `[IssueValidator] Downloading result CID: ${resultCid} from IPFS (Laria)...`,
+            );
             const fileBuffer = await storageService.recoverLaria(resultCid);
             const resultContent = fileBuffer.toString("utf8");
 
-            const resultFileLocalPath = path.join(taskIssueDir, `${subIndex}.md`);
+            const resultFileLocalPath = path.join(
+              taskIssueDir,
+              `${subIndex}.md`,
+            );
             await fs.writeFile(resultFileLocalPath, resultContent, "utf8");
 
             /**
@@ -146,7 +200,9 @@ export async function processNext() {
             try {
               const apiKey = setupConfig.GEMINI_API_KEY;
               if (!apiKey) {
-                throw new Error("Missing GEMINI_API_KEY in environment for validation.");
+                throw new Error(
+                  "Missing GEMINI_API_KEY in environment for validation.",
+                );
               }
               const chatService = new ChatService(apiKey);
 
@@ -171,41 +227,67 @@ ${resultContent.substring(0, 8000)} // Truncating to avoid token limit
               // Info: (20260427 - Luphia) 處理可能包含 markdown code block 的情況
               let jsonStr = rawResponse.trim();
               if (jsonStr.startsWith("```json")) {
-                jsonStr = jsonStr.replace(/^```json/, "").replace(/```$/, "").trim();
+                jsonStr = jsonStr
+                  .replace(/^```json/, "")
+                  .replace(/```$/, "")
+                  .trim();
               } else if (jsonStr.startsWith("```")) {
-                jsonStr = jsonStr.replace(/^```/, "").replace(/```$/, "").trim();
+                jsonStr = jsonStr
+                  .replace(/^```/, "")
+                  .replace(/```$/, "")
+                  .trim();
               }
 
-              const aiResult = JSON.parse(jsonStr) as { confidence: number; reason: string };
+              const aiResult = JSON.parse(jsonStr) as {
+                confidence: number;
+                reason: string;
+              };
               aiConfidence = aiResult.confidence;
 
               if (aiConfidence < 60) {
                 rejectReason = `AI Confidence too low (${aiConfidence}/100): ${aiResult.reason}`;
                 isApproved = false;
-                console.log(`[IssueValidator] Validation failed. ${rejectReason}`);
+                console.log(
+                  `[IssueValidator] Validation failed. ${rejectReason}`,
+                );
               } else {
                 isApproved = true;
-                console.log(`[IssueValidator] Validation passed! AI Confidence: ${aiConfidence}/100. Reason: ${aiResult.reason}`);
+                console.log(
+                  `[IssueValidator] Validation passed! AI Confidence: ${aiConfidence}/100. Reason: ${aiResult.reason}`,
+                );
               }
             } catch (err) {
-              console.error(`[IssueValidator] AI Validation failed for Task ID: ${currentTaskId}.`, err);
-              rejectReason = "AI Validation encountered an error or returned invalid format";
+              console.error(
+                `[IssueValidator] AI Validation failed for Task ID: ${currentTaskId}.`,
+                err,
+              );
+              rejectReason =
+                "AI Validation encountered an error or returned invalid format";
 
               // Info: (20260427 - Luphia) 如果 AI 暫時不可用，採用長度防呆降級驗證
-              if (resultContent && resultContent.length > 50 && !resultContent.toLowerCase().includes("error") && !resultContent.toLowerCase().includes("failed")) {
-                console.log("[IssueValidator] Falling back to basic validation due to AI failure (passed).");
+              if (
+                resultContent &&
+                resultContent.length > 50 &&
+                !resultContent.toLowerCase().includes("error") &&
+                !resultContent.toLowerCase().includes("failed")
+              ) {
+                console.log(
+                  "[IssueValidator] Falling back to basic validation due to AI failure (passed).",
+                );
                 isApproved = true;
               }
             }
 
             if (isApproved) {
-              console.log(`[IssueValidator] Validation passed for Task ID: ${currentTaskId}. Approving submission...`);
+              console.log(
+                `[IssueValidator] Validation passed for Task ID: ${currentTaskId}. Approving submission...`,
+              );
               const { request } = await publicClient.simulateContract({
                 account: adminAccount,
                 address: mbAddress,
                 abi: MB_ABI,
                 functionName: "approveSubmission",
-                args: [currentTaskId, subIndex]
+                args: [currentTaskId, subIndex],
               });
               const txHash = await walletClient.writeContract(request);
               await publicClient.waitForTransactionReceipt({ hash: txHash });
@@ -219,13 +301,15 @@ ${resultContent.substring(0, 8000)} // Truncating to avoid token limit
 `;
               await fs.writeFile(approvedPath, approvedContent, "utf8");
             } else {
-              console.log(`[IssueValidator] Validation failed for Task ID: ${currentTaskId}. Rejecting submission... Reason: ${rejectReason}`);
+              console.log(
+                `[IssueValidator] Validation failed for Task ID: ${currentTaskId}. Rejecting submission... Reason: ${rejectReason}`,
+              );
               const { request } = await publicClient.simulateContract({
                 account: adminAccount,
                 address: mbAddress,
                 abi: MB_ABI,
                 functionName: "rejectSubmission",
-                args: [currentTaskId, subIndex]
+                args: [currentTaskId, subIndex],
               });
               const txHash = await walletClient.writeContract(request);
               await publicClient.waitForTransactionReceipt({ hash: txHash });
@@ -248,7 +332,10 @@ ${resultContent.substring(0, 8000)} // Truncating to avoid token limit
 
       currentTaskId++;
     } catch (e) {
-      console.error(`[IssueValidator] Execution error on Task ID ${currentTaskId}:`, e);
+      console.error(
+        `[IssueValidator] Execution error on Task ID ${currentTaskId}:`,
+        e,
+      );
       /**
        * Info: (20260420 - Luphia)
        * Do not break the entire loop on a single task error if it's not a contract out-of-bounds,

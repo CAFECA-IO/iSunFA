@@ -132,9 +132,12 @@ export async function verifyLogin(
 
   if (data.code !== ApiCode.SUCCESS) {
     throw new AppError({
-      code: typeof data.errorCode === 'string' ? data.errorCode : 'IS000099',
+      code: typeof data.errorCode === "string" ? data.errorCode : "IS000099",
       message: data.message || "Login verification failed",
-      status: typeof data.code === 'number' ? data.code : ApiCode.INTERNAL_SERVER_ERROR
+      status:
+        typeof data.code === "number"
+          ? data.code
+          : ApiCode.INTERNAL_SERVER_ERROR,
     });
   }
 

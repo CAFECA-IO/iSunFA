@@ -37,7 +37,7 @@ export const downloadHtmlAsPdf = async (
     const maxDomHeightPerPage = maxPdfHeight / pixelToPtRatio;
 
     // Info: (20260418 - Tzuhan) We will find all elements marked 'break-inside-avoid' and push them down if they cross a boundary
-    const avoidElements = element.querySelectorAll('.break-inside-avoid');
+    const avoidElements = element.querySelectorAll(".break-inside-avoid");
 
     // Info: (20260420 - Tzuhan) Keep track of inserted spacers
     const insertedSpacers: HTMLDivElement[] = [];
@@ -50,7 +50,8 @@ export const downloadHtmlAsPdf = async (
       const rect = el.getBoundingClientRect();
 
       // Info: (20260418 - Tzuhan) Element's top relative to container
-      const currentRelativeTop = (el.getBoundingClientRect().top - element.getBoundingClientRect().top);
+      const currentRelativeTop =
+        el.getBoundingClientRect().top - element.getBoundingClientRect().top;
       const relativeBottom = currentRelativeTop + rect.height;
 
       const startPage = Math.floor(currentRelativeTop / maxDomHeightPerPage);
@@ -61,21 +62,22 @@ export const downloadHtmlAsPdf = async (
         // Info: (20260418 - Tzuhan) We need to push this element down so it starts exactly on the next page
         // Info: (20260418 - Tzuhan) We add a 2px buffer to ensure we completely clear the mathematical cut line
         const nextPageStartTop = (startPage + 1) * maxDomHeightPerPage;
-        const pushDownAmount = Math.ceil(nextPageStartTop - currentRelativeTop) + 2;
+        const pushDownAmount =
+          Math.ceil(nextPageStartTop - currentRelativeTop) + 2;
 
         // Info: (20260420 - Tzuhan) Insert a physical spacer div to push element without margin collapsing issues
-        const spacer = document.createElement('div');
+        const spacer = document.createElement("div");
         spacer.style.height = `${pushDownAmount}px`;
-        spacer.style.width = '100%';
-        spacer.style.backgroundColor = 'transparent';
-        spacer.classList.add('pdf-avoid-spacer');
+        spacer.style.width = "100%";
+        spacer.style.backgroundColor = "transparent";
+        spacer.classList.add("pdf-avoid-spacer");
         el.parentNode?.insertBefore(spacer, el);
         insertedSpacers.push(spacer);
       }
     }
 
     // Info: (20260418 - Tzuhan) Wait for DOM to re-layout with new margins
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 100));
 
     const dataUrl = await toPng(element, {
       quality: 1.0,
@@ -86,7 +88,7 @@ export const downloadHtmlAsPdf = async (
     });
 
     // Info: (20260420 - Tzuhan) Revert inserted spacers
-    insertedSpacers.forEach(spacer => spacer.remove());
+    insertedSpacers.forEach((spacer) => spacer.remove());
 
     const pdfDoc = await PDFDocument.create();
 

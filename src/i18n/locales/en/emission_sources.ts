@@ -35,6 +35,6 @@ export const emissionSources = {
       vendor: "Vendor",
       data: "Activity Data",
       emission: "Emissions (kgCO2e)",
-    }
-  }
+    },
+  },
 };

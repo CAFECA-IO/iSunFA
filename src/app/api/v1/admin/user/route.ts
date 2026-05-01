@@ -1,7 +1,7 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
-import { Role } from "@/generated/enums";
+import { Role } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 
@@ -19,7 +19,8 @@ export async function GET(req: Request) {
     const limit = parseInt(searchParams.get("limit") || "15", 10);
     const search = searchParams.get("search") || "";
     const sortBy = searchParams.get("sortBy") || "createdAt";
-    const sortOrder = (searchParams.get("sortOrder") as "asc" | "desc") || "desc";
+    const sortOrder =
+      (searchParams.get("sortOrder") as "asc" | "desc") || "desc";
 
     const result = await webAuthnRepo.findAllUsersForAdmin({
       page,
@@ -31,6 +32,10 @@ export async function GET(req: Request) {
 
     return jsonOk(result);
   } catch (error) {
-    return jsonFail({ code: "IS000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IS000099",
+      message: String((error as Error).message).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

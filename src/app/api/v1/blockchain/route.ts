@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
     const bodyText = await req.text();
     console.log("[DEBUG /api/v1/blockchain] Incoming body:", bodyText);
-    
+
     const response = await fetch(rpcUrl, {
       method: "POST",
       headers: {
@@ -23,14 +23,21 @@ export async function POST(req: NextRequest) {
     });
 
     const data = await response.json();
-    console.log("[DEBUG /api/v1/blockchain] Outgoing data:", JSON.stringify(data));
-    
+    console.log(
+      "[DEBUG /api/v1/blockchain] Outgoing data:",
+      JSON.stringify(data),
+    );
+
     // Info: (20260417) Wrapped in jsonOk per user request, frontend must unwrap this
     return jsonOk(data);
   } catch (error: Error | unknown) {
     console.error("[API] /v1/blockchain Error:", error);
-    return jsonFail({ code: "IS000099", message: String((error as Error).message || "Internal Server Error").slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IS000099",
+      message: String(
+        (error as Error).message || "Internal Server Error",
+      ).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }
-
-

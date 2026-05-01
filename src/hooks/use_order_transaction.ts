@@ -6,16 +6,14 @@ import {
   encodeWebAuthnSignature,
   hexToBase64Url,
 } from "@/lib/auth/crypto_utils";
-import {
-  prepareTransferUserOp,
-} from "@/lib/utils/user_op_builder";
+import { prepareTransferUserOp } from "@/lib/utils/user_op_builder";
 import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { request } from "@/lib/utils/request";
 import { IOrderParams } from "@/lib/analysis/pricing";
 import { type OrderType } from "@/constants/status";
 
 export interface IOrderPayload extends IOrderParams {
-  type: OrderType
+  type: OrderType;
 }
 
 export const useOrderTransaction = () => {
@@ -69,7 +67,7 @@ export const useOrderTransaction = () => {
         payload: { orderId: string; challenge: string };
       }>("/api/v1/user/order", {
         method: "POST",
-        body: payloadString
+        body: payloadString,
       });
 
       if (!orderRes?.payload) throw new Error("Failed to create order");
@@ -106,17 +104,16 @@ export const useOrderTransaction = () => {
 
       // Info: (20260417 - Luphia) 5. 提交至背景處理 API
       setWorkflowStatus("submitting_payment");
-      const submitRes = await request<{ payload: { txHash: string, orderId: string, reportId?: string } }>(
-        `/api/v1/user/order/${orderId}/blockchain_payment`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            userOp: { ...userOp, signature: encodedSignature },
-            signature: encodedSignature,
-            authentication: transferAuth
-          }),
-        }
-      );
+      const submitRes = await request<{
+        payload: { txHash: string; orderId: string; reportId?: string };
+      }>(`/api/v1/user/order/${orderId}/blockchain_payment`, {
+        method: "POST",
+        body: JSON.stringify({
+          userOp: { ...userOp, signature: encodedSignature },
+          signature: encodedSignature,
+          authentication: transferAuth,
+        }),
+      });
 
       if (!submitRes || !submitRes.payload) {
         throw new Error("Token transfer dispatch failed");
@@ -129,7 +126,7 @@ export const useOrderTransaction = () => {
       setWorkflowStatus("payment_success");
 
       // Info: (20260419 - Agent) Optimistic UI Update to hide alt-mempool fetch latency
-      if (user?.credits !== undefined && typeof user.credits === 'number') {
+      if (user?.credits !== undefined && typeof user.credits === "number") {
         updateLocalCredits(-calculatedCost);
       }
 
@@ -142,7 +139,9 @@ export const useOrderTransaction = () => {
 
       // Info: (20260209 - Tzuhan) 7. Refresh user balance from chain (may take seconds to propagate)
       // Info: (20260419 - Luphia) Call it in the background instead of awaiting so UI doesn't freeze
-      setTimeout(() => { refreshAuth(); }, 5000);
+      setTimeout(() => {
+        refreshAuth();
+      }, 5000);
       return true;
     } catch (error) {
       console.error("Analysis/Transaction failed:", error);

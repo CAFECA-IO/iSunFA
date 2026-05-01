@@ -7,7 +7,7 @@ import { accountBookRepo } from "@/repositories/account_book.repo";
 import { journalRepo } from "@/repositories/journal.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { Prisma } from "@/generated/browser";
+import { Prisma } from "@/generated/client";
 import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { VerifyStatus } from "@/constants/verify_status";
@@ -20,15 +20,13 @@ async function validateRequestAndGetContext(
   const authHeader = request.headers.get("Authorization");
   const sessionUser = await getIdentityFromDeWT(authHeader);
 
-  if (!sessionUser)
-    return { error: jsonFail(API_ERRORS.NF_USER) };
+  if (!sessionUser) return { error: jsonFail(API_ERRORS.NF_USER) };
 
   const user = await webAuthnRepo.findUserByAddress(sessionUser.address);
   if (!user) return { error: jsonFail(API_ERRORS.NF_USER) };
 
   const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
-  if (!accountBook)
-    return { error: jsonFail(API_ERRORS.NF_ACCOUNT_BOOK) };
+  if (!accountBook) return { error: jsonFail(API_ERRORS.NF_ACCOUNT_BOOK) };
 
   return { user, accountBook };
 }
@@ -55,7 +53,11 @@ export async function POST(
 
     if (!fileId) {
       console.error("Missing fileId");
-      return jsonFail({ code: "VA000099", message: "File is required", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "File is required",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     /**
@@ -167,10 +169,10 @@ export async function GET(
       fileId: j.fileId ?? "",
       file: j.file
         ? {
-          id: j.file.id,
-          hash: j.file.hash,
-          fileName: j.file.fileName ?? "",
-        }
+            id: j.file.id,
+            hash: j.file.hash,
+            fileName: j.file.fileName ?? "",
+          }
         : undefined,
       voucherId: j.voucherId,
       esgRecordId: j.esgRecordId,

@@ -98,8 +98,7 @@ export async function GET(
     const unit = validTimeUnits.includes(timeUnit) ? timeUnit : "30d";
 
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
-    if (!accountBook)
-      return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
+    if (!accountBook) return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
 
     const teamMember = await teamRepo.getTeamMember(
       sessionUser.id,
@@ -442,6 +441,10 @@ export async function GET(
     });
   } catch (error) {
     console.error("API Error:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to generate dashboar...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to generate dashboar...",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

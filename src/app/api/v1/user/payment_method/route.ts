@@ -102,7 +102,13 @@ export async function POST(request: NextRequest) {
         redirectUrl: `${SUBSCRIBE_URL}/checkout/subscription/create/${paymentId}`,
       });
     } else {
-      return jsonFail({ code: "IN000099", message: "Failed to get OEN checkout ...", status: ApiCode.INTERNAL_SERVER_ERROR }, oenData,
+      return jsonFail(
+        {
+          code: "IN000099",
+          message: "Failed to get OEN checkout ...",
+          status: ApiCode.INTERNAL_SERVER_ERROR,
+        },
+        oenData,
       );
     }
   } catch {

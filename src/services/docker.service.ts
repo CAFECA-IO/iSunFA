@@ -15,7 +15,9 @@ export class DockerService {
 
   public async getRunningContainers() {
     return await runCommand(
-      this.wrapCmd("docker ps --format '{{.ID}}|{{.Image}}|{{.Names}}|{{.Status}}'")
+      this.wrapCmd(
+        "docker ps --format '{{.ID}}|{{.Image}}|{{.Names}}|{{.Status}}'",
+      ),
     );
   }
 
@@ -44,7 +46,9 @@ export class DockerService {
   public async execContainer(containerName: string, command: string) {
     if (process.platform === "darwin") {
       const escapedCmd = command.replace(/"/g, '\\"');
-      return await runCommand(`zsh -ic "docker exec ${containerName} ${escapedCmd}"`);
+      return await runCommand(
+        `zsh -ic "docker exec ${containerName} ${escapedCmd}"`,
+      );
     } else {
       return await runCommand(`docker exec ${containerName} ${command}`);
     }
@@ -52,9 +56,15 @@ export class DockerService {
 
   public async composeRestart(cwd: string, serviceName?: string) {
     const target = serviceName ? ` ${serviceName}` : "";
-    let result = await runCommand(this.wrapCmd(`docker compose restart${target}`), cwd);
+    let result = await runCommand(
+      this.wrapCmd(`docker compose restart${target}`),
+      cwd,
+    );
     if (!result.success && result.output.includes("not a docker command")) {
-      result = await runCommand(this.wrapCmd(`docker-compose restart${target}`), cwd);
+      result = await runCommand(
+        this.wrapCmd(`docker-compose restart${target}`),
+        cwd,
+      );
     }
     return result;
   }

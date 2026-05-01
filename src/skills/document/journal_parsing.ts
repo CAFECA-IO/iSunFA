@@ -26,10 +26,10 @@ export class JournalParsingSkill implements ITaskSkill {
     chatService: ChatService,
   ): Promise<string> {
     const { images, accountBook } = await prepareDocumentContext(task);
-    
+
     // Info: (20260429 - Luphia) Moved from ChatService to Skill
     const promptText = getJournalPrompt(accountBook);
-    
+
     try {
       const text = await chatService.generateRawWithImages(promptText, images);
       if (text.includes("上傳內容無法解析狀態")) {

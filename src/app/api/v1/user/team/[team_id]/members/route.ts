@@ -25,7 +25,11 @@ export async function GET(
     // Info: (20260325 - Tzuhan) Verify user is in this team
     const member = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!member) {
-      return jsonFail({ code: "FO000099", message: "Permission denied. You are ...", status: ApiCode.FORBIDDEN },  );
+      return jsonFail({
+        code: "FO000099",
+        message: "Permission denied. You are ...",
+        status: ApiCode.FORBIDDEN,
+      });
     }
 
     const members = await teamRepo.listTeamMember(teamId);
@@ -53,7 +57,11 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Check permission (OWNER or ADMIN)
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
-      return jsonFail({ code: "FO000099", message: "Permission denied. Only OWN...", status: ApiCode.FORBIDDEN },  );
+      return jsonFail({
+        code: "FO000099",
+        message: "Permission denied. Only OWN...",
+        status: ApiCode.FORBIDDEN,
+      });
     }
 
     const body = await request.json();
@@ -70,7 +78,11 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Fetch operator's current challenge
     const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
-      return jsonFail({ code: "UN000099", message: "Missing WebAuthn challenge....", status: ApiCode.UNAUTHORIZED },  );
+      return jsonFail({
+        code: "UN000099",
+        message: "Missing WebAuthn challenge....",
+        status: ApiCode.UNAUTHORIZED,
+      });
     }
 
     // Info: (20260325 - Tzuhan) Verify FIDO2 signature
@@ -97,7 +109,11 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Check if user is already a member
     const existingMember = await teamRepo.getTeamMember(targetUser.id, teamId);
     if (existingMember) {
-      return jsonFail({ code: "VA000099", message: "User is already a member of...", status: ApiCode.VALIDATION_ERROR },  );
+      return jsonFail({
+        code: "VA000099",
+        message: "User is already a member of...",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     const newMember = await teamRepo.createTeamMember({

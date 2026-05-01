@@ -1,7 +1,7 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { Role } from "@/generated/enums";
+import { Role } from "@/generated/client";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { getMemberInfo } from "@/services/member.service";
@@ -31,11 +31,14 @@ export async function GET(
       return jsonFail(API_ERRORS.IS_DB_FAILED);
     }
 
-    const { registrationTime, totalCheckInRewards, totalPurchasedPoints } = info.data;
-    
+    const { registrationTime, totalCheckInRewards, totalPurchasedPoints } =
+      info.data;
+
     // Info: (20260417 - Luphia) Calculate EXP dynamically from MembershipSystem smart contract rewards & top-ups
-    const registrationExp = registrationTime > 0 ? REWARD_AMOUNTS.REGISTRATION_REWARD : 0;
-    const totalExp = registrationExp + totalCheckInRewards + totalPurchasedPoints;
+    const registrationExp =
+      registrationTime > 0 ? REWARD_AMOUNTS.REGISTRATION_REWARD : 0;
+    const totalExp =
+      registrationExp + totalCheckInRewards + totalPurchasedPoints;
 
     let mode = "Bronze";
     let modeZh = "銅卡";
@@ -53,6 +56,10 @@ export async function GET(
       modeZh: modeZh,
     });
   } catch (error) {
-    return jsonFail({ code: "IS000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IS000099",
+      message: String((error as Error).message).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }
