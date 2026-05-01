@@ -71,7 +71,11 @@ export async function GET(
     return jsonOk(formattedCoefficient);
   } catch (error) {
     console.error("Error fetching coefficient:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to fetch coefficient", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to fetch coefficient",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }
 
@@ -112,7 +116,11 @@ export async function PUT(
     // Info: (20260414 - Julian) 驗證 coefficient 參數
     if (!input || !input.name) {
       console.error("Missing coefficient or coefficient name");
-      return jsonFail({ code: "VA000099", message: "Coefficient is required", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "Coefficient is required",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     // Info: (20260414 - Julian) 更新係數
@@ -134,7 +142,11 @@ export async function PUT(
     return jsonOk({ updatedCoefficientId: updatedCoefficient.id });
   } catch (error) {
     console.error("Error updating coefficient:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to update coefficient", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to update coefficient",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }
 
@@ -173,7 +185,8 @@ export async function DELETE(
       return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
-    const deletedCoefficient = await esgRepo.deleteEsgCoefficient(coefficientId);
+    const deletedCoefficient =
+      await esgRepo.deleteEsgCoefficient(coefficientId);
 
     if (!deletedCoefficient) {
       console.error("Coefficient not found");

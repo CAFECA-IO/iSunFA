@@ -10,15 +10,18 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 
 // Info: (20260416 - Luphia) 設定與共用工具 (Configuration & Utils)
 
-const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const configuredOrigin =
+  process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 // Info: (20260416 - Luphia) 確保 Origin 唯一性並包含 localhost 開發環境與正式網址
-const allowedOrigins = Array.from(new Set([
-  configuredOrigin,
-  "http://localhost:3000",
-  "https://isunfa.localhost",
-  "https://isunfa.tw",
-  "https://isunfa.com"
-]));
+const allowedOrigins = Array.from(
+  new Set([
+    configuredOrigin,
+    "http://localhost:3000",
+    "https://isunfa.localhost",
+    "https://isunfa.tw",
+    "https://isunfa.com",
+  ]),
+);
 const isAllowedOrigin = (origin: string) => allowedOrigins.includes(origin);
 
 // Info: (20260416 - Luphia) WebAuthn 核心驗證 (Core Verification)
@@ -64,7 +67,11 @@ export async function verifyAuthentication(
     // Info: (20260416 - Luphia) 修正非完美 32-byte R/S ASN.1 DER 簽章的硬體 Bug (發生率 ~0.8%)
     if (errorMessage.includes("Invalid signature")) {
       try {
-        return verifySignatureNativeFallback(authentication, credential, expectedChallenge);
+        return verifySignatureNativeFallback(
+          authentication,
+          credential,
+          expectedChallenge,
+        );
       } catch (fallbackError) {
         console.error("Native fallback verification failed:", fallbackError);
         throw new AppError(API_ERRORS.AUTH_INVALID_TOKEN);
@@ -88,16 +95,23 @@ function verifySignatureNativeFallback(
   credential: CredentialInfo,
   expectedChallenge: string,
 ) {
-  console.warn("Library verifyAuthentication failed signature. Falling back to native crypto DER verification.");
+  console.warn(
+    "Library verifyAuthentication failed signature. Falling back to native crypto DER verification.",
+  );
 
-  const { clientDataJSON, authenticatorData, signature } = authentication.response;
+  const { clientDataJSON, authenticatorData, signature } =
+    authentication.response;
 
   // Info: (20260416 - Luphia) 驗證 Challenge 與 Origin
-  const clientDataRaw = Buffer.from(clientDataJSON, "base64url").toString("utf-8");
+  const clientDataRaw = Buffer.from(clientDataJSON, "base64url").toString(
+    "utf-8",
+  );
   const clientDataParsed = JSON.parse(clientDataRaw);
 
   if (clientDataParsed.challenge !== expectedChallenge) {
-    throw new Error(`Unexpected ClientData challenge: ${clientDataParsed.challenge}`);
+    throw new Error(
+      `Unexpected ClientData challenge: ${clientDataParsed.challenge}`,
+    );
   }
   if (!isAllowedOrigin(clientDataParsed.origin)) {
     throw new Error(`Unexpected ClientData origin: ${clientDataParsed.origin}`);
@@ -115,7 +129,9 @@ function verifySignatureNativeFallback(
   ]);
 
   // Info: (20260416 - Luphia) 準備 PEM 格式的 Public Key
-  const pubKeyBase64 = Buffer.from(credential.publicKey, "base64url").toString("base64");
+  const pubKeyBase64 = Buffer.from(credential.publicKey, "base64url").toString(
+    "base64",
+  );
   const pubKeyPEM = `-----BEGIN PUBLIC KEY-----\n${pubKeyBase64.match(/.{1,64}/g)?.join("\n")}\n-----END PUBLIC KEY-----`;
 
   // Info: (20260416 - Luphia) 執行原生驗證

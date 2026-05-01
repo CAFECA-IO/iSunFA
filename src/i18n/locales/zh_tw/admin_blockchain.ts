@@ -14,7 +14,7 @@ export const adminBlockchain = {
     mint_icp: "鑄造信用點數 (ICP)",
     mint_desc:
       "鑄造 ICP 需要根據即時抵押率提供等值的 ISC。新鑄造的 ICP 將會注入會員系統儲備池。",
-        mint_est_days: "預估可支撐天數：",
+    mint_est_days: "預估可支撐天數：",
     days: "天",
     amount_placeholder: "輸入欲鑄造的 ICP 數量...",
     amount_aria: "輸入欲鑄造的 ICP 數量",

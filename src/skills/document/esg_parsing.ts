@@ -36,11 +36,8 @@ export class EsgParsingSkill implements ITaskSkill {
     // Info: (20260416 - Julian) 讀取標準係數與該帳本的專屬係數
     const coefficients = await esgRepo.getEsgCoefficients({
       where: {
-        OR: [
-          { accountBookId: accountBook?.id },
-          { accountBookId: null }
-        ]
-      }
+        OR: [{ accountBookId: accountBook?.id }, { accountBookId: null }],
+      },
     });
 
     const formattedCoefficients = coefficients.map((c) => ({
@@ -49,7 +46,7 @@ export class EsgParsingSkill implements ITaskSkill {
       updatedAt: c.updatedAt.getTime() / 1000,
       deletedAt: c.deletedAt ? c.deletedAt.getTime() / 1000 : null,
       emissionFactor: Number(c.emissionFactor),
-    }))
+    }));
 
     let promptText = getEsgPrompt(accountBook, formattedCoefficients);
 
@@ -63,10 +60,16 @@ export class EsgParsingSkill implements ITaskSkill {
       if (jsonMatch) {
         return JSON.stringify({ data: JSON.parse(jsonMatch[0]) });
       }
-      return JSON.stringify({ data: null, error: "無法從 AI 回應中解析出有效的 JSON 格式" });
+      return JSON.stringify({
+        data: null,
+        error: "無法從 AI 回應中解析出有效的 JSON 格式",
+      });
     } catch (error) {
       console.error("[EsgParsingSkill] Error:", error);
-      return JSON.stringify({ data: null, error: "AI 解析碳盤查失敗，請稍後再試" });
+      return JSON.stringify({
+        data: null,
+        error: "AI 解析碳盤查失敗，請稍後再試",
+      });
     }
   }
 }

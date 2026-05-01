@@ -7,14 +7,22 @@ import {
 export function generateAiConsultingMission(
   params: IMissionParams,
 ): IMissionDefinition | null {
-  const data = (params.data as { question?: string; files?: { base64: string; mimeType: string }[] }) || {};
+  const data =
+    (params.data as {
+      question?: string;
+      files?: { base64: string; mimeType: string }[];
+    }) || {};
   const question = data.question;
   const files = data.files || [];
 
   if (!question) {
-    console.warn("[AIGenerator] Missing question for AI Talk, using default fallback.");
+    console.warn(
+      "[AIGenerator] Missing question for AI Talk, using default fallback.",
+    );
   }
-  const actualQuestion = question || "I would like to have a general financial consultation. Please analyze my current status based on any provided context.";
+  const actualQuestion =
+    question ||
+    "I would like to have a general financial consultation. Please analyze my current status based on any provided context.";
 
   const tasks: ITaskDefinition[] = [
     {

@@ -182,12 +182,16 @@ export class PaymentRepository {
     });
   }
 
-  async createOrder(data: Prisma.OrderUncheckedCreateInput & { unit: CurrencyUnit }) {
+  async createOrder(
+    data: Prisma.OrderUncheckedCreateInput & { unit: CurrencyUnit },
+  ) {
     if (!data.unit) {
       throw new Error("Order unit is explicitly required");
     }
     if (!Object.values(CURRENCY_UNIT).includes(data.unit)) {
-      throw new Error(`Invalid order unit. Must be one of: ${Object.values(CURRENCY_UNIT).join(", ")}`);
+      throw new Error(
+        `Invalid order unit. Must be one of: ${Object.values(CURRENCY_UNIT).join(", ")}`,
+      );
     }
     return prisma.order.create({ data });
   }
@@ -217,10 +221,15 @@ export class PaymentRepository {
     transactionHash?: string,
   ) {
     await prisma.$transaction(async (tx) => {
-      const existingOrder = await tx.order.findUnique({ where: { id: orderId } });
+      const existingOrder = await tx.order.findUnique({
+        where: { id: orderId },
+      });
       if (!existingOrder) throw new Error("Order not found");
 
-      const finalStatus = existingOrder.type === ORDER_TYPE.ANALYSIS ? ORDER_STATUS.PAID : ORDER_STATUS.COMPLETED;
+      const finalStatus =
+        existingOrder.type === ORDER_TYPE.ANALYSIS
+          ? ORDER_STATUS.PAID
+          : ORDER_STATUS.COMPLETED;
 
       const order = await tx.order.update({
         where: { id: orderId },
@@ -376,7 +385,11 @@ export class PaymentRepository {
     });
   }
 
-  async updateOrderStatus(orderId: string, status: string, additionalData?: Prisma.OrderUpdateInput) {
+  async updateOrderStatus(
+    orderId: string,
+    status: string,
+    additionalData?: Prisma.OrderUpdateInput,
+  ) {
     return prisma.order.update({
       where: { id: orderId },
       data: { status, ...additionalData },
@@ -504,7 +517,10 @@ export class PaymentRepository {
   }
 
   // Info: (20260416 - Agent) Admin Billing global metric methods
-  private buildDateWhereClause(startDate?: Date, endDate?: Date): Prisma.OrderWhereInput {
+  private buildDateWhereClause(
+    startDate?: Date,
+    endDate?: Date,
+  ): Prisma.OrderWhereInput {
     const whereClause: Prisma.OrderWhereInput = {};
     if (startDate || endDate) {
       whereClause.createdAt = {};
@@ -514,7 +530,10 @@ export class PaymentRepository {
     return whereClause;
   }
 
-  async getGlobalRevenueTotal(startDate?: Date, endDate?: Date): Promise<number> {
+  async getGlobalRevenueTotal(
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<number> {
     const where = this.buildDateWhereClause(startDate, endDate);
     where.type = ORDER_TYPE.OEN_PAYMENT;
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
@@ -526,7 +545,10 @@ export class PaymentRepository {
     return agg._sum.amount || 0;
   }
 
-  async getGlobalTransactingUsersCount(startDate?: Date, endDate?: Date): Promise<number> {
+  async getGlobalTransactingUsersCount(
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<number> {
     const where = this.buildDateWhereClause(startDate, endDate);
     where.type = ORDER_TYPE.OEN_PAYMENT;
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
@@ -538,7 +560,10 @@ export class PaymentRepository {
     return agg.length;
   }
 
-  async getGlobalPointsPurchasedTotal(startDate?: Date, endDate?: Date): Promise<number> {
+  async getGlobalPointsPurchasedTotal(
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<number> {
     const where = this.buildDateWhereClause(startDate, endDate);
     where.type = ORDER_TYPE.OEN_PAYMENT;
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
@@ -558,9 +583,20 @@ export class PaymentRepository {
     return total;
   }
 
-  async getGlobalPointsConsumedTotal(startDate?: Date, endDate?: Date): Promise<number> {
+  async getGlobalPointsConsumedTotal(
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<number> {
     const where = this.buildDateWhereClause(startDate, endDate);
-    where.type = { notIn: [ORDER_TYPE.OEN_PAYMENT, ORDER_TYPE.OEN_BINDING, ORDER_TYPE.CHECK_IN_REWARD, ORDER_TYPE.REGISTRATION_REWARD, ORDER_TYPE.ADMIN_ISSUED] };
+    where.type = {
+      notIn: [
+        ORDER_TYPE.OEN_PAYMENT,
+        ORDER_TYPE.OEN_BINDING,
+        ORDER_TYPE.CHECK_IN_REWARD,
+        ORDER_TYPE.REGISTRATION_REWARD,
+        ORDER_TYPE.ADMIN_ISSUED,
+      ],
+    };
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
     where.amount = { gt: 0 };
 
@@ -578,7 +614,12 @@ export class PaymentRepository {
     return prisma.order.count({ where });
   }
 
-  async getGlobalOrdersPaginated(startDate?: Date, endDate?: Date, skip: number = 0, take: number = 20) {
+  async getGlobalOrdersPaginated(
+    startDate?: Date,
+    endDate?: Date,
+    skip: number = 0,
+    take: number = 20,
+  ) {
     const where = this.buildDateWhereClause(startDate, endDate);
     where.type = ORDER_TYPE.OEN_PAYMENT;
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
@@ -591,14 +632,22 @@ export class PaymentRepository {
     });
   }
 
-  async countGlobalPointUsages(startDate?: Date, endDate?: Date): Promise<number> {
+  async countGlobalPointUsages(
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<number> {
     const where = this.buildDateWhereClause(startDate, endDate);
     where.type = { notIn: [ORDER_TYPE.OEN_PAYMENT, ORDER_TYPE.OEN_BINDING] };
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
     return prisma.order.count({ where });
   }
 
-  async getGlobalPointUsagesPaginated(startDate?: Date, endDate?: Date, skip: number = 0, take: number = 20) {
+  async getGlobalPointUsagesPaginated(
+    startDate?: Date,
+    endDate?: Date,
+    skip: number = 0,
+    take: number = 20,
+  ) {
     const where = this.buildDateWhereClause(startDate, endDate);
     where.type = { notIn: [ORDER_TYPE.OEN_PAYMENT, ORDER_TYPE.OEN_BINDING] };
     where.status = { in: [ORDER_STATUS.PAID, ORDER_STATUS.COMPLETED] };
@@ -610,7 +659,10 @@ export class PaymentRepository {
       include: { user: true },
     });
   }
-  async countGlobalPaymentTransactions(startDate?: Date, endDate?: Date): Promise<number> {
+  async countGlobalPaymentTransactions(
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<number> {
     const where: Prisma.PaymentTransactionWhereInput = {};
     if (startDate || endDate) {
       where.createdAt = {};
@@ -620,7 +672,12 @@ export class PaymentRepository {
     return prisma.paymentTransaction.count({ where });
   }
 
-  async getGlobalPaymentTransactionsPaginated(startDate?: Date, endDate?: Date, skip: number = 0, take: number = 20) {
+  async getGlobalPaymentTransactionsPaginated(
+    startDate?: Date,
+    endDate?: Date,
+    skip: number = 0,
+    take: number = 20,
+  ) {
     const where: Prisma.PaymentTransactionWhereInput = {};
     if (startDate || endDate) {
       where.createdAt = {};

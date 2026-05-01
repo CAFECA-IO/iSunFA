@@ -11,11 +11,15 @@ import { getPendingOrder, markOrderPaying } from "@/services/order.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { publicClient } from "@/lib/viem_public";
 import { ORDER_TYPE } from "@/constants/status";
-import { ANALYSIS_CATEGORY, type AnalysisCategory, type AnalysisPeriod } from "@/constants/analysis";
+import {
+  ANALYSIS_CATEGORY,
+  type AnalysisCategory,
+  type AnalysisPeriod,
+} from "@/constants/analysis";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ order_id: string }> }
+  { params }: { params: Promise<{ order_id: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -42,12 +46,13 @@ export async function POST(
     // Info: (20260417 - Luphia) Calculate real userOpHash from the submitted userOp matching what Bundler will do
     const { ABIS } = await import("@/config/contracts");
     const { hexToBase64Url } = await import("@/lib/auth/crypto_utils");
-    const { encodeAbiParameters, parseAbiParameters, keccak256 } = await import("viem");
+    const { encodeAbiParameters, parseAbiParameters, keccak256 } =
+      await import("viem");
     const { isuncoin } = await import("@/lib/viem_public");
 
     const packed = encodeAbiParameters(
       parseAbiParameters(
-        "address, uint256, bytes32, bytes32, uint256, uint256, uint256, uint256, uint256, bytes32"
+        "address, uint256, bytes32, bytes32, uint256, uint256, uint256, uint256, uint256, bytes32",
       ),
       [
         userOp.sender as `0x${string}`,
@@ -60,7 +65,7 @@ export async function POST(
         BigInt(userOp.maxFeePerGas),
         BigInt(userOp.maxPriorityFeePerGas),
         keccak256(userOp.paymasterAndData as `0x${string}`),
-      ]
+      ],
     );
 
     const hash = keccak256(packed);
@@ -69,10 +74,14 @@ export async function POST(
         hash,
         CONTRACT_ADDRESSES.ENTRY_POINT,
         BigInt(isuncoin.id),
-      ])
+      ]),
     );
 
-    await webAuthnService.verifySignature(user.address, authPayload, hexToBase64Url(trueUserOpHash as string));
+    await webAuthnService.verifySignature(
+      user.address,
+      authPayload,
+      hexToBase64Url(trueUserOpHash as string),
+    );
 
     // Info: (20260419 - Luphia) Check if pending balance is sufficient before sending
     const { formatUnits } = await import("viem");
@@ -90,11 +99,18 @@ export async function POST(
     }
 
     // Info: (20260417 - Luphia) 3. Dispatch Background Transaction without awaiting receipt
-    const sendResult = await bundlerService.sendUserOpAsync(userOp, CONTRACT_ADDRESSES.ENTRY_POINT);
+    const sendResult = await bundlerService.sendUserOpAsync(
+      userOp,
+      CONTRACT_ADDRESSES.ENTRY_POINT,
+    );
     const txHash = sendResult.transactionHash;
 
     // Info: (20260417 - Luphia) 4. Update order to mark it as verifying with txHash
-    await markOrderPaying(orderId, JSON.stringify({ verifiedVia: "async_tx", txHash }), txHash);
+    await markOrderPaying(
+      orderId,
+      JSON.stringify({ verifiedVia: "async_tx", txHash }),
+      txHash,
+    );
 
     /**
      * Info: (20260417 - Luphia) 5. Generate Analysis with PAYING status FIRST
@@ -104,7 +120,10 @@ export async function POST(
     const innerData = (orderData.data || orderData) as Record<string, unknown>;
     const category = innerData.category as string;
 
-    let analysisRes: { success: boolean; data?: Record<string, unknown> | unknown } = { success: true };
+    let analysisRes: {
+      success: boolean;
+      data?: Record<string, unknown> | unknown;
+    } = { success: true };
     let resData: { reportId?: string } = {};
 
     // Info: (20260418 - Luphia) Automatically generate mission for ALL categories including ai_consulting, but SKIP journal_upload since it generates missions per-file manually.
@@ -123,10 +142,13 @@ export async function POST(
           periodType: innerData.periodType as AnalysisPeriod,
           periodValue: innerData.periodValue as string,
           year: innerData.year as number,
-        }
+        },
       };
 
-      analysisRes = await analysisService.generateAnalysis(user.id, generateParams);
+      analysisRes = await analysisService.generateAnalysis(
+        user.id,
+        generateParams,
+      );
       resData = (analysisRes.data || {}) as { reportId?: string };
     } else if (category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
       const files = (innerData.files as TPayloadFile[]) || [];
@@ -151,19 +173,26 @@ export async function POST(
     }
 
     // Info: (20260418 - Luphia) 建立上傳檔案並與討論串關聯 (Restore AI Talk logic)
-    if (category === ANALYSIS_CATEGORY.AI_CONSULTING && resData.reportId && orderData.data) {
+    if (
+      category === ANALYSIS_CATEGORY.AI_CONSULTING &&
+      resData.reportId &&
+      orderData.data
+    ) {
       const payloadData = orderData.data as { files?: TPayloadFile[] };
       if (payloadData.files && payloadData.files.length > 0) {
         await talkRepo.createFiles(
           payloadData.files.map((file: TPayloadFile) => {
-            const isString = typeof file === 'string';
+            const isString = typeof file === "string";
             const fileHash = isString ? file : file.hash;
             return {
               hash: fileHash,
-              fileName: isString ? `${fileHash.substring(0, 8)}.png` : (file as { fileName?: string }).fileName || `${fileHash.substring(0, 8)}.png`,
+              fileName: isString
+                ? `${fileHash.substring(0, 8)}.png`
+                : (file as { fileName?: string }).fileName ||
+                  `${fileHash.substring(0, 8)}.png`,
               analysisId: resData.reportId!,
             };
-          })
+          }),
         );
       }
     }
@@ -175,11 +204,14 @@ export async function POST(
     return jsonOk({
       txHash,
       orderId: orderId,
-      reportId: resData.reportId
+      reportId: resData.reportId,
     });
-
   } catch (error) {
     console.error("[API] POST blockchain_payment Error:", error);
-    return jsonFail({ code: "IS000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IS000099",
+      message: String((error as Error).message).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

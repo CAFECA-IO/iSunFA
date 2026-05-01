@@ -11,31 +11,36 @@ export class ChatLocalService {
     this.ollamaUrl = process.env.OLLAMA_URL || "http://127.0.0.1:11434";
   }
 
-  private async ollamaGenerate(prompt: string, images?: { data: string; mimeType: string }[]): Promise<string> {
+  private async ollamaGenerate(
+    prompt: string,
+    images?: { data: string; mimeType: string }[],
+  ): Promise<string> {
     const payload: Record<string, unknown> = {
       model: this.modelName,
       prompt: prompt,
       stream: false,
       options: {
         temperature: 0.2,
-      }
+      },
     };
 
     if (images && images.length > 0) {
-      payload.images = images.map(img => img.data);
+      payload.images = images.map((img) => img.data);
     }
 
     try {
       const response = await fetch(`${this.ollamaUrl}/api/generate`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Ollama API error: ${response.status} ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
@@ -53,10 +58,19 @@ export class ChatLocalService {
     mimeType?: string,
   ): Promise<string> {
     const skill = new DirectChatSkill();
-    return skill.execute(message, tags, file, mimeType, this as unknown as ChatService);
+    return skill.execute(
+      message,
+      tags,
+      file,
+      mimeType,
+      this as unknown as ChatService,
+    );
   }
 
-  async generateRawWithImages(prompt: string, images?: { data: string; mimeType: string }[]): Promise<string> {
+  async generateRawWithImages(
+    prompt: string,
+    images?: { data: string; mimeType: string }[],
+  ): Promise<string> {
     return this.ollamaGenerate(prompt, images);
   }
 

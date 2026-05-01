@@ -31,9 +31,9 @@ export const authModal = {
     "이 패스키와 연결된 계정을 찾을 수 없습니다. 이 장치를 사용하여 새 계정을 생성하시겠습니까?",
   unregistered_confirm_yes: "네, 계정 생성",
   unregistered_confirm_no: "취소",
+  user_canceled: "사용자가 로그인을 취소했습니다",
 
   deploying: "Deploying...",
   success: "Success",
   failed: "Failed",
-
 };

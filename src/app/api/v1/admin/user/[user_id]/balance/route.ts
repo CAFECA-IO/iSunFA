@@ -41,6 +41,10 @@ export async function GET(
 
     return jsonOk(Number(formatUnits(balance, 18)));
   } catch (error) {
-    return jsonFail({ code: "IS000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IS000099",
+      message: String((error as Error).message).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

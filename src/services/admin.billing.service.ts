@@ -6,28 +6,44 @@ export class AdminBillingService {
     endDateStr?: string | null,
     tab: "orders" | "points" | "credit_cards" = "orders",
     page: number = 1,
-    limit: number = 20
+    limit: number = 20,
   ) {
     const startDate = startDateStr ? new Date(startDateStr) : undefined;
     const endDate = endDateStr ? new Date(endDateStr) : undefined;
 
     // Info: (20260416 - Luphia) 1. Calculate Metrics globally (for the selected date range)
-    const rewardTypes = ["CHECKIN_REWARD", "REGISTRATION_REWARD", "ADMIN_ISSUED"];
+    const rewardTypes = [
+      "CHECKIN_REWARD",
+      "REGISTRATION_REWARD",
+      "ADMIN_ISSUED",
+    ];
 
     // Info: (20260416 - Luphia) Aggregate using Repository
-    const totalRevenue = await paymentRepo.getGlobalRevenueTotal(startDate, endDate);
-    const totalTransactingUsers = await paymentRepo.getGlobalTransactingUsersCount(startDate, endDate);
-    const arpu = totalTransactingUsers > 0 ? Math.round(totalRevenue / totalTransactingUsers) : 0;
+    const totalRevenue = await paymentRepo.getGlobalRevenueTotal(
+      startDate,
+      endDate,
+    );
+    const totalTransactingUsers =
+      await paymentRepo.getGlobalTransactingUsersCount(startDate, endDate);
+    const arpu =
+      totalTransactingUsers > 0
+        ? Math.round(totalRevenue / totalTransactingUsers)
+        : 0;
 
     // Info: (20260416 - Luphia) We need total points purchased to calculate burn ratio
-    const totalPointsPurchased = await paymentRepo.getGlobalPointsPurchasedTotal(startDate, endDate);
+    const totalPointsPurchased =
+      await paymentRepo.getGlobalPointsPurchasedTotal(startDate, endDate);
 
     // Info: (20260416 - Luphia) Total Consumption
-    const totalPointsConsumed = await paymentRepo.getGlobalPointsConsumedTotal(startDate, endDate);
+    const totalPointsConsumed = await paymentRepo.getGlobalPointsConsumedTotal(
+      startDate,
+      endDate,
+    );
 
-    const burnToBuyRatio = totalPointsPurchased > 0
-      ? Number((totalPointsConsumed / totalPointsPurchased).toFixed(2))
-      : 0;
+    const burnToBuyRatio =
+      totalPointsPurchased > 0
+        ? Number((totalPointsConsumed / totalPointsPurchased).toFixed(2))
+        : 0;
 
     // Info: (20260416 - Luphia) 2. Paginate Data for the requested Tab
     const offset = (page - 1) * limit;
@@ -37,7 +53,12 @@ export class AdminBillingService {
 
     if (tab === "orders") {
       totalElements = await paymentRepo.countGlobalOrders(startDate, endDate);
-      const orders = await paymentRepo.getGlobalOrdersPaginated(startDate, endDate, offset, limit);
+      const orders = await paymentRepo.getGlobalOrdersPaginated(
+        startDate,
+        endDate,
+        offset,
+        limit,
+      );
 
       interface IExtendedOrderData {
         checkoutResponse?: {
@@ -51,7 +72,7 @@ export class AdminBillingService {
         billingAddress?: string;
       }
 
-      paginatedData = orders.map(order => ({
+      paginatedData = orders.map((order) => ({
         id: order.id,
         createdAt: order.createdAt,
         type: order.type,
@@ -62,16 +83,28 @@ export class AdminBillingService {
           name: order.user?.name,
           address: order.user?.address,
         },
-        cardInfo: (order.data as IExtendedOrderData)?.checkoutResponse?.card_info || null,
-        buyerName: (order.data as IExtendedOrderData)?.buyerName || order.user?.name,
+        cardInfo:
+          (order.data as IExtendedOrderData)?.checkoutResponse?.card_info ||
+          null,
+        buyerName:
+          (order.data as IExtendedOrderData)?.buyerName || order.user?.name,
         buyerTaxId: (order.data as IExtendedOrderData)?.taxId || null,
-        buyerAddress: (order.data as IExtendedOrderData)?.billingAddress || null,
+        buyerAddress:
+          (order.data as IExtendedOrderData)?.billingAddress || null,
       }));
     } else if (tab === "points") {
-      totalElements = await paymentRepo.countGlobalPointUsages(startDate, endDate);
-      const orders = await paymentRepo.getGlobalPointUsagesPaginated(startDate, endDate, offset, limit);
+      totalElements = await paymentRepo.countGlobalPointUsages(
+        startDate,
+        endDate,
+      );
+      const orders = await paymentRepo.getGlobalPointUsagesPaginated(
+        startDate,
+        endDate,
+        offset,
+        limit,
+      );
 
-      paginatedData = orders.map(order => {
+      paginatedData = orders.map((order) => {
         const sourceType = order.type;
         const amountChange = order.amount;
         let sourceKey = "";
@@ -79,9 +112,12 @@ export class AdminBillingService {
 
         if (rewardTypes.includes(order.type)) {
           isPositive = true;
-          if (order.type === "CHECKIN_REWARD") sourceKey = "billing.point_history.source_checkin";
-          else if (order.type === "REGISTRATION_REWARD") sourceKey = "billing.point_history.source_registration";
-          else if (order.type === "ADMIN_ISSUED") sourceKey = "billing.point_history.source_admin_issued";
+          if (order.type === "CHECKIN_REWARD")
+            sourceKey = "billing.point_history.source_checkin";
+          else if (order.type === "REGISTRATION_REWARD")
+            sourceKey = "billing.point_history.source_registration";
+          else if (order.type === "ADMIN_ISSUED")
+            sourceKey = "billing.point_history.source_admin_issued";
         } else {
           // Info: (20260416 - Luphia) This is a consumption
           isPositive = false;
@@ -99,14 +135,22 @@ export class AdminBillingService {
             id: order.user?.id,
             name: order.user?.name,
             address: order.user?.address,
-          }
+          },
         };
       });
     } else if (tab === "credit_cards") {
-      totalElements = await paymentRepo.countGlobalPaymentTransactions(startDate, endDate);
-      const txs = await paymentRepo.getGlobalPaymentTransactionsPaginated(startDate, endDate, offset, limit);
+      totalElements = await paymentRepo.countGlobalPaymentTransactions(
+        startDate,
+        endDate,
+      );
+      const txs = await paymentRepo.getGlobalPaymentTransactionsPaginated(
+        startDate,
+        endDate,
+        offset,
+        limit,
+      );
 
-      paginatedData = txs.map(tx => {
+      paginatedData = txs.map((tx) => {
         let purpose = "未知用途";
         if (tx.order?.type === "OEN_BINDING") {
           purpose = "綁定信用卡";
@@ -116,7 +160,10 @@ export class AdminBillingService {
 
         let cardInfo = null;
         if (tx.rawData) {
-          const raw = tx.rawData as { card_info?: unknown; data?: { card_info?: unknown } };
+          const raw = tx.rawData as {
+            card_info?: unknown;
+            data?: { card_info?: unknown };
+          };
           if (raw.card_info) {
             cardInfo = raw.card_info;
           } else if (raw.data && raw.data.card_info) {
@@ -137,7 +184,7 @@ export class AdminBillingService {
             name: tx.user?.name,
             address: tx.user?.address,
           },
-          cardInfo: cardInfo
+          cardInfo: cardInfo,
         };
       });
     }

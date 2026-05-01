@@ -1,6 +1,7 @@
 export const orderManagement = {
   title: "Order Management",
-  subtitle: "View and manage all orders, payment statuses, and blockchain execution statuses",
+  subtitle:
+    "View and manage all orders, payment statuses, and blockchain execution statuses",
   table: {
     date: "Date",
     user: "User",
@@ -17,6 +18,6 @@ export const orderManagement = {
     processing: "Processing",
     failed: "Failed",
     unnamed_user: "Unnamed User",
-    no_data: "No orders found."
-  }
+    no_data: "No orders found.",
+  },
 };

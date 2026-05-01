@@ -14,8 +14,19 @@ function fastScreenAnomalies(rawData: unknown): string {
 
   // Info: (20260418 - Tzuhan) 串接真實過濾邏輯，此處將過濾後的結果打上系統標籤，屏除一般常態雜訊交由 AI 審核。
   const fraudKeywords = [
-    "退貨", "拆分", "避稅天堂", "開曼", "維京群島", "特許",
-    "關係人", "資金貸與", "期末", "年底", "大額", "減損", "異常"
+    "退貨",
+    "拆分",
+    "避稅天堂",
+    "開曼",
+    "維京群島",
+    "特許",
+    "關係人",
+    "資金貸與",
+    "期末",
+    "年底",
+    "大額",
+    "減損",
+    "異常",
   ];
 
   /**
@@ -30,8 +41,10 @@ function fastScreenAnomalies(rawData: unknown): string {
     // Info: (20260420 - Tzuhan) 判斷是否為傳票格式行
     if (line.includes("- 傳票號:")) {
       totalVoucherCount++;
-      const hasRiskKeyword = fraudKeywords.some((keyword) => line.includes(keyword));
-      
+      const hasRiskKeyword = fraudKeywords.some((keyword) =>
+        line.includes(keyword),
+      );
+
       let hasLargeAmount = false;
       const amountMatches = line.matchAll(/金額:(\d+)/g);
       for (const match of amountMatches) {
@@ -45,13 +58,13 @@ function fastScreenAnomalies(rawData: unknown): string {
       if (keep) suspiciousVoucherCount++;
       return keep;
     }
-    
+
     // Info: (20260420 - Tzuhan) 不是傳票行 (例如標題或 ESG 紀錄段落)，直接保留
     return true;
   });
 
   const screenedData = processedLines.join("\n");
-  
+
   if (totalVoucherCount > 0 && suspiciousVoucherCount === 0) {
     return `【系統演算快篩結果：未發現顯著高風險異常特徵，常規明細已依據條件屏除】\n\n${screenedData}`;
   }
@@ -71,8 +84,10 @@ export function generateMission(
     ...params,
     prerequisiteData: {
       ...params.prerequisiteData,
-      esgRecordsContext: fastScreenAnomalies(params.prerequisiteData?.esgRecordsContext)
-    }
+      voucherRecordsContext: fastScreenAnomalies(
+        params.prerequisiteData?.voucherRecordsContext,
+      ),
+    },
   };
 
   return generateBaseInternalMission(

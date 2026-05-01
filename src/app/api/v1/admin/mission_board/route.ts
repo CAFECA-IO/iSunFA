@@ -26,7 +26,8 @@ export async function GET(req: NextRequest) {
       return jsonFail(API_ERRORS.AUTH_ADMIN_REQUIRED);
     }
 
-    const missionBoardAddress = process.env.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
+    const missionBoardAddress = process.env
+      .NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
 
     if (!missionBoardAddress) {
       return jsonFail(API_ERRORS.IS_CONFIG_MISSING);
@@ -52,15 +53,31 @@ export async function GET(req: NextRequest) {
             abi: c.abi,
             functionName: c.functionName,
             args: c.args,
-          })
-        )
+          }),
+        ),
       );
 
       for (let i = 0; i < results.length; i++) {
         const res = results[i];
         if (res.status === "fulfilled" && res.value) {
-          const resultTuple = res.value as [string, string, bigint, bigint, bigint, number, bigint];
-          const [creator, contentCid, reward, createdAt, updatedAt, status, submissionCount] = resultTuple;
+          const resultTuple = res.value as [
+            string,
+            string,
+            bigint,
+            bigint,
+            bigint,
+            number,
+            bigint,
+          ];
+          const [
+            creator,
+            contentCid,
+            reward,
+            createdAt,
+            updatedAt,
+            status,
+            submissionCount,
+          ] = resultTuple;
 
           if (creator === "0x0000000000000000000000000000000000000000") {
             keepReading = false;
@@ -116,15 +133,27 @@ export async function GET(req: NextRequest) {
               abi: c.abi,
               functionName: c.functionName,
               args: c.args,
-            })
-          )
+            }),
+          ),
         );
 
         for (let j = 0; j < chunkResults.length; j++) {
           const res = chunkResults[j];
           if (res.status === "fulfilled" && res.value) {
-            const resultTuple = res.value as [string, string, bigint, boolean, bigint];
-            const [submitter, resultCid, consumedTokens, isRejected, disputeUntil] = resultTuple;
+            const resultTuple = res.value as [
+              string,
+              string,
+              bigint,
+              boolean,
+              bigint,
+            ];
+            const [
+              submitter,
+              resultCid,
+              consumedTokens,
+              isRejected,
+              disputeUntil,
+            ] = resultTuple;
 
             const mapEntry = subCallMap[i + j];
             const task = allTasks.find((t) => t.taskId === mapEntry.taskId);
@@ -150,7 +179,6 @@ export async function GET(req: NextRequest) {
     allTasks.sort((a, b) => b.taskId - a.taskId);
 
     return jsonOk(allTasks);
-
   } catch (error) {
     console.error("MissionBoard API Error:", error);
     return jsonFail(API_ERRORS.IS_DB_FAILED);

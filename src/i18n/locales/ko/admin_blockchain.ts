@@ -15,7 +15,7 @@ export const adminBlockchain = {
     mint_icp: "신용 포인트(ICP) 발행",
     mint_desc:
       "ICP를 발행하려면 실시간 담보 비율에 따라 동등한 금액의 ISC를 제공해야 합니다. 발행된 ICP는 멤버 시스템 인벤토리에 배치됩니다.",
-        mint_est_days: "예상 지원 일수：",
+    mint_est_days: "예상 지원 일수：",
     days: "일",
     amount_placeholder: "발행할 ICP 양 입력...",
     amount_aria: "발행할 ICP 양 입력",

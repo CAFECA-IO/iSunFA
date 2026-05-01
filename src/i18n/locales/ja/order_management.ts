@@ -1,6 +1,7 @@
 export const orderManagement = {
   title: "注文管理",
-  subtitle: "すべての注文、支払いステータス、ブロックチェーンの実行ステータスを管理・確認します",
+  subtitle:
+    "すべての注文、支払いステータス、ブロックチェーンの実行ステータスを管理・確認します",
   table: {
     date: "日付",
     user: "ユーザー",
@@ -17,6 +18,6 @@ export const orderManagement = {
     processing: "処理中",
     failed: "失敗",
     unnamed_user: "名無しのユーザー",
-    no_data: "注文が見つかりません。"
-  }
+    no_data: "注文が見つかりません。",
+  },
 };

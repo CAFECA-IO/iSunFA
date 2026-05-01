@@ -41,22 +41,27 @@ export async function GET(req: NextRequest) {
 
       const hasSubmit = files.includes("submit.executor.json");
       const hasExecutionLog = files.includes("execution_log.json");
-      const failedMdFiles = files.filter(f => f.startsWith("failed_") && f.endsWith(".md"));
+      const failedMdFiles = files.filter(
+        (f) => f.startsWith("failed_") && f.endsWith(".md"),
+      );
       const failureCount = failedMdFiles.length;
 
-      let status: LocalMissionStatus = 'pending';
+      let status: LocalMissionStatus = "pending";
       if (hasSubmit) {
-        status = 'completed';
+        status = "completed";
       } else if (hasExecutionLog) {
-        status = 'executing';
+        status = "executing";
       } else if (failureCount >= 3) {
-        status = 'failed';
+        status = "failed";
       }
 
       const failedLogs = [];
-      if (status === 'failed' || failureCount > 0) {
+      if (status === "failed" || failureCount > 0) {
         for (const file of failedMdFiles) {
-          const content = await fs.readFile(path.join(folderPath, file), "utf8");
+          const content = await fs.readFile(
+            path.join(folderPath, file),
+            "utf8",
+          );
           failedLogs.push({ filename: file, content });
         }
       }

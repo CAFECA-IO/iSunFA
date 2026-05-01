@@ -19,6 +19,8 @@ import {
   getLoginOptions,
   verifyLogin,
 } from "@/lib/auth/fido2_client";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { AppError } from "@/lib/utils/error";
 
 import {
   registrationService,
@@ -91,8 +93,13 @@ export default function AuthModal({ isOpen, onClose, onSuccess = undefined }: IA
       }
     } catch (err: unknown) {
       console.error("Login error:", err);
+      const isCanceled = err instanceof AppError && err.apiCode === API_ERRORS.AUTH_USER_CANCELED.code;
       const message = err instanceof Error ? err.message : "Login failed";
-      if (message.includes("User not found") || message.includes("not registered")) {
+      
+      if (isCanceled) {
+        setError(t("auth_modal.user_canceled"));
+        setLoginStep("IDLE");
+      } else if (message.includes("User not found") || message.includes("not registered")) {
         setShowUnregisteredPrompt(true);
         setError(null);
         setLoginStep("IDLE");
@@ -139,9 +146,14 @@ export default function AuthModal({ isOpen, onClose, onSuccess = undefined }: IA
       setError(null);
     } catch (err: unknown) {
       console.error("Registration error:", err);
-      const message =
-        err instanceof Error ? err.message : "Registration failed";
-      setError(message);
+      const isCanceled = err instanceof AppError && err.apiCode === API_ERRORS.AUTH_USER_CANCELED.code;
+      const message = err instanceof Error ? err.message : "Registration failed";
+      
+      if (isCanceled) {
+        setError(t("auth_modal.user_canceled"));
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
       setCurrentStep("IDLE");

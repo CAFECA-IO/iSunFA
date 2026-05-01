@@ -13,12 +13,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { ORDER_STATUS } from "@/constants/status";
-import {
-  decodeFunctionData,
-  keccak256,
-  stringToBytes,
-  parseAbi,
-} from "viem";
+import { decodeFunctionData, keccak256, stringToBytes, parseAbi } from "viem";
 import { AppError } from "@/lib/utils/error";
 import { getPendingOrder } from "@/services/order.service";
 import { publicClient } from "@/lib/viem_public";
@@ -66,7 +61,11 @@ export async function POST(
     // Info: (20260318 - Julian) 驗證 file 參數
     if (!file) {
       console.error("Missing file or file hash");
-      return jsonFail({ code: "VA000099", message: "File is required", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "File is required",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     // Info: (20260413 - Luphia) Verify Payment Order before doing AI processing
@@ -144,19 +143,19 @@ export async function POST(
          * The background worker or asynchronous order completion handles failures.
          * Wait to complete order because multiple AI scans share the same order, so only complete it once if pending!
          */
-        const existingOrder = await getPendingOrder(orderId, creator.id)
-          .catch(() => null);
+        const existingOrder = await getPendingOrder(orderId, creator.id).catch(
+          () => null,
+        );
         if (existingOrder && existingOrder.status === "PENDING") {
           // Info: (20260420 - Luphia) Mark as PAID so MissionIssuer picks it up
-          await paymentRepo.updateOrderStatus(
-            orderId,
-            ORDER_STATUS.PAID,
-            { transactionHash: txHash }
-          );
+          await paymentRepo.updateOrderStatus(orderId, ORDER_STATUS.PAID, {
+            transactionHash: txHash,
+          });
         }
       } else {
-        const order = await getPendingOrder(orderId, creator.id)
-          .catch(() => null);
+        const order = await getPendingOrder(orderId, creator.id).catch(
+          () => null,
+        );
 
         if (order && order.status === "PENDING") {
           await webAuthnService.verifySignature(
@@ -166,18 +165,22 @@ export async function POST(
           );
 
           // Info: (20260420 - Luphia) Mark as PAID so MissionIssuer picks it up
-          await paymentRepo.updateOrderStatus(
-            orderId,
-            ORDER_STATUS.PAID,
-            { signature: JSON.stringify(authentication) }
-          );
+          await paymentRepo.updateOrderStatus(orderId, ORDER_STATUS.PAID, {
+            signature: JSON.stringify(authentication),
+          });
         }
       }
     } catch (error) {
       if (error instanceof AppError) {
         return jsonFail(API_ERRORS.IS_UNKNOWN);
       }
-      return jsonFail({ code: "UN000099", message: String(`Verification failed: ${(error as Error).message}`).slice(0, 30), status: ApiCode.UNAUTHORIZED });
+      return jsonFail({
+        code: "UN000099",
+        message: String(
+          `Verification failed: ${(error as Error).message}`,
+        ).slice(0, 30),
+        status: ApiCode.UNAUTHORIZED,
+      });
     }
 
     // Info: (20260318 - Julian) 將 file 存入 DB
@@ -281,6 +284,10 @@ export async function POST(
     });
   } catch (error) {
     console.error("Error creating AI analysis:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to create AI analysis", status: ApiCode.INTERNAL_SERVER_ERROR },);
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to create AI analysis",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

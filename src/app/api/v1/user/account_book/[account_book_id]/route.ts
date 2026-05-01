@@ -55,7 +55,11 @@ export async function PUT(
     }
 
     if (accountBook.userRole !== "OWNER") {
-      return jsonFail({ code: "FO000099", message: "Only the owner can edit the...", status: ApiCode.FORBIDDEN },  );
+      return jsonFail({
+        code: "FO000099",
+        message: "Only the owner can edit the...",
+        status: ApiCode.FORBIDDEN,
+      });
     }
 
     const body = await request.json();

@@ -44,10 +44,16 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
       if (jsonMatch) {
         return JSON.stringify({ data: JSON.parse(jsonMatch[0]) });
       }
-      return JSON.stringify({ data: null, error: "無法從 AI 回應中解析出有效的 JSON 格式" });
+      return JSON.stringify({
+        data: null,
+        error: "無法從 AI 回應中解析出有效的 JSON 格式",
+      });
     } catch (error) {
       console.error("[VoucherLinesParsingSkill] Error:", error);
-      return JSON.stringify({ data: null, error: "AI 解析傳票分錄失敗，請稍後再試" });
+      return JSON.stringify({
+        data: null,
+        error: "AI 解析傳票分錄失敗，請稍後再試",
+      });
     }
   }
 }

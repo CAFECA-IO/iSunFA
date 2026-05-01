@@ -106,11 +106,13 @@ export class DirectChatSkill {
     tags: string[] = [],
     file?: string,
     mimeType?: string,
-    chatService?: ChatService
+    chatService?: ChatService,
   ): Promise<string> {
     if (!chatService) throw new Error("ChatService required");
     const prompt = this.getPrompt(message, tags);
-    const images = file ? [{ data: file, mimeType: mimeType || "image/jpeg" }] : [];
+    const images = file
+      ? [{ data: file, mimeType: mimeType || "image/jpeg" }]
+      : [];
     return chatService.generateRawWithImages(prompt, images);
   }
 }

@@ -18,7 +18,11 @@ export async function prepareTransferUserOp(
   sender: string,
   amount: number,
   orderId?: string,
-): Promise<{ success: boolean; message: string; data?: { userOp: UserOperationJson; userOpHash: string } }> {
+): Promise<{
+  success: boolean;
+  message: string;
+  data?: { userOp: UserOperationJson; userOpHash: string };
+}> {
   try {
     const validSender = getAddress(sender);
     const amountBigInt = parseEther(amount.toString());
@@ -59,7 +63,9 @@ export async function prepareTransferUserOp(
       const entryPointAbi = parseAbi([
         "function getNonce(address sender, uint192 key) external view returns (uint256)",
       ]);
-      const randomKey = BigInt(Math.floor(Date.now() * Math.random()) % 1000000000);
+      const randomKey = BigInt(
+        Math.floor(Date.now() * Math.random()) % 1000000000,
+      );
       nonce = await publicClient.readContract({
         address: CONTRACT_ADDRESSES.ENTRY_POINT,
         abi: entryPointAbi,
@@ -96,7 +102,7 @@ export async function prepareTransferUserOp(
     // Info: (20260130 - Tzuhan) 5. Calculate UserOp Hash locally instead of RPC call
     const packed = encodeAbiParameters(
       parseAbiParameters(
-        "address, uint256, bytes32, bytes32, uint256, uint256, uint256, uint256, uint256, bytes32"
+        "address, uint256, bytes32, bytes32, uint256, uint256, uint256, uint256, uint256, bytes32",
       ),
       [
         userOp.sender as `0x${string}`,
@@ -109,7 +115,7 @@ export async function prepareTransferUserOp(
         BigInt(userOp.maxFeePerGas),
         BigInt(userOp.maxPriorityFeePerGas),
         keccak256(userOp.paymasterAndData as `0x${string}`),
-      ]
+      ],
     );
 
     const hash = keccak256(packed);
@@ -118,7 +124,7 @@ export async function prepareTransferUserOp(
         hash,
         CONTRACT_ADDRESSES.ENTRY_POINT,
         BigInt(isuncoin.id),
-      ])
+      ]),
     );
 
     return {

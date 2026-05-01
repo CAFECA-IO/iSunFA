@@ -31,7 +31,7 @@ export class DocumentPreCheckSkill implements ITaskSkill {
   ): Promise<string> {
     const { images, parsedContext } = await prepareDocumentContext(task);
     const promptText = getDocumentDuplicateCheckPrompt();
-    
+
     let res: {
       data: {
         invoiceNumber?: string | null;
@@ -52,15 +52,16 @@ export class DocumentPreCheckSkill implements ITaskSkill {
     } catch (error) {
       console.error("[DocumentPreCheckSkill] Error:", error);
     }
-    const result = JSON.stringify(res);    // Info: (20260406 - Luphia) Check duplication with backend database
+    const result = JSON.stringify(res); // Info: (20260406 - Luphia) Check duplication with backend database
     if (res.data && parsedContext.accountBookId) {
       const dupResult = await voucherRepo.checkDocumentDuplication(
         parsedContext.accountBookId,
         res.data,
       );
       if (dupResult.isDuplicate) {
-        const msg = `憑證已入錄，停止後續分析。 (與${dupResult.duplicateType === "VOUCHER" ? "傳票" : "日記帳"
-          } ID: ${dupResult.duplicateId} 重複)`;
+        const msg = `憑證已入錄，停止後續分析。 (與${
+          dupResult.duplicateType === "VOUCHER" ? "傳票" : "日記帳"
+        } ID: ${dupResult.duplicateId} 重複)`;
 
         // Info: (20260406 - Luphia) 即使重複而停止後續分析，仍要將截取到的交易日期寫回原本建立的紀錄中
         if (parsedContext.fileId && res.data.tradingDate) {

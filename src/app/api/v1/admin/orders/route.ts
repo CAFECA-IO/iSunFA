@@ -3,8 +3,6 @@ import { orderRepo } from "@/repositories/order.repo";
 import { orderIssueService } from "@/services/order.issue.service";
 import { jsonOk } from "@/lib/utils/response";
 
-
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -18,7 +16,8 @@ export async function GET(request: Request) {
       orderRepo.getAllCommissionOrdersPaginated(skip, limit),
     ]);
 
-    const mappedOrders = await orderIssueService.getExecutionStatusesForOrders(orders);
+    const mappedOrders =
+      await orderIssueService.getExecutionStatusesForOrders(orders);
 
     return jsonOk({
       data: mappedOrders,
@@ -31,6 +30,9 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("Failed to fetch orders:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

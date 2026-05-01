@@ -17,6 +17,6 @@ export const orderManagement = {
     processing: "執行中",
     failed: "執行失敗",
     unnamed_user: "未知用戶",
-    no_data: "目前沒有任何訂單。"
-  }
+    no_data: "目前沒有任何訂單。",
+  },
 };

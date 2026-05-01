@@ -88,7 +88,8 @@ export const adminSetup = {
     use_existing_btn: "使用現有部署",
     start_deployment_btn: "開始部署",
     existing_found_title: "發現現有合約",
-    existing_found_desc: "如果您選擇「使用現有部署」，下方套用的設定將不會生效。",
+    existing_found_desc:
+      "如果您選擇「使用現有部署」，下方套用的設定將不會生效。",
     network_economics: "網路經濟模型",
     col_rate_desc: "設定綁定至此網路的預設抵押率（範圍：100 ~ 10^-9）。",
     col_rate_label: "ICP 抵押率 (1 ICP = X ISC)",

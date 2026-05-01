@@ -23,7 +23,11 @@ export async function POST(
     const amount = Number(body.amount);
 
     if (isNaN(amount) || amount <= 0) {
-      return jsonFail({ code: "VA000099", message: "Issue amount must be greate...", status: ApiCode.VALIDATION_ERROR },  );
+      return jsonFail({
+        code: "VA000099",
+        message: "Issue amount must be greate...",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     const targetUser = await webAuthnRepo.findUserById(userId);
@@ -36,7 +40,11 @@ export async function POST(
       amount,
     );
     if (!result.success) {
-      return jsonFail({ code: "VL000099", message: String(result.message).slice(0, 30), status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VL000099",
+        message: String(result.message).slice(0, 30),
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     await paymentRepo.createOrder({
@@ -52,6 +60,10 @@ export async function POST(
 
     return jsonOk(null, "Issue success");
   } catch (error) {
-    return jsonFail({ code: "IS000099", message: String((error as Error).message).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IS000099",
+      message: String((error as Error).message).slice(0, 30),
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
 
         const credits = Number(formatUnits(balance, 18));
 
-        if (credits < 500) {
+        if (credits < REWARD_AMOUNTS.FREE_PLAN_LIMIT) {
           // Info: (20260408 - Luphia) Check if user is blacklisted before minting
           const isBlacklisted = await publicClient.readContract({
             address: CONTRACT_ADDRESSES.DYNAMIC_KYC_MEMBERSHIP,

@@ -1,7 +1,8 @@
 export const adminMissionBoard = {
   page: {
     title: "Mission Board",
-    subtitle: "Manage and review all automated tasks and bounties published to the blockchain.",
+    subtitle:
+      "Manage and review all automated tasks and bounties published to the blockchain.",
   },
   kpi: {
     total_missions: "Total Missions",
@@ -60,11 +61,13 @@ export const adminMissionBoard = {
     internal_document: "Internal Document",
     system_report: "System Report",
     footer_title: "Reinventing Carbon Accounting with AI",
-    footer_text: "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal."
+    footer_text:
+      "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",
   },
   gc: {
     btn_text: "Execute GC Cleanup",
     result_title: "GC Cleanup Results",
-    success_msg: "Successfully cleared {{count}} expired or invalid contract folders.",
-  }
+    success_msg:
+      "Successfully cleared {{count}} expired or invalid contract folders.",
+  },
 };

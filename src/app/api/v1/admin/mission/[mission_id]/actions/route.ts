@@ -1,7 +1,10 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import { getAdminWalletClient, getAdminAccount } from "@/lib/wallet/admin_wallet";
+import {
+  getAdminWalletClient,
+  getAdminAccount,
+} from "@/lib/wallet/admin_wallet";
 import { publicClient } from "@/lib/viem_public";
 import { parseAbi, maxUint256 } from "viem";
 import { validateAdminFido2 } from "@/lib/auth/admin_validator";
@@ -10,17 +13,17 @@ const MB_ABI = parseAbi([
   "function cancelTask(uint256 taskId)",
   "function bumpTask(uint256 taskId)",
   "function rewardToken() view returns (address)",
-  "function tasks(uint256 taskId) view returns (address creator, string contentCid, uint256 reward, uint256 createdAt, uint256 updatedAt, uint8 status, uint256 submissionCount)"
+  "function tasks(uint256 taskId) view returns (address creator, string contentCid, uint256 reward, uint256 createdAt, uint256 updatedAt, uint8 status, uint256 submissionCount)",
 ]);
 
 const ERC20_ABI = parseAbi([
   "function approve(address spender, uint256 amount) returns (bool)",
-  "function allowance(address owner, address spender) view returns (uint256)"
+  "function allowance(address owner, address spender) view returns (uint256)",
 ]);
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ mission_id: string }> }
+  { params }: { params: Promise<{ mission_id: string }> },
 ) {
   try {
     const { body } = await validateAdminFido2(req);
@@ -33,7 +36,8 @@ export async function POST(
 
     const walletClient = await getAdminWalletClient();
     const account = await getAdminAccount();
-    const address = process.env.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
+    const address = process.env
+      .NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
 
     if (!address) {
       return jsonFail(API_ERRORS.IS_CONFIG_MISSING);
@@ -54,14 +58,14 @@ export async function POST(
       const rewardTokenAddress = await publicClient.readContract({
         address,
         abi: MB_ABI,
-        functionName: "rewardToken"
+        functionName: "rewardToken",
       });
 
       const taskData = await publicClient.readContract({
         address,
         abi: MB_ABI,
         functionName: "tasks",
-        args: [BigInt(taskId)]
+        args: [BigInt(taskId)],
       });
 
       const currentReward = taskData[2];
@@ -72,7 +76,7 @@ export async function POST(
           address: rewardTokenAddress,
           abi: ERC20_ABI,
           functionName: "allowance",
-          args: [account.address, address]
+          args: [account.address, address],
         });
 
         if (currentAllowance < bumpAmount) {
@@ -81,7 +85,7 @@ export async function POST(
             address: rewardTokenAddress,
             abi: ERC20_ABI,
             functionName: "approve",
-            args: [address, maxUint256]
+            args: [address, maxUint256],
           });
           const approveHash = await walletClient.writeContract(approveReq);
           await publicClient.waitForTransactionReceipt({ hash: approveHash });

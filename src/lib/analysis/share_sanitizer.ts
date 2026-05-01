@@ -43,10 +43,12 @@ const extractMarkdown = (result: TShareResult): string => {
   if (typeof result === "object" && result !== null) {
     if (typeof result.content === "string") return result.content;
     if (typeof result.markdown === "string") return result.markdown;
-    
+
     const keys = Object.keys(result).sort();
     if (keys.length > 0) {
-      return keys.map(k => (result as Record<string, string>)[k]).join('\n\n---\n\n');
+      return keys
+        .map((k) => (result as Record<string, string>)[k])
+        .join("\n\n---\n\n");
     }
   }
   return "";
@@ -91,7 +93,9 @@ export class CarbonSanitizer implements IShareSanitizeStrategy<ICarbonMetrics> {
     const rawMarkdown = extractMarkdown(result);
     const scoreMatch = rawMarkdown.match(/綜合評分.*?[:：]\s*(\d+(?:\.\d+)?)/);
     const tagsMatch = rawMarkdown.match(/核心標籤.*?[:：]\s*([^\r\n]+)/);
-    const positionMatch = rawMarkdown.match(/戰略風險定位.*?[:：]\s*([^\r\n]+)/);
+    const positionMatch = rawMarkdown.match(
+      /戰略風險定位.*?[:：]\s*([^\r\n]+)/,
+    );
 
     return {
       companyName: extractCompanyName(data, "企業"),
@@ -100,12 +104,14 @@ export class CarbonSanitizer implements IShareSanitizeStrategy<ICarbonMetrics> {
         score: scoreMatch ? scoreMatch[1] : null,
         tags: tagsMatch
           ? tagsMatch[1]
-            .replace(/[\*\[\]]/g, "")
-            .split(/[#\s、,，]+/)
-            .map((t) => t.trim())
-            .filter(Boolean)
+              .replace(/[\*\[\]]/g, "")
+              .split(/[#\s、,，]+/)
+              .map((t) => t.trim())
+              .filter(Boolean)
           : [],
-        strategicPosition: positionMatch ? positionMatch[1].replace(/[\*]/g, "").trim() : null,
+        strategicPosition: positionMatch
+          ? positionMatch[1].replace(/[\*]/g, "").trim()
+          : null,
       },
     };
   }
@@ -117,7 +123,9 @@ export class RatingSanitizer implements IShareSanitizeStrategy<IFinancialMetrics
     result: TShareResult,
   ): IPublicReportData<IFinancialMetrics> {
     const rawMarkdown = extractMarkdown(result);
-    const ratingMatch = rawMarkdown.match(/(?:評級結果|綜合評級|最終評級|評級).*?[:：]\s*([^\r\n]+)/);
+    const ratingMatch = rawMarkdown.match(
+      /(?:評級結果|綜合評級|最終評級|評級).*?[:：]\s*([^\r\n]+)/,
+    );
     const tagsMatch = rawMarkdown.match(/報告.*?[:：]\s*([^\r\n]+)/);
 
     return {
@@ -125,14 +133,17 @@ export class RatingSanitizer implements IShareSanitizeStrategy<IFinancialMetrics
       safeMarkdown: rawMarkdown,
       metrics: {
         rating: ratingMatch
-          ? ratingMatch[1].replace(/[\*\[\]]/g, "").split(/[(（]/)[0].trim()
+          ? ratingMatch[1]
+              .replace(/[\*\[\]]/g, "")
+              .split(/[(（]/)[0]
+              .trim()
           : null,
         tags: tagsMatch
           ? tagsMatch[1]
-            .replace(/[\*\[\]「」]/g, "")
-            .split(/[，,]/)
-            .map((t) => t.trim())
-            .filter(Boolean)
+              .replace(/[\*\[\]「」]/g, "")
+              .split(/[，,]/)
+              .map((t) => t.trim())
+              .filter(Boolean)
           : [],
       },
     };
@@ -146,9 +157,10 @@ export class FinancialReportSanitizer implements IShareSanitizeStrategy<null> {
     isFinancialDataHidden?: boolean,
   ): IPublicReportData<null> {
     const rawMarkdown = extractMarkdown(result);
-    const redactedMarkdown = isFinancialDataHidden !== false
-      ? redactMarkdownTables(rawMarkdown)
-      : rawMarkdown;
+    const redactedMarkdown =
+      isFinancialDataHidden !== false
+        ? redactMarkdownTables(rawMarkdown)
+        : rawMarkdown;
 
     return {
       companyName: extractCompanyName(data, "企業"),

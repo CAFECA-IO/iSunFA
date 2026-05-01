@@ -34,7 +34,7 @@ export function generateIrscMission(
   if (params.prerequisiteData?.esgRecordsContext) {
     targetObj.internalDataContext = params.prerequisiteData.esgRecordsContext;
   }
-  
+
   if (params.data) {
     targetObj.financialDataPayload = params.data;
   }

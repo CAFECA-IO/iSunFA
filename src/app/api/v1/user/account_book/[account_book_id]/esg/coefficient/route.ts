@@ -12,7 +12,20 @@ import {
   ICoefficientInput,
 } from "@/interfaces/coefficient";
 import { Prisma } from "@/generated/client";
-import { TRUE_COEFFICIENT_DATA_PART_1, TRUE_COEFFICIENT_DATA_PART_2, TRUE_COEFFICIENT_DATA_PART_3, TRUE_COEFFICIENT_DATA_PART_4, TRUE_COEFFICIENT_DATA_PART_5, TRUE_COEFFICIENT_DATA_DEFRA_PART_1, TRUE_COEFFICIENT_DATA_DEFRA_PART_2, TRUE_COEFFICIENT_DATA_DEFRA_PART_3, TRUE_COEFFICIENT_DATA_DEFRA_PART_4, TRUE_COEFFICIENT_DATA_DEFRA_PART_5, TRUE_COEFFICIENT_DATA_DEFRA_PART_6, TRUE_COEFFICIENT_DATA_TAIWAN } from "@/constants/true_esg_coefficients";
+import {
+  TRUE_COEFFICIENT_DATA_PART_1,
+  TRUE_COEFFICIENT_DATA_PART_2,
+  TRUE_COEFFICIENT_DATA_PART_3,
+  TRUE_COEFFICIENT_DATA_PART_4,
+  TRUE_COEFFICIENT_DATA_PART_5,
+  TRUE_COEFFICIENT_DATA_DEFRA_PART_1,
+  TRUE_COEFFICIENT_DATA_DEFRA_PART_2,
+  TRUE_COEFFICIENT_DATA_DEFRA_PART_3,
+  TRUE_COEFFICIENT_DATA_DEFRA_PART_4,
+  TRUE_COEFFICIENT_DATA_DEFRA_PART_5,
+  TRUE_COEFFICIENT_DATA_DEFRA_PART_6,
+  TRUE_COEFFICIENT_DATA_TAIWAN,
+} from "@/constants/true_esg_coefficients";
 
 /**
  * Info: (20260413 - Julian) 新增自訂係數
@@ -56,7 +69,11 @@ export async function POST(
     // Info: (20260413 - Julian) 驗證 coefficient 參數
     if (!input || !input.name) {
       console.error("Missing coefficient or coefficient name");
-      return jsonFail({ code: "VA000099", message: "Coefficient is required", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "Coefficient is required",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     // Info: (20260413 - Julian) 建立自訂公式
@@ -72,7 +89,11 @@ export async function POST(
     return jsonOk({ coefficientId: newCoefficient.id });
   } catch (error) {
     console.error("Error creating esg coefficient:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to create esg coeffi...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to create esg coeffi...",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }
 
@@ -144,7 +165,9 @@ export async function GET(
 
     // Info: (20260416 - Julian) 單位過濾邏輯（模糊搜尋）
     if (unitParam) {
-      andConditions.push({ unit: { contains: unitParam, mode: "insensitive" } });
+      andConditions.push({
+        unit: { contains: unitParam, mode: "insensitive" },
+      });
     }
 
     const [coefficients, totalCount] = await Promise.all([
@@ -159,22 +182,37 @@ export async function GET(
       }),
       esgRepo.countEsgCoefficients({ AND: andConditions }),
     ]);
-    
-    const dataFromDatabase: ICoefficient[] = coefficients.map((coefficient) => ({
-      id: coefficient.id,
-      name: coefficient.name,
-      description: coefficient.description,
-      emissionFactor: Number(coefficient.emissionFactor),
-      unit: coefficient.unit,
-      source: coefficient.source,
-      category: !!coefficient.accountBookId
-        ? CoefficientCategory.CUSTOM
-        : CoefficientCategory.STANDARD,
-      createdAt: new Date(coefficient.createdAt).getTime() / 1000,
-      updatedAt: new Date(coefficient.updatedAt).getTime() / 1000,
-    }));
 
-    let dataFromConstants: ICoefficient[] = [...TRUE_COEFFICIENT_DATA_PART_1, ...TRUE_COEFFICIENT_DATA_PART_2, ...TRUE_COEFFICIENT_DATA_PART_3, ...TRUE_COEFFICIENT_DATA_PART_4, ...TRUE_COEFFICIENT_DATA_PART_5, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_1, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_2, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_3, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_4, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_5, ...TRUE_COEFFICIENT_DATA_DEFRA_PART_6, ...TRUE_COEFFICIENT_DATA_TAIWAN];
+    const dataFromDatabase: ICoefficient[] = coefficients.map(
+      (coefficient) => ({
+        id: coefficient.id,
+        name: coefficient.name,
+        description: coefficient.description,
+        emissionFactor: Number(coefficient.emissionFactor),
+        unit: coefficient.unit,
+        source: coefficient.source,
+        category: !!coefficient.accountBookId
+          ? CoefficientCategory.CUSTOM
+          : CoefficientCategory.STANDARD,
+        createdAt: new Date(coefficient.createdAt).getTime() / 1000,
+        updatedAt: new Date(coefficient.updatedAt).getTime() / 1000,
+      }),
+    );
+
+    let dataFromConstants: ICoefficient[] = [
+      ...TRUE_COEFFICIENT_DATA_PART_1,
+      ...TRUE_COEFFICIENT_DATA_PART_2,
+      ...TRUE_COEFFICIENT_DATA_PART_3,
+      ...TRUE_COEFFICIENT_DATA_PART_4,
+      ...TRUE_COEFFICIENT_DATA_PART_5,
+      ...TRUE_COEFFICIENT_DATA_DEFRA_PART_1,
+      ...TRUE_COEFFICIENT_DATA_DEFRA_PART_2,
+      ...TRUE_COEFFICIENT_DATA_DEFRA_PART_3,
+      ...TRUE_COEFFICIENT_DATA_DEFRA_PART_4,
+      ...TRUE_COEFFICIENT_DATA_DEFRA_PART_5,
+      ...TRUE_COEFFICIENT_DATA_DEFRA_PART_6,
+      ...TRUE_COEFFICIENT_DATA_TAIWAN,
+    ];
 
     if (tabParam === CoefficientCategory.CUSTOM) {
       dataFromConstants = [];
@@ -183,39 +221,52 @@ export async function GET(
     if (searchParam) {
       const lowerSearch = searchParam.toLowerCase();
       dataFromConstants = dataFromConstants.filter(
-        c => c.name.toLowerCase().includes(lowerSearch) || c.description.toLowerCase().includes(lowerSearch)
+        (c) =>
+          c.name.toLowerCase().includes(lowerSearch) ||
+          c.description.toLowerCase().includes(lowerSearch),
       );
     }
 
     if (unitParam) {
-      dataFromConstants = dataFromConstants.filter(c => c.unit === unitParam);
+      dataFromConstants = dataFromConstants.filter((c) => c.unit === unitParam);
     }
 
     const total = dataFromConstants.length + totalCount;
     let paginatedDataFromConstants = dataFromConstants;
 
     if (page && pageSize) {
-      paginatedDataFromConstants = paginatedDataFromConstants.slice((page - 1) * pageSize, page * pageSize);
+      paginatedDataFromConstants = paginatedDataFromConstants.slice(
+        (page - 1) * pageSize,
+        page * pageSize,
+      );
     }
 
-    const formattedDataFromConstants: ICoefficient[] = paginatedDataFromConstants.map(c => ({
-      id: c.id,
-      name: c.name,
-      description: c.description,
-      emissionFactor: Number(c.emissionFactor),
-      unit: c.unit,
-      source: c.source,
-      category: CoefficientCategory.STANDARD,
-      createdAt: Number(c.createdAt),
-      updatedAt: Number(c.updatedAt),
-    }));
+    const formattedDataFromConstants: ICoefficient[] =
+      paginatedDataFromConstants.map((c) => ({
+        id: c.id,
+        name: c.name,
+        description: c.description,
+        emissionFactor: Number(c.emissionFactor),
+        unit: c.unit,
+        source: c.source,
+        category: CoefficientCategory.STANDARD,
+        createdAt: Number(c.createdAt),
+        updatedAt: Number(c.updatedAt),
+      }));
 
     // Info: (20260429 - Julian) 整合標準係數與自訂係數，且依照更新時間倒序排列
-    const result: ICoefficient[] = [...formattedDataFromConstants, ...dataFromDatabase].sort((a, b) => b.updatedAt - a.updatedAt);
+    const result: ICoefficient[] = [
+      ...formattedDataFromConstants,
+      ...dataFromDatabase,
+    ].sort((a, b) => b.updatedAt - a.updatedAt);
 
     return jsonOk({ items: result, total });
   } catch (error) {
     console.error("Error fetching esg coefficients:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to fetch esg coeffic...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to fetch esg coeffic...",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }

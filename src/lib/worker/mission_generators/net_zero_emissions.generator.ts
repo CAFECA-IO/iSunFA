@@ -13,7 +13,10 @@ export function generateMission(
   params: IMissionParams,
 ): IMissionDefinition | null {
   if (params.isExternal) {
-    return generateBaseExternalMission(params, Prompts as IExternalPromptModule);
+    return generateBaseExternalMission(
+      params,
+      Prompts as IExternalPromptModule,
+    );
   }
 
   return generateBaseInternalMission(

@@ -21,7 +21,10 @@ export interface ITalkRepository {
   ): Promise<Reaction>;
   countReactions(commentId: string, type: ReactionType): Promise<number>;
 
-  getThreadReaction(userId: string, analysisId: string): Promise<Reaction | null>;
+  getThreadReaction(
+    userId: string,
+    analysisId: string,
+  ): Promise<Reaction | null>;
   createThreadReaction(
     userId: string,
     analysisId: string,
@@ -56,7 +59,9 @@ export interface ITalkRepository {
     pageSize?: number;
   }): Promise<{
     items: Prisma.AnalysisGetPayload<{
-      include: { _count: { select: { comments: true; reportShareTokens: true } } };
+      include: {
+        _count: { select: { comments: true; reportShareTokens: true } };
+      };
     }>[];
     total: number;
   }>;
@@ -158,9 +163,14 @@ export class TalkRepository implements ITalkRepository {
     if (options?.keyword) {
       where.OR = [
         // Info: (20260428 - Julian) 由於 data 和 result 為 JSON 類型，所以使用 path 來指定要搜尋的欄位
-        { data: { path: ['question'], string_contains: options.keyword } },
-        { data: { path: ['data', 'question'], string_contains: options.keyword } },
-        { result: { path: ['answer'], string_contains: options.keyword } },
+        { data: { path: ["question"], string_contains: options.keyword } },
+        {
+          data: {
+            path: ["data", "question"],
+            string_contains: options.keyword,
+          },
+        },
+        { result: { path: ["answer"], string_contains: options.keyword } },
         { result: { string_contains: options.keyword } },
       ];
     }
@@ -178,7 +188,7 @@ export class TalkRepository implements ITalkRepository {
     }
 
     if (options?.tags && options.tags.length > 0) {
-      const validTags = options.tags.filter(t => t.trim() !== "");
+      const validTags = options.tags.filter((t) => t.trim() !== "");
       if (validTags.length > 0) {
         where.tags = {
           some: {
@@ -197,7 +207,8 @@ export class TalkRepository implements ITalkRepository {
     };
 
     const page = options?.page && options.page > 0 ? options.page : 1;
-    const pageSize = options?.pageSize && options.pageSize > 0 ? options.pageSize : 20;
+    const pageSize =
+      options?.pageSize && options.pageSize > 0 ? options.pageSize : 20;
     const skip = (page - 1) * pageSize;
 
     const [items, total] = await prisma.$transaction([

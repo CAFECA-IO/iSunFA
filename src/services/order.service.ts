@@ -2,13 +2,21 @@ import { createHash } from "crypto";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { generateReceiptItems } from "@/lib/utils/payment_helpers";
 import { analysisRepo } from "@/repositories/analysis.repo";
-import { getAnalysisCost, IAnalysisParams, IOrderParams } from "@/lib/analysis/pricing";
+import {
+  getAnalysisCost,
+  IAnalysisParams,
+  IOrderParams,
+} from "@/lib/analysis/pricing";
 import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
 import { Prisma } from "@/generated/client";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
-import { ANALYSIS_CATEGORY, CURRENCY_UNIT, CurrencyUnit } from "@/constants/price";
+import {
+  ANALYSIS_CATEGORY,
+  CURRENCY_UNIT,
+  CurrencyUnit,
+} from "@/constants/price";
 
 export async function getOrdersByUserId(userId: string, type?: string | null) {
   const orders = await paymentRepo.getOrdersByUserId(userId, type);
@@ -18,13 +26,13 @@ export async function getOrdersByUserId(userId: string, type?: string | null) {
     const tx =
       "paymentTransactions" in o
         ? (
-          o as unknown as {
-            paymentTransactions: Array<{
-              status: string;
-              paymentMethod?: { data?: { card_info?: unknown } };
-            }>;
-          }
-        ).paymentTransactions?.[0]
+            o as unknown as {
+              paymentTransactions: Array<{
+                status: string;
+                paymentMethod?: { data?: { card_info?: unknown } };
+              }>;
+            }
+          ).paymentTransactions?.[0]
         : undefined;
     const pmData = tx?.paymentMethod?.data as
       | Record<string, unknown>
@@ -44,8 +52,7 @@ export async function getOrdersByUserId(userId: string, type?: string | null) {
       cardInfo: pmData?.card_info || null, // Info: (20260409 - Luphia) Provide card_info if paid with credit card
       buyerName:
         typeof pmData?.buyerName === "string" ? pmData.buyerName : undefined,
-      buyerTaxId:
-        typeof pmData?.taxId === "string" ? pmData.taxId : undefined,
+      buyerTaxId: typeof pmData?.taxId === "string" ? pmData.taxId : undefined,
       buyerAddress:
         typeof pmData?.billingAddress === "string"
           ? pmData.billingAddress
@@ -77,7 +84,13 @@ export async function generateAnalysisOrder(
   // Info: (20260320 - Tzuhan) Prerequisite check: Net Zero Emissions requires Carbon Health Check
   if (analysisData.category === ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS) {
     if (!analysisData.keyword) {
-      throw new AppError({ code: "VA000099", message: String("Missing company info (keyword) for net_zero_emissions").slice(0, 30), status: ApiCode.VALIDATION_ERROR });
+      throw new AppError({
+        code: "VA000099",
+        message: String(
+          "Missing company info (keyword) for net_zero_emissions",
+        ).slice(0, 30),
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
     const prerequisite = await analysisRepo.findAnalysisByKeywordAndType(
       userId,
@@ -85,7 +98,13 @@ export async function generateAnalysisOrder(
       analysisData.keyword,
     );
     if (!prerequisite) {
-      throw new AppError({ code: "VA000099", message: String("必須先完成該企業的「企業碳健檢（Carbon Health Check）」分析，才能產出「淨零碳排（Net Zero Emissions）」報告。").slice(0, 30), status: ApiCode.VALIDATION_ERROR });
+      throw new AppError({
+        code: "VA000099",
+        message: String(
+          "必須先完成該企業的「企業碳健檢（Carbon Health Check）」分析，才能產出「淨零碳排（Net Zero Emissions）」報告。",
+        ).slice(0, 30),
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     const latestNetZero = await analysisRepo.findAnalysisByKeywordAndType(
@@ -98,7 +117,13 @@ export async function generateAnalysisOrder(
       latestNetZero &&
       prerequisite.createdAt.getTime() <= latestNetZero.createdAt.getTime()
     ) {
-      throw new AppError({ code: "VA000099", message: String("您的企業碳健檢資料已過期！請先針對該企業「重新生成一份最新的碳健檢報告」，再產出淨零碳排報告。").slice(0, 30), status: ApiCode.VALIDATION_ERROR });
+      throw new AppError({
+        code: "VA000099",
+        message: String(
+          "您的企業碳健檢資料已過期！請先針對該企業「重新生成一份最新的碳健檢報告」，再產出淨零碳排報告。",
+        ).slice(0, 30),
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
   }
 
@@ -113,7 +138,10 @@ export async function generateAnalysisOrder(
     "irsc",
   ];
 
-  if (!analysisData.isExternal && INTERNAL_CATEGORIES.includes(analysisData.category)) {
+  if (
+    !analysisData.isExternal &&
+    INTERNAL_CATEGORIES.includes(analysisData.category)
+  ) {
     if (analysisData.keyword) {
       const match = analysisData.keyword.match(/\((.*?)\)/);
       const taxId = match ? match[1] : analysisData.keyword;
@@ -121,10 +149,23 @@ export async function generateAnalysisOrder(
       const hasData = await accountBookRepo.hasAssociatedEsgData(userId, taxId);
 
       if (!hasData) {
-        throw new AppError({ code: "VA000099", message: String("該企業尚未建立 ESG 或財務數據紀錄。請先上傳相關資料，或是改為申請「外部分析報告」。").slice(0, 30), status: ApiCode.VALIDATION_ERROR });
+        throw new AppError({
+          code: "VA000099",
+          message: String(
+            "該企業尚未建立 ESG 或財務數據紀錄。請先上傳相關資料，或是改為申請「外部分析報告」。",
+          ).slice(0, 30),
+          status: ApiCode.VALIDATION_ERROR,
+        });
       }
     } else {
-      throw new AppError({ code: "VA000099", message: String("內部分析報告需要提供有效之企業資訊 (統編)。").slice(0, 30), status: ApiCode.VALIDATION_ERROR });
+      throw new AppError({
+        code: "VA000099",
+        message: String("內部分析報告需要提供有效之企業資訊 (統編)。").slice(
+          0,
+          30,
+        ),
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
   }
 
@@ -211,15 +252,27 @@ export async function getPendingOrder(orderId: string, userId: string) {
   const order = await paymentRepo.getOrderById(orderId);
 
   if (!order) {
-    throw new AppError({ code: "NO000099", message: "Order not found", status: ApiCode.NOT_FOUND });
+    throw new AppError({
+      code: "NO000099",
+      message: "Order not found",
+      status: ApiCode.NOT_FOUND,
+    });
   }
 
   if (order.userId !== userId) {
-    throw new AppError({ code: "FO000099", message: "Order does not belong to user", status: ApiCode.FORBIDDEN });
+    throw new AppError({
+      code: "FO000099",
+      message: "Order does not belong to user",
+      status: ApiCode.FORBIDDEN,
+    });
   }
 
   if (order.status !== ORDER_STATUS.PENDING) {
-    throw new AppError({ code: "VA000099", message: "Order is not pending", status: ApiCode.VALIDATION_ERROR });
+    throw new AppError({
+      code: "VA000099",
+      message: "Order is not pending",
+      status: ApiCode.VALIDATION_ERROR,
+    });
   }
 
   return order;

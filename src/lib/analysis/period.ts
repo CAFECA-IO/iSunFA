@@ -6,7 +6,8 @@ export const getPeriodDateRange = (
   year: number,
   pValue: string | number,
 ) => {
-  if (pType === ANALYSIS_PERIOD.DAILY) return { start: String(pValue), end: String(pValue) };
+  if (pType === ANALYSIS_PERIOD.DAILY)
+    return { start: String(pValue), end: String(pValue) };
 
   let start = "";
   let end = "";

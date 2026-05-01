@@ -356,6 +356,18 @@ export default function HistorySection() {
             <Loader2 className="h-3 w-3 animate-spin" /> {t('analysis.history.status_types.processing')}
           </span>
         );
+      case 'paid':
+        return (
+          <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">
+            <Loader2 className="h-3 w-3 animate-spin" /> {t('analysis.history.status_types.paid')}
+          </span>
+        );
+      case 'executing':
+        return (
+          <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">
+            <Loader2 className="h-3 w-3 animate-spin" /> {t('analysis.history.status_types.executing')}
+          </span>
+        );
       case 'failed':
       case 'error':
         return (

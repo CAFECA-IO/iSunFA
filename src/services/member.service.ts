@@ -151,21 +151,38 @@ export async function issuePurchasedPointsToMember(
   } catch (error) {
     const errorMsg = (error as Error).message || "";
     // Info: (20260417 - Luphia) Auto-funding mechanism if contract runs out of ISC reserves
-    if (errorMsg.includes("InsufficientContractReserves") || errorMsg.includes("0x9443a76e")) {
+    if (
+      errorMsg.includes("InsufficientContractReserves") ||
+      errorMsg.includes("0x9443a76e")
+    ) {
       // Info: (20260417 - Luphia) Make auto-funding dynamic to cover large issuances, plus 50 as buffer
       const fundingAmount = Math.max(50, amount + 50);
-      console.warn(`[MembershipService] Contract reserves low during point issuance. Executing auto-funding of ${fundingAmount} ISC...`);
+      console.warn(
+        `[MembershipService] Contract reserves low during point issuance. Executing auto-funding of ${fundingAmount} ISC...`,
+      );
       const fundRes = await fundMembershipSystem(fundingAmount);
       if (!fundRes.success) {
-        return { success: false, message: `Auto-funding sequence failed: ${fundRes.message}` };
+        return {
+          success: false,
+          message: `Auto-funding sequence failed: ${fundRes.message}`,
+        };
       }
-      console.log(`[MembershipService] Auto-funding successful. Retrying point issuance...`);
-      
+      console.log(
+        `[MembershipService] Auto-funding successful. Retrying point issuance...`,
+      );
+
       try {
         const retryTx = await executeIssue();
-        return { success: true, message: `Issued ${amount} points (after auto-funding)`, data: { tx: retryTx } };
+        return {
+          success: true,
+          message: `Issued ${amount} points (after auto-funding)`,
+          data: { tx: retryTx },
+        };
       } catch (retryError) {
-        console.error(`[MembershipService] Retry failed for ${userAddress}:`, retryError);
+        console.error(
+          `[MembershipService] Retry failed for ${userAddress}:`,
+          retryError,
+        );
         return { success: false, message: (retryError as Error).message };
       }
     }
@@ -242,16 +259,13 @@ export async function fundMembershipSystem(
 
     await publicClient.waitForTransactionReceipt({ hash });
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: `Successfully funded MembershipSystem with ${amountISC} ISC`,
-      data: { tx: hash }
+      data: { tx: hash },
     };
   } catch (error) {
-    console.error(
-      `[MembershipService] fundMembershipSystem failed:`,
-      error,
-    );
+    console.error(`[MembershipService] fundMembershipSystem failed:`, error);
     return { success: false, message: (error as Error).message };
   }
 }

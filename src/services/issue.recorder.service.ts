@@ -9,7 +9,9 @@ import { getPriorityEnvConfig } from "@/services/env.service";
 
 export class IssueRecorderService {
   async processNext() {
-    console.log("[MissionRecorder] Scanning ISSUE_DIR for approved submissions to record...");
+    console.log(
+      "[MissionRecorder] Scanning ISSUE_DIR for approved submissions to record...",
+    );
 
     const setupConfig = await getPriorityEnvConfig();
     const issueDirBase = setupConfig.ISSUE_DIR || "issues";
@@ -25,13 +27,15 @@ export class IssueRecorderService {
         const folderName = folder.name;
         const taskDir = path.join(issueDirPath, folderName);
 
-        const parts = folderName.split('_');
+        const parts = folderName.split("_");
         if (parts.length < 2) continue; // Info: (20260427 - Luphia) Skip invalid formats
         const taskId = parts[parts.length - 1];
 
         // Info: (20260420 - Luphia) Find approved.*.md files
         const files = await fs.readdir(taskDir);
-        const approvedFile = files.find(f => f.startsWith("approved.") && f.endsWith(".md"));
+        const approvedFile = files.find(
+          (f) => f.startsWith("approved.") && f.endsWith(".md"),
+        );
 
         if (!approvedFile) continue;
 
@@ -44,19 +48,28 @@ export class IssueRecorderService {
           await fs.access(flagFile);
           // Info: (20260420 - Luphia) Already recorded to database
           continue;
-        } catch { /* Info: (20260426 - Luphia) proceeding to record */ }
+        } catch {
+          /* Info: (20260426 - Luphia) proceeding to record */
+        }
 
         recordedTask = true;
-        console.log(`[MissionRecorder] Found approved task to record: Task ID ${taskId}`);
+        console.log(
+          `[MissionRecorder] Found approved task to record: Task ID ${taskId}`,
+        );
 
         try {
           // Info: (20260420 - Luphia) Find the Order
           const order = await orderRepo.findFirst({
-            where: { mission: { contains: `"${taskId}"` }, status: { in: [ORDER_STATUS.EXECUTING, ORDER_STATUS.COMPLETED] } }
+            where: {
+              mission: { contains: `"${taskId}"` },
+              status: { in: [ORDER_STATUS.EXECUTING, ORDER_STATUS.COMPLETED] },
+            },
           });
 
           if (!order) {
-            console.warn(`[MissionRecorder] Task ID ${taskId} has no EXECUTING/COMPLETED Order in database.`);
+            console.warn(
+              `[MissionRecorder] Task ID ${taskId} has no EXECUTING/COMPLETED Order in database.`,
+            );
             // Info: (20260420 - Luphia) mark flag anyway to skip
             await fs.writeFile(flagFile, "No matching order found", "utf8");
             continue;
@@ -68,7 +81,7 @@ export class IssueRecorderService {
           // Info: (20260420 - Luphia) Update Order Status loosely
           await orderRepo.update({
             where: { id: order.id },
-            data: { status: ORDER_STATUS.COMPLETED }
+            data: { status: ORDER_STATUS.COMPLETED },
           });
 
           /**
@@ -79,13 +92,13 @@ export class IssueRecorderService {
           let analysis = await analysisRepo.findFirst({
             where: {
               orderId: order.id,
-              data: { path: ["missionTaskId"], equals: taskId }
-            }
+              data: { path: ["missionTaskId"], equals: taskId },
+            },
           });
 
           if (!analysis) {
             analysis = await analysisRepo.findFirst({
-              where: { orderId: order.id }
+              where: { orderId: order.id },
             });
           }
 
@@ -99,14 +112,17 @@ export class IssueRecorderService {
 
             await analysisRepo.update({
               where: { id: analysis.id },
-              data: { result: parsedResult as Prisma.InputJsonValue }
+              data: { result: parsedResult as Prisma.InputJsonValue },
             });
 
             // Info: (20260420 - Luphia) Save Analysis tags if present
-            if (typeof parsedResult === 'object' && parsedResult !== null) {
+            if (typeof parsedResult === "object" && parsedResult !== null) {
               const tags = (parsedResult as Record<string, unknown>).tags;
               if (Array.isArray(tags)) {
-                await analysisRepo.syncAnalysisTags(analysis.id, tags.map(t => String(t)));
+                await analysisRepo.syncAnalysisTags(
+                  analysis.id,
+                  tags.map((t) => String(t)),
+                );
               }
             }
           }
@@ -115,32 +131,56 @@ export class IssueRecorderService {
           try {
             let parsedResult: Record<string, unknown> | undefined = undefined;
             try {
-              parsedResult = JSON.parse(resultContent) as Record<string, unknown>;
-            } catch { }
+              parsedResult = JSON.parse(resultContent) as Record<
+                string,
+                unknown
+              >;
+            } catch {}
 
-            if (parsedResult && parsedResult.dbSyncPayload && typeof parsedResult.dbSyncPayload === 'object') {
-              const payload = parsedResult.dbSyncPayload as Record<string, Record<string, unknown>>;
+            if (
+              parsedResult &&
+              parsedResult.dbSyncPayload &&
+              typeof parsedResult.dbSyncPayload === "object"
+            ) {
+              const payload = parsedResult.dbSyncPayload as Record<
+                string,
+                Record<string, unknown>
+              >;
               for (const fileId of Object.keys(payload)) {
                 const fileResult = payload[fileId];
                 await syncDocumentResultToDatabase(
                   fileId,
                   fileResult.accountBookId as string,
-                  fileResult as unknown as import("@/skills/utils/document_parser_db_sync").IAggregatedDocumentResult
+                  fileResult as unknown as import("@/skills/utils/document_parser_db_sync").IAggregatedDocumentResult,
                 );
               }
-              console.log(`[MissionRecorder] Synced document results to DB for Task ID ${taskId}`);
+              console.log(
+                `[MissionRecorder] Synced document results to DB for Task ID ${taskId}`,
+              );
             }
           } catch (e) {
-            console.error(`[MissionRecorder] Failed to sync document results to DB for Task ID ${taskId}:`, e);
+            console.error(
+              `[MissionRecorder] Failed to sync document results to DB for Task ID ${taskId}:`,
+              e,
+            );
           }
 
           // Info: (20260420 - Luphia) Write flag to prevent reprocessing
-          await fs.writeFile(flagFile, `Recorded at ${new Date().toISOString()}`, "utf8");
-          console.log(`[MissionRecorder] Successfully updated Order ${order.id} to COMPLETED.`);
+          await fs.writeFile(
+            flagFile,
+            `Recorded at ${new Date().toISOString()}`,
+            "utf8",
+          );
+          console.log(
+            `[MissionRecorder] Successfully updated Order ${order.id} to COMPLETED.`,
+          );
 
           break; // Info: (20260420 - Luphia) process one at a time
         } catch (err) {
-          console.error(`[MissionRecorder] Error recording Task ID ${taskId}:`, err);
+          console.error(
+            `[MissionRecorder] Error recording Task ID ${taskId}:`,
+            err,
+          );
         }
       }
     } catch (e) {

@@ -5,7 +5,8 @@ export const RPC_URL = "http://127.0.0.1:20024";
 
 // Info: (20260124 - Tzuhan) ERC-4337 & RWA System Addresses from latest deployment
 export const CONTRACT_ADDRESSES = {
-  DYNAMIC_KYC_MEMBERSHIP: process.env.NEXT_PUBLIC_DYNAMIC_KYC_MEMBERSHIP_ADDRESS as Address,
+  DYNAMIC_KYC_MEMBERSHIP: process.env
+    .NEXT_PUBLIC_DYNAMIC_KYC_MEMBERSHIP_ADDRESS as Address,
   CREDIT_POINT: process.env.NEXT_PUBLIC_CREDIT_POINT_ADDRESS as Address,
   MEMBERSHIP_SYSTEM: process.env
     .NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS as Address,

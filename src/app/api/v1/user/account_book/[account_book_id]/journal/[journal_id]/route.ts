@@ -61,10 +61,10 @@ export async function GET(
       ...journalDbRecord,
       file: journalDbRecord.file
         ? {
-          id: journalDbRecord.file.id,
-          hash: journalDbRecord.file.hash,
-          fileName: journalDbRecord.file.fileName || "Unknown",
-        }
+            id: journalDbRecord.file.id,
+            hash: journalDbRecord.file.hash,
+            fileName: journalDbRecord.file.fileName || "Unknown",
+          }
         : undefined,
       voucherId: journalDbRecord.voucherId,
       esgRecordId: journalDbRecord.esgRecordId,
@@ -164,7 +164,7 @@ export async function PUT(
         voucherId: updatedJournal.voucherId,
         esgRecordId: updatedJournal.esgRecordId,
         accountBookId: accountBook.id,
-      } as Prisma.InputJsonObject
+      } as Prisma.InputJsonObject,
     });
 
     if (fallbackOrder) {
@@ -205,10 +205,10 @@ export async function PUT(
       fileId: updatedJournal.fileId ?? "",
       file: updatedJournal.file
         ? {
-          id: updatedJournal.file.id,
-          hash: updatedJournal.file.hash,
-          fileName: updatedJournal.file.fileName ?? "",
-        }
+            id: updatedJournal.file.id,
+            hash: updatedJournal.file.hash,
+            fileName: updatedJournal.file.fileName ?? "",
+          }
         : undefined,
       voucherId: updatedJournal.voucherId,
       esgRecordId: updatedJournal.esgRecordId,

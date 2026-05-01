@@ -31,9 +31,9 @@ export const authModal = {
     "系统找不到此 Passkey 对应的账户。您是否要使用此设备注册一个新账户？",
   unregistered_confirm_yes: "好，创建账户",
   unregistered_confirm_no: "取消",
+  user_canceled: "用户取消登录",
 
   deploying: "Deploying...",
   success: "Success",
   failed: "Failed",
-
 };

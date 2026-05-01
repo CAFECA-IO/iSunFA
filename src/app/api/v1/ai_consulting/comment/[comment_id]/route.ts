@@ -20,14 +20,22 @@ export async function DELETE(
 
     if (!user) {
       console.error("User not found");
-      return jsonFail({ code: "IN000099", message: "User not found", status: ApiCode.INTERNAL_SERVER_ERROR });
+      return jsonFail({
+        code: "IN000099",
+        message: "User not found",
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     const { comment_id: commentId } = await params;
 
     if (!commentId) {
       console.error("Comment not found");
-      return jsonFail({ code: "IN000099", message: "Comment not found", status: ApiCode.INTERNAL_SERVER_ERROR });
+      return jsonFail({
+        code: "IN000099",
+        message: "Comment not found",
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     // Info: (20260428 - Julian) 刪除留言

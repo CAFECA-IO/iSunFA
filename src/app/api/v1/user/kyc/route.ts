@@ -41,7 +41,13 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       console.error("Identity registration failed:", result.message);
-      return jsonFail({ code: "IS000099", message: String(`KYC saved but Identity deployment failed: ${result.message}`).slice(0, 30), status: ApiCode.INTERNAL_SERVER_ERROR });
+      return jsonFail({
+        code: "IS000099",
+        message: String(
+          `KYC saved but Identity deployment failed: ${result.message}`,
+        ).slice(0, 30),
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
 
     try {
@@ -54,7 +60,11 @@ export async function POST(request: NextRequest) {
       });
     } catch (e) {
       console.warn("Failed to update identity address:", e);
-      return jsonFail({ code: "IN000099", message: "Failed to update identity a...", status: ApiCode.INTERNAL_SERVER_ERROR },  );
+      return jsonFail({
+        code: "IN000099",
+        message: "Failed to update identity a...",
+        status: ApiCode.INTERNAL_SERVER_ERROR,
+      });
     }
   } catch (error) {
     console.error("[API] /user/kyc error:", error);
