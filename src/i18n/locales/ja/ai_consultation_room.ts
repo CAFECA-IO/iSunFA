@@ -57,4 +57,5 @@ export const aiConsultationRoom = {
   sort_newest: "新しい順",
   search_placeholder: "スレッドを検索",
   total_threads: "全 {{count}} 件のスレッド",
+  login_to_use: "AIチャットを使用するにはログインしてください",
 };

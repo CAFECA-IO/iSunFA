@@ -1,0 +1,54 @@
+export const transportationCarbonFootprintCalculator = {
+  "default_ai_input": "타이베이 국부기념관에서 맨체스터 박물관으로 5000kg의 석판 운송",
+  "analysis_failed": "분석 실패",
+  "error": {
+    "missing_input": "운송 경로 설명을 입력하거나 고급 설정을 펼쳐서 전체 매개변수를 수동으로 입력하세요.",
+    "ai_parse_failed": "AI 구문 분석 실패",
+    "missing_params": "전체 매개변수를 가져올 수 없습니다. AI 분석 결과를 확인하거나 수동으로 입력하세요."
+  },
+  "payment": {
+    "fee_name": "탄소 발자국 분석 비용",
+    "modal_label": "물류 탄소 발자국 분석",
+    "modal_value": "물류 분석"
+  },
+  "pdf": {
+    "generating_title": "고품질 PDF 생성 중...",
+    "generating_desc": "몇 초 정도 걸릴 수 있습니다. 잠시 기다려주세요",
+    "generating_title_large": "고품질 PDF 보고서를 생성 중입니다",
+    "generating_desc_large_1": "시스템이 지도 경로와 상세 분석 데이터를 추출하고 있습니다...",
+    "generating_desc_large_2": "고품질 렌더링 콘텐츠가 포함되어 있으므로 몇 초 정도 걸릴 수 있습니다. 잠시 기다려 주십시오.",
+    "error_failed": "PDF 생성 실패, 오류 메시지: ",
+    "error_unknown": "알 수 없는 오류",
+    "mode_land": "육상 운송",
+    "mode_sea": "해상 복합 운송",
+    "mode_air": "항공 복합 운송",
+    "origin": "출발지",
+    "dest": "도착지",
+    "footer": "페이지 {{current}} / {{total}} • 경로: {{origin}} ➝ {{dest}}",
+    "section_analysis": "전용 섹션 분석",
+    "weight_label": "총 중량: {{weight}} KG",
+    "watermark": "iSunFA CONFIDENTIAL"
+  },
+  "ui": {
+    "title": "물류 탄소 발자국",
+    "description": "AI로 운송 경로를 지능적으로 분석하여 육상, 해상 및 항공 구간을 자동으로 나누고 IPCC 표준에 따라 마일리지 및 탄소 배출량을 추정합니다.",
+    "not_generated": "분석 보고서가 아직 생성되지 않았습니다",
+    "config_title": "매개변수 구성 및 분석 제어",
+    "route_description": "운송 경로 설명",
+    "route_placeholder": "예: 타이베이시에서 미국 뉴욕으로 화물 운송",
+    "advanced_config": "고급 매개변수 수동 구성 (선택 사항)",
+    "origin_lat": "출발지 위도",
+    "origin_lng": "출발지 경도",
+    "dest_lat": "도착지 위도",
+    "dest_lng": "도착지 경도",
+    "total_weight": "총 중량 (KG)",
+    "land_route": "육상 운송 계획",
+    "sea_route": "해상 복합 운송",
+    "air_route": "항공 복합 운송",
+    "exporting": "내보내는 중...",
+    "export_report": "보고서 내보내기",
+    "calculating": "계산 중...",
+    "generate_report": "분석 보고서 생성",
+    "login_to_generate": "분석 보고서를 생성하려면 로그인하십시오"
+  }
+};

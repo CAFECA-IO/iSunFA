@@ -15,9 +15,12 @@ import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { useOrderTransaction, IOrderPayload } from "@/hooks/use_order_transaction";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { ORDER_TYPE } from "@/constants/status";
+import { ANALYSIS_BASE_COSTS } from '@/constants/price';
+import { useTranslation } from "@/i18n/i18n_context";
 
 export default function ReportPage() {
-	const [aiInput, setAiInput] = useState('從臺北國父紀念館運送 5000 公斤的石板到曼徹斯特博物館');
+	const { t } = useTranslation();
+	const [aiInput, setAiInput] = useState(t("transportation_carbon_footprint_calculator.default_ai_input"));
 	const [weightKg, setWeightKg] = useState<number | ''>('');
 	const [isParsing, setIsParsing] = useState(false);
 	const [loading, setLoading] = useState(false);
@@ -121,7 +124,7 @@ export default function ReportPage() {
 			const result = response.payload;
 			setPlan(result);
 		} catch (err) {
-			setError(err instanceof Error ? err.message : '分析失敗');
+			setError(err instanceof Error ? err.message : t('transportation_carbon_footprint_calculator.analysis_failed'));
 		} finally {
 			setLoading(false);
 			setIsParsing(false);
@@ -145,14 +148,14 @@ export default function ReportPage() {
 			},
 			items: [
 				{
-					name: "碳足跡分析費用", // 可以換成 i18n
-					unitPrice: 10,
+					name: t('transportation_carbon_footprint_calculator.payment.fee_name'),
+					unitPrice: ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT,
 					quantity: 1,
 				},
 			],
 		};
 
-		await executeOrderTransaction(orderPayload, 10, async (authData) => {
+		await executeOrderTransaction(orderPayload, ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT, async (authData) => {
 			await calculateFootprint(authData.orderId);
 			setIsPaymentModalOpen(false);
 		});
@@ -287,7 +290,7 @@ export default function ReportPage() {
 			pdf.save(`iSunFA_Logistics_Carbon_Report_${Date.now()}.pdf`);
 		} catch (err) {
 			console.error("Failed to generate PDF", err);
-			alert("生成 PDF 失敗，錯誤訊息：" + (err instanceof Error ? err.message : '未知錯誤'));
+			alert(t('transportation_carbon_footprint_calculator.pdf.error_failed') + (err instanceof Error ? err.message : t('transportation_carbon_footprint_calculator.pdf.error_unknown')));
 		} finally {
 			setIsExporting(false);
 		}
@@ -317,15 +320,6 @@ export default function ReportPage() {
 				<title>iSunFA ESG Logistics Static Report</title>
 			</Head>
 
-			{/* Info: (20260501 - Luphia) PDF 匯出時的滿版覆蓋載入提示 */}
-			{isExporting && (
-				<div className="fixed inset-0 z-[9999] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center pointer-events-none">
-					<Loader2 className="w-16 h-16 text-orange-500 animate-spin mb-4" />
-					<h2 className="text-2xl font-bold text-gray-800">正在生成高畫質 PDF...</h2>
-					<p className="text-gray-500 mt-2">這可能需要幾秒鐘的時間，請稍候</p>
-				</div>
-			)}
-
 			<PaymentConfirmModal
 				isOpen={isPaymentModalOpen}
 				onClose={() => {
@@ -337,11 +331,11 @@ export default function ReportPage() {
 					}
 				}}
 				onConfirm={handlePaymentConfirm}
-				cost={10}
+				cost={ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT}
 				items={[
 					{
-						label: "物流碳足跡分析",
-						value: "物流分析",
+						label: t('transportation_carbon_footprint_calculator.payment.modal_label'),
+						value: t('transportation_carbon_footprint_calculator.payment.modal_value'),
 					},
 				]}
 				status={workflowStatus}
@@ -351,10 +345,10 @@ export default function ReportPage() {
 			{isExporting && (
 				<div className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
 					<Loader2 className="w-16 h-16 text-orange-600 animate-spin mb-6 drop-shadow-md" />
-					<h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">正在為您產生高畫質 PDF 報告</h2>
+					<h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">{t('transportation_carbon_footprint_calculator.pdf.generating_title_large')}</h2>
 					<p className="text-gray-500 font-medium max-w-md text-sm md:text-base leading-relaxed">
-						系統正在擷取地圖路線與詳細分析數據...<br />
-						由於包含高畫質渲染內容，這可能需要幾秒鐘的時間，請稍候片刻。
+						{t('transportation_carbon_footprint_calculator.pdf.generating_desc_large_1')}<br />
+						{t('transportation_carbon_footprint_calculator.pdf.generating_desc_large_2')}
 					</p>
 
 					{/* Info: (20260501 - Luphia) Progress Indicator */}
@@ -363,13 +357,6 @@ export default function ReportPage() {
 					</div>
 				</div>
 			)}
-
-			{/* Info: (20260501 - Luphia) Watermark for confidentiality */}
-			<div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center opacity-[0.02] overflow-hidden mix-blend-multiply">
-				<div className="transform -rotate-45 text-[10vw] md:text-[7vw] lg:text-[5vw] xl:text-[6rem] font-black tracking-widest text-gray-900 whitespace-nowrap">
-					iSunFA CONFIDENTIAL
-				</div>
-			</div>
 
 			<div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80 pointer-events-none" aria-hidden="true">
 				<div
@@ -386,10 +373,10 @@ export default function ReportPage() {
 						<Leaf className="w-8 h-8 text-orange-600" />
 					</div>
 					<h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-orange-700 via-orange-500 to-amber-400 drop-shadow-sm pb-2">
-						物流碳足跡
+						{t('transportation_carbon_footprint_calculator.ui.title')}
 					</h1>
 					<p className="text-gray-600 max-w-2xl mx-auto text-lg leading-relaxed">
-						透過 AI 智能分析運輸路線，自動分割陸運、海運與空運路段，並依據 IPCC 基準估算各區段里程與碳排放量。
+						{t('transportation_carbon_footprint_calculator.ui.description')}
 					</p>
 				</div>
 
@@ -399,7 +386,7 @@ export default function ReportPage() {
 						<div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-6 md:p-8 shadow-xl">
 							<div className="flex justify-between items-center mb-6">
 								<h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-									<Settings2 className="w-5 h-5 text-orange-500" /> 參數配置與分析控制
+									<Settings2 className="w-5 h-5 text-orange-500" /> {t('transportation_carbon_footprint_calculator.ui.config_title')}
 								</h2>
 							</div>
 
@@ -408,7 +395,7 @@ export default function ReportPage() {
 								<div className="flex flex-col md:flex-row gap-4">
 									<label className="flex-1 w-full flex flex-col gap-2">
 										<div className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-											<Sparkles className="w-4 h-4 text-orange-500" /> 運輸路線描述
+											<Sparkles className="w-4 h-4 text-orange-500" /> {t('transportation_carbon_footprint_calculator.ui.route_description')}
 										</div>
 										<input
 											type="text" value={aiInput} onChange={(e) => {
@@ -417,8 +404,8 @@ export default function ReportPage() {
 												setDest({ lat: '', lng: '' });
 												setWeightKg('');
 											}}
-											placeholder="例如：從台北市運送貨物到美國紐約"
-											aria-label="運輸路線描述"
+											placeholder={t('transportation_carbon_footprint_calculator.ui.route_placeholder')}
+											aria-label={t('transportation_carbon_footprint_calculator.ui.route_description')}
 											disabled={isLocked || isParsing}
 											className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all text-gray-900 shadow-sm disabled:bg-gray-100 disabled:text-gray-500"
 										/>
@@ -431,31 +418,31 @@ export default function ReportPage() {
 										onClick={() => setShowManual(!showManual)}
 										className="w-full px-6 py-3.5 flex justify-between items-center hover:bg-orange-50/50 transition-colors text-sm font-semibold text-gray-600 group"
 									>
-										<span className="flex items-center gap-2 group-hover:text-orange-600 transition-colors"><Settings2 className="w-4 h-4" /> 進階參數手動配置 (可選)</span>
+										<span className="flex items-center gap-2 group-hover:text-orange-600 transition-colors"><Settings2 className="w-4 h-4" /> {t('transportation_carbon_footprint_calculator.ui.advanced_config')}</span>
 										{showManual ? <ChevronUp className="w-4 h-4 group-hover:text-orange-600 transition-colors" /> : <ChevronDown className="w-4 h-4 group-hover:text-orange-600 transition-colors" />}
 									</button>
 
 									{showManual && (
 										<div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 border-t border-gray-200/60 bg-white/60 backdrop-blur-sm">
 											<label className="flex flex-col gap-1.5 cursor-pointer">
-												<span className="text-xs font-bold text-gray-500 tracking-wider">起點緯度</span>
-												<input type="number" step="any" aria-label="起點緯度" value={origin.lat} onChange={e => setOrigin({ ...origin, lat: e.target.value ? parseFloat(e.target.value) : '' })} disabled={isLocked} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 disabled:bg-gray-100/80 disabled:text-gray-400 transition-all shadow-sm" />
+												<span className="text-xs font-bold text-gray-500 tracking-wider">{t('transportation_carbon_footprint_calculator.ui.origin_lat')}</span>
+												<input type="number" step="any" aria-label={t('transportation_carbon_footprint_calculator.ui.origin_lat')} value={origin.lat} onChange={e => setOrigin({ ...origin, lat: e.target.value ? parseFloat(e.target.value) : '' })} disabled={isLocked} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 disabled:bg-gray-100/80 disabled:text-gray-400 transition-all shadow-sm" />
 											</label>
 											<label className="flex flex-col gap-1.5 cursor-pointer">
-												<span className="text-xs font-bold text-gray-500 tracking-wider">起點經度</span>
-												<input type="number" step="any" aria-label="起點經度" value={origin.lng} onChange={e => setOrigin({ ...origin, lng: e.target.value ? parseFloat(e.target.value) : '' })} disabled={isLocked} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 disabled:bg-gray-100/80 disabled:text-gray-400 transition-all shadow-sm" />
+												<span className="text-xs font-bold text-gray-500 tracking-wider">{t('transportation_carbon_footprint_calculator.ui.origin_lng')}</span>
+												<input type="number" step="any" aria-label={t('transportation_carbon_footprint_calculator.ui.origin_lng')} value={origin.lng} onChange={e => setOrigin({ ...origin, lng: e.target.value ? parseFloat(e.target.value) : '' })} disabled={isLocked} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 disabled:bg-gray-100/80 disabled:text-gray-400 transition-all shadow-sm" />
 											</label>
 											<label className="flex flex-col gap-1.5 cursor-pointer">
-												<span className="text-xs font-bold text-gray-500 tracking-wider">終點緯度</span>
-												<input type="number" step="any" aria-label="終點緯度" value={dest.lat} onChange={e => setDest({ ...dest, lat: e.target.value ? parseFloat(e.target.value) : '' })} disabled={isLocked} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 disabled:bg-gray-100/80 disabled:text-gray-400 transition-all shadow-sm" />
+												<span className="text-xs font-bold text-gray-500 tracking-wider">{t('transportation_carbon_footprint_calculator.ui.dest_lat')}</span>
+												<input type="number" step="any" aria-label={t('transportation_carbon_footprint_calculator.ui.dest_lat')} value={dest.lat} onChange={e => setDest({ ...dest, lat: e.target.value ? parseFloat(e.target.value) : '' })} disabled={isLocked} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 disabled:bg-gray-100/80 disabled:text-gray-400 transition-all shadow-sm" />
 											</label>
 											<label className="flex flex-col gap-1.5 cursor-pointer">
-												<span className="text-xs font-bold text-gray-500 tracking-wider">終點經度</span>
-												<input type="number" step="any" aria-label="終點經度" value={dest.lng} onChange={e => setDest({ ...dest, lng: e.target.value ? parseFloat(e.target.value) : '' })} disabled={isLocked} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 disabled:bg-gray-100/80 disabled:text-gray-400 transition-all shadow-sm" />
+												<span className="text-xs font-bold text-gray-500 tracking-wider">{t('transportation_carbon_footprint_calculator.ui.dest_lng')}</span>
+												<input type="number" step="any" aria-label={t('transportation_carbon_footprint_calculator.ui.dest_lng')} value={dest.lng} onChange={e => setDest({ ...dest, lng: e.target.value ? parseFloat(e.target.value) : '' })} disabled={isLocked} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 disabled:bg-gray-100/80 disabled:text-gray-400 transition-all shadow-sm" />
 											</label>
 											<label className="flex flex-col gap-1.5 cursor-pointer">
-												<span className="text-xs font-bold text-orange-600 flex items-center gap-1 tracking-wider"><Weight className="w-3 h-3" /> 總重 (KG)</span>
-												<input type="number" step="any" aria-label="總重" value={weightKg} onChange={e => setWeightKg(e.target.value ? parseFloat(e.target.value) : '')} disabled={isLocked} className="w-full bg-white border border-orange-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 disabled:bg-orange-50/50 disabled:text-gray-400 transition-all shadow-sm" />
+												<span className="text-xs font-bold text-orange-600 flex items-center gap-1 tracking-wider"><Weight className="w-3 h-3" /> {t('transportation_carbon_footprint_calculator.ui.total_weight')}</span>
+												<input type="number" step="any" aria-label={t('transportation_carbon_footprint_calculator.ui.total_weight')} value={weightKg} onChange={e => setWeightKg(e.target.value ? parseFloat(e.target.value) : '')} disabled={isLocked} className="w-full bg-white border border-orange-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 disabled:bg-orange-50/50 disabled:text-gray-400 transition-all shadow-sm" />
 											</label>
 										</div>
 									)}
@@ -473,7 +460,7 @@ export default function ReportPage() {
 													selectedRoutes.has('land') ? 'bg-orange-50 border-orange-200 text-orange-700 shadow-sm' :
 														'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
 									>
-										<Truck className="w-4 h-4" /> 純陸運方案
+										<Truck className="w-4 h-4" /> {t('transportation_carbon_footprint_calculator.ui.land_route')}
 									</button>
 									<button
 										onClick={() => toggleRoute('sea')}
@@ -483,7 +470,7 @@ export default function ReportPage() {
 												selectedRoutes.has('sea') ? 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm' :
 													'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
 									>
-										<Ship className="w-4 h-4" /> 海運多式聯運
+										<Ship className="w-4 h-4" /> {t('transportation_carbon_footprint_calculator.ui.sea_route')}
 									</button>
 									<button
 										onClick={() => toggleRoute('air')}
@@ -493,28 +480,30 @@ export default function ReportPage() {
 												selectedRoutes.has('air') ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm' :
 													'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
 									>
-										<Plane className="w-4 h-4" /> 空運多式聯運
+										<Plane className="w-4 h-4" /> {t('transportation_carbon_footprint_calculator.ui.air_route')}
 									</button>
 								</div>
 
 								<div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-									<button
-										onClick={handleDownloadPDF}
-										disabled={!plan || loading || isParsing || isExporting}
-										className="px-8 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:hover:translate-y-0 flex items-center gap-2 shadow-md transform hover:-translate-y-0.5 w-full sm:w-auto justify-center"
-									>
-										{isExporting ? <><Loader2 className="w-5 h-5 animate-spin" /> 匯出中...</> : <><Download className="w-5 h-5" /> 匯出報告</>}
-									</button>
+									{user && (
+										<button
+											onClick={handleDownloadPDF}
+											disabled={!plan || loading || isParsing || isExporting}
+											className="px-8 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:hover:translate-y-0 flex items-center gap-2 shadow-md transform hover:-translate-y-0.5 w-full sm:w-auto justify-center"
+										>
+											{isExporting ? <><Loader2 className="w-5 h-5 animate-spin" /> {t('transportation_carbon_footprint_calculator.ui.exporting')}</> : <><Download className="w-5 h-5" /> {t('transportation_carbon_footprint_calculator.ui.export_report')}</>}
+										</button>
+									)}
 									{user ? (
 										<button
 											onClick={handleOpenPayment} disabled={loading || isParsing || isExporting}
 											className="px-8 py-3 bg-orange-600 hover:bg-orange-500 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:hover:translate-y-0 flex items-center gap-2 shadow-md transform hover:-translate-y-0.5 w-full sm:w-auto justify-center"
 										>
-											{(loading || isParsing) ? <><Loader2 className="w-5 h-5 animate-spin" /> 運算中...</> : <><Activity className="w-5 h-5" /> 產生分析報告</>}
+											{(loading || isParsing) ? <><Loader2 className="w-5 h-5 animate-spin" /> {t('transportation_carbon_footprint_calculator.ui.calculating')}</> : <><Activity className="w-5 h-5" /> {t('transportation_carbon_footprint_calculator.ui.generate_report')}</>}
 										</button>
 									) : (
 										<div className="w-full sm:w-auto">
-											<LoginButton label="請先登入以產生分析報告" />
+											<LoginButton label={t('transportation_carbon_footprint_calculator.ui.login_to_generate')} />
 										</div>
 									)}
 								</div>
@@ -530,18 +519,18 @@ export default function ReportPage() {
 								{/* Info: (20260501 - Luphia) 根據選擇的路線，動態渲染，並在匯出時每一頁獨立用 ReportLayout 包覆 */}
 								{(() => {
 									const routesToRender = ['land', 'sea', 'air'].filter(type => selectedRoutes.has(type as RouteType) && (type !== 'land' || isLandAvailable));
-									const getModeName = (mode: string) => mode === 'land' ? '純陸運' : mode === 'sea' ? '海運多式聯運' : '空運多式聯運';
-									const originName = origin.lat ? `${origin.lat}, ${origin.lng}` : '起點';
-									const destName = dest.lat ? `${dest.lat}, ${dest.lng}` : '終點';
+									const getModeName = (mode: string) => mode === 'land' ? t('transportation_carbon_footprint_calculator.pdf.mode_land') : mode === 'sea' ? t('transportation_carbon_footprint_calculator.pdf.mode_sea') : t('transportation_carbon_footprint_calculator.pdf.mode_air');
+									const originName = origin.lat ? `${origin.lat}, ${origin.lng}` : t('transportation_carbon_footprint_calculator.pdf.origin');
+									const destName = dest.lat ? `${dest.lat}, ${dest.lng}` : t('transportation_carbon_footprint_calculator.pdf.dest');
 
 									return routesToRender.map((type, index) => (
 										<div key={type} id={`pdf-page-${type}`} className={isExporting ? 'bg-transparent shadow-none' : ''}>
 											<ReportLayout
 												isPdfExport={isExporting}
 												hideFrameUnlessExport={true}
-												badgeText={`${getModeName(type)}碳足跡分析報告`}
+												badgeText={`${getModeName(type)} ${t('transportation_carbon_footprint_calculator.payment.fee_name')}`}
 												footerType={isExporting ? "simple" : "none"}
-												footerTitle={`頁碼 ${index + 1} / ${routesToRender.length} • 路線：${originName} ➝ ${destName}`}
+												footerTitle={t('transportation_carbon_footprint_calculator.pdf.footer').replace('{{current}}', String(index + 1)).replace('{{total}}', String(routesToRender.length)).replace('{{origin}}', originName).replace('{{dest}}', destName)}
 												className={isExporting ? "bg-white min-h-[1448px] rounded-none shadow-none ring-0 border-none justify-between" : "bg-transparent shadow-none ring-0 border-none"}
 												contentClassName={isExporting ? "p-8" : "p-0"}
 											>
@@ -552,7 +541,7 @@ export default function ReportPage() {
 															<div className="p-2.5 bg-white rounded-xl shadow-sm border border-gray-100">
 																{type === 'land' ? <Truck className="w-6 h-6 text-orange-500" /> : type === 'sea' ? <Ship className="w-6 h-6 text-emerald-500" /> : <Plane className="w-6 h-6 text-blue-500" />}
 															</div>
-															<h2 className="text-2xl font-bold text-gray-900">{getModeName(type)}專屬區段分析</h2>
+															<h2 className="text-2xl font-bold text-gray-900">{getModeName(type)} {t('transportation_carbon_footprint_calculator.pdf.section_analysis')}</h2>
 														</div>
 														<div className="flex flex-wrap items-center text-gray-700 text-sm font-semibold gap-3">
 															<div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm flex-1 sm:flex-none">
@@ -566,7 +555,7 @@ export default function ReportPage() {
 															</div>
 															<div className="ml-auto flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
 																<Weight className="w-4 h-4 text-blue-500" />
-																<span>總重: {weightKg || 1000} KG</span>
+																<span>{t('transportation_carbon_footprint_calculator.pdf.weight_label').replace('{{weight}}', String(weightKg || 1000))}</span>
 															</div>
 														</div>
 													</div>
@@ -582,7 +571,7 @@ export default function ReportPage() {
 						) : (
 							<div className="mt-12 text-center py-24 bg-gray-50 rounded-3xl border border-gray-100 border-dashed">
 								<Leaf className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-								<h3 className="text-gray-500 font-medium">分析報告尚未生成</h3>
+								<h3 className="text-gray-500 font-medium">{t('transportation_carbon_footprint_calculator.ui.not_generated')}</h3>
 							</div>
 						)}
 					</div>
