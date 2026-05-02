@@ -50,11 +50,25 @@ export async function GET(
       }
     }
 
+    // Info: (20260502 - Luphia) Automatically unwrap TRANSPORTATION_CARBON_FOOTPRINT result
+    let finalResult = analysis.result;
+    if (analysis.type === "TRANSPORTATION_CARBON_FOOTPRINT" && finalResult) {
+      if (typeof finalResult === "object") {
+        const resObj = finalResult as Record<string, unknown>;
+        if (typeof resObj.answer === "string") {
+          finalResult = resObj.answer;
+        } else {
+          // Info: (20260502 - Luphia) Stringify the raw object so the frontend JSON.parse doesn't throw
+          finalResult = JSON.stringify(finalResult);
+        }
+      }
+    }
+
     // Info: (20260130 - Luphia) Return full details including analysis result
     return jsonOk({
       id: analysis.id,
       status: analysis.order?.status ?? "UNKNOWN",
-      result: analysis.result,
+      result: finalResult,
       createdAt: analysis.createdAt,
       type: analysis.type,
       isExternal,

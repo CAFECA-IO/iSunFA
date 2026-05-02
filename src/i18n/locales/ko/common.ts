@@ -12,6 +12,12 @@ export const common = {
   actions: "작업",
   note: "비고",
   optional_in_parentheses: "선택",
+  date: "Date",
+  status: "Status",
+  origin: "Origin",
+  destination: "Destination",
+  weight: "Weight",
+  load: "Load",
   no_data: "데이터 없음",
   cancel_edit_title: "편집 취소?",
   cancel_edit_message:

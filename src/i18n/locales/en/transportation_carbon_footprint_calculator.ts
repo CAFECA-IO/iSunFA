@@ -49,7 +49,12 @@ export const transportationCarbonFootprintCalculator = {
     "export_report": "Export Report",
     "calculating": "Calculating...",
     "generate_report": "Generate Analysis Report",
-    "login_to_generate": "Please login to generate analysis report"
+    "login_to_generate": "Please login to generate analysis report",
+    "tab_analysis": "Carbon Accounting",
+    "tab_history": "Historical Reports"
+  },
+  "history": {
+    "title": "Historical Analysis Paths"
   }
 ,
   "plan_section": {

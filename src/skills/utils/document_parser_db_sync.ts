@@ -26,6 +26,14 @@ export interface IDocNode {
     emissionFactor?: number | string;
     source?: string;
   };
+  emissionSourceId?: string;
+  newEmissionSource?: {
+    name?: string;
+    description?: string;
+    unit?: string;
+    emissionFactor?: number | string;
+    source?: string;
+  };
   scope?: string;
   activityType?: string;
   vendor?: string;
@@ -228,7 +236,9 @@ export async function syncDocumentResultToDatabase(
         const ed = esg.data || esg;
         const confidence = parseInt(String(ed.confidence)) || 0;
         let finalCoefficientId = ed.coefficientId || null;
+        let finalEmissionSourceId = ed.emissionSourceId || null;
 
+        // Info: (20260430 - Julian) 將 AI 提供的新係數加入 DB
         if (ed.newCoefficient && ed.newCoefficient.name) {
           const newCoef = await tx.coefficient.create({
             data: {
@@ -242,6 +252,27 @@ export async function syncDocumentResultToDatabase(
             },
           });
           finalCoefficientId = newCoef.id;
+        }
+
+        // Info: (20260430 - Julian) 將 AI 提供的新排放源歸口加入 DB
+        if (ed.newEmissionSource && ed.newEmissionSource.name) {
+          const newEmissionSource = await tx.emissionSource.create({
+            data: {
+              name: ed.newEmissionSource.name,
+              accountBookId: accountBookId, // Info: (20260430 - Julian) 歸屬到當前帳本
+            }
+          });
+          finalEmissionSourceId = newEmissionSource.id;
+        }
+
+        if (finalCoefficientId) {
+          const coefExists = await tx.coefficient.findUnique({ where: { id: finalCoefficientId } });
+          if (!coefExists) finalCoefficientId = null;
+        }
+
+        if (finalEmissionSourceId) {
+          const sourceExists = await tx.emissionSource.findUnique({ where: { id: finalEmissionSourceId } });
+          if (!sourceExists) finalEmissionSourceId = null;
         }
 
         const esgData: Prisma.EsgRecordUncheckedCreateInput = {
@@ -261,6 +292,7 @@ export async function syncDocumentResultToDatabase(
           aiNote: ed.aiNote ?? "無 AI 分析備註",
           analysisStatus: "COMPLETED" as AIAnalysisStatus,
           coefficientId: finalCoefficientId,
+          emissionSourceId: finalEmissionSourceId,
         };
 
         if (existingEsg) {

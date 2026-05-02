@@ -49,7 +49,12 @@ export async function processNext() {
       try {
         await fs.access(closePath);
         continue; // Info: (20260430 - Luphia) Already closed
-      } catch {}
+      } catch { }
+
+      try {
+        await fs.access(path.join(taskDir, "giveup.md"));
+        continue; // Info: (20260502 - Luphia) Already given up
+      } catch { }
 
       processedAny = true;
       console.log(
@@ -118,23 +123,41 @@ export async function processNext() {
           const [, , , isRejected] = subData;
 
           if (isRejected) {
-            console.log(
-              `[MissionFallbacker] Task ${taskId} was REJECTED! Renaming files to re-execute...`,
-            );
-            const timestamp = Date.now();
-            try {
-              await fs.rename(
-                resultPath,
-                path.join(taskDir, `result_rejected_${timestamp}.md`),
+            if (submissionCount >= 3n) {
+              console.log(
+                `[MissionFallbacker] Task ${taskId} was REJECTED ${submissionCount} times! Giving up...`,
               );
-            } catch {}
-            try {
-              await fs.rename(
-                submitPath,
-                path.join(taskDir, `submit_rejected_${timestamp}.md`),
+              const giveupContent = `# Give Up Record
+- Task ID: ${taskId}
+- Status: Given Up
+- Reason: Rejected 3 times
+- Given Up At: ${new Date().toISOString()}
+`;
+              await fs.writeFile(
+                path.join(taskDir, "giveup.md"),
+                giveupContent,
+                "utf8",
               );
-            } catch {}
-            break; // Info: (20260430 - Luphia) process one per tick
+              break; // Info: (20260502 - Luphia) process one per tick
+            } else {
+              console.log(
+                `[MissionFallbacker] Task ${taskId} was REJECTED! Renaming files to re-execute...`,
+              );
+              const timestamp = Date.now();
+              try {
+                await fs.rename(
+                  resultPath,
+                  path.join(taskDir, `result_rejected_${timestamp}.md`),
+                );
+              } catch { }
+              try {
+                await fs.rename(
+                  submitPath,
+                  path.join(taskDir, `submit_rejected_${timestamp}.md`),
+                );
+              } catch { }
+              break; // Info: (20260430 - Luphia) process one per tick
+            }
           }
         }
       } catch (err) {

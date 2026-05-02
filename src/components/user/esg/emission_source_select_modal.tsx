@@ -13,7 +13,7 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
-import { IEsgEmissionSourcesUI } from "@/interfaces/emission_source";
+import { IEsgEmissionSourcesUI } from "@/interfaces/emission_sources";
 
 interface IEmissionSourceSelectModalProps {
   isOpen: boolean;
