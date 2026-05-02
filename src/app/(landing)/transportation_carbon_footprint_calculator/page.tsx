@@ -90,12 +90,9 @@ function ReportPageContent() {
 	// Info: (20260501 - Luphia) Fetch History (優化：包裝 useCallback 供 useEffect 穩定依賴)
 	const fetchHistory = useCallback(async () => {
 		try {
-			const res = await request<{ payload: IHistoryItem[] }>('/api/v1/user/analysis');
+			const res = await request<{ payload: IHistoryItem[] }>('/api/v1/user/analysis?category=TRANSPORTATION_CARBON_FOOTPRINT');
 			if (res?.payload) {
-				const transportHistory = res.payload.filter(
-					item => item.category === ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT
-				);
-				setHistory(transportHistory);
+				setHistory(res.payload);
 			}
 		} catch (e) {
 			console.error("Failed to fetch history", e);
