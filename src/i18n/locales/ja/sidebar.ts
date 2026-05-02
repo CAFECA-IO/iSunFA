@@ -5,4 +5,6 @@ export const sidebar = {
   team: "チーム管理",
   settings: "設定",
   account_book: "帳簿の切り替え",
+  public_modules: "ツール",
 };
+

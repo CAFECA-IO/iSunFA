@@ -59,6 +59,7 @@ export const analysis = {
   },
   title: "顧問分析",
   desc: "提供多領域專家企業分析，協助管理層做出明智商業決策。",
+  login_to_generate: "請先登入以產生分析報告",
   internal_analysis: "內部數據分析",
   external_analysis: "外部數據分析",
   addon_bookkeeper: "加購記賬士簽證",

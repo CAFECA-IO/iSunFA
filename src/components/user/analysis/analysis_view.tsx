@@ -16,6 +16,8 @@ import { type AnalysisCategory, type AnalysisPeriod, ANALYSIS_PERIOD } from '@/c
 import { ANALYSIS_ADDON_COSTS } from '@/constants/price';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { ORDER_TYPE } from '@/constants/status';
+import { useAuth } from '@/contexts/auth_context';
+import LoginButton from '@/components/common/login_button';
 
 // Info: (20260419 - Luphia) 靜態常數外提，避免每次 Render 重複建立 ---
 const SEASONS = ['S1', 'S2', 'S3', 'S4'];
@@ -26,6 +28,7 @@ type TabType = 'internal' | 'external' | 'history';
 
 export default function AnalysisView() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -121,6 +124,7 @@ export default function AnalysisView() {
 
   // Info: (20260419 - Luphia) 取得 Account Books (加入 isMounted 防止 Memory Leak)
   useEffect(() => {
+    if (!user) return;
     let isMounted = true;
     request<{ payload: Array<{ id: string, name: string, enterpriseId?: string }> }>('/api/v1/user/account_book')
       .then(res => {
@@ -128,7 +132,7 @@ export default function AnalysisView() {
       })
       .catch(console.error);
     return () => { isMounted = false; };
-  }, []);
+  }, [user]);
 
   // Info: (20260419 - Luphia) 公司搜尋 Debounce
   useEffect(() => {
@@ -384,15 +388,15 @@ export default function AnalysisView() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-12 w-full">
       {/* Info: (20260419 - Luphia) Header */}
-      <div>
+      <div className="space-y-2">
         <h1 className="text-2xl font-bold text-gray-900">{t('analysis.title')}</h1>
         <p className="mt-2 text-sm text-gray-500">{t('analysis.desc')}</p>
       </div>
 
       {/* Info: (20260419 - Luphia) Tabs */}
-      <div className="flex justify-center">
+      <div className="flex justify-center mb-8">
         <div className="flex rounded-lg bg-gray-100 p-1">
           {(['internal', 'external', 'history'] as TabType[]).map(tab => (
             <button
@@ -582,13 +586,19 @@ export default function AnalysisView() {
                 </div>
               </div>
 
-              <button
-                onClick={handleGenerate}
-                disabled={(periodType !== ANALYSIS_PERIOD.YEARLY && !selectedPeriodValue) || (activeTab === 'external' && !isExternalCarbonAnalysis && !selectedCountry) || (activeTab === 'external' && !isExternalCarbonAnalysis && category !== ANALYSIS_CATEGORY.MARKET_TRENDS && !keyword.trim()) || (needsCompanyInput && !selectedCompany)}
-                className="w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed rounded-lg bg-orange-600 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 transition-colors"
-              >
-                {t('analysis.generate')}
-              </button>
+              {user ? (
+                <button
+                  onClick={handleGenerate}
+                  disabled={(periodType !== ANALYSIS_PERIOD.YEARLY && !selectedPeriodValue) || (activeTab === 'external' && !isExternalCarbonAnalysis && !selectedCountry) || (activeTab === 'external' && !isExternalCarbonAnalysis && category !== ANALYSIS_CATEGORY.MARKET_TRENDS && !keyword.trim()) || (needsCompanyInput && !selectedCompany)}
+                  className="w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed rounded-lg bg-orange-600 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 transition-colors"
+                >
+                  {t('analysis.generate')}
+                </button>
+              ) : (
+                <div className="h-full w-full sm:w-auto flex items-stretch">
+                  <LoginButton label={t('analysis.login_to_generate')} />
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 export const transportationCarbonFootprintCalculator = {
+  "title": "物流カーボンフットプリント",
   "default_ai_input": "台北の国父紀念館からマンチェスター博物館へ5000キロの石板を輸送する",
   "analysis_failed": "分析失敗",
   "error": {

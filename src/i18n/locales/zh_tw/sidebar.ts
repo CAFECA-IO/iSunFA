@@ -5,4 +5,6 @@ export const sidebar = {
   team: "團隊管理",
   settings: "設定",
   account_book: "帳本切換",
+  public_modules: "小工具",
 };
+
