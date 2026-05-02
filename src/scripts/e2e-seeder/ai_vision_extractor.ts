@@ -124,32 +124,18 @@ export const extractContextFromPdf = async (
     console.log(`[SUCCESS] Extracted and cached data for ${stockId}.`);
 
     return parsedData;
-  } catch {
-    console.warn(
-      `[WARN] Failed to extract data for ${stockId} from Gemini API. Falling back to mocked cache...`,
+  } catch (error) {
+    console.error(
+      `[FATAL] Failed to extract data for ${stockId} from Gemini API.`,
     );
-    const mockFallback: IExtractedContextCache = {
-      financial: {
-        travelExpenseRatio: 0.05,
-        utilitiesRatio: 0.1,
-        top3Vendors: ["台灣電力公司", "中華電信", "中鋼公司"],
-        depreciationStrategy: "直線法 (Straight-line)",
-      },
-      esg: {
-        scope1MajorSource: "自有車隊及發電機柴油燃燒",
-        scope2MajorSource: "台電外購電力",
-        hasGreenEnergyPurchases: false,
-      },
-      simulatedNoise: {
-        suggestedNoiseLevel: "medium",
-        commonMissingFields: ["tax_id", "date"],
-      },
-    };
-    fs.writeFileSync(cachePath, JSON.stringify(mockFallback, null, 2), "utf-8");
-    console.log(
-      `[SUCCESS] Generated and cached fallback mock data for ${stockId}.`,
+    console.error(
+      "This is likely due to a network timeout or VPN restriction when uploading large PDFs to the AI model.",
     );
-    return mockFallback;
+    console.error(
+      "-> PLEASE CHECK YOUR VPN CONNECTION OR PROXY SETTINGS AND RETRY <-",
+    );
+    console.error("Error details:", error);
+    process.exit(1);
   }
 };
 
