@@ -13,13 +13,14 @@ export const emissionSources = {
   },
   modal: {
     title: "Add Emission Source",
+    title_edit: "Edit Emission Source",
     name_label: "Emission Source (Site) Name",
     name_placeholder: "e.g., Taichung Plant 2",
     name_error: "Please enter the emission source name",
     address_label: "Address (Optional)",
     address_placeholder: "e.g., 1 Industrial Rd., Xitun Dist., Taichung City",
     cancel: "Cancel",
-    confirm: "Confirm & Add",
+    confirm: "Save",
   },
   item: {
     no_records: "No ESG records logged yet",

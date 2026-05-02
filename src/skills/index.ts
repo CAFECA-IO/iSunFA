@@ -7,6 +7,7 @@ import { EsgIntensityEvaluationSkill } from "@/skills/document/esg_intensity_eva
 import { DocumentPreCheckSkill } from "@/skills/document/document_pre_check";
 import { MarketEventCollectionSkill } from "@/skills/market/market_event_collection";
 import { AiConsultingSkill } from "@/skills/ai_consulting/ai_consulting";
+import { TransportationCarbonFootprintEvaluationSkill } from "@/skills/document/transportation_carbon_footprint_evaluation";
 
 export const skillRegistry: Record<string, ITaskSkill> = {
   JOURNAL_PARSING: new JournalParsingSkill(),
@@ -17,4 +18,5 @@ export const skillRegistry: Record<string, ITaskSkill> = {
   DOCUMENT_PRE_CHECK: new DocumentPreCheckSkill(),
   MARKET_EVENT_COLLECTION: new MarketEventCollectionSkill(),
   AI_CONSULTING_TASK: new AiConsultingSkill(),
+  TRANSPORTATION_CARBON_FOOTPRINT: new TransportationCarbonFootprintEvaluationSkill(),
 };

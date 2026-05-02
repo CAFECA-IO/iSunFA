@@ -125,6 +125,7 @@ export const analysis = {
     ai_consulting: "AI コンサルティング",
     journal_upload: "仕訳帳の作成",
     certificate_analysis: "証憑分析",
+    transportation_carbon_footprint: "輸送カーボンフットプリント",
   },
   history: {
     title: "分析履歴",

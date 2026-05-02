@@ -1,6 +1,4 @@
 import { IPseudoTask } from "@/skills/types";
-import { accountBookRepo } from "@/repositories/account_book.repo";
-import { esgRepo } from "@/repositories/esg.repo";
 import { storageService } from "@/services/storage.service";
 
 export interface IDocumentContext {
@@ -91,15 +89,8 @@ export async function prepareDocumentContext(task: IPseudoTask) {
     );
   }
 
-  // Info: (20260326 - Julian) 取得帳本資訊
-  const accountBook = parsedContext.accountBookId
-    ? await accountBookRepo.getAccountBookById(parsedContext.accountBookId)
-    : null;
-
-  // Info: (20260417 - Julian) 取得碳排查紀錄
-  const esgRecord = parsedContext.esgRecordId
-    ? await esgRepo.getEsgRecordById(parsedContext.esgRecordId)
-    : null;
+  const accountBook = null;
+  const esgRecord = null;
 
   return { parsedContext, images, accountBook, esgRecord };
 }

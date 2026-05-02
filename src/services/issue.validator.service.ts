@@ -206,6 +206,42 @@ export async function processNext() {
               }
               const chatService = new ChatService(apiKey);
 
+              let contentToValidate = resultContent;
+              try {
+                const parsedResult = JSON.parse(resultContent);
+
+                // Info: (20260503 - Luphia) 限制傳入 AI 的文字長度，避免超出 token limit
+                const stripHeavyData = (obj: unknown): void => {
+                  if (!obj || typeof obj !== "object") return;
+
+                  const record = obj as Record<string, unknown>;
+
+                  for (const key of Object.keys(record)) {
+                    if (key === "geometry") {
+                      const geometry = record[key];
+                      if (geometry && typeof geometry === "object") {
+                        const geoRecord = geometry as Record<string, unknown>;
+                        if (geoRecord.coordinates) {
+                          geoRecord.coordinates = "[Geometry coordinates omitted for AI validation]";
+                        }
+                      }
+                    } else if (typeof record[key] === "object") {
+                      stripHeavyData(record[key]);
+                    }
+                  }
+                };
+
+                stripHeavyData(parsedResult);
+                contentToValidate = JSON.stringify(parsedResult, null, 2);
+
+                if (contentToValidate.length > 8000) {
+                  contentToValidate =
+                    contentToValidate.substring(0, 8000) + "\n...[truncated]";
+                }
+              } catch {
+                contentToValidate = resultContent.substring(0, 8000);
+              }
+
               const prompt = `
 Please act as an automated validator. Your task is to evaluate the provided execution result against the validation plan.
 Rate your confidence in the result's correctness and completeness on a scale of 0 to 100.
@@ -220,7 +256,7 @@ Validation Plan:
 ${validatorPlan}
 
 Execution Result:
-${resultContent.substring(0, 8000)} // Truncating to avoid token limit
+${contentToValidate}
 `;
               const rawResponse = await chatService.generateRaw(prompt);
 
@@ -282,46 +318,90 @@ ${resultContent.substring(0, 8000)} // Truncating to avoid token limit
               console.log(
                 `[IssueValidator] Validation passed for Task ID: ${currentTaskId}. Approving submission...`,
               );
-              const { request } = await publicClient.simulateContract({
-                account: adminAccount,
-                address: mbAddress,
-                abi: MB_ABI,
-                functionName: "approveSubmission",
-                args: [currentTaskId, subIndex],
-              });
-              const txHash = await walletClient.writeContract(request);
-              await publicClient.waitForTransactionReceipt({ hash: txHash });
+              try {
+                const { request } = await publicClient.simulateContract({
+                  account: adminAccount,
+                  address: mbAddress,
+                  abi: MB_ABI,
+                  functionName: "approveSubmission",
+                  args: [currentTaskId, subIndex],
+                });
+                const txHash = await walletClient.writeContract(request);
+                await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-              const approvedContent = `# Approved Submission
+                const approvedContent = `# Approved Submission
 - Result CID: ${resultCid}
 - Submission Index: ${subIndex}
 - Validator Note: Everything matches \`plan.validator.md\` successfully.
 - AI Confidence: ${aiConfidence}
 - Transaction Hash: ${txHash}
 `;
-              await fs.writeFile(approvedPath, approvedContent, "utf8");
+                await fs.writeFile(approvedPath, approvedContent, "utf8");
+              } catch (contractErr: unknown) {
+                const errMessage =
+                  contractErr instanceof Error
+                    ? contractErr.message
+                    : String(contractErr);
+                if (errMessage.includes("Invalid status")) {
+                  console.log(
+                    `[IssueValidator] Task ID: ${currentTaskId} was already approved/closed by another node/process. Skipping gracefully.`,
+                  );
+                  // Info: (20260502 - Luphia) Write a local record so we don't try again
+                  const approvedContent = `# Approved Submission
+- Result CID: ${resultCid}
+- Submission Index: ${subIndex}
+- Validator Note: Already approved on-chain by another validator.
+- AI Confidence: ${aiConfidence}
+`;
+                  await fs.writeFile(approvedPath, approvedContent, "utf8");
+                } else {
+                  throw contractErr;
+                }
+              }
             } else {
               console.log(
                 `[IssueValidator] Validation failed for Task ID: ${currentTaskId}. Rejecting submission... Reason: ${rejectReason}`,
               );
-              const { request } = await publicClient.simulateContract({
-                account: adminAccount,
-                address: mbAddress,
-                abi: MB_ABI,
-                functionName: "rejectSubmission",
-                args: [currentTaskId, subIndex],
-              });
-              const txHash = await walletClient.writeContract(request);
-              await publicClient.waitForTransactionReceipt({ hash: txHash });
+              try {
+                const { request } = await publicClient.simulateContract({
+                  account: adminAccount,
+                  address: mbAddress,
+                  abi: MB_ABI,
+                  functionName: "rejectSubmission",
+                  args: [currentTaskId, subIndex],
+                });
+                const txHash = await walletClient.writeContract(request);
+                await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-              const rejectedContent = `# Rejected Submission
+                const rejectedContent = `# Rejected Submission
 - Result CID: ${resultCid}
 - Submission Index: ${subIndex}
 - Reason: ${rejectReason}
 - AI Confidence: ${aiConfidence}
 - Transaction Hash: ${txHash}
 `;
-              await fs.writeFile(rejectedPath, rejectedContent, "utf8");
+                await fs.writeFile(rejectedPath, rejectedContent, "utf8");
+              } catch (contractErr: unknown) {
+                const errMessage =
+                  contractErr instanceof Error
+                    ? contractErr.message
+                    : String(contractErr);
+                if (errMessage.includes("Already rejected")) {
+                  console.log(
+                    `[IssueValidator] Task ID: ${currentTaskId} was already rejected by another node/process. Skipping gracefully.`,
+                  );
+                  // Info: (20260502 - Luphia) Write a local record so we don't try again
+                  const rejectedContent = `# Rejected Submission
+- Result CID: ${resultCid}
+- Submission Index: ${subIndex}
+- Reason: Already rejected on-chain by another validator.
+- AI Confidence: ${aiConfidence}
+`;
+                  await fs.writeFile(rejectedPath, rejectedContent, "utf8");
+                } else {
+                  throw contractErr;
+                }
+              }
             }
 
             validatedTask = true;

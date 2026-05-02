@@ -12,6 +12,12 @@ export const common = {
   actions: "Actions",
   note: "Note",
   optional_in_parentheses: "Optional",
+  date: "Date",
+  status: "Status",
+  origin: "Origin",
+  destination: "Destination",
+  weight: "Weight",
+  load: "Load",
   no_data: "No Data",
   cancel_edit_title: "Cancel Edit?",
   cancel_edit_message:

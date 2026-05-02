@@ -38,9 +38,11 @@ export class EsgIntensityEvaluationSkill implements ITaskSkill {
 
     try {
       if (esgRecord) {
-        activityType = esgRecord.activityType as EsgActivityTypeKey;
-        coefficient = esgRecord.coefficient?.emissionFactor
-          ? Number(esgRecord.coefficient.emissionFactor)
+        const record = esgRecord as unknown as Record<string, unknown>;
+        activityType = record.activityType as EsgActivityTypeKey;
+        const coefObj = record.coefficient as Record<string, unknown> | undefined;
+        coefficient = coefObj?.emissionFactor
+          ? Number(coefObj.emissionFactor)
           : 0;
       }
     } catch (error) {

@@ -1,5 +1,4 @@
 import { ITaskSkill } from "@/skills/types";
-import { getBaseVoucherPrompt } from "@/constants/prompts/voucher";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
@@ -29,10 +28,11 @@ export class VoucherBaseParsingSkill implements ITaskSkill {
     fullPrompt: string,
     chatService: ChatService,
   ): Promise<string> {
-    const { images, accountBook, parsedContext } =
+    const { images, parsedContext } =
       await prepareDocumentContext(task);
 
-    let promptText = getBaseVoucherPrompt(accountBook);
+    // Info: (20260501 - Luphia) Use fullPrompt provided by executor to keep worker stateless
+    let promptText = fullPrompt;
 
     if (parsedContext.journalText) {
       promptText += `\n\n【重要指示】\n使用者已提供/修正日記帳的最新內容如下。請優先依據以下文字資訊進行解析，若與圖片內容有衝突，以此文字為準：\n${parsedContext.journalText}`;
