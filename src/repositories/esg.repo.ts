@@ -56,7 +56,9 @@ export interface IEsgRepository {
     accountBookId: string,
     data: Prisma.EsgRecordUpdateInput,
   ): Promise<Prisma.BatchPayload>;
-  createEsgCoefficient(data: Prisma.CoefficientCreateInput): Promise<Coefficient>;
+  createEsgCoefficient(
+    data: Prisma.CoefficientCreateInput,
+  ): Promise<Coefficient>;
   countEsgCoefficients(where: Prisma.CoefficientWhereInput): Promise<number>;
   getEsgCoefficientById(id: string): Promise<Coefficient | null>;
   updateEsgCoefficient(
@@ -64,7 +66,9 @@ export interface IEsgRepository {
     data: Prisma.CoefficientUpdateInput,
   ): Promise<Coefficient | null>;
   deleteEsgCoefficient(id: string): Promise<{ id: string } | null>;
-  getEsgCoefficients(args: Prisma.CoefficientFindManyArgs): Promise<Coefficient[]>;
+  getEsgCoefficients(
+    args: Prisma.CoefficientFindManyArgs,
+  ): Promise<Coefficient[]>;
   getEsgEmissionSources(
     accountBookId: string,
     keyword: string,
@@ -499,12 +503,12 @@ export class EsgRepository implements IEsgRepository {
       // Info: (20260430 - Julian) 搜尋關鍵字：ID、名稱、地址
       ...(keyword
         ? {
-          OR: [
-            { id: { contains: keyword, mode: "insensitive" } },
-            { name: { contains: keyword, mode: "insensitive" } },
-            { address: { contains: keyword, mode: "insensitive" } },
-          ],
-        }
+            OR: [
+              { id: { contains: keyword, mode: "insensitive" } },
+              { name: { contains: keyword, mode: "insensitive" } },
+              { address: { contains: keyword, mode: "insensitive" } },
+            ],
+          }
         : {}),
     };
 
@@ -665,7 +669,9 @@ export class EsgRepository implements IEsgRepository {
     return result;
   }
 
-  async getEsgEmissionSourcesById(id: string): Promise<IEsgEmissionSourcesUI | null> {
+  async getEsgEmissionSourcesById(
+    id: string,
+  ): Promise<IEsgEmissionSourcesUI | null> {
     const source = await prisma.emissionSource.findUnique({
       where: { id },
       // Info: (20260430 - Julian) 取得排放源下的所有 ESG 紀錄，並排除已刪除的紀錄
@@ -713,7 +719,10 @@ export class EsgRepository implements IEsgRepository {
     };
   }
 
-  async updateEsgEmissionSources(id: string, data: Prisma.EmissionSourceUpdateInput): Promise<IEmissionSources | null> {
+  async updateEsgEmissionSources(
+    id: string,
+    data: Prisma.EmissionSourceUpdateInput,
+  ): Promise<IEmissionSources | null> {
     const updatedSource = await prisma.emissionSource.update({
       where: { id },
       data,

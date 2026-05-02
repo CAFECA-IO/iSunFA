@@ -395,9 +395,15 @@ export async function GET(request: NextRequest) {
         isExternal,
         isShared,
         isFinancialDataHidden,
-        origin: (missionData?.origin || (missionData?.data as Record<string, unknown>)?.origin || orderData?.origin) as Record<string, unknown> | undefined,
-        dest: (missionData?.dest || (missionData?.data as Record<string, unknown>)?.dest || orderData?.dest) as Record<string, unknown> | undefined,
-        weightKg: (missionData?.weightKg || (missionData?.data as Record<string, unknown>)?.weightKg || orderData?.weightKg) as number | undefined,
+        origin: (missionData?.origin ||
+          (missionData?.data as Record<string, unknown>)?.origin ||
+          orderData?.origin) as Record<string, unknown> | undefined,
+        dest: (missionData?.dest ||
+          (missionData?.data as Record<string, unknown>)?.dest ||
+          orderData?.dest) as Record<string, unknown> | undefined,
+        weightKg: (missionData?.weightKg ||
+          (missionData?.data as Record<string, unknown>)?.weightKg ||
+          orderData?.weightKg) as number | undefined,
         retryCount:
           typeof missionData?.retryCount === "number"
             ? missionData.retryCount

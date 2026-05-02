@@ -28,8 +28,7 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
     fullPrompt: string,
     chatService: ChatService,
   ): Promise<string> {
-    const { images, parsedContext } =
-      await prepareDocumentContext(task);
+    const { images, parsedContext } = await prepareDocumentContext(task);
 
     // Info: (20260501 - Luphia) Use fullPrompt provided by executor to keep worker stateless
     let promptText = fullPrompt;

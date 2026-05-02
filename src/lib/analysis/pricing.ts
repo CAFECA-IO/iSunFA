@@ -33,14 +33,18 @@ export interface IConsultationParams {
 
 export interface ITransportationParams {
   category: AnalysisCategory;
-  origin: { lat: number | ''; lng: number | '' };
-  dest: { lat: number | ''; lng: number | '' };
-  weightKg: number | '';
+  origin: { lat: number | ""; lng: number | "" };
+  dest: { lat: number | ""; lng: number | "" };
+  weightKg: number | "";
 }
 
 export interface IOrderParams {
   type: OrderType;
-  data: IAnalysisParams | IDocumentParams | IConsultationParams | ITransportationParams;
+  data:
+    | IAnalysisParams
+    | IDocumentParams
+    | IConsultationParams
+    | ITransportationParams;
   items?: { name: string; unitPrice: number; quantity: number }[];
 }
 

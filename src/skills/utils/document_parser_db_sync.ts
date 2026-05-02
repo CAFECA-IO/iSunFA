@@ -260,18 +260,22 @@ export async function syncDocumentResultToDatabase(
             data: {
               name: ed.newEmissionSource.name,
               accountBookId: accountBookId, // Info: (20260430 - Julian) 歸屬到當前帳本
-            }
+            },
           });
           finalEmissionSourceId = newEmissionSource.id;
         }
 
         if (finalCoefficientId) {
-          const coefExists = await tx.coefficient.findUnique({ where: { id: finalCoefficientId } });
+          const coefExists = await tx.coefficient.findUnique({
+            where: { id: finalCoefficientId },
+          });
           if (!coefExists) finalCoefficientId = null;
         }
 
         if (finalEmissionSourceId) {
-          const sourceExists = await tx.emissionSource.findUnique({ where: { id: finalEmissionSourceId } });
+          const sourceExists = await tx.emissionSource.findUnique({
+            where: { id: finalEmissionSourceId },
+          });
           if (!sourceExists) finalEmissionSourceId = null;
         }
 
