@@ -319,7 +319,12 @@ export class AnalysisService {
               parsedPrerequisiteParams.cashFlowReport = generateCashFlowStatement(periodLines);
             } else if (params.category === ANALYSIS_CATEGORY.INCOME_STATEMENT) {
               parsedPrerequisiteParams.incomeStatementReport = generateIncomeStatement(periodLines);
-            } else if (params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE || params.category === ANALYSIS_CATEGORY.FINANCIAL_HEALTH) {
+            } else if (
+              params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE || 
+              params.category === ANALYSIS_CATEGORY.FINANCIAL_HEALTH ||
+              params.category === ANALYSIS_CATEGORY.CARBON_HEALTH_CHECK ||
+              params.category === ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS
+            ) {
               parsedPrerequisiteParams.balanceSheetReport = generateBalanceSheet(cumulativeLines);
               parsedPrerequisiteParams.cashFlowReport = generateCashFlowStatement(periodLines);
               parsedPrerequisiteParams.incomeStatementReport = generateIncomeStatement(periodLines);
