@@ -57,3 +57,5 @@ yarn.lock
 
 # data & local seeding
 /data
+agent.md
+
