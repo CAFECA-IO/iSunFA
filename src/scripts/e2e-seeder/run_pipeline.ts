@@ -4,7 +4,7 @@ import { generateEsgRecords } from "@/scripts/e2e-seeder/esg_reverse_engineer";
 import { generateReceiptImages } from "@/scripts/e2e-seeder/receipt_image_generator";
 import { runCrossValidation } from "@/scripts/e2e-seeder/cross_validator";
 
-const runPipeline = async (stockId: string) => {
+export const runPipeline = async (stockId: string) => {
   console.log(
     `\n🚀 [START] Running Full E2E Seeder Pipeline for Stock ID: ${stockId}`,
   );
@@ -29,10 +29,10 @@ const runPipeline = async (stockId: string) => {
     console.log(`Check the output in: data/${stockId}/`);
   } catch (error) {
     console.error(
-      `\n❌ [PIPELINE FAILED] The pipeline was halted due to an error:`,
+      `\n❌ [PIPELINE FAILED] The pipeline was halted for ${stockId} due to an error:`,
       error,
     );
-    process.exit(1);
+    throw error;
   }
 };
 
@@ -44,5 +44,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     );
     process.exit(1);
   }
-  runPipeline(targetStock);
+  runPipeline(targetStock).catch(() => process.exit(1));
 }

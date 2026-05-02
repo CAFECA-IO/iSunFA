@@ -42,8 +42,6 @@ export interface IExtractedContextCache {
   };
 }
 
-
-
 export const extractContextFromPdf = async (
   stockId: string,
 ): Promise<IExtractedContextCache | null> => {
