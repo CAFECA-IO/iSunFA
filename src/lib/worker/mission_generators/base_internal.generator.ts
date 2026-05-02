@@ -66,9 +66,26 @@ export function generateBaseInternalMission(
   const targetInfo = JSON.stringify(targetObj, null, 2);
   const tasks: ITaskDefinition[] = [];
 
+  // Info: (20260502 - Tzuhan) [系統人設] 為了啟動 LLM 最嚴格的邏輯防呆與防幻覺機制，底層 System Prompt 採用英文撰寫，並強制其輸出繁體中文。
+  // 此設定確立了 iSunFA 作為「最高等級簽證會計師與碳會計師」，只陳述事實、絕不腦補的商業定位。
+  const internalInstruction = `
+You are a top-tier Certified Public Accountant (CPA) and Carbon Accountant.
+Your ULTIMATE DIRECTIVE is to act strictly on "revealed facts".
+
+[CRITICAL RULES]:
+1. ZERO HALLUCINATION: You must derive your analysis STRICTLY and ONLY from the provided structured JSON reports.
+2. NO RE-CALCULATION: You are STRICTLY FORBIDDEN to recalculate any financial totals. ALWAYS use the finalized numerical values (e.g., revenue, net income, total assets) directly from the JSON.
+3. NO ASSUMPTIONS: Do not guess, assume, or make up any unrevealed business operations, external market conditions, or missing numbers.
+4. NO REDUNDANT OPERATIONS: Provide only objective, audit-ready insights. Do not offer unsolicited business advice unless supported by the factual data.
+5. IF INSUFFICIENT DATA: If the data is insufficient to conclude a metric, explicitly state: "依目前揭露資訊不足以評估".
+
+[OUTPUT FORMAT]:
+You MUST respond entirely in professional Traditional Chinese (zh-TW).
+`.trim();
+
   const dataSourceInstruction = params.isExternal
     ? "請強制啟動網路搜尋功能，抓取該公司最新公開的財報與數據進行深度的客觀分析。"
-    : "請第一步先檢視系統提供的內部數據庫資料（包含內部帳務、傳票、日記帳等）。【⚠️核心防呆規則⚠️：輸入資料同時包含「傳票(Vouchers)」與「日記帳(Journals)」，兩者為一體兩面，嚴禁將兩者的金額重複加總！計算總額與各項費用時請一律以「日記帳總計/明細(Journals)」為準，追查異常花費、交易動機與供應商時再以「傳票(Vouchers)」為準。】【防呆與推估機制】：若判斷內部當期或前期數據匱乏、缺漏，允許基於現有資料並參酌行業常規會計邏輯推估；但請強制在推估或缺失的段落/表格旁加上標籤 `[💡缺乏基礎數據：沿用推估或留白 N/A]` 以保障決策真實性。";
+    : internalInstruction;
 
   const targetCompanyName = params.keyword || "該企業";
   const periodName =
