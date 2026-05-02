@@ -49,7 +49,12 @@ export const transportationCarbonFootprintCalculator = {
     "export_report": "レポートをエクスポート",
     "calculating": "計算中...",
     "generate_report": "分析レポートを生成",
-    "login_to_generate": "分析レポートを生成するにはログインしてください"
+    "login_to_generate": "分析レポートを生成するにはログインしてください",
+    "tab_analysis": "炭素会計",
+    "tab_history": "履歴レポート"
+  },
+  "history": {
+    "title": "Historical Analysis Paths"
   }
 ,
   "plan_section": {

@@ -120,6 +120,7 @@ export const analysis = {
     ai_consulting: "AI 咨询",
     journal_upload: "日记账建档",
     certificate_analysis: "凭证分析",
+    transportation_carbon_footprint: "物流碳足迹",
   },
   history: {
     title: "历史分析报告",

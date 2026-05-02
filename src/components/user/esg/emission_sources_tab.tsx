@@ -8,8 +8,8 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 // import EmissionSourcesSummary from "@/components/user/esg/emission_sources_summary";
 import EmissionSourcesItem from "@/components/user/esg/emission_sources_item";
-import { IEsgEmissionSourcesUI } from "@/interfaces/emission_source";
-import AddEmissionSourceModal from "@/components/user/esg/add_emission_source_modal";
+import { IEsgEmissionSourcesUI } from "@/interfaces/emission_sources";
+import EmissionSourcesAddEditModal from "@/components/user/esg/emission_sources_add_edit_modal";
 import Pagination from "@/components/common/pagination";
 
 const PAGE_SIZE = 10;
@@ -17,9 +17,11 @@ const PAGE_SIZE = 10;
 const EmissionSourcesList = ({
   keyword,
   refreshFlag,
+  onEdit,
 }: {
   keyword: string;
   refreshFlag: boolean;
+  onEdit: (id: string) => void;
 }) => {
   const { t } = useTranslation();
   const params = useParams();
@@ -84,7 +86,7 @@ const EmissionSourcesList = ({
         {t("emission_sources.list.total_count").split("{{count}}")[1]}
       </div>
       {data.map((item) => (
-        <EmissionSourcesItem key={item.id} data={item} />
+        <EmissionSourcesItem key={item.id} data={item} onEdit={() => onEdit(item.id)} />
       ))}
 
       {totalPages > 1 && (
@@ -103,7 +105,18 @@ export default function EmissionSourcesTab() {
 
   const [keyword, setKeyword] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedEmissionSourceId, setSelectedEmissionSourceId] = useState<string | null>(null);
   const [refreshFlag, setRefreshFlag] = useState<boolean>(false);
+
+  const handleEdit = (id: string) => {
+    setSelectedEmissionSourceId(id);
+    setIsModalOpen(true);
+  };
+
+  const handleAdd = () => {
+    setSelectedEmissionSourceId(null);
+    setIsModalOpen(true);
+  };
 
   return (
     <>
@@ -132,7 +145,7 @@ export default function EmissionSourcesTab() {
           {/* Info: (20260420 - Julian) Add Button */}
           <button
             type="button"
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleAdd}
             className="flex items-center justify-center gap-2 rounded-lg bg-orange-500 p-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-orange-600 focus:outline-none lg:px-5 lg:py-3 lg:text-base"
           >
             <Plus size={20} />
@@ -141,10 +154,11 @@ export default function EmissionSourcesTab() {
         </div>
 
         {/* Info: (20260420 - Julian) Emission Sources List */}
-        <EmissionSourcesList keyword={keyword} refreshFlag={refreshFlag} />
+        <EmissionSourcesList keyword={keyword} refreshFlag={refreshFlag} onEdit={handleEdit} />
       </div>
 
-      <AddEmissionSourceModal
+      <EmissionSourcesAddEditModal
+        selectedEmissionSourceId={selectedEmissionSourceId}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => setRefreshFlag((prev) => !prev)}

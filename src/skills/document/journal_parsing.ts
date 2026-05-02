@@ -1,5 +1,4 @@
 import { ITaskSkill } from "@/skills/types";
-import { getJournalPrompt } from "@/constants/prompts/journal";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
@@ -25,10 +24,10 @@ export class JournalParsingSkill implements ITaskSkill {
     fullPrompt: string,
     chatService: ChatService,
   ): Promise<string> {
-    const { images, accountBook } = await prepareDocumentContext(task);
+    const { images } = await prepareDocumentContext(task);
 
-    // Info: (20260429 - Luphia) Moved from ChatService to Skill
-    const promptText = getJournalPrompt(accountBook);
+    // Info: (20260501 - Luphia) Use fullPrompt provided by executor to keep worker stateless
+    const promptText = fullPrompt;
 
     try {
       const text = await chatService.generateRawWithImages(promptText, images);

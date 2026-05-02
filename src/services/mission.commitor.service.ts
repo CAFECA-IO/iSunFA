@@ -47,6 +47,11 @@ export async function processNext() {
         // Info: (20260420 - Luphia) Ready to submit
       }
 
+      try {
+        await fs.access(path.join(taskDir, "giveup.md"));
+        continue; // Info: (20260502 - Luphia) Already given up
+      } catch {}
+
       const taskFiles = await fs.readdir(taskDir);
       const failedCommitFiles = taskFiles.filter(
         (f) => f.startsWith("commit_failed_") && f.endsWith(".md"),

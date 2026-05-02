@@ -2,16 +2,18 @@
 
 import { useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { ChevronDown, Minus, Plus } from "lucide-react";
-import { IEsgEmissionSourcesUI } from "@/interfaces/emission_source";
+import { ChevronDown, Minus, Plus, Edit2 } from "lucide-react";
+import RecordTabModal from "@/components/user/common/record_tab_modal";
+import { IEsgEmissionSourcesUI } from "@/interfaces/emission_sources";
 import { EsgIntensity, IEsgRecordBrief } from "@/interfaces/esg";
 import { numberWithCommas, timestampToString } from "@/lib/utils/common";
 
 interface IEmissionSourcesItemProps {
   data: IEsgEmissionSourcesUI;
+  onEdit?: () => void;
 }
 
-const RecordItem = ({ rec }: { rec: IEsgRecordBrief }) => {
+const RecordItem = ({ rec, onClick }: { rec: IEsgRecordBrief; onClick: () => void }) => {
   const { t } = useTranslation();
 
   // Info: (20260424 - Julian) 檢查翻譯內容是否與原本的 key 一致，如果是，則代表翻譯不存在或未設定，那就直接使用原本的 activityType
@@ -24,7 +26,7 @@ const RecordItem = ({ rec }: { rec: IEsgRecordBrief }) => {
   }
 
   return (
-    <tr className="transition-colors hover:bg-orange-50/50">
+    <tr className="cursor-pointer transition-colors hover:bg-orange-50/50" onClick={onClick}>
       <td className="px-5 py-3 text-slate-600">
         {timestampToString(rec.tradingDate).dateWithDash}
       </td>
@@ -45,17 +47,27 @@ const RecordItem = ({ rec }: { rec: IEsgRecordBrief }) => {
 
 export default function EmissionSourcesItem({
   data,
+  onEdit = () => { },
 }: IEmissionSourcesItemProps) {
   const { t } = useTranslation();
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
 
+  // Info: (20260430 - Julian) 處理展開/收合
   const toggleOpen = () => setIsOpen((prev) => !prev);
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       toggleOpen();
     }
+  };
+
+  // Info: (20260430 - Julian) 打開 Record Tab Modal
+  const handleRecordClick = (id: string) => {
+    setSelectedRecordId(id);
+    setIsModalOpen(true);
   };
 
   // Info: (20260424 - Julian) 將紀錄依據 emissionSourceTag 分類
@@ -115,7 +127,7 @@ export default function EmissionSourcesItem({
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {records.map((rec) => (
-                  <RecordItem key={rec.id} rec={rec} />
+                  <RecordItem key={rec.id} rec={rec} onClick={() => handleRecordClick(rec.id)} />
                 ))}
               </tbody>
             </table>
@@ -167,8 +179,22 @@ export default function EmissionSourcesItem({
             </div>
           </div>
         </div>
-        <div className="text-slate-400 p-2 shrink-0 transition-colors duration-200 group-hover:text-orange-600">
-          {isOpen ? <Minus size={20} /> : <Plus size={20} />}
+        <div className="flex items-center gap-2">
+          {onEdit && (
+            <button
+              type="button"
+              className="text-slate-400 p-2 shrink-0 transition-colors duration-200 hover:text-blue-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+            >
+              <Edit2 size={18} />
+            </button>
+          )}
+          <div className="text-slate-400 p-2 shrink-0 transition-colors duration-200 group-hover:text-orange-600">
+            {isOpen ? <Minus size={20} /> : <Plus size={20} />}
+          </div>
         </div>
       </div>
 
@@ -181,6 +207,14 @@ export default function EmissionSourcesItem({
           <div className="lg:p-6 p-3">{groupedRecordList}</div>
         </div>
       </div>
+
+      {/* Info: (20260430 - Julian) Record Tab Modal */}
+      <RecordTabModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        defaultTab="esg"
+        esgId={selectedRecordId}
+      />
     </div>
   );
 }

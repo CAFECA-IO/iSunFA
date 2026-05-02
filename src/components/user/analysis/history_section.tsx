@@ -351,9 +351,11 @@ export default function HistorySection() {
       case 'pending':
       case 'uploading':
       case 'doing':
+      case 'incomplete':
+      case '未完成':
         return (
           <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">
-            <Loader2 className="h-3 w-3 animate-spin" /> {t('analysis.history.status_types.processing')}
+            <Loader2 className="h-3 w-3 animate-spin" /> {status === 'incomplete' || status === '未完成' ? '未完成' : t('analysis.history.status_types.processing')}
           </span>
         );
       case 'paid':

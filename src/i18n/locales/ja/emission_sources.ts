@@ -13,13 +13,14 @@ export const emissionSources = {
   },
   modal: {
     title: "排出源を追加",
+    title_edit: "排出源を編集",
     name_label: "排出源名 (工場)",
     name_placeholder: "例：台中第2工場",
     name_error: "排出源名を入力してください",
     address_label: "住所 (任意)",
     address_placeholder: "例：台中市西屯区工業区一路1号",
     cancel: "キャンセル",
-    confirm: "追加を確認",
+    confirm: "保存",
   },
   item: {
     no_records: "ESG記録がまだ登録されていません",

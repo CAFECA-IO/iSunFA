@@ -66,6 +66,7 @@ export class AnalysisService {
     const isNonPeriodAnalysis = [
       ANALYSIS_CATEGORY.AI_CONSULTING,
       ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
+      ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT,
     ].some((category) => params.category === category);
 
     if (!isNonPeriodAnalysis && !params.periodType) {
