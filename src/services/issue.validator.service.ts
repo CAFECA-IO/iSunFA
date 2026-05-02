@@ -206,6 +206,42 @@ export async function processNext() {
               }
               const chatService = new ChatService(apiKey);
 
+              let contentToValidate = resultContent;
+              try {
+                const parsedResult = JSON.parse(resultContent);
+
+                // Info: (20260503 - Luphia) 限制傳入 AI 的文字長度，避免超出 token limit
+                const stripHeavyData = (obj: unknown): void => {
+                  if (!obj || typeof obj !== "object") return;
+
+                  const record = obj as Record<string, unknown>;
+
+                  for (const key of Object.keys(record)) {
+                    if (key === "geometry") {
+                      const geometry = record[key];
+                      if (geometry && typeof geometry === "object") {
+                        const geoRecord = geometry as Record<string, unknown>;
+                        if (geoRecord.coordinates) {
+                          geoRecord.coordinates = "[Geometry coordinates omitted for AI validation]";
+                        }
+                      }
+                    } else if (typeof record[key] === "object") {
+                      stripHeavyData(record[key]);
+                    }
+                  }
+                };
+
+                stripHeavyData(parsedResult);
+                contentToValidate = JSON.stringify(parsedResult, null, 2);
+
+                if (contentToValidate.length > 8000) {
+                  contentToValidate =
+                    contentToValidate.substring(0, 8000) + "\n...[truncated]";
+                }
+              } catch {
+                contentToValidate = resultContent.substring(0, 8000);
+              }
+
               const prompt = `
 Please act as an automated validator. Your task is to evaluate the provided execution result against the validation plan.
 Rate your confidence in the result's correctness and completeness on a scale of 0 to 100.
@@ -220,7 +256,7 @@ Validation Plan:
 ${validatorPlan}
 
 Execution Result:
-${resultContent.substring(0, 8000)} // Truncating to avoid token limit
+${contentToValidate}
 `;
               const rawResponse = await chatService.generateRaw(prompt);
 
