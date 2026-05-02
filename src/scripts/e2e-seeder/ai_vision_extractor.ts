@@ -1,4 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+
 import * as fs from "fs";
 import * as path from "path";
 import { config } from "dotenv";
@@ -13,9 +16,9 @@ if (!apiKey) {
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
-// Using gemini-1.5-pro since it supports PDF inline data and advanced reasoning
+// Using gemini-2.5-flash since it supports large text data and advanced reasoning
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-2.5-flash",
   generationConfig: {
     responseMimeType: "application/json",
   },
@@ -39,17 +42,7 @@ export interface IExtractedContextCache {
   };
 }
 
-/**
- * Reads a file and converts it to the format required by Gemini API inlineData.
- */
-function fileToGenerativePart(filePath: string, mimeType: string) {
-  return {
-    inlineData: {
-      data: Buffer.from(fs.readFileSync(filePath)).toString("base64"),
-      mimeType,
-    },
-  };
-}
+
 
 export const extractContextFromPdf = async (
   stockId: string,
@@ -76,8 +69,22 @@ export const extractContextFromPdf = async (
   console.log(`[INFO] Analyzing PDFs for ${stockId} via Gemini Vision API...`);
 
   try {
-    const finPdfPart = fileToGenerativePart(finPdfPath, "application/pdf");
-    const esgPdfPart = fileToGenerativePart(esgPdfPath, "application/pdf");
+    console.log(
+      `⏳ [${stockId}] Extracting text from PDFs locally to avoid VPN timeouts...`,
+    );
+    const { PDFParse } = require("pdf-parse");
+
+    const finBuffer = fs.readFileSync(finPdfPath);
+    const finParser = new PDFParse({ data: finBuffer });
+    const finData = await finParser.getText({ first: 1, last: 15 });
+    const finText = finData.text.substring(0, 30000);
+    await finParser.destroy();
+
+    const esgBuffer = fs.readFileSync(esgPdfPath);
+    const esgParser = new PDFParse({ data: esgBuffer });
+    const esgData = await esgParser.getText({ first: 1, last: 15 });
+    const esgText = esgData.text.substring(0, 30000);
+    await esgParser.destroy();
 
     const prompt = `
       You are an expert Certified Public Accountant (CPA) and ESG Auditor.
@@ -104,13 +111,18 @@ export const extractContextFromPdf = async (
       }
     `;
 
-    // Note: Sending two large PDFs might consume significant tokens.
-    // Gemini 1.5 Pro handles up to 2M tokens, which is perfectly suited for this.
-    const result = await model.generateContent([
-      prompt,
-      finPdfPart,
-      esgPdfPart,
-    ]);
+    const finalPrompt = `
+${prompt}
+
+【FIN REPORT 財報摘錄】:
+${finText}
+
+【ESG REPORT 報告摘錄】:
+${esgText}
+    `;
+
+    console.log(`🚀 [${stockId}] Sending text payload to Gemini API...`);
+    const result = await model.generateContent([finalPrompt]);
     const responseText = result.response.text();
 
     // Parse the JSON (Gemini in JSON mode usually returns pure JSON without markdown blocks, but we clean it just in case)
