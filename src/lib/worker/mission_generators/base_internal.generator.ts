@@ -66,8 +66,11 @@ export function generateBaseInternalMission(
   const targetInfo = JSON.stringify(targetObj, null, 2);
   const tasks: ITaskDefinition[] = [];
 
-  // Info: (20260502 - Tzuhan) [系統人設] 為了啟動 LLM 最嚴格的邏輯防呆與防幻覺機制，底層 System Prompt 採用英文撰寫，並強制其輸出繁體中文。
-  // 此設定確立了 iSunFA 作為「最高等級簽證會計師與碳會計師」，只陳述事實、絕不腦補的商業定位。
+  /**
+   * Info: (20260502 - Tzuhan)
+   * [系統人設] 為了啟動 LLM 最嚴格的邏輯防呆與防幻覺機制，底層 System Prompt 採用英文撰寫，並強制其輸出繁體中文。
+   * 此設定確立了 iSunFA 作為「最高等級簽證會計師與碳會計師」，只陳述事實、絕不腦補的商業定位。
+   */
   const internalInstruction = `
 You are a top-tier Certified Public Accountant (CPA) and Carbon Accountant.
 Your ULTIMATE DIRECTIVE is to act strictly on "revealed facts".
