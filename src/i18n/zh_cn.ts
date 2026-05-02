@@ -54,7 +54,8 @@ import { transportationCarbonFootprintCalculator } from "@/i18n/locales/zh_cn/tr
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const zhCn = {
-  transportation_carbon_footprint_calculator: transportationCarbonFootprintCalculator,
+  transportation_carbon_footprint_calculator:
+    transportationCarbonFootprintCalculator,
   date,
   currency_alias: currencyAlias,
   common,

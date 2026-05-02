@@ -54,7 +54,8 @@ import { transportationCarbonFootprintCalculator } from "@/i18n/locales/en/trans
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const en = {
-  transportation_carbon_footprint_calculator: transportationCarbonFootprintCalculator,
+  transportation_carbon_footprint_calculator:
+    transportationCarbonFootprintCalculator,
   common,
   faith,
   cookie_consent: cookieConsent,

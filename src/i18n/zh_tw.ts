@@ -53,7 +53,8 @@ import { orderManagement } from "@/i18n/locales/zh_tw/order_management";
 import { transportationCarbonFootprintCalculator } from "@/i18n/locales/zh_tw/transportation_carbon_footprint_calculator";
 
 export const zhTw = {
-  transportation_carbon_footprint_calculator: transportationCarbonFootprintCalculator,
+  transportation_carbon_footprint_calculator:
+    transportationCarbonFootprintCalculator,
   common,
   faith,
   cookie_consent: cookieConsent,
