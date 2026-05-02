@@ -1,4 +1,4 @@
-import { Prisma, TeamRole } from "@/generated/client";
+import { Prisma, TeamRole } from "@/generated";
 import { userRepo } from "@/repositories/user.repo";
 import { teamRepo } from "@/repositories/team.repo";
 

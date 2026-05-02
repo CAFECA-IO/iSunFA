@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma, Analysis } from "@/generated/client";
+import { Prisma, Analysis } from "@/generated";
 import { CATEGORIES } from "@/constants/analysis";
 
 export type FullAnalysis = Prisma.AnalysisGetPayload<{

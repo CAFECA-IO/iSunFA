@@ -1,4 +1,4 @@
-import { AccountBook } from "@/generated/client";
+import { AccountBook } from "@/generated";
 import { ICoefficient } from "@/interfaces/coefficient";
 import {
   TRUE_COEFFICIENT_DATA_PART_1,

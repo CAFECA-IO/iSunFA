@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma, Order, User } from "@/generated/client";
+import { Prisma, Order, User } from "@/generated";
 import {
   ORDER_STATUS,
   PAYMENT_TRANSACTION_STATUS,

@@ -9,7 +9,7 @@ import { voucherRepo } from "@/repositories/voucher.repo";
 import { journalRepo } from "@/repositories/journal.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { EsgScope, EsgIntensity } from "@/generated/client";
+import { EsgScope, EsgIntensity } from "@/generated";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import {
   IEsgRecordDetail,

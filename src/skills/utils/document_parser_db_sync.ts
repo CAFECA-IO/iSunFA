@@ -5,7 +5,7 @@ import {
   Prisma,
   EsgScope,
   EsgIntensity,
-} from "@/generated/client";
+} from "@/generated";
 import { IParsedVoucherLine } from "@/interfaces/voucher";
 
 export interface IDocNode {

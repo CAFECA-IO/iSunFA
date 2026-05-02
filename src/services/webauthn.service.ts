@@ -24,7 +24,7 @@ import {
   generateChallengeToken,
   verifyChallengeToken,
 } from "@/lib/auth/challenge_token";
-import type { User } from "@/generated/client";
+import type { User } from "@/generated";
 
 interface ILoginResult {
   dewt: string;

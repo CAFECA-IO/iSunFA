@@ -22,7 +22,7 @@ import {
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import { AppError } from "@/lib/utils/error";
 import { ApiCode } from "@/lib/utils/status";
-import { AccountBook, Prisma, EsgRecord } from "@/generated/client";
+import { AccountBook, Prisma, EsgRecord } from "@/generated";
 import { ANALYSIS_CATEGORY } from "@/constants/price";
 import type { IVoucherLineUI } from "@/interfaces/voucher";
 

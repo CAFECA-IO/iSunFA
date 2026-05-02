@@ -6,7 +6,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
-import { TeamRole } from "@/generated/client";
+import { TeamRole } from "@/generated";
 
 export async function GET(
   request: NextRequest,
