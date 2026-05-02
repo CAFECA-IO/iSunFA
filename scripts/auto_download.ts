@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { prisma } from "@/lib/prisma";
-import { TaskType, TaskStatus } from "@/generated/client";
+import { companyRepo } from "@/repositories/company.repo";
+import { reportDownloadTaskRepo } from "@/repositories/report_download_task.repo";
+import { TaskType, TaskStatus } from "@/generated";
 
 interface IDlqRecord {
   stockId: string;
@@ -86,7 +87,7 @@ async function main() {
       ? {}
       : { stockId: { in: params.stockId.split(",") } };
 
-  const companies = await prisma.company.findMany({ where: companyQuery });
+  const companies = await companyRepo.findMany({ where: companyQuery });
 
   if (companies.length === 0) {
     console.error(
@@ -123,7 +124,7 @@ async function main() {
     const dlqRecords = loadDLQRecords();
 
     // Info: (20260409 - Tzuhan) 每次回合重新從 DB 撈取最新狀態
-    const existingTasks = await prisma.reportDownloadTask.findMany({
+    const existingTasks = await reportDownloadTaskRepo.findMany({
       where: {
         stockId: { in: companies.map((c) => c.stockId) },
         year: { in: targetYears },
@@ -186,7 +187,7 @@ async function main() {
 
               if (dlqRecords[key].dlqCount > 2) severeAlertCount++; // Info: (20260409 - Tzuhan) 死亡次數超過 2 次，發出嚴重警報
               // Info: (20260409 - Tzuhan) 復活重置
-              await prisma.reportDownloadTask.update({
+              await reportDownloadTaskRepo.update({
                 where: { id: existingTask.id },
                 data: {
                   status: TaskStatus.PENDING,
@@ -205,7 +206,7 @@ async function main() {
     saveDLQRecords(dlqRecords);
 
     if (tasksToCreate.length > 0) {
-      await prisma.reportDownloadTask.createMany({
+      await reportDownloadTaskRepo.createMany({
         data: tasksToCreate,
         skipDuplicates: true,
       });
@@ -222,7 +223,7 @@ async function main() {
       console.log(`👉 可以到查看 logs/dlq_records.json 進行人工排查！\n`);
     }
 
-    const targetPendingCount = await prisma.reportDownloadTask.count({
+    const targetPendingCount = await reportDownloadTaskRepo.count({
       where: {
         stockId:
           params.stockId === "ALL"
@@ -280,5 +281,5 @@ async function main() {
 main()
   .catch(console.error)
   .finally(async () => {
-    await prisma.$disconnect();
+    await reportDownloadTaskRepo.disconnect();
   });

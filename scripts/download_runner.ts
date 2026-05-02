@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { prisma } from "@/lib/prisma";
-import { TaskType, TaskStatus, Prisma } from "@/generated/client";
+import { reportDownloadTaskRepo } from "@/repositories/report_download_task.repo";
+import { TaskType, TaskStatus, Prisma } from "@/generated";
 import {
   downloadFinancialData,
   downloadFinancialReport,
@@ -48,7 +48,7 @@ async function main() {
     whereClause.stockId = { in: stockIdArg.split(",") };
   if (yearArg && yearArg !== "ALL") whereClause.year = parseInt(yearArg);
 
-  const pendingTasks = await prisma.reportDownloadTask.findMany({
+  const pendingTasks = await reportDownloadTaskRepo.findMany({
     where: whereClause,
     take: limit,
     orderBy: { updatedAt: "asc" }, // Info: (20260408 - Tzuhan) 改用 updatedAt，讓很久沒動的優先處理
@@ -121,7 +121,7 @@ async function main() {
       }
 
       // Info: (20260408 - Tzuhan) 📝 狀態回報 (將結果更新回資料庫)
-      await prisma.reportDownloadTask.update({
+      await reportDownloadTaskRepo.update({
         where: { id: task.id },
         data: {
           status: isSuccess ? TaskStatus.SUCCESS : TaskStatus.FAILED,
@@ -149,7 +149,7 @@ async function main() {
         fs.rmSync(savePath, { force: true });
         console.log(`🗑️ [清理] 已刪除不完整的檔案殘骸: ${savePath}`);
       }
-      await prisma.reportDownloadTask.update({
+      await reportDownloadTaskRepo.update({
         where: { id: task.id },
         data: {
           status: TaskStatus.FAILED,
@@ -169,7 +169,7 @@ async function main() {
 
   await runWithConcurrency(taskFactories, concurrency);
 
-  const dlqCount = await prisma.reportDownloadTask.count({
+  const dlqCount = await reportDownloadTaskRepo.count({
     where: { status: TaskStatus.FAILED, retryCount: { gte: 3 } },
   });
 
@@ -188,5 +188,5 @@ async function main() {
 main()
   .catch(console.error)
   .finally(async () => {
-    await prisma.$disconnect();
+    await reportDownloadTaskRepo.disconnect();
   });
