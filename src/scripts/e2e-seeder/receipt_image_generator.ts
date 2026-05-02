@@ -17,7 +17,7 @@ interface ISimulatedVoucher {
   lines: ISimulatedVoucherLine[];
 }
 
-// Generates a random Tax ID
+// Info: (20260502 - Tzuhan) 產生隨機統一編號
 const generateTaxId = () => {
   return Math.floor(10000000 + Math.random() * 90000000).toString();
 };
@@ -44,11 +44,11 @@ export const generateReceiptImages = (stockId: string) => {
   let noiseCount = 0;
 
   vouchers.forEach((voucher) => {
-    // Only generate physical receipts for transactions with external vendors or cash payments.
-    // Skip internal adjustments like depreciation (which has no physical receipt).
+    // Info: (20260502 - Tzuhan) 僅為外部供應商或現金交易產生實體憑證。
+    // Info: (20260502 - Tzuhan) 略過如折舊等無實體憑證的內部調整。
     if (voucher.voucherNumber.startsWith("ADJ-")) return;
 
-    // Identify the main line for description and amount
+    // Info: (20260502 - Tzuhan) 找出主要的分錄以取得描述與金額
     const mainLine =
       voucher.lines.find((l) => l.debitAmount > 0) || voucher.lines[0];
     const vendorName = mainLine.vendor || "現金交易客戶/供應商";
@@ -57,16 +57,16 @@ export const generateReceiptImages = (stockId: string) => {
     const date = new Date(voucher.tradingDate).toISOString().split("T")[0];
     const taxId = generateTaxId();
 
-    // 15% Chance to inject extreme noise (blur, missing data)
+    // Info: (20260502 - Tzuhan) 15% 機率注入極端雜訊 (模糊、遺失資料)
     const isNoisy = Math.random() < 0.15;
     let svgContent = "";
 
     if (isNoisy) {
       noiseCount++;
-      // NOISE: Randomly drop Tax ID or Date, add blur filter, add random strike-through lines
+      // Info: (20260502 - Tzuhan) 雜訊：隨機遺失統編或日期，加入模糊濾鏡，加入隨機刪除線
       const dropTaxId = Math.random() < 0.5;
       const dropDate = Math.random() < 0.3;
-      const blurLevel = (Math.random() * 2 + 1).toFixed(1); // 1.0 to 3.0 blur
+      const blurLevel = (Math.random() * 2 + 1).toFixed(1); // Info: (20260502 - Tzuhan) 1.0 到 3.0 的模糊程度
 
       svgContent = `
       <svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
@@ -91,13 +91,13 @@ export const generateReceiptImages = (stockId: string) => {
           <line x1="40" y1="400" x2="360" y2="400" stroke="#999" stroke-width="2" />
           <text x="200" y="450" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#777">模擬雜訊憑證 - iSunFA End-to-End Test</text>
         </g>
-        <!-- Random noise artifacts (scratches / folds) -->
+        <!-- Info: (20260502 - Tzuhan) 隨機雜訊偽影 (刮痕 / 摺痕) -->
         <path d="M 0 ${Math.random() * 600} Q 200 ${Math.random() * 600} 400 ${Math.random() * 600}" stroke="#rgba(0,0,0,0.2)" stroke-width="3" fill="transparent" />
         <path d="M ${Math.random() * 400} 0 L ${Math.random() * 400} 600" stroke="#rgba(0,0,0,0.1)" stroke-width="10" />
       </svg>
       `;
     } else {
-      // CLEAN: Perfect receipt
+      // Info: (20260502 - Tzuhan) 乾淨：完美的憑證
       svgContent = `
       <svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="#ffffff" stroke="#cccccc" stroke-width="2" />
@@ -128,7 +128,7 @@ export const generateReceiptImages = (stockId: string) => {
   );
 };
 
-// If run directly
+// Info: (20260502 - Tzuhan) 如果直接執行此腳本
 if (import.meta.url === `file://${process.argv[1]}`) {
   const targetStock = process.argv[2];
   if (!targetStock) {

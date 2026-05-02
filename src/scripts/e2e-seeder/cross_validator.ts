@@ -41,7 +41,7 @@ export const runCrossValidation = (stockId: string) => {
 
   console.log(`\n🔍 [AUDIT] Starting Cross Validation for ${stockId}...`);
 
-  // 1. Read Golden Values
+  // Info: (20260502 - Tzuhan) 1. 讀取黃金標準數值 (Golden Values)
   const finData = JSON.parse(fs.readFileSync(finDataPath, "utf-8"));
   const isList = finData.incomeStatement.reportList;
   const cfList = finData.cashFlow.reportList;
@@ -50,7 +50,7 @@ export const runCrossValidation = (stockId: string) => {
   const goldenOpex = findReportValue(isList, "營業費用合計");
   const goldenDepreciation = findReportValue(cfList, "折舊費用");
 
-  // 2. Aggregate System Vouchers
+  // Info: (20260502 - Tzuhan) 2. 聚合系統產生的傳票 (Vouchers)
   const vouchers = JSON.parse(
     fs.readFileSync(vouchersPath, "utf-8"),
   ) as ISimulatedVoucher[];
@@ -61,22 +61,22 @@ export const runCrossValidation = (stockId: string) => {
 
   vouchers.forEach((voucher) => {
     voucher.lines.forEach((line) => {
-      // Revenue (4111) is credited
+      // Info: (20260502 - Tzuhan) 銷貨收入 (4111) 記貸方
       if (line.accountingCode === "4111") {
         systemRevenue += line.creditAmount;
       }
-      // Operating Expenses (6161, 6172, 6299) are debited
+      // Info: (20260502 - Tzuhan) 營業費用 (6161, 6172, 6299) 記借方
       if (["6161", "6172", "6299"].includes(line.accountingCode)) {
         systemOpex += line.debitAmount;
       }
-      // Depreciation (6184) is debited
+      // Info: (20260502 - Tzuhan) 折舊費用 (6184) 記借方
       if (line.accountingCode === "6184") {
         systemDepreciation += line.debitAmount;
       }
     });
   });
 
-  // 3. Calculate Variance
+  // Info: (20260502 - Tzuhan) 3. 計算誤差值 (Variance)
   const calculateVariance = (system: number, golden: number) => {
     if (golden === 0) return system === 0 ? "0.00%" : "∞%";
     const diff = system - golden;
@@ -100,7 +100,7 @@ export const runCrossValidation = (stockId: string) => {
         golden: goldenOpex,
         system: systemOpex,
         variancePercent: calculateVariance(systemOpex, goldenOpex),
-        // Due to flooring in integer division, there might be a tiny rounding error
+        // Info: (20260502 - Tzuhan) 由於整數除法無條件捨去，可能會有微小的四捨五入誤差
         isPassed: Math.abs(systemOpex - goldenOpex) < 100,
       },
       Depreciation: {

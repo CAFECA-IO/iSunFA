@@ -44,7 +44,7 @@ interface ISimulatedVoucher {
   lines: ISimulatedVoucherLine[];
 }
 
-// Utility to search the complex ESG JSON structure
+// Info: (20260502 - Tzuhan) 在複雜的 ESG JSON 結構中進行搜尋的工具
 const findEsgValue = (
   esgData: Record<string, unknown>,
   codeToFind: string,
@@ -98,7 +98,7 @@ export const generateEsgRecords = (stockId: string) => {
     fs.readFileSync(vouchersPath, "utf-8"),
   ) as ISimulatedVoucher[];
 
-  // 1. Parse Real ESG Targets from JSON
+  // Info: (20260502 - Tzuhan) 1. 從 JSON 解析真實的 ESG 目標
   const scope1Target = findEsgValue(
     esgData,
     "grossScope1GreenhouseGasEmissions",
@@ -110,7 +110,7 @@ export const generateEsgRecords = (stockId: string) => {
   const waterTarget = findEsgValue(esgData, "waterConsumed");
   const wasteTarget = findEsgValue(esgData, "nonHazardousWaste");
 
-  // 2. Map Scope 2 (Electricity) to Utilities Vouchers (Code 6161)
+  // Info: (20260502 - Tzuhan) 2. 將範疇二 (電力) 映射至水電費傳票 (代碼 6161)
   const utilityLines = vouchers.flatMap((v) =>
     v.lines.filter((l) => l.accountingCode === "6161" && l.debitAmount > 0),
   );
@@ -123,14 +123,14 @@ export const generateEsgRecords = (stockId: string) => {
         id: randomUUID(),
         category: "scope2",
         source: contextCache.esg.scope2MajorSource || "台電外購電力",
-        metricAmount: scope2PerVoucher * 1980, // Assuming 1 ton CO2e = 1980 kWh approx
+        metricAmount: scope2PerVoucher * 1980, // Info: (20260502 - Tzuhan) 假設 1 噸 CO2e 約等於 1980 度電
         metricUnit: "kWh",
         carbonAmount: scope2PerVoucher,
       });
     });
   }
 
-  // 3. Map Scope 1 (Direct) to Travel Vouchers (Code 6172)
+  // Info: (20260502 - Tzuhan) 3. 將範疇一 (直接排放) 映射至差旅費傳票 (代碼 6172)
   const travelLines = vouchers.flatMap((v) =>
     v.lines.filter((l) => l.accountingCode === "6172" && l.debitAmount > 0),
   );
@@ -143,14 +143,14 @@ export const generateEsgRecords = (stockId: string) => {
         id: randomUUID(),
         category: "scope1",
         source: contextCache.esg.scope1MajorSource || "公司車輛燃油",
-        metricAmount: scope1PerVoucher * 400, // Assuming 1 ton CO2e = 400 Liters of gasoline
+        metricAmount: scope1PerVoucher * 400, // Info: (20260502 - Tzuhan) 假設 1 噸 CO2e 約等於 400 公升汽油
         metricUnit: "Liters",
         carbonAmount: scope1PerVoucher,
       });
     });
   }
 
-  // 4. Map Water and Waste
+  // Info: (20260502 - Tzuhan) 4. 映射用水與廢棄物
   if (utilityLines.length > 0 && waterTarget > 0) {
     const waterPerVoucher = waterTarget / utilityLines.length;
     const wastePerVoucher =
@@ -163,7 +163,7 @@ export const generateEsgRecords = (stockId: string) => {
         source: "自來水",
         metricAmount: waterPerVoucher,
         metricUnit: "ton",
-        carbonAmount: 0, // Water doesn't usually map directly to Scope 1/2 CO2e directly here
+        carbonAmount: 0, // Info: (20260502 - Tzuhan) 用水通常不會直接映射到這裡的範疇一或範疇二的碳排放量
       });
       if (wastePerVoucher > 0) {
         line.esgRecords.push({
@@ -178,7 +178,7 @@ export const generateEsgRecords = (stockId: string) => {
     });
   }
 
-  // 5. Overwrite vouchers with ESG records
+  // Info: (20260502 - Tzuhan) 5. 將 ESG 紀錄覆寫回傳票
   fs.writeFileSync(vouchersPath, JSON.stringify(vouchers, null, 2), "utf-8");
 
   console.log(
@@ -186,7 +186,7 @@ export const generateEsgRecords = (stockId: string) => {
   );
 };
 
-// If run directly
+// Info: (20260502 - Tzuhan) 如果直接執行此腳本
 if (import.meta.url === `file://${process.argv[1]}`) {
   const targetStock = process.argv[2];
   if (!targetStock) {

@@ -14,7 +14,7 @@ export const runScaleTest = async () => {
     process.exit(1);
   }
 
-  // Find all subdirectories in data/
+  // Info: (20260502 - Tzuhan) 尋找 data/ 底下的所有子目錄
   const items = fs.readdirSync(dataDir, { withFileTypes: true });
   const stockIds = items
     .filter((item) => item.isDirectory() && /^\d+$/.test(item.name))
@@ -36,7 +36,7 @@ export const runScaleTest = async () => {
     console.log(`>>> Processing Enterprise: ${stockId} <<<`);
     console.log(`------------------------------------------------------`);
 
-    // Quick validation before running
+    // Info: (20260502 - Tzuhan) 執行前進行快速驗證
     const finDataPath = path.join(dataDir, stockId, "2024_FIN_DATA.json");
     const esgDataPath = path.join(dataDir, stockId, "2024_ESG_METRICS.json");
 
@@ -70,7 +70,7 @@ export const runScaleTest = async () => {
   console.log(`======================================================\n`);
 };
 
-// If run directly
+// Info: (20260502 - Tzuhan) 如果直接執行此腳本
 if (import.meta.url === `file://${process.argv[1]}`) {
   runScaleTest().catch((err) => {
     console.error("Batch execution failed:", err);

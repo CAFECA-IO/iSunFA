@@ -6,7 +6,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { config } from "dotenv";
 
-// Load environment variables
+// Info: (20260502 - Tzuhan) 載入環境變數
 config();
 
 const apiKey = process.env.GEMINI_API_KEY;
@@ -16,7 +16,7 @@ if (!apiKey) {
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
-// Using gemini-2.5-flash since it supports large text data and advanced reasoning
+// Info: (20260502 - Tzuhan) 使用 gemini-2.5-flash 因為它支援大型文本資料與進階推理
 const model = genAI.getGenerativeModel({
   model: "gemini-2.5-flash",
   generationConfig: {
@@ -26,8 +26,8 @@ const model = genAI.getGenerativeModel({
 
 export interface IExtractedContextCache {
   financial: {
-    travelExpenseRatio: number; // 0.0 ~ 1.0
-    utilitiesRatio: number; // 0.0 ~ 1.0
+    travelExpenseRatio: number; // Info: (20260502 - Tzuhan) 0.0 ~ 1.0
+    utilitiesRatio: number; // Info: (20260502 - Tzuhan) 0.0 ~ 1.0
     top3Vendors: string[];
     depreciationStrategy: string;
   };
@@ -48,8 +48,8 @@ export const extractContextFromPdf = async (
   const dataDir = path.resolve(process.cwd(), `data/${stockId}`);
   const cachePath = path.join(dataDir, "ai_extracted_context_cache.json");
 
-  // Principle: Database Idempotency & Data Retention
-  // If cache exists, return it immediately to save API costs and ensure reproducibility.
+  // Info: (20260502 - Tzuhan) 原則：資料庫冪等性與資料保留
+  // Info: (20260502 - Tzuhan) 如果快取存在，立即回傳以節省 API 成本並確保結果可重現。
   if (fs.existsSync(cachePath)) {
     console.log(`[INFO] Cache found for ${stockId}. Skipping API call.`);
     const rawCache = fs.readFileSync(cachePath, "utf-8");
@@ -123,13 +123,13 @@ ${esgText}
     const result = await model.generateContent([finalPrompt]);
     const responseText = result.response.text();
 
-    // Parse the JSON (Gemini in JSON mode usually returns pure JSON without markdown blocks, but we clean it just in case)
+    // Info: (20260502 - Tzuhan) 解析 JSON (Gemini 在 JSON 模式下通常會回傳純 JSON 而不帶 markdown 區塊，但我們還是先清理以防萬一)
     const cleanJsonString = responseText
       .replace(/^\\s*\\x60{3}(?:json)?\\s*/i, "")
       .replace(/\\s*\\x60{3}\\s*$/, "");
     const parsedData = JSON.parse(cleanJsonString) as IExtractedContextCache;
 
-    // Cache the result
+    // Info: (20260502 - Tzuhan) 快取結果
     fs.writeFileSync(cachePath, JSON.stringify(parsedData, null, 2), "utf-8");
     console.log(`[SUCCESS] Extracted and cached data for ${stockId}.`);
 
@@ -149,7 +149,7 @@ ${esgText}
   }
 };
 
-// If run directly
+// Info: (20260502 - Tzuhan) 如果直接執行此腳本
 if (import.meta.url === `file://${process.argv[1]}`) {
   const targetStock = process.argv[2];
   if (!targetStock) {

@@ -48,12 +48,12 @@ export const runOcrStressTest = async (stockId: string) => {
     fs.readFileSync(vouchersPath, "utf-8"),
   ) as ISimulatedVoucher[];
 
-  // Get all SVG files
+  // Info: (20260502 - Tzuhan) 取得所有 SVG 檔案
   const svgFiles = fs
     .readdirSync(receiptsDir)
     .filter((f) => f.endsWith(".svg"));
 
-  // To avoid hitting API rate limits or taking 10 minutes, we will randomly sample 10 SVGs (5 clean, 5 dirty if possible)
+  // Info: (20260502 - Tzuhan) 為了避免觸發 API 頻率限制或耗時過久，我們將隨機抽樣 10 張 SVG（盡可能包含乾淨與髒汙版本）
   const sampleSize = Math.min(10, svgFiles.length);
   const selectedFiles = svgFiles
     .sort(() => 0.5 - Math.random())
@@ -73,7 +73,7 @@ export const runOcrStressTest = async (stockId: string) => {
       .readFileSync(path.join(receiptsDir, file), "utf-8")
       .includes("DIRTY");
 
-    // Find ground truth
+    // Info: (20260502 - Tzuhan) 尋找對應的標準答案 (Ground Truth)
     const groundTruthVoucher = vouchers.find(
       (v) => v.voucherNumber === voucherNumber,
     );
@@ -85,7 +85,7 @@ export const runOcrStressTest = async (stockId: string) => {
     const expectedAmount =
       mainLine.debitAmount > 0 ? mainLine.debitAmount : mainLine.creditAmount;
 
-    // Send to Gemini
+    // Info: (20260502 - Tzuhan) 傳送至 Gemini 進行解析
     const svgContent = fs.readFileSync(path.join(receiptsDir, file), "utf-8");
     const prompt = `
       You are an OCR extraction engine. Below is the raw SVG code of a physical receipt/invoice.
@@ -111,7 +111,7 @@ export const runOcrStressTest = async (stockId: string) => {
       const aiResponse = JSON.parse(result.response.text());
 
       const amountMatched = aiResponse.amount === expectedAmount;
-      // We only strictly check amount here for the stress test pass/fail
+      // Info: (20260502 - Tzuhan) 在此壓力測試中，我們嚴格檢查金額是否相符以判斷及格與否
 
       if (amountMatched) {
         correctCount++;

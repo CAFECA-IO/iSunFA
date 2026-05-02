@@ -23,7 +23,7 @@ interface IExtractedContextCache {
 interface ISimulatedVoucherLine {
   id: string;
   description: string;
-  accountingCode: string; // e.g. 4111
+  accountingCode: string; // Info: (20260502 - Tzuhan) 例如 4111
   debitAmount: number;
   creditAmount: number;
   vendor?: string;
@@ -36,20 +36,20 @@ interface ISimulatedVoucher {
   lines: ISimulatedVoucherLine[];
 }
 
-// Utility to parse numbers like "112,684" into absolute integers
+// Info: (20260502 - Tzuhan) 將類似 "112,684" 的數字解析為絕對整數的工具
 const parseFinanceNumber = (val: string): number => {
   if (!val) return 0;
   const num = parseInt(val.replace(/,/g, ""), 10);
-  return isNaN(num) ? 0 : num * 1000; // Assume reports are in thousands of NTD
+  return isNaN(num) ? 0 : num * 1000; // Info: (20260502 - Tzuhan) 假設財報單位為新台幣千元
 };
 
-// Utility to search for a specific row in the unstructured report list
+// Info: (20260502 - Tzuhan) 在非結構化報表列表中搜尋特定資料列的工具
 const findReportValue = (reportList: string[][], keyword: string): number => {
   const row = reportList.find((r) => r[0].includes(keyword));
   return row ? parseFinanceNumber(row[1]) : 0;
 };
 
-// Helper to generate a random date in 2024
+// Info: (20260502 - Tzuhan) 產生 2024 年隨機日期的輔助函式
 const getRandomDate2024 = (): string => {
   const start = new Date("2024-01-01T00:00:00.000Z").getTime();
   const end = new Date("2024-12-30T23:59:59.000Z").getTime();
@@ -75,23 +75,23 @@ export const generateFinancialVouchers = (stockId: string) => {
   const isList = finData.incomeStatement.reportList;
   const cfList = finData.cashFlow.reportList;
 
-  // Extract Macro Numbers
+  // Info: (20260502 - Tzuhan) 萃取宏觀數據
   const totalRevenue = findReportValue(isList, "營業收入合計");
   const totalOpex = findReportValue(isList, "營業費用合計");
   const depreciation = findReportValue(cfList, "折舊費用");
 
-  // Determine targeted amounts based on AI extraction
+  // Info: (20260502 - Tzuhan) 根據 AI 萃取結果決定目標金額
   const utilitiesAmount = totalOpex * contextCache.financial.utilitiesRatio;
   const travelAmount = totalOpex * contextCache.financial.travelExpenseRatio;
-  // The rest of OpEx
+  // Info: (20260502 - Tzuhan) 其餘營業費用
   const otherOpexAmount = totalOpex - utilitiesAmount - travelAmount;
 
   const vouchers: ISimulatedVoucher[] = [];
 
   // ============================================
-  // 1. Generate Revenue Vouchers (Sales)
+  // Info: (20260502 - Tzuhan) 1. 產生銷貨收入傳票
   // ============================================
-  // Let's create 12 monthly revenue vouchers for simplicity, or 50 random ones.
+  // Info: (20260502 - Tzuhan) 為了簡化，建立 12 張月度收入傳票，或是 50 張隨機傳票。
   const numSales = 50;
   const revenuePerSale = Math.floor(totalRevenue / numSales);
   for (let i = 0; i < numSales; i++) {
@@ -103,14 +103,14 @@ export const generateFinancialVouchers = (stockId: string) => {
         {
           id: randomUUID(),
           description: "日常銷貨收款",
-          accountingCode: "1111", // 現金
+          accountingCode: "1111", // Info: (20260502 - Tzuhan) 現金
           debitAmount: revenuePerSale,
           creditAmount: 0,
         },
         {
           id: randomUUID(),
           description: "日常銷貨收入",
-          accountingCode: "4111", // 銷貨收入
+          accountingCode: "4111", // Info: (20260502 - Tzuhan) 銷貨收入
           debitAmount: 0,
           creditAmount: revenuePerSale,
         },
@@ -119,9 +119,9 @@ export const generateFinancialVouchers = (stockId: string) => {
   }
 
   // ============================================
-  // 2. Generate OpEx: Utilities (水電費)
+  // Info: (20260502 - Tzuhan) 2. 產生營業費用：水電瓦斯費
   // ============================================
-  const numUtilities = 12; // Monthly
+  const numUtilities = 12; // Info: (20260502 - Tzuhan) 每月
   const utilityPerMonth = Math.floor(utilitiesAmount / numUtilities);
   for (let i = 0; i < numUtilities; i++) {
     vouchers.push({
@@ -132,7 +132,7 @@ export const generateFinancialVouchers = (stockId: string) => {
         {
           id: randomUUID(),
           description: "當月水電瓦斯費",
-          accountingCode: "6161", // 水電瓦斯費
+          accountingCode: "6161", // Info: (20260502 - Tzuhan) 水電瓦斯費
           debitAmount: utilityPerMonth,
           creditAmount: 0,
           vendor: contextCache.financial.top3Vendors[0] || "台灣電力公司",
@@ -140,7 +140,7 @@ export const generateFinancialVouchers = (stockId: string) => {
         {
           id: randomUUID(),
           description: "支付水電瓦斯費",
-          accountingCode: "1111", // 現金
+          accountingCode: "1111", // Info: (20260502 - Tzuhan) 現金
           debitAmount: 0,
           creditAmount: utilityPerMonth,
         },
@@ -149,7 +149,7 @@ export const generateFinancialVouchers = (stockId: string) => {
   }
 
   // ============================================
-  // 3. Generate OpEx: Travel (差旅費)
+  // Info: (20260502 - Tzuhan) 3. 產生營業費用：差旅費
   // ============================================
   const numTravels = 20;
   const travelPerTrip = Math.floor(travelAmount / numTravels);
@@ -162,14 +162,14 @@ export const generateFinancialVouchers = (stockId: string) => {
         {
           id: randomUUID(),
           description: "業務出差機票及住宿",
-          accountingCode: "6172", // 旅費
+          accountingCode: "6172", // Info: (20260502 - Tzuhan) 旅費
           debitAmount: travelPerTrip,
           creditAmount: 0,
         },
         {
           id: randomUUID(),
           description: "支付差旅費",
-          accountingCode: "1111", // 現金
+          accountingCode: "1111", // Info: (20260502 - Tzuhan) 現金
           debitAmount: 0,
           creditAmount: travelPerTrip,
         },
@@ -178,17 +178,17 @@ export const generateFinancialVouchers = (stockId: string) => {
   }
 
   // ============================================
-  // 4. Generate OpEx: Other Expenses
+  // Info: (20260502 - Tzuhan) 4. 產生營業費用：其他費用
   // ============================================
   const otherOpexVoucher: ISimulatedVoucher = {
     id: randomUUID(),
-    tradingDate: "2024-12-31T00:00:00.000Z", // Simplify as year-end aggregate for test
+    tradingDate: "2024-12-31T00:00:00.000Z", // Info: (20260502 - Tzuhan) 測試用，簡化為年底加總
     voucherNumber: "OPEX-OTHER-2024",
     lines: [
       {
         id: randomUUID(),
         description: "其他營業費用彙總",
-        accountingCode: "6299", // 其他管理費用
+        accountingCode: "6299", // Info: (20260502 - Tzuhan) 其他管理費用
         debitAmount: otherOpexAmount,
         creditAmount: 0,
       },
@@ -204,8 +204,8 @@ export const generateFinancialVouchers = (stockId: string) => {
   vouchers.push(otherOpexVoucher);
 
   // ============================================
-  // 5. Period-end Adjustments: Depreciation (折舊)
-  // [Priority 0: Missing Accrual Adjustments]
+  // Info: (20260502 - Tzuhan) 5. 期末調整：折舊
+  // Info: (20260502 - Tzuhan) [優先級 0: 遺漏應計調整]
   // ============================================
   if (depreciation > 0) {
     const depreciationVoucher: ISimulatedVoucher = {
@@ -232,7 +232,7 @@ export const generateFinancialVouchers = (stockId: string) => {
     vouchers.push(depreciationVoucher);
   }
 
-  // Write out the simulated vouchers
+  // Info: (20260502 - Tzuhan) 輸出模擬傳票
   const outPath = path.join(dataDir, "simulated_vouchers.json");
   fs.writeFileSync(outPath, JSON.stringify(vouchers, null, 2), "utf-8");
   console.log(
@@ -240,7 +240,7 @@ export const generateFinancialVouchers = (stockId: string) => {
   );
 };
 
-// If run directly
+// Info: (20260502 - Tzuhan) 如果直接執行此腳本
 if (import.meta.url === `file://${process.argv[1]}`) {
   const targetStock = process.argv[2];
   if (!targetStock) {
