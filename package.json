@@ -60,7 +60,8 @@
     "react-markdown": "^10.1.0",
     "react-usestateref": "^2.0.0",
     "recharts": "^3.6.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^16.1.1",
