@@ -35,7 +35,8 @@ export async function POST(
           (file.startsWith("failed_") && file.endsWith(".md")) ||
           file === "execution_log.json"
         ) {
-          await fs.unlink(path.join(folderPath, file));
+          const target = folderPath + "/" + file;
+          await fs.unlink(target);
         }
       }
       return jsonOk({ success: true, message: "Task restarted" });
