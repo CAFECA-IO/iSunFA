@@ -29,6 +29,39 @@ export const runPipeline = async (stockId: string) => {
     console.log("\n[6/6] Running Enterprise Cross Validator...");
     await runCrossValidation(stockId);
 
+    console.log(`\n[7/7] Generating Internal Analysis Reports for ${stockId}...`);
+    const { prisma } = await import("@/lib/prisma");
+    const { analysisService } = await import("@/services/analysis.service");
+    
+    // Info: (20260503 - Tzuhan) Find the designated E2E test user
+    const user = await prisma.user.findFirst({
+      where: { email: { contains: "e2e" } }, // Fallback to any user if needed, but phase2_runner usually uses an e2e user or admin
+      orderBy: { createdAt: "asc" }
+    }) || await prisma.user.findFirst();
+
+    if (user) {
+      const { ANALYSIS_CATEGORY, PERIOD_TYPE } = await import("@/constants/analysis");
+      
+      await analysisService.generateAnalysis({
+        category: ANALYSIS_CATEGORY.FINANCIAL_HEALTH,
+        periodType: PERIOD_TYPE.YEARLY,
+        periodValue: 1,
+        year: 2024,
+        keyword: `(${stockId})`, // Must contain the stockId in parentheses for regex matching in analysis.service.ts
+        isExternal: false,
+      }, user.id);
+      
+      await analysisService.generateAnalysis({
+        category: ANALYSIS_CATEGORY.CARBON_HEALTH_CHECK,
+        periodType: PERIOD_TYPE.YEARLY,
+        periodValue: 1,
+        year: 2024,
+        keyword: `(${stockId})`,
+        isExternal: false,
+      }, user.id);
+      console.log(`[SUCCESS] Queued Financial Health & Carbon Health Check reports.`);
+    }
+
     console.log(`\n✅ [DONE] Pipeline successfully completed for ${stockId}!`);
     console.log(`Check the output in: data/${stockId}/`);
   } catch (error) {
