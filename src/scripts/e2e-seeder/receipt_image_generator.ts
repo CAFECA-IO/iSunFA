@@ -32,9 +32,10 @@ export const generateReceiptImages = (stockId: string) => {
     process.exit(1);
   }
 
-  if (!fs.existsSync(receiptsDir)) {
-    fs.mkdirSync(receiptsDir, { recursive: true });
+  if (fs.existsSync(receiptsDir)) {
+    fs.rmSync(receiptsDir, { recursive: true, force: true });
   }
+  fs.mkdirSync(receiptsDir, { recursive: true });
 
   const vouchers = JSON.parse(
     fs.readFileSync(vouchersPath, "utf-8"),
