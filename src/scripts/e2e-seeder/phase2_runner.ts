@@ -114,11 +114,11 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
     update: {},
     create: {
       id: `e2e-book-${stockId}`,
-      name: `2024 Accounting Book`,
+      name: `[E2E-${stockId}] 2024 Accounting Book`,
       country: "TW",
       currency: "TWD",
       rule: "IFRS",
-      enterpriseId: company.stockId,
+      enterpriseId: stockId,
       teamId: team.id,
     },
   });
