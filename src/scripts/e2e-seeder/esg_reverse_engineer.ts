@@ -131,9 +131,9 @@ export const generateEsgRecords = (stockId: string) => {
     });
   }
 
-  // Info: (20260502 - Tzuhan) 3. 將範疇一 (直接排放) 映射至差旅費傳票 (代碼 6172)
+  // Info: (20260502 - Tzuhan) 3. 將範疇一 (直接排放) 映射至交通費傳票 (代碼 6213)
   const travelLines = vouchers.flatMap((v) =>
-    v.lines.filter((l) => l.accountingCode === "6172" && l.debitAmount > 0),
+    v.lines.filter((l) => l.accountingCode === "6213" && l.debitAmount > 0),
   );
 
   if (travelLines.length > 0 && scope1Target.gt(0)) {

@@ -67,8 +67,8 @@ export const runCrossValidation = async (stockId: string) => {
       if (line.accountingCode === "4111" && !line.isDebit) {
         systemRevenue = systemRevenue.add(line.amount || 0);
       }
-      // Info: (20260502 - Tzuhan) 營業費用 (代碼 6161 水電, 6172 旅費, 6288 其他, 6184 折舊)
-      if (["6161", "6172", "6288"].includes(line.accountingCode || "") && line.isDebit) {
+      // Info: (20260502 - Tzuhan) 營業費用 (代碼 6161 水電, 6213 旅費, 6288 其他, 6184 折舊)
+      if (["6161", "6213", "6288"].includes(line.accountingCode || "") && line.isDebit) {
         systemOpex = systemOpex.add(line.amount || 0);
       }
       if (line.accountingCode === "6184" && line.isDebit) {

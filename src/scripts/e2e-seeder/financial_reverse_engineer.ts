@@ -164,11 +164,11 @@ export const generateFinancialVouchers = (stockId: string) => {
       lines: [
         {
           id: randomUUID(),
-          description: "業務出差機票及住宿",
-          accountingCode: "6172", // Info: (20260502 - Tzuhan) 旅費
+          description: "公司自有公務車燃油費",
+          accountingCode: "6213", // Info: (20260502 - Tzuhan) 旅費/交通費
           debitAmount: travelPerTrip,
           creditAmount: 0,
-          vendor: "長榮航空/當地飯店",
+          vendor: "台灣中油",
         },
         {
           id: randomUUID(),
