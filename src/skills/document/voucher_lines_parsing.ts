@@ -28,8 +28,7 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
     fullPrompt: string,
     chatService: ChatService,
   ): Promise<string> {
-    const { images, parsedContext } =
-      await prepareDocumentContext(task);
+    const { images, parsedContext } = await prepareDocumentContext(task);
 
     // Info: (20260501 - Luphia) Use fullPrompt provided by executor to keep worker stateless
     let promptText = fullPrompt;
@@ -39,15 +38,8 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
     }
 
     try {
-      const text = await chatService.generateRawWithImages(promptText, images);
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.stringify({ data: JSON.parse(jsonMatch[0]) });
-      }
-      return JSON.stringify({
-        data: null,
-        error: "無法從 AI 回應中解析出有效的 JSON 格式",
-      });
+      const text = await chatService.generateRawWithImages(promptText, images, true);
+      return JSON.stringify({ data: JSON.parse(text) });
     } catch (error) {
       console.error("[VoucherLinesParsingSkill] Error:", error);
       return JSON.stringify({

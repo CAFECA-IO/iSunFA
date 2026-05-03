@@ -23,8 +23,10 @@ export class ChatService {
   async generateRawWithImages(
     prompt: string,
     images?: { data: string; mimeType: string }[],
+    isJson: boolean = false,
   ): Promise<string> {
-    const model = this.genAI.getGenerativeModel({ model: this.modelName });
+    const generationConfig = isJson ? { responseMimeType: "application/json" } : undefined;
+    const model = this.genAI.getGenerativeModel({ model: this.modelName, generationConfig });
     const parts: Part[] = [{ text: prompt }];
 
     if (images && images.length > 0) {

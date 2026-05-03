@@ -16,7 +16,9 @@ export function generateTransportationCarbonFootprintMission(
     order: 0,
     data: {
       key: "TRANSPORTATION_CARBON_FOOTPRINT",
-      prompt: "Please execute transportation carbon footprint calculation with the provided payload:\n" + payloadStr,
+      prompt:
+        "Please execute transportation carbon footprint calculation with the provided payload:\n" +
+        payloadStr,
       context: payloadStr,
     },
   });

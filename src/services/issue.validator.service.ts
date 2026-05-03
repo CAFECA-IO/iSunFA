@@ -222,7 +222,8 @@ export async function processNext() {
                       if (geometry && typeof geometry === "object") {
                         const geoRecord = geometry as Record<string, unknown>;
                         if (geoRecord.coordinates) {
-                          geoRecord.coordinates = "[Geometry coordinates omitted for AI validation]";
+                          geoRecord.coordinates =
+                            "[Geometry coordinates omitted for AI validation]";
                         }
                       }
                     } else if (typeof record[key] === "object") {
