@@ -92,10 +92,9 @@ export const generateReceiptImages = (stockId: string) => {
           <line x1="40" y1="400" x2="360" y2="400" stroke="#999" stroke-width="2" />
           <text x="200" y="450" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#777">模擬雜訊憑證 - iSunFA End-to-End Test</text>
         </g>
-        <!-- Info: (20260502 - Tzuhan) 隨機雜訊偽影 (刮痕 / 摺痕)，避開 Y=300~350 的關鍵金額區 -->
-        <path d="M 0 ${Math.random() * 200} Q 200 ${Math.random() * 200} 400 ${Math.random() * 200}" stroke="#rgba(0,0,0,0.2)" stroke-width="3" fill="transparent" />
-        <path d="M ${Math.random() * 400} 0 L ${Math.random() * 400} 250" stroke="#rgba(0,0,0,0.1)" stroke-width="10" />
-        <path d="M ${Math.random() * 400} 400 L ${Math.random() * 400} 600" stroke="#rgba(0,0,0,0.1)" stroke-width="10" />
+        <!-- Info: (20260502 - Tzuhan) 隨機雜訊偽影 (刮痕 / 摺痕) -->
+        <path d="M 0 ${Math.random() * 600} Q 200 ${Math.random() * 600} 400 ${Math.random() * 600}" stroke="#rgba(0,0,0,0.2)" stroke-width="3" fill="transparent" />
+        <path d="M ${Math.random() * 400} 0 L ${Math.random() * 400} 600" stroke="#rgba(0,0,0,0.1)" stroke-width="10" />
       </svg>
       `;
     } else {
