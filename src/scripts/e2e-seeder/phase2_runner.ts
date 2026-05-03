@@ -282,6 +282,9 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
         console.log(`⚠️ Exception: ${err.message}`);
       }
     }
+    
+    // Info: (20260503 - Tzuhan) 增加 2 秒延遲，避免觸發 Gemini API Rate Limit (429 Too Many Requests)
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
   const voucherAccuracy = totalVoucherTested > 0 ? (correctVoucherCount / totalVoucherTested) * 100 : 0;

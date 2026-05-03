@@ -32,8 +32,8 @@ export const runScaleTest = async () => {
 
   const results: Record<string, string> = {};
 
-  // Info: (20260503 - Tzuhan) 設定併發上限為 3，以避免過度請求導致 AI API 封鎖
-  const limit = pLimit(3);
+  // Info: (20260503 - Tzuhan) 設定併發上限為 1 (嚴格序列化)，以避免過度請求導致 AI API 封鎖
+  const limit = pLimit(1);
 
   const tasks = stockIds.map((stockId) => limit(async () => {
     console.log(`\n------------------------------------------------------`);
