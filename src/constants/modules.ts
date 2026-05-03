@@ -40,7 +40,11 @@ export const PUBLIC_MODULES = [
   { key: "analysis", icon: PieChart, basic: true },
   { key: "ai_consultation_room", icon: Bot, basic: true },
   { key: "salary_calculator", icon: Wallet, basic: true },
-  { key: "transportation_carbon_footprint_calculator", icon: Truck, basic: true }
+  {
+    key: "transportation_carbon_footprint_calculator",
+    icon: Truck,
+    basic: true,
+  },
 ];
 
 export const ADMIN_MODULES = [

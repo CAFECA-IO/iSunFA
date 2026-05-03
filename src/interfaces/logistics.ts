@@ -1,4 +1,4 @@
-import type { Geometry } from 'geojson';
+import type { Geometry } from "geojson";
 
 export interface INearestPortResult {
   id: string;
@@ -20,19 +20,19 @@ export interface ITransportSegment {
 export interface IComparePlansResponse {
   success: boolean;
   plans: {
-      landOnly: ITransportSegment & { co2eKg?: number };
-      sea_multimodal: {
-          land_origin_to_port: ITransportSegment;
-          sea_port_to_port: ITransportSegment;
-          land_port_to_dest: ITransportSegment;
-          total_co2eKg?: number;
-      };
-      air_multimodal: {
-          land_origin_to_airport: ITransportSegment;
-          air_airport_to_airport: ITransportSegment;
-          land_airport_to_dest: ITransportSegment;
-          total_co2eKg?: number;
-      };
+    landOnly: ITransportSegment & { co2eKg?: number };
+    sea_multimodal: {
+      land_origin_to_port: ITransportSegment;
+      sea_port_to_port: ITransportSegment;
+      land_port_to_dest: ITransportSegment;
+      total_co2eKg?: number;
+    };
+    air_multimodal: {
+      land_origin_to_airport: ITransportSegment;
+      air_airport_to_airport: ITransportSegment;
+      land_airport_to_dest: ITransportSegment;
+      total_co2eKg?: number;
+    };
   };
 }
 

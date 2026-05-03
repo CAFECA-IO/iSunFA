@@ -7,4 +7,3 @@ export const sidebar = {
   account_book: "Switch Account Book",
   public_modules: "Tools",
 };
-

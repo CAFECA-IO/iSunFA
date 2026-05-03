@@ -15,7 +15,9 @@ export async function GET(
   request: NextRequest,
   {
     params,
-  }: { params: Promise<{ account_book_id: string; emission_sources_id: string }> },
+  }: {
+    params: Promise<{ account_book_id: string; emission_sources_id: string }>;
+  },
 ) {
   try {
     // Info: (20260304 - Julian) Verify Token & Get User
@@ -28,8 +30,10 @@ export async function GET(
     }
 
     // Info: (20260312 - Julian) 取得帳簿
-    const { account_book_id: accountBookId, emission_sources_id: emissionSourcesId } =
-      await params;
+    const {
+      account_book_id: accountBookId,
+      emission_sources_id: emissionSourcesId,
+    } = await params;
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
@@ -38,7 +42,8 @@ export async function GET(
     }
 
     // Info: (20260430 - Julian) 取得排放源
-    const emissionSources = await esgRepo.getEsgEmissionSourcesById(emissionSourcesId);
+    const emissionSources =
+      await esgRepo.getEsgEmissionSourcesById(emissionSourcesId);
 
     if (!emissionSources) {
       console.error("Emission sources not found");
@@ -48,7 +53,11 @@ export async function GET(
     return jsonOk(emissionSources);
   } catch (error) {
     console.error("Error fetching emission sources:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to fetch emission sources", status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to fetch emission sources",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }
 
@@ -60,7 +69,9 @@ export async function PUT(
   request: NextRequest,
   {
     params,
-  }: { params: Promise<{ account_book_id: string; emission_sources_id: string }> },
+  }: {
+    params: Promise<{ account_book_id: string; emission_sources_id: string }>;
+  },
 ) {
   try {
     // Info: (20260304 - Julian) Verify Token & Get User
@@ -73,8 +84,10 @@ export async function PUT(
     }
 
     // Info: (20260312 - Julian) 取得帳簿
-    const { account_book_id: accountBookId, emission_sources_id: emissionSourcesId } =
-      await params;
+    const {
+      account_book_id: accountBookId,
+      emission_sources_id: emissionSourcesId,
+    } = await params;
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
@@ -89,7 +102,11 @@ export async function PUT(
     // Info: (20260430 - Julian) 驗證排放源參數
     if (!input || !input.name) {
       console.error("Missing emission sources or emission sources name");
-      return jsonFail({ code: "VA000099", message: "Emission sources is required", status: ApiCode.VALIDATION_ERROR });
+      return jsonFail({
+        code: "VA000099",
+        message: "Emission sources is required",
+        status: ApiCode.VALIDATION_ERROR,
+      });
     }
 
     // Info: (20260430 - Julian) 更新排放源
@@ -109,7 +126,11 @@ export async function PUT(
     return jsonOk({ updatedEmissionSourcesId: updatedEmissionSources.id });
   } catch (error) {
     console.error("Error updating emission sources:", error);
-    return jsonFail({ code: "IN000099", message: "Failed to update emission sources", status: ApiCode.INTERNAL_SERVER_ERROR });
+    return jsonFail({
+      code: "IN000099",
+      message: "Failed to update emission sources",
+      status: ApiCode.INTERNAL_SERVER_ERROR,
+    });
   }
 }
 
@@ -121,7 +142,9 @@ export async function DELETE(
   request: NextRequest,
   {
     params,
-  }: { params: Promise<{ account_book_id: string; emission_sources_id: string }> },
+  }: {
+    params: Promise<{ account_book_id: string; emission_sources_id: string }>;
+  },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -132,8 +155,10 @@ export async function DELETE(
       return jsonFail(API_ERRORS.NF_USER);
     }
 
-    const { account_book_id: accountBookId, emission_sources_id: emissionSourcesId } =
-      await params;
+    const {
+      account_book_id: accountBookId,
+      emission_sources_id: emissionSourcesId,
+    } = await params;
     const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
 
     if (!accountBook) {
@@ -141,7 +166,8 @@ export async function DELETE(
       return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
-    const deletedEmissionSources = await esgRepo.deleteEsgEmissionSources(emissionSourcesId);
+    const deletedEmissionSources =
+      await esgRepo.deleteEsgEmissionSources(emissionSourcesId);
 
     if (!deletedEmissionSources) {
       console.error("Emission sources not found");

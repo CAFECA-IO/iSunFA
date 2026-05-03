@@ -54,7 +54,8 @@ import { transportationCarbonFootprintCalculator } from "@/i18n/locales/zh_tw/tr
 import { salaryCalculator } from "@/i18n/locales/zh_tw/salary_calculator";
 
 export const zhTw = {
-  transportation_carbon_footprint_calculator: transportationCarbonFootprintCalculator,
+  transportation_carbon_footprint_calculator:
+    transportationCarbonFootprintCalculator,
   salary_calculator: salaryCalculator,
   common,
   faith,

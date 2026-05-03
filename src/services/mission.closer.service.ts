@@ -49,12 +49,12 @@ export async function processNext() {
       try {
         await fs.access(closePath);
         continue; // Info: (20260430 - Luphia) Already closed
-      } catch { }
+      } catch {}
 
       try {
         await fs.access(path.join(taskDir, "giveup.md"));
         continue; // Info: (20260502 - Luphia) Already given up
-      } catch { }
+      } catch {}
 
       processedAny = true;
       console.log(
@@ -149,13 +149,13 @@ export async function processNext() {
                   resultPath,
                   path.join(taskDir, `result_rejected_${timestamp}.md`),
                 );
-              } catch { }
+              } catch {}
               try {
                 await fs.rename(
                   submitPath,
                   path.join(taskDir, `submit_rejected_${timestamp}.md`),
                 );
-              } catch { }
+              } catch {}
               break; // Info: (20260430 - Luphia) process one per tick
             }
           }

@@ -7,4 +7,3 @@ export const sidebar = {
   account_book: "帳簿の切り替え",
   public_modules: "ツール",
 };
-

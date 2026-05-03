@@ -29,7 +29,10 @@ export interface IAnalysisRepository {
     type: string,
     keyword: string,
   ): Promise<Analysis | null>;
-  getFullAnalysisHistoryByUserId(userId: string, category?: string): Promise<FullAnalysis[]>;
+  getFullAnalysisHistoryByUserId(
+    userId: string,
+    category?: string,
+  ): Promise<FullAnalysis[]>;
   syncAnalysisTags(analysisId: string, tags: string[]): Promise<void>;
 }
 

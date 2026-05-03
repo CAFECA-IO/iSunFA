@@ -292,7 +292,7 @@ export async function GET(request: NextRequest) {
     // Info: (20260311 - Tzuhan) Fetch associated tags and related mission data
     const fullAnalyses = await analysisRepo.getFullAnalysisHistoryByUserId(
       user.id,
-      category
+      category,
     );
 
     // Info: (20260128 - Luphia) Map DB result to response format
@@ -398,9 +398,15 @@ export async function GET(request: NextRequest) {
         isExternal,
         isShared,
         isFinancialDataHidden,
-        origin: (missionData?.origin || (missionData?.data as Record<string, unknown>)?.origin || orderData?.origin) as Record<string, unknown> | undefined,
-        dest: (missionData?.dest || (missionData?.data as Record<string, unknown>)?.dest || orderData?.dest) as Record<string, unknown> | undefined,
-        weightKg: (missionData?.weightKg || (missionData?.data as Record<string, unknown>)?.weightKg || orderData?.weightKg) as number | undefined,
+        origin: (missionData?.origin ||
+          (missionData?.data as Record<string, unknown>)?.origin ||
+          orderData?.origin) as Record<string, unknown> | undefined,
+        dest: (missionData?.dest ||
+          (missionData?.data as Record<string, unknown>)?.dest ||
+          orderData?.dest) as Record<string, unknown> | undefined,
+        weightKg: (missionData?.weightKg ||
+          (missionData?.data as Record<string, unknown>)?.weightKg ||
+          orderData?.weightKg) as number | undefined,
         retryCount:
           typeof missionData?.retryCount === "number"
             ? missionData.retryCount

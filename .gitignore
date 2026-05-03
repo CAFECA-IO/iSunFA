@@ -54,3 +54,7 @@ next-env.d.ts
 # lock files
 package-lock.json
 yarn.lock
+
+# data & local seeding
+data/
+/agent.md

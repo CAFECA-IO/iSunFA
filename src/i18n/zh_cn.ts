@@ -55,7 +55,8 @@ import { salaryCalculator } from "@/i18n/locales/zh_cn/salary_calculator";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const zhCn = {
-  transportation_carbon_footprint_calculator: transportationCarbonFootprintCalculator,
+  transportation_carbon_footprint_calculator:
+    transportationCarbonFootprintCalculator,
   salary_calculator: salaryCalculator,
   date,
   currency_alias: currencyAlias,

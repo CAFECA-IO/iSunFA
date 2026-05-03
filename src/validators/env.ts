@@ -146,9 +146,7 @@ export async function validateEnvDetailed(): Promise<IEnvValidationResultDetaile
       .map((k) => `${k}=${dotenvConfig[k]}`)
       .join("\n");
 
-    const hashBuffer = createHash("sha256")
-      .update(stableString)
-      .digest();
+    const hashBuffer = createHash("sha256").update(stableString).digest();
     const computedChallenge = hashBuffer
       .toString("base64")
       .replace(/\+/g, "-")

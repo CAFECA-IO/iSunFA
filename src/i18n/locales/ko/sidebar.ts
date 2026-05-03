@@ -7,4 +7,3 @@ export const sidebar = {
   account_book: "장부 전환",
   public_modules: "도구",
 };
-

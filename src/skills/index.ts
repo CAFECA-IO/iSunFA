@@ -18,5 +18,6 @@ export const skillRegistry: Record<string, ITaskSkill> = {
   DOCUMENT_PRE_CHECK: new DocumentPreCheckSkill(),
   MARKET_EVENT_COLLECTION: new MarketEventCollectionSkill(),
   AI_CONSULTING_TASK: new AiConsultingSkill(),
-  TRANSPORTATION_CARBON_FOOTPRINT: new TransportationCarbonFootprintEvaluationSkill(),
+  TRANSPORTATION_CARBON_FOOTPRINT:
+    new TransportationCarbonFootprintEvaluationSkill(),
 };

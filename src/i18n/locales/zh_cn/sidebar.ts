@@ -7,4 +7,3 @@ export const sidebar = {
   account_book: "账本切换",
   public_modules: "小工具",
 };
-

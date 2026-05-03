@@ -202,21 +202,23 @@ export class AnalysisService {
 
           const esgRecords = targetAccountBookId
             ? await esgRepo.findManyEsgRecords({
-              where: {
-                accountBookId: targetAccountBookId,
-                tradingDate: {
-                  gte: new Date(start + "T00:00:00.000Z"),
-                  lte: new Date(end + "T23:59:59.999Z"),
+                where: {
+                  accountBookId: targetAccountBookId,
+                  tradingDate: {
+                    gte: new Date(start + "T00:00:00.000Z"),
+                    lte: new Date(end + "T23:59:59.999Z"),
+                  },
+                  deletedAt: null,
+                  isVerified: true,
                 },
-                deletedAt: null,
-                isVerified: true,
-              },
-              orderBy: { tradingDate: "asc" },
-            })
+                orderBy: { tradingDate: "asc" },
+              })
             : [];
 
           // Info: (20260418 - Tzuhan) [去耦合與效能最佳化] 分離 Period (當期) 與 Cumulative (歷史累積) 的查詢，避免財報數據打架
-          type VoucherWithLines = Prisma.VoucherGetPayload<{ include: { lines: true } }>;
+          type VoucherWithLines = Prisma.VoucherGetPayload<{
+            include: { lines: true };
+          }>;
           let periodVouchers: VoucherWithLines[] = [];
           let cumulativeVouchers: VoucherWithLines[] = [];
 
@@ -231,38 +233,47 @@ export class AnalysisService {
               accountBookId: targetAccountBookId!,
               deletedAt: null,
               isVerified: true, // Info: (20260502 - Tzuhan) ⚠️修復：排除草稿傳票
-              tradingDate: { lte: new Date(end + "T23:59:59.999Z") }
+              tradingDate: { lte: new Date(end + "T23:59:59.999Z") },
             };
 
             if (targetAccountBookId) {
-              const category = params.category as (typeof ANALYSIS_CATEGORY)[keyof typeof ANALYSIS_CATEGORY];
+              const category =
+                params.category as (typeof ANALYSIS_CATEGORY)[keyof typeof ANALYSIS_CATEGORY];
 
               // Info: (20260502 - Tzuhan) 1. 資產負債表需要累積餘額 (無 gte)
-              const needsCumulative: (typeof ANALYSIS_CATEGORY)[keyof typeof ANALYSIS_CATEGORY][] = [
-                ANALYSIS_CATEGORY.BALANCE_SHEET,
-                ANALYSIS_CATEGORY.FINANCIAL_HEALTH,
-                ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE
-              ];
+              const needsCumulative: (typeof ANALYSIS_CATEGORY)[keyof typeof ANALYSIS_CATEGORY][] =
+                [
+                  ANALYSIS_CATEGORY.BALANCE_SHEET,
+                  ANALYSIS_CATEGORY.FINANCIAL_HEALTH,
+                  ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE,
+                ];
               if (needsCumulative.includes(category)) {
                 cumulativeVouchers = (await voucherRepo.findManyVouchers({
                   where: baseWhere,
                   orderBy: { tradingDate: "asc" },
-                  include: { lines: true }
+                  include: { lines: true },
                 })) as unknown as VoucherWithLines[];
               }
 
               // Info: (20260502 - Tzuhan) 2. 損益與現金流量表需要當期發生額 (有 gte)
-              const needsPeriod: (typeof ANALYSIS_CATEGORY)[keyof typeof ANALYSIS_CATEGORY][] = [
-                ANALYSIS_CATEGORY.INCOME_STATEMENT,
-                ANALYSIS_CATEGORY.CASH_FLOW,
-                ANALYSIS_CATEGORY.FINANCIAL_HEALTH,
-                ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE
-              ];
+              const needsPeriod: (typeof ANALYSIS_CATEGORY)[keyof typeof ANALYSIS_CATEGORY][] =
+                [
+                  ANALYSIS_CATEGORY.INCOME_STATEMENT,
+                  ANALYSIS_CATEGORY.CASH_FLOW,
+                  ANALYSIS_CATEGORY.FINANCIAL_HEALTH,
+                  ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE,
+                ];
               if (needsPeriod.includes(category)) {
                 periodVouchers = (await voucherRepo.findManyVouchers({
-                  where: { ...baseWhere, tradingDate: { lte: new Date(end + "T23:59:59.999Z"), gte: new Date(start + "T00:00:00.000Z") } },
+                  where: {
+                    ...baseWhere,
+                    tradingDate: {
+                      lte: new Date(end + "T23:59:59.999Z"),
+                      gte: new Date(start + "T00:00:00.000Z"),
+                    },
+                  },
                   orderBy: { tradingDate: "asc" },
-                  include: { lines: true }
+                  include: { lines: true },
                 })) as unknown as VoucherWithLines[];
               }
             }
@@ -272,7 +283,11 @@ export class AnalysisService {
             `[ESG-DEBUG] Fetched esgRecords: ${esgRecords.length}, periodVouchers: ${periodVouchers.length}, cumulativeVouchers: ${cumulativeVouchers.length}`,
           );
 
-          if (esgRecords.length > 0 || periodVouchers.length > 0 || cumulativeVouchers.length > 0) {
+          if (
+            esgRecords.length > 0 ||
+            periodVouchers.length > 0 ||
+            cumulativeVouchers.length > 0
+          ) {
             parsedPrerequisiteParams = {
               accountBook: matchedAccountBook || undefined,
             };
@@ -287,7 +302,9 @@ export class AnalysisService {
                   allLines.push({
                     id: String(line.id || ""),
                     accountingCode: code,
-                    accounting: acc ? (acc as IAccount) : { code, name: code } as IAccount, // Info: (20260502 - Tzuhan) ⚠️修復：正確綁定科目字典，消滅 AI 幻覺
+                    accounting: acc
+                      ? (acc as IAccount)
+                      : ({ code, name: code } as IAccount), // Info: (20260502 - Tzuhan) ⚠️修復：正確綁定科目字典，消滅 AI 幻覺
                     particular: String(line.particular || ""),
                     amount: Number(line.amount || 0),
                     isDebit: Boolean(line.isDebit),
@@ -301,38 +318,56 @@ export class AnalysisService {
             const cumulativeLines = formatLines(cumulativeVouchers);
 
             // Info: (20260502 - Tzuhan) ⚠️修復：只有合規抓鬼 (FINANCIAL_COMPLIANCE) 這種異常偵測，才需要把「原始傳票明細」餵給 AI，其餘純財報分析嚴禁餵原始明細避免 AI 重複加總
-            if (params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE && periodVouchers.length > 0) {
-              const voucherLinesStr = periodVouchers.map((v) => {
-                const linesStr = (Array.isArray(v.lines) ? v.lines : []).map((l) => {
-                  const code = String(l.accountingCode || "");
-                  const acc = getAccountByCode(code);
-                  return `    - 科目: ${acc ? acc.name : code}, 金額:${Number(l.amount || 0)}, 摘要: ${l.particular || ""}, 借貸: ${l.isDebit ? "借方" : "貸方"}`;
-                }).join("\n");
-                const dateStr = v.tradingDate instanceof Date ? v.tradingDate.toISOString().split("T")[0] : String(v.tradingDate).split("T")[0];
-                return `- 傳票號: ${v.id}, 日期: ${dateStr}\n${linesStr}`;
-              }).join("\n");
+            if (
+              params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE &&
+              periodVouchers.length > 0
+            ) {
+              const voucherLinesStr = periodVouchers
+                .map((v) => {
+                  const linesStr = (Array.isArray(v.lines) ? v.lines : [])
+                    .map((l) => {
+                      const code = String(l.accountingCode || "");
+                      const acc = getAccountByCode(code);
+                      return `    - 科目: ${acc ? acc.name : code}, 金額:${Number(l.amount || 0)}, 摘要: ${l.particular || ""}, 借貸: ${l.isDebit ? "借方" : "貸方"}`;
+                    })
+                    .join("\n");
+                  const dateStr =
+                    v.tradingDate instanceof Date
+                      ? v.tradingDate.toISOString().split("T")[0]
+                      : String(v.tradingDate).split("T")[0];
+                  return `- 傳票號: ${v.id}, 日期: ${dateStr}\n${linesStr}`;
+                })
+                .join("\n");
               parsedPrerequisiteParams.voucherRecordsContext = `\n【內部傳票明細數據紀錄】(僅供合規異常分析參考，嚴禁自行加總):\n${voucherLinesStr}\n`;
             }
 
             if (params.category === ANALYSIS_CATEGORY.BALANCE_SHEET) {
-              parsedPrerequisiteParams.balanceSheetReport = generateBalanceSheet(cumulativeLines);
+              parsedPrerequisiteParams.balanceSheetReport =
+                generateBalanceSheet(cumulativeLines);
             } else if (params.category === ANALYSIS_CATEGORY.CASH_FLOW) {
-              parsedPrerequisiteParams.cashFlowReport = generateCashFlowStatement(periodLines);
+              parsedPrerequisiteParams.cashFlowReport =
+                generateCashFlowStatement(periodLines);
             } else if (params.category === ANALYSIS_CATEGORY.INCOME_STATEMENT) {
-              parsedPrerequisiteParams.incomeStatementReport = generateIncomeStatement(periodLines);
+              parsedPrerequisiteParams.incomeStatementReport =
+                generateIncomeStatement(periodLines);
             } else if (
-              params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE || 
+              params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE ||
               params.category === ANALYSIS_CATEGORY.FINANCIAL_HEALTH ||
               params.category === ANALYSIS_CATEGORY.CARBON_HEALTH_CHECK ||
               params.category === ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS
             ) {
-              parsedPrerequisiteParams.balanceSheetReport = generateBalanceSheet(cumulativeLines);
-              parsedPrerequisiteParams.cashFlowReport = generateCashFlowStatement(periodLines);
-              parsedPrerequisiteParams.incomeStatementReport = generateIncomeStatement(periodLines);
+              parsedPrerequisiteParams.balanceSheetReport =
+                generateBalanceSheet(cumulativeLines);
+              parsedPrerequisiteParams.cashFlowReport =
+                generateCashFlowStatement(periodLines);
+              parsedPrerequisiteParams.incomeStatementReport =
+                generateIncomeStatement(periodLines);
             }
 
             if (esgRecords.length > 0) {
-              parsedPrerequisiteParams.esgReport = generateEsgReport(esgRecords as EsgRecord[]);
+              parsedPrerequisiteParams.esgReport = generateEsgReport(
+                esgRecords as EsgRecord[],
+              );
 
               if (params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE) {
                 const esgContextLines = esgRecords.map((r) => {
