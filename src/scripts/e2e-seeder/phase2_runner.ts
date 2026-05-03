@@ -107,8 +107,8 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
   let totalEsgTested = 0;
   let totalVoucherTested = 0;
 
-  // For testing, let's process 5 receipts to avoid rate limits during the script testing phase
-  const sampleSize = Math.min(5, svgFiles.length);
+  // Info: (20260503 - Tzuhan) 處理所有傳票，以達成 100% 準確率的全量擴展測試
+  const sampleSize = svgFiles.length;
   const selectedFiles = svgFiles.slice(0, sampleSize);
 
   for (let i = 0; i < selectedFiles.length; i++) {
@@ -144,9 +144,23 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
     };
 
     try {
+      const corePrompt = `請分析這張傳票/單據圖片，並將其轉換為會計分錄。
+請回傳一個 JSON 格式的物件，且格式必須為：
+{
+  "lines": [
+    {
+      "accountingCode": "4111",
+      "particular": "摘要說明",
+      "amount": 2253680,
+      "isDebit": false
+    }
+  ]
+}
+確保數字準確，借貸平衡，不可有任何 markdown 標籤或其餘文字，直接輸出 JSON 即可。`;
+
       process.stdout.write(`  [${i + 1}/${sampleSize}] Parsing ${voucherNumber} via Core Skill... `);
       
-      const resultJsonStr = await skill.execute(task, mission, "", chatService);
+      const resultJsonStr = await skill.execute(task, mission, corePrompt, chatService);
       const result = JSON.parse(resultJsonStr);
 
       if (result.error) {
@@ -207,8 +221,21 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
         type: "ESG_PARSING",
       };
 
+      const esgPrompt = `請分析這張單據的碳排與 ESG 數據。
+請回傳一個 JSON 格式的物件，且格式必須為：
+{
+  "scope": "SCOPE_2",
+  "activityType": "用電",
+  "vendor": "台灣電力公司",
+  "amount": 5000,
+  "unit": "度",
+  "emissions": 2.47,
+  "confidence": 95
+}
+若無碳排資訊，請合理給予 SCOPE_3 或預設值。不可有任何 markdown 標籤，直接輸出 JSON 即可。`;
+
       process.stdout.write(`  [${i + 1}/${sampleSize}] Parsing ${voucherNumber} via ESG Skill... `);
-      const esgResultStr = await esgSkill.execute(esgTask, mission, "", chatService);
+      const esgResultStr = await esgSkill.execute(esgTask, mission, esgPrompt, chatService);
       const esgResult = JSON.parse(esgResultStr);
 
       if (esgResult.error) {

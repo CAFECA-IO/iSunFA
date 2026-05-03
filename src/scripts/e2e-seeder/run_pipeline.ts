@@ -2,6 +2,7 @@ import { extractContextFromPdf } from "@/scripts/e2e-seeder/ai_vision_extractor"
 import { generateFinancialVouchers } from "@/scripts/e2e-seeder/financial_reverse_engineer";
 import { generateEsgRecords } from "@/scripts/e2e-seeder/esg_reverse_engineer";
 import { generateReceiptImages } from "@/scripts/e2e-seeder/receipt_image_generator";
+import { runPhase2ReceiptAnalysis } from "@/scripts/e2e-seeder/phase2_runner";
 import { runCrossValidation } from "@/scripts/e2e-seeder/cross_validator";
 
 export const runPipeline = async (stockId: string) => {
@@ -19,11 +20,14 @@ export const runPipeline = async (stockId: string) => {
     console.log("\n[3/5] Running ESG Reverse Engineer...");
     generateEsgRecords(stockId);
 
-    console.log("\n[4/5] Running Receipt Image Generator...");
+    console.log("\n[4/6] Running Receipt Image Generator...");
     generateReceiptImages(stockId);
 
-    console.log("\n[5/5] Running Enterprise Cross Validator...");
-    runCrossValidation(stockId);
+    console.log("\n[5/6] Running Phase 2 Receipt Analysis (AI Extraction)...");
+    await runPhase2ReceiptAnalysis(stockId);
+
+    console.log("\n[6/6] Running Enterprise Cross Validator...");
+    await runCrossValidation(stockId);
 
     console.log(`\n✅ [DONE] Pipeline successfully completed for ${stockId}!`);
     console.log(`Check the output in: data/${stockId}/`);

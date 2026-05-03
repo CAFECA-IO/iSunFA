@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { runPipeline } from "@/scripts/e2e-seeder/run_pipeline";
+import pLimit from "p-limit";
 
 export const runScaleTest = async () => {
   console.log(`\n======================================================`);
@@ -31,7 +32,10 @@ export const runScaleTest = async () => {
 
   const results: Record<string, string> = {};
 
-  for (const stockId of stockIds) {
+  // Info: (20260503 - Tzuhan) 設定併發上限為 3，以避免過度請求導致 AI API 封鎖
+  const limit = pLimit(3);
+
+  const tasks = stockIds.map((stockId) => limit(async () => {
     console.log(`\n------------------------------------------------------`);
     console.log(`>>> Processing Enterprise: ${stockId} <<<`);
     console.log(`------------------------------------------------------`);
@@ -45,7 +49,7 @@ export const runScaleTest = async () => {
         `[WARN] Skipping ${stockId} due to missing FIN/ESG JSON data sources.`,
       );
       results[stockId] = "SKIPPED (Missing Data)";
-      continue;
+      return;
     }
 
     try {
@@ -57,7 +61,9 @@ export const runScaleTest = async () => {
       );
       results[stockId] = "FAILED";
     }
-  }
+  }));
+
+  await Promise.all(tasks);
 
   console.log(`\n======================================================`);
   console.log(`📈 [ENTERPRISE SCALING] Batch Summary`);
