@@ -63,16 +63,6 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
   console.log(`======================================================`);
 
   // 1. Create Mock DB Entities
-  const company = await prisma.company.upsert({
-    where: { stockId: `E2E-${stockId}` },
-    update: {},
-    create: {
-      stockId: `E2E-${stockId}`,
-      name: `E2E Test Enterprise ${stockId}`,
-      marketType: "sii",
-    },
-  });
-
   // Info: (20260503 - Tzuhan) 優先使用環境變數指定的 USER_ID，否則自動抓資料庫中第一位使用者（讓每個開發者的本地環境都能通用）
   const envUserId = process.env.E2E_USER_ID;
   let user = envUserId ? await prisma.user.findUnique({ where: { id: envUserId } }) : null;
@@ -96,11 +86,11 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
   }
 
   const team = await prisma.team.upsert({
-    where: { id: `e2e-team-${stockId}` },
+    where: { id: `e2e-global-test-team` },
     update: {},
     create: {
-      id: `e2e-team-${stockId}`,
-      name: `E2E Team ${stockId}`,
+      id: `e2e-global-test-team`,
+      name: `E2E Testing Team`,
     },
   });
 
@@ -111,7 +101,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
   if (!teamMember) {
     await prisma.teamMember.create({
       data: {
-        id: `e2e-tm-${stockId}`,
+        id: `e2e-tm-global-${user.id.substring(0, 8)}`,
         teamId: team.id,
         userId: user.id,
         role: "OWNER",
@@ -241,6 +231,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
       await prisma.voucher.create({
         data: {
           accountBookId: accountBook.id,
+          userId: user.id,
           tradingDate: new Date(groundTruthVoucher.tradingDate),
           confidence: 85,
           analysisStatus: "COMPLETED",
@@ -313,6 +304,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
       await prisma.esgRecord.create({
         data: {
           accountBookId: accountBook.id,
+          userId: user.id,
           tradingDate: new Date(esgData.tradingDate || groundTruthVoucher.tradingDate),
           scope: esgData.scope || "SCOPE_3",
           activityType: esgData.activityType || "UNKNOWN",
