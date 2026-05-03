@@ -6,7 +6,7 @@ import { Prisma } from "@/generated";
 const parseFinanceNumber = (val: string): Prisma.Decimal => {
   if (!val) return new Prisma.Decimal(0);
   const num = parseInt(val.replace(/,/g, ""), 10);
-  return isNaN(num) ? new Prisma.Decimal(0) : new Prisma.Decimal(num).mul(1000);
+  return isNaN(num) ? new Prisma.Decimal(0) : new Prisma.Decimal(num);
 };
 
 const findReportValue = (reportList: string[][], keyword: string): Prisma.Decimal => {

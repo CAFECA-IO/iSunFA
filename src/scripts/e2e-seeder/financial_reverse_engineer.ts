@@ -42,7 +42,7 @@ interface ISimulatedVoucher {
 const parseFinanceNumber = (val: string): Prisma.Decimal => {
   if (!val) return new Prisma.Decimal(0);
   const num = parseInt(val.replace(/,/g, ""), 10);
-  return isNaN(num) ? new Prisma.Decimal(0) : new Prisma.Decimal(num).mul(1000); // Info: (20260502 - Tzuhan) 假設財報單位為新台幣千元
+  return isNaN(num) ? new Prisma.Decimal(0) : new Prisma.Decimal(num); // Info: (20260503 - Tzuhan) 移除 .mul(1000) 以避免 Prisma Int 欄位超過 21 億上限
 };
 
 // Info: (20260502 - Tzuhan) 在非結構化報表列表中搜尋特定資料列的工具
