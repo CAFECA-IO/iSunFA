@@ -193,6 +193,16 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
     }
   ]
 }
+
+【請注意，你必須只能從以下會計項目代碼中選擇最符合的】：
+- 1111: 現金 (資產)
+- 4111: 銷貨收入 (收入)
+- 6161: 水電瓦斯費 (營業費用)
+- 6172: 旅費/業務出差機票及住宿 (營業費用)
+- 6299: 其他營業費用 (營業費用)
+- 6184: 折舊費用 (營業費用)
+- 1521: 累計折舊 (資產抵銷)
+
 確保數字準確，借貸平衡，不可有任何 markdown 標籤或其餘文字，直接輸出 JSON 即可。`;
 
       process.stdout.write(`  [${i + 1}/${sampleSize}] Parsing ${voucherNumber} via Core Skill... `);
@@ -318,6 +328,8 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
         }
       });
 
+      // Prevent Gemini API Rate Limits and 503 errors
+      await new Promise((resolve) => setTimeout(resolve, 4000));
     } catch (err: unknown) {
       if (err instanceof Error) {
         console.log(`⚠️ Exception: ${err.message}`);
