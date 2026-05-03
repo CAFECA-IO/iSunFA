@@ -175,7 +175,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
     const mission: IPseudoMission = {
       id: `mission-${voucherNumber}`,
       data: {
-        companyId: company.stockId,
+        companyId: stockId,
         name: `E2E Test Mission ${voucherNumber}`,
       },
     };
