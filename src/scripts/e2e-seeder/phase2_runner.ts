@@ -244,6 +244,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
           tradingDate: new Date(groundTruthVoucher.tradingDate),
           confidence: 85,
           analysisStatus: "COMPLETED",
+          isVerified: true,
           lines: {
             create: extractedLines.map((l: IExtractedLine) => ({
               accountingCode: l.accountingCode || "9999",
@@ -321,6 +322,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
           emissions: esgData.emissions || 0,
           confidence: esgData.confidence || 85,
           analysisStatus: "COMPLETED",
+          isVerified: true,
         }
       });
 
