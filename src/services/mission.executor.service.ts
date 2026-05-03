@@ -1,12 +1,13 @@
-import { getPriorityEnvConfig } from "@/services/env.service";
 import fs from "fs/promises";
 import path from "path";
+import { getPriorityEnvConfig } from "@/services/env.service";
 import { ChatService } from "@/services/chat.service";
 import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
 import { Prisma } from "@/generated";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
+
 export async function processNext() {
   console.log("[MissionExecutor] Scanning MISSION_DIR for tasks to execute...");
 
@@ -213,23 +214,34 @@ export async function processNext() {
             if (useJsonPlan && subTaskConfig.data?.context) {
               try {
                 const ctx = JSON.parse(subTaskConfig.data.context as string);
-                if (ctx.fileId && ctx.accountBookId) {
-                  if (!aggregatedResultsByFileId[ctx.fileId]) {
-                    aggregatedResultsByFileId[ctx.fileId] = {
+                const recordKey =
+                  ctx.fileId ||
+                  ctx.voucherId ||
+                  ctx.esgRecordId ||
+                  ctx.journalId ||
+                  "default";
+
+                if (recordKey && ctx.accountBookId) {
+                  if (!aggregatedResultsByFileId[recordKey]) {
+                    aggregatedResultsByFileId[recordKey] = {
                       accountBookId: ctx.accountBookId,
+                      fileId: ctx.fileId || "",
+                      voucherIdContext: ctx.voucherId || "",
+                      esgRecordIdContext: ctx.esgRecordId || "",
+                      journalIdContext: ctx.journalId || "",
                     };
                   }
 
                   if (subTaskConfig.type === "JOURNAL_PARSING")
-                    aggregatedResultsByFileId[ctx.fileId].journal = parsedVal;
+                    aggregatedResultsByFileId[recordKey].journal = parsedVal;
                   if (subTaskConfig.type === "VOUCHER_BASE_PARSING")
-                    aggregatedResultsByFileId[ctx.fileId].voucherBase =
+                    aggregatedResultsByFileId[recordKey].voucherBase =
                       parsedVal;
                   if (subTaskConfig.type === "VOUCHER_LINES_PARSING")
-                    aggregatedResultsByFileId[ctx.fileId].voucherLines =
+                    aggregatedResultsByFileId[recordKey].voucherLines =
                       parsedVal;
                   if (subTaskConfig.type === "ESG_PARSING")
-                    aggregatedResultsByFileId[ctx.fileId].esg = parsedVal;
+                    aggregatedResultsByFileId[recordKey].esg = parsedVal;
                 }
               } catch {}
             }
