@@ -328,8 +328,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
         }
       });
 
-      // Prevent Gemini API Rate Limits and 503 errors
-      await new Promise((resolve) => setTimeout(resolve, 4000));
+      // Rate Limit Delay removed since user is on a paid Gemini tier
     } catch (err: unknown) {
       if (err instanceof Error) {
         console.log(`⚠️ Exception: ${err.message}`);
