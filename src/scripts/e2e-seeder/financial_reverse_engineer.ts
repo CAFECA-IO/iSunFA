@@ -8,6 +8,7 @@ interface IExtractedContextCache {
     travelExpenseRatio: number;
     utilitiesRatio: number;
     top3Vendors: string[];
+    top3Customers?: string[];
     depreciationStrategy: string;
   };
   esg: {
@@ -107,6 +108,7 @@ export const generateFinancialVouchers = (stockId: string) => {
           accountingCode: "1111", // Info: (20260502 - Tzuhan) 現金
           debitAmount: revenuePerSale,
           creditAmount: 0,
+          vendor: contextCache.financial.top3Customers?.[0] || "國際主力客戶",
         },
         {
           id: randomUUID(),
@@ -136,7 +138,7 @@ export const generateFinancialVouchers = (stockId: string) => {
           accountingCode: "6161", // Info: (20260502 - Tzuhan) 水電瓦斯費
           debitAmount: utilityPerMonth,
           creditAmount: 0,
-          vendor: contextCache.financial.top3Vendors[0] || "台灣電力公司",
+          vendor: "台灣電力公司",
         },
         {
           id: randomUUID(),
@@ -166,6 +168,7 @@ export const generateFinancialVouchers = (stockId: string) => {
           accountingCode: "6172", // Info: (20260502 - Tzuhan) 旅費
           debitAmount: travelPerTrip,
           creditAmount: 0,
+          vendor: "長榮航空/當地飯店",
         },
         {
           id: randomUUID(),

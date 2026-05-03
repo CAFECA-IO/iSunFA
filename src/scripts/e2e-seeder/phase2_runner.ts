@@ -73,6 +73,28 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
     },
   });
 
+  // Info: (20260503 - Tzuhan) 優先使用環境變數指定的 USER_ID，否則自動抓資料庫中第一位使用者（讓每個開發者的本地環境都能通用）
+  const envUserId = process.env.E2E_USER_ID;
+  let user = envUserId ? await prisma.user.findUnique({ where: { id: envUserId } }) : null;
+
+  if (!user) {
+    user = await prisma.user.findFirst();
+  }
+
+  // Info: (20260503 - Tzuhan) 如果資料庫是空的 (CI/CD 環境)，則建立預設測試帳號
+  if (!user) {
+    const defaultUserId = "e2e-system-user-0001";
+    user = await prisma.user.upsert({
+      where: { id: defaultUserId },
+      update: {},
+      create: {
+        id: defaultUserId,
+        address: `e2e-address-${defaultUserId}`,
+        name: "E2E Test User",
+      }
+    });
+  }
+
   const team = await prisma.team.upsert({
     where: { id: `e2e-team-${stockId}` },
     update: {},
@@ -81,6 +103,21 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
       name: `E2E Team ${stockId}`,
     },
   });
+
+  const teamMember = await prisma.teamMember.findFirst({
+    where: { teamId: team.id, userId: user.id }
+  });
+
+  if (!teamMember) {
+    await prisma.teamMember.create({
+      data: {
+        id: `e2e-tm-${stockId}`,
+        teamId: team.id,
+        userId: user.id,
+        role: "OWNER",
+      }
+    });
+  }
 
   const accountBook = await prisma.accountBook.upsert({
     where: { id: `e2e-book-${stockId}` },
