@@ -51,10 +51,12 @@ import { currencyAlias } from "@/i18n/locales/ko/currency_alias";
 import { orderManagement } from "@/i18n/locales/ko/order_management";
 import { adminBilling } from "@/i18n/locales/ko/admin_billing";
 import { transportationCarbonFootprintCalculator } from "@/i18n/locales/ko/transportation_carbon_footprint_calculator";
+import { salaryCalculator } from "@/i18n/locales/ko/salary_calculator";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const ko = {
   transportation_carbon_footprint_calculator: transportationCarbonFootprintCalculator,
+  salary_calculator: salaryCalculator,
   date,
   currency_alias: currencyAlias,
   common,

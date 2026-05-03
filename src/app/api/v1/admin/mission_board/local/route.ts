@@ -58,10 +58,8 @@ export async function GET(req: NextRequest) {
       const failedLogs = [];
       if (status === "failed" || failureCount > 0) {
         for (const file of failedMdFiles) {
-          const content = await fs.readFile(
-            path.join(folderPath, file),
-            "utf8",
-          );
+          const targetFile = folderPath + "/" + file;
+          const content = await fs.readFile(targetFile, "utf8");
           failedLogs.push({ filename: file, content });
         }
       }

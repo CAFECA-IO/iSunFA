@@ -7,7 +7,7 @@ import {
   Analysis,
   AnalysisTag,
   Comment,
-} from "@/generated/client";
+} from "@/generated";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 
 export interface ITalkRepository {

@@ -1,4 +1,5 @@
 export const transportationCarbonFootprintCalculator = {
+  "title": "物流碳足迹",
   "default_ai_input": "从台北国父纪念馆运送 5000 公斤的石板到曼彻斯特博物馆",
   "analysis_failed": "分析失败",
   "error": {

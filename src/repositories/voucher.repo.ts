@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma, Voucher } from "@/generated/client";
+import { Prisma, Voucher } from "@/generated";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 export type VoucherWithRelations = Prisma.VoucherGetPayload<{

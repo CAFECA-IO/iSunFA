@@ -22,7 +22,7 @@ import {
   IUserTarget,
 } from "@/components/admin/user/point_issue_modal";
 import { useTranslation } from "@/i18n/i18n_context";
-import { Role } from "@/generated/client";
+import { Role } from "@/generated";
 import { IBlockchainDashboardData } from "@/services/admin.blockchain.service";
 
 interface IMembershipInfo {

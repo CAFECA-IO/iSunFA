@@ -68,6 +68,7 @@ export async function getExternalConfig(): Promise<{
     appUrl: string;
     gaId: string;
     geminiKey: string;
+    maptilerKey: string;
     oenToken: string;
     oenMerchant: string;
   };

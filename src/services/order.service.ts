@@ -9,7 +9,7 @@ import {
 } from "@/lib/analysis/pricing";
 import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
-import { Prisma } from "@/generated/client";
+import { Prisma } from "@/generated";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import {

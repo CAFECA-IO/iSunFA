@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/generated/client";
+import { Prisma } from "@/generated";
 
 export class UserRepository {
   async findMany(args?: Prisma.UserFindManyArgs) {

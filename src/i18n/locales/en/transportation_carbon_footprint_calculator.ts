@@ -1,4 +1,5 @@
 export const transportationCarbonFootprintCalculator = {
+  "title": "Logistics Carbon Footprint",
   "default_ai_input": "Transport 5000 kg of slate from Sun Yat-sen Memorial Hall in Taipei to the Manchester Museum",
   "analysis_failed": "Analysis failed",
   "error": {

@@ -5,4 +5,6 @@ export const sidebar = {
   team: "팀 관리",
   settings: "설정",
   account_book: "장부 전환",
+  public_modules: "도구",
 };
+

@@ -5,7 +5,7 @@ import { ChatService } from "@/services/chat.service";
 import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
-import { Prisma } from "@/generated/client";
+import { Prisma } from "@/generated";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 export async function processNext() {
   console.log("[MissionExecutor] Scanning MISSION_DIR for tasks to execute...");

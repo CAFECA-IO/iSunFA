@@ -8,7 +8,7 @@ import {
   getVoucherLinesPrompt,
 } from "@/constants/prompts/voucher";
 import { getEsgPrompt } from "@/constants/prompts/esg";
-import { AccountBook, Coefficient } from "@/generated/client";
+import { AccountBook, Coefficient } from "@/generated";
 
 export function generateJournalCorrectionMission(
   params: IMissionParams,

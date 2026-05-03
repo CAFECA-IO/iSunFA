@@ -11,7 +11,7 @@ import {
   ICoefficient,
   ICoefficientInput,
 } from "@/interfaces/coefficient";
-import { Prisma } from "@/generated/client";
+import { Prisma } from "@/generated";
 import {
   TRUE_COEFFICIENT_DATA_PART_1,
   TRUE_COEFFICIENT_DATA_PART_2,

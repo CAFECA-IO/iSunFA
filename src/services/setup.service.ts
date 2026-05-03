@@ -94,6 +94,11 @@ export async function startDockerCompose() {
   );
   setupContent = updateOrAppendEnv(
     setupContent,
+    "OSRM_ROUTER_URL",
+    "http://127.0.0.1:20025",
+  );
+  setupContent = updateOrAppendEnv(
+    setupContent,
     "NEXT_PUBLIC_RPC_URL",
     "http://127.0.0.1:20024",
   );

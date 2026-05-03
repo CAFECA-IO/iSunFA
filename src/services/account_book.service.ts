@@ -1,5 +1,5 @@
 import { COUNTRY, CURRENCY, RULE } from "@/constants/accounts";
-import { Prisma } from "@/generated/client";
+import { Prisma } from "@/generated";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { teamRepo } from "@/repositories/team.repo";
 

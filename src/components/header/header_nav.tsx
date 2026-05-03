@@ -11,23 +11,16 @@ import {
   MenuItems,
   Transition,
 } from "@headlessui/react";
+import { PUBLIC_MODULES, getModuleI18nKey } from "@/constants/modules";
 
 export default function HeaderNav() {
   const { t } = useTranslation();
 
   const NAV_ITEMS = [
-    {
-      label: t("header.transportation_carbon_footprint_calculator"),
-      href: "/transportation_carbon_footprint_calculator",
-    },
-    {
-      label: t("header.salary_calculator"),
-      href: "/salary_calculator",
-    },
-    {
-      label: t("header.ai_consultation_room"),
-      href: "/ai_consultation_room",
-    },
+    ...PUBLIC_MODULES.map((module) => ({
+      label: t(getModuleI18nKey(module.key)),
+      href: `/${module.key}`,
+    })),
     {
       label: t("header.pricing"),
       href: "/pricing",
@@ -52,7 +45,7 @@ export default function HeaderNav() {
       {/* Info: (20260304 - Julian) Mobile Navigation */}
       <Menu
         as="div"
-        className="relative z-100 flex flex-col items-center sm:hidden"
+        className="relative z-100 flex flex-col items-center lg:hidden"
       >
         <MenuButton className="flex items-center gap-x-1 px-2 py-1 text-sm leading-6 font-semibold text-gray-900 transition-colors hover:text-orange-600 focus:outline-none">
           <TextAlignJustify

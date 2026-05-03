@@ -45,18 +45,15 @@ services:
       - blockchain_data:/root/.isuncoin
 
   osrm:
-    image: osrm/osrm-backend:latest
+    build:
+      context: ./dockerfiles/osrm
     platform: linux/amd64
     container_name: osrm
     restart: always
     ports:
       - '${OSRM_PORT:-20025}:5000'
-    volumes:
-      - osrm_data:/data
-    command: "osrm-routed --algorithm mld /data/map.osrm"
 
 volumes:
   blockchain_data:
   database_data:
   storage_data:
-  osrm_data:

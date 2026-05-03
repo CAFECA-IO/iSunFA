@@ -27,7 +27,7 @@ import {
   RegistrationStep,
 } from "@/services/registration.service";
 import AuthTransition, { LoginStep } from "@/components/auth/auth_transition";
-import { Role } from "@/generated/client";
+import { Role } from "@/generated";
 
 interface IAuthModalProps {
   isOpen: boolean;

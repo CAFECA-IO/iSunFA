@@ -4,7 +4,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
-import { Prisma } from "@/generated/client";
+import { Prisma } from "@/generated";
 import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
 import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";

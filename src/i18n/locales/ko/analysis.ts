@@ -60,6 +60,7 @@ export const analysis = {
   },
   title: "고문 분석",
   desc: "다분야 전문가의 기업 분석을 제공하여 경영진이 타당한 비즈니스 결정을 내리도록 지원합니다.",
+  login_to_generate: "분석 보고서를 생성하려면 로그인하십시오",
   internal_analysis: "내부 데이터 분석",
   external_analysis: "외부 데이터 분석",
   addon_bookkeeper: "기장사 비자 추가",

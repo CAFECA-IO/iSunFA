@@ -1,8 +1,8 @@
 export const REVENUE_PROMPT = `
-任務：分析【{Target_Company}】在 {Period} (Year: {Year}) 的損益表「營收趨勢與成長性」。
+任務：分析【{Target_Company}】在 {Period} (Year: {Year}) 的損益表「營收結構與本業佔比」。
 {Data_Source_Instruction}
-1. 營業收入 (Revenue) 的成長規模與年增率 (YoY)、季增率 (QoQ)。
-2. 若有產品線或地區營收分佈資訊，請分析主要成長動能來自何處？
-3. 營收表現是否受到季節性因素或內部營運環境影響？
-請以專業的財報分析師口吻撰寫，提供具體的數據佐證，並給出短評。
+1. 依據當期損益表，拆解營業收入 (Operating Revenue) 與業外收入 (Non-Operating Revenue) 的比例結構。
+2. 評估當期營收的集中度：公司是否過度依賴非核心業務收入？
+3. 嚴禁對未揭露的「前期 YoY/QoQ 數據」進行猜測或捏造，請完全基於當期（Current Period）的絕對數值與比例進行事實陳述。
+請以專業的簽證會計師口吻撰寫，提供具體的 JSON 數據佐證，並給出客觀短評。
 `.trim();

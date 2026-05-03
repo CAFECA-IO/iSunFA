@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma, Analysis } from "@/generated/client";
-import { ANALYSIS_CATEGORY } from "@/constants/analysis";
+import { Prisma, Analysis } from "@/generated";
+import { CATEGORIES } from "@/constants/analysis";
 
 export type FullAnalysis = Prisma.AnalysisGetPayload<{
   include: {
@@ -29,7 +29,7 @@ export interface IAnalysisRepository {
     type: string,
     keyword: string,
   ): Promise<Analysis | null>;
-  getFullAnalysisHistoryByUserId(userId: string): Promise<FullAnalysis[]>;
+  getFullAnalysisHistoryByUserId(userId: string, category?: string): Promise<FullAnalysis[]>;
   syncAnalysisTags(analysisId: string, tags: string[]): Promise<void>;
 }
 
@@ -135,17 +135,20 @@ export class AnalysisRepository implements IAnalysisRepository {
 
   async getFullAnalysisHistoryByUserId(
     userId: string,
+    category?: string,
   ): Promise<FullAnalysis[]> {
+    const whereClause: Prisma.AnalysisWhereInput = { userId };
+
+    if (category) {
+      whereClause.type = category;
+    } else {
+      whereClause.type = {
+        in: [...CATEGORIES],
+      };
+    }
+
     return prisma.analysis.findMany({
-      where: {
-        userId,
-        type: {
-          notIn: [
-            ANALYSIS_CATEGORY.AI_CONSULTING,
-            ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
-          ],
-        },
-      },
+      where: whereClause,
       orderBy: { createdAt: "desc" },
       include: {
         order: true,

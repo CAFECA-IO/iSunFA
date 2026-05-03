@@ -8,6 +8,8 @@ import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@
 import { MarkdownContent } from '@/components/common/markdown_content';
 import { downloadHtmlAsPdf } from '@/lib/utils/pdf';
 import { QRCodeSVG } from 'qrcode.react';
+import { useAuth } from '@/contexts/auth_context';
+import LoginButton from '@/components/common/login_button';
 
 interface IHistoryItem {
   id: string;
@@ -28,6 +30,7 @@ interface IHistoryItem {
 
 export default function HistorySection() {
   const { t } = useTranslation();
+  const { user, loading: isAuthLoading } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -103,9 +106,13 @@ export default function HistorySection() {
   };
 
   useEffect(() => {
-    fetchHistory();
-     
-  }, [t]);
+    if (user) {
+      fetchHistory();
+    } else if (!isAuthLoading) {
+      setLoading(false);
+      setIsInitialLoad(false);
+    }
+  }, [t, user, isAuthLoading]);
 
   const handleRetryReport = async (item: IHistoryItem) => {
     try {
@@ -159,7 +166,7 @@ export default function HistorySection() {
             content = keys.map(k => resultObj[k] as string).join('\n\n---\n\n');
           }
         }
-        
+
         setSelectedReport({
           id: result.payload.id,
           content: content || 'No content available.',
@@ -394,10 +401,24 @@ export default function HistorySection() {
     }
   };
 
-  if (loading && isInitialLoad) {
+  if ((loading && isInitialLoad) || isAuthLoading) {
     return (
       <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 p-6 flex justify-center py-12">
         <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 p-6 flex flex-col items-center justify-center py-16 px-4 text-center">
+        <div className="bg-orange-50 p-4 rounded-full mb-4">
+          <Sparkles className="h-8 w-8 text-orange-600" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">
+          {t('analysis.login_to_generate')}
+        </h3>
+        <LoginButton label={t('analysis.login_to_generate')} />
       </div>
     );
   }
