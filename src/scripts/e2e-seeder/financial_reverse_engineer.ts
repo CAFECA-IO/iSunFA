@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { randomUUID } from "crypto";
+import { Prisma } from "@/generated";
 
 interface IExtractedContextCache {
   financial: {
@@ -37,16 +38,16 @@ interface ISimulatedVoucher {
 }
 
 // Info: (20260502 - Tzuhan) 將類似 "112,684" 的數字解析為絕對整數的工具
-const parseFinanceNumber = (val: string): number => {
-  if (!val) return 0;
+const parseFinanceNumber = (val: string): Prisma.Decimal => {
+  if (!val) return new Prisma.Decimal(0);
   const num = parseInt(val.replace(/,/g, ""), 10);
-  return isNaN(num) ? 0 : num * 1000; // Info: (20260502 - Tzuhan) 假設財報單位為新台幣千元
+  return isNaN(num) ? new Prisma.Decimal(0) : new Prisma.Decimal(num).mul(1000); // Info: (20260502 - Tzuhan) 假設財報單位為新台幣千元
 };
 
 // Info: (20260502 - Tzuhan) 在非結構化報表列表中搜尋特定資料列的工具
-const findReportValue = (reportList: string[][], keyword: string): number => {
+const findReportValue = (reportList: string[][], keyword: string): Prisma.Decimal => {
   const row = reportList.find((r) => r[0].includes(keyword));
-  return row ? parseFinanceNumber(row[1]) : 0;
+  return row ? parseFinanceNumber(row[1]) : new Prisma.Decimal(0);
 };
 
 // Info: (20260502 - Tzuhan) 產生 2024 年隨機日期的輔助函式
@@ -81,10 +82,10 @@ export const generateFinancialVouchers = (stockId: string) => {
   const depreciation = findReportValue(cfList, "折舊費用");
 
   // Info: (20260502 - Tzuhan) 根據 AI 萃取結果決定目標金額
-  const utilitiesAmount = totalOpex * contextCache.financial.utilitiesRatio;
-  const travelAmount = totalOpex * contextCache.financial.travelExpenseRatio;
+  const utilitiesAmount = totalOpex.mul(contextCache.financial.utilitiesRatio);
+  const travelAmount = totalOpex.mul(contextCache.financial.travelExpenseRatio);
   // Info: (20260502 - Tzuhan) 其餘營業費用
-  const otherOpexAmount = totalOpex - utilitiesAmount - travelAmount;
+  const otherOpexAmount = totalOpex.sub(utilitiesAmount).sub(travelAmount);
 
   const vouchers: ISimulatedVoucher[] = [];
 
@@ -93,7 +94,7 @@ export const generateFinancialVouchers = (stockId: string) => {
   // ============================================
   // Info: (20260502 - Tzuhan) 為了簡化，建立 12 張月度收入傳票，或是 50 張隨機傳票。
   const numSales = 50;
-  const revenuePerSale = Math.floor(totalRevenue / numSales);
+  const revenuePerSale = totalRevenue.div(numSales).floor().toNumber();
   for (let i = 0; i < numSales; i++) {
     vouchers.push({
       id: randomUUID(),
@@ -122,7 +123,7 @@ export const generateFinancialVouchers = (stockId: string) => {
   // Info: (20260502 - Tzuhan) 2. 產生營業費用：水電瓦斯費
   // ============================================
   const numUtilities = 12; // Info: (20260502 - Tzuhan) 每月
-  const utilityPerMonth = Math.floor(utilitiesAmount / numUtilities);
+  const utilityPerMonth = utilitiesAmount.div(numUtilities).floor().toNumber();
   for (let i = 0; i < numUtilities; i++) {
     vouchers.push({
       id: randomUUID(),
@@ -152,7 +153,7 @@ export const generateFinancialVouchers = (stockId: string) => {
   // Info: (20260502 - Tzuhan) 3. 產生營業費用：差旅費
   // ============================================
   const numTravels = 20;
-  const travelPerTrip = Math.floor(travelAmount / numTravels);
+  const travelPerTrip = travelAmount.div(numTravels).floor().toNumber();
   for (let i = 0; i < numTravels; i++) {
     vouchers.push({
       id: randomUUID(),
@@ -189,7 +190,7 @@ export const generateFinancialVouchers = (stockId: string) => {
         id: randomUUID(),
         description: "其他營業費用彙總",
         accountingCode: "6299", // Info: (20260502 - Tzuhan) 其他管理費用
-        debitAmount: otherOpexAmount,
+        debitAmount: otherOpexAmount.floor().toNumber(),
         creditAmount: 0,
       },
       {
@@ -197,7 +198,7 @@ export const generateFinancialVouchers = (stockId: string) => {
         description: "支付其他營業費用",
         accountingCode: "1111",
         debitAmount: 0,
-        creditAmount: otherOpexAmount,
+        creditAmount: otherOpexAmount.floor().toNumber(),
       },
     ],
   };
@@ -207,7 +208,7 @@ export const generateFinancialVouchers = (stockId: string) => {
   // Info: (20260502 - Tzuhan) 5. 期末調整：折舊
   // Info: (20260502 - Tzuhan) [優先級 0: 遺漏應計調整]
   // ============================================
-  if (depreciation > 0) {
+  if (depreciation.gt(0)) {
     const depreciationVoucher: ISimulatedVoucher = {
       id: randomUUID(),
       tradingDate: "2024-12-31T23:59:59.000Z",
@@ -217,7 +218,7 @@ export const generateFinancialVouchers = (stockId: string) => {
           id: randomUUID(),
           description: "期末提列固定資產折舊",
           accountingCode: "6184", // 折舊
-          debitAmount: depreciation,
+          debitAmount: depreciation.toNumber(),
           creditAmount: 0,
         },
         {
@@ -225,7 +226,7 @@ export const generateFinancialVouchers = (stockId: string) => {
           description: "累計折舊增加",
           accountingCode: "1521", // 累計折舊
           debitAmount: 0,
-          creditAmount: depreciation,
+          creditAmount: depreciation.toNumber(),
         },
       ],
     };

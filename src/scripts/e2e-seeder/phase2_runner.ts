@@ -98,6 +98,16 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
 
   console.log(`✅ [DB] Initialized E2E AccountBook: ${accountBook.name} (${accountBook.id})`);
 
+  // Info: (20260503 - Tzuhan) 每次重新執行前，先清空該 AccountBook 之前的模擬傳票與 ESG 紀錄，確保資料冪等性 (Idempotent) 不會重複疊加
+  const existingVouchers = await prisma.voucher.findMany({ where: { accountBookId: accountBook.id }, select: { id: true } });
+  if (existingVouchers.length > 0) {
+    const voucherIds = existingVouchers.map(v => v.id);
+    await prisma.voucherLine.deleteMany({ where: { voucherId: { in: voucherIds } } });
+    await prisma.voucher.deleteMany({ where: { id: { in: voucherIds } } });
+  }
+  await prisma.esgRecord.deleteMany({ where: { accountBookId: accountBook.id } });
+  console.log(`🧹 [DB] Cleared previous Vouchers and ESG records for AccountBook: ${accountBook.id} to ensure clean state.`);
+
   const skill = new VoucherLinesParsingSkill();
   const esgSkill = new EsgParsingSkill();
   const chatService = new ChatService(process.env.GEMINI_API_KEY || "");

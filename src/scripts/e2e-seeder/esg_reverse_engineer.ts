@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { randomUUID } from "crypto";
+import { Prisma } from "@/generated";
 
 interface IExtractedContextCache {
   financial: {
@@ -48,7 +49,7 @@ interface ISimulatedVoucher {
 const findEsgValue = (
   esgData: Record<string, unknown>,
   codeToFind: string,
-): number => {
+): Prisma.Decimal => {
   const treeModels =
     (esgData.treeModels as Array<Record<string, unknown>>) || [];
   for (const model of treeModels) {
@@ -61,13 +62,13 @@ const findEsgValue = (
         for (const control of controls) {
           if (control.code === codeToFind) {
             const val = parseFloat(control.value as string);
-            return isNaN(val) ? 0 : val;
+            return isNaN(val) ? new Prisma.Decimal(0) : new Prisma.Decimal(val);
           }
         }
       }
     }
   }
-  return 0;
+  return new Prisma.Decimal(0);
 };
 
 export const generateEsgRecords = (stockId: string) => {
@@ -115,17 +116,17 @@ export const generateEsgRecords = (stockId: string) => {
     v.lines.filter((l) => l.accountingCode === "6161" && l.debitAmount > 0),
   );
 
-  if (utilityLines.length > 0 && scope2Target > 0) {
-    const scope2PerVoucher = scope2Target / utilityLines.length;
+  if (utilityLines.length > 0 && scope2Target.gt(0)) {
+    const scope2PerVoucher = scope2Target.div(utilityLines.length);
     utilityLines.forEach((line) => {
       line.esgRecords = line.esgRecords || [];
       line.esgRecords.push({
         id: randomUUID(),
         category: "scope2",
         source: contextCache.esg.scope2MajorSource || "台電外購電力",
-        metricAmount: scope2PerVoucher * 1980, // Info: (20260502 - Tzuhan) 假設 1 噸 CO2e 約等於 1980 度電
+        metricAmount: scope2PerVoucher.mul(1980).toNumber(), // Info: (20260502 - Tzuhan) 假設 1 噸 CO2e 約等於 1980 度電
         metricUnit: "kWh",
-        carbonAmount: scope2PerVoucher,
+        carbonAmount: scope2PerVoucher.toNumber(),
       });
     });
   }
@@ -135,42 +136,42 @@ export const generateEsgRecords = (stockId: string) => {
     v.lines.filter((l) => l.accountingCode === "6172" && l.debitAmount > 0),
   );
 
-  if (travelLines.length > 0 && scope1Target > 0) {
-    const scope1PerVoucher = scope1Target / travelLines.length;
+  if (travelLines.length > 0 && scope1Target.gt(0)) {
+    const scope1PerVoucher = scope1Target.div(travelLines.length);
     travelLines.forEach((line) => {
       line.esgRecords = line.esgRecords || [];
       line.esgRecords.push({
         id: randomUUID(),
         category: "scope1",
         source: contextCache.esg.scope1MajorSource || "公司車輛燃油",
-        metricAmount: scope1PerVoucher * 400, // Info: (20260502 - Tzuhan) 假設 1 噸 CO2e 約等於 400 公升汽油
+        metricAmount: scope1PerVoucher.mul(400).toNumber(), // Info: (20260502 - Tzuhan) 假設 1 噸 CO2e 約等於 400 公升汽油
         metricUnit: "Liters",
-        carbonAmount: scope1PerVoucher,
+        carbonAmount: scope1PerVoucher.toNumber(),
       });
     });
   }
 
   // Info: (20260502 - Tzuhan) 4. 映射用水與廢棄物
-  if (utilityLines.length > 0 && waterTarget > 0) {
-    const waterPerVoucher = waterTarget / utilityLines.length;
+  if (utilityLines.length > 0 && waterTarget.gt(0)) {
+    const waterPerVoucher = waterTarget.div(utilityLines.length);
     const wastePerVoucher =
-      wasteTarget > 0 ? wasteTarget / utilityLines.length : 0;
+      wasteTarget.gt(0) ? wasteTarget.div(utilityLines.length) : new Prisma.Decimal(0);
     utilityLines.forEach((line) => {
       line.esgRecords = line.esgRecords || [];
       line.esgRecords.push({
         id: randomUUID(),
         category: "water",
         source: "自來水",
-        metricAmount: waterPerVoucher,
+        metricAmount: waterPerVoucher.toNumber(),
         metricUnit: "ton",
         carbonAmount: 0, // Info: (20260502 - Tzuhan) 用水通常不會直接映射到這裡的範疇一或範疇二的碳排放量
       });
-      if (wastePerVoucher > 0) {
+      if (wastePerVoucher.gt(0)) {
         line.esgRecords.push({
           id: randomUUID(),
           category: "waste",
           source: "一般廢棄物",
-          metricAmount: wastePerVoucher,
+          metricAmount: wastePerVoucher.toNumber(),
           metricUnit: "ton",
           carbonAmount: 0,
         });
@@ -182,7 +183,7 @@ export const generateEsgRecords = (stockId: string) => {
   fs.writeFileSync(vouchersPath, JSON.stringify(vouchers, null, 2), "utf-8");
 
   console.log(
-    `[SUCCESS] Embedded ESG Data into Vouchers for ${stockId}. (Scope1: ${scope1Target}t, Scope2: ${scope2Target}t)`,
+    `[SUCCESS] Embedded ESG Data into Vouchers for ${stockId}. (Scope1: ${scope1Target.toNumber()}t, Scope2: ${scope2Target.toNumber()}t)`,
   );
 };
 

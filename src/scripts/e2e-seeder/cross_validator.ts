@@ -1,16 +1,17 @@
 import * as fs from "fs";
 import * as path from "path";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated";
 
-const parseFinanceNumber = (val: string): number => {
-  if (!val) return 0;
+const parseFinanceNumber = (val: string): Prisma.Decimal => {
+  if (!val) return new Prisma.Decimal(0);
   const num = parseInt(val.replace(/,/g, ""), 10);
-  return isNaN(num) ? 0 : num * 1000;
+  return isNaN(num) ? new Prisma.Decimal(0) : new Prisma.Decimal(num).mul(1000);
 };
 
-const findReportValue = (reportList: string[][], keyword: string): number => {
+const findReportValue = (reportList: string[][], keyword: string): Prisma.Decimal => {
   const row = reportList.find((r) => r[0].includes(keyword));
-  return row ? parseFinanceNumber(row[1]) : 0;
+  return row ? parseFinanceNumber(row[1]) : new Prisma.Decimal(0);
 };
 
 export const runCrossValidation = async (stockId: string) => {
@@ -38,15 +39,17 @@ export const runCrossValidation = async (stockId: string) => {
   const goldenOpex = findReportValue(isList, "營業費用合計");
   const goldenDepreciation = findReportValue(cfList, "折舊費用");
 
-  let goldenScope1 = 0, goldenScope2 = 0, goldenScope3 = 0;
+  let goldenScope1 = new Prisma.Decimal(0);
+  let goldenScope2 = new Prisma.Decimal(0);
+  let goldenScope3 = new Prisma.Decimal(0);
   if (fs.existsSync(esgMetricsPath)) {
     const esgStr = fs.readFileSync(esgMetricsPath, "utf-8");
     const s1 = esgStr.match(/"value":\s*"([^"]+)",\s*"ctrType":\s*"number",\s*"imageUrl":\s*null,\s*"code":\s*"grossScope1GreenhouseGasEmissions"/);
-    if (s1) goldenScope1 = parseFloat(s1[1]);
+    if (s1) goldenScope1 = new Prisma.Decimal(parseFloat(s1[1]));
     const s2 = esgStr.match(/"value":\s*"([^"]+)",\s*"ctrType":\s*"number",\s*"imageUrl":\s*null,\s*"code":\s*"grossScope2GreenhouseGasEmissions"/);
-    if (s2) goldenScope2 = parseFloat(s2[1]);
+    if (s2) goldenScope2 = new Prisma.Decimal(parseFloat(s2[1]));
     const s3 = esgStr.match(/"value":\s*"([^"]+)",\s*"ctrType":\s*"number",\s*"imageUrl":\s*null,\s*"code":\s*"grossScope3GreenhouseGasEmissions"/);
-    if (s3) goldenScope3 = parseFloat(s3[1]);
+    if (s3) goldenScope3 = new Prisma.Decimal(parseFloat(s3[1]));
   }
 
   // Info: (20260502 - Tzuhan) 2. 從資料庫讀取 AI 解析的傳票 (Vouchers) 與 碳排 (ESG)
@@ -55,20 +58,20 @@ export const runCrossValidation = async (stockId: string) => {
     include: { lines: true },
   });
 
-  let systemRevenue = 0;
-  let systemOpex = 0;
-  let systemDepreciation = 0;
+  let systemRevenue = new Prisma.Decimal(0);
+  let systemOpex = new Prisma.Decimal(0);
+  let systemDepreciation = new Prisma.Decimal(0);
 
   vouchers.forEach((voucher) => {
     voucher.lines.forEach((line) => {
       if (line.accountingCode === "4111" && !line.isDebit) {
-        systemRevenue += Number(line.amount || 0);
+        systemRevenue = systemRevenue.add(line.amount || 0);
       }
       if (["6161", "6172", "6299"].includes(line.accountingCode || "") && line.isDebit) {
-        systemOpex += Number(line.amount || 0);
+        systemOpex = systemOpex.add(line.amount || 0);
       }
       if (line.accountingCode === "6184" && line.isDebit) {
-        systemDepreciation += Number(line.amount || 0);
+        systemDepreciation = systemDepreciation.add(line.amount || 0);
       }
     });
   });
@@ -77,20 +80,22 @@ export const runCrossValidation = async (stockId: string) => {
     where: { accountBookId, analysisStatus: "COMPLETED" },
   });
   
-  let systemScope1 = 0, systemScope2 = 0, systemScope3 = 0;
+  let systemScope1 = new Prisma.Decimal(0);
+  let systemScope2 = new Prisma.Decimal(0);
+  let systemScope3 = new Prisma.Decimal(0);
   esgRecords.forEach(record => {
-    const val = Number(record.emissions || 0);
-    if (record.scope === "SCOPE_1") systemScope1 += val;
-    else if (record.scope === "SCOPE_2") systemScope2 += val;
-    else if (record.scope === "SCOPE_3") systemScope3 += val;
+    const val = record.emissions || new Prisma.Decimal(0);
+    if (record.scope === "SCOPE_1") systemScope1 = systemScope1.add(val);
+    else if (record.scope === "SCOPE_2") systemScope2 = systemScope2.add(val);
+    else if (record.scope === "SCOPE_3") systemScope3 = systemScope3.add(val);
   });
 
   // Info: (20260502 - Tzuhan) 3. 計算誤差值 (Variance)
-  const calculateVariance = (system: number, golden: number) => {
-    if (isNaN(golden) || isNaN(system)) return "N/A";
-    if (golden === 0) return system === 0 ? "0.00%" : "∞%";
-    const diff = system - golden;
-    return `${((diff / golden) * 100).toFixed(4)}%`;
+  const calculateVariance = (system: Prisma.Decimal, golden: Prisma.Decimal) => {
+    if (golden.isNaN() || system.isNaN()) return "N/A";
+    if (golden.isZero()) return system.isZero() ? "0.00%" : "∞%";
+    const diff = system.sub(golden);
+    return `${diff.div(golden).mul(100).toFixed(4)}%`;
   };
 
   const report = {
@@ -102,40 +107,40 @@ export const runCrossValidation = async (stockId: string) => {
     },
     metrics: {
       Revenue: {
-        golden: goldenRevenue,
-        system: systemRevenue,
+        golden: goldenRevenue.toNumber(),
+        system: systemRevenue.toNumber(),
         variancePercent: calculateVariance(systemRevenue, goldenRevenue),
-        isPassed: systemRevenue === goldenRevenue,
+        isPassed: systemRevenue.equals(goldenRevenue),
       },
       OperatingExpenses: {
-        golden: goldenOpex,
-        system: systemOpex,
+        golden: goldenOpex.toNumber(),
+        system: systemOpex.toNumber(),
         variancePercent: calculateVariance(systemOpex, goldenOpex),
-        isPassed: Math.abs(systemOpex - goldenOpex) < 100, // Info: (20260503 - Tzuhan) 容忍千分位四捨五入所產生的微小誤差
+        isPassed: systemOpex.sub(goldenOpex).abs().lt(100), // Info: (20260503 - Tzuhan) 容忍千分位四捨五入所產生的微小誤差
       },
       Depreciation: {
-        golden: goldenDepreciation,
-        system: systemDepreciation,
+        golden: goldenDepreciation.toNumber(),
+        system: systemDepreciation.toNumber(),
         variancePercent: calculateVariance(systemDepreciation, goldenDepreciation),
-        isPassed: systemDepreciation === goldenDepreciation,
+        isPassed: systemDepreciation.equals(goldenDepreciation),
       },
       Scope1: {
-        golden: goldenScope1,
-        system: systemScope1,
+        golden: goldenScope1.toNumber(),
+        system: systemScope1.toNumber(),
         variancePercent: calculateVariance(systemScope1, goldenScope1),
-        isPassed: Math.abs(systemScope1 - goldenScope1) < 0.1, // Info: (20260503 - Tzuhan) 容忍浮點數運算誤差
+        isPassed: systemScope1.sub(goldenScope1).abs().lt(0.1), // Info: (20260503 - Tzuhan) 容忍浮點數運算誤差
       },
       Scope2: {
-        golden: goldenScope2,
-        system: systemScope2,
+        golden: goldenScope2.toNumber(),
+        system: systemScope2.toNumber(),
         variancePercent: calculateVariance(systemScope2, goldenScope2),
-        isPassed: Math.abs(systemScope2 - goldenScope2) < 0.1,
+        isPassed: systemScope2.sub(goldenScope2).abs().lt(0.1),
       },
       Scope3: {
-        golden: goldenScope3,
-        system: systemScope3,
+        golden: goldenScope3.toNumber(),
+        system: systemScope3.toNumber(),
         variancePercent: calculateVariance(systemScope3, goldenScope3),
-        isPassed: isNaN(goldenScope3) || Math.abs(systemScope3 - goldenScope3) < 0.1,
+        isPassed: goldenScope3.isNaN() || systemScope3.sub(goldenScope3).abs().lt(0.1),
       }
     },
     overallStatus: "FAILED",
@@ -159,16 +164,16 @@ export const runCrossValidation = async (stockId: string) => {
 
   console.log(`\n📊 [FINANCIAL VARIANCE REPORT]`);
   console.table({
-    Revenue: { Expected: goldenRevenue, AI_Actual: systemRevenue, Variance: report.metrics.Revenue.variancePercent },
-    OpEx: { Expected: goldenOpex, AI_Actual: systemOpex, Variance: report.metrics.OperatingExpenses.variancePercent },
-    Depreciation: { Expected: goldenDepreciation, AI_Actual: systemDepreciation, Variance: report.metrics.Depreciation.variancePercent }
+    Revenue: { Expected: goldenRevenue.toNumber(), AI_Actual: systemRevenue.toNumber(), Variance: report.metrics.Revenue.variancePercent },
+    OpEx: { Expected: goldenOpex.toNumber(), AI_Actual: systemOpex.toNumber(), Variance: report.metrics.OperatingExpenses.variancePercent },
+    Depreciation: { Expected: goldenDepreciation.toNumber(), AI_Actual: systemDepreciation.toNumber(), Variance: report.metrics.Depreciation.variancePercent }
   });
 
   console.log(`\n🌍 [ESG VARIANCE REPORT]`);
   console.table({
-    Scope1: { Expected: goldenScope1, AI_Actual: systemScope1, Variance: report.metrics.Scope1.variancePercent },
-    Scope2: { Expected: goldenScope2, AI_Actual: systemScope2, Variance: report.metrics.Scope2.variancePercent },
-    Scope3: { Expected: goldenScope3, AI_Actual: systemScope3, Variance: report.metrics.Scope3.variancePercent }
+    Scope1: { Expected: goldenScope1.toNumber(), AI_Actual: systemScope1.toNumber(), Variance: report.metrics.Scope1.variancePercent },
+    Scope2: { Expected: goldenScope2.toNumber(), AI_Actual: systemScope2.toNumber(), Variance: report.metrics.Scope2.variancePercent },
+    Scope3: { Expected: goldenScope3.toNumber(), AI_Actual: systemScope3.toNumber(), Variance: report.metrics.Scope3.variancePercent }
   });
 
   console.log(`\n🏆 [FINAL SCORE FOR ${stockId}]`);
