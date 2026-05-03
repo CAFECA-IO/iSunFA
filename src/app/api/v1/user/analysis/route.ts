@@ -287,9 +287,12 @@ export async function GET(request: NextRequest) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
+    const category = request.nextUrl.searchParams.get("category") || undefined;
+
     // Info: (20260311 - Tzuhan) Fetch associated tags and related mission data
     const fullAnalyses = await analysisRepo.getFullAnalysisHistoryByUserId(
       user.id,
+      category,
     );
 
     // Info: (20260128 - Luphia) Map DB result to response format

@@ -5,7 +5,7 @@ import {
   EsgRecord,
   AIAnalysisStatus,
   Coefficient,
-} from "@/generated/client";
+} from "@/generated";
 import {
   IEsgDashboardSummary,
   EsgScope,

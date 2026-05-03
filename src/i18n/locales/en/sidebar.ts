@@ -5,4 +5,5 @@ export const sidebar = {
   team: "Team Management",
   settings: "Settings",
   account_book: "Switch Account Book",
+  public_modules: "Tools",
 };

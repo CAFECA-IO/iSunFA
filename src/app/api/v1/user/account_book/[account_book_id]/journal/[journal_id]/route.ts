@@ -1,6 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
-import { Prisma } from "@/generated/client";
+import { Prisma } from "@/generated";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";

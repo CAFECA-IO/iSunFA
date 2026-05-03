@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma, AccountBook, TeamMember, Team } from "@/generated/client";
+import { Prisma, AccountBook, TeamMember, Team } from "@/generated";
 
 export interface IAccountBookRepository {
   create(data: Prisma.AccountBookCreateInput): Promise<AccountBook>;

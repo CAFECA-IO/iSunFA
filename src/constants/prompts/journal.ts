@@ -1,4 +1,4 @@
-import { AccountBook } from "@/generated/client";
+import { AccountBook } from "@/generated";
 
 export const getJournalPrompt = (accountBook?: Partial<AccountBook> | null) => {
   // Info: (20260326 - Julian) 帳本資訊

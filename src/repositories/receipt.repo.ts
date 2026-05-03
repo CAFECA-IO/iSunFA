@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/generated/client";
+import { Prisma } from "@/generated";
 import { buildReceiptDataToSave } from "@/lib/utils/payment_helpers";
 
 export class ReceiptRepo {

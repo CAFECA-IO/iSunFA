@@ -51,11 +51,13 @@ import { date } from "@/i18n/locales/zh_cn/date";
 import { currencyAlias } from "@/i18n/locales/zh_cn/currency_alias";
 import { adminBilling } from "@/i18n/locales/zh_cn/admin_billing";
 import { transportationCarbonFootprintCalculator } from "@/i18n/locales/zh_cn/transportation_carbon_footprint_calculator";
+import { salaryCalculator } from "@/i18n/locales/zh_cn/salary_calculator";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const zhCn = {
   transportation_carbon_footprint_calculator:
     transportationCarbonFootprintCalculator,
+  salary_calculator: salaryCalculator,
   date,
   currency_alias: currencyAlias,
   common,

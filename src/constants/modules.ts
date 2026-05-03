@@ -17,6 +17,8 @@ import {
   Settings,
   LogOut,
   Target,
+  Bot,
+  Truck,
 } from "lucide-react";
 
 export const MODULES = [
@@ -25,13 +27,24 @@ export const MODULES = [
   { key: "voucher", icon: BookOpen, basic: true },
   { key: "esg", icon: Leaf, basic: true },
   { key: "financial_report", icon: FileText, basic: true },
-  { key: "analysis", icon: PieChart, basic: true },
+  { key: "analysis", icon: PieChart, basic: false },
   { key: "signing", icon: FileSignature, basic: false },
   { key: "cashier", icon: Wallet, basic: false },
   { key: "tax", icon: Landmark, basic: false },
   { key: "salary", icon: Users, basic: false },
   { key: "integration", icon: Network, basic: false },
   { key: "audit", icon: BadgeCheck, basic: false },
+];
+
+export const PUBLIC_MODULES = [
+  { key: "analysis", icon: PieChart, basic: true },
+  { key: "ai_consultation_room", icon: Bot, basic: true },
+  { key: "salary_calculator", icon: Wallet, basic: true },
+  {
+    key: "transportation_carbon_footprint_calculator",
+    icon: Truck,
+    basic: true,
+  },
 ];
 
 export const ADMIN_MODULES = [

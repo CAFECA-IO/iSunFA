@@ -1,5 +1,5 @@
 import { ACCOUNTS } from "@/constants/accounts";
-import { AccountBook } from "@/generated/client";
+import { AccountBook } from "@/generated";
 
 /*
  ** Info: (20260407 - Julian) 將傳票的分析拆解成「基本資料」和「會計分錄」

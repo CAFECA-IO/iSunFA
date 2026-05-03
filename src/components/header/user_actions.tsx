@@ -14,6 +14,7 @@ import {
   MODULES,
   ADMIN_MODULES,
   SYSTEM_MODULES,
+  PUBLIC_MODULES,
   getModuleI18nKey,
 } from "@/constants/modules";
 import { useAuth } from "@/contexts/auth_context";
@@ -53,7 +54,9 @@ export default function UserActions() {
 
   // Info: (20260424 - Julian) 功能模組選單
   const modulesMenuItems = (() => {
-    const modulesToDisplay = isAdmin ? ADMIN_MODULES : MODULES;
+    const modulesToDisplay = isAdmin
+      ? ADMIN_MODULES
+      : MODULES.filter((m) => m.basic !== false);
 
     return modulesToDisplay.map((module) => {
       const active = isAdmin ? true : isModuleActive(module.key);
@@ -88,6 +91,34 @@ export default function UserActions() {
               </div>
             )
           }
+        </MenuItem>
+      );
+    });
+  })();
+
+  // Info: (20260502 - Luphia) 小工具選單
+  const publicModulesMenuItems = (() => {
+    return PUBLIC_MODULES.map((module) => {
+      const Icon = module.icon;
+      const targetPath = `/${module.key}`;
+
+      return (
+        <MenuItem key={module.key} as={Fragment}>
+          {({ focus }) => (
+            <Link
+              href={targetPath}
+              className={` ${focus ? "bg-orange-50 ring-1 ring-orange-200" : "bg-white shadow-sm ring-1 ring-gray-200 hover:bg-gray-50 md:shadow-none md:ring-gray-100"} group flex h-full w-full flex-col items-center justify-center rounded-xl p-2 transition-all duration-200 md:rounded-lg md:p-3`}
+            >
+              <Icon
+                className={`mb-1 h-6 w-6 md:mb-2 md:h-6 md:w-6 ${focus ? "text-orange-600" : "text-gray-500 group-hover:text-orange-500"}`}
+              />
+              <span
+                className={`text-center text-xs font-normal md:text-sm md:font-medium ${focus ? "text-orange-900" : "text-gray-700"}`}
+              >
+                {t(getModuleI18nKey(module.key))}
+              </span>
+            </Link>
+          )}
         </MenuItem>
       );
     });
@@ -230,6 +261,16 @@ export default function UserActions() {
               </h3>
               <div className="grid grid-cols-3 gap-3 md:gap-2">
                 {modulesMenuItems}
+              </div>
+            </div>
+
+            {/* Info: (20260502 - Luphia) 小工具選單 */}
+            <div>
+              <h3 className="mb-2 px-1 text-xs font-semibold tracking-wider text-gray-400 uppercase md:mb-3 md:px-2">
+                {t("sidebar.public_modules")}
+              </h3>
+              <div className="grid grid-cols-3 gap-3 md:gap-2">
+                {publicModulesMenuItems}
               </div>
             </div>
 

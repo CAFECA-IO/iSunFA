@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/generated/client";
+import { Prisma } from "@/generated";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 // Info: (20260327 - Luphia) 定義共用的 Return Type 讓型別更嚴謹

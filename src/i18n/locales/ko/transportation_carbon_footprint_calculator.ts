@@ -1,4 +1,5 @@
 export const transportationCarbonFootprintCalculator = {
+  title: "물류 탄소 발자국",
   default_ai_input:
     "타이베이 국부기념관에서 맨체스터 박물관으로 5000kg의 석판 운송",
   analysis_failed: "분석 실패",

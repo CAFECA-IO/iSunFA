@@ -1,4 +1,5 @@
 import fs from "fs";
+import { createHash } from "crypto";
 import path from "path";
 import dotenv from "dotenv";
 import { verifyAuthentication } from "@/lib/auth/fido2_server";
@@ -128,7 +129,6 @@ export async function validateEnvDetailed(): Promise<IEnvValidationResultDetaile
     };
 
     // Info: (20260413 - Luphia) Verify that the .env contents match exactly what was signed using deterministic map hashing
-    const crypto = await import("crypto");
     const envContentForHash = fs.readFileSync(envPath, "utf8");
     const cleanContentForHash = envContentForHash
       .split("\n")
@@ -146,10 +146,7 @@ export async function validateEnvDetailed(): Promise<IEnvValidationResultDetaile
       .map((k) => `${k}=${dotenvConfig[k]}`)
       .join("\n");
 
-    const hashBuffer = crypto
-      .createHash("sha256")
-      .update(stableString)
-      .digest();
+    const hashBuffer = createHash("sha256").update(stableString).digest();
     const computedChallenge = hashBuffer
       .toString("base64")
       .replace(/\+/g, "-")

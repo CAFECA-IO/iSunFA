@@ -5,7 +5,7 @@ import {
   TeamMember,
   TeamInvitation,
   TeamRole,
-} from "@/generated/client";
+} from "@/generated";
 import { TEAM_INVITATION_STATUS } from "@/constants/status";
 
 export interface ITeamRepository {

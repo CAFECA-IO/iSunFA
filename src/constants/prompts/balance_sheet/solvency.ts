@@ -1,8 +1,8 @@
 export const SOLVENCY_PROMPT = `
 任務：分析【{Target_Company}】在 {Period} (Year: {Year}) 的資產負債表「長期償債能力與資本結構」。
 {Data_Source_Instruction}
-1. 負債比率 (Debt Ratio) 與權益乘數 (Equity Multiplier) 的數值與變化趨勢。
-2. 有息負債 (Interest-bearing Debt) 的規模，以及是否存在過高的財務槓桿風險？
-3. 利息保障倍數 (Interest Coverage Ratio) 是否在安全範圍內？
-請以專業的財報分析師口吻撰寫，提供具體的數據佐證，並給出短評。
+1. 根據當期數據計算負債比率 (Debt Ratio) 與權益乘數 (Equity Multiplier)。
+2. 檢視負債結構中，長短期有息負債的佔比，評估整體的財務槓桿風險是否過高。
+3. 嚴禁捏造變化趨勢，請專注陳述「當下負債規模是否健康」與「自有資本是否充足」。
+請以專業的簽證會計師口吻撰寫，提供具體的 JSON 數據佐證，並給出客觀短評。
 `.trim();

@@ -10,7 +10,7 @@ import {
 } from "@/constants/prompts/voucher";
 import { getEsgPrompt } from "@/constants/prompts/esg";
 import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
-import { AccountBook } from "@/generated/client";
+import { AccountBook } from "@/generated";
 
 export function generateCertificateAnalysisMission(
   params: IMissionParams,
