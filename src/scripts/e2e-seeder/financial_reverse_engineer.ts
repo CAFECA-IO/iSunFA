@@ -192,7 +192,7 @@ export const generateFinancialVouchers = (stockId: string) => {
       {
         id: randomUUID(),
         description: "其他營業費用彙總",
-        accountingCode: "6299", // Info: (20260502 - Tzuhan) 其他管理費用
+        accountingCode: "6288", // Info: (20260502 - Tzuhan) 其他管理費用
         debitAmount: otherOpexAmount.floor().toNumber(),
         creditAmount: 0,
       },
