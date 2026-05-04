@@ -7,6 +7,7 @@ import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
 import { Prisma } from "@/generated";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
+import { Schema } from "@google/generative-ai";
 
 export async function processNext() {
   console.log("[MissionExecutor] Scanning MISSION_DIR for tasks to execute...");
@@ -155,7 +156,13 @@ export async function processNext() {
             console.log(
               `[MissionExecutor]      Invoking raw ChatService LLM...`,
             );
-            taskResultStr = await chatService.generateRaw(fullPrompt);
+            const responseSchema = subTaskConfig.data?.responseSchema as
+              | Schema
+              | undefined;
+            taskResultStr = await chatService.generateRaw(
+              fullPrompt,
+              responseSchema,
+            );
           }
 
           // Info: (20260420 - Luphia) Track execution tokens and content
@@ -177,11 +184,7 @@ export async function processNext() {
           // Info: (20260420 - Luphia) Save in memory for next step
           priorResults.set(taskKey, taskResultStr);
 
-          let cleanedTaskResultStr = taskResultStr
-            .replace(/```json/g, "")
-            .replace(/```markdown/g, "")
-            .replace(/```/g, "")
-            .trim();
+          let cleanedTaskResultStr = taskResultStr.trim();
           let isJson = false;
           let parsedVal: unknown;
 

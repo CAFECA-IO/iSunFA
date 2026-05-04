@@ -1,4 +1,10 @@
-import { GoogleGenerativeAI, Part, Tool } from "@google/generative-ai";
+import {
+  GoogleGenerativeAI,
+  Part,
+  Tool,
+  Schema,
+  GenerationConfig,
+} from "@google/generative-ai";
 import { DirectChatSkill } from "@/skills/chat/direct_chat";
 
 export class ChatService {
@@ -23,8 +29,20 @@ export class ChatService {
   async generateRawWithImages(
     prompt: string,
     images?: { data: string; mimeType: string }[],
+    isJson: boolean = false,
+    responseSchema?: Schema,
   ): Promise<string> {
-    const model = this.genAI.getGenerativeModel({ model: this.modelName });
+    const generationConfig: GenerationConfig = {};
+    if (isJson || responseSchema) {
+      generationConfig.responseMimeType = "application/json";
+    }
+    if (responseSchema) {
+      generationConfig.responseSchema = responseSchema;
+    }
+    const model = this.genAI.getGenerativeModel({
+      model: this.modelName,
+      generationConfig,
+    });
     const parts: Part[] = [{ text: prompt }];
 
     if (images && images.length > 0) {
@@ -43,12 +61,18 @@ export class ChatService {
     return response.text();
   }
 
-  async generateRaw(prompt: string): Promise<string> {
+  async generateRaw(prompt: string, responseSchema?: Schema): Promise<string> {
+    const generationConfig: GenerationConfig = {
+      temperature: 0.2,
+    };
+    if (responseSchema) {
+      generationConfig.responseMimeType = "application/json";
+      generationConfig.responseSchema = responseSchema;
+    }
+
     const model = this.genAI.getGenerativeModel({
       model: this.modelName,
-      generationConfig: {
-        temperature: 0.2,
-      },
+      generationConfig,
     });
     const result = await model.generateContent(prompt);
     const response = await result.response;

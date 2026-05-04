@@ -1,5 +1,5 @@
 import { publicClient } from "@/lib/viem";
-import { parseAbiItem } from "viem";
+import { parseAbiItem, stringToHex } from "viem";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import type {
   RegistrationJSON,
@@ -220,62 +220,32 @@ class WebAuthnService {
   ): Promise<User | null> {
     try {
       console.log(
-        "[Recovery] Scanning blockchain for AccountCreated events...",
+        `[Recovery] Querying blockchain for Credential ID: ${credentialId}...`,
       );
 
-      const logs = await publicClient.getLogs({
+      const credentialIdHex = stringToHex(credentialId);
+
+      const scwAddress = (await publicClient.readContract({
         address: CONTRACT_ADDRESSES.SCW_FACTORY as `0x${string}`,
-        event: parseAbiItem(
-          "event AccountCreated(address indexed scw, uint256 pubKeyX, uint256 pubKeyY, uint256 salt, string credentialId, string name, string imageUrl)",
-        ),
-        fromBlock: "earliest",
-      });
+        abi: [
+          parseAbiItem(
+            "function getAccountByCredentialId(bytes) view returns (address)",
+          ),
+        ],
+        functionName: "getAccountByCredentialId",
+        args: [credentialIdHex as `0x${string}`],
+      })) as string;
 
-      const matchLog = logs.find(
-        (log) => log.args.credentialId === credentialId,
-      );
-
-      if (!matchLog) {
+      if (
+        !scwAddress ||
+        scwAddress === "0x0000000000000000000000000000000000000000"
+      ) {
         console.log("[Recovery] No matching credential ID found on chain.");
         return null;
       }
 
-      const { scw, pubKeyX, pubKeyY, name, imageUrl } = matchLog.args;
-      if (!scw || !pubKeyX || !pubKeyY) return null;
-
-      console.log(`[Recovery] Found user ${scw} on chain. Restoring...`);
-
-      // Info: (20260123 - Tzuhan) 容錯處理：DB 寫入失敗時回傳記憶體物件
-      try {
-        const user = await this.repo.upsertUser({
-          address: scw,
-          pubKeyX: pubKeyX.toString(),
-          pubKeyY: pubKeyY.toString(),
-          credentialId: credentialId,
-          name: name || `User ${scw.slice(0, 6)}`,
-          imageUrl: imageUrl,
-        });
-        return user;
-      } catch (dbError) {
-        console.warn(
-          "[Recovery] DB Write Failed (Offline Mode). Using ephemeral data.",
-          dbError,
-        );
-        return {
-          id: `ephemeral_${scw}`,
-          address: scw,
-          pubKeyX: pubKeyX.toString(),
-          pubKeyY: pubKeyY.toString(),
-          credentialId: credentialId,
-          name: name || `User ${scw.slice(0, 6)}`,
-          imageUrl: imageUrl || null,
-          role: "USER",
-          currentChallenge: null,
-          identityAddress: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as User;
-      }
+      console.log(`[Recovery] Found user ${scwAddress} on chain. Syncing...`);
+      return await this.ensureUserSynced(scwAddress);
     } catch (error) {
       console.error("[Recovery] Failed to recover user:", error);
       return null;
