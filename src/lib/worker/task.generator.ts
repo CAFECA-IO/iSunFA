@@ -1,3 +1,5 @@
+import { Schema } from "@google/generative-ai";
+
 // Info: (20260130 - Luphia) Task Definition Interface
 export interface ITaskDefinition {
   type: string;
@@ -6,6 +8,7 @@ export interface ITaskDefinition {
     key: string;
     prompt: string;
     context?: string;
+    responseSchema?: Schema;
     files?: {
       hash?: string;
       id?: string;
