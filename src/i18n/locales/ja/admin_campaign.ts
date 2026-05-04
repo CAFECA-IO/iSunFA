@@ -1,0 +1,48 @@
+export const adminCampaign = {
+  title: "キャンペーン管理",
+  subtitle:
+    "プロモーションコードの管理、参加者の追跡、発行されたポイントの表示。",
+  create: "キャンペーンを追加",
+  delete_title: "キャンペーンを削除",
+  delete_confirm:
+    "このキャンペーンを削除してもよろしいですか？この操作は元に戻せません。",
+  delete_success: "正常に削除されました",
+  delete_error: "キャンペーンの削除に失敗しました",
+  error_occurred: "エラーが発生しました",
+  save_failed: "キャンペーンの保存に失敗しました",
+  table: {
+    code: "コード",
+    name: "キャンペーン名",
+    duration: "期間",
+    rewards: "報酬",
+    stats: "参加者 / ポイント",
+    status: "ステータス",
+    no_data: "キャンペーンが見つかりません",
+  },
+  users: {
+    title: "登録ユーザー",
+    table: {
+      user: "ユーザー情報",
+      entity: "登録区分",
+      contact: "連絡先",
+      date: "登録日",
+      no_data: "登録ユーザーがいません",
+    },
+  },
+  modal: {
+    edit_title: "キャンペーンを編集",
+    add_title: "キャンペーンを追加",
+    code: "キャンペーンコード",
+    code_placeholder: "例：2026SPRING",
+    name: "キャンペーン名",
+    description: "説明",
+    start_date: "開始日",
+    end_date: "終了日",
+    bonus_points: "ボーナスポイント",
+    bonus_modules: "ロック解除モジュール (カンマ区切り)",
+    bonus_modules_placeholder: "例：advance_esg, premium_report",
+    is_active: "アクティブ",
+    cancel: "キャンセル",
+    save: "保存",
+  },
+};

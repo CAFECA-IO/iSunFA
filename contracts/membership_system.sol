@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {AccessControl} from "./lib/@openzeppelin/contracts/access/AccessControl.sol";
+import {IERC20} from "./lib/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface ICreditPoint is IERC20 {
     function collateralRate() external view returns (uint256);

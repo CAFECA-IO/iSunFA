@@ -28,6 +28,7 @@ export interface IDataTableProps<T> {
   sortOrder?: "asc" | "desc";
   emptyStateText?: string | ReactNode;
   rowKey: (row: T) => string;
+  onRowClick?: (row: T) => void;
 }
 
 export default function DataTable<T>({
@@ -41,6 +42,7 @@ export default function DataTable<T>({
   sortOrder = "desc",
   emptyStateText = undefined,
   rowKey,
+  onRowClick = undefined,
 }: IDataTableProps<T>) {
   const { t } = useTranslation();
 
@@ -53,19 +55,22 @@ export default function DataTable<T>({
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-gray-400 ${col.align === "right"
+                  className={`px-6 py-3.5 text-xs font-bold tracking-wider text-gray-400 uppercase ${
+                    col.align === "right"
                       ? "text-right"
                       : col.align === "center"
                         ? "text-center"
                         : "text-left"
-                    } ${col.sortable ? "cursor-pointer hover:bg-gray-100 hover:text-gray-600 transition-colors select-none" : ""} ${col.className || ""}`}
+                  } ${col.sortable ? "cursor-pointer transition-colors select-none hover:bg-gray-100 hover:text-gray-600" : ""} ${col.className || ""}`}
                   onClick={() => {
                     if (col.sortable && onSort) {
                       onSort(col.key);
                     }
                   }}
                 >
-                  <div className={`flex items-center gap-1 ${col.align === "right" ? "justify-end" : col.align === "center" ? "justify-center" : "justify-start"}`}>
+                  <div
+                    className={`flex items-center gap-1 ${col.align === "right" ? "justify-end" : col.align === "center" ? "justify-center" : "justify-start"}`}
+                  >
                     {col.label}
                     {col.sortable && sortBy === col.key && (
                       <span className="text-orange-500">
@@ -98,28 +103,33 @@ export default function DataTable<T>({
                   colSpan={columns.length}
                   className="py-16 text-center text-gray-400"
                 >
-                  {emptyStateText || t("common.no_data", { defaultValue: "No data available" })}
+                  {emptyStateText ||
+                    t("common.no_data", { defaultValue: "No data available" })}
                 </td>
               </tr>
             ) : (
               data.map((row) => (
                 <tr
                   key={rowKey(row)}
-                  className="hover:bg-orange-50/30 transition-colors"
+                  className={`transition-colors ${onRowClick ? "cursor-pointer hover:bg-orange-50" : "hover:bg-orange-50/30"}`}
+                  onClick={() => onRowClick && onRowClick(row)}
                 >
                   {columns.map((col) => (
                     <td
                       key={`${rowKey(row)}-${col.key}`}
-                      className={`px-6 py-3.5 text-sm ${col.align === "right"
+                      className={`px-6 py-3.5 text-sm ${
+                        col.align === "right"
                           ? "text-right"
                           : col.align === "center"
                             ? "text-center"
                             : "text-left"
-                        }`}
+                      }`}
                     >
                       {col.render
                         ? col.render(row)
-                        : (row as Record<string, unknown>)[col.key] !== undefined && (row as Record<string, unknown>)[col.key] !== null
+                        : (row as Record<string, unknown>)[col.key] !==
+                              undefined &&
+                            (row as Record<string, unknown>)[col.key] !== null
                           ? String((row as Record<string, unknown>)[col.key])
                           : ""}
                     </td>
@@ -132,7 +142,7 @@ export default function DataTable<T>({
       </div>
 
       {!loading && pagination && pagination.totalPages > 1 && onPageChange && (
-        <div className="bg-gray-50 px-4 py-4 w-full border-t border-gray-100">
+        <div className="w-full border-t border-gray-100 bg-gray-50 px-4 py-4">
           <Pagination
             currentPage={pagination.page}
             totalPages={pagination.totalPages}

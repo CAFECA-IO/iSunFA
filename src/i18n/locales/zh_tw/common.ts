@@ -72,4 +72,5 @@ export const common = {
     note: "* 圓餅圖呈現核心 {{title}} 之組合分佈。系統僅針對有效數據進行渲染，若有偏離或未定義科目則自動合併計算。",
   },
   other: "其他",
+  pdf_tool: "PDF 工具",
 };

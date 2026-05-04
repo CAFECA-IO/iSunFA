@@ -265,14 +265,16 @@ export default function UserActions() {
             </div>
 
             {/* Info: (20260502 - Luphia) 小工具選單 */}
-            <div>
-              <h3 className="mb-2 px-1 text-xs font-semibold tracking-wider text-gray-400 uppercase md:mb-3 md:px-2">
-                {t("sidebar.public_modules")}
-              </h3>
-              <div className="grid grid-cols-3 gap-3 md:gap-2">
-                {publicModulesMenuItems}
+            {!isAdmin && (
+              <div>
+                <h3 className="mb-2 px-1 text-xs font-semibold tracking-wider text-gray-400 uppercase md:mb-3 md:px-2">
+                  {t("sidebar.public_modules")}
+                </h3>
+                <div className="grid grid-cols-3 gap-3 md:gap-2">
+                  {publicModulesMenuItems}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Info: (20260423 - Julian) Bottom System Actions */}
             <div>

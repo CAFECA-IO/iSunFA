@@ -1,22 +1,38 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { request } from '@/lib/utils/request';
-import AdminPageHeader from '@/components/admin/common/admin_page_header';
-import AdminMetricCard from '@/components/admin/common/admin_metric_card';
-import { Receipt, Calendar, Search, Wallet, Activity, Coins, UserCircle } from 'lucide-react';
-import { useTranslation } from '@/i18n/i18n_context';
-import DataTable, { IDataTableColumn } from '@/components/common/data_table';
-import { formatDate } from '@/lib/utils/date';
-import ReceiptPdfDownloader from '@/components/user/billing/receipt_pdf_downloader';
-import { ORDER_STATUS } from '@/constants/status';
-import { IMetrics, IPagination, IOrderData, IPointData, ICreditCardData } from '@/interfaces/admin_billing';
-import { CreditCard } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { request } from "@/lib/utils/request";
+import AdminPageHeader from "@/components/admin/common/admin_page_header";
+import AdminMetricCard from "@/components/admin/common/admin_metric_card";
+import {
+  Receipt,
+  Calendar,
+  Search,
+  Wallet,
+  Activity,
+  Coins,
+  UserCircle,
+} from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
+import DataTable, { IDataTableColumn } from "@/components/common/data_table";
+import { formatDate } from "@/lib/utils/date";
+import ReceiptPdfDownloader from "@/components/user/billing/receipt_pdf_downloader";
+import { ORDER_STATUS } from "@/constants/status";
+import {
+  IMetrics,
+  IPagination,
+  IOrderData,
+  IPointData,
+  ICreditCardData,
+} from "@/interfaces/admin_billing";
+import { CreditCard } from "lucide-react";
 
 export default function AdminBillingPage() {
   const { t } = useTranslation();
   // Info: (20260417 - Luphia) 核心查詢狀態
-  const [activeTab, setActiveTab] = useState<"orders" | "points" | "credit_cards">("orders");
+  const [activeTab, setActiveTab] = useState<
+    "orders" | "points" | "credit_cards"
+  >("orders");
   const [page, setPage] = useState<number>(1);
   const limit = 15;
 
@@ -25,7 +41,10 @@ export default function AdminBillingPage() {
   const [endDateInput, setEndDateInput] = useState<string>("");
 
   // Info: (20260417 - Luphia) 實際應用的過濾條件
-  const [appliedFilters, setAppliedFilters] = useState({ startDate: "", endDate: "" });
+  const [appliedFilters, setAppliedFilters] = useState({
+    startDate: "",
+    endDate: "",
+  });
 
   // Info: (20260417 - Luphia) 資料狀態
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,7 +53,10 @@ export default function AdminBillingPage() {
   const [points, setPoints] = useState<IPointData[]>([]);
   const [creditCards, setCreditCards] = useState<ICreditCardData[]>([]);
   const [pagination, setPagination] = useState<IPagination>({
-    page: 1, limit: 15, totalElements: 0, totalPages: 0
+    page: 1,
+    limit: 15,
+    totalElements: 0,
+    totalPages: 0,
   });
 
   // Info: (20260417 - Luphia) 單一的資料獲取副作用：當查詢條件改變時自動觸發
@@ -47,15 +69,24 @@ export default function AdminBillingPage() {
         const query = new URLSearchParams({
           tab: activeTab,
           page: String(page),
-          limit: String(limit)
+          limit: String(limit),
         });
 
-        if (appliedFilters.startDate) query.append("startDate", `${appliedFilters.startDate}T00:00:00.000Z`);
-        if (appliedFilters.endDate) query.append("endDate", `${appliedFilters.endDate}T23:59:59.999Z`);
+        if (appliedFilters.startDate)
+          query.append(
+            "startDate",
+            `${appliedFilters.startDate}T00:00:00.000Z`,
+          );
+        if (appliedFilters.endDate)
+          query.append("endDate", `${appliedFilters.endDate}T23:59:59.999Z`);
 
-        const res = await request<{ payload: { metrics: IMetrics, data: unknown, pagination: IPagination } }>(
-          `/api/v1/admin/billing/stats?${query.toString()}`
-        );
+        const res = await request<{
+          payload: {
+            metrics: IMetrics;
+            data: unknown;
+            pagination: IPagination;
+          };
+        }>(`/api/v1/admin/billing/stats?${query.toString()}`);
 
         // Info: (20260417 - Luphia) 如果元件已經 unmount 或條件已改變，則忽略此次結果
         if (ignore) return;
@@ -83,7 +114,13 @@ export default function AdminBillingPage() {
     return () => {
       ignore = true; // Info: (20260417 - Luphia) 清理函式：標記為忽略舊的請求
     };
-  }, [activeTab, page, limit, appliedFilters.startDate, appliedFilters.endDate]);
+  }, [
+    activeTab,
+    page,
+    limit,
+    appliedFilters.startDate,
+    appliedFilters.endDate,
+  ]);
 
   // Info: (20260417 - Luphia) 事件處理器：僅更新狀態，不直接呼叫 API
   const handleTabChange = (tab: "orders" | "points" | "credit_cards") => {
@@ -112,12 +149,25 @@ export default function AdminBillingPage() {
       label: t("admin_billing.table.th_user"),
       render: (record) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
-            {record.user?.name ? record.user.name.substring(0, 2).toUpperCase() : <UserCircle className="w-4 h-4" />}
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+            {record.user?.name ? (
+              record.user.name.substring(0, 2).toUpperCase()
+            ) : (
+              <UserCircle className="h-4 w-4" />
+            )}
           </div>
           <div>
-            <div className="text-sm font-semibold text-gray-800">{record.user?.name || t("admin_billing.table.unnamed_user", { defaultValue: "Unnamed User" })}</div>
-            <div className="text-xs text-gray-400 font-mono mt-0.5">{record.user?.address ? `${record.user.address.substring(0, 8)}...` : "Unknown"}</div>
+            <div className="text-sm font-semibold text-gray-800">
+              {record.user?.name ||
+                t("admin_billing.table.unnamed_user", {
+                  defaultValue: "Unnamed User",
+                })}
+            </div>
+            <div className="mt-0.5 font-mono text-xs text-gray-400">
+              {record.user?.address
+                ? `${record.user.address.substring(0, 8)}...`
+                : "Unknown"}
+            </div>
           </div>
         </div>
       ),
@@ -126,7 +176,9 @@ export default function AdminBillingPage() {
       key: "orderId",
       label: t("admin_billing.table.th_order"),
       render: (record) => (
-        <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">{record.id}</span>
+        <span className="rounded bg-gray-100 px-2 py-1 font-mono text-xs text-gray-600">
+          {record.id}
+        </span>
       ),
     },
     {
@@ -143,10 +195,14 @@ export default function AdminBillingPage() {
       key: "status",
       label: t("admin_billing.table.th_status"),
       render: (record) => (
-        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${record.status === ORDER_STATUS.PAID || record.status === ORDER_STATUS.COMPLETED
-          ? "bg-emerald-50 text-emerald-700"
-          : "bg-red-50 text-red-700"
-          }`}>
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
+            record.status === ORDER_STATUS.PAID ||
+            record.status === ORDER_STATUS.COMPLETED
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-red-50 text-red-700"
+          }`}
+        >
           {record.status}
         </span>
       ),
@@ -184,12 +240,25 @@ export default function AdminBillingPage() {
       label: t("admin_billing.table.th_user"),
       render: (pt) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
-            {pt.user?.name ? pt.user.name.substring(0, 2).toUpperCase() : <UserCircle className="w-4 h-4" />}
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+            {pt.user?.name ? (
+              pt.user.name.substring(0, 2).toUpperCase()
+            ) : (
+              <UserCircle className="h-4 w-4" />
+            )}
           </div>
           <div>
-            <div className="text-sm font-semibold text-gray-800">{pt.user?.name || t("admin_billing.table.unnamed_user", { defaultValue: "Unnamed User" })}</div>
-            <div className="text-xs text-gray-400 font-mono mt-0.5">{pt.user?.address ? `${pt.user.address.substring(0, 8)}...` : "Unknown"}</div>
+            <div className="text-sm font-semibold text-gray-800">
+              {pt.user?.name ||
+                t("admin_billing.table.unnamed_user", {
+                  defaultValue: "Unnamed User",
+                })}
+            </div>
+            <div className="mt-0.5 font-mono text-xs text-gray-400">
+              {pt.user?.address
+                ? `${pt.user.address.substring(0, 8)}...`
+                : "Unknown"}
+            </div>
           </div>
         </div>
       ),
@@ -199,7 +268,7 @@ export default function AdminBillingPage() {
       label: t("admin_billing.table.th_source"),
       render: (pt) => (
         <span className="text-sm font-semibold text-gray-700">
-          {pt.sourceKey ? String(t(pt.sourceKey)) : pt.sourceType}
+          {pt.sourceKey ? t(pt.sourceKey) : pt.sourceType}
         </span>
       ),
     },
@@ -208,8 +277,11 @@ export default function AdminBillingPage() {
       label: t("admin_billing.table.th_amount"),
       align: "right",
       render: (pt) => (
-        <span className={`text-sm font-bold ${pt.isPositive ? "text-emerald-600" : "text-gray-900"}`}>
-          {!pt.isPositive && pt.amount > 0 ? "-" : (pt.isPositive ? "+" : "")}{pt.amount}
+        <span
+          className={`text-sm font-bold ${pt.isPositive ? "text-emerald-600" : "text-gray-900"}`}
+        >
+          {!pt.isPositive && pt.amount > 0 ? "-" : pt.isPositive ? "+" : ""}
+          {pt.amount}
         </span>
       ),
     },
@@ -231,12 +303,25 @@ export default function AdminBillingPage() {
       label: t("admin_billing.table.th_user"),
       render: (cc) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
-            {cc.user?.name ? cc.user.name.substring(0, 2).toUpperCase() : <UserCircle className="w-4 h-4" />}
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+            {cc.user?.name ? (
+              cc.user.name.substring(0, 2).toUpperCase()
+            ) : (
+              <UserCircle className="h-4 w-4" />
+            )}
           </div>
           <div>
-            <div className="text-sm font-semibold text-gray-800">{cc.user?.name || t("admin_billing.table.unnamed_user", { defaultValue: "Unnamed User" })}</div>
-            <div className="text-xs text-gray-400 font-mono mt-0.5">{cc.user?.address ? `${cc.user.address.substring(0, 8)}...` : "Unknown"}</div>
+            <div className="text-sm font-semibold text-gray-800">
+              {cc.user?.name ||
+                t("admin_billing.table.unnamed_user", {
+                  defaultValue: "Unnamed User",
+                })}
+            </div>
+            <div className="mt-0.5 font-mono text-xs text-gray-400">
+              {cc.user?.address
+                ? `${cc.user.address.substring(0, 8)}...`
+                : "Unknown"}
+            </div>
           </div>
         </div>
       ),
@@ -255,8 +340,12 @@ export default function AdminBillingPage() {
       label: t("admin_billing.table.th_card_info"),
       render: (cc) => (
         <div className="flex flex-col">
-          <span className="text-sm font-medium text-gray-900">{cc.cardInfo?.type_name || "Unknown CC"}</span>
-          <span className="text-xs text-gray-500 font-mono">**** {cc.cardInfo?.last_four || "****"}</span>
+          <span className="text-sm font-medium text-gray-900">
+            {cc.cardInfo?.type_name || "Unknown CC"}
+          </span>
+          <span className="font-mono text-xs text-gray-500">
+            **** {cc.cardInfo?.last_four || "****"}
+          </span>
         </div>
       ),
     },
@@ -275,10 +364,14 @@ export default function AdminBillingPage() {
       label: t("admin_billing.table.th_status"),
       align: "right",
       render: (cc) => (
-        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${cc.status === "SUCCESS"
-          ? "bg-emerald-50 text-emerald-700"
-          : "bg-red-50 text-red-700"
-          }`} title={cc.errorMessage}>
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
+            cc.status === "SUCCESS"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-red-50 text-red-700"
+          }`}
+          title={cc.errorMessage}
+        >
           {cc.status}
         </span>
       ),
@@ -290,34 +383,42 @@ export default function AdminBillingPage() {
       <div className="mx-auto max-w-7xl space-y-6">
         <AdminPageHeader
           icon={Receipt}
-          title={String(t("admin_billing.page.title"))}
-          subtitle={String(t("admin_billing.page.subtitle"))}
+          title={t("admin_billing.page.title")}
+          subtitle={t("admin_billing.page.subtitle")}
           rightNode={
             <div className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
               <div className="flex flex-col space-y-1">
-                <label htmlFor="startDate" className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                  <Calendar className="h-3 w-3" /> {String(t("admin_billing.page.start_date"))}
+                <label
+                  htmlFor="startDate"
+                  className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-gray-400 uppercase"
+                >
+                  <Calendar className="h-3 w-3" />{" "}
+                  {t("admin_billing.page.start_date")}
                 </label>
                 <input
                   id="startDate"
-                  aria-label={String(t("admin_billing.page.start_date")) || "Start Date"}
+                  aria-label={t("admin_billing.page.start_date")}
                   type="date"
                   value={startDateInput}
                   onChange={(e) => setStartDateInput(e.target.value)}
-                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-colors"
+                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 transition-colors focus:bg-white focus:ring-2 focus:ring-orange-500"
                 />
               </div>
               <div className="flex flex-col space-y-1">
-                <label htmlFor="endDate" className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                  <Calendar className="h-3 w-3" /> {String(t("admin_billing.page.end_date"))}
+                <label
+                  htmlFor="endDate"
+                  className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-gray-400 uppercase"
+                >
+                  <Calendar className="h-3 w-3" />{" "}
+                  {t("admin_billing.page.end_date")}
                 </label>
                 <input
                   id="endDate"
-                  aria-label={String(t("admin_billing.page.end_date")) || "End Date"}
+                  aria-label={t("admin_billing.page.end_date")}
                   type="date"
                   value={endDateInput}
                   onChange={(e) => setEndDateInput(e.target.value)}
-                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-colors"
+                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 transition-colors focus:bg-white focus:ring-2 focus:ring-orange-500"
                 />
               </div>
               <button
@@ -325,13 +426,15 @@ export default function AdminBillingPage() {
                 className="flex h-9 items-center justify-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-700"
               >
                 <Search className="h-4 w-4" />
-                <span className="sm:hidden lg:inline">{String(t("admin_billing.page.apply_filter"))}</span>
+                <span className="sm:hidden lg:inline">
+                  {t("admin_billing.page.apply_filter")}
+                </span>
               </button>
             </div>
           }
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <AdminMetricCard
             title={t("admin_billing.kpi.revenue")}
             value={metrics ? metrics.totalRevenue.toLocaleString() : "---"}
@@ -341,7 +444,9 @@ export default function AdminBillingPage() {
           />
           <AdminMetricCard
             title={t("admin_billing.kpi.consumption")}
-            value={metrics ? metrics.totalPointsConsumed.toLocaleString() : "---"}
+            value={
+              metrics ? metrics.totalPointsConsumed.toLocaleString() : "---"
+            }
             unit="Pts"
             icon={Activity}
             colorTheme="orange"
@@ -362,7 +467,7 @@ export default function AdminBillingPage() {
             colorTheme="rose"
             badgeNode={
               metrics && metrics.burnToBuyRatio > 1 ? (
-                <span className="text-xs font-semibold text-rose-500 bg-rose-50 px-2 rounded-md mb-1 pb-[1px]">
+                <span className="mb-1 rounded-md bg-rose-50 px-2 pb-[1px] text-xs font-semibold text-rose-500">
                   High Velocity
                 </span>
               ) : null
@@ -370,36 +475,54 @@ export default function AdminBillingPage() {
           />
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           {/* Info: (20260416 - Luphia) Tabs */}
-          <div className="flex items-center gap-1 bg-gray-50/50 p-2 border-b border-gray-100">
+          <div className="flex items-center gap-1 border-b border-gray-100 bg-gray-50/50 p-2">
             <button
               onClick={() => handleTabChange("orders")}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-200 ${activeTab === "orders" ? "bg-white text-orange-600 shadow-sm ring-1 ring-gray-100" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/50"}`}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-200 md:flex-none ${activeTab === "orders" ? "bg-white text-orange-600 shadow-sm ring-1 ring-gray-100" : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-700"}`}
             >
-              <Receipt className="w-4 h-4" />
-              {String(t("admin_billing.tabs.orders"))}
+              <Receipt className="h-4 w-4" />
+              {t("admin_billing.tabs.orders")}
             </button>
             <button
               onClick={() => handleTabChange("points")}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-200 ${activeTab === "points" ? "bg-white text-orange-600 shadow-sm ring-1 ring-gray-100" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/50"}`}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-200 md:flex-none ${activeTab === "points" ? "bg-white text-orange-600 shadow-sm ring-1 ring-gray-100" : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-700"}`}
             >
-              <Activity className="w-4 h-4" />
-              {String(t("admin_billing.tabs.points"))}
+              <Activity className="h-4 w-4" />
+              {t("admin_billing.tabs.points")}
             </button>
             <button
               onClick={() => handleTabChange("credit_cards")}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-200 ${activeTab === "credit_cards" ? "bg-white text-orange-600 shadow-sm ring-1 ring-gray-100" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/50"}`}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-200 md:flex-none ${activeTab === "credit_cards" ? "bg-white text-orange-600 shadow-sm ring-1 ring-gray-100" : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-700"}`}
             >
-              <CreditCard className="w-4 h-4" />
-              {String(t("admin_billing.tabs.credit_cards"))}
+              <CreditCard className="h-4 w-4" />
+              {t("admin_billing.tabs.credit_cards")}
             </button>
           </div>
 
           {/* Info: (20260416 - Luphia) Tab Content with DataTable */}
           <DataTable<IOrderData | IPointData | ICreditCardData>
-            columns={activeTab === "orders" ? (orderColumns as IDataTableColumn<IOrderData | IPointData | ICreditCardData>[]) : activeTab === "points" ? (pointColumns as IDataTableColumn<IOrderData | IPointData | ICreditCardData>[]) : (creditCardColumns as IDataTableColumn<IOrderData | IPointData | ICreditCardData>[])}
-            data={activeTab === "orders" ? orders : activeTab === "points" ? points : creditCards}
+            columns={
+              activeTab === "orders"
+                ? (orderColumns as IDataTableColumn<
+                    IOrderData | IPointData | ICreditCardData
+                  >[])
+                : activeTab === "points"
+                  ? (pointColumns as IDataTableColumn<
+                      IOrderData | IPointData | ICreditCardData
+                    >[])
+                  : (creditCardColumns as IDataTableColumn<
+                      IOrderData | IPointData | ICreditCardData
+                    >[])
+            }
+            data={
+              activeTab === "orders"
+                ? orders
+                : activeTab === "points"
+                  ? points
+                  : creditCards
+            }
             loading={loading}
             pagination={{
               page: pagination?.page || 1,
@@ -408,8 +531,10 @@ export default function AdminBillingPage() {
               totalElements: pagination?.totalElements || 0,
             }}
             onPageChange={setPage}
-            emptyStateText={String(t("common.no_data"))}
-            rowKey={(record: IOrderData | IPointData | ICreditCardData) => record.id}
+            emptyStateText={t("common.no_data")}
+            rowKey={(record: IOrderData | IPointData | ICreditCardData) =>
+              record.id
+            }
           />
         </div>
       </div>

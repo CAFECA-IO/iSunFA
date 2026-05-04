@@ -1,39 +1,22 @@
 import crypto from "crypto";
+import { parse } from "dotenv";
 import {
   ENV_PATH,
   ENV_SETUP_PATH,
   updateOrAppendEnv,
-  loadEnvConfig,
   getPriorityEnvConfig,
   getEnvRawContent,
   saveEnvRawContent,
   existsEnv,
   deleteEnv,
+  computePredictedFinalEnvString,
 } from "@/services/env.service";
 import { validateEnvDetailed } from "@/validators/env";
 
 export async function finalizeSetupEnvironment() {
   if (existsEnv(ENV_SETUP_PATH)) {
-    const setupContent = getEnvRawContent(ENV_SETUP_PATH);
-    let envContent = getEnvRawContent(ENV_PATH);
-
-    setupContent.split(/\r?\n/).forEach((line) => {
-      const trimmed = line.trim();
-      if (trimmed.startsWith("#") || trimmed === "") {
-        if (trimmed !== "" && !envContent.includes(trimmed)) {
-          envContent +=
-            (envContent.endsWith("\n") || envContent === "" ? "" : "\n") +
-            `${trimmed}\n`;
-        }
-      } else {
-        const match = trimmed.match(/^([^=]+)=(.*)$/);
-        if (match) {
-          envContent = updateOrAppendEnv(envContent, match[1], match[2]);
-        }
-      }
-    });
-
-    saveEnvRawContent(ENV_PATH, envContent);
+    const finalFileContent = computePredictedFinalEnvString();
+    saveEnvRawContent(ENV_PATH, finalFileContent);
     deleteEnv(ENV_SETUP_PATH);
     return { success: true };
   }
@@ -46,15 +29,12 @@ export async function getEnvHashChallenge(): Promise<{
   error?: string;
 }> {
   try {
-    const targetEnvPath = existsEnv(ENV_SETUP_PATH)
-      ? ENV_SETUP_PATH
-      : existsEnv(ENV_PATH)
-        ? ENV_PATH
-        : undefined;
-    if (!targetEnvPath)
-      return { success: false, error: "Configuration file not found" };
-
-    const config = await getPriorityEnvConfig();
+    const finalStr = computePredictedFinalEnvString();
+    const cleanStr = finalStr
+      .split("\n")
+      .filter((line) => line.trim() !== "" && !line.trim().startsWith("#"))
+      .join("\n");
+    const config = parse(cleanStr);
 
     delete config["SUPER_ADMIN_SIGNATURE"];
 
@@ -214,10 +194,15 @@ export async function getEnvSignatureStatus() {
 }
 
 export async function getEnvContentToSign() {
-  if (!existsEnv(ENV_PATH))
+  if (!existsEnv(ENV_PATH) && !existsEnv(ENV_SETUP_PATH))
     return { success: false, error: "No .env file found" };
 
-  const dotenvConfig = await loadEnvConfig(ENV_PATH);
+  const finalStr = computePredictedFinalEnvString();
+  const cleanStr = finalStr
+    .split("\n")
+    .filter((line) => line.trim() !== "" && !line.trim().startsWith("#"))
+    .join("\n");
+  const dotenvConfig = parse(cleanStr);
 
   const excludeKeys = ["SUPER_ADMIN_SIGNATURE"];
   for (const k of excludeKeys) {

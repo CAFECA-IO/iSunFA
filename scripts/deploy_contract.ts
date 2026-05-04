@@ -240,14 +240,9 @@ async function main() {
   // Info: (20260412 - Luphia) 6. Deploy EntryPoint
   let entryPointAddress = getEnv("NEXT_PUBLIC_ENTRY_POINT_ADDRESS");
   if (!entryPointAddress || entryPointAddress === "") {
-    const epArtifact = JSON.parse(
-      fs.readFileSync(
-        path.join(
-          process.cwd(),
-          "node_modules/@account-abstraction/contracts/artifacts/EntryPoint.json",
-        ),
-        "utf-8",
-      ),
+    const epArtifact = getArtifact(
+      "lib/@account-abstraction/contracts/core/EntryPoint",
+      "EntryPoint",
     );
     console.log("Deploying EntryPoint...");
     const epHash = await walletClient.deployContract({

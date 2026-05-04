@@ -72,3 +72,90 @@ export function deleteEnv(targetPath: string): void {
     fs.unlinkSync(targetPath);
   }
 }
+
+export function computePredictedFinalEnvString(): string {
+  const envContent = getEnvRawContent(ENV_PATH);
+  const setupContent = existsEnv(ENV_SETUP_PATH)
+    ? getEnvRawContent(ENV_SETUP_PATH)
+    : "";
+
+  const finalValues: Record<string, string> = {};
+  const extractToMap = (content: string) => {
+    content.split(/\r?\n/).forEach((line) => {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("#") && trimmed !== "") {
+        const match = trimmed.match(/^([^=]+)=(.*)$/);
+        if (match) {
+          finalValues[match[1]] = match[2];
+        }
+      }
+    });
+  };
+
+  extractToMap(envContent);
+  extractToMap(setupContent);
+
+  let finalFileContent = "";
+  if (existsEnv(ENV_EXAMPLE_PATH)) {
+    const exampleContent = getEnvRawContent(ENV_EXAMPLE_PATH);
+    exampleContent.split(/\r?\n/).forEach((line) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("#") || trimmed === "") {
+        finalFileContent += line + "\n";
+      } else {
+        const match = trimmed.match(/^([^=]+)=(.*)$/);
+        if (match) {
+          const key = match[1];
+          if (finalValues[key] !== undefined) {
+            finalFileContent += `${key}=${finalValues[key]}\n`;
+            delete finalValues[key];
+          } else {
+            finalFileContent += line + "\n";
+          }
+        } else {
+          finalFileContent += line + "\n";
+        }
+      }
+    });
+
+    const remainingKeys = Object.keys(finalValues);
+    if (remainingKeys.length > 0) {
+      if (finalValues["SUPER_ADMIN_SIGNATURE"]) {
+        finalFileContent +=
+          "\n# PART 6: Configuration Immutable Signature via FIDO2\n";
+        finalFileContent += `SUPER_ADMIN_SIGNATURE=${finalValues["SUPER_ADMIN_SIGNATURE"]}\n`;
+        delete finalValues["SUPER_ADMIN_SIGNATURE"];
+      }
+      const veryRemaining = Object.keys(finalValues);
+      if (veryRemaining.length > 0) {
+        finalFileContent += "\n# Auto-Appended Variables\n";
+        veryRemaining.forEach((key) => {
+          finalFileContent += `${key}=${finalValues[key]}\n`;
+        });
+      }
+    }
+  } else {
+    finalFileContent = envContent;
+    setupContent.split(/\r?\n/).forEach((line) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("#") || trimmed === "") {
+        if (trimmed !== "" && !finalFileContent.includes(trimmed)) {
+          finalFileContent +=
+            (finalFileContent.endsWith("\n") || finalFileContent === ""
+              ? ""
+              : "\n") + `${trimmed}\n`;
+        }
+      } else {
+        const match = trimmed.match(/^([^=]+)=(.*)$/);
+        if (match) {
+          finalFileContent = updateOrAppendEnv(
+            finalFileContent,
+            match[1],
+            match[2],
+          );
+        }
+      }
+    });
+  }
+  return finalFileContent.trim() + "\n";
+}
