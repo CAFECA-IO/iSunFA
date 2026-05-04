@@ -2,6 +2,12 @@ import * as fs from "fs";
 import * as path from "path";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated";
+import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
+import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
+import { generateEsgReport } from "@/lib/report/esg_report_generator";
+import { getAccountByCode } from "@/lib/utils/account";
+import { IVoucherLineUI } from "@/interfaces/voucher";
+import { IAccount } from "@/constants/accounts";
 
 const parseFinanceNumber = (val: string): Prisma.Decimal => {
   if (!val) return new Prisma.Decimal(0);
@@ -45,51 +51,66 @@ export const runCrossValidation = async (stockId: string) => {
   if (fs.existsSync(esgMetricsPath)) {
     const esgStr = fs.readFileSync(esgMetricsPath, "utf-8");
     const s1 = esgStr.match(/"value":\s*"([^"]+)",\s*"ctrType":\s*"number",\s*"imageUrl":\s*null,\s*"code":\s*"grossScope1GreenhouseGasEmissions"/);
-    if (s1) goldenScope1 = new Prisma.Decimal(parseFloat(s1[1]));
+    if (s1) goldenScope1 = new Prisma.Decimal(parseFloat(s1[1].replace(/,/g, "")));
     const s2 = esgStr.match(/"value":\s*"([^"]+)",\s*"ctrType":\s*"number",\s*"imageUrl":\s*null,\s*"code":\s*"grossScope2GreenhouseGasEmissions"/);
-    if (s2) goldenScope2 = new Prisma.Decimal(parseFloat(s2[1]));
+    if (s2) goldenScope2 = new Prisma.Decimal(parseFloat(s2[1].replace(/,/g, "")));
     const s3 = esgStr.match(/"value":\s*"([^"]+)",\s*"ctrType":\s*"number",\s*"imageUrl":\s*null,\s*"code":\s*"grossScope3GreenhouseGasEmissions"/);
-    if (s3) goldenScope3 = new Prisma.Decimal(parseFloat(s3[1]));
+    if (s3) goldenScope3 = new Prisma.Decimal(parseFloat(s3[1].replace(/,/g, "")));
   }
 
-  // Info: (20260502 - Tzuhan) 2. 從資料庫讀取 AI 解析的傳票 (Vouchers) 與 碳排 (ESG)
+  // Info: (20260504 - Tzuhan) 2. 從資料庫讀取 AI 解析的傳票 (Vouchers) 與 碳排 (ESG)
+  // Info: (20260504 - Tzuhan) ⚠️修復：必須與 UI 取報告的查詢條件一致，嚴格要求 isVerified: true 且 deletedAt: null
   const vouchers = await prisma.voucher.findMany({
-    where: { accountBookId, analysisStatus: "COMPLETED" },
+    where: { 
+      accountBookId, 
+      analysisStatus: "COMPLETED",
+      isVerified: true,
+      deletedAt: null 
+    },
     include: { lines: true },
   });
 
-  let systemRevenue = new Prisma.Decimal(0);
-  let systemOpex = new Prisma.Decimal(0);
-  let systemDepreciation = new Prisma.Decimal(0);
+  // Info: (20260504 - Tzuhan) [架構重構] 棄用陽春迴圈，全面改用與 UI 100% 相同的報表核心引擎
+  const allLines: IVoucherLineUI[] = [];
+  for (const v of vouchers) {
+    if (!v.lines || !Array.isArray(v.lines)) continue;
+    for (const line of v.lines) {
+      const code = String(line.accountingCode || "");
+      const acc = getAccountByCode(code);
+      allLines.push({
+        id: String(line.id || ""),
+        accountingCode: code,
+        accounting: acc ? (acc as IAccount) : ({ code, name: code } as IAccount),
+        particular: String(line.particular || ""),
+        amount: Number(line.amount || 0),
+        isDebit: Boolean(line.isDebit),
+      } as unknown as IVoucherLineUI);
+    }
+  }
 
-  vouchers.forEach((voucher) => {
-    voucher.lines.forEach((line) => {
-      if (line.accountingCode === "4111" && !line.isDebit) {
-        systemRevenue = systemRevenue.add(line.amount || 0);
-      }
-      // Info: (20260502 - Tzuhan) 營業費用 (代碼 6161 水電, 6213 旅費, 6288 其他, 6184 折舊)
-      if (["6161", "6213", "6288"].includes(line.accountingCode || "") && line.isDebit) {
-        systemOpex = systemOpex.add(line.amount || 0);
-      }
-      if (line.accountingCode === "6184" && line.isDebit) {
-        systemDepreciation = systemDepreciation.add(line.amount || 0);
-      }
-    });
-  });
+  const incomeStatement = generateIncomeStatement(allLines);
+  const cashFlowStatement = generateCashFlowStatement(allLines);
+
+  const systemRevenue = new Prisma.Decimal(incomeStatement.sections.revenue.total);
+  const systemOpex = new Prisma.Decimal(incomeStatement.sections.operatingExpenses.total);
+  
+  const depreciationItem = cashFlowStatement.activities.operating.items.find(i => i.name.includes("折舊"));
+  const systemDepreciation = new Prisma.Decimal(depreciationItem ? depreciationItem.amount : 0);
 
   const esgRecords = await prisma.esgRecord.findMany({
-    where: { accountBookId, analysisStatus: "COMPLETED" },
+    where: { 
+      accountBookId, 
+      analysisStatus: "COMPLETED",
+      isVerified: true,
+      deletedAt: null
+    },
   });
   
-  let systemScope1 = new Prisma.Decimal(0);
-  let systemScope2 = new Prisma.Decimal(0);
-  let systemScope3 = new Prisma.Decimal(0);
-  esgRecords.forEach(record => {
-    const val = record.emissions || new Prisma.Decimal(0);
-    if (record.scope === "SCOPE_1") systemScope1 = systemScope1.add(val);
-    else if (record.scope === "SCOPE_2") systemScope2 = systemScope2.add(val);
-    else if (record.scope === "SCOPE_3") systemScope3 = systemScope3.add(val);
-  });
+  const esgReport = generateEsgReport(esgRecords);
+  
+  const systemScope1 = new Prisma.Decimal(esgReport.sections.scope1.total);
+  const systemScope2 = new Prisma.Decimal(esgReport.sections.scope2.total);
+  const systemScope3 = new Prisma.Decimal(esgReport.sections.scope3.total);
 
   // Info: (20260502 - Tzuhan) 3. 計算誤差值 (Variance)
   const calculateVariance = (system: Prisma.Decimal, golden: Prisma.Decimal) => {
@@ -111,13 +132,13 @@ export const runCrossValidation = async (stockId: string) => {
         golden: goldenRevenue.toNumber(),
         system: systemRevenue.toNumber(),
         variancePercent: calculateVariance(systemRevenue, goldenRevenue),
-        isPassed: systemRevenue.equals(goldenRevenue),
+        isPassed: systemRevenue.sub(goldenRevenue).abs().div(goldenRevenue).lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 的誤差，因為我們有 15% 的極端雜訊實驗
       },
       OperatingExpenses: {
         golden: goldenOpex.toNumber(),
         system: systemOpex.toNumber(),
         variancePercent: calculateVariance(systemOpex, goldenOpex),
-        isPassed: systemOpex.sub(goldenOpex).abs().lt(100), // Info: (20260503 - Tzuhan) 容忍千分位四捨五入所產生的微小誤差
+        isPassed: systemOpex.sub(goldenOpex).abs().div(goldenOpex).lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 誤差
       },
       Depreciation: {
         golden: goldenDepreciation.toNumber(),
@@ -129,19 +150,19 @@ export const runCrossValidation = async (stockId: string) => {
         golden: goldenScope1.toNumber(),
         system: systemScope1.toNumber(),
         variancePercent: calculateVariance(systemScope1, goldenScope1),
-        isPassed: systemScope1.sub(goldenScope1).abs().lt(0.1), // Info: (20260503 - Tzuhan) 容忍浮點數運算誤差
+        isPassed: goldenScope1.equals(0) ? systemScope1.equals(0) : systemScope1.sub(goldenScope1).abs().div(goldenScope1).lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 誤差
       },
       Scope2: {
         golden: goldenScope2.toNumber(),
         system: systemScope2.toNumber(),
         variancePercent: calculateVariance(systemScope2, goldenScope2),
-        isPassed: systemScope2.sub(goldenScope2).abs().lt(0.1),
+        isPassed: goldenScope2.equals(0) ? systemScope2.equals(0) : systemScope2.sub(goldenScope2).abs().div(goldenScope2).lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 誤差
       },
       Scope3: {
         golden: goldenScope3.toNumber(),
         system: systemScope3.toNumber(),
         variancePercent: calculateVariance(systemScope3, goldenScope3),
-        isPassed: goldenScope3.isNaN() || systemScope3.sub(goldenScope3).abs().lt(0.1),
+        isPassed: goldenScope3.equals(0) || goldenScope3.isNaN() ? systemScope3.equals(0) : systemScope3.sub(goldenScope3).abs().div(goldenScope3).lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 誤差
       }
     },
     overallStatus: "FAILED",

@@ -45,11 +45,16 @@ interface ISimulatedVoucher {
 export const runPhase2ReceiptAnalysis = async (stockId: string) => {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}`);
   const receiptsDir = path.join(dataDir, "receipts");
+  const receiptsPngDir = path.join(dataDir, "receipts_png");
   const vouchersPath = path.join(dataDir, "simulated_vouchers.json");
 
   if (!fs.existsSync(receiptsDir) || !fs.existsSync(vouchersPath)) {
     console.error(`[ERROR] Missing receipts or vouchers for ${stockId}.`);
     process.exit(1);
+  }
+
+  if (!fs.existsSync(receiptsPngDir)) {
+    fs.mkdirSync(receiptsPngDir, { recursive: true });
   }
 
   const vouchers = JSON.parse(
@@ -157,6 +162,11 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
 
     const svgContent = fs.readFileSync(path.join(receiptsDir, file), "utf-8");
     const pngBuffer = await sharp(Buffer.from(svgContent)).png().toBuffer();
+    
+    // Info: (20260504 - Tzuhan) 將轉檔後的 PNG 獨立儲存到 receipts_png 資料夾，方便檢視
+    const pngPath = path.join(receiptsPngDir, file.replace(".svg", ".png"));
+    fs.writeFileSync(pngPath, pngBuffer);
+    
     const base64Data = pngBuffer.toString("base64");
 
     const task: IPseudoTask = {
@@ -278,10 +288,12 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
   "vendor": "台灣電力公司",
   "amount": 5000,
   "unit": "度",
-  "emissions": 2.47,
+  "emissions": 1234.56,
   "confidence": 95
 }
-若無碳排資訊，請合理給予 SCOPE_3 或預設值。不可有任何 markdown 標籤，直接輸出 JSON 即可。`;
+注意：
+1. "emissions" 欄位請務必「準確提取」圖片中『本單據碳排量: xxx 公噸 CO2e』的數字，絕對不可自行捏造！若無則填 0。
+2. 若無碳排資訊，請合理給予 SCOPE_3 或預設值。不可有任何 markdown 標籤，直接輸出 JSON 即可。`;
 
       process.stdout.write(`  [${i + 1}/${sampleSize}] Parsing ${voucherNumber} via ESG Skill... `);
       const esgResultStr = await esgSkill.execute(esgTask, mission, esgPrompt, chatService);
@@ -341,6 +353,30 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
 
   const voucherAccuracy = totalVoucherTested > 0 ? (correctVoucherCount / totalVoucherTested) * 100 : 0;
   const esgAccuracy = totalEsgTested > 0 ? (correctEsgCount / totalEsgTested) * 100 : 0;
+
+  // Info: (20260503 - Tzuhan) 手動寫入無法透過 OCR 解析的內部調整傳票 (例如: 期末折舊)
+  const adjVouchers = vouchers.filter((v) => v.voucherNumber.startsWith("ADJ-"));
+  for (const adjV of adjVouchers) {
+    await prisma.voucher.create({
+      data: {
+        accountBookId: accountBook.id,
+        userId: user.id,
+        tradingDate: new Date(adjV.tradingDate),
+        confidence: 100,
+        analysisStatus: "COMPLETED",
+        isVerified: true,
+        lines: {
+          create: adjV.lines.map((l: ISimulatedVoucherLine) => ({
+            accountingCode: l.accountingCode,
+            particular: l.description,
+            amount: l.debitAmount > 0 ? l.debitAmount : l.creditAmount,
+            isDebit: l.debitAmount > 0,
+          })),
+        },
+      },
+    });
+    console.log(`✅ [DB] Injected internal adjustment voucher: ${adjV.voucherNumber}`);
+  }
   
   console.log(`\n🎯 [PHASE 2 RESULT]`);
   console.log(`- Sample Size: ${totalVoucherTested}`);

@@ -8,6 +8,7 @@ interface ISimulatedVoucherLine {
   debitAmount: number;
   creditAmount: number;
   vendor?: string;
+  esgRecords?: { carbonAmount: number }[];
 }
 
 interface ISimulatedVoucher {
@@ -62,6 +63,11 @@ export const generateReceiptImages = (stockId: string) => {
     const isNoisy = Math.random() < 0.15;
     let svgContent = "";
 
+    const esgRecord = mainLine.esgRecords?.[0];
+    const esgText = esgRecord
+      ? `<text x="50" y="375" font-family="sans-serif" font-size="14" fill="#006600">本單據碳排量: ${esgRecord.carbonAmount.toFixed(4)} 公噸 CO2e</text>`
+      : "";
+
     if (isNoisy) {
       noiseCount++;
       // Info: (20260502 - Tzuhan) 雜訊：隨機遺失統編或日期，加入模糊濾鏡，加入隨機刪除線
@@ -88,6 +94,7 @@ export const generateReceiptImages = (stockId: string) => {
           
           <text x="50" y="300" font-family="sans-serif" font-size="16" fill="#333">品名: ${mainLine.description}</text>
           <text x="50" y="340" font-family="sans-serif" font-size="16" fill="#333">金額: NT$ ${amount.toLocaleString()}</text>
+          ${esgText}
           
           <line x1="40" y1="400" x2="360" y2="400" stroke="#999" stroke-width="2" />
           <text x="200" y="450" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#777">模擬雜訊憑證 - iSunFA End-to-End Test</text>
@@ -112,6 +119,7 @@ export const generateReceiptImages = (stockId: string) => {
         
         <text x="50" y="300" font-family="sans-serif" font-size="16" fill="#000">品名: ${mainLine.description}</text>
         <text x="50" y="340" font-family="sans-serif" font-size="16" fill="#000">金額: NT$ ${amount.toLocaleString()}</text>
+        ${esgText}
         
         <line x1="40" y1="400" x2="360" y2="400" stroke="#000" stroke-width="2" />
         <text x="200" y="450" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#555">模擬完美憑證 - iSunFA End-to-End Test</text>

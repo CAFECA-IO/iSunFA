@@ -106,6 +106,7 @@ export async function GET(
     const where: Prisma.VoucherWhereInput = {
       accountBookId,
       isVerified: true, // Info: (20260331 - Julian) 僅取得「已核對」
+      deletedAt: null,  // Info: (20260504 - Tzuhan) ⚠️修復：排除被軟刪除的傳票
       tradingDate: {
         ...(reportType !== ReportType.BALANCE_SHEET && {
           gte: getTradingDateRange().start,
