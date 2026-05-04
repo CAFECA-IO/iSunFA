@@ -1,7 +1,7 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { prisma } from "@/lib/prisma";
+import { checkinRepo } from "@/repositories/checkin.repo";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { publicClient } from "@/lib/viem";
 import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     // Info: (20260408 - Luphia) 3. Throttle by 24h Checkin logic: find if there's any record in the last 24h
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const recentCheckin = await prisma.checkin.findFirst({
+    const recentCheckin = await checkinRepo.findFirst({
       where: {
         userId: user.id,
         createdAt: {
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Info: (20260408 - Luphia) 4. Record the checkin
-    await prisma.checkin.create({
+    await checkinRepo.create({
       data: {
         userId: user.id,
         ip,

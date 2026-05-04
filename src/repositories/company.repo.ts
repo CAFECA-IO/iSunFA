@@ -5,4 +5,7 @@ export const companyRepo = {
   findMany(args?: Prisma.CompanyFindManyArgs): Promise<Company[]> {
     return prisma.company.findMany(args);
   },
+  upsert(args: Prisma.CompanyUpsertArgs): Promise<Company> {
+    return prisma.company.upsert(args);
+  },
 };
