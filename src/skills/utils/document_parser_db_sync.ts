@@ -52,14 +52,27 @@ export interface IAggregatedDocumentResult {
   failureReason?: string;
 }
 
-export async function syncDocumentResultToDatabase(
-  fileId: string,
-  accountBookId: string,
-  result: IAggregatedDocumentResult,
-  voucherIdContext?: string,
-  esgRecordIdContext?: string,
-) {
-  if (!accountBookId || (!fileId && !voucherIdContext && !esgRecordIdContext)) {
+export interface ISyncDocumentResultParams {
+  fileId: string;
+  accountBookId: string;
+  result: IAggregatedDocumentResult;
+  voucherIdContext?: string;
+  esgRecordIdContext?: string;
+  journalIdContext?: string;
+}
+
+export async function syncDocumentResultToDatabase({
+  fileId,
+  accountBookId,
+  result,
+  voucherIdContext,
+  esgRecordIdContext,
+  journalIdContext,
+}: ISyncDocumentResultParams) {
+  if (
+    !accountBookId ||
+    (!fileId && !voucherIdContext && !esgRecordIdContext && !journalIdContext)
+  ) {
     return false;
   }
 
@@ -89,7 +102,11 @@ export async function syncDocumentResultToDatabase(
     // Info: (20260420 - Luphia) 1. Sync Journal
     if (journal || failureReason) {
       let existingJournal = null;
-      if (realFileId && accountBookId) {
+      if (journalIdContext) {
+        existingJournal = await tx.journal.findUnique({
+          where: { id: journalIdContext },
+        });
+      } else if (realFileId && accountBookId) {
         existingJournal = await tx.journal.findFirst({
           where: { fileId: realFileId, accountBookId },
         });

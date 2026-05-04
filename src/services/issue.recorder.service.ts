@@ -6,6 +6,7 @@ import { Prisma } from "@/generated";
 import { ORDER_STATUS } from "@/constants/status";
 import { syncDocumentResultToDatabase } from "@/skills/utils/document_parser_db_sync";
 import { getPriorityEnvConfig } from "@/services/env.service";
+import type { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 
 export class IssueRecorderService {
   async processNext() {
@@ -146,13 +147,26 @@ export class IssueRecorderService {
                 string,
                 Record<string, unknown>
               >;
-              for (const fileId of Object.keys(payload)) {
-                const fileResult = payload[fileId];
-                await syncDocumentResultToDatabase(
-                  fileId,
-                  fileResult.accountBookId as string,
-                  fileResult as unknown as import("@/skills/utils/document_parser_db_sync").IAggregatedDocumentResult,
-                );
+              for (const recordKey of Object.keys(payload)) {
+                const fileResult = payload[recordKey];
+                const fileIdToSync =
+                  typeof fileResult.fileId === "string"
+                    ? fileResult.fileId
+                    : recordKey;
+                await syncDocumentResultToDatabase({
+                  fileId: fileIdToSync,
+                  accountBookId: fileResult.accountBookId as string,
+                  result: fileResult as unknown as IAggregatedDocumentResult,
+                  voucherIdContext: fileResult.voucherIdContext as
+                    | string
+                    | undefined,
+                  esgRecordIdContext: fileResult.esgRecordIdContext as
+                    | string
+                    | undefined,
+                  journalIdContext: fileResult.journalIdContext as
+                    | string
+                    | undefined,
+                });
               }
               console.log(
                 `[MissionRecorder] Synced document results to DB for Task ID ${taskId}`,
