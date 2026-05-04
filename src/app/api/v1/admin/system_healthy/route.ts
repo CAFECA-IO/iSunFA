@@ -1,5 +1,5 @@
 import { jsonOk } from "@/lib/utils/response";
-import { prisma } from "@/lib/prisma";
+import { dbRepo } from "@/repositories/db.repo";
 import { publicClient } from "@/lib/viem_public";
 import { SYSTEM_STATUS } from "@/constants/status";
 import { dockerService } from "@/services/docker.service";
@@ -16,7 +16,7 @@ export async function GET() {
 
   // Info: (20260419 - Luphia) 1. Check Database
   try {
-    await prisma.$queryRaw`SELECT 1`;
+    await dbRepo.checkConnection();
     status.database = SYSTEM_STATUS.HEALTHY;
   } catch (error) {
     status.database = SYSTEM_STATUS.UNHEALTHY;

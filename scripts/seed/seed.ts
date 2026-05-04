@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { dbRepo } from "@/repositories/db.repo";
 import * as path from "path";
 import { seedLogisticsCoefficients } from "./seed_logistics_coefficients";
 import { seedLogisticsInfrastructure } from "./seed_full_logistics_infrastructure";
@@ -18,4 +18,4 @@ async function main() {
 
 main()
   .catch(console.error)
-  .finally(() => prisma.$disconnect());
+  .finally(() => dbRepo.disconnect());

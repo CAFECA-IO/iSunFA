@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import { fetchWithRetry } from "@/lib/utils/http_client";
+import { companyRepo } from "@/repositories/company.repo";
 
 interface IOpenApiRecord {
   // Info: (20260402 - Tzuhan) 上市 (sii) 中文欄位
@@ -88,7 +88,7 @@ async function main() {
         metadata: item,
       };
 
-      await prisma.company.upsert({
+      await companyRepo.upsert({
         where: { stockId },
         update: data,
         create: { stockId, ...data },
