@@ -178,15 +178,19 @@ export default function AuthModal({
               modules: data.payload.bonusModules || [],
             });
             setOnRewardAccept(() => async () => {
-              // Info: (20260504 - Luphia) When accepted, finally update the global auth state and redirect
+              // Info: (20260504 - Luphia) Execute refreshAuth only after user accepts to prevent modal from unmounting prematurely
               await refreshAuth();
               setLoginStep("SUCCESS");
               handleRedirect();
             });
             return; // Info: (20260504 - Luphia) Pause the flow, wait for user to click accept
+          } else {
+            const errorData = await res.json();
+            console.error("Campaign registration rejected by API:", errorData);
+            await refreshAuth();
           }
-        } catch (e) {
-          console.error("Failed to register pending campaign:", e);
+        } catch (error) {
+          console.error("Failed to register pending campaign:", error);
         }
         localStorage.removeItem("pending_campaign_registration");
       }
@@ -195,7 +199,7 @@ export default function AuthModal({
       setLoginStep("SUCCESS");
 
       // Info: (20260116 - Tzuhan) Add a small delay for user to see success message
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       handleRedirect();
     } catch (err: unknown) {
       console.error("Login error:", err);
@@ -255,7 +259,7 @@ export default function AuthModal({
       );
 
       // Info: (20260116 - Luphia) Add a small delay for user to see success message
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       if (campaignData) {
         localStorage.setItem(
@@ -271,12 +275,23 @@ export default function AuthModal({
       }
 
       /**
-       * Info: (20260413 - Luphia) Do NOT automatically call handleLogin() here!
-       * The blockchain indexer needs a few seconds to pick up the AccountCreated event.
-       * Auto-triggering FIDO2 login immediately will result in a 404. Let the user click it manually.
+       * Info: (20260504 - Luphia) Phase 2: Fast Auto-Login
+       * Since the backend has Lazy Sync (recoverUserByCredentialId),
+       * we just wait a brief moment for RPC node propagation and trigger login directly.
        */
+      setCurrentStep("SYNCING");
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       setMode("login");
       setError(null);
+
+      try {
+        console.log("Triggering auto-login via Lazy Sync...");
+        await handleLogin();
+        return; // Info: (20260504 - Luphia) Success, handled by handleLogin
+      } catch {
+        console.error("Auto login failed or was canceled");
+      }
     } catch (err: unknown) {
       console.error("Registration error:", err);
       const isCanceled =

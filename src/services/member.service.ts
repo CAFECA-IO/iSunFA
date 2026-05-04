@@ -145,54 +145,75 @@ export async function issuePurchasedPointsToMember(
     return tx;
   };
 
-  try {
-    const tx = await executeIssue();
-    return { success: true, message: `Issued ${amount} points`, data: { tx } };
-  } catch (error) {
-    const errorMsg = (error as Error).message || "";
-    // Info: (20260417 - Luphia) Auto-funding mechanism if contract runs out of ISC reserves
-    if (
-      errorMsg.includes("InsufficientContractReserves") ||
-      errorMsg.includes("0x9443a76e")
-    ) {
-      // Info: (20260417 - Luphia) Make auto-funding dynamic to cover large issuances, plus 50 as buffer
-      const fundingAmount = Math.max(50, amount + 50);
-      console.warn(
-        `[MembershipService] Contract reserves low during point issuance. Executing auto-funding of ${fundingAmount} ISC...`,
-      );
-      const fundRes = await fundMembershipSystem(fundingAmount);
-      if (!fundRes.success) {
-        return {
-          success: false,
-          message: `Auto-funding sequence failed: ${fundRes.message}`,
-        };
-      }
-      console.log(
-        `[MembershipService] Auto-funding successful. Retrying point issuance...`,
-      );
+  let retries = 3;
+  while (retries > 0) {
+    try {
+      const tx = await executeIssue();
+      return {
+        success: true,
+        message: `Issued ${amount} points`,
+        data: { tx },
+      };
+    } catch (error) {
+      const errorMsg = (error as Error).message || "";
 
-      try {
-        const retryTx = await executeIssue();
-        return {
-          success: true,
-          message: `Issued ${amount} points (after auto-funding)`,
-          data: { tx: retryTx },
-        };
-      } catch (retryError) {
-        console.error(
-          `[MembershipService] Retry failed for ${userAddress}:`,
-          retryError,
+      // Info: (20260504 - Luphia) Handle nonce collisions when Bundler and MembershipService use the same admin wallet concurrently
+      if (
+        errorMsg.includes("replacement transaction underpriced") ||
+        errorMsg.includes("nonce too low") ||
+        errorMsg.includes("already known")
+      ) {
+        console.warn(
+          `[MembershipService] Nonce collision detected, retrying in 2 seconds... (${retries} retries left)`,
         );
-        return { success: false, message: (retryError as Error).message };
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        retries--;
+        if (retries === 0) {
+          console.error(
+            `[MembershipService] Max retries reached for nonce collision for ${userAddress}`,
+          );
+          return {
+            success: false,
+            message: "Transaction failed due to concurrent nonce collision.",
+          };
+        }
+        continue; // Info: (20260504 - Luphia) Retry due to nonce collision
       }
-    }
 
-    console.error(
-      `[MembershipService] issuePurchasedPoints failed for ${userAddress}:`,
-      error,
-    );
-    return { success: false, message: errorMsg };
+      // Info: (20260417 - Luphia) Auto-funding mechanism if contract runs out of ISC reserves
+      if (
+        errorMsg.includes("InsufficientContractReserves") ||
+        errorMsg.includes("0x9443a76e")
+      ) {
+        // Info: (20260417 - Luphia) Make auto-funding dynamic to cover large issuances, plus 50 as buffer
+        const fundingAmount = Math.max(50, amount + 50);
+        console.warn(
+          `[MembershipService] Contract reserves low during point issuance. Executing auto-funding of ${fundingAmount} ISC...`,
+        );
+        const fundRes = await fundMembershipSystem(fundingAmount);
+        if (!fundRes.success) {
+          return {
+            success: false,
+            message: `Auto-funding sequence failed: ${fundRes.message}`,
+          };
+        }
+        console.log(
+          `[MembershipService] Auto-funding successful. Retrying point issuance...`,
+        );
+
+        retries--;
+        continue; // Info: (20260504 - Luphia) Retry the issue execution instead of throwing
+      }
+
+      console.error(
+        `[MembershipService] issuePurchasedPoints failed for ${userAddress}:`,
+        error,
+      );
+      return { success: false, message: errorMsg };
+    }
   }
+
+  return { success: false, message: "Max retries exceeded" };
 }
 
 // Info: (20260413 - Luphia) Query user info from MembershipSystem

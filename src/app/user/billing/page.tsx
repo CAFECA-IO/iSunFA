@@ -1,13 +1,22 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useTranslation } from '@/i18n/i18n_context';
-import { CreditCard, Receipt, Coins, Loader2, Plus, CheckCircle2, Edit2, Trash2 } from 'lucide-react';
-import { request } from '@/lib/utils/request';
-import { formatDate } from '@/lib/utils/date';
-import EditCardModal from '@/components/user/billing/edit_card_modal';
-import ReceiptPdfDownloader from '@/components/user/billing/receipt_pdf_downloader';
-import { ORDER_STATUS, ORDER_TYPE } from '@/constants/status';
+import { useState, useEffect } from "react";
+import { useTranslation } from "@/i18n/i18n_context";
+import {
+  CreditCard,
+  Receipt,
+  Coins,
+  Loader2,
+  Plus,
+  CheckCircle2,
+  Edit2,
+  Trash2,
+} from "lucide-react";
+import { request } from "@/lib/utils/request";
+import { formatDate } from "@/lib/utils/date";
+import EditCardModal from "@/components/user/billing/edit_card_modal";
+import ReceiptPdfDownloader from "@/components/user/billing/receipt_pdf_downloader";
+import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 
 type Tab = "orders" | "points" | "cards";
 
@@ -25,7 +34,13 @@ interface IOrder {
   buyerName?: string;
   buyerTaxId?: string;
   buyerAddress?: string;
-  items?: { name: string; quantity: number | string; unitPrice: number | string; amount: number | string; remark?: string }[];
+  items?: {
+    name: string;
+    quantity: number | string;
+    unitPrice: number | string;
+    amount: number | string;
+    remark?: string;
+  }[];
 }
 
 interface IPointHistory {
@@ -59,7 +74,13 @@ interface IPaymentTransaction {
   createdAt: string;
   amount: number;
   status: string;
-  items?: { name: string; quantity: number; unitPrice: number; amount: number; remark?: string }[];
+  items?: {
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    amount: number;
+    remark?: string;
+  }[];
 }
 
 export default function BillingPage() {
@@ -238,30 +259,33 @@ export default function BillingPage() {
       <div className="mx-auto mb-8 flex w-full max-w-xl space-x-1 rounded-xl bg-gray-100/50 p-1">
         <button
           onClick={() => setActiveTab("orders")}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${activeTab === "orders"
-            ? "bg-white text-orange-600 shadow-sm"
-            : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
-            }`}
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+            activeTab === "orders"
+              ? "bg-white text-orange-600 shadow-sm"
+              : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
+          }`}
         >
           <Receipt className="size-4 shrink-0" />
           {t("billing.tabs.orders")}
         </button>
         <button
           onClick={() => setActiveTab("points")}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${activeTab === "points"
-            ? "bg-white text-orange-600 shadow-sm"
-            : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
-            }`}
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+            activeTab === "points"
+              ? "bg-white text-orange-600 shadow-sm"
+              : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
+          }`}
         >
           <Coins className="size-4 shrink-0" />
           {t("billing.tabs.points")}
         </button>
         <button
           onClick={() => setActiveTab("cards")}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${activeTab === "cards"
-            ? "bg-white text-orange-600 shadow-sm"
-            : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
-            }`}
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+            activeTab === "cards"
+              ? "bg-white text-orange-600 shadow-sm"
+              : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
+          }`}
         >
           <CreditCard className="size-4 shrink-0" />
           {t("billing.tabs.cards")}
@@ -286,11 +310,21 @@ export default function BillingPage() {
                 <table className="w-full text-left text-sm whitespace-nowrap">
                   <thead className="border-b border-gray-100 bg-gray-50 text-gray-500">
                     <tr>
-                      <th className="px-6 py-4 font-medium">{t('billing.table.date')}</th>
-                      <th className="px-6 py-4 font-medium">{t('billing.table.order_id')}</th>
-                      <th className="px-6 py-4 font-medium">{t('billing.table.amount')}</th>
-                      <th className="px-6 py-4 font-medium">{t('billing.table.status')}</th>
-                      <th className="px-6 py-4 font-medium w-16"><span className="sr-only">Action</span></th>
+                      <th className="px-6 py-4 font-medium">
+                        {t("billing.table.date")}
+                      </th>
+                      <th className="px-6 py-4 font-medium">
+                        {t("billing.table.order_id")}
+                      </th>
+                      <th className="px-6 py-4 font-medium">
+                        {t("billing.table.amount")}
+                      </th>
+                      <th className="px-6 py-4 font-medium">
+                        {t("billing.table.status")}
+                      </th>
+                      <th className="w-16 px-6 py-4 font-medium">
+                        <span className="sr-only">Action</span>
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -330,28 +364,33 @@ export default function BillingPage() {
                         </td>
                         <td className="px-6 py-4">
                           <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${order.status === "SUCCESS" || order.status === ORDER_STATUS.PAID || order.status === ORDER_STATUS.COMPLETED
-                              ? "bg-green-50 text-green-700"
-                              : order.status === ORDER_STATUS.PENDING || order.status === ORDER_STATUS.PAYING
-                                ? "bg-yellow-50 text-yellow-700"
-                                : "bg-red-50 text-red-700"
-                              }`}
+                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+                              order.status === "SUCCESS" ||
+                              order.status === ORDER_STATUS.PAID ||
+                              order.status === ORDER_STATUS.COMPLETED
+                                ? "bg-green-50 text-green-700"
+                                : order.status === ORDER_STATUS.PENDING ||
+                                    order.status === ORDER_STATUS.PAYING
+                                  ? "bg-yellow-50 text-yellow-700"
+                                  : "bg-red-50 text-red-700"
+                            }`}
                           >
                             {order.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 flex justify-end">
-                          {order.type === ORDER_TYPE.OEN_PAYMENT && order.status === "SUCCESS" && (
-                            <ReceiptPdfDownloader
-                              receiptNumber={order.id}
-                              date={order.createdAt}
-                              amount={order.amount}
-                              buyerName={order.buyerName}
-                              buyerTaxId={order.buyerTaxId}
-                              buyerAddress={order.buyerAddress}
-                              items={order.items}
-                            />
-                          )}
+                        <td className="flex justify-end px-6 py-4">
+                          {order.type === ORDER_TYPE.OEN_PAYMENT &&
+                            order.status === "SUCCESS" && (
+                              <ReceiptPdfDownloader
+                                receiptNumber={order.id}
+                                date={order.createdAt}
+                                amount={order.amount}
+                                buyerName={order.buyerName}
+                                buyerTaxId={order.buyerTaxId}
+                                buyerAddress={order.buyerAddress}
+                                items={order.items}
+                              />
+                            )}
                         </td>
                       </tr>
                     ))}
@@ -407,10 +446,12 @@ export default function BillingPage() {
                             {t(pt.sourceKey)}
                             {pt.extendedType && (
                               <span className="ml-2 text-xs text-gray-500">
-                                {pt.extendedType === "ai_consulting"
-                                  ? `(${t("billing.point_history.source_chat")})`
-                                  : `(${t(`analysis.categories.${pt.extendedType.toLowerCase()}`)})`
-                                }
+                                {pt.sourceKey ===
+                                "billing.point_history.source_campaign"
+                                  ? `(${pt.extendedType})`
+                                  : pt.extendedType === "ai_consulting"
+                                    ? `(${t("billing.point_history.source_chat")})`
+                                    : `(${t(`analysis.categories.${pt.extendedType.toLowerCase()}`)})`}
                               </span>
                             )}
                           </td>
@@ -424,9 +465,12 @@ export default function BillingPage() {
                             {pt.status && (
                               <span
                                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-                                  pt.status === ORDER_STATUS.PAID || pt.status === ORDER_STATUS.COMPLETED || pt.status === "SUCCESS"
+                                  pt.status === ORDER_STATUS.PAID ||
+                                  pt.status === ORDER_STATUS.COMPLETED ||
+                                  pt.status === "SUCCESS"
                                     ? "bg-green-50 text-green-700"
-                                    : pt.status === ORDER_STATUS.PENDING || pt.status === ORDER_STATUS.PAYING
+                                    : pt.status === ORDER_STATUS.PENDING ||
+                                        pt.status === ORDER_STATUS.PAYING
                                       ? "bg-yellow-50 text-yellow-700"
                                       : "bg-red-50 text-red-700"
                                 }`}
@@ -516,8 +560,13 @@ export default function BillingPage() {
                               </span>
                             )}
                           </div>
-                          <div className="text-sm text-gray-500 mt-1 font-mono">
-                            •••• •••• •••• {pm.data?.paymentInfo ? String(pm.data.paymentInfo).substring(String(pm.data.paymentInfo).length - 4) : '****'}
+                          <div className="mt-1 font-mono text-sm text-gray-500">
+                            •••• •••• ••••{" "}
+                            {pm.data?.paymentInfo
+                              ? String(pm.data.paymentInfo).substring(
+                                  String(pm.data.paymentInfo).length - 4,
+                                )
+                              : "****"}
                           </div>
                         </div>
                       </div>
@@ -584,10 +633,18 @@ export default function BillingPage() {
                             <table className="w-full text-left text-sm whitespace-nowrap">
                               <thead className="bg-transparent text-gray-500">
                                 <tr>
-                                  <th className="px-6 py-4 font-medium">{t('billing.table.date')}</th>
-                                  <th className="px-6 py-4 font-medium">{t('billing.table.amount')}</th>
-                                  <th className="px-6 py-4 font-medium">{t('billing.table.status')}</th>
-                                  <th className="px-6 py-4 font-medium w-16"><span className="sr-only">Action</span></th>
+                                  <th className="px-6 py-4 font-medium">
+                                    {t("billing.table.date")}
+                                  </th>
+                                  <th className="px-6 py-4 font-medium">
+                                    {t("billing.table.amount")}
+                                  </th>
+                                  <th className="px-6 py-4 font-medium">
+                                    {t("billing.table.status")}
+                                  </th>
+                                  <th className="w-16 px-6 py-4 font-medium">
+                                    <span className="sr-only">Action</span>
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-gray-100">
@@ -607,17 +664,23 @@ export default function BillingPage() {
                                     </td>
                                     <td className="px-6 py-3">
                                       <span
-                                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${tx.status === "SUCCESS" || tx.status === ORDER_STATUS.PAID || tx.status === ORDER_STATUS.COMPLETED
-                                          ? "bg-green-50 text-green-700"
-                                          : tx.status === ORDER_STATUS.PENDING || tx.status === ORDER_STATUS.PAYING
-                                            ? "bg-yellow-50 text-yellow-700"
-                                            : "bg-red-50 text-red-700"
-                                          }`}
+                                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+                                          tx.status === "SUCCESS" ||
+                                          tx.status === ORDER_STATUS.PAID ||
+                                          tx.status === ORDER_STATUS.COMPLETED
+                                            ? "bg-green-50 text-green-700"
+                                            : tx.status ===
+                                                  ORDER_STATUS.PENDING ||
+                                                tx.status ===
+                                                  ORDER_STATUS.PAYING
+                                              ? "bg-yellow-50 text-yellow-700"
+                                              : "bg-red-50 text-red-700"
+                                        }`}
                                       >
                                         {tx.status}
                                       </span>
                                     </td>
-                                    <td className="px-6 py-3 flex justify-end">
+                                    <td className="flex justify-end px-6 py-3">
                                       {tx.status === "SUCCESS" && (
                                         <ReceiptPdfDownloader
                                           receiptNumber={tx.id}

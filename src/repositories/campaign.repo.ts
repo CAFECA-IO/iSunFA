@@ -86,6 +86,16 @@ export class CampaignRepository {
 
     return { data, count };
   }
+
+  async findRegistrationsByUserId(userId: string) {
+    return prisma.campaignRegistration.findMany({
+      where: { userId },
+      include: {
+        campaign: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
 }
 
 export const campaignRepo = new CampaignRepository();

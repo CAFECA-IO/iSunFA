@@ -48,6 +48,7 @@ export const billing = {
     source_chat: "AI 咨询服务",
     source_checkin: "每日签到奖励",
     source_registration: "注册奖励",
+    source_campaign: "活动奖励",
     source_admin_issued: "系统管理员发放",
     source_check_in_reward: "每日签到奖励",
   },

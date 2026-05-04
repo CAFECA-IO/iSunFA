@@ -2,6 +2,7 @@ import { paymentRepo } from "@/repositories/payment.repo";
 import { getMemberInfo } from "@/services/member.service";
 import { CURRENCY_UNIT, REWARD_AMOUNTS } from "@/constants/price";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import { campaignRepo } from "@/repositories/campaign.repo";
 
 export class PointService {
   async getPointHistory(user: { id: string; address?: string | null }) {
@@ -91,6 +92,31 @@ export class PointService {
           e,
         );
       }
+    }
+
+    // Info: (20260504 - Luphia) Fetch campaign registrations and add to point history
+    try {
+      const campaignRegistrations =
+        await campaignRepo.findRegistrationsByUserId(user.id);
+      for (const reg of campaignRegistrations) {
+        if (reg.campaign && reg.campaign.bonusPoints > 0) {
+          history.push({
+            id: `campaign-${reg.id}`,
+            type: "REWARD",
+            sourceKey: "billing.point_history.source_campaign",
+            fallbackSource: `Campaign Reward: ${reg.campaign.name}`,
+            amount: reg.campaign.bonusPoints,
+            extendedType: reg.campaign.name,
+            status: ORDER_STATUS.COMPLETED,
+            createdAt: reg.createdAt,
+          });
+        }
+      }
+    } catch (e) {
+      console.warn(
+        "Failed to fetch campaign registrations for point history",
+        e,
+      );
     }
 
     history.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
