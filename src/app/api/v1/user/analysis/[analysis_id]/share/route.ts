@@ -1,6 +1,7 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { analysisRepo } from "@/repositories/analysis.repo";
+import { shareRepo } from "@/repositories/share.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -32,27 +33,25 @@ export async function POST(
       console.error("[API] /user/analysis/share POST error:", e);
     }
 
-    const analysis = await prisma.analysis.findUnique({
-      where: { id: analysisId },
-    });
+    const analysis = await analysisRepo.findById(analysisId);
 
     if (!analysis || analysis.userId !== user.id) {
       return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
-    let shareToken = await prisma.reportShareToken.findFirst({
+    let shareToken = await shareRepo.findTokenFirst({
       where: { analysisId: analysisId, isActive: true },
     });
 
     if (shareToken && shareToken.isFinancialDataHidden !== hideFinancialData) {
-      shareToken = await prisma.reportShareToken.update({
+      shareToken = await shareRepo.updateToken({
         where: { id: shareToken.id },
         data: { isFinancialDataHidden: hideFinancialData },
       });
     }
 
     if (!shareToken) {
-      shareToken = await prisma.reportShareToken.create({
+      shareToken = await shareRepo.createToken({
         data: {
           analysisId: analysisId,
           category: analysis.type,

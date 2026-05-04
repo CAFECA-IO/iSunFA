@@ -1,6 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { shareRepo } from "@/repositories/share.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -19,7 +19,7 @@ export async function PATCH(
 
     const { analysisId, token } = await params;
 
-    const updated = await prisma.reportShareToken.update({
+    const updated = await shareRepo.updateToken({
       where: {
         token,
         analysisId,

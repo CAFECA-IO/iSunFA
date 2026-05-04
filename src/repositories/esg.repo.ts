@@ -59,6 +59,9 @@ export interface IEsgRepository {
   createEsgCoefficient(
     data: Prisma.CoefficientCreateInput,
   ): Promise<Coefficient>;
+  upsertEsgCoefficient(
+    args: Prisma.CoefficientUpsertArgs,
+  ): Promise<Coefficient>;
   countEsgCoefficients(where: Prisma.CoefficientWhereInput): Promise<number>;
   getEsgCoefficientById(id: string): Promise<Coefficient | null>;
   updateEsgCoefficient(
@@ -443,6 +446,10 @@ export class EsgRepository implements IEsgRepository {
 
   async createEsgCoefficient(data: Prisma.CoefficientCreateInput) {
     return prisma.coefficient.create({ data });
+  }
+
+  async upsertEsgCoefficient(args: Prisma.CoefficientUpsertArgs) {
+    return prisma.coefficient.upsert(args);
   }
 
   async getEsgCoefficients(args: Prisma.CoefficientFindManyArgs) {

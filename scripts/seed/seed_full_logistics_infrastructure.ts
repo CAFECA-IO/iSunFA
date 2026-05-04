@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { infrastructureRepo } from "@/repositories/infrastructure.repo";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -76,35 +76,29 @@ export async function seedLogisticsInfrastructure(dataDir: string) {
     let processed = 0;
 
     for (const chunk of portChunks) {
-      const values = chunk
-        .map((f: GeoJSON.Feature) => {
-          const id = f.properties?.port.replace(/'/g, "''");
-          const name = (f.properties?.name || "Unknown").replace(/'/g, "''");
-          const country = (f.properties?.cty || "Unknown").replace(/'/g, "''");
-          const size = "Medium"; // Info: (20260430 - Tzuhan) 預設 size
-          const lng = parseFloat(
-            (f.geometry as GeoJSON.Point).coordinates[0].toString(),
-          );
-          const lat = parseFloat(
-            (f.geometry as GeoJSON.Point).coordinates[1].toString(),
-          );
-          return `('${id}', '${name}', '${country}', '${size}', ${lat}, ${lng}, NOW())`;
-        })
-        .join(",");
+      const promises = chunk.map((f: GeoJSON.Feature) => {
+        const id = f.properties?.port;
+        const name = f.properties?.name || "Unknown";
+        const country = f.properties?.cty || "Unknown";
+        const size = "Medium";
+        const lng = parseFloat(
+          (f.geometry as GeoJSON.Point).coordinates[0].toString(),
+        );
+        const lat = parseFloat(
+          (f.geometry as GeoJSON.Point).coordinates[1].toString(),
+        );
+        return infrastructureRepo.upsertSeaport({
+          id,
+          name,
+          country,
+          size,
+          lat,
+          lng,
+        });
+      });
 
-      if (values.length > 0) {
-        const query = `
-                    INSERT INTO seaports (id, name, country, size, lat, lng, updated_at)
-                    VALUES ${values}
-                    ON CONFLICT (id) DO UPDATE 
-                    SET name = EXCLUDED.name,
-                        country = EXCLUDED.country,
-                        size = EXCLUDED.size,
-                        lat = EXCLUDED.lat,
-                        lng = EXCLUDED.lng,
-                        updated_at = NOW();
-                `;
-        await prisma.$executeRawUnsafe(query);
+      if (promises.length > 0) {
+        await Promise.all(promises);
       }
       processed += chunk.length;
       process.stdout.write(`\r⚓ 進度: ${processed} / ${uniquePorts.length}`);
@@ -181,41 +175,35 @@ export async function seedLogisticsInfrastructure(dataDir: string) {
     let processed = 0;
 
     for (const chunk of airportChunks) {
-      const values = chunk
-        .map(
-          (a: {
-            id: string;
-            iata_code: string;
-            name: string;
-            country: string;
-            size: string;
-            lat: number;
-            lng: number;
-          }) => {
-            const id = a.id.replace(/'/g, "''").substring(0, 50);
-            const iata = a.iata_code.replace(/'/g, "''").substring(0, 10);
-            const name = a.name.replace(/'/g, "''").substring(0, 200);
-            const country = a.country.replace(/'/g, "''").substring(0, 10);
-            const size = a.size.replace(/'/g, "''").substring(0, 50);
-            return `('${id}', '${iata}', '${name}', '${country}', '${size}', ${a.lat}, ${a.lng}, NOW())`;
-          },
-        )
-        .join(",");
+      const promises = chunk.map(
+        (a: {
+          id: string;
+          iata_code: string;
+          name: string;
+          country: string;
+          size: string;
+          lat: number;
+          lng: number;
+        }) => {
+          const id = a.id.substring(0, 50);
+          const iataCode = a.iata_code.substring(0, 10);
+          const name = a.name.substring(0, 200);
+          const country = a.country.substring(0, 10);
+          const size = a.size.substring(0, 50);
+          return infrastructureRepo.upsertAirport({
+            id,
+            iataCode,
+            name,
+            country,
+            size,
+            lat: a.lat,
+            lng: a.lng,
+          });
+        },
+      );
 
-      if (values.length > 0) {
-        const query = `
-                    INSERT INTO airports (id, iata_code, name, country, size, lat, lng, updated_at)
-                    VALUES ${values}
-                    ON CONFLICT (id) DO UPDATE 
-                    SET iata_code = EXCLUDED.iata_code,
-                        name = EXCLUDED.name,
-                        country = EXCLUDED.country,
-                        size = EXCLUDED.size,
-                        lat = EXCLUDED.lat,
-                        lng = EXCLUDED.lng,
-                        updated_at = NOW();
-                `;
-        await prisma.$executeRawUnsafe(query);
+      if (promises.length > 0) {
+        await Promise.all(promises);
       }
       processed += chunk.length;
       process.stdout.write(

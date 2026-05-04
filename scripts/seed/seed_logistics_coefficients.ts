@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { esgRepo } from "@/repositories/esg.repo";
 
 export const logisticsCoefficients = [
   // Info: (20260430 - Tzuhan) --- 陸運 (Road Freight) ---
@@ -67,7 +67,7 @@ export const logisticsCoefficients = [
 export async function seedLogisticsCoefficients() {
   console.log("🌱 Starting to seed logistics emission coefficients...");
   for (const coef of logisticsCoefficients) {
-    await prisma.coefficient.upsert({
+    await esgRepo.upsertEsgCoefficient({
       where: { id: coef.id },
       update: {
         name: coef.name,

@@ -2,6 +2,7 @@ import { ITaskSkill } from "@/skills/types";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
+import { SchemaType, Schema } from "@google/generative-ai";
 
 export class VoucherLinesParsingSkill implements ITaskSkill {
   name = "VOUCHER_LINES_PARSING";
@@ -38,15 +39,42 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
     }
 
     try {
-      const text = await chatService.generateRawWithImages(promptText, images);
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.stringify({ data: JSON.parse(jsonMatch[0]) });
-      }
-      return JSON.stringify({
-        data: null,
-        error: "無法從 AI 回應中解析出有效的 JSON 格式",
-      });
+      const responseSchema: Schema = {
+        type: SchemaType.OBJECT,
+        properties: {
+          lines: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                accountingCode: {
+                  type: SchemaType.STRING,
+                  description: "會計科目代碼",
+                },
+                particular: {
+                  type: SchemaType.STRING,
+                  description: "摘要說明",
+                },
+                amount: { type: SchemaType.NUMBER, description: "金額" },
+                isDebit: {
+                  type: SchemaType.BOOLEAN,
+                  description: "是否為借方",
+                },
+              },
+              required: ["accountingCode", "particular", "amount", "isDebit"],
+            },
+          },
+        },
+        required: ["lines"],
+      };
+
+      const text = await chatService.generateRawWithImages(
+        promptText,
+        images,
+        true,
+        responseSchema,
+      );
+      return JSON.stringify({ data: JSON.parse(text) });
     } catch (error) {
       console.error("[VoucherLinesParsingSkill] Error:", error);
       return JSON.stringify({
