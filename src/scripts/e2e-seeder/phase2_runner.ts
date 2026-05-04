@@ -7,6 +7,7 @@ import { ChatService } from "@/services/chat.service";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { config } from "dotenv";
 import sharp from "sharp";
+import { Role } from "@/generated";
 
 config();
 
@@ -70,15 +71,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
   console.log(`======================================================`);
 
   // Info: (20260504 - Tzuhan) 1. 建立測試用的模擬資料庫實體
-  // Info: (20260503 - Tzuhan) 優先使用環境變數指定的 USER_ID，否則自動抓資料庫中第一位使用者（讓每個開發者的本地環境都能通用）
-  const envUserId = process.env.E2E_USER_ID;
-  let user = envUserId
-    ? await prisma.user.findUnique({ where: { id: envUserId } })
-    : null;
-
-  if (!user) {
-    user = await prisma.user.findFirst();
-  }
+  let user = await prisma.user.findFirst({ where: { role: Role.USER } });
 
   // Info: (20260503 - Tzuhan) 如果資料庫是空的 (CI/CD 環境)，則建立預設測試帳號
   if (!user) {
@@ -227,8 +220,8 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
 - 6161: 水電瓦斯費 (營業費用)
 - 6213: 交通費/公務車燃油費 (營業費用)
 - 6288: 其他管理費用 (營業費用)
-- 6184: 折舊費用 (營業費用)
-- 1521: 累計折舊 (資產抵銷)
+- 5110: 銷貨成本/製造費用折舊 (營業成本)
+- 1613: 累計折舊－房屋及建築 (資產抵銷)
 
 確保數字準確，借貸平衡，不可有任何 markdown 標籤或其餘文字，直接輸出 JSON 即可。`;
 

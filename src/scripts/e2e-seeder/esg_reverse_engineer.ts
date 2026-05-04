@@ -61,7 +61,11 @@ const findEsgValue = (
           (section.controls as Array<Record<string, unknown>>) || [];
         for (const control of controls) {
           if (control.code === codeToFind) {
-            const val = parseFloat(control.value as string);
+            let rawValue = String(control.value || "").replace(/,/g, "");
+            if (rawValue.startsWith("(") && rawValue.endsWith(")")) {
+              rawValue = "-" + rawValue.slice(1, -1);
+            }
+            const val = parseFloat(rawValue);
             return isNaN(val) ? new Prisma.Decimal(0) : new Prisma.Decimal(val);
           }
         }
