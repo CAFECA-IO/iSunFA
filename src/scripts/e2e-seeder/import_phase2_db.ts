@@ -17,7 +17,7 @@ export const importPhase2Db = async (stockId: string) => {
 
   const dumpData = JSON.parse(fs.readFileSync(dumpPath, "utf-8"));
 
-  // Ensure DB has the required entities
+  // Info: (20260504 - Tzuhan) 確保資料庫有必需的實體
   const company = await prisma.company.upsert({
     where: { stockId: `E2E-${stockId}` },
     update: {},
@@ -51,7 +51,7 @@ export const importPhase2Db = async (stockId: string) => {
     },
   });
 
-  // Restore Vouchers
+  // Info: (20260504 - Tzuhan) 還原傳票紀錄
   let voucherCount = 0;
   for (const v of dumpData.vouchers) {
     await prisma.voucher.create({
@@ -80,7 +80,7 @@ export const importPhase2Db = async (stockId: string) => {
     voucherCount++;
   }
 
-  // Restore ESG Records
+  // Info: (20260504 - Tzuhan) 還原 ESG 紀錄
   let esgCount = 0;
   for (const e of dumpData.esgRecords) {
     await prisma.esgRecord.create({
@@ -117,7 +117,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   const run = async () => {
     if (targetStock === "all") {
-      // Find all directories in data/ that contain db_dump_vouchers.json
+      // Info: (20260504 - Tzuhan) 尋找 data/ 內所有包含 db_dump_vouchers.json 的目錄
       const dataRoot = path.resolve(process.cwd(), "data");
       if (fs.existsSync(dataRoot)) {
         const dirs = fs.readdirSync(dataRoot);

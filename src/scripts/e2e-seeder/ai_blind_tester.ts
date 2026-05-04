@@ -19,7 +19,7 @@ export const runAiBlindTester = async (stockId: string) => {
 
   const accountBookId = `e2e-book-${stockId}`;
 
-  // 1. 取得帳簿與團隊資訊
+  // Info: (20260504 - Tzuhan) 1. 取得帳簿與團隊資訊
   const accountBook = await prisma.accountBook.findUnique({
     where: { id: accountBookId },
     include: { team: { include: { teamMembers: true } } },
@@ -34,9 +34,9 @@ export const runAiBlindTester = async (stockId: string) => {
 
   const userId = accountBook.team.teamMembers[0].userId;
 
-  // ==========================================
-  // 階段 1: JSON 數字報表防呆盲測 (ReportGenerator)
-  // ==========================================
+  // Info: (20260504 - Tzuhan) ==========================================
+  // Info: (20260504 - Tzuhan) 階段 1: JSON 數字報表防呆盲測 (ReportGenerator)
+  // Info: (20260504 - Tzuhan) ==========================================
   console.log(`\n==========================================`);
   console.log(`[STAGE 1] ReportGenerator JSON 報表防呆與數值盲測`);
   console.log(`==========================================`);
@@ -87,7 +87,7 @@ export const runAiBlindTester = async (stockId: string) => {
       `✅ [JSON 產出成功] ESG Report - 總碳排: ${esgReport.metrics.totalEmissions} kgCO2e`,
     );
 
-    // 基本防呆檢查 (有沒有產生 NaN 或非邏輯的 Undefined)
+    // Info: (20260504 - Tzuhan) 基本防呆檢查 (有沒有產生 NaN 或非邏輯的 Undefined)
     if (
       isNaN(bsReport.assets.total) ||
       isNaN(cfReport.summary.netIncreaseDecrease)
@@ -102,16 +102,16 @@ export const runAiBlindTester = async (stockId: string) => {
     console.error(`❌ [FAILED] JSON ReportGenerator 執行失敗:`, error);
   }
 
-  // ==========================================
-  // 階段 2: AI 解讀與診斷報告盲測 (AnalysisService)
-  // ==========================================
+  // Info: (20260504 - Tzuhan) ==========================================
+  // Info: (20260504 - Tzuhan) 階段 2: AI 解讀與診斷報告盲測 (AnalysisService)
+  // Info: (20260504 - Tzuhan) ==========================================
   console.log(`\n==========================================`);
   console.log(`[STAGE 2] AI 診斷與解讀報告抗幻覺盲測`);
   console.log(`==========================================`);
 
-  // 兩大核心產出與分析：
-  // 1. 三大財務報表與碳盤查 (AI 解讀報告)
-  // 2. 財務健康與合規異常診斷 (AI 診斷報告)
+  // Info: (20260504 - Tzuhan) 兩大核心產出與分析：
+  // Info: (20260504 - Tzuhan) 1. 三大財務報表與碳盤查 (AI 解讀報告)
+  // Info: (20260504 - Tzuhan) 2. 財務健康與合規異常診斷 (AI 診斷報告)
   const categoriesToTest = [
     { category: ANALYSIS_CATEGORY.BALANCE_SHEET, isExternal: false },
     { category: ANALYSIS_CATEGORY.CASH_FLOW, isExternal: false },
@@ -130,7 +130,7 @@ export const runAiBlindTester = async (stockId: string) => {
     console.log(`▶️ 正在生成分析報告: ${category} (External: ${isExternal})`);
 
     try {
-      // 模擬前端觸發 Analysis API
+      // Info: (20260504 - Tzuhan) 模擬前端觸發 Analysis API
       const generateResult = await analysisService.generateAnalysis(userId, {
         type: "ANALYSIS",
         data: {
@@ -146,16 +146,16 @@ export const runAiBlindTester = async (stockId: string) => {
 
       console.log(`✅ 成功派發任務:`, generateResult.data.reportId);
 
-      // 觸發 Task Worker，等待 AI 執行完成
+      // Info: (20260504 - Tzuhan) 觸發 Task Worker，等待 AI 執行完成
       console.log(`⏳ 等待 Mission Executor 處理任務中...`);
       await processNext();
 
-      // 取回剛建立的 Analysis Report ID (透過 DB)
+      // Info: (20260504 - Tzuhan) 取回剛建立的 Analysis Report ID (透過 DB)
       const report = await prisma.analysis.findFirst({
         where: { id: generateResult.data.reportId },
       });
 
-      // 取得最新 mission 的 result.md
+      // Info: (20260504 - Tzuhan) 取得最新 mission 的 result.md
       if (
         report &&
         report.data &&
@@ -174,19 +174,19 @@ export const runAiBlindTester = async (stockId: string) => {
           console.log(`\n📄 [報告摘錄 - ${category}]:`);
           console.log(resultMd.substring(0, 500) + "...\n(截斷)");
 
-          // ===============================
-          // Anti-Hallucination 幻覺盲測檢查
-          // ===============================
+          // Info: (20260504 - Tzuhan) ===============================
+          // Info: (20260504 - Tzuhan) Anti-Hallucination 幻覺盲測檢查
+          // Info: (20260504 - Tzuhan) ===============================
           console.log(`\n🛡️ 防幻覺盲測 (Anti-Hallucination Check):`);
           const isHallucinating = false;
 
-          // 1. 檢查 N/A 規則 (如果資料缺乏，AI 是否捏造)
-          // 根據 agent.md，如果缺乏基礎數據，應該要有 [💡缺乏基礎數據：沿用推估或留白 N/A] 或直接 N/A
-          // 如果是測試真實資料，因為我們確實有塞入財務與 ESG 數據，所以不一定出現 N/A。
-          // 但我們可以反向確保它有抓出正確的問題（例如流動性危機、碳鎖定風險）。
+          // Info: (20260504 - Tzuhan) 1. 檢查 N/A 規則 (如果資料缺乏，AI 是否捏造)
+          // Info: (20260504 - Tzuhan) 根據 agent.md，如果缺乏基礎數據，應該要有 [💡缺乏基礎數據：沿用推估或留白 N/A] 或直接 N/A
+          // Info: (20260504 - Tzuhan) 如果是測試真實資料，因為我們確實有塞入財務與 ESG 數據，所以不一定出現 N/A。
+          // Info: (20260504 - Tzuhan) 但我們可以反向確保它有抓出正確的問題（例如流動性危機、碳鎖定風險）。
 
           if (category === ANALYSIS_CATEGORY.FINANCIAL_HEALTH) {
-            // 應該要有提及現金流或 ROE 等字眼
+            // Info: (20260504 - Tzuhan) 應該要有提及現金流或 ROE 等字眼
             if (!resultMd.includes("ROE") && !resultMd.includes("現金")) {
               console.warn(
                 `[WARNING] Financial Health report seems to lack concrete metrics.`,
@@ -222,7 +222,7 @@ export const runAiBlindTester = async (stockId: string) => {
   console.log(`✅ 通過防幻覺檢驗: ${passedCount} / ${categoriesToTest.length}`);
 };
 
-// 如果是直接執行此腳本：
+// Info: (20260504 - Tzuhan) 如果是直接執行此腳本：
 if (import.meta.url === `file://${process.argv[1]}`) {
   const stockId = process.argv[2];
   if (!stockId) {

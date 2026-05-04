@@ -69,7 +69,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
   console.log(`🤖 [PHASE 2] AI Receipt Analysis Test for ${stockId}`);
   console.log(`======================================================`);
 
-  // 1. Create Mock DB Entities
+  // Info: (20260504 - Tzuhan) 1. 建立測試用的模擬資料庫實體
   // Info: (20260503 - Tzuhan) 優先使用環境變數指定的 USER_ID，否則自動抓資料庫中第一位使用者（讓每個開發者的本地環境都能通用）
   const envUserId = process.env.E2E_USER_ID;
   let user = envUserId
@@ -252,7 +252,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
       const extractedData = result.data;
       totalVoucherTested++;
 
-      // Evaluate logic: check if the expected amount matches
+      // Info: (20260504 - Tzuhan) 評估邏輯：檢查預期的金額是否相符
       const mainLine =
         groundTruthVoucher.lines.find((l) => l.debitAmount > 0) ||
         groundTruthVoucher.lines[0];
@@ -260,7 +260,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
         mainLine.debitAmount > 0 ? mainLine.debitAmount : mainLine.creditAmount;
       const expectedCode = mainLine.accountingCode;
 
-      // The AI returns `lines` array
+      // Info: (20260504 - Tzuhan) AI 應該回傳 `lines` 陣列
       const extractedLines = extractedData.lines || [];
       const isMatch = extractedLines.some(
         (l: IExtractedLine) =>
@@ -280,7 +280,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
         );
       }
 
-      // Persist to DB
+      // Info: (20260504 - Tzuhan) 寫入資料庫保存
       await prisma.voucher.create({
         data: {
           accountBookId: accountBook.id,
@@ -300,14 +300,14 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
         },
       });
 
-      // ============================================
-      // ESG Parsing
-      // ============================================
+      // Info: (20260504 - Tzuhan) ============================================
+      // Info: (20260504 - Tzuhan) ESG 碳排放解析
+      // Info: (20260504 - Tzuhan) ============================================
       const gtEsgRecords = groundTruthVoucher.lines.flatMap(
         (l) => l.esgRecords || [],
       );
-      // We only test ESG if there's actually an ESG ground truth, or if it's a random check
-      // For simplicity, let's test it for all and expect null if not ESG relevant
+      // Info: (20260504 - Tzuhan) 只有當具有 ESG 真實答案，或是隨機檢查時，我們才進行 ESG 測試
+      // Info: (20260504 - Tzuhan) 為求簡化，我們全部測試並預期若與 ESG 無關時回傳 null
 
       const esgTask: IPseudoTask = {
         ...task,
@@ -350,8 +350,8 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
 
       if (gtEsgRecords.length > 0) {
         totalEsgTested++;
-        // We expect scope1 or scope2
-        const expectedScope = gtEsgRecords[0].category.toUpperCase(); // "SCOPE1" -> "SCOPE_1" format logic
+        // Info: (20260504 - Tzuhan) 預期分類應為 scope1 或 scope2
+        const expectedScope = gtEsgRecords[0].category.toUpperCase(); // Info: (20260504 - Tzuhan) "SCOPE1" -> "SCOPE_1" 格式邏輯
         const formattedExpectedScope = expectedScope.includes("SCOPE1")
           ? "SCOPE_1"
           : "SCOPE_2";
@@ -372,7 +372,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
         );
       }
 
-      // Persist ESG
+      // Info: (20260504 - Tzuhan) 將 ESG 紀錄寫入資料庫
       await prisma.esgRecord.create({
         data: {
           accountBookId: accountBook.id,
@@ -392,7 +392,7 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
         },
       });
 
-      // Rate Limit Delay removed since user is on a paid Gemini tier
+      // Info: (20260504 - Tzuhan) 因為使用者已使用付費版 Gemini 方案，所以移除請求速率限制的延遲時間
     } catch (err: unknown) {
       if (err instanceof Error) {
         console.log(`⚠️ Exception: ${err.message}`);

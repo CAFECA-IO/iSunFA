@@ -93,9 +93,9 @@ export const generateFinancialVouchers = (stockId: string) => {
 
   const vouchers: ISimulatedVoucher[] = [];
 
-  // ============================================
+  // Info: (20260504 - Tzuhan) ============================================
   // Info: (20260502 - Tzuhan) 1. 產生銷貨收入傳票
-  // ============================================
+  // Info: (20260504 - Tzuhan) ============================================
   // Info: (20260502 - Tzuhan) 為了簡化，建立 12 張月度收入傳票，或是 50 張隨機傳票。
   const numSales = 50;
   const revenuePerSale = totalRevenue.div(numSales).floor().toNumber();
@@ -124,9 +124,9 @@ export const generateFinancialVouchers = (stockId: string) => {
     });
   }
 
-  // ============================================
+  // Info: (20260504 - Tzuhan) ============================================
   // Info: (20260502 - Tzuhan) 2. 產生營業費用：水電瓦斯費
-  // ============================================
+  // Info: (20260504 - Tzuhan) ============================================
   const numUtilities = 12; // Info: (20260502 - Tzuhan) 每月
   const utilityPerMonth = utilitiesAmount.div(numUtilities).floor().toNumber();
   for (let i = 0; i < numUtilities; i++) {
@@ -154,9 +154,9 @@ export const generateFinancialVouchers = (stockId: string) => {
     });
   }
 
-  // ============================================
+  // Info: (20260504 - Tzuhan) ============================================
   // Info: (20260502 - Tzuhan) 3. 產生營業費用：差旅費
-  // ============================================
+  // Info: (20260504 - Tzuhan) ============================================
   const numTravels = 20;
   const travelPerTrip = travelAmount.div(numTravels).floor().toNumber();
   for (let i = 0; i < numTravels; i++) {
@@ -184,9 +184,9 @@ export const generateFinancialVouchers = (stockId: string) => {
     });
   }
 
-  // ============================================
+  // Info: (20260504 - Tzuhan) ============================================
   // Info: (20260502 - Tzuhan) 4. 產生營業費用：其他費用
-  // ============================================
+  // Info: (20260504 - Tzuhan) ============================================
   const otherOpexVoucher: ISimulatedVoucher = {
     id: randomUUID(),
     tradingDate: "2024-12-31T00:00:00.000Z", // Info: (20260502 - Tzuhan) 測試用，簡化為年底加總
@@ -210,10 +210,10 @@ export const generateFinancialVouchers = (stockId: string) => {
   };
   vouchers.push(otherOpexVoucher);
 
-  // ============================================
+  // Info: (20260504 - Tzuhan) ============================================
   // Info: (20260502 - Tzuhan) 5. 期末調整：折舊
   // Info: (20260502 - Tzuhan) [優先級 0: 遺漏應計調整]
-  // ============================================
+  // Info: (20260504 - Tzuhan) ============================================
   if (depreciation.gt(0)) {
     const depreciationVoucher: ISimulatedVoucher = {
       id: randomUUID(),
@@ -223,14 +223,14 @@ export const generateFinancialVouchers = (stockId: string) => {
         {
           id: randomUUID(),
           description: "期末提列固定資產折舊",
-          accountingCode: "6184", // 折舊
+          accountingCode: "6184", // Info: (20260504 - Tzuhan) 折舊
           debitAmount: depreciation.toNumber(),
           creditAmount: 0,
         },
         {
           id: randomUUID(),
           description: "累計折舊增加",
-          accountingCode: "1521", // 累計折舊
+          accountingCode: "1521", // Info: (20260504 - Tzuhan) 累計折舊
           debitAmount: 0,
           creditAmount: depreciation.toNumber(),
         },
