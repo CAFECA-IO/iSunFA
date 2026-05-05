@@ -1,9 +1,24 @@
 import { prisma } from "@/lib/prisma";
-import { AuditLogDataType, Prisma } from "@/generated";
+import { AuditLogDataType, Prisma, AuditLog } from "@/generated";
 import { IAuditLogFilterOptions } from "@/interfaces/prisma_filter_option";
 import { AuditLogAction } from "@/constants/audit_log";
 
-export class AuditLogRepository {
+export interface IAuditLogRepository {
+  createAuditLog(data: Prisma.AuditLogUncheckedCreateInput): Promise<AuditLog>;
+  createManyAuditLogs(
+    data: Prisma.AuditLogCreateManyInput[],
+  ): Promise<Prisma.BatchPayload>;
+  getAuditLogs(
+    options: IAuditLogFilterOptions,
+  ): Promise<
+    Prisma.AuditLogGetPayload<{
+      include: { user: { select: { id: true; name: true; address: true } } };
+    }>[]
+  >;
+  countAuditLogs(options: IAuditLogFilterOptions): Promise<number>;
+}
+
+export class AuditLogRepository implements IAuditLogRepository {
   async createAuditLog(data: Prisma.AuditLogUncheckedCreateInput) {
     return prisma.auditLog.create({ data });
   }

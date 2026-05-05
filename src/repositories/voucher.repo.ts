@@ -51,6 +51,7 @@ export interface IVoucherRepository {
     duplicateId?: string;
     duplicateType?: "VOUCHER" | "JOURNAL";
   }>;
+  findManyVouchers(args: Prisma.VoucherFindManyArgs): Promise<Voucher[]>;
 }
 
 export class VoucherRepository implements IVoucherRepository {

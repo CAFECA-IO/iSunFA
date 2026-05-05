@@ -114,6 +114,16 @@ export interface IEsgRepository {
     data: Prisma.EmissionSourceUpdateInput,
   ): Promise<IEmissionSources | null>;
   deleteEsgEmissionSources(id: string): Promise<{ id: string } | null>;
+  verifyAllEsgRecords(accountBookId: string): Promise<Prisma.BatchPayload>;
+  findManyEsgRecords(args: Prisma.EsgRecordFindManyArgs): Promise<EsgRecord[]>;
+  getEsgSummary(
+    accountBookId: string,
+    year?: string,
+    month?: string,
+  ): Promise<IEsgDashboardSummary>;
+  getEsgEmissionSourcesSummary(
+    accountBookId: string,
+  ): Promise<IEsgEmissionSourcesSummary>;
 }
 
 export class EsgRepository implements IEsgRepository {

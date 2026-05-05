@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/generated";
+import { Prisma, Journal } from "@/generated";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { IJournalFilterOptions } from "@/interfaces/prisma_filter_option";
 import { VerifyStatus } from "@/constants/verify_status";
@@ -12,7 +12,38 @@ type JournalWithRelations = Prisma.JournalGetPayload<{
   esgRecordId?: string;
 };
 
-export class JournalRepository {
+export interface IJournalRepository {
+  createJournal(data: Prisma.JournalUncheckedCreateInput): Promise<Journal>;
+  countJournals(where: Prisma.JournalWhereInput): Promise<number>;
+  getJournalsByFilter(
+    options: IJournalFilterOptions,
+  ): Promise<JournalWithRelations[]>;
+  countJournalsByFilter(options: IJournalFilterOptions): Promise<number>;
+  getJournals(
+    args: Prisma.JournalFindManyArgs,
+  ): Promise<JournalWithRelations[]>;
+  getJournalById(id: string): Promise<JournalWithRelations | null>;
+  updateJournal(
+    id: string,
+    data: Prisma.JournalUpdateInput,
+  ): Promise<JournalWithRelations>;
+  deleteJournal(id: string): Promise<Journal>;
+  verifyAllJournals(accountBookId: string): Promise<Prisma.BatchPayload>;
+  getJournalSummary(
+    accountBookId: string,
+  ): Promise<{
+    todayJournalCount: number;
+    pendingJournalCount: number;
+    aiAverageConfidence: number;
+  }>;
+  updateManyJournalsByFile(
+    fileId: string,
+    accountBookId: string,
+    data: Prisma.JournalUpdateInput,
+  ): Promise<Prisma.BatchPayload>;
+}
+
+export class JournalRepository implements IJournalRepository {
   async createJournal(data: Prisma.JournalUncheckedCreateInput) {
     return prisma.journal.create({ data });
   }
