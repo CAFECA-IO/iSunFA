@@ -24,6 +24,7 @@ export interface IVoucherLine {
 
 export interface IVoucherLineUI {
   id: string;
+  accountingCode: string;
   accounting: IAccount | null;
   particular: string;
   amount: number;

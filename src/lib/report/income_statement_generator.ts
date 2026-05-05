@@ -20,40 +20,40 @@ export function generateIncomeStatement(
   let interestExpense = 0;
 
   lineItems.forEach((line) => {
-    // Info: (20260330 - Julian) 確保有會計科目且借貸方有值
-    if (!line.accounting || line.isDebit === null) return;
+    const code = line.accountingCode || line.accounting?.code;
+    if (!code || line.isDebit === null) return;
 
-    // Info: (20260331 - Julian) 解構
-    const {
-      accounting: { code, name },
-      isDebit,
-      amount,
-    } = line;
+    const name = line.accounting?.name || line.particular || code;
+    const { isDebit, amount } = line;
 
-    // Info: (20260330 - Julian) 只處理損益表科目（4 ~ 9 開頭）
+    // Info: (20260504 - Tzuhan) ⚠️修復：改由備抵資產 (Contra-Asset) 的變動來精準捕捉折舊攤銷，完全捨棄中文關鍵字比對
+    if (
+      code.startsWith("15") ||
+      code.startsWith("16") ||
+      code.startsWith("17") ||
+      code.startsWith("18") ||
+      code.startsWith("19")
+    ) {
+      if (line.accounting && !line.accounting.isDebit) {
+        if (!isDebit) {
+          // Info: (20260504 - Tzuhan) 貸方增加代表提列折舊/攤銷
+          depreciationAndAmortization += amount;
+        }
+      }
+    }
+
+    // Info: (20260330 - Julian) 只處理損益表科目（4 ~ 9 開頭）來做後續分類
     if (!code.match(/^[456789]/)) return;
 
     const isRevenue = code.startsWith("4");
     const isCOGS = code.startsWith("5");
     const isOpex = code.startsWith("6");
-    const isTax =
-      code.startsWith("8") || code.startsWith("9") || name.includes("所得稅");
-    // Info: (20260330 - Julian) 「非營業收支」通常是 7 開頭；若 8 或 9 不是所得稅，也可能歸為「非營業」
-    const isNonOp =
-      code.startsWith("7") ||
-      (!isTax && (code.startsWith("8") || code.startsWith("9")));
+    const isTax = code.startsWith("79");
+    // Info: (20260504 - Tzuhan) ⚠️修復邏輯短路：真正的非營業收支是 7 與 8，移除 9 (9 為其他綜合損益 OCI)
+    const isNonOp = code.startsWith("7") || code.startsWith("8");
 
-    // Info: (20260330 - Julian) 提取「折舊」與「攤銷」用於 EBITDA 計算
-    if (
-      (isCOGS || isOpex || isNonOp) &&
-      (name.includes("折舊") || name.includes("攤銷"))
-    ) {
-      // Info: (20260330 - Julian) 折舊/攤銷是費用，借方增加 => 借方為正
-      depreciationAndAmortization += isDebit ? amount : -amount;
-    }
-
-    // Info: (20260330 - Julian) 提取「利息費用」用於「利息保障倍數」計算
-    if (isNonOp && name.includes("利息費用")) {
+    // Info: (20260504 - Tzuhan) ⚠️修復：不再用中文「利息費用」判斷，改以標準代碼 (7510 利息費用, 7050 財務成本)
+    if (isNonOp && (code.startsWith("751") || code.startsWith("705"))) {
       // Info: (20260330 - Julian) 利息是費用，借方增加 => 借方為正
       interestExpense += isDebit ? amount : -amount;
     }
@@ -141,7 +141,7 @@ export function generateIncomeStatement(
     ebitdaMargin: safeDivide(ebitda, totalRevenue) * 100,
     operatingExpenseRatio: safeDivide(totalOpex, totalRevenue) * 100,
     nonOperatingIncomeRatio: safeDivide(totalNonOp, totalRevenue) * 100,
-    interestCoverageRatio: safeDivide(operatingIncome, interestExpense),
+    interestCoverageRatio: safeDivide(operatingIncome, interestExpense, null),
     eps: 0, // TODO: (20260330 - Julian) 外部資料，目前預設為 0
     taxRate: safeDivide(totalTax, incomeBeforeTax) * 100,
   };
