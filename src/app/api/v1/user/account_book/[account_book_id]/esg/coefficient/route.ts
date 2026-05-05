@@ -11,7 +11,6 @@ import {
   ICoefficient,
   ICoefficientInput,
 } from "@/interfaces/coefficient";
-import { Prisma } from "@/generated";
 import {
   TRUE_COEFFICIENT_DATA_PART_1,
   TRUE_COEFFICIENT_DATA_PART_2,
@@ -26,6 +25,7 @@ import {
   TRUE_COEFFICIENT_DATA_DEFRA_PART_6,
   TRUE_COEFFICIENT_DATA_TAIWAN,
 } from "@/constants/true_esg_coefficients";
+import { ICoefficientFilterOptions } from "@/interfaces/prisma_filter_option";
 
 /**
  * Info: (20260413 - Julian) 新增自訂係數
@@ -138,49 +138,18 @@ export async function GET(
     const unitParam = searchParams.get("unit");
 
     // Info: (20260414 - Julian) 篩選條件
-    const andConditions: Prisma.CoefficientWhereInput[] = [];
-
-    // Info: (20260413 - Julian) 排除已刪除的係數
-    andConditions.push({ deletedAt: null });
-
-    // Info: (20260414 - Julian) 依據 tab 篩選係數
-    if (tabParam === CoefficientCategory.STANDARD) {
-      // Info: (20260414 - Julian) 無 accountBookId => 標準係數
-      andConditions.push({ accountBookId: null });
-    } else if (tabParam === CoefficientCategory.CUSTOM) {
-      // Info: (20260414 - Julian) 有 accountBookId => 自訂係數
-      andConditions.push({ accountBookId: { not: null } });
-    }
-
-    // Info: (20260414 - Julian) 搜尋字串過濾邏輯（名稱、描述、來源的模糊搜尋）
-    if (searchParam) {
-      andConditions.push({
-        OR: [
-          { name: { contains: searchParam, mode: "insensitive" } },
-          { description: { contains: searchParam, mode: "insensitive" } },
-          { source: { contains: searchParam, mode: "insensitive" } },
-        ],
-      });
-    }
-
-    // Info: (20260416 - Julian) 單位過濾邏輯（模糊搜尋）
-    if (unitParam) {
-      andConditions.push({
-        unit: { contains: unitParam, mode: "insensitive" },
-      });
-    }
+    const options: ICoefficientFilterOptions = {
+      accountBookId,
+      tab: tabParam,
+      keyword: searchParam,
+      unit: unitParam,
+      page,
+      limit: pageSize,
+    };
 
     const [coefficients, totalCount] = await Promise.all([
-      esgRepo.getEsgCoefficients({
-        where: { AND: andConditions },
-        // Info: (20260413 - Julian) 分頁邏輯
-        ...(page && pageSize
-          ? { skip: (page - 1) * pageSize, take: pageSize }
-          : {}),
-        // Info: (20260413 - Julian) 排序邏輯：將標準係數排在前面，並依據更新時間倒序排列
-        orderBy: [{ accountBookId: "desc" }, { updatedAt: "desc" }],
-      }),
-      esgRepo.countEsgCoefficients({ AND: andConditions }),
+      esgRepo.getEsgCoefficientsByFilter(options),
+      esgRepo.countEsgCoefficientsByFilter(options),
     ]);
 
     const dataFromDatabase: ICoefficient[] = coefficients.map(

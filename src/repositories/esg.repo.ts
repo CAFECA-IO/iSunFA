@@ -19,6 +19,8 @@ import {
 } from "@/interfaces/emission_sources";
 import { EsgIntensity } from "@/interfaces/esg";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
+import { CoefficientCategory } from "@/interfaces/coefficient";
+import { ICoefficientFilterOptions } from "@/interfaces/prisma_filter_option";
 
 export type EsgRecordWithRelations = Prisma.EsgRecordGetPayload<{
   include: { file: true; coefficient: true; emissionSource: true };
@@ -72,6 +74,12 @@ export interface IEsgRepository {
   getEsgCoefficients(
     args: Prisma.CoefficientFindManyArgs,
   ): Promise<Coefficient[]>;
+  getEsgCoefficientsByFilter(
+    options: ICoefficientFilterOptions,
+  ): Promise<Coefficient[]>;
+  countEsgCoefficientsByFilter(
+    options: ICoefficientFilterOptions,
+  ): Promise<number>;
   getEsgEmissionSources(
     accountBookId: string,
     keyword: string,
@@ -450,6 +458,62 @@ export class EsgRepository implements IEsgRepository {
 
   async upsertEsgCoefficient(args: Prisma.CoefficientUpsertArgs) {
     return prisma.coefficient.upsert(args);
+  }
+
+  private buildCoefficientWhereClause(
+    options: ICoefficientFilterOptions,
+  ): Prisma.CoefficientWhereInput {
+    const andConditions: Prisma.CoefficientWhereInput[] = [];
+
+    // Info: (20260413 - Julian) 排除已刪除的係數
+    andConditions.push({ deletedAt: null });
+
+    // Info: (20260414 - Julian) 依據 tab 篩選係數
+    if (options.tab === CoefficientCategory.STANDARD) {
+      // Info: (20260414 - Julian) 無 accountBookId => 標準係數
+      andConditions.push({ accountBookId: null });
+    } else if (options.tab === CoefficientCategory.CUSTOM) {
+      // Info: (20260414 - Julian) 有 accountBookId => 自訂係數
+      andConditions.push({ accountBookId: { not: null } });
+    }
+
+    // Info: (20260414 - Julian) 搜尋字串過濾邏輯（名稱、描述、來源的模糊搜尋）
+    if (options.keyword) {
+      andConditions.push({
+        OR: [
+          { name: { contains: options.keyword, mode: "insensitive" } },
+          { description: { contains: options.keyword, mode: "insensitive" } },
+          { source: { contains: options.keyword, mode: "insensitive" } },
+        ],
+      });
+    }
+
+    // Info: (20260416 - Julian) 單位過濾邏輯（模糊搜尋）
+    if (options.unit) {
+      andConditions.push({
+        unit: { contains: options.unit, mode: "insensitive" },
+      });
+    }
+
+    return { AND: andConditions };
+  }
+
+  async getEsgCoefficientsByFilter(options: ICoefficientFilterOptions) {
+    const where = this.buildCoefficientWhereClause(options);
+
+    return prisma.coefficient.findMany({
+      where,
+      ...(options.page && options.limit
+        ? { skip: (options.page - 1) * options.limit, take: options.limit }
+        : {}),
+      orderBy: [{ accountBookId: "desc" }, { updatedAt: "desc" }],
+      include: { accountBook: true },
+    });
+  }
+
+  async countEsgCoefficientsByFilter(options: ICoefficientFilterOptions) {
+    const where = this.buildCoefficientWhereClause(options);
+    return prisma.coefficient.count({ where });
   }
 
   async getEsgCoefficients(args: Prisma.CoefficientFindManyArgs) {

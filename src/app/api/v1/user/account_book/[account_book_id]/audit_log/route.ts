@@ -4,10 +4,9 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { AuditLogDataType } from "@/generated";
-import { Prisma } from "@/generated";
 import { IAuditLog } from "@/interfaces/audit_log";
-import { AuditLogAction } from "@/constants/audit_log";
+import { IAuditLogFilterOptions } from "@/interfaces/prisma_filter_option";
+import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
 
 /**
  * Info: (20260306 - Julian) 取得日記帳的異動紀錄
@@ -39,7 +38,6 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "20", 10);
-    const skip = (page - 1) * limit;
 
     const keyword = searchParams.get("keyword");
     const actionType = searchParams.get("actionType") as AuditLogAction;
@@ -47,57 +45,20 @@ export async function GET(
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    const where: Prisma.AuditLogWhereInput = {
+    const options: IAuditLogFilterOptions = {
       accountBookId: accountBook.id,
+      keyword,
+      actionType,
+      dataType,
+      startDate,
+      endDate,
+      page,
+      limit,
     };
 
-    // Info: (20260429 - Julian) 篩選關鍵字：可查詢 Log ID、操作人員的名稱和地址
-    if (keyword) {
-      where.OR = [
-        { dataId: { contains: keyword } },
-        { user: { name: { contains: keyword } } },
-        { user: { address: { contains: keyword } } },
-      ];
-    }
-
-    // Info: (20260429 - Julian) 篩選動作類型
-    if (actionType) {
-      where.action = actionType;
-    }
-
-    // Info: (20260407 - Julian) 篩選資料類型
-    if (dataType) {
-      where.dataType = dataType;
-    }
-
-    // Info: (20260407 - Julian) 篩選時間區間
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) {
-        where.createdAt.gte = new Date(startDate);
-      }
-      if (endDate) {
-        where.createdAt.lte = new Date(endDate);
-      }
-    }
-
     const [totalItems, logs] = await Promise.all([
-      auditLogRepo.countAuditLogs(where),
-      auditLogRepo.getAuditLogs({
-        where,
-        orderBy: { createdAt: "desc" },
-        skip,
-        take: limit,
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              address: true,
-            },
-          },
-        },
-      }),
+      auditLogRepo.countAuditLogs(options),
+      auditLogRepo.getAuditLogs(options),
     ]);
 
     const totalPages = Math.ceil(totalItems / limit);
@@ -107,7 +68,7 @@ export async function GET(
       return {
         id: log.id,
         action: log.action as AuditLogAction,
-        dataType: log.dataType as AuditLogDataType,
+        dataType: log.dataType,
         dataId: log.dataId,
         user: {
           id: log.user.id,
