@@ -15,13 +15,13 @@ export const runPipeline = async (
   );
 
   try {
-    console.log("\n[1/5] Running AI Vision Extractor...");
+    console.log("\n[1/6] Running AI Vision Extractor...");
     await extractContextFromPdf(stockId);
 
-    console.log("\n[2/5] Running Financial Reverse Engineer...");
+    console.log("\n[2/6] Running Financial Reverse Engineer...");
     generateFinancialVouchers(stockId);
 
-    console.log("\n[3/5] Running ESG Reverse Engineer...");
+    console.log("\n[3/6] Running ESG Reverse Engineer...");
     generateEsgRecords(stockId);
 
     if (!skipImages) {

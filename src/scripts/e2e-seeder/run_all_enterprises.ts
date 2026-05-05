@@ -3,9 +3,13 @@ import * as path from "path";
 import { runPipeline } from "@/scripts/e2e-seeder/run_pipeline";
 import pLimit from "p-limit";
 
-export const runScaleTest = async () => {
+export const runScaleTest = async (
+  shouldClean: boolean = false,
+  skipImages: boolean = false,
+) => {
   console.log(`\n======================================================`);
   console.log(`🏢 [ENTERPRISE SCALING] Batch E2E Seeder Initialization`);
+  console.log(`Flags: --clean=${shouldClean}, --skip-images=${skipImages}`);
   console.log(`======================================================\n`);
 
   const dataDir = path.resolve(process.cwd(), "data");
@@ -54,7 +58,7 @@ export const runScaleTest = async () => {
       }
 
       try {
-        await runPipeline(stockId);
+        await runPipeline(stockId, shouldClean, skipImages);
         results[stockId] = "PASSED";
       } catch {
         console.error(
@@ -80,7 +84,10 @@ export const runScaleTest = async () => {
 
 // Info: (20260502 - Tzuhan) 如果直接執行此腳本
 if (import.meta.url === `file://${process.argv[1]}`) {
-  runScaleTest().catch((err) => {
+  const shouldClean = process.argv.includes("--clean");
+  const skipImages = process.argv.includes("--skip-images");
+
+  runScaleTest(shouldClean, skipImages).catch((err) => {
     console.error("Batch execution failed:", err);
     process.exit(1);
   });
