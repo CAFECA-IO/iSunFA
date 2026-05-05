@@ -10,8 +10,9 @@
  */
 import fs from "fs";
 import path from "path";
-import { prisma } from "../src/lib/prisma";
-import { runCrossValidation } from "../src/scripts/e2e-seeder/cross_validator";
+import { prisma } from "@/lib/prisma";
+import { Prisma, EsgScope, AIAnalysisStatus } from "@/generated";
+import { runCrossValidation } from "@/scripts/e2e-seeder/cross_validator";
 
 interface ISimulatedLine {
   id: string;
@@ -19,6 +20,7 @@ interface ISimulatedLine {
   accountingCode: string;
   debitAmount: number;
   creditAmount: number;
+  esgRecords?: ISimulatedEsg[];
 }
 
 interface ISimulatedEsg {
@@ -95,22 +97,34 @@ async function fastVerify(stockId: string) {
     }));
     await prisma.voucherLine.createMany({ data: lineData });
 
-    if (v.esgRecords && v.esgRecords.length > 0) {
-      const esgData = v.esgRecords.map((e: ISimulatedEsg) => ({
-        id: e.id,
-        accountBookId,
-        voucherId: createdVoucher.id,
-        tradingDate: new Date(v.tradingDate),
-        scope: e.category.toUpperCase() || "SCOPE_3",
-        activityType: e.source || "Unknown",
-        vendor: "Test Vendor",
-        amount: e.metricAmount || 0,
-        unit: e.metricUnit || "kg",
-        emissions: e.carbonAmount || 0,
-        confidence: 100,
-        analysisStatus: "COMPLETED",
-        isVerified: true,
-      }));
+    const esgData: Prisma.EsgRecordCreateManyInput[] = [];
+    v.lines.forEach((l: ISimulatedLine) => {
+      if (l.esgRecords && l.esgRecords.length > 0) {
+        l.esgRecords.forEach((e: ISimulatedEsg) => {
+          let formattedScope: EsgScope = EsgScope.SCOPE_3;
+          if (e.category.includes("scope1")) formattedScope = EsgScope.SCOPE_1;
+          if (e.category.includes("scope2")) formattedScope = EsgScope.SCOPE_2;
+          if (e.category.includes("scope3")) formattedScope = EsgScope.SCOPE_3;
+
+          esgData.push({
+            id: e.id,
+            accountBookId,
+            tradingDate: new Date(v.tradingDate),
+            scope: formattedScope,
+            activityType: e.source || "Unknown",
+            vendor: "Test Vendor",
+            amount: e.metricAmount || 0,
+            unit: e.metricUnit || "kg",
+            emissions: e.carbonAmount || 0,
+            confidence: 100,
+            analysisStatus: AIAnalysisStatus.COMPLETED,
+            isVerified: true,
+          });
+        });
+      }
+    });
+
+    if (esgData.length > 0) {
       await prisma.esgRecord.createMany({ data: esgData });
     }
   }

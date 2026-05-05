@@ -108,7 +108,7 @@ export const generateFinancialVouchers = (stockId: string) => {
         {
           id: randomUUID(),
           description: "日常銷貨收款",
-          accountingCode: "1111", // Info: (20260502 - Tzuhan) 現金
+          accountingCode: "1100", // Info: (20260502 - Tzuhan) 現金
           debitAmount: revenuePerSale,
           creditAmount: 0,
           vendor: contextCache.financial.top3Customers?.[0] || "國際主力客戶",
@@ -138,7 +138,7 @@ export const generateFinancialVouchers = (stockId: string) => {
         {
           id: randomUUID(),
           description: "當月水電瓦斯費",
-          accountingCode: "6161", // Info: (20260502 - Tzuhan) 水電瓦斯費
+          accountingCode: "6288", // Info: (20260502 - Tzuhan) 水電瓦斯費 (改用其他管理費用)
           debitAmount: utilityPerMonth,
           creditAmount: 0,
           vendor: "台灣電力公司",
@@ -146,7 +146,7 @@ export const generateFinancialVouchers = (stockId: string) => {
         {
           id: randomUUID(),
           description: "支付水電瓦斯費",
-          accountingCode: "1111", // Info: (20260502 - Tzuhan) 現金
+          accountingCode: "1100", // Info: (20260502 - Tzuhan) 現金
           debitAmount: 0,
           creditAmount: utilityPerMonth,
         },
@@ -176,7 +176,7 @@ export const generateFinancialVouchers = (stockId: string) => {
         {
           id: randomUUID(),
           description: "支付差旅費",
-          accountingCode: "1111", // Info: (20260502 - Tzuhan) 現金
+          accountingCode: "1100", // Info: (20260502 - Tzuhan) 現金
           debitAmount: 0,
           creditAmount: travelPerTrip,
         },
@@ -202,7 +202,7 @@ export const generateFinancialVouchers = (stockId: string) => {
       {
         id: randomUUID(),
         description: "支付其他營業費用",
-        accountingCode: "1111",
+        accountingCode: "1100",
         debitAmount: 0,
         creditAmount: otherOpexAmount.floor().toNumber(),
       },

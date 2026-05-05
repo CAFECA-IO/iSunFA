@@ -119,9 +119,9 @@ export const generateEsgRecords = (stockId: string) => {
   const waterTarget = findEsgValue(esgData, "waterConsumed");
   const wasteTarget = findEsgValue(esgData, "nonHazardousWaste");
 
-  // Info: (20260502 - Tzuhan) 2. 將範疇二 (電力) 映射至水電費傳票 (代碼 6161)
+  // Info: (20260502 - Tzuhan) 2. 將範疇二 (電力) 映射至水電費傳票 (代碼 6288)
   const utilityLines = vouchers.flatMap((v) =>
-    v.lines.filter((l) => l.accountingCode === "6161" && l.debitAmount > 0),
+    v.lines.filter((l) => l.accountingCode === "6288" && l.debitAmount > 0),
   );
 
   if (utilityLines.length > 0 && scope2Target.gt(0)) {

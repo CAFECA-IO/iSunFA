@@ -36,15 +36,11 @@ export function generateCashFlowStatement(
   let currentLiabilitiesTotal = 0;
 
   lineItems.forEach((line) => {
-    // Info: (20260331 - Julian) 確保有會計科目且借貸方有值
-    if (!line.accounting || line.isDebit === null) return;
+    const code = line.accountingCode || line.accounting?.code;
+    if (!code || line.isDebit === null) return;
 
-    // Info: (20260331 - Julian) 解構
-    const {
-      accounting: { code, name },
-      isDebit,
-      amount,
-    } = line;
+    const name = line.accounting?.name || line.particular || code;
+    const { isDebit, amount } = line;
 
     /* Info: (20260330 - Julian)
      * 1. 資產增加(借方)代表現金流出，減少(貸方)代表現金流入
@@ -110,7 +106,7 @@ export function generateCashFlowStatement(
       code.startsWith("19")
     ) {
       // Info: (20260504 - Tzuhan) ⚠️修復：改由備抵資產 (Contra-Asset) 的變動來精準捕捉折舊攤銷，完全捨棄中文關鍵字比對
-      if (!line.accounting.isDebit) {
+      if (line.accounting && !line.accounting.isDebit) {
         if (!isDebit) {
           // 貸方增加代表提列折舊/攤銷，加回淨利
           depreciationAndAmortization += amount;

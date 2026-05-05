@@ -229,6 +229,7 @@ export default function VoucherDetailModal({
       ...prev,
       {
         id: `row-${Date.now()}`,
+        accountingCode: "",
         accounting: null,
         particular: "",
         amount: 0,
@@ -658,6 +659,7 @@ export default function VoucherDetailModal({
             if (targetRow) {
               updateRow(selectorTargetRowId, {
                 ...targetRow,
+                accountingCode: account.code,
                 accounting: account,
               });
             }

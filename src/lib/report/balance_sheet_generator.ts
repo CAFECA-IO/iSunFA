@@ -42,14 +42,11 @@ export function generateBalanceSheet(
   lineItems.forEach((line) => {
     // Info: (20260331 - Julian) 確保有會計科目且借貸方有值
     // Info: (20260504 - Tzuhan) ⚠️修復：修正 JS 運算子優先級陷阱 (!line.isDebit === null 會永遠為 false)
-    if (!line.accounting || line.isDebit === null) return;
+    const code = line.accountingCode || line.accounting?.code;
+    if (!code || line.isDebit === null) return;
 
-    // Info: (20260331 - Julian) 解構
-    const {
-      accounting: { code, name },
-      isDebit,
-      amount,
-    } = line;
+    const name = line.accounting?.name || line.particular || code;
+    const { isDebit, amount } = line;
 
     const impact = isDebit ? amount : -amount;
 
