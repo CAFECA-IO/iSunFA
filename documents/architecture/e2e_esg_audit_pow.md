@@ -44,11 +44,9 @@ This document serves as a comprehensive engineering audit trail, detailing the *
 *切中系統靈魂，確保報表能 100% 擴展至全球市場，並確保底層運算毫無懸念。*
 
 22. **【i18n】徹底消滅多國語系字串硬綁定**：把所有 `name.includes("借款/股利/無形資產")` 等依賴中文字串的 Anti-pattern 徹底拔除，改為依賴 `src/constants/accounts.ts` 裡強型別的底層字典標籤 (`isInterestBearing`, `isDividend`) 驅動。
-23. **【Math】拍板數值運算底層標準**：做出明確的企業級架構決策：
-    * **財務報表**維持原生 `Number` 以守護高頻運算效能與 GC 回收效率。
-    * **ESG 碳排係數**強制引入 `Prisma.Decimal` 防禦 IEEE 754 浮點數誤差。
-24. **【DB】巨量資料的 21.4 億上限迴避與 Application-level Sharding (架構權衡)**：
-> 針對台積電 2.89 兆營收突破資料庫 32-bit `Int` (21.4 億) 上限的致命問題，我們刻意選擇「不立刻升級 `BigInt`」，以完美避開 Node.js `BigInt` 在 JSON 序列化時的崩潰災難與 TypeScript 型別骨牌效應。取而代之的是實作了「應用層傳票分片 (Sharding) 策略」，將巨額營收安全拆分為 50 張傳票，以最小代價解決了巨量資料匯入的瓶頸。
+23. **【Math & DB】拍板數值運算底層標準與 21.4 億上限迴避**：
+    確立財務三表維持 `Number` 以守護高效能，而 ESG 碳排強制引入 `Prisma.Decimal` 防禦浮點數誤差。同時，為了避開 `BigInt` 的 JSON 序列化災難，我們實作了「應用層傳票分片 (Sharding)」來解決單筆傳票超過 21.4 億的 PostgreSQL 限制。
+    👉 *完整架構決策與權衡分析，請參見：[`numerical_precision_guideline.md`](./numerical_precision_guideline.md)*
 
 *(尚未實作)* **【Domain】流通在外股數的「彈性面額」解耦 (相容國際市場)**：
 > 拔除 `balance_sheet_generator.ts` 中硬編碼的 `/ 10` (面額 10 元) 計算邏輯。徹底擺脫台灣舊有法規的硬編碼限制，為系統未來支援台灣新制「彈性面額」以及美股 (US-GAAP) 「無面額股票 (No Par Value)」的跨國多架構預留了乾淨的擴充空間。
