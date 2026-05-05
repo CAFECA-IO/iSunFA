@@ -21,6 +21,7 @@ import { EsgIntensity } from "@/interfaces/esg";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 import { CoefficientCategory } from "@/interfaces/coefficient";
 import {
+  IBaseStringFilter,
   ICoefficientFilterOptions,
   IEsgRecordFilterOptions,
 } from "@/interfaces/prisma_filter_option";
@@ -241,11 +242,11 @@ export class EsgRepository implements IEsgRepository {
       const gte = options.startDate ? new Date(options.startDate) : undefined;
       const lte = options.endDate ? new Date(options.endDate) : undefined;
 
-      const dateCondition: { gte?: Date; lte?: Date } = {};
-      if (gte) dateCondition.gte = gte;
-      if (lte) dateCondition.lte = lte;
+      const dateCondition: IBaseStringFilter = {};
+      if (gte) dateCondition.gte = gte.toISOString();
+      if (lte) dateCondition.lte = lte.toISOString();
 
-      const stringCondition: { gte?: string; lte?: string } = {};
+      const stringCondition: IBaseStringFilter = {};
       if (gte) stringCondition.gte = gte.toISOString();
       if (lte) stringCondition.lte = lte.toISOString();
 
