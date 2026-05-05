@@ -43,7 +43,10 @@ interface ISimulatedVoucher {
   lines: ISimulatedVoucherLine[];
 }
 
-export const runPhase2ReceiptAnalysis = async (stockId: string) => {
+export const runPhase2ReceiptAnalysis = async (
+  stockId: string,
+  shouldClean: boolean = false,
+) => {
   const dataDir = path.resolve(process.cwd(), `data/${stockId}`);
   const receiptsDir = path.join(dataDir, "receipts");
   const receiptsPngDir = path.join(dataDir, "receipts_png");
@@ -129,24 +132,30 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
     `✅ [DB] Initialized E2E AccountBook: ${accountBook.name} (${accountBook.id})`,
   );
 
-  // Info: (20260503 - Tzuhan) 每次重新執行前，先清空該 AccountBook 之前的模擬傳票與 ESG 紀錄，確保資料冪等性 (Idempotent) 不會重複疊加
-  const existingVouchers = await prisma.voucher.findMany({
-    where: { accountBookId: accountBook.id },
-    select: { id: true },
-  });
-  if (existingVouchers.length > 0) {
-    const voucherIds = existingVouchers.map((v) => v.id);
-    await prisma.voucherLine.deleteMany({
-      where: { voucherId: { in: voucherIds } },
+  // Info: (20260503 - Tzuhan) 如果傳入 `--clean` 參數，先清空該 AccountBook 之前的模擬傳票與 ESG 紀錄，確保資料冪等性 (Idempotent) 不會重複疊加
+  if (shouldClean) {
+    const existingVouchers = await prisma.voucher.findMany({
+      where: { accountBookId: accountBook.id },
+      select: { id: true },
     });
-    await prisma.voucher.deleteMany({ where: { id: { in: voucherIds } } });
+    if (existingVouchers.length > 0) {
+      const voucherIds = existingVouchers.map((v) => v.id);
+      await prisma.voucherLine.deleteMany({
+        where: { voucherId: { in: voucherIds } },
+      });
+      await prisma.voucher.deleteMany({ where: { id: { in: voucherIds } } });
+    }
+    await prisma.esgRecord.deleteMany({
+      where: { accountBookId: accountBook.id },
+    });
+    console.log(
+      `🧹 [DB] Cleared previous Vouchers and ESG records for AccountBook: ${accountBook.id} to ensure clean state.`,
+    );
+  } else {
+    console.log(
+      `⏭️  [DB] Skipped cleaning Vouchers and ESG records for AccountBook: ${accountBook.id} (No --clean flag).`,
+    );
   }
-  await prisma.esgRecord.deleteMany({
-    where: { accountBookId: accountBook.id },
-  });
-  console.log(
-    `🧹 [DB] Cleared previous Vouchers and ESG records for AccountBook: ${accountBook.id} to ensure clean state.`,
-  );
 
   const skill = new VoucherLinesParsingSkill();
   const esgSkill = new EsgParsingSkill();
@@ -343,11 +352,13 @@ export const runPhase2ReceiptAnalysis = async (stockId: string) => {
 
       if (gtEsgRecords.length > 0) {
         totalEsgTested++;
-        // Info: (20260504 - Tzuhan) 預期分類應為 scope1 或 scope2
+        // Info: (20260504 - Tzuhan) 預期分類應為 scope1 或 scope2 或 scope3
         const expectedScope = gtEsgRecords[0].category.toUpperCase(); // Info: (20260504 - Tzuhan) "SCOPE1" -> "SCOPE_1" 格式邏輯
-        const formattedExpectedScope = expectedScope.includes("SCOPE1")
-          ? "SCOPE_1"
-          : "SCOPE_2";
+        let formattedExpectedScope = "SCOPE_2";
+        if (expectedScope.includes("SCOPE1"))
+          formattedExpectedScope = "SCOPE_1";
+        if (expectedScope.includes("SCOPE3"))
+          formattedExpectedScope = "SCOPE_3";
 
         if (esgData.scope === formattedExpectedScope) {
           correctEsgCount++;

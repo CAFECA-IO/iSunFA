@@ -10,21 +10,12 @@ export const exportPhase2Db = async (stockId: string) => {
   console.log(`📤 [PHASE 2] Exporting DB Vouchers & ESG for ${stockId}`);
   console.log(`======================================================`);
 
-  const company = await prisma.company.findUnique({
-    where: { stockId: `E2E-${stockId}` },
-  });
-
-  if (!company) {
-    console.error(`[ERROR] E2E Company E2E-${stockId} not found in DB.`);
-    process.exit(1);
-  }
-
-  const accountBook = await prisma.accountBook.findFirst({
-    where: { enterpriseId: company.stockId },
+  const accountBook = await prisma.accountBook.findUnique({
+    where: { id: `e2e-book-${stockId}` },
   });
 
   if (!accountBook) {
-    console.error(`[ERROR] No AccountBook found for ${company.stockId}.`);
+    console.error(`[ERROR] E2E Company E2E-${stockId} not found in DB.`);
     process.exit(1);
   }
 

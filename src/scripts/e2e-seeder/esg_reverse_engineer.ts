@@ -30,7 +30,7 @@ interface ISimulatedVoucherLine {
   vendor?: string;
   esgRecords?: {
     id: string;
-    category: "scope1" | "scope2" | "water" | "waste";
+    category: "scope1" | "scope2" | "scope3" | "water" | "waste";
     source: string;
     metricAmount: number;
     metricUnit: string;
@@ -112,6 +112,10 @@ export const generateEsgRecords = (stockId: string) => {
     esgData,
     "grossScope2GreenhouseGasEmissions",
   );
+  const scope3Target = findEsgValue(
+    esgData,
+    "grossScope3GreenhouseGasEmissions",
+  );
   const waterTarget = findEsgValue(esgData, "waterConsumed");
   const wasteTarget = findEsgValue(esgData, "nonHazardousWaste");
 
@@ -155,6 +159,26 @@ export const generateEsgRecords = (stockId: string) => {
     });
   }
 
+  // Info: (20260504 - Tzuhan) 將範疇三 (其他間接排放) 映射至其他管理費用傳票 (代碼 6288)
+  const opexLines = vouchers.flatMap((v) =>
+    v.lines.filter((l) => l.accountingCode === "6288" && l.debitAmount > 0),
+  );
+
+  if (opexLines.length > 0 && scope3Target.gt(0)) {
+    const scope3PerVoucher = scope3Target.div(opexLines.length);
+    opexLines.forEach((line) => {
+      line.esgRecords = line.esgRecords || [];
+      line.esgRecords.push({
+        id: randomUUID(),
+        category: "scope3",
+        source: "其他供應鏈間接排放",
+        metricAmount: scope3PerVoucher.mul(100).toNumber(), // Info: (20260504 - Tzuhan) 假設 1 噸 CO2e 約對應 100 單位物料
+        metricUnit: "Pieces",
+        carbonAmount: scope3PerVoucher.toNumber(),
+      });
+    });
+  }
+
   // Info: (20260502 - Tzuhan) 4. 映射用水與廢棄物
   if (utilityLines.length > 0 && waterTarget.gt(0)) {
     const waterPerVoucher = waterTarget.div(utilityLines.length);
@@ -188,7 +212,7 @@ export const generateEsgRecords = (stockId: string) => {
   fs.writeFileSync(vouchersPath, JSON.stringify(vouchers, null, 2), "utf-8");
 
   console.log(
-    `[SUCCESS] Embedded ESG Data into Vouchers for ${stockId}. (Scope1: ${scope1Target.toNumber()}t, Scope2: ${scope2Target.toNumber()}t)`,
+    `[SUCCESS] Embedded ESG Data into Vouchers for ${stockId}. (Scope1: ${scope1Target.toNumber()}t, Scope2: ${scope2Target.toNumber()}t, Scope3: ${scope3Target.toNumber()}t)`,
   );
 };
 

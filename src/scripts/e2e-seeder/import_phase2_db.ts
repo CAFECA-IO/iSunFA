@@ -17,17 +17,6 @@ export const importPhase2Db = async (stockId: string) => {
 
   const dumpData = JSON.parse(fs.readFileSync(dumpPath, "utf-8"));
 
-  // Info: (20260504 - Tzuhan) 確保資料庫有必需的實體
-  const company = await prisma.company.upsert({
-    where: { stockId: `E2E-${stockId}` },
-    update: {},
-    create: {
-      stockId: `E2E-${stockId}`,
-      name: `E2E Test Enterprise ${stockId}`,
-      marketType: "sii",
-    },
-  });
-
   const team = await prisma.team.upsert({
     where: { id: `e2e-team-${stockId}` },
     update: {},
@@ -46,7 +35,7 @@ export const importPhase2Db = async (stockId: string) => {
       country: "TW",
       currency: "TWD",
       rule: "IFRS",
-      enterpriseId: company.stockId,
+      enterpriseId: stockId,
       teamId: team.id,
     },
   });
