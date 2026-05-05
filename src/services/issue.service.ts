@@ -193,9 +193,30 @@ export async function processNext() {
     );
     const preparedItems = await Promise.all(
       itemsToProcess.map(async (item) => {
+        let localContextObj: Record<string, unknown> | null = null;
+        if (item.fileInfo) {
+          const fileInfoObj = item.fileInfo as Record<string, unknown>;
+          localContextObj = {
+            journalId: fileInfoObj.journalId,
+            voucherId: fileInfoObj.voucherId,
+            esgRecordId: fileInfoObj.esgRecordId,
+          };
+          delete fileInfoObj.journalId;
+          delete fileInfoObj.voucherId;
+          delete fileInfoObj.esgRecordId;
+        }
+
         const itemData = item.fileInfo
           ? { ...orderDataObj, fileId: item.fileInfo.hash }
           : orderDataObj;
+
+        if (itemData.files && Array.isArray(itemData.files)) {
+          itemData.files = itemData.files.map((f: unknown) => {
+            const fObj = f as Record<string, unknown>;
+            return { hash: fObj.hash, name: fObj.name };
+          });
+        }
+
         const missionData = {
           orderId: order.id,
           type: order.type,
@@ -213,7 +234,7 @@ export async function processNext() {
         });
 
         const cid = await storageService.uploadLaria(missionFile);
-        return { item, cid, missionJsonStr, missionData };
+        return { item, cid, missionJsonStr, missionData, localContextObj };
       }),
     );
 
@@ -221,7 +242,13 @@ export async function processNext() {
      * (20260427 - Luphia) 3: Sequential Blockchain Execution & Local Files
      * Contract creations must be sequential to manage nonce properly
      */
-    for (const { item, cid, missionJsonStr, missionData } of preparedItems) {
+    for (const {
+      item,
+      cid,
+      missionJsonStr,
+      missionData,
+      localContextObj,
+    } of preparedItems) {
       console.log(
         `[MissionIssuer] Creating task on MissionBoard with CID ${cid}...`,
       );
@@ -277,6 +304,14 @@ export async function processNext() {
         missionJsonStr,
         "utf8",
       );
+
+      if (localContextObj) {
+        await fs.writeFile(
+          path.join(taskDir, "context.json"),
+          JSON.stringify(localContextObj, null, 2),
+          "utf8",
+        );
+      }
 
       const planValidatorContent = `# Plan Validator
 This is an automated validation plan.

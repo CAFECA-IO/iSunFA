@@ -76,28 +76,27 @@ export function useJournalAnalysis({
       setIsAnalyzing(true);
       setAnalyzedCount(0);
 
-      for (let i = 0; i < files.length; i++) {
-        const fileData = files[i];
-        const response = await request<IApiResponse<object>>(
-          `/api/v1/user/account_book/${accountBookId}/ai_analysis`,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              file: {
-                id: fileData.id,
-                file: { name: fileData.file.name, type: fileData.file.type },
-                previewUrl: fileData.previewUrl,
-                hash: fileData.hash,
-                base64: fileData.base64,
-              },
-              authentication: authData,
-            }),
-          },
-        );
+      const formattedFiles = files.map((fileData) => ({
+        id: fileData.id,
+        file: { name: fileData.file.name, type: fileData.file.type },
+        previewUrl: fileData.previewUrl,
+        hash: fileData.hash,
+        base64: fileData.base64,
+      }));
 
-        if (response.code === ApiCode.SUCCESS) {
-          setAnalyzedCount((prev) => prev + 1);
-        }
+      const response = await request<IApiResponse<object>>(
+        `/api/v1/user/account_book/${accountBookId}/ai_analysis`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            files: formattedFiles,
+            authentication: authData,
+          }),
+        },
+      );
+
+      if (response.code === ApiCode.SUCCESS) {
+        setAnalyzedCount(files.length);
       }
 
       onComplete?.();

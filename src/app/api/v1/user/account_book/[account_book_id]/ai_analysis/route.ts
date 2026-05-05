@@ -12,6 +12,7 @@ import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { paymentRepo } from "@/repositories/payment.repo";
+import { orderRepo } from "@/repositories/order.repo";
 import { ORDER_STATUS } from "@/constants/status";
 import { decodeFunctionData, keccak256, stringToBytes, parseAbi } from "viem";
 import { AppError } from "@/lib/utils/error";
@@ -19,6 +20,7 @@ import { getPendingOrder } from "@/services/order.service";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS } from "@/config/contracts";
 import { webAuthnService } from "@/services/webauthn.service";
+import { Prisma } from "@/generated";
 
 /**
  * Info: (20260318 - Julian) AI 分析：生成日記帳、傳票、碳排查
@@ -56,10 +58,11 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { file, authentication } = body;
+    const { file, files, authentication } = body;
+    const uploadFiles = files || (file ? [file] : []);
 
     // Info: (20260318 - Julian) 驗證 file 參數
-    if (!file) {
+    if (uploadFiles.length === 0) {
       console.error("Missing file or file hash");
       return jsonFail({
         code: "VA000099",
@@ -183,104 +186,141 @@ export async function POST(
       });
     }
 
-    // Info: (20260318 - Julian) 將 file 存入 DB
-    const uploadedFile = await fileRepo.createFile({
-      hash: file.hash,
-      fileName: file.file.name,
-    });
+    const results: Array<{
+      hash: string;
+      journalId: string;
+      voucherId: string;
+      recordId: string;
+    }> = [];
+    const auditLogs: Array<{
+      userId: string;
+      dataType: "JOURNAL" | "VOUCHER" | "ESG_RECORD";
+      dataId: string;
+      accountBookId: string;
+      action: "CREATE";
+    }> = [];
 
-    if (!uploadedFile) {
-      console.error("File upload failed");
-      return jsonFail(API_ERRORS.IS_UPLOAD_FAILED);
-    }
+    // Info: (20260318 - Julian) 將 files 存入 DB 並建立關聯
+    for (const f of uploadFiles) {
+      const uploadedFile = await fileRepo.createFile({
+        hash: f.hash,
+        fileName: f.file?.name,
+      });
 
-    // Info: (20260318 - Julian) 建立日記帳
-    const newJournal = await journalRepo.createJournal({
-      accountBookId: accountBook.id,
-      fileId: uploadedFile.id,
-      text: "",
-      tradingDate: new Date(),
-      confidence: 0,
-      isVerified: false,
-      aiNote: "",
-    });
+      if (!uploadedFile) {
+        console.error("File upload failed for hash:", f.hash);
+        continue;
+      }
 
-    if (!newJournal) {
-      console.error("Journal creation failed");
-      return jsonFail(API_ERRORS.IS_DB_FAILED);
-    }
-
-    // Info: (20260318 - Julian) 建立空白傳票
-    const newVoucher = await voucherRepo.createVoucher({
-      accountBookId: accountBook.id,
-      fileId: uploadedFile.id,
-      userId: creator.id,
-      tradingDate: new Date(),
-      note: "",
-      lines: { create: [] },
-      aiNote: "",
-      confidence: 0,
-      isVerified: false,
-    });
-
-    if (!newVoucher) {
-      console.error("Voucher creation failed");
-      return jsonFail(API_ERRORS.IS_DB_FAILED);
-    }
-
-    // Info: (20260318 - Julian) 建立空白 ESG 紀錄
-    const newRecord = await esgRepo.createEsgRecord({
-      accountBookId: accountBook.id,
-      userId: creator.id,
-      fileId: uploadedFile.id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      tradingDate: new Date(),
-      activityType: "",
-      vendor: "",
-      amount: 0,
-      unit: "",
-      emissions: 0,
-      dqiScore: 0,
-      aiNote: "",
-      confidence: 0,
-      isVerified: false,
-    });
-
-    if (!newRecord) {
-      console.error("ESG record creation failed");
-      return jsonFail(API_ERRORS.IS_DB_FAILED);
-    }
-
-    // Info: (20260318 - Julian) 新增 AuditLog
-    await auditLogRepo.createManyAuditLogs([
-      {
-        userId: creator.id,
-        dataType: "JOURNAL",
-        dataId: newJournal.id,
+      const newJournal = await journalRepo.createJournal({
         accountBookId: accountBook.id,
-        action: "CREATE",
-      },
-      {
-        userId: creator.id,
-        dataType: "VOUCHER",
-        dataId: newVoucher.id,
+        fileId: uploadedFile.id,
+        text: "",
+        tradingDate: new Date(),
+        confidence: 0,
+        isVerified: false,
+        aiNote: "",
+      });
+
+      const newVoucher = await voucherRepo.createVoucher({
         accountBookId: accountBook.id,
-        action: "CREATE",
-      },
-      {
+        fileId: uploadedFile.id,
         userId: creator.id,
-        dataType: "ESG_RECORD",
-        dataId: newRecord.id,
+        tradingDate: new Date(),
+        note: "",
+        lines: { create: [] },
+        aiNote: "",
+        confidence: 0,
+        isVerified: false,
+      });
+
+      const newRecord = await esgRepo.createEsgRecord({
         accountBookId: accountBook.id,
-        action: "CREATE",
-      },
-    ]);
+        userId: creator.id,
+        fileId: uploadedFile.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        tradingDate: new Date(),
+        activityType: "",
+        vendor: "",
+        amount: 0,
+        unit: "",
+        emissions: 0,
+        dqiScore: 0,
+        aiNote: "",
+        confidence: 0,
+        isVerified: false,
+      });
+
+      auditLogs.push(
+        {
+          userId: creator.id,
+          dataType: "JOURNAL",
+          dataId: newJournal.id,
+          accountBookId: accountBook.id,
+          action: "CREATE" as const,
+        },
+        {
+          userId: creator.id,
+          dataType: "VOUCHER",
+          dataId: newVoucher.id,
+          accountBookId: accountBook.id,
+          action: "CREATE" as const,
+        },
+        {
+          userId: creator.id,
+          dataType: "ESG_RECORD",
+          dataId: newRecord.id,
+          accountBookId: accountBook.id,
+          action: "CREATE" as const,
+        },
+      );
+
+      results.push({
+        hash: f.hash,
+        journalId: newJournal.id,
+        voucherId: newVoucher.id,
+        recordId: newRecord.id,
+      });
+    }
+
+    if (auditLogs.length > 0) {
+      await auditLogRepo.createManyAuditLogs(auditLogs);
+    }
+
+    try {
+      const order = await orderRepo.findFirst({ where: { id: orderId } });
+      if (order && order.data) {
+        const orderData = order.data as Record<string, unknown>;
+        if (orderData.files && Array.isArray(orderData.files)) {
+          orderData.files = orderData.files.map((f: unknown) => {
+            const fileObj = f as Record<string, unknown>;
+            const match = results.find((r) => r.hash === fileObj.hash);
+            if (match) {
+              return {
+                ...fileObj,
+                journalId: match.journalId,
+                voucherId: match.voucherId,
+                esgRecordId: match.recordId,
+              };
+            }
+            return f;
+          });
+          await orderRepo.update({
+            where: { id: orderId },
+            data: { data: orderData as Prisma.InputJsonValue },
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to update order with generated IDs:", e);
+    }
 
     return jsonOk({
-      journalId: newJournal.id,
-      voucherId: newVoucher.id,
-      recordId: newRecord.id,
+      journalId: results[0]?.journalId,
+      voucherId: results[0]?.voucherId,
+      recordId: results[0]?.recordId,
+      data: results,
     });
   } catch (error) {
     console.error("Error creating AI analysis:", error);
