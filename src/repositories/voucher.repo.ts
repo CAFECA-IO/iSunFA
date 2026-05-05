@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, Voucher } from "@/generated";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { IVoucherFilterOptions } from "@/interfaces/prisma_filter_option";
+import { VerifyStatus } from "@/constants/verify_status";
 
 export type VoucherWithRelations = Prisma.VoucherGetPayload<{
   include: { file: true; user: true; lines: true };
@@ -16,6 +18,10 @@ export interface IVoucherRepository {
   getVouchers(
     args: Prisma.VoucherFindManyArgs,
   ): Promise<VoucherWithRelations[]>;
+  getVouchersByFilter(
+    options: IVoucherFilterOptions,
+  ): Promise<VoucherWithRelations[]>;
+  countVouchersByFilter(options: IVoucherFilterOptions): Promise<number>;
   getVoucherById(id: string): Promise<VoucherWithRelations | null>;
   updateVoucher(
     id: string,
@@ -77,6 +83,97 @@ export class VoucherRepository implements IVoucherRepository {
 
   async countVouchers(where: Prisma.VoucherWhereInput) {
     return prisma.voucher.count({ where });
+  }
+
+  private buildVoucherFindManyArgs(
+    options: IVoucherFilterOptions,
+  ): Prisma.VoucherFindManyArgs {
+    const filteredConditions: Prisma.VoucherFindManyArgs = {
+      where: { accountBookId: options.accountBookId },
+      // Info: (20260311 - Julian) 將關聯的 file, user, lines 一併取出
+      include: { file: true, user: true, lines: true },
+    };
+
+    // Info: (20260311 - Julian) 關鍵字篩選：id / note / particular / accountingCode
+    if (options.keyword) {
+      filteredConditions.where!.OR = [
+        { id: { contains: options.keyword } },
+        { note: { contains: options.keyword } },
+        { lines: { some: { particular: { contains: options.keyword } } } },
+        { lines: { some: { accountingCode: { contains: options.keyword } } } },
+      ];
+    }
+
+    // Info: (20260324 - Julian) 建立審核狀態篩選
+    if (options.verifyStatus) {
+      filteredConditions.where!.isVerified =
+        options.verifyStatus === VerifyStatus.VERIFIED;
+    }
+
+    // Info: (20260310 - Julian) 建立時間區間篩選
+    if (options.startDate || options.endDate) {
+      filteredConditions.where!.tradingDate = {};
+      if (options.startDate) {
+        filteredConditions.where!.tradingDate.gte = new Date(options.startDate);
+      }
+      if (options.endDate) {
+        filteredConditions.where!.tradingDate.lte = new Date(options.endDate);
+      }
+    }
+
+    // Info: (20260310 - Julian) 分頁
+    if (options.page && options.limit) {
+      filteredConditions.skip = (options.page - 1) * options.limit;
+      filteredConditions.take = options.limit;
+    }
+
+    // Info: (20260310 - Julian) 排序 (保留欄位排序功能，但如果提供 sorting，則在最後再重新排序)
+    if (options.orderBy) {
+      try {
+        filteredConditions.orderBy = JSON.parse(options.orderBy);
+      } catch {
+        console.warn("Invalid orderBy param format, ignoring");
+      }
+    }
+
+    if (options.type && options.type !== "all") {
+      filteredConditions.where!.tradingType = options.type.toUpperCase() as
+        | "INCOME"
+        | "OUTCOME"
+        | "TRANSFER";
+    }
+
+    if (options.hideDeleted) {
+      filteredConditions.where!.deletedAt = null;
+    } else {
+      // Info: (20260404 - Luphia) 預設列表顯示：未刪除、或是被軟刪除但距今小於 7 天內的傳票
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const whereInput = filteredConditions.where as Prisma.VoucherWhereInput;
+      const andConditions = Array.isArray(whereInput.AND)
+        ? whereInput.AND
+        : whereInput.AND
+          ? [whereInput.AND]
+          : [];
+
+      andConditions.push({
+        OR: [{ deletedAt: null }, { deletedAt: { gte: sevenDaysAgo } }],
+      });
+      whereInput.AND = andConditions;
+    }
+
+    return filteredConditions;
+  }
+
+  async getVouchersByFilter(
+    options: IVoucherFilterOptions,
+  ): Promise<VoucherWithRelations[]> {
+    const args = this.buildVoucherFindManyArgs(options);
+    return this.getVouchers(args);
+  }
+
+  async countVouchersByFilter(options: IVoucherFilterOptions): Promise<number> {
+    const args = this.buildVoucherFindManyArgs(options);
+    return this.countVouchers(args.where || {});
   }
 
   async getVouchers(

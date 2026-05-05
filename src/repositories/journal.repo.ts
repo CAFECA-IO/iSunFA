@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { IJournalFilterOptions } from "@/interfaces/prisma_filter_option";
+import { VerifyStatus } from "@/constants/verify_status";
 
 // Info: (20260327 - Luphia) 定義共用的 Return Type 讓型別更嚴謹
 type JournalWithRelations = Prisma.JournalGetPayload<{
@@ -17,6 +19,65 @@ export class JournalRepository {
 
   async countJournals(where: Prisma.JournalWhereInput) {
     return prisma.journal.count({ where });
+  }
+
+  private buildJournalWhereClause(
+    options: IJournalFilterOptions,
+  ): Prisma.JournalWhereInput {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const where: Prisma.JournalWhereInput = {
+      accountBookId: options.accountBookId,
+      OR: [{ deletedAt: null }, { deletedAt: { gte: sevenDaysAgo } }],
+    };
+
+    if (options.keyword) {
+      where.AND = [
+        {
+          OR: [
+            { text: { contains: options.keyword } },
+            { id: { contains: options.keyword } },
+          ],
+        },
+      ];
+    }
+
+    if (options.verifyStatus) {
+      where.isVerified = options.verifyStatus === VerifyStatus.VERIFIED;
+    }
+
+    if (options.startDate || options.endDate) {
+      where.tradingDate = {};
+      if (options.startDate)
+        where.tradingDate.gte = new Date(options.startDate);
+      if (options.endDate) where.tradingDate.lte = new Date(options.endDate);
+    }
+
+    return where;
+  }
+
+  async getJournalsByFilter(
+    options: IJournalFilterOptions,
+  ): Promise<JournalWithRelations[]> {
+    const where = this.buildJournalWhereClause(options);
+    const skip =
+      options.page && options.limit
+        ? (options.page - 1) * options.limit
+        : undefined;
+    const take = options.limit || undefined;
+
+    return this.getJournals({
+      where,
+      skip,
+      take,
+      orderBy: { tradingDate: options.sort || "desc" },
+    });
+  }
+
+  async countJournalsByFilter(options: IJournalFilterOptions): Promise<number> {
+    const where = this.buildJournalWhereClause(options);
+    return this.countJournals(where);
   }
 
   async getJournals(

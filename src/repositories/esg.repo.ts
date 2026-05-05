@@ -20,7 +20,11 @@ import {
 import { EsgIntensity } from "@/interfaces/esg";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 import { CoefficientCategory } from "@/interfaces/coefficient";
-import { ICoefficientFilterOptions } from "@/interfaces/prisma_filter_option";
+import {
+  ICoefficientFilterOptions,
+  IEsgRecordFilterOptions,
+} from "@/interfaces/prisma_filter_option";
+import { VerifyStatus } from "@/constants/verify_status";
 
 export type EsgRecordWithRelations = Prisma.EsgRecordGetPayload<{
   include: { file: true; coefficient: true; emissionSource: true };
@@ -44,10 +48,14 @@ export interface IEsgRepository {
   getEsgRecords(
     args: Prisma.EsgRecordFindManyArgs,
   ): Promise<EsgRecordWithRelations[]>;
+  getEsgRecordsByFilter(
+    options: IEsgRecordFilterOptions,
+  ): Promise<EsgRecordWithRelations[]>;
   createEsgRecord(
     data: Prisma.EsgRecordUncheckedCreateInput,
   ): Promise<EsgRecord>;
   countEsgRecords(where: Prisma.EsgRecordWhereInput): Promise<number>;
+  countEsgRecordsByFilter(options: IEsgRecordFilterOptions): Promise<number>;
   getEsgRecordById(id: string): Promise<EsgRecordWithRelations | null>;
   updateEsgRecord(
     id: string,
@@ -166,6 +174,115 @@ export class EsgRepository implements IEsgRepository {
     return prisma.esgTarget.findFirst({
       where: { accountBookId, year },
     });
+  }
+
+  private buildEsgRecordWhereClause(
+    options: IEsgRecordFilterOptions,
+  ): Prisma.EsgRecordWhereInput {
+    const andConditions: Prisma.EsgRecordWhereInput[] = [];
+
+    // Info: (20260406 - Luphia) 軟刪除過濾邏輯
+    if (options.hideDeleted) {
+      andConditions.push({ deletedAt: null });
+    }
+
+    // Info: (20260406 - Luphia) 搜尋字串過濾邏輯
+    if (options.keyword) {
+      andConditions.push({
+        OR: [
+          { id: { contains: options.keyword, mode: "insensitive" } },
+          { vendor: { contains: options.keyword, mode: "insensitive" } },
+          { activityType: { contains: options.keyword, mode: "insensitive" } },
+        ],
+      });
+    }
+
+    if (options.verifyStatus) {
+      andConditions.push({
+        isVerified: options.verifyStatus === VerifyStatus.VERIFIED,
+      });
+    }
+
+    if (options.intensity) {
+      andConditions.push({ intensity: options.intensity as EsgIntensity });
+    }
+
+    if (options.scope) {
+      andConditions.push({ scope: options.scope as EsgScope });
+    }
+
+    // Info: (20260407 - Julian) 日期過濾邏輯
+    if (options.year) {
+      let startDate: Date;
+      let endDate: Date;
+
+      if (options.month) {
+        startDate = new Date(options.year, options.month - 1, 1);
+        endDate = new Date(options.year, options.month, 0, 23, 59, 59, 999);
+      } else {
+        startDate = new Date(options.year, 0, 1);
+        endDate = new Date(options.year, 11, 31, 23, 59, 59, 999);
+      }
+
+      andConditions.push({
+        OR: [
+          {
+            tradingDate: {
+              gte: startDate.toISOString(),
+              lte: endDate.toISOString(),
+            },
+          },
+          { AND: [{ tradingDate: { gte: startDate, lte: endDate } }] },
+        ],
+      });
+    }
+
+    if (options.startDate || options.endDate) {
+      const gte = options.startDate ? new Date(options.startDate) : undefined;
+      const lte = options.endDate ? new Date(options.endDate) : undefined;
+
+      const dateCondition: { gte?: Date; lte?: Date } = {};
+      if (gte) dateCondition.gte = gte;
+      if (lte) dateCondition.lte = lte;
+
+      const stringCondition: { gte?: string; lte?: string } = {};
+      if (gte) stringCondition.gte = gte.toISOString();
+      if (lte) stringCondition.lte = lte.toISOString();
+
+      andConditions.push({
+        OR: [
+          { tradingDate: stringCondition },
+          { AND: [{ tradingDate: dateCondition }] },
+        ],
+      });
+    }
+
+    return {
+      accountBookId: options.accountBookId,
+      AND: andConditions.length > 0 ? andConditions : undefined,
+    };
+  }
+
+  async getEsgRecordsByFilter(
+    options: IEsgRecordFilterOptions,
+  ): Promise<EsgRecordWithRelations[]> {
+    const where = this.buildEsgRecordWhereClause(options);
+
+    return this.getEsgRecords({
+      where,
+      include: { file: true, coefficient: true },
+      orderBy: { tradingDate: options.sort || "desc" },
+      ...(options.page && options.limit
+        ? { skip: (options.page - 1) * options.limit, take: options.limit }
+        : {}),
+    });
+  }
+
+  async countEsgRecordsByFilter(
+    options: IEsgRecordFilterOptions,
+  ): Promise<number> {
+    const where = this.buildEsgRecordWhereClause(options);
+    return this.countEsgRecords(where);
   }
 
   async getEsgRecords(

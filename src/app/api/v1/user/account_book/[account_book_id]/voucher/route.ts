@@ -7,11 +7,10 @@ import { accountBookRepo } from "@/repositories/account_book.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { Prisma } from "@/generated";
+import { IVoucherFilterOptions } from "@/interfaces/prisma_filter_option";
 import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
-import { VerifyStatus } from "@/constants/verify_status";
 
 /**
  * Info: (20260310 - Julian) 新增傳票：將 AI 解析出的傳票存入 DB
@@ -148,81 +147,22 @@ export async function GET(
     const hideDeleted = searchParams.get("hideDeleted") === "true";
     const sorting = searchParams.get("sorting");
 
-    const filteredConditions: Prisma.VoucherFindManyArgs = {
-      where: { accountBookId: accountBook.id },
-      // Info: (20260311 - Julian) 將關聯的 file, user, lines 一併取出
-      include: { file: true, user: true, lines: true },
+    const options: IVoucherFilterOptions = {
+      accountBookId: accountBook.id,
+      verifyStatus,
+      keyword: keyWord,
+      startDate,
+      endDate,
+      page,
+      limit: pageSize,
+      orderBy: orderByParams,
+      type,
+      hideDeleted,
+      sorting,
     };
 
-    // Info: (20260311 - Julian) 關鍵字篩選：id / note / particular / accountingCode
-    if (keyWord) {
-      filteredConditions.where!.OR = [
-        { id: { contains: keyWord } },
-        { note: { contains: keyWord } },
-        { lines: { some: { particular: { contains: keyWord } } } },
-        { lines: { some: { accountingCode: { contains: keyWord } } } },
-      ];
-    }
-
-    // Info: (20260324 - Julian) 建立審核狀態篩選
-    if (verifyStatus) {
-      filteredConditions.where!.isVerified =
-        verifyStatus === VerifyStatus.VERIFIED;
-    }
-
-    // Info: (20260310 - Julian) 建立時間區間篩選
-    if (startDate || endDate) {
-      filteredConditions.where!.tradingDate = {};
-      if (startDate) {
-        filteredConditions.where!.tradingDate.gte = new Date(startDate);
-      }
-      if (endDate) {
-        filteredConditions.where!.tradingDate.lte = new Date(endDate);
-      }
-    }
-
-    // Info: (20260310 - Julian) 分頁
-    if (page && pageSize) {
-      filteredConditions.skip = (page - 1) * pageSize;
-      filteredConditions.take = pageSize;
-    }
-
-    // Info: (20260310 - Julian) 排序 (保留欄位排序功能，但如果提供 sorting，則在最後再重新排序)
-    if (orderByParams) {
-      try {
-        filteredConditions.orderBy = JSON.parse(orderByParams);
-      } catch {
-        console.warn("Invalid orderBy param format, ignoring");
-      }
-    }
-
-    if (type && type !== "all") {
-      filteredConditions.where!.tradingType = type.toUpperCase() as
-        | "INCOME"
-        | "OUTCOME"
-        | "TRANSFER";
-    }
-
-    if (hideDeleted) {
-      filteredConditions.where!.deletedAt = null;
-    } else {
-      // Info: (20260404 - Luphia) 預設列表顯示：未刪除、或是被軟刪除但距今小於 7 天內的傳票
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      const whereInput = filteredConditions.where as Prisma.VoucherWhereInput;
-      const andConditions = Array.isArray(whereInput.AND)
-        ? whereInput.AND
-        : whereInput.AND
-          ? [whereInput.AND]
-          : [];
-
-      andConditions.push({
-        OR: [{ deletedAt: null }, { deletedAt: { gte: sevenDaysAgo } }],
-      });
-      whereInput.AND = andConditions;
-    }
-
     // Info: (20260310 - Julian) 取得日記帳列表
-    const vouchers = await voucherRepo.getVouchers(filteredConditions);
+    const vouchers = await voucherRepo.getVouchersByFilter(options);
 
     // Info: (20260311 - Julian) 組合成前端所需的格式
     const formattedVouchers: IVoucher[] = vouchers.map((v) => {
@@ -307,9 +247,7 @@ export async function GET(
     }
 
     // Info: (20260324 - Julian) 總筆數
-    const totalCount = await voucherRepo.countVouchers(
-      filteredConditions.where || {},
-    );
+    const totalCount = await voucherRepo.countVouchersByFilter(options);
 
     return jsonOk({ data: formattedVouchers, total: totalCount });
   } catch (error) {

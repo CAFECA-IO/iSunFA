@@ -4,7 +4,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
-import { Prisma } from "@/generated";
+import { VerifyStatus } from "@/constants/verify_status";
 import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
 import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
@@ -89,13 +89,12 @@ export async function GET(
       // Info: (20260406 - Luphia) 產出碳盤查報表
       const range = getTradingDateRange();
 
-      const esgRecords = await esgRepo.getEsgRecords({
-        where: {
-          accountBookId,
-          tradingDate: { gte: range.start, lte: range.end },
-          isVerified: true,
-          deletedAt: null,
-        },
+      const esgRecords = await esgRepo.getEsgRecordsByFilter({
+        accountBookId,
+        startDate: range.start,
+        endDate: range.end,
+        verifyStatus: VerifyStatus.VERIFIED,
+        hideDeleted: true,
       });
 
       const report = generateEsgReport(esgRecords);
@@ -103,22 +102,16 @@ export async function GET(
     }
 
     // Info: (20260408 - Luphia) 資產負債表是從開立帳簿以來的累積餘額，因此不應限制 gte 起始日；損益表與現金流量表則是計算當期發生額，因此需限制 gte。
-    const where: Prisma.VoucherWhereInput = {
-      accountBookId,
-      isVerified: true, // Info: (20260331 - Julian) 僅取得「已核對」
-      deletedAt: null, // Info: (20260504 - Tzuhan) ⚠️修復：排除被軟刪除的傳票
-      tradingDate: {
-        ...(reportType !== ReportType.BALANCE_SHEET && {
-          gte: getTradingDateRange().start,
-        }),
-        lte: getTradingDateRange().end,
-      },
-    };
-
     // Info: (20260331 - Julian) 取得傳票與會計分錄
-    const vouchers = await voucherRepo.getVouchers({
-      where,
-      include: { lines: true },
+    const vouchers = await voucherRepo.getVouchersByFilter({
+      accountBookId,
+      verifyStatus: VerifyStatus.VERIFIED, // Info: (20260331 - Julian) 僅取得「已核對」
+      hideDeleted: true, // Info: (20260504 - Tzuhan) ⚠️修復：排除被軟刪除的傳票
+      startDate:
+        reportType !== ReportType.BALANCE_SHEET
+          ? getTradingDateRange().start
+          : undefined,
+      endDate: getTradingDateRange().end,
     });
     const lineItems = vouchers.map((voucher) => voucher.lines).flat();
 
