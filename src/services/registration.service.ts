@@ -21,6 +21,7 @@ export type RegistrationStep =
   | "CALCULATING_HASH"
   | "AWAITING_SIGNATURE"
   | "DEPLOYING"
+  | "SYNCING"
   | "SUCCESS"
   | "FAILED";
 

@@ -1,4 +1,5 @@
 import { adminDashboard } from "@/i18n/locales/zh_cn/admin_dashboard";
+import { adminCampaign } from "@/i18n/locales/zh_cn/admin_campaign";
 import { common } from "@/i18n/locales/zh_cn/common";
 import { faith } from "@/i18n/locales/zh_cn/faith";
 import { cookieConsent } from "@/i18n/locales/zh_cn/cookie_consent";
@@ -110,4 +111,5 @@ export const zhCn = {
   admin_mission_board: adminMissionBoard,
   emission_sources: emissionSources,
   order_management: orderManagement,
+  admin_campaign: adminCampaign,
 } satisfies BaseTranslation;

@@ -36,6 +36,10 @@ export default function AuthTransition({ mode, step }: IAuthTransitionProps) {
           return t("registration_steps.awaiting_signature");
         case "DEPLOYING":
           return t("registration_steps.deploying");
+        case "SYNCING":
+          return (
+            t("registration_steps.syncing") || "Syncing with blockchain..."
+          );
         case "SUCCESS":
           return t("registration_steps.success");
         case "FAILED":
@@ -65,21 +69,25 @@ export default function AuthTransition({ mode, step }: IAuthTransitionProps) {
   const isSuccess = step === "SUCCESS";
 
   return (
-    <div className="flex flex-col items-center justify-center py-8 sm:py-12 space-y-4 animate-in fade-in duration-300">
+    <div className="animate-in fade-in flex flex-col items-center justify-center space-y-4 py-8 duration-300 sm:py-12">
       <div className="relative">
         {isSuccess ? (
-          <CheckCircle2 className="h-16 w-16 text-green-500 animate-in zoom-in duration-300" />
+          <CheckCircle2 className="animate-in zoom-in h-16 w-16 text-green-500 duration-300" />
         ) : (
-          <Loader2 className="h-16 w-16 text-orange-600 animate-spin" />
+          <Loader2 className="h-16 w-16 animate-spin text-orange-600" />
         )}
       </div>
-      <div className="text-center space-y-2">
+      <div className="space-y-2 text-center">
         <h3 className="text-lg font-semibold text-gray-900">
           {isSuccess
-            ? (mode === 'register' ? t("registration_steps.complete_title") : t("login_steps.complete_title"))
-            : (mode === 'register' ? t("registration_steps.processing_title") : t("login_steps.processing_title"))}
+            ? mode === "register"
+              ? t("registration_steps.complete_title")
+              : t("login_steps.complete_title")
+            : mode === "register"
+              ? t("registration_steps.processing_title")
+              : t("login_steps.processing_title")}
         </h3>
-        <p className="text-sm text-gray-500 animate-pulse">
+        <p className="animate-pulse text-sm text-gray-500">
           {getStepDescription()}
         </p>
       </div>

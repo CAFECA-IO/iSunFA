@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {CreditPoint} from "./credit_point.sol";
 import {DynamicKYCMembership} from "./dynamic_kyc_membership.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessControl} from "./lib/@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
  * Info: (20260416 - Luphia)

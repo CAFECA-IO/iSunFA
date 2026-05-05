@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+import {Create2} from "./lib/@openzeppelin/contracts/utils/Create2.sol";
 import {
     ERC1967Proxy
-} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+} from "./lib/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {
     IEntryPoint
-} from "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
+} from "./lib/@account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {Fido2Account} from "./fido2_account.sol";
 
 /**

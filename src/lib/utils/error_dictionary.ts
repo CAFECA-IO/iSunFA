@@ -85,6 +85,16 @@ export const API_ERRORS = {
     message: "Invalid address",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  VL_CAMPAIGN_EXPIRED: {
+    code: "VL000008",
+    message: "Campaign is expired or not active",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  VL_CAMPAIGN_ALREADY_REGISTERED: {
+    code: "VL000009",
+    message: "User has already registered for this campaign",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 
   // Info: (20260421 - Luphia) NF: Not Found Resources (000001 ~ 000099)
   NF_USER: {
@@ -155,6 +165,11 @@ export const API_ERRORS = {
   NF_ACTION: {
     code: "NF000014",
     message: "Action not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+  NF_CAMPAIGN: {
+    code: "NF000015",
+    message: "Campaign not found",
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,
 

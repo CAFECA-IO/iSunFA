@@ -287,7 +287,7 @@ export default function MemberAdminPage() {
           if (!memInfo)
             return (
               <span className="text-xs font-bold tracking-wider text-gray-400 uppercase">
-                {String(t("admin_member.page.loading"))}
+                {t("admin_member.page.loading")}
               </span>
             );
 
@@ -300,9 +300,7 @@ export default function MemberAdminPage() {
                 className={`inline-flex w-max items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${isGold ? "bg-amber-100 text-amber-700" : isSilver ? "bg-slate-100 text-slate-700" : "bg-orange-50 text-orange-700"}`}
               >
                 <Gem className="h-3 w-3" />
-                {String(
-                  t(`admin_member.page.tier_${memInfo.mode.toLowerCase()}`),
-                )}
+                {t(`admin_member.page.tier_${memInfo.mode.toLowerCase()}`)}
               </span>
               <span className="font-mono text-xs font-semibold tracking-tight text-gray-500">
                 {memInfo.exp.toLocaleString()} EXP
@@ -340,8 +338,8 @@ export default function MemberAdminPage() {
         {/* Info: (20260415 - Luphia) Header & Blockchain Stats */}
         <AdminPageHeader
           icon={Users}
-          title={String(t("admin_member.page.title"))}
-          subtitle={String(t("admin_member.page.subtitle"))}
+          title={t("admin_member.page.title")!}
+          subtitle={t("admin_member.page.subtitle")!}
           rightNode={
             <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
               {/* Info: (20260416 - Luphia) Search Box */}

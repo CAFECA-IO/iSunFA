@@ -3,6 +3,7 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { reconstructKeyFromXY } from "@/lib/auth/crypto_utils";
 import { verifyAuthentication } from "@/lib/auth/fido2_server";
 import type { AuthenticationJSON } from "@passwordless-id/webauthn";
+import { generateKeyPairSync } from "crypto";
 import {
   ENV_PATH,
   ENV_SETUP_PATH,
@@ -12,7 +13,9 @@ import {
   existsEnv,
   updateOrAppendEnv,
   loadEnvConfig,
+  computePredictedFinalEnvString,
 } from "@/services/env.service";
+import { parse } from "dotenv";
 import { publicClient } from "@/lib/viem_public";
 import { parseAbiItem } from "viem";
 import { getDbUrl } from "@/services/setup.db.service";
@@ -107,6 +110,20 @@ export async function authorizeSuperAdmin(authentication?: {
           "SUPER_ADMIN_PUB_Y",
           user.pubKeyY!,
         );
+
+        if (!setupContent.includes("DEWT_PRIVATE_KEY_PEM")) {
+          const { privateKey } = generateKeyPairSync("ec", {
+            namedCurve: "prime256v1",
+            publicKeyEncoding: { type: "spki", format: "pem" },
+            privateKeyEncoding: { type: "pkcs8", format: "pem" },
+          });
+          setupContent = updateOrAppendEnv(
+            setupContent,
+            "DEWT_PRIVATE_KEY_PEM",
+            `"${privateKey.replace(/\n/g, "\\n")}"`,
+          );
+        }
+
         saveEnvRawContent(targetEnvPath, setupContent);
 
         return { success: true };
@@ -167,6 +184,20 @@ export async function authorizeSuperAdmin(authentication?: {
               "SUPER_ADMIN_PUB_Y",
               pubKeyYStr,
             );
+
+            if (!setupContent.includes("DEWT_PRIVATE_KEY_PEM")) {
+              const { privateKey } = generateKeyPairSync("ec", {
+                namedCurve: "prime256v1",
+                publicKeyEncoding: { type: "spki", format: "pem" },
+                privateKeyEncoding: { type: "pkcs8", format: "pem" },
+              });
+              setupContent = updateOrAppendEnv(
+                setupContent,
+                "DEWT_PRIVATE_KEY_PEM",
+                `"${privateKey.replace(/\n/g, "\\n")}"`,
+              );
+            }
+
             saveEnvRawContent(targetEnvPath, setupContent);
 
             const scw = matchLog.args.scw;
@@ -217,7 +248,13 @@ export async function verifyAndFinalizeConfig(
     if (!existsEnv(envPathObj))
       return { success: false, error: "Configuration file not found" };
 
-    const envConfig = await loadEnvConfig(envPathObj);
+    const finalStr = computePredictedFinalEnvString();
+    const cleanStr = finalStr
+      .split("\n")
+      .filter((line) => line.trim() !== "" && !line.trim().startsWith("#"))
+      .join("\n");
+    const envConfig = parse(cleanStr);
+
     const pubX = envConfig.SUPER_ADMIN_PUB_X;
     const pubY = envConfig.SUPER_ADMIN_PUB_Y;
     const credId = envConfig.SUPER_ADMIN_CRED_ID;

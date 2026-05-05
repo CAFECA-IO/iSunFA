@@ -1,10 +1,10 @@
 generator client {
-  provider        = "prisma-client-js"
-  output          = "../src/generated"
+  provider = "prisma-client-js"
+  output   = "../src/generated"
 }
 
 datasource db {
-  provider   = "postgresql"
+  provider = "postgresql"
 }
 
 enum Role {
@@ -39,21 +39,22 @@ model User {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  orders              Order[]
-  analyses            Analysis[]
-  comments            Comment[]
-  receivedReplies     Comment[]            @relation("CommentRecipient")
-  reactions           Reaction[]
-  paymentMethods      PaymentMethod[]
-  paymentTransactions PaymentTransaction[]
-  journals            Journal[]
-  teamMembers         TeamMember[]
-  teamInvitations     TeamInvitation[]     @relation("Inviter")
-  auditLogs           AuditLog[]
-  vouchers            Voucher[]
-  esgRecords          EsgRecord[]
-  checkins            Checkin[]
-  reportShareTokens   ReportShareToken[]   @relation("ReportSharer")
+  orders                Order[]
+  analyses              Analysis[]
+  comments              Comment[]
+  receivedReplies       Comment[]              @relation("CommentRecipient")
+  reactions             Reaction[]
+  paymentMethods        PaymentMethod[]
+  paymentTransactions   PaymentTransaction[]
+  journals              Journal[]
+  teamMembers           TeamMember[]
+  teamInvitations       TeamInvitation[]       @relation("Inviter")
+  auditLogs             AuditLog[]
+  vouchers              Voucher[]
+  esgRecords            EsgRecord[]
+  checkins              Checkin[]
+  reportShareTokens     ReportShareToken[]     @relation("ReportSharer")
+  campaignRegistrations CampaignRegistration[]
 
   @@index([address])
   @@map("user")
@@ -720,8 +721,8 @@ model Seaport {
 
 // Info: (20260430 - Tzuhan) 基礎設施：空運機場 (Airports)
 model Airport {
-  id       String                                @id // Info: (20260430 - Tzuhan) 機場內部代號或 ICAO (e.g., KLAX, 00A)
-  iataCode String?                               @map("iata_code") // Info: (20260430 - Tzuhan) IATA 代碼 (e.g., TPE, LAX)，可能為空
+  id       String  @id // Info: (20260430 - Tzuhan) 機場內部代號或 ICAO (e.g., KLAX, 00A)
+  iataCode String? @map("iata_code") // Info: (20260430 - Tzuhan) IATA 代碼 (e.g., TPE, LAX)，可能為空
   name     String // Info: (20260430 - Tzuhan) 機場名稱
   country  String // Info: (20260430 - Tzuhan) 國家代碼
   size     String // Info: (20260430 - Tzuhan) 規模 (large_airport, medium_airport, small_airport, heliport 等)
@@ -741,20 +742,56 @@ model Airport {
 
 // Info: (20260430 - Tzuhan) 物流碳排引擎：快取機制 (Logistics Cache)
 model LogisticsCache {
-  id        String   @id @default(uuid())
-  originLat Float    @map("origin_lat")
-  originLng Float    @map("origin_lng")
-  destLat   Float    @map("dest_lat")
-  destLng   Float    @map("dest_lng")
-  weightKg  Float    @map("weight_kg")
-  
+  id        String @id @default(uuid())
+  originLat Float  @map("origin_lat")
+  originLng Float  @map("origin_lng")
+  destLat   Float  @map("dest_lat")
+  destLng   Float  @map("dest_lng")
+  weightKg  Float  @map("weight_kg")
+
   // Info: (20260430 - Tzuhan) 將完整的 ILogisticsPlan (包含 GeoJSON) 快取起來
-  planData  Json     @map("plan_data")
-  
+  planData Json @map("plan_data")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Info: (20260430 - Tzuhan) 建立複合索引以加速查詢
   @@index([originLat, originLng, destLat, destLng, weightKg])
   @@map("logistics_cache")
+}
+
+// Info: (20260504 - Agent) Campaign System
+model Campaign {
+  id           String   @id @default(uuid())
+  code         String   @unique
+  name         String
+  description  String?
+  startDate    DateTime @map("start_date")
+  endDate      DateTime @map("end_date")
+  bonusPoints  Int      @default(0) @map("bonus_points")
+  bonusModules String[] @map("bonus_modules")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  registrations CampaignRegistration[]
+
+  @@map("campaign")
+}
+
+model CampaignRegistration {
+  id           String   @id @default(uuid())
+  campaignId   String   @map("campaign_id")
+  campaign     Campaign @relation(fields: [campaignId], references: [id])
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id])
+  entityType   String   @map("entity_type")
+  entityName   String   @map("entity_name")
+  contactEmail String   @map("contact_email")
+  contactPhone String   @map("contact_phone")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@unique([campaignId, userId])
+  @@map("campaign_registration")
 }

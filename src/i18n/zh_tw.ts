@@ -1,4 +1,5 @@
 import { adminDashboard } from "@/i18n/locales/zh_tw/admin_dashboard";
+import { adminCampaign } from "@/i18n/locales/zh_tw/admin_campaign";
 import { common } from "@/i18n/locales/zh_tw/common";
 import { faith } from "@/i18n/locales/zh_tw/faith";
 import { cookieConsent } from "@/i18n/locales/zh_tw/cookie_consent";
@@ -109,6 +110,7 @@ export const zhTw = {
   admin_mission_board: adminMissionBoard,
   emission_sources: emissionSources,
   order_management: orderManagement,
+  admin_campaign: adminCampaign,
 } as const;
 
 export type BaseTranslation = typeof zhTw;

@@ -27,3 +27,11 @@ export async function setSuperAdminTaskStatus(status: {
     }
   ).superAdminTaskStatus = status;
 }
+
+export async function restartService() {
+  setTimeout(() => {
+    console.log("[Setup] Restarting service via process.exit(0)...");
+    process.exit(0);
+  }, 1000);
+  return { success: true, message: "Restarting..." };
+}

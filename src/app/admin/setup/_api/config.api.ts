@@ -41,6 +41,13 @@ export async function getEnvContentToSign(): Promise<{
   return fetchApi("getEnvContentToSign");
 }
 
+export async function apiRestartService(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  return fetchApi("restartService");
+}
+
 export async function verifyAndFinalizeConfig(
   authData: AuthenticationJSON,
 ): Promise<{ success: boolean; error?: string }> {

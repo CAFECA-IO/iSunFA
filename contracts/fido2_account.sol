@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {BaseAccount} from "@account-abstraction/contracts/core/BaseAccount.sol";
+import {BaseAccount} from "./lib/@account-abstraction/contracts/core/BaseAccount.sol";
 import {
     IEntryPoint
-} from "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
+} from "./lib/@account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {
     UserOperation
-} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
+} from "./lib/@account-abstraction/contracts/interfaces/UserOperation.sol";
 
 import {FCL_WebAuthn} from "./lib/fcl_webauthn.sol";
 import {
     Initializable
-} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+} from "./lib/@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {
     UUPSUpgradeable
-} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
+} from "./lib/@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 
 /**
  * Info: (20260412 - Luphia)

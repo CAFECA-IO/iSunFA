@@ -1,4 +1,5 @@
 import { adminDashboard } from "@/i18n/locales/en/admin_dashboard";
+import { adminCampaign } from "@/i18n/locales/en/admin_campaign";
 import { common } from "@/i18n/locales/en/common";
 import { faith } from "@/i18n/locales/en/faith";
 import { cookieConsent } from "@/i18n/locales/en/cookie_consent";
@@ -110,4 +111,5 @@ export const en = {
   admin_mission_board: adminMissionBoard,
   emission_sources: emissionSources,
   order_management: orderManagement,
+  admin_campaign: adminCampaign,
 } satisfies BaseTranslation;

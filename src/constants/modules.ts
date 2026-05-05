@@ -19,6 +19,7 @@ import {
   Target,
   Bot,
   Truck,
+  Trophy,
 } from "lucide-react";
 
 export const MODULES = [
@@ -54,6 +55,8 @@ export const ADMIN_MODULES = [
   { key: "blockchain", icon: Blocks, basic: true },
   { key: "user", icon: Users, basic: true },
   { key: "billing", icon: CreditCard, basic: true },
+  { key: "campaign", icon: Trophy, basic: true },
+  { key: "pdf_tool", icon: FileText, basic: true },
 ];
 
 export const SYSTEM_MODULES = [
@@ -131,6 +134,10 @@ export function getModuleI18nKey(key: string, isAdminContext: boolean = false) {
       return "features.items.signing.title";
     case "integration":
       return "features.items.integration.title";
+    case "campaign":
+      return "admin_campaign.title";
+    case "pdf_tool":
+      return "common.pdf_tool";
     default:
       return `${key}.title`;
   }
