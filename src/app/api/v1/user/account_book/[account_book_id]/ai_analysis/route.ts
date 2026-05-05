@@ -77,6 +77,10 @@ export async function POST(
     }
 
     const orderId = authentication.orderId;
+    let pendingPaymentUpdate: {
+      orderId: string;
+      options: Record<string, unknown>;
+    } | null = null;
     const authWithTx = authentication as AuthenticationJSON & {
       transactionHash?: string;
     };
@@ -150,10 +154,10 @@ export async function POST(
           () => null,
         );
         if (existingOrder && existingOrder.status === "PENDING") {
-          // Info: (20260420 - Luphia) Mark as PAID so MissionIssuer picks it up
-          await paymentRepo.updateOrderStatus(orderId, ORDER_STATUS.PAID, {
-            transactionHash: txHash,
-          });
+          pendingPaymentUpdate = {
+            orderId,
+            options: { transactionHash: txHash },
+          };
         }
       } else {
         const order = await getPendingOrder(orderId, creator.id).catch(
@@ -167,10 +171,10 @@ export async function POST(
             order.challenge,
           );
 
-          // Info: (20260420 - Luphia) Mark as PAID so MissionIssuer picks it up
-          await paymentRepo.updateOrderStatus(orderId, ORDER_STATUS.PAID, {
-            signature: JSON.stringify(authentication),
-          });
+          pendingPaymentUpdate = {
+            orderId,
+            options: { signature: JSON.stringify(authentication) },
+          };
         }
       }
     } catch (error) {
@@ -292,8 +296,11 @@ export async function POST(
       const order = await orderRepo.findFirst({ where: { id: orderId } });
       if (order && order.data) {
         const orderData = order.data as Record<string, unknown>;
-        if (orderData.files && Array.isArray(orderData.files)) {
-          orderData.files = orderData.files.map((f: unknown) => {
+        const payloadData =
+          (orderData.data as Record<string, unknown>) || orderData;
+
+        if (payloadData.files && Array.isArray(payloadData.files)) {
+          payloadData.files = payloadData.files.map((f: unknown) => {
             const fileObj = f as Record<string, unknown>;
             const match = results.find((r) => r.hash === fileObj.hash);
             if (match) {
@@ -306,6 +313,11 @@ export async function POST(
             }
             return f;
           });
+
+          if (orderData.data) {
+            orderData.data = payloadData;
+          }
+
           await orderRepo.update({
             where: { id: orderId },
             data: { data: orderData as Prisma.InputJsonValue },
@@ -314,6 +326,15 @@ export async function POST(
       }
     } catch (e) {
       console.error("Failed to update order with generated IDs:", e);
+    }
+
+    if (pendingPaymentUpdate) {
+      // Info: (20260420 - Luphia) Mark as PAID so MissionIssuer picks it up ONLY AFTER DB records are fully synced
+      await paymentRepo.updateOrderStatus(
+        pendingPaymentUpdate.orderId,
+        ORDER_STATUS.PAID,
+        pendingPaymentUpdate.options,
+      );
     }
 
     return jsonOk({
