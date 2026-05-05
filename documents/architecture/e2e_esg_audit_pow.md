@@ -1,12 +1,36 @@
-# 🏆 iSunFA E2E ESG Audit Pipeline - Q2 Proof of Work (PoW)
+# 🚀 任務總結與 Audit Trail：iSunFA 財報引擎架構重構與 E2E 盲測排雷
 
-> **Date**: May 2026
-> **Objective**: Hardening the ESG Audit Pipeline and achieving a **0.0000% Variance** baseline for Enterprise Financial & ESG Reporting.
-> **Info**: (20260505 - Tzuhan)
+> **Date**: May 2026 (20260505)
+> **Author**: Tzuhan
+> **Objective**: 徹底解耦財報引擎對語系字串的依賴，對齊 IFRS 會計準則，並清除影響 2330 ESG 盲測數據的底層幽靈資料，實現 0.0000% 誤差的防彈管線。
 
-This document serves as a comprehensive engineering audit trail, detailing the **24 critical bugs and architectural vulnerabilities** resolved during the E2E pipeline hardening phase. Our joint effort spanned across Domain Logic, Data Infrastructure, and High-Level Architecture, successfully transforming a fragile script into a highly robust, enterprise-grade auditing engine.
+## 🏆 高階技術成果 (Executive Summary)
+
+### 1. 資料與邏輯徹底解耦 (i18n 解放與防禦性編程)
+過去系統高度依賴 `name.includes("中文")` 來歸類財報項目，面臨外商客戶或異體字時極易崩潰。我們完成了底層重構：
+*   **標籤化架構 (Tag-based Architecture)：** 在 `IAccount` 介面中擴充了 `isInterestBearing` (有息負債) 與 `isDividend` (股利) 等業務標籤，並寫入全站字典檔。
+*   **字串解耦：** 拔除各報表中的字串比對，全權信任底層的會計代碼與 `isDebit` 借貸邏輯。
+
+### 2. 弭平「核彈級」財務指標失真 (Financial Metrics Hardening)
+*   **流動比率失真修復：** 補齊漏網的 `23` 開頭代碼，確保流動負債不會被低估。
+*   **反向指標零分母防禦：** 為 `safeDivide` 實作泛型 Fallback 機制，當零負債企業利息費用為 0 時安全回傳 `null`，避免被誤判為最高倒債風險。
+*   **彈性面額解耦：** 抽離流通在外股數硬編碼的 `/ 10` 計算邏輯，支援台灣彈性面額制度及美股無面額股票。
+
+### 3. IFRS 準則對齊與邏輯悖論修正 (Accounting Logic Alignment)
+*   **營運費用 (OpEx) 膨脹修正：** 將製造設備折舊從營業費用 (`6184`) 重分類至營業成本 (`5110`)，大幅還原真實毛利率。
+*   **布林邏輯悖論解法：** 修復子集交集陷阱，確保所得稅費用 (`79xx`) 不會被錯誤地「營業外收支」吞噬。
+
+### 4. ESG 資料管線除錯與淨空 (Data Pipeline Idempotency)
+*   **幽靈數據 (Ghost Data) 清除：** 排查出碳排數據 100% 兩倍誤差的原因是系統反覆執行累積的髒資料，撰寫 `clean_db.ts` 徹底淨空資料庫還原 Baseline。
+*   **數值防禦強化：** 加入正則表達式，妥善處理帶有括號 `()` 的負數表達與千分位逗號。
+
+### 5. 架構權衡與效能保護 (Architectural Trade-offs)
+*   拍板決議：**「財報引擎使用原生 Number，ESG 引擎使用 Decimal」**。避開 `BigInt` 序列化地雷。
+*   👉 *完整決策分析見：[`numerical_precision_guideline.md`](./numerical_precision_guideline.md)*
 
 ---
+
+## 🕵️♂️ 詳細除錯紀錄 (Detailed Audit Trail - 24 Fixes)
 
 ## 🕵️♂️ Phase 1: 業務邏輯與會計分類錯誤 (Domain Logic Bugs)
 *解決了最核心的報表失真問題，確保財務恆等式與現金流計算的絕對正確。*
