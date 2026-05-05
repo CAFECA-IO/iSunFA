@@ -13,7 +13,7 @@ export interface IIncomeStatementMetrics {
   ebitdaMargin: number; // Info: (20260330 - Julian) EBITDA 利潤率 %
   operatingExpenseRatio: number; // Info: (20260330 - Julian) 營業費用率 %
   nonOperatingIncomeRatio: number; // Info: (20260330 - Julian) 業外收支佔營收比率 %
-  interestCoverageRatio: number; // Info: (20260330 - Julian) 利息保障倍數
+  interestCoverageRatio: number | null; // Info: (20260330 - Julian) 利息保障倍數
   eps: number; // Info: (20260330 - Julian) 每股盈餘
   taxRate: number; // Info: (20260330 - Julian) 稅率 %
 }

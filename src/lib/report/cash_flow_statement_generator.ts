@@ -3,6 +3,7 @@ import {
   ICashFlowStatement,
   ICashFlowStatementItem,
 } from "@/interfaces/cash_flow_statement";
+import { safeDivide } from "@/lib/utils/math";
 
 export function generateCashFlowStatement(
   lineItems: IVoucherLineUI[],
@@ -25,11 +26,11 @@ export function generateCashFlowStatement(
   // Info: (20260330 - Julian) 關鍵指標
   let netIncome = 0;
   let depreciationAndAmortization = 0;
-  let capitalExpenditure = 0;
-
-  // Info: (20260330 - Julian) 補充揭露
+  let nonOperatingIncomeAndExpense = 0;
   let interestPaid = 0;
   let taxesPaid = 0;
+  let capitalExpenditure = 0;
+  let dividendsPaid = 0;
 
   // Info: (20260330 - Julian) 計算營業現金流對流動負債比率
   let currentLiabilitiesTotal = 0;
@@ -64,14 +65,15 @@ export function generateCashFlowStatement(
     ) {
       netIncome += impact;
 
-      // Info: (20260330 - Julian) 分離折舊與攤銷 (非現金費用加回)
-      if (name.includes("折舊") || name.includes("攤銷")) {
-        depreciationAndAmortization += isDebit ? amount : -amount;
+      // Info: (20260504 - Tzuhan) ⚠️修復：反向調節營業外收支 (7,8 開頭)，避免與投資/籌資活動現金流重複計算
+      if (code.startsWith("7") || code.startsWith("8")) {
+        nonOperatingIncomeAndExpense += impact;
       }
 
-      // Info: (20260330 - Julian) 補充揭露
-      if (name.includes("利息費用")) interestPaid += isDebit ? amount : -amount;
-      if (name.includes("所得稅費用")) taxesPaid += isDebit ? amount : -amount;
+      // Info: (20260504 - Tzuhan) 補充揭露：使用代碼 (7510/7050 利息, 79 所得稅) 避免中文判斷失效
+      if (code.startsWith("751") || code.startsWith("705"))
+        interestPaid += isDebit ? amount : -amount;
+      if (code.startsWith("79")) taxesPaid += isDebit ? amount : -amount;
     }
 
     // Info: (20260330 - Julian) 2. 營業活動 - 營運營運資金變動
@@ -89,9 +91,9 @@ export function generateCashFlowStatement(
 
     // Info: (20260330 - Julian) 流動負債變動 (營業活動)
     if (code.startsWith("21") || code.startsWith("22")) {
-      // Info: (20260330 - Julian) 短期借款歸類融資
-      if (code.startsWith("212")) {
-        addItem(financingItems, `短期借款變動`, impact);
+      // Info: (20260504 - Tzuhan) ⚠️修復：改由底層字典的 isInterestBearing 標籤統一控管有息負債，實現資料與邏輯解耦
+      if (line.accounting?.isInterestBearing) {
+        addItem(financingItems, `短期借款/票券及一年內到期長債變動`, impact);
       } else {
         addItem(operatingItems, `[營運資金] ${name}變動`, impact);
       }
@@ -107,6 +109,18 @@ export function generateCashFlowStatement(
       code.startsWith("18") ||
       code.startsWith("19")
     ) {
+      // Info: (20260504 - Tzuhan) ⚠️修復：改由備抵資產 (Contra-Asset) 的變動來精準捕捉折舊攤銷，完全捨棄中文關鍵字比對
+      if (!line.accounting.isDebit) {
+        if (!isDebit) {
+          // 貸方增加代表提列折舊/攤銷，加回淨利
+          depreciationAndAmortization += amount;
+        } else {
+          // 借方減少代表處分資產時的累計折舊沖銷，應作為投資活動現金流的減項（還原資產帳面價值）
+          addItem(investingItems, `處分資產(累計折舊沖銷)`, impact);
+        }
+        return;
+      }
+
       // Info: (20260330 - Julian) 粗略算資本支出 (不動產廠房設備增加=借方)
       if (isDebit && (code.startsWith("15") || code.startsWith("16"))) {
         capitalExpenditure += amount;
@@ -128,12 +142,11 @@ export function generateCashFlowStatement(
       addItem(financingItems, `長期負債變動: ${name}`, impact);
     }
     if (code.startsWith("3")) {
-      if (code.startsWith("33")) {
-        // Info: (20260330 - Julian) 保留盈餘變動可能包含本期損益結轉及發放股利。這裡簡化處理：如果有名稱含「股利」，則列入融資流出
-        if (name.includes("股利")) {
-          addItem(financingItems, `發放股利 (${name})`, impact);
-        }
-      } else {
+      if (line.accounting?.isDividend && isDebit) {
+        // Info: (20260504 - Tzuhan) 分配股利為未分配盈餘 (335) 的借方變動
+        dividendsPaid += amount;
+        addItem(financingItems, `發放股利`, impact);
+      } else if (!code.startsWith("33")) {
         addItem(financingItems, `權益變動: ${name}`, impact);
       }
     }
@@ -153,6 +166,12 @@ export function generateCashFlowStatement(
     finalOperatingItems.push({
       name: "折舊及攤銷費用(加回)",
       amount: depreciationAndAmortization,
+    });
+  }
+  if (nonOperatingIncomeAndExpense !== 0) {
+    finalOperatingItems.push({
+      name: "營業外收支(反向排除)",
+      amount: -nonOperatingIncomeAndExpense, // 收益(正)轉負扣除，費損(負)轉正加回
     });
   }
   finalOperatingItems.push(...mapToArray(operatingItems));
@@ -180,8 +199,7 @@ export function generateCashFlowStatement(
   // Info: (20260330 - Julian) 計算指標
   const freeCashFlow = totalOperating - capitalExpenditure; // Info: (20260330 - Julian) 自由現金流
   // Info: (20260330 - Julian) 營業現金流對流動負債比率 = 總營業現金流 / 流動負債
-  const safeDivide = (num: number, den: number) =>
-    den === 0 || isNaN(den) ? 0 : num / den;
+  // Info: (20260330 - Julian) 營業現金流對流動負債比率 = 總營業現金流 / 流動負債
   const operatingCashFlowRatio =
     safeDivide(totalOperating, currentLiabilitiesTotal) * 100;
 
@@ -211,16 +229,7 @@ export function generateCashFlowStatement(
           capitalExpenditure + Math.abs(totalFinancing),
         ) * 100, // Info: (20260330 - Julian) 簡化版
       cashReinvestmentRatio:
-        safeDivide(
-          totalOperating - calculateDividends(finalFinancingItems),
-          1000000,
-        ) * 100, // Info: (20260330 - Julian) 簡化版 (需要總資產，這裡無法直接取得)
+        safeDivide(totalOperating - dividendsPaid, 1000000) * 100, // Info: (20260330 - Julian) 簡化版 (需要總資產，這裡無法直接取得)
     },
   };
-}
-
-function calculateDividends(items: ICashFlowStatementItem[]) {
-  return items
-    .filter((i) => i.name.includes("股利"))
-    .reduce((acc, curr) => acc + Math.abs(curr.amount), 0);
 }

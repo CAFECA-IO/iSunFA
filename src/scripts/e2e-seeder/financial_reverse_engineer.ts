@@ -222,15 +222,15 @@ export const generateFinancialVouchers = (stockId: string) => {
       lines: [
         {
           id: randomUUID(),
-          description: "期末提列固定資產折舊",
-          accountingCode: "6184", // Info: (20260504 - Tzuhan) 折舊
+          description: "期末提列製造費用折舊",
+          accountingCode: "5110", // Info: (20260504 - Tzuhan) 銷貨成本，避免錯誤膨脹營業費用 (6XXX)
           debitAmount: depreciation.toNumber(),
           creditAmount: 0,
         },
         {
           id: randomUUID(),
           description: "累計折舊增加",
-          accountingCode: "1521", // Info: (20260504 - Tzuhan) 累計折舊
+          accountingCode: "1613", // Info: (20260504 - Tzuhan) 累計折舊－房屋及建築 (此為 Contra-Asset，isDebit=false)
           debitAmount: 0,
           creditAmount: depreciation.toNumber(),
         },
