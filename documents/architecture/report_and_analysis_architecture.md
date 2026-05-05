@@ -1,4 +1,6 @@
 # 系統報表產出架構解析 (Sequence Diagrams)
+> **Info**: (20260505 - Tzuhan)
+
 以下是 iSunFA 系統內兩個產出財報與碳排查的關鍵模組序列圖。
 ---
 
