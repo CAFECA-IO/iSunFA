@@ -58,6 +58,7 @@ export async function GET(
     const lineItems: IVoucherLineUI[] = voucher.lines.map((l) => {
       return {
         id: l.id,
+        accountingCode: l.accountingCode,
         accounting: getAccountByCode(l.accountingCode),
         particular: l.particular ?? "",
         amount: l.amount,
