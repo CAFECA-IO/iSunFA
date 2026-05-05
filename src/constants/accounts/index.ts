@@ -13,6 +13,8 @@ export interface IAccount {
   level: number;
   parentCode: string;
   isDebit: boolean;
+  isInterestBearing?: boolean;
+  isDividend?: boolean;
 }
 
 export const COUNTRY = {
