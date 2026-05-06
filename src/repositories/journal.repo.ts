@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, Journal } from "@/generated";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
-import { IJournalFilterOptions } from "@/interfaces/prisma_filter_option";
+import { IJournalFilterOptions } from "@/interfaces/data_filter_option";
 import { VerifyStatus } from "@/constants/verify_status";
 
 // Info: (20260327 - Luphia) 定義共用的 Return Type 讓型別更嚴謹
@@ -29,9 +29,7 @@ export interface IJournalRepository {
   ): Promise<JournalWithRelations>;
   deleteJournal(id: string): Promise<Journal>;
   verifyAllJournals(accountBookId: string): Promise<Prisma.BatchPayload>;
-  getJournalSummary(
-    accountBookId: string,
-  ): Promise<{
+  getJournalSummary(accountBookId: string): Promise<{
     todayJournalCount: number;
     pendingJournalCount: number;
     aiAverageConfidence: number;

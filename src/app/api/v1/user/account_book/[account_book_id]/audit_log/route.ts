@@ -5,7 +5,7 @@ import { accountBookRepo } from "@/repositories/account_book.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IAuditLog } from "@/interfaces/audit_log";
-import { IAuditLogFilterOptions } from "@/interfaces/prisma_filter_option";
+import { IAuditLogFilterOptions } from "@/interfaces/data_filter_option";
 import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
 
 /**

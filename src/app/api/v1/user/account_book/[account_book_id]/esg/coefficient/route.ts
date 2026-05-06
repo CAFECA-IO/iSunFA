@@ -25,7 +25,7 @@ import {
   TRUE_COEFFICIENT_DATA_DEFRA_PART_6,
   TRUE_COEFFICIENT_DATA_TAIWAN,
 } from "@/constants/true_esg_coefficients";
-import { ICoefficientFilterOptions } from "@/interfaces/prisma_filter_option";
+import { ICoefficientFilterOptions } from "@/interfaces/data_filter_option";
 
 /**
  * Info: (20260413 - Julian) 新增自訂係數

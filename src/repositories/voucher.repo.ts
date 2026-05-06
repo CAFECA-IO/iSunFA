@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, Voucher } from "@/generated";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
-import { IVoucherFilterOptions } from "@/interfaces/prisma_filter_option";
+import { IVoucherFilterOptions } from "@/interfaces/data_filter_option";
 import { VerifyStatus } from "@/constants/verify_status";
 
 export type VoucherWithRelations = Prisma.VoucherGetPayload<{

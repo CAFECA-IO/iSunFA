@@ -24,7 +24,7 @@ import {
   IBaseStringFilter,
   ICoefficientFilterOptions,
   IEsgRecordFilterOptions,
-} from "@/interfaces/prisma_filter_option";
+} from "@/interfaces/data_filter_option";
 import { VerifyStatus } from "@/constants/verify_status";
 
 export type EsgRecordWithRelations = Prisma.EsgRecordGetPayload<{

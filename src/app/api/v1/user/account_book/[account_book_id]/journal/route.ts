@@ -7,7 +7,7 @@ import { accountBookRepo } from "@/repositories/account_book.repo";
 import { journalRepo } from "@/repositories/journal.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { IJournalFilterOptions } from "@/interfaces/prisma_filter_option";
+import { IJournalFilterOptions } from "@/interfaces/data_filter_option";
 import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 

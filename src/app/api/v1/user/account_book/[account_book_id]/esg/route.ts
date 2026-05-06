@@ -7,7 +7,7 @@ import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { IEsgRecordFilterOptions } from "@/interfaces/prisma_filter_option";
+import { IEsgRecordFilterOptions } from "@/interfaces/data_filter_option";
 import {
   IEsgRecordDetail,
   EsgScope as ClientEsgScope,
