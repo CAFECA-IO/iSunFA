@@ -3,8 +3,14 @@ import * as path from "path";
 import { prisma } from "@/lib/prisma";
 
 export const exportPhase2Db = async (stockId: string) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}`);
-  const dumpPath = path.join(dataDir, "db_dump_vouchers.json");
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+  const outDir = path.join(
+    dataDir,
+    "inputs",
+    "simulated_data",
+    "phase5_articulation_test",
+  );
+  const dumpPath = path.join(outDir, "db_dump_vouchers.json");
 
   console.log(`\n======================================================`);
   console.log(`📤 [PHASE 2] Exporting DB Vouchers & ESG for ${stockId}`);
@@ -33,8 +39,8 @@ export const exportPhase2Db = async (stockId: string) => {
     esgRecords,
   };
 
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+  if (!fs.existsSync(outDir)) {
+    fs.mkdirSync(outDir, { recursive: true });
   }
 
   fs.writeFileSync(dumpPath, JSON.stringify(dumpData, null, 2), "utf-8");

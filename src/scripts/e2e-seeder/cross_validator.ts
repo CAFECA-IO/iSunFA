@@ -25,9 +25,19 @@ const findReportValue = (
 };
 
 export const runCrossValidation = async (stockId: string) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}`);
-  const finDataPath = path.join(dataDir, "2024_FIN_DATA.json");
-  const esgMetricsPath = path.join(dataDir, "2024_ESG_METRICS.json");
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+  const finDataPath = path.join(
+    dataDir,
+    "inputs",
+    "golden_data",
+    "2024_FIN_DATA.json",
+  );
+  const esgMetricsPath = path.join(
+    dataDir,
+    "inputs",
+    "golden_data",
+    "2024_ESG_METRICS.json",
+  );
 
   if (!fs.existsSync(finDataPath)) {
     console.error(
@@ -261,7 +271,12 @@ export const runCrossValidation = async (stockId: string) => {
   report.score = Math.round((passedCount / tests.length) * 100);
   report.overallStatus = report.score === 100 ? "PASSED" : "FAILED";
 
-  const outPath = path.join(dataDir, "audit_variance_report.json");
+  const outPath = path.join(
+    dataDir,
+    "outputs",
+    "phase5_articulation_test",
+    "audit_variance_report.json",
+  );
   fs.writeFileSync(outPath, JSON.stringify(report, null, 2), "utf-8");
 
   console.log(`\n📊 [FINANCIAL VARIANCE REPORT]`);

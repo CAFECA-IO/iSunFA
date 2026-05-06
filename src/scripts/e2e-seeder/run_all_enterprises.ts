@@ -46,8 +46,22 @@ export const runScaleTest = async (
       console.log(`------------------------------------------------------`);
 
       // Info: (20260502 - Tzuhan) 執行前進行快速驗證
-      const finDataPath = path.join(dataDir, stockId, "2024_FIN_DATA.json");
-      const esgDataPath = path.join(dataDir, stockId, "2024_ESG_METRICS.json");
+      const finDataPath = path.join(
+        dataDir,
+        stockId,
+        "2024",
+        "inputs",
+        "golden_data",
+        "2024_FIN_DATA.json",
+      );
+      const esgDataPath = path.join(
+        dataDir,
+        stockId,
+        "2024",
+        "inputs",
+        "golden_data",
+        "2024_ESG_METRICS.json",
+      );
 
       if (!fs.existsSync(finDataPath) || !fs.existsSync(esgDataPath)) {
         console.warn(
@@ -58,6 +72,13 @@ export const runScaleTest = async (
       }
 
       try {
+        if (shouldClean) {
+          const outputsDir = path.join(dataDir, stockId, "2024", "outputs");
+          if (fs.existsSync(outputsDir)) {
+            console.log(`🧹 Cleaning outputs directory for ${stockId}...`);
+            fs.rmSync(outputsDir, { recursive: true, force: true });
+          }
+        }
         await runPipeline(stockId, shouldClean, skipImages);
         results[stockId] = "PASSED";
       } catch {
