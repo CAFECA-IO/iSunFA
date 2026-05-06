@@ -49,25 +49,12 @@ export async function GET(
       return jsonFail(API_ERRORS.VL_INVALID_ID);
     }
 
-    const journalDbRecord = await journalRepo.getJournalById(journalId);
+    const journal = await journalRepo.getJournalById(journalId);
 
-    if (!journalDbRecord) {
+    if (!journal) {
       console.error("Journal not found");
       return jsonFail(API_ERRORS.NF_JOURNAL);
     }
-
-    const journal = {
-      ...journalDbRecord,
-      file: journalDbRecord.file
-        ? {
-            id: journalDbRecord.file.id,
-            hash: journalDbRecord.file.hash,
-            fileName: journalDbRecord.file.fileName || "Unknown",
-          }
-        : undefined,
-      voucherId: journalDbRecord.voucherId,
-      esgRecordId: journalDbRecord.esgRecordId,
-    };
 
     return jsonOk(journal);
   } catch (error) {

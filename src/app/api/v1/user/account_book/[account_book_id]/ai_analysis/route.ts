@@ -200,7 +200,6 @@ export async function POST(
       fileId: uploadedFile.id,
       text: "",
       tradingDate: new Date(),
-      confidence: 0,
       isVerified: false,
       aiNote: "",
     });
@@ -257,7 +256,7 @@ export async function POST(
       {
         userId: creator.id,
         dataType: "JOURNAL",
-        dataId: newJournal.id,
+        dataId: newJournal.newId,
         accountBookId: accountBook.id,
         action: "CREATE",
       },
@@ -278,7 +277,7 @@ export async function POST(
     ]);
 
     return jsonOk({
-      journalId: newJournal.id,
+      journalId: newJournal.newId,
       voucherId: newVoucher.id,
       recordId: newRecord.id,
     });

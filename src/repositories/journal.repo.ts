@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, Journal } from "@/generated";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { IJournal } from "@/interfaces/journal";
 import { IJournalFilterOptions } from "@/interfaces/data_filter_option";
 import { VerifyStatus } from "@/constants/verify_status";
 
@@ -13,16 +14,15 @@ type JournalWithRelations = Prisma.JournalGetPayload<{
 };
 
 export interface IJournalRepository {
-  createJournal(data: Prisma.JournalUncheckedCreateInput): Promise<Journal>;
-  countJournals(where: Prisma.JournalWhereInput): Promise<number>;
-  getJournalsByFilter(
-    options: IJournalFilterOptions,
-  ): Promise<JournalWithRelations[]>;
+  createJournal(
+    data: Prisma.JournalUncheckedCreateInput,
+  ): Promise<{ newId: string }>;
+  countJournals(): Promise<number>;
   countJournalsByFilter(options: IJournalFilterOptions): Promise<number>;
-  getJournals(
-    args: Prisma.JournalFindManyArgs,
-  ): Promise<JournalWithRelations[]>;
-  getJournalById(id: string): Promise<JournalWithRelations | null>;
+  getJournals(): Promise<IJournal[]>;
+  getJournalsByFilter(options: IJournalFilterOptions): Promise<IJournal[]>;
+  getJournalById(id: string): Promise<IJournal | null>;
+
   updateJournal(
     id: string,
     data: Prisma.JournalUpdateInput,
@@ -42,17 +42,12 @@ export interface IJournalRepository {
 }
 
 export class JournalRepository implements IJournalRepository {
-  async createJournal(data: Prisma.JournalUncheckedCreateInput) {
-    return prisma.journal.create({ data });
-  }
-
-  async countJournals(where: Prisma.JournalWhereInput) {
-    return prisma.journal.count({ where });
-  }
-
+  // Info: (20260506 - Julian) ==== 核心邏輯 ====
+  // Info: (20260506 - Julian) 建構查詢條件
   private buildJournalWhereClause(
     options: IJournalFilterOptions,
   ): Prisma.JournalWhereInput {
+    // Info: (20260506 - Julian) 軟刪除過濾邏輯
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -86,32 +81,34 @@ export class JournalRepository implements IJournalRepository {
     return where;
   }
 
-  async getJournalsByFilter(
-    options: IJournalFilterOptions,
-  ): Promise<JournalWithRelations[]> {
-    const where = this.buildJournalWhereClause(options);
-    const skip =
-      options.page && options.limit
-        ? (options.page - 1) * options.limit
-        : undefined;
-    const take = options.limit || undefined;
-
-    return this.getJournals({
-      where,
-      skip,
-      take,
-      orderBy: { tradingDate: options.sort || "desc" },
-    });
+  // Info: (20260506 - Julian) 轉換格式
+  private transformToFrontendFormat(journal: JournalWithRelations): IJournal {
+    return {
+      ...journal,
+      tradingTimestamp: Math.floor(journal.tradingDate.getTime() / 1000),
+      text: journal.text ?? "",
+      fileId: journal.fileId ?? "",
+      file: journal.file
+        ? {
+            id: journal.file.id,
+            hash: journal.file.hash,
+            fileName: journal.file.fileName ?? "",
+          }
+        : undefined,
+      voucherId: journal.voucherId,
+      esgRecordId: journal.esgRecordId,
+      analysisStatus: journal.analysisStatus as AIAnalysisStatus,
+      confidence: journal.confidence,
+      isVerified: journal.isVerified,
+      aiNote: journal.aiNote ?? undefined,
+      isDeleted: !!journal.deletedAt,
+    };
   }
 
-  async countJournalsByFilter(options: IJournalFilterOptions): Promise<number> {
-    const where = this.buildJournalWhereClause(options);
-    return this.countJournals(where);
-  }
-
-  async getJournals(
+  // Info: (20260506 - Julian) 抽取共用的查詢與轉換邏輯
+  private async fetchAndFormatJournals(
     args: Prisma.JournalFindManyArgs,
-  ): Promise<JournalWithRelations[]> {
+  ): Promise<IJournal[]> {
     // Info: (20260327 - Luphia) 確保一定有 include file，並讓 Prisma 自動推導型別
     const mergedArgs = {
       ...args,
@@ -119,16 +116,18 @@ export class JournalRepository implements IJournalRepository {
     };
 
     const journals = await prisma.journal.findMany(mergedArgs);
-    if (journals.length === 0) return [];
+    if (journals.length === 0) return []; // Info: (20260506 - Julian) 若無日記帳就直接 return
 
+    // Info: (20260506 - Julian) 取出 file
     const fileIds = Array.from(
       new Set(
         journals.map((j) => j.fileId).filter((id): id is string => id !== null),
       ),
     );
 
+    // Info: (20260506 - Julian) 若沒有 file 就不需要後續的查詢
     if (fileIds.length === 0) {
-      return journals.map((journal) => ({ ...journal }));
+      return journals.map((j) => this.transformToFrontendFormat(j));
     }
 
     // Info: (20260327 - Luphia) 並行查詢，節省等待時間
@@ -152,35 +151,70 @@ export class JournalRepository implements IJournalRepository {
       esgRecords.map((e) => [`${e.fileId}_${e.accountBookId}`, e.id]),
     );
 
+    // Info: (20260506 - Julian) 轉換格式，並對齊關聯資料
     return journals.map((journal) => {
       const compositeKey = `${journal.fileId}_${journal.accountBookId}`;
-      return {
+      const voucherId = journal.fileId
+        ? voucherMap.get(compositeKey)
+        : undefined;
+      const esgRecordId = journal.fileId
+        ? esgRecordMap.get(compositeKey)
+        : undefined;
+
+      return this.transformToFrontendFormat({
         ...journal,
-        voucherId: journal.fileId ? voucherMap.get(compositeKey) : undefined,
-        esgRecordId: journal.fileId
-          ? esgRecordMap.get(compositeKey)
-          : undefined,
-      };
+        voucherId,
+        esgRecordId,
+      });
     });
   }
 
-  async getJournalById(id: string): Promise<JournalWithRelations | null> {
-    const journal = await prisma.journal.findUnique({
-      where: { id },
-      include: { file: true },
+  // Info: (20260506 - Julian) 新增日記帳：回傳 new journal id (string)
+  async createJournal(data: Prisma.JournalUncheckedCreateInput) {
+    const newJournal = await prisma.journal.create({ data });
+    return { newId: newJournal.id };
+  }
+
+  // Info: (20260506 - Julian) 取得日記帳總數：回傳 number
+  async countJournals() {
+    return prisma.journal.count();
+  }
+
+  // Info: (20260506 - Julian) 取得符合條件的日記帳總數：回傳 number
+  async countJournalsByFilter(options: IJournalFilterOptions): Promise<number> {
+    const where = this.buildJournalWhereClause(options);
+    return prisma.journal.count({ where });
+  }
+
+  // Info: (20260506 - Julian) 取得所有日記帳：回傳 IJournal[]
+  async getJournals(): Promise<IJournal[]> {
+    return this.fetchAndFormatJournals({});
+  }
+
+  // Info: (20260506 - Julian) 取得符合條件的日記帳列表：回傳 IJournal[]
+  async getJournalsByFilter(
+    options: IJournalFilterOptions,
+  ): Promise<IJournal[]> {
+    const where = this.buildJournalWhereClause(options);
+    const skip =
+      options.page && options.limit
+        ? (options.page - 1) * options.limit
+        : undefined;
+    const take = options.limit || undefined;
+
+    return this.fetchAndFormatJournals({
+      where,
+      skip,
+      take,
+      orderBy: { tradingDate: options.sort || "desc" },
     });
+  }
 
-    if (!journal) return null;
-
-    const relations = await this.getRelationsForJournal(
-      journal.fileId,
-      journal.accountBookId,
-    );
-
-    return {
-      ...journal,
-      ...relations,
-    };
+  async getJournalById(id: string): Promise<IJournal | null> {
+    const journals = await this.fetchAndFormatJournals({
+      where: { id },
+    });
+    return journals[0] || null;
   }
 
   async updateJournal(
