@@ -8,9 +8,6 @@ import { VerifyStatus } from "@/constants/verify_status";
 import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
 import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
-import { getAccountByCode } from "@/lib/utils/account";
-import { IVoucherLineUI } from "@/interfaces/voucher";
-import { IAccount } from "@/constants/accounts";
 import { generateEsgReport } from "@/lib/report/esg_report_generator";
 import { esgRepo } from "@/repositories/esg.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
@@ -113,24 +110,17 @@ export async function GET(
           : undefined,
       endDate: getTradingDateRange().end,
     });
-    const lineItems = vouchers.map((voucher) => voucher.lines).flat();
-
-    // Info: (20260331 - Julian) 格式化會計分錄
-    const formattedLineItems: IVoucherLineUI[] = lineItems.map((line) => ({
-      ...line,
-      particular: line.particular ?? "",
-      accounting: getAccountByCode(line.accountingCode) as IAccount,
-    }));
+    const lineItems = vouchers.map((voucher) => voucher.lineItems.lines).flat();
 
     // Info: (20260330 - Julian) 取得報表資料
     const getReportData = () => {
       switch (reportType) {
         case ReportType.BALANCE_SHEET:
-          return generateBalanceSheet(formattedLineItems);
+          return generateBalanceSheet(lineItems);
         case ReportType.CASH_FLOW:
-          return generateCashFlowStatement(formattedLineItems);
+          return generateCashFlowStatement(lineItems);
         case ReportType.INCOME_STATEMENT:
-          return generateIncomeStatement(formattedLineItems);
+          return generateIncomeStatement(lineItems);
         default:
           return {};
       }

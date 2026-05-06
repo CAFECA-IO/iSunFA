@@ -1,28 +1,33 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, Voucher } from "@/generated";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { IAccount } from "@/constants/accounts";
 import { IVoucherFilterOptions } from "@/interfaces/data_filter_option";
 import { VerifyStatus } from "@/constants/verify_status";
+import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
+import { getAccountByCode } from "@/lib/utils/account";
+import { VoucherSorting } from "@/constants/sort";
 
 export type VoucherWithRelations = Prisma.VoucherGetPayload<{
   include: { file: true; user: true; lines: true };
 }> & { journalId?: string; esgRecordId?: string };
 
 export interface IVoucherRepository {
-  verifyAllVouchers(accountBookId: string): Promise<Prisma.BatchPayload>;
+  createVoucher(
+    data: Prisma.VoucherUncheckedCreateInput,
+  ): Promise<{ newId: string }>;
+  countVouchers(accountBookId: string): Promise<number>;
+  countVouchersByFilter(options: IVoucherFilterOptions): Promise<number>;
+  verifyAllVouchers(accountBookId: string): Promise<number>;
+
+  getVouchers(accountBookId: string): Promise<IVoucher[]>;
+  getVouchersByFilter(options: IVoucherFilterOptions): Promise<IVoucher[]>;
+  getVoucherById(id: string): Promise<IVoucher | null>;
+
   getVerifiedIncomesByAccountBookId(
     accountBookId: string,
   ): Promise<Prisma.VoucherGetPayload<{ include: { lines: true } }>[]>;
-  createVoucher(data: Prisma.VoucherUncheckedCreateInput): Promise<Voucher>;
-  countVouchers(where: Prisma.VoucherWhereInput): Promise<number>;
-  getVouchers(
-    args: Prisma.VoucherFindManyArgs,
-  ): Promise<VoucherWithRelations[]>;
-  getVouchersByFilter(
-    options: IVoucherFilterOptions,
-  ): Promise<VoucherWithRelations[]>;
-  countVouchersByFilter(options: IVoucherFilterOptions): Promise<number>;
-  getVoucherById(id: string): Promise<VoucherWithRelations | null>;
+
   updateVoucher(
     id: string,
     data: Prisma.VoucherUpdateInput,
@@ -55,37 +60,7 @@ export interface IVoucherRepository {
 }
 
 export class VoucherRepository implements IVoucherRepository {
-  async verifyAllVouchers(accountBookId: string) {
-    return prisma.voucher.updateMany({
-      where: {
-        accountBookId,
-        isVerified: false,
-      },
-      data: {
-        isVerified: true,
-      },
-    });
-  }
-
-  async getVerifiedIncomesByAccountBookId(accountBookId: string) {
-    return prisma.voucher.findMany({
-      where: {
-        accountBookId,
-        tradingType: "INCOME",
-        isVerified: true,
-      },
-      include: { lines: true },
-    });
-  }
-
-  async createVoucher(data: Prisma.VoucherUncheckedCreateInput) {
-    return prisma.voucher.create({ data });
-  }
-
-  async countVouchers(where: Prisma.VoucherWhereInput) {
-    return prisma.voucher.count({ where });
-  }
-
+  // Info: (20260506 - Julian) 建構查詢條件
   private buildVoucherFindManyArgs(
     options: IVoucherFilterOptions,
   ): Prisma.VoucherFindManyArgs {
@@ -129,13 +104,13 @@ export class VoucherRepository implements IVoucherRepository {
     }
 
     // Info: (20260310 - Julian) 排序 (保留欄位排序功能，但如果提供 sorting，則在最後再重新排序)
-    if (options.orderBy) {
-      try {
-        filteredConditions.orderBy = JSON.parse(options.orderBy);
-      } catch {
-        console.warn("Invalid orderBy param format, ignoring");
-      }
-    }
+    // if (options.orderBy) {
+    //   try {
+    //     filteredConditions.orderBy = JSON.parse(options.orderBy);
+    //   } catch {
+    //     console.warn("Invalid orderBy param format, ignoring");
+    //   }
+    // }
 
     if (options.type && options.type !== "all") {
       filteredConditions.where!.tradingType = options.type.toUpperCase() as
@@ -165,92 +140,310 @@ export class VoucherRepository implements IVoucherRepository {
     return filteredConditions;
   }
 
-  async getVouchersByFilter(
+  private buildVoucherWhereClause(
     options: IVoucherFilterOptions,
-  ): Promise<VoucherWithRelations[]> {
-    const args = this.buildVoucherFindManyArgs(options);
-    return this.getVouchers(args);
-  }
+  ): Prisma.VoucherWhereInput {
+    const where: Prisma.VoucherWhereInput = {
+      accountBookId: options.accountBookId,
+    };
 
-  async countVouchersByFilter(options: IVoucherFilterOptions): Promise<number> {
-    const args = this.buildVoucherFindManyArgs(options);
-    return this.countVouchers(args.where || {});
-  }
-
-  async getVouchers(
-    args: Prisma.VoucherFindManyArgs,
-  ): Promise<VoucherWithRelations[]> {
-    const vouchers = (await prisma.voucher.findMany(
-      args,
-    )) as unknown as Prisma.VoucherGetPayload<{
-      include: { file: true; user: true; lines: true };
-    }>[];
-    if (vouchers.length === 0) return vouchers as VoucherWithRelations[];
-
-    const fileIds = Array.from(
-      new Set(vouchers.map((v) => v.fileId).filter(Boolean)),
-    ) as string[];
-    let journals: { id: string; fileId: string | null }[] = [];
-    let esgRecords: { id: string; fileId: string | null }[] = [];
-
-    if (fileIds.length > 0) {
-      journals = await prisma.journal.findMany({
-        where: { fileId: { in: fileIds } },
-        select: { id: true, fileId: true },
-      });
-      esgRecords = await prisma.esgRecord.findMany({
-        where: { fileId: { in: fileIds } },
-        select: { id: true, fileId: true },
-      });
+    // Info: (20260311 - Julian) 關鍵字篩選：id / note / particular / accountingCode
+    if (options.keyword) {
+      where.OR = [
+        { id: { contains: options.keyword } },
+        { note: { contains: options.keyword } },
+        { lines: { some: { particular: { contains: options.keyword } } } },
+        { lines: { some: { accountingCode: { contains: options.keyword } } } },
+      ];
     }
 
-    return vouchers.map((voucher) => {
-      const journalId = journals.find((j) => j.fileId === voucher.fileId)?.id;
-      const esgRecordId = esgRecords.find(
-        (e) => e.fileId === voucher.fileId,
-      )?.id;
+    // Info: (20260324 - Julian) 建立審核狀態篩選
+    if (options.verifyStatus) {
+      where.isVerified = options.verifyStatus === VerifyStatus.VERIFIED;
+    }
+
+    // Info: (20260310 - Julian) 建立時間區間篩選
+    if (options.startDate || options.endDate) {
+      where.tradingDate = {};
+      if (options.startDate) {
+        where.tradingDate.gte = new Date(options.startDate);
+      }
+      if (options.endDate) {
+        where.tradingDate.lte = new Date(options.endDate);
+      }
+    }
+
+    if (options.type && options.type !== "all") {
+      where.tradingType = options.type.toUpperCase() as
+        | "INCOME"
+        | "OUTCOME"
+        | "TRANSFER";
+    }
+
+    if (options.hideDeleted) {
+      where.deletedAt = null;
+    } else {
+      // Info: (20260404 - Luphia) 預設列表顯示：未刪除、或是被軟刪除但距今小於 7 天內的傳票
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const whereInput = where as Prisma.VoucherWhereInput;
+      const andConditions = Array.isArray(whereInput.AND)
+        ? whereInput.AND
+        : whereInput.AND
+          ? [whereInput.AND]
+          : [];
+
+      andConditions.push({
+        OR: [{ deletedAt: null }, { deletedAt: { gte: sevenDaysAgo } }],
+      });
+      whereInput.AND = andConditions;
+    }
+
+    return where;
+  }
+
+  // Info: (20260506 - Julian) 轉換格式
+  private transformToFrontendFormat(voucher: VoucherWithRelations): IVoucher {
+    const formattedLineItems: IVoucherLineUI[] = voucher.lines.map((line) => {
       return {
+        ...line,
+        particular: line.particular ?? "",
+        accounting: getAccountByCode(line.accountingCode) as IAccount,
+      };
+    });
+    const totalAmount = voucher.lines.reduce(
+      (acc, line) => acc + line.amount,
+      0,
+    );
+
+    return {
+      ...voucher,
+      isDeleted: voucher.deletedAt !== null,
+      issuerName: voucher.user?.name || "",
+      tradingDate: Math.floor(voucher.tradingDate.getTime() / 1000),
+      tradingType: (voucher.tradingType?.toUpperCase() as TradingType) ?? null,
+      note: voucher.note || "",
+      fileId: voucher.fileId || "",
+      file: voucher.file
+        ? {
+            id: voucher.file.id,
+            hash: voucher.file.hash,
+            fileName: voucher.file.fileName ?? "",
+          }
+        : undefined,
+      lineItems: {
+        totalAmount,
+        lines: formattedLineItems,
+      },
+      analysisStatus: voucher.analysisStatus as AIAnalysisStatus,
+    };
+  }
+
+  // Info: (20260506 - Julian) 批次取得關聯並轉換格式
+  private async attachRelationsAndFormat(
+    vouchers: VoucherWithRelations[],
+  ): Promise<IVoucher[]> {
+    // Info: (20260506 - Julian) 若沒有日記帳就直接 return
+    if (vouchers.length === 0) return [];
+
+    // Info: (20260506 - Julian) 取出 file
+    const fileIds = Array.from(
+      new Set(
+        vouchers.map((j) => j.fileId).filter((id): id is string => id !== null),
+      ),
+    );
+
+    // Info: (20260506 - Julian) 若沒有 file 就不需要後續的查詢
+    if (fileIds.length === 0) {
+      return vouchers.map((j) => this.transformToFrontendFormat(j));
+    }
+
+    // Info: (20260327 - Luphia) 並行查詢，節省等待時間
+    const [journals, esgRecords] = await Promise.all([
+      prisma.journal.findMany({
+        where: { fileId: { in: fileIds } },
+        select: { id: true, fileId: true, accountBookId: true },
+      }),
+      prisma.esgRecord.findMany({
+        where: { fileId: { in: fileIds } },
+        select: { id: true, fileId: true, accountBookId: true },
+      }),
+    ]);
+
+    // Info: (20260327 - Luphia) 使用 Map 將查詢複雜度從 O(N*M) 降為 O(1)
+    // Info: (20260327 - Luphia) 使用 fileId + accountBookId 作為複合鍵，確保對應精準度
+    const journalMap = new Map(
+      journals.map((v) => [`${v.fileId}_${v.accountBookId}`, v.id]),
+    );
+    const esgRecordMap = new Map(
+      esgRecords.map((e) => [`${e.fileId}_${e.accountBookId}`, e.id]),
+    );
+
+    // Info: (20260506 - Julian) 轉換格式，並對齊關聯資料
+    return vouchers.map((voucher) => {
+      const compositeKey = `${voucher.fileId}_${voucher.accountBookId}`;
+      const journalId = voucher.fileId
+        ? journalMap.get(compositeKey)
+        : undefined;
+      const esgRecordId = voucher.fileId
+        ? esgRecordMap.get(compositeKey)
+        : undefined;
+
+      return this.transformToFrontendFormat({
         ...voucher,
         journalId,
         esgRecordId,
-      };
-    }) as VoucherWithRelations[];
+      });
+    });
+  }
+
+  // Info: (20260506 - Julian) 抽取共用的查詢並轉換格式
+  private async fetchAndFormatVouchers(
+    args: Prisma.VoucherFindManyArgs,
+    sorting?: VoucherSorting,
+  ): Promise<IVoucher[]> {
+    // Info: (20260506 - Julian) Prisma 只能用 tradingDate 排序，借貸金額排序交給下方 JS 處理
+    const prismaOrderBy: Prisma.VoucherOrderByWithRelationInput =
+      sorting === VoucherSorting.DATE_ASC
+        ? { tradingDate: Prisma.SortOrder.asc }
+        : { tradingDate: Prisma.SortOrder.desc };
+
+    const mergedArgs: Prisma.VoucherFindManyArgs = {
+      ...args,
+      orderBy: args.orderBy || prismaOrderBy,
+      // Info: (20260506 - Julian) 將關聯的 file, user, lines 一併取出
+      include: { ...args.include, file: true, user: true, lines: true },
+    };
+
+    const vouchers = (await prisma.voucher.findMany(
+      mergedArgs,
+    )) as unknown as VoucherWithRelations[];
+    const formattedVouchers = await this.attachRelationsAndFormat(vouchers);
+
+    // Info: (20260311 - Julian) JS 排序邏輯 (處理 Prisma 不支援的關聯加總)
+    if (
+      sorting &&
+      sorting !== VoucherSorting.DATE_DESC &&
+      sorting !== VoucherSorting.DATE_ASC
+    ) {
+      formattedVouchers.sort((a, b) => {
+        if (
+          sorting === VoucherSorting.DEBIT_DESC ||
+          sorting === VoucherSorting.DEBIT_ASC
+        ) {
+          const aDebit = a.lineItems.lines
+            .filter((l) => l.isDebit)
+            .reduce((sum, l) => sum + l.amount, 0);
+          const bDebit = b.lineItems.lines
+            .filter((l) => l.isDebit)
+            .reduce((sum, l) => sum + l.amount, 0);
+          return sorting === VoucherSorting.DEBIT_DESC
+            ? bDebit - aDebit
+            : aDebit - bDebit;
+        }
+
+        if (
+          sorting === VoucherSorting.CREDIT_DESC ||
+          sorting === VoucherSorting.CREDIT_ASC
+        ) {
+          const aCredit = a.lineItems.lines
+            .filter((l) => !l.isDebit)
+            .reduce((sum, l) => sum + l.amount, 0);
+          const bCredit = b.lineItems.lines
+            .filter((l) => !l.isDebit)
+            .reduce((sum, l) => sum + l.amount, 0);
+          return sorting === VoucherSorting.CREDIT_DESC
+            ? bCredit - aCredit
+            : aCredit - bCredit;
+        }
+
+        return 0;
+      });
+    }
+
+    return formattedVouchers;
+  }
+
+  // Info: (20260506 - Julian) 新增傳票：回傳 new voucher id (string)
+  async createVoucher(data: Prisma.VoucherUncheckedCreateInput) {
+    const newVoucher = await prisma.voucher.create({ data });
+    return { newId: newVoucher.id };
+  }
+
+  // Info: (20260506 - Julian) 取得傳票總數：回傳總數(number)
+  async countVouchers(accountBookId: string) {
+    const where = this.buildVoucherWhereClause({ accountBookId });
+    return prisma.voucher.count({ where });
+  }
+
+  // Info: (20260506 - Julian) 依據篩選條件取得傳票總數：回傳總數(number)
+  async countVouchersByFilter(options: IVoucherFilterOptions): Promise<number> {
+    const where = this.buildVoucherWhereClause(options);
+    return prisma.voucher.count({ where });
+  }
+
+  // Info: (20260506 - Julian) 驗證所有傳票：回傳總數(number)
+  async verifyAllVouchers(accountBookId: string) {
+    const result = await prisma.voucher.updateMany({
+      where: {
+        accountBookId,
+        isVerified: false,
+        deletedAt: null, // Info: (20260506 - Julian) 避免改動到被軟刪除的傳票
+      },
+      data: { isVerified: true },
+    });
+    return result.count;
+  }
+
+  // Info: (20260506 - Julian) 取得傳票列表：回傳 IVoucher[]
+  async getVouchers(accountBookId: string): Promise<IVoucher[]> {
+    // Info: (20260506 - Julian) 取得帳簿底下的所有日記帳
+    const where = this.buildVoucherWhereClause({ accountBookId });
+    return this.fetchAndFormatVouchers({ where });
+  }
+
+  // Info: (20260506 - Julian) 依據篩選條件取得傳票列表：回傳 IVoucher[]
+  async getVouchersByFilter(
+    options: IVoucherFilterOptions,
+  ): Promise<IVoucher[]> {
+    const where = this.buildVoucherWhereClause(options);
+    const skip =
+      options.page && options.limit
+        ? (options.page - 1) * options.limit
+        : undefined;
+    const take = options.limit || undefined;
+
+    return this.fetchAndFormatVouchers(
+      {
+        where,
+        skip,
+        take,
+      },
+      options.sorting,
+    );
+  }
+
+  // Info: (20260506 - Julian) 依據 id 取得傳票：回傳 IVoucher | null
+  async getVoucherById(id: string): Promise<IVoucher | null> {
+    const vouchers = await this.fetchAndFormatVouchers({
+      where: { id },
+    });
+    return vouchers[0] || null;
+  }
+
+  // Info: (20260506 - Julian) 取得核對過的收入傳票：回傳
+  async getVerifiedIncomesByAccountBookId(accountBookId: string) {
+    return prisma.voucher.findMany({
+      where: {
+        accountBookId,
+        tradingType: "INCOME",
+        isVerified: true,
+      },
+      include: { lines: true },
+    });
   }
 
   async findManyVouchers(args: Prisma.VoucherFindManyArgs) {
     return prisma.voucher.findMany(args);
-  }
-
-  async getVoucherById(id: string): Promise<VoucherWithRelations | null> {
-    const voucher = await prisma.voucher.findUnique({
-      where: { id },
-      include: { file: true, user: true, lines: true },
-    });
-
-    if (!voucher) return null;
-
-    let journalId: string | undefined;
-    let esgRecordId: string | undefined;
-
-    if (voucher.fileId) {
-      const journal = await prisma.journal.findFirst({
-        where: { fileId: voucher.fileId, accountBookId: voucher.accountBookId },
-        select: { id: true },
-      });
-      if (journal) journalId = journal.id;
-
-      const esgRecord = await prisma.esgRecord.findFirst({
-        where: { fileId: voucher.fileId, accountBookId: voucher.accountBookId },
-        select: { id: true },
-      });
-      if (esgRecord) esgRecordId = esgRecord.id;
-    }
-
-    return {
-      ...voucher,
-      journalId,
-      esgRecordId,
-    } as VoucherWithRelations;
   }
 
   async updateVoucher(

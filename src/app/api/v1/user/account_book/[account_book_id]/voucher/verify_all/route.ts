@@ -30,9 +30,9 @@ export async function PUT(
     if (!teamMember) return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
 
     // Info: (20260322 - Luphia) 更新所有未完成的傳票
-    const result = await voucherRepo.verifyAllVouchers(accountBookId);
+    const count = await voucherRepo.verifyAllVouchers(accountBookId);
 
-    return jsonOk({ count: result.count });
+    return jsonOk({ count });
   } catch (error) {
     console.error("API Error:", error);
     return jsonFail({

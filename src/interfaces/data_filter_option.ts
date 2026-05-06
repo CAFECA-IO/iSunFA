@@ -2,6 +2,7 @@ import {
   AuditLogAction as ClientAuditLogAction,
   AuditLogDataType as ClientAuditLogDataType,
 } from "@/constants/audit_log";
+import { VoucherSorting } from "@/constants/sort";
 import {
   EsgScope as ClientEsgScope,
   EsgIntensity as ClientEsgIntensity,
@@ -46,8 +47,7 @@ export interface IVoucherFilterOptions extends IBaseFilterOptions {
   endDate?: string | Date | null;
   type?: string | null;
   hideDeleted?: boolean | null;
-  orderBy?: string | null;
-  sorting?: string | null;
+  sorting?: VoucherSorting;
 }
 
 // Info: (20260505 - Julian) ESG 紀錄篩選條件

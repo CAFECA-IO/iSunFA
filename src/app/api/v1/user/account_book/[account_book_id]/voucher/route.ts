@@ -8,9 +8,7 @@ import { voucherRepo } from "@/repositories/voucher.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IVoucherFilterOptions } from "@/interfaces/data_filter_option";
-import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
-import { getAccountByCode } from "@/lib/utils/account";
-import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { VoucherSorting } from "@/constants/sort";
 
 /**
  * Info: (20260310 - Julian) 新增傳票：將 AI 解析出的傳票存入 DB
@@ -81,15 +79,12 @@ export async function POST(
     await auditLogRepo.createAuditLog({
       userId: creator.id,
       dataType: "VOUCHER",
-      dataId: newVoucher.id,
+      dataId: newVoucher.newId,
       accountBookId: accountBook.id,
       action: "CREATE",
     });
 
-    return jsonOk({
-      voucherId: newVoucher.id,
-      data: newVoucher,
-    });
+    return jsonOk({ voucherId: newVoucher.newId });
   } catch (error) {
     console.error("Error creating voucher:", error);
     return jsonFail(API_ERRORS.IS_DB_FAILED);
@@ -142,10 +137,11 @@ export async function GET(
     const pageSize = searchParams.get("pageSize")
       ? parseInt(searchParams.get("pageSize")!)
       : undefined;
-    const orderByParams = searchParams.get("orderBy");
     const type = searchParams.get("type");
     const hideDeleted = searchParams.get("hideDeleted") === "true";
-    const sorting = searchParams.get("sorting");
+    const sorting =
+      (searchParams.get("sorting") as VoucherSorting) ??
+      VoucherSorting.DATE_DESC;
 
     const options: IVoucherFilterOptions = {
       accountBookId: accountBook.id,
@@ -155,7 +151,6 @@ export async function GET(
       endDate,
       page,
       limit: pageSize,
-      orderBy: orderByParams,
       type,
       hideDeleted,
       sorting,
@@ -164,92 +159,10 @@ export async function GET(
     // Info: (20260310 - Julian) 取得日記帳列表
     const vouchers = await voucherRepo.getVouchersByFilter(options);
 
-    // Info: (20260311 - Julian) 組合成前端所需的格式
-    const formattedVouchers: IVoucher[] = vouchers.map((v) => {
-      // Info: (20260311 - Julian) 取得個別分錄
-      const voucherLines = v.lines.filter((l) => l.voucherId === v.id);
-
-      const voucherLineItems: IVoucherLineUI[] = voucherLines.map((l) => {
-        return {
-          id: l.id,
-          accounting: getAccountByCode(l.accountingCode),
-          particular: l.particular ?? "",
-          amount: l.amount,
-          isDebit: l.isDebit,
-        };
-      });
-
-      // Info: (20260311 - Julian) 計算 debit 總和
-      const totalAmount = voucherLines
-        .filter((l) => l.isDebit)
-        .reduce((sum, l) => sum + l.amount, 0);
-
-      return {
-        id: v.id,
-        accountBookId: v.accountBookId,
-        userId: v.userId,
-        tradingDate: Math.floor(v.tradingDate.getTime() / 1000),
-        tradingType: v.tradingType as TradingType,
-        note: v.note ?? "",
-        isDeleted: !!v.deletedAt,
-        fileId: v.fileId ?? "",
-        file: v.file
-          ? {
-              id: v.file.id,
-              hash: v.file.hash,
-              fileName: v.file.fileName || "Unknown",
-            }
-          : undefined,
-        lineItems: {
-          lines: voucherLineItems,
-          totalAmount: totalAmount,
-        },
-        issuerName: v.user?.name ?? "",
-        confidence: v.confidence,
-        isVerified: v.isVerified,
-        analysisStatus: v.analysisStatus as AIAnalysisStatus,
-        aiNote: v.aiNote ?? "",
-        journalId: v.journalId,
-        esgRecordId: v.esgRecordId,
-      };
-    });
-
-    // Info: (20260311 - Julian) 排序邏輯
-    if (sorting) {
-      formattedVouchers.sort((a, b) => {
-        if (sorting === "date_desc") return b.tradingDate - a.tradingDate;
-        if (sorting === "date_asc") return a.tradingDate - b.tradingDate;
-
-        if (sorting.startsWith("debit_")) {
-          const aDebit = a.lineItems.lines
-            .filter((l) => l.isDebit)
-            .reduce((sum, l) => sum + l.amount, 0);
-          const bDebit = b.lineItems.lines
-            .filter((l) => l.isDebit)
-            .reduce((sum, l) => sum + l.amount, 0);
-          return sorting === "debit_desc" ? bDebit - aDebit : aDebit - bDebit;
-        }
-
-        if (sorting.startsWith("credit_")) {
-          const aCredit = a.lineItems.lines
-            .filter((l) => !l.isDebit)
-            .reduce((sum, l) => sum + l.amount, 0);
-          const bCredit = b.lineItems.lines
-            .filter((l) => !l.isDebit)
-            .reduce((sum, l) => sum + l.amount, 0);
-          return sorting === "credit_desc"
-            ? bCredit - aCredit
-            : aCredit - bCredit;
-        }
-
-        return 0;
-      });
-    }
-
     // Info: (20260324 - Julian) 總筆數
     const totalCount = await voucherRepo.countVouchersByFilter(options);
 
-    return jsonOk({ data: formattedVouchers, total: totalCount });
+    return jsonOk({ data: vouchers, total: totalCount });
   } catch (error) {
     console.error("Get vouchers failed", error);
     return jsonFail(API_ERRORS.IS_DB_FAILED);

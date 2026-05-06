@@ -15,15 +15,7 @@ import DateRangePicker from "@/components/common/date_range_picker";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
 import { VerifyStatus } from "@/constants/verify_status";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
-
-enum VoucherSorting {
-  DATE_DESC = "date_desc",
-  DATE_ASC = "date_asc",
-  DEBIT_DESC = "debit_desc",
-  DEBIT_ASC = "debit_asc",
-  CREDIT_DESC = "credit_desc",
-  CREDIT_ASC = "credit_asc",
-}
+import { VoucherSorting } from "@/constants/sort";
 
 const PAGE_SIZE = 12;
 

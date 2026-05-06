@@ -263,7 +263,7 @@ export async function POST(
       {
         userId: creator.id,
         dataType: "VOUCHER",
-        dataId: newVoucher.id,
+        dataId: newVoucher.newId,
         accountBookId: accountBook.id,
         action: "CREATE",
       },
@@ -278,7 +278,7 @@ export async function POST(
 
     return jsonOk({
       journalId: newJournal.newId,
-      voucherId: newVoucher.id,
+      voucherId: newVoucher.newId,
       recordId: newRecord.id,
     });
   } catch (error) {

@@ -17,9 +17,9 @@ export interface IJournalRepository {
   createJournal(
     data: Prisma.JournalUncheckedCreateInput,
   ): Promise<{ newId: string }>;
-  countJournals(): Promise<number>;
+  countJournals(accountBookId: string): Promise<number>;
   countJournalsByFilter(options: IJournalFilterOptions): Promise<number>;
-  getJournals(): Promise<IJournal[]>;
+  getJournals(accountBookId: string): Promise<IJournal[]>;
   getJournalsByFilter(options: IJournalFilterOptions): Promise<IJournal[]>;
   getJournalById(id: string): Promise<IJournal | null>;
   updateJournal(id: string, data: Prisma.JournalUpdateInput): Promise<IJournal>;
@@ -34,7 +34,6 @@ export interface IJournalRepository {
 }
 
 export class JournalRepository implements IJournalRepository {
-  // Info: (20260506 - Julian) ==== 核心邏輯 ====
   // Info: (20260506 - Julian) 建構查詢條件
   private buildJournalWhereClause(
     options: IJournalFilterOptions,
@@ -43,6 +42,7 @@ export class JournalRepository implements IJournalRepository {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+    // Info: (20260506 - Julian) 查詢條件：帳簿、軟刪除(保留 7 天內)
     const where: Prisma.JournalWhereInput = {
       accountBookId: options.accountBookId,
       OR: [{ deletedAt: null }, { deletedAt: { gte: sevenDaysAgo } }],
@@ -176,8 +176,10 @@ export class JournalRepository implements IJournalRepository {
   }
 
   // Info: (20260506 - Julian) 取得日記帳總數：回傳 number
-  async countJournals() {
-    return prisma.journal.count();
+  async countJournals(accountBookId: string) {
+    // Info: (20260506 - Julian) 取得帳簿底下的日記帳總數
+    const where = this.buildJournalWhereClause({ accountBookId });
+    return prisma.journal.count({ where });
   }
 
   // Info: (20260506 - Julian) 取得符合條件的日記帳總數：回傳 number
@@ -187,8 +189,10 @@ export class JournalRepository implements IJournalRepository {
   }
 
   // Info: (20260506 - Julian) 取得所有日記帳：回傳 IJournal[]
-  async getJournals(): Promise<IJournal[]> {
-    return this.fetchAndFormatJournals({});
+  async getJournals(accountBookId: string): Promise<IJournal[]> {
+    // Info: (20260506 - Julian) 取得帳簿底下的所有日記帳
+    const where = this.buildJournalWhereClause({ accountBookId });
+    return this.fetchAndFormatJournals({ where });
   }
 
   // Info: (20260506 - Julian) 取得符合條件的日記帳列表：回傳 IJournal[]
@@ -244,16 +248,15 @@ export class JournalRepository implements IJournalRepository {
     return { deletedJournalId: result.id };
   }
 
-  // Info: (20260506 - Julian) 更新所有日記帳：回傳 number
+  // Info: (20260506 - Julian) 核對所有日記帳：回傳核對數量(number)
   async verifyAllJournals(accountBookId: string) {
     const result = await prisma.journal.updateMany({
       where: {
         accountBookId,
         isVerified: false,
+        deletedAt: null, // Info: (20260506 - Julian) 避免改動到被軟刪除的日記帳
       },
-      data: {
-        isVerified: true,
-      },
+      data: { isVerified: true },
     });
 
     return result.count;
@@ -269,13 +272,21 @@ export class JournalRepository implements IJournalRepository {
     const [todayJournalCount, pendingJournalCount, aiAverageConfidenceAggr] =
       await Promise.all([
         prisma.journal.count({
-          where: { accountBookId, createdAt: { gte: startOfToday } },
+          where: {
+            accountBookId,
+            createdAt: { gte: startOfToday },
+            deletedAt: null,
+          },
         }),
         prisma.journal.count({
-          where: { accountBookId, isVerified: false },
+          where: { accountBookId, isVerified: false, deletedAt: null },
         }),
         prisma.journal.aggregate({
-          where: { accountBookId, analysisStatus: AIAnalysisStatus.COMPLETED },
+          where: {
+            accountBookId,
+            analysisStatus: AIAnalysisStatus.COMPLETED,
+            deletedAt: null,
+          },
           _avg: { confidence: true },
         }),
       ]);
@@ -288,14 +299,14 @@ export class JournalRepository implements IJournalRepository {
   }
 
   // Info: (20260327 - Luphia) 抽離共用的關聯查詢邏輯，並使用 Promise.all 加速
-  // Info: (20260506 - Julian) 更新日記帳：回傳 number
+  // Info: (20260506 - Julian) 更新日記帳：回傳更新數量(number)
   async updateManyJournalsByFile(
     fileId: string,
     accountBookId: string,
     data: Prisma.JournalUpdateInput,
   ) {
     const result = await prisma.journal.updateMany({
-      where: { fileId, accountBookId },
+      where: { fileId, accountBookId, deletedAt: null },
       data,
     });
     return result.count;
