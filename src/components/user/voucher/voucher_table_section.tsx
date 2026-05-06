@@ -495,11 +495,11 @@ export default function VoucherTableSection() {
                         <div className="-gap-[2px] flex shrink-0 flex-col px-2">
                           <ChevronUp
                             size={14}
-                            className={`translate-y-[2px] transition-colors ${isDateAsc ? "text-orange-500" : "text-slate-300"}`}
+                            className={`translate-y-[2px] transition-colors ${isDateDesc ? "text-orange-500" : "text-slate-300"}`}
                           />
                           <ChevronDown
                             size={14}
-                            className={`-translate-y-[2px] transition-colors ${isDateDesc ? "text-orange-500" : "text-slate-300"}`}
+                            className={`-translate-y-[2px] transition-colors ${isDateAsc ? "text-orange-500" : "text-slate-300"}`}
                           />
                         </div>
                       </button>
@@ -535,11 +535,11 @@ export default function VoucherTableSection() {
                         <div className="-gap-[2px] flex shrink-0 flex-col pl-2">
                           <ChevronUp
                             size={14}
-                            className={`translate-y-[2px] transition-colors ${isDebitAsc ? "text-orange-500" : "text-slate-300"}`}
+                            className={`translate-y-[2px] transition-colors ${isDebitDesc ? "text-orange-500" : "text-slate-300"}`}
                           />
                           <ChevronDown
                             size={14}
-                            className={`-translate-y-[2px] transition-colors ${isDebitDesc ? "text-orange-500" : "text-slate-300"}`}
+                            className={`-translate-y-[2px] transition-colors ${isDebitAsc ? "text-orange-500" : "text-slate-300"}`}
                           />
                         </div>
                       </button>
@@ -563,11 +563,11 @@ export default function VoucherTableSection() {
                         <div className="-gap-[2px] flex shrink-0 flex-col pl-2">
                           <ChevronUp
                             size={14}
-                            className={`translate-y-[2px] transition-colors ${isCreditAsc ? "text-orange-500" : "text-slate-300"}`}
+                            className={`translate-y-[2px] transition-colors ${isCreditDesc ? "text-orange-500" : "text-slate-300"}`}
                           />
                           <ChevronDown
                             size={14}
-                            className={`-translate-y-[2px] transition-colors ${isCreditDesc ? "text-orange-500" : "text-slate-300"}`}
+                            className={`-translate-y-[2px] transition-colors ${isCreditAsc ? "text-orange-500" : "text-slate-300"}`}
                           />
                         </div>
                       </button>

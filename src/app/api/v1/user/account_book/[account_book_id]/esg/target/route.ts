@@ -48,9 +48,10 @@ export async function GET(
     });
 
     incomes.forEach((v) => {
-      const year = v.tradingDate.getFullYear();
+      const date = new Date(v.tradingDate);
+      const year = date.getFullYear();
       if (!yearlyData[year]) yearlyData[year] = { emissions: 0, revenue: 0 };
-      const val = v.lines.reduce((a, l) => a + l.amount, 0) / 2;
+      const val = v.lineItems.lines.reduce((a, l) => a + l.amount, 0) / 2;
       yearlyData[year].revenue += val;
     });
 

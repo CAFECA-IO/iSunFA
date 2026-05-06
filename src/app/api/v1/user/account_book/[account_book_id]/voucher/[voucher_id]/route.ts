@@ -8,8 +8,7 @@ import { voucherRepo } from "@/repositories/voucher.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { esgRepo } from "@/repositories/esg.repo";
-import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
-import { getAccountByCode } from "@/lib/utils/account";
+import { IVoucherLineUI } from "@/interfaces/voucher";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 /**
@@ -55,49 +54,7 @@ export async function GET(
       return jsonFail(API_ERRORS.NF_VOUCHER);
     }
 
-    const lineItems: IVoucherLineUI[] = voucher.lines.map((l) => {
-      return {
-        id: l.id,
-        accounting: getAccountByCode(l.accountingCode),
-        particular: l.particular ?? "",
-        amount: l.amount,
-        isDebit: l.isDebit,
-      };
-    });
-
-    // Info: (20260311 - Julian) 計算 debit 總和
-    const lineTotalAmount = voucher.lines
-      .filter((l) => l.isDebit)
-      .reduce((sum, l) => sum + l.amount, 0);
-
-    const result: IVoucher = {
-      id: voucher.id,
-      tradingDate: Math.floor(voucher.tradingDate.getTime() / 1000),
-      tradingType: voucher.tradingType?.toUpperCase() as TradingType,
-      note: voucher.note ?? "",
-      isDeleted: !!voucher.deletedAt,
-      fileId: voucher.fileId ?? "",
-      file: voucher.file
-        ? {
-            id: voucher.file.id,
-            hash: voucher.file.hash,
-            fileName: voucher.file.fileName || "Unknown",
-          }
-        : undefined,
-      lineItems: {
-        lines: lineItems,
-        totalAmount: lineTotalAmount,
-      },
-      issuerName: voucher.user?.name ?? "",
-      confidence: voucher.confidence,
-      isVerified: voucher.isVerified,
-      analysisStatus: voucher.analysisStatus as AIAnalysisStatus,
-      aiNote: voucher.aiNote ?? "",
-      journalId: voucher.journalId,
-      esgRecordId: voucher.esgRecordId,
-    };
-
-    return jsonOk(result);
+    return jsonOk(voucher);
   } catch (error) {
     console.error("Get voucher failed", error);
     return jsonFail(API_ERRORS.IS_DB_FAILED);

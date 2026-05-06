@@ -4,7 +4,12 @@ import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { IAccount } from "@/constants/accounts";
 import { IVoucherFilterOptions } from "@/interfaces/data_filter_option";
 import { VerifyStatus } from "@/constants/verify_status";
-import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
+import {
+  IVoucher,
+  IVoucherLineUI,
+  TradingType,
+  IVoucherDashboardSummary,
+} from "@/interfaces/voucher";
 import { getAccountByCode } from "@/lib/utils/account";
 import { VoucherSorting } from "@/constants/sort";
 
@@ -19,30 +24,22 @@ export interface IVoucherRepository {
   countVouchers(accountBookId: string): Promise<number>;
   countVouchersByFilter(options: IVoucherFilterOptions): Promise<number>;
   verifyAllVouchers(accountBookId: string): Promise<number>;
-
   getVouchers(accountBookId: string): Promise<IVoucher[]>;
   getVouchersByFilter(options: IVoucherFilterOptions): Promise<IVoucher[]>;
   getVoucherById(id: string): Promise<IVoucher | null>;
-
-  getVerifiedIncomesByAccountBookId(
-    accountBookId: string,
-  ): Promise<Prisma.VoucherGetPayload<{ include: { lines: true } }>[]>;
-
+  getVerifiedIncomesByAccountBookId(accountBookId: string): Promise<IVoucher[]>;
   updateVoucher(
     id: string,
     data: Prisma.VoucherUpdateInput,
-  ): Promise<VoucherWithRelations | null>;
+  ): Promise<IVoucher | null>;
   updateManyVouchersByFile(
     fileId: string,
     accountBookId: string,
     data: Prisma.VoucherUpdateInput,
-  ): Promise<Prisma.BatchPayload>;
-  getVoucherSummary(accountBookId: string): Promise<{
-    todayVoucherCount: number;
-    monthTotalAmount: number;
-    pendingVoucherCount: number;
-    aiAverageConfidence: number;
-  }>;
+  ): Promise<number>;
+
+  getVoucherSummary(accountBookId: string): Promise<IVoucherDashboardSummary>;
+
   checkDocumentDuplication(
     accountBookId: string,
     preCheckData: {
@@ -430,69 +427,50 @@ export class VoucherRepository implements IVoucherRepository {
     return vouchers[0] || null;
   }
 
-  // Info: (20260506 - Julian) 取得核對過的收入傳票：回傳
+  // Info: (20260506 - Julian) 取得核對過的收入傳票：回傳 IVoucher[]
   async getVerifiedIncomesByAccountBookId(accountBookId: string) {
-    return prisma.voucher.findMany({
+    const where = this.buildVoucherWhereClause({ accountBookId });
+    return this.fetchAndFormatVouchers({
+      // Info: (20260506 - Julian) 篩選條件：已核對且為 INCOME 的傳票
       where: {
-        accountBookId,
-        tradingType: "INCOME",
+        ...where,
+        tradingType: TradingType.INCOME,
         isVerified: true,
       },
-      include: { lines: true },
     });
   }
 
-  async findManyVouchers(args: Prisma.VoucherFindManyArgs) {
-    return prisma.voucher.findMany(args);
-  }
-
+  // Info: (20260506 - Julian) 更新傳票：回傳更新後的 IVoucher | null
   async updateVoucher(
     id: string,
     data: Prisma.VoucherUpdateInput,
-  ): Promise<VoucherWithRelations | null> {
-    const voucher = await prisma.voucher.update({
+  ): Promise<IVoucher | null> {
+    const voucher = (await prisma.voucher.update({
       where: { id },
       data,
       include: { file: true, user: true, lines: true },
-    });
+    })) as unknown as VoucherWithRelations;
 
     if (!voucher) return null;
 
-    let journalId: string | undefined;
-    let esgRecordId: string | undefined;
-
-    if (voucher.fileId) {
-      const journal = await prisma.journal.findFirst({
-        where: { fileId: voucher.fileId, accountBookId: voucher.accountBookId },
-        select: { id: true },
-      });
-      if (journal) journalId = journal.id;
-
-      const esgRecord = await prisma.esgRecord.findFirst({
-        where: { fileId: voucher.fileId, accountBookId: voucher.accountBookId },
-        select: { id: true },
-      });
-      if (esgRecord) esgRecordId = esgRecord.id;
-    }
-
-    return {
-      ...voucher,
-      journalId,
-      esgRecordId,
-    } as VoucherWithRelations;
+    const formattedVouchers = await this.attachRelationsAndFormat([voucher]);
+    return formattedVouchers[0] || null;
   }
 
+  // Info: (20260506 - Julian) 更新與特定 file 關聯的傳票：回傳更新數量(number)
   async updateManyVouchersByFile(
     fileId: string,
     accountBookId: string,
     data: Prisma.VoucherUpdateInput,
-  ): Promise<Prisma.BatchPayload> {
-    return prisma.voucher.updateMany({
-      where: { fileId, accountBookId },
+  ): Promise<number> {
+    const result = await prisma.voucher.updateMany({
+      where: { fileId, accountBookId, deletedAt: null },
       data,
     });
+    return result.count;
   }
 
+  // Info: (20260506 - Julian) 取得傳票儀表板摘要：回傳 IVoucherDashboardSummary
   async getVoucherSummary(accountBookId: string) {
     const now = new Date();
     const startOfToday = new Date(
@@ -502,30 +480,40 @@ export class VoucherRepository implements IVoucherRepository {
     );
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
+    // Info: (20260506 - Julian) 今日傳票數量
     const todayVoucherCount = await prisma.voucher.count({
-      where: { accountBookId, createdAt: { gte: startOfToday } },
+      where: {
+        accountBookId,
+        createdAt: { gte: startOfToday },
+        deletedAt: null,
+      },
     });
 
+    // Info: (20260506 - Julian) 本月支出總金額
     const monthTotalAmountAggr = await prisma.voucherLine.aggregate({
       where: {
         isDebit: true,
         voucher: {
           accountBookId,
           tradingDate: { gte: startOfMonth },
+          deletedAt: null,
         },
       },
       _sum: { amount: true },
     });
     const monthTotalAmount = monthTotalAmountAggr._sum.amount || 0;
 
+    // Info: (20260506 - Julian) 未核對傳票數量
     const pendingVoucherCount = await prisma.voucher.count({
-      where: { accountBookId, isVerified: false },
+      where: { accountBookId, isVerified: false, deletedAt: null },
     });
 
+    // Info: (20260506 - Julian) AI 平均信賴度 (只算已完成分析的傳票)
     const aiAverageConfidenceAggr = await prisma.voucher.aggregate({
       where: { accountBookId, analysisStatus: AIAnalysisStatus.COMPLETED },
       _avg: { confidence: true },
     });
+
     const aiAverageConfidence = Math.round(
       aiAverageConfidenceAggr._avg.confidence || 0,
     );
@@ -609,6 +597,11 @@ export class VoucherRepository implements IVoucherRepository {
       }
     }
     return { isDuplicate: false };
+  }
+
+  // ToDo: 在 src/services/analysis.service.ts 使用，預計移除
+  async findManyVouchers(args: Prisma.VoucherFindManyArgs) {
+    return prisma.voucher.findMany(args);
   }
 }
 
