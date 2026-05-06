@@ -30,9 +30,9 @@ export async function PUT(
     if (!teamMember) return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
 
     // Info: (20260420 - Luphia) 更新所有未完成的日記帳
-    const result = await journalRepo.verifyAllJournals(accountBookId);
+    const count = await journalRepo.verifyAllJournals(accountBookId);
 
-    return jsonOk({ count: result.count });
+    return jsonOk({ count });
   } catch (error) {
     console.error("API Error:", error);
     return jsonFail({

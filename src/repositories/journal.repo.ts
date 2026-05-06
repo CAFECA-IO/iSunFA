@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma, Journal } from "@/generated";
+import { Prisma } from "@/generated";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
-import { IJournal } from "@/interfaces/journal";
+import { IJournal, IJournalDashboardSummary } from "@/interfaces/journal";
 import { IJournalFilterOptions } from "@/interfaces/data_filter_option";
 import { VerifyStatus } from "@/constants/verify_status";
 
@@ -22,23 +22,15 @@ export interface IJournalRepository {
   getJournals(): Promise<IJournal[]>;
   getJournalsByFilter(options: IJournalFilterOptions): Promise<IJournal[]>;
   getJournalById(id: string): Promise<IJournal | null>;
-
-  updateJournal(
-    id: string,
-    data: Prisma.JournalUpdateInput,
-  ): Promise<JournalWithRelations>;
-  deleteJournal(id: string): Promise<Journal>;
-  verifyAllJournals(accountBookId: string): Promise<Prisma.BatchPayload>;
-  getJournalSummary(accountBookId: string): Promise<{
-    todayJournalCount: number;
-    pendingJournalCount: number;
-    aiAverageConfidence: number;
-  }>;
+  updateJournal(id: string, data: Prisma.JournalUpdateInput): Promise<IJournal>;
+  deleteJournal(id: string): Promise<{ deletedJournalId: string }>;
+  verifyAllJournals(accountBookId: string): Promise<number>;
+  getJournalSummary(accountBookId: string): Promise<IJournalDashboardSummary>;
   updateManyJournalsByFile(
     fileId: string,
     accountBookId: string,
     data: Prisma.JournalUpdateInput,
-  ): Promise<Prisma.BatchPayload>;
+  ): Promise<number>;
 }
 
 export class JournalRepository implements IJournalRepository {
@@ -105,18 +97,12 @@ export class JournalRepository implements IJournalRepository {
     };
   }
 
-  // Info: (20260506 - Julian) 抽取共用的查詢與轉換邏輯
-  private async fetchAndFormatJournals(
-    args: Prisma.JournalFindManyArgs,
+  // Info: (20260506 - Julian) 批次取得關聯並轉換格式
+  private async attachRelationsAndFormat(
+    journals: JournalWithRelations[],
   ): Promise<IJournal[]> {
-    // Info: (20260327 - Luphia) 確保一定有 include file，並讓 Prisma 自動推導型別
-    const mergedArgs = {
-      ...args,
-      include: { ...args.include, file: true },
-    };
-
-    const journals = await prisma.journal.findMany(mergedArgs);
-    if (journals.length === 0) return []; // Info: (20260506 - Julian) 若無日記帳就直接 return
+    // Info: (20260506 - Julian) 若沒有日記帳就直接 return
+    if (journals.length === 0) return [];
 
     // Info: (20260506 - Julian) 取出 file
     const fileIds = Array.from(
@@ -169,6 +155,20 @@ export class JournalRepository implements IJournalRepository {
     });
   }
 
+  // Info: (20260506 - Julian) 抽取共用的查詢並轉換格式
+  private async fetchAndFormatJournals(
+    args: Prisma.JournalFindManyArgs,
+  ): Promise<IJournal[]> {
+    // Info: (20260327 - Luphia) 確保一定有 include file，並讓 Prisma 自動推導型別
+    const mergedArgs = {
+      ...args,
+      include: { ...args.include, file: true },
+    };
+
+    const journals = await prisma.journal.findMany(mergedArgs);
+    return this.attachRelationsAndFormat(journals);
+  }
+
   // Info: (20260506 - Julian) 新增日記帳：回傳 new journal id (string)
   async createJournal(data: Prisma.JournalUncheckedCreateInput) {
     const newJournal = await prisma.journal.create({ data });
@@ -210,6 +210,7 @@ export class JournalRepository implements IJournalRepository {
     });
   }
 
+  // Info: (20260506 - Julian) 以 ID 取得日記帳：回傳 IJournal | null
   async getJournalById(id: string): Promise<IJournal | null> {
     const journals = await this.fetchAndFormatJournals({
       where: { id },
@@ -217,35 +218,35 @@ export class JournalRepository implements IJournalRepository {
     return journals[0] || null;
   }
 
+  // Info: (20260506 - Julian) 更新日記帳：回傳 IJournal
   async updateJournal(
     id: string,
     data: Prisma.JournalUpdateInput,
-  ): Promise<JournalWithRelations> {
+  ): Promise<IJournal> {
     const journal = await prisma.journal.update({
       where: { id },
       data,
       include: { file: true },
     });
 
-    const relations = await this.getRelationsForJournal(
-      journal.fileId,
-      journal.accountBookId,
-    );
+    // Info: (20260506 - Julian) 取得關聯資料
+    const [result] = await this.attachRelationsAndFormat([journal]);
 
-    return {
-      ...journal,
-      ...relations,
-    };
+    return result;
   }
 
+  // Info: (20260506 - Julian) 軟刪除日記帳：回傳 { deletedJournalId: string }
   async deleteJournal(id: string) {
-    return prisma.journal.delete({
+    const result = await prisma.journal.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
+    return { deletedJournalId: result.id };
   }
 
+  // Info: (20260506 - Julian) 更新所有日記帳：回傳 number
   async verifyAllJournals(accountBookId: string) {
-    return prisma.journal.updateMany({
+    const result = await prisma.journal.updateMany({
       where: {
         accountBookId,
         isVerified: false,
@@ -254,8 +255,11 @@ export class JournalRepository implements IJournalRepository {
         isVerified: true,
       },
     });
+
+    return result.count;
   }
 
+  // Info: (20260506 - Julian) 取得日記帳總覽：回傳 IJournalDashboardSummary
   async getJournalSummary(accountBookId: string) {
     const now = new Date();
     // Info: (20260327 - Luphia) 更乾淨的今日零時寫法
@@ -284,38 +288,17 @@ export class JournalRepository implements IJournalRepository {
   }
 
   // Info: (20260327 - Luphia) 抽離共用的關聯查詢邏輯，並使用 Promise.all 加速
+  // Info: (20260506 - Julian) 更新日記帳：回傳 number
   async updateManyJournalsByFile(
     fileId: string,
     accountBookId: string,
     data: Prisma.JournalUpdateInput,
   ) {
-    return prisma.journal.updateMany({
+    const result = await prisma.journal.updateMany({
       where: { fileId, accountBookId },
       data,
     });
-  }
-
-  private async getRelationsForJournal(
-    fileId: string | null,
-    accountBookId: string,
-  ) {
-    if (!fileId) return { voucherId: undefined, esgRecordId: undefined };
-
-    const [voucher, esgRecord] = await Promise.all([
-      prisma.voucher.findFirst({
-        where: { fileId, accountBookId },
-        select: { id: true },
-      }),
-      prisma.esgRecord.findFirst({
-        where: { fileId, accountBookId },
-        select: { id: true },
-      }),
-    ]);
-
-    return {
-      voucherId: voucher?.id,
-      esgRecordId: esgRecord?.id,
-    };
+    return result.count;
   }
 }
 
