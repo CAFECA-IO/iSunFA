@@ -37,16 +37,23 @@ export function generateBalanceSheet(
   let retainedEarningsTotal = 0;
   let commonStockCapitalTotal = 0;
 
+  let currentPeriodEarnings = 0;
+
   lineItems.forEach((line) => {
     // Info: (20260331 - Julian) 確保有會計科目且借貸方有值
-    if (!line.accounting || !line.isDebit === null) return;
+    // Info: (20260504 - Tzuhan) ⚠️修復：修正 JS 運算子優先級陷阱 (!line.isDebit === null 會永遠為 false)
+    const code = line.accountingCode || line.accounting?.code;
+    if (!code || line.isDebit === null) return;
 
-    // Info: (20260331 - Julian) 解構
-    const {
-      accounting: { code, name },
-      isDebit,
-      amount,
-    } = line;
+    const name = line.accounting?.name || line.particular || code;
+    const { isDebit, amount } = line;
+
+    const impact = isDebit ? amount : -amount;
+
+    // Info: (20260504 - Tzuhan) ⚠️修復：將本期損益科目(4~9)動態結轉到本期淨利，否則資產負債表永遠無法配平
+    if (code.match(/^[456789]/)) {
+      currentPeriodEarnings -= impact; // 貸方(收益) impact為負 -> 淨利增加; 借方(費損) impact為正 -> 淨利減少
+    }
 
     // Info: (20260331 - Julian) 根據標準臺灣會計編碼規則分組 (1: 資產, 2: 負債, 3: 權益)
     const isAsset = code.startsWith("1");
@@ -61,10 +68,10 @@ export function generateBalanceSheet(
         code.startsWith("13") ||
         code.startsWith("14"));
     const isCurrentLiability =
-      isLiability && (code.startsWith("21") || code.startsWith("22"));
+      isLiability &&
+      (code.startsWith("21") || code.startsWith("22") || code.startsWith("23"));
 
     // Info: (20260331 - Julian) 借貸方向
-    const impact = isDebit ? amount : -amount;
 
     if (isAsset) {
       // Info: (20260331 - Julian) 資產增加在借方
@@ -87,8 +94,7 @@ export function generateBalanceSheet(
         code.startsWith("18") ||
         code.startsWith("19")
       ) {
-        if (code.startsWith("17") || name.includes("無形資產"))
-          intangibleAssetsTotal += impact; // Info: (20260330 - Julian) 無形資產
+        if (code.startsWith("17")) intangibleAssetsTotal += impact; // Info: (20260330 - Julian) 無形資產
       }
     } else if (isLiability) {
       // Info: (20260331 - Julian) 負債增加在貸方
@@ -100,13 +106,8 @@ export function generateBalanceSheet(
       });
       totalLiabilities -= impact;
 
-      // Info: (20260331 - Julian) 粗略估計有息負債 (短期及長期借款)
-      if (
-        code.startsWith("212") ||
-        code.startsWith("253") ||
-        name.includes("借款") ||
-        name.includes("公司債")
-      ) {
+      // Info: (20260504 - Tzuhan) ⚠️修復：改由底層字典 (tw.ts 等) 的 isInterestBearing 標籤統一控管有息負債，實現資料與邏輯徹底解耦
+      if (line.accounting?.isInterestBearing) {
         interestBearingDebtTotal -= impact;
       }
     } else if (isEquity) {
@@ -122,6 +123,11 @@ export function generateBalanceSheet(
       if (code.startsWith("31")) commonStockCapitalTotal -= impact;
     }
   });
+
+  if (currentPeriodEarnings !== 0) {
+    equityMap.set("3200", { name: "本期損益", amount: currentPeriodEarnings });
+    totalEquity += currentPeriodEarnings;
+  }
 
   // Info: (20260331 - Julian) 轉換 Map 為 IBalanceSheetItem[]
   const mapToArray = (
@@ -190,8 +196,9 @@ export function generateBalanceSheet(
   );
   longTermFundsTotal = totalEquity + nonCurrentLiabilitiesTotal;
 
-  // Info: (20260408 - Luphia) 取得發行股數 (以 31** 股本 / 10 計算)
-  const outstandingShares = commonStockCapitalTotal / 10;
+  // Todo: (20260530 - Tzuhan) 應從外部傳入 parValue，不應硬編碼為 10 (因應彈性面額制度)
+  const parValue = 10;
+  const outstandingShares = commonStockCapitalTotal / parValue;
 
   // Info: (20260330 - Julian) 計算各項財務比率
   const metrics = {

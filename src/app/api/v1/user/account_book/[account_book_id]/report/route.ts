@@ -50,8 +50,8 @@ export async function GET(
       const selectedYear = yearParam ? parseInt(yearParam, 10) : thisYear;
 
       const allYearRange = {
-        start: new Date(`${selectedYear}-01-01 00:00:00`),
-        end: new Date(`${selectedYear}-12-31 23:59:59`),
+        start: new Date(Date.UTC(selectedYear, 0, 1, 0, 0, 0)),
+        end: new Date(Date.UTC(selectedYear, 11, 31, 23, 59, 59, 999)),
       };
 
       switch (period) {
@@ -59,23 +59,23 @@ export async function GET(
           return allYearRange;
         case ReportPeriod.Q1:
           return {
-            start: new Date(`${selectedYear}-01-01 00:00:00`),
-            end: new Date(`${selectedYear}-03-31 23:59:59`),
+            start: new Date(Date.UTC(selectedYear, 0, 1, 0, 0, 0)),
+            end: new Date(Date.UTC(selectedYear, 2, 31, 23, 59, 59, 999)),
           };
         case ReportPeriod.Q2:
           return {
-            start: new Date(`${selectedYear}-04-01 00:00:00`),
-            end: new Date(`${selectedYear}-06-30 23:59:59`),
+            start: new Date(Date.UTC(selectedYear, 3, 1, 0, 0, 0)),
+            end: new Date(Date.UTC(selectedYear, 5, 30, 23, 59, 59, 999)),
           };
         case ReportPeriod.Q3:
           return {
-            start: new Date(`${selectedYear}-07-01 00:00:00`),
-            end: new Date(`${selectedYear}-09-30 23:59:59`),
+            start: new Date(Date.UTC(selectedYear, 6, 1, 0, 0, 0)),
+            end: new Date(Date.UTC(selectedYear, 8, 30, 23, 59, 59, 999)),
           };
         case ReportPeriod.Q4:
           return {
-            start: new Date(`${selectedYear}-10-01 00:00:00`),
-            end: new Date(`${selectedYear}-12-31 23:59:59`),
+            start: new Date(Date.UTC(selectedYear, 9, 1, 0, 0, 0)),
+            end: new Date(Date.UTC(selectedYear, 11, 31, 23, 59, 59, 999)),
           };
         default:
           return allYearRange;

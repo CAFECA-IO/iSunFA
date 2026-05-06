@@ -4743,6 +4743,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 2,
     parentCode: "21XX",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2101",
@@ -4752,6 +4753,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2100",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2102",
@@ -4761,6 +4763,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2100",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2108",
@@ -4770,6 +4773,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2100",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2110",
@@ -4779,6 +4783,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 2,
     parentCode: "21XX",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2111",
@@ -4788,6 +4793,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2110",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2116",
@@ -4797,6 +4803,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2110",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2119",
@@ -4806,6 +4813,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2110",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2120",
@@ -5427,6 +5435,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 2,
     parentCode: "21XX",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2281",
@@ -5436,6 +5445,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2280",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2282",
@@ -5445,6 +5455,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2280",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2300",
@@ -5508,6 +5519,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2300",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2321",
@@ -5517,6 +5529,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 4,
     parentCode: "2320",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2322",
@@ -5526,6 +5539,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 4,
     parentCode: "2320",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2323",
@@ -5535,6 +5549,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 4,
     parentCode: "2320",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2324",
@@ -5544,6 +5559,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 4,
     parentCode: "2320",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2325",
@@ -5553,6 +5569,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2300",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2330",
@@ -5706,6 +5723,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 2,
     parentCode: "25XX",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2531",
@@ -5715,6 +5733,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2530",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2532",
@@ -5724,6 +5743,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2530",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2540",
@@ -5733,6 +5753,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 2,
     parentCode: "25XX",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2541",
@@ -5742,6 +5763,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2540",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2542",
@@ -5751,6 +5773,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2540",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2543",
@@ -5760,6 +5783,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2540",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2550",
@@ -5886,6 +5910,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 2,
     parentCode: "25XX",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2581",
@@ -5895,6 +5920,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2580",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "2582",
@@ -5904,6 +5930,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "2580",
     isDebit: false,
+    isInterestBearing: true,
   },
   {
     code: "25XX",
@@ -6426,6 +6453,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 2,
     parentCode: "3300",
     isDebit: false,
+    isDividend: true,
   },
   {
     code: "3351",
@@ -6435,6 +6463,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "3350",
     isDebit: false,
+    isDividend: true,
   },
   {
     code: "3352",
@@ -6444,6 +6473,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "3350",
     isDebit: false,
+    isDividend: true,
   },
   {
     code: "3353",
@@ -6453,6 +6483,7 @@ export const TW_ACCOUNTS: IAccount[] = [
     level: 3,
     parentCode: "3350",
     isDebit: false,
+    isDividend: true,
   },
   {
     code: "3400",

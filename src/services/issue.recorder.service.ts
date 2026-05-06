@@ -138,6 +138,17 @@ export class IssueRecorderService {
               >;
             } catch {}
 
+            let localContextObj: Record<string, string> = {};
+            try {
+              const contextContent = await fs.readFile(
+                path.join(taskDir, "context.json"),
+                "utf8",
+              );
+              localContextObj = JSON.parse(contextContent);
+            } catch {
+              // Info: (20260506 - Luphia) context.json might not exist
+            }
+
             if (
               parsedResult &&
               parsedResult.dbSyncPayload &&
@@ -157,15 +168,15 @@ export class IssueRecorderService {
                   fileId: fileIdToSync,
                   accountBookId: fileResult.accountBookId as string,
                   result: fileResult as unknown as IAggregatedDocumentResult,
-                  voucherIdContext: fileResult.voucherIdContext as
-                    | string
-                    | undefined,
-                  esgRecordIdContext: fileResult.esgRecordIdContext as
-                    | string
-                    | undefined,
-                  journalIdContext: fileResult.journalIdContext as
-                    | string
-                    | undefined,
+                  voucherIdContext:
+                    localContextObj.voucherId ||
+                    (fileResult.voucherIdContext as string | undefined),
+                  esgRecordIdContext:
+                    localContextObj.esgRecordId ||
+                    (fileResult.esgRecordIdContext as string | undefined),
+                  journalIdContext:
+                    localContextObj.journalId ||
+                    (fileResult.journalIdContext as string | undefined),
                 });
               }
               console.log(

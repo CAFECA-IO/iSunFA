@@ -5,7 +5,11 @@ import { generateReceiptImages } from "@/scripts/e2e-seeder/receipt_image_genera
 import { runPhase2ReceiptAnalysis } from "@/scripts/e2e-seeder/phase2_runner";
 import { runCrossValidation } from "@/scripts/e2e-seeder/cross_validator";
 
-export const runPipeline = async (stockId: string) => {
+export const runPipeline = async (
+  stockId: string,
+  shouldClean: boolean = false,
+  skipImages: boolean = false,
+) => {
   console.log(
     `\n🚀 [START] Running Full E2E Seeder Pipeline for Stock ID: ${stockId}`,
   );
@@ -20,11 +24,17 @@ export const runPipeline = async (stockId: string) => {
     console.log("\n[3/5] Running ESG Reverse Engineer...");
     generateEsgRecords(stockId);
 
-    console.log("\n[4/6] Running Receipt Image Generator...");
-    generateReceiptImages(stockId);
+    if (!skipImages) {
+      console.log("\n[4/6] Running Receipt Image Generator...");
+      generateReceiptImages(stockId);
+    } else {
+      console.log(
+        "\n[4/6] ⏭️ Skipping Receipt Image Generator (--skip-images)...",
+      );
+    }
 
     console.log("\n[5/6] Running Phase 2 Receipt Analysis (AI Extraction)...");
-    await runPhase2ReceiptAnalysis(stockId);
+    await runPhase2ReceiptAnalysis(stockId, shouldClean);
 
     console.log("\n[6/6] Running Enterprise Cross Validator...");
     await runCrossValidation(stockId);
@@ -42,11 +52,15 @@ export const runPipeline = async (stockId: string) => {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const targetStock = process.argv[2];
-  if (!targetStock) {
+  const shouldClean = process.argv.includes("--clean");
+  const skipImages = process.argv.includes("--skip-images");
+  if (!targetStock || targetStock.startsWith("--")) {
     console.error(
-      "Please provide a stock ID. Usage: tsx run_pipeline.ts <stockId>",
+      "Please provide a stock ID. Usage: tsx run_pipeline.ts <stockId> [--clean] [--skip-images]",
     );
     process.exit(1);
   }
-  runPipeline(targetStock).catch(() => process.exit(1));
+  runPipeline(targetStock, shouldClean, skipImages).catch(() =>
+    process.exit(1),
+  );
 }
