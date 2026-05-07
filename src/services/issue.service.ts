@@ -201,28 +201,60 @@ export async function processNext() {
             voucherId: fileInfoObj.voucherId,
             esgRecordId: fileInfoObj.esgRecordId,
           };
-          delete fileInfoObj.journalId;
-          delete fileInfoObj.voucherId;
-          delete fileInfoObj.esgRecordId;
         }
 
         const itemData = item.fileInfo
-          ? { ...orderDataObj, fileId: item.fileInfo.hash }
-          : orderDataObj;
+          ? JSON.parse(
+              JSON.stringify({ ...orderDataObj, fileId: item.fileInfo.hash }),
+            )
+          : JSON.parse(JSON.stringify(orderDataObj));
 
-        if (itemData.files && Array.isArray(itemData.files)) {
-          itemData.files = itemData.files.map((f: unknown) => {
-            const fObj = f as Record<string, unknown>;
-            return { hash: fObj.hash, name: fObj.name };
-          });
+        // Info: (20260506 - Luphia) Deeply strip sensitive info from itemData for IPFS
+        if (itemData.data && Array.isArray(itemData.data.files)) {
+          itemData.data.files = itemData.data.files
+            .filter(
+              (f: Record<string, unknown>) =>
+                !item.fileInfo || f.hash === item.fileInfo.hash,
+            )
+            .map((f: Record<string, unknown>) => ({
+              hash: f.hash,
+              name: f.name,
+            }));
+        } else if (itemData.files && Array.isArray(itemData.files)) {
+          itemData.files = itemData.files
+            .filter(
+              (f: Record<string, unknown>) =>
+                !item.fileInfo || f.hash === item.fileInfo.hash,
+            )
+            .map((f: Record<string, unknown>) => ({
+              hash: f.hash,
+              name: f.name,
+            }));
+        }
+
+        let missionAmount = order.amount;
+        let missionItems = orderDataObj.items || [];
+
+        if (category === "CERTIFICATE_ANALYSIS" && itemsToProcess.length > 0) {
+          missionAmount = Number(
+            (order.amount / itemsToProcess.length).toFixed(2),
+          );
+          if (Array.isArray(missionItems)) {
+            missionItems = missionItems.map((item) => {
+              const itemObj = item;
+              itemObj.quantity = 1;
+              return itemObj;
+            });
+          }
         }
 
         const missionData = {
           orderId: order.id,
           type: order.type,
           unit: order.unit,
-          amount: order.amount,
+          amount: missionAmount,
           ...itemData,
+          items: missionItems,
         };
 
         const missionJsonStr = JSON.stringify(missionData, null, 2);
