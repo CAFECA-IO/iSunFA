@@ -37,7 +37,6 @@ export interface IVoucherRepository {
     accountBookId: string,
     data: Prisma.VoucherUpdateInput,
   ): Promise<number>;
-
   getVoucherSummary(accountBookId: string): Promise<IVoucherDashboardSummary>;
 
   checkDocumentDuplication(
@@ -58,85 +57,6 @@ export interface IVoucherRepository {
 
 export class VoucherRepository implements IVoucherRepository {
   // Info: (20260506 - Julian) 建構查詢條件
-  private buildVoucherFindManyArgs(
-    options: IVoucherFilterOptions,
-  ): Prisma.VoucherFindManyArgs {
-    const filteredConditions: Prisma.VoucherFindManyArgs = {
-      where: { accountBookId: options.accountBookId },
-      // Info: (20260311 - Julian) 將關聯的 file, user, lines 一併取出
-      include: { file: true, user: true, lines: true },
-    };
-
-    // Info: (20260311 - Julian) 關鍵字篩選：id / note / particular / accountingCode
-    if (options.keyword) {
-      filteredConditions.where!.OR = [
-        { id: { contains: options.keyword } },
-        { note: { contains: options.keyword } },
-        { lines: { some: { particular: { contains: options.keyword } } } },
-        { lines: { some: { accountingCode: { contains: options.keyword } } } },
-      ];
-    }
-
-    // Info: (20260324 - Julian) 建立審核狀態篩選
-    if (options.verifyStatus) {
-      filteredConditions.where!.isVerified =
-        options.verifyStatus === VerifyStatus.VERIFIED;
-    }
-
-    // Info: (20260310 - Julian) 建立時間區間篩選
-    if (options.startDate || options.endDate) {
-      filteredConditions.where!.tradingDate = {};
-      if (options.startDate) {
-        filteredConditions.where!.tradingDate.gte = new Date(options.startDate);
-      }
-      if (options.endDate) {
-        filteredConditions.where!.tradingDate.lte = new Date(options.endDate);
-      }
-    }
-
-    // Info: (20260310 - Julian) 分頁
-    if (options.page && options.limit) {
-      filteredConditions.skip = (options.page - 1) * options.limit;
-      filteredConditions.take = options.limit;
-    }
-
-    // Info: (20260310 - Julian) 排序 (保留欄位排序功能，但如果提供 sorting，則在最後再重新排序)
-    // if (options.orderBy) {
-    //   try {
-    //     filteredConditions.orderBy = JSON.parse(options.orderBy);
-    //   } catch {
-    //     console.warn("Invalid orderBy param format, ignoring");
-    //   }
-    // }
-
-    if (options.type && options.type !== "all") {
-      filteredConditions.where!.tradingType = options.type.toUpperCase() as
-        | "INCOME"
-        | "OUTCOME"
-        | "TRANSFER";
-    }
-
-    if (options.hideDeleted) {
-      filteredConditions.where!.deletedAt = null;
-    } else {
-      // Info: (20260404 - Luphia) 預設列表顯示：未刪除、或是被軟刪除但距今小於 7 天內的傳票
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      const whereInput = filteredConditions.where as Prisma.VoucherWhereInput;
-      const andConditions = Array.isArray(whereInput.AND)
-        ? whereInput.AND
-        : whereInput.AND
-          ? [whereInput.AND]
-          : [];
-
-      andConditions.push({
-        OR: [{ deletedAt: null }, { deletedAt: { gte: sevenDaysAgo } }],
-      });
-      whereInput.AND = andConditions;
-    }
-
-    return filteredConditions;
-  }
-
   private buildVoucherWhereClause(
     options: IVoucherFilterOptions,
   ): Prisma.VoucherWhereInput {
@@ -239,7 +159,7 @@ export class VoucherRepository implements IVoucherRepository {
   private async attachRelationsAndFormat(
     vouchers: VoucherWithRelations[],
   ): Promise<IVoucher[]> {
-    // Info: (20260506 - Julian) 若沒有日記帳就直接 return
+    // Info: (20260506 - Julian) 若沒有傳票就直接 return
     if (vouchers.length === 0) return [];
 
     // Info: (20260506 - Julian) 取出 file
@@ -269,7 +189,7 @@ export class VoucherRepository implements IVoucherRepository {
     // Info: (20260327 - Luphia) 使用 Map 將查詢複雜度從 O(N*M) 降為 O(1)
     // Info: (20260327 - Luphia) 使用 fileId + accountBookId 作為複合鍵，確保對應精準度
     const journalMap = new Map(
-      journals.map((v) => [`${v.fileId}_${v.accountBookId}`, v.id]),
+      journals.map((j) => [`${j.fileId}_${j.accountBookId}`, j.id]),
     );
     const esgRecordMap = new Map(
       esgRecords.map((e) => [`${e.fileId}_${e.accountBookId}`, e.id]),
@@ -526,6 +446,8 @@ export class VoucherRepository implements IVoucherRepository {
     };
   }
 
+  // Info: (20260507 - Julian) 檢查文件是否重複：回傳 { isDuplicate, duplicateId, duplicateType }
+  // 但目前未使用
   async checkDocumentDuplication(
     accountBookId: string,
     preCheckData: {

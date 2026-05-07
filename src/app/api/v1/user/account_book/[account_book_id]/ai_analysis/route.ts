@@ -270,7 +270,7 @@ export async function POST(
       {
         userId: creator.id,
         dataType: "ESG_RECORD",
-        dataId: newRecord.id,
+        dataId: newRecord.newId,
         accountBookId: accountBook.id,
         action: "CREATE",
       },
@@ -279,7 +279,7 @@ export async function POST(
     return jsonOk({
       journalId: newJournal.newId,
       voucherId: newVoucher.newId,
-      recordId: newRecord.id,
+      recordId: newRecord.newId,
     });
   } catch (error) {
     console.error("Error creating AI analysis:", error);

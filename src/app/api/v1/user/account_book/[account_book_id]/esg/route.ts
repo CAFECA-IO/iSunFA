@@ -8,14 +8,6 @@ import { esgRepo } from "@/repositories/esg.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IEsgRecordFilterOptions } from "@/interfaces/data_filter_option";
-import {
-  IEsgRecordDetail,
-  EsgScope as ClientEsgScope,
-  EsgIntensity as ClientEsgIntensity,
-} from "@/interfaces/esg";
-import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
-import { CoefficientCategory } from "@/interfaces/coefficient";
-import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 
 /**
  * Info: (20260312 - Julian) 新增 ESG 紀錄
@@ -88,12 +80,12 @@ export async function POST(
     await auditLogRepo.createAuditLog({
       userId: creator.id,
       dataType: "ESG_RECORD",
-      dataId: newRecord.id,
+      dataId: newRecord.newId,
       accountBookId: accountBook.id,
       action: "CREATE",
     });
 
-    return jsonOk({ esgRecordId: newRecord.id });
+    return jsonOk({ esgRecordId: newRecord.newId });
   } catch (error) {
     console.error("Error creating esg record:", error);
     return jsonFail({
@@ -161,45 +153,10 @@ export async function GET(
       limit: pageSize,
     };
 
-    const [totalEsgCount, esgDbRecords] = await Promise.all([
+    const [totalEsgCount, esgRecords] = await Promise.all([
       esgRepo.countEsgRecordsByFilter(options),
       esgRepo.getEsgRecordsByFilter(options),
     ]);
-
-    const esgRecords: IEsgRecordDetail[] = esgDbRecords.map((r) => ({
-      ...r,
-      tradingDate: Math.floor(r.tradingDate.getTime() / 1000),
-      fileId: r.fileId ?? "",
-      file: r.file
-        ? {
-            id: r.file.id,
-            hash: r.file.hash,
-            fileName: r.file.fileName || "Unknown",
-          }
-        : undefined,
-      scope: r.scope as ClientEsgScope,
-      activityType: r.activityType as unknown as EsgActivityTypeKey,
-      amount: Number(r.amount),
-      emissions: Number(r.emissions),
-      intensity: r.intensity as ClientEsgIntensity,
-      analysisStatus: r.analysisStatus as AIAnalysisStatus,
-      journalId: r.journalId,
-      voucherId: r.voucherId,
-      isDeleted: !!r.deletedAt,
-      dqiScore: Number(r.dqiScore) ?? 0,
-      coefficient: r.coefficient
-        ? {
-            ...r.coefficient,
-            category: !!r.coefficient.accountBookId
-              ? CoefficientCategory.CUSTOM
-              : CoefficientCategory.STANDARD,
-            createdAt: new Date(r.coefficient.createdAt).getTime() / 1000,
-            updatedAt: new Date(r.coefficient.updatedAt).getTime() / 1000,
-            emissionFactor: Number(r.coefficient.emissionFactor),
-          }
-        : null,
-      emissionSourceTag: r.emissionSourceTag ?? "",
-    }));
 
     return jsonOk({
       esgRecords,

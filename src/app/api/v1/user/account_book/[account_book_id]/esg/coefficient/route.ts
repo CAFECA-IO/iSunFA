@@ -86,7 +86,7 @@ export async function POST(
       accountBook: { connect: { id: accountBook.id } },
     });
 
-    return jsonOk({ coefficientId: newCoefficient.id });
+    return jsonOk({ coefficientId: newCoefficient.newId });
   } catch (error) {
     console.error("Error creating esg coefficient:", error);
     return jsonFail({
@@ -152,21 +152,7 @@ export async function GET(
       esgRepo.countEsgCoefficientsByFilter(options),
     ]);
 
-    const dataFromDatabase: ICoefficient[] = coefficients.map(
-      (coefficient) => ({
-        id: coefficient.id,
-        name: coefficient.name,
-        description: coefficient.description,
-        emissionFactor: Number(coefficient.emissionFactor),
-        unit: coefficient.unit,
-        source: coefficient.source,
-        category: !!coefficient.accountBookId
-          ? CoefficientCategory.CUSTOM
-          : CoefficientCategory.STANDARD,
-        createdAt: new Date(coefficient.createdAt).getTime() / 1000,
-        updatedAt: new Date(coefficient.updatedAt).getTime() / 1000,
-      }),
-    );
+    const dataFromDatabase: ICoefficient[] = coefficients;
 
     let dataFromConstants: ICoefficient[] = [
       ...TRUE_COEFFICIENT_DATA_PART_1,

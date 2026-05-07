@@ -129,13 +129,12 @@ export async function GET(
     });
 
     // Info: (20260321 - Luphia) 2. Fetch ESG
-    const esgRecords = await esgRepo.getEsgRecords({
-      where: {
-        accountBookId,
-        tradingDate: { gte: prevStart, lte: end },
-        isVerified: true,
-        deletedAt: null,
-      },
+    const esgRecords = await esgRepo.getEsgRecordsByFilter({
+      accountBookId,
+      startDate: prevStart,
+      endDate: end,
+      verifyStatus: VerifyStatus.VERIFIED,
+      hideDeleted: true,
     });
 
     // Info: (20260321 - Luphia) Initialize buckets
@@ -181,7 +180,6 @@ export async function GET(
         if (v.tradingType === "INCOME") currentIncome += val;
         else if (v.tradingType === "OUTCOME") currentOutcome += val;
 
-        const ts = tradingDateMs;
         let bIdx = 0;
         if (unit === "1y" || (unit === "custom" && !monthStr)) {
           const months =
@@ -191,7 +189,10 @@ export async function GET(
         } else {
           bIdx = Math.max(
             0,
-            Math.min(count - 1, Math.floor((ts - start.getTime()) / bucketMs)),
+            Math.min(
+              count - 1,
+              Math.floor((tradingDateMs - start.getTime()) / bucketMs),
+            ),
           );
         }
 
@@ -205,7 +206,8 @@ export async function GET(
 
     // Info: (20260321 - Luphia)  Process ESG
     esgRecords.forEach((e) => {
-      const isCurrent = e.tradingDate >= start;
+      const tradingDateMs = e.tradingDate * 1000;
+      const isCurrent = tradingDateMs >= start.getTime();
       const em = Number(e.emissions);
       /**
        * Info: (20260321 - Luphia) Determine gas type roughly from activityType or vendor
@@ -235,9 +237,7 @@ export async function GET(
             0,
             Math.min(
               count - 1,
-              Math.floor(
-                (e.tradingDate.getTime() - start.getTime()) / bucketMs,
-              ),
+              Math.floor((tradingDateMs - start.getTime()) / bucketMs),
             ),
           );
         }

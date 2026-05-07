@@ -3,13 +3,16 @@ import {
   EsgTarget,
   Prisma,
   EsgRecord,
-  AIAnalysisStatus,
+  // AIAnalysisStatus,
   Coefficient,
 } from "@/generated";
 import {
   IEsgDashboardSummary,
   EsgScope,
   IEsgScopeDistributionData,
+  IEsgTarget,
+  IEsgRecordBrief,
+  IEsgRecordDetail,
 } from "@/interfaces/esg";
 import { ESG_INDUSTRY_BENCHMARKS } from "@/constants/esg_industry_benchmarks";
 import {
@@ -19,76 +22,81 @@ import {
 } from "@/interfaces/emission_sources";
 import { EsgIntensity } from "@/interfaces/esg";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
-import { CoefficientCategory } from "@/interfaces/coefficient";
+import { CoefficientCategory, ICoefficient } from "@/interfaces/coefficient";
 import {
   IBaseStringFilter,
   ICoefficientFilterOptions,
   IEsgRecordFilterOptions,
 } from "@/interfaces/data_filter_option";
 import { VerifyStatus } from "@/constants/verify_status";
+import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 
 export type EsgRecordWithRelations = Prisma.EsgRecordGetPayload<{
   include: { file: true; coefficient: true; emissionSource: true };
 }> & { journalId?: string; voucherId?: string };
 
 export interface IEsgRepository {
-  getEsgTargetsByAccountBookId(accountBookId: string): Promise<EsgTarget[]>;
+  getEsgTargetsByAccountBookId(accountBookId: string): Promise<IEsgTarget[]>;
   upsertEsgTarget(data: {
     accountBookId: string;
     year: number;
     totalEmissionTarget: Prisma.Decimal | number | null;
     revenueEmissionTarget: Prisma.Decimal | number | null;
-  }): Promise<EsgTarget>;
+  }): Promise<IEsgTarget>;
   getVerifiedEsgRecordsByAccountBookId(
     accountBookId: string,
-  ): Promise<EsgRecord[]>;
+  ): Promise<IEsgRecordBrief[]>;
+  verifyAllEsgRecords(accountBookId: string): Promise<number>;
   getEsgTargetByYear(
     accountBookId: string,
     year: number,
-  ): Promise<EsgTarget | null>;
-  getEsgRecords(
-    args: Prisma.EsgRecordFindManyArgs,
-  ): Promise<EsgRecordWithRelations[]>;
+  ): Promise<IEsgTarget | null>;
+  getEsgRecords(accountBookId: string): Promise<IEsgRecordDetail[]>;
   getEsgRecordsByFilter(
     options: IEsgRecordFilterOptions,
-  ): Promise<EsgRecordWithRelations[]>;
+  ): Promise<IEsgRecordDetail[]>;
   createEsgRecord(
     data: Prisma.EsgRecordUncheckedCreateInput,
-  ): Promise<EsgRecord>;
-  countEsgRecords(where: Prisma.EsgRecordWhereInput): Promise<number>;
+  ): Promise<{ newId: string }>;
+  countEsgRecords(accountBookId: string): Promise<number>;
   countEsgRecordsByFilter(options: IEsgRecordFilterOptions): Promise<number>;
-  getEsgRecordById(id: string): Promise<EsgRecordWithRelations | null>;
+  getEsgRecordById(id: string): Promise<IEsgRecordDetail | null>;
   updateEsgRecord(
     id: string,
     data: Prisma.EsgRecordUpdateInput,
-  ): Promise<EsgRecordWithRelations | null>;
+  ): Promise<IEsgRecordDetail | null>;
   updateManyEsgRecordsByFile(
     fileId: string,
     accountBookId: string,
     data: Prisma.EsgRecordUpdateInput,
-  ): Promise<Prisma.BatchPayload>;
+  ): Promise<number>;
+  getEsgSummary(
+    accountBookId: string,
+    year?: string,
+    month?: string,
+  ): Promise<IEsgDashboardSummary>;
   createEsgCoefficient(
     data: Prisma.CoefficientCreateInput,
-  ): Promise<Coefficient>;
+  ): Promise<{ newId: string }>;
   upsertEsgCoefficient(
     args: Prisma.CoefficientUpsertArgs,
-  ): Promise<Coefficient>;
+  ): Promise<{ newId: string }>;
   countEsgCoefficients(where: Prisma.CoefficientWhereInput): Promise<number>;
-  getEsgCoefficientById(id: string): Promise<Coefficient | null>;
+  countEsgCoefficientsByFilter(
+    options: ICoefficientFilterOptions,
+  ): Promise<number>;
+  getEsgCoefficients(accountBookId: string): Promise<ICoefficient[]>;
+  getEsgCoefficientsByFilter(
+    options: ICoefficientFilterOptions,
+  ): Promise<ICoefficient[]>;
+  getEsgCoefficientById(id: string): Promise<ICoefficient | null>;
+
   updateEsgCoefficient(
     id: string,
     data: Prisma.CoefficientUpdateInput,
   ): Promise<Coefficient | null>;
   deleteEsgCoefficient(id: string): Promise<{ id: string } | null>;
-  getEsgCoefficients(
-    args: Prisma.CoefficientFindManyArgs,
-  ): Promise<Coefficient[]>;
-  getEsgCoefficientsByFilter(
-    options: ICoefficientFilterOptions,
-  ): Promise<Coefficient[]>;
-  countEsgCoefficientsByFilter(
-    options: ICoefficientFilterOptions,
-  ): Promise<number>;
+
   getEsgEmissionSources(
     accountBookId: string,
     keyword: string,
@@ -114,79 +122,16 @@ export interface IEsgRepository {
     data: Prisma.EmissionSourceUpdateInput,
   ): Promise<IEmissionSources | null>;
   deleteEsgEmissionSources(id: string): Promise<{ id: string } | null>;
-  verifyAllEsgRecords(accountBookId: string): Promise<Prisma.BatchPayload>;
-  findManyEsgRecords(args: Prisma.EsgRecordFindManyArgs): Promise<EsgRecord[]>;
-  getEsgSummary(
-    accountBookId: string,
-    year?: string,
-    month?: string,
-  ): Promise<IEsgDashboardSummary>;
+
   getEsgEmissionSourcesSummary(
     accountBookId: string,
   ): Promise<IEsgEmissionSourcesSummary>;
+
+  findManyEsgRecords(args: Prisma.EsgRecordFindManyArgs): Promise<EsgRecord[]>;
 }
 
 export class EsgRepository implements IEsgRepository {
-  async getEsgTargetsByAccountBookId(accountBookId: string) {
-    return prisma.esgTarget.findMany({
-      where: { accountBookId },
-      orderBy: { year: "asc" },
-    });
-  }
-
-  async upsertEsgTarget({
-    accountBookId,
-    year,
-    totalEmissionTarget,
-    revenueEmissionTarget,
-  }: {
-    accountBookId: string;
-    year: number;
-    totalEmissionTarget: Prisma.Decimal | number | null;
-    revenueEmissionTarget: Prisma.Decimal | number | null;
-  }) {
-    return prisma.esgTarget.upsert({
-      where: {
-        accountBookId_year: {
-          accountBookId,
-          year,
-        },
-      },
-      update: {
-        totalEmissionTarget,
-        revenueEmissionTarget,
-      },
-      create: {
-        accountBookId,
-        year,
-        totalEmissionTarget,
-        revenueEmissionTarget,
-      },
-    });
-  }
-
-  async verifyAllEsgRecords(accountBookId: string) {
-    return prisma.esgRecord.updateMany({
-      where: { accountBookId, isVerified: false },
-      data: { isVerified: true },
-    });
-  }
-
-  async getVerifiedEsgRecordsByAccountBookId(accountBookId: string) {
-    return prisma.esgRecord.findMany({
-      where: {
-        accountBookId,
-        isVerified: true,
-      },
-    });
-  }
-
-  async getEsgTargetByYear(accountBookId: string, year: number) {
-    return prisma.esgTarget.findFirst({
-      where: { accountBookId, year },
-    });
-  }
-
+  // Info: (20260507 - Julian) 建構查詢條件
   private buildEsgRecordWhereClause(
     options: IEsgRecordFilterOptions,
   ): Prisma.EsgRecordWhereInput {
@@ -274,14 +219,311 @@ export class EsgRepository implements IEsgRepository {
     };
   }
 
+  // Info: (20260507 - Julian) 將 ESG 目標轉換成前端格式
+  private transformEsgTargetToFrontendFormat(esgTarget: EsgTarget): IEsgTarget {
+    const result: IEsgTarget = {
+      id: esgTarget.id,
+      accountBookId: esgTarget.accountBookId,
+      year: esgTarget.year,
+      totalEmissionTarget: Number(esgTarget.totalEmissionTarget),
+      revenueEmissionTarget: Number(esgTarget.revenueEmissionTarget),
+    };
+    return result;
+  }
+
+  // Info: (20260507 - Julian) 將 ESG 紀錄轉換成前端格式
+  private transformEsgRecordToFrontendFormat(
+    esgRecord: EsgRecordWithRelations,
+  ): IEsgRecordDetail {
+    const coefficient: ICoefficient | null = esgRecord.coefficient
+      ? {
+          ...esgRecord.coefficient,
+          category: esgRecord.coefficient.accountBookId
+            ? CoefficientCategory.CUSTOM
+            : CoefficientCategory.STANDARD,
+          createdAt: Math.floor(
+            esgRecord.coefficient.createdAt.getTime() / 1000,
+          ),
+          updatedAt: Math.floor(
+            esgRecord.coefficient.updatedAt.getTime() / 1000,
+          ),
+          emissionFactor: Number(esgRecord.coefficient.emissionFactor),
+        }
+      : null;
+
+    const emissionSource = esgRecord.emissionSource
+      ? {
+          id: esgRecord.emissionSource.id,
+          name: esgRecord.emissionSource.name,
+        }
+      : null;
+
+    const file = esgRecord.file
+      ? {
+          id: esgRecord.file.id,
+          hash: esgRecord.file.hash,
+          fileName: esgRecord.file.fileName ?? "",
+        }
+      : undefined;
+
+    return {
+      ...esgRecord,
+      coefficient,
+      emissionSource,
+      fileId: esgRecord.fileId ?? "",
+      file,
+      tradingDate: Math.floor(esgRecord.tradingDate.getTime() / 1000),
+      amount: Number(esgRecord.amount),
+      emissions: Number(esgRecord.emissions),
+      emissionSourceTag: esgRecord.emissionSourceTag ?? undefined,
+      dqiScore: Number(esgRecord.dqiScore),
+      scope: esgRecord.scope as EsgScope,
+      intensity: esgRecord.intensity as EsgIntensity,
+      analysisStatus: esgRecord.analysisStatus as AIAnalysisStatus,
+      activityType: esgRecord.activityType as EsgActivityTypeKey,
+    };
+  }
+
+  // Info: (20260507 - Julian) 批次取得 ESG 紀錄的關聯並轉換格式
+  private async attachEsgRecordRelationsAndFormat(
+    esgRecords: EsgRecordWithRelations[],
+  ): Promise<IEsgRecordDetail[]> {
+    // Info: (20260507 - Julian) 若沒有 ESG 紀錄就直接 return
+    if (esgRecords.length === 0) return [];
+
+    // Info: (20260507 - Julian) 取出 file
+    const fileIds = Array.from(
+      new Set(
+        esgRecords
+          .map((j) => j.fileId)
+          .filter((id): id is string => id !== null),
+      ),
+    );
+
+    // Info: (20260507 - Julian) 若沒有 file 就不需要後續的查詢
+    if (fileIds.length === 0) {
+      return esgRecords.map((e) => this.transformEsgRecordToFrontendFormat(e));
+    }
+
+    // Info: (20260327 - Luphia) 並行查詢，節省等待時間
+    const [journals, vouchers] = await Promise.all([
+      prisma.journal.findMany({
+        where: { fileId: { in: fileIds } },
+        select: { id: true, fileId: true, accountBookId: true },
+      }),
+      prisma.voucher.findMany({
+        where: { fileId: { in: fileIds } },
+        select: { id: true, fileId: true, accountBookId: true },
+      }),
+    ]);
+
+    // Info: (20260327 - Luphia) 使用 Map 將查詢複雜度從 O(N*M) 降為 O(1)
+    // Info: (20260327 - Luphia) 使用 fileId + accountBookId 作為複合鍵，確保對應精準度
+    const journalMap = new Map(
+      journals.map((j) => [`${j.fileId}_${j.accountBookId}`, j.id]),
+    );
+    const voucherMap = new Map(
+      vouchers.map((v) => [`${v.fileId}_${v.accountBookId}`, v.id]),
+    );
+
+    // Info: (20260506 - Julian) 轉換格式，並對齊關聯資料
+    return esgRecords.map((esgRecord) => {
+      const compositeKey = `${esgRecord.fileId}_${esgRecord.accountBookId}`;
+      const journalId = esgRecord.fileId
+        ? journalMap.get(compositeKey)
+        : undefined;
+      const voucherId = esgRecord.fileId
+        ? voucherMap.get(compositeKey)
+        : undefined;
+
+      return this.transformEsgRecordToFrontendFormat({
+        ...esgRecord,
+        journalId,
+        voucherId,
+      });
+    });
+  }
+
+  // Info: (20260507 - Julian) 抽取共用的查詢並轉換格式
+  private async fetchAndFormatEsgRecords(
+    args: Prisma.EsgRecordFindManyArgs,
+  ): Promise<IEsgRecordDetail[]> {
+    const mergedArgs = {
+      ...args,
+      // Info: (20260507 - Julian) 將關聯的 file, coefficient, emissionSource 一併取出
+      include: {
+        ...args.include,
+        file: true,
+        coefficient: true,
+        emissionSource: true,
+      },
+    };
+
+    const esgRecords = (await prisma.esgRecord.findMany(
+      mergedArgs,
+    )) as unknown as EsgRecordWithRelations[];
+    return this.attachEsgRecordRelationsAndFormat(esgRecords);
+  }
+
+  // Info: (20260507 - Julian) 建立係數過濾條件
+  private buildCoefficientWhereClause(
+    options: ICoefficientFilterOptions,
+  ): Prisma.CoefficientWhereInput {
+    const andConditions: Prisma.CoefficientWhereInput[] = [];
+
+    // Info: (20260413 - Julian) 排除已刪除的係數
+    andConditions.push({ deletedAt: null });
+
+    // Info: (20260414 - Julian) 依據 tab 篩選係數
+    if (options.tab === CoefficientCategory.STANDARD) {
+      // Info: (20260414 - Julian) 無 accountBookId => 標準係數
+      andConditions.push({ accountBookId: null });
+    } else if (options.tab === CoefficientCategory.CUSTOM) {
+      // Info: (20260414 - Julian) 有 accountBookId => 自訂係數
+      andConditions.push({ accountBookId: { not: null } });
+    }
+
+    // Info: (20260414 - Julian) 搜尋字串過濾邏輯（名稱、描述、來源的模糊搜尋）
+    if (options.keyword) {
+      andConditions.push({
+        OR: [
+          { name: { contains: options.keyword, mode: "insensitive" } },
+          { description: { contains: options.keyword, mode: "insensitive" } },
+          { source: { contains: options.keyword, mode: "insensitive" } },
+        ],
+      });
+    }
+
+    // Info: (20260416 - Julian) 單位過濾邏輯（模糊搜尋）
+    if (options.unit) {
+      andConditions.push({
+        unit: { contains: options.unit, mode: "insensitive" },
+      });
+    }
+
+    return { AND: andConditions };
+  }
+
+  // Info: (20260507 - Julian) 轉換係數至前端格式
+  private transformCoefficientToFrontendFormat(
+    coefficient: Coefficient,
+  ): ICoefficient {
+    return {
+      ...coefficient,
+      category: !!coefficient.accountBookId
+        ? CoefficientCategory.CUSTOM
+        : CoefficientCategory.STANDARD,
+      createdAt: Math.floor(coefficient.createdAt.getTime() / 1000),
+      updatedAt: Math.floor(coefficient.updatedAt.getTime() / 1000),
+      emissionFactor: Number(coefficient.emissionFactor),
+    };
+  }
+
+  // Info: (20260507 - Julian) 取得指定帳簿的 ESG 目標，回傳 IEsgTarget[]
+  async getEsgTargetsByAccountBookId(accountBookId: string) {
+    const esgTarget = await prisma.esgTarget.findMany({
+      where: { accountBookId },
+      orderBy: { year: "asc" },
+    });
+
+    const result: IEsgTarget[] = esgTarget.map(
+      this.transformEsgTargetToFrontendFormat,
+    );
+    return result;
+  }
+
+  // Info: (20260507 - Julian) 新增或更新指定帳簿的 ESG 目標，回傳 IEsgTarget
+  async upsertEsgTarget({
+    accountBookId,
+    year,
+    totalEmissionTarget,
+    revenueEmissionTarget,
+  }: {
+    accountBookId: string;
+    year: number;
+    totalEmissionTarget: Prisma.Decimal | number | null;
+    revenueEmissionTarget: Prisma.Decimal | number | null;
+  }) {
+    const esgTarget = await prisma.esgTarget.upsert({
+      where: {
+        accountBookId_year: {
+          accountBookId,
+          year,
+        },
+      },
+      update: {
+        totalEmissionTarget,
+        revenueEmissionTarget,
+      },
+      create: {
+        accountBookId,
+        year,
+        totalEmissionTarget,
+        revenueEmissionTarget,
+      },
+    });
+
+    const result = this.transformEsgTargetToFrontendFormat(esgTarget);
+
+    return result;
+  }
+
+  // Info: (20260507 - Julian) 取得指定帳簿的已驗證的 ESG 記錄，回傳 IEsgRecordBrief[]
+  async getVerifiedEsgRecordsByAccountBookId(accountBookId: string) {
+    const esgRecords = await prisma.esgRecord.findMany({
+      where: { accountBookId, isVerified: true },
+    });
+
+    const result: IEsgRecordBrief[] = esgRecords.map((record) => ({
+      id: record.id,
+      tradingDate: Math.floor(record.tradingDate.getTime() / 1000),
+      activityType: record.activityType as EsgActivityTypeKey,
+      vendor: record.vendor,
+      amount: Number(record.amount),
+      unit: record.unit,
+      emissions: Number(record.emissions),
+      emissionSourceTag: record.emissionSourceTag ?? undefined,
+    }));
+
+    return result;
+  }
+
+  // Info: (20260507 - Julian) 將所有未驗證的 ESG 記錄設為已驗證，回傳數量(number)
+  async verifyAllEsgRecords(accountBookId: string) {
+    const result = await prisma.esgRecord.updateMany({
+      where: { accountBookId, isVerified: false },
+      data: { isVerified: true },
+    });
+
+    return result.count;
+  }
+
+  // Info: (20260507 - Julian) 取得指定帳簿特定年份的 ESG 目標，回傳 IEsgTarget | null
+  async getEsgTargetByYear(accountBookId: string, year: number) {
+    const esgTarget = await prisma.esgTarget.findFirst({
+      where: { accountBookId, year },
+    });
+
+    if (!esgTarget) return null;
+
+    const result = this.transformEsgTargetToFrontendFormat(esgTarget);
+    return result;
+  }
+
+  // Info: (20260507 - Julian) 取得指定帳簿的 ESG 記錄，回傳 IEsgRecordDetail[]
+  async getEsgRecords(accountBookId: string): Promise<IEsgRecordDetail[]> {
+    const where = this.buildEsgRecordWhereClause({ accountBookId });
+    return this.fetchAndFormatEsgRecords({ where });
+  }
+
+  // Info: (20260507 - Julian) 取得指定帳簿的 ESG 記錄(依條件過濾)，回傳 IEsgRecordDetail[]
   async getEsgRecordsByFilter(
     options: IEsgRecordFilterOptions,
-  ): Promise<EsgRecordWithRelations[]> {
+  ): Promise<IEsgRecordDetail[]> {
     const where = this.buildEsgRecordWhereClause(options);
 
-    return this.getEsgRecords({
+    return this.fetchAndFormatEsgRecords({
       where,
-      include: { file: true, coefficient: true },
       orderBy: { tradingDate: options.sort || "desc" },
       ...(options.page && options.limit
         ? { skip: (options.page - 1) * options.limit, take: options.limit }
@@ -289,94 +531,73 @@ export class EsgRepository implements IEsgRepository {
     });
   }
 
+  // Info: (20260507 - Julian) 新增 ESG 記錄，回傳新建立記錄的 ID
+  async createEsgRecord(
+    data: Prisma.EsgRecordUncheckedCreateInput,
+  ): Promise<{ newId: string }> {
+    const result = await prisma.esgRecord.create({ data });
+    return { newId: result.id };
+  }
+
+  // Info: (20260507 - Julian) 統計 ESG 記錄總數，
+  async countEsgRecords(accountBookId: string) {
+    return prisma.esgRecord.count({ where: { accountBookId } });
+  }
+
+  // Info: (20260507 - Julian) 統計 ESG 記錄總數(依條件過濾)，回傳數量(number)
   async countEsgRecordsByFilter(
     options: IEsgRecordFilterOptions,
   ): Promise<number> {
     const where = this.buildEsgRecordWhereClause(options);
-    return this.countEsgRecords(where);
-  }
-
-  async getEsgRecords(
-    args: Prisma.EsgRecordFindManyArgs,
-  ): Promise<EsgRecordWithRelations[]> {
-    const records = (await prisma.esgRecord.findMany(
-      args,
-    )) as unknown as Prisma.EsgRecordGetPayload<{ include: { file: true } }>[];
-    if (records.length === 0) return records as EsgRecordWithRelations[];
-
-    const fileIds = Array.from(
-      new Set(records.map((r) => r.fileId).filter(Boolean)),
-    ) as string[];
-    let journals: { id: string; fileId: string | null }[] = [];
-    let vouchers: { id: string; fileId: string | null }[] = [];
-
-    if (fileIds.length > 0) {
-      journals = await prisma.journal.findMany({
-        where: { fileId: { in: fileIds } },
-        select: { id: true, fileId: true },
-      });
-      vouchers = await prisma.voucher.findMany({
-        where: { fileId: { in: fileIds } },
-        select: { id: true, fileId: true },
-      });
-    }
-
-    return records.map((record) => {
-      const journalId = journals.find((j) => j.fileId === record.fileId)?.id;
-      const voucherId = vouchers.find((v) => v.fileId === record.fileId)?.id;
-      return {
-        ...record,
-        journalId,
-        voucherId,
-      };
-    }) as EsgRecordWithRelations[];
-  }
-
-  async findManyEsgRecords(args: Prisma.EsgRecordFindManyArgs) {
-    return prisma.esgRecord.findMany(args);
-  }
-
-  async createEsgRecord(data: Prisma.EsgRecordUncheckedCreateInput) {
-    return prisma.esgRecord.create({ data });
-  }
-
-  async countEsgRecords(where: Prisma.EsgRecordWhereInput) {
     return prisma.esgRecord.count({ where });
   }
 
-  async getEsgRecordById(id: string): Promise<EsgRecordWithRelations | null> {
-    const record = await prisma.esgRecord.findUnique({
+  // Info: (20260507 - Julian) 取得指定帳簿的 ESG 記錄，回傳 IEsgRecordDetail[]
+  async getEsgRecordById(id: string): Promise<IEsgRecordDetail | null> {
+    const esgRecords = await this.fetchAndFormatEsgRecords({
       where: { id },
-      include: { file: true, coefficient: true, emissionSource: true },
     });
-
-    if (!record) return null;
-
-    let journalId: string | undefined;
-    let voucherId: string | undefined;
-
-    if (record.fileId) {
-      const journal = await prisma.journal.findFirst({
-        where: { fileId: record.fileId, accountBookId: record.accountBookId },
-        select: { id: true },
-      });
-      if (journal) journalId = journal.id;
-
-      const voucher = await prisma.voucher.findFirst({
-        where: { fileId: record.fileId, accountBookId: record.accountBookId },
-        select: { id: true },
-      });
-      if (voucher) voucherId = voucher.id;
-    }
-
-    return {
-      ...record,
-      journalId,
-      voucherId,
-    } as EsgRecordWithRelations;
+    return esgRecords[0] || null;
   }
 
-  async getEsgSummary(accountBookId: string, year?: string, month?: string) {
+  // Info: (20260507 - Julian) 更新單一 ESG 紀錄，回傳 IEsgRecordDetail | null
+  async updateEsgRecord(
+    id: string,
+    data: Prisma.EsgRecordUpdateInput,
+  ): Promise<IEsgRecordDetail | null> {
+    const esgRecord = (await prisma.esgRecord.update({
+      where: { id },
+      data,
+      include: { file: true, coefficient: true, emissionSource: true },
+    })) as unknown as EsgRecordWithRelations;
+
+    if (!esgRecord) return null;
+
+    const formattedEsgRecords = await this.attachEsgRecordRelationsAndFormat([
+      esgRecord,
+    ]);
+    return formattedEsgRecords[0] || null;
+  }
+
+  // Info: (20260507 - Julian) 更新與特定 file 關聯的 ESG 紀錄：回傳更新數量(number)
+  async updateManyEsgRecordsByFile(
+    fileId: string,
+    accountBookId: string,
+    data: Prisma.EsgRecordUpdateInput,
+  ): Promise<number> {
+    const result = await prisma.esgRecord.updateMany({
+      where: { fileId, accountBookId, deletedAt: null },
+      data,
+    });
+    return result.count;
+  }
+
+  // Info: (20260507 - Julian) 計算指定帳簿和區間段的 ESG 摘要，回傳 IEsgDashboardSummary
+  async getEsgSummary(
+    accountBookId: string,
+    year?: string,
+    month?: string,
+  ): Promise<IEsgDashboardSummary> {
     let startDate: Date;
     let endDate: Date;
 
@@ -391,6 +612,7 @@ export class EsgRepository implements IEsgRepository {
       endDate = new Date(currentYear, 11, 31, 23, 59, 59, 999);
     }
 
+    // Info: (20260507 - Julian) 平行查詢 ESG 記錄、收入傳票、帳簿、目標
     const [esgAggregations, incomeVoucherLinesAggr, accountBook, targets] =
       await Promise.all([
         prisma.esgRecord.groupBy({
@@ -533,103 +755,45 @@ export class EsgRepository implements IEsgRepository {
     return summary;
   }
 
-  async updateEsgRecord(
-    id: string,
-    data: Prisma.EsgRecordUpdateInput,
-  ): Promise<EsgRecordWithRelations | null> {
-    const record = await prisma.esgRecord.update({
-      where: { id },
-      data,
-      include: { file: true },
-    });
-
-    if (!record) return null;
-
-    let journalId: string | undefined;
-    let voucherId: string | undefined;
-
-    if (record.fileId) {
-      const journal = await prisma.journal.findFirst({
-        where: { fileId: record.fileId, accountBookId: record.accountBookId },
-        select: { id: true },
-      });
-      if (journal) journalId = journal.id;
-
-      const voucher = await prisma.voucher.findFirst({
-        where: { fileId: record.fileId, accountBookId: record.accountBookId },
-        select: { id: true },
-      });
-      if (voucher) voucherId = voucher.id;
-    }
-
-    return {
-      ...record,
-      journalId,
-      voucherId,
-    } as EsgRecordWithRelations;
-  }
-
-  async updateManyEsgRecordsByFile(
-    fileId: string,
-    accountBookId: string,
-    data: Prisma.EsgRecordUpdateInput,
-  ): Promise<Prisma.BatchPayload> {
-    return prisma.esgRecord.updateMany({
-      where: { fileId, accountBookId },
-      data,
-    });
-  }
-
+  // Info: (20260507 - Julian) 新增自訂係數，回傳 ID
   async createEsgCoefficient(data: Prisma.CoefficientCreateInput) {
-    return prisma.coefficient.create({ data });
+    const coefficient = await prisma.coefficient.create({ data });
+    return { newId: coefficient.id };
   }
 
+  // Info: (20260507 - Julian) 更新或建立自訂係數，回傳 ID
   async upsertEsgCoefficient(args: Prisma.CoefficientUpsertArgs) {
-    return prisma.coefficient.upsert(args);
+    const coefficient = await prisma.coefficient.upsert(args);
+    return { newId: coefficient.id };
   }
 
-  private buildCoefficientWhereClause(
-    options: ICoefficientFilterOptions,
-  ): Prisma.CoefficientWhereInput {
-    const andConditions: Prisma.CoefficientWhereInput[] = [];
-
-    // Info: (20260413 - Julian) 排除已刪除的係數
-    andConditions.push({ deletedAt: null });
-
-    // Info: (20260414 - Julian) 依據 tab 篩選係數
-    if (options.tab === CoefficientCategory.STANDARD) {
-      // Info: (20260414 - Julian) 無 accountBookId => 標準係數
-      andConditions.push({ accountBookId: null });
-    } else if (options.tab === CoefficientCategory.CUSTOM) {
-      // Info: (20260414 - Julian) 有 accountBookId => 自訂係數
-      andConditions.push({ accountBookId: { not: null } });
-    }
-
-    // Info: (20260414 - Julian) 搜尋字串過濾邏輯（名稱、描述、來源的模糊搜尋）
-    if (options.keyword) {
-      andConditions.push({
-        OR: [
-          { name: { contains: options.keyword, mode: "insensitive" } },
-          { description: { contains: options.keyword, mode: "insensitive" } },
-          { source: { contains: options.keyword, mode: "insensitive" } },
-        ],
-      });
-    }
-
-    // Info: (20260416 - Julian) 單位過濾邏輯（模糊搜尋）
-    if (options.unit) {
-      andConditions.push({
-        unit: { contains: options.unit, mode: "insensitive" },
-      });
-    }
-
-    return { AND: andConditions };
+  // Info: (20260507 - Julian) 計算係數總數，回傳 number
+  async countEsgCoefficients(where: Prisma.CoefficientWhereInput) {
+    return prisma.coefficient.count({ where });
   }
 
-  async getEsgCoefficientsByFilter(options: ICoefficientFilterOptions) {
+  // Info: (20260507 - Julian) 依據篩選條件計算係數總數，回傳 number
+  async countEsgCoefficientsByFilter(options: ICoefficientFilterOptions) {
     const where = this.buildCoefficientWhereClause(options);
+    return prisma.coefficient.count({ where });
+  }
 
-    return prisma.coefficient.findMany({
+  // Info: (20260507 - Julian) 取得指定帳簿的係數，回傳 ICoefficient[]
+  async getEsgCoefficients(accountBookId: string): Promise<ICoefficient[]> {
+    const coefficients = await prisma.coefficient.findMany({
+      where: { accountBookId },
+    });
+    return coefficients.map((coefficient) =>
+      this.transformCoefficientToFrontendFormat(coefficient),
+    );
+  }
+
+  // Info: (20260507 - Julian) 依據篩選條件取得係數，回傳 ICoefficient[]
+  async getEsgCoefficientsByFilter(
+    options: ICoefficientFilterOptions,
+  ): Promise<ICoefficient[]> {
+    const where = this.buildCoefficientWhereClause(options);
+    const coefficients = await prisma.coefficient.findMany({
       where,
       ...(options.page && options.limit
         ? { skip: (options.page - 1) * options.limit, take: options.limit }
@@ -637,31 +801,20 @@ export class EsgRepository implements IEsgRepository {
       orderBy: [{ accountBookId: "desc" }, { updatedAt: "desc" }],
       include: { accountBook: true },
     });
+    return coefficients.map((coefficient) =>
+      this.transformCoefficientToFrontendFormat(coefficient),
+    );
   }
 
-  async countEsgCoefficientsByFilter(options: ICoefficientFilterOptions) {
-    const where = this.buildCoefficientWhereClause(options);
-    return prisma.coefficient.count({ where });
-  }
-
-  async getEsgCoefficients(args: Prisma.CoefficientFindManyArgs) {
-    const coefficients = await prisma.coefficient.findMany({
-      ...args,
-      include: { accountBook: true },
-    });
-
-    return coefficients;
-  }
-
-  async countEsgCoefficients(where: Prisma.CoefficientWhereInput) {
-    return prisma.coefficient.count({ where });
-  }
-
-  async getEsgCoefficientById(id: string) {
-    return prisma.coefficient.findUnique({
+  // Info: (20260507 - Julian) 取得指定係數 ID 的係數，回傳 ICoefficient
+  async getEsgCoefficientById(id: string): Promise<ICoefficient | null> {
+    const coefficient = await prisma.coefficient.findUnique({
       where: { id },
       include: { accountBook: true },
     });
+    return coefficient
+      ? this.transformCoefficientToFrontendFormat(coefficient)
+      : null;
   }
 
   async updateEsgCoefficient(id: string, data: Prisma.CoefficientUpdateInput) {
@@ -949,6 +1102,11 @@ export class EsgRepository implements IEsgRepository {
     if (!deletedSource) return null;
 
     return { id: deletedSource.id };
+  }
+
+  // TODO
+  async findManyEsgRecords(args: Prisma.EsgRecordFindManyArgs) {
+    return prisma.esgRecord.findMany(args);
   }
 }
 

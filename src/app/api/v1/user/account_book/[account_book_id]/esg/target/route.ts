@@ -42,13 +42,14 @@ export async function GET(
       {};
 
     esgRecords.forEach((r) => {
-      const year = r.tradingDate.getFullYear();
+      const date = new Date(r.tradingDate * 1000);
+      const year = date.getFullYear();
       if (!yearlyData[year]) yearlyData[year] = { emissions: 0, revenue: 0 };
       yearlyData[year].emissions += Number(r.emissions);
     });
 
     incomes.forEach((v) => {
-      const date = new Date(v.tradingDate);
+      const date = new Date(v.tradingDate * 1000);
       const year = date.getFullYear();
       if (!yearlyData[year]) yearlyData[year] = { emissions: 0, revenue: 0 };
       const val = v.lineItems.lines.reduce((a, l) => a + l.amount, 0) / 2;
