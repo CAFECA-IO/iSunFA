@@ -3,8 +3,8 @@ import {
   EsgTarget,
   Prisma,
   EsgRecord,
-  // AIAnalysisStatus,
   Coefficient,
+  EmissionSource,
 } from "@/generated";
 import {
   IEsgDashboardSummary,
@@ -16,7 +16,6 @@ import {
 } from "@/interfaces/esg";
 import { ESG_INDUSTRY_BENCHMARKS } from "@/constants/esg_industry_benchmarks";
 import {
-  IEmissionSources,
   IEsgEmissionSourcesSummary,
   IEsgEmissionSourcesUI,
 } from "@/interfaces/emission_sources";
@@ -46,6 +45,11 @@ export interface IEsgRepository {
   getVerifiedEsgRecordsByAccountBookId(
     accountBookId: string,
   ): Promise<IEsgRecordBrief[]>;
+  getEsgRecordsByPeriod(
+    accountBookId: string,
+    start: Date,
+    end: Date,
+  ): Promise<IEsgRecordDetail[]>;
   verifyAllEsgRecords(accountBookId: string): Promise<number>;
   getEsgTargetByYear(
     accountBookId: string,
@@ -90,13 +94,11 @@ export interface IEsgRepository {
     options: ICoefficientFilterOptions,
   ): Promise<ICoefficient[]>;
   getEsgCoefficientById(id: string): Promise<ICoefficient | null>;
-
   updateEsgCoefficient(
     id: string,
     data: Prisma.CoefficientUpdateInput,
-  ): Promise<Coefficient | null>;
+  ): Promise<{ newId: string }>;
   deleteEsgCoefficient(id: string): Promise<{ id: string } | null>;
-
   getEsgEmissionSources(
     accountBookId: string,
     keyword: string,
@@ -111,27 +113,25 @@ export interface IEsgRepository {
       totalPages: number;
     };
   }>;
-  createEsgEmissionSources(
-    accountBookId: string,
-    name: string,
-    address?: string,
-  ): Promise<IEmissionSources>;
   getEsgEmissionSourcesById(id: string): Promise<IEsgEmissionSourcesUI | null>;
-  updateEsgEmissionSources(
-    id: string,
-    data: Prisma.EmissionSourceUpdateInput,
-  ): Promise<IEmissionSources | null>;
-  deleteEsgEmissionSources(id: string): Promise<{ id: string } | null>;
-
   getEsgEmissionSourcesSummary(
     accountBookId: string,
   ): Promise<IEsgEmissionSourcesSummary>;
 
-  findManyEsgRecords(args: Prisma.EsgRecordFindManyArgs): Promise<EsgRecord[]>;
+  createEsgEmissionSources(
+    accountBookId: string,
+    name: string,
+    address?: string,
+  ): Promise<IEsgEmissionSourcesUI>;
+  updateEsgEmissionSources(
+    id: string,
+    data: Prisma.EmissionSourceUpdateInput,
+  ): Promise<IEsgEmissionSourcesUI | null>;
+  deleteEsgEmissionSources(id: string): Promise<{ id: string } | null>;
 }
 
 export class EsgRepository implements IEsgRepository {
-  // Info: (20260507 - Julian) 建構查詢條件
+  // Info: (20260507 - Julian) 建構 ESG 紀錄查詢條件
   private buildEsgRecordWhereClause(
     options: IEsgRecordFilterOptions,
   ): Prisma.EsgRecordWhereInput {
@@ -419,6 +419,49 @@ export class EsgRepository implements IEsgRepository {
     };
   }
 
+  // Info: (20260507 - Julian) 計算排放源總排放量及強度，並轉換為前端格式
+  private transformEmissionSourceToFrontendFormat(
+    source: EmissionSource & { esgRecords: EsgRecord[] },
+  ): IEsgEmissionSourcesUI {
+    let totalEmission = 0;
+    const records = source.esgRecords
+      // Info: (20260507 - Julian) 只選出有完成分析，且沒有被刪除的紀錄
+      .filter((record) => record.analysisStatus === AIAnalysisStatus.COMPLETED)
+      .filter((record) => record.deletedAt === null)
+      .map((record) => {
+        totalEmission += Number(record.emissions || 0);
+
+        return {
+          id: record.id,
+          tradingDate: Math.floor(record.tradingDate.getTime() / 1000),
+          activityType: record.activityType as EsgActivityTypeKey,
+          vendor: record.vendor,
+          amount: Number(record.amount || 0),
+          unit: record.unit,
+          emissions: Number(record.emissions || 0),
+          emissionSourceTag: record.emissionSourceTag || undefined,
+        };
+      });
+
+    return {
+      id: source.id,
+      name: source.name,
+      address: source.address || undefined,
+      intensity: this.computeIntensity(totalEmission),
+      records,
+      totalEmission: Number(totalEmission.toFixed(2)),
+    };
+  }
+
+  // Info: (20260507 - Julian) 計算總排放量對應的強度區間
+  /* ToDo: (20260507 - Julian) ⚠️還在開發中
+   ** 需要根據搜集到的資料來制定計算強度區間的方法，目前先寫死區間，後續會再擴充 */
+  private computeIntensity(totalEmission: number): EsgIntensity {
+    if (totalEmission < 100) return EsgIntensity.LOW;
+    if (totalEmission < 1000) return EsgIntensity.MEDIUM;
+    return EsgIntensity.HIGH;
+  }
+
   // Info: (20260507 - Julian) 取得指定帳簿的 ESG 目標，回傳 IEsgTarget[]
   async getEsgTargetsByAccountBookId(accountBookId: string) {
     const esgTarget = await prisma.esgTarget.findMany({
@@ -483,6 +526,111 @@ export class EsgRepository implements IEsgRepository {
       unit: record.unit,
       emissions: Number(record.emissions),
       emissionSourceTag: record.emissionSourceTag ?? undefined,
+    }));
+
+    return result;
+  }
+
+  // Info: (20260508 - Julian) 取得指定帳簿和區間篩選的 ESG 記錄，回傳 IEsgRecordForAnalysis[]
+  /* 用於 src/services/analysis.service.ts */
+  async getEsgRecordsByPeriod(
+    accountBookId: string,
+    start: Date,
+    end: Date,
+  ): Promise<IEsgRecordDetail[]> {
+    const esgRecords = await prisma.esgRecord.findMany({
+      where: {
+        accountBookId,
+        tradingDate: {
+          gte: start,
+          lte: end,
+        },
+      },
+      include: { file: true, emissionSource: true, coefficient: true },
+    });
+
+    // Info: (20260507 - Julian) 取出 file
+    const fileIds = Array.from(
+      new Set(
+        esgRecords
+          .map((j) => j.fileId)
+          .filter((id): id is string => id !== null),
+      ),
+    );
+
+    // Info: (20260507 - Julian) 若沒有 file 就不需要後續的查詢
+    if (fileIds.length === 0) {
+      return esgRecords.map((e) => this.transformEsgRecordToFrontendFormat(e));
+    }
+
+    // Info: (20260327 - Luphia) 並行查詢，節省等待時間
+    const [journals, vouchers] = await Promise.all([
+      prisma.journal.findMany({
+        where: { fileId: { in: fileIds } },
+        select: { id: true, fileId: true, accountBookId: true },
+      }),
+      prisma.voucher.findMany({
+        where: { fileId: { in: fileIds } },
+        select: { id: true, fileId: true, accountBookId: true },
+      }),
+    ]);
+
+    // Info: (20260327 - Luphia) 使用 Map 將查詢複雜度從 O(N*M) 降為 O(1)
+    // Info: (20260327 - Luphia) 使用 fileId + accountBookId 作為複合鍵，確保對應精準度
+    const journalMap = new Map(
+      journals.map((j) => [`${j.fileId}_${j.accountBookId}`, j.id]),
+    );
+    const voucherMap = new Map(
+      vouchers.map((v) => [`${v.fileId}_${v.accountBookId}`, v.id]),
+    );
+
+    const result: IEsgRecordDetail[] = esgRecords.map((record) => ({
+      id: record.id,
+      tradingDate: Math.floor(record.tradingDate.getTime() / 1000),
+      activityType: record.activityType as EsgActivityTypeKey,
+      vendor: record.vendor,
+      amount: Number(record.amount),
+      unit: record.unit,
+      emissions: Number(record.emissions),
+      emissionSourceTag: record.emissionSourceTag ?? undefined,
+      scope: record.scope as EsgScope,
+      intensity: record.intensity as EsgIntensity,
+      analysisStatus: record.analysisStatus as AIAnalysisStatus,
+      fileId: record.fileId ?? "",
+      file: record.file
+        ? {
+            id: record.file.id,
+            hash: record.file.hash,
+            fileName: record.file.fileName ?? "",
+          }
+        : undefined,
+      aiNote: record.aiNote,
+      confidence: record.confidence,
+      isVerified: record.isVerified,
+      dqiScore: Number(record.dqiScore),
+      coefficient: record.coefficient
+        ? {
+            ...record.coefficient,
+            emissionFactor: Number(record.coefficient.emissionFactor),
+            category: !!record.coefficient.accountBookId
+              ? CoefficientCategory.CUSTOM
+              : CoefficientCategory.STANDARD,
+            createdAt: Math.floor(
+              record.coefficient.createdAt.getTime() / 1000,
+            ),
+            updatedAt: Math.floor(
+              record.coefficient.updatedAt.getTime() / 1000,
+            ),
+          }
+        : null,
+      emissionSource: record.emissionSource ?? null,
+      isDeleted: record.deletedAt !== null,
+      journalId: record.fileId
+        ? journalMap.get(`${record.fileId}_${record.accountBookId}`)
+        : undefined,
+      voucherId: record.fileId
+        ? voucherMap.get(`${record.fileId}_${record.accountBookId}`)
+        : undefined,
     }));
 
     return result;
@@ -817,13 +965,16 @@ export class EsgRepository implements IEsgRepository {
       : null;
   }
 
+  // Info: (20260507 - Julian) 透過 ID 更新係數，回傳 { newId: string }
   async updateEsgCoefficient(id: string, data: Prisma.CoefficientUpdateInput) {
-    return prisma.coefficient.update({
+    const updatedCoefficient = await prisma.coefficient.update({
       where: { id },
       data,
     });
+    return { newId: updatedCoefficient.id };
   }
 
+  // Info: (20260507 - Julian) 軟刪除係數，回傳 { id: string }
   async deleteEsgCoefficient(id: string): Promise<{ id: string } | null> {
     const deletedCoefficient = await prisma.coefficient.update({
       where: { id },
@@ -835,6 +986,7 @@ export class EsgRepository implements IEsgRepository {
     return { id: deletedCoefficient.id };
   }
 
+  // Info: (20260507 - Julian) 依據帳簿 ID 和關鍵字取得排放源列表，回傳 IEsgEmissionSourcesUI[]
   async getEsgEmissionSources(
     accountBookId: string,
     keyword: string,
@@ -873,47 +1025,10 @@ export class EsgRepository implements IEsgRepository {
       include: { esgRecords: { where: { deletedAt: null } } },
     });
 
-    const data: IEsgEmissionSourcesUI[] = emissionSources.map((source) => {
-      let totalEmission = 0;
-      let intensity = EsgIntensity.LOW;
-
-      const records = source.esgRecords
-        // Info: (20260430 - Julian) 只選出有完成分析的紀錄
-        .filter(
-          (record) => record.analysisStatus === AIAnalysisStatus.COMPLETED,
-        )
-        .map((record) => {
-          totalEmission += Number(record.emissions || 0);
-          if (record.intensity === EsgIntensity.HIGH) {
-            intensity = EsgIntensity.HIGH;
-          } else if (
-            record.intensity === EsgIntensity.MEDIUM &&
-            intensity === EsgIntensity.LOW
-          ) {
-            intensity = EsgIntensity.MEDIUM;
-          }
-
-          return {
-            id: record.id,
-            tradingDate: Math.floor(record.tradingDate.getTime() / 1000),
-            activityType: record.activityType as EsgActivityTypeKey,
-            vendor: record.vendor,
-            amount: Number(record.amount || 0),
-            unit: record.unit,
-            emissions: Number(record.emissions || 0),
-            emissionSourceTag: record.emissionSourceTag || undefined,
-          };
-        });
-
-      return {
-        id: source.id,
-        name: source.name,
-        address: source.address || undefined,
-        intensity: intensity,
-        records,
-        totalEmission: Number(totalEmission.toFixed(2)),
-      };
-    });
+    // Info: (20260507 - Julian) 轉換為前端格式
+    const data = emissionSources.map((source) =>
+      this.transformEmissionSourceToFrontendFormat(source),
+    );
 
     return {
       data,
@@ -926,6 +1041,22 @@ export class EsgRepository implements IEsgRepository {
     };
   }
 
+  // Info: (20260507 - Julian) 依據 ID 取得排放源，回傳 IEsgEmissionSourcesUI
+  async getEsgEmissionSourcesById(
+    id: string,
+  ): Promise<IEsgEmissionSourcesUI | null> {
+    const source = await prisma.emissionSource.findUnique({
+      where: { id },
+      // Info: (20260430 - Julian) 取得排放源下的所有 ESG 紀錄，並排除已刪除的紀錄
+      include: { esgRecords: { where: { deletedAt: null } } },
+    });
+
+    if (!source) return null;
+
+    return this.transformEmissionSourceToFrontendFormat(source);
+  }
+
+  // Info: (20260507 - Julian) 取得排放源的摘要，回傳 IEsgEmissionSourcesSummary
   async getEsgEmissionSourcesSummary(
     accountBookId: string,
   ): Promise<IEsgEmissionSourcesSummary> {
@@ -995,104 +1126,43 @@ export class EsgRepository implements IEsgRepository {
     return summary;
   }
 
+  // Info: (20260507 - Julian) 建立排放源，回傳 IEmissionSources
   async createEsgEmissionSources(
     accountBookId: string,
     name: string,
     address?: string,
-  ) {
+  ): Promise<IEsgEmissionSourcesUI> {
     const emissionSource = await prisma.emissionSource.create({
       data: {
         accountBookId,
         name,
         address,
       },
-    });
-
-    // ToDo: (20260424 - Julian) 評估排放強度
-    const intensity = EsgIntensity.LOW;
-
-    const result: IEmissionSources = {
-      id: emissionSource.id,
-      name: emissionSource.name,
-      address: emissionSource.address ?? "",
-      intensity,
-    };
-
-    return result;
-  }
-
-  async getEsgEmissionSourcesById(
-    id: string,
-  ): Promise<IEsgEmissionSourcesUI | null> {
-    const source = await prisma.emissionSource.findUnique({
-      where: { id },
-      // Info: (20260430 - Julian) 取得排放源下的所有 ESG 紀錄，並排除已刪除的紀錄
       include: { esgRecords: { where: { deletedAt: null } } },
     });
 
-    if (!source) return null;
-
-    let totalEmission = 0;
-    let intensity = EsgIntensity.LOW;
-
-    const records = source.esgRecords
-      // Info: (20260430 - Julian) 只選出有完成分析的紀錄
-      .filter((record) => record.analysisStatus === AIAnalysisStatus.COMPLETED)
-      .map((record) => {
-        totalEmission += Number(record.emissions || 0);
-        if (record.intensity === EsgIntensity.HIGH) {
-          intensity = EsgIntensity.HIGH;
-        } else if (
-          record.intensity === EsgIntensity.MEDIUM &&
-          intensity === EsgIntensity.LOW
-        ) {
-          intensity = EsgIntensity.MEDIUM;
-        }
-
-        return {
-          id: record.id,
-          tradingDate: Math.floor(record.tradingDate.getTime() / 1000),
-          activityType: record.activityType as EsgActivityTypeKey,
-          vendor: record.vendor,
-          amount: Number(record.amount || 0),
-          unit: record.unit,
-          emissions: Number(record.emissions || 0),
-          emissionSourceTag: record.emissionSourceTag || undefined,
-        };
-      });
-
-    return {
-      id: source.id,
-      name: source.name,
-      address: source.address || undefined,
-      intensity: intensity,
-      records,
-      totalEmission: Number(totalEmission.toFixed(2)),
-    };
+    const result = this.transformEmissionSourceToFrontendFormat(emissionSource);
+    return result;
   }
 
+  // Info: (20260507 - Julian) 更新排放源，回傳 IEsgEmissionSourcesUI
   async updateEsgEmissionSources(
     id: string,
     data: Prisma.EmissionSourceUpdateInput,
-  ): Promise<IEmissionSources | null> {
+  ): Promise<IEsgEmissionSourcesUI | null> {
     const updatedSource = await prisma.emissionSource.update({
       where: { id },
       data,
+      include: { esgRecords: { where: { deletedAt: null } } },
     });
 
     if (!updatedSource) return null;
 
-    // ToDo: (20260424 - Julian) 評估排放強度
-    const intensity = EsgIntensity.LOW;
-
-    return {
-      id: updatedSource.id,
-      name: updatedSource.name,
-      address: updatedSource.address ?? undefined,
-      intensity,
-    };
+    const result = this.transformEmissionSourceToFrontendFormat(updatedSource);
+    return result;
   }
 
+  // Info: (20260507 - Julian) 軟刪除排放源，回傳 { id: string }
   async deleteEsgEmissionSources(id: string): Promise<{ id: string } | null> {
     const deletedSource = await prisma.emissionSource.update({
       where: { id },
@@ -1102,11 +1172,6 @@ export class EsgRepository implements IEsgRepository {
     if (!deletedSource) return null;
 
     return { id: deletedSource.id };
-  }
-
-  // TODO
-  async findManyEsgRecords(args: Prisma.EsgRecordFindManyArgs) {
-    return prisma.esgRecord.findMany(args);
   }
 }
 
