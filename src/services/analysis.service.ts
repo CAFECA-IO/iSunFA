@@ -201,11 +201,11 @@ export class AnalysisService {
           console.log(`[ESG-DEBUG] Start TS: ${startTs}, End TS: ${endTs}`);
 
           const esgRecords = targetAccountBookId
-            ? await esgRepo.getEsgRecordsByPeriod(
-                targetAccountBookId,
-                new Date(start + "T00:00:00.000Z"),
-                new Date(end + "T23:59:59.999Z"),
-              )
+            ? await esgRepo.getEsgRecordsForReport({
+                accountBookId: targetAccountBookId,
+                start: new Date(start + "T00:00:00.000Z"),
+                end: new Date(end + "T23:59:59.999Z"),
+              })
             : [];
 
           // Info: (20260418 - Tzuhan) [去耦合與效能最佳化] 分離 Period (當期) 與 Cumulative (歷史累積) 的查詢，避免財報數據打架
@@ -363,7 +363,7 @@ export class AnalysisService {
 
               if (params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE) {
                 const esgContextLines = esgRecords.map((r) => {
-                  const tradingDateStr = new Date(r.tradingDate)
+                  const tradingDateStr = new Date(r.tradingDate * 1000)
                     .toISOString()
                     .split("T")[0];
                   return `- 日期: ${tradingDateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;

@@ -45,11 +45,15 @@ export interface IEsgRepository {
   getVerifiedEsgRecordsByAccountBookId(
     accountBookId: string,
   ): Promise<IEsgRecordBrief[]>;
-  getEsgRecordsByPeriod(
-    accountBookId: string,
-    start: Date,
-    end: Date,
-  ): Promise<IEsgRecordDetail[]>;
+  getEsgRecordsForReport({
+    accountBookId,
+    start,
+    end,
+  }: {
+    accountBookId: string;
+    start?: Date;
+    end?: Date;
+  }): Promise<IEsgRecordDetail[]>;
   verifyAllEsgRecords(accountBookId: string): Promise<number>;
   getEsgTargetByYear(
     accountBookId: string,
@@ -531,20 +535,22 @@ export class EsgRepository implements IEsgRepository {
     return result;
   }
 
-  // Info: (20260508 - Julian) 取得指定帳簿和區間篩選的 ESG 記錄，回傳 IEsgRecordForAnalysis[]
-  /* 用於 src/services/analysis.service.ts */
-  async getEsgRecordsByPeriod(
-    accountBookId: string,
-    start: Date,
-    end: Date,
-  ): Promise<IEsgRecordDetail[]> {
+  // Info: (20260508 - Julian) 取得指定帳簿的 ESG 記錄，主要用於生成 report，回傳 IEsgRecordForAnalysis[]
+  async getEsgRecordsForReport({
+    accountBookId,
+    start,
+    end,
+  }: {
+    accountBookId: string;
+    start?: Date;
+    end?: Date;
+  }): Promise<IEsgRecordDetail[]> {
     const esgRecords = await prisma.esgRecord.findMany({
       where: {
         accountBookId,
-        tradingDate: {
-          gte: start,
-          lte: end,
-        },
+        tradingDate: { gte: start, lte: end },
+        deletedAt: null,
+        isVerified: true,
       },
       include: { file: true, emissionSource: true, coefficient: true },
     });
