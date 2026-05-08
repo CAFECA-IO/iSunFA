@@ -521,7 +521,7 @@ export class VoucherRepository implements IVoucherRepository {
     return { isDuplicate: false };
   }
 
-  // ToDo: 在 src/services/analysis.service.ts 使用，預計移除
+  // ToDo: (20260507 - Julian) 在 src/services/analysis.service.ts 使用，預計移除
   async findManyVouchers(args: Prisma.VoucherFindManyArgs) {
     return prisma.voucher.findMany(args);
   }
