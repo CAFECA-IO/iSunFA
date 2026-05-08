@@ -8,6 +8,7 @@ import { generateEsgReport } from "@/lib/report/esg_report_generator";
 import { getAccountByCode } from "@/lib/utils/account";
 import { IVoucherLineUI } from "@/interfaces/voucher";
 import { IAccount } from "@/constants/accounts";
+import { esgRepo } from "@/repositories/esg.repo";
 
 const parseFinanceNumber = (val: string): Prisma.Decimal => {
   if (!val) return new Prisma.Decimal(0);
@@ -121,14 +122,17 @@ export const runCrossValidation = async (stockId: string) => {
     depreciationItem ? depreciationItem.amount : 0,
   );
 
-  const esgRecords = await prisma.esgRecord.findMany({
-    where: {
-      accountBookId,
-      analysisStatus: "COMPLETED",
-      isVerified: true,
-      deletedAt: null,
-    },
-  });
+  // const esgRecords = await prisma.esgRecord.findMany({
+  //   where: {
+  //     accountBookId,
+  //     analysisStatus: "COMPLETED",
+  //     isVerified: true,
+  //     deletedAt: null,
+  //   },
+  // });
+
+  // Info: (20260507 - Julian) 改用 getEsgRecordsForReport 取得產生碳盤查資料
+  const esgRecords = await esgRepo.getEsgRecordsForReport({ accountBookId });
 
   const esgReport = generateEsgReport(esgRecords);
 

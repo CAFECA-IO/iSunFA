@@ -7,16 +7,7 @@ import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { Prisma } from "@/generated";
-import {
-  IEsgRecordDetail,
-  EsgScope as ClientEsgScope,
-  EsgIntensity as ClientEsgIntensity,
-} from "@/interfaces/esg";
-import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
-import { VerifyStatus } from "@/constants/verify_status";
-import { CoefficientCategory } from "@/interfaces/coefficient";
-import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
+import { IEsgRecordFilterOptions } from "@/interfaces/data_filter_option";
 
 /**
  * Info: (20260312 - Julian) 新增 ESG 紀錄
@@ -89,12 +80,12 @@ export async function POST(
     await auditLogRepo.createAuditLog({
       userId: creator.id,
       dataType: "ESG_RECORD",
-      dataId: newRecord.id,
+      dataId: newRecord.newId,
       accountBookId: accountBook.id,
       action: "CREATE",
     });
 
-    return jsonOk({ esgRecordId: newRecord.id });
+    return jsonOk({ esgRecordId: newRecord.newId });
   } catch (error) {
     console.error("Error creating esg record:", error);
     return jsonFail({
@@ -148,127 +139,24 @@ export async function GET(
       ? parseInt(searchParams.get("pageSize")!)
       : undefined;
 
-    let recordDateQuery: Prisma.StringFilter | undefined = undefined;
-    let startDate: Date | undefined;
-    let endDate: Date | undefined;
-
-    if (yearParam) {
-      const year = parseInt(yearParam, 10);
-      const month = monthParam ? parseInt(monthParam, 10) : null;
-
-      if (month) {
-        startDate = new Date(year, month - 1, 1);
-        endDate = new Date(year, month, 0, 23, 59, 59, 999);
-      } else {
-        startDate = new Date(year, 0, 1);
-        endDate = new Date(year, 11, 31, 23, 59, 59, 999);
-      }
-      recordDateQuery = {
-        gte: startDate.toISOString(),
-        lte: endDate.toISOString(),
-      };
-    }
-
-    const hideDeleted = searchParams.get("hideDeleted") === "true";
-
-    // Info: (20260312 - Luphia) 整理查詢條件
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const andConditions: Prisma.EsgRecordWhereInput[] = [];
-
-    // Info: (20260406 - Luphia) 軟刪除過濾邏輯
-    if (hideDeleted) {
-      andConditions.push({ deletedAt: null });
-    }
-
-    // Info: (20260406 - Luphia) 搜尋字串過濾邏輯
-    if (searchParam) {
-      andConditions.push({
-        OR: [
-          { id: { contains: searchParam, mode: "insensitive" } },
-          { vendor: { contains: searchParam, mode: "insensitive" } },
-          { activityType: { contains: searchParam, mode: "insensitive" } },
-        ],
-      });
-    }
-
-    if (verifyStatus) {
-      andConditions.push({
-        isVerified: verifyStatus === VerifyStatus.VERIFIED,
-      });
-    }
-
-    if (intensity) {
-      andConditions.push({ intensity: intensity as ClientEsgIntensity });
-    }
-
-    if (scope) {
-      andConditions.push({ scope: scope as ClientEsgScope });
-    }
-
-    // Info: (20260407 - Julian) 日期過濾邏輯
-    if (recordDateQuery && startDate && endDate) {
-      andConditions.push({
-        OR: [
-          { tradingDate: recordDateQuery },
-          {
-            AND: [{ tradingDate: { gte: startDate, lte: endDate } }],
-          },
-        ],
-      });
-    }
-
-    const whereClause: Prisma.EsgRecordWhereInput = {
-      accountBookId: accountBook.id,
-      AND: andConditions.length > 0 ? andConditions : undefined,
+    const options: IEsgRecordFilterOptions = {
+      accountBookId,
+      keyword: searchParam,
+      verifyStatus,
+      intensity,
+      scope,
+      sort,
+      year: yearParam ? parseInt(yearParam, 10) : null,
+      month: monthParam ? parseInt(monthParam, 10) : null,
+      hideDeleted: searchParams.get("hideDeleted") === "true",
+      page,
+      limit: pageSize,
     };
 
-    const totalEsgCount = await esgRepo.countEsgRecords(whereClause);
-
-    const esgDbRecords = await esgRepo.getEsgRecords({
-      where: whereClause,
-      include: { file: true, coefficient: true },
-      orderBy: { tradingDate: sort },
-      ...(page && pageSize
-        ? { skip: (page - 1) * pageSize, take: pageSize }
-        : {}),
-    });
-
-    const esgRecords: IEsgRecordDetail[] = esgDbRecords.map((r) => ({
-      ...r,
-      tradingDate: Math.floor(r.tradingDate.getTime() / 1000),
-      fileId: r.fileId ?? "",
-      file: r.file
-        ? {
-            id: r.file.id,
-            hash: r.file.hash,
-            fileName: r.file.fileName || "Unknown",
-          }
-        : undefined,
-      scope: r.scope as ClientEsgScope,
-      activityType: r.activityType as unknown as EsgActivityTypeKey,
-      amount: Number(r.amount),
-      emissions: Number(r.emissions),
-      intensity: r.intensity as ClientEsgIntensity,
-      analysisStatus: r.analysisStatus as AIAnalysisStatus,
-      journalId: r.journalId,
-      voucherId: r.voucherId,
-      isDeleted: !!r.deletedAt,
-      dqiScore: Number(r.dqiScore) ?? 0,
-      coefficient: r.coefficient
-        ? {
-            ...r.coefficient,
-            category: !!r.coefficient.accountBookId
-              ? CoefficientCategory.CUSTOM
-              : CoefficientCategory.STANDARD,
-            createdAt: new Date(r.coefficient.createdAt).getTime() / 1000,
-            updatedAt: new Date(r.coefficient.updatedAt).getTime() / 1000,
-            emissionFactor: Number(r.coefficient.emissionFactor),
-          }
-        : null,
-      emissionSourceTag: r.emissionSourceTag ?? "",
-    }));
+    const [totalEsgCount, esgRecords] = await Promise.all([
+      esgRepo.countEsgRecordsByFilter(options),
+      esgRepo.getEsgRecordsByFilter(options),
+    ]);
 
     return jsonOk({
       esgRecords,

@@ -5,6 +5,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { voucherRepo } from "@/repositories/voucher.repo";
+import { VerifyStatus } from "@/constants/verify_status";
 
 /**
  * Info: (20260331 - Julian) 取得帳本中「已核對的傳票數目」
@@ -33,9 +34,9 @@ export async function GET(
       return jsonFail(API_ERRORS.NF_ACCOUNT_BOOK);
     }
 
-    const countOfVerifiedVouchers = await voucherRepo.countVouchers({
+    const countOfVerifiedVouchers = await voucherRepo.countVouchersByFilter({
       accountBookId,
-      isVerified: true,
+      verifyStatus: VerifyStatus.VERIFIED,
     });
 
     return jsonOk({ count: countOfVerifiedVouchers });

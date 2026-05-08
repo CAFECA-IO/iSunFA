@@ -6,11 +6,7 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import {
-  CoefficientCategory,
-  ICoefficient,
-  ICoefficientInput,
-} from "@/interfaces/coefficient";
+import { ICoefficientInput } from "@/interfaces/coefficient";
 
 /**
  * Info: (20260414 - Julian) 取得單一係數
@@ -58,17 +54,7 @@ export async function GET(
       return jsonFail(API_ERRORS.NF_COEFFICIENT);
     }
 
-    const formattedCoefficient: ICoefficient = {
-      ...coefficient,
-      category: !!coefficient.accountBookId
-        ? CoefficientCategory.CUSTOM
-        : CoefficientCategory.STANDARD,
-      createdAt: coefficient.createdAt.getTime() / 1000,
-      updatedAt: coefficient.updatedAt.getTime() / 1000,
-      emissionFactor: Number(coefficient.emissionFactor),
-    };
-
-    return jsonOk(formattedCoefficient);
+    return jsonOk(coefficient);
   } catch (error) {
     console.error("Error fetching coefficient:", error);
     return jsonFail({
@@ -139,7 +125,7 @@ export async function PUT(
       return jsonFail(API_ERRORS.NF_COEFFICIENT);
     }
 
-    return jsonOk({ updatedCoefficientId: updatedCoefficient.id });
+    return jsonOk({ updatedCoefficientId: updatedCoefficient.newId });
   } catch (error) {
     console.error("Error updating coefficient:", error);
     return jsonFail({
