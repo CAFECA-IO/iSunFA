@@ -12,6 +12,7 @@ export const adminBlockchain = {
     admin_isc: "관리자 지갑 ISC",
     system_icp: "시스템 ICP 공급",
     member_icp: "멤버 시스템 ICP 준비금",
+    block_height: "블록 높이",
     mint_icp: "신용 포인트(ICP) 발행",
     mint_desc:
       "ICP를 발행하려면 실시간 담보 비율에 따라 동등한 금액의 ISC를 제공해야 합니다. 발행된 ICP는 멤버 시스템 인벤토리에 배치됩니다.",

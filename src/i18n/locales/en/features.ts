@@ -40,17 +40,17 @@ export const features = {
       title: "Smart Receipt Recognition",
       desc: "Automatically extracts and archives receipt information, eliminating the burden of manual data entry.",
     },
-    integration: {
-      title: "Data Integration",
-      desc: "Flexibly connects external heterogeneous systems to seamlessly integrate cross-platform operational data.",
+    digital_product_passport: {
+      title: "Digital Product Passport",
+      desc: "Create a digital resume of product lifecycle information and carbon footprint, compliant with international standards, to enhance green competitiveness.",
     },
     esg: {
       title: "Carbon Inventory",
       desc: "Accurately converts activity data into carbon emissions to manage compliance risks and costs.",
     },
-    audit: {
-      title: "Smart Audit",
-      desc: "Real-time ledger analysis providing correction suggestions to ensure accurate and error-free accounting entries.",
+    pos: {
+      title: "Smart POS",
+      desc: "Real-time integration of sales and collection data, automating accounting entries and providing operational analysis to improve checkout efficiency and accuracy.",
     },
   },
 };
