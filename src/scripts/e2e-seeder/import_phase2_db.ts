@@ -3,8 +3,14 @@ import * as path from "path";
 import { prisma } from "@/lib/prisma";
 
 export const importPhase2Db = async (stockId: string) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}`);
-  const dumpPath = path.join(dataDir, "db_dump_vouchers.json");
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+  const dumpPath = path.join(
+    dataDir,
+    "inputs",
+    "simulated_data",
+    "phase5_articulation_test",
+    "db_dump_vouchers.json",
+  );
 
   console.log(`\n======================================================`);
   console.log(`📥 [PHASE 2] Importing DB Vouchers & ESG for ${stockId}`);
@@ -111,7 +117,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       if (fs.existsSync(dataRoot)) {
         const dirs = fs.readdirSync(dataRoot);
         for (const dir of dirs) {
-          const dumpPath = path.join(dataRoot, dir, "db_dump_vouchers.json");
+          const dumpPath = path.join(
+            dataRoot,
+            dir,
+            "2024",
+            "inputs",
+            "simulated_data",
+            "phase5_articulation_test",
+            "db_dump_vouchers.json",
+          );
           if (fs.existsSync(dumpPath)) {
             await importPhase2Db(dir);
           }

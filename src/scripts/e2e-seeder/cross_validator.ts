@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated";
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
 import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
+import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
 import { generateEsgReport } from "@/lib/report/esg_report_generator";
 import { getAccountByCode } from "@/lib/utils/account";
 import { IVoucherLineUI } from "@/interfaces/voucher";
@@ -24,9 +25,19 @@ const findReportValue = (
 };
 
 export const runCrossValidation = async (stockId: string) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}`);
-  const finDataPath = path.join(dataDir, "2024_FIN_DATA.json");
-  const esgMetricsPath = path.join(dataDir, "2024_ESG_METRICS.json");
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+  const finDataPath = path.join(
+    dataDir,
+    "inputs",
+    "golden_data",
+    "2024_FIN_DATA.json",
+  );
+  const esgMetricsPath = path.join(
+    dataDir,
+    "inputs",
+    "golden_data",
+    "2024_ESG_METRICS.json",
+  );
 
   if (!fs.existsSync(finDataPath)) {
     console.error(
@@ -106,6 +117,7 @@ export const runCrossValidation = async (stockId: string) => {
 
   const incomeStatement = generateIncomeStatement(allLines);
   const cashFlowStatement = generateCashFlowStatement(allLines);
+  const balanceSheet = generateBalanceSheet(allLines);
 
   const systemRevenue = new Prisma.Decimal(
     incomeStatement.sections.revenue.total,
@@ -146,6 +158,33 @@ export const runCrossValidation = async (stockId: string) => {
     const diff = system.sub(golden);
     return `${diff.div(golden).mul(100).toFixed(4)}%`;
   };
+
+  // Info: (20260505 - Tzuhan) [Internal Articulation] 驗證三表連動性
+  const isAccountingEquationBalanced =
+    balanceSheet.assets.total ===
+    balanceSheet.liabilities.total + balanceSheet.equity.total;
+
+  const isIncomeStatementNetIncome = incomeStatement.sections.netIncome.total;
+  const bsRetainedEarnings =
+    balanceSheet.equity.items.find(
+      (i: { code: string; amount: number }) => i.code === "3200",
+    )?.amount || 0;
+  const cfStartingNetIncome =
+    cashFlowStatement.activities.operating.items.find(
+      (i: { name: string; amount: number }) => i.name === "本期稅後淨利",
+    )?.amount || 0;
+
+  const isNetIncomeArticulated =
+    isIncomeStatementNetIncome === bsRetainedEarnings &&
+    isIncomeStatementNetIncome === cfStartingNetIncome;
+
+  const bsEndingCash =
+    balanceSheet.assets.current.items.find(
+      (i: { code: string; amount: number }) => i.code === "1100",
+    )?.amount || 0;
+  const cfEndingCash = cashFlowStatement.summary.endingBalance;
+
+  const isCashArticulated = bsEndingCash === cfEndingCash;
 
   const report = {
     metadata: {
@@ -205,6 +244,15 @@ export const runCrossValidation = async (stockId: string) => {
             ? systemScope3.equals(0)
             : systemScope3.sub(goldenScope3).abs().div(goldenScope3).lt(0.2), // Info: (20260503 - Tzuhan) 容忍 20% 誤差
       },
+      InternalArticulation: {
+        isAccountingEquationBalanced,
+        isNetIncomeArticulated,
+        isCashArticulated,
+        isPassed:
+          isAccountingEquationBalanced &&
+          isNetIncomeArticulated &&
+          isCashArticulated,
+      },
     },
     overallStatus: "FAILED",
     score: 0,
@@ -217,12 +265,18 @@ export const runCrossValidation = async (stockId: string) => {
     report.metrics.Scope1.isPassed,
     report.metrics.Scope2.isPassed,
     report.metrics.Scope3.isPassed,
+    report.metrics.InternalArticulation.isPassed,
   ];
   const passedCount = tests.filter(Boolean).length;
   report.score = Math.round((passedCount / tests.length) * 100);
   report.overallStatus = report.score === 100 ? "PASSED" : "FAILED";
 
-  const outPath = path.join(dataDir, "audit_variance_report.json");
+  const outPath = path.join(
+    dataDir,
+    "outputs",
+    "phase5_articulation_test",
+    "audit_variance_report.json",
+  );
   fs.writeFileSync(outPath, JSON.stringify(report, null, 2), "utf-8");
 
   console.log(`\n📊 [FINANCIAL VARIANCE REPORT]`);
@@ -260,6 +314,19 @@ export const runCrossValidation = async (stockId: string) => {
       Expected: goldenScope3.toNumber(),
       AI_Actual: systemScope3.toNumber(),
       Variance: report.metrics.Scope3.variancePercent,
+    },
+  });
+
+  console.log(`\n🔗 [INTERNAL ARTICULATION REPORT]`);
+  console.table({
+    AccountingEquation: {
+      Passed: report.metrics.InternalArticulation.isAccountingEquationBalanced,
+    },
+    NetIncomeArticulation: {
+      Passed: report.metrics.InternalArticulation.isNetIncomeArticulated,
+    },
+    CashArticulation: {
+      Passed: report.metrics.InternalArticulation.isCashArticulated,
     },
   });
 

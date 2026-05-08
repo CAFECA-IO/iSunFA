@@ -24,9 +24,21 @@ const generateTaxId = () => {
 };
 
 export const generateReceiptImages = (stockId: string) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}`);
-  const vouchersPath = path.join(dataDir, "simulated_vouchers.json");
-  const receiptsDir = path.join(dataDir, "receipts");
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+  const vouchersPath = path.join(
+    dataDir,
+    "inputs",
+    "simulated_data",
+    "phase5_articulation_test",
+    "simulated_vouchers.json",
+  );
+  const receiptsDir = path.join(
+    dataDir,
+    "inputs",
+    "simulated_data",
+    "phase5_articulation_test",
+    "receipts",
+  );
 
   if (!fs.existsSync(vouchersPath)) {
     console.error(`[ERROR] simulated_vouchers.json not found for ${stockId}.`);

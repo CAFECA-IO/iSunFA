@@ -58,3 +58,6 @@ yarn.lock
 # data & local seeding
 data/
 /agent.md
+
+# Backup Archives
+*.tar.gz
