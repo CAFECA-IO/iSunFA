@@ -483,9 +483,9 @@ export class AnalysisService {
       createdAt: new Date().toISOString(),
       result: analysisResult,
 
-      // Info (20260509 - Julian) 加入這兩行以便除錯與觀測 AI 任務的原始素材：
-      prerequisiteData: parsedPrerequisiteParams,
-      missionDef: missionDef,
+      // Info (20260508 - Julian) For Debug
+      // prerequisiteData: parsedPrerequisiteParams,
+      // missionDef: missionDef,
     };
 
     // Info: (20260304 - Tzuhan) Create an instant UUID for reportId instead of waiting 15s for Laria Hash
@@ -535,11 +535,7 @@ export class AnalysisService {
             keyword: params.keyword,
             isExternal: params.isExternal === true,
             historicalTags: await analysisRepo.getGlobalTopTags(20),
-            data: params.data
-              ? // Info: (20260509 - Julian) 移除 Prisma 依賴，使用 IJSONObject
-                // ? (params.data as unknown as Prisma.InputJsonValue)
-                (params.data as unknown as IJSONObject)
-              : undefined,
+            data: params.data,
           },
         });
       } catch (error) {
