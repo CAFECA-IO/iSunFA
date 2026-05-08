@@ -76,10 +76,26 @@ const findEsgValue = (
 };
 
 export const generateEsgRecords = (stockId: string) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}`);
-  const esgDataPath = path.join(dataDir, "2024_ESG_METRICS.json");
-  const cachePath = path.join(dataDir, "ai_extracted_context_cache.json");
-  const vouchersPath = path.join(dataDir, "simulated_vouchers.json");
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+  const esgDataPath = path.join(
+    dataDir,
+    "inputs",
+    "golden_data",
+    "2024_ESG_METRICS.json",
+  );
+  const cachePath = path.join(
+    dataDir,
+    "outputs",
+    "phase4_vision_test",
+    "ai_extracted_context_cache.json",
+  );
+  const vouchersPath = path.join(
+    dataDir,
+    "inputs",
+    "simulated_data",
+    "phase5_articulation_test",
+    "simulated_vouchers.json",
+  );
 
   if (
     !fs.existsSync(esgDataPath) ||

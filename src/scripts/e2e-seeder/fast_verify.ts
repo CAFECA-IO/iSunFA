@@ -41,8 +41,14 @@ interface ISimulatedVoucher {
 }
 
 async function fastVerify(stockId: string) {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}`);
-  const vouchersPath = path.join(dataDir, "simulated_vouchers.json");
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+  const vouchersPath = path.join(
+    dataDir,
+    "inputs",
+    "simulated_data",
+    "phase5_articulation_test",
+    "simulated_vouchers.json",
+  );
 
   console.log(
     `\n🚀 [FAST VERIFY] Bypassing AI Phase 2... Directly seeding DB from simulated_vouchers.json for ${stockId}`,

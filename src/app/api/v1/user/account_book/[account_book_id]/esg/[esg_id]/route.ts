@@ -11,13 +11,7 @@ import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { EsgScope, EsgIntensity } from "@/generated";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
-import {
-  IEsgRecordDetail,
-  EsgScope as ClientEsgScope,
-  EsgIntensity as ClientEsgIntensity,
-} from "@/interfaces/esg";
-import { CoefficientCategory } from "@/interfaces/coefficient";
-import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
+import { IEsgRecordDetail } from "@/interfaces/esg";
 
 /**
  * Info: (20260312 - Julian) 取得單一 ESG 紀錄
@@ -62,53 +56,7 @@ export async function GET(
       return jsonFail(API_ERRORS.NF_ESG);
     }
 
-    const formattedRecord: IEsgRecordDetail = {
-      id: esgRecord.id,
-      tradingDate: Math.floor(esgRecord.tradingDate.getTime() / 1000),
-      fileId: esgRecord.fileId ?? "",
-      file: esgRecord.file
-        ? {
-            id: esgRecord.file.id,
-            hash: esgRecord.file.hash,
-            fileName: esgRecord.file.fileName || "Unknown",
-          }
-        : undefined,
-      scope: esgRecord.scope as unknown as ClientEsgScope,
-      activityType: esgRecord.activityType as unknown as EsgActivityTypeKey,
-      vendor: esgRecord.vendor,
-      amount: Number(esgRecord.amount),
-      unit: esgRecord.unit,
-      emissions: Number(esgRecord.emissions),
-      dqiScore: Number(esgRecord.dqiScore) ?? 0,
-      intensity: esgRecord.intensity as unknown as ClientEsgIntensity,
-      confidence: esgRecord.confidence,
-      isVerified: esgRecord.isVerified,
-      analysisStatus: esgRecord.analysisStatus as unknown as AIAnalysisStatus,
-      aiNote: esgRecord.aiNote ?? "",
-      journalId: esgRecord.journalId,
-      voucherId: esgRecord.voucherId,
-      coefficient: esgRecord.coefficient
-        ? {
-            ...esgRecord.coefficient,
-            category: !!esgRecord.coefficient.accountBookId
-              ? CoefficientCategory.CUSTOM
-              : CoefficientCategory.STANDARD,
-            createdAt:
-              new Date(esgRecord.coefficient.createdAt).getTime() / 1000,
-            updatedAt:
-              new Date(esgRecord.coefficient.updatedAt).getTime() / 1000,
-            emissionFactor: Number(esgRecord.coefficient.emissionFactor),
-          }
-        : null,
-      emissionSource: esgRecord.emissionSource
-        ? {
-            id: esgRecord.emissionSource.id,
-            name: esgRecord.emissionSource.name,
-          }
-        : null,
-    };
-
-    return jsonOk(formattedRecord);
+    return jsonOk(esgRecord);
   } catch (error) {
     console.error("Error fetching esg record:", error);
     return jsonFail({
@@ -208,46 +156,6 @@ export async function PUT(
       return jsonFail(API_ERRORS.IS_DB_FAILED);
     }
 
-    const formattedRecord: IEsgRecordDetail = {
-      id: updatedRecord.id,
-      tradingDate: Math.floor(updatedRecord.tradingDate.getTime() / 1000),
-      fileId: updatedRecord.fileId ?? "",
-      scope: updatedRecord.scope as unknown as ClientEsgScope,
-      activityType: updatedRecord.activityType as unknown as EsgActivityTypeKey,
-      vendor: updatedRecord.vendor,
-      amount: Number(updatedRecord.amount),
-      unit: updatedRecord.unit,
-      emissions: Number(updatedRecord.emissions),
-      dqiScore: Number(updatedRecord.dqiScore) ?? 0,
-      intensity: updatedRecord.intensity as unknown as ClientEsgIntensity,
-      confidence: updatedRecord.confidence,
-      isVerified: updatedRecord.isVerified,
-      analysisStatus:
-        updatedRecord.analysisStatus as unknown as AIAnalysisStatus,
-      aiNote: updatedRecord.aiNote ?? "",
-      journalId: updatedRecord.journalId,
-      voucherId: updatedRecord.voucherId,
-      coefficient: esgRecord.coefficient
-        ? {
-            ...esgRecord.coefficient,
-            category: !!esgRecord.coefficient.accountBookId
-              ? CoefficientCategory.CUSTOM
-              : CoefficientCategory.STANDARD,
-            createdAt:
-              new Date(esgRecord.coefficient.createdAt).getTime() / 1000,
-            updatedAt:
-              new Date(esgRecord.coefficient.updatedAt).getTime() / 1000,
-            emissionFactor: Number(esgRecord.coefficient.emissionFactor),
-          }
-        : null,
-      emissionSource: updatedRecord.emissionSource
-        ? {
-            id: updatedRecord.emissionSource.id,
-            name: updatedRecord.emissionSource.name,
-          }
-        : null,
-    };
-
     // Info: (20260312 - Julian) 新增 log
     await auditLogRepo.createAuditLog({
       userId: updater.id,
@@ -257,7 +165,7 @@ export async function PUT(
       action: "UPDATE",
     });
 
-    return jsonOk(formattedRecord);
+    return jsonOk(updatedRecord);
   } catch (error) {
     console.error("Error updating esg record:", error);
     return jsonFail({

@@ -71,6 +71,8 @@ const amount = Number(line.amount);
 ---
 
 ## 📌 文件維護指南 (When to Update)
+
 此 ADR 記錄了當前系統在數值精度與效能間的權衡，當發生以下架構變更時必須更新：
+
 - **Schema 正式升級 `BigInt`**：當團隊決定全面升級資料庫至 `BigInt` 以對接 Tier-1 跨國企業時，必須在此文件中明確寫下解決 JSON 序列化挑戰的具體作法（例如：引入 `superjson` 或是全域的 JSON replacer）。
 - **精度需求擴張**：若未來財務三表也需要計算具有複雜小數點的「加密貨幣微小單位」，必須重新評估並修改「純財務維持原生 Number」的架構決策。

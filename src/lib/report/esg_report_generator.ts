@@ -3,12 +3,10 @@ import {
   IEsgReportItem,
   IEsgReportDetailedRecord,
 } from "@/interfaces/esg_report";
-import { Prisma } from "@/generated";
 import { safeDivide } from "@/lib/utils/math";
+import { IEsgRecordDetail } from "@/interfaces/esg";
 
-export function generateEsgReport(
-  esgRecords: Prisma.EsgRecordGetPayload<Record<string, never>>[],
-): IEsgReport {
+export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
   const scope1Map = new Map<string, { name: string; amount: number }>();
   const scope2Map = new Map<string, { name: string; amount: number }>();
   const scope3Map = new Map<string, { name: string; amount: number }>();

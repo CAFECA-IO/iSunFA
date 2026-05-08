@@ -63,9 +63,19 @@ const getRandomDate2024 = (): string => {
 };
 
 export const generateFinancialVouchers = (stockId: string) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}`);
-  const finDataPath = path.join(dataDir, "2024_FIN_DATA.json");
-  const cachePath = path.join(dataDir, "ai_extracted_context_cache.json");
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+  const finDataPath = path.join(
+    dataDir,
+    "inputs",
+    "golden_data",
+    "2024_FIN_DATA.json",
+  );
+  const cachePath = path.join(
+    dataDir,
+    "outputs",
+    "phase4_vision_test",
+    "ai_extracted_context_cache.json",
+  );
 
   if (!fs.existsSync(finDataPath) || !fs.existsSync(cachePath)) {
     console.error(`[ERROR] Missing required files for ${stockId}.`);
@@ -240,7 +250,13 @@ export const generateFinancialVouchers = (stockId: string) => {
   }
 
   // Info: (20260502 - Tzuhan) 輸出模擬傳票
-  const outPath = path.join(dataDir, "simulated_vouchers.json");
+  const outPath = path.join(
+    dataDir,
+    "inputs",
+    "simulated_data",
+    "phase5_articulation_test",
+    "simulated_vouchers.json",
+  );
   fs.writeFileSync(outPath, JSON.stringify(vouchers, null, 2), "utf-8");
   console.log(
     `[SUCCESS] Reverse engineered ${vouchers.length} vouchers for ${stockId} and saved to simulated_vouchers.json.`,

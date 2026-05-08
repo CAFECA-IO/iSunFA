@@ -7,6 +7,7 @@ import { voucherRepo } from "@/repositories/voucher.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
+import { VerifyStatus } from "@/constants/verify_status";
 
 type TimeUnit = "7d" | "30d" | "3m" | "1y" | "custom";
 type GasType = "co2" | "ch4" | "n2o" | "f_gases";
@@ -119,24 +120,21 @@ export async function GET(
     );
 
     // Info: (20260321 - Luphia) 1. Fetch Vouchers
-    const vouchers = await voucherRepo.getVouchers({
-      where: {
-        accountBookId,
-        tradingDate: { gte: prevStart, lte: end },
-        isVerified: true,
-        deletedAt: null,
-      },
-      include: { lines: true },
+    const vouchers = await voucherRepo.getVouchersByFilter({
+      accountBookId,
+      startDate: prevStart.toISOString(),
+      endDate: end.toISOString(),
+      verifyStatus: VerifyStatus.VERIFIED,
+      hideDeleted: true,
     });
 
     // Info: (20260321 - Luphia) 2. Fetch ESG
-    const esgRecords = await esgRepo.getEsgRecords({
-      where: {
-        accountBookId,
-        tradingDate: { gte: prevStart, lte: end },
-        isVerified: true,
-        deletedAt: null,
-      },
+    const esgRecords = await esgRepo.getEsgRecordsByFilter({
+      accountBookId,
+      startDate: prevStart,
+      endDate: end,
+      verifyStatus: VerifyStatus.VERIFIED,
+      hideDeleted: true,
     });
 
     // Info: (20260321 - Luphia) Initialize buckets
@@ -170,25 +168,31 @@ export async function GET(
     const prevGas = { co2: 0, ch4: 0, n2o: 0, f_gases: 0 };
 
     // Info: (20260321 - Luphia) Process Vouchers
+    // Info: (20260506 - Julian) 以 IVoucher 重構
     vouchers.forEach((v) => {
-      const isCurrent = v.tradingDate >= start;
-      const val = v.lines.reduce((acc, line) => acc + line.amount, 0) / 2; // Info: (20260321 - Luphia) Derived from lines
+      const tradingDateMs = v.tradingDate * 1000;
+      const tradingDateObj = new Date(tradingDateMs);
+      const isCurrent = tradingDateMs >= start.getTime();
+      const val =
+        v.lineItems.lines.reduce((acc, line) => acc + line.amount, 0) / 2; // Info: (20260321 - Luphia) Derived from lines
 
       if (isCurrent) {
         if (v.tradingType === "INCOME") currentIncome += val;
         else if (v.tradingType === "OUTCOME") currentOutcome += val;
 
-        const ts = v.tradingDate.getTime();
         let bIdx = 0;
         if (unit === "1y" || (unit === "custom" && !monthStr)) {
           const months =
-            (v.tradingDate.getFullYear() - start.getFullYear()) * 12 +
-            (v.tradingDate.getMonth() - start.getMonth());
+            (tradingDateObj.getFullYear() - start.getFullYear()) * 12 +
+            (tradingDateObj.getMonth() - start.getMonth());
           bIdx = Math.max(0, Math.min(count - 1, months));
         } else {
           bIdx = Math.max(
             0,
-            Math.min(count - 1, Math.floor((ts - start.getTime()) / bucketMs)),
+            Math.min(
+              count - 1,
+              Math.floor((tradingDateMs - start.getTime()) / bucketMs),
+            ),
           );
         }
 
@@ -202,7 +206,8 @@ export async function GET(
 
     // Info: (20260321 - Luphia)  Process ESG
     esgRecords.forEach((e) => {
-      const isCurrent = e.tradingDate >= start;
+      const tradingDateMs = e.tradingDate * 1000;
+      const isCurrent = tradingDateMs >= start.getTime();
       const em = Number(e.emissions);
       /**
        * Info: (20260321 - Luphia) Determine gas type roughly from activityType or vendor
@@ -232,9 +237,7 @@ export async function GET(
             0,
             Math.min(
               count - 1,
-              Math.floor(
-                (e.tradingDate.getTime() - start.getTime()) / bucketMs,
-              ),
+              Math.floor((tradingDateMs - start.getTime()) / bucketMs),
             ),
           );
         }
