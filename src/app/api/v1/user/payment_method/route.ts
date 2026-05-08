@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { Prisma } from "@/generated";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { paymentRepo } from "@/repositories/payment.repo";
@@ -94,7 +93,7 @@ export async function POST(request: NextRequest) {
 
       await paymentRepo.updateOrderData(order.id, {
         paymentId: paymentId,
-      } as Prisma.InputJsonObject);
+      });
 
       return jsonOk({
         requireBinding: true,

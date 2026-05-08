@@ -11,6 +11,7 @@ import { generateEsgReport } from "@/lib/report/esg_report_generator";
 import { getAccountByCode } from "@/lib/utils/account";
 import { IAccount } from "@/constants/accounts";
 import { IVoucherLineUI } from "@/interfaces/voucher";
+import { esgRepo } from "@/repositories/esg.repo";
 
 export const runAiBlindTester = async (stockId: string) => {
   console.log(
@@ -46,9 +47,12 @@ export const runAiBlindTester = async (stockId: string) => {
     include: { lines: true },
   });
 
-  const esgRecords = await prisma.esgRecord.findMany({
-    where: { accountBookId: accountBookId, deletedAt: null, isVerified: true },
-  });
+  // const esgRecords = await prisma.esgRecord.findMany({
+  //   where: { accountBookId: accountBookId, deletedAt: null, isVerified: true },
+  // });
+
+  // Info: (20260507 - Julian) 改用 getEsgRecordsForReport 取得產生碳盤查資料
+  const esgRecords = await esgRepo.getEsgRecordsForReport({ accountBookId });
 
   const formattedLines: IVoucherLineUI[] = [];
   for (const v of vouchers) {

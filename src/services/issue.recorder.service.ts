@@ -59,13 +59,44 @@ export class IssueRecorderService {
         );
 
         try {
-          // Info: (20260420 - Luphia) Find the Order
-          const order = await orderRepo.findFirst({
-            where: {
-              mission: { contains: `"${taskId}"` },
-              status: { in: [ORDER_STATUS.EXECUTING, ORDER_STATUS.COMPLETED] },
-            },
-          });
+          // Info: (20260506 - Luphia) Read mission.json to get the exact orderId
+          let orderId = "";
+          try {
+            const missionContent = await fs.readFile(
+              path.join(taskDir, "mission.json"),
+              "utf8",
+            );
+            const missionData = JSON.parse(missionContent);
+            if (missionData && missionData.orderId) {
+              orderId = missionData.orderId;
+            }
+          } catch {
+            console.warn(
+              `[MissionRecorder] Could not read mission.json for Task ID ${taskId}`,
+            );
+          }
+
+          let order = null;
+          if (orderId) {
+            order = await orderRepo.findFirst({
+              where: {
+                id: orderId,
+                status: {
+                  in: [ORDER_STATUS.EXECUTING, ORDER_STATUS.COMPLETED],
+                },
+              },
+            });
+          } else {
+            // Info: (20260506 - Luphia) Fallback for older missions
+            order = await orderRepo.findFirst({
+              where: {
+                mission: { contains: `"${taskId}"` },
+                status: {
+                  in: [ORDER_STATUS.EXECUTING, ORDER_STATUS.COMPLETED],
+                },
+              },
+            });
+          }
 
           if (!order) {
             console.warn(

@@ -18,6 +18,15 @@ export enum SortOrder {
   DESC = "desc",
 }
 
+export enum VoucherSorting {
+  DATE_DESC = "date_desc",
+  DATE_ASC = "date_asc",
+  DEBIT_DESC = "debit_desc",
+  DEBIT_ASC = "debit_asc",
+  CREDIT_DESC = "credit_desc",
+  CREDIT_ASC = "credit_asc",
+}
+
 /**
  * Info: (20241104 - Murky)
  * @description this enum is for sort option in `FilterSection`

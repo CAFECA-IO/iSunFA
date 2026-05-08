@@ -75,3 +75,12 @@ export interface IEsgRecordDetail extends IEsgRecordBrief {
   voucherId?: string; // Info: (20260424 - Julian) 傳票 ID
   isDeleted?: boolean; // Info: (20260424 - Julian) 是否已刪除
 }
+
+// Info: (20260507 - Julian) 碳排放目標
+export interface IEsgTarget {
+  id: string;
+  accountBookId: string;
+  year: number; // Info: (20260507 - Julian) 年度
+  totalEmissionTarget: number; // Info: (20260507 - Julian) 總排放量目標
+  revenueEmissionTarget: number; // Info: (20260507 - Julian) 營收排放量目標
+}

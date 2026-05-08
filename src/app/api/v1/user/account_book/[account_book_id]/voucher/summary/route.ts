@@ -5,7 +5,6 @@ import { ApiCode } from "@/lib/utils/status";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { IVoucherDashboardSummary } from "@/interfaces/voucher";
 
 /**
  * Info: (20260316 - Julian) 取得傳票儀表板摘要
@@ -39,22 +38,9 @@ export async function GET(
       });
     }
 
-    const {
-      todayVoucherCount,
-      monthTotalAmount,
-      pendingVoucherCount,
-      aiAverageConfidence,
-    } = await voucherRepo.getVoucherSummary(accountBookId);
+    const summary = await voucherRepo.getVoucherSummary(accountBookId);
 
-    // Info: (20260316 - Julian) 組合 response
-    const dashboardSummary: IVoucherDashboardSummary = {
-      todayVoucherCount,
-      monthTotalAmount,
-      pendingVoucherCount,
-      aiAverageConfidence,
-    };
-
-    return jsonOk(dashboardSummary);
+    return jsonOk(summary);
   } catch (error) {
     console.error("Error fetching Voucher summary:", error);
     return jsonFail({

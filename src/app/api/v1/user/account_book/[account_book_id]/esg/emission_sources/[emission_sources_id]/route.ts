@@ -112,10 +112,7 @@ export async function PUT(
     // Info: (20260430 - Julian) 更新排放源
     const updatedEmissionSources = await esgRepo.updateEsgEmissionSources(
       emissionSourcesId,
-      {
-        name: input.name,
-        address: input.address,
-      },
+      { name: input.name, address: input.address },
     );
 
     if (!updatedEmissionSources) {

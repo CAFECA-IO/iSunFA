@@ -1,6 +1,5 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
-import { Prisma } from "@/generated";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
@@ -9,7 +8,6 @@ import { voucherRepo } from "@/repositories/voucher.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import { paymentRepo } from "@/repositories/payment.repo";
@@ -50,25 +48,12 @@ export async function GET(
       return jsonFail(API_ERRORS.VL_INVALID_ID);
     }
 
-    const journalDbRecord = await journalRepo.getJournalById(journalId);
+    const journal = await journalRepo.getJournalById(journalId);
 
-    if (!journalDbRecord) {
+    if (!journal) {
       console.error("Journal not found");
       return jsonFail(API_ERRORS.NF_JOURNAL);
     }
-
-    const journal = {
-      ...journalDbRecord,
-      file: journalDbRecord.file
-        ? {
-            id: journalDbRecord.file.id,
-            hash: journalDbRecord.file.hash,
-            fileName: journalDbRecord.file.fileName || "Unknown",
-          }
-        : undefined,
-      voucherId: journalDbRecord.voucherId,
-      esgRecordId: journalDbRecord.esgRecordId,
-    };
 
     return jsonOk(journal);
   } catch (error) {
@@ -164,7 +149,7 @@ export async function PUT(
         voucherId: updatedJournal.voucherId,
         esgRecordId: updatedJournal.esgRecordId,
         accountBookId: accountBook.id,
-      } as Prisma.InputJsonObject,
+      },
     });
 
     if (fallbackOrder) {
@@ -198,27 +183,7 @@ export async function PUT(
       }
     }
 
-    const formattedJournal: IJournal = {
-      id: updatedJournal.id,
-      tradingTimestamp: Math.floor(updatedJournal.tradingDate.getTime() / 1000),
-      text: updatedJournal.text,
-      fileId: updatedJournal.fileId ?? "",
-      file: updatedJournal.file
-        ? {
-            id: updatedJournal.file.id,
-            hash: updatedJournal.file.hash,
-            fileName: updatedJournal.file.fileName ?? "",
-          }
-        : undefined,
-      voucherId: updatedJournal.voucherId,
-      esgRecordId: updatedJournal.esgRecordId,
-      analysisStatus: updatedJournal.analysisStatus as AIAnalysisStatus,
-      confidence: updatedJournal.confidence,
-      isVerified: updatedJournal.isVerified,
-      aiNote: updatedJournal.aiNote,
-    };
-
-    return jsonOk(formattedJournal);
+    return jsonOk(updatedJournal);
   } catch (error) {
     console.error("Put journal failed", error);
     return jsonFail(API_ERRORS.IS_DB_FAILED);

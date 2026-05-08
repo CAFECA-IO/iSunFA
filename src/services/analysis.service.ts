@@ -22,7 +22,7 @@ import {
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import { AppError } from "@/lib/utils/error";
 import { ApiCode } from "@/lib/utils/status";
-import { AccountBook, Prisma, EsgRecord } from "@/generated";
+import { AccountBook, Prisma } from "@/generated";
 import { ANALYSIS_CATEGORY } from "@/constants/price";
 import type { IVoucherLineUI } from "@/interfaces/voucher";
 
@@ -201,17 +201,10 @@ export class AnalysisService {
           console.log(`[ESG-DEBUG] Start TS: ${startTs}, End TS: ${endTs}`);
 
           const esgRecords = targetAccountBookId
-            ? await esgRepo.findManyEsgRecords({
-                where: {
-                  accountBookId: targetAccountBookId,
-                  tradingDate: {
-                    gte: new Date(start + "T00:00:00.000Z"),
-                    lte: new Date(end + "T23:59:59.999Z"),
-                  },
-                  deletedAt: null,
-                  isVerified: true,
-                },
-                orderBy: { tradingDate: "asc" },
+            ? await esgRepo.getEsgRecordsForReport({
+                accountBookId: targetAccountBookId,
+                start: new Date(start + "T00:00:00.000Z"),
+                end: new Date(end + "T23:59:59.999Z"),
               })
             : [];
 
@@ -365,14 +358,15 @@ export class AnalysisService {
             }
 
             if (esgRecords.length > 0) {
-              parsedPrerequisiteParams.esgReport = generateEsgReport(
-                esgRecords as EsgRecord[],
-              );
+              parsedPrerequisiteParams.esgReport =
+                generateEsgReport(esgRecords);
 
               if (params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE) {
                 const esgContextLines = esgRecords.map((r) => {
-                  const dateStr = r.tradingDate.toISOString().split("T")[0];
-                  return `- 日期: ${dateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
+                  const tradingDateStr = new Date(r.tradingDate * 1000)
+                    .toISOString()
+                    .split("T")[0];
+                  return `- 日期: ${tradingDateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
                 });
                 parsedPrerequisiteParams.esgRecordsContext = `\n【內部 ESG 明細紀錄】:\n${esgContextLines.join("\n")}\n`;
               }
