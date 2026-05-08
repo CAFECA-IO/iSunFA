@@ -3,9 +3,13 @@ import * as path from "path";
 import { runPipeline } from "@/scripts/e2e-seeder/run_pipeline";
 import pLimit from "p-limit";
 
-export const runScaleTest = async () => {
+export const runScaleTest = async (
+  shouldClean: boolean = false,
+  skipImages: boolean = false,
+) => {
   console.log(`\n======================================================`);
   console.log(`🏢 [ENTERPRISE SCALING] Batch E2E Seeder Initialization`);
+  console.log(`Flags: --clean=${shouldClean}, --skip-images=${skipImages}`);
   console.log(`======================================================\n`);
 
   const dataDir = path.resolve(process.cwd(), "data");
@@ -42,8 +46,22 @@ export const runScaleTest = async () => {
       console.log(`------------------------------------------------------`);
 
       // Info: (20260502 - Tzuhan) 執行前進行快速驗證
-      const finDataPath = path.join(dataDir, stockId, "2024_FIN_DATA.json");
-      const esgDataPath = path.join(dataDir, stockId, "2024_ESG_METRICS.json");
+      const finDataPath = path.join(
+        dataDir,
+        stockId,
+        "2024",
+        "inputs",
+        "golden_data",
+        "2024_FIN_DATA.json",
+      );
+      const esgDataPath = path.join(
+        dataDir,
+        stockId,
+        "2024",
+        "inputs",
+        "golden_data",
+        "2024_ESG_METRICS.json",
+      );
 
       if (!fs.existsSync(finDataPath) || !fs.existsSync(esgDataPath)) {
         console.warn(
@@ -54,7 +72,14 @@ export const runScaleTest = async () => {
       }
 
       try {
-        await runPipeline(stockId);
+        if (shouldClean) {
+          const outputsDir = path.join(dataDir, stockId, "2024", "outputs");
+          if (fs.existsSync(outputsDir)) {
+            console.log(`🧹 Cleaning outputs directory for ${stockId}...`);
+            fs.rmSync(outputsDir, { recursive: true, force: true });
+          }
+        }
+        await runPipeline(stockId, shouldClean, skipImages);
         results[stockId] = "PASSED";
       } catch {
         console.error(
@@ -80,7 +105,10 @@ export const runScaleTest = async () => {
 
 // Info: (20260502 - Tzuhan) 如果直接執行此腳本
 if (import.meta.url === `file://${process.argv[1]}`) {
-  runScaleTest().catch((err) => {
+  const shouldClean = process.argv.includes("--clean");
+  const skipImages = process.argv.includes("--skip-images");
+
+  runScaleTest(shouldClean, skipImages).catch((err) => {
     console.error("Batch execution failed:", err);
     process.exit(1);
   });

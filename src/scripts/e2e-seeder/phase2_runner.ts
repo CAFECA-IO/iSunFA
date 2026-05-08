@@ -47,10 +47,28 @@ export const runPhase2ReceiptAnalysis = async (
   stockId: string,
   shouldClean: boolean = false,
 ) => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}`);
-  const receiptsDir = path.join(dataDir, "receipts");
-  const receiptsPngDir = path.join(dataDir, "receipts_png");
-  const vouchersPath = path.join(dataDir, "simulated_vouchers.json");
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+  const receiptsDir = path.join(
+    dataDir,
+    "inputs",
+    "simulated_data",
+    "phase5_articulation_test",
+    "receipts",
+  );
+  const receiptsPngDir = path.join(
+    dataDir,
+    "inputs",
+    "simulated_data",
+    "phase5_articulation_test",
+    "receipts_png",
+  );
+  const vouchersPath = path.join(
+    dataDir,
+    "inputs",
+    "simulated_data",
+    "phase5_articulation_test",
+    "simulated_vouchers.json",
+  );
 
   if (!fs.existsSync(receiptsDir) || !fs.existsSync(vouchersPath)) {
     console.error(`[ERROR] Missing receipts or vouchers for ${stockId}.`);
@@ -395,8 +413,6 @@ export const runPhase2ReceiptAnalysis = async (
           isVerified: true,
         },
       });
-
-      // Info: (20260504 - Tzuhan) 因為使用者已使用付費版 Gemini 方案，所以移除請求速率限制的延遲時間
     } catch (err: unknown) {
       if (err instanceof Error) {
         console.log(`⚠️ Exception: ${err.message}`);

@@ -45,8 +45,13 @@ export interface IExtractedContextCache {
 export const extractContextFromPdf = async (
   stockId: string,
 ): Promise<IExtractedContextCache | null> => {
-  const dataDir = path.resolve(process.cwd(), `data/${stockId}`);
-  const cachePath = path.join(dataDir, "ai_extracted_context_cache.json");
+  const dataDir = path.resolve(process.cwd(), `data/${stockId}/2024`);
+  const cachePath = path.join(
+    dataDir,
+    "outputs",
+    "phase4_vision_test",
+    "ai_extracted_context_cache.json",
+  );
 
   // Info: (20260502 - Tzuhan) 原則：資料庫冪等性與資料保留
   // Info: (20260502 - Tzuhan) 如果快取存在，立即回傳以節省 API 成本並確保結果可重現。
@@ -56,8 +61,18 @@ export const extractContextFromPdf = async (
     return JSON.parse(rawCache) as IExtractedContextCache;
   }
 
-  const finPdfPath = path.join(dataDir, "2024_FIN_REPORT.pdf");
-  const esgPdfPath = path.join(dataDir, "2024_ESG_REPORT.pdf");
+  const finPdfPath = path.join(
+    dataDir,
+    "inputs",
+    "golden_data",
+    "2024_FIN_REPORT.pdf",
+  );
+  const esgPdfPath = path.join(
+    dataDir,
+    "inputs",
+    "golden_data",
+    "2024_ESG_REPORT.pdf",
+  );
 
   if (!fs.existsSync(finPdfPath) || !fs.existsSync(esgPdfPath)) {
     console.warn(`[WARN] PDFs not found for ${stockId}. Returning null.`);
