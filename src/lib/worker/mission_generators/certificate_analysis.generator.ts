@@ -19,19 +19,6 @@ export function generateCertificateAnalysisMission(
     | IAccountBookBase
     | undefined;
 
-  // Info: (20260508 - Julian) 轉換為 prompt 需要的格式
-  const accountBookForPrompt: IAccountBookBase | null = accountBook
-    ? {
-        id: accountBook.id ?? "",
-        name: accountBook.name ?? "",
-        country: accountBook.country ?? "",
-        currency: accountBook.currency ?? "",
-        rule: accountBook.rule ?? "",
-      }
-    : null;
-
-  console.log("👾accountBookForPrompt:", accountBookForPrompt);
-
   const paramsObj = params as unknown as {
     files?: string[];
     accountBookId?: string;
@@ -64,7 +51,7 @@ export function generateCertificateAnalysisMission(
     order: 1,
     data: {
       key: `JOURNAL`,
-      prompt: getJournalPrompt(accountBookForPrompt),
+      prompt: getJournalPrompt(accountBook),
       context,
     },
   });
@@ -74,7 +61,7 @@ export function generateCertificateAnalysisMission(
     order: 1,
     data: {
       key: `VOUCHER_BASE`,
-      prompt: getBaseVoucherPrompt(accountBookForPrompt),
+      prompt: getBaseVoucherPrompt(accountBook),
       context,
     },
   });
@@ -84,7 +71,7 @@ export function generateCertificateAnalysisMission(
     order: 1,
     data: {
       key: `VOUCHER_LINES`,
-      prompt: getVoucherLinesPrompt(accountBookForPrompt),
+      prompt: getVoucherLinesPrompt(accountBook),
       context,
     },
   });
@@ -94,7 +81,7 @@ export function generateCertificateAnalysisMission(
     order: 1,
     data: {
       key: `ESG`,
-      prompt: getEsgPrompt(accountBookForPrompt),
+      prompt: getEsgPrompt(accountBook),
       context,
     },
   });

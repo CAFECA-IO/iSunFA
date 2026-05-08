@@ -23,17 +23,6 @@ export function generateDocumentParsingMission(
     | ICoefficient[]
     | undefined;
 
-  // Info: (20260508 - Julian) 轉換為 prompt 需要的格式
-  const accountBookForPrompt: IAccountBookBase | null = accountBook
-    ? {
-        id: accountBook.id ?? "",
-        name: accountBook.name ?? "",
-        country: accountBook.country ?? "",
-        currency: accountBook.currency ?? "",
-        rule: accountBook.rule ?? "",
-      }
-    : null;
-
   const tasks: ITaskDefinition[] = [];
   const data = (params.data as { accountBookId?: string }) || {};
   const accountBookId =
@@ -61,7 +50,7 @@ export function generateDocumentParsingMission(
     order: 1,
     data: {
       key: "JOURNAL",
-      prompt: getJournalPrompt(accountBookForPrompt),
+      prompt: getJournalPrompt(accountBook),
       context,
     },
   });
@@ -71,7 +60,7 @@ export function generateDocumentParsingMission(
     order: 1,
     data: {
       key: "VOUCHER_BASE",
-      prompt: getBaseVoucherPrompt(accountBookForPrompt),
+      prompt: getBaseVoucherPrompt(accountBook),
       context,
     },
   });
@@ -81,7 +70,7 @@ export function generateDocumentParsingMission(
     order: 1,
     data: {
       key: "VOUCHER_LINES",
-      prompt: getVoucherLinesPrompt(accountBookForPrompt),
+      prompt: getVoucherLinesPrompt(accountBook),
       context,
     },
   });
@@ -91,7 +80,7 @@ export function generateDocumentParsingMission(
     order: 1,
     data: {
       key: "ESG",
-      prompt: getEsgPrompt(accountBookForPrompt, coefficients),
+      prompt: getEsgPrompt(accountBook, coefficients),
       context,
     },
   });
