@@ -11,6 +11,7 @@ import {
 import { getEsgPrompt } from "@/constants/prompts/esg";
 import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
 import { AccountBook } from "@/generated";
+import { IAccountBookForPrompt } from "@/interfaces/account_book";
 
 export function generateCertificateAnalysisMission(
   params: IMissionParams,
@@ -18,6 +19,16 @@ export function generateCertificateAnalysisMission(
   const accountBook = params.prerequisiteData?.accountBook as
     | Partial<AccountBook>
     | undefined;
+
+  // Info: (20260508 - Julian) 轉換為 prompt 需要的格式
+  const accountBookForPrompt: IAccountBookForPrompt | null = accountBook
+    ? {
+        name: accountBook.name ?? "",
+        country: accountBook.country ?? "",
+        currency: accountBook.currency ?? "",
+        rule: accountBook.rule ?? "",
+      }
+    : null;
 
   const paramsObj = params as unknown as {
     files?: string[];
@@ -51,7 +62,7 @@ export function generateCertificateAnalysisMission(
     order: 1,
     data: {
       key: `JOURNAL`,
-      prompt: getJournalPrompt(accountBook),
+      prompt: getJournalPrompt(accountBookForPrompt),
       context,
     },
   });
@@ -61,7 +72,7 @@ export function generateCertificateAnalysisMission(
     order: 1,
     data: {
       key: `VOUCHER_BASE`,
-      prompt: getBaseVoucherPrompt(accountBook),
+      prompt: getBaseVoucherPrompt(accountBookForPrompt),
       context,
     },
   });
@@ -71,7 +82,7 @@ export function generateCertificateAnalysisMission(
     order: 1,
     data: {
       key: `VOUCHER_LINES`,
-      prompt: getVoucherLinesPrompt(accountBook),
+      prompt: getVoucherLinesPrompt(accountBookForPrompt),
       context,
     },
   });
@@ -81,7 +92,7 @@ export function generateCertificateAnalysisMission(
     order: 1,
     data: {
       key: `ESG`,
-      prompt: getEsgPrompt(accountBook),
+      prompt: getEsgPrompt(accountBookForPrompt),
       context,
     },
   });
