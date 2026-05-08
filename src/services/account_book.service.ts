@@ -57,15 +57,19 @@ export interface IAccountBookCreateInput {
   currency: string;
   rule: string;
   teamId: string;
+  enterpriseId?: string | null;
+  esgIndustryId?: number | null;
+  createdAt?: Date;
 }
 
 // Info: (20260508 - Julian) 建立一個帳簿
 export const createAccountBook = async (
   data: IAccountBookCreateInput,
 ): Promise<IAccountBook> => {
+  const { teamId, ...rest } = data;
   const updatedData = {
-    ...data,
-    team: { connect: { id: data.teamId } },
+    ...rest,
+    team: { connect: { id: teamId } },
   };
   return accountBookRepo.create(updatedData);
 };
