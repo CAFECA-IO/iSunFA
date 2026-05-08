@@ -1,5 +1,4 @@
 import { COUNTRY, CURRENCY, RULE } from "@/constants/accounts";
-import { Prisma } from "@/generated";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { teamRepo } from "@/repositories/team.repo";
 
@@ -34,7 +33,7 @@ export const createAccountBookForTeamsWithoutOne = async () => {
       country: COUNTRY.TW,
       currency: CURRENCY.TW,
       rule: RULE.T_IFRS,
-      team: { connect: { id: team.id } },
+      teamId: team.id,
     });
     results.push(accountBook);
   }
@@ -65,11 +64,23 @@ export const getAccountBooksByTeamId = async (
   return accountBookRepo.listTeamsAccountBooksByTeamId(teamId);
 };
 
-// Info: (20260308 - Luphia) 建立一個帳簿
+export interface IAccountBookCreateInput {
+  name: string;
+  country: string;
+  currency: string;
+  rule: string;
+  teamId: string;
+}
+
+// Info: (20260508 - Julian) 建立一個帳簿
 export const createAccountBook = async (
-  data: Prisma.AccountBookCreateInput,
+  data: IAccountBookCreateInput,
 ): Promise<IAccountBook> => {
-  return accountBookRepo.create(data);
+  const updatedData = {
+    ...data,
+    team: { connect: { id: data.teamId } },
+  };
+  return accountBookRepo.create(updatedData);
 };
 
 // Info: (20260308 - Luphia) 取得一個帳簿
@@ -82,7 +93,7 @@ export const getAccountBookById = async (
 // Info: (20260308 - Luphia) 編輯帳簿
 export const updateAccountBook = async (
   accountBookId: string,
-  data: Prisma.AccountBookUpdateInput,
+  data: Partial<IAccountBook>, // Info: (20260508 - Julian) 目前使用 Partial<IAccountBook> 作為參數，未來可依據需求擴充其他欄位
 ): Promise<IAccountBook> => {
   return accountBookRepo.updateAccountBook(accountBookId, data);
 };

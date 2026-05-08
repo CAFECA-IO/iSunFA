@@ -9,7 +9,10 @@ import { voucherRepo } from "@/repositories/voucher.repo";
 import { journalRepo } from "@/repositories/journal.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { EsgScope, EsgIntensity } from "@/generated";
+import {
+  EsgScope as ClientEsgScope,
+  EsgIntensity as ClientEsgIntensity,
+} from "@/interfaces/esg";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { IEsgRecordDetail } from "@/interfaces/esg";
 
@@ -118,7 +121,7 @@ export async function PUT(
         tradingDate: new Date(reqBody.tradingDate * 1000),
       }),
       ...(reqBody.scope && {
-        scope: reqBody.scope.toUpperCase() as EsgScope,
+        scope: reqBody.scope.toUpperCase() as ClientEsgScope,
       }),
       ...(reqBody.activityType && { activityType: reqBody.activityType }),
       ...(reqBody.vendor && { vendor: reqBody.vendor }),
@@ -128,7 +131,7 @@ export async function PUT(
       ...(reqBody.unit && { unit: reqBody.unit }),
       ...(reqBody.emissions && { emissions: reqBody.emissions }),
       ...(reqBody.intensity && {
-        intensity: reqBody.intensity.toUpperCase() as EsgIntensity,
+        intensity: reqBody.intensity.toUpperCase() as ClientEsgIntensity,
       }),
       ...(reqBody.confidence !== undefined && {
         confidence: reqBody.confidence,
