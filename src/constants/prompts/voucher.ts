@@ -1,14 +1,12 @@
 import { ACCOUNTS } from "@/constants/accounts";
-import { IAccountBookForPrompt } from "@/interfaces/account_book";
+import { IAccountBookBase } from "@/interfaces/account_book";
 
 /*
  ** Info: (20260407 - Julian) 將傳票的分析拆解成「基本資料」和「會計分錄」
  */
 
 //  Info: (20260407 - Julian) 分析傳票「基本資料」的 Prompt
-export const getBaseVoucherPrompt = (
-  accountBook?: IAccountBookForPrompt | null,
-) => {
+export const getBaseVoucherPrompt = (accountBook?: IAccountBookBase | null) => {
   // Info: (20260326 - Julian) 會計科目代碼
   const country = accountBook?.country || "TW";
 
@@ -38,7 +36,7 @@ export const getBaseVoucherPrompt = (
 
 //  Info: (20260407 - Julian) 分析傳票「會計分錄」的 Prompt
 export const getVoucherLinesPrompt = (
-  accountBook?: IAccountBookForPrompt | null,
+  accountBook?: IAccountBookBase | null,
 ) => {
   // Info: (20260407 - Julian) 會計科目代碼
   const country = accountBook?.country || "TW";

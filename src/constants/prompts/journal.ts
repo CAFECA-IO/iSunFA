@@ -1,8 +1,6 @@
-import { IAccountBookForPrompt } from "@/interfaces/account_book";
+import { IAccountBookBase } from "@/interfaces/account_book";
 
-export const getJournalPrompt = (
-  accountBook?: IAccountBookForPrompt | null,
-) => {
+export const getJournalPrompt = (accountBook?: IAccountBookBase | null) => {
   // Info: (20260506 - Julian) 今日日期
   const today = new Date().toISOString().split("T")[0];
 

@@ -10,25 +10,27 @@ import {
 } from "@/constants/prompts/voucher";
 import { getEsgPrompt } from "@/constants/prompts/esg";
 import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
-import { AccountBook } from "@/generated";
-import { IAccountBookForPrompt } from "@/interfaces/account_book";
+import { IAccountBookBase } from "@/interfaces/account_book";
 
 export function generateCertificateAnalysisMission(
   params: IMissionParams,
 ): IMissionDefinition | null {
   const accountBook = params.prerequisiteData?.accountBook as
-    | Partial<AccountBook>
+    | IAccountBookBase
     | undefined;
 
   // Info: (20260508 - Julian) 轉換為 prompt 需要的格式
-  const accountBookForPrompt: IAccountBookForPrompt | null = accountBook
+  const accountBookForPrompt: IAccountBookBase | null = accountBook
     ? {
+        id: accountBook.id ?? "",
         name: accountBook.name ?? "",
         country: accountBook.country ?? "",
         currency: accountBook.currency ?? "",
         rule: accountBook.rule ?? "",
       }
     : null;
+
+  console.log("👾accountBookForPrompt:", accountBookForPrompt);
 
   const paramsObj = params as unknown as {
     files?: string[];
