@@ -17,16 +17,18 @@ export interface IAnalysisRecordData {
   missionName: string;
   category: string;
   cost: number;
-  remainingBalance: number;
+  remainingBalance?: number;
   generatedAt: string;
-  planHash: string | null;
+  planHash?: string | null;
   periodType: string;
   periodValue: string;
   year: number;
   country?: string;
   keyword?: string;
   isExternal: boolean;
-  historicalTags: string[];
+  historicalTags?: string[];
+  missionTaskId?: string;
+  fileHash?: string;
   data?: unknown;
 }
 
