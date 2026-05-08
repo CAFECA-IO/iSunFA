@@ -1,20 +1,7 @@
 import { COUNTRY, CURRENCY, RULE } from "@/constants/accounts";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { teamRepo } from "@/repositories/team.repo";
-
-export interface IAccountBook {
-  id: string;
-  name: string;
-  country: string;
-  currency: string;
-  rule: string;
-  teamId?: string;
-  teamName?: string;
-  userRole?: string;
-  enterpriseId?: string | null;
-  esgIndustryId?: number | null;
-  createdAt?: string | Date;
-}
+import { IAccountBook } from "@/interfaces/account_book";
 
 // Info: (20260308 - Luphia) 找出所有帳簿的團隊，使用 createAccountBook 為他建立一個
 export const createAccountBookForTeamsWithoutOne = async () => {

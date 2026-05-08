@@ -22,8 +22,9 @@ import {
   IUserTarget,
 } from "@/components/admin/user/point_issue_modal";
 import { useTranslation } from "@/i18n/i18n_context";
-import { Role } from "@/generated";
+import { Role } from "@/constants/role";
 import { IBlockchainDashboardData } from "@/services/admin.blockchain.service";
+import { IPagination } from "@/interfaces/admin_billing";
 
 interface IMembershipInfo {
   exp: number;
@@ -37,13 +38,6 @@ interface IUser {
   address: string;
   role: string;
   createdAt: string;
-}
-
-interface IPagination {
-  page: number;
-  limit: number;
-  totalPages: number;
-  totalElements: number;
 }
 
 export default function MemberAdminPage() {
