@@ -1,21 +1,7 @@
 import { COUNTRY, CURRENCY, RULE } from "@/constants/accounts";
-import { Prisma } from "@/generated";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { teamRepo } from "@/repositories/team.repo";
-
-export interface IAccountBook {
-  id: string;
-  name: string;
-  country: string;
-  currency: string;
-  rule: string;
-  teamId?: string;
-  teamName?: string;
-  userRole?: string;
-  enterpriseId?: string | null;
-  esgIndustryId?: number | null;
-  createdAt?: string | Date;
-}
+import { IAccountBook } from "@/interfaces/account_book";
 
 // Info: (20260308 - Luphia) 找出所有帳簿的團隊，使用 createAccountBook 為他建立一個
 export const createAccountBookForTeamsWithoutOne = async () => {
@@ -34,7 +20,7 @@ export const createAccountBookForTeamsWithoutOne = async () => {
       country: COUNTRY.TW,
       currency: CURRENCY.TW,
       rule: RULE.T_IFRS,
-      team: { connect: { id: team.id } },
+      teamId: team.id,
     });
     results.push(accountBook);
   }
@@ -65,11 +51,27 @@ export const getAccountBooksByTeamId = async (
   return accountBookRepo.listTeamsAccountBooksByTeamId(teamId);
 };
 
-// Info: (20260308 - Luphia) 建立一個帳簿
+export interface IAccountBookCreateInput {
+  name: string;
+  country: string;
+  currency: string;
+  rule: string;
+  teamId: string;
+  enterpriseId?: string | null;
+  esgIndustryId?: number | null;
+  createdAt?: Date;
+}
+
+// Info: (20260508 - Julian) 建立一個帳簿
 export const createAccountBook = async (
-  data: Prisma.AccountBookCreateInput,
+  data: IAccountBookCreateInput,
 ): Promise<IAccountBook> => {
-  return accountBookRepo.create(data);
+  const { teamId, ...rest } = data;
+  const updatedData = {
+    ...rest,
+    team: { connect: { id: teamId } },
+  };
+  return accountBookRepo.create(updatedData);
 };
 
 // Info: (20260308 - Luphia) 取得一個帳簿
@@ -82,7 +84,7 @@ export const getAccountBookById = async (
 // Info: (20260308 - Luphia) 編輯帳簿
 export const updateAccountBook = async (
   accountBookId: string,
-  data: Prisma.AccountBookUpdateInput,
+  data: Partial<IAccountBook>, // Info: (20260508 - Julian) 目前使用 Partial<IAccountBook> 作為參數，未來可依據需求擴充其他欄位
 ): Promise<IAccountBook> => {
   return accountBookRepo.updateAccountBook(accountBookId, data);
 };

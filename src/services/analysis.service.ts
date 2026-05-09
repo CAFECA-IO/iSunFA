@@ -12,8 +12,8 @@ import { orderRepo } from "@/repositories/order.repo";
 import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
 import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
-import { getAccountByCode } from "@/lib/utils/account";
-import { IAccount } from "@/constants/accounts";
+// import { getAccountByCode } from "@/lib/utils/account";
+// import { IAccount } from "@/constants/accounts";
 import { generateEsgReport } from "@/lib/report/esg_report_generator";
 import {
   missionGenerator,
@@ -22,9 +22,14 @@ import {
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import { AppError } from "@/lib/utils/error";
 import { ApiCode } from "@/lib/utils/status";
-import { AccountBook, Prisma } from "@/generated";
+// import { AccountBook, Prisma } from "@/generated";
 import { ANALYSIS_CATEGORY } from "@/constants/price";
-import type { IVoucherLineUI } from "@/interfaces/voucher";
+import { IVoucherFilterOptions } from "@/interfaces/data_filter_option";
+import { VerifyStatus } from "@/constants/verify_status";
+import { VoucherSorting } from "@/constants/sort";
+import type { IVoucher } from "@/interfaces/voucher";
+import { IAccountBook } from "@/interfaces/account_book";
+import { IJSONObject } from "@/validators";
 
 export interface IGenerateAnalysisParams extends IOrderParams {
   orderId?: string;
@@ -171,7 +176,10 @@ export class AnalysisService {
           const teamIds = teamMembers.map((tm) => tm.teamId);
 
           let targetAccountBookId: string | null = null;
-          let matchedAccountBook: AccountBook | null = null;
+          // Info: (20260508 - Julian) 以 IAccountBook 替代 Prisma 取值
+          // let matchedAccountBook: AccountBook | null = null;
+          let matchedAccountBook: IAccountBook | null = null;
+
           if (params.keyword) {
             const match = params.keyword.match(/\((.*?)\)/);
             const taxId = match ? match[1] : params.keyword;
@@ -209,11 +217,15 @@ export class AnalysisService {
             : [];
 
           // Info: (20260418 - Tzuhan) [去耦合與效能最佳化] 分離 Period (當期) 與 Cumulative (歷史累積) 的查詢，避免財報數據打架
+          /*
           type VoucherWithLines = Prisma.VoucherGetPayload<{
             include: { lines: true };
           }>;
           let periodVouchers: VoucherWithLines[] = [];
           let cumulativeVouchers: VoucherWithLines[] = [];
+          */
+          let periodVouchers: IVoucher[] = [];
+          let cumulativeVouchers: IVoucher[] = [];
 
           if (
             params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE ||
@@ -222,16 +234,28 @@ export class AnalysisService {
             params.category === ANALYSIS_CATEGORY.CASH_FLOW ||
             params.category === ANALYSIS_CATEGORY.INCOME_STATEMENT
           ) {
+            // Info: (20260508 - Julian) 移除 Prisma.VoucherWhereInput
+            /*
             const baseWhere: Prisma.VoucherWhereInput = {
               accountBookId: targetAccountBookId!,
               deletedAt: null,
               isVerified: true, // Info: (20260502 - Tzuhan) ⚠️修復：排除草稿傳票
               tradingDate: { lte: new Date(end + "T23:59:59.999Z") },
             };
+            */
 
             if (targetAccountBookId) {
               const category =
                 params.category as (typeof ANALYSIS_CATEGORY)[keyof typeof ANALYSIS_CATEGORY];
+
+              // Info: (20260508 - Julian) 使用 IVoucherFilterOptions 建立篩選條件
+              const cumulativeFilter: IVoucherFilterOptions = {
+                accountBookId: targetAccountBookId,
+                hideDeleted: true, // Info: (20260508 - Julian) 排除已刪除的傳票
+                verifyStatus: VerifyStatus.VERIFIED, // Info: (20260502 - Julian) 選擇傳票
+                endDate: new Date(end + "T23:59:59.999Z"), // Info: (20260508 - Julian) 排除未來傳票
+                sorting: VoucherSorting.DATE_ASC, // Info: (20260508 - Julian) 按日期排序
+              };
 
               // Info: (20260502 - Tzuhan) 1. 資產負債表需要累積餘額 (無 gte)
               const needsCumulative: (typeof ANALYSIS_CATEGORY)[keyof typeof ANALYSIS_CATEGORY][] =
@@ -241,11 +265,16 @@ export class AnalysisService {
                   ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE,
                 ];
               if (needsCumulative.includes(category)) {
+                // Info: (20260508 - Julian) 使用 getVouchersByFilter 取代原來的 findManyVouchers
+                /*
                 cumulativeVouchers = (await voucherRepo.findManyVouchers({
                   where: baseWhere,
                   orderBy: { tradingDate: "asc" },
                   include: { lines: true },
                 })) as unknown as VoucherWithLines[];
+                */
+                cumulativeVouchers =
+                  await voucherRepo.getVouchersByFilter(cumulativeFilter);
               }
 
               // Info: (20260502 - Tzuhan) 2. 損益與現金流量表需要當期發生額 (有 gte)
@@ -257,6 +286,8 @@ export class AnalysisService {
                   ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE,
                 ];
               if (needsPeriod.includes(category)) {
+                // Info: (20260508 - Julian) 使用 getVouchersByFilter 取代原來的 findManyVouchers
+                /*
                 periodVouchers = (await voucherRepo.findManyVouchers({
                   where: {
                     ...baseWhere,
@@ -268,6 +299,11 @@ export class AnalysisService {
                   orderBy: { tradingDate: "asc" },
                   include: { lines: true },
                 })) as unknown as VoucherWithLines[];
+                */
+                periodVouchers = await voucherRepo.getVouchersByFilter({
+                  ...cumulativeFilter,
+                  startDate: new Date(start + "T00:00:00.000Z"),
+                });
               }
             }
           }
@@ -285,6 +321,7 @@ export class AnalysisService {
               accountBook: matchedAccountBook || undefined,
             };
 
+            /*
             const formatLines = (vouchers: VoucherWithLines[]) => {
               const allLines: IVoucherLineUI[] = [];
               for (const v of vouchers) {
@@ -306,6 +343,10 @@ export class AnalysisService {
               }
               return allLines;
             };
+            */
+            // Info: (20260508 - Julian) Phase 2: 移除手動轉換邏輯，直接從 IVoucher 取出 lines
+            const formatLines = (vouchers: IVoucher[]) =>
+              vouchers.flatMap((v) => v.lineItems?.lines || []);
 
             const periodLines = formatLines(periodVouchers);
             const cumulativeLines = formatLines(cumulativeVouchers);
@@ -315,6 +356,7 @@ export class AnalysisService {
               params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE &&
               periodVouchers.length > 0
             ) {
+              /*
               const voucherLinesStr = periodVouchers
                 .map((v) => {
                   const linesStr = (Array.isArray(v.lines) ? v.lines : [])
@@ -328,6 +370,21 @@ export class AnalysisService {
                     v.tradingDate instanceof Date
                       ? v.tradingDate.toISOString().split("T")[0]
                       : String(v.tradingDate).split("T")[0];
+                  return `- 傳票號: ${v.id}, 日期: ${dateStr}\n${linesStr}`;
+                })
+                .join("\n");
+              */
+              // Info: (20260508 - Julian) 轉換日期格式，並將 lineItems 的結構轉換成字串
+              const voucherLinesStr = periodVouchers
+                .map((v) => {
+                  const linesStr = (v.lineItems?.lines || [])
+                    .map((l) => {
+                      return `    - 科目: ${l.accounting?.name || l.accountingCode}, 金額:${l.amount}, 摘要: ${l.particular}, 借貸: ${l.isDebit ? "借方" : "貸方"}`;
+                    })
+                    .join("\n");
+                  const dateStr = new Date(v.tradingDate * 1000)
+                    .toISOString()
+                    .split("T")[0];
                   return `- 傳票號: ${v.id}, 日期: ${dateStr}\n${linesStr}`;
                 })
                 .join("\n");
@@ -425,6 +482,10 @@ export class AnalysisService {
       cost,
       createdAt: new Date().toISOString(),
       result: analysisResult,
+
+      // Info (20260508 - Julian) For Debug
+      // prerequisiteData: parsedPrerequisiteParams,
+      // missionDef: missionDef,
     };
 
     // Info: (20260304 - Tzuhan) Create an instant UUID for reportId instead of waiting 15s for Laria Hash
@@ -474,9 +535,7 @@ export class AnalysisService {
             keyword: params.keyword,
             isExternal: params.isExternal === true,
             historicalTags: await analysisRepo.getGlobalTopTags(20),
-            data: params.data
-              ? (params.data as unknown as Prisma.InputJsonValue)
-              : undefined,
+            data: params.data,
           },
         });
       } catch (error) {
@@ -503,7 +562,8 @@ export class AnalysisService {
                   ...innerData,
                   prerequisiteData: parsedPrerequisiteParams,
                 },
-              } as unknown as Prisma.InputJsonObject,
+                // Info: (20260509 - Julian) 移除 Prisma 依賴，使用 IJSONObject
+              } as unknown as IJSONObject, // Prisma.InputJsonObject,
             },
           });
           console.log(

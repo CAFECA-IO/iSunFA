@@ -1,7 +1,7 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
-import { Role } from "@/generated";
+import { Role } from "@/constants/role";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 

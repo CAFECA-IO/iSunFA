@@ -13,6 +13,7 @@ import { X, Search, SearchX, Loader2 } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { ACCOUNTS } from "@/constants/accounts";
+import { IAccountBook } from "@/interfaces/account_book";
 
 // Info: (20260317 - Julian) IAccount interface type
 export interface IAccount {
@@ -23,14 +24,6 @@ export interface IAccount {
   level: number;
   parentCode: string;
   isDebit: boolean;
-}
-
-interface IAccountBook {
-  id: string;
-  name: string;
-  country: string;
-  currency: string;
-  rule: string;
 }
 
 interface IAccountBookSelectorProps {
@@ -51,7 +44,6 @@ export default function AccountBookSelector({
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [accountBook, setAccountBook] = useState<IAccountBook | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-
 
   useEffect(() => {
     const fetchAccountBook = async () => {

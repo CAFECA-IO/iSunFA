@@ -1,14 +1,22 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  ReactNode,
+} from "react";
 
-import { request } from '@/lib/utils/request';
-import { publicClient } from '@/lib/viem_public';
-import { ABIS, CONTRACT_ADDRESSES } from '@/config/contracts';
-import { formatUnits } from 'viem';
-import { CheckinRewardModal } from '@/components/common/checkin_reward_modal';
+import { request } from "@/lib/utils/request";
+import { publicClient } from "@/lib/viem_public";
+import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
+import { formatUnits } from "viem";
+import { CheckinRewardModal } from "@/components/common/checkin_reward_modal";
 
-interface IUser {
+interface IAuthUser {
   address: string;
   name: string | null;
   role: string | null;
@@ -24,7 +32,7 @@ interface IUser {
 }
 
 interface IAuthContextType {
-  user: IUser | null;
+  user: IAuthUser | null;
   loading: boolean;
   refreshAuth: () => Promise<void>;
   logout: () => void;
@@ -34,13 +42,13 @@ interface IAuthContextType {
 const AuthContext = createContext<IAuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<IUser | null>(null);
+  const [user, setUser] = useState<IAuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [rewardAmount, setRewardAmount] = useState<number>(0);
   const [showRewardModal, setShowRewardModal] = useState<boolean>(false);
 
   const refreshAuth = useCallback(async () => {
-    const token = localStorage.getItem('dewt');
+    const token = localStorage.getItem("dewt");
     if (!token) {
       setUser(null);
       setLoading(false);
@@ -48,13 +56,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const authPromise = request<{ payload: IUser }>('/api/v1/auth/me', {
-        method: 'GET',
+      const authPromise = request<{ payload: IAuthUser }>("/api/v1/auth/me", {
+        method: "GET",
       });
 
       // Info: (20260408 - Luphia) Parallel non-blocking checkin
-      const checkinPromise = request<{ payload: { checkinSuccess: boolean, rewardAmount: number } }>('/api/v1/auth/checkin', {
-        method: 'GET',
+      const checkinPromise = request<{
+        payload: { checkinSuccess: boolean; rewardAmount: number };
+      }>("/api/v1/auth/checkin", {
+        method: "GET",
       }).catch((err) => {
         console.warn("Background checkin failed:", err);
         return null;
@@ -76,9 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const balance = await publicClient.readContract({
               address: CONTRACT_ADDRESSES.CREDIT_POINT,
               abi: ABIS.CREDIT_POINT,
-              functionName: 'balanceOf',
+              functionName: "balanceOf",
               args: [userData.address as `0x${string}`],
-              blockTag: 'pending'
+              blockTag: "pending",
             });
             const credits = Number(formatUnits(balance, 18));
 
@@ -86,26 +96,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const isBlacklisted = await publicClient.readContract({
               address: CONTRACT_ADDRESSES.DYNAMIC_KYC_MEMBERSHIP,
               abi: ABIS.DYNAMIC_KYC_MEMBERSHIP,
-              functionName: 'isBlacklisted',
-              args: [userData.address as `0x${string}`]
+              functionName: "isBlacklisted",
+              args: [userData.address as `0x${string}`],
             });
 
             // Info: (20260302 - Tzuhan) 將從區塊鏈取得的 credits 寫入 userData，同時也包含後端傳來的 pendingCredits
             userData = { ...userData, credits, isVerified: !isBlacklisted };
           }
         } catch (e) {
-          console.warn("Deprecate: (20260310 - Tzuhan) ", 'Failed to fetch user balance:', e);
+          console.warn(
+            "Deprecate: (20260310 - Tzuhan) ",
+            "Failed to fetch user balance:",
+            e,
+          );
         }
 
         setUser(userData);
       } else {
         setUser(null);
-        localStorage.removeItem('dewt');
+        localStorage.removeItem("dewt");
       }
     } catch (error) {
-      console.error("Deprecate: (20260310 - Tzuhan) ", 'Failed to fetch user:', error);
+      console.error(
+        "Deprecate: (20260310 - Tzuhan) ",
+        "Failed to fetch user:",
+        error,
+      );
       setUser(null);
-      localStorage.removeItem('dewt');
+      localStorage.removeItem("dewt");
     } finally {
       setLoading(false);
     }
@@ -116,13 +134,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshAuth]);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('dewt');
+    localStorage.removeItem("dewt");
     setUser(null);
     window.location.reload();
   }, []);
 
   const updateLocalCredits = useCallback((delta: number) => {
-    setUser(prev => {
+    setUser((prev) => {
       if (!prev || prev.credits === undefined) return prev;
       return { ...prev, credits: prev.credits + delta };
     });
@@ -136,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       updateLocalCredits,
     }),
-    [user, loading, refreshAuth, logout, updateLocalCredits]
+    [user, loading, refreshAuth, logout, updateLocalCredits],
   );
 
   return (
@@ -154,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

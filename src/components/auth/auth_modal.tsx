@@ -29,7 +29,7 @@ import {
 import AuthTransition, { LoginStep } from "@/components/auth/auth_transition";
 import RewardScreen from "@/components/auth/reward_screen";
 import CampaignRegistrationFields from "@/components/auth/campaign_registration_fields";
-import { Role } from "@/generated";
+import { Role } from "@/constants/role";
 
 interface IAuthModalProps {
   isOpen: boolean;

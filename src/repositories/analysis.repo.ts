@@ -12,14 +12,37 @@ export type FullAnalysis = Prisma.AnalysisGetPayload<{
   };
 }>;
 
+// Info: (20260508 - Julian) analysis 記錄資料
+export interface IAnalysisRecordData {
+  missionName: string;
+  category: string;
+  cost: number;
+  remainingBalance?: number;
+  generatedAt: string;
+  planHash?: string | null;
+  periodType: string;
+  periodValue: string;
+  year: number;
+  country?: string;
+  keyword?: string;
+  isExternal: boolean;
+  historicalTags?: string[];
+  missionTaskId?: string;
+  fileHash?: string;
+  data?: unknown;
+}
+
+// Info: (20260508 - Julian) 建立 analysis 之參數
+export interface ICreateAnalysisDTO {
+  reportId: string;
+  userId: string;
+  orderId: string;
+  category: string;
+  data: IAnalysisRecordData;
+}
+
 export interface IAnalysisRepository {
-  create(params: {
-    reportId: string;
-    userId: string;
-    orderId: string;
-    category: string;
-    data: Prisma.InputJsonValue;
-  }): Promise<Analysis>;
+  create(params: ICreateAnalysisDTO): Promise<Analysis>;
   findByUserId(userId: string): Promise<Analysis[]>;
   findById(id: string): Promise<Analysis | null>;
 
@@ -49,13 +72,7 @@ export class AnalysisRepository implements IAnalysisRepository {
     return prisma.analysis.update(args);
   }
 
-  async create(params: {
-    reportId: string;
-    userId: string;
-    orderId: string;
-    category: string;
-    data: Prisma.InputJsonValue;
-  }) {
+  async create(params: ICreateAnalysisDTO) {
     // Info: (20260420 - Luphia) Create Analysis linked strictly to Order, no more Mission table.
     return await prisma.analysis.create({
       data: {
@@ -63,7 +80,7 @@ export class AnalysisRepository implements IAnalysisRepository {
         userId: params.userId,
         orderId: params.orderId,
         type: params.category,
-        data: params.data,
+        data: params.data as unknown as Prisma.InputJsonValue,
       },
     });
   }

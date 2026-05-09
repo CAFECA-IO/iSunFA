@@ -1,4 +1,4 @@
-import { AccountBook } from "@/generated";
+import { IAccountBookBase } from "@/interfaces/account_book";
 import { ICoefficient } from "@/interfaces/coefficient";
 import {
   TRUE_COEFFICIENT_DATA_PART_1,
@@ -34,7 +34,7 @@ const ALL_TRUE_COEFFICIENT_DATA = [
 ];
 
 export const getEsgPrompt = (
-  accountBook?: Partial<AccountBook> | null,
+  accountBook?: IAccountBookBase | null,
   coefficients?: Partial<ICoefficient>[],
   emissionSources?: Partial<IEmissionSources>[],
 ) => {
