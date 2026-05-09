@@ -11,6 +11,7 @@ export const adminBlockchain = {
     admin_isc: "管理员钱包 ISC",
     system_icp: "ICP 总发行量",
     member_icp: "会员系统 ICP 储备池",
+    block_height: "区块高度",
     mint_icp: "铸造信用积分 (ICP)",
     mint_desc:
       "铸造 ICP 需要根据即时抵押率提供等值的 ISC。新铸造的 ICP 将会注入会员系统储备池。",

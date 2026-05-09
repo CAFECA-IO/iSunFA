@@ -25,6 +25,7 @@ export interface IBlockchainDashboardData {
   systemTotalIcp: string;
   collateralRate: string;
   totalMembers: number;
+  blockHeight: number;
 }
 
 // Info: (20260416 - Luphia) 檢查使用者權限 (RBAC)
@@ -74,10 +75,14 @@ export async function getBlockchainDashboardData(
 
     // Info: (20260416 - Luphia) 1. Admin Wallet ISC & Mining info
     const adminAddress = adminAccount.address;
-    const adminIscWei = await publicClient.getBalance({
-      address: adminAddress,
-    });
+
+    // Info: 取得 ISC 餘額及區塊高度
+    const [adminIscWei, blockHeightBigInt] = await Promise.all([
+      publicClient.getBalance({ address: adminAddress }),
+      publicClient.getBlockNumber(),
+    ]);
     const adminIscBalance = formatEther(adminIscWei);
+    const blockHeight = Number(blockHeightBigInt);
 
     /**
      * Info: (20260416 - Luphia) For Mining we reuse toggleMining approach (check via API/Node or we can wrap the existing helper)
@@ -154,6 +159,7 @@ export async function getBlockchainDashboardData(
         systemTotalIcp,
         collateralRate,
         totalMembers,
+        blockHeight,
       },
     };
   } catch (error: unknown) {

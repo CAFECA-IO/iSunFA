@@ -8,7 +8,7 @@ import {
   FileText,
   FileSignature,
   ScanLine,
-  Network,
+  QrCode,
   Leaf,
   BadgeCheck,
   LayoutDashboard,
@@ -20,6 +20,7 @@ import {
   Bot,
   Truck,
   Trophy,
+  Computer,
 } from "lucide-react";
 
 export const MODULES = [
@@ -28,13 +29,13 @@ export const MODULES = [
   { key: "voucher", icon: BookOpen, basic: true },
   { key: "esg", icon: Leaf, basic: true },
   { key: "financial_report", icon: FileText, basic: true },
-  { key: "analysis", icon: PieChart, basic: false },
+  { key: "analysis", icon: PieChart, basic: true },
+  { key: "pos", icon: Computer, basic: false },
+  { key: "digital_product_passport", icon: QrCode, basic: false },
   { key: "signing", icon: FileSignature, basic: false },
   { key: "cashier", icon: Wallet, basic: false },
   { key: "tax", icon: Landmark, basic: false },
   { key: "salary", icon: Users, basic: false },
-  { key: "integration", icon: Network, basic: false },
-  { key: "audit", icon: BadgeCheck, basic: false },
 ];
 
 export const PUBLIC_MODULES = [
@@ -126,14 +127,14 @@ export function getModuleI18nKey(key: string, isAdminContext: boolean = false) {
       return "features.items.cashier.title";
     case "salary":
       return "features.items.salary.title";
-    case "audit":
-      return "features.items.audit.title";
+    case "pos":
+      return "features.items.pos.title";
     case "tax":
       return "features.items.tax.title";
     case "signing":
       return "features.items.signing.title";
-    case "integration":
-      return "features.items.integration.title";
+    case "digital_product_passport":
+      return "features.items.digital_product_passport.title";
     case "campaign":
       return "admin_campaign.title";
     case "pdf_tool":
