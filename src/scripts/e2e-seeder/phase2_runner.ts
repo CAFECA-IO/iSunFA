@@ -7,7 +7,7 @@ import { ChatService } from "@/services/chat.service";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { config } from "dotenv";
 import sharp from "sharp";
-import { Role } from "@/generated";
+import { Role } from "@/constants/role";
 
 config();
 

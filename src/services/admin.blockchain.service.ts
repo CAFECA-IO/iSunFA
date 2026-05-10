@@ -15,7 +15,7 @@ import { toggleMining } from "@/services/setup.blockchain.service";
 import { cookies } from "next/headers";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
-import { Role } from "@/generated";
+import { Role } from "@/constants/role";
 
 export interface IBlockchainDashboardData {
   address: string;

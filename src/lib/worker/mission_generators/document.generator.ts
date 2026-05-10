@@ -10,33 +10,23 @@ import {
 } from "@/constants/prompts/voucher";
 import { getEsgPrompt } from "@/constants/prompts/esg";
 import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
-import { AccountBook, Coefficient } from "@/generated";
+import { IAccountBookBase } from "@/interfaces/account_book";
+import { ICoefficient } from "@/interfaces/coefficient";
 
 export function generateDocumentParsingMission(
   params: IMissionParams,
 ): IMissionDefinition | null {
   const accountBook = params.prerequisiteData?.accountBook as
-    | Partial<AccountBook>
+    | IAccountBookBase
     | undefined;
-  const coef = params.prerequisiteData?.coefficients as
-    | Partial<Coefficient>[]
+  const coefficients = params.prerequisiteData?.coefficients as
+    | ICoefficient[]
     | undefined;
 
   const tasks: ITaskDefinition[] = [];
   const data = (params.data as { accountBookId?: string }) || {};
   const accountBookId =
     data.accountBookId || params.accountBookId || accountBook?.id || "";
-
-  // Info: (20260423 - Julian) 重新整理係數
-  const coefficients = coef?.map((c) => {
-    return {
-      ...c,
-      emissionFactor: Number(c.emissionFactor),
-      createdAt: c.createdAt ? c.createdAt.getTime() / 1000 : 0,
-      updatedAt: c.updatedAt ? c.updatedAt.getTime() / 1000 : 0,
-      deletedAt: c.deletedAt ? c.deletedAt.getTime() / 1000 : null,
-    };
-  });
 
   const context = JSON.stringify({
     fileId: params.fileId,

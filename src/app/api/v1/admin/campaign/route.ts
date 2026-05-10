@@ -2,7 +2,7 @@ import { campaignRepo } from "@/repositories/campaign.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import { Role } from "@/generated";
+import { Role } from "@/constants/role";
 
 export async function GET(req: Request) {
   try {

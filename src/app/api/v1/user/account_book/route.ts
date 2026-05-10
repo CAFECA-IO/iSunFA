@@ -67,10 +67,10 @@ export async function POST(request: NextRequest) {
       country,
       currency,
       rule,
+      teamId,
       enterpriseId,
       esgIndustryId,
       createdAt,
-      team: { connect: { id: teamId } },
     });
 
     return jsonOk(accountBook);

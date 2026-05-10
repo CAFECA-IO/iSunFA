@@ -1,6 +1,6 @@
-import { Prisma, TeamRole } from "@/generated";
 import { userRepo } from "@/repositories/user.repo";
 import { teamRepo } from "@/repositories/team.repo";
+import { TeamRole } from "@/constants/team";
 
 // Info: (20260308 - Luphia) 找出所有沒團隊的使用者，使用 getOrCreateUserTeam 為他建立一個
 export const createTeamForUsersWithoutTeam = async () => {
@@ -47,7 +47,7 @@ export const getOrCreateUserTeam = async (
 // Info: (20260308 - Luphia) 修改團隊資料
 export const updateTeam = async (
   teamId: string,
-  data: Prisma.TeamUpdateInput,
+  data: { name?: string }, // Info: (20260508 - Julian) 目前只提供修改名稱，未來可擴充其他欄位
 ) => {
   return teamRepo.updateTeam(teamId, data);
 };

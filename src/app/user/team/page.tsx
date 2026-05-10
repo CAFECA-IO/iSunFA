@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, FormEvent } from 'react';
+import { useState, useEffect, useCallback, FormEvent } from "react";
 
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
@@ -17,14 +17,8 @@ import {
 import { Dialog } from "@headlessui/react";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
 import ConfirmModal from "@/components/common/confirm_modal";
+import { IAccountBook } from "@/interfaces/account_book";
 
-interface IAccountBook {
-  id: string;
-  name: string;
-  country: string;
-  currency: string;
-  rule: string;
-}
 interface ITeam {
   id: string;
   name: string;

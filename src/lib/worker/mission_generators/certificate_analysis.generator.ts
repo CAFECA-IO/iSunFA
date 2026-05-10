@@ -10,13 +10,13 @@ import {
 } from "@/constants/prompts/voucher";
 import { getEsgPrompt } from "@/constants/prompts/esg";
 import { getDocumentDuplicateCheckPrompt } from "@/constants/prompts/document_check";
-import { AccountBook } from "@/generated";
+import { IAccountBookBase } from "@/interfaces/account_book";
 
 export function generateCertificateAnalysisMission(
   params: IMissionParams,
 ): IMissionDefinition | null {
   const accountBook = params.prerequisiteData?.accountBook as
-    | Partial<AccountBook>
+    | IAccountBookBase
     | undefined;
 
   const paramsObj = params as unknown as {

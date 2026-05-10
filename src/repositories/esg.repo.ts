@@ -139,39 +139,37 @@ export class EsgRepository implements IEsgRepository {
   private buildEsgRecordWhereClause(
     options: IEsgRecordFilterOptions,
   ): Prisma.EsgRecordWhereInput {
-    const andConditions: Prisma.EsgRecordWhereInput[] = [];
+    // Info: (20260508 - Julian) 查詢條件：帳簿、軟刪除
+    const where: Prisma.EsgRecordWhereInput = {
+      accountBookId: options.accountBookId,
+      deletedAt: null,
+    };
 
-    // Info: (20260406 - Luphia) 軟刪除過濾邏輯
-    if (options.hideDeleted) {
-      andConditions.push({ deletedAt: null });
-    }
-
-    // Info: (20260406 - Luphia) 搜尋字串過濾邏輯
+    // Info: (20260311 - Julian) 關鍵字篩選：id / vendor / activityType
     if (options.keyword) {
-      andConditions.push({
-        OR: [
-          { id: { contains: options.keyword, mode: "insensitive" } },
-          { vendor: { contains: options.keyword, mode: "insensitive" } },
-          { activityType: { contains: options.keyword, mode: "insensitive" } },
-        ],
-      });
+      where.OR = [
+        { id: { contains: options.keyword, mode: "insensitive" } },
+        { vendor: { contains: options.keyword, mode: "insensitive" } },
+        { activityType: { contains: options.keyword, mode: "insensitive" } },
+      ];
     }
 
+    // Info: (20260508 - Julian) 審核狀態過濾
     if (options.verifyStatus) {
-      andConditions.push({
-        isVerified: options.verifyStatus === VerifyStatus.VERIFIED,
-      });
+      where.isVerified = options.verifyStatus === VerifyStatus.VERIFIED;
     }
 
+    // Info: (20260508 - Julian) 排放強度過濾
     if (options.intensity) {
-      andConditions.push({ intensity: options.intensity as EsgIntensity });
+      where.intensity = options.intensity as EsgIntensity;
     }
 
+    // Info: (20260508 - Julian) 排放範圍過濾
     if (options.scope) {
-      andConditions.push({ scope: options.scope as EsgScope });
+      where.scope = options.scope as EsgScope;
     }
 
-    // Info: (20260407 - Julian) 日期過濾邏輯
+    // Info: (20260508 - Julian) 年度、月份過濾邏輯
     if (options.year) {
       let startDate: Date;
       let endDate: Date;
@@ -184,19 +182,18 @@ export class EsgRepository implements IEsgRepository {
         endDate = new Date(options.year, 11, 31, 23, 59, 59, 999);
       }
 
-      andConditions.push({
-        OR: [
-          {
-            tradingDate: {
-              gte: startDate.toISOString(),
-              lte: endDate.toISOString(),
-            },
+      where.OR = [
+        {
+          tradingDate: {
+            gte: startDate.toISOString(),
+            lte: endDate.toISOString(),
           },
-          { AND: [{ tradingDate: { gte: startDate, lte: endDate } }] },
-        ],
-      });
+        },
+        { AND: [{ tradingDate: { gte: startDate, lte: endDate } }] },
+      ];
     }
 
+    // Info: (20260508 - Julian) 日期過濾邏輯
     if (options.startDate || options.endDate) {
       const gte = options.startDate ? new Date(options.startDate) : undefined;
       const lte = options.endDate ? new Date(options.endDate) : undefined;
@@ -209,18 +206,13 @@ export class EsgRepository implements IEsgRepository {
       if (gte) stringCondition.gte = gte.toISOString();
       if (lte) stringCondition.lte = lte.toISOString();
 
-      andConditions.push({
-        OR: [
-          { tradingDate: stringCondition },
-          { AND: [{ tradingDate: dateCondition }] },
-        ],
-      });
+      where.OR = [
+        { tradingDate: stringCondition },
+        { AND: [{ tradingDate: dateCondition }] },
+      ];
     }
 
-    return {
-      accountBookId: options.accountBookId,
-      AND: andConditions.length > 0 ? andConditions : undefined,
-    };
+    return where;
   }
 
   // Info: (20260507 - Julian) 將 ESG 目標轉換成前端格式
@@ -373,39 +365,38 @@ export class EsgRepository implements IEsgRepository {
   private buildCoefficientWhereClause(
     options: ICoefficientFilterOptions,
   ): Prisma.CoefficientWhereInput {
-    const andConditions: Prisma.CoefficientWhereInput[] = [];
+    const where: Prisma.CoefficientWhereInput = {
+      deletedAt: null, // Info: (20260508 - Julian) 排除已刪除的係數
+      OR: [
+        { accountBookId: null }, // Info: (20260508 - Julian) 標準係數
+        { accountBookId: options.accountBookId }, // Info: (20260508 - Julian) 對應帳簿的自訂係數
+      ],
+    };
 
-    // Info: (20260413 - Julian) 排除已刪除的係數
-    andConditions.push({ deletedAt: null });
-
-    // Info: (20260414 - Julian) 依據 tab 篩選係數
+    // Info: (20260508 - Julian) 依據 tab 篩選係數
     if (options.tab === CoefficientCategory.STANDARD) {
-      // Info: (20260414 - Julian) 無 accountBookId => 標準係數
-      andConditions.push({ accountBookId: null });
+      // Info: (20260508 - Julian) 無 accountBookId => 標準係數
+      where.accountBookId = null;
     } else if (options.tab === CoefficientCategory.CUSTOM) {
-      // Info: (20260414 - Julian) 有 accountBookId => 自訂係數
-      andConditions.push({ accountBookId: { not: null } });
+      // Info: (20260508 - Julian) 有 accountBookId => 自訂係數
+      where.accountBookId = options.accountBookId;
     }
 
-    // Info: (20260414 - Julian) 搜尋字串過濾邏輯（名稱、描述、來源的模糊搜尋）
+    // Info: (20260508 - Julian) 搜尋字串過濾邏輯：name, description, source
     if (options.keyword) {
-      andConditions.push({
-        OR: [
-          { name: { contains: options.keyword, mode: "insensitive" } },
-          { description: { contains: options.keyword, mode: "insensitive" } },
-          { source: { contains: options.keyword, mode: "insensitive" } },
-        ],
-      });
+      where.OR = [
+        { name: { contains: options.keyword, mode: "insensitive" } },
+        { description: { contains: options.keyword, mode: "insensitive" } },
+        { source: { contains: options.keyword, mode: "insensitive" } },
+      ];
     }
 
-    // Info: (20260416 - Julian) 單位過濾邏輯（模糊搜尋）
+    // Info: (20260508 - Julian) 單位過濾邏輯：模糊搜尋
     if (options.unit) {
-      andConditions.push({
-        unit: { contains: options.unit, mode: "insensitive" },
-      });
+      where.unit = { contains: options.unit, mode: "insensitive" };
     }
 
-    return { AND: andConditions };
+    return where;
   }
 
   // Info: (20260507 - Julian) 轉換係數至前端格式

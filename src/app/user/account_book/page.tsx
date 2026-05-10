@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, MouseEvent } from 'react';
+import { useState, useEffect, MouseEvent } from "react";
 
 import Link from "next/link";
 import { Book, Users, UserCircle2, Plus, Pencil } from "lucide-react";
 import { Dialog } from "@headlessui/react";
-import { IAccountBook } from "@/services/account_book.service";
+import { IAccountBook } from "@/interfaces/account_book";
 import { useTranslation } from "@/i18n/i18n_context";
 import { COUNTRY, CURRENCY, RULE } from "@/constants/accounts";
 import { ESG_INDUSTRY_BENCHMARKS } from "@/constants/esg_industry_benchmarks";
