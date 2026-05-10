@@ -17,5 +17,6 @@ export const accountBookSelection = {
   form_team: "Team",
   form_enterprise_id: "Enterprise ID (Optional)",
   form_esg_industry: "Industry Category (ESG, Optional)",
+  form_par_value: "Par Value",
   submit: "Confirm",
 };

@@ -393,7 +393,10 @@ export class AnalysisService {
 
             if (params.category === ANALYSIS_CATEGORY.BALANCE_SHEET) {
               parsedPrerequisiteParams.balanceSheetReport =
-                generateBalanceSheet(cumulativeLines);
+                generateBalanceSheet(
+                  cumulativeLines,
+                  matchedAccountBook?.parValue || 10,
+                );
             } else if (params.category === ANALYSIS_CATEGORY.CASH_FLOW) {
               parsedPrerequisiteParams.cashFlowReport =
                 generateCashFlowStatement(periodLines);
@@ -407,7 +410,10 @@ export class AnalysisService {
               params.category === ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS
             ) {
               parsedPrerequisiteParams.balanceSheetReport =
-                generateBalanceSheet(cumulativeLines);
+                generateBalanceSheet(
+                  cumulativeLines,
+                  matchedAccountBook?.parValue || 10,
+                );
               parsedPrerequisiteParams.cashFlowReport =
                 generateCashFlowStatement(periodLines);
               parsedPrerequisiteParams.incomeStatementReport =

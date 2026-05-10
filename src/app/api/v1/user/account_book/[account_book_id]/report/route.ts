@@ -116,7 +116,7 @@ export async function GET(
     const getReportData = () => {
       switch (reportType) {
         case ReportType.BALANCE_SHEET:
-          return generateBalanceSheet(lineItems);
+          return generateBalanceSheet(lineItems, accountBook.parValue);
         case ReportType.CASH_FLOW:
           return generateCashFlowStatement(lineItems);
         case ReportType.INCOME_STATEMENT:

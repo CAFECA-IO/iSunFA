@@ -16,5 +16,6 @@ export const accountBookSelection = {
   form_team: "所属团队",
   form_enterprise_id: "统一社会信用代码 (选填)",
   form_esg_industry: "产业分类 (ESG, 选填)",
+  form_par_value: "面额 (Par Value)",
   submit: "确认",
 };

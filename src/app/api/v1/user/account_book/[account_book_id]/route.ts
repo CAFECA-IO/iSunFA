@@ -71,6 +71,7 @@ export async function PUT(
       enterpriseId,
       startYear,
       esgIndustryId,
+      parValue,
     } = body;
 
     const createdAt = startYear
@@ -84,6 +85,7 @@ export async function PUT(
       rule,
       enterpriseId,
       esgIndustryId,
+      parValue,
       createdAt,
     });
 

@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
       enterpriseId,
       startYear,
       esgIndustryId,
+      parValue,
     } = body;
 
     if (!name || !country || !currency || !rule || !teamId) {
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
       teamId,
       enterpriseId,
       esgIndustryId,
+      parValue,
       createdAt,
     });
 

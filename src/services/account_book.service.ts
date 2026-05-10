@@ -59,6 +59,7 @@ export interface IAccountBookCreateInput {
   teamId: string;
   enterpriseId?: string | null;
   esgIndustryId?: number | null;
+  parValue?: number;
   createdAt?: Date;
 }
 

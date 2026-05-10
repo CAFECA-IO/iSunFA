@@ -4,6 +4,7 @@ import { safeDivide } from "@/lib/utils/math";
 
 export function generateBalanceSheet(
   lineItems: IVoucherLineUI[],
+  parValue: number = 10,
 ): IBalanceSheet {
   const assetMap = new Map<
     string,
@@ -196,8 +197,7 @@ export function generateBalanceSheet(
   );
   longTermFundsTotal = totalEquity + nonCurrentLiabilitiesTotal;
 
-  // Todo: (20260530 - Tzuhan) 應從外部傳入 parValue，不應硬編碼為 10 (因應彈性面額制度)
-  const parValue = 10;
+  // Info: (20260508 - Tzuhan) 已解耦，由外部傳入 parValue (因應彈性面額制度)
   const outstandingShares = commonStockCapitalTotal / parValue;
 
   // Info: (20260330 - Julian) 計算各項財務比率
@@ -214,6 +214,7 @@ export function generateBalanceSheet(
     cashRatio: safeDivide(cashTotal, currentLiabilitiesTotal) * 100,
     netWorthPerShare:
       outstandingShares > 0 ? safeDivide(totalEquity, outstandingShares) : 0,
+    parValue,
     retainedEarningsRatio: safeDivide(retainedEarningsTotal, totalEquity) * 100,
     intangibleAssetsRatio: safeDivide(intangibleAssetsTotal, totalAssets) * 100,
     equityRatio: safeDivide(totalEquity, totalAssets) * 100,
