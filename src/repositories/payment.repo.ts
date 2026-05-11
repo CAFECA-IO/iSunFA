@@ -387,11 +387,16 @@ export class PaymentRepository {
   async updateOrderStatus(
     orderId: string,
     status: string,
+    tokens?: number,
     additionalData?: Prisma.OrderUpdateInput,
   ) {
+    const data: Prisma.OrderUpdateInput = { status, ...additionalData };
+    if (tokens !== undefined) {
+      data.tokens = tokens;
+    }
     return prisma.order.update({
       where: { id: orderId },
-      data: { status, ...additionalData },
+      data,
     });
   }
 

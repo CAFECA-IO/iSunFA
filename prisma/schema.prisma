@@ -114,6 +114,7 @@ model Order {
   signature       String?
   transactionHash String?  @map("transaction_hash")
   mission         String?
+  tokens          Int?     @default(0)
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 

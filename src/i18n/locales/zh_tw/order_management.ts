@@ -7,6 +7,7 @@ export const orderManagement = {
     order_id: "訂單編號",
     type: "類型",
     amount: "金額",
+    tokens: "Tokens",
     order_status: "訂單狀態",
     payment_record: "支付紀錄",
     execution_status: "執行狀態",

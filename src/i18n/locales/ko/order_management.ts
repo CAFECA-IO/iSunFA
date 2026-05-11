@@ -7,6 +7,7 @@ export const orderManagement = {
     order_id: "주문 ID",
     type: "유형",
     amount: "금액",
+    tokens: "Tokens",
     order_status: "주문 상태",
     payment_record: "결제 기록",
     execution_status: "실행 상태",

@@ -17,8 +17,11 @@ export const common = {
   origin: "Origin",
   destination: "Destination",
   weight: "Weight",
+  type: "Type",
+  multiple_items: "Multiple Items",
   load: "Load",
   no_data: "데이터 없음",
+  unknown: "알 수 없음",
   cancel_edit_title: "편집 취소?",
   cancel_edit_message:
     "편집을 취소하시겠습니까? 데이터가 원래 상태로 돌아갑니다.",

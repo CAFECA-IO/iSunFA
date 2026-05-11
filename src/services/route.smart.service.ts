@@ -70,3 +70,52 @@ export async function parseSmartInput(
     );
   }
 }
+
+export async function parseMultipleRoutesFromText(
+  text: string,
+): Promise<
+  Array<{
+    origin: string;
+    dest: string;
+    mode?: "LAND" | "SEA_LAND" | "AIR_LAND" | "SEA_LAND_AIR";
+  }>
+> {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const prompt = `
+            You are a professional logistics AI assistant.
+            Extract all distinct transportation routes from the user's description.
+            For each route, identify the origin and destination as a string description (e.g., city name, address), and recommend the BEST transportation mode based on the locations and context.
+            If cross-continental, recommend SEA_LAND or AIR_LAND. If intercontinental with extremely long distance or specific user request, recommend SEA_LAND_AIR. If domestic, recommend LAND.
+            
+            User Request: "${text}"
+            
+            You must output ONLY a valid JSON array of objects matching the following structure. Do NOT include markdown code blocks.
+            
+            [
+              {
+                  "origin": "String description of origin",
+                  "dest": "String description of destination",
+                  "mode": "LAND" | "SEA_LAND" | "AIR_LAND" | "SEA_LAND_AIR"
+              }
+            ]
+        `;
+    const result = await model.generateContent(prompt);
+    let resultText = result.response.text().trim();
+    if (resultText.startsWith("\`\`\`json"))
+      resultText = resultText
+        .replace("\`\`\`json", "")
+        .replace("\`\`\`", "")
+        .trim();
+    else if (resultText.startsWith("\`\`\`"))
+      resultText = resultText.replace("\`\`\`", "").trim();
+
+    return JSON.parse(resultText) as Array<{ origin: string; dest: string }>;
+  } catch (error) {
+    console.error("[Action Error] parseMultipleRoutesFromText:", error);
+    throw new Error("解析多筆路線時發生錯誤");
+  }
+}

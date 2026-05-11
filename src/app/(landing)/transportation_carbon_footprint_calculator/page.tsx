@@ -25,12 +25,20 @@ import {
 } from "lucide-react";
 import * as htmlToImage from "html-to-image";
 import { jsPDF } from "jspdf";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 import { ILogisticsPlan } from "@/interfaces/logistics";
 import { request } from "@/lib/utils/request";
 import {
   PlanSection,
   RouteType,
 } from "@/components/transportation_carbon_footprint_calculator/plan_section";
+import { MileageCalculator } from "@/components/transportation_carbon_footprint_calculator/mileage_calculator";
+import {
+  MileageBatchResults,
+  type IMileageBatchResult,
+} from "@/components/transportation_carbon_footprint_calculator/mileage_batch_results";
+import { BatchItemReport } from "@/components/transportation_carbon_footprint_calculator/batch_item_report";
 import type { IMapViewerRef } from "@/components/transportation_carbon_footprint_calculator/map_viewer";
 import { ReportLayout } from "@/components/common/report_layout";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
@@ -54,6 +62,8 @@ interface IHistoryItem {
   origin?: { lat: number | ""; lng: number | "" };
   dest?: { lat: number | ""; lng: number | "" };
   weightKg?: number;
+  action?: string;
+  items?: Array<{ origin: string; dest: string }>;
 }
 
 export default function ReportPage() {
@@ -81,10 +91,14 @@ function ReportPageContent() {
   const pathname = usePathname();
 
   const activeTab =
-    searchParams?.get("tab") === "history" ? "history" : "analysis";
+    searchParams?.get("tab") === "history"
+      ? "history"
+      : searchParams?.get("tab") === "mileage"
+        ? "mileage"
+        : "analysis";
 
   const setActiveTab = useCallback(
-    (tab: "analysis" | "history") => {
+    (tab: "analysis" | "history" | "mileage") => {
       const params = new URLSearchParams(searchParams?.toString() || "");
       params.set("tab", tab);
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -100,6 +114,11 @@ function ReportPageContent() {
   const [loading, setLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false); // Info: (20260501 - Luphia) PDF 匯出狀態
   const [plan, setPlan] = useState<ILogisticsPlan | null>(null);
+  const [batchResults, setBatchResults] = useState<
+    IMileageBatchResult[] | null
+  >(null);
+  const [exportingIndex, setExportingIndex] = useState<number | null>(null);
+  const mapReadyResolver = useRef<(() => void) | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<IHistoryItem[]>([]);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -318,9 +337,115 @@ function ReportPageContent() {
     });
   }, []);
 
+  const handleMapsReady = useCallback(() => {
+    if (mapReadyResolver.current) {
+      mapReadyResolver.current();
+    }
+  }, []);
+
   const handleDownloadPDF = async () => {
     let originalViewport: string | null = null;
     let viewportMeta: Element | null = null;
+    if (batchResults) {
+      try {
+        setIsExporting(true);
+
+        viewportMeta = document.querySelector('meta[name="viewport"]');
+        setExportingIndex(null);
+        mapReadyResolver.current = null;
+        if (viewportMeta) {
+          originalViewport = viewportMeta.getAttribute("content");
+        } else {
+          viewportMeta = document.createElement("meta");
+          viewportMeta.setAttribute("name", "viewport");
+          document.head.appendChild(viewportMeta);
+        }
+        if (window.innerWidth < 1024) {
+          viewportMeta.setAttribute("content", "width=1024");
+        }
+
+        // Info: (20260511 - Luphia) Wait for React to render the hidden batch components
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        if (batchResults.length === 1) {
+          setExportingIndex(0);
+          await new Promise<void>((resolve) => {
+            mapReadyResolver.current = resolve;
+            setTimeout(resolve, 8000);
+          });
+
+          const pageEl = document.getElementById(`batch-report-item-0`);
+          if (pageEl) {
+            const dataUrl = await htmlToImage.toPng(pageEl, {
+              quality: 0.95,
+              pixelRatio: 2,
+              style: { margin: "0", transform: "none" },
+            });
+            const pdf = new jsPDF("p", "mm", "a4");
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const imgProps = pdf.getImageProperties(dataUrl);
+            const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, imgHeight);
+            pdf.save(
+              `iSunFA_Logistics_Carbon_Report_${new Date().getTime()}.pdf`,
+            );
+          }
+        } else {
+          const zip = new JSZip();
+
+          const csvRows = [
+            `\uFEFF${t("common.origin")},${t("common.destination")},${t("transportation_carbon_footprint_calculator.mileage_calculator.csv_total_dist")},${t("transportation_carbon_footprint_calculator.mileage_calculator.csv_land_dist")},${t("transportation_carbon_footprint_calculator.mileage_calculator.csv_sea_dist")},${t("transportation_carbon_footprint_calculator.mileage_calculator.csv_air_dist")},${t("transportation_carbon_footprint_calculator.mileage_calculator.col_mode")},${t("transportation_carbon_footprint_calculator.mileage_calculator.csv_pdf_file")}`,
+          ];
+
+          for (let i = 0; i < batchResults.length; i++) {
+            setExportingIndex(i);
+            // Info: (20260511 - Luphia) Wait for the BatchItemReport to fully render and capture its internal MapViewers
+            await new Promise<void>((resolve) => {
+              mapReadyResolver.current = resolve;
+              // Info: (20260511 - Luphia) Fallback timeout just in case WebGL or capture fails to respond
+              setTimeout(resolve, 8000);
+            });
+
+            const item = batchResults[i];
+            const pageEl = document.getElementById(`batch-report-item-${i}`);
+            if (pageEl) {
+              const dataUrl = await htmlToImage.toPng(pageEl, {
+                quality: 0.95,
+                pixelRatio: 2,
+                style: { margin: "0", transform: "none" },
+              });
+
+              const pdf = new jsPDF("p", "mm", "a4");
+              const pdfWidth = pdf.internal.pageSize.getWidth();
+              const imgProps = pdf.getImageProperties(dataUrl);
+              const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+              pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, imgHeight);
+
+              const filename = `route_${i + 1}.pdf`;
+              zip.file(filename, pdf.output("blob"));
+              csvRows.push(
+                `${item.origin},${item.dest},${item.distanceKm || 0},${item.landDistanceKm || 0},${item.seaDistanceKm || 0},${item.airDistanceKm || 0},${item.mode},${filename}`,
+              );
+            }
+          }
+
+          zip.file("summary.csv", csvRows.join("\n"));
+          const content = await zip.generateAsync({ type: "blob" });
+          saveAs(content, `batch_report_${new Date().getTime()}.zip`);
+        }
+      } catch (err) {
+        console.error("Export zip failed", err);
+      } finally {
+        if (viewportMeta && originalViewport !== null) {
+          viewportMeta.setAttribute("content", originalViewport);
+        }
+        setIsExporting(false);
+      }
+      return;
+    }
+
+    // Info: (20260511 - Luphia) Default flow for single report
     try {
       setIsExporting(true); // Info: (20260501 - Luphia) 觸發重新渲染，隱藏控制面板並顯示各分頁 Header/Footer
 
@@ -508,16 +633,26 @@ function ReportPageContent() {
     setLoading(true);
     setError(null);
     setPlan(null);
+    setBatchResults(null);
     try {
       const res = await request<{ payload: { result: string } }>(
         `/api/v1/user/analysis/${item.id}`,
       );
       if (res?.payload?.result) {
-        setPlan(JSON.parse(res.payload.result));
+        const parsed = JSON.parse(res.payload.result);
+        if (Array.isArray(parsed)) {
+          setBatchResults(parsed);
+          setPlan(null);
+          setActiveTab("mileage");
+        } else {
+          setPlan(parsed);
+          setBatchResults(null);
+          setActiveTab("analysis");
+        }
         setOrigin(item.origin || { lat: "", lng: "" });
         setDest(item.dest || { lat: "", lng: "" });
         setWeightKg(item.weightKg || "");
-        setActiveTab("analysis");
+
         setTimeout(() => {
           if (scrollTargetRef.current) {
             scrollTargetRef.current.scrollIntoView({
@@ -567,28 +702,93 @@ function ReportPageContent() {
       },
     },
     {
+      key: "type",
+      label: t("common.type", { defaultValue: "核算類型" }),
+      render: (row) => (
+        <span className="font-bold text-gray-700">
+          {row.action === "calculate_batch" ? "里程核算" : "碳排核算"}
+        </span>
+      ),
+    },
+    {
       key: "origin",
       label: t("common.origin"),
-      render: (row) => (
-        <div className="flex items-center gap-1.5 text-sm text-gray-700">
-          <MapPin className="h-4 w-4 shrink-0 text-orange-500" />
-          <span className="max-w-[200px] truncate">
-            {row.origin?.lat ? `${row.origin.lat}, ${row.origin.lng}` : "未知"}
-          </span>
-        </div>
-      ),
+      render: (row) => {
+        if (row.action === "calculate_batch") {
+          if (row.items && row.items.length === 1) {
+            return (
+              <div className="flex items-center gap-1.5 text-sm text-gray-700">
+                <MapPin className="h-4 w-4 shrink-0 text-orange-500" />
+                <span className="max-w-[200px] truncate">
+                  {typeof row.items[0].origin === "string"
+                    ? row.items[0].origin
+                    : (row.items[0].origin as { lat?: number; lng?: number })
+                          ?.lat
+                      ? `${(row.items[0].origin as { lat?: number; lng?: number }).lat}, ${(row.items[0].origin as { lat?: number; lng?: number }).lng}`
+                      : t("common.unknown")}
+                </span>
+              </div>
+            );
+          }
+          return (
+            <div className="flex items-center gap-1.5 text-sm text-gray-700">
+              <span className="max-w-[200px] truncate text-gray-500 italic">
+                {t("common.multiple_items", { defaultValue: "多筆清單" })} (
+                {row.items?.length || 0})
+              </span>
+            </div>
+          );
+        }
+        return (
+          <div className="flex items-center gap-1.5 text-sm text-gray-700">
+            <MapPin className="h-4 w-4 shrink-0 text-orange-500" />
+            <span className="max-w-[200px] truncate">
+              {row.origin?.lat
+                ? `${row.origin.lat}, ${row.origin.lng}`
+                : t("common.unknown")}
+            </span>
+          </div>
+        );
+      },
     },
     {
       key: "dest",
       label: t("common.destination"),
-      render: (row) => (
-        <div className="flex items-center gap-1.5 text-sm text-gray-700">
-          <MapPin className="h-4 w-4 shrink-0 text-emerald-500" />
-          <span className="max-w-[200px] truncate">
-            {row.dest?.lat ? `${row.dest.lat}, ${row.dest.lng}` : "未知"}
-          </span>
-        </div>
-      ),
+      render: (row) => {
+        if (row.action === "calculate_batch") {
+          if (row.items && row.items.length === 1) {
+            return (
+              <div className="flex items-center gap-1.5 text-sm text-gray-700">
+                <MapPin className="h-4 w-4 shrink-0 text-emerald-500" />
+                <span className="max-w-[200px] truncate">
+                  {typeof row.items[0].dest === "string"
+                    ? row.items[0].dest
+                    : (row.items[0].dest as { lat?: number; lng?: number })?.lat
+                      ? `${(row.items[0].dest as { lat?: number; lng?: number }).lat}, ${(row.items[0].dest as { lat?: number; lng?: number }).lng}`
+                      : t("common.unknown")}
+                </span>
+              </div>
+            );
+          }
+          return (
+            <div className="flex items-center gap-1.5 text-sm text-gray-700">
+              <span className="max-w-[200px] truncate text-gray-500 italic">
+                -
+              </span>
+            </div>
+          );
+        }
+        return (
+          <div className="flex items-center gap-1.5 text-sm text-gray-700">
+            <MapPin className="h-4 w-4 shrink-0 text-emerald-500" />
+            <span className="max-w-[200px] truncate">
+              {row.dest?.lat
+                ? `${row.dest.lat}, ${row.dest.lng}`
+                : t("common.unknown")}
+            </span>
+          </div>
+        );
+      },
     },
     {
       key: "weight",
@@ -596,7 +796,7 @@ function ReportPageContent() {
       render: (row) => (
         <div className="flex items-center gap-1.5 text-sm text-gray-700">
           <Weight className="h-4 w-4 text-gray-400" />
-          <span>{row.weightKg} kg</span>
+          <span>{row.weightKg != null ? `${row.weightKg} kg` : "-"}</span>
         </div>
       ),
     },
@@ -719,6 +919,12 @@ function ReportPageContent() {
               className={`${activeTab === "analysis" ? "bg-white shadow-sm" : "hover:bg-gray-50"} rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200`}
             >
               {t("transportation_carbon_footprint_calculator.ui.tab_analysis")}
+            </button>
+            <button
+              onClick={() => setActiveTab("mileage")}
+              className={`${activeTab === "mileage" ? "bg-white shadow-sm" : "hover:bg-gray-50"} rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200`}
+            >
+              {t("transportation_carbon_footprint_calculator.ui.tab_mileage")}
             </button>
             <button
               onClick={() => setActiveTab("history")}
@@ -902,6 +1108,38 @@ function ReportPageContent() {
             </div>
           )}
 
+          {/* Info: (20260510 - Luphia) 里程核算區塊 */}
+          {!isExporting && activeTab === "mileage" && (
+            <div className="mt-10 w-full">
+              {batchResults ? (
+                <MileageBatchResults
+                  batchResults={batchResults}
+                  onRecalculate={() => setBatchResults(null)}
+                  onDownload={handleDownloadPDF}
+                  isExporting={isExporting}
+                />
+              ) : (
+                <MileageCalculator
+                  onNavigateToHistory={() => setActiveTab("history")}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Info: (20260511 - Luphia) Render hidden batch items for PDF export sequentially to avoid WebGL context limits */}
+          {isExporting &&
+            batchResults &&
+            exportingIndex !== null &&
+            batchResults[exportingIndex] && (
+              <div className="absolute top-[-9999px] left-[-9999px] flex flex-col opacity-0">
+                <BatchItemReport
+                  item={batchResults[exportingIndex]}
+                  index={exportingIndex}
+                  onMapsReady={handleMapsReady}
+                />
+              </div>
+            )}
+
           {/* Info: (20260501 - Luphia) 歷史分析路徑區塊 */}
           {!isExporting && activeTab === "history" && (
             <div ref={historyTableRef} className="mt-10 w-full">
@@ -909,6 +1147,45 @@ function ReportPageContent() {
                 columns={historyColumns}
                 data={history}
                 rowKey={(row) => row.id}
+                rowExpandable={(row) =>
+                  row.action === "calculate_batch" &&
+                  row.items !== undefined &&
+                  row.items.length > 1
+                }
+                expandedRowRender={(row) => {
+                  if (
+                    row.action !== "calculate_batch" ||
+                    !row.items ||
+                    row.items.length <= 1
+                  )
+                    return null;
+                  return (
+                    <div className="w-full">
+                      <table className="w-full text-left text-sm whitespace-nowrap">
+                        <thead>
+                          <tr className="border-b border-gray-200 text-gray-500">
+                            <th className="px-4 py-2">#</th>
+                            <th className="px-4 py-2">{t("common.origin")}</th>
+                            <th className="px-4 py-2">
+                              {t("common.destination")}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {row.items.map((item, index) => (
+                            <tr key={index} className="hover:bg-white/50">
+                              <td className="px-4 py-2 text-gray-400">
+                                {index + 1}
+                              </td>
+                              <td className="px-4 py-2">{item.origin}</td>
+                              <td className="px-4 py-2">{item.dest}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                }}
               />
             </div>
           )}

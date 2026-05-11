@@ -41,7 +41,7 @@ export const features = {
       desc: "自動提取單據資訊並分類歸檔，免除手動輸入作業負擔。",
     },
     digital_product_passport: {
-      title: "數位商品護照",
+      title: "數位產品護照",
       desc: "建立產品全生命週期資訊與碳足跡的數位履歷，符合國際規範，強化綠色競爭力。",
     },
     esg: {

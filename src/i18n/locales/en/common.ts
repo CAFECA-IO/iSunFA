@@ -17,8 +17,11 @@ export const common = {
   origin: "Origin",
   destination: "Destination",
   weight: "Weight",
+  type: "Type",
+  multiple_items: "Multiple Items",
   load: "Load",
   no_data: "No Data",
+  unknown: "Unknown",
   cancel_edit_title: "Cancel Edit?",
   cancel_edit_message:
     "Are you sure you want to cancel the edit? Data will revert to the original state.",

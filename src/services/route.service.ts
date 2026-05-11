@@ -321,3 +321,30 @@ export async function calculateLogisticsPlanFromText(
 
   return { plan, parsed };
 }
+
+export async function calculateMileageFromStrings(
+  originDesc: string,
+  destDesc: string,
+): Promise<{ distanceKm: number }> {
+  try {
+    const text = `Origin: ${originDesc}, Dest: ${destDesc}`;
+    const parsed = await parseSmartInput(text);
+    if (!parsed.origin || !parsed.dest)
+      throw new Error("Could not parse coordinates");
+    const landRoute = await getLandRoute(parsed.origin, parsed.dest);
+    if (landRoute.success && landRoute.distanceKm) {
+      return { distanceKm: landRoute.distanceKm };
+    }
+    // Fallback direct distance
+    const dist = calculateDistanceKm(
+      parsed.origin.lat,
+      parsed.origin.lng,
+      parsed.dest.lat,
+      parsed.dest.lng,
+    );
+    return { distanceKm: dist * 1.2 };
+  } catch (err) {
+    console.error("Mileage calc error:", err);
+    throw err;
+  }
+}

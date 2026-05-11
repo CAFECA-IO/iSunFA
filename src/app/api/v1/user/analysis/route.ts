@@ -411,6 +411,14 @@ export async function GET(request: NextRequest) {
           typeof missionData?.retryCount === "number"
             ? missionData.retryCount
             : 0,
+        action:
+          missionData?.action ||
+          (missionData?.data as Record<string, unknown>)?.action ||
+          orderData?.action,
+        items:
+          missionData?.items ||
+          (missionData?.data as Record<string, unknown>)?.items ||
+          orderData?.items,
       };
     });
 

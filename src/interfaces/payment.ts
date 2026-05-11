@@ -73,3 +73,14 @@ export interface IPaymentModalProps {
   title?: string;
   planId?: string;
 }
+
+export interface IOrderWithMission {
+  id: string;
+  mission: string | null;
+  tokens: number | null;
+}
+
+export interface IOrderUpdateTokensParams {
+  id: string;
+  tokens: number;
+}

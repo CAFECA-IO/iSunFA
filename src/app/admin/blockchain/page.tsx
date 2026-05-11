@@ -300,7 +300,7 @@ export default function BlockchainDashboardPage() {
 
           <AdminMetricCard
             title={t("admin_blockchain.page.block_height")}
-            value={data ? data.blockHeight.toString() : "---"}
+            value={data ? data.blockHeight.toLocaleString() : "---"}
             unit=""
             icon={Blocks}
             showSmallIcon={false}
