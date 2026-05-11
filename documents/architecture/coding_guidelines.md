@@ -29,7 +29,9 @@
    我們對 `any` 採取零容忍態度。若面對外部 API 傳入的不可預知資料，請**有條件地使用 `unknown`**，並在使用前透過 Type Guards (型別防護 / Zod) 縮小並確認其型別。
 2. **不厭其煩的型別定義**：
    所有的 Payload、DTO、以及內部流轉的資料結構，都必須在 `src/interfaces` 或是該模組下定義嚴謹的 `interface` 或 `type`。
-3. **高精度數值處理 (Precision First)**：
+3. **API Payload 驗證最佳實踐 (Centralized Validators)**：
+   為保持 API Controller 的乾淨與職責單一，所有的 Request Payload 驗證邏輯 (Zod Schema) **嚴禁直接寫在 `route.ts` 內**。必須統一抽離至 `src/validators/` 目錄下定義，並透過 `src/validators/index.ts` 集中導出。API 層僅負責呼叫 `Schema.safeParse(body)`。
+4. **高精度數值處理 (Precision First)**：
    處理財務金額與碳排當量時，嚴禁使用原生的 `number` 進行浮點數加減乘除。必須使用 `Prisma.Decimal` 或 `BigInt` 以確保零誤差。
 
 ---
@@ -54,6 +56,10 @@
 
 3. **絕對路徑引入 (Path Aliasing)**：
    全面使用 `@/` 進行模組引入 (例如 `import { ChatService } from "@/services/chat.service";`)。嚴禁使用過深的相對路徑 (如 `../../../../`)，以提升重構時的安全性與可讀性。
+4. **拒絕魔法字串 (No Hardcoded / Magic Strings)**：
+   對於任何需要「條件判斷 (if/switch)」或「狀態比對」的字串，**絕對禁止直接 Hardcode 在程式碼中**。必須統一抽離至 `src/constants/` 目錄或獨立的字典檔 (如 `error_dictionary.ts` 或是 `status.ts`)，定義成 `enum` 或是唯讀的 `const` 常數。所有攸關商業邏輯的狀態字串，也必須同步記錄於架構文件中，保持文件與代碼的一致性。
+5. **套用函式前的「停看聽」(Inspect Before Use)**：
+   不論是工程師還是 AI，在呼叫任何現有的系統函式、API 工具或是錯誤處理套件 (如 `jsonFail`) 時，**務必先去查看該函式或介面的原始定義 (Definition)**。嚴禁憑直覺盲目傳遞參數，或憑空捏造未定義的列舉值 (例如隨意塞入不屬於 `ApiCode` 的 HTTP Status)。使用前確認定義，才能守住系統的型別安全防線。
 
 ---
 

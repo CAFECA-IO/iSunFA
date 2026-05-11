@@ -7,6 +7,7 @@ import {
   getAccountBooksByUserId,
   updateAccountBook,
 } from "@/services/account_book.service";
+import { UpdateAccountBookSchema } from "@/validators";
 
 export async function GET(
   request: NextRequest,
@@ -63,6 +64,15 @@ export async function PUT(
     }
 
     const body = await request.json();
+    const parseResult = UpdateAccountBookSchema.safeParse(body);
+
+    if (!parseResult.success) {
+      return jsonFail({
+        ...API_ERRORS.VL_SCHEMA_ERROR,
+        message: `Validation Error: ${parseResult.error.errors[0].message} (${parseResult.error.errors[0].path.join(".")})`,
+      });
+    }
+
     const {
       name,
       country,
@@ -72,7 +82,7 @@ export async function PUT(
       startYear,
       esgIndustryId,
       parValue,
-    } = body;
+    } = parseResult.data;
 
     const createdAt = startYear
       ? new Date(`${startYear}-01-01T00:00:00.000Z`)
