@@ -5,7 +5,6 @@ import { ChatService } from "@/services/chat.service";
 import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
-// import { Prisma } from "@/generated";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { Schema } from "@google/generative-ai";
 import { JSONValue } from "@/validators/common";
@@ -131,7 +130,7 @@ export async function processNext() {
           const pseudoTask = {
             id: taskKey,
             type: subTaskConfig.type,
-            data: subTaskConfig.data as unknown as JSONValue, // Prisma.InputJsonValue,
+            data: subTaskConfig.data as unknown as JSONValue,
             order: subTaskConfig.order,
           } as IPseudoTask;
 
@@ -202,7 +201,8 @@ export async function processNext() {
                 isJson = true;
               } catch {
                 /**
-                 * Info: (20260430 - Luphia) 擷取出來的也不是合法的 JSON，這代表它是一般的 Markdown 文本
+                 * Info: (20260430 - Luphia)
+                 * 擷取出來的也不是合法的 JSON，這代表它是一般的 Markdown 文本
                  * 因此我們應該保留原始的 taskResultStr，不要破壞它
                  */
                 cleanedTaskResultStr = taskResultStr;
@@ -254,7 +254,7 @@ export async function processNext() {
               (aggregatedResult as Record<string, unknown>)[taskKey] =
                 parsedVal;
             } else {
-              aggregatedResult = parsedVal as JSONValue; // Prisma.InputJsonValue;
+              aggregatedResult = parsedVal as JSONValue;
             }
           } else {
             if (useJsonPlan && tasksConfig.length > 1) {
