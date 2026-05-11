@@ -1,4 +1,9 @@
-# 🚀 iSunFA Architecture - Future Optimization Roadmap (Phase 5)
+# 🚀 [DEPRECATED] iSunFA Architecture - Future Optimization Roadmap (Phase 5)
+
+> **⚠️ DEPRECATION NOTICE (2026-05)** 
+> **Status**: 🗄️ **Archived / Overturned**
+> **Reason**: 本文件中的部分「架構優化目標」（特別是要求 AI 讀取原始度數並自行執行乘法運算）與 iSunFA 的最高指導原則「CPA 絕對合規：零捏造」產生嚴重哲學衝突。將 ESG 係數注入 Prompt 並要求 AI 算數學的做法，現已正式被列為重大技術債。
+> **Superseded By**: 本文件已被 `documents/architecture/e2e_roadmap_v2.md` 與 `pipeline/` 系列實作文件取代並重構。保留此文件僅作為架構演進歷史紀錄，提醒後人勿重蹈「過度信任 AI 數學能力」之覆轍。
 
 > **Date**: May 2026
 > **Context**: Optimization opportunities and technical debt discovered during the Q2 E2E Pipeline Hardening.

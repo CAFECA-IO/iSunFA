@@ -54,9 +54,12 @@ export default function UserActions() {
 
   // Info: (20260424 - Julian) 功能模組選單
   const modulesMenuItems = (() => {
+    const publicModuleKeys = new Set(PUBLIC_MODULES.map((m) => m.key));
     const modulesToDisplay = isAdmin
       ? ADMIN_MODULES
-      : MODULES.filter((m) => m.basic !== false);
+      : MODULES.filter(
+          (m) => m.basic !== false && !publicModuleKeys.has(m.key),
+        );
 
     return modulesToDisplay.map((module) => {
       const active = isAdmin ? true : isModuleActive(module.key);

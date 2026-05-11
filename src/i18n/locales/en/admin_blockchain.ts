@@ -12,6 +12,7 @@ export const adminBlockchain = {
     admin_isc: "Admin Wallet ISC",
     system_icp: "System ICP Supply",
     member_icp: "Member System ICP Reserve",
+    block_height: "Block Height",
     mint_icp: "Mint Credit Points (ICP)",
     mint_desc:
       "Minting ICP requires providing an equivalent amount of ISC based on the real-time collateral rate. The minted ICP will be placed in the Member System inventory.",

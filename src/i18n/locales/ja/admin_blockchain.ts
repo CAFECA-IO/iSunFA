@@ -12,6 +12,7 @@ export const adminBlockchain = {
     admin_isc: "管理者ウォレット ISC",
     system_icp: "システム ICP 供給量",
     member_icp: "メンバーシステム ICP 準備金",
+    block_height: "ブロック高",
     mint_icp: "クレジットポイント(ICP)の鋳造",
     mint_desc:
       "ICP を鋳造するには、リアルタイムの担保率に基づいて同等額の ISC を提供する必要があります。鋳造された ICP はメンバーシステムのインベントリに配置されます。",
