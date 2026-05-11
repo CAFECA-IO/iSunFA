@@ -207,7 +207,7 @@ export default function BalanceSheetView({
       value: `${numberWithCommas(metrics.netWorthPerShare || 0)}`,
       description: t("balance_sheet_view.metric_nwps_desc"),
       textColor: "text-gray-900",
-      statusGood: (metrics.netWorthPerShare || 0) > 10,
+      statusGood: (metrics.netWorthPerShare || 0) > (metrics.parValue || 10),
       className: "col-span-2 lg:col-span-2 print:w-1/2",
       tooltipAlign: TooltipAlign.RIGHT,
     },

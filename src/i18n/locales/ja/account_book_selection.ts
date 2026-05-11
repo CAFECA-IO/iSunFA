@@ -16,5 +16,6 @@ export const accountBookSelection = {
   form_team: "所属チーム",
   form_enterprise_id: "統一企業番号 (任意)",
   form_esg_industry: "業界分類 (ESG、任意)",
+  form_par_value: "額面 (Par Value)",
   submit: "確認",
 };

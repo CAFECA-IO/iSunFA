@@ -16,5 +16,6 @@ export const accountBookSelection = {
   form_team: "所屬團隊",
   form_enterprise_id: "統一編號 (選填)",
   form_esg_industry: "產業分類 (ESG, 選填)",
+  form_par_value: "面額 (Par Value)",
   submit: "確認",
 };

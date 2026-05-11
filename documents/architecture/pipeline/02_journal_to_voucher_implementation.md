@@ -1,5 +1,8 @@
 # 實作與技術債：02. 日記帳至會計傳票 (Journal to Voucher)
 
+> **Date**: 2026-05-10
+> **Author**: Tzuhan
+
 > **CPA 查核視角 (Audit Lens)**：
 > 會計傳票 (Voucher) 是財報的骨幹，決定了「借貸平衡 (Double-Entry)」與「會計科目分類 (Chart of Accounts Mapping)」。此階段不容許任何一毛錢的誤差，且所有會計科目都必須精確對應至企業的會計制度字典，不能有無中生有的科目。
 
@@ -23,9 +26,12 @@ Prompt 中指示：`「本位幣: {currency}。請將憑證上的幣值轉換為
 
 ## 3. Deloitte 級別重構目標 (Refactoring Towards Audit-Ready)
 
-1. **實作兩段式 RAG 科目檢索 (Two-Stage RAG Mapping)**：
-   - AI 先判斷科目大類 (Asset, Liability, Expense 等)。
-   - 後端利用向量檢索 (Vector Search) 或關鍵字過濾，挑出最符合的 5~10 個精確子科目傳給 AI 做最終選擇，徹底解決 Token 爆炸問題。
+1. **全面導入混合決策管線 (Hybrid Deterministic Pipeline)**：
+   - **Stage 1 (萃取特徵)**：AI 僅負責萃取發票廠商、日期、金額等客觀特徵。
+   - **Stage 2 (程式查表)**：完全廢除 Prompt 字典注入。依賴後端 TypeScript 建立「黃金廠商映射表」，看到如「中華電信繳費通知」，直接回傳確定的 CPA 認證分錄 (Deterministic Logic)。
+   - **Stage 3 (AI 推論)**：若遇未知憑證，才啟動具備向量檢索 (Vector Search) 功能的高階 Prompt 進行猜測。
+   - **(未來擴充) 策略模式註冊表 (Strategy Registry Pattern)**：將黃金映射表封裝至 `VENDOR_RULE_REGISTRY`，後端透過廠商名稱動態調用對應的查表函式，遵守 OCP 開閉原則。
+   - **(未來擴充) 審計軌跡標籤 (Audit Trail Flag)**：強制要求輸出的 JSON 中帶有 `generationSource`（如 `RULE_ENGINE_STAGE_2` 或 `LLM_FALLBACK_STAGE_3`），供會計師查帳時快速篩選高風險傳票。
 2. **將匯率與數學運算抽回系統層 (Backend Math Offloading)**：
    - AI 僅被允許萃取「原始幣別 (如 USD)」與「原始金額 (如 100.50)」。
    - 後端透過專屬的匯率微服務 (Exchange Rate API) 取得精確的結匯日匯率，並使用精確的 `Decimal` 模組算出本位幣，從根源消滅數學幻覺。

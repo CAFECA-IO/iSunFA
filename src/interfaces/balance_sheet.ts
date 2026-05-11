@@ -14,6 +14,7 @@ export interface IBalanceSheetMetrics {
   workingCapital: number; // Info: (20260330 - Julian) 營運資金
   cashRatio: number; // Info: (20260330 - Julian) 現金比率 %
   netWorthPerShare: number; // Info: (20260330 - Julian) 每股淨值 (requires outstanding shares, assuming predefined or omitted if not avail)
+  parValue: number; // Info: (20260508 - Tzuhan) 面額
   retainedEarningsRatio: number; // Info: (20260330 - Julian) 保留盈餘佔比 %
   intangibleAssetsRatio: number; // Info: (20260330 - Julian) 無形資產佔比 %
   // Info: (20260330 - Julian) 新建議的財務比率：

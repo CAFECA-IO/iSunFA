@@ -16,5 +16,6 @@ export const accountBookSelection = {
   form_team: "팀",
   form_enterprise_id: "사업자등록번호 (선택 시)",
   form_esg_industry: "산업 분류 (ESG, 선택 시)",
+  form_par_value: "액면가 (Par Value)",
   submit: "확인",
 };

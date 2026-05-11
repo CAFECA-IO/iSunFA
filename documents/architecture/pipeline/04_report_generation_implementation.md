@@ -1,5 +1,8 @@
 # 實作與技術債：04. 報表生成與 AI 健檢 (Report Generation & Analysis)
 
+> **Date**: 2026-05-10
+> **Author**: Tzuhan
+
 > **CPA 查核視角 (Audit Lens)**：
 > 此階段是系統的心臟。無論是對外產出的即時財報，還是交由 AI 生成的分析報告，其數據來源都必須建立在「絕對真理」之上，也就是資料庫中 `isVerified: true` 的不可竄改憑證。
 

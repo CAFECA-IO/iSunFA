@@ -7,6 +7,7 @@ import {
   createAccountBook,
 } from "@/services/account_book.service";
 import { teamRepo } from "@/repositories/team.repo";
+import { CreateAccountBookSchema } from "@/validators";
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,6 +37,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parseResult = CreateAccountBookSchema.safeParse(body);
+
+    if (!parseResult.success) {
+      return jsonFail({
+        ...API_ERRORS.VL_SCHEMA_ERROR,
+        message: `Validation Error: ${parseResult.error.errors[0].message} (${parseResult.error.errors[0].path.join(".")})`,
+      });
+    }
+
     const {
       name,
       country,
@@ -45,11 +55,8 @@ export async function POST(request: NextRequest) {
       enterpriseId,
       startYear,
       esgIndustryId,
-    } = body;
-
-    if (!name || !country || !currency || !rule || !teamId) {
-      return jsonFail(API_ERRORS.VL_MISSING_PARAMS);
-    }
+      parValue,
+    } = parseResult.data;
 
     // Info: (20260321 - Luphia) Verify user belongs to the team and has permission
     const teamMember = await teamRepo.getTeamMember(sessionUser.id, teamId);
@@ -70,6 +77,7 @@ export async function POST(request: NextRequest) {
       teamId,
       enterpriseId,
       esgIndustryId,
+      parValue,
       createdAt,
     });
 
