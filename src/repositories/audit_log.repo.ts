@@ -1,12 +1,20 @@
 import { prisma } from "@/lib/prisma";
-import { AuditLogDataType, Prisma, AuditLog } from "@/generated";
+import { Prisma, AuditLog } from "@/generated";
 import { IAuditLogFilterOptions } from "@/interfaces/data_filter_option";
-import { AuditLogAction } from "@/constants/audit_log";
+import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
+
+export interface ICreateAuditLogInput {
+  userId: string;
+  dataType: AuditLogDataType | string;
+  dataId: string;
+  accountBookId: string;
+  action: AuditLogAction | string;
+}
 
 export interface IAuditLogRepository {
-  createAuditLog(data: Prisma.AuditLogUncheckedCreateInput): Promise<AuditLog>;
+  createAuditLog(data: ICreateAuditLogInput): Promise<AuditLog>;
   createManyAuditLogs(
-    data: Prisma.AuditLogCreateManyInput[],
+    data: ICreateAuditLogInput[],
   ): Promise<Prisma.BatchPayload>;
   getAuditLogs(options: IAuditLogFilterOptions): Promise<
     Prisma.AuditLogGetPayload<{
@@ -17,12 +25,16 @@ export interface IAuditLogRepository {
 }
 
 export class AuditLogRepository implements IAuditLogRepository {
-  async createAuditLog(data: Prisma.AuditLogUncheckedCreateInput) {
-    return prisma.auditLog.create({ data });
+  async createAuditLog(data: ICreateAuditLogInput) {
+    return prisma.auditLog.create({
+      data: data as Prisma.AuditLogUncheckedCreateInput,
+    });
   }
 
-  async createManyAuditLogs(data: Prisma.AuditLogCreateManyInput[]) {
-    return prisma.auditLog.createMany({ data });
+  async createManyAuditLogs(data: ICreateAuditLogInput[]) {
+    return prisma.auditLog.createMany({
+      data: data as Prisma.AuditLogCreateManyInput[],
+    });
   }
 
   private buildWhereClause(

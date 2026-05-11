@@ -8,7 +8,10 @@ import { fileRepo } from "@/repositories/file.repo";
 import { journalRepo } from "@/repositories/journal.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
 import { esgRepo } from "@/repositories/esg.repo";
-import { auditLogRepo } from "@/repositories/audit_log.repo";
+import {
+  auditLogRepo,
+  ICreateAuditLogInput,
+} from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { paymentRepo } from "@/repositories/payment.repo";
@@ -56,10 +59,10 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { file, authentication } = body;
+    const { files, authentication } = body;
 
     // Info: (20260318 - Julian) 驗證 file 參數
-    if (!file) {
+    if (!files || files.length === 0) {
       console.error("Missing file or file hash");
       return jsonFail({
         code: "VA000099",
@@ -183,103 +186,114 @@ export async function POST(
       });
     }
 
-    // Info: (20260318 - Julian) 將 file 存入 DB
-    const uploadedFile = await fileRepo.createFile({
-      hash: file.hash,
-      fileName: file.file.name,
-    });
+    const auditLogsToCreate: ICreateAuditLogInput[] = [];
 
-    if (!uploadedFile) {
-      console.error("File upload failed");
-      return jsonFail(API_ERRORS.IS_UPLOAD_FAILED);
+    const results = await Promise.all(
+      files.map(async (fileItem: { hash: string; file: { name: string } }) => {
+        // Info: (20260318 - Julian) 將 file 存入 DB
+        const uploadedFile = await fileRepo.createFile({
+          hash: fileItem.hash,
+          fileName: fileItem.file.name,
+        });
+
+        if (!uploadedFile) {
+          throw new Error("File upload failed");
+        }
+
+        // Info: (20260318 - Julian) 建立日記帳
+        const newJournal = await journalRepo.createJournal({
+          accountBookId: accountBook.id,
+          fileId: uploadedFile.id,
+          text: "",
+          tradingDate: new Date(),
+          isVerified: false,
+          aiNote: "",
+        });
+
+        if (!newJournal) {
+          throw new Error("Journal creation failed");
+        }
+
+        // Info: (20260318 - Julian) 建立空白傳票
+        const newVoucher = await voucherRepo.createVoucher({
+          accountBookId: accountBook.id,
+          fileId: uploadedFile.id,
+          userId: creator.id,
+          tradingDate: new Date(),
+          note: "",
+          lines: { create: [] },
+          aiNote: "",
+          confidence: 0,
+          isVerified: false,
+        });
+
+        if (!newVoucher) {
+          throw new Error("Voucher creation failed");
+        }
+
+        // Info: (20260318 - Julian) 建立空白 ESG 紀錄
+        const newRecord = await esgRepo.createEsgRecord({
+          accountBookId: accountBook.id,
+          userId: creator.id,
+          fileId: uploadedFile.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          tradingDate: new Date(),
+          activityType: "",
+          vendor: "",
+          amount: 0,
+          unit: "",
+          emissions: 0,
+          dqiScore: 0,
+          aiNote: "",
+          confidence: 0,
+          isVerified: false,
+        });
+
+        if (!newRecord) {
+          throw new Error("ESG record creation failed");
+        }
+
+        // 收集 AuditLog，移到迴圈外統一執行 (效能優化)
+        auditLogsToCreate.push(
+          {
+            userId: creator.id,
+            dataType: "JOURNAL",
+            dataId: newJournal.newId,
+            accountBookId: accountBook.id,
+            action: "CREATE",
+          },
+          {
+            userId: creator.id,
+            dataType: "VOUCHER",
+            dataId: newVoucher.newId,
+            accountBookId: accountBook.id,
+            action: "CREATE",
+          },
+          {
+            userId: creator.id,
+            dataType: "ESG_RECORD",
+            dataId: newRecord.newId,
+            accountBookId: accountBook.id,
+            action: "CREATE",
+          },
+        );
+
+        return {
+          journalId: newJournal.newId,
+          voucherId: newVoucher.newId,
+          recordId: newRecord.newId,
+        };
+      }),
+    );
+
+    // Info: (20260511 - Julian) 批量寫入 AuditLog，降低 DB query 數量
+    if (auditLogsToCreate.length > 0) {
+      await auditLogRepo.createManyAuditLogs(auditLogsToCreate);
     }
-
-    // Info: (20260318 - Julian) 建立日記帳
-    const newJournal = await journalRepo.createJournal({
-      accountBookId: accountBook.id,
-      fileId: uploadedFile.id,
-      text: "",
-      tradingDate: new Date(),
-      isVerified: false,
-      aiNote: "",
-    });
-
-    if (!newJournal) {
-      console.error("Journal creation failed");
-      return jsonFail(API_ERRORS.IS_DB_FAILED);
-    }
-
-    // Info: (20260318 - Julian) 建立空白傳票
-    const newVoucher = await voucherRepo.createVoucher({
-      accountBookId: accountBook.id,
-      fileId: uploadedFile.id,
-      userId: creator.id,
-      tradingDate: new Date(),
-      note: "",
-      lines: { create: [] },
-      aiNote: "",
-      confidence: 0,
-      isVerified: false,
-    });
-
-    if (!newVoucher) {
-      console.error("Voucher creation failed");
-      return jsonFail(API_ERRORS.IS_DB_FAILED);
-    }
-
-    // Info: (20260318 - Julian) 建立空白 ESG 紀錄
-    const newRecord = await esgRepo.createEsgRecord({
-      accountBookId: accountBook.id,
-      userId: creator.id,
-      fileId: uploadedFile.id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      tradingDate: new Date(),
-      activityType: "",
-      vendor: "",
-      amount: 0,
-      unit: "",
-      emissions: 0,
-      dqiScore: 0,
-      aiNote: "",
-      confidence: 0,
-      isVerified: false,
-    });
-
-    if (!newRecord) {
-      console.error("ESG record creation failed");
-      return jsonFail(API_ERRORS.IS_DB_FAILED);
-    }
-
-    // Info: (20260318 - Julian) 新增 AuditLog
-    await auditLogRepo.createManyAuditLogs([
-      {
-        userId: creator.id,
-        dataType: "JOURNAL",
-        dataId: newJournal.newId,
-        accountBookId: accountBook.id,
-        action: "CREATE",
-      },
-      {
-        userId: creator.id,
-        dataType: "VOUCHER",
-        dataId: newVoucher.newId,
-        accountBookId: accountBook.id,
-        action: "CREATE",
-      },
-      {
-        userId: creator.id,
-        dataType: "ESG_RECORD",
-        dataId: newRecord.newId,
-        accountBookId: accountBook.id,
-        action: "CREATE",
-      },
-    ]);
 
     return jsonOk({
-      journalId: newJournal.newId,
-      voucherId: newVoucher.newId,
-      recordId: newRecord.newId,
+      results,
     });
   } catch (error) {
     console.error("Error creating AI analysis:", error);
