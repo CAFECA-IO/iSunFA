@@ -142,27 +142,89 @@ export async function processNext() {
             priorResults,
           );
           let taskResultStr = "";
+          let stage2Intercepted = false;
 
-          const skill = skillRegistry[subTaskConfig.type];
-          if (skill) {
-            console.log(`[MissionExecutor]      Invoking Skill: ${skill.name}`);
-            taskResultStr = await skill.execute(
-              pseudoTask,
-              pseudoMission,
-              fullPrompt,
-              chatService,
-            );
-          } else {
-            console.log(
-              `[MissionExecutor]      Invoking raw ChatService LLM...`,
-            );
-            const responseSchema = subTaskConfig.data?.responseSchema as
-              | Schema
-              | undefined;
-            taskResultStr = await chatService.generateRaw(
-              fullPrompt,
-              responseSchema,
-            );
+          // Info: (20260511 - Tzuhan) Stage 2 Deterministic Routing Intercept
+          if (subTaskConfig.type === "VOUCHER_LINES_PARSING") {
+            let baseParsed: Record<string, unknown> | null = null;
+            for (const prevResultStr of priorResults.values()) {
+              try {
+                const parsed = JSON.parse(prevResultStr);
+                if (parsed.vendorName && parsed.documentType) {
+                  baseParsed = parsed;
+                  break;
+                }
+              } catch {}
+            }
+
+            if (baseParsed && baseParsed.vendorName) {
+              const ruleRegistry =
+                await import("@/services/rules/vendor_registry");
+              const vendorKey = Object.keys(
+                ruleRegistry.VENDOR_RULE_REGISTRY,
+              ).find((k) => String(baseParsed!.vendorName).includes(k));
+
+              if (vendorKey) {
+                const ruleProcessor =
+                  ruleRegistry.VENDOR_RULE_REGISTRY[vendorKey];
+                const lines = ruleProcessor({
+                  documentType: baseParsed.documentType as
+                    | "BILL_NOTICE"
+                    | "PAYMENT_RECEIPT"
+                    | "OTHER",
+                  amount: Number(baseParsed.totalAmount) || 0,
+                });
+
+                if (lines) {
+                  console.log(
+                    `[MissionExecutor] 🎯 Stage 2 Match: Deterministic rules applied for ${vendorKey}`,
+                  );
+                  taskResultStr = JSON.stringify({
+                    generationSource: "RULE_ENGINE_STAGE_2",
+                    confidence: 100,
+                    aiNote:
+                      "Stage 2: Deterministic Routing Applied (TypeScript Rules)",
+                    lines: lines,
+                  });
+                  stage2Intercepted = true;
+                }
+              }
+            }
+          }
+
+          if (!stage2Intercepted) {
+            const skill = skillRegistry[subTaskConfig.type];
+            if (skill) {
+              console.log(
+                `[MissionExecutor]      Invoking Skill: ${skill.name}`,
+              );
+              taskResultStr = await skill.execute(
+                pseudoTask,
+                pseudoMission,
+                fullPrompt,
+                chatService,
+              );
+            } else {
+              console.log(
+                `[MissionExecutor]      Invoking raw ChatService LLM...`,
+              );
+              const responseSchema = subTaskConfig.data?.responseSchema as
+                | Schema
+                | undefined;
+              taskResultStr = await chatService.generateRaw(
+                fullPrompt,
+                responseSchema,
+              );
+            }
+
+            // Info: (20260511 - Tzuhan) LLM/Skill 產出若為 JSON，補上 Fallback 標籤
+            try {
+              const parsed = JSON.parse(taskResultStr);
+              if (typeof parsed === "object" && !parsed.generationSource) {
+                parsed.generationSource = "LLM_FALLBACK_STAGE_3";
+                taskResultStr = JSON.stringify(parsed);
+              }
+            } catch {}
           }
 
           // Info: (20260420 - Luphia) Track execution tokens and content
