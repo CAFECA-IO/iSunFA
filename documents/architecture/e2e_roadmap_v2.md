@@ -1,6 +1,10 @@
 # 🚀 iSunFA Master Blueprint：ESG 與財務混合審計底層引擎 (E2E Core Engine)
 
-> **Date**: May 2026
+> **Date**: 2026-05-10
+> **Author**: Tzuhan
+> **Version**: 1.0
+> **Last Updated**: 2026-05-11
+
 > **Status**: 🔴 **UI/UX 進入全面凍結 (Freeze)**。全隊開發量能 100% 轉向底層報表與數據引擎的準確性構建。
 >
 > **Vision**: 讓 iSunFA 成為 ESG 與財務混合審計的黃金標準，達到四大會計師 (Big 4) 的查帳要求，並足以作為政府（如新北市）數位產品護照 (DPP) 與合規審查的底層引擎 。
@@ -40,16 +44,19 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 **🎯 收斂目標 (DoD)**：在不考慮 AI 辨識率的情況下，系統的財務引擎能精準加總且總資產完美配平；ESG 引擎能精準執行單位轉換與係數乘法，且在高併發下達到 0 丟包率。
 
 - **[CPA 財務合規任務]**
-- **期初餘額與試算表恆等式 (Opening Balances & Trial Balance Gatekeeper)**：擴充 `OpeningBalance` Schema。在 API 寫入層級加上嚴格斷言：寫入的期初資料必須完全符合 `Assets = Liabilities + Equity`。若客戶匯入的期初試算表不平，系統大門口直接 `Throw Error` 拒絕寫入。
+- **包容不完美揭露的財報容錯 (Partial Disclosure Tolerance)**：為符合系統允許用戶「部分揭露憑證」的核心商業原則，系統必須容忍資產負債表不平的情形。**嚴禁在 API 閘道口阻擋不平的試算表寫入**。系統應動態將差額提列至「暫付款/暫收款 (Suspense Account)」等懸記科目，真實反映未決明細。
 - **面額彈性解耦 (Decoupling Par Value)**：拔除系統內 `parValue = 10` 的 Hardcode，改為動態傳入。
+- **外幣匯率與後端運算解耦 (Exchange Rate Backend Math)**：拔除 AI 在 Prompt 中「猜測歷史匯率」與「換算本位幣」的權限，改由後端串接 Exchange Rate API 獲取精準匯率並以 `Prisma.Decimal` 計算。
 
 - **[CPA 碳排合規任務 (DPP 基礎)]**
 - **數位 BOM 與產品關聯 Schema**：要求每一筆憑證或傳票，必須能選填關聯至 `ProductID`（產品線）。這是未來支援新北 DPP 銅級合規（ISO 14067 產品碳足跡）的底層骨架 。
 
 - **高精度數據重構與單位枚舉 (Precision & Unit Enum)**：財務欄位升級為 `BigInt`；碳排引擎導入 `Prisma.Decimal` 並實作嚴格的 `Unit Enum`（如 `KWH`, `LITER`），徹底消滅浮點數誤差與單位轉換亂流。
 
-- **[Architect 穩定性任務]**
-- **非同步化與死信佇列 (Batch Queue & DLQ)**：全面導入非同步訊息佇列（如 BullMQ），429 錯誤必須進入 DLQ 重試，確保 0 丟包率。
+- **[Architect 穩定性任務 (Anti-Overengineering)]**
+- **極簡化檔案死信佇列 (File-System DLQ)**：**禁止引入 Redis 或 BullMQ 等外部 Queue 依賴**。基於「零捏造與極簡依賴」原則，目前的 `mission.executor.service.ts` 檔案輪詢機制已具備極佳的解耦效果。引入 Redis 只會增加地端與主權雲部署的維運成本。
+  - **防污染實作規範**：將 AI 請求全面改為嚴格的結構化輸出 (`responseMimeType: "application/json"`) 廢除脆弱的 Regex。當任務失敗時，Worker 不得讓任務蒸發，必須將原始 JSON 與 `.error.log` 移入 `MISSION_DIR/dlq/`，用最純粹的 File-System 滿足 CPA 對實體除錯軌跡的要求。
+  - **點數退還機制 (Credit Refund Saga)**：當任務遭遇 API 限流失敗並被打入 DLQ (`giveup.md`) 時，必須實作原子操作，呼叫 Refund API 將預扣點數退還給企業帳戶。
 
 ### 📌 Sprint 2: 商業邏輯防禦與抗幻覺 (Business Logic & Anti-Hallucination)
 
@@ -63,6 +70,11 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **[CPA 碳排合規任務 (DPP 基礎)]**
 - **建置碳排暫存區 (SuspenseEsgRecord)**：廢除 `SCOPE_3` 的無腦 Fallback。憑證資訊不明時，凍結資料於待釐清區，防堵漂綠風險。
 - **阻斷 AI 碳排幻覺 (Anti-ESG Hallucination)**：內建 `EmissionFactorDictionary`。在測試管線中投入「假裝印有碳排噸數的發票」，驗證系統是否能成功無視該數值，堅持只抓取「活動數據」並交由底層重算。
+- **質量守恆勾稽 (Mass Conservation Articulation)**：將「進銷存與原物料物理防護」實作於管線中。猶如財務的 A=L+E，系統將強制核對：`期初庫存重量 + 本期採購重量 = 消耗重量 + 期末庫存重量`。若 AI 萃取出的碳排原物料消耗量大於 ERP 物理庫存與採購上限，立刻報錯並凍結憑證，從物理層面實現「零捏造」。
+
+- **[Architect & CPA 聯手任務 (Self-Healing & Deterministic AI)]**
+- **混合決策管線 (Hybrid Deterministic Pipeline)**：徹底解決 LLM 機率不穩定性的終極架構。將憑證解析任務拆分為三階：Stage 1 (單純讓 AI 萃取特徵，如廠商名稱與文件類型)、Stage 2 (依賴 TypeScript 查表作絕對穩定分流，例如看到中華電信繳費通知，直接 Hardcode 應付費用分錄)、Stage 3 (查無規則時才讓 AI 進行推論 Fallback)。
+- **AI 封閉迴圈校正管線 (Closed-Loop Prompt Calibration)**：針對高度相似的憑證（如：中華電信的「繳費通知」屬應付費用，而「繳費結果通知」屬實質現金流出），建立基於 Golden Dataset 的自動盲測機制。若 AI 解析的分錄與 CPA 標準答案不符，系統將自動啟動反饋迴圈 (Feedback Loop)，將「錯誤輸出」與「正確答案」打包交由高階推理模型，強制 AI 自我審查並**自動產出優化版的解析 Prompt**。這將使系統脫離「人類手動調整 Prompt」的低效勞動，具備自我進化的防呆能力。
 
 ### 📌 Sprint 3: 視覺極限與合規深水區 (Vision Extreme & ITGC Compliance)
 
@@ -70,13 +82,15 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 
 - **[CPA 財排雙軌合規任務]**
 - **排放係數時空快照 (Emission Factor Versioning)**：將「當下使用的碳排係數數值與標籤」硬拷貝寫入 `EsgRecord` 中，防範未來係數更新導致歷史報告查驗失敗。
-- **無 UI 的 API 級 Maker-Checker 實作 (API-Level Segregation of Duties)**：配合 UI 凍結戰略，API 層級嚴格鎖死：當呼叫 `Verify_All` API 時，檢查 `SessionUser.ID` 是否等於該傳票的 `createdBy`。若為同一人，API 直接回傳 `403 Forbidden`。零 UI 開發成本滿足 100% SOX 職能分工。
+- **禁止 Web2 級別的權限中介軟體 (No Web2 RBAC Anti-Pattern)**：**絕對禁止**在 API 實作類似 `SessionUser.ID !== createdBy` 這種傳統的 Maker-Checker 邏輯。
+  - **防污染實作規範**：本系統的「零信任」奠基於區塊鏈與密碼學。職能分離 (Segregation of Duties) 必須且只能透過驗證操作者的 AA Wallet (ERC-4337) 簽章與其綁定的 ONCHAINID (如：具備 CPA Claim) 來達成。任何試圖在 Node.js API 層做字串比對的權限控管，都是對 Web3 零信任架構的降級與污染。
 
 - **[Architect 穩定性與區塊鏈任務]**
 - **WORM 級別查核軌跡 (Hash-Chained Logs)**：導入密碼學雜湊鏈，防禦 DBA 竄改與截斷攻擊。
 - **再生原料憑證上鏈 (DPP Green Certificate)**：對接城市採礦戰略。當系統確認具備戰略循環（如人造螢石、高純度矽粉等）的再生原料入荷時 ，觸發智能合約，發行專屬的「再生原料憑證 Hash」 ，並自動綁定至該批次的數位產品護照 (DPP) 中 。
 
 - **視覺與邏輯對抗測試 (Adversarial Testing)**：投入異常清晰但金額極度不合理的樣本，驗證「動態信賴區間」能否自動將其凍結。
+- **日/月結餘快照機制 (Daily/Monthly Snapshot Rollups)**：解決數十萬筆傳票 On-the-fly 動態加總的效能瓶頸。每月底結算期末餘額快照，未來查詢只需載入「歷史快照 + 當期變動明細」，以支撐千億級帳務。
 
 ---
 

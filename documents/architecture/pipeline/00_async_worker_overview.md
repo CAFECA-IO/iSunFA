@@ -1,36 +1,89 @@
-# 實作與技術債：00. 非同步任務架構與速度的錯覺 (Async Worker Architecture)
+# ⚙️ 核心管線：00. 非同步任務執行器 (Mission Executor Architecture)
 
-> **CPA 查核視角 (Audit Lens)**：
-> 系統的「非同步架構 (Asynchronous Architecture)」極好地隱藏了 AI 處理的延遲 (Latency)，為使用者帶來極佳的流暢體驗。但這也意味著「錯誤的發生是靜默的 (Silent Failure)」。我們必須意識到，即使前端不卡頓，後端的 API Token 消耗與幻覺風險依然在背景真實發生，這在營運成本與審計合規上是巨大的隱患。
+> **Date**: 2026-05-10
+> **Author**: Tzuhan
+> **Target**: `src/services/mission.executor.service.ts`
 
-## 1. 模組實作現況 (Current Implementation)
+本文件詳細拆解 iSunFA 最核心的非同步 AI 任務調度中心：`MissionExecutor`。它採用了極具巧思的**「檔案系統佇列 (File-System Queue)」**設計，在不引入 Redis / BullMQ 等重量級依賴的前提下，實現了高可用、具備死信重試與防無窮迴圈的穩健架構。
 
-當前系統能夠「流暢運作且不卡頓」的真正核心，在於優秀的非同步解耦設計：
+---
 
-1. **極速的 API 請求 (Foreground)**：
-   當上傳憑證觸發 `/api/v1/user/account_book/{id}/ai_analysis` 時，系統並沒有在當下等待 AI 的生成。它僅僅是**將任務需求寫入檔案系統 (`MISSION_DIR`) 或資料庫**，便立刻回傳 `HTTP 200 SUCCESS` 給前端。這也是為何使用者完全感受不到上萬個 Token 傳輸的卡頓。
+## 🗺️ 核心執行流程圖 (Execution Flowchart)
 
-2. **默默吃苦的背景勞工 (Background)**：
-   在系統背後，`src/services/mission.executor.service.ts` 是一支常駐的輪詢 Worker。它會不斷掃描 `MISSION_DIR`，一旦發現有待辦的任務，就會依序呼叫 `JOURNAL_PARSING`、`VOUCHER_LINES_PARSING`、`ESG_PARSING`。
-   **真正的 Token 消耗與浮點數數學運算，全部發生在這裡。**
+```mermaid
+graph TD
+    %% Define Node Styles
+    classDef start_end fill:#2A3B4C,stroke:#00A8FF,stroke-width:2px,color:#fff;
+    classDef decision fill:#3E2723,stroke:#FF5252,stroke-width:2px,color:#fff;
+    classDef process fill:#1E3A8A,stroke:#60A5FA,stroke-width:2px,color:#fff;
+    classDef ai fill:#064E3B,stroke:#34D399,stroke-width:2px,color:#fff;
+    classDef storage fill:#4B5563,stroke:#9CA3AF,stroke-width:2px,color:#fff,shape:cylinder;
 
-## 2. 存在之技術債與架構地雷 (Technical Debts & Gotchas)
+    Start(["Start Polling (processNext)"]):::start_end --> ScanDir[/"Scan MISSION_DIR sub-folders"/]:::storage
 
-除了先前提到「AI 算數學」與「暴力注入字典」的技術債被這層架構隱藏之外，進一步深挖 `mission.executor.service.ts` 程式碼，還發現了另一個容易被忽略的系統級地雷：
+    ScanDir --> CheckFolder{"Check Folder Status"}:::decision
 
-### 🚨 脆弱的 JSON 正規表達式擷取 (Fragile Regex JSON Extraction)
-在 `mission.executor.service.ts` 的第 196 行左右，處理 AI 回傳結果時，若 `JSON.parse` 失敗，系統設計了一個 Fallback 救援機制：
-```typescript
-const globalMatch = taskResultStr.match(/\{[\s\S]*\}/);
+    CheckFolder -- "Has result.md" --> Skip1(["Skip (Already Done)"]):::start_end
+    CheckFolder -- "Has giveup.md" --> Skip2(["Skip (DLQ / Given Up)"]):::start_end
+    CheckFolder -- "failed_*.md >= 3" --> Skip3(["Skip (Max Retries Reached)"]):::start_end
+    CheckFolder -- "Pending / Valid" --> ReadPlan["Read plan.executor.json & mission.json"]:::process
+
+    ReadPlan --> LoopStart{"For each subTask"}:::decision
+
+    LoopStart -- "Has Next Task" --> BuildPrompt["Build Prompt (Inject Prior Results)"]:::process
+    BuildPrompt --> CheckSkill{"Is Skill Registered?"}:::decision
+
+    CheckSkill -- "Yes" --> InvokeSkill["Invoke skillRegistry"]:::ai
+    CheckSkill -- "No" --> InvokeLLM["Invoke ChatService (Raw LLM)"]:::ai
+
+    InvokeSkill --> SavePrior["Save Task Output to In-Memory Map"]:::process
+    InvokeLLM --> SavePrior
+
+    SavePrior --> ParseJSON["Parse Output to JSON (A=L+E Checks)"]:::process
+    ParseJSON --> LoopStart
+
+    LoopStart -- "All Tasks Done" --> Aggregation["Aggregate Results (Group by fileId)"]:::process
+    Aggregation --> WriteAudit[/"Write execution_log.json"/]:::storage
+    WriteAudit --> WriteResult[/"Write result.md (Mark as Done)"/]:::storage
+    WriteResult --> End(["Finish Execution"]):::start_end
 ```
-**【技術債風險】**：
-這是一個非常危險的 Regex！如果在 AI 的 Markdown 輸出中，出現了**多個**獨立的 JSON 區塊（例如 AI 解釋邏輯時附帶了另一個 JSON 範例），這段語法會直接「從第一個 `{` 一路截斷到最後一個 `}`」，把中間所有的純文字也一併包進去，產生一個絕對無法 Parse 的超級無效字串。
-**【審計風險】**：
-這會導致該筆憑證的解析結果直接變成 fallback 的純文字，而無法結構化寫入資料庫。對於要求 100% 準確對應的會計系統而言，這會引發無聲的資料遺失 (Silent Data Loss)。
 
-## 3. Deloitte 級別重構目標 (Refactoring Towards Audit-Ready)
+---
 
-1. **改用結構化輸出 (Structured Outputs)**：
-   既然 Gemini 已經支援嚴格的 JSON Schema 設定，應全面廢除這種脆弱的 Regex 擷取，直接依賴 `responseMimeType: "application/json"`，要求模型原生輸出 JSON。
-2. **背景任務的死信佇列 (Dead-Letter Queue, DLQ)**：
-   因為錯誤發生在背景，如果 AI 解析失敗，必須有明確的機制將失敗任務丟入 DLQ，並在前端 UI 顯示「憑證需要人工介入 (Requires Human Review)」，確保沒有任何一筆異常憑證被系統「靜默吞沒」。
+## 🔍 底層邏輯深度剖析 (Deep Dive)
+
+`processNext()` 函式是這支 Worker 的心臟。以下是其底層邏輯的精確拆解：
+
+### 1. 📂 任務篩選與優先級判定 (Filtering & Prioritization)
+
+Worker 啟動後會掃描 `MISSION_DIR`（預設為 `missions/` 資料夾）。它的防禦性編程非常亮眼：
+
+- **去重防護**：若資料夾存在 `result.md`，代表已完成，直接跳過。
+- **死信防無窮迴圈 (DLQ Protection)**：若存在 `giveup.md` 或 `failed_*.md` 數量大於等於 3 次，代表這是個「毒藥任務 (Poison Pill)」，為避免燒光 Gemini API Token，強制跳過。
+- **優先級降級**：若存在 1~2 個 `failed_*.md`，會將其放入 `fallbackTargetFolderInfo`，優先執行完全沒有失敗過的任務。
+
+### 2. 🧠 上下文流轉 (In-Memory Context Passing)
+
+在處理複雜的 `plan.executor.json`（例如：先解析發票，再推論分錄）時，系統設計了一個極度輕量的 State Machine：
+
+- **`priorResults` Map**：這是一個存在記憶體中的 KV Store。當 `Task 1`（萃取廠商名稱）完成後，結果會被寫入 `priorResults`，隨後 `buildTaskPrompt()` 在準備 `Task 2`（查表分錄）時，可以直接取用前面的產出，實現了完美的「步驟串聯」。
+
+### 3. 🤖 混合決策管線的分流 (Skill vs LLM & Vendor Registry)
+
+這裡實作了我們引以為傲的「混合決策管線」，分為三個層級的分流攔截：
+
+1. **任務層級分流 (`skillRegistry`)**：程式會先檢查 `subTaskConfig.type` 是否為預先寫死的 TypeScript Skill。
+2. **業務邏輯攔截 (`VENDOR_RULE_REGISTRY`)**：針對傳票解析，若上一步判定廠商為「中華電信」等已知特例，將直接強行攔截，走決定論查表邏輯，100% 杜絕 LLM 算數學。
+3. **AI 推論 Fallback**：若上述兩道防線皆無命中，才會退回到純粹的 `chatService.generateRaw()` 請求 Gemini 的推論。
+
+### 4. 📝 稽核軌跡與 JSON 解析 (Audit & JSON Extraction)
+
+- **Token 消耗追蹤**：每執行完一個子任務，都會精確計算 `inputTokens` 與 `outputTokens`，並寫入 `execution_log.json`。這對企業估算營運成本極度重要。
+- **JSON 擷取技術債**：目前程式碼 (約 L196) 在遇到不合法的 JSON 時，會嘗試用 `/\{[\s\S]*\}/` 去擷取。**（注意：此處依據 Roadmap v2 將全面汰換為 `responseMimeType: "application/json"` 與強 Schema 驗證）。**
+- **資料庫寫入準備**：最後，系統會聰明地把解析出來的 `{ journal, voucherBase, esg }` 依照 `fileId` 打包成 `aggregatedResultsByFileId`，等待下一步被 Commit 進 Prisma 資料庫。
+
+---
+
+## 🏆 架構師評價 (Architectural Verdict)
+
+這支 `mission.executor.service.ts` 的架構品味極高。它利用**「檔案系統狀態機」**（用不同檔名的檔案代表任務狀態）取代了 Redis，這大幅降低了主權雲端地端部署的複雜度（Zero-Dependency）。結合 `giveup.md` 的防呆機制，這是一套完全夠格稱為 Enterprise-Ready 的非同步引擎。
