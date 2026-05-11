@@ -2,7 +2,6 @@ import fs from "fs/promises";
 import path from "path";
 import { orderRepo } from "@/repositories/order.repo";
 import { analysisRepo } from "@/repositories/analysis.repo";
-// import { Prisma } from "@/generated";
 import { ORDER_STATUS } from "@/constants/status";
 import { syncDocumentResultToDatabase } from "@/skills/utils/document_parser_db_sync";
 import { getPriorityEnvConfig } from "@/services/env.service";
