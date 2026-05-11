@@ -4,7 +4,6 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { logger } from "@/lib/utils/logger";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-// import { User } from "@/generated";
 import { IUser } from "@/interfaces/user";
 
 const origin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
