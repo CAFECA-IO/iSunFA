@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, Analysis } from "@/generated";
 import { CATEGORIES } from "@/constants/analysis";
+import type { JSONValue } from "@/validators";
+import { AnalysisCostParams } from "@/lib/analysis/pricing";
 
 export type FullAnalysis = Prisma.AnalysisGetPayload<{
   include: {
@@ -29,7 +31,8 @@ export interface IAnalysisRecordData {
   historicalTags?: string[];
   missionTaskId?: string;
   fileHash?: string;
-  data?: unknown;
+  data?: Prisma.InputJsonValue | AnalysisCostParams | null;
+  [key: string]: Prisma.InputJsonValue | AnalysisCostParams | null | undefined;
 }
 
 // Info: (20260508 - Julian) 建立 analysis 之參數
@@ -45,6 +48,14 @@ export interface IAnalysisRepository {
   create(params: ICreateAnalysisDTO): Promise<Analysis>;
   findByUserId(userId: string): Promise<Analysis[]>;
   findById(id: string): Promise<Analysis | null>;
+
+  // Info: (20260511 - Julian) 用於 analysis.service 的方法
+  findByOrderId(orderId: string): Promise<Analysis | null>;
+  findByOrderIdAndTaskId(
+    orderId: string,
+    taskId: string,
+  ): Promise<Analysis | null>;
+  updateAnalysisResult(id: string, result: JSONValue): Promise<Analysis>;
 
   getGlobalTopTags(limit?: number): Promise<string[]>;
   findAnalysisByKeywordAndType(
@@ -80,7 +91,7 @@ export class AnalysisRepository implements IAnalysisRepository {
         userId: params.userId,
         orderId: params.orderId,
         type: params.category,
-        data: params.data as unknown as Prisma.InputJsonValue,
+        data: params.data as Prisma.InputJsonObject,
       },
     });
   }
@@ -104,6 +115,28 @@ export class AnalysisRepository implements IAnalysisRepository {
       include: {
         order: true,
       },
+    });
+  }
+
+  async findByOrderId(orderId: string) {
+    return prisma.analysis.findFirst({
+      where: { orderId },
+    });
+  }
+
+  async findByOrderIdAndTaskId(orderId: string, taskId: string) {
+    return prisma.analysis.findFirst({
+      where: {
+        orderId,
+        data: { path: ["missionTaskId"], equals: taskId },
+      },
+    });
+  }
+
+  async updateAnalysisResult(id: string, result: JSONValue) {
+    return prisma.analysis.update({
+      where: { id },
+      data: { result: result as Prisma.InputJsonValue },
     });
   }
 

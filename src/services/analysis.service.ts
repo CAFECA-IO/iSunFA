@@ -393,7 +393,10 @@ export class AnalysisService {
 
             if (params.category === ANALYSIS_CATEGORY.BALANCE_SHEET) {
               parsedPrerequisiteParams.balanceSheetReport =
-                generateBalanceSheet(cumulativeLines);
+                generateBalanceSheet(
+                  cumulativeLines,
+                  matchedAccountBook?.parValue || 10,
+                );
             } else if (params.category === ANALYSIS_CATEGORY.CASH_FLOW) {
               parsedPrerequisiteParams.cashFlowReport =
                 generateCashFlowStatement(periodLines);
@@ -407,7 +410,10 @@ export class AnalysisService {
               params.category === ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS
             ) {
               parsedPrerequisiteParams.balanceSheetReport =
-                generateBalanceSheet(cumulativeLines);
+                generateBalanceSheet(
+                  cumulativeLines,
+                  matchedAccountBook?.parValue || 10,
+                );
               parsedPrerequisiteParams.cashFlowReport =
                 generateCashFlowStatement(periodLines);
               parsedPrerequisiteParams.incomeStatementReport =
@@ -544,28 +550,22 @@ export class AnalysisService {
       }
 
       try {
-        const existingOrder = await orderRepo.findFirst({
-          where: { id: params.orderId },
-        });
+        const existingOrder = await orderRepo.findById(params.orderId);
         if (existingOrder && parsedPrerequisiteParams) {
           const orderDataObj =
             (existingOrder.data as Record<string, unknown>) || {};
           const innerData =
             (orderDataObj.data as Record<string, unknown>) || {};
 
-          await orderRepo.update({
-            where: { id: params.orderId },
+          const updatedOrderData = {
+            ...orderDataObj,
             data: {
-              data: {
-                ...orderDataObj,
-                data: {
-                  ...innerData,
-                  prerequisiteData: parsedPrerequisiteParams,
-                },
-                // Info: (20260509 - Julian) 移除 Prisma 依賴，使用 IJSONObject
-              } as unknown as IJSONObject, // Prisma.InputJsonObject,
+              ...innerData,
+              prerequisiteData: parsedPrerequisiteParams,
             },
-          });
+          } as IJSONObject;
+
+          await orderRepo.updateOrderData(params.orderId, updatedOrderData);
           console.log(
             `[AnalysisService] Injected prerequisiteData into Order ${params.orderId} successfully.`,
           );

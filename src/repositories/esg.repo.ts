@@ -357,7 +357,7 @@ export class EsgRepository implements IEsgRepository {
 
     const esgRecords = (await prisma.esgRecord.findMany(
       mergedArgs,
-    )) as unknown as EsgRecordWithRelations[];
+    )) as EsgRecordWithRelations[];
     return this.attachEsgRecordRelationsAndFormat(esgRecords);
   }
 
@@ -714,7 +714,7 @@ export class EsgRepository implements IEsgRepository {
       where: { id },
       data,
       include: { file: true, coefficient: true, emissionSource: true },
-    })) as unknown as EsgRecordWithRelations;
+    })) as EsgRecordWithRelations;
 
     if (!esgRecord) return null;
 

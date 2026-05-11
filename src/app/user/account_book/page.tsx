@@ -34,6 +34,7 @@ export default function UserMainPage() {
   const [formTeamId, setFormTeamId] = useState("");
   const [formEnterpriseId, setFormEnterpriseId] = useState("");
   const [formEsgIndustryId, setFormEsgIndustryId] = useState<string>("");
+  const [formParValue, setFormParValue] = useState<number>(10);
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -117,6 +118,7 @@ export default function UserMainPage() {
     setFormRule(RULE.T_IFRS);
     setFormEnterpriseId("");
     setFormEsgIndustryId("");
+    setFormParValue(10);
     if (teams.length > 0) setFormTeamId(teams[0].id);
     setIsModalOpen(true);
   };
@@ -135,6 +137,7 @@ export default function UserMainPage() {
     setFormRule(book.rule);
     setFormEnterpriseId(book.enterpriseId || "");
     setFormEsgIndustryId(book.esgIndustryId?.toString() || "");
+    setFormParValue(book.parValue || 10);
     setFormTeamId(book.teamId || "");
     setIsModalOpen(true);
   };
@@ -165,6 +168,7 @@ export default function UserMainPage() {
           teamId: formTeamId,
           enterpriseId: formEnterpriseId || null,
           esgIndustryId: formEsgIndustryId ? Number(formEsgIndustryId) : null,
+          parValue: formParValue,
         }),
       });
 
@@ -325,6 +329,26 @@ export default function UserMainPage() {
                     max="2050"
                     value={formStartYear}
                     onChange={(e) => setFormStartYear(Number(e.target.value))}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="form_par_value"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
+                    {t("account_book_selection.form_par_value")}
+                  </label>
+                  <input
+                    id="form_par_value"
+                    aria-label={t("account_book_selection.form_par_value")}
+                    required
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    value={formParValue}
+                    onChange={(e) => setFormParValue(Number(e.target.value))}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
                   />
                 </div>

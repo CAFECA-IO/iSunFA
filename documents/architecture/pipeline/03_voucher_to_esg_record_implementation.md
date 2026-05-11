@@ -1,5 +1,8 @@
 # 實作與技術債：03. 傳票至 ESG 碳排紀錄 (Voucher to esgRecord)
 
+> **Date**: 2026-05-10
+> **Author**: Tzuhan
+
 > **CPA 查核視角 (Audit Lens)**：
 > 在混合審計架構中，碳盤查 (Carbon Accounting) 的嚴謹度必須與財務審計齊平。每一筆碳排紀錄 (esgRecord) 的「活動數據 (Activity Data)」與「排放係數 (Emission Factor)」都必須留下不可竄改的追溯軌跡。系統不能容許任何黑盒子式的碳排計算。
 
@@ -31,4 +34,6 @@ AI 被要求：
    - 限制 AI 的職責：只准從憑證中萃取「活動名稱 (esgActivityType, 例：購買車用汽油)」、「消耗量 (esgAmount, 例：100)」與「單位 (esgUnit, 例：加侖)」。**嚴禁 AI 進行乘法計算**。
 2. **第二段：系統層的精確匹配與數學運算 (System-Level Vector Matching & Math)**
    - 在 Node.js 後端，拿著 AI 解析出的 `esgActivityType` 去向量資料庫 (Vector Search) 尋找 `true_esg_coefficients.ts` 中最相關的係數。
-   - 找出係數後，由系統使用 `Decimal` 模組執行嚴格的浮點數相乘 (`esgAmount * emissionFactor`)，確保盤查結果具備 **0.0000% 的數學誤差**，並將匹配的 `coefficientId` 牢牢釘在關聯資料庫中以供溯源查核。
+   - 找出係數後，由系統使用 `Decimal` 模組執行嚴格的浮點數相乘 (`esgAmount * emissionFactor`)，確保盤查結果具備 **0.0000% 的數學誤差**。
+3. **第三段：物理質量守恆護欄 (Mass Conservation Articulation)**
+   - 這是阻絕 AI 漂綠的終極防呆機制。將 AI 萃取出的消耗量與企業 ERP 系統進行比對（`期初庫存 + 本期採購 = 消耗重量 + 期末庫存`）。若數量大於物理上限，立刻報錯凍結。

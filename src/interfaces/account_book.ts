@@ -14,5 +14,6 @@ export interface IAccountBook extends IAccountBookBase {
   userRole?: string;
   enterpriseId?: string | null;
   esgIndustryId?: number | null;
+  parValue?: number; // Info: (20260510 - Tzuhan) 面額
   createdAt?: string | Date;
 }

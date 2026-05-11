@@ -9,7 +9,6 @@ import {
 } from "@/lib/analysis/pricing";
 import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
-import { Prisma } from "@/generated";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import {
@@ -17,23 +16,14 @@ import {
   CURRENCY_UNIT,
   CurrencyUnit,
 } from "@/constants/price";
+import { IJSONObject } from "@/validators/common";
 
 export async function getOrdersByUserId(userId: string, type?: string | null) {
   const orders = await paymentRepo.getOrdersByUserId(userId, type);
 
   return orders.map((o) => {
     // Info: (20260409 - Luphia) Access the latest payment transaction to get fiat swipe status
-    const tx =
-      "paymentTransactions" in o
-        ? (
-            o as unknown as {
-              paymentTransactions: Array<{
-                status: string;
-                paymentMethod?: { data?: { card_info?: unknown } };
-              }>;
-            }
-          ).paymentTransactions?.[0]
-        : undefined;
+    const tx = o.paymentTransactions?.[0];
     const pmData = tx?.paymentMethod?.data as
       | Record<string, unknown>
       | undefined;
@@ -193,7 +183,7 @@ export async function generateAnalysisOrder(
     amount: -cost,
     unit: "ICP",
     // Info: (20260128 - Luphia) Store the full data object including timestamp
-    data: orderData as unknown as Prisma.InputJsonObject,
+    data: JSON.parse(jsonString) as IJSONObject,
     status: ORDER_STATUS.PENDING,
     challenge: challenge,
   });

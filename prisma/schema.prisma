@@ -340,6 +340,9 @@ model AccountBook {
   teamId String @map("team_id")
   team   Team   @relation(fields: [teamId], references: [id])
 
+  // Info: (20260508 - Tzuhan) 面額 (預設 10)
+  parValue Float @default(10) @map("par_value")
+
   // Info: (20260305 - Julian) 一個帳本可以有多個憑證
   journals Journal[]
 

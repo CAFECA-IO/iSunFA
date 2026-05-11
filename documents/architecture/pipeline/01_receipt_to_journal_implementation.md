@@ -1,5 +1,8 @@
 # 實作與技術債：01. 憑證上傳至日記帳 (Receipt to Journal)
 
+> **Date**: 2026-05-10
+> **Author**: Tzuhan
+
 > **CPA 查核視角 (Audit Lens)**：
 > 日記帳 (Journal) 是所有財報的起源，也就是「原始憑證」轉化為「文字紀錄」的第一道關卡。此階段的底線是「零捏造 (Zero Invention)」，客戶揭露多少憑證，系統就只產出多少事實，確保後續查帳時的人事時地物能 100% 溯源。
 
@@ -22,6 +25,9 @@
 ### 🚨 2.2 缺乏防呆快取機制 (Missing Hash-based Caching)
 目前只要使用者重複上傳相同憑證，系統就會無條件重新打給 Gemini 消耗 Token。
 作為企業級架構，第一道防線必須是在影像進入 AI 前計算 File Hash。若影像相同且過去解析的 `confidence` 足夠高，應直接調用資料庫內的客觀紀錄，確保系統「冪等性 (Idempotency)」並極小化營運成本。
+
+### 🚨 2.3 脆弱的 JSON 正規表達式擷取 (Fragile Regex JSON Extraction)
+在目前的實作中，當 AI 回傳結果且 `JSON.parse` 失敗時，系統依賴 `/\{[\s\S]*\}/` 進行 Fallback 擷取。這是一個巨大的技術債。若 AI 的 Markdown 中包含多個獨立的 JSON 區塊，此 Regex 會將中間的純文字一併包入，產生絕對無法 Parse 的無效字串，導致該筆憑證靜默遺失 (Silent Data Loss)。
 
 ## 3. Deloitte 級別重構目標 (Refactoring Towards Audit-Ready)
 

@@ -2,11 +2,11 @@ import fs from "fs/promises";
 import path from "path";
 import { orderRepo } from "@/repositories/order.repo";
 import { analysisRepo } from "@/repositories/analysis.repo";
-import { Prisma } from "@/generated";
 import { ORDER_STATUS } from "@/constants/status";
 import { syncDocumentResultToDatabase } from "@/skills/utils/document_parser_db_sync";
 import { getPriorityEnvConfig } from "@/services/env.service";
 import type { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
+import type { JSONValue } from "@/validators";
 
 export class IssueRecorderService {
   async processNext() {
@@ -161,31 +161,25 @@ export class IssueRecorderService {
            * "Cancel, temporarily keep mission and task table". Thus Analysis might still exist.
            * Let's find analysis by orderId and update its result
            */
-          let analysis = await analysisRepo.findFirst({
-            where: {
-              orderId: order.id,
-              data: { path: ["missionTaskId"], equals: taskId },
-            },
-          });
+          let analysis = await analysisRepo.findByOrderIdAndTaskId(
+            order.id,
+            taskId,
+          );
 
           if (!analysis) {
-            analysis = await analysisRepo.findFirst({
-              where: { orderId: order.id },
-            });
+            analysis = await analysisRepo.findByOrderId(order.id);
           }
 
           if (analysis) {
-            let parsedResult: unknown = resultContent;
+            let parsedResult: JSONValue = resultContent;
             try {
-              parsedResult = JSON.parse(resultContent);
+              // Info: (20260511 - Julian) 解析 JSON 格式
+              parsedResult = JSON.parse(resultContent) as JSONValue;
             } catch {
               // Info: (20260420 - Luphia) fallback to string
             }
 
-            await analysisRepo.update({
-              where: { id: analysis.id },
-              data: { result: parsedResult as Prisma.InputJsonValue },
-            });
+            await analysisRepo.updateAnalysisResult(analysis.id, parsedResult);
 
             // Info: (20260420 - Luphia) Save Analysis tags if present
             if (typeof parsedResult === "object" && parsedResult !== null) {

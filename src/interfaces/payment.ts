@@ -20,6 +20,22 @@ export type IOenOrderData = {
   timestamp?: string;
 };
 
+export interface IAIAnalysisOrderFile {
+  hash: string;
+  name: string;
+  journalId?: string;
+  voucherId?: string;
+  esgRecordId?: string;
+}
+
+export interface IAIAnalysisOrderData {
+  files?: IAIAnalysisOrderFile[];
+  data?: Record<string, unknown> & {
+    files?: IAIAnalysisOrderFile[];
+  };
+  [key: string]: unknown;
+}
+
 export interface IOenCheckoutResponse {
   requireBinding: boolean;
   redirectUrl?: string;

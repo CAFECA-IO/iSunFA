@@ -95,6 +95,11 @@ export const API_ERRORS = {
     message: "User has already registered for this campaign",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  VL_SCHEMA_ERROR: {
+    code: "VL000010",
+    message: "Schema validation failed",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 
   // Info: (20260421 - Luphia) NF: Not Found Resources (000001 ~ 000099)
   NF_USER: {
