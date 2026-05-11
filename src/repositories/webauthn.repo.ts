@@ -1,10 +1,11 @@
 import { User, Prisma, Role } from "@/generated";
 import { prisma } from "@/lib/prisma";
+import { IUser } from "@/interfaces/user";
 
 export interface IWebAuthnRepository {
-  findUserByCredentialId(credentialId: string): Promise<User | null>;
-  findUserByAddress(address: string): Promise<User | null>;
-  findUserById(id: string): Promise<User | null>;
+  findUserByCredentialId(credentialId: string): Promise<IUser | null>;
+  findUserByAddress(address: string): Promise<IUser | null>;
+  findUserById(id: string): Promise<IUser | null>;
   findUsersByIds(ids: string[]): Promise<User[]>;
   findUserByName(name: string): Promise<User | null>;
   findAllUsersForAdmin(params: {
@@ -38,29 +39,59 @@ export interface IWebAuthnRepository {
     credentialId?: string;
     name?: string;
     imageUrl?: string;
-  }): Promise<User>;
+  }): Promise<IUser>;
   clearSuperAdmins(): Promise<void>;
 }
 
 class WebAuthnRepository implements IWebAuthnRepository {
+  // Info: (20260511 - Julian) 轉換格式
+  private transformUserToIUser(user: User): IUser {
+    return {
+      id: user.id,
+      address: user.address,
+      pubKeyX: user.pubKeyX,
+      pubKeyY: user.pubKeyY,
+      credentialId: user.credentialId,
+      name: user.name,
+      imageUrl: user.imageUrl,
+      role: user.role,
+      currentChallenge: user.currentChallenge,
+      identityAddress: user.identityAddress,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
   public async findUserByCredentialId(
     credentialId: string,
-  ): Promise<User | null> {
-    return prisma.user.findUnique({
+  ): Promise<IUser | null> {
+    const user = await prisma.user.findUnique({
       where: { credentialId },
     });
+
+    if (!user) return null;
+
+    return this.transformUserToIUser(user);
   }
 
-  public async findUserByAddress(address: string): Promise<User | null> {
-    return prisma.user.findUnique({
+  public async findUserByAddress(address: string): Promise<IUser | null> {
+    const user = await prisma.user.findUnique({
       where: { address },
     });
+
+    if (!user) return null;
+
+    return this.transformUserToIUser(user);
   }
 
-  public async findUserById(id: string): Promise<User | null> {
-    return prisma.user.findUnique({
+  public async findUserById(id: string): Promise<IUser | null> {
+    const user = await prisma.user.findUnique({
       where: { id },
     });
+
+    if (!user) return null;
+
+    return this.transformUserToIUser(user);
   }
 
   public async findUsersByIds(ids: string[]): Promise<User[]> {
@@ -198,8 +229,8 @@ class WebAuthnRepository implements IWebAuthnRepository {
     credentialId?: string;
     name?: string;
     imageUrl?: string;
-  }): Promise<User> {
-    return prisma.user.upsert({
+  }): Promise<IUser> {
+    const user = await prisma.user.upsert({
       where: { address: data.address },
       update: {
         pubKeyX: data.pubKeyX,
@@ -219,6 +250,8 @@ class WebAuthnRepository implements IWebAuthnRepository {
         imageUrl: data.imageUrl ?? null,
       },
     });
+
+    return this.transformUserToIUser(user);
   }
 
   public async clearSuperAdmins(): Promise<void> {

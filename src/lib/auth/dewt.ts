@@ -4,7 +4,7 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { logger } from "@/lib/utils/logger";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import { User } from "@/generated";
+import { IUser } from "@/interfaces/user";
 
 const origin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const PEM_PRIVATE_KEY = process.env.DEWT_PRIVATE_KEY_PEM;
@@ -57,7 +57,7 @@ async function loadKeys(): Promise<ILoadedKeys> {
   }
 }
 
-export const signDeWT = async (user: User): Promise<string> => {
+export const signDeWT = async (user: IUser): Promise<string> => {
   const { privateKey } = await loadKeys();
 
   // Info: (20251223 - Tzuhan) Payload 包含前端需要的基礎資訊
@@ -100,7 +100,7 @@ export const verifyDeWT = async (dewt: string): Promise<JWTPayload> => {
 
 export const getIdentityFromDeWT = async (
   authHeader: string | null | undefined,
-): Promise<User | null> => {
+): Promise<IUser | null> => {
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return null;
   }
@@ -149,7 +149,7 @@ export const getIdentityFromDeWT = async (
     identityAddress: null,
     createdAt: payload.iat ? new Date(payload.iat * 1000) : new Date(),
     updatedAt: payload.iat ? new Date(payload.iat * 1000) : new Date(),
-  } as User;
+  } as IUser;
   console.log(result);
   return result;
 };

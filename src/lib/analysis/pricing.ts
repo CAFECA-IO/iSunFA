@@ -70,7 +70,10 @@ export type AnalysisCostParams =
 export function getAnalysisCost(params: AnalysisCostParams): number {
   // Info: (20260419 - Luphia) 1. 取得對應分類的基礎價格
   const category = params.category;
-  const baseCost = ANALYSIS_BASE_COSTS[category] ?? 9999;
+  const baseCost =
+    category === ANALYSIS_CATEGORY.JOURNAL_CORRECTION
+      ? ANALYSIS_BASE_COSTS[ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS]
+      : (ANALYSIS_BASE_COSTS[category] ?? 0);
 
   // Info: (20260419 - Luphia) 2. 若傳入的參數包含 periodType (IAnalysisParams)，則乘上時間週期倍率
   if ("periodType" in params && params.periodType) {
