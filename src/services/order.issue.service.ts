@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { ORDER_STATUS } from "@/constants/status";
 
 export class OrderIssueService {
   async getExecutionStatusesForOrders<
@@ -23,10 +24,16 @@ export class OrderIssueService {
 
     return Promise.all(
       orders.map(async (order) => {
-        let executionStatus = "PENDING";
+        let executionStatus: string =
+          order.status === ORDER_STATUS.CANCEL
+            ? ORDER_STATUS.CANCEL
+            : ORDER_STATUS.PENDING;
         let executionConfidence: number | null = null;
 
-        if (order.status === "EXECUTING" || order.status === "COMPLETED") {
+        if (
+          order.status === ORDER_STATUS.EXECUTING ||
+          order.status === ORDER_STATUS.COMPLETED
+        ) {
           try {
             const taskIds = order.mission
               ? JSON.parse(order.mission as string)
@@ -44,7 +51,7 @@ export class OrderIssueService {
                 const folderName = folders.find((f) =>
                   f.endsWith(`_${taskId}`),
                 );
-                let taskStatus = "PENDING";
+                let taskStatus: string = ORDER_STATUS.PENDING;
                 let taskConf: number | null = null;
 
                 if (folderName) {
@@ -73,11 +80,13 @@ export class OrderIssueService {
                         f.startsWith("failed_") && f.endsWith(".md"),
                     );
 
-                    if (hasApproved) taskStatus = "COMPLETED";
-                    else if (hasSubmit) taskStatus = "COMPLETED";
-                    else if (hasExecutionLog) taskStatus = "EXECUTING";
-                    else if (failedMdFiles.length >= 3) taskStatus = "FAILED";
-                    else taskStatus = "PENDING";
+                    if (hasApproved) taskStatus = ORDER_STATUS.COMPLETED;
+                    else if (hasSubmit) taskStatus = ORDER_STATUS.COMPLETED;
+                    else if (hasExecutionLog)
+                      taskStatus = ORDER_STATUS.EXECUTING;
+                    else if (failedMdFiles.length >= 3)
+                      taskStatus = ORDER_STATUS.FAILED;
+                    else taskStatus = ORDER_STATUS.PENDING;
 
                     let confidenceFileToRead = "";
                     if (hasApproved) {
@@ -114,10 +123,10 @@ export class OrderIssueService {
                   }
                 }
 
-                if (taskStatus === "FAILED") anyFailed = true;
-                if (taskStatus === "PENDING") anyPending = true;
-                if (taskStatus === "EXECUTING") anyExecuting = true;
-                if (taskStatus !== "COMPLETED") allCompleted = false;
+                if (taskStatus === ORDER_STATUS.FAILED) anyFailed = true;
+                if (taskStatus === ORDER_STATUS.PENDING) anyPending = true;
+                if (taskStatus === ORDER_STATUS.EXECUTING) anyExecuting = true;
+                if (taskStatus !== ORDER_STATUS.COMPLETED) allCompleted = false;
 
                 if (taskConf !== null) {
                   totalConfidence += taskConf;
@@ -125,10 +134,10 @@ export class OrderIssueService {
                 }
               }
 
-              if (anyFailed) executionStatus = "FAILED";
-              else if (anyPending) executionStatus = "PENDING";
-              else if (anyExecuting) executionStatus = "EXECUTING";
-              else if (allCompleted) executionStatus = "COMPLETED";
+              if (anyFailed) executionStatus = ORDER_STATUS.FAILED;
+              else if (anyPending) executionStatus = ORDER_STATUS.PENDING;
+              else if (anyExecuting) executionStatus = ORDER_STATUS.EXECUTING;
+              else if (allCompleted) executionStatus = ORDER_STATUS.COMPLETED;
 
               if (confidenceCount > 0) {
                 executionConfidence = Math.round(

@@ -7,11 +7,13 @@ import { List, UserCircle } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import { formatDate } from "@/lib/utils/date";
+import { ORDER_STATUS } from "@/constants/status";
 
 interface IOrderManagementData {
   id: string;
   createdAt: string;
   type: string;
+  data: Record<string, unknown> | null;
   amount: number;
   unit: string;
   status: string;
@@ -22,6 +24,7 @@ interface IOrderManagementData {
     name: string | null;
     address: string;
   } | null;
+  tokens: number | null;
   paymentTransactions: {
     status: string;
   }[];
@@ -131,9 +134,24 @@ export default function OrderManagementPage() {
     {
       key: "type",
       label: t("order_management.table.type"),
-      render: (record) => (
-        <span className="text-sm font-medium text-gray-700">{record.type}</span>
-      ),
+      render: (record) => {
+        let display = record.type;
+        const orderData = record.data as Record<string, unknown>;
+        const dataField = orderData?.data as
+          | Record<string, unknown>
+          | undefined;
+        const rawCat = dataField?.category || orderData?.category;
+
+        if (rawCat) {
+          const cat = String(rawCat);
+          const key = `analysis.categories.${cat.toLowerCase()}`;
+          const translated = t(key);
+          display = translated !== key ? translated : cat;
+        }
+        return (
+          <span className="text-sm font-medium text-gray-700">{display}</span>
+        );
+      },
     },
     {
       key: "amount",
@@ -146,12 +164,23 @@ export default function OrderManagementPage() {
       ),
     },
     {
+      key: "tokens",
+      label: t("order_management.table.tokens"),
+      align: "right",
+      render: (record) => (
+        <span className="text-sm font-medium text-gray-900">
+          {record.tokens ? record.tokens.toLocaleString() : "-"}
+        </span>
+      ),
+    },
+    {
       key: "status",
       label: t("order_management.table.order_status"),
       render: (record) => (
         <span
           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
-            record.status === "PAID" || record.status === "COMPLETED"
+            record.status === ORDER_STATUS.PAID ||
+            record.status === ORDER_STATUS.COMPLETED
               ? "bg-emerald-50 text-emerald-700"
               : "bg-orange-50 text-orange-700"
           }`}
@@ -190,15 +219,18 @@ export default function OrderManagementPage() {
         let text = t("order_management.table.pending");
         let colorClass = "bg-gray-100 text-gray-600";
 
-        if (record.executionStatus === "COMPLETED") {
+        if (record.executionStatus === ORDER_STATUS.COMPLETED) {
           text = t("order_management.table.executed");
           colorClass = "bg-purple-50 text-purple-700";
-        } else if (record.executionStatus === "EXECUTING") {
+        } else if (record.executionStatus === ORDER_STATUS.EXECUTING) {
           text = t("order_management.table.processing");
           colorClass = "bg-blue-50 text-blue-700";
-        } else if (record.executionStatus === "FAILED") {
+        } else if (record.executionStatus === ORDER_STATUS.FAILED) {
           text = t("order_management.table.failed");
           colorClass = "bg-red-50 text-red-700";
+        } else if (record.executionStatus === ORDER_STATUS.CANCEL) {
+          text = "CANCEL";
+          colorClass = "bg-orange-50 text-orange-700";
         }
 
         return (

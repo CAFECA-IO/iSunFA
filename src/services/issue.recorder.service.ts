@@ -110,10 +110,50 @@ export class IssueRecorderService {
           // Info: (20260420 - Luphia) Read the actual result text
           const resultContent = await fs.readFile(resultFile, "utf8");
 
+          let tokensConsumed = 0;
+          try {
+            const parsedResult = JSON.parse(resultContent) as Record<
+              string,
+              unknown
+            >;
+            const usage = parsedResult?.usage as
+              | Record<string, unknown>
+              | undefined;
+            if (usage?.totalTokens) tokensConsumed = Number(usage.totalTokens);
+            else if (usage?.total_tokens)
+              tokensConsumed = Number(usage.total_tokens);
+            else if (parsedResult?.tokens)
+              tokensConsumed = Number(parsedResult.tokens);
+            else if (parsedResult?.totalTokens)
+              tokensConsumed = Number(parsedResult.totalTokens);
+          } catch {}
+
+          try {
+            // Info: (20260510 - Luphia) Try reading from missions directory if local execution
+            const missionLogPath = path.join(
+              process.cwd(),
+              setupConfig.MISSION_DIR || "missions",
+              folderName,
+              "execution_log.json",
+            );
+            const logStr = await fs.readFile(missionLogPath, "utf8");
+            const logs = JSON.parse(logStr);
+            if (Array.isArray(logs)) {
+              let logTokens = 0;
+              for (const log of logs) {
+                if (log.totalTokens) logTokens += Number(log.totalTokens);
+              }
+              if (logTokens > 0) tokensConsumed = logTokens;
+            }
+          } catch {}
+
           // Info: (20260420 - Luphia) Update Order Status loosely
           await orderRepo.update({
             where: { id: order.id },
-            data: { status: ORDER_STATUS.COMPLETED },
+            data: {
+              status: ORDER_STATUS.COMPLETED,
+              tokens: tokensConsumed > 0 ? tokensConsumed : undefined,
+            },
           });
 
           /**

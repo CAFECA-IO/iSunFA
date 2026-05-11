@@ -8,6 +8,7 @@ export const orderManagement = {
     order_id: "Order ID",
     type: "Type",
     amount: "Amount",
+    tokens: "Tokens",
     order_status: "Order Status",
     payment_record: "Payment Record",
     execution_status: "Execution Status",

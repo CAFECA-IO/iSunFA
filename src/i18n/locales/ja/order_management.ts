@@ -8,6 +8,7 @@ export const orderManagement = {
     order_id: "注文ID",
     type: "タイプ",
     amount: "金額",
+    tokens: "Tokens",
     order_status: "注文ステータス",
     payment_record: "支払い記録",
     execution_status: "実行ステータス",

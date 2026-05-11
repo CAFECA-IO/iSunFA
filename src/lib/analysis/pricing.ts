@@ -6,6 +6,7 @@ import {
   ANALYSIS_CATEGORY,
   AnalysisCategory,
   AnalysisPeriod,
+  type MileageAction,
 } from "@/constants/analysis";
 import { OrderType } from "@/constants/status";
 
@@ -33,9 +34,12 @@ export interface IConsultationParams {
 
 export interface ITransportationParams {
   category: AnalysisCategory;
-  origin: { lat: number | ""; lng: number | "" };
-  dest: { lat: number | ""; lng: number | "" };
-  weightKg: number | "";
+  origin?: { lat: number | ""; lng: number | "" };
+  dest?: { lat: number | ""; lng: number | "" };
+  weightKg?: number | "";
+  action?: MileageAction;
+  text?: string;
+  items?: Array<{ origin: string; dest: string }>;
 }
 
 export interface IOrderParams {

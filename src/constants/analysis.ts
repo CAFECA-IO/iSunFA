@@ -63,3 +63,20 @@ export const PERIOD_TYPES = [
   ANALYSIS_PERIOD.WEEKLY,
   ANALYSIS_PERIOD.DAILY,
 ] as const;
+
+export const ROUTE_MODE = {
+  LAND: "LAND",
+  SEA_LAND: "SEA_LAND",
+  AIR_LAND: "AIR_LAND",
+  SEA_LAND_AIR: "SEA_LAND_AIR",
+} as const;
+
+export type RouteMode = (typeof ROUTE_MODE)[keyof typeof ROUTE_MODE];
+
+export const MILEAGE_ACTION = {
+  PARSE_MULTIPLE: "parse_multiple",
+  CALCULATE_BATCH: "calculate_batch",
+} as const;
+
+export type MileageAction =
+  (typeof MILEAGE_ACTION)[keyof typeof MILEAGE_ACTION];

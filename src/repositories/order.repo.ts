@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated";
+import {
+  IOrderWithMission,
+  IOrderUpdateTokensParams,
+} from "@/interfaces/payment";
+import { ORDER_TYPE, ORDER_STATUS } from "@/constants/status";
 
 export class OrderRepository {
   async findFirst(args: Prisma.OrderFindFirstArgs) {
@@ -55,6 +60,30 @@ export class OrderRepository {
           take: 1,
         },
       },
+    });
+  }
+
+  async getOrdersMissingTokens(): Promise<IOrderWithMission[]> {
+    const orders = await prisma.order.findMany({
+      where: {
+        type: ORDER_TYPE.ANALYSIS,
+        status: ORDER_STATUS.COMPLETED,
+        mission: { not: null },
+        OR: [{ tokens: null }, { tokens: 0 }],
+      },
+      select: {
+        id: true,
+        mission: true,
+        tokens: true,
+      },
+    });
+    return orders;
+  }
+
+  async updateOrderTokens(params: IOrderUpdateTokensParams): Promise<void> {
+    await prisma.order.update({
+      where: { id: params.id },
+      data: { tokens: params.tokens },
     });
   }
 }

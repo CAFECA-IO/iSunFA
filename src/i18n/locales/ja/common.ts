@@ -17,8 +17,11 @@ export const common = {
   origin: "Origin",
   destination: "Destination",
   weight: "Weight",
+  type: "Type",
+  multiple_items: "Multiple Items",
   load: "Load",
   no_data: "データなし",
+  unknown: "不明",
   cancel_edit_title: "編集をキャンセルしますか？",
   cancel_edit_message:
     "編集をキャンセルしてもよろしいですか？データは元の状態に戻ります。",

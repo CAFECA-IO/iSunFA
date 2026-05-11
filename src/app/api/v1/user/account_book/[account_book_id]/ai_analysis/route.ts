@@ -148,9 +148,14 @@ export async function POST(
         );
         if (existingOrder && existingOrder.status === "PENDING") {
           // Info: (20260420 - Luphia) Mark as PAID so MissionIssuer picks it up
-          await paymentRepo.updateOrderStatus(orderId, ORDER_STATUS.PAID, {
-            transactionHash: txHash,
-          });
+          await paymentRepo.updateOrderStatus(
+            orderId,
+            ORDER_STATUS.PAID,
+            undefined,
+            {
+              transactionHash: txHash,
+            },
+          );
         }
       } else {
         const order = await getPendingOrder(orderId, creator.id).catch(
@@ -165,9 +170,14 @@ export async function POST(
           );
 
           // Info: (20260420 - Luphia) Mark as PAID so MissionIssuer picks it up
-          await paymentRepo.updateOrderStatus(orderId, ORDER_STATUS.PAID, {
-            signature: JSON.stringify(authentication),
-          });
+          await paymentRepo.updateOrderStatus(
+            orderId,
+            ORDER_STATUS.PAID,
+            undefined,
+            {
+              signature: JSON.stringify(authentication),
+            },
+          );
         }
       }
     } catch (error) {
