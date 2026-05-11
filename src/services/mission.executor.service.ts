@@ -96,16 +96,16 @@ export async function processNext() {
     try {
       // Info: (20260420 - Luphia) Read mission data
       const missionJsonStr = await fs.readFile(missionJsonPath, "utf8");
-      const missionData = JSON.parse(missionJsonStr);
-      const pseudoMission = {
-        id: missionData.orderId || "MOCK_MISSION",
+      const missionData = JSON.parse(missionJsonStr) as Record<string, unknown>;
+      const pseudoMission: IPseudoMission = {
+        id: String(missionData.orderId || "MOCK_MISSION"),
         data: missionData,
-      } as unknown as IPseudoMission;
+      };
 
       let aggregatedResult: JSONValue = "Execution completed statically.";
       const aggregatedResultsByFileId: Record<
         string,
-        Record<string, unknown>
+        Record<string, JSONValue>
       > = {};
 
       if (useJsonPlan) {
@@ -127,12 +127,12 @@ export async function processNext() {
           console.log(
             `[MissionExecutor]   -> Running sub-task [${taskKey}] (${subTaskConfig.type})`,
           );
-          const pseudoTask = {
+          const pseudoTask: IPseudoTask = {
             id: taskKey,
             type: subTaskConfig.type,
-            data: subTaskConfig.data as unknown as JSONValue,
+            data: JSON.parse(JSON.stringify(subTaskConfig.data)),
             order: subTaskConfig.order,
-          } as IPseudoTask;
+          };
 
           // Info: (20260420 - Luphia) Build Prompt
           const fullPrompt = await buildTaskPrompt(
@@ -185,18 +185,18 @@ export async function processNext() {
 
           let cleanedTaskResultStr = taskResultStr.trim();
           let isJson = false;
-          let parsedVal: unknown;
+          let parsedVal: JSONValue | undefined;
 
           try {
             // Info: (20260430 - Luphia) Try to parse as JSON
-            parsedVal = JSON.parse(cleanedTaskResultStr);
+            parsedVal = JSON.parse(cleanedTaskResultStr) as JSONValue;
             isJson = true;
           } catch {
             // Info: (20260430 - Luphia) 若失敗，嘗試只擷取第一對大括號內的內容（應對有前後文的情境）
             const globalMatch = taskResultStr.match(/\{[\s\S]*\}/);
             if (globalMatch) {
               try {
-                parsedVal = JSON.parse(globalMatch[0]);
+                parsedVal = JSON.parse(globalMatch[0]) as JSONValue;
                 cleanedTaskResultStr = globalMatch[0];
                 isJson = true;
               } catch {
@@ -212,7 +212,7 @@ export async function processNext() {
             }
           }
 
-          if (isJson) {
+          if (isJson && parsedVal !== undefined) {
             // Info: (20260420 - Luphia) Track for database sync grouped by fileId
             if (useJsonPlan && subTaskConfig.data?.context) {
               try {
@@ -354,14 +354,14 @@ export async function processNext() {
             }
           }
 
-          aggregatedResult = {
+          const finalResult: Record<string, JSONValue> = {
             answer: finalAnswer,
             tags: tags,
-            dbSyncPayload:
-              Object.keys(aggregatedResultsByFileId).length > 0
-                ? aggregatedResultsByFileId
-                : undefined,
-          } as unknown as JSONValue; // Prisma.InputJsonValue;
+          };
+          if (Object.keys(aggregatedResultsByFileId).length > 0) {
+            finalResult.dbSyncPayload = aggregatedResultsByFileId;
+          }
+          aggregatedResult = finalResult;
         }
       } else {
         // Info: (20260420 - Luphia) Fallback MD behavior
