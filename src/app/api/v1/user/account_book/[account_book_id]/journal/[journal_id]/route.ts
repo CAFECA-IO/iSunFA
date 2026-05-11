@@ -142,7 +142,7 @@ export async function PUT(
       status: ORDER_STATUS.PAID,
       challenge: crypto.randomUUID(),
       data: {
-        category: "journal_correction",
+        category: "JOURNAL_CORRECTION",
         fileId: updatedJournal.fileId || undefined,
         journalId: updatedJournal.id,
         journalText: text,
