@@ -258,7 +258,7 @@ export async function POST(
           throw new Error("ESG record creation failed");
         }
 
-        // 收集 AuditLog，移到迴圈外統一執行 (效能優化)
+        // Info: (20260511 - Julian) 收集 AuditLog，移到迴圈外統一執行 (效能優化)
         auditLogsToCreate.push(
           {
             userId: creator.id,
