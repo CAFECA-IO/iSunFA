@@ -5,9 +5,10 @@ import { ChatService } from "@/services/chat.service";
 import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
-import { Prisma } from "@/generated";
+// import { Prisma } from "@/generated";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { Schema } from "@google/generative-ai";
+import { JSONValue } from "@/validators/common";
 
 export async function processNext() {
   console.log("[MissionExecutor] Scanning MISSION_DIR for tasks to execute...");
@@ -102,8 +103,7 @@ export async function processNext() {
         data: missionData,
       } as unknown as IPseudoMission;
 
-      let aggregatedResult: Prisma.InputJsonValue =
-        "Execution completed statically.";
+      let aggregatedResult: JSONValue = "Execution completed statically.";
       const aggregatedResultsByFileId: Record<
         string,
         Record<string, unknown>
@@ -131,7 +131,7 @@ export async function processNext() {
           const pseudoTask = {
             id: taskKey,
             type: subTaskConfig.type,
-            data: subTaskConfig.data as unknown as Prisma.InputJsonValue,
+            data: subTaskConfig.data as unknown as JSONValue, // Prisma.InputJsonValue,
             order: subTaskConfig.order,
           } as IPseudoTask;
 
@@ -254,7 +254,7 @@ export async function processNext() {
               (aggregatedResult as Record<string, unknown>)[taskKey] =
                 parsedVal;
             } else {
-              aggregatedResult = parsedVal as Prisma.InputJsonValue;
+              aggregatedResult = parsedVal as JSONValue; // Prisma.InputJsonValue;
             }
           } else {
             if (useJsonPlan && tasksConfig.length > 1) {
@@ -361,7 +361,7 @@ export async function processNext() {
               Object.keys(aggregatedResultsByFileId).length > 0
                 ? aggregatedResultsByFileId
                 : undefined,
-          } as unknown as Prisma.InputJsonValue;
+          } as unknown as JSONValue; // Prisma.InputJsonValue;
         }
       } else {
         // Info: (20260420 - Luphia) Fallback MD behavior
