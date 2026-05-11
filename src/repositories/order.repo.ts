@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated";
+import type { JSONValue } from "@/validators";
 
 export class OrderRepository {
   async findFirst(args: Prisma.OrderFindFirstArgs) {
@@ -15,6 +16,20 @@ export class OrderRepository {
   }
   async countAllOrders(): Promise<number> {
     return prisma.order.count();
+  }
+
+  // Info: (20260511 - Julian) 用於 analysis.service 的方法
+  async findById(id: string) {
+    return prisma.order.findUnique({
+      where: { id },
+    });
+  }
+
+  async updateOrderData(id: string, data: JSONValue) {
+    return prisma.order.update({
+      where: { id },
+      data: { data: data as Prisma.InputJsonValue },
+    });
   }
 
   async countCommissionOrders(): Promise<number> {

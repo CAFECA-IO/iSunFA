@@ -24,7 +24,7 @@ import {
   generateChallengeToken,
   verifyChallengeToken,
 } from "@/lib/auth/challenge_token";
-import type { User } from "@/generated";
+import { IUser } from "@/interfaces/user";
 
 interface ILoginResult {
   dewt: string;
@@ -148,7 +148,7 @@ class WebAuthnService {
     };
   }
 
-  public async ensureUserSynced(address: string) {
+  public async ensureUserSynced(address: string): Promise<IUser | null> {
     // Info: (20260123 - Tzuhan) 加強容錯：如果 DB 壞了，直接回傳 null 讓後續流程決定是否走鏈上
     try {
       const user = await this.repo.findUserByAddress(address);
@@ -203,7 +203,7 @@ class WebAuthnService {
           identityAddress: null,
           createdAt: new Date(),
           updatedAt: new Date(),
-        } as User;
+        } as IUser;
       }
     } catch (error) {
       console.error("[Sync] Chain fetch failed:", error);
@@ -217,7 +217,7 @@ class WebAuthnService {
 
   private async recoverUserByCredentialId(
     credentialId: string,
-  ): Promise<User | null> {
+  ): Promise<IUser | null> {
     try {
       console.log(
         `[Recovery] Querying blockchain for Credential ID: ${credentialId}...`,
@@ -260,7 +260,7 @@ class WebAuthnService {
     const expectedChallenge = await verifyChallengeToken(challengeToken);
 
     // Info: (20260123 - Tzuhan) 這裡加上 try-catch，捕捉 DB 連線錯誤
-    let user: User | null = null;
+    let user: IUser | null = null;
     try {
       user = await this.repo.findUserByCredentialId(authenticationData.id);
     } catch (dbError) {

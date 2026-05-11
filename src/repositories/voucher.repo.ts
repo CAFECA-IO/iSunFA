@@ -233,7 +233,7 @@ export class VoucherRepository implements IVoucherRepository {
 
     const vouchers = (await prisma.voucher.findMany(
       mergedArgs,
-    )) as unknown as VoucherWithRelations[];
+    )) as VoucherWithRelations[];
     const formattedVouchers = await this.attachRelationsAndFormat(vouchers);
 
     // Info: (20260311 - Julian) JS 排序邏輯 (處理 Prisma 不支援的關聯加總)
@@ -369,7 +369,7 @@ export class VoucherRepository implements IVoucherRepository {
       where: { id },
       data,
       include: { file: true, user: true, lines: true },
-    })) as unknown as VoucherWithRelations;
+    })) as VoucherWithRelations;
 
     if (!voucher) return null;
 

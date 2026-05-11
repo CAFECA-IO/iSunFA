@@ -5,9 +5,9 @@ import { ChatService } from "@/services/chat.service";
 import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
-import { Prisma } from "@/generated";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { Schema } from "@google/generative-ai";
+import { JSONValue } from "@/validators/common";
 
 export async function processNext() {
   console.log("[MissionExecutor] Scanning MISSION_DIR for tasks to execute...");
@@ -96,17 +96,16 @@ export async function processNext() {
     try {
       // Info: (20260420 - Luphia) Read mission data
       const missionJsonStr = await fs.readFile(missionJsonPath, "utf8");
-      const missionData = JSON.parse(missionJsonStr);
-      const pseudoMission = {
-        id: missionData.orderId || "MOCK_MISSION",
+      const missionData = JSON.parse(missionJsonStr) as Record<string, unknown>;
+      const pseudoMission: IPseudoMission = {
+        id: String(missionData.orderId || "MOCK_MISSION"),
         data: missionData,
-      } as unknown as IPseudoMission;
+      };
 
-      let aggregatedResult: Prisma.InputJsonValue =
-        "Execution completed statically.";
+      let aggregatedResult: JSONValue = "Execution completed statically.";
       const aggregatedResultsByFileId: Record<
         string,
-        Record<string, unknown>
+        Record<string, JSONValue>
       > = {};
 
       if (useJsonPlan) {
@@ -128,12 +127,12 @@ export async function processNext() {
           console.log(
             `[MissionExecutor]   -> Running sub-task [${taskKey}] (${subTaskConfig.type})`,
           );
-          const pseudoTask = {
+          const pseudoTask: IPseudoTask = {
             id: taskKey,
             type: subTaskConfig.type,
-            data: subTaskConfig.data as unknown as Prisma.InputJsonValue,
+            data: JSON.parse(JSON.stringify(subTaskConfig.data)),
             order: subTaskConfig.order,
-          } as IPseudoTask;
+          };
 
           // Info: (20260420 - Luphia) Build Prompt
           const fullPrompt = await buildTaskPrompt(
@@ -248,23 +247,24 @@ export async function processNext() {
 
           let cleanedTaskResultStr = taskResultStr.trim();
           let isJson = false;
-          let parsedVal: unknown;
+          let parsedVal: JSONValue | undefined;
 
           try {
             // Info: (20260430 - Luphia) Try to parse as JSON
-            parsedVal = JSON.parse(cleanedTaskResultStr);
+            parsedVal = JSON.parse(cleanedTaskResultStr) as JSONValue;
             isJson = true;
           } catch {
             // Info: (20260430 - Luphia) 若失敗，嘗試只擷取第一對大括號內的內容（應對有前後文的情境）
             const globalMatch = taskResultStr.match(/\{[\s\S]*\}/);
             if (globalMatch) {
               try {
-                parsedVal = JSON.parse(globalMatch[0]);
+                parsedVal = JSON.parse(globalMatch[0]) as JSONValue;
                 cleanedTaskResultStr = globalMatch[0];
                 isJson = true;
               } catch {
                 /**
-                 * Info: (20260430 - Luphia) 擷取出來的也不是合法的 JSON，這代表它是一般的 Markdown 文本
+                 * Info: (20260430 - Luphia)
+                 * 擷取出來的也不是合法的 JSON，這代表它是一般的 Markdown 文本
                  * 因此我們應該保留原始的 taskResultStr，不要破壞它
                  */
                 cleanedTaskResultStr = taskResultStr;
@@ -274,7 +274,7 @@ export async function processNext() {
             }
           }
 
-          if (isJson) {
+          if (isJson && parsedVal !== undefined) {
             // Info: (20260420 - Luphia) Track for database sync grouped by fileId
             if (useJsonPlan && subTaskConfig.data?.context) {
               try {
@@ -316,7 +316,7 @@ export async function processNext() {
               (aggregatedResult as Record<string, unknown>)[taskKey] =
                 parsedVal;
             } else {
-              aggregatedResult = parsedVal as Prisma.InputJsonValue;
+              aggregatedResult = parsedVal as JSONValue;
             }
           } else {
             if (useJsonPlan && tasksConfig.length > 1) {
@@ -416,14 +416,14 @@ export async function processNext() {
             }
           }
 
-          aggregatedResult = {
+          const finalResult: Record<string, JSONValue> = {
             answer: finalAnswer,
             tags: tags,
-            dbSyncPayload:
-              Object.keys(aggregatedResultsByFileId).length > 0
-                ? aggregatedResultsByFileId
-                : undefined,
-          } as unknown as Prisma.InputJsonValue;
+          };
+          if (Object.keys(aggregatedResultsByFileId).length > 0) {
+            finalResult.dbSyncPayload = aggregatedResultsByFileId;
+          }
+          aggregatedResult = finalResult;
         }
       } else {
         // Info: (20260420 - Luphia) Fallback MD behavior
