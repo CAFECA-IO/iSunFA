@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, Analysis } from "@/generated";
 import { CATEGORIES } from "@/constants/analysis";
+import type { JSONValue } from "@/validators";
 
 export type FullAnalysis = Prisma.AnalysisGetPayload<{
   include: {
@@ -45,6 +46,14 @@ export interface IAnalysisRepository {
   create(params: ICreateAnalysisDTO): Promise<Analysis>;
   findByUserId(userId: string): Promise<Analysis[]>;
   findById(id: string): Promise<Analysis | null>;
+
+  // Info: (20260511 - Julian) 用於 analysis.service 的方法
+  findByOrderId(orderId: string): Promise<Analysis | null>;
+  findByOrderIdAndTaskId(
+    orderId: string,
+    taskId: string,
+  ): Promise<Analysis | null>;
+  updateAnalysisResult(id: string, result: JSONValue): Promise<Analysis>;
 
   getGlobalTopTags(limit?: number): Promise<string[]>;
   findAnalysisByKeywordAndType(
@@ -104,6 +113,28 @@ export class AnalysisRepository implements IAnalysisRepository {
       include: {
         order: true,
       },
+    });
+  }
+
+  async findByOrderId(orderId: string) {
+    return prisma.analysis.findFirst({
+      where: { orderId },
+    });
+  }
+
+  async findByOrderIdAndTaskId(orderId: string, taskId: string) {
+    return prisma.analysis.findFirst({
+      where: {
+        orderId,
+        data: { path: ["missionTaskId"], equals: taskId },
+      },
+    });
+  }
+
+  async updateAnalysisResult(id: string, result: JSONValue) {
+    return prisma.analysis.update({
+      where: { id },
+      data: { result: result as Prisma.InputJsonValue },
     });
   }
 
