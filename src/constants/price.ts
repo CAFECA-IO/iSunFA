@@ -58,7 +58,6 @@ export const ANALYSIS_BASE_COSTS: Record<string, number> = {
   CERTIFICATE_ANALYSIS: 3,
   TRANSPORTATION_CARBON_FOOTPRINT: 5,
   AI_REPORT: 100,
-  JOURNAL_CORRECTION: 3,
 };
 
 export const ANALYSIS_PERIOD_MULTIPLIERS: Record<AnalysisPeriod, number> = {
