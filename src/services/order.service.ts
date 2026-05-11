@@ -9,7 +9,7 @@ import {
 } from "@/lib/analysis/pricing";
 import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
-import { Prisma } from "@/generated";
+// import { Prisma } from "@/generated";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import {
@@ -17,6 +17,7 @@ import {
   CURRENCY_UNIT,
   CurrencyUnit,
 } from "@/constants/price";
+import { IJSONObject } from "@/validators/common";
 
 export async function getOrdersByUserId(userId: string, type?: string | null) {
   const orders = await paymentRepo.getOrdersByUserId(userId, type);
@@ -193,7 +194,7 @@ export async function generateAnalysisOrder(
     amount: -cost,
     unit: "ICP",
     // Info: (20260128 - Luphia) Store the full data object including timestamp
-    data: orderData as unknown as Prisma.InputJsonObject,
+    data: orderData as unknown as IJSONObject, // Prisma.InputJsonObject,
     status: ORDER_STATUS.PENDING,
     challenge: challenge,
   });
