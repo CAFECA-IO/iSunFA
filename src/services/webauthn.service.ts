@@ -24,7 +24,6 @@ import {
   generateChallengeToken,
   verifyChallengeToken,
 } from "@/lib/auth/challenge_token";
-// import type { User } from "@/generated";
 import { IUser } from "@/interfaces/user";
 
 interface ILoginResult {
