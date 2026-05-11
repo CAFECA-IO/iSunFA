@@ -22,6 +22,10 @@ import { getPendingOrder } from "@/services/order.service";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS } from "@/config/contracts";
 import { webAuthnService } from "@/services/webauthn.service";
+import {
+  IAIAnalysisOrderData,
+  IAIAnalysisOrderFile,
+} from "@/interfaces/payment";
 
 /**
  * Info: (20260318 - Julian) AI 分析：生成日記帳、傳票、碳排查
@@ -280,8 +284,10 @@ export async function POST(
         );
 
         return {
+          hash: fileItem.hash,
           journalId: newJournal.newId,
           voucherId: newVoucher.newId,
+          esgRecordId: newRecord.newId,
           recordId: newRecord.newId,
         };
       }),
@@ -292,9 +298,41 @@ export async function POST(
       await auditLogRepo.createManyAuditLogs(auditLogsToCreate);
     }
 
-    return jsonOk({
-      results,
-    });
+    // Info: (20260511 - Julian) 更新 Order，加入產生的 journalId、voucherId、esgRecordId
+    const orderToUpdate = await paymentRepo.getOrderById(orderId);
+    if (orderToUpdate) {
+      const orderDataObj =
+        (orderToUpdate.data as Record<string, unknown>) || {};
+      const innerData =
+        (orderDataObj.data as Record<string, unknown>) || orderDataObj;
+      const filesData = innerData.files as IAIAnalysisOrderFile[] | undefined;
+
+      if (Array.isArray(filesData)) {
+        const updatedFilesData: IAIAnalysisOrderFile[] = filesData.map((f) => {
+          const matchingResult = results.find((r) => r.hash === f.hash);
+          if (matchingResult) {
+            return {
+              ...f,
+              journalId: matchingResult.journalId,
+              voucherId: matchingResult.voucherId,
+              esgRecordId: matchingResult.esgRecordId,
+            };
+          }
+          return f;
+        });
+
+        const updatedData: IAIAnalysisOrderData = { ...orderDataObj };
+        if (orderDataObj.data) {
+          updatedData.data = { ...innerData, files: updatedFilesData };
+        } else {
+          updatedData.files = updatedFilesData;
+        }
+
+        await paymentRepo.updateOrderData(orderId, updatedData);
+      }
+    }
+
+    return jsonOk({ results });
   } catch (error) {
     console.error("Error creating AI analysis:", error);
     return jsonFail({

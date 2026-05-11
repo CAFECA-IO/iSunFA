@@ -378,10 +378,10 @@ export class PaymentRepository {
     });
   }
 
-  async updateOrderData(orderId: string, data: Prisma.InputJsonObject) {
+  async updateOrderData(orderId: string, data: Record<string, unknown>) {
     return prisma.order.update({
       where: { id: orderId },
-      data: { data },
+      data: { data: data as Prisma.InputJsonObject },
     });
   }
 
