@@ -338,8 +338,7 @@ export default function UserMainPage() {
                     htmlFor="form_par_value"
                     className="mb-1 block text-sm font-medium text-gray-700"
                   >
-                    {t("account_book_selection.form_par_value") ||
-                      "面額 (Par Value)"}
+                    {t("account_book_selection.form_par_value")}
                   </label>
                   <input
                     id="form_par_value"
