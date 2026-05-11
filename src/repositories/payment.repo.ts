@@ -97,8 +97,7 @@ export class PaymentRepository {
                   buyerId: order.userId,
                   buyerName: order.user?.name || "Unknown",
                   itemDescription: `iSunFA Credits - ${_creditsToMint}`,
-                  gatewayTxId: (body as unknown as { data?: { id?: string } })
-                    ?.data?.id,
+                  gatewayTxId: body.data?.id,
                 },
               } as Prisma.InputJsonObject,
             },
@@ -108,7 +107,7 @@ export class PaymentRepository {
             where: { orderId: order.id },
             data: {
               status: PAYMENT_TRANSACTION_STATUS.SUCCESS,
-              rawData: body as unknown as Prisma.InputJsonValue,
+              rawData: body as Prisma.InputJsonObject,
             },
           });
 
@@ -118,7 +117,7 @@ export class PaymentRepository {
               status: ORDER_STATUS.PAID,
               data: {
                 ...(order.data as IOenOrderData),
-                checkoutResponse: body as unknown as Prisma.InputJsonValue,
+                checkoutResponse: body as Prisma.InputJsonObject,
                 receiptId: dbReceipt.id,
               } as Prisma.InputJsonObject,
             },
@@ -133,7 +132,7 @@ export class PaymentRepository {
           where: { orderId: order.id },
           data: {
             status: PAYMENT_TRANSACTION_STATUS.FAILED,
-            rawData: body as unknown as Prisma.InputJsonValue,
+            rawData: body as Prisma.InputJsonObject,
             errorMessage: "Payment failed via OEN Callback",
           },
         });
@@ -143,7 +142,7 @@ export class PaymentRepository {
             status: ORDER_STATUS.FAILED,
             data: {
               ...(order.data as IOenOrderData),
-              checkoutResponse: body as unknown as Prisma.InputJsonValue,
+              checkoutResponse: body as Prisma.InputJsonObject,
             } as Prisma.InputJsonObject,
           },
         });
@@ -165,7 +164,7 @@ export class PaymentRepository {
         status: ORDER_STATUS.MINT_FAILED,
         data: {
           ...orderData,
-          checkoutResponse: responseBody as unknown as Prisma.InputJsonValue,
+          checkoutResponse: responseBody as Prisma.InputJsonObject,
           error: errorMessage,
         } as Prisma.InputJsonObject,
       },

@@ -98,11 +98,7 @@ export class AuditLogRepository implements IAuditLogRepository {
           },
         },
       },
-    }) as unknown as Promise<
-      Prisma.AuditLogGetPayload<{
-        include: { user: { select: { id: true; name: true; address: true } } };
-      }>[]
-    >;
+    });
   }
 
   async countAuditLogs(options: IAuditLogFilterOptions) {

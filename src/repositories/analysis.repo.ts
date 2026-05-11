@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma, Analysis } from "@/generated";
 import { CATEGORIES } from "@/constants/analysis";
 import type { JSONValue } from "@/validators";
+import { AnalysisCostParams } from "@/lib/analysis/pricing";
 
 export type FullAnalysis = Prisma.AnalysisGetPayload<{
   include: {
@@ -30,7 +31,8 @@ export interface IAnalysisRecordData {
   historicalTags?: string[];
   missionTaskId?: string;
   fileHash?: string;
-  data?: unknown;
+  data?: Prisma.InputJsonValue | AnalysisCostParams | null;
+  [key: string]: Prisma.InputJsonValue | AnalysisCostParams | null | undefined;
 }
 
 // Info: (20260508 - Julian) 建立 analysis 之參數
@@ -89,7 +91,7 @@ export class AnalysisRepository implements IAnalysisRepository {
         userId: params.userId,
         orderId: params.orderId,
         type: params.category,
-        data: params.data as unknown as Prisma.InputJsonValue,
+        data: params.data as Prisma.InputJsonObject,
       },
     });
   }
