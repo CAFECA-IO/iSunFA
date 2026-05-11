@@ -12,6 +12,8 @@ import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { CURRENCY_UNIT } from "@/constants/price";
+import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 /**
  * Info: (20260304 - Julian) 取得日記帳
  * GET /api/v1/user/account_book/:account_book_id/journal/:journal_id
@@ -124,10 +126,10 @@ export async function PUT(
     // Info: (20260306 - Julian) 新增 log
     await auditLogRepo.createAuditLog({
       userId: updater.id,
-      dataType: "JOURNAL",
+      dataType: AuditLogDataType.JOURNAL,
       dataId: updatedJournal.id,
       accountBookId: accountBook.id,
-      action: "UPDATE",
+      action: AuditLogAction.UPDATE,
     });
 
     /**
@@ -142,7 +144,7 @@ export async function PUT(
       status: ORDER_STATUS.PAID,
       challenge: crypto.randomUUID(),
       data: {
-        category: "JOURNAL_CORRECTION",
+        category: ANALYSIS_CATEGORY.JOURNAL_CORRECTION,
         fileId: updatedJournal.fileId || undefined,
         journalId: updatedJournal.id,
         journalText: text,
