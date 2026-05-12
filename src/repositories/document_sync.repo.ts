@@ -44,7 +44,6 @@ export class DocumentSyncRepository {
       if (fileId) {
         let fileNode = await tx.file.findFirst({
           where: { hash: fileId },
-          orderBy: { createdAt: "desc" },
         });
         if (!fileNode) {
           fileNode = await tx.file.create({ data: { hash: fileId } });
@@ -59,9 +58,9 @@ export class DocumentSyncRepository {
           existingJournal = await tx.journal.findUnique({
             where: { id: journalIdContext },
           });
-        } else if (realFileId && accountBookId) {
+        } else if (fileId && accountBookId) {
           existingJournal = await tx.journal.findFirst({
-            where: { fileId: realFileId, accountBookId },
+            where: { file: { hash: fileId }, accountBookId },
             orderBy: { createdAt: "desc" },
           });
         }
@@ -110,9 +109,9 @@ export class DocumentSyncRepository {
           existingVoucher = await tx.voucher.findUnique({
             where: { id: voucherIdContext },
           });
-        } else if (realFileId && accountBookId) {
+        } else if (fileId && accountBookId) {
           existingVoucher = await tx.voucher.findFirst({
-            where: { fileId: realFileId, accountBookId },
+            where: { file: { hash: fileId }, accountBookId },
             orderBy: { createdAt: "desc" },
           });
         }
@@ -188,9 +187,9 @@ export class DocumentSyncRepository {
           existingEsg = await tx.esgRecord.findUnique({
             where: { id: esgRecordIdContext },
           });
-        } else if (realFileId && accountBookId) {
+        } else if (fileId && accountBookId) {
           existingEsg = await tx.esgRecord.findFirst({
-            where: { fileId: realFileId, accountBookId },
+            where: { file: { hash: fileId }, accountBookId },
             orderBy: { createdAt: "desc" },
           });
         }
