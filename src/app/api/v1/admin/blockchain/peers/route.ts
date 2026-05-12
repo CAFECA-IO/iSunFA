@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       return jsonFail({
         code: "IS000098",
         message: "Missing enodeUrl",
-        status: ApiCode.BAD_REQUEST,
+        status: ApiCode.VALIDATION_ERROR,
       });
     }
 
