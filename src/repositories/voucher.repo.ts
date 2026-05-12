@@ -123,12 +123,13 @@ export class VoucherRepository implements IVoucherRepository {
     const formattedLineItems: IVoucherLineUI[] = voucher.lines.map((line) => {
       return {
         ...line,
+        amount: Number(line.amount),
         particular: line.particular ?? "",
         accounting: getAccountByCode(line.accountingCode) as IAccount,
       };
     });
     const totalAmount = voucher.lines.reduce(
-      (acc, line) => acc + line.amount,
+      (acc, line) => acc + Number(line.amount),
       0,
     );
 
@@ -421,7 +422,7 @@ export class VoucherRepository implements IVoucherRepository {
       },
       _sum: { amount: true },
     });
-    const monthTotalAmount = monthTotalAmountAggr._sum.amount || 0;
+    const monthTotalAmount = Number(monthTotalAmountAggr._sum.amount || 0);
 
     // Info: (20260506 - Julian) 未核對傳票數量
     const pendingVoucherCount = await prisma.voucher.count({
@@ -506,7 +507,7 @@ export class VoucherRepository implements IVoucherRepository {
         });
         if (v) {
           const sum = v.lines.reduce(
-            (acc, obj) => acc + (obj.isDebit ? obj.amount : 0),
+            (acc, obj) => acc + (obj.isDebit ? Number(obj.amount) : 0),
             0,
           );
           if (sum === Number(preCheckData.totalAmount))
