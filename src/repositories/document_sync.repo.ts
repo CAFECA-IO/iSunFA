@@ -9,6 +9,25 @@ import {
 } from "@/generated";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { IParsedVoucherLine } from "@/interfaces/voucher";
+import { ACCOUNTS, IAccount } from "@/constants/accounts";
+
+function mapAccountingCode(country: string, keyword: string): string {
+  const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
+    ACCOUNTS["TW"]) as IAccount[];
+  if (!keyword) return accountList[0]?.code || "UNKNOWN";
+
+  // Info: (20260513 - Tzuhan) exact match on code
+  const exactCode = accountList.find((a: IAccount) => a.code === keyword);
+  if (exactCode) return exactCode.code;
+
+  // Info: (20260513 - Tzuhan) partial match on name
+  const matchName = accountList.find(
+    (a: IAccount) => a.name.includes(keyword) || keyword.includes(a.name),
+  );
+  if (matchName) return matchName.code;
+
+  return keyword; // Info: (20260513 - Tzuhan) fallback
+}
 
 export class DocumentSyncRepository {
   async syncDocumentResultToDatabase({
@@ -155,7 +174,10 @@ export class DocumentSyncRepository {
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
             lines: {
               create: (vd.lines || []).map((l: IParsedVoucherLine) => ({
-                accountingCode: l.accountingCode || "",
+                accountingCode: mapAccountingCode(
+                  accountBook.country || "TW",
+                  l.accountingCode || "",
+                ),
                 particular: l.particular || null,
                 amount: BigInt(Math.round(parseFloat(String(l.amount)) || 0)),
                 isDebit: l.isDebit === true,

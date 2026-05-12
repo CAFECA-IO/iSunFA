@@ -1,4 +1,3 @@
-import { ACCOUNTS } from "@/constants/accounts";
 import { IAccountBookBase } from "@/interfaces/account_book";
 
 /*
@@ -63,10 +62,8 @@ JSON Schema:
 export const getVoucherLinesPrompt = (
   accountBook?: IAccountBookBase | null,
 ) => {
+  // Info: (20260512 - Tzuhan) 廢除全域會計科目表暴力注入，改由後端 Hybrid Pipeline 處理
   const country = accountBook?.country || "TW";
-  const accountsStr = JSON.stringify(
-    ACCOUNTS[country as keyof typeof ACCOUNTS] || ACCOUNTS["TW"],
-  );
 
   const accountBookInfo = accountBook
     ? `\nAccounting Principle Country: ${country}, Base Currency: ${accountBook.currency}.`
@@ -95,10 +92,12 @@ JSON Schema:
       "isDebit": true // true = Debit, false = Credit
     }
   ]
+  ]
 }
 
-AVAILABLE ACCOUNTING CODES:
-You MUST prioritize using these codes and names. Do NOT invent new codes.
-${accountsStr}
+[IMPORTANT]
+Do NOT invent exact numerical accounting codes if you don't know them. 
+Simply provide the most standard and descriptive account name (e.g., "Cash", "Accounts Payable", "Office Supplies") in the "accountingCode" field. 
+The backend system will map this to the exact local accounting code via Vector Search.
 `;
 };

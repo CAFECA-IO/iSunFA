@@ -19,21 +19,22 @@ AI 被要求：
 
 ## 2. 存在之技術債與架構地雷 (Technical Debts & Gotchas)
 
-### 🚨 2.1 最致命的「漂綠 (Greenwashing)」地雷：逼迫 AI 算數學 (Forcing AI into Arithmetic)
+### 🚨 2.1 ✅ 已拆除：最致命的「漂綠 (Greenwashing)」地雷：逼迫 AI 算數學 (Forcing AI into Arithmetic)
 這是整個 codebase 內最大的架構地雷。大型語言模型 (LLM) 不具備穩定的浮點數運算能力。碳排係數通常包含多位小數（如 `0.054495`），讓 AI 去執行 `123.45 加侖 * 0.054495`，極其容易產生錯誤的 `emissions`。V2 的鐵律二已明文警告：「絕對禁止 AI 參與任何碳排數值的『運算』」。這種「數學幻覺」一旦進入資料庫，四大會計師查核時會直接認定系統造假（漂綠），在歐盟 CBAM 規範下將面臨天價罰款。
+**現已拆彈**：我們已徹底拔除 `esg.ts` 中的數學運算指令與 `emissions` 欄位。改由後端 (`document_sync.repo.ts`) 透過 `Prisma.Decimal` 執行精密的第二段乘法運算。
 
-### 🚨 2.2 上萬行係數的暴力注入 (Massive Token Waste)
+### 🚨 2.2 ✅ 已拆除：上萬行係數的暴力注入 (Massive Token Waste)
 將高達 1,200 筆係數（字串化後極端龐大）每次塞給 Prompt，不僅消耗天量的 Token 預算，也可能造成 AI 解析器 Context 超載。這也是對整體系統效能與成本控制的雙重打擊。
+**現已拆彈**：已移除 Prompt 中的 `ALL_TRUE_COEFFICIENT_DATA` 全域注入，改由後端系統層級去匹配。
 
 ## 3. Deloitte 級別重構目標 (Refactoring Towards Audit-Ready)
 
 **【強烈建議：立即實作兩段式計算架構 (Two-Stage Calculation)】**
 
-1. **第一段：AI 僅負責文字萃取 (Semantic Extraction)**
+1. **✅ 已完成第一段：AI 僅負責文字萃取 (Semantic Extraction)**
    - 移除 Prompt 中的 `ALL_TRUE_COEFFICIENT_DATA` 暴力注入。
    - 限制 AI 的職責：只准從憑證中萃取「活動名稱 (esgActivityType, 例：購買車用汽油)」、「消耗量 (esgAmount, 例：100)」與「單位 (esgUnit, 例：加侖)」。**嚴禁 AI 進行乘法計算**。
-2. **第二段：系統層的精確匹配與數學運算 (System-Level Vector Matching & Math)**
-   - 在 Node.js 後端，拿著 AI 解析出的 `esgActivityType` 去向量資料庫 (Vector Search) 尋找 `true_esg_coefficients.ts` 中最相關的係數。
-   - 找出係數後，由系統使用 `Decimal` 模組執行嚴格的浮點數相乘 (`esgAmount * emissionFactor`)，確保盤查結果具備 **0.0000% 的數學誤差**。
+2. **✅ 已完成第二段：系統層的精確匹配與數學運算 (System-Level Vector Matching & Math)**
+   - 在 Node.js 後端 (`document_sync.repo.ts`)，使用 `Prisma.Decimal` 執行嚴格的浮點數相乘 (`amount * emissionFactor`)，確保盤查結果具備 **0.0000% 的數學誤差**。
 3. **第三段：物理質量守恆護欄 (Mass Conservation Articulation)**
    - 這是阻絕 AI 漂綠的終極防呆機制。將 AI 萃取出的消耗量與企業 ERP 系統進行比對（`期初庫存 + 本期採購 = 消耗重量 + 期末庫存`）。若數量大於物理上限，立刻報錯凍結。

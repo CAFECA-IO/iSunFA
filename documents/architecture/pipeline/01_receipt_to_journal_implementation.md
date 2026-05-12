@@ -18,9 +18,10 @@
 
 ## 2. 存在之技術債與架構地雷 (Technical Debts & Gotchas)
 
-### 🚨 2.1 喪失防幻覺約束與 AI 腦補地雷 (Loss of Anti-Hallucination Sandbox)
+### 🚨 2.1 ✅ 已拆除：喪失防幻覺約束與 AI 腦補地雷 (Loss of Anti-Hallucination Sandbox)
 原本在 `vision.accounting.service.ts` 中，為了達到 100% 事實對應，系統被設計為必須在 `temperature: 0.1` 的極低溫度下運行，且有嚴格的 3-Phase 隔離。
-但目前的實作為了方便整合，將其放入了通用的 Worker Pipeline (`certificate_analysis.generator.ts`) 中。通用 Worker 缺乏對特定會計場景的極端約束，加上 Prompt 要求 AI 寫「企業活動故事」，這會直接觸發大語言模型 (LLM) 的幻覺本能。為了讓故事通順，AI 會自動捏造（腦補）發票上不存在的人事時地物，這在 Big 4 查帳與「零捏造鐵律」下是致命傷。
+但目前的實作為了方便整合，將其放入了通用的 Worker Pipeline (`certificate_analysis.generator.ts`) 中。通用 Worker 缺乏對特定會計場景的極端約束，加上過去 Prompt 要求 AI 寫「企業活動故事」，這直接觸發大語言模型 (LLM) 的幻覺本能。為了讓故事通順，AI 會自動捏造（腦補）發票上不存在的人事時地物，這在 Big 4 查帳與「零捏造鐵律」下是致命傷。
+**現已拆彈**：我們已移除 `journal.ts` 中的故事敘述指令，改採「分析師模式 (Analyst Mode)」。在第一階段僅萃取供應商、日期、金額等特徵，待結算後再交由 AI 依據真理數據進行分析。
 
 ### 🚨 2.2 缺乏防呆快取機制 (Missing Hash-based Caching)
 目前只要使用者重複上傳相同憑證，系統就會無條件重新打給 Gemini 消耗 Token。
@@ -33,4 +34,4 @@
 
 1. **復活嚴格沙盒 (Revive Rigid Sandbox)**：將 `JOURNAL_PARSING` 任務從通用 Worker 剝離，或在 Task Generator 內實作強制的 LLM 參數覆寫 (`temperature: 0.0` ~ `0.1`)。
 2. **零捏造斷言 (Zero Invention Assertion)**：在程式碼層級新增檢查機制，如果 `confidence < 80` 且憑證含有不可辨識區塊，系統必須拒絕生成完整故事，並直接送入「人工覆核 (Human-in-the-Loop)」佇列，寧可顯示 `N/A` 也不准 AI 填寫假資料。
-3. **全面升級結構化輸出 (Structured Output)**：徹底廢除「寫故事」與 Regex 擷取。將 AI 請求全面改為 `responseMimeType: "application/json"` 或 `responseSchema`，只允許輸出精簡的 Key-Value 特徵。
+3. **✅ 已完成：全面升級結構化輸出與後端重組**：徹底廢除「寫故事」。改為要求 AI 輸出精簡的 Key-Value 特徵 (JSON)。在後端 (`document_sync.repo.ts`) 再由系統自動將客觀數字重組為條理分明的 Markdown 格式寫入資料庫，兼顧安全與可讀性。

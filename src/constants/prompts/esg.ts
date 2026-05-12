@@ -1,48 +1,15 @@
 import { IAccountBookBase } from "@/interfaces/account_book";
 import { ICoefficient } from "@/interfaces/coefficient";
-import {
-  TRUE_COEFFICIENT_DATA_PART_1,
-  TRUE_COEFFICIENT_DATA_PART_2,
-  TRUE_COEFFICIENT_DATA_PART_3,
-  TRUE_COEFFICIENT_DATA_PART_4,
-  TRUE_COEFFICIENT_DATA_PART_5,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_1,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_2,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_3,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_4,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_5,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_6,
-  TRUE_COEFFICIENT_DATA_TAIWAN,
-} from "@/constants/true_esg_coefficients";
 import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
 import { IEmissionSources } from "@/interfaces/emission_sources";
-
-// Info: (20260423 - Julian) 集合所有係數清單
-const ALL_TRUE_COEFFICIENT_DATA = [
-  ...TRUE_COEFFICIENT_DATA_PART_1,
-  ...TRUE_COEFFICIENT_DATA_PART_2,
-  ...TRUE_COEFFICIENT_DATA_PART_3,
-  ...TRUE_COEFFICIENT_DATA_PART_4,
-  ...TRUE_COEFFICIENT_DATA_PART_5,
-  ...TRUE_COEFFICIENT_DATA_DEFRA_PART_1,
-  ...TRUE_COEFFICIENT_DATA_DEFRA_PART_2,
-  ...TRUE_COEFFICIENT_DATA_DEFRA_PART_3,
-  ...TRUE_COEFFICIENT_DATA_DEFRA_PART_4,
-  ...TRUE_COEFFICIENT_DATA_DEFRA_PART_5,
-  ...TRUE_COEFFICIENT_DATA_DEFRA_PART_6,
-  ...TRUE_COEFFICIENT_DATA_TAIWAN,
-];
 
 export const getEsgPrompt = (
   accountBook?: IAccountBookBase | null,
   coefficients?: Partial<ICoefficient>[],
   emissionSources?: Partial<IEmissionSources>[],
 ) => {
-  // Info: (20260423 - Julian) 將外部傳入的 coefficients 與 ALL_TRUE_COEFFICIENT_DATA 合併
-  const allCoefficients = [
-    ...ALL_TRUE_COEFFICIENT_DATA,
-    ...(coefficients || []),
-  ];
+  // Info: (20260513 - Tzuhan) 將外部傳入的 coefficients 作為 context (廢除了全域係數的暴力注入)
+  const allCoefficients = [...(coefficients || [])];
 
   // Info: (20260423 - Julian) 建立「單位」清單，並篩掉空值與重複項目
   const allUnits = [...new Set(allCoefficients.map((c) => c.unit))];
@@ -100,11 +67,11 @@ export const getEsgPrompt = (
   - 若無符合的係數，或清單為空，請尋找來源可靠的外部係數（例如：經濟部能源署發布之溫室氣體排放係數、固定燃燒排放源排放係數等），並將新找到的係數資訊填入回傳 JSON 的 \`newCoefficient\` 物件中，同時將 \`coefficientId\` 設為 null。
   - 如果連外部都沒有可靠係數可以參考，請將 \`emissions\` 填為 0，並將 \`coefficientId\` 與 \`newCoefficient\` 皆設為 null。
 
-  【碳排放量計算標準】：
-  1. 活動數據 (Activity Data)：用戶提供的數據（如：用電度數、天然氣用量等）。
-  2. 排放係數 (Emission Factor)：依據您上述選擇（既有或新尋找的係數數值）。
-  3. 碳排放量 (Emissions)：活動數據 × 排放係數。
-  請將最終計算出的碳排數字填入 \`emissions\`。`;
+  【活動數據萃取標準】：
+  [CRITICAL STRICT RULES FOR DATA EXTRACTION]
+  You are a pure data extractor. Do NOT perform any business logic judgments or math.
+  - 絕對禁止計算碳排放量 (Emissions)。
+  - 僅萃取活動數據 (Activity Data) 與單位。`;
 
   // Info: (20260430 - Julian) 建立排放源 instruction
   const emissionSourcesInstruction = `
@@ -143,7 +110,7 @@ export const getEsgPrompt = (
     "vendor": "心心小舖", // 供應商
     "amount": 2.01, // 活動數據 (數字)
     "unit": "kWh", // 單位
-    "emissions": 123.45, // 排放量 (數字，單位為 kgCO2e)
+
     "intensity": "HIGH", // 排放強度 ("HIGH" | "MEDIUM" | "LOW")
     "dqiScore": 1.2, // 數據品質分數 (數字 1-5)
     "confidence": 85, // AI 分析的整體信心度 (數字 0-100)
