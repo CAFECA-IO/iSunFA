@@ -9,6 +9,8 @@
 >
 > **Vision**: 讓 iSunFA 成為 ESG 與財務混合審計的黃金標準，達到四大會計師 (Big 4) 的查帳要求，並足以作為政府（如新北市）數位產品護照 (DPP) 與合規審查的底層引擎 。
 > **Lineage (架構演進)**: 本文件正式取代並重構了先前的 `archive/future_optimization_roadmap.md`。我們在此正式推翻了過去「為了極限測試而讓 AI 參與數學運算」的實驗室思維，確立了「零捏造、完全職能分離」的 CPA 級別鐵律。
+>
+> ⚠️ **IMPORTANT RULE**: 本 Roadmap v2 必須與 `documents/architecture/pipeline/` 底下的各模組實作說明 **結合一起看**，因為 Roadmap 中的每一項「地雷拆除」都精確對應著底層 Pipeline 原始碼的現況與弱點。
 
 ---
 
@@ -46,7 +48,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **[CPA 財務合規任務]**
 - **包容不完美揭露的財報容錯 (Partial Disclosure Tolerance)**：為符合系統允許用戶「部分揭露憑證」的核心商業原則，系統必須容忍資產負債表不平的情形。**嚴禁在 API 閘道口阻擋不平的試算表寫入**。系統應動態將差額提列至「暫付款/暫收款 (Suspense Account)」等懸記科目，真實反映未決明細。
 - **✅ 面額彈性解耦 (Decoupling Par Value)**：拔除系統內 `parValue = 10` 的 Hardcode，改為動態傳入（已於 `balance_sheet_generator` 與 `income_statement_generator` 實作完成，動態計算每股淨值與 EPS）。
-- **外幣匯率與後端運算解耦 (Exchange Rate Backend Math)**：拔除 AI 在 Prompt 中「猜測歷史匯率」與「換算本位幣」的權限，改由後端串接 Exchange Rate API 獲取精準匯率並以 `Prisma.Decimal` 計算。
+- **外幣匯率與後端運算解耦 (Exchange Rate Backend Math)**：拔除 AI 在 Prompt (如 `journal.ts`) 中「猜測歷史匯率」與「換算本位幣」的權限，改由後端串接 Exchange Rate API 獲取精準匯率並以 `Prisma.Decimal` 計算。
 - **期初餘額與快照機制 (Opening Balance & Snapshot)**：**(效能地雷拆彈)** 不能將快照機制押到 Sprint 3，否則在大型企業 E2E 盲測時，即時動態加總數十萬筆傳票會導致 API 記憶體耗盡 (OOM) 或超時。報表引擎從 Sprint 1 起必須設計為 `Report = Opening Balance + Period Delta`，作為核心基礎設施。
 
 - **[CPA 碳排合規任務 (DPP 基礎)]**
