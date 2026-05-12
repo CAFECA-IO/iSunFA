@@ -18,18 +18,19 @@
 
 ## 2. 存在之技術債與架構地雷 (Technical Debts & Gotchas)
 
-### 🚨 2.1 喪失防幻覺約束 (Loss of Anti-Hallucination Sandbox)
+### 🚨 2.1 喪失防幻覺約束與 AI 腦補地雷 (Loss of Anti-Hallucination Sandbox)
 原本在 `vision.accounting.service.ts` 中，為了達到 100% 事實對應，系統被設計為必須在 `temperature: 0.1` 的極低溫度下運行，且有嚴格的 3-Phase 隔離。
-但目前的實作為了方便整合，將其放入了通用的 Worker Pipeline (`certificate_analysis.generator.ts`) 中。通用 Worker 缺乏對特定會計場景的極端約束，可能導致 AI 在處理「模糊憑證」時，為了讓「故事（人事時地物）」通順而自動**腦補（捏造）**缺漏的細節，這在 Big 4 查帳時是致命傷。
+但目前的實作為了方便整合，將其放入了通用的 Worker Pipeline (`certificate_analysis.generator.ts`) 中。通用 Worker 缺乏對特定會計場景的極端約束，加上 Prompt 要求 AI 寫「企業活動故事」，這會直接觸發大語言模型 (LLM) 的幻覺本能。為了讓故事通順，AI 會自動捏造（腦補）發票上不存在的人事時地物，這在 Big 4 查帳與「零捏造鐵律」下是致命傷。
 
 ### 🚨 2.2 缺乏防呆快取機制 (Missing Hash-based Caching)
 目前只要使用者重複上傳相同憑證，系統就會無條件重新打給 Gemini 消耗 Token。
 作為企業級架構，第一道防線必須是在影像進入 AI 前計算 File Hash。若影像相同且過去解析的 `confidence` 足夠高，應直接調用資料庫內的客觀紀錄，確保系統「冪等性 (Idempotency)」並極小化營運成本。
 
 ### 🚨 2.3 脆弱的 JSON 正規表達式擷取 (Fragile Regex JSON Extraction)
-在目前的實作中，當 AI 回傳結果且 `JSON.parse` 失敗時，系統依賴 `/\{[\s\S]*\}/` 進行 Fallback 擷取。這是一個巨大的技術債。若 AI 的 Markdown 中包含多個獨立的 JSON 區塊，此 Regex 會將中間的純文字一併包入，產生絕對無法 Parse 的無效字串，導致該筆憑證靜默遺失 (Silent Data Loss)。
+在目前的實作中，當 AI 回傳結果且 `JSON.parse` 失敗時，系統依賴 `/\{[\s\S]*\}/` 進行 Fallback 擷取。這是一個巨大的技術債。若 AI 的 Markdown 中包含多個獨立的 JSON 區塊，此 Regex 會將中間的純文字一併包入，產生絕對無法 Parse 的無效字串，導致該筆憑證靜默遺失 (Silent Data Loss)。Roadmap v2 已明文規定廢除此作法。
 
 ## 3. Deloitte 級別重構目標 (Refactoring Towards Audit-Ready)
 
 1. **復活嚴格沙盒 (Revive Rigid Sandbox)**：將 `JOURNAL_PARSING` 任務從通用 Worker 剝離，或在 Task Generator 內實作強制的 LLM 參數覆寫 (`temperature: 0.0` ~ `0.1`)。
 2. **零捏造斷言 (Zero Invention Assertion)**：在程式碼層級新增檢查機制，如果 `confidence < 80` 且憑證含有不可辨識區塊，系統必須拒絕生成完整故事，並直接送入「人工覆核 (Human-in-the-Loop)」佇列，寧可顯示 `N/A` 也不准 AI 填寫假資料。
+3. **全面升級結構化輸出 (Structured Output)**：徹底廢除「寫故事」與 Regex 擷取。將 AI 請求全面改為 `responseMimeType: "application/json"` 或 `responseSchema`，只允許輸出精簡的 Key-Value 特徵。
