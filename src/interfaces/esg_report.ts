@@ -11,7 +11,7 @@ export interface IEsgReportDetailedRecord {
   originalData: number;
   unit: string;
   emissions: number;
-  coefficient: number;
+  coefficient: number | null; // Info: (20260512 - Tzuhan) Allow null to prevent greenwashing when originalData is 0
   percentage: number;
 }
 

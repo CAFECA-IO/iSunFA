@@ -32,7 +32,8 @@ export class OrderIssueService {
 
         if (
           order.status === ORDER_STATUS.EXECUTING ||
-          order.status === ORDER_STATUS.COMPLETED
+          order.status === ORDER_STATUS.COMPLETED ||
+          order.status === ORDER_STATUS.PAID
         ) {
           try {
             const taskIds = order.mission
@@ -86,7 +87,7 @@ export class OrderIssueService {
                       taskStatus = ORDER_STATUS.EXECUTING;
                     else if (failedMdFiles.length >= 3)
                       taskStatus = ORDER_STATUS.FAILED;
-                    else taskStatus = ORDER_STATUS.PENDING;
+                    else taskStatus = ORDER_STATUS.EXECUTING;
 
                     let confidenceFileToRead = "";
                     if (hasApproved) {
