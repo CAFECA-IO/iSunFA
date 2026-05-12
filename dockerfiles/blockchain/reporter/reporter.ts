@@ -1,6 +1,35 @@
 import si from "systeminformation";
 import * as http from "http";
 import * as https from "https";
+import * as os from "os";
+
+let cachedFlops = 0;
+
+function measureFlops(): number {
+  if (cachedFlops > 0) return cachedFlops;
+
+  const iterations = 50000000;
+  let a = 1.5;
+  let c = 0.0;
+
+  const start = process.hrtime.bigint();
+  for (let i = 0; i < iterations; i++) {
+    c = c + a * 1.000001;
+    a = a * 0.999999;
+  }
+  const end = process.hrtime.bigint();
+
+  // Info: (20260512 - Luphia) Prevent engine from optimizing away the loop
+  if (c === 0) console.log("prevent optimization:", c);
+
+  const durationInSeconds = Number(end - start) / 1e9;
+  // Info: (20260512 - Luphia) 2 operations per iteration (multiplication + addition)
+  const flopsPerCore = (iterations * 2) / durationInSeconds;
+  const totalCores = os.cpus().length;
+
+  cachedFlops = flopsPerCore * totalCores;
+  return cachedFlops;
+}
 
 async function getIsuncoinNodeInfo() {
   return new Promise((resolve) => {
@@ -64,7 +93,7 @@ const collectAndReportNodeStats = async () => {
     }
 
     // Info: (20260412 - Luphia) Keep flops at 0 or extract if cached
-    const flopsVal = 0;
+    const flopsVal = measureFlops();
 
     const mem = await si.mem();
     const fsData = await si.fsSize();
@@ -96,6 +125,10 @@ const collectAndReportNodeStats = async () => {
 
     for (const target of targets) {
       try {
+        console.log(
+          `[Node Reporting] Sending POST request to ${target} with payload:`,
+          JSON.stringify(payload),
+        );
         const req = https.request(
           target,
           {
