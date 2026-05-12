@@ -47,6 +47,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **包容不完美揭露的財報容錯 (Partial Disclosure Tolerance)**：為符合系統允許用戶「部分揭露憑證」的核心商業原則，系統必須容忍資產負債表不平的情形。**嚴禁在 API 閘道口阻擋不平的試算表寫入**。系統應動態將差額提列至「暫付款/暫收款 (Suspense Account)」等懸記科目，真實反映未決明細。
 - **✅ 面額彈性解耦 (Decoupling Par Value)**：拔除系統內 `parValue = 10` 的 Hardcode，改為動態傳入（已於 `balance_sheet_generator` 與 `income_statement_generator` 實作完成，動態計算每股淨值與 EPS）。
 - **外幣匯率與後端運算解耦 (Exchange Rate Backend Math)**：拔除 AI 在 Prompt 中「猜測歷史匯率」與「換算本位幣」的權限，改由後端串接 Exchange Rate API 獲取精準匯率並以 `Prisma.Decimal` 計算。
+- **期初餘額與快照機制 (Opening Balance & Snapshot)**：**(效能地雷拆彈)** 不能將快照機制押到 Sprint 3，否則在大型企業 E2E 盲測時，即時動態加總數十萬筆傳票會導致 API 記憶體耗盡 (OOM) 或超時。報表引擎從 Sprint 1 起必須設計為 `Report = Opening Balance + Period Delta`，作為核心基礎設施。
 
 - **[CPA 碳排合規任務 (DPP 基礎)]**
 - **數位 BOM 與產品關聯 Schema**：要求每一筆憑證或傳票，必須能選填關聯至 `ProductID`（產品線）。這是未來支援新北 DPP 銅級合規（ISO 14067 產品碳足跡）的底層骨架 。
@@ -71,11 +72,11 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **[CPA 碳排合規任務 (DPP 基礎)]**
 - **建置碳排暫存區 (SuspenseEsgRecord)**：廢除 `SCOPE_3` 的無腦 Fallback。憑證資訊不明時，凍結資料於待釐清區，防堵漂綠風險。
 - **阻斷 AI 碳排幻覺 (Anti-ESG Hallucination)**：內建 `EmissionFactorDictionary`。在測試管線中投入「假裝印有碳排噸數的發票」，驗證系統是否能成功無視該數值，堅持只抓取「活動數據」並交由底層重算。
-- **質量守恆勾稽 (Mass Conservation Articulation)**：將「進銷存與原物料物理防護」實作於管線中。猶如財務的 A=L+E，系統將強制核對：`期初庫存重量 + 本期採購重量 = 消耗重量 + 期末庫存重量`。若 AI 萃取出的碳排原物料消耗量大於 ERP 物理庫存與採購上限，立刻報錯並凍結憑證，從物理層面實現「零捏造」。
+- **質量守恆勾稽 (Mass Conservation Articulation)**：將「進銷存與原物料物理防護」實作於管線中。猶如財務的 A=L+E，系統將強制核對：`期初庫存重量 + 本期採購重量 = 消耗重量 + 期末庫存重量`。**(物理防呆地雷拆彈)** 現實中絕對守恆不存在，必須在 Schema 為不同原物料引入動態的「容許耗損率 (Loss Ratio Threshold)」。若盤盈虧落在合理閥值內，系統應自動生成「盤盈虧/耗損調整分錄」並繼續放行，避免真實製造業（如化工、半導體）的傳票遭到無端死鎖。
 
 - **[Architect & CPA 聯手任務 (Self-Healing & Deterministic AI)]**
 - **混合決策管線 (Hybrid Deterministic Pipeline)**：徹底解決 LLM 機率不穩定性的終極架構。將憑證解析任務拆分為三階：Stage 1 (單純讓 AI 萃取特徵，如廠商名稱與文件類型)、Stage 2 (依賴 TypeScript 查表作絕對穩定分流，例如看到中華電信繳費通知，直接 Hardcode 應付費用分錄)、Stage 3 (查無規則時才讓 AI 進行推論 Fallback)。
-- **AI 封閉迴圈校正管線 (Closed-Loop Prompt Calibration)**：針對高度相似的憑證（如：中華電信的「繳費通知」屬應付費用，而「繳費結果通知」屬實質現金流出），建立基於 Golden Dataset 的自動盲測機制。若 AI 解析的分錄與 CPA 標準答案不符，系統將自動啟動反饋迴圈 (Feedback Loop)，將「錯誤輸出」與「正確答案」打包交由高階推理模型，強制 AI 自我審查並**自動產出優化版的解析 Prompt**。這將使系統脫離「人類手動調整 Prompt」的低效勞動，具備自我進化的防呆能力。
+- **AI 封閉迴圈校正管線 (Closed-Loop Prompt Calibration)**：針對高度相似的憑證建立自動盲測機制。若 AI 解析錯誤，將「錯誤輸出」與「正確答案」交由高階模型自動產出優化版的解析 Prompt。**(資安防線地雷拆彈)** 禁止 AI 直接覆寫生產環境的 Prompt，以防惡意供應商發動「提示詞注入 (Prompt Injection)」攻擊導致模型崩潰。優化 Prompt 必須進入「人工覆核 (HITL)」，由具備 CPA 權限的超級管理員審核並簽章後，才能部署更新。
 
 ### 📌 Sprint 3: 視覺極限與合規深水區 (Vision Extreme & ITGC Compliance)
 
@@ -91,7 +92,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **再生原料憑證上鏈 (DPP Green Certificate)**：對接城市採礦戰略。當系統確認具備戰略循環（如人造螢石、高純度矽粉等）的再生原料入荷時 ，觸發智能合約，發行專屬的「再生原料憑證 Hash」 ，並自動綁定至該批次的數位產品護照 (DPP) 中 。
 
 - **視覺與邏輯對抗測試 (Adversarial Testing)**：投入異常清晰但金額極度不合理的樣本，驗證「動態信賴區間」能否自動將其凍結。
-- **日/月結餘快照機制 (Daily/Monthly Snapshot Rollups)**：解決數十萬筆傳票 On-the-fly 動態加總的效能瓶頸。每月底結算期末餘額快照，未來查詢只需載入「歷史快照 + 當期變動明細」，以支撐千億級帳務。
+
 
 ---
 
