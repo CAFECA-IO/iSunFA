@@ -42,7 +42,10 @@ export class DocumentSyncRepository {
 
       let realFileId: string | undefined = undefined;
       if (fileId) {
-        let fileNode = await tx.file.findFirst({ where: { hash: fileId } });
+        let fileNode = await tx.file.findFirst({
+          where: { hash: fileId },
+          orderBy: { createdAt: "desc" },
+        });
         if (!fileNode) {
           fileNode = await tx.file.create({ data: { hash: fileId } });
         }
@@ -59,6 +62,7 @@ export class DocumentSyncRepository {
         } else if (realFileId && accountBookId) {
           existingJournal = await tx.journal.findFirst({
             where: { fileId: realFileId, accountBookId },
+            orderBy: { createdAt: "desc" },
           });
         }
 
@@ -109,6 +113,7 @@ export class DocumentSyncRepository {
         } else if (realFileId && accountBookId) {
           existingVoucher = await tx.voucher.findFirst({
             where: { fileId: realFileId, accountBookId },
+            orderBy: { createdAt: "desc" },
           });
         }
 
@@ -186,6 +191,7 @@ export class DocumentSyncRepository {
         } else if (realFileId && accountBookId) {
           existingEsg = await tx.esgRecord.findFirst({
             where: { fileId: realFileId, accountBookId },
+            orderBy: { createdAt: "desc" },
           });
         }
 
