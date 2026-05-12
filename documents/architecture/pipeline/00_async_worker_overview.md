@@ -84,6 +84,20 @@ Worker 啟動後會掃描 `MISSION_DIR`（預設為 `missions/` 資料夾）。�
 
 ---
 
-## 🏆 架構師評價 (Architectural Verdict)
+## 🏆 架構師評價與潛在擴展地雷 (Architectural Verdict & Scalability Gotchas)
 
-這支 `mission.executor.service.ts` 的架構品味極高。它利用**「檔案系統狀態機」**（用不同檔名的檔案代表任務狀態）取代了 Redis，這大幅降低了主權雲端地端部署的複雜度（Zero-Dependency）。結合 `giveup.md` 的防呆機制，這是一套完全夠格稱為 Enterprise-Ready 的非同步引擎。
+這支 `mission.executor.service.ts` 在「單機部署」時的架構品味極高。它利用**「檔案系統狀態機」**（透過 `result.md`、`giveup.md` 等檔案控制狀態）取代了 Redis 或 BullMQ，完美達成 **零依賴 (Zero-Dependency)**。這大幅降低了主權雲端 (TWSC) 或大型企業地端部署的複雜度與資安稽核門檻。
+
+### 💣 地雷引爆點：缺乏「原子鎖」的分散式競爭條件 (Race Condition)
+
+**當未來系統掛載分散式檔案系統 (如 AWS EFS) 並啟用 Kubernetes HPA 橫向擴展 (多 Worker 節點) 時，此架構將面臨致命災難：**
+- **非原子檢查**：Worker A 掃描資料夾發現無 `result.md`，判定為 Pending 並準備執行；同一微秒，Worker B 也掃描發現無 `result.md`，也判定為 Pending 並開始執行。
+- **後果**：同一任務被並行執行兩次，消耗雙倍 LLM Token。當兩者同時將解析完的 JSON 寫入 PostgreSQL 時，將引發 Unique Constraint Error，甚至導致傳票重複寫入的嚴重財報失真。
+
+### 🛠️ 拆彈建議：純檔案系統的原子操作 (Atomic Operations)
+
+為了在不放棄「零依賴」的前提下補齊跨節點擴展性，必須實作 POSIX 標準的檔案系統原子鎖：
+1. **Rename 原子轉移法 (推薦)**：Worker 決定接單時，立刻呼叫 `fs.renameSync` 將任務資料夾由 `missions/pending/task_1` 搬移至 `missions/processing/task_1`。在 EFS/NFS 環境下，同一個檔案的 Rename 是原子性的。若 Worker B 搬移失敗 (拋出 `ENOENT`)，只要 Catch 錯誤並 Skip 即可。
+2. **Mkdir 原子鎖定法 (Lock Directory)**：在任務資料夾內 `fs.mkdirSync('.lock')`。建立資料夾在多數檔案系統是強原子的，若拋出 `EEXIST` 則代表該任務已被鎖定。
+
+在進入 K8s 部署前，利用上述的檔案系統原子特性把這個競爭條件漏洞補上，這套架構才能真正稱得上是「兼具極簡與雲端擴展性」的企業級完美之作。
