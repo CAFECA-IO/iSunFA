@@ -232,12 +232,12 @@ export async function processNext() {
             }));
         }
 
-        let missionAmount = order.amount;
+        let missionAmount = Number(order.amount);
         let missionItems = orderDataObj.items || [];
 
         if (category === "CERTIFICATE_ANALYSIS" && itemsToProcess.length > 0) {
           missionAmount = Number(
-            (order.amount / itemsToProcess.length).toFixed(2),
+            (Number(order.amount) / itemsToProcess.length).toFixed(2),
           );
           if (Array.isArray(missionItems)) {
             missionItems = missionItems.map((item) => {
