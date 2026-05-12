@@ -1,7 +1,7 @@
 export interface IEsgReportItem {
   id: string;
   name: string;
-  amount: number; // Info: (20260406 - Luphia) Emissions in kgCO2e
+  amount: string | number; // Info: (20260406 - Luphia) Emissions in kgCO2e
   percentageOfScope: number;
 }
 
@@ -18,11 +18,11 @@ export interface IEsgReportDetailedRecord {
 export interface IEsgReportSection {
   items: IEsgReportItem[];
   records?: IEsgReportDetailedRecord[];
-  total: number;
+  total: string | number;
 }
 
 export interface IEsgReportMetrics {
-  totalEmissions: number;
+  totalEmissions: string | number;
   scope1Proportion: number;
   scope2Proportion: number;
   scope3Proportion: number;
@@ -33,7 +33,7 @@ export interface IEsgReport {
     scope1: IEsgReportSection;
     scope2: IEsgReportSection;
     scope3: IEsgReportSection;
-    grossEmissions: { total: number };
+    grossEmissions: { total: string | number };
   };
   metrics: IEsgReportMetrics;
 }

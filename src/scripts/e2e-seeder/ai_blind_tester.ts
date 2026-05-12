@@ -93,8 +93,8 @@ export const runAiBlindTester = async (stockId: string) => {
 
     // Info: (20260504 - Tzuhan) 基本防呆檢查 (有沒有產生 NaN 或非邏輯的 Undefined)
     if (
-      isNaN(bsReport.assets.total) ||
-      isNaN(cfReport.summary.netIncreaseDecrease)
+      isNaN(Number(bsReport.assets.total)) ||
+      isNaN(Number(cfReport.summary.netIncreaseDecrease))
     ) {
       console.error(
         `❌ [FAILED] JSON 報表結算出現 NaN，運算邏輯可能遭遇浮點數崩潰或除以零！`,

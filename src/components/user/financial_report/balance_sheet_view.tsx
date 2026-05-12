@@ -12,6 +12,7 @@ import ReportPrintNote, {
   IReportNote,
 } from "@/components/user/financial_report/report_print_note";
 import { numberWithCommas } from "@/lib/utils/common";
+import { MoneyUtil } from "@/lib/utils/money";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
@@ -24,13 +25,11 @@ const BalanceSheetSection = ({
   titleText,
   titleValue,
   items,
-  total,
   barColor,
 }: {
   titleText: string;
-  titleValue: number;
+  titleValue: string | number;
   items: IBalanceSheetItem[];
-  total: number;
   barColor: string;
 }) => {
   return (
@@ -55,7 +54,7 @@ const BalanceSheetSection = ({
                 <div
                   className={`h-full rounded-full ${barColor}`}
                   style={{
-                    width: `${(item.amount / total) * 100}%`,
+                    width: `${item.percentageOfAssetOrLiabEquity}%`,
                   }}
                 ></div>
               </div>
@@ -65,7 +64,7 @@ const BalanceSheetSection = ({
                 {numberWithCommas(item.amount)}
               </span>
               <span className="text-[10px] font-bold text-gray-400">
-                {((item.amount / total) * 100).toFixed(1)}%
+                {item.percentageOfAssetOrLiabEquity.toFixed(1)}%
               </span>
             </div>
           </div>
@@ -198,7 +197,13 @@ export default function BalanceSheetView({
   // Info: (20260409 - Julian) 計算前台固定資產總額，以判斷特殊分母為 0 的狀況
   const fixedAssetsTotal = assets.nonCurrent.items
     .filter((i) => i.code.startsWith("15") || i.code.startsWith("16"))
-    .reduce((acc, curr) => acc + curr.amount, 0);
+    .reduce(
+      (acc, curr) =>
+        MoneyUtil.toDecimal(acc)
+          .plus(MoneyUtil.toDecimal(curr.amount))
+          .toNumber(),
+      0,
+    );
   const isFixedAssetsZero = fixedAssetsTotal === 0;
 
   const balanceKeyMetricsData = [
@@ -258,14 +263,14 @@ export default function BalanceSheetView({
     },
     {
       title: t("balance_sheet_view.metric_dte_title"),
-      value:
-        equity.total === 0
-          ? "N/A"
-          : `${(metrics.debtToEquityRatio || 0).toFixed(1)}%`,
+      value: MoneyUtil.toDecimal(equity.total).isZero()
+        ? "N/A"
+        : `${(metrics.debtToEquityRatio || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_dte_desc"),
       textColor: "text-gray-900",
-      statusGood:
-        equity.total === 0 ? undefined : (metrics.debtToEquityRatio || 0) < 100,
+      statusGood: MoneyUtil.toDecimal(equity.total).isZero()
+        ? undefined
+        : (metrics.debtToEquityRatio || 0) < 100,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.LEFT,
     },
@@ -284,31 +289,27 @@ export default function BalanceSheetView({
     },
     {
       title: t("balance_sheet_view.metric_rer_title"),
-      value:
-        equity.total === 0
-          ? "N/A"
-          : `${(metrics.retainedEarningsRatio || 0).toFixed(1)}%`,
+      value: MoneyUtil.toDecimal(equity.total).isZero()
+        ? "N/A"
+        : `${(metrics.retainedEarningsRatio || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_rer_desc"),
       textColor: "text-gray-900",
-      statusGood:
-        equity.total === 0
-          ? undefined
-          : (metrics.retainedEarningsRatio || 0) > 0,
+      statusGood: MoneyUtil.toDecimal(equity.total).isZero()
+        ? undefined
+        : (metrics.retainedEarningsRatio || 0) > 0,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.LEFT,
     },
     {
       title: t("balance_sheet_view.metric_iar_title"),
-      value:
-        assets.total === 0
-          ? "N/A"
-          : `${(metrics.intangibleAssetsRatio || 0).toFixed(1)}%`,
+      value: MoneyUtil.toDecimal(assets.total).isZero()
+        ? "N/A"
+        : `${(metrics.intangibleAssetsRatio || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_iar_desc"),
       textColor: "text-gray-900",
-      statusGood:
-        assets.total === 0
-          ? undefined
-          : (metrics.intangibleAssetsRatio || 0) < 20,
+      statusGood: MoneyUtil.toDecimal(assets.total).isZero()
+        ? undefined
+        : (metrics.intangibleAssetsRatio || 0) < 20,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.RIGHT,
     },
@@ -362,14 +363,12 @@ export default function BalanceSheetView({
           titleText={t("balance_sheet_view.current_assets")}
           titleValue={assets.current.total}
           items={assets.current.items}
-          total={assets.total}
           barColor="bg-blue-400"
         />
         <BalanceSheetSection
           titleText={t("balance_sheet_view.non_current_assets")}
           titleValue={assets.nonCurrent.total}
           items={assets.nonCurrent.items}
-          total={assets.total}
           barColor="bg-blue-400"
         />
       </div>
@@ -404,21 +403,18 @@ export default function BalanceSheetView({
             titleText={t("balance_sheet_view.current_liab")}
             titleValue={liabilities.current.total}
             items={liabilities.current.items}
-            total={liabilities.total + equity.total}
             barColor="bg-orange-400"
           />
           <BalanceSheetSection
             titleText={t("balance_sheet_view.non_current_liab")}
             titleValue={liabilities.nonCurrent.total}
             items={liabilities.nonCurrent.items}
-            total={liabilities.total + equity.total}
             barColor="bg-orange-400"
           />
           <BalanceSheetSection
             titleText={t("balance_sheet_view.equity")}
             titleValue={equity.total}
             items={equity.items}
-            total={liabilities.total + equity.total}
             barColor="bg-orange-300"
           />
         </div>
@@ -429,7 +425,10 @@ export default function BalanceSheetView({
           </span>
           <span className="text-lg font-black text-white lg:text-2xl">
             {numberWithCommas(
-              reportData.liabilities.total + reportData.equity.total,
+              MoneyUtil.add(
+                reportData.liabilities.total,
+                reportData.equity.total,
+              ),
             )}
           </span>
         </div>

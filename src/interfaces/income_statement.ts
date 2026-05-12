@@ -1,7 +1,7 @@
 export interface IIncomeStatementItem {
   code: string;
   name: string;
-  amount: number;
+  amount: string | number;
   percentageOfRevenue: number;
 }
 
@@ -20,15 +20,18 @@ export interface IIncomeStatementMetrics {
 
 export interface IIncomeStatement {
   sections: {
-    revenue: { items: IIncomeStatementItem[]; total: number };
-    cogs: { items: IIncomeStatementItem[]; total: number };
-    grossProfit: { total: number };
-    operatingExpenses: { items: IIncomeStatementItem[]; total: number };
-    operatingIncome: { total: number };
-    nonOperating: { items: IIncomeStatementItem[]; total: number };
-    incomeBeforeTax: { total: number };
-    taxExpense: { items: IIncomeStatementItem[]; total: number };
-    netIncome: { total: number };
+    revenue: { items: IIncomeStatementItem[]; total: string | number };
+    cogs: { items: IIncomeStatementItem[]; total: string | number };
+    grossProfit: { total: string | number };
+    operatingExpenses: {
+      items: IIncomeStatementItem[];
+      total: string | number;
+    };
+    operatingIncome: { total: string | number };
+    nonOperating: { items: IIncomeStatementItem[]; total: string | number };
+    incomeBeforeTax: { total: string | number };
+    taxExpense: { items: IIncomeStatementItem[]; total: string | number };
+    netIncome: { total: string | number };
   };
   metrics: IIncomeStatementMetrics;
 }

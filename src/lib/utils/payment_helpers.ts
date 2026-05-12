@@ -1,3 +1,5 @@
+import { Decimal } from "decimal.js";
+
 export type IReceiptItem = {
   name: string;
   quantity: number | string;
@@ -12,7 +14,7 @@ export type IReceiptItem = {
  * This ensures that OEN records perfectly match the Receipt PDF generator items output.
  */
 export function generateReceiptItems(
-  amount: number,
+  amount: bigint | number | string,
   orderData: Record<string, unknown>,
 ): IReceiptItem[] {
   let items: IReceiptItem[] = [];
@@ -22,40 +24,46 @@ export function generateReceiptItems(
       {
         name: (orderData.title as string) || "會員訂閱",
         quantity: 1,
-        unitPrice: amount,
-        amount: amount,
+        unitPrice: amount.toString(),
+        amount: amount.toString(),
         remark:
           orderData.billingInterval === "year" ? "會員卡年費" : "會員卡月費",
       },
     ];
   } else {
-    let base = Number(orderData.baseCredits || orderData.credits || amount);
-    let bonus = Number(orderData.bonusCredits || 0);
+    let base = new Decimal(
+      (orderData.baseCredits as string | number) ||
+        (orderData.credits as string | number) ||
+        amount.toString(),
+    );
+    let bonus = new Decimal((orderData.bonusCredits as string | number) || 0);
 
     if (
       !orderData.bonusCredits &&
       orderData.credits &&
-      Number(orderData.credits) > Number(amount)
+      new Decimal(orderData.credits as string | number).gt(amount.toString())
     ) {
-      base = Number(amount);
-      bonus = Number(orderData.credits) - Number(amount);
+      base = new Decimal(amount.toString());
+      bonus = new Decimal(orderData.credits as string | number).minus(
+        amount.toString(),
+      );
     }
 
     items.push({
-      name: `iSunFA ${base} 點`,
+      name: `iSunFA ${base.toString()} 點`,
       quantity: 1,
-      unitPrice: amount,
-      amount: amount,
-      remark: `購買 ${base} 點`,
+      unitPrice: amount.toString(),
+      amount: amount.toString(),
+      remark: `購買 ${base.toString()} 點`,
     });
 
-    if (bonus > 0) {
+    if (bonus.gt(0)) {
       items.push({
-        name: `iSunFA ${bonus} 點（贈品）`,
+        name: `iSunFA ${bonus.toString()} 點（贈品）`,
         quantity: 1,
         unitPrice: 0,
         amount: 0,
-        remark: `贈送 ${bonus} 點`,
+        remark: `贈送 ${bonus.toString()} 點`,
       });
     }
   }
@@ -72,7 +80,7 @@ export function buildOenTransactionPayload(
   dbUser: { id: string; name: string | null },
   pmData: Record<string, unknown> | undefined,
   orderId: string,
-  amount: number,
+  amount: bigint | number | string,
   orderData: Record<string, unknown>,
   providerToken: string,
 ) {
@@ -80,7 +88,7 @@ export function buildOenTransactionPayload(
 
   return {
     merchantId: "mermer",
-    amount: amount,
+    amount: amount.toString(),
     currency: "TWD",
     token: providerToken,
     orderId: orderId,
@@ -104,7 +112,7 @@ export function buildOenTransactionPayload(
  */
 export function buildReceiptDataToSave(
   orderId: string,
-  amount: number,
+  amount: bigint | number | string,
   orderData: Record<string, unknown>,
   pmData: Record<string, unknown> | undefined,
   dbUser?: { name: string | null } | null,
@@ -115,8 +123,9 @@ export function buildReceiptDataToSave(
   const numericPart = digits.padEnd(8, "0").substring(0, 8);
   const invoiceNumber = `ZM${numericPart}`;
 
-  const taxAmount = Math.round(amount - amount / 1.05);
-  const salesAmount = amount - taxAmount;
+  const amountDec = new Decimal(amount.toString());
+  const taxAmount = amountDec.minus(amountDec.div(1.05)).round().toString();
+  const salesAmount = amountDec.minus(taxAmount).toString();
 
   const resolvedBuyerName =
     pmData?.buyerName || orderData?.buyerName || dbUser?.name || "Unknown";

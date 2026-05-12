@@ -85,12 +85,12 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
           .update(`${scopeName}-${name}`)
           .digest("hex"),
         name: data.name,
-        amount: data.amount.toNumber(),
+        amount: data.amount.toString(),
         percentageOfScope: baseTotal.isZero()
           ? 0
           : data.amount.dividedBy(baseTotal).times(100).toNumber(),
       }))
-      .sort((a, b) => b.amount - a.amount);
+      .sort((a, b) => Number(b.amount) - Number(a.amount));
   };
 
   const scope1Items = mapToArray(categoryMap.scope1, totalScope1, "scope1");
@@ -98,7 +98,7 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
   const scope3Items = mapToArray(categoryMap.scope3, totalScope3, "scope3");
 
   const metrics = {
-    totalEmissions: totalEmissions.toNumber(),
+    totalEmissions: totalEmissions.toString(),
     scope1Proportion: totalEmissions.isZero()
       ? 0
       : totalScope1.dividedBy(totalEmissions).times(100).toNumber(),
@@ -144,19 +144,19 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
       scope1: {
         items: scope1Items,
         records: calculateRecords(categoryRecords.scope1, totalScope1),
-        total: totalScope1.toNumber(),
+        total: totalScope1.toString(),
       },
       scope2: {
         items: scope2Items,
         records: calculateRecords(categoryRecords.scope2, totalScope2),
-        total: totalScope2.toNumber(),
+        total: totalScope2.toString(),
       },
       scope3: {
         items: scope3Items,
         records: calculateRecords(categoryRecords.scope3, totalScope3),
-        total: totalScope3.toNumber(),
+        total: totalScope3.toString(),
       },
-      grossEmissions: { total: totalEmissions.toNumber() },
+      grossEmissions: { total: totalEmissions.toString() },
     },
     metrics,
   };

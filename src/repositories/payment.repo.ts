@@ -76,7 +76,7 @@ export class PaymentRepository {
           const _creditsToMint = (order.data as IOenOrderData)?.credits || 0;
           const standardizedData = buildReceiptDataToSave(
             order.id,
-            Number(order.amount),
+            order.amount,
             (order.data as Record<string, unknown>) || {},
             body as Record<string, unknown>, // Info: (20260410 - Luphia) Use webhook body as pmData proxy for buyerName/taxId if submitted
             order.user,
@@ -91,7 +91,7 @@ export class PaymentRepository {
                 ...standardizedData,
                 randomCode: Math.floor(Math.random() * 9000 + 1000).toString(),
                 receiptDetails: {
-                  amount: Number(order.amount),
+                  amount: order.amount,
                   credits: _creditsToMint,
                   transactionTime: new Date().toISOString(),
                   buyerId: order.userId,
@@ -482,7 +482,7 @@ export class PaymentRepository {
           data: {
             ...(oenData as Record<string, unknown>),
             receiptDetails: {
-              amount: Number(amount),
+              amount: amount,
               credits,
               transactionTime: new Date().toISOString(),
               buyerId: userId,
@@ -546,7 +546,7 @@ export class PaymentRepository {
       _sum: { amount: true },
       where,
     });
-    return Number(agg._sum.amount || 0);
+    return Number(agg._sum.amount || 0n);
   }
 
   async getGlobalTransactingUsersCount(
@@ -608,7 +608,7 @@ export class PaymentRepository {
       _sum: { amount: true },
       where,
     });
-    return Number(agg._sum.amount || 0);
+    return Number(agg._sum.amount || 0n);
   }
 
   async countGlobalOrders(startDate?: Date, endDate?: Date): Promise<number> {

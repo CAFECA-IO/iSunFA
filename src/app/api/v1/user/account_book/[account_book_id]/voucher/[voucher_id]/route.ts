@@ -137,7 +137,7 @@ export async function PUT(
         create: rows.map((row) => ({
           accountingCode: row.accounting?.code || "",
           particular: row.particular || "",
-          amount: row.amount || 0,
+          amount: BigInt(row.amount || 0),
           isDebit: row.isDebit ?? false,
         })),
       },

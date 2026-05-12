@@ -11,7 +11,12 @@
 import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/prisma";
-import { Prisma, EsgScope, AIAnalysisStatus } from "@/generated";
+import {
+  Prisma,
+  EsgScope,
+  AIAnalysisStatus,
+  MeasurementUnit,
+} from "@/generated";
 import { runCrossValidation } from "@/scripts/e2e-seeder/cross_validator";
 
 interface ISimulatedLine {
@@ -120,7 +125,7 @@ async function fastVerify(stockId: string) {
             activityType: e.source || "Unknown",
             vendor: "Test Vendor",
             amount: e.metricAmount || 0,
-            unit: e.metricUnit || "kg",
+            unit: (e.metricUnit as MeasurementUnit) || MeasurementUnit.KG,
             emissions: e.carbonAmount || 0,
             confidence: 100,
             analysisStatus: AIAnalysisStatus.COMPLETED,

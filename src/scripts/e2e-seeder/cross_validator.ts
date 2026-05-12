@@ -165,30 +165,31 @@ export const runCrossValidation = async (stockId: string) => {
 
   // Info: (20260505 - Tzuhan) [Internal Articulation] 驗證三表連動性
   const isAccountingEquationBalanced =
-    balanceSheet.assets.total ===
-    balanceSheet.liabilities.total + balanceSheet.equity.total;
+    Number(balanceSheet.assets.total) ===
+    Number(balanceSheet.liabilities.total) + Number(balanceSheet.equity.total);
 
   const isIncomeStatementNetIncome = incomeStatement.sections.netIncome.total;
   const bsRetainedEarnings =
     balanceSheet.equity.items.find(
-      (i: { code: string; amount: number }) => i.code === "3200",
+      (i: { code: string; amount: string | number }) => i.code === "3200",
     )?.amount || 0;
   const cfStartingNetIncome =
     cashFlowStatement.activities.operating.items.find(
-      (i: { name: string; amount: number }) => i.name === "本期稅後淨利",
+      (i: { name: string; amount: string | number }) =>
+        i.name === "本期稅後淨利",
     )?.amount || 0;
 
   const isNetIncomeArticulated =
-    isIncomeStatementNetIncome === bsRetainedEarnings &&
-    isIncomeStatementNetIncome === cfStartingNetIncome;
+    Number(isIncomeStatementNetIncome) === Number(bsRetainedEarnings) &&
+    Number(isIncomeStatementNetIncome) === Number(cfStartingNetIncome);
 
   const bsEndingCash =
     balanceSheet.assets.current.items.find(
-      (i: { code: string; amount: number }) => i.code === "1100",
+      (i: { code: string; amount: string | number }) => i.code === "1100",
     )?.amount || 0;
   const cfEndingCash = cashFlowStatement.summary.endingBalance;
 
-  const isCashArticulated = bsEndingCash === cfEndingCash;
+  const isCashArticulated = Number(bsEndingCash) === Number(cfEndingCash);
 
   const report = {
     metadata: {

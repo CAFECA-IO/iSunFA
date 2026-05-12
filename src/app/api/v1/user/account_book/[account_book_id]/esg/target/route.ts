@@ -7,6 +7,7 @@ import { teamRepo } from "@/repositories/team.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
+import { Decimal } from "decimal.js";
 
 export async function GET(
   req: NextRequest,
@@ -52,7 +53,13 @@ export async function GET(
       const date = new Date(v.tradingDate * 1000);
       const year = date.getFullYear();
       if (!yearlyData[year]) yearlyData[year] = { emissions: 0, revenue: 0 };
-      const val = v.lineItems.lines.reduce((a, l) => a + l.amount, 0) / 2;
+      const val = v.lineItems.lines
+        .reduce(
+          (a, l) => a.plus(new Decimal(l.amount as string | number)),
+          new Decimal(0),
+        )
+        .div(2)
+        .toNumber();
       yearlyData[year].revenue += val;
     });
 

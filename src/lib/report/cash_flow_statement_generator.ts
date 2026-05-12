@@ -3,37 +3,38 @@ import {
   ICashFlowStatement,
   ICashFlowStatementItem,
 } from "@/interfaces/cash_flow_statement";
-import { safeDivide } from "@/lib/utils/math";
+import { MoneyUtil } from "@/lib/utils/money";
+import { Decimal } from "decimal.js";
 
 export function generateCashFlowStatement(
   lineItems: IVoucherLineUI[],
 ): ICashFlowStatement {
-  const operatingItems = new Map<string, { name: string; amount: number }>();
-  const investingItems = new Map<string, { name: string; amount: number }>();
-  const financingItems = new Map<string, { name: string; amount: number }>();
+  const operatingItems = new Map<string, { name: string; amount: Decimal }>();
+  const investingItems = new Map<string, { name: string; amount: Decimal }>();
+  const financingItems = new Map<string, { name: string; amount: Decimal }>();
 
   // Info: (20260330 - Julian) 加入項目：amount > 0 表現金流入, amount < 0 表現金流出
   const addItem = (
-    map: Map<string, { name: string; amount: number }>,
+    map: Map<string, { name: string; amount: Decimal }>,
     name: string,
-    amount: number,
+    amount: Decimal,
   ) => {
-    if (amount === 0) return;
-    const current = map.get(name)?.amount || 0;
-    map.set(name, { name, amount: current + amount });
+    if (amount.isZero()) return;
+    const current = map.get(name)?.amount || MoneyUtil.toDecimal(0);
+    map.set(name, { name, amount: current.plus(amount) });
   };
 
   // Info: (20260330 - Julian) 關鍵指標
-  let netIncome = 0;
-  let depreciationAndAmortization = 0;
-  let nonOperatingIncomeAndExpense = 0;
-  let interestPaid = 0;
-  let taxesPaid = 0;
-  let capitalExpenditure = 0;
-  let dividendsPaid = 0;
+  let netIncome = MoneyUtil.toDecimal(0);
+  let depreciationAndAmortization = MoneyUtil.toDecimal(0);
+  let nonOperatingIncomeAndExpense = MoneyUtil.toDecimal(0);
+  let interestPaid = MoneyUtil.toDecimal(0);
+  let taxesPaid = MoneyUtil.toDecimal(0);
+  let capitalExpenditure = MoneyUtil.toDecimal(0);
+  let dividendsPaid = MoneyUtil.toDecimal(0);
 
   // Info: (20260330 - Julian) 計算營業現金流對流動負債比率
-  let currentLiabilitiesTotal = 0;
+  let currentLiabilitiesTotal = MoneyUtil.toDecimal(0);
 
   lineItems.forEach((line) => {
     const code = line.accountingCode || line.accounting?.code;
@@ -49,7 +50,9 @@ export function generateCashFlowStatement(
      */
 
     // Info: (20260331 - Julian) 現金或淨利影響：貸方 = 現金流入/淨利增加 = 正向，借方 = 現金流出/淨利減少 = 負向
-    const impact = isDebit ? -amount : amount;
+    const impact = isDebit
+      ? MoneyUtil.toDecimal(amount).negated()
+      : MoneyUtil.toDecimal(amount);
 
     // Info: (20260330 - Julian) 1. 計算應計基礎淨利 (Net Income)
     if (
@@ -59,17 +62,27 @@ export function generateCashFlowStatement(
       code.startsWith("7") ||
       code.startsWith("8")
     ) {
-      netIncome += impact;
+      netIncome = netIncome.plus(impact);
 
       // Info: (20260504 - Tzuhan) ⚠️修復：反向調節營業外收支 (7,8 開頭)，避免與投資/籌資活動現金流重複計算
       if (code.startsWith("7") || code.startsWith("8")) {
-        nonOperatingIncomeAndExpense += impact;
+        nonOperatingIncomeAndExpense =
+          nonOperatingIncomeAndExpense.plus(impact);
       }
 
       // Info: (20260504 - Tzuhan) 補充揭露：使用代碼 (7510/7050 利息, 79 所得稅) 避免中文判斷失效
       if (code.startsWith("751") || code.startsWith("705"))
-        interestPaid += isDebit ? amount : -amount;
-      if (code.startsWith("79")) taxesPaid += isDebit ? amount : -amount;
+        interestPaid = interestPaid.plus(
+          isDebit
+            ? MoneyUtil.toDecimal(amount)
+            : MoneyUtil.toDecimal(amount).negated(),
+        );
+      if (code.startsWith("79"))
+        taxesPaid = taxesPaid.plus(
+          isDebit
+            ? MoneyUtil.toDecimal(amount)
+            : MoneyUtil.toDecimal(amount).negated(),
+        );
     }
 
     // Info: (20260330 - Julian) 2. 營業活動 - 營運營運資金變動
@@ -93,8 +106,14 @@ export function generateCashFlowStatement(
       } else {
         addItem(operatingItems, `[營運資金] ${name}變動`, impact);
       }
-      if (isDebit) currentLiabilitiesTotal -= amount;
-      else currentLiabilitiesTotal += amount;
+      if (isDebit)
+        currentLiabilitiesTotal = currentLiabilitiesTotal.minus(
+          MoneyUtil.toDecimal(amount),
+        );
+      else
+        currentLiabilitiesTotal = currentLiabilitiesTotal.plus(
+          MoneyUtil.toDecimal(amount),
+        );
     }
 
     // Info: (20260330 - Julian) 3. 投資活動
@@ -108,10 +127,12 @@ export function generateCashFlowStatement(
       // Info: (20260504 - Tzuhan) ⚠️修復：改由備抵資產 (Contra-Asset) 的變動來精準捕捉折舊攤銷，完全捨棄中文關鍵字比對
       if (line.accounting && !line.accounting.isDebit) {
         if (!isDebit) {
-          // 貸方增加代表提列折舊/攤銷，加回淨利
-          depreciationAndAmortization += amount;
+          // Info: (20260512 - Tzuhan) 貸方增加代表提列折舊/攤銷，加回淨利
+          depreciationAndAmortization = depreciationAndAmortization.plus(
+            MoneyUtil.toDecimal(amount),
+          );
         } else {
-          // 借方減少代表處分資產時的累計折舊沖銷，應作為投資活動現金流的減項（還原資產帳面價值）
+          // Info: (20260512 - Tzuhan) 借方減少代表處分資產時的累計折舊沖銷，應作為投資活動現金流的減項（還原資產帳面價值）
           addItem(investingItems, `處分資產(累計折舊沖銷)`, impact);
         }
         return;
@@ -119,7 +140,9 @@ export function generateCashFlowStatement(
 
       // Info: (20260330 - Julian) 粗略算資本支出 (不動產廠房設備增加=借方)
       if (isDebit && (code.startsWith("15") || code.startsWith("16"))) {
-        capitalExpenditure += amount;
+        capitalExpenditure = capitalExpenditure.plus(
+          MoneyUtil.toDecimal(amount),
+        );
       }
       addItem(investingItems, `取得/處分 ${name}`, impact);
     }
@@ -140,7 +163,7 @@ export function generateCashFlowStatement(
     if (code.startsWith("3")) {
       if (line.accounting?.isDividend && isDebit) {
         // Info: (20260504 - Tzuhan) 分配股利為未分配盈餘 (335) 的借方變動
-        dividendsPaid += amount;
+        dividendsPaid = dividendsPaid.plus(MoneyUtil.toDecimal(amount));
         addItem(financingItems, `發放股利`, impact);
       } else if (!code.startsWith("33")) {
         addItem(financingItems, `權益變動: ${name}`, impact);
@@ -150,82 +173,100 @@ export function generateCashFlowStatement(
 
   // Info: (20260330 - Julian) 轉換 Map 為 ICashFlowStatementItem[] (首項為本期淨利與折舊加回)
   const mapToArray = (
-    map: Map<string, { name: string; amount: number }>,
+    map: Map<string, { name: string; amount: Decimal }>,
   ): ICashFlowStatementItem[] => {
-    return Array.from(map.values()).filter((i) => i.amount !== 0);
+    return Array.from(map.values())
+      .filter((i) => !i.amount.isZero())
+      .map((i) => ({ name: i.name, amount: i.amount.toString() }));
   };
 
   // Info: (20260331 - Julian) 組合「營業項目」數據
   const finalOperatingItems: ICashFlowStatementItem[] = [];
-  finalOperatingItems.push({ name: "本期稅後淨利", amount: netIncome });
-  if (depreciationAndAmortization !== 0) {
+  finalOperatingItems.push({
+    name: "本期稅後淨利",
+    amount: netIncome.toString(),
+  });
+  if (!depreciationAndAmortization.isZero()) {
     finalOperatingItems.push({
       name: "折舊及攤銷費用(加回)",
-      amount: depreciationAndAmortization,
+      amount: depreciationAndAmortization.toString(),
     });
   }
-  if (nonOperatingIncomeAndExpense !== 0) {
+  if (!nonOperatingIncomeAndExpense.isZero()) {
     finalOperatingItems.push({
       name: "營業外收支(反向排除)",
-      amount: -nonOperatingIncomeAndExpense, // 收益(正)轉負扣除，費損(負)轉正加回
+      amount: nonOperatingIncomeAndExpense.negated().toString(), // 收益(正)轉負扣除，費損(負)轉正加回
     });
   }
   finalOperatingItems.push(...mapToArray(operatingItems));
 
   const totalOperating = finalOperatingItems.reduce(
-    (acc, curr) => acc + curr.amount,
-    0,
+    (acc, curr) => acc.plus(MoneyUtil.toDecimal(curr.amount)),
+    MoneyUtil.toDecimal(0),
   );
   const finalInvestingItems = mapToArray(investingItems);
   const totalInvesting = finalInvestingItems.reduce(
-    (acc, curr) => acc + curr.amount,
-    0,
+    (acc, curr) => acc.plus(MoneyUtil.toDecimal(curr.amount)),
+    MoneyUtil.toDecimal(0),
   );
   const finalFinancingItems = mapToArray(financingItems);
   const totalFinancing = finalFinancingItems.reduce(
-    (acc, curr) => acc + curr.amount,
-    0,
+    (acc, curr) => acc.plus(MoneyUtil.toDecimal(curr.amount)),
+    MoneyUtil.toDecimal(0),
   );
 
   // Info: (20260330 - Julian) 暫無期初/期末資訊，以本期變動為基礎，期初設為0
-  const beginningBalance = 0;
-  const netIncreaseDecrease = totalOperating + totalInvesting + totalFinancing;
-  const endingBalance = beginningBalance + netIncreaseDecrease;
+  const beginningBalance = MoneyUtil.toDecimal(0);
+  const netIncreaseDecrease = totalOperating
+    .plus(totalInvesting)
+    .plus(totalFinancing);
+  const endingBalance = beginningBalance.plus(netIncreaseDecrease);
 
   // Info: (20260330 - Julian) 計算指標
-  const freeCashFlow = totalOperating - capitalExpenditure; // Info: (20260330 - Julian) 自由現金流
+  const freeCashFlow = totalOperating.minus(capitalExpenditure); // Info: (20260330 - Julian) 自由現金流
   // Info: (20260330 - Julian) 營業現金流對流動負債比率 = 總營業現金流 / 流動負債
-  // Info: (20260330 - Julian) 營業現金流對流動負債比率 = 總營業現金流 / 流動負債
-  const operatingCashFlowRatio =
-    safeDivide(totalOperating, currentLiabilitiesTotal) * 100;
+  const operatingCashFlowRatio = MoneyUtil.safeRatio(
+    totalOperating,
+    currentLiabilitiesTotal,
+  );
 
   return {
     reportPeriod: "",
     currency: "TWD",
     activities: {
-      operating: { items: finalOperatingItems, total: totalOperating },
-      investing: { items: finalInvestingItems, total: totalInvesting },
-      financing: { items: finalFinancingItems, total: totalFinancing },
+      operating: {
+        items: finalOperatingItems,
+        total: totalOperating.toString(),
+      },
+      investing: {
+        items: finalInvestingItems,
+        total: totalInvesting.toString(),
+      },
+      financing: {
+        items: finalFinancingItems,
+        total: totalFinancing.toString(),
+      },
     },
     summary: {
-      netIncreaseDecrease: netIncreaseDecrease,
-      beginningBalance: beginningBalance,
-      endingBalance: endingBalance,
+      netIncreaseDecrease: netIncreaseDecrease.toString(),
+      beginningBalance: beginningBalance.toString(),
+      endingBalance: endingBalance.toString(),
     },
     supplementary: {
-      interestPaid,
-      taxesPaid,
+      interestPaid: interestPaid.toString(),
+      taxesPaid: taxesPaid.toString(),
     },
     metrics: {
-      freeCashFlow,
+      freeCashFlow: freeCashFlow.toNumber(),
       operatingCashFlowRatio,
-      cashFlowAdequacyRatio:
-        safeDivide(
-          totalOperating,
-          capitalExpenditure + Math.abs(totalFinancing),
-        ) * 100, // Info: (20260330 - Julian) 簡化版
-      cashReinvestmentRatio:
-        safeDivide(totalOperating - dividendsPaid, 1000000) * 100, // Info: (20260330 - Julian) 簡化版 (需要總資產，這裡無法直接取得)
+      cashFlowAdequacyRatio: MoneyUtil.safeRatio(
+        totalOperating,
+        capitalExpenditure.plus(totalFinancing.abs()),
+      ),
+      cashReinvestmentRatio: MoneyUtil.safeRatio(
+        totalOperating.minus(dividendsPaid),
+        1000000,
+      ),
     },
   };
 }

@@ -7,6 +7,7 @@ import { IApiResponse } from "@/lib/utils/response";
 import { IEsgReport, IEsgReportItem } from "@/interfaces/esg_report";
 import KeyMetricsCard from "@/components/user/financial_report/key_metrics_card";
 import { numberWithCommas } from "@/lib/utils/common";
+import { MoneyUtil } from "@/lib/utils/money";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
@@ -20,13 +21,11 @@ const EsgReportSection = ({
   titleText,
   titleValue,
   items,
-  baseDivisor,
   barColor,
 }: {
   titleText: string;
-  titleValue: number;
+  titleValue: string | number;
   items: IEsgReportItem[];
-  baseDivisor: number;
   barColor: string;
 }) => {
   const { t } = useTranslation();
@@ -36,15 +35,16 @@ const EsgReportSection = ({
       <div className="mb-2 flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
         <span className="font-bold text-gray-700">{titleText}</span>
         <span className="text-base font-bold text-gray-900 print:text-sm">
-          {numberWithCommas(Number(titleValue.toFixed(1)))}{" "}
+          {numberWithCommas(
+            MoneyUtil.toDecimal(titleValue).toNumber().toFixed(1),
+          )}{" "}
           <span className="text-xs font-semibold">{t("esg_report.unit")}</span>
         </span>
       </div>
       {/* Info: (20260406 - Luphia) 項目內容 */}
       <div className="flex flex-col gap-1 px-3">
         {items.map((item) => {
-          const percentage =
-            baseDivisor !== 0 ? (item.amount / baseDivisor) * 100 : 0;
+          const percentage = item.percentageOfScope;
           return (
             <div
               key={item.id}
@@ -65,7 +65,9 @@ const EsgReportSection = ({
               </div>
               <div className="flex flex-col items-end">
                 <span className="text-base font-bold text-gray-900 print:text-sm">
-                  {numberWithCommas(Number(item.amount.toFixed(1)))}
+                  {numberWithCommas(
+                    MoneyUtil.toDecimal(item.amount).toNumber().toFixed(1),
+                  )}
                 </span>
                 <span className="text-[10px] font-bold text-gray-400">
                   {percentage.toFixed(1)}%
@@ -140,14 +142,15 @@ export default function EsgReportView({
   }
 
   const { metrics, sections } = reportData;
-  const baseEmissions = sections.grossEmissions.total;
 
   const keyMetricsData = [
     {
       title: t("esg_report.gross_emissions"),
       value: (
         <>
-          {numberWithCommas(Number(metrics.totalEmissions.toFixed(1)))}
+          {numberWithCommas(
+            MoneyUtil.toDecimal(metrics.totalEmissions).toNumber().toFixed(1),
+          )}
           <span className="ml-[2px] text-xs font-bold">
             {t("esg_report.unit")}
           </span>
@@ -215,7 +218,6 @@ export default function EsgReportView({
           titleText={t("esg_report.scope1_title")}
           titleValue={sections.scope1.total}
           items={sections.scope1.items}
-          baseDivisor={baseEmissions}
           barColor="bg-gray-300"
         />
 
@@ -223,7 +225,6 @@ export default function EsgReportView({
           titleText={t("esg_report.scope2_title")}
           titleValue={sections.scope2.total}
           items={sections.scope2.items}
-          baseDivisor={baseEmissions}
           barColor="bg-gray-200"
         />
 
@@ -231,7 +232,6 @@ export default function EsgReportView({
           titleText={t("esg_report.scope3_title")}
           titleValue={sections.scope3.total}
           items={sections.scope3.items}
-          baseDivisor={baseEmissions}
           barColor="bg-gray-300"
         />
       </div>
@@ -241,7 +241,11 @@ export default function EsgReportView({
           {t("esg_report.gross_emissions_bottom")}
         </span>
         <span className="text-3xl font-black text-white">
-          {numberWithCommas(Number(sections.grossEmissions.total.toFixed(1)))}{" "}
+          {numberWithCommas(
+            MoneyUtil.toDecimal(sections.grossEmissions.total)
+              .toNumber()
+              .toFixed(1),
+          )}{" "}
           <span className="text-lg font-bold">{t("esg_report.unit")}</span>
         </span>
       </div>

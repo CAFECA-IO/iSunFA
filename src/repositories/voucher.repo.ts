@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, Voucher } from "@/generated";
+import { Decimal } from "decimal.js";
+import { MoneyUtil } from "@/lib/utils/money";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { IAccount } from "@/constants/accounts";
 import { IVoucherFilterOptions } from "@/interfaces/data_filter_option";
@@ -123,15 +125,17 @@ export class VoucherRepository implements IVoucherRepository {
     const formattedLineItems: IVoucherLineUI[] = voucher.lines.map((line) => {
       return {
         ...line,
-        amount: Number(line.amount),
+        amount: line.amount,
         particular: line.particular ?? "",
         accounting: getAccountByCode(line.accountingCode) as IAccount,
       };
     });
-    const totalAmount = voucher.lines.reduce(
-      (acc, line) => acc + Number(line.amount),
-      0,
-    );
+    const totalAmount = voucher.lines
+      .reduce(
+        (acc, line) => acc.plus(MoneyUtil.toDecimal(line.amount)),
+        MoneyUtil.toDecimal(0),
+      )
+      .toString();
 
     return {
       ...voucher,
@@ -250,10 +254,18 @@ export class VoucherRepository implements IVoucherRepository {
         ) {
           const aDebit = a.lineItems.lines
             .filter((l) => l.isDebit)
-            .reduce((sum, l) => sum + l.amount, 0);
+            .reduce(
+              (sum, l) => sum.plus(new Decimal(l.amount as string | number)),
+              new Decimal(0),
+            )
+            .toNumber();
           const bDebit = b.lineItems.lines
             .filter((l) => l.isDebit)
-            .reduce((sum, l) => sum + l.amount, 0);
+            .reduce(
+              (sum, l) => sum.plus(new Decimal(l.amount as string | number)),
+              new Decimal(0),
+            )
+            .toNumber();
           return sorting === VoucherSorting.DEBIT_DESC
             ? bDebit - aDebit
             : aDebit - bDebit;
@@ -265,10 +277,18 @@ export class VoucherRepository implements IVoucherRepository {
         ) {
           const aCredit = a.lineItems.lines
             .filter((l) => !l.isDebit)
-            .reduce((sum, l) => sum + l.amount, 0);
+            .reduce(
+              (sum, l) => sum.plus(new Decimal(l.amount as string | number)),
+              new Decimal(0),
+            )
+            .toNumber();
           const bCredit = b.lineItems.lines
             .filter((l) => !l.isDebit)
-            .reduce((sum, l) => sum + l.amount, 0);
+            .reduce(
+              (sum, l) => sum.plus(new Decimal(l.amount as string | number)),
+              new Decimal(0),
+            )
+            .toNumber();
           return sorting === VoucherSorting.CREDIT_DESC
             ? bCredit - aCredit
             : aCredit - bCredit;
@@ -422,7 +442,7 @@ export class VoucherRepository implements IVoucherRepository {
       },
       _sum: { amount: true },
     });
-    const monthTotalAmount = Number(monthTotalAmountAggr._sum.amount || 0);
+    const monthTotalAmount = monthTotalAmountAggr._sum.amount || 0n;
 
     // Info: (20260506 - Julian) 未核對傳票數量
     const pendingVoucherCount = await prisma.voucher.count({
@@ -506,10 +526,17 @@ export class VoucherRepository implements IVoucherRepository {
           include: { lines: true },
         });
         if (v) {
-          const sum = v.lines.reduce(
-            (acc, obj) => acc + (obj.isDebit ? Number(obj.amount) : 0),
-            0,
-          );
+          const sum = v.lines
+            .reduce(
+              (acc, obj) =>
+                acc.plus(
+                  obj.isDebit
+                    ? MoneyUtil.toDecimal(obj.amount)
+                    : MoneyUtil.toDecimal(0),
+                ),
+              MoneyUtil.toDecimal(0),
+            )
+            .toNumber();
           if (sum === Number(preCheckData.totalAmount))
             return {
               isDuplicate: true,
