@@ -45,13 +45,13 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 
 - **[CPA 財務合規任務]**
 - **包容不完美揭露的財報容錯 (Partial Disclosure Tolerance)**：為符合系統允許用戶「部分揭露憑證」的核心商業原則，系統必須容忍資產負債表不平的情形。**嚴禁在 API 閘道口阻擋不平的試算表寫入**。系統應動態將差額提列至「暫付款/暫收款 (Suspense Account)」等懸記科目，真實反映未決明細。
-- **面額彈性解耦 (Decoupling Par Value)**：拔除系統內 `parValue = 10` 的 Hardcode，改為動態傳入。
+- **✅ 面額彈性解耦 (Decoupling Par Value)**：拔除系統內 `parValue = 10` 的 Hardcode，改為動態傳入（已於 `balance_sheet_generator` 與 `income_statement_generator` 實作完成，動態計算每股淨值與 EPS）。
 - **外幣匯率與後端運算解耦 (Exchange Rate Backend Math)**：拔除 AI 在 Prompt 中「猜測歷史匯率」與「換算本位幣」的權限，改由後端串接 Exchange Rate API 獲取精準匯率並以 `Prisma.Decimal` 計算。
 
 - **[CPA 碳排合規任務 (DPP 基礎)]**
 - **數位 BOM 與產品關聯 Schema**：要求每一筆憑證或傳票，必須能選填關聯至 `ProductID`（產品線）。這是未來支援新北 DPP 銅級合規（ISO 14067 產品碳足跡）的底層骨架 。
 
-- **高精度數據重構與單位枚舉 (Precision & Unit Enum)**：財務欄位升級為 `BigInt`；碳排引擎導入 `Prisma.Decimal` 並實作嚴格的 `Unit Enum`（如 `KWH`, `LITER`），徹底消滅浮點數誤差與單位轉換亂流。
+- **✅ 高精度數據重構與單位枚舉 (Precision & Unit Enum)**：財務欄位升級為 `BigInt`；碳排引擎導入 `Prisma.Decimal` 並實作嚴格的 `Unit Enum`（如 `KWH`, `LITER`），徹底消滅浮點數誤差與單位轉換亂流。前端全面套用 `MoneyUtil` 防腐層。
 
 - **[Architect 穩定性任務 (Anti-Overengineering)]**
 - **極簡化檔案死信佇列 (File-System DLQ)**：**禁止引入 Redis 或 BullMQ 等外部 Queue 依賴**。基於「零捏造與極簡依賴」原則，目前的 `mission.executor.service.ts` 檔案輪詢機制已具備極佳的解耦效果。引入 Redis 只會增加地端與主權雲部署的維運成本。
@@ -66,6 +66,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **廢除不合理允當標準 (Zero Tolerance)**：日常上線的報表驗證 Threshold 嚴格鎖死在 **0%**。
 - **防堵日期幻覺 (Anti-Date Hallucination)**：強制依賴 AI 輸出的 `tradingDate`，若發生跨期，系統必須報錯並阻斷財報生成。
 - **追溯重編的「關聯性鎖死」 (Adjustment Voucher Audit Trail)**：實作前期損益調整時，追加帶有標籤 (`isRestatement=true`) 的當期調整傳票。**Schema 強制帶入 `targetVoucherId` (被更正的原始傳票 ID)**，形成雙向鏈結，杜絕幽靈調整傳票。
+- **⚠️ 待解決 (Pending): 傳票金額重複加總問題 (Voucher Duplication Issue)**：目前 Voucher 金額運算邏輯在代繳與已繳費的處理上會產生重複計算。這是接下來必須被修復的核心商業邏輯錯誤。
 
 - **[CPA 碳排合規任務 (DPP 基礎)]**
 - **建置碳排暫存區 (SuspenseEsgRecord)**：廢除 `SCOPE_3` 的無腦 Fallback。憑證資訊不明時，凍結資料於待釐清區，防堵漂綠風險。

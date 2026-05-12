@@ -33,8 +33,8 @@
 *   這確保了資料庫撈出的 `BigInt` 會以**字串**的形式（例如 `"9007199254740999"`）透過 API 傳送給前端，實現 0 資料流失。
 
 ### 4. 前端計算的防腐層 (Anti-Corruption Layer)
-前端收到的 API Payload 中，所有極端數值皆為字串。前端元件**絕對不可**直接使用 `+`、`-` 或 `Math.abs()` 對這些字串進行原生運算。
-*   **防腐層封裝**：必須全面引入 `bignumber.js` 或 `decimal.js`。所有牽涉畫面的渲染、千分位格式化、比率運算，皆需透過統一的 Utility 函式（如 `formatMoney` 或 `useMoney` Hook）進行封裝與處理，將 `decimal.js` 的依賴鎖在防腐層內。
+前端收到的 API Payload 中，所有極端數值皆為字串。前端元件與報表引擎**絕對不可**直接使用 `+`、`-` 或 `Math.abs()` 對這些字串進行原生運算。
+*   **防腐層封裝 (`MoneyUtil`)**：我們已經在 `src/lib/utils/money.ts` 中全面實作了 `MoneyUtil` 防腐層。所有牽涉畫面的渲染、千分位格式化、比率運算（如 `safeRatio`）、甚至 Repository 層的加總，皆必須透過統一的 `MoneyUtil` 進行封裝與處理，將 `decimal.js` 與大數運算的複雜度鎖在防腐層內。
 
 ---
 
