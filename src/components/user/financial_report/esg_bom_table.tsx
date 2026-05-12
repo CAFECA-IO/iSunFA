@@ -42,7 +42,10 @@ export default function EsgBomTable({ sections }: IEsgBomTableProps) {
                 {item.unit}
               </td>
               <td className="px-4 py-3 text-right">
-                * {numberWithCommas(Number(item.coefficient.toFixed(4)))}
+                *{" "}
+                {item.coefficient !== null
+                  ? numberWithCommas(Number(item.coefficient.toFixed(4)))
+                  : "N/A"}
               </td>
               <td className="px-4 py-3 text-right font-bold text-gray-900">
                 {numberWithCommas(Number(item.emissions.toFixed(1)))}
