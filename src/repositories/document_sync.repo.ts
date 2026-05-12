@@ -5,6 +5,7 @@ import {
   Prisma,
   EsgScope,
   EsgIntensity,
+  MeasurementUnit,
 } from "@/generated";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { IParsedVoucherLine } from "@/interfaces/voucher";
@@ -152,7 +153,7 @@ export class DocumentSyncRepository {
               create: (vd.lines || []).map((l: IParsedVoucherLine) => ({
                 accountingCode: l.accountingCode || "",
                 particular: l.particular || null,
-                amount: parseFloat(String(l.amount)) || 0,
+                amount: BigInt(Math.round(parseFloat(String(l.amount)) || 0)),
                 isDebit: l.isDebit === true,
               })),
             },
@@ -252,9 +253,15 @@ export class DocumentSyncRepository {
             scope: (ed.scope as EsgScope) || "SCOPE_1",
             activityType: ed.activityType || "",
             vendor: ed.vendor || "",
-            amount: parseFloat(String(ed.amount)) || 0,
-            unit: ed.unit || "",
-            emissions: parseFloat(String(ed.emissions)) || 0,
+            amount: new Prisma.Decimal(parseFloat(String(ed.amount)) || 0),
+            unit: (Object.values(MeasurementUnit).includes(
+              ed.unit as MeasurementUnit,
+            )
+              ? ed.unit
+              : MeasurementUnit.KG) as MeasurementUnit,
+            emissions: new Prisma.Decimal(
+              parseFloat(String(ed.emissions)) || 0,
+            ),
             intensity: (ed.intensity as EsgIntensity) || null,
             dqiScore: parseFloat(String(ed.dqiScore)) || 0,
             confidence,
