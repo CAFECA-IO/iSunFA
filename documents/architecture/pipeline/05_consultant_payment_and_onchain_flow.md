@@ -1,4 +1,4 @@
-# 04 Consultant Analysis & Payment On-Chain Saga
+# 05 Consultant Analysis & Payment On-Chain Saga
 
 本文件詳細記錄了從使用者在前端發起「顧問分析 / 憑證解析 (Journal)」開始，經歷「簽章授權」、「訂單扣款」、「非同步任務執行」、「區塊鏈狀態錨定 (On-Chain Anchoring)」，到任務失敗時觸發的「點數退還機制 (Credit Refund Saga)」的完整生命週期序列圖 (Sequence Diagram)。
 
