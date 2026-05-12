@@ -38,7 +38,12 @@ export const adminBlockchain = {
     invalid_amount: "無効な鋳造量です。",
     minting_failed: "鋳造に失敗しました。",
     mining_enabled: "マイニングが正常に有効になりました。",
-    mining_disabled: "マイニングが正常に無効になりました。",
+    mining_disabled: "マイニングを無効にしました",
     failed_toggle: "マイニングの切り替えに失敗しました",
+    peer_added_success: "ピアを正常に追加しました",
+    connected_peers: "接続されたピア",
+    manage_p2p_network: "ブロックチェーンP2Pネットワークの接続を管理します。",
+    add_peer: "ピアを追加",
+    no_peers: "接続されているピアはありません。",
   },
 };

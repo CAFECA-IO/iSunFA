@@ -39,5 +39,10 @@ export const adminBlockchain = {
     mining_enabled: "Mining Enabled Successfully.",
     mining_disabled: "Mining Disabled Successfully.",
     failed_toggle: "Failed to toggle mining.",
+    peer_added_success: "Peer added successfully",
+    connected_peers: "Connected Peers",
+    manage_p2p_network: "Manage blockchain P2P network connections.",
+    add_peer: "Add Peer",
+    no_peers: "No connected peers.",
   },
 };

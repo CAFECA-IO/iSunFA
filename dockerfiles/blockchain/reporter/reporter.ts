@@ -48,10 +48,7 @@ async function getIsuncoinNodeInfo() {
             if (result && result.result) {
               resolve({
                 enode: result.result.enode,
-                networkId:
-                  result.result.protocols?.eth?.network ||
-                  result.result.protocols?.isuncoin?.network ||
-                  8017,
+                networkId: 8017,
                 client: result.result.name,
               });
             } else {

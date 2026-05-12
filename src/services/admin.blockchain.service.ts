@@ -17,6 +17,17 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { Role } from "@/constants/role";
 
+export interface IBlockchainPeer {
+  id: string;
+  name: string;
+  enode: string;
+  network?: {
+    localAddress: string;
+    remoteAddress: string;
+  };
+  protocols?: Record<string, unknown>;
+}
+
 export interface IBlockchainDashboardData {
   address: string;
   adminIscBalance: string;
@@ -26,6 +37,7 @@ export interface IBlockchainDashboardData {
   collateralRate: string;
   totalMembers: number;
   blockHeight: number;
+  peers?: IBlockchainPeer[];
 }
 
 // Info: (20260416 - Luphia) 檢查使用者權限 (RBAC)
@@ -110,6 +122,26 @@ export async function getBlockchainDashboardData(
       console.warn("Failed fetching total members: ", e);
     }
 
+    let peers: IBlockchainPeer[] = [];
+    try {
+      const rpcRes = await fetch(rpcUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "admin_peers",
+          params: [],
+          id: 1,
+        }),
+      });
+      const rpcData = await rpcRes.json();
+      if (rpcData && rpcData.result) {
+        peers = rpcData.result;
+      }
+    } catch (err) {
+      console.warn("Failed fetching admin peers:", err);
+    }
+
     // Info: (20260416 - Luphia) 3. Credit Point interactions
     if (cpAddress) {
       try {
@@ -160,6 +192,7 @@ export async function getBlockchainDashboardData(
         collateralRate,
         totalMembers,
         blockHeight,
+        peers,
       },
     };
   } catch (error: unknown) {
@@ -292,6 +325,51 @@ export async function toggleMiningAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+export async function addPeerAction(
+  enodeUrl: string,
+  clientToken?: string,
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    await enforceAdminRole(clientToken);
+    if (!enodeUrl || typeof enodeUrl !== "string") {
+      throw new Error("Invalid enode URL");
+    }
+
+    const setupConfig = await getPriorityEnvConfig();
+    const rpcUrl = setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
+
+    const rpcRes = await fetch(rpcUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "admin_addPeer",
+        params: [enodeUrl],
+        id: 1,
+      }),
+    });
+    const rpcData = await rpcRes.json();
+
+    if (rpcData.error) {
+      throw new Error(rpcData.error.message || "Failed to add peer");
+    }
+
+    if (!rpcData.result) {
+      throw new Error("Failed to add peer: node rejected the URL");
+    }
+
+    return {
+      success: true,
+      message: "Peer added successfully",
+    };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }

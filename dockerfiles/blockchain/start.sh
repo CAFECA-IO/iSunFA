@@ -11,7 +11,7 @@ echo "[Start] Starting ISUNCOIN Node..."
 (
   echo "[Start] Waiting for node HTTP RPC to be ready..."
   while ! curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"net_version","params":[],"id":1}' http://127.0.0.1:20024 > /dev/null; do
-    sleep 2
+    sleep 10
   done
   echo "[Start] Node is up, executing admin.addPeer..."
 
@@ -25,4 +25,4 @@ echo "[Start] Starting ISUNCOIN Node..."
     'admin.addPeer("enode://9bf20bea0a1f0f11eb808234807fbd738a76eb47f61e6d0d27a346910462396c1adc5095fd1828120cd50fe6574a893ccc4814a1d98fd5abed1273b902b91996@211.22.118.150:30303")'
 ) &
 
-exec isuncoin --networkid 8017 --port 20023 --discovery.port 20023 --http --http.addr 0.0.0.0 --http.port 20024 --http.vhosts "*" --http.corsdomain "*" --http.api "eth,net,web3,miner,personal,admin"
+exec isuncoin --port 20023 --discovery.port 20023 --http --http.addr 0.0.0.0 --http.port 20024 --http.vhosts "*" --http.corsdomain "*" --http.api "eth,net,web3,miner,personal,admin"
