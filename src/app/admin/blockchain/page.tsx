@@ -16,6 +16,7 @@ import FidoConfirmModal from "@/components/admin/common/fido_confirm_modal";
 import BlockchainMintForm from "@/components/admin/blockchain/blockchain_mint_form";
 import BlockchainMiningStatus from "@/components/admin/blockchain/blockchain_mining_status";
 import BlockchainTreasury from "@/components/admin/blockchain/blockchain_treasury";
+import BlockchainPeers from "@/components/admin/blockchain/blockchain_peers";
 import { request } from "@/lib/utils/request";
 import { type IBlockchainDashboardData } from "@/services/admin.blockchain.service";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
@@ -326,6 +327,12 @@ export default function BlockchainDashboardPage() {
               data={data}
               isTogglingMining={isTogglingMining}
               handleToggleMining={handleToggleMining}
+            />
+
+            <BlockchainPeers
+              data={data}
+              mutate={mutate}
+              setToastMessage={setToastMessage}
             />
           </div>
 
