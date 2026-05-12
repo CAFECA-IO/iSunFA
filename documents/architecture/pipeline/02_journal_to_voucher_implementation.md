@@ -23,6 +23,8 @@
 ### 🚨 2.2 匯率轉換與數學誤差風險 (Foreign Exchange Math Risk)
 Prompt 中指示：`「本位幣: {currency}。請將憑證上的幣值轉換為本位幣。」`
 這讓 AI 承擔了「取得歷史匯率」與「浮點數乘法」的雙重責任。AI 極可能因為缺乏即時金融數據而「編造匯率」，或在小數點計算時產生截斷誤差。在 CPA 審計標準下，一元之差即代表內控失敗。
+### 🚨 2.3 傳票金額重複加總問題 (Voucher Duplication Issue)
+目前的 `Voucher` 統計邏輯中，針對「代繳」與「已繳費」的情境未有明確的防護分離，導致部分複雜憑證在總額結算時會產生重複計算（Double-counting）。此商業邏輯錯誤目前標記為 Pending，將於接下來的 Sprint 中修復。
 
 ## 3. Deloitte 級別重構目標 (Refactoring Towards Audit-Ready)
 

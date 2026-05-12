@@ -13,6 +13,7 @@
 ### 1.1 即時財報與儀表板 (內部報表引擎)
 - **定位**：這就是系統的「骨幹」。這裡完全沒有 AI 的介入，只有 0 誤差的數學恆等式。
 - **處理邏輯**：當使用者檢視財報時，Next.js API 直接向資料庫請求 `isVerified: true` 且 `deletedAt: null` 的明細資料，交由 `src/lib/report/*` 核心引擎根據「借貸法則」動態加總抵銷，產出結構化的 JSON (如 `IIncomeStatement`) 供前端渲染。
+- **✅ 高精度計算防護 (Precision Engine)**：底層全數改採 `BigInt` 與 `MoneyUtil` (Anti-Corruption Layer) 計算。徹底消滅了 JavaScript `Number` 運算時的浮點數漂移誤差，並實作了動態面額解耦 (Dynamic Par Value) 以及高精度 `safeRatio`，達成 0 誤差的報表產出。
 
 ### 1.2 AI 深度分析與碳健檢模組 (靜態快照報表)
 - **定位**：將 AI 限制為「分析師與閱讀者 (Analyst)」。
