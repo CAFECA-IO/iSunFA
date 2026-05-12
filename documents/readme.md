@@ -47,6 +47,14 @@
 - **[商業藍圖與 GTM 戰略](architecture/gtm_business_blueprint.md)**
   - 了解 iSunFA 系統的商業願景與推廣目標。
 
+### 🚀 系統部署與管理員維運白皮書 (System Deployment & Admin Setup)
+- **[00_執行計畫 (Execution Plan)](admin_setup_whitepaper/00_execution_plan.md)**
+- **[01_架構總覽 (Architecture Overview)](admin_setup_whitepaper/01_architecture_overview.md)**
+- **[02_基礎設施與節點架構 (Infrastructure and Nodes)](admin_setup_whitepaper/02_infrastructure_and_nodes.md)**
+- **[03_鏈上合約部署 (Onchain Deployment)](admin_setup_whitepaper/03_onchain_deployment.md)**
+- **[04_資料庫錨定與身分設計 (Data and Identity)](admin_setup_whitepaper/04_data_and_identity.md)**
+- **[05_環境交付與封鎖 (Environment Finalization)](admin_setup_whitepaper/05_environment_finalization.md)**
+
 ---
 
 ## ⚙️ 第三階段：核心非同步管線 (Async Worker Pipelines)
