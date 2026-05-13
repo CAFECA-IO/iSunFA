@@ -18,9 +18,9 @@
 *   **財務金額 (Fiat & Crypto)**：所有 `amount` 欄位（如 `VoucherLine.amount`, `Order.amount`）強制使用 `BigInt` (64-bit)，上限高達 922 億億。這徹底淘汰了以往因 32-bit `Int` (21 億上限) 所造成的「傳票分片 (Sharding)」荒謬實作，實現發票與系統傳票的 1:1 絕對對應。
 *   **ESG 碳排數據 (Emissions)**：任何包含小數的排放量與排放係數（如 `esgAmount`, `factor`），維持使用 `Prisma.Decimal` 以避免二進制浮點數誤差。
 
-### 2. 報表核心引擎層 (The Brain: `src/lib/report/*`)
-*   **拒絕過度使用 Decimal**：我們保留了舊版架構中「不濫用 Prisma.Decimal 於全域」的效能優勢。
-*   **採用原生 BigInt 運算**：在 Node.js 中，`BigInt` 是原生基本型別 (Primitive Type)，不是物件。在伺服器端報表加總時，使用 `100n + 200n` 的速度極快，記憶體 GC 開銷極小，且保證絕對的 0 誤差。
+### 2. 報表核心引擎與防腐層 (The Brain & Anti-Corruption Layer)
+*   **確立 `MoneyUtil` (Decimal.js) 為全端黃金防腐標準**：無論是前端 UI 渲染、還是後端 `src/lib/report/*` 的報表加總與比率計算（如 `safeRatio`），**全面統一使用 `MoneyUtil` 進行運算**。
+*   **放棄純粹的 BigInt 狂熱**：在企業級 SaaS 中，產生單一財報時 `Decimal.js` 的記憶體開銷微乎其微。為了防護開發者不小心發生型別轉換錯誤或浮點數溢位，統一透過 `MoneyUtil.add()` 處理是最高明、最保險的「防腐層防線」。
 
 ### 3. API 傳輸與序列化防線 (Global Serialization Shield)
 為了解決原生 `JSON.stringify` 遇到 `BigInt` 會崩潰的問題，**嚴禁在 DTO/Repository 層手動加上 `Number(amount)`**！
@@ -32,9 +32,9 @@
     ```
 *   這確保了資料庫撈出的 `BigInt` 會以**字串**的形式（例如 `"9007199254740999"`）透過 API 傳送給前端，實現 0 資料流失。
 
-### 4. 前端計算的防腐層 (Anti-Corruption Layer)
-前端收到的 API Payload 中，所有極端數值皆為字串。前端元件與報表引擎**絕對不可**直接使用 `+`、`-` 或 `Math.abs()` 對這些字串進行原生運算。
-*   **防腐層封裝 (`MoneyUtil`)**：我們已經在 `src/lib/utils/money.ts` 中全面實作了 `MoneyUtil` 防腐層。所有牽涉畫面的渲染、千分位格式化、比率運算（如 `safeRatio`）、甚至 Repository 層的加總，皆必須透過統一的 `MoneyUtil` 進行封裝與處理，將 `decimal.js` 與大數運算的複雜度鎖在防腐層內。
+### 4. 企業級資料庫邊界防護 (Enterprise Database Boundary Guard)
+前端收到的 API Payload 中，所有極端數值皆為字串。當資料流回後端準備寫入資料庫時，我們在 Prisma 層實作了嚴格的防禦機制：
+*   **動態 DMMF 攔截器**：系統啟動時會動態解析 Prisma Schema，將所有定義為 `BigInt` 或 `Decimal` 的欄位（如 `amount`, `emissions`）加入防護名單。任何寫入行為只要被偵測到傳入了原生的 JavaScript `number`，將會直接拋出 `[Database Boundary Guard]` 錯誤，徹底阻絕無聲的精度遺失災難。
 
 ---
 

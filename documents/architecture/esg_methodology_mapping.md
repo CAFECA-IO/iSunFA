@@ -16,17 +16,17 @@ iSunFA 的 `esgRecord` 資料結構直接對應國際準則之揭露要求：
 | :--- | :--- | :--- |
 | `tradingDate` | **[現有實作]** | 確保碳排歸屬於正確的財務年度。 |
 | `esgActivityType` | **[現有實作]** | 透過 AI 萃取並由人力確認分類。 |
-| `amount` * `factor` | **[Antigravity 推薦規劃]** | 計畫由 Stage 2 管線執行精確計算，目前仍由 AI 初步估算或依賴前端計算。 |
+| `amount` * `factor` | **[即將實作 (Sprint 1)]** | 將由 Stage 2 管線執行精確計算 (配合 Vector Search)，徹底廢除 AI 數學運算。 |
 
 ## 2. 係數庫維護政策 (Emission Factor Governance)
 
-**[Antigravity 推薦規劃 (尚未實作)]**：
+**[即將實作 (Sprint 2)]**：
 `true_esg_coefficients.ts` 的管理是 ESG 審計的核心：
 *   **版本控制 (Versioning)**：系統資料庫必須綁定 `coefficientId` 與 `versionYear`，即使未來係數更新，過去的計算結果也絕對不可被覆蓋或溯及既往。
 
 ## 3. 物理質量守恆勾稽細則 (Mass Conservation Articulation)
 
-**[Antigravity 推薦規劃 (尚未實作)]**：
+**[即將實作 (Sprint 2)]**：
 為防堵 AI 捏造與企業漂綠 (Greenwashing)，iSunFA 計畫實施工業級的質量守恆審計：
 
 *   **基本等式**：`期初庫存量 + 本期採購量 (依據憑證) = 本期投入製程量 (碳排消耗) + 期末庫存量`

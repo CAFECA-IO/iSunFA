@@ -19,6 +19,36 @@ export const MoneyUtil = {
   },
 
   /**
+   * Info: (20260513 - Tzuhan)
+   * 企業級輸入反格式化：將 (1,000) 解析為 -1000，並提供嚴格校驗
+   */
+  parseInput(val: string): string {
+    if (!val) return "0";
+    let parsed = val.trim();
+
+    // Info: (20260513 - Tzuhan) 處理括號表示的負數 (xxx)
+    const isNegativeBracket = parsed.startsWith("(") && parsed.endsWith(")");
+    if (isNegativeBracket) {
+      parsed = "-" + parsed.substring(1, parsed.length - 1);
+    }
+
+    // Info: (20260513 - Tzuhan) 移除所有的千分位逗號
+    parsed = parsed.replace(/,/g, "");
+
+    try {
+      const dec = new Decimal(parsed);
+      if (dec.isNaN()) {
+        throw new Error("Parsed value is NaN");
+      }
+      return dec.toString();
+    } catch (e) {
+      // Info: (20260513 - Tzuhan) 企業級系統不可靜默吞沒錯誤，先印出 Log 供除錯，然後拋出例外交由表單層處理
+      console.error("[MoneyUtil] Parse error:", e);
+      throw new Error(`[MoneyUtil] Invalid financial input format: "${val}"`);
+    }
+  },
+
+  /**
    * Info: (20260512 - Tzuhan)
    * 格式化金額，加入千分位與自訂小數點位數
    * 如果是負數，會回傳帶有括號的會計格式：(1,000)
