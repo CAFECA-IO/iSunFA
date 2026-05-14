@@ -149,8 +149,9 @@ export async function processNext() {
             for (const prevResultStr of priorResults.values()) {
               try {
                 const parsed = JSON.parse(prevResultStr);
-                if (parsed.vendorName && parsed.documentType) {
-                  baseParsed = parsed;
+                const actualParsed = parsed.data || parsed;
+                if (actualParsed.vendorName && actualParsed.documentType) {
+                  baseParsed = actualParsed;
                   break;
                 }
               } catch {}

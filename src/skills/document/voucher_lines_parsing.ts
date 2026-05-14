@@ -39,7 +39,10 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
     }
 
     try {
-      const responseSchema: Schema = {
+      const responseSchema = (task.data as Record<string, unknown>)
+        ?.responseSchema as Schema | undefined;
+
+      const schema: Schema = responseSchema || {
         type: SchemaType.OBJECT,
         properties: {
           lines: {
@@ -72,7 +75,7 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
         promptText,
         images,
         true,
-        responseSchema,
+        schema,
       );
       return JSON.stringify({ data: JSON.parse(text) });
     } catch (error) {

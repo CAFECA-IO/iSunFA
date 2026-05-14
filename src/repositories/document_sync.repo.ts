@@ -154,11 +154,16 @@ export class DocumentSyncRepository {
           const tradingDate = new Date(vd.tradingDate || new Date());
           const typeMap: Record<string, VoucherTradingType> = {
             income: "INCOME",
+            receipt: "INCOME",
             outcome: "OUTCOME",
+            expense: "OUTCOME",
+            payment: "OUTCOME",
             transfer: "TRANSFER",
           };
-          const trType =
-            typeMap[String(vd.tradingType).toLowerCase()] || "INCOME";
+          const rawType = String(
+            vd.tradingType || (vd as Record<string, unknown>).type || "",
+          ).toLowerCase();
+          const trType = typeMap[rawType] || "INCOME";
           const confidence = parseInt(String(vd.confidence)) || 0;
 
           const dataPayload: Prisma.VoucherUncheckedCreateInput = {

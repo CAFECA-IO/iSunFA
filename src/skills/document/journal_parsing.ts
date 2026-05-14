@@ -2,6 +2,7 @@ import { ITaskSkill } from "@/skills/types";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
+import { Schema } from "@google/generative-ai";
 
 export class JournalParsingSkill implements ITaskSkill {
   name = "JOURNAL_PARSING";
@@ -30,7 +31,14 @@ export class JournalParsingSkill implements ITaskSkill {
     const promptText = fullPrompt;
 
     try {
-      const text = await chatService.generateRawWithImages(promptText, images);
+      const responseSchema = (task.data as Record<string, unknown>)
+        ?.responseSchema as Schema | undefined;
+      const text = await chatService.generateRawWithImages(
+        promptText,
+        images,
+        true,
+        responseSchema,
+      );
       if (text.includes("上傳內容無法解析狀態")) {
         return "上傳內容無法解析，請重新上傳或手動調整";
       }
