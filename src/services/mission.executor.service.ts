@@ -246,6 +246,19 @@ export async function processNext() {
           priorResults.set(taskKey, taskResultStr);
 
           let cleanedTaskResultStr = taskResultStr.trim();
+          // Info: (20260514 - Tzuhan) 即使廢除了 Regex 擷取，Gemini 有時還是會固執地包上 Markdown，必須移除前後綴
+          if (cleanedTaskResultStr.startsWith("```json")) {
+            cleanedTaskResultStr = cleanedTaskResultStr
+              .replace(/^```json/, "")
+              .replace(/```$/, "")
+              .trim();
+          } else if (cleanedTaskResultStr.startsWith("```")) {
+            cleanedTaskResultStr = cleanedTaskResultStr
+              .replace(/^```/, "")
+              .replace(/```$/, "")
+              .trim();
+          }
+
           let isJson = false;
           let parsedVal: JSONValue | undefined;
 
