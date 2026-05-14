@@ -48,3 +48,8 @@ export const SYSTEM_STATUS = {
   CHECKING: "CHECKING",
   UNCONFIGURED: "UNCONFIGURED",
 } as const;
+
+export const DPP_SKU_STATUS = {
+  READY: "READY",
+  AUDITING: "AUDITING",
+} as const;

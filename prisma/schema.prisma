@@ -364,6 +364,9 @@ model AccountBook {
   // Info: (20260421 - Julian) 帳本對應的排放源
   emissionSources EmissionSource[]
 
+  // Info: (20260513 - Luphia) 帳本對應的數位產品護照 SKU
+  digitalProductPassportSkus DigitalProductPassportSku[]
+
   @@map("account_book")
 }
 
@@ -798,4 +801,45 @@ model CampaignRegistration {
 
   @@unique([campaignId, userId])
   @@map("campaign_registration")
+}
+
+// Info: (20260513 - Luphia) 數位產品護照 (DPP) SKU 基因定義
+model DigitalProductPassportSku {
+  id            String      @id @default(uuid())
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  gtin   String @unique // Info: (20260513 - Luphia) 全球貿易品項識別碼
+  name   String
+  status String // Info: (20260513 - Luphia) DRAFT, AUDITING, READY
+
+  modulesData Json? @map("modules_data") // Info: (20260513 - Luphia) 存放 9 大模組靜態結構化資料
+  missingGaps Json? @map("missing_gaps") // Info: (20260513 - Luphia) AI 診斷缺失清單
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  batches DigitalProductPassportBatch[]
+
+  @@map("digital_product_passport_sku")
+}
+
+// Info: (20260513 - Luphia) 數位產品護照 (DPP) 生產批次
+model DigitalProductPassportBatch {
+  id    String                    @id @default(uuid())
+  skuId String                    @map("sku_id")
+  sku   DigitalProductPassportSku @relation(fields: [skuId], references: [id])
+
+  batchNumber     String   @map("batch_number")
+  serialRange     String?  @map("serial_range")
+  manufactureDate DateTime @map("manufacture_date")
+  facilitySite    String   @map("facility_site")
+
+  dynamicOverrides Json? @map("dynamic_overrides") // Info: (20260513 - Luphia)批次覆蓋資料
+
+  publicUrl String @unique @map("public_url")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("digital_product_passport_batch")
 }

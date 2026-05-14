@@ -31,11 +31,7 @@ export async function GET(
 
     // Info: (20260130 - Luphia) Authorization Check
     if (analysis.userId !== user.id) {
-      return jsonFail({
-        code: "FO000099",
-        message: "You do not have permission ...",
-        status: ApiCode.FORBIDDEN,
-      });
+      return jsonFail(API_ERRORS.FO_YOU_DO_NOT_HAVE_PERMISSION);
     }
 
     const analysisData = analysis.data as Record<string, unknown> | null;

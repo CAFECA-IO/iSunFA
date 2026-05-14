@@ -2,7 +2,6 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { webAuthnService } from "@/services/webauthn.service";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
 import { randomBytes } from "crypto";
 
@@ -44,10 +43,6 @@ export async function GET(request: NextRequest) {
     if (error instanceof AppError) {
       return jsonFail(API_ERRORS.IS_UNKNOWN);
     }
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to generate auth opt...",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_GENERATE_AUTH_OPT);
   }
 }

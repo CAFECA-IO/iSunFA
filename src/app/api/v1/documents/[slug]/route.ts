@@ -3,7 +3,6 @@ import { promises as fs } from "fs";
 import path from "path";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { ALLOWED_DOCS } from "@/constants/documents";
 
 export async function GET(
@@ -15,11 +14,7 @@ export async function GET(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!ALLOWED_DOCS.includes(slug as any)) {
-    return jsonFail({
-      code: "VA000099",
-      message: "Invalid document type",
-      status: ApiCode.VALIDATION_ERROR,
-    });
+    return jsonFail(API_ERRORS.VA_INVALID_DOCUMENT_TYPE);
   }
 
   try {

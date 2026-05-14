@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
@@ -33,11 +32,7 @@ export async function GET(
     );
 
     if (!accountBook) {
-      return jsonFail({
-        code: "NO000099",
-        message: "Accountbook not found or no...",
-        status: ApiCode.NOT_FOUND,
-      });
+      return jsonFail(API_ERRORS.NO_ACCOUNTBOOK_NOT_FOUND_OR_NO);
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -53,10 +48,6 @@ export async function GET(
     return jsonOk(dashboardSummary);
   } catch (error) {
     console.error("Error fetching ESG summary:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to fetch ESG summary",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_FETCH_ESG_SUMMARY);
   }
 }

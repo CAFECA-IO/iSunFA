@@ -2,7 +2,6 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { ORDER_STATUS } from "@/constants/status";
 
@@ -58,10 +57,6 @@ export async function GET(
       "[API] GET /user/order/[id] error:",
       error,
     );
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to fetch order details",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_FETCH_ORDER_DETAILS);
   }
 }

@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
@@ -62,11 +61,7 @@ export async function GET(
     return jsonOk(esgRecord);
   } catch (error) {
     console.error("Error fetching esg record:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to fetch esg record",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_FETCH_ESG_RECORD);
   }
 }
 
@@ -171,11 +166,7 @@ export async function PUT(
     return jsonOk(updatedRecord);
   } catch (error) {
     console.error("Error updating esg record:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to update esg record",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_UPDATE_ESG_RECORD);
   }
 }
 

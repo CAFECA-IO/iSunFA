@@ -68,11 +68,7 @@ export async function POST(
     // Info: (20260318 - Julian) 驗證 file 參數
     if (!files || files.length === 0) {
       console.error("Missing file or file hash");
-      return jsonFail({
-        code: "VA000099",
-        message: "File is required",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_FILE_IS_REQUIRED);
     }
 
     // Info: (20260413 - Luphia) Verify Payment Order before doing AI processing
@@ -345,10 +341,6 @@ export async function POST(
     return jsonOk({ results });
   } catch (error) {
     console.error("Error creating AI analysis:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to create AI analysis",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_CREATE_AI_ANALYSIS);
   }
 }

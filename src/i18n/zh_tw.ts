@@ -1,3 +1,4 @@
+import { digitalProductPassport } from "@/i18n/locales/zh_tw/digital_product_passport";
 import { adminDashboard } from "@/i18n/locales/zh_tw/admin_dashboard";
 import { adminCampaign } from "@/i18n/locales/zh_tw/admin_campaign";
 import { common } from "@/i18n/locales/zh_tw/common";
@@ -55,6 +56,7 @@ import { transportationCarbonFootprintCalculator } from "@/i18n/locales/zh_tw/tr
 import { salaryCalculator } from "@/i18n/locales/zh_tw/salary_calculator";
 
 export const zhTw = {
+  digital_product_passport: digitalProductPassport,
   transportation_carbon_footprint_calculator:
     transportationCarbonFootprintCalculator,
   salary_calculator: salaryCalculator,

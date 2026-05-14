@@ -1,3 +1,4 @@
+import { digitalProductPassport } from "@/i18n/locales/ko/digital_product_passport";
 import { adminDashboard } from "@/i18n/locales/ko/admin_dashboard";
 import { adminCampaign } from "@/i18n/locales/ko/admin_campaign";
 import { common } from "@/i18n/locales/ko/common";
@@ -56,6 +57,7 @@ import { salaryCalculator } from "@/i18n/locales/ko/salary_calculator";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const ko = {
+  digital_product_passport: digitalProductPassport,
   transportation_carbon_footprint_calculator:
     transportationCarbonFootprintCalculator,
   salary_calculator: salaryCalculator,

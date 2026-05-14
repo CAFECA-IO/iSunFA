@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 
@@ -10,22 +11,14 @@ export async function POST(request: Request) {
   const STORAGE_DOMAIN = process.env.STORAGE_DOMAIN;
 
   if (!STORAGE_DOMAIN) {
-    return jsonFail({
-      code: "IN000099",
-      message: "STORAGE_DOMAIN is not defined",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_STORAGE_DOMAIN_IS_NOT_DEFINED);
   }
 
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
     if (!file) {
-      return jsonFail({
-        code: "VA000099",
-        message: "No file uploaded",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_NO_FILE_UPLOADED);
     }
 
     const newFormData = new FormData();

@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { talkRepo } from "@/repositories/talk.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 
@@ -20,22 +19,14 @@ export async function DELETE(
 
     if (!user) {
       console.error("User not found");
-      return jsonFail({
-        code: "IN000099",
-        message: "User not found",
-        status: ApiCode.INTERNAL_SERVER_ERROR,
-      });
+      return jsonFail(API_ERRORS.IN_USER_NOT_FOUND);
     }
 
     const { comment_id: commentId } = await params;
 
     if (!commentId) {
       console.error("Comment not found");
-      return jsonFail({
-        code: "IN000099",
-        message: "Comment not found",
-        status: ApiCode.INTERNAL_SERVER_ERROR,
-      });
+      return jsonFail(API_ERRORS.IN_COMMENT_NOT_FOUND);
     }
 
     // Info: (20260428 - Julian) 刪除留言

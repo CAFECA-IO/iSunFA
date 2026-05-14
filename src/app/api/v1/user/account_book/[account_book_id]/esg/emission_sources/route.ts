@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -51,11 +50,7 @@ export async function GET(
     return jsonOk({ data, total, totalPages });
   } catch (error) {
     console.error("Error fetching esg emission sources:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to fetch esg emission sources",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_FETCH_ESG_EMISSION_S);
   }
 }
 
@@ -91,11 +86,7 @@ export async function POST(
     const { name, address } = body;
 
     if (!name) {
-      return jsonFail({
-        code: "VA000099",
-        message: "Name is required",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_NAME_IS_REQUIRED);
     }
 
     // Info: (20260424 - Julian) 建立排放源
@@ -108,10 +99,6 @@ export async function POST(
     return jsonOk(result);
   } catch (error) {
     console.error("Error creating esg emission source:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to create esg emission source",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_CREATE_ESG_EMISSION_);
   }
 }
