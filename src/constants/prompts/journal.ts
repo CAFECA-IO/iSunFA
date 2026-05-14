@@ -20,9 +20,6 @@ export const getJournalPrompt = (accountBook?: IAccountBookBase | null) => {
       [CRITICAL WARNING - ZERO INVENTION POLICY]
       1. 嚴禁撰寫「事件摘要」或編造任何故事。請僅忠實條列這張憑證上「確切可見」的所有資訊（人事時地物）。
       2. You are strictly prohibited from calculating foreign exchange conversions. Do NOT attempt to convert the currency on the receipt to the base currency. You must extract and retain the original currency and amount as printed on the receipt.
-      3. 嚴禁任何 Markdown 格式包裹，嚴禁加上 \`\`\`json 標籤。
 
-      請分析憑證是否有任何異常（例如：是否合乎邏輯、是否有偽造痕跡、數據是否正常等），並將分析邏輯記錄於 aiNote。
-
-      請直接回傳符合系統定義 Schema 的 JSON 物件字串。`;
+      請分析憑證是否有任何異常（例如：是否合乎邏輯、是否有偽造痕跡、數據是否正常等），並將分析邏輯記錄於 aiNote。`;
 };

@@ -42,19 +42,6 @@ ${ANTI_HALLUCINATION_RULES}
 
 Write down your analysis logic in the "aiNote" field without any markdown formatting.
 IMPORTANT: Your output MUST be in the language of the uploaded document (e.g., Traditional Chinese).
-You MUST return ONLY a strictly valid JSON object. Do NOT include markdown code blocks or any extra text.
-
-JSON Schema:
-{
-  "aiNote": "string", // [Chain of Thought] ALWAYS write your step-by-step reasoning HERE FIRST before filling other fields. (Output in Traditional Chinese)
-  "vendorName": "string", // Extracted name of the vendor (e.g. 中華電信)
-  "documentType": "BILL_NOTICE" | "PAYMENT_RECEIPT" | "OTHER", // Identify the document type based on the rules
-  "totalAmount": 100, // The exact numeric total amount written on the document
-  "tradingDate": "YYYY-MM-DD", // Date of transaction (Apply ROC year conversion if needed)
-  "tradingType": "INCOME" | "OUTCOME" | "TRANSFER",
-  "note": "string", // Brief summary/note of the transaction
-  "confidence": 85 // Overall confidence score (0-100)
-}
 `;
 };
 
@@ -78,22 +65,6 @@ ${ANTI_HALLUCINATION_RULES}
 
 Write down your logic for determining the debit and credit accounts in the "aiNote" field.
 IMPORTANT: Your output (particular, aiNote) MUST be in the language of the uploaded document (e.g., Traditional Chinese).
-You MUST return ONLY a strictly valid JSON object. Do NOT include markdown code blocks or any extra text.
-
-JSON Schema:
-{
-  "aiNote": "string", // [Chain of Thought] ALWAYS write your reasoning HERE FIRST. Especially verify if it's an UNPAID Notice or PAID Receipt. (Output in Traditional Chinese)
-  // Journal entries. The sum of debit amounts MUST equal the sum of credit amounts (A = L + E).
-  "lines": [ 
-    {
-      "accountingCode": "string", // Accounting code from the provided list
-      "particular": "string", // Summary of this specific entry (Output in Traditional Chinese)
-      "amount": 100, // Numeric amount
-      "isDebit": true // true = Debit, false = Credit
-    }
-  ]
-  ]
-}
 
 [IMPORTANT]
 Do NOT invent exact numerical accounting codes if you don't know them. 

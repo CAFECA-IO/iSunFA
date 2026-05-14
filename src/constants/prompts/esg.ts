@@ -101,34 +101,5 @@ export const getEsgPrompt = (
   5. 數據可靠性 (Re)：數據來源是否可靠。優質標準：數據來源為政府機構、學術研究或國際組織等權威機構。
   請用以上五個分數，計算出平均 DQI 分數，並填入 dqiScore 欄位。
 
-  並請在 aiNote 欄位寫下 AI 分析碳盤查的邏輯，不需要任何標題，直接寫下分析邏輯或列點描述即可。 
-  請務必回傳一個 JSON 格式，包含以下欄位（不要加入任何額外的文字，也不要包裝在 markdown 程式碼區塊中，直接回傳 JSON 字串）：
-  {
-    "tradingDate": "YYYY-MM-DD", // 交易日期 
-    "scope": "SCOPE_1", // 溫室氣體範疇 ("SCOPE_1" | "SCOPE_2" | "SCOPE_3")
-    "activityType": "EMPLOYEE_COMMUTING", // 活動類型
-    "vendor": "心心小舖", // 供應商
-    "amount": 2.01, // 活動數據 (數字)
-    "unit": "kWh", // 單位
-
-    "intensity": "HIGH", // 排放強度 ("HIGH" | "MEDIUM" | "LOW")
-    "dqiScore": 1.2, // 數據品質分數 (數字 1-5)
-    "confidence": 85, // AI 分析的整體信心度 (數字 0-100)
-    "coefficientId": "string | null", // 使用既有係數之 ID，若使用新係數或無適合係數則為 null
-    "newCoefficient": { 
-        // 若找不到適合的既有係數，所尋找到的可靠外部係數資訊 (若有使用既有係數，則為 null)
-        "name": "string", // 係數名稱，須符合「XX 係數」的格式
-        "description": "string", // 係數描述
-        "unit": "string", // 係數單位，不包含 'kgCO2e'，例如：kgCO2e/kg，即為 kg (盡量以國際通用單位為主，不要寫中文)
-        "emissionFactor": 1.23, // 排放係數 (數字)
-        "source": "string" // 來源，如「經濟部能源署」等
-    },
-    "emissionSourceId": "string | null", // 使用既有排放源歸口 ID，若使用新排放源歸口或無適合排放源歸口則為 null
-    "newEmissionSource": {
-        // 若找不到適合的既有排放源歸口，所建立的新排放源歸口資訊 (若有使用既有排放源歸口，則為 null)
-        "name": "string", // 排放源名稱
-    },
-    "aiNote": "string" // AI 分析的備註
-  }
-`;
+  並請在 aiNote 欄位寫下 AI 分析碳盤查的邏輯，不需要任何標題，直接寫下分析邏輯或列點描述即可。`;
 };

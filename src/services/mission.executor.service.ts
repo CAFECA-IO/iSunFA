@@ -27,15 +27,19 @@ export async function processNext() {
   try {
     const folders = await fs.readdir(missionDirPath, { withFileTypes: true });
 
-    let targetFolderInfo: { name: string; useJsonPlan: boolean } | null = null;
-    let fallbackTargetFolderInfo: {
-      name: string;
-      useJsonPlan: boolean;
-    } | null = null;
+    let activeFolderInfo: { name: string; useJsonPlan: boolean } | null = null;
+    let lockDirCreated = false;
 
     for (const folder of folders) {
       if (!folder.isDirectory()) continue;
       const taskDir = path.join(missionDirPath, folder.name);
+
+      // Info: (20260514 - Tzuhan) Phase 1.2 POSIX Atomic Lock Check
+      const lockDir = path.join(taskDir, ".lock");
+      try {
+        await fs.access(lockDir);
+        continue; // Info: Already locked by another worker
+      } catch {}
 
       try {
         await fs.access(path.join(taskDir, "result.md"));
@@ -68,16 +72,20 @@ export async function processNext() {
         continue; // Info: (20260422 - Luphia) Max retries exceeded
       }
 
-      if (failedFiles.length > 0) {
-        if (!fallbackTargetFolderInfo)
-          fallbackTargetFolderInfo = { name: folder.name, useJsonPlan };
-      } else {
-        targetFolderInfo = { name: folder.name, useJsonPlan };
-        break; // Info: (20260422 - Luphia) Found immediate priority task
+      // Info: (20260514 - Tzuhan) Phase 1.2 POSIX Atomic Lock Acquisition
+      try {
+        await fs.mkdir(lockDir);
+        lockDirCreated = true;
+        activeFolderInfo = { name: folder.name, useJsonPlan };
+        break; // Successfully acquired a task, break loop
+      } catch (err) {
+        if ((err as NodeJS.ErrnoException)?.code === "EEXIST") {
+          continue; // Another worker beat us to it, check next folder
+        }
+        throw err;
       }
     }
 
-    const activeFolderInfo = targetFolderInfo || fallbackTargetFolderInfo;
     if (!activeFolderInfo) {
       console.log("[MissionExecutor] No pending executions found.");
       return;
@@ -445,6 +453,18 @@ export async function processNext() {
         errorMessage,
         "utf8",
       );
+    } finally {
+      // Info: (20260514 - Tzuhan) Phase 1.2 POSIX Atomic Lock Release
+      if (lockDirCreated) {
+        try {
+          await fs.rmdir(path.join(taskDir, ".lock"));
+        } catch (e) {
+          console.error(
+            `[MissionExecutor] Failed to release lock for ${folderName}:`,
+            e,
+          );
+        }
+      }
     }
   } catch (e) {
     console.log("[MissionExecutor] Invalid MISSION_DIR or none exists yet.", e);
