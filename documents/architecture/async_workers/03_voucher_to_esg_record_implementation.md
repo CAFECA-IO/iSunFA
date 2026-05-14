@@ -42,3 +42,7 @@ AI 被要求：
    - 已將 `MeasurementUnit` 從 Prisma 資料庫 Enum 中徹底拔除，轉為 TypeScript 端的強型別常數 (`src/constants/enums.ts`)。這消除了 AI 萃取時與資料庫層的依賴耦合，並確保單位定義在系統層是絕對靜態的真理，不會因為 DB Schema 異動而導致碳排計算邏輯崩潰。
 5. **ESG 碳排係數洗轉與產業容損率建置** `(👉 交由 Julian 負責實作)`
    - 將龐大的原始係數資料表清洗並轉換為高效率的後端檢索格式，同時建置不同產業的容損率 (Tolerance Rate) 機制，確保碳盤查系統具備對極端異常值 (Outliers) 的彈性與警示能力。
+6. **🛡️ 精度防護：碳排數據強制 Prisma.Decimal 鑄造 (Mandatory Decimal Casting)**：
+   - 與財務金流不同，ESG 的「活動數據 (esgAmount)」與「排放係數 (factor)」必然牽涉到極微小的小數點運算（例如 `0.000054` 噸 CO2e）。這類數值絕對不能使用 `BigInt`（會遺失小數），更不能使用原生 JavaScript `number`（會產生二進制浮點數漂移）。
+   - 當 AI 回傳或系統檢索到正確的係數與數據後，準備回寫至主系統 `EsgRecord` 前，必須強制透過 `new Prisma.Decimal(amount)` 將數值轉型為 Decimal 實體。
+   - 透過嚴格的 `Decimal` 邊界控管，除了能順利通過 `Database Boundary Guard` 外，更能保證在未來任何的碳排相乘加總中，系統產出的數字達到 100% 的科學與查核誤差容忍標準。

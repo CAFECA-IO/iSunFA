@@ -40,3 +40,6 @@
 2. **零捏造斷言 (Zero Invention Assertion)**：在程式碼層級新增檢查機制，如果 `confidence < 80` 且憑證含有不可辨識區塊，系統必須拒絕生成完整故事，並直接送入「人工覆核 (Human-in-the-Loop)」佇列，寧可顯示 `N/A` 也不准 AI 填寫假資料。
 3. **✅ 已完成：全面升級結構化輸出與後端重組**：徹底廢除「寫故事」。改為要求 AI 輸出精簡的 Key-Value 特徵 (JSON)。在後端 (`document_sync.repo.ts`) 再由系統自動將客觀數字重組為條理分明的 Markdown 格式寫入資料庫，兼顧安全與可讀性。
 4. **✅ 已完成：外幣萃取邏輯**：若發票包含外幣資訊，AI 會將這些外幣細節（原幣金額與匯率）如實記錄在它該在的 `text` 或 `aiNote` 裡，透過 Chain of Thought 自然呈現，避免為了特例而污染核心資料庫的 Schema。
+5. **🛡️ 精度防護：數值型別邊界控管 (Volatile JSON Type Defense)**：
+   - AI 解析產出的金額等數值，在 JSON 中雖然以原生 `number` 或 `string` 呈現，但在本階段**必須被視為「未受信任狀態 (Untrusted Volatile Data)」**。
+   - 嚴禁在 AI Worker 階段對任何原生 `number` 進行四捨五入或稅率推算，以防早期浮點數漂移。這些數據必須原封不動地往後傳遞，待進入資料庫寫入邊界前，才會安全轉型為 `BigInt` 或 `Prisma.Decimal`。

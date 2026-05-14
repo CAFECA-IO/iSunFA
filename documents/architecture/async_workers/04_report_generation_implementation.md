@@ -32,3 +32,7 @@
 1. **日結餘 / 月結餘 快照機制 (Daily/Monthly Snapshot Rollups)**：
    - 不應該每次都從歷史第一筆開始算起。必須實作結帳機制，每個月底固定結算出「期末餘額表 (Trial Balance)」，將其雜湊上鏈或鎖定。
    - 報表計算公式必須徹底改為：`本期報表 = 上期快照 (Opening Balance) + 本期變動明細 (Period Delta)`。
+2. **🛡️ 精度防護：全面導入防腐層 (MoneyUtil Anti-Corruption Layer)**：
+   - 當從資料庫讀出百萬筆以 `BigInt` 儲存的傳票進行聚合計算，或處理包含 `Decimal` 的複雜比率（如 `safeRatio`、稅率計算）時，嚴禁依賴原生 JavaScript `Number` 或純粹的 `BigInt`。
+   - 所有報表引擎的底層聚合運算，必須無條件交由基於 `Decimal.js` 的 `MoneyUtil` 來處理。
+   - 這層防腐層（Anti-Corruption Layer）不僅能安全地處理不同型別的跨界計算，還能在最終透過 API 拋轉給前端時，確保數值被安全地處理，徹底阻絕浮點數截斷，並確保前端畫面渲染的 100% 精準。

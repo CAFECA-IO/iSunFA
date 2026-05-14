@@ -114,3 +114,16 @@ Worker 是一個完全獨立的外部節點，**沒有權限存取主系統資�
 | **碳排計算** | 逼 AI 執行乘法運算 | AI 萃取數據 ＋ 後端精密計算 | 0% 數學誤差、符合 IFRS/ISO |
 
 透過這樣的調整，iSunFA 系統的底層管線已從「依賴 AI 機率」正式轉向「依賴數學與業務恆等式」，真正達到四大會計師事務所 (Big 4) 的查帳合規標準。
+
+---
+
+## 🧮 全管線數值型別流轉 (End-to-End Type Flow)
+
+為了貫徹「零誤差企業級數值架構」，本管線嚴格管制數值型別（Computation Types）的生命週期，並於主系統邊界設置防護機制：
+
+1. **AI 萃取期 (Volatile JSON)**：AI 解析輸出的金額為原生的 `number` 或 `string`。此時資料被視為「未受信任 (Untrusted)」，嚴禁執行四捨五入或稅率運算。
+2. **型別鑄造 (Type Casting)**：
+   - **財務金流**（如 `VoucherLine.amount`）在寫入前，必須強制透過 `BigInt(Math.round(amount))` 轉換為 64-bit 大整數。
+   - **ESG 碳排數據**（如活動數據、排放係數）因牽涉高精度小數，必須強制轉換為 `Prisma.Decimal` 實體。
+3. **資料庫防護 (Database Boundary Guard)**：主系統的 Prisma 層實作了動態攔截器。若任何模組試圖將原生 `number` 直接寫入 `BigInt` 或 `Decimal` 欄位，將觸發 500 內部錯誤並退回，強制阻斷精度流失地雷。
+4. **報表聚合防腐層 (MoneyUtil)**：當從資料庫撈出海量 `BigInt` 進行財報加總或比率計算時，全面統一使用基於 `Decimal.js` 的 `MoneyUtil` 進行安全運算，並以 `String` 型態安全地透過 JSON 傳遞給前端。
