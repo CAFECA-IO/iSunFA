@@ -47,6 +47,13 @@
 - **[商業藍圖與 GTM 戰略](architecture/gtm_business_blueprint.md)**
   - 了解 iSunFA 系統的商業願景與推廣目標。
 
+### 🏛️ 架構決策紀錄 (Architecture Decision Records, ADRs)
+
+為了追蹤重大架構變更背後的歷史脈絡與取捨，我們將核心的「減法工程」與重構決策收斂於此：
+
+- **[ADR 001: The Great Purge (精準度架構重構與拔除)](architecture/decisions/001_precision_refactor_removals.md)**
+  - 記錄 Sprint 1 期間為達 Big 4 確定性標準，對 AI 數學幻覺、Regex 擷取、Prompt 冗餘結構與硬編碼面額進行的「史詩級拔除」決策。
+
 ### 🚀 系統部署與管理員維運白皮書 (System Deployment & Admin Setup)
 - **[00_執行計畫 (Execution Plan)](admin_setup_whitepaper/00_execution_plan.md)**
 - **[01_架構總覽 (Architecture Overview)](admin_setup_whitepaper/01_architecture_overview.md)**
