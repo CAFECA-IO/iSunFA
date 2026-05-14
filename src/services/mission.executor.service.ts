@@ -250,28 +250,15 @@ export async function processNext() {
           let parsedVal: JSONValue | undefined;
 
           try {
-            // Info: (20260430 - Luphia) Try to parse as JSON
+            // Info: (20260514 - Tzuhan) Phase 1.1: Strict JSON Schema parsing, removing Regex fallback
             parsedVal = JSON.parse(cleanedTaskResultStr) as JSONValue;
             isJson = true;
           } catch {
-            // Info: (20260430 - Luphia) 若失敗，嘗試只擷取第一對大括號內的內容（應對有前後文的情境）
-            const globalMatch = taskResultStr.match(/\{[\s\S]*\}/);
-            if (globalMatch) {
-              try {
-                parsedVal = JSON.parse(globalMatch[0]) as JSONValue;
-                cleanedTaskResultStr = globalMatch[0];
-                isJson = true;
-              } catch {
-                /**
-                 * Info: (20260430 - Luphia)
-                 * 擷取出來的也不是合法的 JSON，這代表它是一般的 Markdown 文本
-                 * 因此我們應該保留原始的 taskResultStr，不要破壞它
-                 */
-                cleanedTaskResultStr = taskResultStr;
-              }
-            } else {
-              cleanedTaskResultStr = taskResultStr;
-            }
+            // Info: (20260514 - Tzuhan) If it fails to parse, we log the failure but do NOT fallback to Regex
+            console.error(
+              `[MissionExecutor] ❌ JSON Parsing Failed for Task ${taskKey}. Expected strict JSON from AI. Raw: ${cleanedTaskResultStr.substring(0, 50)}...`,
+            );
+            cleanedTaskResultStr = taskResultStr;
           }
 
           if (isJson && parsedVal !== undefined) {
