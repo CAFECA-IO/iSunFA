@@ -4,14 +4,15 @@
  ** 1. 從 DB 找出最接近 date 的匯率
  ** 2. 若查無資料，拋出明確的 Error。
  ** 3. 將計算後的結果回傳
- ** 4. 必須使用 Decimal 確保計算精度無誤
+ ** 4. 必須使用 Prisma.Decimal 確保計算精度無誤
  */
 
-import { prisma } from "@/lib/prisma";
+// ToDo: (20260514 - Julian) 後續開發還要使用 Prisma，先保留
 import { Prisma } from "@/generated";
+import { exchangeRateRepo } from "@/repositories/exchange_rate.repo";
 
 export class ExchangeRateService {
-  // Info: (20260514 - Julian) 從 DB 找出最接近 date 的 TWD 匯率(回傳匯率)
+  // Info: (20260514 - Julian) 找出最接近 date 的 TWD 匯率
   async getExchangeRateToTWD({
     currency,
     date,
@@ -20,13 +21,9 @@ export class ExchangeRateService {
     date: Date;
   }): Promise<{ exchangeRate: Prisma.Decimal }> {
     try {
-      const exchangeRate = await prisma.exchangeRate.findFirst({
-        where: {
-          baseCurrency: "TWD",
-          targetCurrency: currency,
-          date: { lte: date }, // Info: (20260514 - Julian) 往前回溯，避免使用到未來的匯率
-        },
-        orderBy: { date: "desc" },
+      const exchangeRate = await exchangeRateRepo.getExchangeRateToTWD({
+        currency,
+        date,
       });
 
       if (!exchangeRate) {
