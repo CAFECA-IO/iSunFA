@@ -21,7 +21,7 @@
    👉 定義了架構分層 (API-Service-Repo)、禁用 `any`、以及如何優雅地隔離資料庫錯誤。
 2. **[註解與標籤規範指南](engineering_guidelines/work_guidelines/annotation.md)**
    👉 **極度重要**！本專案強制要求所有註解必須具備時間戳與作者 (例如 `// Info: (20260511 - Tzuhan)`)。未遵守此規範的註解將被視為違規。
-3. **[LLM 實作規範與邊界防護指南](architecture/ai_and_data/llm_implementation_guideline.md)**
+3. **[LLM 實作規範與邊界防護指南](architecture/ai_and_analytics/llm_implementation_guideline.md)**
    👉 說明了 AI 在系統中的定位。絕對禁止讓 AI 算數學、做業務邏輯判斷，並規範了「混合決策管線 (Hybrid Pipeline)」與「English-First Prompting」的防幻覺實作方式。
 4. **[數值精度處理規範](engineering_guidelines/numerical_precision_guideline.md)**
    👉 說明為何我們在財務與碳排計算中全面棄用原生 `number`，並強制使用 `Prisma.Decimal` 與 `BigInt`。
@@ -66,13 +66,13 @@
 
 ## ⚙️ 第三階段：核心非同步管線 (Async Worker Pipelines)
 
-系統最複雜的憑證處理流程皆位於 `mission.executor.service.ts` 的非同步管線中，詳細實作見 `pipeline` 目錄：
+系統最複雜的憑證處理流程皆位於 `mission.executor.service.ts` 的非同步管線中，詳細實作見 `async_workers` 目錄：
 
-- **[00\_非同步 Worker 總覽](architecture/pipeline/00_async_worker_overview.md)**：非同步架構設計、死信佇列 (DLQ) 與重試機制的總覽。
-- **[01\_憑證至分錄 (Receipt to Journal)](architecture/pipeline/01_receipt_to_journal_implementation.md)**：AI OCR 特徵萃取與初階轉換。
-- **[02\_分錄至傳票 (Journal to Voucher)](architecture/pipeline/02_journal_to_voucher_implementation.md)**：TypeScript 決定論查表、會計科目 mapping。
-- **[03\_傳票至 ESG 紀錄 (Voucher to ESG)](architecture/pipeline/03_voucher_to_esg_record_implementation.md)**：碳排活動數據抓取、防護欄檢核。
-- **[04\_報表生成流程 (Report Generation)](architecture/pipeline/04_report_generation_implementation.md)**：產生財務與碳排最終報表。
+- **[00\_非同步 Worker 總覽](architecture/async_workers/00_async_worker_overview.md)**：非同步架構設計、死信佇列 (DLQ) 與重試機制的總覽。
+- **[01\_憑證至分錄 (Receipt to Journal)](architecture/async_workers/01_receipt_to_journal_implementation.md)**：AI OCR 特徵萃取與初階轉換。
+- **[02\_分錄至傳票 (Journal to Voucher)](architecture/async_workers/02_journal_to_voucher_implementation.md)**：TypeScript 決定論查表、會計科目 mapping。
+- **[03\_傳票至 ESG 紀錄 (Voucher to ESG)](architecture/async_workers/03_voucher_to_esg_record_implementation.md)**：碳排活動數據抓取、防護欄檢核。
+- **[04\_報表生成流程 (Report Generation)](architecture/async_workers/04_report_generation_implementation.md)**：產生財務與碳排最終報表。
 
 ---
 
@@ -80,9 +80,9 @@
 
 任何核心模組的修改，都必須確保測試通過：
 
-- **[端到端測試架構設計](e2e_audit_pipeline/e2e_testing_architecture.md)**：了解系統如何進行 E2E 驗證。
-- **[整合測試撰寫指南](integration_test/01_integration_test_guide.md)**：教導如何撰寫符合標準的整合測試。
-- **[整合測試 Cookie/Session 說明](integration_test/00_integration_test_cookie_session_explanation.md)**：測試環境中的授權機制實作細節。
+- **[端到端測試架構設計](testing_and_qa/e2e_audit_pipeline/e2e_testing_architecture.md)**：了解系統如何進行 E2E 驗證。
+- **[整合測試撰寫指南](testing_and_qa/integration_test/01_integration_test_guide.md)**：教導如何撰寫符合標準的整合測試。
+- **[整合測試 Cookie/Session 說明](testing_and_qa/integration_test/00_integration_test_cookie_session_explanation.md)**：測試環境中的授權機制實作細節。
 
 ---
 
