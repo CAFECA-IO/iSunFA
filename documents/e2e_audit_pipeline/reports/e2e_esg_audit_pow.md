@@ -26,7 +26,7 @@
 
 ### 5. 架構權衡與效能保護 (Architectural Trade-offs)
 *   拍板決議：**「財報引擎使用原生 Number，ESG 引擎使用 Decimal」**。避開 `BigInt` 序列化地雷。
-*   👉 *完整決策分析見：[`numerical_precision_guideline.md`](./numerical_precision_guideline.md)*
+*   👉 *完整決策分析見：[`numerical_precision_guideline.md`](../../engineering_guidelines/numerical_precision_guideline.md)*
 
 ---
 
@@ -71,7 +71,7 @@
 22. **【i18n】徹底消滅多國語系字串硬綁定**：把所有 `name.includes("借款/股利/無形資產")` 等依賴中文字串的 Anti-pattern 徹底拔除，改為依賴 `src/constants/accounts.ts` 裡強型別的底層字典標籤 (`isInterestBearing`, `isDividend`) 驅動。
 23. **【Math & DB】拍板數值運算底層標準與 21.4 億上限迴避**：
     確立財務三表維持 `Number` 以守護高效能，而 ESG 碳排強制引入 `Prisma.Decimal` 防禦浮點數誤差。同時，為了避開 `BigInt` 的 JSON 序列化災難，我們實作了「應用層傳票分片 (Sharding)」來解決單筆傳票超過 21.4 億的 PostgreSQL 限制。
-    👉 *完整架構決策與權衡分析，請參見：[`numerical_precision_guideline.md`](./numerical_precision_guideline.md)*
+    👉 *完整架構決策與權衡分析，請參見：[`numerical_precision_guideline.md`](../../engineering_guidelines/numerical_precision_guideline.md)*
 
 *(尚未實作)* **【Domain】流通在外股數的「彈性面額」解耦 (相容國際市場)**：
 > 拔除 `balance_sheet_generator.ts` 中硬編碼的 `/ 10` (面額 10 元) 計算邏輯。徹底擺脫台灣舊有法規的硬編碼限制，為系統未來支援台灣新制「彈性面額」以及美股 (US-GAAP) 「無面額股票 (No Par Value)」的跨國多架構預留了乾淨的擴充空間。

@@ -17,13 +17,13 @@
 
 若您是第一次接觸本專案，請務必按照順序閱讀以下三份文件，它們定義了我們如何寫 Code 以及如何限制 AI：
 
-1. **[團隊協作與程式碼最佳實踐](architecture/coding_guidelines.md)**
+1. **[團隊協作與程式碼最佳實踐](engineering_guidelines/coding_guidelines.md)**
    👉 定義了架構分層 (API-Service-Repo)、禁用 `any`、以及如何優雅地隔離資料庫錯誤。
-2. **[註解與標籤規範指南](work_guidelines/annotation.md)**
+2. **[註解與標籤規範指南](engineering_guidelines/work_guidelines/annotation.md)**
    👉 **極度重要**！本專案強制要求所有註解必須具備時間戳與作者 (例如 `// Info: (20260511 - Tzuhan)`)。未遵守此規範的註解將被視為違規。
-3. **[LLM 實作規範與邊界防護指南](architecture/llm_implementation_guideline.md)**
+3. **[LLM 實作規範與邊界防護指南](architecture/ai_and_data/llm_implementation_guideline.md)**
    👉 說明了 AI 在系統中的定位。絕對禁止讓 AI 算數學、做業務邏輯判斷，並規範了「混合決策管線 (Hybrid Pipeline)」與「English-First Prompting」的防幻覺實作方式。
-4. **[數值精度處理規範](architecture/numerical_precision_guideline.md)**
+4. **[數值精度處理規範](engineering_guidelines/numerical_precision_guideline.md)**
    👉 說明為何我們在財務與碳排計算中全面棄用原生 `number`，並強制使用 `Prisma.Decimal` 與 `BigInt`。
 
 ---
@@ -38,13 +38,13 @@
 ### 👑 國家級與會計師 (Big 4) 合規白皮書
 
 - **[iSunFA 內部控制與系統自動控制說明書 (ITAC)](architecture/internal_control_and_audit_framework.md)**：COSO 框架對應與人工覆核 (HITL) 規範。
-- **[企業機密隔離與加密計算架構 (ZKP & Privacy-Preserving)](architecture/zkp_privacy_preserving.md)**：零知識證明與 AA 錢包金鑰管理。
-- **[國家級主權雲端安全性白皮書與災難復原計畫 (DRP)](architecture/sovereign_cloud_security_drp.md)**：HA/DR 與 ISO 標準對齊。
+- **[企業機密隔離與加密計算架構 (ZKP & Privacy-Preserving)](architecture/security_and_web3/zkp_privacy_preserving.md)**：零知識證明與 AA 錢包金鑰管理。
+- **[國家級主權雲端安全性白皮書與災難復原計畫 (DRP)](architecture/security_and_web3/sovereign_cloud_security_drp.md)**：HA/DR 與 ISO 標準對齊。
 - **[溫室氣體核算方法論與國際準則對照表](architecture/esg_methodology_mapping.md)**：GHG Protocol/IFRS S2 對齊與質量守恆查核。
 
-- **[區塊鏈防篡改與零信任架構](architecture/blockchain_immutability_architecture.md)**
+- **[區塊鏈防篡改與零信任架構](architecture/security_and_web3/blockchain_immutability_architecture.md)**
   - 說明系統如何利用 AA Wallet (ERC-4337)、ONCHAINID 憑證與 Hash-Chained Logs 來實現 Web3 級別的權限控管與軌跡防護，**嚴禁使用傳統 Web2 RBAC 邏輯**。
-- **[商業藍圖與 GTM 戰略](architecture/gtm_business_blueprint.md)**
+- **[商業藍圖與 GTM 戰略](business_and_product/gtm_business_blueprint.md)**
   - 了解 iSunFA 系統的商業願景與推廣目標。
 
 ### 🏛️ 架構決策紀錄 (Architecture Decision Records, ADRs)
@@ -80,7 +80,7 @@
 
 任何核心模組的修改，都必須確保測試通過：
 
-- **[端到端測試架構設計](architecture/e2e_testing_architecture.md)**：了解系統如何進行 E2E 驗證。
+- **[端到端測試架構設計](e2e_audit_pipeline/e2e_testing_architecture.md)**：了解系統如何進行 E2E 驗證。
 - **[整合測試撰寫指南](integration_test/01_integration_test_guide.md)**：教導如何撰寫符合標準的整合測試。
 - **[整合測試 Cookie/Session 說明](integration_test/00_integration_test_cookie_session_explanation.md)**：測試環境中的授權機制實作細節。
 
@@ -88,9 +88,9 @@
 
 ## 🔌 其他系統模組與政策文件
 
-- **外部整合**：[外部使用者綁定機制 (External User Binding)](external_user_binding.md)
-- **特定業務邏輯**：[薪資計算機運作機制 (Salary Calculator)](salary_calculator_operating_mechanism/v1_0_0.md)
+- **外部整合**：[外部使用者綁定機制 (External User Binding)](business_and_product/external_user_binding.md)
+- **特定業務邏輯**：[薪資計算機運作機制 (Salary Calculator)](business_and_product/salary_calculator_operating_mechanism/v1_0_0.md)
 - **法律與合規政策**：
-  - [服務條款 (Terms of Service)](terms_of_service.md)
-  - [隱私權政策 (Privacy Policy)](privacy_policy.md)
-  - [退款政策 (Refund Policy)](refund_policy.md)
+  - [服務條款 (Terms of Service)](legal/terms_of_service.md)
+  - [隱私權政策 (Privacy Policy)](legal/privacy_policy.md)
+  - [退款政策 (Refund Policy)](legal/refund_policy.md)

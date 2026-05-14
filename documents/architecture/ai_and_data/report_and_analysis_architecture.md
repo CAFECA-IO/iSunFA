@@ -9,28 +9,75 @@
 **觸發點**：使用者進入 `src/components/user/financial_report/*_view.tsx`
 **特性**：每次進入頁面或調整日期時，即時向後端索取由「已核對傳票 (Verified)」即時運算出的報表數據。
 
+### 核心循序圖與四大階段 (Sequence Diagram)
+
+這份架構圖詳細拆解了從「使用者點擊報表」一直到「報表引擎產出數字」的完整資料流。
+
 ```mermaid
 sequenceDiagram
-    actor User as 客戶 (Browser)
-    participant UI as 財報 UI 元件<br/>(financial_report)
-    participant API as Next.js API<br/>(/api/v1/.../report)
-    participant DB as 資料庫 (Prisma)
-    participant Engine as 核心報表引擎<br/>(src/lib/report/*)
+    autonumber
+    actor User as 使用者 (Browser)
+    participant UI as 前端畫面<br>(如 IncomeStatementView)
+    participant API as 後端 API 介面<br>(/api/.../report/route.ts)
+    participant DB as 資料庫<br>(Prisma)
+    participant Dict as 會計字典<br>(tw.ts)
+    participant Engine as 報表核心引擎<br>(*_generator.ts)
 
-    User->>UI: 進入財報頁面
-    UI->>API: GET 要求報表資料 (帶入日期區間)
+    User->>UI: 選擇報表類型與年份 (例: 2024 全年度)
+    UI->>API: 發送 GET 請求 (帶入 reportType, period, year)
+    
+    rect rgb(240, 248, 255)
+        Note right of API: 階段一：資料撈取 (Data Fetching)
+        API->>API: 轉換精準的 UTC 時間邊界 (01/01 ~ 12/31 23:59:59.999Z)
+        API->>DB: 撈取傳票 (條件：isVerified=true, 無軟刪除, 落在區間內)
+        DB-->>API: 回傳所有符合的 Vouchers 與 VoucherLines
+    end
 
-    Note over API, DB: 【重要】篩選條件：<br/>isVerified: true<br/>deletedAt: null
-    API->>DB: 撈取範圍內的 Vouchers & ESG Records
-    DB-->>API: 傳回明細資料
+    rect rgb(255, 245, 238)
+        Note right of API: 階段二：資料充血 (Data Enrichment)
+        API->>API: 將所有傳票分錄 (Lines) 攤平為單一陣列
+        API->>Dict: 依據 line.accountingCode 查詢完整會計屬性
+        Dict-->>API: 回傳科目名稱、類別 (Type)、借貸性 (isDebit)
+        API->>API: 組合為強型別的 IVoucherLineUI
+    end
 
-    API->>Engine: 傳遞資料給核心引擎<br/>(generateIncomeStatement 等)
-    Note right of Engine: 依據借貸法則進行加總與抵銷
-    Engine-->>API: 回傳 IIncomeStatement 等結構化 JSON
+    rect rgb(245, 255, 250)
+        Note right of API: 階段三：核心計算引擎 (The Brain)
+        API->>Engine: 餵入充血後的 formattedLineItems 陣列
+        Engine->>Engine: 步驟 A：依科目代碼第一碼分類 (例: 4=收入, 5=營業成本, 6=營業費用)
+        Engine->>Engine: 步驟 B：利用 isDebit 決定加減 (借方增加/減少)
+        Engine->>Engine: 步驟 C：結算核心指標 (如: 毛利, EBITDA, 稅後淨利)
+        Engine-->>API: 產出結構化的 JSON 樹狀物件
+    end
 
-    API-->>UI: 回傳報表數據
-    UI-->>User: 渲染華麗的視覺化圖表與報表
+    API-->>UI: 回傳 HTTP 200 帶有計算完畢的 { report } 物件
+
+    rect rgb(253, 245, 230)
+        Note right of UI: 階段四：視覺渲染 (Presentation)
+        UI->>UI: 解析 JSON，計算 UI 專用的百分比進度條與長度
+        UI->>User: 顯示最終排版精美的報表、儀表板與註解
+    end
 ```
+
+### 🔍 流程解說：誰給資料？怎麼給？UI 呈現什麼？
+
+1. **誰發動的？** 前端 UI 元件（如 `IncomeStatementView.tsx`）只負責「要結果」，不負責計算。
+2. **資料從哪裡來？** API 先從 DB (Prisma) 索取「已驗證 (isVerified: true)」且「未刪除」的傳票。接著向會計字典 (`tw.ts`) 查詢詳細屬性。
+3. **引擎如何處理？** 引擎（如 `income_statement_generator.ts`）將代碼分類，根據借貸法則加總，算出 EBITDA、毛利等核心指標。
+4. **UI 呈現什麼？** UI 收到 JSON 樹狀結構後，加上金錢符號，並計算百分比進度條。
+
+> 💡 **架構洞察：歷史曾發生的三大「幽靈 Bug」是如何產生的？**
+> 這套「分層處理」架構雖然清晰，但只要有一個節點沒有做好防呆，就會產生極難追蹤的錯誤。我們曾遇到以下三個經典案例：
+> 
+> 1. **字典缺失引發的「沉默丟失 (Silent Drop)」**：
+>    - **情境**：當外部資料或 AI 辨識給了一個不存在於字典的代碼時，引擎直接把它當空氣丟掉，導致淨利虛增。
+>    - **解法**：為引擎加上「未分類 (Uncategorized) 容錯網」，遇未知科目時直接以代碼第一碼強行歸類，確保配平。
+> 2. **驗證狀態造成的「選擇性失明」**：
+>    - **情境**：期末折舊憑單存在於 DB 但未被標記 `isVerified: true`，導致前端算出來折舊為 0。
+>    - **解法**：確保所有期末調整分錄在產生或匯入時，都必須正確賦予 `isVerified: true`。
+> 3. **跨年折舊消失的「時區陷阱 (Timezone Trap)」**：
+>    - **情境**：年底調整傳票的時間是 `23:59:59Z`，若使用本地時區 `new Date()` 轉換會變成下午，導致壓線傳票掉到隔年。
+>    - **解法**：API 查詢區間嚴格採用 `Date.UTC()`，確保跨時區查詢的絕對精準。
 
 ---
 
@@ -107,3 +154,4 @@ sequenceDiagram
 
 - **新增依賴模組**：若未來開發了如「批次匯出 PDF 報表微服務」或「即時財報警示系統」，需要將其 Sequence Diagram 補入此文件，以維持系統架構圖的完整性。
 - **核心引擎抽離**：若 `src/lib/report/*` 未來被重構為獨立運行的跨語言微服務 (如 Golang/Rust)，必須更新此架構圖中的通訊協定與流程。
+
