@@ -14,12 +14,18 @@ const adapter = new PrismaPg(pool);
 const basePrisma = new PrismaClient({ adapter });
 
 // Info: (20260513 - Tzuhan) 企業級資料庫邊界防護 (Enterprise Database Boundary Guard)
-// Info: (20260513 - Tzuhan) 動態解析 Prisma Schema，找出所有 BigInt 與 Decimal 欄位名稱
+// Info: (20260513 - Tzuhan) 動態解析 Prisma Schema，找出所有 BigInt、Decimal 與 Json 欄位名稱
 const guardedFields = new Set<string>();
+const jsonFields = new Set<string>();
 Prisma.dmmf.datamodel.models.forEach((model) => {
-  model.fields
-    .filter((f) => f.type === "Decimal" || f.type === "BigInt")
-    .forEach((f) => guardedFields.add(f.name));
+  model.fields.forEach((f) => {
+    if (f.type === "Decimal" || f.type === "BigInt") {
+      guardedFields.add(f.name);
+    }
+    if (f.type === "Json") {
+      jsonFields.add(f.name);
+    }
+  });
 });
 
 // Info: (20260513 - Tzuhan) 攔截所有 Prisma 寫入操作，嚴格阻擋原生 JS number 寫入這些欄位以防止精度遺失
@@ -37,22 +43,30 @@ const prisma = basePrisma.$extends({
         if (writeOps.includes(operation) && args) {
           const argsRecord = args as Record<string, unknown>;
           if (argsRecord.data) {
-            const checkNoNumber = (obj: unknown) => {
+            const checkNoNumber = (obj: unknown, isInsideJson = false) => {
               if (!obj || typeof obj !== "object") return;
               // Info: (20260513 - Tzuhan) 處理陣列 (例如 createMany)
               if (Array.isArray(obj)) {
-                obj.forEach(checkNoNumber);
+                obj.forEach((item) => checkNoNumber(item, isInsideJson));
                 return;
               }
               const record = obj as Record<string, unknown>;
               for (const key in record) {
-                if (guardedFields.has(key) && typeof record[key] === "number") {
+                // Info: (20260514 - Tzuhan) 如果是在 Json 欄位內部，不應套用邊界防護，因為 Json 本來就允許 number
+                if (
+                  !isInsideJson &&
+                  guardedFields.has(key) &&
+                  typeof record[key] === "number"
+                ) {
                   throw new Error(
                     `[Database Boundary Guard] Failed to save to ${model}: '${key}' is defined as Decimal/BigInt but received a primitive number. Please pass a string, Decimal instance, or BigInt to prevent silent precision loss.`,
                   );
                 }
                 if (typeof record[key] === "object") {
-                  checkNoNumber(record[key]);
+                  checkNoNumber(
+                    record[key],
+                    isInsideJson || jsonFields.has(key),
+                  );
                 }
               }
             };
