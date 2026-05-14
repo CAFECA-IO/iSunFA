@@ -196,7 +196,9 @@ export class PaymentRepository {
     const safeData = {
       ...data,
       amount:
-        typeof data.amount === "number" ? String(data.amount) : data.amount,
+        typeof data.amount === "number"
+          ? BigInt(Math.round(data.amount))
+          : data.amount,
     };
 
     return prisma.order.create({ data: safeData });
@@ -422,7 +424,7 @@ export class PaymentRepository {
           paymentMethodId: paymentMethodId,
           orderId: orderId,
           provider: "OEN",
-          amount: String(amount),
+          amount: BigInt(Math.round(amount)),
           status: PAYMENT_TRANSACTION_STATUS.PENDING,
         },
       });
@@ -485,7 +487,7 @@ export class PaymentRepository {
       const dbReceipt = await tx.receipt.create({
         data: {
           orderId: orderId,
-          amount: String(amount),
+          amount: BigInt(Math.round(amount)),
           data: {
             ...(oenData as Record<string, unknown>),
             receiptDetails: {
