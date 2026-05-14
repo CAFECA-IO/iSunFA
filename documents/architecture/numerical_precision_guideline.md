@@ -18,9 +18,13 @@
 *   **財務金額 (Fiat & Crypto)**：所有 `amount` 欄位（如 `VoucherLine.amount`, `Order.amount`）強制使用 `BigInt` (64-bit)，上限高達 922 億億。這徹底淘汰了以往因 32-bit `Int` (21 億上限) 所造成的「傳票分片 (Sharding)」荒謬實作，實現發票與系統傳票的 1:1 絕對對應。
 *   **ESG 碳排數據 (Emissions)**：任何包含小數的排放量與排放係數（如 `esgAmount`, `factor`），維持使用 `Prisma.Decimal` 以避免二進制浮點數誤差。
 
-### 2. 報表核心引擎與防腐層 (The Brain & Anti-Corruption Layer)
-*   **確立 `MoneyUtil` (Decimal.js) 為全端黃金防腐標準**：無論是前端 UI 渲染、還是後端 `src/lib/report/*` 的報表加總與比率計算（如 `safeRatio`），**全面統一使用 `MoneyUtil` 進行運算**。
-*   **放棄純粹的 BigInt 狂熱**：在企業級 SaaS 中，產生單一財報時 `Decimal.js` 的記憶體開銷微乎其微。為了防護開發者不小心發生型別轉換錯誤或浮點數溢位，統一透過 `MoneyUtil.add()` 處理是最高明、最保險的「防腐層防線」。
+### 2. 領域驅動的雙軌防護標準 (DDD Precision Boundaries)
+為了在「CPA 審計合規」與「Web3 基礎設施」間取得完美平衡，系統實作了嚴格的雙軌邊界：
+
+*   **【報表與財會領域】確立 `MoneyUtil` (Decimal.js) 為防腐標準**：
+    無論是前端 UI 渲染、還是後端 `src/lib/report/*` 的財報加總與比率計算（如 `safeRatio`），**全面統一使用 `MoneyUtil` 進行運算**。在企業級 SaaS 中，產生單一財報時 `Decimal.js` 的記憶體開銷微乎其微。為了防護開發者不小心發生型別轉換錯誤或浮點數（稅率、匯率）截斷溢位，捨棄純粹的 BigInt 狂熱，統一透過 `MoneyUtil.add()` 處理是最高明、最保險的「防腐層防線」。
+*   **【Web3 區塊鏈領域】強制保留原生 `BigInt` 運算**：
+    在 Service 層（如 `issue.service.ts`, `token.service.ts`）處理鏈上代幣餘額、ERC-4337 手續費或打包 UserOp 時，**嚴禁套用 `MoneyUtil`**。因為 EVM 智能合約與 `viem` 套件底層強制要求原生 JavaScript `BigInt` (uint256)。在這道邊界內，維持 `(amount * rate) / 10n**18n` 的原生大整數運算是唯一合法且安全的標準。
 
 ### 3. API 傳輸與序列化防線 (Global Serialization Shield)
 為了解決原生 `JSON.stringify` 遇到 `BigInt` 會崩潰的問題，**嚴禁在 DTO/Repository 層手動加上 `Number(amount)`**！

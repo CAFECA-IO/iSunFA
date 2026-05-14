@@ -38,3 +38,7 @@ AI 被要求：
    - 在 Node.js 後端 (`document_sync.repo.ts`)，使用 `Prisma.Decimal` 執行嚴格的浮點數相乘 (`amount * emissionFactor`)，確保盤查結果具備 **0.0000% 的數學誤差**。
 3. **第三段：物理質量守恆護欄 (Mass Conservation Articulation)**
    - 這是阻絕 AI 漂綠的終極防呆機制。將 AI 萃取出的消耗量與企業 ERP 系統進行比對（`期初庫存 + 本期採購 = 消耗重量 + 期末庫存`）。若數量大於物理上限，立刻報錯凍結。
+4. **✅ 已完成：ESG 單位型別強固化 (MeasurementUnit Decoupling)**
+   - 已將 `MeasurementUnit` 從 Prisma 資料庫 Enum 中徹底拔除，轉為 TypeScript 端的強型別常數 (`src/constants/enums.ts`)。這消除了 AI 萃取時與資料庫層的依賴耦合，並確保單位定義在系統層是絕對靜態的真理，不會因為 DB Schema 異動而導致碳排計算邏輯崩潰。
+5. **ESG 碳排係數洗轉與產業容損率建置** `(👉 交由 Julian 負責實作)`
+   - 將龐大的原始係數資料表清洗並轉換為高效率的後端檢索格式，同時建置不同產業的容損率 (Tolerance Rate) 機制，確保碳盤查系統具備對極端異常值 (Outliers) 的彈性與警示能力。

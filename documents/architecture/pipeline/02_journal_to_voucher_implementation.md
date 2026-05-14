@@ -28,6 +28,7 @@
 這讓 AI 承擔了「取得歷史匯率」與「浮點數乘法」的雙重責任。AI 極可能因為缺乏即時金融數據而「編造匯率」，或在小數點計算時產生截斷誤差。在 CPA 審計標準下，一元之差即代表內控失敗。
 
 **🛠️ 處理現況 (2026-05-13)**：
+
 - **Prompt 端**：已拔除 AI 計算匯差的權力 (`journal.ts`)，強制要求保留原始幣別與金額。
 - **Backend 端 (⚠️ Pending)**：雖然拔除了 AI 的權限，但我們尚未實作「匯率微服務 (Exchange Rate API)」。這意味著目前系統處理外幣憑證時，仍無法自動化結算回本位幣。此功能必須在 Sprint 2 優先實作，否則會影響跨國企業的試算表平衡。
 
@@ -41,8 +42,11 @@
    - **Stage 1 (萃取特徵)**：AI 僅負責萃取發票廠商、日期、金額等客觀特徵。
    - **Stage 2 (程式查表)**：完全廢除 Prompt 字典注入。依賴後端 TypeScript 建立「黃金廠商映射表」，看到如「中華電信繳費通知」，直接回傳確定的 CPA 認證分錄 (Deterministic Logic)。
    - **Stage 3 (AI 推論)**：若遇未知憑證，才啟動具備向量檢索 (Vector Search) 功能的高階 Prompt 進行猜測。
-   - **(未來擴充) 策略模式註冊表 (Strategy Registry Pattern)**：將黃金映射表封裝至 `VENDOR_RULE_REGISTRY`，後端透過廠商名稱動態調用對應的查表函式，遵守 OCP 開閉原則。
+   - **策略模式註冊表 (Strategy Registry Pattern)** `(👉 交由 Julian 負責實作)`：將黃金映射表封裝至 `VENDOR_RULE_REGISTRY`，後端透過廠商名稱動態調用對應的查表函式，遵守 OCP 開閉原則。
    - **(未來擴充) 審計軌跡標籤 (Audit Trail Flag)**：強制要求輸出的 JSON 中帶有 `generationSource`（如 `RULE_ENGINE_STAGE_2` 或 `LLM_FALLBACK_STAGE_3`），供會計師查帳時快速篩選高風險傳票。
-2. **將匯率與數學運算抽回系統層 (Backend Math Offloading)**：
+2. **將匯率與數學運算抽回系統層 (Backend Math Offloading)** `(👉 交由 Julian 負責實作：外幣匯率自動化爬蟲與換算服務)`：
    - AI 僅被允許萃取「原始幣別 (如 USD)」與「原始金額 (如 100.50)」。
    - 後端透過專屬的匯率微服務 (Exchange Rate API) 取得精確的結匯日匯率，並使用精確的 `Decimal` 模組算出本位幣，從根源消滅數學幻覺。
+3. **✅ 已完成：VoucherLine 資料庫 Schema 淨化**：
+   - 徹底拔除了 `VoucherLine` 模型中的 `originalAmount` 與 `currency` 欄位。
+   - 所有外幣細節全面回歸至 `Journal` 的文本 (`text`) 或備註中記錄，確保傳票明細層 (VoucherLine) 專注於本位幣的借貸平衡，大幅降低後端結算與對帳的複雜度。
