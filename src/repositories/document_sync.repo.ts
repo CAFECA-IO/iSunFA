@@ -8,6 +8,7 @@ import {
 } from "@/generated";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { IParsedVoucherLine } from "@/interfaces/voucher";
+import { exchangeRateService } from "@/services/exchange_rate.service";
 
 export class DocumentSyncRepository {
   async syncDocumentResultToDatabase({
@@ -122,39 +123,78 @@ export class DocumentSyncRepository {
             });
           }
         } else if (voucherBase || voucherLines) {
-          const vd = {
+          const rawVd = {
             ...(voucherBase?.data || voucherBase || {}),
             ...(voucherLines?.data || voucherLines || {}),
-            aiNote: `- 基本資訊分析：${voucherBase?.aiNote || voucherBase?.data?.aiNote || ""}\n- 會計科目分錄分析：${voucherLines?.aiNote || voucherLines?.data?.aiNote || ""}`,
           };
-          const tradingDate = new Date(vd.tradingDate || new Date());
+
+          const tradingDate = new Date(rawVd.tradingDate || new Date());
+          const originalCurrency = String(rawVd.currency || "TWD");
+          const baseCurrency = accountBook.currency;
+
+          let aiNoteAppend = "";
+          let exchangeRateNum = 1;
+
+          if (originalCurrency !== baseCurrency) {
+            try {
+              // Info: (20260515 - Julian) 取得 fromCurrency -> baseCurrency 的匯率
+              const { exchangeRate } =
+                await exchangeRateService.getCrossExchangeRate({
+                  fromCurrency: originalCurrency,
+                  toCurrency: baseCurrency,
+                  date: tradingDate,
+                });
+              exchangeRateNum = exchangeRate.toNumber();
+              aiNoteAppend = `\n\n## [系統自動換算]\n- 原幣別：${originalCurrency}\n- 本位幣：${baseCurrency}\n- 系統匯率：${exchangeRateNum}\n（各分錄金額皆已自動乘上此匯率並四捨五入至整數）`;
+            } catch (e) {
+              console.warn(
+                `[syncDocumentResultToDatabase] Failed to get exchange rate for ${originalCurrency} to ${baseCurrency}`,
+                e,
+              );
+              aiNoteAppend = `\n\n## [系統自動換算 ⚠️ 失敗]\n查無 ${originalCurrency} 至 ${baseCurrency} 之匯率，暫以 1 計算，請人工複核！`;
+            }
+          }
+
+          const vdAiNote =
+            `- 基本資訊分析：${voucherBase?.aiNote || voucherBase?.data?.aiNote || ""}\n- 會計科目分錄分析：${voucherLines?.aiNote || voucherLines?.data?.aiNote || ""}` +
+            aiNoteAppend;
+
           const typeMap: Record<string, VoucherTradingType> = {
             income: "INCOME",
             outcome: "OUTCOME",
             transfer: "TRANSFER",
           };
           const trType =
-            typeMap[String(vd.tradingType).toLowerCase()] || "INCOME";
-          const confidence = parseInt(String(vd.confidence)) || 0;
+            typeMap[String(rawVd.tradingType).toLowerCase()] || "INCOME";
+          const confidence = parseInt(String(rawVd.confidence)) || 0;
 
           const dataPayload: Prisma.VoucherUncheckedCreateInput = {
             tradingDate,
             tradingType: trType as VoucherTradingType,
-            note: vd.note ?? "-",
-            currency: vd.currency || "TWD",
+            note: rawVd.note ?? "-",
+            currency: baseCurrency, // Info: (20260514 - Julian) 換算後存為本位幣
+            originalCurrency: originalCurrency, // Info: (20260515 - Julian) 存入原幣別
+            exchangeRate: exchangeRateNum, // Info: (20260515 - Julian) 存入匯率
             fileId: realFileId,
             accountBookId,
             confidence,
             isVerified: confidence > 85,
-            aiNote: vd.aiNote ?? "無 AI 分析備註",
+            aiNote: vdAiNote,
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
             lines: {
-              create: (vd.lines || []).map((l: IParsedVoucherLine) => ({
-                accountingCode: l.accountingCode || "",
-                particular: l.particular || null,
-                amount: parseFloat(String(l.amount)) || 0,
-                isDebit: l.isDebit === true,
-              })),
+              create: (rawVd.lines || []).map((l: IParsedVoucherLine) => {
+                const originalAmount = parseFloat(String(l.amount)) || 0;
+                const convertedAmount = Math.round(
+                  originalAmount * exchangeRateNum,
+                );
+                return {
+                  accountingCode: l.accountingCode || "",
+                  particular: l.particular || null,
+                  amount: convertedAmount, // Info: (20260514 - Julian) 換算後的本位幣金額
+                  originalAmount: originalAmount, // Info: (20260514 - Julian) 原始金額
+                  isDebit: l.isDebit === true,
+                };
+              }),
             },
           };
 
