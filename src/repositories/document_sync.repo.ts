@@ -323,7 +323,7 @@ export class DocumentSyncRepository {
               : MeasurementUnit.KG) as MeasurementUnit,
             emissions: calculatedEmissions,
             intensity: (ed.intensity as EsgIntensity) || null,
-            dqiScore: parseFloat(String(ed.dqiScore)) || 0,
+            dqiScore: new Prisma.Decimal(String(ed.dqiScore || "0")),
             confidence,
             isVerified: recordIsVerified,
             aiNote,
