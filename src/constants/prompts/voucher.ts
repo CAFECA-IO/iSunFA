@@ -51,6 +51,7 @@ JSON Schema:
   "vendorName": "string", // Extracted name of the vendor (e.g. 中華電信)
   "documentType": "BILL_NOTICE" | "PAYMENT_RECEIPT" | "OTHER", // Identify the document type based on the rules
   "totalAmount": 100, // The exact numeric total amount written on the document
+  "currency": "string", // Currency code (e.g. TWD)
   "tradingDate": "YYYY-MM-DD", // Date of transaction (Apply ROC year conversion if needed)
   "tradingType": "INCOME" | "OUTCOME" | "TRANSFER",
   "note": "string", // Brief summary/note of the transaction
