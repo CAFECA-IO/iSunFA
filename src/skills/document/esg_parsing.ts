@@ -73,11 +73,10 @@ export class EsgParsingSkill implements ITaskSkill {
         true,
         responseSchema,
       );
-      return JSON.stringify({ data: JSON.parse(text) });
+      return text.trim();
     } catch (error) {
       console.error("[EsgParsingSkill] Error:", error);
       return JSON.stringify({
-        data: null,
         error: "AI 解析碳盤查失敗，請稍後再試",
       });
     }

@@ -47,11 +47,10 @@ export class VoucherBaseParsingSkill implements ITaskSkill {
         true,
         responseSchema,
       );
-      return JSON.stringify({ data: JSON.parse(text) });
+      return text.trim();
     } catch (error) {
       console.error("[VoucherBaseParsingSkill] Error:", error);
       return JSON.stringify({
-        data: null,
         error: "AI 解析傳票基礎資料失敗，請稍後再試",
       });
     }

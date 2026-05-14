@@ -77,11 +77,10 @@ export class VoucherLinesParsingSkill implements ITaskSkill {
         true,
         schema,
       );
-      return JSON.stringify({ data: JSON.parse(text) });
+      return text.trim();
     } catch (error) {
       console.error("[VoucherLinesParsingSkill] Error:", error);
       return JSON.stringify({
-        data: null,
         error: "AI 解析傳票分錄失敗，請稍後再試",
       });
     }

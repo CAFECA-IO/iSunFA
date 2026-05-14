@@ -30,15 +30,9 @@ export class DocumentPreCheckSkill implements ITaskSkill {
     // Info: (20260501 - Luphia) Use fullPrompt provided by executor to keep worker stateless
     const promptText = fullPrompt;
 
-    let res: {
-      data: {
-        invoiceNumber?: string | null;
-        vendorTaxId?: string | null;
-        tradingDate?: string | null;
-        totalAmount?: number | null;
-      } | null;
-      error?: string;
-    } = { data: null, error: "AI 前置防呆掃描失敗，請稍後再試" };
+    let res: string = JSON.stringify({
+      error: "AI 前置防呆掃描失敗，請稍後再試",
+    });
     try {
       const responseSchema = (
         task.data as { responseSchema?: import("@google/generative-ai").Schema }
@@ -49,7 +43,7 @@ export class DocumentPreCheckSkill implements ITaskSkill {
         true,
         responseSchema,
       );
-      res = { data: JSON.parse(text) };
+      res = text.trim();
     } catch (error) {
       console.error("[DocumentPreCheckSkill] Error:", error);
     }
@@ -59,6 +53,6 @@ export class DocumentPreCheckSkill implements ITaskSkill {
      * Duplication handling should be managed by the recorder/sync logic when saving the result.
      */
 
-    return JSON.stringify(res);
+    return res;
   }
 }

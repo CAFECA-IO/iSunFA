@@ -150,11 +150,25 @@ export async function processNext() {
               try {
                 const parsed = JSON.parse(prevResultStr);
                 const actualParsed = parsed.data || parsed;
+
+                // Info: (20260514) Intercept AI parsing errors to prevent silent Stage 3 hallucination
+                if (actualParsed.error) {
+                  throw new Error(`AI 解析失敗: ${actualParsed.error}`);
+                }
+
                 if (actualParsed.vendorName && actualParsed.documentType) {
                   baseParsed = actualParsed;
                   break;
                 }
-              } catch {}
+              } catch (err) {
+                // Info: (20260514) Rethrow if it's our explicit AI failure, otherwise ignore malformed JSON in prior results
+                if (
+                  err instanceof Error &&
+                  err.message.includes("AI 解析失敗")
+                ) {
+                  throw err;
+                }
+              }
             }
 
             if (baseParsed && baseParsed.vendorName) {
