@@ -225,6 +225,11 @@ export class IssueRecorderService {
               >;
               for (const recordKey of Object.keys(payload)) {
                 const fileResult = payload[recordKey];
+                
+                if (!fileResult.journal) {
+                  console.warn(`[MissionRecorder] ⚠️ 警告：Task ID ${taskId} 的 dbSyncPayload (recordKey: ${recordKey}) 缺少 journal 屬性。請確認 MissionExecutor 是否正確打包了 JOURNAL_PARSING 的結果。`);
+                }
+
                 const fileIdToSync =
                   typeof fileResult.fileId === "string"
                     ? fileResult.fileId

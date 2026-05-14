@@ -13,6 +13,7 @@ export const reportView = {
     "필요한 매개변수를 설정하면 iSunFA에서 즉시 보고서를 생성합니다.",
   unknown_account_book: "(알 수 없는 장부)",
   period_unit: "기간: {{period}} | 단위: {{currency}}",
+  unverified_warning: "경고: 보고서에 {{count}}개의 '미확인' 항목이 있습니다. 확인하려면 아래 링크를 클릭하십시오.",
   types: {
     balance_sheet: "대차대조표",
     cash_flow: "현금흐름표",

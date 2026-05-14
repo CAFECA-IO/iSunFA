@@ -550,7 +550,6 @@ export class EsgRepository implements IEsgRepository {
         accountBookId,
         tradingDate: { gte: start, lte: end },
         deletedAt: null,
-        isVerified: true,
       },
       include: { file: true, emissionSource: true, coefficient: true },
     });

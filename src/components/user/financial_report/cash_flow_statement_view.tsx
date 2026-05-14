@@ -98,9 +98,11 @@ const CashFlowSection = ({
 export default function CashFlowSheetView({
   period,
   year,
+  onUnverifiedItemsChange,
 }: {
   period: ReportPeriod;
   year: number;
+  onUnverifiedItemsChange?: (items: {id: string, note: string, type: string}[]) => void;
 }) {
   const params = useParams();
   const { t } = useTranslation();
@@ -115,12 +117,15 @@ export default function CashFlowSheetView({
         try {
           setIsLoading(true);
           const res = await request<
-            IApiResponse<{ report: ICashFlowStatement }>
+            IApiResponse<{ report: ICashFlowStatement; unverifiedItems?: {id: string, note: string, type: string}[] }>
           >(
             `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.CASH_FLOW}&period=${period}&year=${year}`,
           );
           if (res.payload) {
             setReportData(res.payload.report);
+            if (res.payload.unverifiedItems !== undefined && onUnverifiedItemsChange) {
+              onUnverifiedItemsChange(res.payload.unverifiedItems);
+            }
           }
         } catch (error) {
           console.error("Failed to fetch cash flow statement:", error);

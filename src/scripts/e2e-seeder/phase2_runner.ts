@@ -308,7 +308,6 @@ export const runPhase2ReceiptAnalysis = async (
           tradingDate: new Date(groundTruthVoucher.tradingDate),
           confidence: 85,
           analysisStatus: "COMPLETED",
-          isVerified: true,
           lines: {
             create: extractedLines.map((l: IExtractedLine) => ({
               accountingCode: l.accountingCode || "9999",
@@ -410,7 +409,6 @@ export const runPhase2ReceiptAnalysis = async (
           emissions: esgData.emissions || 0,
           confidence: esgData.confidence || 85,
           analysisStatus: "COMPLETED",
-          isVerified: true,
         },
       });
     } catch (err: unknown) {
@@ -442,7 +440,6 @@ export const runPhase2ReceiptAnalysis = async (
         tradingDate: new Date(adjV.tradingDate),
         confidence: 100,
         analysisStatus: "COMPLETED",
-        isVerified: true,
         lines: {
           create: adjV.lines.map((l: ISimulatedVoucherLine) => ({
             accountingCode: l.accountingCode,

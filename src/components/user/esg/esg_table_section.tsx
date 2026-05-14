@@ -9,7 +9,7 @@ import RecordTabModal from "@/components/user/common/record_tab_modal";
 import ConfirmModal from "@/components/common/confirm_modal";
 import DateSortButton from "@/components/user/common/date_sort_button";
 import { request } from "@/lib/utils/request";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { IApiResponse } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -58,6 +58,16 @@ export default function EsgTableSection({
   );
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [isRestoring, setIsRestoring] = useState<boolean>(false);
+
+  const searchParams = useSearchParams();
+  const openId = searchParams?.get("openId");
+
+  useEffect(() => {
+    if (openId) {
+      setSelectedEsgId(openId);
+      setIsVerifyModalOpen(true);
+    }
+  }, [openId]);
 
   const fetchRecords = useCallback(async () => {
     if (!accountBookId) return;

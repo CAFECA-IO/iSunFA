@@ -32,6 +32,7 @@ const BalanceSheetSection = ({
   items: IBalanceSheetItem[];
   barColor: string;
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="mb-4 lg:mb-6 print:mb-2 print:break-inside-avoid">
       <div className="mb-2 flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
@@ -48,7 +49,11 @@ const BalanceSheetSection = ({
           >
             <div className="flex w-2/3 flex-col">
               <span className="text-xs font-medium text-gray-600 lg:text-base print:text-sm">
-                {item.name}
+                {item.name === "suspense_receipt" 
+                  ? (t("balance_sheet_view.suspense_receipt") === "balance_sheet_view.suspense_receipt" ? "暫收款" : t("balance_sheet_view.suspense_receipt"))
+                  : item.name === "suspense_payment" 
+                    ? (t("balance_sheet_view.suspense_payment") === "balance_sheet_view.suspense_payment" ? "暫付款" : t("balance_sheet_view.suspense_payment"))
+                    : item.name}
               </span>
               <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                 <div
@@ -77,9 +82,11 @@ const BalanceSheetSection = ({
 export default function BalanceSheetView({
   period,
   year,
+  onUnverifiedItemsChange,
 }: {
   period: ReportPeriod;
   year: number;
+  onUnverifiedItemsChange?: (items: {id: string, note: string, type: string}[]) => void;
 }) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
@@ -93,11 +100,14 @@ export default function BalanceSheetView({
       const fetchSummary = async () => {
         try {
           setIsLoading(true);
-          const res = await request<IApiResponse<{ report: IBalanceSheet }>>(
+          const res = await request<IApiResponse<{ report: IBalanceSheet; unverifiedItems?: {id: string, note: string, type: string}[] }>>(
             `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.BALANCE_SHEET}&period=${period}&year=${year}`,
           );
           if (res.payload) {
             setReportData(res.payload.report);
+            if (res.payload.unverifiedItems !== undefined && onUnverifiedItemsChange) {
+              onUnverifiedItemsChange(res.payload.unverifiedItems);
+            }
           }
         } catch (error) {
           console.error("Failed to fetch balance sheet:", error);

@@ -3,7 +3,7 @@
 import { useState, useEffect, ChangeEvent } from 'react';
 
 import { useParams } from "next/navigation";
-import { Filter, Download } from "lucide-react";
+import { Filter, Search, AlertTriangle, Download } from "lucide-react";
 import EmbedGenerateModal from "@/components/user/financial_report/embed_generate_modal";
 import BalanceSheetView from "@/components/user/financial_report/balance_sheet_view";
 import CashFlowSheetView from "@/components/user/financial_report/cash_flow_statement_view";
@@ -37,8 +37,10 @@ export default function ReportView() {
     year: number;
     currency: string;
   } | null>(null);
-  const [countOfVerifiedVouchers, setCountOfVerifiedVouchers] =
-    useState<number>(0);
+  const [countOfVerifiedVouchers, setCountOfVerifiedVouchers] = useState<number>(0);
+  const [unverifiedItems, setUnverifiedItems] = useState<
+    { id: string; note: string; type: string }[]
+  >([]);
 
   // Info: (20260401 - Julian) 從 API 取得「帳簿名稱」
   useEffect(() => {
@@ -147,6 +149,7 @@ export default function ReportView() {
 
   // Info: (20260330 - Julian) 產出報表
   const handleGenerateReport = () => {
+    setUnverifiedItems([]);
     setGeneratedConfig({
       type: selectedReportType,
       period: selectedReportPeriod,
@@ -250,6 +253,7 @@ export default function ReportView() {
           <BalanceSheetView
             period={generatedConfig.period}
             year={generatedConfig.year}
+            onUnverifiedItemsChange={setUnverifiedItems}
           />
         );
       case ReportType.CASH_FLOW:
@@ -257,6 +261,7 @@ export default function ReportView() {
           <CashFlowSheetView
             period={generatedConfig.period}
             year={generatedConfig.year}
+            onUnverifiedItemsChange={setUnverifiedItems}
           />
         );
       case ReportType.INCOME_STATEMENT:
@@ -264,6 +269,7 @@ export default function ReportView() {
           <IncomeStatementView
             period={generatedConfig.period}
             year={generatedConfig.year}
+            onUnverifiedItemsChange={setUnverifiedItems}
           />
         );
       case ReportType.ESG_REPORT:
@@ -271,6 +277,7 @@ export default function ReportView() {
           <EsgReportView
             period={generatedConfig.period}
             year={generatedConfig.year}
+            onUnverifiedItemsChange={setUnverifiedItems}
           />
         );
       default:
@@ -360,12 +367,40 @@ export default function ReportView() {
             </button>
 
             {/* Info:(20260319 - Julian) 傳票核對數提示 */}
-            <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-2 lg:p-4">
-              <p className="text-xs leading-relaxed font-medium text-gray-600">
-                {t("report_view.hint_verified_count", {
-                  count: numberWithCommas(countOfVerifiedVouchers),
-                })}
-              </p>
+            <div className="flex flex-col gap-2">
+              <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-2 lg:p-4">
+                <p className="text-xs leading-relaxed font-medium text-gray-600">
+                  {t("report_view.hint_verified_count", {
+                    count: numberWithCommas(countOfVerifiedVouchers),
+                  })}
+                </p>
+              </div>
+              
+              {unverifiedItems.length > 0 && generatedConfig && (
+                <div className="rounded-xl border border-red-200 bg-red-50/50 p-3 lg:p-4 print:hidden shadow-sm">
+                  <div className="flex items-start gap-2 mb-2">
+                    <AlertTriangle className="h-4 w-4 lg:h-5 lg:w-5 text-red-500 shrink-0 mt-0.5" />
+                    <p className="text-xs lg:text-sm leading-relaxed font-bold text-red-600">
+                      {t("report_view.unverified_warning", { count: numberWithCommas(unverifiedItems.length) })}
+                    </p>
+                  </div>
+                  <ul className="max-h-32 overflow-y-auto space-y-1 mt-2 border-t border-red-100 pt-2">
+                    {unverifiedItems.map((item) => (
+                      <li key={item.id}>
+                        <a
+                          href={`/user/account_book/${accountBookId}/${item.type === "esg" ? "esg" : "voucher"}?openId=${item.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] font-medium text-red-500 hover:text-red-700 hover:underline flex flex-col"
+                        >
+                          <span className="truncate">{item.id}</span>
+                          <span className="truncate text-red-400 font-normal">{item.note}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </div>

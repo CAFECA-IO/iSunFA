@@ -43,7 +43,7 @@ export const runAiBlindTester = async (stockId: string) => {
   console.log(`==========================================`);
 
   const vouchers = await prisma.voucher.findMany({
-    where: { accountBookId: accountBookId, deletedAt: null, isVerified: true },
+    where: { accountBookId: accountBookId, deletedAt: null },
     include: { lines: true },
   });
 

@@ -97,7 +97,6 @@ export const runCrossValidation = async (stockId: string) => {
     where: {
       accountBookId,
       analysisStatus: "COMPLETED",
-      isVerified: true,
       deletedAt: null,
     },
     include: { lines: true },

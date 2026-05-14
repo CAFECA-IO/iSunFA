@@ -93,6 +93,12 @@ export async function processNext() {
       `[MissionExecutor] Found pending execution for Task ID: ${folderName} (Using ${useJsonPlan ? "JSON" : "MD"} Plan)`,
     );
 
+    let aggregatedResult: JSONValue = "Execution completed statically.";
+    const aggregatedResultsByFileId: Record<
+      string,
+      Record<string, JSONValue>
+    > = {};
+
     try {
       // Info: (20260420 - Luphia) Read mission data
       const missionJsonStr = await fs.readFile(missionJsonPath, "utf8");
@@ -101,12 +107,6 @@ export async function processNext() {
         id: String(missionData.orderId || "MOCK_MISSION"),
         data: missionData,
       };
-
-      let aggregatedResult: JSONValue = "Execution completed statically.";
-      const aggregatedResultsByFileId: Record<
-        string,
-        Record<string, JSONValue>
-      > = {};
 
       if (useJsonPlan) {
         // Info: (20260420 - Luphia) Complex LLM & Skill sequence execution
@@ -312,15 +312,15 @@ export async function processNext() {
                     };
                   }
 
-                  if (subTaskConfig.type === "JOURNAL_PARSING")
+                  if (subTaskConfig.type === "JOURNAL_PARSING" || subTaskConfig.type === "JOURNAL" || subTaskConfig.data?.key === "JOURNAL")
                     aggregatedResultsByFileId[recordKey].journal = parsedVal;
-                  if (subTaskConfig.type === "VOUCHER_BASE_PARSING")
+                  if (subTaskConfig.type === "VOUCHER_BASE_PARSING" || subTaskConfig.type === "VOUCHER_BASE" || subTaskConfig.data?.key === "VOUCHER_BASE")
                     aggregatedResultsByFileId[recordKey].voucherBase =
                       parsedVal;
-                  if (subTaskConfig.type === "VOUCHER_LINES_PARSING")
+                  if (subTaskConfig.type === "VOUCHER_LINES_PARSING" || subTaskConfig.type === "VOUCHER_LINES" || subTaskConfig.data?.key === "VOUCHER_LINES")
                     aggregatedResultsByFileId[recordKey].voucherLines =
                       parsedVal;
-                  if (subTaskConfig.type === "ESG_PARSING")
+                  if (subTaskConfig.type === "ESG_PARSING" || subTaskConfig.type === "ESG" || subTaskConfig.data?.key === "ESG")
                     aggregatedResultsByFileId[recordKey].esg = parsedVal;
                 }
               } catch {}
@@ -439,6 +439,17 @@ export async function processNext() {
             finalResult.dbSyncPayload = aggregatedResultsByFileId;
           }
           aggregatedResult = finalResult;
+        } else if (
+          tasksConfig.length === 1 &&
+          typeof aggregatedResult === "object" &&
+          aggregatedResult !== null &&
+          useJsonPlan
+        ) {
+          const finalResult: Record<string, JSONValue> = { ...(aggregatedResult as Record<string, JSONValue>) };
+          if (Object.keys(aggregatedResultsByFileId).length > 0) {
+            finalResult.dbSyncPayload = aggregatedResultsByFileId;
+          }
+          aggregatedResult = finalResult;
         }
       } else {
         // Info: (20260420 - Luphia) Fallback MD behavior
@@ -468,6 +479,32 @@ export async function processNext() {
         execErr,
       );
       const errorMessage = `[Error at ${new Date().toISOString()}]\n${execErr instanceof Error ? execErr.message : String(execErr)}\n`;
+
+      // Info: (20260514 - Tzuhan) 解決 Worker 殭屍狀態：將錯誤包裝進 dbSyncPayload，讓 IssueRecorder 得以標記為 FAILED
+      const errorResult: Record<string, JSONValue> = {
+        answer: "Execution failed.",
+        tags: ["error"],
+      };
+
+      if (Object.keys(aggregatedResultsByFileId).length > 0) {
+        for (const key of Object.keys(aggregatedResultsByFileId)) {
+          aggregatedResultsByFileId[key].failureReason = execErr instanceof Error ? execErr.message : String(execErr);
+        }
+        errorResult.dbSyncPayload = aggregatedResultsByFileId;
+      } else {
+        errorResult.dbSyncPayload = {
+          "default": {
+            failureReason: execErr instanceof Error ? execErr.message : String(execErr)
+          }
+        };
+      }
+
+      await fs.writeFile(
+        path.join(taskDir, "result.md"),
+        JSON.stringify(errorResult, null, 2),
+        "utf8",
+      );
+
       await fs.writeFile(
         path.join(taskDir, `failed_${Date.now()}.md`),
         errorMessage,

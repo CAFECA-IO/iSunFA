@@ -88,7 +88,6 @@ async function fastVerify(stockId: string) {
         id: v.id,
         accountBookId,
         tradingDate: new Date(v.tradingDate),
-        isVerified: true,
         confidence: 100,
         analysisStatus: "COMPLETED",
       },
@@ -125,7 +124,6 @@ async function fastVerify(stockId: string) {
             emissions: e.carbonAmount || 0,
             confidence: 100,
             analysisStatus: AIAnalysisStatus.COMPLETED,
-            isVerified: true,
           });
         });
       }
