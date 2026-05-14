@@ -799,3 +799,26 @@ model CampaignRegistration {
   @@unique([campaignId, userId])
   @@map("campaign_registration")
 }
+
+model ExchangeRate {
+  id String @id @default(uuid())
+
+  // Info: (20260514 - Tzuhan) 匯率生效日期 (建議統一存 UTC 的 00:00:00)
+  date DateTime
+
+  // Info: (20260514 - Tzuhan) 雙幣別設計 (A幣 換 B幣)
+  baseCurrency   String @map("base_currency") // 基準本位幣 (例如: "TWD")
+  targetCurrency String @map("target_currency") // 目標外幣 (例如: "KRW", "USD", "EUR")
+
+  // Info: (20260514 - Tzuhan) 匯率數值 (代表 1 targetCurrency 兌換多少 baseCurrency)
+  rate Decimal
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Info: (20260514 - Tzuhan) 複合唯一鍵：同一天、同一個「基準-目標」貨幣對，絕對不能有重複的匯率
+  @@unique([date, baseCurrency, targetCurrency])
+  // Info: (20260514 - Tzuhan) 建立日期索引：因為未來主程式會頻繁用 date 去 WHERE 查詢，加 index 查詢才會快
+  @@index([date])
+  @@map("exchange_rate")
+}
