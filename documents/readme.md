@@ -37,10 +37,10 @@
 
 ### 👑 國家級與會計師 (Big 4) 合規白皮書
 
-- **[iSunFA 內部控制與系統自動控制說明書 (ITAC)](architecture/internal_control_and_audit_framework.md)**：COSO 框架對應與人工覆核 (HITL) 規範。
+- **[iSunFA 內部控制與系統自動控制說明書 (ITAC)](architecture/compliance_and_audit/internal_control_and_audit_framework.md)**：COSO 框架對應與人工覆核 (HITL) 規範。
 - **[企業機密隔離與加密計算架構 (ZKP & Privacy-Preserving)](architecture/security_and_web3/zkp_privacy_preserving.md)**：零知識證明與 AA 錢包金鑰管理。
 - **[國家級主權雲端安全性白皮書與災難復原計畫 (DRP)](architecture/security_and_web3/sovereign_cloud_security_drp.md)**：HA/DR 與 ISO 標準對齊。
-- **[溫室氣體核算方法論與國際準則對照表](architecture/esg_methodology_mapping.md)**：GHG Protocol/IFRS S2 對齊與質量守恆查核。
+- **[溫室氣體核算方法論與國際準則對照表](architecture/compliance_and_audit/esg_methodology_mapping.md)**：GHG Protocol/IFRS S2 對齊與質量守恆查核。
 
 - **[區塊鏈防篡改與零信任架構](architecture/security_and_web3/blockchain_immutability_architecture.md)**
   - 說明系統如何利用 AA Wallet (ERC-4337)、ONCHAINID 憑證與 Hash-Chained Logs 來實現 Web3 級別的權限控管與軌跡防護，**嚴禁使用傳統 Web2 RBAC 邏輯**。
