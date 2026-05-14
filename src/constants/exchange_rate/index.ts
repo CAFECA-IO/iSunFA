@@ -24,6 +24,28 @@ export interface IExchangeRate {
   note?: string;
 }
 
+// Info: (20260515 - Julian) 國際 ISO 4217 代碼
+export enum CurrencyCode {
+  HKD = "HKD",
+  USD = "USD",
+  TWD = "TWD",
+  CNY = "CNY",
+  JPY = "JPY",
+  KRW = "KRW",
+}
+
+// Info: (20260515 - Julian) 幣種別名 Map
+const CURRENCY_ALIAS_MAP: Record<string, CurrencyCode> = {
+  RMB: CurrencyCode.CNY,
+};
+
+// Info: (20260515 - Julian) 將傳入的幣別字串轉換為標準的國際 ISO 4217 代碼
+export const normalizeCurrency = (currency: string): string => {
+  if (!currency) return "";
+  const upperCurrency = currency.trim().toUpperCase();
+  return CURRENCY_ALIAS_MAP[upperCurrency] || upperCurrency;
+};
+
 const ALL_EXCHANGE_RATES: IExchangeRate[] = [
   ...EXCHANGE_RATE_2010,
   ...EXCHANGE_RATE_2011,
@@ -72,7 +94,11 @@ export const getExchangeRateToTWD = ({
   // Info: (20260515 - Julian) Date 轉換字串
   const targetDateStr = date.toISOString().split("T")[0];
 
-  const currencyRates = RATES_BY_CURRENCY[currency];
+  // Info: (20260515 - Julian) 幣別代碼標準化
+  const normalizedCurrency = normalizeCurrency(currency);
+
+  // Info: (20260515 - Julian) 取得目標幣別的匯率
+  const currencyRates = RATES_BY_CURRENCY[normalizedCurrency];
   if (!currencyRates) {
     throw new Error(`Currency ${currency} not supported or no data available.`);
   }
