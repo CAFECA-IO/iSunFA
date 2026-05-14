@@ -8,6 +8,7 @@ import { esgRepo } from "@/repositories/esg.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
 import { Decimal } from "decimal.js";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export async function GET(
   req: NextRequest,
@@ -80,7 +81,10 @@ export async function GET(
         year,
         emissions: data.emissions > 0 ? data.emissions : null,
         revenue: data.revenue > 0 ? data.revenue : null,
-        intensity: data.emissions > 0 ? parseFloat(intensity.toFixed(2)) : null,
+        intensity:
+          data.emissions > 0
+            ? MoneyUtil.toDecimal(intensity.toFixed(2)).toNumber()
+            : null,
         totalEmissionTarget: target?.totalEmissionTarget
           ? Number(target.totalEmissionTarget) / 1000
           : null,

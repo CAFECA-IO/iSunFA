@@ -482,6 +482,15 @@ export class EsgRepository implements IEsgRepository {
     totalEmissionTarget: Prisma.Decimal | number | null;
     revenueEmissionTarget: Prisma.Decimal | number | null;
   }) {
+    const totalDec =
+      totalEmissionTarget !== null
+        ? new Prisma.Decimal(String(totalEmissionTarget))
+        : null;
+    const revenueDec =
+      revenueEmissionTarget !== null
+        ? new Prisma.Decimal(String(revenueEmissionTarget))
+        : null;
+
     const esgTarget = await prisma.esgTarget.upsert({
       where: {
         accountBookId_year: {
@@ -490,14 +499,14 @@ export class EsgRepository implements IEsgRepository {
         },
       },
       update: {
-        totalEmissionTarget,
-        revenueEmissionTarget,
+        totalEmissionTarget: totalDec,
+        revenueEmissionTarget: revenueDec,
       },
       create: {
         accountBookId,
         year,
-        totalEmissionTarget,
-        revenueEmissionTarget,
+        totalEmissionTarget: totalDec,
+        revenueEmissionTarget: revenueDec,
       },
     });
 

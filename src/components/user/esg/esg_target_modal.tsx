@@ -8,6 +8,7 @@ import { request } from "@/lib/utils/request";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { IApiResponse } from "@/lib/utils/response";
 import { ESG_INDUSTRY_BENCHMARKS } from "@/constants/esg_industry_benchmarks";
+import { MoneyUtil } from "@/lib/utils/money";
 
 interface IHistory {
   year: number;
@@ -127,7 +128,7 @@ export default function EsgTargetModal({
       ...prev,
       [year]: {
         ...prev[year],
-        [field]: value === "" ? null : parseFloat(value),
+        [field]: value === "" ? null : MoneyUtil.toDecimal(value).toNumber(),
       },
     }));
   };

@@ -70,7 +70,16 @@ const prisma = basePrisma.$extends({
                 }
               }
             };
-            checkNoNumber(argsRecord.data);
+            // Info: (20260514 - Tzuhan) 避免直接 iterate args.data 觸發 Prisma Proxy 的 Trap 導致 query 生成異常 (如空的 SET)
+            const safeCloneStr = JSON.stringify(
+              argsRecord.data,
+              (key, value) => {
+                if (typeof value === "bigint") return value.toString();
+                return value;
+              },
+            );
+            const safeClone = JSON.parse(safeCloneStr);
+            checkNoNumber(safeClone);
           }
         }
         return query(args);

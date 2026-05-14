@@ -73,7 +73,13 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **✅ Done (2026-05-14)：建置碳排暫存區 (SuspenseEsgRecord)**：廢除 `SCOPE_3` 的無腦 Fallback。憑證資訊不明或缺少碳排係數主檔時，依然如實寫入憑證紀錄以保留查核軌跡，但將 `emissions` 強制設為 0，且 `isVerified` 設為 `false`，並打上懸記警告標籤 (`aiNote`)，凍結該筆資料於待釐清區等待 CPA 覆核補登，徹底防堵隱匿財報與漂綠風險。
 - **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。
   - **🔒 Immutable Coefficient 兩大鐵律**：未來維護係數庫必須嚴格遵守：1. **禁止 UPDATE 數值** (避免污染歷史帳本)；2. **永遠只用 INSERT (Append-Only)**。
-- **⚠️ Pending (急迫)：官方係數庫定期下載與更新管線**：建立定期從環境部、DEFRA 等官方來源抓取最新係數並自動 Append 至資料庫的管線，確保系統隨時具備最新 Master Data。
+- **⚠️ Pending (急迫)：官方標準係數資料庫轉移與自動化管線 (Standard Coefficients DB Migration & Scraper)**：
+  - 目前為求開發便利，將大量係數混寫於常數檔中 (`TRUE_COEFFICIENT_DATA_*`)。未來必須開發專屬 Seeder 將數萬筆標準係數全數整併至資料庫（以 `accountBookId = null` 作為全域辨識），並重構 `route.ts` 直接查詢 DB 以支援效能與分頁。
+  - **三大資料來源同步**：
+    1. **US EPA** (美國環保署資料庫)
+    2. **UK DEFRA** (英國環境食品與鄉村事務部資料庫)
+    3. **Taiwan MOENV** (台灣環境部事業溫室氣體排放量資訊平台 - 需找回舊有爬蟲程式碼整合進管線)
+  - 建立定期自動下載 Pipeline，確保系統具備最新 Master Data 且強制遵守 Append-Only 不可竄改規則。
 - **⚠️ Pending：阻斷 AI 碳排幻覺與導入向量搜尋 (Anti-ESG Hallucination & Vector Search)**：內建 `EmissionFactorDictionary`。不僅要求 AI 只抓取「活動數據」，後端必須導入 `pgvector` 向量搜尋來精準對接官方係數庫並交由系統重算。
 - **⚠️ Pending (急迫)：質量守恆勾稽與動態容許耗損率 (Mass Conservation & Loss Ratio Threshold)**：將「進銷存與原物料物理防護」實作於管線中。猶如財務的 A=L+E，系統將強制核對：`期初庫存重量 + 本期採購重量 = 消耗重量 + 期末庫存重量`。**(物理防呆地雷拆彈)** 避免過度剛性的物理防護導致系統死鎖，現實中絕對守恆不存在，必須在 Schema 為不同原物料引入動態的「容許耗損率 (Loss Ratio Threshold)」。若 AI 萃取出的消耗量與 ERP 盤盈虧落在合理閥值內，系統應自動生成「盤盈虧/耗損調整分錄」並繼續放行，以貼近真實製造業的運作樣貌。
   - **⚠️ Pending (2026-05-13)：進階防護實作**：必須在寫入 DB 前掛載 ERP 庫存比對微服務，若 `amount > MAX_INVENTORY_LIMIT` 則直接拋出 Error 並將憑證標記為 `FRAUD_SUSPECTED` 阻斷寫入，達到 100% 物理防漂綠。
