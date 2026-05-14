@@ -13,7 +13,7 @@ import {
   EsgScope as ClientEsgScope,
   EsgIntensity as ClientEsgIntensity,
 } from "@/interfaces/esg";
-import { MeasurementUnit } from "@/generated";
+import { MeasurementUnit } from "@/constants/enums";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { IEsgRecordDetail } from "@/interfaces/esg";
 

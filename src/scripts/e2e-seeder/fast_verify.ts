@@ -11,12 +11,8 @@
 import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/prisma";
-import {
-  Prisma,
-  EsgScope,
-  AIAnalysisStatus,
-  MeasurementUnit,
-} from "@/generated";
+import { Prisma, EsgScope, AIAnalysisStatus } from "@/generated";
+import { MeasurementUnit } from "@/constants/enums";
 import { runCrossValidation } from "@/scripts/e2e-seeder/cross_validator";
 
 interface ISimulatedLine {

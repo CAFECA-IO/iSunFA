@@ -5,8 +5,8 @@ import {
   Prisma,
   EsgScope,
   EsgIntensity,
-  MeasurementUnit,
 } from "@/generated";
+import { MeasurementUnit } from "@/constants/enums";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { IParsedVoucherLine } from "@/interfaces/voucher";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";

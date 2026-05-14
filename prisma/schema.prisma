@@ -455,9 +455,6 @@ model Voucher {
   // Info: (20260324 - Julian) AI 分析的備註
   aiNote String @default("") @map("ai_note") @db.Text
 
-  // Info: (20260513 - Tzuhan) DPP 產品關聯
-  productId String? @map("product_id")
-
   @@map("voucher")
 }
 
@@ -483,11 +480,6 @@ model VoucherLine {
   // Info: (20260310 - Julian) 是否為借方 (true=借方/Debit, false=貸方/Credit)
   isDebit Boolean @map("is_debit")
 
-  // Info: (20260513 - Tzuhan) 匯率與溯源防線
-  originalAmount Decimal? @map("original_amount")
-  currency       String?
-  exchangeRate   Decimal? @map("exchange_rate")
-
   @@map("voucher_line")
 }
 
@@ -504,15 +496,6 @@ enum EsgIntensity {
   HIGH
 }
 
-enum MeasurementUnit {
-  KWH
-  LITER
-  KG
-  TONNE
-  GALLON
-  PIECE
-}
-
 model EsgRecord {
   id                String           @id @default(uuid())
   createdAt         DateTime         @default(now()) @map("created_at")
@@ -523,7 +506,7 @@ model EsgRecord {
   activityType      String           @map("activity_type") // Info: (20260312 - Julian) 活動類型
   vendor            String // Info: (20260312 - Julian) 供應商與對象
   amount            Decimal          @default(0) // Info: (20260416 - Julian) 活動數據
-  unit              MeasurementUnit // Info: (20260312 - Julian) 單位
+  unit              String // Info: (20260312 - Julian) 單位
   emissions         Decimal // Info: (20260312 - Julian) 排放量 (KGCO2E)
   intensity         EsgIntensity? // Info: (20260312 - Julian) 排放強度分類 (LOW, MEDIUM, HIGH)
   confidence        Int // Info: (20260312 - Julian) AI 信心度
@@ -554,9 +537,6 @@ model EsgRecord {
 
   // Info: (20260324 - Julian) AI 分析的備註
   aiNote String @default("") @map("ai_note") @db.Text
-
-  // Info: (20260513 - Tzuhan) DPP 產品關聯
-  productId String? @map("product_id")
 
   @@map("esg_record")
 }
@@ -823,14 +803,24 @@ model CampaignRegistration {
 
 // Info: (20260513 - Tzuhan) 官方匯率表，支援 Sprint 1 匯率微服務與本位幣溯源
 model ExchangeRate {
-  id       String   @id @default(uuid())
-  date     DateTime
-  currency String
-  rate     Decimal
+  id String @id @default(uuid())
+
+  // Info: (20260514 - Tzuhan) 匯率生效日期 (建議統一存 UTC 的 00:00:00)
+  date DateTime
+
+  // Info: (20260514 - Tzuhan) 雙幣別設計 (A幣 換 B幣)
+  baseCurrency   String @map("base_currency") // 基準本位幣 (例如: "TWD")
+  targetCurrency String @map("target_currency") // 目標外幣 (例如: "KRW", "USD", "EUR")
+
+  // Info: (20260514 - Tzuhan) 匯率數值 (代表 1 targetCurrency 兌換多少 baseCurrency)
+  rate Decimal
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([date, currency])
+  // Info: (20260514 - Tzuhan) 複合唯一鍵：同一天、同一個「基準-目標」貨幣對，絕對不能有重複的匯率
+  @@unique([date, baseCurrency, targetCurrency])
+  // Info: (20260514 - Tzuhan) 建立日期索引：因為未來主程式會頻繁用 date 去 WHERE 查詢，加 index 查詢才會快
+  @@index([date])
   @@map("exchange_rate")
 }

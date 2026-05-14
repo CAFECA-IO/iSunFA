@@ -26,7 +26,7 @@ import {
   IAIAnalysisOrderData,
   IAIAnalysisOrderFile,
 } from "@/interfaces/payment";
-import { MeasurementUnit } from "@/generated";
+import { MeasurementUnit } from "@/constants/enums";
 
 /**
  * Info: (20260318 - Julian) AI 分析：生成日記帳、傳票、碳排查
