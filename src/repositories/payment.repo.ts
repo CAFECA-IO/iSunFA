@@ -192,7 +192,14 @@ export class PaymentRepository {
         `Invalid order unit. Must be one of: ${Object.values(CURRENCY_UNIT).join(", ")}`,
       );
     }
-    return prisma.order.create({ data });
+
+    const safeData = {
+      ...data,
+      amount:
+        typeof data.amount === "number" ? String(data.amount) : data.amount,
+    };
+
+    return prisma.order.create({ data: safeData });
   }
 
   async getOrderById(orderId: string) {
@@ -415,7 +422,7 @@ export class PaymentRepository {
           paymentMethodId: paymentMethodId,
           orderId: orderId,
           provider: "OEN",
-          amount: amount,
+          amount: String(amount),
           status: PAYMENT_TRANSACTION_STATUS.PENDING,
         },
       });
@@ -478,7 +485,7 @@ export class PaymentRepository {
       const dbReceipt = await tx.receipt.create({
         data: {
           orderId: orderId,
-          amount: amount,
+          amount: String(amount),
           data: {
             ...(oenData as Record<string, unknown>),
             receiptDetails: {
