@@ -88,13 +88,13 @@ sequenceDiagram
 
 ## 🏗️ 關鍵架構防禦點 (Architectural Gotchas & Defenses)
 
-1. **極致解耦：Blockchain ↔ Planner ↔ Executor ↔ DB**：
-   系統完全切斷了 API 直接呼叫 AI 的路徑。API 只負責把 UserOp 丟上鏈；`MissionPlanner` 只負責從鏈上抓 CID 下載檔案並寫入本地 `MISSION_DIR`；`MissionExecutor` 只負責掃描本地檔案系統執行 AI。這種「零耦合」的 File-System State Machine 架構，讓系統能抵禦極端流量峰值。
+1. **極致去中心化與職責解耦：Blockchain ↔ Planner ↔ Executor ↔ Blockchain**：
+   系統完全切斷了 API 直接呼叫 AI 的路徑。API 只負責把 UserOp 丟上鏈；`MissionPlanner` 只負責從鏈上抓 CID 下載檔案並寫入本地 `MISSION_DIR`；`MissionExecutor` (Worker) 只負責掃描本地 IPFS/Laria 檔案系統執行 AI。**請注意：Worker 是一個獨立的外部節點，完全沒有存取 PostgreSQL 主資料庫的權限。** 它執行完畢後，會將結果封裝並直接回報給區塊鏈智能合約。
 2. **不可否認性 (Non-repudiation) ✅ FIDO2 已實作**：
    所有的「發起解析 / 扣款」動作，都必須在前端使用 FIDO2 進行簽章。後端透過 `webAuthnService` 計算真實 `trueUserOpHash` 比對，確保四大會計師查核時無法被 DBA 竄改。
 3. **區塊鏈智能合約扣款 (On-chain ERC-4337 UserOp) ✅ 已實作**：
    呼叫 `bundlerService.sendUserOpAsync` 將 UserOp 發送至 EntryPoint 智能合約前，會先透過 `publicClient.simulateContract` 進行鏈上預演，確保使用者簽章正確且點數足夠扣款，避免發送註定會 Revert 的垃圾交易。確認安全後才呼叫 `writeContract` 發射，並由 `MissionBoard` 合約進行原子扣款並紀錄 CID，達成 Web3 級別的分散式資金流動。
-4. **⚠️ (Pending) 退款補償機制 (Saga Pattern)**：
-   當 LLM 服務中斷被打入 DLQ (`giveup.md`) 時，Executor 必須具備「發起逆向智能合約退款」的 Saga 補償能力，確保使用者點數原機退還。目前僅實作寫入 DLQ。
+4. **無退款之無限重試防禦 (No-Refund & Retry-Until-Success)**：
+   有別於傳統 Web2 會因為伺服器錯誤而發動 Saga 退款，我們的 Worker **從設計之初就沒有發起智能合約退款的權限**。當任務遭遇 LLM 限流或異常時，Worker 僅會將其隔離至 `MISSION_DIR/dlq/` (`giveup.md`)。這純粹作為狀態判斷與人類實體除錯軌跡。Worker 的唯一目標是重試至成功，不走妥協的退款機制。
 5. **⚠️ (Pending) 狀態根上鏈 (State Root Anchoring)**：
-   任務成功後，除了寫入 DB，Executor 需計算結果的 Merkle Root 寫回區塊鏈智能合約。政府稽核員未來只需比對鏈上 Hash 與本地資料庫 Hash 即可。
+   任務成功後，Worker 需計算解析結果的 Merkle Root，並於回報區塊鏈智能合約時一併上鏈。政府稽核員未來只需比對鏈上 Hash 與實際檔案 Hash 即可，達成終極審計公證。

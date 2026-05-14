@@ -47,8 +47,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **[第一順位：Architect 穩定性任務 (底層管線防護)]**
 - **1. ⏳ In Progress (急迫)：廢除 Markdown 故事腦補與全域替換 JSON 擷取**：**(幻覺地雷拆彈)** 明令禁止在 Prompt (如 `journal.ts`) 中要求 AI 撰寫「事件摘要或故事」。全面強制升級為 Gemini 的 `responseSchema` (Structured Output) 與 `responseMimeType: "application/json"`。必須徹底拔除舊版脆弱的 `\{[\s\S]*\}` Regex 擷取，斷絕資料靜默遺失風險。這是所有資料流的源頭，必須最優先修復。
 - **2. ⚠️ Pending (急迫)：分散式併發原子鎖 (POSIX File-System Atomic Lock)**：為維持「零外部 Message Queue 與零資料庫負擔」的極簡原則，必須在 `mission.executor.service.ts` 的檔案輪詢中實作 POSIX 標準的「原子操作（如 `fs.renameSync` 或 `fs.mkdirSync('.lock')`）」。確保未來進入主權雲 K8s 多節點掛載共用硬碟 (如 EFS) 時，不會發生 Race Condition 導致傳票重複執行。
-- **3. ⏳ In Progress：極簡化檔案死信佇列 (File-System DLQ) 與點數退還**：當任務遭遇限流或 JSON 失敗時，Worker 繼續使用本地 `MISSION_DIR/dlq/` 隔離毒藥任務 (Poison Pill)，滿足實體除錯軌跡，並實作採納原子操作的 Credit Refund 點數退還機制。
-- **4. ⚠️ Pending：報表快照與期初餘額 (Snapshots & Opening Balance)**：**(效能地雷拆彈)** 若不實作期初餘額，E2E 盲測驗證龐大真實資料庫時，API 會因反覆重算數十萬筆傳票而觸發 OOM (Out of Memory) 崩潰。報表引擎必須基於 `本期報表 = 期初快照 + 當期變動明細` 打造。
+- **3. ⚠️ Pending：報表快照與期初餘額 (Snapshots & Opening Balance)**：**(效能地雷拆彈)** 若不實作期初餘額，E2E 盲測驗證龐大真實資料庫時，API 會因反覆重算數十萬筆傳票而觸發 OOM (Out of Memory) 崩潰。報表引擎必須基於 `本期報表 = 期初快照 + 當期變動明細` 打造。
 
 - **[第二順位：CPA 財務合規任務 (核心財務防禦)]**
 - **5. ⏳ In Progress (2026-05-13)：外幣匯率與後端運算解耦 (Exchange Rate Backend Math)**：拔除 AI 在 Prompt 中「猜測歷史匯率」的權限。(註：將實作 CronJob 每日抓取台灣銀行匯率至本地 DB `ExchangeRate`，確保毫秒級存取與歷史不可竄改性，這是算對本位幣的基礎)。

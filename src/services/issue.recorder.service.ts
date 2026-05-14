@@ -253,13 +253,6 @@ export class IssueRecorderService {
               `[MissionRecorder] Failed to sync document results to DB for Task ID ${taskId}:`,
               e,
             );
-            const failFile = path.join(taskDir, `failed_${Date.now()}.md`);
-            await fs.writeFile(
-              failFile,
-              `Failed to sync DB:\n${e instanceof Error ? e.message : String(e)}\n\n${e instanceof Error ? e.stack : ""}`,
-              "utf8",
-            );
-            continue; // Info: (20260512 - Tzuhan) Skip writing recorded.flag so it can be retried or marked as FAILED if retry limit reached
           }
 
           // Info: (20260420 - Luphia) Write flag to prevent reprocessing

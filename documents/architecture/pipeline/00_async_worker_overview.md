@@ -79,28 +79,27 @@ Worker 啟動後會掃描 `MISSION_DIR`（預設為 `missions/` 資料夾）。�
 ### 4. 📝 稽核軌跡與 JSON 解析 (Audit & JSON Extraction)
 
 - **Token 消耗追蹤**：每執行完一個子任務，都會精確計算 `inputTokens` 與 `outputTokens`，並寫入 `execution_log.json`。這對企業估算營運成本極度重要。
-- **JSON 擷取技術債**：目前程式碼 (約 L196) 在遇到不合法的 JSON 時，會嘗試用 `/\{[\s\S]*\}/` 去擷取。**（注意：此處依據 Roadmap v2 將全面汰換為 `responseMimeType: "application/json"` 與強 Schema 驗證）。**
-- **資料庫寫入準備**：最後，系統會聰明地把解析出來的 `{ journal, voucherBase, esg }` 依照 `fileId` 打包成 `aggregatedResultsByFileId`，等待下一步被 Commit 進 Prisma 資料庫。
+- **[已拔除] JSON 擷取技術債**：過去在遇到不合法的 JSON 時，會嘗試用 `/\{[\s\S]*\}/` 去擷取。我們已在 Phase 1.1 的「大拔除 (The Great Purge)」中將其徹底移除，全面強制升級為 Gemini API 的 `responseSchema` 與 `application/json` 驗證。
+- **回報智能合約 (而非資料庫)**：最後，系統會把解析出來的 `{ journal, voucherBase, esg }` 依照 `fileId` 打包成 `aggregatedResultsByFileId`，並將此結果封裝後，準備回報給區塊鏈上的智能合約。**請注意：Worker 是一個完全獨立的外部節點，它從設計之初就沒有 PostgreSQL 主資料庫的存取權限。**
 
 ---
 
-## 🏆 架構師評價與潛在擴展地雷 (Architectural Verdict & Scalability Gotchas)
+## 🏆 架構師評價與防禦機制實作 (Architectural Verdict & Defenses)
 
-這支 `mission.executor.service.ts` 在「單機部署」時的架構品味極高。它利用**「檔案系統狀態機」**（透過 `result.md`、`giveup.md` 等檔案控制狀態）取代了 Redis 或 BullMQ，完美達成 **零依賴 (Zero-Dependency)**。這大幅降低了主權雲端 (TWSC) 或大型企業地端部署的複雜度與資安稽核門檻。
+這支 `mission.executor.service.ts` 的架構品味極高，它的設計徹底貫徹了「去中心化與職責隔離」的原則。
 
-### 💣 地雷引爆點：缺乏「原子鎖」的分散式競爭條件 (Race Condition)
+### 🛡️ 獨立的外部節點與 IPFS 儲存架構
 
-**當未來系統掛載分散式檔案系統 (如 AWS EFS) 並啟用 Kubernetes HPA 橫向擴展 (多 Worker 節點) 時，此架構將面臨致命災難：**
-- **非原子檢查**：Worker A 掃描資料夾發現無 `result.md`，判定為 Pending 並準備執行；同一微秒，Worker B 也掃描發現無 `result.md`，也判定為 Pending 並開始執行。
-- **後果**：同一任務被並行執行兩次，消耗雙倍 LLM Token。當兩者同時將解析完的 JSON 寫入 PostgreSQL 時，將引發 Unique Constraint Error，甚至導致傳票重複寫入的嚴重財報失真。
+Worker 是一個完全獨立的外部節點，**沒有權限存取主系統資料庫 (PostgreSQL)，也沒有權限發起點數退款**。它的職責極度純粹：
+1. **去區塊鏈尋找任務** ➔ **拉下來執行** ➔ **做好後回報區塊鏈**。我們不設計失敗退款邏輯，Worker 的唯一目標是「強制重試至成功」。
+2. **極簡化檔案死信佇列 (File-System DLQ)**：當任務遭遇限流或 JSON 失敗時，Worker 會利用本地 `MISSION_DIR/dlq/` 隔離毒藥任務 (Poison Pill)。這純粹作為 Worker 判斷自身執行狀態的依據，順便提供人類可讀的實體除錯軌跡。
+3. **Web3 儲存基礎設施**：Worker 依賴的「檔案系統狀態機」並非傳統單機硬碟，而是建構在 **IPFS** 之上，並透過 **Laria** 進行檔案切塊 (Chunking) 與加密傳輸，底層更搭配 **Software RAID** 確保實體資料的高可用性與抗毀損能力。這種設計徹底取代了 Redis 或 BullMQ，完美達成了傳統意義上的「零依賴 (Zero-Dependency)」，大幅降低了主權雲端 (TWSC) 或大型企業地端部署的複雜度與資安稽核門檻。
 
-### 🛠️ 拆彈建議：純檔案系統的原子操作 (Atomic Operations)
+### 🛡️ 徹底隔離的檔案系統 (Shared-Nothing Architecture)
 
-為了在不放棄「零依賴」的前提下補齊跨節點擴展性，必須實作 POSIX 標準的檔案系統原子鎖：
-1. **Rename 原子轉移法 (推薦)**：Worker 決定接單時，立刻呼叫 `fs.renameSync` 將任務資料夾由 `missions/pending/task_1` 搬移至 `missions/processing/task_1`。在 EFS/NFS 環境下，同一個檔案的 Rename 是原子性的。若 Worker B 搬移失敗 (拋出 `ENOENT`)，只要 Catch 錯誤並 Skip 即可。
-2. **Mkdir 原子鎖定法 (Lock Directory)**：在任務資料夾內 `fs.mkdirSync('.lock')`。建立資料夾在多數檔案系統是強原子的，若拋出 `EEXIST` 則代表該任務已被鎖定。
+由於 Worker 是自主去區塊鏈上聆聽並拉取任務，每個 Worker 節點都會在**完全獨立且隔離的本地檔案系統**中建立任務資料夾並執行。這意味著多個 Worker 之間**完全不需要共用掛載硬碟 (Shared Volume)**。
 
-在進入 K8s 部署前，利用上述的檔案系統原子特性把這個競爭條件漏洞補上，這套架構才能真正稱得上是「兼具極簡與雲端擴展性」的企業級完美之作。
+因為沒有共用硬碟，自然就從物理層面徹底消滅了分散式擴展時最難解的「競爭條件 (Race Condition)」。系統不需要實作任何 Redis Lock 或 POSIX `fs.mkdir` 原子鎖，節點間做到 100% Shared-Nothing Architecture，這使得 K8s 的橫向擴展變得極度輕量、純粹且具備無限擴展性。
 
 ---
 
