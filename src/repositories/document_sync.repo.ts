@@ -173,8 +173,6 @@ export class DocumentSyncRepository {
             tradingType: trType as VoucherTradingType,
             note: rawVd.note ?? "-",
             currency: baseCurrency, // Info: (20260514 - Julian) 換算後存為本位幣
-            originalCurrency: originalCurrency, // Info: (20260515 - Julian) 存入原幣別
-            exchangeRate: exchangeRateNum, // Info: (20260515 - Julian) 存入匯率
             fileId: realFileId,
             accountBookId,
             confidence,
@@ -189,9 +187,12 @@ export class DocumentSyncRepository {
                 );
                 return {
                   accountingCode: l.accountingCode || "",
-                  particular: l.particular || null,
-                  amount: convertedAmount, // Info: (20260514 - Julian) 換算後的本位幣金額
-                  originalAmount: originalAmount, // Info: (20260514 - Julian) 原始金額
+                  particular:
+                    (l.particular || "") +
+                    (exchangeRateNum !== 1
+                      ? ` (原幣金額: ${originalAmount} ${originalCurrency})`
+                      : ""),
+                  amount: convertedAmount,
                   isDebit: l.isDebit === true,
                 };
               }),

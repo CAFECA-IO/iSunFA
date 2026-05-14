@@ -428,12 +428,6 @@ model Voucher {
   // Info: (20260310 - Julian) 幣別
   currency String @default("TWD")
 
-  // Info: (20260515 - Julian) AI 取得的原始幣別
-  originalCurrency String? @map("original_currency")
-
-  // Info: (20260515 - Julian) 交易當日的匯率 (若無轉換則為 null 或 1.0)
-  exchangeRate Float? @map("exchange_rate")
-
   // Info: (20260310 - Julian) 關聯檔案 (如附件)
   fileId String? @map("file_id")
   file   File?   @relation(fields: [fileId], references: [id])
@@ -482,9 +476,6 @@ model VoucherLine {
 
   // Info: (20260310 - Julian) 金額
   amount Int
-
-  // Info: (20260515 - Julian) AI 取得的原始金額
-  originalAmount Int? @map("original_amount")
 
   // Info: (20260310 - Julian) 是否為借方 (true=借方/Debit, false=貸方/Credit)
   isDebit Boolean @map("is_debit")

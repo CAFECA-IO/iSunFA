@@ -1,5 +1,7 @@
 import cron from "node-cron";
 import { prisma } from "@/lib/prisma";
+import fs from "fs";
+import path from "path";
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
@@ -56,8 +58,16 @@ export async function syncExchangeRates() {
     // Info: (20260514 - Julian) 統一日期為當天 UTC 午夜 00:00:00，避免因為時區問題導致重複執行產生多筆紀錄
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
+    const dateStr = today.toISOString().split("T")[0]; // YYYY-MM-DD
 
     let updatedCount = 0;
+    const newRateEntries: {
+      date: string;
+      baseCurrency: string;
+      targetCurrency: string;
+      rate: string;
+      note: string;
+    }[] = [];
 
     // Info: (20260514 - Julian) CSV 解析 (第一行是 Header，從第二行開始處理)
     for (let i = 1; i < lines.length; i++) {
@@ -121,12 +131,80 @@ export async function syncExchangeRates() {
             rate: rateToSave,
           },
         });
+
+        newRateEntries.push({
+          date: dateStr,
+          baseCurrency: "TWD",
+          targetCurrency: currency,
+          rate: rateToSave.toString(),
+          note: "從台灣銀行每日爬蟲更新",
+        });
+
         updatedCount++;
       }
     }
     console.log(
       `[Cron] Exchange rate sync completed. Updated ${updatedCount} currencies.`,
     );
+
+    // Info: (20260515 - Julian) 將爬取的資料同步寫入 src/constants/exchange_rate 的 ts 檔案
+    if (newRateEntries.length > 0) {
+      try {
+        const yearStr = dateStr.substring(0, 4);
+        const constantsFilePath = path.join(
+          process.cwd(),
+          "src",
+          "constants",
+          "exchange_rate",
+          `rate_${yearStr}.ts`,
+        );
+
+        if (fs.existsSync(constantsFilePath)) {
+          let fileContent = fs.readFileSync(constantsFilePath, "utf-8");
+          // 移除最後的 closing bracket
+          fileContent = fileContent.replace(/\];?\s*$/, "");
+
+          let appendContent = "";
+          let appendedCount = 0;
+
+          for (const entry of newRateEntries) {
+            // 檢查是否已存在同一天、同幣別的資料，避免 Cron 重複執行造成 Duplicate Append
+            const existsRegex = new RegExp(
+              `date:\\s*["']${entry.date}["'],\\s*baseCurrency:\\s*["']${entry.baseCurrency}["'],\\s*targetCurrency:\\s*["']${entry.targetCurrency}["']`,
+              "m",
+            );
+            if (!existsRegex.test(fileContent)) {
+              appendContent += `  {
+    date: "${entry.date}",
+    baseCurrency: "${entry.baseCurrency}",
+    targetCurrency: "${entry.targetCurrency}",
+    rate: "${entry.rate}",
+    note: "${entry.note}",
+  },\n`;
+              appendedCount++;
+            } else {
+              console.log(
+                `[Cron] Entry for ${entry.targetCurrency} on ${entry.date} already exists in rate_${yearStr}.ts, skipping append.`,
+              );
+            }
+          }
+
+          if (appendedCount > 0) {
+            fileContent += appendContent + "];\n";
+            fs.writeFileSync(constantsFilePath, fileContent, "utf-8");
+            console.log(
+              `[Cron] Successfully appended ${appendedCount} new rates to rate_${yearStr}.ts`,
+            );
+          }
+        } else {
+          console.warn(
+            `[Cron] File rate_${yearStr}.ts does not exist, skipping file append.`,
+          );
+        }
+      } catch (err) {
+        console.error("[Cron] Failed to write to constants file:", err);
+      }
+    }
   } catch (error) {
     console.error("[Cron] Error syncing exchange rates:", error);
   }
