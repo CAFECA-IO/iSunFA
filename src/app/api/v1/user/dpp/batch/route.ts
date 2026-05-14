@@ -4,10 +4,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { DppService } from "@/services/dpp.service";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ sku_id: string }> },
-) {
+export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
     if (!authHeader) return jsonFail(API_ERRORS.AUTH_MISSING_HEADER);
@@ -17,14 +14,12 @@ export async function GET(
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
-    const { sku_id: skuId } = await params;
-
     const dppService = new DppService();
-    const skuData = await dppService.getSku(skuId, identity.address);
+    const batches = await dppService.getBatches(identity.address);
 
-    return jsonOk(skuData);
+    return jsonOk(batches);
   } catch (error: unknown) {
-    console.error(`[GET /api/v1/user/dpp/sku/[sku_id]]`, error);
+    console.error(`[GET /api/v1/user/dpp/batch]`, error);
     if (error instanceof ApiError) {
       return jsonFail({
         code: error.code,

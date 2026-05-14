@@ -4,9 +4,13 @@ export const digitalProductPassport = {
   define_sku: "Define New SKU",
   define_sku_desc: "Upload technical documents for AI extraction",
   create_sku: "Create SKU",
-  batch_production: "Batch Production",
+  sku_name: "SKU Name",
+  company_name: "Company Name",
+  gtin: "GTIN",
+  batch_production: "Generate Passport",
   batch_production_desc: "Publish new manufacturing batch",
   issue_batch: "Issue Batch",
+  view_passport: "View Passport",
   recent_skus: "Recent SKUs",
   no_recent_skus: "No recent SKUs found. Define your first SKU to get started.",
   select_sku_for_batch:
@@ -78,6 +82,7 @@ export const digitalProductPassport = {
     status: {
       READY: "READY",
       AUDITING: "AUDITING",
+      INCOMPLETE: "INCOMPLETE",
     },
   },
 };

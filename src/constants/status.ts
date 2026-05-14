@@ -52,4 +52,5 @@ export const SYSTEM_STATUS = {
 export const DPP_SKU_STATUS = {
   READY: "READY",
   AUDITING: "AUDITING",
+  INCOMPLETE: "INCOMPLETE",
 } as const;

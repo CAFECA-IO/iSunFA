@@ -3,6 +3,7 @@ import { JSONValue } from "@/validators/common";
 export interface IDigitalProductPassportSku {
   id: string;
   accountBookId: string;
+  accountBookName?: string;
   gtin: string;
   name: string;
   status: string;
@@ -15,6 +16,8 @@ export interface IDigitalProductPassportSku {
 export interface IDigitalProductPassportBatch {
   id: string;
   skuId: string;
+  skuName?: string;
+  skuGtin?: string;
   batchNumber: string;
   serialRange: string | null;
   manufactureDate: Date;

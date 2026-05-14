@@ -10,14 +10,17 @@ import {
   FileText,
   X,
 } from "lucide-react";
-import { useRouter, useParams } from "next/navigation";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import ConfirmModal from "@/components/common/confirm_modal";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
+import { uploadFile } from "@/lib/file_operator";
+import { IAccountBook } from "@/interfaces/account_book";
 
 export default function SkuCreatePage() {
   const { t } = useTranslation();
   const router = useRouter();
-  const params = useParams();
-  const accountBookId = params.account_book_id as string;
 
   const DPP_MODULES = [
     t("digital_product_passport.sku_creation.modules.m1"),
@@ -35,6 +38,36 @@ export default function SkuCreatePage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [currentModuleIdx, setCurrentModuleIdx] = useState(-1);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [accountBooks, setAccountBooks] = useState<IAccountBook[]>([]);
+  const [selectedAccountBookId, setSelectedAccountBookId] = useState("");
+
+  useEffect(() => {
+    const fetchAccountBooks = async () => {
+      try {
+        const res = await request<IApiResponse<IAccountBook[]>>(
+          "/api/v1/user/account_book",
+        );
+        if (res.success && res.payload) {
+          setAccountBooks(res.payload);
+          if (res.payload.length > 0) {
+            setSelectedAccountBookId(res.payload[0].id);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch account books", err);
+      }
+    };
+    fetchAccountBooks();
+  }, []);
+
+  const showAlert = (title: string, message: string) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setIsAlertOpen(true);
+  };
 
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -45,31 +78,47 @@ export default function SkuCreatePage() {
 
   const handleSimulateUpload = async () => {
     if (files.length === 0) return;
+    if (!selectedAccountBookId) {
+      showAlert(
+        t("common.notification"),
+        t("account_book_selection.empty_title"),
+      );
+      return;
+    }
     setIsUploading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("accountBookId", accountBookId);
-      files.forEach((file) => formData.append("files", file));
-
-      // Info: (20260513 - Luphia) Replace with your actual auth request utility
-      const token = localStorage.getItem("dewt"); // Info: (20260513 - Luphia) Adjust based on your auth implementation
-      const res = await fetch("/api/v1/user/dpp/sku", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+      // Info: (20260514 - Luphia) Upload each file via file_operator to IPFS
+      const uploadPromises = files.map((file) => {
+        return new Promise<string>((resolve, reject) => {
+          uploadFile(file, {
+            onSuccess: (hash) => resolve(hash),
+            onError: (err) => reject(new Error(err)),
+          });
+        });
       });
 
-      const responseData = await res.json();
+      const fileIds = await Promise.all(uploadPromises);
+
+      const responseData = await request<IApiResponse<{ id: string }>>(
+        "/api/v1/user/dpp/sku",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            accountBookId: selectedAccountBookId,
+            fileIds,
+          }),
+        },
+      );
+
       setIsUploading(false);
 
-      if (responseData.success) {
+      if (responseData.success && responseData.payload) {
         setIsProcessing(true);
         simulateAIProcessing(responseData.payload.id);
       } else {
-        alert(
+        showAlert(
+          t("common.notification"),
           t("digital_product_passport.sku_creation.upload_failed") +
             responseData.message,
         );
@@ -77,7 +126,10 @@ export default function SkuCreatePage() {
     } catch (err) {
       setIsUploading(false);
       console.error(err);
-      alert(t("digital_product_passport.sku_creation.upload_error"));
+      showAlert(
+        t("common.notification"),
+        t("digital_product_passport.sku_creation.upload_error"),
+      );
     }
   };
 
@@ -89,9 +141,7 @@ export default function SkuCreatePage() {
       if (idx > DPP_MODULES.length) {
         clearInterval(interval);
         setTimeout(() => {
-          router.push(
-            `/user/account_book/${accountBookId}/digital_product_passport/sku/${newSkuId}`,
-          );
+          router.push(`/digital_product_passport/sku/${newSkuId}`);
         }, 1000);
       }
     }, 800);
@@ -119,6 +169,31 @@ export default function SkuCreatePage() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Info: (20260513 - Luphia) Left Column: Upload Area */}
         <div className="space-y-6 lg:col-span-2">
+          {/* Info: (20260514 - Luphia) Account Book Selector */}
+          <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+            <label
+              htmlFor="account_book_select"
+              className="mb-2 block text-sm font-semibold text-gray-700"
+            >
+              {t("account_book_selection.title")}
+            </label>
+            <select
+              id="account_book_select"
+              value={selectedAccountBookId}
+              onChange={(e) => setSelectedAccountBookId(e.target.value)}
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="" disabled>
+                ---
+              </option>
+              {accountBooks.map((ab) => (
+                <option key={ab.id} value={ab.id}>
+                  {ab.name} ({ab.teamName})
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div
             role="button"
             tabIndex={0}
@@ -268,6 +343,13 @@ export default function SkuCreatePage() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isAlertOpen}
+        onClose={() => setIsAlertOpen(false)}
+        title={alertTitle}
+        message={alertMessage}
+      />
     </div>
   );
 }

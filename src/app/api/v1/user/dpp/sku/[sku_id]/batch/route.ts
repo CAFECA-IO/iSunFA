@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
-import { ApiCode } from "@/lib/utils/status";
 import { DppService } from "@/services/dpp.service";
 
 export async function POST(
@@ -13,8 +12,7 @@ export async function POST(
     const authHeader = request.headers.get("authorization");
     if (!authHeader) return jsonFail(API_ERRORS.AUTH_MISSING_HEADER);
 
-    const token = authHeader.replace("Bearer ", "");
-    const identity = await getIdentityFromDeWT(token);
+    const identity = await getIdentityFromDeWT(authHeader);
     if (!identity || !identity.address) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
@@ -35,12 +33,6 @@ export async function POST(
         status: error.status,
       });
     }
-    return jsonFail(
-      new ApiError(
-        "ISDPP500",
-        error instanceof Error ? error.message : "Failed to create batch",
-        ApiCode.INTERNAL_SERVER_ERROR,
-      ),
-    );
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

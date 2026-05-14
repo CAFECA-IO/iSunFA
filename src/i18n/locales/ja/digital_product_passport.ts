@@ -4,9 +4,13 @@ export const digitalProductPassport = {
   define_sku: "新しい SKU を定義する",
   define_sku_desc: "AI 抽出用の技術ドキュメントをアップロード",
   create_sku: "SKU を作成",
-  batch_production: "バッチ生産",
+  sku_name: "SKU名",
+  company_name: "会社名",
+  gtin: "GTIN",
+  batch_production: "パスポートを生成",
   batch_production_desc: "新しい生産バッチを発行",
   issue_batch: "バッチ発行",
+  view_passport: "パスポートを表示",
   recent_skus: "最近の SKU",
   no_recent_skus:
     "最近の SKU は見つかりません。開始するには、最初の SKU を定義してください。",
@@ -79,6 +83,7 @@ export const digitalProductPassport = {
     status: {
       READY: "準備完了",
       AUDITING: "監査中",
+      INCOMPLETE: "データ欠落",
     },
   },
 };

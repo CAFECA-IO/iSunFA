@@ -84,7 +84,7 @@ export class DppService {
   public async createSku(
     accountBookId: string,
     userAddress: string,
-    files: File[],
+    fileIds: string[],
   ): Promise<IDigitalProductPassportSku> {
     // Info: (20260513 - Luphia) Verify account book exists and user has access
     const accountBook = await this.dppRepo.verifyAccountBookAccess(
@@ -107,7 +107,7 @@ export class DppService {
      */
 
     const mockGtin = `GTIN-${Date.now()}`;
-    const mockName = `Product SKU based on ${files[0]?.name || "Unknown Document"}`;
+    const mockName = `Product SKU based on document ${fileIds[0] ? fileIds[0].substring(0, 8) : "Unknown Document"}`;
     const mockModulesData = {
       "1_product_info": { extracted: true },
       "2_environmental_impact": { extracted: true },
@@ -138,12 +138,24 @@ export class DppService {
       accountBookId,
       gtin: mockGtin,
       name: mockName,
-      status: DPP_SKU_STATUS.AUDITING, // Info: (20260513 - Luphia) Because there are missing gaps
+      status: DPP_SKU_STATUS.INCOMPLETE, // Info: (20260513 - Luphia) Because there are missing gaps
       modulesData: mockModulesData,
       missingGaps: mockMissingGaps,
     });
 
     return sku;
+  }
+
+  public async getSkus(
+    userAddress: string,
+  ): Promise<IDigitalProductPassportSku[]> {
+    return this.dppRepo.getSkusByUser(userAddress);
+  }
+
+  public async getBatches(
+    userAddress: string,
+  ): Promise<IDigitalProductPassportBatch[]> {
+    return this.dppRepo.getBatchesByUser(userAddress);
   }
 
   public async getSku(

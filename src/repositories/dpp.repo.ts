@@ -41,6 +41,61 @@ export class DppRepository {
     });
   }
 
+  public async getSkusByUser(
+    userAddress: string,
+  ): Promise<IDigitalProductPassportSku[]> {
+    const skus = await prisma.digitalProductPassportSku.findMany({
+      where: {
+        accountBook: {
+          team: {
+            teamMembers: {
+              some: {
+                user: { address: userAddress },
+              },
+            },
+          },
+        },
+      },
+      include: {
+        accountBook: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return skus.map((sku) => ({
+      ...this.mapSkuToInterface(sku),
+      accountBookName: sku.accountBook.name,
+    }));
+  }
+
+  public async getBatchesByUser(
+    userAddress: string,
+  ): Promise<IDigitalProductPassportBatch[]> {
+    const batches = await prisma.digitalProductPassportBatch.findMany({
+      where: {
+        sku: {
+          accountBook: {
+            team: {
+              teamMembers: {
+                some: {
+                  user: { address: userAddress },
+                },
+              },
+            },
+          },
+        },
+      },
+      include: {
+        sku: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return batches.map((batch) => ({
+      ...this.mapBatchToInterface(batch),
+      skuName: batch.sku.name,
+      skuGtin: batch.sku.gtin,
+    }));
+  }
+
   public async getSkuByIdWithTeamAccess(skuId: string, address: string) {
     const sku = await prisma.digitalProductPassportSku.findUnique({
       where: { id: skuId },

@@ -4,13 +4,15 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { useState } from "react";
+import ConfirmModal from "@/components/common/confirm_modal";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
 
 export default function BatchCreatePage() {
   const { t } = useTranslation();
   const router = useRouter();
   const params = useParams();
   const skuId = params.sku_id as string;
-  const accountBookId = params.account_book_id as string;
 
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -19,6 +21,23 @@ export default function BatchCreatePage() {
     facilitySite: "",
     serialRange: "",
   });
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [onConfirmAction, setOnConfirmAction] = useState<
+    (() => void) | undefined
+  >();
+
+  const showAlert = (
+    title: string,
+    message: string,
+    onConfirm?: () => void,
+  ) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setOnConfirmAction(() => onConfirm);
+    setIsAlertOpen(true);
+  };
 
   const handleSubmit = async () => {
     if (
@@ -26,36 +45,42 @@ export default function BatchCreatePage() {
       !formData.manufactureDate ||
       !formData.facilitySite
     ) {
-      alert(t("digital_product_passport.batch_creation.fill_required"));
+      showAlert(
+        t("common.notification"),
+        t("digital_product_passport.batch_creation.fill_required"),
+      );
       return;
     }
 
     setIsLoading(true);
     try {
-      const token = localStorage.getItem("dewt");
-      const res = await fetch(`/api/v1/user/dpp/sku/${skuId}/batch`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const data = await request<IApiResponse<null>>(
+        `/api/v1/user/dpp/sku/${skuId}/batch`,
+        {
+          method: "POST",
+          body: JSON.stringify(formData),
         },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
+      );
       if (data.success) {
-        alert(t("digital_product_passport.batch_creation.success"));
-        router.push(
-          `/user/account_book/${accountBookId}/digital_product_passport`,
+        showAlert(
+          t("common.notification"),
+          t("digital_product_passport.batch_creation.success"),
+          () => {
+            router.push(`/digital_product_passport`);
+          },
         );
       } else {
-        alert(
+        showAlert(
+          t("common.notification"),
           data.message || t("digital_product_passport.batch_creation.failed"),
         );
       }
     } catch (error) {
       console.error(error);
-      alert(t("digital_product_passport.batch_creation.error"));
+      showAlert(
+        t("common.notification"),
+        t("digital_product_passport.batch_creation.error"),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +106,7 @@ export default function BatchCreatePage() {
         </div>
       </div>
 
-      <div className="max-w-2xl rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="max-w-2xl rounded-3xl border border-gray-200 bg-white p-8 text-gray-800 shadow-sm">
         <div className="flex flex-col gap-6">
           <div>
             <label
@@ -90,8 +115,6 @@ export default function BatchCreatePage() {
             >
               {t("digital_product_passport.batch_creation.batch_number")}
             </label>
-            {}
-            {}
             <input
               aria-label={t(
                 "digital_product_passport.batch_creation.batch_number",
@@ -196,6 +219,18 @@ export default function BatchCreatePage() {
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isAlertOpen}
+        onClose={() => {
+          setIsAlertOpen(false);
+          if (onConfirmAction) {
+            onConfirmAction();
+          }
+        }}
+        title={alertTitle}
+        message={alertMessage}
+      />
     </div>
   );
 }

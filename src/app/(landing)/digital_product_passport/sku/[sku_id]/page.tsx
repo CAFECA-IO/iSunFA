@@ -12,21 +12,26 @@ import {
   Loader2,
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
+import { useState, useRef } from "react";
 import useSWR from "swr";
 import { DPP_SKU_STATUS } from "@/constants/status";
+import { request } from "@/lib/utils/request";
+import { IApiResponse } from "@/lib/utils/response";
+import { uploadFile } from "@/lib/file_operator";
 
-const fetcher = (url: string) => {
-  const token = localStorage.getItem("dewt");
-  return fetch(url, { headers: { Authorization: `Bearer ${token}` } }).then(
-    (res) => res.json(),
-  );
-};
+interface ISkuPayload {
+  status: string;
+  missingGaps?: { module: string; issue: string; impact: string }[];
+  modulesData?: Record<string, { extracted: boolean }>;
+}
+
+const fetcher = (url: string) =>
+  request<IApiResponse<ISkuPayload>>(url, { method: "GET" });
 
 export default function SkuDiagnosticPage() {
   const { t } = useTranslation();
   const router = useRouter();
   const params = useParams();
-  const accountBookId = params.account_book_id as string;
   const skuId = params.sku_id as string;
 
   const { data: response, isLoading } = useSWR(
@@ -36,37 +41,67 @@ export default function SkuDiagnosticPage() {
 
   const sku = response?.payload || null;
 
-  // Info: (20260513 - Luphia) For demonstration if it's the demo sku or loading
-  const mockMissingGaps = [
-    {
-      module: "6.1 Repair & Teardown Guidelines",
-      issue:
-        "No circuit diagrams or mainboard layout found in uploaded documents.",
-      impact: "High",
-    },
-    {
-      module: "9.3 Hazardous Chemicals (PFAS)",
-      issue: "Missing declaration of exact locations of hazardous materials.",
-      impact: "Critical",
-    },
-  ];
+  // Info: (20260514 - Luphia) Supplementary Upload State
+  const [uploadingGaps, setUploadingGaps] = useState<Record<number, boolean>>(
+    {},
+  );
+  const [clearedGaps, setClearedGaps] = useState<number[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeGapIdx, setActiveGapIdx] = useState<number | null>(null);
 
-  const gaps = sku?.missingGaps || mockMissingGaps;
+  const handleTriggerUpload = (idx: number) => {
+    setActiveGapIdx(idx);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || activeGapIdx === null)
+      return;
+    const file = e.target.files[0];
+    const currentIdx = activeGapIdx;
+
+    setUploadingGaps((prev) => ({ ...prev, [currentIdx]: true }));
+
+    try {
+      // Info: (20260514 - Luphia) Upload the file to IPFS
+      await new Promise<string>((resolve, reject) => {
+        uploadFile(file, {
+          onSuccess: (hash) => resolve(hash),
+          onError: (err) => reject(new Error(err)),
+        });
+      });
+
+      // Info: (20260514 - Luphia) Simulate AI extraction complete & gap cleared
+      setTimeout(() => {
+        setClearedGaps((prev) => [...prev, currentIdx]);
+        setUploadingGaps((prev) => ({ ...prev, [currentIdx]: false }));
+      }, 1500); // Info: (20260514 - Luphia) Give a little visual feedback delay
+    } catch (err) {
+      console.error("Upload failed", err);
+      setUploadingGaps((prev) => ({ ...prev, [currentIdx]: false }));
+      alert(
+        t("digital_product_passport.sku_creation.upload_error") ||
+          "Failed to upload supplement document.",
+      );
+    } finally {
+      setActiveGapIdx(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const originalGaps = sku?.missingGaps || [];
+  const gaps = originalGaps.filter((_, idx) => !clearedGaps.includes(idx));
   const isReady = sku
     ? sku.status === DPP_SKU_STATUS.READY || gaps.length === 0
-    : false;
+    : gaps.length === 0;
   const readinessScore = isReady ? 100 : 100 - gaps.length * 12.5; // Info: (20260513 - Luphia) Simplified calculation
 
-  const detectedModules = sku?.modulesData
-    ? Object.keys(sku.modulesData)
-        .filter((key) => sku.modulesData[key].extracted)
+  const modulesData = sku?.modulesData;
+  const detectedModules = modulesData
+    ? Object.keys(modulesData)
+        .filter((key) => modulesData[key].extracted)
         .map((key) => key.replace(/_/g, " ").toUpperCase())
-    : [
-        "PRODUCT INFO",
-        "ENVIRONMENTAL IMPACT",
-        "COMPLIANCE AUDITS",
-        "MATERIAL COMPOSITION",
-      ];
+    : [];
 
   if (isLoading) {
     return (
@@ -81,11 +116,7 @@ export default function SkuDiagnosticPage() {
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() =>
-              router.push(
-                `/user/account_book/${accountBookId}/digital_product_passport`,
-              )
-            }
+            onClick={() => router.push(`/digital_product_passport`)}
             className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white transition hover:bg-gray-50"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600" />
@@ -112,12 +143,26 @@ export default function SkuDiagnosticPage() {
           </div>
         </div>
 
+        {/* Info: (20260514 - Luphia) Hidden file input for supplementary uploads */}
+        <label htmlFor="supplementary-upload" className="sr-only">
+          {t("digital_product_passport.sku_diagnostics.upload_doc")}
+        </label>
+        <input
+          id="supplementary-upload"
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          onChange={handleFileChange}
+          aria-label={
+            t("digital_product_passport.sku_diagnostics.upload_doc") ||
+            "Upload Supplementary Document"
+          }
+        />
+
         {isReady && (
           <button
             onClick={() =>
-              router.push(
-                `/user/account_book/${accountBookId}/digital_product_passport/sku/${skuId}/batch/create`,
-              )
+              router.push(`/digital_product_passport/sku/${skuId}/batch/create`)
             }
             className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
           >
@@ -231,40 +276,59 @@ export default function SkuDiagnosticPage() {
                   </p>
                 </div>
               ) : (
-                gaps.map(
+                originalGaps.map(
                   (
                     gap: { module: string; issue: string; impact: string },
                     idx: number,
-                  ) => (
-                    <div
-                      key={idx}
-                      className="group rounded-2xl border border-amber-200 bg-amber-50/30 p-5 transition hover:border-amber-300 hover:shadow-md"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <div className="mb-2 flex items-center gap-2">
-                            <span className="rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700 uppercase">
-                              {gap.impact}
-                            </span>
-                            <h4 className="font-bold text-gray-900">
-                              {gap.module}
-                            </h4>
+                  ) => {
+                    const isCleared = clearedGaps.includes(idx);
+                    const isUploading = uploadingGaps[idx];
+
+                    if (isCleared) return null;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="group rounded-2xl border border-amber-200 bg-amber-50/30 p-5 transition hover:border-amber-300 hover:shadow-md"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <div className="mb-2 flex items-center gap-2">
+                              <span className="rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700 uppercase">
+                                {gap.impact}
+                              </span>
+                              <h4 className="font-bold text-gray-900">
+                                {gap.module}
+                              </h4>
+                            </div>
+                            <p className="mb-4 text-sm text-gray-600">
+                              {gap.issue}
+                            </p>
                           </div>
-                          <p className="mb-4 text-sm text-gray-600">
-                            {gap.issue}
-                          </p>
+                        </div>
+                        <div className="flex justify-end border-t border-amber-200/50 pt-4">
+                          <button
+                            onClick={() => handleTriggerUpload(idx)}
+                            disabled={isUploading}
+                            className="flex items-center gap-2 rounded-lg bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-200 disabled:opacity-50"
+                          >
+                            {isUploading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <UploadCloud className="h-4 w-4" />
+                            )}
+                            {isUploading
+                              ? t(
+                                  "digital_product_passport.sku_creation.uploading",
+                                )
+                              : t(
+                                  "digital_product_passport.sku_diagnostics.upload_doc",
+                                )}
+                          </button>
                         </div>
                       </div>
-                      <div className="flex justify-end border-t border-amber-200/50 pt-4">
-                        <button className="flex items-center gap-2 rounded-lg bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-200">
-                          <UploadCloud className="h-4 w-4" />{" "}
-                          {t(
-                            "digital_product_passport.sku_diagnostics.upload_doc",
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  ),
+                    );
+                  },
                 )
               )}
             </div>

@@ -4,9 +4,13 @@ export const digitalProductPassport = {
   define_sku: "새 SKU 정의",
   define_sku_desc: "AI 추출을 위한 기술 문서 업로드",
   create_sku: "SKU 생성",
-  batch_production: "배치 생산",
+  sku_name: "SKU 이름",
+  company_name: "회사 이름",
+  gtin: "GTIN",
+  batch_production: "여권 생성",
   batch_production_desc: "새 제조 배치 발행",
   issue_batch: "배치 발행",
+  view_passport: "여권 보기",
   recent_skus: "최근 SKU",
   no_recent_skus: "최근 SKU가 없습니다. 시작하려면 첫 번째 SKU를 정의하세요.",
   select_sku_for_batch:
@@ -77,6 +81,7 @@ export const digitalProductPassport = {
     status: {
       READY: "준비됨",
       AUDITING: "감사 중",
+      INCOMPLETE: "데이터 누락",
     },
   },
 };

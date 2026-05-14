@@ -1,18 +1,22 @@
 export const digitalProductPassport = {
-  title: "数字商品护照",
+  title: "数字产品护照",
   description: "管理 B2B 产品 SKU 并发布生产批次",
   define_sku: "定义新 SKU",
   define_sku_desc: "上传技术文档供 AI 解析",
   create_sku: "建立 SKU",
-  batch_production: "批次生产",
+  sku_name: "SKU 名称",
+  company_name: "公司名称",
+  gtin: "全球贸易项目代码",
+  batch_production: "生成护照",
   batch_production_desc: "发布新的生产批次",
   issue_batch: "发布批次",
+  view_passport: "查看护照",
   recent_skus: "最近的 SKU",
   no_recent_skus: "找不到最近的 SKU。请先定义您的第一个 SKU。",
   select_sku_for_batch: "需要操作：请先选择一个现有的 SKU 来发布新的生产批次。",
   sku_creation: {
     title: "定义产品 SKU",
-    subtitle: "上传产品手册与报告，AI 将自动构建数字商品护照结构。",
+    subtitle: "上传产品手册与报告，AI 将自动构建数字产品护照结构。",
     upload_failed: "上传失败：",
     upload_error: "上传过程中发生错误。",
     ai_analyzing: "AI 正在分析文件...",
@@ -53,7 +57,7 @@ export const digitalProductPassport = {
     facility_site_ph: "例如：台北A厂",
     serial_range: "产品序号范围（选填）",
     serial_range_ph: "例如：SN1000 - SN1999",
-    generate: "生成数字商品护照",
+    generate: "生成数字产品护照",
   },
   sku_diagnostics: {
     title: "SKU 诊断",
@@ -74,6 +78,7 @@ export const digitalProductPassport = {
     status: {
       READY: "准备就绪",
       AUDITING: "审核中",
+      INCOMPLETE: "资料缺失",
     },
   },
 };
