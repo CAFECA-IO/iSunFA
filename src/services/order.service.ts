@@ -163,7 +163,7 @@ export async function generateAnalysisOrder(
 
   const orderData = {
     ...params,
-    amount: -cost,
+    amount: (-cost).toString(),
     timestamp: new Date().toISOString(),
   };
 
@@ -202,6 +202,7 @@ export async function generatePaymentOrder(
 ): Promise<IOrderResult> {
   const orderData = {
     ...params,
+    amount: params.amount.toString(),
     timestamp: new Date().toISOString(),
   };
 

@@ -57,7 +57,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **[第三順位：CPA 碳排合規任務 (DPP 基礎)]**
 - **✅ Done (2026-05-14)：數位 BOM 與產品關聯解耦 (DPP Handover)**：為了保持核心借貸引擎極簡，徹底移除了資料庫中對 `productId` 的強耦合。DPP 數位產品護照架構已切分出領域邊界，正式交由老闆 Luphia 親自負責統籌與設計。
 - **✅ Done (2026-05-13)：實作「ESG 兩段式計算架構 (Two-Stage Calculation)」**：**(漂綠地雷拆彈)** 廢除 Prompt 中的 `ALL_TRUE_COEFFICIENT_DATA` 與乘法指令。AI 僅限萃取，後端 ESG 碳排係數洗轉與產業容損率建置交由 Julian 實作。
-- **✅ Done (2026-05-12)：高精度數據重構與單位枚舉 (Precision & Unit Enum)**：財務欄位升級為 `BigInt`；碳排引擎導入 `Prisma.Decimal` 並將 `MeasurementUnit` 從 DB 拔除轉為 TypeScript 端強型別，前端全面套用 `MoneyUtil` 防腐層。
+- **✅ Done (2026-05-14)：高精度數據重構與單位枚舉 (Precision & Unit Enum)**：財務欄位升級為 `BigInt`；碳排引擎導入 `Prisma.Decimal` 並將 `MeasurementUnit` 從 DB 拔除轉為 TypeScript 端強型別，前端全面套用 `MoneyUtil` 防腐層。徹底消滅所有 `parseFloat` 的隱性精度流失漏洞，保障千兆級財報與極精密碳排係數安全寫入。
 
 ### 📌 Sprint 2: 商業邏輯防禦與抗幻覺 (Business Logic & Anti-Hallucination)
 
@@ -70,8 +70,10 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **⚠️ Pending (Blocker)：強制修復傳票重複加總漏洞 (Voucher Duplication)**：目前 Voucher 金額運算邏輯在代繳與已繳費的處理上會產生重複計算。必須實作嚴格的「交易關聯 ID (Transaction Correlation ID)」與沖銷邏輯，確保代墊款與實際支付在會計科目上能完美沖抵，否則系統將無法通過四大會計師的三表勾稽審查。
 
 - **[CPA 碳排合規任務 (DPP 產品護照架構交由 Luphia 負責)]**
-- **⚠️ Pending：建置碳排暫存區 (SuspenseEsgRecord)**：廢除 `SCOPE_3` 的無腦 Fallback。憑證資訊不明時，凍結資料於待釐清區，防堵漂綠風險。
-- **⚠️ Pending (急迫)：排放係數時空快照 (Emission Factor Versioning)**：將「當下使用的碳排係數數值與標籤 (versionYear)」硬拷貝寫入 `EsgRecord` 中，防範未來係數庫更新導致過去歷史報告查驗失敗，這是防堵漂綠的底線。
+- **✅ Done (2026-05-14)：建置碳排暫存區 (SuspenseEsgRecord)**：廢除 `SCOPE_3` 的無腦 Fallback。憑證資訊不明或缺少碳排係數主檔時，依然如實寫入憑證紀錄以保留查核軌跡，但將 `emissions` 強制設為 0，且 `isVerified` 設為 `false`，並打上懸記警告標籤 (`aiNote`)，凍結該筆資料於待釐清區等待 CPA 覆核補登，徹底防堵隱匿財報與漂綠風險。
+- **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。
+  - **🔒 Immutable Coefficient 兩大鐵律**：未來維護係數庫必須嚴格遵守：1. **禁止 UPDATE 數值** (避免污染歷史帳本)；2. **永遠只用 INSERT (Append-Only)**。
+- **⚠️ Pending (急迫)：官方係數庫定期下載與更新管線**：建立定期從環境部、DEFRA 等官方來源抓取最新係數並自動 Append 至資料庫的管線，確保系統隨時具備最新 Master Data。
 - **⚠️ Pending：阻斷 AI 碳排幻覺與導入向量搜尋 (Anti-ESG Hallucination & Vector Search)**：內建 `EmissionFactorDictionary`。不僅要求 AI 只抓取「活動數據」，後端必須導入 `pgvector` 向量搜尋來精準對接官方係數庫並交由系統重算。
 - **⚠️ Pending (急迫)：質量守恆勾稽與動態容許耗損率 (Mass Conservation & Loss Ratio Threshold)**：將「進銷存與原物料物理防護」實作於管線中。猶如財務的 A=L+E，系統將強制核對：`期初庫存重量 + 本期採購重量 = 消耗重量 + 期末庫存重量`。**(物理防呆地雷拆彈)** 避免過度剛性的物理防護導致系統死鎖，現實中絕對守恆不存在，必須在 Schema 為不同原物料引入動態的「容許耗損率 (Loss Ratio Threshold)」。若 AI 萃取出的消耗量與 ERP 盤盈虧落在合理閥值內，系統應自動生成「盤盈虧/耗損調整分錄」並繼續放行，以貼近真實製造業的運作樣貌。
   - **⚠️ Pending (2026-05-13)：進階防護實作**：必須在寫入 DB 前掛載 ERP 庫存比對微服務，若 `amount > MAX_INVENTORY_LIMIT` 則直接拋出 Error 並將憑證標記為 `FRAUD_SUSPECTED` 阻斷寫入，達到 100% 物理防漂綠。

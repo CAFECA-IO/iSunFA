@@ -179,7 +179,11 @@ export class DocumentSyncRepository {
                   l.accountingCode || "",
                 ),
                 particular: l.particular || null,
-                amount: BigInt(Math.round(parseFloat(String(l.amount)) || 0)),
+                amount: BigInt(
+                  new Prisma.Decimal(String(l.amount) || "0")
+                    .round()
+                    .toFixed(0),
+                ),
                 isDebit: l.isDebit === true,
               })),
             },
@@ -239,10 +243,12 @@ export class DocumentSyncRepository {
                 name: ed.newCoefficient.name,
                 description: ed.newCoefficient.description || "",
                 unit: ed.newCoefficient.unit || "",
-                emissionFactor:
-                  parseFloat(String(ed.newCoefficient.emissionFactor)) || 0,
+                emissionFactor: new Prisma.Decimal(
+                  String(ed.newCoefficient.emissionFactor) || "0",
+                ),
                 source: ed.newCoefficient.source || "AI 動態擷取",
                 accountBookId: null,
+                isVerified: false, // Info: (20260514 - Tzuhan) 未經驗證的係數
               },
             });
             finalCoefficientId = newCoef.id;
@@ -259,18 +265,47 @@ export class DocumentSyncRepository {
             finalEmissionSourceId = newEmissionSource.id;
           }
 
-          if (finalCoefficientId) {
-            const coefExists = await tx.coefficient.findUnique({
-              where: { id: finalCoefficientId },
-            });
-            if (!coefExists) finalCoefficientId = null;
-          }
-
           if (finalEmissionSourceId) {
             const sourceExists = await tx.emissionSource.findUnique({
               where: { id: finalEmissionSourceId },
             });
             if (!sourceExists) finalEmissionSourceId = null;
+          }
+
+          const esgAmount = new Prisma.Decimal(String(ed.amount) || "0");
+          let emissionFactorValue = new Prisma.Decimal(0);
+          let isSuspense = false;
+          let recordIsVerified = confidence > 85;
+
+          if (ed.newCoefficient && ed.newCoefficient.name) {
+            emissionFactorValue = new Prisma.Decimal(
+              String(ed.newCoefficient.emissionFactor) || "0",
+            );
+            recordIsVerified = false; // AI generated new coefficient is unverified
+          } else if (finalCoefficientId) {
+            const coefExists = await tx.coefficient.findUnique({
+              where: { id: finalCoefficientId },
+            });
+            if (coefExists) {
+              emissionFactorValue = coefExists.emissionFactor;
+              if (!coefExists.isVerified) {
+                recordIsVerified = false; // Using unverified coefficient makes record unverified
+              }
+            } else {
+              isSuspense = true;
+              finalCoefficientId = null;
+            }
+          } else {
+            isSuspense = true;
+          }
+
+          let calculatedEmissions = esgAmount.mul(emissionFactorValue);
+          let aiNote = ed.aiNote ?? "無 AI 分析備註";
+
+          if (isSuspense) {
+            calculatedEmissions = new Prisma.Decimal(0);
+            recordIsVerified = false;
+            aiNote = "🚨 懸記：缺少碳排係數主檔，已凍結計算。\n" + aiNote;
           }
 
           const esgData: Prisma.EsgRecordUncheckedCreateInput = {
@@ -280,20 +315,18 @@ export class DocumentSyncRepository {
             scope: (ed.scope as EsgScope) || "SCOPE_1",
             activityType: ed.activityType || "",
             vendor: ed.vendor || "",
-            amount: new Prisma.Decimal(parseFloat(String(ed.amount)) || 0),
+            amount: esgAmount,
             unit: (Object.values(MeasurementUnit).includes(
               ed.unit as MeasurementUnit,
             )
               ? ed.unit
               : MeasurementUnit.KG) as MeasurementUnit,
-            emissions: new Prisma.Decimal(
-              parseFloat(String(ed.emissions)) || 0,
-            ),
+            emissions: calculatedEmissions,
             intensity: (ed.intensity as EsgIntensity) || null,
             dqiScore: parseFloat(String(ed.dqiScore)) || 0,
             confidence,
-            isVerified: confidence > 85,
-            aiNote: ed.aiNote ?? "無 AI 分析備註",
+            isVerified: recordIsVerified,
+            aiNote,
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
             coefficientId: finalCoefficientId,
             emissionSourceId: finalEmissionSourceId,

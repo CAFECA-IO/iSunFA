@@ -41,7 +41,8 @@
 - **[企業機密隔離與加密計算架構 (ZKP & Privacy-Preserving)](architecture/security_and_web3/zkp_privacy_preserving.md)**：零知識證明與 AA 錢包金鑰管理。
 - **[國家級主權雲端安全性白皮書與災難復原計畫 (DRP)](architecture/security_and_web3/sovereign_cloud_security_drp.md)**：HA/DR 與 ISO 標準對齊。
 - **[溫室氣體核算方法論與國際準則對照表](architecture/compliance_and_audit/esg_methodology_mapping.md)**：GHG Protocol/IFRS S2 對齊與質量守恆查核。
-
+- **[溫室氣體盤查與碳會計師實務手冊 (Carbon Accounting Methodology)](domain/carbon_accounting_methodology.md)**
+  - 記載碳盤查的核心計算架構、三大範疇，以及最重要的「黃金決策邏輯」，是所有開發碳排管線工程師的必讀領域知識。
 - **[區塊鏈防篡改與零信任架構](architecture/security_and_web3/blockchain_immutability_architecture.md)**
   - 說明系統如何利用 AA Wallet (ERC-4337)、ONCHAINID 憑證與 Hash-Chained Logs 來實現 Web3 級別的權限控管與軌跡防護，**嚴禁使用傳統 Web2 RBAC 邏輯**。
 - **[商業藍圖與 GTM 戰略](business_and_product/gtm_business_blueprint.md)**
@@ -55,12 +56,13 @@
   - 記錄 Sprint 1 期間為達 Big 4 確定性標準，對 AI 數學幻覺、Regex 擷取、Prompt 冗餘結構與硬編碼面額進行的「史詩級拔除」決策。
 
 ### 🚀 系統部署與管理員維運白皮書 (System Deployment & Admin Setup)
-- **[00_執行計畫 (Execution Plan)](admin_setup_whitepaper/00_execution_plan.md)**
-- **[01_架構總覽 (Architecture Overview)](admin_setup_whitepaper/01_architecture_overview.md)**
-- **[02_基礎設施與節點架構 (Infrastructure and Nodes)](admin_setup_whitepaper/02_infrastructure_and_nodes.md)**
-- **[03_鏈上合約部署 (Onchain Deployment)](admin_setup_whitepaper/03_onchain_deployment.md)**
-- **[04_資料庫錨定與身分設計 (Data and Identity)](admin_setup_whitepaper/04_data_and_identity.md)**
-- **[05_環境交付與封鎖 (Environment Finalization)](admin_setup_whitepaper/05_environment_finalization.md)**
+
+- **[00\_執行計畫 (Execution Plan)](admin_setup_whitepaper/00_execution_plan.md)**
+- **[01\_架構總覽 (Architecture Overview)](admin_setup_whitepaper/01_architecture_overview.md)**
+- **[02\_基礎設施與節點架構 (Infrastructure and Nodes)](admin_setup_whitepaper/02_infrastructure_and_nodes.md)**
+- **[03\_鏈上合約部署 (Onchain Deployment)](admin_setup_whitepaper/03_onchain_deployment.md)**
+- **[04\_資料庫錨定與身分設計 (Data and Identity)](admin_setup_whitepaper/04_data_and_identity.md)**
+- **[05\_環境交付與封鎖 (Environment Finalization)](admin_setup_whitepaper/05_environment_finalization.md)**
 
 ---
 
