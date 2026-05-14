@@ -40,13 +40,16 @@ export class DocumentPreCheckSkill implements ITaskSkill {
       error?: string;
     } = { data: null, error: "AI 前置防呆掃描失敗，請稍後再試" };
     try {
-      const text = await chatService.generateRawWithImages(promptText, images);
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        res = { data: JSON.parse(jsonMatch[0]) };
-      } else {
-        res = { data: null, error: "無法從 AI 回應中解析出有效的 JSON 格式" };
-      }
+      const responseSchema = (
+        task.data as { responseSchema?: import("@google/generative-ai").Schema }
+      )?.responseSchema;
+      const text = await chatService.generateRawWithImages(
+        promptText,
+        images,
+        true,
+        responseSchema,
+      );
+      res = { data: JSON.parse(text) };
     } catch (error) {
       console.error("[DocumentPreCheckSkill] Error:", error);
     }
