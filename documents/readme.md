@@ -72,7 +72,8 @@
 
 系統最複雜的憑證處理流程皆位於 `mission.executor.service.ts` 的非同步管線中，詳細實作見 `async_workers` 目錄：
 
-- **[00\_非同步 Worker 總覽](architecture/async_workers/00_async_worker_overview.md)**：非同步架構設計、死信佇列 (DLQ) 與重試機制的總覽。
+- **[00\_非同步微服務守護行程總覽 (The 7-Daemon Orchestration)](architecture/async_workers/00_async_worker_overview.md)**：系統層級架構，涵蓋 7 大守護行程與 mission_board.sol 之間的 Web3 狀態機接力。
+- **[00.1\_非同步任務執行器深潛 (Mission Executor Architecture)](architecture/async_workers/00.1_mission_executor_architecture.md)**：元件層級架構，詳細剖析 Executor 內部的混合決定論管線、檔案狀態機與數值防腐層。
 - **[01\_憑證至分錄 (Receipt to Journal)](architecture/async_workers/01_receipt_to_journal_implementation.md)**：AI OCR 特徵萃取與初階轉換。
 - **[02\_分錄至傳票 (Journal to Voucher)](architecture/async_workers/02_journal_to_voucher_implementation.md)**：TypeScript 決定論查表、會計科目 mapping。
 - **[03\_傳票至 ESG 紀錄 (Voucher to ESG)](architecture/async_workers/03_voucher_to_esg_record_implementation.md)**：碳排活動數據抓取、防護欄檢核。
