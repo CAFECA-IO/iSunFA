@@ -97,11 +97,13 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 
 - **[CPA 財排雙軌合規任務]**
 - **⚠️ Pending：是非題自我對抗防護 (Self-Consistency / Self-Reflection)**：針對高風險的 Stage 3 任務（如 ESG 排放係數或罕見分錄盲猜），在背景 Worker 引入自我詰問機制。讓模型產出初步結果後，由另一組 Prompt 進行是非題覆核，雙重確保沒有數學或邏輯幻覺。
-- **禁止 Web2 級別的權限中介軟體 (No Web2 RBAC Anti-Pattern)**：**絕對禁止**在 API 實作類似 `SessionUser.ID !== createdBy` 這種傳統的 Maker-Checker 邏輯。
-  - **防污染實作規範**：本系統的「零信任」奠基於區塊鏈與密碼學。職能分離 (Segregation of Duties) 必須且只能透過驗證操作者的 AA Wallet (ERC-4337) 簽章與其綁定的 ONCHAINID (如：具備 CPA Claim) 來達成。任何試圖在 Node.js API 層做字串比對的權限控管，都是對 Web3 零信任架構的降級與污染。
+- **✅ Done (Architectural Decision): API 權限層簡化與 Web3 原生授權 (API RBAC Simplification)**：捨棄在 Node.js API 層實作複雜的傳統 Web2 權限中介軟體（如 `SessionUser.ID !== createdBy` 等 Maker-Checker 邏輯）。
+  - **Single Source of Truth (SSOT)**：因 `mission_board.sol` 智能合約已將所有任務指派與執行結果不可篡改地記錄於區塊鏈上，系統的「零信任」直接由底層合約保障。API 層僅作為輕量級傳輸通道，不需要過度防禦所謂的「權限污染」，這大幅降低了開發與維護的複雜度。
 
 - **[Architect 穩定性與區塊鏈任務]**
 - **WORM 級別查核軌跡 (Hash-Chained Logs)**：導入密碼學雜湊鏈，防禦 DBA 竄改與截斷攻擊。
+- **⚠️ Pending (Postponed): 全同態加密 (FHE) 與儲存隔離**：企業機密保護的終極型態。計畫於 `laria.ts` (寫入 IPFS 前後) 實作 FHE (Fully Homomorphic Encryption)，確保儲存節點無法窺探明文。
+  - **架構決策 (延後實作)**：因 FHE 會導致 Payload 變為完全不可讀的密文，這將使現階段底層引擎（如財務與碳排計算）的除錯難度呈現指數級上升。為確保核心功能開發順利，此功能將嚴格推遲至「系統功能 100% 穩定」後再行整合。
 - **再生原料憑證上鏈 (DPP Green Certificate)**：對接城市採礦戰略。當系統確認具備戰略循環（如人造螢石、高純度矽粉等）的再生原料入荷時 ，觸發智能合約，發行專屬的「再生原料憑證 Hash」 ，並自動綁定至該批次的數位產品護照 (DPP) 中 。
 
 - **視覺與邏輯對抗測試 (Adversarial Testing)**：投入異常清晰但金額極度不合理的樣本，驗證「動態信賴區間」能否自動將其凍結。
@@ -111,7 +113,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 ## 🧭 第三章：防偏航與執行戰略 (Anti-Derailment Execution Strategy)
 
 1. **公私協力與國家級主權雲端 (Data Sovereignty)**
-   在部署架構上，因應新北市 1.9 萬家工廠的機密數據要求，系統需確保 100% 落地臺灣的國家級主權雲端（如 TWSC） ，不外流至境外伺服器，配合金融級 AI 與零知識證明技術保障企業商業機密 。
+   在部署架構上，因應新北市 1.9 萬家工廠的機密數據要求，系統需確保 100% 落地臺灣的國家級主權雲端（如 TWSC） ，不外流至境外伺服器，配合金融級 AI 與 FHE (全同態加密) 技術保障企業商業機密 。
 
 2. **DPP 100 點驗證作為終極防弊 DoD (DPP Validation Rule)**
    將新北市的「DPP 100 點驗證規範」納入系統測試的 Acceptance Criteria：AI 必須自動驗證所有單據，**「無具體第三方報告與單據，系統不予給分」** ，實質防堵漂綠 (Greenwashing) 。

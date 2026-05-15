@@ -1,6 +1,7 @@
 # 🌍 溫室氣體盤查與碳會計師實務手冊 (Carbon Accounting Methodology)
 
 > **Version** 1.0
+> **Date**: 2026-05-15
 > **Author** Tzuhan
 > **Audience** 全體後端工程師、AI 工程師、系統架構師
 > **Purpose** 確保 iSunFA 系統的核心數學引擎與 AI 決策邏輯，嚴格符合國際標準與四大會計師 (Big 4) 的查核要求。

@@ -37,14 +37,16 @@
 
 ### 👑 國家級與會計師 (Big 4) 合規白皮書
 
-- **[iSunFA 內部控制與系統自動控制說明書 (ITAC)](architecture/compliance_and_audit/internal_control_and_audit_framework.md)**：COSO 框架對應與人工覆核 (HITL) 規範。
-- **[企業機密隔離與加密計算架構 (ZKP & Privacy-Preserving)](architecture/security_and_web3/zkp_privacy_preserving.md)**：零知識證明與 AA 錢包金鑰管理。
+- **[iSunFA 內部控制與系統自動控制說明書 (ITAC)](architecture/compliance_and_audit/internal_control_and_audit_framework.md)**：COSO 框架對應與去中心化仲裁 (Arbitration) 規範。
+- **[企業機密隔離與加密計算架構 (FHE & Privacy-Preserving)](architecture/security_and_web3/zkp_privacy_preserving.md)**：全同態加密 (FHE) 與 AA 錢包金鑰管理。
 - **[國家級主權雲端安全性白皮書與災難復原計畫 (DRP)](architecture/security_and_web3/sovereign_cloud_security_drp.md)**：HA/DR 與 ISO 標準對齊。
 - **[溫室氣體核算方法論與國際準則對照表](architecture/compliance_and_audit/esg_methodology_mapping.md)**：GHG Protocol/IFRS S2 對齊與質量守恆查核。
 - **[溫室氣體盤查與碳會計師實務手冊 (Carbon Accounting Methodology)](domain/carbon_accounting_methodology.md)**
   - 記載碳盤查的核心計算架構、三大範疇，以及最重要的「黃金決策邏輯」，是所有開發碳排管線工程師的必讀領域知識。
 - **[區塊鏈防篡改與零信任架構](architecture/security_and_web3/blockchain_immutability_architecture.md)**
-  - 說明系統如何利用 AA Wallet (ERC-4337)、ONCHAINID 憑證與 Hash-Chained Logs 來實現 Web3 級別的權限控管與軌跡防護，**嚴禁使用傳統 Web2 RBAC 邏輯**。
+  - 說明系統如何利用 AA Wallet (ERC-4337) 與 `mission_board.sol` 智能合約來實現 Web3 級別的單一真相來源 (SSOT)，捨棄過度依賴 Node.js API 層的傳統 Web2 RBAC 防禦。
+- **[Mission Board 去中心化任務信託與仲裁架構](architecture/security_and_web3/mission_board_architecture.md)**
+  - 詳細剖析 `mission_board.sol` 底層設計，包含任務 NFT 化、資金信託 (Escrow)、爭議仲裁機制與動態 KYC 整合。
 - **[商業藍圖與 GTM 戰略](business_and_product/gtm_business_blueprint.md)**
   - 了解 iSunFA 系統的商業願景與推廣目標。
 
@@ -75,6 +77,7 @@
 - **[02\_分錄至傳票 (Journal to Voucher)](architecture/async_workers/02_journal_to_voucher_implementation.md)**：TypeScript 決定論查表、會計科目 mapping。
 - **[03\_傳票至 ESG 紀錄 (Voucher to ESG)](architecture/async_workers/03_voucher_to_esg_record_implementation.md)**：碳排活動數據抓取、防護欄檢核。
 - **[04\_報表生成流程 (Report Generation)](architecture/async_workers/04_report_generation_implementation.md)**：產生財務與碳排最終報表。
+- **[05\_顧問分析與區塊鏈付款流轉 (Consultant Payment & Onchain Saga)](architecture/async_workers/05_consultant_payment_and_onchain_flow.md)**：從前端發起解析到 `mission_board.sol` 的非同步任務與去中心化資金流轉。
 
 ---
 

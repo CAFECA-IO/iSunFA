@@ -44,8 +44,9 @@ graph TD
 
     LoopStart -- "All Tasks Done" --> Aggregation["Aggregate Results (Group by fileId)"]:::process
     Aggregation --> WriteAudit[/"Write execution_log.json"/]:::storage
-    WriteAudit --> WriteResult[/"Write result.md (Mark as Done)"/]:::storage
-    WriteResult --> End(["Finish Execution"]):::start_end
+    WriteAudit --> UploadIPFS["Upload Result to Laria (IPFS)"]:::storage
+    UploadIPFS --> SubmitResult["Call mission_board.sol submitResult(resultCid)"]:::process
+    SubmitResult --> End(["Finish Execution (Pending Review)"]):::start_end
 ```
 
 ---

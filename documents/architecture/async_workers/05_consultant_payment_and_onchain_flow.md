@@ -1,5 +1,10 @@
 # 05 Consultant Analysis & Payment On-Chain Saga
 
+> **Date**: 2026-05-15
+> **Author**: Tzuhan
+> **Document Status**: Active (Architectural Blueprint)
+> **Core Tech**: ERC-4337, AA Wallet, Escrow, IPFS, Event Sourcing
+
 本文件詳細記錄了從使用者在前端發起「顧問分析 / 憑證解析 (Journal)」開始，經歷「簽章授權」、「訂單扣款」、「非同步任務執行」、「區塊鏈狀態錨定 (On-Chain Anchoring)」，到任務失敗時觸發的「點數退還機制 (Credit Refund Saga)」的完整生命週期序列圖 (Sequence Diagram)。
 
 此流程完美體現了 iSunFA 系統的「零信任架構」與「分散式交易補償機制」。
@@ -57,30 +62,36 @@ sequenceDiagram
 
     %% Phase 4: Mission Executor (The AI Engine)
     rect rgb(240, 240, 240)
-        Note over Planner, Executor: Phase 4: Executor 執行 (File System -> AI -> DB)
+        Note over Planner, Executor: Phase 4: Executor 執行 (File System -> AI -> Blockchain)
         Executor->>Executor: 掃描 `MISSION_DIR` 尋找待辦資料夾
         Executor->>Executor: 讀取 `plan.executor.json`
         Executor->>Executor: 執行 LLM 解析管線 (混合決策分流)
         alt 任務執行成功 (Success)
             Executor->>Executor: 寫入本地 `result.md` (狀態機轉移)
-            Executor->>Executor: ⚠️ (Pending) 計算 Merkle Root
-            Executor->>Blockchain: ⚠️ (Pending) 呼叫合約回報完成與狀態根上鏈 (Anchoring)
-            Note over Blockchain, DB: API (Node.js) 監聽合約事件，拉取最終 CID 寫入 PostgreSQL
+            Executor->>Laria: 將最終結果上傳至 IPFS 取得 resultCid
+            Executor->>Blockchain: 呼叫 submitResult(taskId, resultCid, consumedTokens)
+            Note right of Blockchain: 狀態轉為 PendingReview
         else 任務執行失敗 (Failed)
             Executor->>Executor: 寫入 `giveup.md` (打入 DLQ)
-            Executor->>Executor: 無退款權限，任務進入永久重試或人工介入佇列
+            Executor->>Executor: 無退款權限，任務進入永久重試或等待介入
         end
     end
 
-    %% Phase 5: DLQ & Human-in-the-Loop (Failure Path)
-    rect rgb(255, 230, 230)
-        Note over Executor, Blockchain: Phase 5: 死信佇列與人工介入 (DLQ & HITL)
-        Executor->>Executor: 將失敗任務標記並保留於 DLQ (`giveup.md`)
-        Executor->>Blockchain: ⚠️ (Pending) 呼叫合約回報任務發生異常 (觸發 HITL)
-        Note over Blockchain, DB: API (Node.js) 監聽合約異常事件，將 DB Order 更新為 FAILED_DLQ 並寫入 AuditLog
-        Client->>API: UI Polling 查詢任務狀態
-        API-->>Client: 回傳狀態 FAILED_DLQ
-        Client-->>User: 顯示「解析發生異常，已通報管理員人工覆核 (無退款)」
+    %% Phase 5: Approval & Arbitration (Web3 Escrow Flow)
+    rect rgb(255, 245, 230)
+        Note over Client, Blockchain: Phase 5: 驗收與爭議仲裁 (Approval & Arbitration)
+        alt 驗收通過 (Approved)
+            Client->>Blockchain: 呼叫 approveSubmission (解鎖 Escrow)
+            Note right of Blockchain: 狀態轉為 Closed，撥款給 Worker
+        else 驗收拒絕 (Rejected)
+            Client->>Blockchain: 呼叫 rejectSubmission
+            Note right of Blockchain: 進入 3 天 Dispute 緩衝期
+            alt 發起爭議
+                Executor->>Blockchain: 呼叫 raiseDispute
+                API->>Blockchain: 官方管理員呼叫 resolveDispute 進行仲裁
+            end
+        end
+        Note over Blockchain, DB: API 監聽合約最終閉環事件，拉取最終 CID 寫入 DB 並更新 Order
     end
 ```
 
@@ -94,5 +105,5 @@ sequenceDiagram
    呼叫 `bundlerService.sendUserOpAsync` 將 UserOp 發送至 EntryPoint 智能合約前，會先透過 `publicClient.simulateContract` 進行鏈上預演，確保使用者簽章正確且點數足夠扣款，避免發送註定會 Revert 的垃圾交易。確認安全後才呼叫 `writeContract` 發射，並由 `MissionBoard` 合約進行原子扣款並紀錄 CID，達成 Web3 級別的分散式資金流動。
 4. **無退款之無限重試防禦 (No-Refund & Retry-Until-Success) ✅ 已實作**：
    有別於傳統 Web2 會因為伺服器錯誤而發動 Saga 退款，我們的 Worker **從設計之初就沒有發起智能合約退款的權限**。當任務遭遇 LLM 限流或異常時，Worker 僅會將其隔離至 `MISSION_DIR/dlq/` (`giveup.md`)。這純粹作為狀態判斷與人類實體除錯軌跡。Worker 的唯一目標是重試至成功，不走妥協的退款機制。
-5. **⚠️ (Pending) 狀態根上鏈 (State Root Anchoring)**：
-   任務成功後，Worker 需計算解析結果的 Merkle Root，並於回報區塊鏈智能合約時一併上鏈。政府稽核員未來只需比對鏈上 Hash 與實際檔案 Hash 即可，達成終極審計公證。
+5. **去中心化資金信託與仲裁 (Escrow & Arbitration) ✅ 合約已實作**：
+   Worker 上傳結果後，並非直接寫入資料庫，而是呼叫 `submitResult` 將 IPFS CID 與 Token 消耗量寫上鏈，進入 `PendingReview`。發起方確認無誤後呼叫 `approveSubmission` 才會解鎖智慧合約中的 ISC 報酬。若遇爭議則進入 `rejectSubmission` 與 `raiseDispute` 的仲裁賽局，達成任務流程與金流的三位一體。
