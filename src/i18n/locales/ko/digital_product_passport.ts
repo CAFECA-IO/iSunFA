@@ -60,6 +60,10 @@ export const digitalProductPassport = {
     serial_range: "일련 번호 범위 (선택 사항)",
     serial_range_ph: "예: SN1000 - SN1999",
     generate: "디지털 상품 여권 생성",
+    ai_extracting: "배치 정보를 추출하는 중...",
+    ai_extraction_complete:
+      "AI 추출이 완료되었습니다. 양식이 자동 완성되었습니다.",
+    upload_desc: "AI 인식 입력을 위해 생산 관련 문서 업로드",
   },
   sku_diagnostics: {
     title: "SKU 진단",

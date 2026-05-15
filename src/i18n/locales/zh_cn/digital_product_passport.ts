@@ -58,6 +58,9 @@ export const digitalProductPassport = {
     serial_range: "产品序号范围（选填）",
     serial_range_ph: "例如：SN1000 - SN1999",
     generate: "生成数字产品护照",
+    ai_extracting: "正在提取批次信息...",
+    ai_extraction_complete: "AI 提取完成，表单已自动填写。",
+    upload_desc: "上传生产相关文件供 AI 识别输入",
   },
   sku_diagnostics: {
     title: "SKU 诊断",

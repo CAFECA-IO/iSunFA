@@ -60,6 +60,9 @@ export const digitalProductPassport = {
     serial_range: "Serial Number Range (Optional)",
     serial_range_ph: "e.g. SN1000 - SN1999",
     generate: "Generate Digital Product Passport",
+    ai_extracting: "Extracting batch information...",
+    ai_extraction_complete: "AI extraction complete. Form populated.",
+    upload_desc: "Upload manufacturing documents for AI extraction",
   },
   sku_diagnostics: {
     title: "SKU Diagnostics",

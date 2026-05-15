@@ -39,7 +39,7 @@ export default function GenericBatchCreatePage() {
     (() => void) | undefined
   >();
 
-  // AI Upload States
+  // Info: (20260515 - Luphia) AI Upload States
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -155,7 +155,7 @@ export default function GenericBatchCreatePage() {
       setIsUploading(false);
       setIsProcessing(true);
 
-      // Simulate AI extraction delay
+      // Info: (20260515 - Luphia) Simulate AI extraction delay
       setTimeout(() => {
         setIsProcessing(false);
         setFormData({
@@ -166,7 +166,7 @@ export default function GenericBatchCreatePage() {
         });
         showAlert(
           t("common.notification"),
-          "AI extraction complete. Form populated.",
+          t("digital_product_passport.batch_creation.ai_extraction_complete"),
         );
       }, 3000);
     } catch (err) {
@@ -199,7 +199,7 @@ export default function GenericBatchCreatePage() {
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Left Column: Form & SKU selection */}
+        {/* Info: (20260515 - Luphia) Left Column: Form & SKU selection */}
         <div className="space-y-6 lg:col-span-2">
           <div className="rounded-3xl border border-gray-200 bg-white p-8 text-gray-800 shadow-sm">
             <div className="flex flex-col gap-6">
@@ -343,7 +343,7 @@ export default function GenericBatchCreatePage() {
           </div>
         </div>
 
-        {/* Right Column: AI Upload */}
+        {/* Info: (20260515 - Luphia) Right Column: AI Upload */}
         <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-4">
             <h3 className="text-lg font-bold text-gray-900">
@@ -378,7 +378,7 @@ export default function GenericBatchCreatePage() {
                   {t("digital_product_passport.sku_creation.ai_analyzing")}
                 </h3>
                 <p className="text-sm text-gray-500">
-                  Extracting batch information...
+                  {t("digital_product_passport.batch_creation.ai_extracting")}
                 </p>
               </div>
             ) : files.length > 0 ? (
@@ -433,7 +433,7 @@ export default function GenericBatchCreatePage() {
                   {t("digital_product_passport.sku_creation.drag_drop")}
                 </h3>
                 <p className="max-w-[200px] text-xs text-gray-500">
-                  Upload manufacturing documents for AI extraction
+                  {t("digital_product_passport.batch_creation.upload_desc")}
                 </p>
                 <div className="mt-6 flex items-center gap-4">
                   <div className="h-px w-8 bg-gray-200"></div>

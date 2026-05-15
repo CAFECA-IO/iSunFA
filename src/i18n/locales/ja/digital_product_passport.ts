@@ -62,6 +62,10 @@ export const digitalProductPassport = {
     serial_range: "シリアル番号の範囲（任意）",
     serial_range_ph: "例：SN1000 - SN1999",
     generate: "デジタル製品パスポートを生成",
+    ai_extracting: "バッチ情報を抽出しています...",
+    ai_extraction_complete:
+      "AI 抽出が完了しました。フォームが自動入力されました。",
+    upload_desc: "AI 認識入力用の生産関連ドキュメントをアップロード",
   },
   sku_diagnostics: {
     title: "SKU 診断",
