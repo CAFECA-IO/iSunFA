@@ -262,6 +262,7 @@ export async function processNext() {
                     vendor: baseParsed.vendorName,
                     amount: String(baseParsed.totalAmount || "0"),
                     unit: esgRule.esgUnit || "TWD",
+                    newCoefficient: esgRule.newCoefficient || undefined,
                   });
                   stage2Intercepted = true;
                 }
