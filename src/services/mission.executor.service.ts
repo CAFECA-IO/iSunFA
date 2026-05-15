@@ -204,6 +204,69 @@ export async function processNext() {
             }
           }
 
+          // Info: (20260515 - Tzuhan) Stage 2 Deterministic Routing Intercept for ESG
+          if (
+            (subTaskConfig.type === "ESG_PARSING" ||
+              subTaskConfig.type === "ESG") &&
+            !stage2Intercepted
+          ) {
+            let baseParsed: Record<string, unknown> | null = null;
+            for (const prevResultStr of priorResults.values()) {
+              try {
+                const parsed = JSON.parse(prevResultStr);
+                const actualParsed = parsed.data || parsed;
+                if (actualParsed.vendorName && actualParsed.documentType) {
+                  baseParsed = actualParsed;
+                  break;
+                }
+              } catch {}
+            }
+
+            if (baseParsed && baseParsed.vendorName) {
+              const ruleRegistry =
+                await import("@/services/rules/vendor_registry");
+              const esgRule = ruleRegistry.VendorRegistry.matchEsg(
+                String(baseParsed.vendorName),
+                String(baseParsed.documentType || "BILL_NOTICE"),
+              );
+
+              if (esgRule) {
+                if (esgRule.suppressEsg) {
+                  console.log(
+                    `[MissionExecutor] 🎯 Stage 2 Match: ESG suppressed for ${baseParsed.vendorName} (${baseParsed.documentType})`,
+                  );
+                  taskResultStr = JSON.stringify({
+                    generationSource: "RULE_ENGINE_STAGE_2",
+                    confidence: 100,
+                    aiNote:
+                      "系統判定：此為資金沖銷/繳費收據，非實體消耗，因此無須計算碳排。",
+                    scope: null,
+                    activityType: "N/A",
+                    amount: "0",
+                    unit: "KG",
+                  });
+                  stage2Intercepted = true;
+                } else {
+                  console.log(
+                    `[MissionExecutor] 🎯 Stage 2 Match: Deterministic ESG rules applied for ${baseParsed.vendorName}`,
+                  );
+                  taskResultStr = JSON.stringify({
+                    generationSource: "RULE_ENGINE_STAGE_2",
+                    confidence: 100,
+                    aiNote: `Stage 2 攔截：系統自動識別為 ${baseParsed.vendorName} 帳單，套用 ${esgRule.esgScope} 支出基礎法，以 ${esgRule.esgUnit} 為單位計算碳排。`,
+                    scope: esgRule.esgScope || "SCOPE_3",
+                    activityType:
+                      esgRule.esgActivityType || "一般行政費用 (花費基礎法)",
+                    vendor: baseParsed.vendorName,
+                    amount: String(baseParsed.totalAmount || "0"),
+                    unit: esgRule.esgUnit || "TWD",
+                  });
+                  stage2Intercepted = true;
+                }
+              }
+            }
+          }
+
           if (!stage2Intercepted) {
             const skill = skillRegistry[subTaskConfig.type];
             if (skill) {

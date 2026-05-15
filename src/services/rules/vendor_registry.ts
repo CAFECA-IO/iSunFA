@@ -12,6 +12,13 @@ import { ACCOUNTS } from "@/constants/accounts";
 const getTwCode = (code: string) =>
   ACCOUNTS.TW.find((a) => a.code === code)?.code || code;
 
+export interface IEsgRule {
+  esgScope?: "SCOPE_1" | "SCOPE_2" | "SCOPE_3" | null;
+  esgActivityType?: string;
+  esgUnit?: string;
+  suppressEsg?: boolean;
+}
+
 export interface IVendorRule {
   accountingCode: string;
   isDebit: boolean;
@@ -22,6 +29,9 @@ export interface IVendorEntry {
   aliases: string[];
   rules: {
     [documentType: string]: IVendorRule[];
+  };
+  esgRules?: {
+    [documentType: string]: IEsgRule;
   };
 }
 
@@ -38,6 +48,16 @@ const MOCK_VENDOR_RULES: IVendorEntry[] = [
         { accountingCode: getTwCode("6215"), isDebit: true }, // Info: (20260515 - Tzuhan) 借：管理費用 - 郵電費
         { accountingCode: getTwCode("2171"), isDebit: false }, // Info: (20260515 - Tzuhan) 貸：應付帳款
       ],
+    },
+    esgRules: {
+      PAYMENT_RECEIPT: {
+        suppressEsg: true,
+      },
+      BILL_NOTICE: {
+        esgScope: "SCOPE_3",
+        esgActivityType: "一般行政費用 (花費基礎法)",
+        esgUnit: "TWD",
+      },
     },
   },
 ];
@@ -67,5 +87,26 @@ export class VendorRegistry {
     }
 
     return null; // Info: (20260515 - Tzuhan) 交由後端模糊搜尋或 AI
+  }
+
+  static matchEsg(
+    vendorName: string,
+    documentType: string = "BILL_NOTICE",
+  ): IEsgRule | null {
+    if (!vendorName) return null;
+
+    const normalizedVendor = vendorName.toLowerCase().replace(/\s+/g, "");
+
+    for (const vendor of MOCK_VENDOR_RULES) {
+      const matchFound = vendor.aliases.some((alias) =>
+        normalizedVendor.includes(alias.toLowerCase().replace(/\s+/g, "")),
+      );
+
+      if (matchFound && vendor.esgRules && vendor.esgRules[documentType]) {
+        return vendor.esgRules[documentType];
+      }
+    }
+
+    return null;
   }
 }
