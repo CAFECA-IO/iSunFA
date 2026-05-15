@@ -1,710 +1,2635 @@
 // Info: (20260515 - Julian) 台灣企業最常報帳的 100 間公司
-export const COMMON_VENDOR_MAPPINGS = [
-  {
-    vendorName: "中華電信",
-    particular: "電信費/網路費",
-    accountName: "郵電費",
-    accountCode: "6117",
-    isDebit: true,
-  },
-  {
-    vendorName: "台灣電力公司",
-    particular: "電費",
-    accountName: "水電瓦斯費",
-    accountCode: "6116",
-    isDebit: true,
-  },
-  {
-    vendorName: "台灣自來水公司",
-    particular: "水費",
-    accountName: "水電瓦斯費",
-    accountCode: "6116",
-    isDebit: true,
-  },
-  {
-    vendorName: "台灣中油",
-    particular: "汽油資",
-    accountName: "交通費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "台塑石油",
-    particular: "汽油資",
-    accountName: "交通費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "台灣高鐵",
-    particular: "出差車票",
-    accountName: "旅費",
-    accountCode: "6114",
-    isDebit: true,
-  },
-  {
-    vendorName: "台灣鐵路",
-    particular: "出差車票",
-    accountName: "旅費",
-    accountCode: "6114",
-    isDebit: true,
-  },
-  {
-    vendorName: "統一超商 (7-11)",
-    particular: "文具/雜項用品",
-    accountName: "雜項購置",
-    accountCode: "6124",
-    isDebit: true,
-  },
-  {
-    vendorName: "全家便利商店",
-    particular: "加班餐費",
-    accountName: "伙食費",
-    accountCode: "6111",
-    isDebit: true,
-  },
-  {
-    vendorName: "Google (GWS/Cloud)",
-    particular: "雲端硬碟/郵件軟體",
-    accountName: "軟體支出/資訊服務費",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "Microsoft (Office 365)",
-    particular: "軟體訂閱",
-    accountName: "軟體支出/資訊服務費",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "Adobe",
-    particular: "設計軟體訂閱",
-    accountName: "軟體支出/資訊服務費",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "Zoom",
-    particular: "視訊軟體費",
-    accountName: "郵電費",
-    accountCode: "6117",
-    isDebit: true,
-  },
-  {
-    vendorName: "Uber / Uber Eats",
-    particular: "商務搭乘/加班餐點",
-    accountName: "交通費/伙食費",
-    accountCode: "6115/6111",
-    isDebit: true,
-  },
-  {
-    vendorName: "PChome 24h",
-    particular: "辦公室耗材",
-    accountName: "事務用品費",
-    accountCode: "6119",
-    isDebit: true,
-  },
-  {
-    vendorName: "momo 購物網",
-    particular: "辦公室設備",
-    accountName: "雜項購置",
-    accountCode: "6124",
-    isDebit: true,
-  },
-  {
-    vendorName: "蝦皮購物",
-    particular: "雜項支出",
-    accountName: "雜費",
-    accountCode: "6123",
-    isDebit: true,
-  },
-  {
-    vendorName: "遠傳電信",
-    particular: "公務機月租費",
-    accountName: "郵電費",
-    accountCode: "6117",
-    isDebit: true,
-  },
-  {
-    vendorName: "台灣大哥大",
-    particular: "通訊費用",
-    accountName: "郵電費",
-    accountCode: "6117",
-    isDebit: true,
-  },
-  {
-    vendorName: "國泰航空",
-    particular: "海外出差機票",
-    accountName: "旅費",
-    accountCode: "6114",
-    isDebit: true,
-  },
-  {
-    vendorName: "長榮航空",
-    particular: "商務旅行機票",
-    accountName: "旅費",
-    accountCode: "6114",
-    isDebit: true,
-  },
-  {
-    vendorName: "中華航空",
-    particular: "商務旅行機票",
-    accountName: "旅費",
-    accountCode: "6114",
-    isDebit: true,
-  },
-  {
-    vendorName: "星宇航空",
-    particular: "國外出差",
-    accountName: "旅費",
-    accountCode: "6114",
-    isDebit: true,
-  },
-  {
-    vendorName: "Agoda",
-    particular: "出差住宿費",
-    accountName: "旅費",
-    accountCode: "6114",
-    isDebit: true,
-  },
-  {
-    vendorName: "Booking.com",
-    particular: "出差住宿費",
-    accountName: "旅費",
-    accountCode: "6114",
-    isDebit: true,
-  },
-  {
-    vendorName: "Slack",
-    particular: "通訊協作軟體",
-    accountName: "軟體支出",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "Notion",
-    particular: "知識管理軟體",
-    accountName: "軟體支出",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "Canva",
-    particular: "線上設計工具",
-    accountName: "廣告費/軟體支出",
-    accountCode: "6118/6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "Meta (Facebook Ads)",
-    particular: "廣告投放費",
-    accountName: "廣告費",
-    accountCode: "6118",
-    isDebit: true,
-  },
-  {
-    vendorName: "Google Ads",
-    particular: "關鍵字廣告費",
-    accountName: "廣告費",
-    accountCode: "6118",
-    isDebit: true,
-  },
-  {
-    vendorName: "LINE Pay",
-    particular: "支付手續費",
-    accountName: "手續費",
-    accountCode: "6122",
-    isDebit: true,
-  },
-  {
-    vendorName: "綠界科技 (ECPay)",
-    particular: "金流手續費",
-    accountName: "手續費",
-    accountCode: "6122",
-    isDebit: true,
-  },
-  {
-    vendorName: "藍新科技",
-    particular: "平台服務費",
-    accountName: "手續費",
-    accountCode: "6122",
-    isDebit: true,
-  },
-  {
-    vendorName: "Foodpanda",
-    particular: "員工餐飲",
-    accountName: "伙食費",
-    accountCode: "6111",
-    isDebit: true,
-  },
-  {
-    vendorName: "漢來海港",
-    particular: "客戶餐敘",
-    accountName: "交際費",
-    accountCode: "6113",
-    isDebit: true,
-  },
-  {
-    vendorName: "王品集團",
-    particular: "商務餐飲",
-    accountName: "交際費",
-    accountCode: "6113",
-    isDebit: true,
-  },
-  {
-    vendorName: "鼎泰豐",
-    particular: "接待客戶",
-    accountName: "交際費",
-    accountCode: "6113",
-    isDebit: true,
-  },
-  {
-    vendorName: "星巴克 (Starbucks)",
-    particular: "開會用咖啡",
-    accountName: "交際費/雜費",
-    accountCode: "6113/6123",
-    isDebit: true,
-  },
-  {
-    vendorName: "路易莎咖啡",
-    particular: "辦公室飲品",
-    accountName: "雜費",
-    accountCode: "6123",
-    isDebit: true,
-  },
-  {
-    vendorName: "好市多 (Costco)",
-    particular: "辦公室零食/茶水",
-    accountName: "職工福利/雜費",
-    accountCode: "6120/6123",
-    isDebit: true,
-  },
-  {
-    vendorName: "家樂福",
-    particular: "清潔用品",
-    accountName: "雜費",
-    accountCode: "6123",
-    isDebit: true,
-  },
-  {
-    vendorName: "全聯福利中心",
-    particular: "拜拜用品/雜項",
-    accountName: "雜費",
-    accountCode: "6123",
-    isDebit: true,
-  },
-  {
-    vendorName: "金石堂/誠品",
-    particular: "專業書籍",
-    accountName: "進修訓練費/雜費",
-    accountCode: "6121/6123",
-    isDebit: true,
-  },
-  {
-    vendorName: "九乘九文具專家",
-    particular: "辦公文具",
-    accountName: "事務用品費",
-    accountCode: "6119",
-    isDebit: true,
-  },
-  {
-    vendorName: "震旦行",
-    particular: "影印機租賃",
-    accountName: "租賃費",
-    accountCode: "6112",
-    isDebit: true,
-  },
-  {
-    vendorName: "互盛",
-    particular: "影印機維護",
-    accountName: "修繕費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "和運租車",
-    particular: "公務車租賃",
-    accountName: "租賃費",
-    accountCode: "6112",
-    isDebit: true,
-  },
-  {
-    vendorName: "格上租車",
-    particular: "短期公務租車",
-    accountName: "租賃費",
-    accountCode: "6112",
-    isDebit: true,
-  },
-  {
-    vendorName: "iRent",
-    particular: "短程交通",
-    accountName: "交通費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "台灣大車隊 (55688)",
-    particular: "計程車費",
-    accountName: "交通費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "LINE TAXI",
-    particular: "計程車費",
-    accountName: "交通費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "大都會計程車",
-    particular: "計程車費",
-    accountName: "交通費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "順豐速運",
-    particular: "快遞費",
-    accountName: "郵電費",
-    accountCode: "6117",
-    isDebit: true,
-  },
-  {
-    vendorName: "嘉里大榮",
-    particular: "物流貨運費",
-    accountName: "運費",
-    accountCode: "6108",
-    isDebit: true,
-  },
-  {
-    vendorName: "新竹物流",
-    particular: "物流貨運費",
-    accountName: "運費",
-    accountCode: "6108",
-    isDebit: true,
-  },
-  {
-    vendorName: "黑貓宅急便",
-    particular: "文件包裹遞送",
-    accountName: "郵電費",
-    accountCode: "6117",
-    isDebit: true,
-  },
-  {
-    vendorName: "中華郵政",
-    particular: "郵資",
-    accountName: "郵電費",
-    accountCode: "6117",
-    isDebit: true,
-  },
-  {
-    vendorName: "Lalamove",
-    particular: "即時快遞",
-    accountName: "郵電費",
-    accountCode: "6117",
-    isDebit: true,
-  },
-  {
-    vendorName: "DHL",
-    particular: "國際快遞",
-    accountName: "郵電費",
-    accountCode: "6117",
-    isDebit: true,
-  },
-  {
-    vendorName: "FedEx",
-    particular: "國際快遞",
-    accountName: "郵電費",
-    accountCode: "6117",
-    isDebit: true,
-  },
-  {
-    vendorName: "蘋果 (Apple iCloud/Storage)",
-    particular: "雲端儲存",
-    accountName: "資訊服務費",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "AWS (Amazon Web Services)",
-    particular: "伺服器代管",
-    accountName: "資訊服務費",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "DigitalOcean",
-    particular: "雲端主機",
-    accountName: "資訊服務費",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "GitHub",
-    particular: "程式碼託管",
-    accountName: "軟體支出",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "ChatGPT (OpenAI)",
-    particular: "AI 助手訂閱",
-    accountName: "資訊服務費",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "LinkedIn",
-    particular: "徵才/廣告",
-    accountName: "廣告費/職工訓練費",
-    accountCode: "6118/6121",
-    isDebit: true,
-  },
-  {
-    vendorName: "104 人力銀行",
-    particular: "刊登徵才廣告",
-    accountName: "廣告費",
-    accountCode: "6118",
-    isDebit: true,
-  },
-  {
-    vendorName: "1111 人力銀行",
-    particular: "刊登徵才廣告",
-    accountName: "廣告費",
-    accountCode: "6118",
-    isDebit: true,
-  },
-  {
-    vendorName: "Yourator",
-    particular: "刊登徵才廣告",
-    accountName: "廣告費",
-    accountCode: "6118",
-    isDebit: true,
-  },
-  {
-    vendorName: "CakeResume",
-    particular: "刊登徵才廣告",
-    accountName: "廣告費",
-    accountCode: "6118",
-    isDebit: true,
-  },
-  {
-    vendorName: "SurveyCake",
-    particular: "問卷軟體",
-    accountName: "軟體支出",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "Mailchimp",
-    particular: "電子報系統",
-    accountName: "廣告費",
-    accountCode: "6118",
-    isDebit: true,
-  },
-  {
-    vendorName: "Shopify",
-    particular: "電商平台費",
-    accountName: "資訊服務費",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "91APP",
-    particular: "系統維護費",
-    accountName: "資訊服務費",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "Cyberbiz",
-    particular: "電商租賃服務",
-    accountName: "資訊服務費",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "Gogoro",
-    particular: "換電費",
-    accountName: "交通費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "YouBike",
-    particular: "短程交通費",
-    accountName: "交通費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "台北大眾捷運",
-    particular: "公務出勤",
-    accountName: "交通費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "悠遊卡公司",
-    particular: "交通卡儲值",
-    accountName: "暫付款/交通費",
-    accountCode: "1252/6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "嘟嘟房",
-    particular: "停車費",
-    accountName: "交通費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "台灣聯通",
-    particular: "停車費",
-    accountName: "交通費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "eTag (遠通電信)",
-    particular: "國道通行費",
-    accountName: "交通費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "燦坤 3C",
-    particular: "周邊耗材",
-    accountName: "事務用品費",
-    accountCode: "6119",
-    isDebit: true,
-  },
-  {
-    vendorName: "全國電子",
-    particular: "辦公家電",
-    accountName: "雜項購置",
-    accountCode: "6124",
-    isDebit: true,
-  },
-  {
-    vendorName: "宜家家居 (IKEA)",
-    particular: "辦公家具",
-    accountName: "雜項購置/生財器具",
-    accountCode: "6124/1441",
-    isDebit: true,
-  },
-  {
-    vendorName: "特力屋",
-    particular: "辦公室修繕材料",
-    accountName: "修繕費",
-    accountCode: "6115",
-    isDebit: true,
-  },
-  {
-    vendorName: "屈臣氏",
-    particular: "急救箱藥品",
-    accountName: "雜費",
-    accountCode: "6123",
-    isDebit: true,
-  },
-  {
-    vendorName: "康是美",
-    particular: "衛材用品",
-    accountName: "雜費",
-    accountCode: "6123",
-    isDebit: true,
-  },
-  {
-    vendorName: "大潤發",
-    particular: "普渡/活動用品",
-    accountName: "雜費",
-    accountCode: "6123",
-    isDebit: true,
-  },
-  {
-    vendorName: "國泰產險",
-    particular: "公務車保險",
-    accountName: "保險費",
-    accountCode: "6118",
-    isDebit: true,
-  },
-  {
-    vendorName: "富邦產險",
-    particular: "火險/責任險",
-    accountName: "保險費",
-    accountCode: "6118",
-    isDebit: true,
-  },
-  {
-    vendorName: "南山人壽",
-    particular: "團體保險",
-    accountName: "職工福利/保險費",
-    accountCode: "6120/6118",
-    isDebit: true,
-  },
-  {
-    vendorName: "Expensify",
-    particular: "報帳軟體費",
-    accountName: "軟體支出",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "Trello",
-    particular: "專案管理軟體",
-    accountName: "軟體支出",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "Asana",
-    particular: "專案管理軟體",
-    accountName: "軟體支出",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "Wix",
-    particular: "架站平台費",
-    accountName: "資訊服務費",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "GoDaddy",
-    particular: "網址購買",
-    accountName: "資訊服務費",
-    accountCode: "6125",
-    isDebit: true,
-  },
-  {
-    vendorName: "台北寒舍艾美",
-    particular: "年度晚宴/交際",
-    accountName: "職工福利/交際費",
-    accountCode: "6120/6113",
-    isDebit: true,
-  },
-  {
-    vendorName: "君悅酒店",
-    particular: "國外客戶住宿",
-    accountName: "交際費",
-    accountCode: "6113",
-    isDebit: true,
-  },
-  {
-    vendorName: "Hahow 好學校",
-    particular: "員工教育訓練",
-    accountName: "職工訓練費",
-    accountCode: "6121",
-    isDebit: true,
-  },
-  {
-    vendorName: "Udemy",
-    particular: "線上課程",
-    accountName: "職工訓練費",
-    accountCode: "6121",
-    isDebit: true,
+export const VENDOR_RULES = [
+  {
+    vendorId: "chunghwa_telecom",
+    aliases: ["中華電信", "中華電信股份有限公司", "Chunghwa Telecom", "CHT"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6117",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "taiwan_power_company",
+    aliases: [
+      "台灣電力公司",
+      "台電",
+      "Taiwan Power Company",
+      "Taipower",
+      "TPC",
+    ],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6116",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "taiwan_water_corporation",
+    aliases: ["台灣自來水公司", "台水", "Taiwan Water Corporation"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6116",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "cpc_corporation",
+    aliases: ["台灣中油", "CPC Corporation"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "台塑石油",
+    aliases: ["台塑石油"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "台灣高鐵",
+    aliases: ["台灣高鐵"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6114",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "台灣鐵路",
+    aliases: ["台灣鐵路"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6114",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "統一超商_7-11",
+    aliases: ["統一超商", "7-11", "統一超商股份有限公司"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6124",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "全家便利商店",
+    aliases: ["全家便利商店", "全家便利商店股份有限公司", "FamilyMart"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6111",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "google_gws_cloud",
+    aliases: ["Google", "GWS", "Cloud"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "microsoft_office_365",
+    aliases: ["Microsoft", "Office 365"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "adobe",
+    aliases: ["Adobe"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "zoom",
+    aliases: ["Zoom"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6117",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "uber_uber_eats",
+    aliases: ["Uber", "Uber Eats"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "pchome_24h",
+    aliases: ["PChome 24h"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6119",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "momo_購物網",
+    aliases: ["momo 購物網"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6124",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "蝦皮購物",
+    aliases: ["蝦皮購物"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6123",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "遠傳電信",
+    aliases: ["遠傳電信"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6117",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "台灣大哥大",
+    aliases: ["台灣大哥大"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6117",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "國泰航空",
+    aliases: ["國泰航空"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6114",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "長榮航空",
+    aliases: ["長榮航空"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6114",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "中華航空",
+    aliases: ["中華航空"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6114",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "星宇航空",
+    aliases: ["星宇航空"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6114",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "agoda",
+    aliases: ["Agoda"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6114",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "booking.com",
+    aliases: ["Booking.com"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6114",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "slack",
+    aliases: ["Slack"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "notion",
+    aliases: ["Notion"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "canva",
+    aliases: ["Canva"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6118",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "meta_facebook_ads",
+    aliases: ["Meta", "Facebook Ads"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6118",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "google_ads",
+    aliases: ["Google Ads"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6118",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "line_pay",
+    aliases: ["LINE Pay"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6122",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "綠界科技_ecpay",
+    aliases: ["綠界科技", "ECPay"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6122",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "藍新科技",
+    aliases: ["藍新科技"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6122",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "foodpanda",
+    aliases: ["Foodpanda"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6111",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "漢來海港",
+    aliases: ["漢來海港"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6113",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "王品集團",
+    aliases: ["王品集團"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6113",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "鼎泰豐",
+    aliases: ["鼎泰豐"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6113",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "星巴克_starbucks",
+    aliases: ["星巴克", "Starbucks"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6113",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "路易莎咖啡",
+    aliases: ["路易莎咖啡"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6123",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "好市多_costco",
+    aliases: ["好市多", "Costco"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6120",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "家樂福",
+    aliases: ["家樂福"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6123",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "全聯福利中心",
+    aliases: ["全聯福利中心"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6123",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "金石堂_誠品",
+    aliases: ["金石堂", "誠品"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6121",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "九乘九文具專家",
+    aliases: ["九乘九文具專家"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6119",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "震旦行",
+    aliases: ["震旦行"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6112",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "互盛",
+    aliases: ["互盛"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "和運租車",
+    aliases: ["和運租車"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6112",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "格上租車",
+    aliases: ["格上租車"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6112",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "irent",
+    aliases: ["iRent"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "台灣大車隊_55688",
+    aliases: ["台灣大車隊", "55688"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "line_taxi",
+    aliases: ["LINE TAXI"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "大都會計程車",
+    aliases: ["大都會計程車"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "順豐速運",
+    aliases: ["順豐速運"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6117",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "嘉里大榮",
+    aliases: ["嘉里大榮"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6108",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "新竹物流",
+    aliases: ["新竹物流"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6108",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "黑貓宅急便",
+    aliases: ["黑貓宅急便"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6117",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "中華郵政",
+    aliases: ["中華郵政"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6117",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "lalamove",
+    aliases: ["Lalamove"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6117",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "dhl",
+    aliases: ["DHL"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6117",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "fedex",
+    aliases: ["FedEx"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6117",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "蘋果_apple_icloud_storage",
+    aliases: ["蘋果", "Apple iCloud", "Storage"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "aws_amazon_web_services",
+    aliases: ["AWS", "Amazon Web Services"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "digitalocean",
+    aliases: ["DigitalOcean"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "github",
+    aliases: ["GitHub"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "chatgpt_openai",
+    aliases: ["ChatGPT", "OpenAI"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "linkedin",
+    aliases: ["LinkedIn"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6118",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "104_人力銀行",
+    aliases: ["104 人力銀行"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6118",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "1111_人力銀行",
+    aliases: ["1111 人力銀行"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6118",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "yourator",
+    aliases: ["Yourator"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6118",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "cakeresume",
+    aliases: ["CakeResume"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6118",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "surveycake",
+    aliases: ["SurveyCake"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "mailchimp",
+    aliases: ["Mailchimp"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6118",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "shopify",
+    aliases: ["Shopify"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "91app",
+    aliases: ["91APP"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "cyberbiz",
+    aliases: ["Cyberbiz"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "gogoro",
+    aliases: ["Gogoro"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "youbike",
+    aliases: ["YouBike"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "台北大眾捷運",
+    aliases: ["台北大眾捷運"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "悠遊卡公司",
+    aliases: ["悠遊卡公司"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "1252",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "嘟嘟房",
+    aliases: ["嘟嘟房"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "台灣聯通",
+    aliases: ["台灣聯通"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "etag_遠通電信",
+    aliases: ["eTag", "遠通電信"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "燦坤_3c",
+    aliases: ["燦坤 3C"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6119",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "全國電子",
+    aliases: ["全國電子"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6124",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "宜家家居_ikea",
+    aliases: ["宜家家居", "IKEA"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6124",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "特力屋",
+    aliases: ["特力屋"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6115",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "屈臣氏",
+    aliases: ["屈臣氏"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6123",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "康是美",
+    aliases: ["康是美"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6123",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "大潤發",
+    aliases: ["大潤發"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6123",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "國泰產險",
+    aliases: ["國泰產險"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6118",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "富邦產險",
+    aliases: ["富邦產險"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6118",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "南山人壽",
+    aliases: ["南山人壽"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6120",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "expensify",
+    aliases: ["Expensify"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "trello",
+    aliases: ["Trello"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "asana",
+    aliases: ["Asana"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "wix",
+    aliases: ["Wix"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "godaddy",
+    aliases: ["GoDaddy"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6125",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "台北寒舍艾美",
+    aliases: ["台北寒舍艾美"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6120",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "君悅酒店",
+    aliases: ["君悅酒店"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6113",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "hahow_好學校",
+    aliases: ["Hahow 好學校"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6121",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
+  },
+  {
+    vendorId: "udemy",
+    aliases: ["Udemy"],
+    rules: {
+      BILL_NOTICE: [
+        {
+          accountingCode: "6121",
+          isDebit: true,
+        },
+        {
+          accountingCode: "2141",
+          isDebit: false,
+        },
+      ],
+      PAYMENT_RECEIPT: [
+        {
+          accountingCode: "2141",
+          isDebit: true,
+        },
+        {
+          accountingCode: "1101",
+          isDebit: false,
+        },
+      ],
+    },
   },
 ];
