@@ -253,10 +253,9 @@ export async function processNext() {
                   taskResultStr = JSON.stringify({
                     generationSource: "RULE_ENGINE_STAGE_2",
                     confidence: 100,
-                    aiNote: `Stage 2 攔截：系統自動識別為 ${baseParsed.vendorName} 帳單，套用 ${esgRule.esgScope} 支出基礎法，以 ${esgRule.esgUnit} 為單位計算碳排。`,
+                    aiNote: `Stage 2 攔截：系統自動識別為 ${baseParsed.vendorName} 帳單，套用 ${esgRule.esgScope || "SCOPE_3"} 支出基礎法，以 ${esgRule.esgUnit || "TWD"} 為單位計算碳排。`,
                     scope: esgRule.esgScope || "SCOPE_3",
-                    activityType:
-                      esgRule.esgActivityType || "一般行政費用 (花費基礎法)",
+                    activityType: esgRule.esgActivityType || "PURCHASED_GOODS",
                     vendor: baseParsed.vendorName,
                     amount: String(baseParsed.totalAmount || "0"),
                     unit: esgRule.esgUnit || "TWD",

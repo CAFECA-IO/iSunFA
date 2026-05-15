@@ -8,14 +8,17 @@
  */
 
 import { ACCOUNTS } from "@/constants/accounts";
+import { EsgScope } from "@/interfaces/esg";
+import { MeasurementUnit } from "@/constants/enums";
+import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 
 const getTwCode = (code: string) =>
   ACCOUNTS.TW.find((a) => a.code === code)?.code || code;
 
 export interface IEsgRule {
-  esgScope?: "SCOPE_1" | "SCOPE_2" | "SCOPE_3" | null;
-  esgActivityType?: string;
-  esgUnit?: string;
+  esgScope?: EsgScope | null;
+  esgActivityType?: EsgActivityTypeKey;
+  esgUnit?: MeasurementUnit;
   suppressEsg?: boolean;
 }
 
@@ -54,9 +57,9 @@ const MOCK_VENDOR_RULES: IVendorEntry[] = [
         suppressEsg: true,
       },
       BILL_NOTICE: {
-        esgScope: "SCOPE_3",
-        esgActivityType: "一般行政費用 (花費基礎法)",
-        esgUnit: "TWD",
+        esgScope: EsgScope.SCOPE_3,
+        esgActivityType: "PURCHASED_GOODS",
+        esgUnit: MeasurementUnit.TWD,
       },
     },
   },

@@ -7,6 +7,7 @@ export const MeasurementUnit = {
   TONNE: "TONNE",
   GALLON: "GALLON",
   PIECE: "PIECE",
+  TWD: "TWD",
 } as const;
 
 export type MeasurementUnit =
