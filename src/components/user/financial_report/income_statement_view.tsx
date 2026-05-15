@@ -92,11 +92,13 @@ const IncomeStatementSection = ({
 export default function IncomeStatementView({
   period,
   year,
-  onUnverifiedItemsChange,
+  onUnverifiedItemsChange = () => {},
 }: {
   period: ReportPeriod;
   year: number;
-  onUnverifiedItemsChange?: (items: {id: string, note: string, type: string}[]) => void;
+  onUnverifiedItemsChange?: (
+    items: { id: string; note: string; type: string }[],
+  ) => void;
 }) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
@@ -111,12 +113,20 @@ export default function IncomeStatementView({
       const fetchSummary = async () => {
         try {
           setIsLoading(true);
-          const res = await request<IApiResponse<{ report: IIncomeStatement; unverifiedItems?: {id: string, note: string, type: string}[] }>>(
+          const res = await request<
+            IApiResponse<{
+              report: IIncomeStatement;
+              unverifiedItems?: { id: string; note: string; type: string }[];
+            }>
+          >(
             `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.INCOME_STATEMENT}&period=${period}&year=${year}`,
           );
           if (res.payload) {
             setReportData(res.payload.report);
-            if (res.payload.unverifiedItems !== undefined && onUnverifiedItemsChange) {
+            if (
+              res.payload.unverifiedItems !== undefined &&
+              onUnverifiedItemsChange
+            ) {
               onUnverifiedItemsChange(res.payload.unverifiedItems);
             }
           }
@@ -130,7 +140,7 @@ export default function IncomeStatementView({
     } else {
       setIsLoading(false);
     }
-  }, [accountBookId, period, year]);
+  }, [accountBookId, period, year, onUnverifiedItemsChange]);
 
   if (isLoading) {
     return (

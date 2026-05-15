@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, ChangeEvent } from 'react';
+import { useState, useEffect, ChangeEvent } from "react";
 
 import { useParams } from "next/navigation";
-import { Filter, Search, AlertTriangle, Download } from "lucide-react";
+import { Filter, AlertTriangle, Download } from "lucide-react";
 import EmbedGenerateModal from "@/components/user/financial_report/embed_generate_modal";
 import BalanceSheetView from "@/components/user/financial_report/balance_sheet_view";
 import CashFlowSheetView from "@/components/user/financial_report/cash_flow_statement_view";
@@ -37,7 +37,8 @@ export default function ReportView() {
     year: number;
     currency: string;
   } | null>(null);
-  const [countOfVerifiedVouchers, setCountOfVerifiedVouchers] = useState<number>(0);
+  const [countOfVerifiedVouchers, setCountOfVerifiedVouchers] =
+    useState<number>(0);
   const [unverifiedItems, setUnverifiedItems] = useState<
     { id: string; note: string; type: string }[]
   >([]);
@@ -167,9 +168,7 @@ export default function ReportView() {
   };
 
   // Info: (20260330 - Julian) 變更報表期間
-  const handleReportPeriodChange = (
-    e: ChangeEvent<HTMLSelectElement>,
-  ) => {
+  const handleReportPeriodChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSelectedReportPeriod(e.target.value as ReportPeriod);
   };
 
@@ -375,26 +374,30 @@ export default function ReportView() {
                   })}
                 </p>
               </div>
-              
+
               {unverifiedItems.length > 0 && generatedConfig && (
-                <div className="rounded-xl border border-red-200 bg-red-50/50 p-3 lg:p-4 print:hidden shadow-sm">
-                  <div className="flex items-start gap-2 mb-2">
-                    <AlertTriangle className="h-4 w-4 lg:h-5 lg:w-5 text-red-500 shrink-0 mt-0.5" />
-                    <p className="text-xs lg:text-sm leading-relaxed font-bold text-red-600">
-                      {t("report_view.unverified_warning", { count: numberWithCommas(unverifiedItems.length) })}
+                <div className="rounded-xl border border-red-200 bg-red-50/50 p-3 shadow-sm lg:p-4 print:hidden">
+                  <div className="mb-2 flex items-start gap-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500 lg:h-5 lg:w-5" />
+                    <p className="text-xs leading-relaxed font-bold text-red-600 lg:text-sm">
+                      {t("report_view.unverified_warning", {
+                        count: numberWithCommas(unverifiedItems.length),
+                      })}
                     </p>
                   </div>
-                  <ul className="max-h-32 overflow-y-auto space-y-1 mt-2 border-t border-red-100 pt-2">
+                  <ul className="mt-2 max-h-32 space-y-1 overflow-y-auto border-t border-red-100 pt-2">
                     {unverifiedItems.map((item) => (
                       <li key={item.id}>
                         <a
                           href={`/user/account_book/${accountBookId}/${item.type === "esg" ? "esg" : "voucher"}?openId=${item.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[11px] font-medium text-red-500 hover:text-red-700 hover:underline flex flex-col"
+                          className="flex flex-col text-[11px] font-medium text-red-500 hover:text-red-700 hover:underline"
                         >
                           <span className="truncate">{item.id}</span>
-                          <span className="truncate text-red-400 font-normal">{item.note}</span>
+                          <span className="truncate font-normal text-red-400">
+                            {item.note}
+                          </span>
                         </a>
                       </li>
                     ))}

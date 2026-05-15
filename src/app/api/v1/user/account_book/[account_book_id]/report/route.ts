@@ -4,7 +4,6 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
-import { VerifyStatus } from "@/constants/verify_status";
 import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
 import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
@@ -99,10 +98,14 @@ export async function GET(
         .map((e) => ({
           id: e.id,
           note: e.aiNote || "Unknown",
-          type: "esg"
+          type: "esg",
         }));
       const report = generateEsgReport(esgRecords);
-      return jsonOk({ report, unverifiedCount: unverifiedItems.length, unverifiedItems });
+      return jsonOk({
+        report,
+        unverifiedCount: unverifiedItems.length,
+        unverifiedItems,
+      });
     }
 
     // Info: (20260408 - Luphia) 資產負債表是從開立帳簿以來的累積餘額，因此不應限制 gte 起始日；損益表與現金流量表則是計算當期發生額，因此需限制 gte。
@@ -139,10 +142,14 @@ export async function GET(
       .map((v) => ({
         id: v.id,
         note: v.note || v.aiNote || "Unknown",
-        type: "voucher"
+        type: "voucher",
       }));
 
-    return jsonOk({ report, unverifiedCount: unverifiedItems.length, unverifiedItems });
+    return jsonOk({
+      report,
+      unverifiedCount: unverifiedItems.length,
+      unverifiedItems,
+    });
   } catch (error) {
     console.error("Get report failed", error);
     return jsonFail(API_ERRORS.IS_DB_FAILED);

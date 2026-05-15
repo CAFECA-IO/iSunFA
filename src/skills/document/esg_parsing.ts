@@ -50,7 +50,24 @@ export class EsgParsingSkill implements ITaskSkill {
           vendor: { type: SchemaType.STRING, description: "供應商" },
           amount: { type: SchemaType.NUMBER, description: "數量" },
           unit: { type: SchemaType.STRING, description: "單位" },
-          emissions: { type: SchemaType.NUMBER, description: "碳排放量" },
+          newCoefficient: {
+            type: SchemaType.OBJECT,
+            description: "若系統無預設係數，由 AI 根據領域知識估算的碳排係數",
+            properties: {
+              name: { type: SchemaType.STRING, description: "係數名稱" },
+              description: { type: SchemaType.STRING, description: "描述" },
+              unit: { type: SchemaType.STRING, description: "單位" },
+              emissionFactor: {
+                type: SchemaType.NUMBER,
+                description: "排放係數值",
+              },
+              source: {
+                type: SchemaType.STRING,
+                description: "資料來源 (如: EPA, 估算)",
+              },
+            },
+            required: ["name", "emissionFactor", "unit"],
+          },
           confidence: {
             type: SchemaType.NUMBER,
             description: "信心指數 1-100",
@@ -62,7 +79,6 @@ export class EsgParsingSkill implements ITaskSkill {
           "vendor",
           "amount",
           "unit",
-          "emissions",
           "confidence",
         ],
       };

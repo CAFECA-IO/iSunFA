@@ -8,8 +8,9 @@ import {
 } from "@/generated";
 import { MeasurementUnit } from "@/constants/enums";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
-import { IParsedVoucherLine } from "@/interfaces/voucher";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";
+import { ExchangeRateService } from "@/services/exchange_rate.service";
+import { VendorRegistry } from "@/services/rules/vendor_registry";
 
 function mapAccountingCode(country: string, keyword: string): string {
   const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
@@ -27,6 +28,13 @@ function mapAccountingCode(country: string, keyword: string): string {
   if (matchName) return matchName.code;
 
   return keyword; // Info: (20260513 - Tzuhan) fallback
+}
+
+function getAccountName(country: string, code: string): string {
+  const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
+    ACCOUNTS["TW"]) as IAccount[];
+  const exactCode = accountList.find((a: IAccount) => a.code === code);
+  return exactCode ? exactCode.name : code;
 }
 
 export class DocumentSyncRepository {
@@ -166,6 +174,48 @@ export class DocumentSyncRepository {
           const trType = typeMap[rawType] || "INCOME";
           const confidence = parseInt(String(vd.confidence)) || 0;
 
+          // Info: (20260515 - Tzuhan) 攔截器實作：AccountCode Interceptor 與 FX Interceptor
+          const vdRecord = vd as Record<string, unknown>;
+          const vendorNameStr = String(vdRecord.vendorName || "");
+          const vendorMatch = VendorRegistry.match(vendorNameStr);
+          const linesToCreate: Prisma.VoucherLineCreateWithoutVoucherInput[] =
+            [];
+
+          if (vendorMatch) {
+            for (const rule of vendorMatch) {
+              const fx = await ExchangeRateService.convert({
+                amount: Number(vdRecord.totalAmount) || 0,
+                fromCurrency: vd.currency || "TWD",
+                toCurrency: "TWD",
+                date: tradingDate,
+              });
+              linesToCreate.push({
+                accountingCode: rule.accountingCode,
+                particular: `${getAccountName(accountBook.country || "TW", rule.accountingCode)} - ${vendorNameStr}`,
+                amount: BigInt(fx.convertedAmount.round().toFixed(0)),
+                isDebit: rule.isDebit,
+              });
+            }
+          } else {
+            for (const l of vd.lines || []) {
+              const fx = await ExchangeRateService.convert({
+                amount: Number(l.amount) || 0,
+                fromCurrency: vd.currency || "TWD",
+                toCurrency: "TWD",
+                date: tradingDate,
+              });
+              linesToCreate.push({
+                accountingCode: mapAccountingCode(
+                  accountBook.country || "TW",
+                  l.accountingCode || "",
+                ),
+                particular: l.particular || null,
+                amount: BigInt(fx.convertedAmount.round().toFixed(0)),
+                isDebit: l.isDebit === true,
+              });
+            }
+          }
+
           const dataPayload: Prisma.VoucherUncheckedCreateInput = {
             tradingDate,
             tradingType: trType as VoucherTradingType,
@@ -178,19 +228,7 @@ export class DocumentSyncRepository {
             aiNote: vd.aiNote ?? "無 AI 分析備註",
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
             lines: {
-              create: (vd.lines || []).map((l: IParsedVoucherLine) => ({
-                accountingCode: mapAccountingCode(
-                  accountBook.country || "TW",
-                  l.accountingCode || "",
-                ),
-                particular: l.particular || null,
-                amount: BigInt(
-                  new Prisma.Decimal(String(l.amount) || "0")
-                    .round()
-                    .toFixed(0),
-                ),
-                isDebit: l.isDebit === true,
-              })),
+              create: linesToCreate,
             },
           };
 

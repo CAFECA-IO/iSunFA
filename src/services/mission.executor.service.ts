@@ -174,34 +174,32 @@ export async function processNext() {
             if (baseParsed && baseParsed.vendorName) {
               const ruleRegistry =
                 await import("@/services/rules/vendor_registry");
-              const vendorKey = Object.keys(
-                ruleRegistry.VENDOR_RULE_REGISTRY,
-              ).find((k) => String(baseParsed!.vendorName).includes(k));
+              const matchedRules = ruleRegistry.VendorRegistry.match(
+                String(baseParsed.vendorName),
+                String(baseParsed.documentType || "BILL_NOTICE"),
+              );
 
-              if (vendorKey) {
-                const ruleProcessor =
-                  ruleRegistry.VENDOR_RULE_REGISTRY[vendorKey];
-                const lines = ruleProcessor({
-                  documentType: baseParsed.documentType as
-                    | "BILL_NOTICE"
-                    | "PAYMENT_RECEIPT"
-                    | "OTHER",
+              if (matchedRules && matchedRules.length > 0) {
+                const lines = matchedRules.map((rule) => ({
+                  accountingCode: rule.accountingCode,
+                  isDebit: rule.isDebit,
+                  particular: rule.isDebit
+                    ? `支付 ${baseParsed.vendorName}`
+                    : `應付 ${baseParsed.vendorName}`,
                   amount: Number(baseParsed.totalAmount) || 0,
-                });
+                }));
 
-                if (lines) {
-                  console.log(
-                    `[MissionExecutor] 🎯 Stage 2 Match: Deterministic rules applied for ${vendorKey}`,
-                  );
-                  taskResultStr = JSON.stringify({
-                    generationSource: "RULE_ENGINE_STAGE_2",
-                    confidence: 100,
-                    aiNote:
-                      "Stage 2: Deterministic Routing Applied (TypeScript Rules)",
-                    lines: lines,
-                  });
-                  stage2Intercepted = true;
-                }
+                console.log(
+                  `[MissionExecutor] 🎯 Stage 2 Match: Deterministic rules applied for ${baseParsed.vendorName}`,
+                );
+                taskResultStr = JSON.stringify({
+                  generationSource: "RULE_ENGINE_STAGE_2",
+                  confidence: 100,
+                  aiNote:
+                    "Stage 2: Deterministic Routing Applied (TypeScript Rules)",
+                  lines: lines,
+                });
+                stage2Intercepted = true;
               }
             }
           }
@@ -312,15 +310,31 @@ export async function processNext() {
                     };
                   }
 
-                  if (subTaskConfig.type === "JOURNAL_PARSING" || subTaskConfig.type === "JOURNAL" || subTaskConfig.data?.key === "JOURNAL")
+                  if (
+                    subTaskConfig.type === "JOURNAL_PARSING" ||
+                    subTaskConfig.type === "JOURNAL" ||
+                    subTaskConfig.data?.key === "JOURNAL"
+                  )
                     aggregatedResultsByFileId[recordKey].journal = parsedVal;
-                  if (subTaskConfig.type === "VOUCHER_BASE_PARSING" || subTaskConfig.type === "VOUCHER_BASE" || subTaskConfig.data?.key === "VOUCHER_BASE")
+                  if (
+                    subTaskConfig.type === "VOUCHER_BASE_PARSING" ||
+                    subTaskConfig.type === "VOUCHER_BASE" ||
+                    subTaskConfig.data?.key === "VOUCHER_BASE"
+                  )
                     aggregatedResultsByFileId[recordKey].voucherBase =
                       parsedVal;
-                  if (subTaskConfig.type === "VOUCHER_LINES_PARSING" || subTaskConfig.type === "VOUCHER_LINES" || subTaskConfig.data?.key === "VOUCHER_LINES")
+                  if (
+                    subTaskConfig.type === "VOUCHER_LINES_PARSING" ||
+                    subTaskConfig.type === "VOUCHER_LINES" ||
+                    subTaskConfig.data?.key === "VOUCHER_LINES"
+                  )
                     aggregatedResultsByFileId[recordKey].voucherLines =
                       parsedVal;
-                  if (subTaskConfig.type === "ESG_PARSING" || subTaskConfig.type === "ESG" || subTaskConfig.data?.key === "ESG")
+                  if (
+                    subTaskConfig.type === "ESG_PARSING" ||
+                    subTaskConfig.type === "ESG" ||
+                    subTaskConfig.data?.key === "ESG"
+                  )
                     aggregatedResultsByFileId[recordKey].esg = parsedVal;
                 }
               } catch {}
@@ -445,7 +459,9 @@ export async function processNext() {
           aggregatedResult !== null &&
           useJsonPlan
         ) {
-          const finalResult: Record<string, JSONValue> = { ...(aggregatedResult as Record<string, JSONValue>) };
+          const finalResult: Record<string, JSONValue> = {
+            ...(aggregatedResult as Record<string, JSONValue>),
+          };
           if (Object.keys(aggregatedResultsByFileId).length > 0) {
             finalResult.dbSyncPayload = aggregatedResultsByFileId;
           }
@@ -488,14 +504,16 @@ export async function processNext() {
 
       if (Object.keys(aggregatedResultsByFileId).length > 0) {
         for (const key of Object.keys(aggregatedResultsByFileId)) {
-          aggregatedResultsByFileId[key].failureReason = execErr instanceof Error ? execErr.message : String(execErr);
+          aggregatedResultsByFileId[key].failureReason =
+            execErr instanceof Error ? execErr.message : String(execErr);
         }
         errorResult.dbSyncPayload = aggregatedResultsByFileId;
       } else {
         errorResult.dbSyncPayload = {
-          "default": {
-            failureReason: execErr instanceof Error ? execErr.message : String(execErr)
-          }
+          default: {
+            failureReason:
+              execErr instanceof Error ? execErr.message : String(execErr),
+          },
         };
       }
 
