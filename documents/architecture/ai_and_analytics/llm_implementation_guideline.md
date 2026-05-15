@@ -69,6 +69,7 @@ LLM 的強項在於「處理非結構化的自然語言」。只要任務的核�
 1. **強制英文撰寫 Prompt (English-First Prompting)**：
    - **鐵律**：所有的指令、防呆規則、Schema 定義**必須以全英文撰寫**。
    - **原因**：LLM 在英文語境下的「指令遵循能力」遠高於中文。在 Prompt 尾端加上 `Output your notes in Traditional Chinese` 即可兼顧穩定與易讀性。
+   - **例外條款 (Schema Description Localization)**：雖然 System Prompt 與核心邏輯指令必須為英文，但在定義處理「高度在地化單據（如台灣統一發票）」的 `responseSchema` 時，其欄位的 `description` 允許使用繁體中文。此舉是為了消除模型在 OCR 萃取時的「跨語系對齊損耗 (Alignment Loss)」，確保如「排放係數值」等特定專有名詞的擷取精準度。
 2. **防幻覺規則模組化 (Modular Rules)**：
    防呆規則 (如 `ANTI_HALLUCINATION_RULES`) 必須獨立為變數安插於頂部，以利後續「封閉迴圈校正管線」自動覆寫。
 3. **優先使用 Few-Shot 判例注入**：
