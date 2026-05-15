@@ -45,7 +45,7 @@
 
 ### 📌 Phase 3: 合規沙盒與「帶鎖的火力展示」 (Sync with Eng. Sprint 3)
 
-**工程端現況**：完成基於合約的 Maker-Checker 多簽、Hash-Chained 軌跡、再生原料憑證上鏈。
+**工程端現況**：完成基於 mission_board.sol 的自動化全鏈上稽核、Event Sourcing 軌跡、與去中心化爭議仲裁機制。
 **BD 端任務**：**「展示合規防護網，收割早期訂單」**
 
 1. **Design Partner 封測上線 (The Compliance Sandbox)**：

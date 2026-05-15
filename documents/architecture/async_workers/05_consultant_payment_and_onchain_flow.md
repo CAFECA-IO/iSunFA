@@ -1,15 +1,15 @@
-# 05 Consultant Analysis & Payment On-Chain Saga
+# 05 Consultant Analysis & Payment On-Chain Flow
 
 > **Date**: 2026-05-15
 > **Author**: Tzuhan
 > **Document Status**: Active (Architectural Blueprint)
 > **Core Tech**: ERC-4337, AA Wallet, Escrow, IPFS, Event Sourcing
 
-本文件詳細記錄了從使用者在前端發起「顧問分析 / 憑證解析 (Journal)」開始，經歷「簽章授權」、「訂單扣款」、「非同步任務執行」、「區塊鏈狀態錨定 (On-Chain Anchoring)」，到任務失敗時觸發的「點數退還機制 (Credit Refund Saga)」的完整生命週期序列圖 (Sequence Diagram)。
+本文件詳細記錄了從使用者在前端發起「顧問分析 / 憑證解析 (Journal)」開始，經歷「簽章授權」、「訂單扣款」、「非同步任務執行」、「區塊鏈狀態錨定 (On-Chain Anchoring)」，到任務結算與觸發「去中心化爭議仲裁 (Dispute Arbitration)」的完整生命週期序列圖 (Sequence Diagram)。
 
-此流程完美體現了 iSunFA 系統的「零信任架構」與「分散式交易補償機制」。
+此流程完美體現了 iSunFA 系統的「零信任架構」與「無退款之強制重試機制 (No-Refund & Retry-Until-Success)」。
 
-## 🔄 核心交易序列圖 (Core Saga Sequence)
+## 🔄 核心交易序列圖 (Core Execution Sequence)
 
 以下序列圖涵蓋了前端 (Client)、API 閘道 (Gateway)、資料庫 (DB)、非同步任務處理程序 (Async Worker) 以及區塊鏈智能合約 (Blockchain) 之間的完整交互。
 

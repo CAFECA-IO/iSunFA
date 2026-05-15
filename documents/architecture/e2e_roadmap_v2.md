@@ -101,7 +101,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
   - **Single Source of Truth (SSOT)**：因 `mission_board.sol` 智能合約已將所有任務指派與執行結果不可篡改地記錄於區塊鏈上，系統的「零信任」直接由底層合約保障。API 層僅作為輕量級傳輸通道，不需要過度防禦所謂的「權限污染」，這大幅降低了開發與維護的複雜度。
 
 - **[Architect 穩定性與區塊鏈任務]**
-- **WORM 級別查核軌跡 (Hash-Chained Logs)**：導入密碼學雜湊鏈，防禦 DBA 竄改與截斷攻擊。
+- **✅ Done (Architectural Decision): 全鏈上自動稽核軌跡 (Event Sourcing Logs)**：捨棄傳統的資料庫雜湊鏈，全面依賴 mission_board.sol 的鏈上事件，防禦 DBA 竄改與截斷攻擊。
 - **⚠️ Pending (Postponed): 全同態加密 (FHE) 與儲存隔離**：企業機密保護的終極型態。計畫於 `laria.ts` (寫入 IPFS 前後) 實作 FHE (Fully Homomorphic Encryption)，確保儲存節點無法窺探明文。
   - **架構決策 (延後實作)**：因 FHE 會導致 Payload 變為完全不可讀的密文，這將使現階段底層引擎（如財務與碳排計算）的除錯難度呈現指數級上升。為確保核心功能開發順利，此功能將嚴格推遲至「系統功能 100% 穩定」後再行整合。
 - **再生原料憑證上鏈 (DPP Green Certificate)**：對接城市採礦戰略。當系統確認具備戰略循環（如人造螢石、高純度矽粉等）的再生原料入荷時 ，觸發智能合約，發行專屬的「再生原料憑證 Hash」 ，並自動綁定至該批次的數位產品護照 (DPP) 中 。
