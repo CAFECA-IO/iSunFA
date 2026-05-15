@@ -34,6 +34,7 @@ export const VENDOR_RULES = [
       "Taiwan Power Company",
       "Taipower",
       "TPC",
+      "台灣電力",
     ],
     rules: {
       BILL_NOTICE: [
@@ -60,7 +61,13 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "taiwan_water_corporation",
-    aliases: ["台灣自來水公司", "台水", "Taiwan Water Corporation"],
+    aliases: [
+      "台灣自來水公司",
+      "台水",
+      "Taiwan Water Corporation",
+      "台灣自來水",
+      "TWC",
+    ],
     rules: {
       BILL_NOTICE: [
         {
@@ -86,7 +93,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "cpc_corporation",
-    aliases: ["台灣中油", "CPC Corporation"],
+    aliases: ["台灣中油", "CPC Corporation", "中油", "台灣中油股份有限公司"],
     rules: {
       BILL_NOTICE: [
         {
@@ -111,8 +118,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "台塑石油",
-    aliases: ["台塑石油"],
+    vendorId: "formosa_petrochemical",
+    aliases: ["台塑石油", "台塑石化", "Formosa Petrochemical"],
     rules: {
       BILL_NOTICE: [
         {
@@ -137,8 +144,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "台灣高鐵",
-    aliases: ["台灣高鐵"],
+    vendorId: "taiwan_high_speed_rail",
+    aliases: ["台灣高鐵", "高鐵", "台灣高速鐵路", "THSR"],
     rules: {
       BILL_NOTICE: [
         {
@@ -163,8 +170,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "台灣鐵路",
-    aliases: ["台灣鐵路"],
+    vendorId: "taiwan_railways",
+    aliases: ["台灣鐵路", "台鐵", "交通部台灣鐵路管理局", "TRA"],
     rules: {
       BILL_NOTICE: [
         {
@@ -189,8 +196,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "統一超商_7-11",
-    aliases: ["統一超商", "7-11", "統一超商股份有限公司"],
+    vendorId: "uni_president_7_11",
+    aliases: ["統一超商", "7-11", "統一超商股份有限公司", "7-Eleven"],
     rules: {
       BILL_NOTICE: [
         {
@@ -215,8 +222,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "全家便利商店",
-    aliases: ["全家便利商店", "全家便利商店股份有限公司", "FamilyMart"],
+    vendorId: "familymart",
+    aliases: ["全家便利商店", "全家便利商店股份有限公司", "FamilyMart", "全家"],
     rules: {
       BILL_NOTICE: [
         {
@@ -241,8 +248,15 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "google_gws_cloud",
-    aliases: ["Google", "GWS", "Cloud"],
+    vendorId: "google_workspace_cloud",
+    aliases: [
+      "Google",
+      "GWS",
+      "Cloud",
+      "Google Cloud",
+      "GCP",
+      "Google Workspace",
+    ],
     rules: {
       BILL_NOTICE: [
         {
@@ -268,7 +282,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "microsoft_office_365",
-    aliases: ["Microsoft", "Office 365"],
+    aliases: ["Microsoft", "Office 365", "Microsoft 365", "微軟"],
     rules: {
       BILL_NOTICE: [
         {
@@ -294,7 +308,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "adobe",
-    aliases: ["Adobe"],
+    aliases: ["Adobe", "Adobe Creative Cloud"],
     rules: {
       BILL_NOTICE: [
         {
@@ -320,7 +334,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "zoom",
-    aliases: ["Zoom"],
+    aliases: ["Zoom", "Zoom Video Communications"],
     rules: {
       BILL_NOTICE: [
         {
@@ -345,8 +359,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "uber_uber_eats",
-    aliases: ["Uber", "Uber Eats"],
+    vendorId: "uber",
+    aliases: ["Uber", "Uber Eats", "優步"],
     rules: {
       BILL_NOTICE: [
         {
@@ -372,7 +386,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "pchome_24h",
-    aliases: ["PChome 24h"],
+    aliases: ["PChome 24h", "PChome", "網路家庭", "PChome Online"],
     rules: {
       BILL_NOTICE: [
         {
@@ -397,8 +411,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "momo_購物網",
-    aliases: ["momo 購物網"],
+    vendorId: "momo",
+    aliases: ["momo 購物網", "momo", "富邦媒體科技"],
     rules: {
       BILL_NOTICE: [
         {
@@ -423,8 +437,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "蝦皮購物",
-    aliases: ["蝦皮購物"],
+    vendorId: "shopee",
+    aliases: ["蝦皮購物", "蝦皮", "Shopee", "樂購蝦皮"],
     rules: {
       BILL_NOTICE: [
         {
@@ -449,8 +463,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "遠傳電信",
-    aliases: ["遠傳電信"],
+    vendorId: "far_eas_tone",
+    aliases: ["遠傳電信", "遠傳", "Far EasTone", "FET"],
     rules: {
       BILL_NOTICE: [
         {
@@ -475,8 +489,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "台灣大哥大",
-    aliases: ["台灣大哥大"],
+    vendorId: "taiwan_mobile",
+    aliases: ["台灣大哥大", "台哥大", "Taiwan Mobile"],
     rules: {
       BILL_NOTICE: [
         {
@@ -501,8 +515,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "國泰航空",
-    aliases: ["國泰航空"],
+    vendorId: "cathay_pacific",
+    aliases: ["國泰航空", "Cathay Pacific"],
     rules: {
       BILL_NOTICE: [
         {
@@ -527,8 +541,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "長榮航空",
-    aliases: ["長榮航空"],
+    vendorId: "eva_air",
+    aliases: ["長榮航空", "EVA Air", "長榮"],
     rules: {
       BILL_NOTICE: [
         {
@@ -553,8 +567,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "中華航空",
-    aliases: ["中華航空"],
+    vendorId: "china_airlines",
+    aliases: ["中華航空", "華航", "China Airlines"],
     rules: {
       BILL_NOTICE: [
         {
@@ -579,8 +593,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "星宇航空",
-    aliases: ["星宇航空"],
+    vendorId: "starlux_airlines",
+    aliases: ["星宇航空", "星宇", "STARLUX Airlines"],
     rules: {
       BILL_NOTICE: [
         {
@@ -606,7 +620,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "agoda",
-    aliases: ["Agoda"],
+    aliases: ["Agoda", "雅高達"],
     rules: {
       BILL_NOTICE: [
         {
@@ -631,8 +645,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "booking.com",
-    aliases: ["Booking.com"],
+    vendorId: "booking_com",
+    aliases: ["Booking.com", "繽客"],
     rules: {
       BILL_NOTICE: [
         {
@@ -658,7 +672,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "slack",
-    aliases: ["Slack"],
+    aliases: ["Slack", "Slack Technologies"],
     rules: {
       BILL_NOTICE: [
         {
@@ -684,7 +698,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "notion",
-    aliases: ["Notion"],
+    aliases: ["Notion", "Notion Labs"],
     rules: {
       BILL_NOTICE: [
         {
@@ -735,8 +749,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "meta_facebook_ads",
-    aliases: ["Meta", "Facebook Ads"],
+    vendorId: "meta_ads",
+    aliases: ["Meta", "Facebook Ads", "Facebook", "IG Ads", "Instagram Ads"],
     rules: {
       BILL_NOTICE: [
         {
@@ -762,7 +776,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "google_ads",
-    aliases: ["Google Ads"],
+    aliases: ["Google Ads", "Google AdWords"],
     rules: {
       BILL_NOTICE: [
         {
@@ -788,7 +802,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "line_pay",
-    aliases: ["LINE Pay"],
+    aliases: ["LINE Pay", "連加網路", "連加網路商業"],
     rules: {
       BILL_NOTICE: [
         {
@@ -813,8 +827,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "綠界科技_ecpay",
-    aliases: ["綠界科技", "ECPay"],
+    vendorId: "ecpay",
+    aliases: ["綠界科技", "ECPay", "綠界"],
     rules: {
       BILL_NOTICE: [
         {
@@ -839,8 +853,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "藍新科技",
-    aliases: ["藍新科技"],
+    vendorId: "newebpay",
+    aliases: ["藍新科技", "NewebPay", "藍新"],
     rules: {
       BILL_NOTICE: [
         {
@@ -866,7 +880,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "foodpanda",
-    aliases: ["Foodpanda"],
+    aliases: ["Foodpanda", "富胖達"],
     rules: {
       BILL_NOTICE: [
         {
@@ -891,8 +905,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "漢來海港",
-    aliases: ["漢來海港"],
+    vendorId: "hi_lai_harbour",
+    aliases: ["漢來海港", "漢來美食", "漢來"],
     rules: {
       BILL_NOTICE: [
         {
@@ -917,8 +931,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "王品集團",
-    aliases: ["王品集團"],
+    vendorId: "wowprime",
+    aliases: ["王品集團", "王品", "Wowprime"],
     rules: {
       BILL_NOTICE: [
         {
@@ -943,8 +957,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "鼎泰豐",
-    aliases: ["鼎泰豐"],
+    vendorId: "din_tai_fung",
+    aliases: ["鼎泰豐", "Din Tai Fung"],
     rules: {
       BILL_NOTICE: [
         {
@@ -969,8 +983,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "星巴克_starbucks",
-    aliases: ["星巴克", "Starbucks"],
+    vendorId: "starbucks",
+    aliases: ["星巴克", "Starbucks", "統一星巴克", "悠旅生活事業"],
     rules: {
       BILL_NOTICE: [
         {
@@ -995,8 +1009,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "路易莎咖啡",
-    aliases: ["路易莎咖啡"],
+    vendorId: "louisa_coffee",
+    aliases: ["路易莎咖啡", "路易莎", "Louisa Coffee"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1021,8 +1035,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "好市多_costco",
-    aliases: ["好市多", "Costco"],
+    vendorId: "costco",
+    aliases: ["好市多", "Costco", "好市多股份有限公司"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1047,8 +1061,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "家樂福",
-    aliases: ["家樂福"],
+    vendorId: "carrefour",
+    aliases: ["家樂福", "Carrefour", "家福"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1073,8 +1087,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "全聯福利中心",
-    aliases: ["全聯福利中心"],
+    vendorId: "pxmart",
+    aliases: ["全聯福利中心", "全聯", "全聯實業", "PX Mart"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1099,8 +1113,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "金石堂_誠品",
-    aliases: ["金石堂", "誠品"],
+    vendorId: "kingstone_eslite",
+    aliases: ["金石堂", "誠品", "Kingstone", "Eslite", "誠品書店"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1125,8 +1139,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "九乘九文具專家",
-    aliases: ["九乘九文具專家"],
+    vendorId: "9x9_stationery",
+    aliases: ["九乘九文具專家", "九乘九", "9x9"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1151,8 +1165,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "震旦行",
-    aliases: ["震旦行"],
+    vendorId: "aurora",
+    aliases: ["震旦行", "震旦", "Aurora"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1177,8 +1191,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "互盛",
-    aliases: ["互盛"],
+    vendorId: "hti",
+    aliases: ["互盛", "互盛股份有限公司"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1203,8 +1217,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "和運租車",
-    aliases: ["和運租車"],
+    vendorId: "hotai_leasing",
+    aliases: ["和運租車", "和運", "Hotai Leasing"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1229,8 +1243,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "格上租車",
-    aliases: ["格上租車"],
+    vendorId: "carplus",
+    aliases: ["格上租車", "格上", "Carplus"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1256,7 +1270,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "irent",
-    aliases: ["iRent"],
+    aliases: ["iRent", "和雲行動服務"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1281,8 +1295,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "台灣大車隊_55688",
-    aliases: ["台灣大車隊", "55688"],
+    vendorId: "taiwan_taxi",
+    aliases: ["台灣大車隊", "55688", "Taiwan Taxi"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1308,7 +1322,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "line_taxi",
-    aliases: ["LINE TAXI"],
+    aliases: ["LINE TAXI", "LINE GO"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1333,8 +1347,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "大都會計程車",
-    aliases: ["大都會計程車"],
+    vendorId: "mtaxi",
+    aliases: ["大都會計程車", "大都會", "MTaxi"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1359,8 +1373,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "順豐速運",
-    aliases: ["順豐速運"],
+    vendorId: "sf_express",
+    aliases: ["順豐速運", "順豐", "SF Express", "台灣順豐"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1385,8 +1399,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "嘉里大榮",
-    aliases: ["嘉里大榮"],
+    vendorId: "kerry_tj",
+    aliases: ["嘉里大榮", "大榮貨運", "Kerry TJ Logistics"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1411,8 +1425,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "新竹物流",
-    aliases: ["新竹物流"],
+    vendorId: "hct_logistics",
+    aliases: ["新竹物流", "新竹貨運", "HCT"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1437,8 +1451,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "黑貓宅急便",
-    aliases: ["黑貓宅急便"],
+    vendorId: "tcat",
+    aliases: ["黑貓宅急便", "黑貓", "統一速達"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1463,8 +1477,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "中華郵政",
-    aliases: ["中華郵政"],
+    vendorId: "chunghwa_post",
+    aliases: ["中華郵政", "郵局", "Chunghwa Post"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1490,7 +1504,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "lalamove",
-    aliases: ["Lalamove"],
+    aliases: ["Lalamove", "啦啦快送"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1516,7 +1530,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "dhl",
-    aliases: ["DHL"],
+    aliases: ["DHL", "洋基通運"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1542,7 +1556,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "fedex",
-    aliases: ["FedEx"],
+    aliases: ["FedEx", "聯邦快遞"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1567,8 +1581,15 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "蘋果_apple_icloud_storage",
-    aliases: ["蘋果", "Apple iCloud", "Storage"],
+    vendorId: "apple",
+    aliases: [
+      "蘋果",
+      "Apple iCloud",
+      "Storage",
+      "Apple",
+      "Apple Storage",
+      "蘋果公司",
+    ],
     rules: {
       BILL_NOTICE: [
         {
@@ -1593,8 +1614,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "aws_amazon_web_services",
-    aliases: ["AWS", "Amazon Web Services"],
+    vendorId: "aws",
+    aliases: ["AWS", "Amazon Web Services", "Amazon"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1620,7 +1641,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "digitalocean",
-    aliases: ["DigitalOcean"],
+    aliases: ["DigitalOcean", "DO"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1671,7 +1692,7 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "chatgpt_openai",
+    vendorId: "openai",
     aliases: ["ChatGPT", "OpenAI"],
     rules: {
       BILL_NOTICE: [
@@ -1723,8 +1744,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "104_人力銀行",
-    aliases: ["104 人力銀行"],
+    vendorId: "104_job_bank",
+    aliases: ["104 人力銀行", "104", "一零四資訊科技"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1749,8 +1770,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "1111_人力銀行",
-    aliases: ["1111 人力銀行"],
+    vendorId: "1111_job_bank",
+    aliases: ["1111 人力銀行", "1111", "全球華人"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1776,7 +1797,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "yourator",
-    aliases: ["Yourator"],
+    aliases: ["Yourator", "新創職涯平台"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1802,7 +1823,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "cakeresume",
-    aliases: ["CakeResume"],
+    aliases: ["CakeResume", "Cake"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1828,7 +1849,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "surveycake",
-    aliases: ["SurveyCake"],
+    aliases: ["SurveyCake", "問卷蛋糕"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1906,7 +1927,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "91app",
-    aliases: ["91APP"],
+    aliases: ["91APP", "九易宇軒"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1932,7 +1953,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "cyberbiz",
-    aliases: ["Cyberbiz"],
+    aliases: ["Cyberbiz", "順立智慧"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1958,7 +1979,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "gogoro",
-    aliases: ["Gogoro"],
+    aliases: ["Gogoro", "睿能創意"],
     rules: {
       BILL_NOTICE: [
         {
@@ -1984,7 +2005,7 @@ export const VENDOR_RULES = [
   },
   {
     vendorId: "youbike",
-    aliases: ["YouBike"],
+    aliases: ["YouBike", "微笑單車"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2009,8 +2030,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "台北大眾捷運",
-    aliases: ["台北大眾捷運"],
+    vendorId: "taipei_mrt",
+    aliases: ["台北大眾捷運", "台北捷運", "北捷", "Taipei MRT"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2035,8 +2056,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "悠遊卡公司",
-    aliases: ["悠遊卡公司"],
+    vendorId: "easycard",
+    aliases: ["悠遊卡公司", "悠遊卡", "EasyCard"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2061,8 +2082,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "嘟嘟房",
-    aliases: ["嘟嘟房"],
+    vendorId: "dodohome",
+    aliases: ["嘟嘟房", "中興電工", "Dodo Home"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2087,8 +2108,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "台灣聯通",
-    aliases: ["台灣聯通"],
+    vendorId: "taiwan_parking",
+    aliases: ["台灣聯通", "台灣聯通停車場"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2113,8 +2134,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "etag_遠通電信",
-    aliases: ["eTag", "遠通電信"],
+    vendorId: "far_eastern_electronic_toll_collection",
+    aliases: ["eTag", "遠通電信", "遠通電收", "FETC"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2139,8 +2160,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "燦坤_3c",
-    aliases: ["燦坤 3C"],
+    vendorId: "tsannkuen",
+    aliases: ["燦坤 3C", "燦坤", "Tsannkuen"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2165,8 +2186,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "全國電子",
-    aliases: ["全國電子"],
+    vendorId: "elife_mall",
+    aliases: ["全國電子", "Elife Mall"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2191,7 +2212,7 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "宜家家居_ikea",
+    vendorId: "ikea",
     aliases: ["宜家家居", "IKEA"],
     rules: {
       BILL_NOTICE: [
@@ -2217,8 +2238,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "特力屋",
-    aliases: ["特力屋"],
+    vendorId: "test_rite_retail",
+    aliases: ["特力屋", "Test Rite Retail"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2243,8 +2264,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "屈臣氏",
-    aliases: ["屈臣氏"],
+    vendorId: "watsons",
+    aliases: ["屈臣氏", "Watsons"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2269,8 +2290,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "康是美",
-    aliases: ["康是美"],
+    vendorId: "cosmed",
+    aliases: ["康是美", "COSMED", "統一生活"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2295,8 +2316,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "大潤發",
-    aliases: ["大潤發"],
+    vendorId: "rt_mart",
+    aliases: ["大潤發", "RT-Mart"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2321,8 +2342,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "國泰產險",
-    aliases: ["國泰產險"],
+    vendorId: "cathay_century_insurance",
+    aliases: ["國泰產險", "國泰世紀產物保險", "Cathay Century Insurance"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2347,8 +2368,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "富邦產險",
-    aliases: ["富邦產險"],
+    vendorId: "fubon_insurance",
+    aliases: ["富邦產險", "富邦產物保險", "Fubon Insurance"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2373,8 +2394,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "南山人壽",
-    aliases: ["南山人壽"],
+    vendorId: "nan_shan_life_insurance",
+    aliases: ["南山人壽", "Nan Shan Life Insurance"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2529,8 +2550,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "台北寒舍艾美",
-    aliases: ["台北寒舍艾美"],
+    vendorId: "le_meridien_taipei",
+    aliases: ["台北寒舍艾美", "寒舍艾美", "Le Meridien Taipei"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2555,8 +2576,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "君悅酒店",
-    aliases: ["君悅酒店"],
+    vendorId: "grand_hyatt_taipei",
+    aliases: ["君悅酒店", "台北君悅", "Grand Hyatt Taipei"],
     rules: {
       BILL_NOTICE: [
         {
@@ -2581,8 +2602,8 @@ export const VENDOR_RULES = [
     },
   },
   {
-    vendorId: "hahow_好學校",
-    aliases: ["Hahow 好學校"],
+    vendorId: "hahow",
+    aliases: ["Hahow 好學校", "Hahow", "好學校"],
     rules: {
       BILL_NOTICE: [
         {

@@ -2,7 +2,7 @@ import {
   getChunghwaTelecomVoucherLines,
   IExtractedData,
 } from "@/services/rules/telecom_vendor_rules";
-import { VENDOR_RULES } from "@/constants/vendor";
+import { VENDOR_RULES } from "@/constants/vendor_rules";
 import { EsgScope } from "@/interfaces/esg";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 
