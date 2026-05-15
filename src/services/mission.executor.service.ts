@@ -136,13 +136,16 @@ export async function processNext() {
           };
 
           // Info: (20260420 - Luphia) Build Prompt
-          const fullPrompt = await buildTaskPrompt(
+          let fullPrompt = await buildTaskPrompt(
             subTaskConfig,
             missionData,
             priorResults,
           );
           let taskResultStr = "";
           let stage2Intercepted = false;
+          let esgRuleForFallback:
+            | import("@/services/rules/vendor_registry").IEsgRule
+            | null = null;
 
           // Info: (20260511 - Tzuhan) Stage 2 Deterministic Routing Intercept
           if (subTaskConfig.type === "VOUCHER_LINES_PARSING") {
@@ -251,20 +254,10 @@ export async function processNext() {
                   stage2Intercepted = true;
                 } else {
                   console.log(
-                    `[MissionExecutor] 🎯 Stage 2 Match: Deterministic ESG rules applied for ${baseParsed.vendorName}`,
+                    `[MissionExecutor] 🎯 Stage 2 Match: Deterministic ESG rules found for ${baseParsed.vendorName}, falling back to AI for coefficient estimation.`,
                   );
-                  taskResultStr = JSON.stringify({
-                    generationSource: "RULE_ENGINE_STAGE_2",
-                    confidence: 100,
-                    aiNote: `Stage 2 攔截：系統自動識別為 ${baseParsed.vendorName} 帳單，套用 ${esgRule.esgScope || "SCOPE_3"} 支出基礎法，以 ${esgRule.esgUnit || "TWD"} 為單位計算碳排。`,
-                    scope: esgRule.esgScope || "SCOPE_3",
-                    activityType: esgRule.esgActivityType || "PURCHASED_GOODS",
-                    vendor: baseParsed.vendorName,
-                    amount: String(baseParsed.totalAmount || "0"),
-                    unit: esgRule.esgUnit || "TWD",
-                    newCoefficient: esgRule.newCoefficient || undefined,
-                  });
-                  stage2Intercepted = true;
+                  esgRuleForFallback = esgRule;
+                  fullPrompt += `\n\n【決定論攔截指示】\n系統已判定此廠商為 ${esgRule.esgScope} / ${esgRule.esgActivityType}。請你「強制」使用此範疇與活動類型，並專注於為這個供應商推估合理的碳排係數 (newCoefficient)。`;
                 }
               }
             }
@@ -298,9 +291,21 @@ export async function processNext() {
             // Info: (20260511 - Tzuhan) LLM/Skill 產出若為 JSON，補上 Fallback 標籤
             try {
               const parsed = JSON.parse(taskResultStr);
-              if (typeof parsed === "object" && !parsed.generationSource) {
-                parsed.generationSource = "LLM_FALLBACK_STAGE_3";
-                taskResultStr = JSON.stringify(parsed);
+              if (typeof parsed === "object") {
+                if (esgRuleForFallback && !parsed.error) {
+                  parsed.scope = esgRuleForFallback.esgScope || parsed.scope;
+                  parsed.activityType =
+                    esgRuleForFallback.esgActivityType || parsed.activityType;
+                  parsed.unit = esgRuleForFallback.esgUnit || parsed.unit;
+                  parsed.generationSource = "HYBRID_STAGE_2_AND_3";
+                  if (parsed.aiNote) {
+                    parsed.aiNote = `[混合決策] 範疇與活動由規則引擎鎖定，係數由 AI 推估。原註記: ${parsed.aiNote}`;
+                  }
+                  taskResultStr = JSON.stringify(parsed);
+                } else if (!parsed.generationSource) {
+                  parsed.generationSource = "LLM_FALLBACK_STAGE_3";
+                  taskResultStr = JSON.stringify(parsed);
+                }
               }
             } catch {}
           }

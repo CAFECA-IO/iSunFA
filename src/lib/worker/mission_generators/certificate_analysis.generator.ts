@@ -88,14 +88,24 @@ export function generateCertificateAnalysisMission(
         properties: {
           aiNote: { type: SchemaType.STRING },
           vendorName: { type: SchemaType.STRING },
-          documentType: { type: SchemaType.STRING },
+          documentType: {
+            type: SchemaType.STRING,
+            enum: ["BILL_NOTICE", "PAYMENT_RECEIPT", "OTHER"],
+            description: "Must strictly be one of the provided enums.",
+            format: "enum",
+          },
           totalAmount: { type: SchemaType.NUMBER },
           currency: {
             type: SchemaType.STRING,
             description: "Currency code, e.g. TWD, USD, JPY",
           },
           tradingDate: { type: SchemaType.STRING },
-          tradingType: { type: SchemaType.STRING },
+          tradingType: {
+            type: SchemaType.STRING,
+            enum: ["INCOME", "OUTCOME", "TRANSFER"],
+            description: "Must strictly be one of the provided enums.",
+            format: "enum",
+          },
           note: { type: SchemaType.STRING },
           confidence: { type: SchemaType.INTEGER },
         },

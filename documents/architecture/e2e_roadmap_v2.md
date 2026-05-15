@@ -87,8 +87,10 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
   - **⚠️ Pending (2026-05-13)：進階防護實作**：必須在寫入 DB 前掛載 ERP 庫存比對微服務，若 `amount > MAX_INVENTORY_LIMIT` 則直接拋出 Error 並將憑證標記為 `FRAUD_SUSPECTED` 阻斷寫入，達到 100% 物理防漂綠。
 
 - **[Architect & CPA 聯手任務 (Self-Healing & Deterministic AI)]**
-- **⏳ In Progress (2026-05-13)：混合決策管線與字典解耦 (Hybrid Deterministic Pipeline & Dictionary Decoupling)**：徹底解決 LLM 機率不穩定性的終極架構。將憑證解析任務拆分為三階：Stage 1 (單純讓 AI 萃取特徵，如廠商名稱與文件類型)、Stage 2 (依賴 TypeScript 查表作絕對穩定分流)、Stage 3 (查無規則時才讓 AI 進行推論 Fallback)。在實作 Stage 2 時，必須嚴格禁止將數千筆的國家級會計科目表 (`ACCOUNTS`) 透過 `JSON.stringify` 暴力塞入 Prompt。Stage 1 僅萃取特徵，Stage 2 由後端程式決定科目，藉此極小化 Token 消耗並避免 LLM 注意力渙散。(註：目前 Stage 2 以 includes 實作，已解除暴力注入)。
-  - **⚠️ Pending (2026-05-13)：進階對應實作**：字典映射目前使用字串 `includes` 作為 Stage 2 的過渡防護。下一個 Sprint 必須在 Node.js 引入輕量級 Embeddings (如 OpenAI `text-embedding-3-small` 搭配 Postgres `pgvector`)，將其升級為具備語意理解能力的向量檢索 (Vector Search)。
+- **✅ Done (2026-05-15)：混合決策管線與 Schema 實體約束 (Hybrid Deterministic Pipeline & Schema Enum Binding)**：徹底解決 LLM 機率不穩定性的終極架構。
+  1. **Schema Enum 約束**：全面導入 Gemini JSON Schema `enum` 與 `format: "enum"`，在物理 API 層面封鎖 AI 發明自創字串（如 `documentType`, `tradingType`）的可能性，將萃取資料標準化。
+  2. **混合管線重構**：將憑證解析任務升級為真正的混合編排。Stage 1 讓 AI 萃取受 Enum 約束的特徵；Stage 2 依賴 TypeScript (`VendorRegistry`) 進行絕對精確比對（已移除模糊的 `includes`）；Stage 3 不僅支援純 Fallback，更支援 **HYBRID_STAGE_2_AND_3**（由 Stage 2 鎖死範疇與活動類型，交由 Stage 3 AI 僅推估未知參數如碳排係數）。
+  - **⚠️ Pending (2026-05-16)：進階對應實作**：雖然目前 Stage 2 已實現穩定精確比對，下一個 Sprint 仍須在 Node.js 引入輕量級 Embeddings (如 OpenAI `text-embedding-3-small` 搭配 Postgres `pgvector`)，將未收錄在黃金字典的長尾廠商升級為具備語意理解能力的向量檢索 (Vector Search)。
 - **⚠️ Pending：AI 封閉迴圈校正管線 (Closed-Loop Prompt Calibration)**：針對高度相似的憑證建立自動盲測機制。若 AI 解析錯誤，將「錯誤輸出」與「正確答案」交由高階模型自動產出優化版的解析 Prompt。**(資安防線地雷拆彈)** 禁止 AI 直接覆寫生產環境的 Prompt，以防惡意供應商發動「提示詞注入 (Prompt Injection)」攻擊導致模型崩潰。優化 Prompt 必須進入「人工覆核 (HITL)」，由具備 CPA 權限的超級管理員審核並簽章後，才能部署更新。
 
 ### 📌 Sprint 3: 視覺極限與合規深水區 (Vision Extreme & ITGC Compliance)

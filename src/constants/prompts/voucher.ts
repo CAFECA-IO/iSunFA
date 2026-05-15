@@ -11,10 +11,14 @@ const ANTI_HALLUCINATION_RULES = `
 [CRITICAL STRICT RULES FOR DATA EXTRACTION]
 You are a pure data extractor. Do NOT perform any business logic judgments or math.
 
-1. Document Type Extraction:
+1. Document Type & Trading Type Extraction:
    - Identify if the document is a "BILL_NOTICE" (Unpaid, e.g., "繳費通知", "請於 XX 日前繳納").
    - Or a "PAYMENT_RECEIPT" (Paid, e.g., "收據", "已扣款", "繳費結果通知").
    - Output "OTHER" if it doesn't clearly match either.
+   - For "tradingType": Determine the voucher type. 
+     - If the company is RECEIVING money (Revenue/Income), output "INCOME".
+     - If the company is PAYING money (Expense/Payment), output "OUTCOME".
+     - If it's a non-cash transfer or unpaid bill notice (Accounts Payable/Receivable), output "TRANSFER".
 
 2. Date Hallucination Guard (Taiwan Region):
    - IF the document year is in ROC format (e.g., "115年"), you MUST add 1911 to convert it to the Gregorian calendar (e.g., "2026").

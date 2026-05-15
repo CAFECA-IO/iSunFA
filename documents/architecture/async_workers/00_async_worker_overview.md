@@ -1,14 +1,14 @@
-# ⚙️ 核心管線：00. 非同步微服務守護行程總覽 (The 7-Daemon Orchestration)
+# ⚙️ 核心管線：00. 非同步微服務守護行程總覽 (The 8-Daemon Orchestration)
 
 > **Date**: 2026-05-15
 > **Author**: Tzuhan
 > **Target**: `src/services/mission.*.service.ts`, `order.*.service.ts`
 
-本文件詳細拆解 iSunFA 最核心的非同步 AI 任務調度架構。我們捨棄了傳統 Web2 的單體式輪詢與重量級依賴 (如 Redis / BullMQ)，轉而設計了一套由 **7 大獨立守護行程 (Daemons)** 組成的微服務架構。這些 Daemons 圍繞著區塊鏈智能合約 (`mission_board.sol`) 與去中心化檔案系統 (`IPFS/Laria`)，透過極具巧思的 **「檔案系統佇列 (File-System Queue)」** 與 **「狀態機接力」**，實現了高可用、具備死信重試與防無窮迴圈的穩健架構。
+本文件詳細拆解 iSunFA 最核心的非同步 AI 任務調度架構。我們捨棄了傳統 Web2 的單體式輪詢與重量級依賴 (如 Redis / BullMQ)，轉而設計了一套由 **8 大獨立守護行程 (Daemons)** 組成的微服務架構。這些 Daemons 圍繞著區塊鏈智能合約 (`mission_board.sol`) 與去中心化檔案系統 (`IPFS/Laria`)，透過極具巧思的 **「檔案系統佇列 (File-System Queue)」** 與 **「狀態機接力」**，實現了高可用、具備死信重試與防無窮迴圈的穩健架構。
 
 ---
 
-## 🗺️ 七大守護行程接力圖 (The 7-Daemon Ballet Flowchart)
+## 🗺️ 八大守護行程接力圖 (The 8-Daemon Ballet Flowchart)
 
 ```mermaid
 graph TD
@@ -23,6 +23,7 @@ graph TD
     IPFS[(Laria / IPFS)]:::contract
     MissionDir[/"本地 MISSION_DIR"/]:::local
 
+    TxTracker["0. TxTracker (金流追蹤員)"]:::web3
     Issuer["1. MissionIssuer (發包員)"]:::web3
     Planner["2. MissionPlanner (調度員)"]:::web3
     Executor["3. MissionExecutor (AI引擎)"]:::local
@@ -32,13 +33,15 @@ graph TD
     Fallbacker["7. MissionFallbacker (回收員)"]:::local
 
     %% Flow
-    Web2DB -- "偵測 PAID 訂單" --> Issuer
-    Issuer -- "上傳 mission.json" --> IPFS
+    TxTracker -- "監聽區塊鏈交易 (Tx Success)" --> Web2DB
+    Web2DB -- "標記 Order 為 PAID" --> TxTracker
+    TxTracker -. "觸發" .-> Issuer
+    Issuer -- "上傳 mission.json (透過 DocumentHelper 切塊編碼)" --> IPFS
     Issuer -- "createTask (鎖定資金)" --> MissionBoard
     Issuer -- "寫入 plan.validator.md (防作弊標準)" --> IssueDir[/"本地 ISSUE_DIR"/]:::local
     
     MissionBoard -- "偵測 Open 任務" --> Planner
-    Planner -- "下載憑證 mission.json" --> IPFS
+    Planner -- "下載憑證 mission.json (透過 DocumentHelper 恢復切塊)" --> IPFS
     Planner -- "建立 plan.executor.json" --> MissionDir
 
     MissionDir -- "讀取待辦計畫" --> Executor
@@ -64,7 +67,11 @@ graph TD
 
 ## 🎭 角色職責深度解析 (Daemon Roles)
 
-系統的狀態流轉完全交由智能合約接管，Node.js 端的這 7 支微服務**互不認識、不直接呼叫彼此**，只透過聆聽區塊鏈與本機檔案目錄來決定下一步動作 (Event-Driven & Shared-Nothing Architecture)。
+系統的狀態流轉完全交由智能合約接管，Node.js 端的這 8 支微服務**互不認識、不直接呼叫彼此**，只透過聆聽區塊鏈與本機檔案目錄來決定下一步動作 (Event-Driven & Shared-Nothing Architecture)。
+
+### 0. `TxTracker` (金流追蹤員)
+- **職責**：Web3 到 Web2 的訂單狀態同步器。
+- **動作**：不斷輪詢智能合約或區塊鏈節點，追蹤使用者的支付交易 (Tx)。一旦確認款項入帳 (`Success`)，立刻將 PostgreSQL 中的 Order 狀態更新為 `PAID`，正式啟動後續的發包流程。
 
 ### 1. `MissionIssuer` (發包員)
 - **職責**：Web2 到 Web3 的實體橋樑。
@@ -113,3 +120,8 @@ Executor 的內部實作了「不確定的機率推論」與「絕對的數學�
 1. **AI 萃取期 (Volatile JSON)**：視為原生 `number`，未受信任。
 2. **型別鑄造 (Type Casting)**：強制轉為 `BigInt` (財務金額) 或 `Decimal` (碳排係數)。
 3. **資料庫與聚合防禦**：全面透過基於 `Decimal.js` 的 `MoneyUtil` 防腐層進行後續運算，並受到 Prisma Boundary Guard 的嚴密保護，徹底阻絕浮點數漂移。
+
+### 📦 隱藏的底層英雄：DocumentHelper 與 Laria 儲存層
+在架構圖中未被獨立列出為 Daemon，但扮演關鍵角色的 `DocumentHelper`，是我們去中心化檔案儲存的基石：
+- **切塊編碼 (Sharding)**：當 `MissionIssuer` 準備將任務上傳時，`DocumentHelper` 會在背景將實體檔案切碎（如將 593 bytes 切割為 8 個 119 bytes 的 shards），以符合分散式網路的傳輸標準。
+- **組裝恢復 (Recovery)**：當 `MissionPlanner` 接到任務時，`DocumentHelper` 會在背景將這 8 個切片自動找齊並無縫還原回實體檔案 (`Recovered file successfully`)。這使得上層的 Daemons 完全不需要處理複雜的 IPFS/Laria 下載與解碼邏輯。

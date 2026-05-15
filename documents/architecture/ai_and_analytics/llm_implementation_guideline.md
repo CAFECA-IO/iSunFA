@@ -54,11 +54,19 @@ LLM 的強項在於「處理非結構化的自然語言」。只要任務的核�
 
 ## 🧱 第三章：iSunFA 混合決策管線實作 (The Hybrid Deterministic Pipeline)
 
-基於上述哲學，我們的憑證解析流程 (`mission.executor.service.ts`) 必須採行「混合決策管線」：
+基於上述哲學，我們的憑證解析流程 (`mission.executor.service.ts`) 必須採行「混合決策管線」，並嚴格執行以下三個維度的防呆：
 
-- **🟢 Stage 1 (AI 單純萃取)**：只要求 AI 忠實萃取客觀特徵：`{"vendor": "中華電信", "type": "繳費通知", "amount": 295}`。
-- **🔵 Stage 2 (TypeScript 決定論分流)**：程式碼維護「黃金廠商映射表」。`if (vendor==="中華電信" && type==="繳費通知") return getTelecomAccrualLines();` (100% 絕對穩定)。
-- **🟠 Stage 3 (AI Fallback)**：當 Stage 2 找不到規則時（罕見發票），才呼叫 `getVoucherLinesPrompt` 讓 AI 推論。
+### 1. 物理枷鎖：Schema Enum 強制約束 (Schema Enum Binding)
+- **原則**：永遠不要依賴 Prompt 要求 AI 輸出特定字串。必須在 JSON Schema 中啟用 `enum: ["A", "B"]` 並設定 `format: "enum"`。
+- **實踐**：如 `documentType` 與 `tradingType`，直接從底層 API 封鎖 AI 創造中文狀態碼（如「繳費結果通知」）的可能性，確保能與後端的精確比對無縫接軌。
+
+### 2. 階段式攔截與混合覆寫 (Stage Orchestration)
+我們的管線不再是死板的全有或全無，而是根據確定性高低進行混合編排：
+- **🟢 Stage 1 (AI 單純萃取)**：只要求 AI 忠實萃取客觀數值與 Enum 特徵：`{"vendor": "中華電信", "documentType": "BILL_NOTICE", "tradingType": "OUTCOME"}`。
+- **🔵 Stage 2 (TypeScript 決定論分流)**：後端程式碼維護「黃金廠商映射表 (`VendorRegistry`)」。透過精確比對，直接給出絕對穩定的會計分錄與 ESG 範疇（如 `SCOPE_3`）。
+- **🟠 Stage 3 (AI Fallback / Hybrid Override)**：
+  - **純 Fallback**：當 Stage 2 查無此廠商時，全權交由 AI 推論。
+  - **混合決策 (HYBRID_STAGE_2_AND_3)**：當 Stage 2 認定範疇與活動，但缺乏動態資料（如碳排係數）時，系統不會阻斷 AI。系統會將 Stage 2 的決定論指引強行注入 Prompt，讓 AI 專心估算係數；並在 AI 產出結果後，**強制用 Stage 2 的規則覆寫 AI 輸出的範疇與活動**，達到「規則引擎鎖死框架，AI 負責推估細節」的完美平衡。
 
 ---
 

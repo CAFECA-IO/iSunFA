@@ -20,13 +20,6 @@ export interface IEsgRule {
   esgActivityType?: EsgActivityTypeKey;
   esgUnit?: MeasurementUnit;
   suppressEsg?: boolean;
-  newCoefficient?: {
-    name: string;
-    emissionFactor: number;
-    unit: string;
-    description: string;
-    source: string;
-  };
 }
 
 export interface IVendorRule {
@@ -67,14 +60,6 @@ const MOCK_VENDOR_RULES: IVendorEntry[] = [
         esgScope: EsgScope.SCOPE_3,
         esgActivityType: "PURCHASED_GOODS",
         esgUnit: MeasurementUnit.TWD,
-        newCoefficient: {
-          name: "電信服務",
-          emissionFactor: 0.065,
-          unit: "kgCO2e/TWD",
-          description:
-            "此為基於台灣產業關聯表估算得出，適用於電信服務類別的平均排放係數。",
-          source: "台灣環保署 EIO-LCA 模型",
-        },
       },
     },
   },
@@ -92,12 +77,6 @@ export class VendorRegistry {
   ): IVendorRule[] | null {
     if (!vendorName) return null;
 
-    const normalizedDocType =
-      documentType.toUpperCase().includes("PAYMENT") ||
-      documentType.toUpperCase().includes("RECEIPT")
-        ? "PAYMENT_RECEIPT"
-        : "BILL_NOTICE";
-
     const normalizedVendor = vendorName.toLowerCase().replace(/\s+/g, "");
 
     for (const vendor of MOCK_VENDOR_RULES) {
@@ -105,8 +84,8 @@ export class VendorRegistry {
         normalizedVendor.includes(alias.toLowerCase().replace(/\s+/g, "")),
       );
 
-      if (matchFound && vendor.rules[normalizedDocType]) {
-        return vendor.rules[normalizedDocType];
+      if (matchFound && vendor.rules[documentType]) {
+        return vendor.rules[documentType];
       }
     }
 
@@ -119,12 +98,6 @@ export class VendorRegistry {
   ): IEsgRule | null {
     if (!vendorName) return null;
 
-    const normalizedDocType =
-      documentType.toUpperCase().includes("PAYMENT") ||
-      documentType.toUpperCase().includes("RECEIPT")
-        ? "PAYMENT_RECEIPT"
-        : "BILL_NOTICE";
-
     const normalizedVendor = vendorName.toLowerCase().replace(/\s+/g, "");
 
     for (const vendor of MOCK_VENDOR_RULES) {
@@ -132,8 +105,8 @@ export class VendorRegistry {
         normalizedVendor.includes(alias.toLowerCase().replace(/\s+/g, "")),
       );
 
-      if (matchFound && vendor.esgRules && vendor.esgRules[normalizedDocType]) {
-        return vendor.esgRules[normalizedDocType];
+      if (matchFound && vendor.esgRules && vendor.esgRules[documentType]) {
+        return vendor.esgRules[documentType];
       }
     }
 
