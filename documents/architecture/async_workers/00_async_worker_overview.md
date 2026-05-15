@@ -35,6 +35,7 @@ graph TD
     Web2DB -- "偵測 PAID 訂單" --> Issuer
     Issuer -- "上傳 mission.json" --> IPFS
     Issuer -- "createTask (鎖定資金)" --> MissionBoard
+    Issuer -- "寫入 plan.validator.md (防作弊標準)" --> IssueDir[/"本地 ISSUE_DIR"/]:::local
     
     MissionBoard -- "偵測 Open 任務" --> Planner
     Planner -- "下載憑證 mission.json" --> IPFS
@@ -88,9 +89,9 @@ graph TD
 - **職責**：將 Web3 的真相寫回 Web2 供使用者檢視。
 - **動作**：掃描本地 `ISSUE_DIR` 尋找 Validator 留下的 `approved.*.md`。讀取本地最終確定版的產出，安全地寫回 PostgreSQL 總帳本，並將原本的訂單標記為 `COMPLETED`。
 
-### 7. `MissionFallbacker` (爭議與回收員)
-- **職責**：處理邊界錯誤與死信佇列 (DLQ)。
-- **動作**：負責清理本地目錄的殭屍任務。當任務被 Validator 拒絕達 3 次時，寫入 `giveup.md` 將任務打入死信佇列 (DLQ)。(TODO: 未來實作合約的 `raiseDispute` 爭議仲裁機制)
+### 7. `MissionFallbacker` (結算與回收員)
+- **職責**：任務最終狀態的結算與死信佇列 (DLQ) 處理。
+- **動作**：定期巡視任務最終狀態。若任務已在鏈上核准 (Approved)，則精算 Token 耗損與利潤率並寫入 `close.md` 結案；若任務被拒絕達 3 次，則寫入 `giveup.md` 打入死信佇列。(TODO: 未來實作合約的 `raiseDispute` 爭議仲裁機制)
 
 ---
 
@@ -102,8 +103,8 @@ graph TD
 
 ### 🏗️ 混合決定論管線 (Hybrid Deterministic Pipeline)
 Executor 的內部實作了「不確定的機率推論」與「絕對的數學真理」拆分。
-1. **任務層級分流 (`skillRegistry`)**：判斷是否為預先寫死的 TypeScript 技能。
-2. **廠商查表防禦 (`VendorRegistry`)**：決定論查表，100% 杜絕 LLM 猜測會計科目。
+1. **廠商查表防禦 (`VendorRegistry`)**：最優先攔截，走決定論查表，100% 杜絕 LLM 猜測會計科目。
+2. **任務層級分流 (`skillRegistry`)**：若未被攔截，判斷是否為預先寫死的 TypeScript 技能。
 3. **AI 推論 Fallback**：若皆無命中，才會退回到純粹的 Gemini API 請求。
 
 ### 🧮 數值型別防腐層 (Type Flow & Anti-Corruption)
