@@ -91,3 +91,77 @@ export const ESG_INDUSTRY_BENCHMARKS: IEsgIndustryBenchmark[] = [
     benchmarkDescription: "esg_verify.esg_industry_benchmarks.industry_10.desc",
   },
 ];
+
+// Info: (20260515 - Julian) 產業類別列舉
+export enum IndustryCategory {
+  SEMICONDUCTOR = "半導體業",
+  CHEMICAL = "化工業",
+  METAL_PROCESSING = "傳統金屬加工業",
+  PLASTIC_INJECTION = "塑膠射出成型業",
+  ELECTRONIC_COMPONENTS = "電子零組件業",
+  GENERAL_MANUFACTURING = "一般製造業",
+  TEXTILE = "紡織業",
+}
+
+export interface IEsgIndustryLossRatioBenchmark {
+  industryName: IndustryCategory;
+  lossRatioMin: number;
+  lossRatioMax: number;
+  description: string;
+}
+
+// Info: (20260515 - Julian) 產業類別物質損耗率參考值，用於品質檢查與估算
+export const ESG_INDUSTRY_LOSS_RATIO_BENCHMARKS: Record<
+  string,
+  IEsgIndustryLossRatioBenchmark
+> = {
+  [IndustryCategory.SEMICONDUCTOR]: {
+    industryName: IndustryCategory.SEMICONDUCTOR,
+    lossRatioMin: 0.01,
+    lossRatioMax: 0.03,
+    description:
+      "氣體與化學品多在密閉系統或有高效率尾氣處理設備，一般製程耗損率與溢散率較低（約 1% ~ 3%）。",
+  },
+  [IndustryCategory.CHEMICAL]: {
+    industryName: IndustryCategory.CHEMICAL,
+    lossRatioMin: 0.02,
+    lossRatioMax: 0.05,
+    description:
+      "受槽體揮發、管線洩漏與反應過程溢散影響，視製程密閉程度而定（一般約 2% ~ 5%）。高度揮發性溶劑無回收裝置時可能達 10% 以上。",
+  },
+  [IndustryCategory.METAL_PROCESSING]: {
+    industryName: IndustryCategory.METAL_PROCESSING,
+    lossRatioMin: 0.05,
+    lossRatioMax: 0.1,
+    description:
+      "切削液、潤滑油及金屬清洗溶劑之揮發與工件帶出耗損較高（約 5% ~ 10%）。未回收之高揮發性清洗溶劑揮發率通常視為 100%。",
+  },
+  [IndustryCategory.PLASTIC_INJECTION]: {
+    industryName: IndustryCategory.PLASTIC_INJECTION,
+    lossRatioMin: 0.03,
+    lossRatioMax: 0.05,
+    description:
+      "主要來自成型廢料、機台清料（Purging）與邊角料等實體耗損（約 3% ~ 5%）。",
+  },
+  [IndustryCategory.ELECTRONIC_COMPONENTS]: {
+    industryName: IndustryCategory.ELECTRONIC_COMPONENTS,
+    lossRatioMin: 0.02,
+    lossRatioMax: 0.04,
+    description:
+      "如 PCB、被動元件等製程中之化學槽液揮發、顯影蝕刻液微量帶出（約 2% ~ 4%）。",
+  },
+  [IndustryCategory.GENERAL_MANUFACTURING]: {
+    industryName: IndustryCategory.GENERAL_MANUFACTURING,
+    lossRatioMin: 0.03,
+    lossRatioMax: 0.05,
+    description:
+      "若無廠內實際製程耗損數據，以質量平衡法計算時，預設耗損率可抓約 3% ~ 5% 作為合理之工程估算。",
+  },
+  [IndustryCategory.TEXTILE]: {
+    industryName: IndustryCategory.TEXTILE,
+    lossRatioMin: 0.05,
+    lossRatioMax: 0.1,
+    description:
+      "特別是染整製程中，染料、助劑與化學溶劑易隨廢水排出或於烘乾過程中揮發；紡紗與織布亦有飛花與下腳料耗損（約 5% ~ 10%）。",
+  },
+} as const;
