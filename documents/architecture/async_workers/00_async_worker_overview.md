@@ -33,6 +33,7 @@ graph TD
 
     %% Flow
     Web2DB -- "偵測 PAID 訂單" --> Issuer
+    Issuer -- "上傳 mission.json" --> IPFS
     Issuer -- "createTask (鎖定資金)" --> MissionBoard
     
     MissionBoard -- "偵測 Open 任務" --> Planner
@@ -49,13 +50,12 @@ graph TD
     MissionBoard -- "偵測 PendingReview" --> Validator
     Validator -- "驗證 AI 信心度" --> IPFS
     Validator -- "approveSubmission (撥款)" --> MissionBoard
+    Validator -- "寫入 approved.md 與結果" --> IssueDir[/"本地 ISSUE_DIR"/]:::local
 
-    MissionBoard -- "偵測 Approved" --> Recorder
-    Recorder -- "下載最終結果" --> IPFS
+    IssueDir -- "讀取核准結果" --> Recorder
     Recorder -- "標記 COMPLETED 並寫回總帳" --> Web2DB
 
     Fallbacker -. "監控 DLQ 與超時" .-> MissionDir
-    Fallbacker -. "raiseDispute" .-> MissionBoard
 ```
 
 ---
@@ -74,7 +74,7 @@ graph TD
 
 ### 3. `MissionExecutor` (AI 運算引擎)
 - **職責**：系統的算力心臟，執行純粹的 AI 推論與決定論管線。
-- **動作**：掃描 `MISSION_DIR`。執行混合決策管線 (Skill vs LLM)，將結果寫成 `result.md`。若發生錯誤，則寫入 `failed_*.md` 供後續重試；若嚴重崩潰，則寫入 `giveup.md` (DLQ)。
+- **動作**：掃描 `MISSION_DIR`。執行混合決策管線 (Skill vs LLM)，將結果寫成 `result.md`。若發生錯誤，則寫入 `failed_*.md`。若偵測到 `giveup.md` 則會跳過執行。
 
 ### 4. `MissionCommitor` (上鏈員)
 - **職責**：產出保護與提交。
@@ -86,11 +86,11 @@ graph TD
 
 ### 6. `MissionRecorder` (總帳抄寫員)
 - **職責**：將 Web3 的真相寫回 Web2 供使用者檢視。
-- **動作**：聆聽合約上 `Approved (2)` 的任務。從 IPFS 抓回最終確定版的產出，安全地寫回 PostgreSQL 總帳本，並將原本的訂單標記為 `COMPLETED`。
+- **動作**：掃描本地 `ISSUE_DIR` 尋找 Validator 留下的 `approved.*.md`。讀取本地最終確定版的產出，安全地寫回 PostgreSQL 總帳本，並將原本的訂單標記為 `COMPLETED`。
 
 ### 7. `MissionFallbacker` (爭議與回收員)
 - **職責**：處理邊界錯誤與死信佇列 (DLQ)。
-- **動作**：負責清理本地目錄的殭屍任務，並在 Validator 拒絕結果或是 AI 產生幻覺時，負責強制重啟執行緒，或是呼叫合約的 `raiseDispute` 進入爭議仲裁賽局。
+- **動作**：負責清理本地目錄的殭屍任務。當任務被 Validator 拒絕達 3 次時，寫入 `giveup.md` 將任務打入死信佇列 (DLQ)。(TODO: 未來實作合約的 `raiseDispute` 爭議仲裁機制)
 
 ---
 
