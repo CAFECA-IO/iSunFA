@@ -6,7 +6,7 @@ export const getJournalPrompt = (accountBook?: IAccountBookBase | null) => {
 
   // Info: (20260326 - Julian) 帳本資訊
   const accountBookInfo = accountBook
-    ? `\n  這筆日記帳預計寫入「${accountBook.name}」帳本中，會計原則國家: ${accountBook.country || "TW"}，本位幣: ${accountBook.currency}。`
+    ? `\n  這筆日記帳預計寫入「${accountBook.name}」帳本中，會計原則國家: ${accountBook.country || "TW"}，本位幣: ${accountBook.currency}。請將憑證上的幣值轉換為本位幣。`
     : "";
 
   // Info: (20260326 - Julian) 帳本規則
@@ -21,8 +21,6 @@ export const getJournalPrompt = (accountBook?: IAccountBookBase | null) => {
       # 事件摘要 - 用一段文字描述這份憑證背後代表「${accountBook?.name || "帳本公司"}」的企業活動，描述中盡可能包含人事時地物。
       # 憑證資訊 - 盡可能條列這張憑證提供的所有資訊。
       # 其他備註 - 這張憑證有什麼其他需要注意的地方，包含且不限於是否合乎邏輯、是否有偽造痕跡、是否合乎格式、數據是否正常、是否合乎市場行情，或任何其他備註。
-
-      注意：僅能從憑證中提取「原幣別 (Original Currency)」與「原金額 (Original Amount)」。所有與本位幣的轉換將由主系統接手處理。
 
       並請在 aiNote 欄位寫下 AI 分析的邏輯，不需要任何標題，直接寫下分析邏輯或列點描述即可。
       請務必回傳一個 JSON 格式，包含以下欄位（不要加入任何額外的文字，也不要包裝在 markdown 程式碼區塊中，直接回傳 JSON 字串）：

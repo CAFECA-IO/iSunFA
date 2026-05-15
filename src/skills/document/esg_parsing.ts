@@ -42,10 +42,6 @@ export class EsgParsingSkill implements ITaskSkill {
       const responseSchema: Schema = {
         type: SchemaType.OBJECT,
         properties: {
-          tradingDate: {
-            type: SchemaType.STRING,
-            description: "交易日期 YYYY-MM-DD",
-          },
           scope: {
             type: SchemaType.STRING,
             description: "範疇，如 SCOPE_1, SCOPE_2, SCOPE_3",
@@ -55,47 +51,10 @@ export class EsgParsingSkill implements ITaskSkill {
           amount: { type: SchemaType.NUMBER, description: "數量" },
           unit: { type: SchemaType.STRING, description: "單位" },
           emissions: { type: SchemaType.NUMBER, description: "碳排放量" },
-          intensity: {
-            type: SchemaType.STRING,
-            description: "排放強度 HIGH, MEDIUM, LOW",
-          },
-          dqiScore: {
-            type: SchemaType.NUMBER,
-            description: "數據品質分數 1-5",
-          },
           confidence: {
             type: SchemaType.NUMBER,
             description: "信心指數 1-100",
           },
-          coefficientId: {
-            type: SchemaType.STRING,
-            description: "使用既有係數之 ID",
-            nullable: true,
-          },
-          newCoefficient: {
-            type: SchemaType.OBJECT,
-            nullable: true,
-            properties: {
-              name: { type: SchemaType.STRING },
-              description: { type: SchemaType.STRING },
-              unit: { type: SchemaType.STRING },
-              emissionFactor: { type: SchemaType.NUMBER },
-              source: { type: SchemaType.STRING },
-            },
-          },
-          emissionSourceId: {
-            type: SchemaType.STRING,
-            description: "使用既有排放源歸口 ID",
-            nullable: true,
-          },
-          newEmissionSource: {
-            type: SchemaType.OBJECT,
-            nullable: true,
-            properties: {
-              name: { type: SchemaType.STRING },
-            },
-          },
-          aiNote: { type: SchemaType.STRING, description: "AI 分析備註" },
         },
         required: [
           "scope",
@@ -105,7 +64,6 @@ export class EsgParsingSkill implements ITaskSkill {
           "unit",
           "emissions",
           "confidence",
-          "aiNote",
         ],
       };
 
