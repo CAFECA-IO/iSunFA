@@ -18,6 +18,7 @@ import { isuncoin } from "@/lib/viem_public";
 import { orderRepo } from "@/repositories/order.repo";
 import { ORDER_STATUS } from "@/constants/status";
 import { analysisRepo } from "@/repositories/analysis.repo";
+import { MoneyUtil } from "@/lib/utils/money";
 
 // Info: (20260420 - Luphia) ERC20 & MissionBoard ABIs
 const CP_ABI = parseAbi([
@@ -232,13 +233,16 @@ export async function processNext() {
             }));
         }
 
-        let missionAmount = Number(order.amount);
+        let missionAmount = MoneyUtil.toDecimal(
+          order.amount as string | number,
+        ).toNumber();
         let missionItems = orderDataObj.items || [];
 
         if (category === "CERTIFICATE_ANALYSIS" && itemsToProcess.length > 0) {
-          missionAmount = Number(
-            (Number(order.amount) / itemsToProcess.length).toFixed(2),
-          );
+          missionAmount = MoneyUtil.toDecimal(order.amount as string | number)
+            .dividedBy(itemsToProcess.length)
+            .toDecimalPlaces(2)
+            .toNumber();
           if (Array.isArray(missionItems)) {
             missionItems = missionItems.map((item) => {
               const itemObj = item;

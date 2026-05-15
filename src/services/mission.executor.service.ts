@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { getPriorityEnvConfig } from "@/services/env.service";
 import { ChatService } from "@/services/chat.service";
+import { MoneyUtil } from "@/lib/utils/money";
 import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
@@ -186,7 +187,9 @@ export async function processNext() {
                   particular: rule.isDebit
                     ? `支付 ${baseParsed.vendorName}`
                     : `應付 ${baseParsed.vendorName}`,
-                  amount: Number(baseParsed.totalAmount) || 0,
+                  amount: MoneyUtil.parseInput(
+                    String(baseParsed.totalAmount || "0"),
+                  ),
                 }));
 
                 console.log(
