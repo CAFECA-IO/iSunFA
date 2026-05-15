@@ -56,7 +56,8 @@ graph TD
     IssueDir -- "讀取核准結果" --> Recorder
     Recorder -- "標記 COMPLETED 並寫回總帳" --> Web2DB
 
-    Fallbacker -. "監控 DLQ 與超時" .-> MissionDir
+    MissionBoard -- "查詢 Approved / Rejected 狀態" --> Fallbacker
+    Fallbacker -. "精算利潤寫入 close / 失敗寫入 giveup" .-> MissionDir
 ```
 
 ---
@@ -75,11 +76,11 @@ graph TD
 
 ### 3. `MissionExecutor` (AI 運算引擎)
 - **職責**：系統的算力心臟，執行純粹的 AI 推論與決定論管線。
-- **動作**：掃描 `MISSION_DIR`。執行混合決策管線 (Skill vs LLM)，將結果寫成 `result.md`。若發生錯誤，則寫入 `failed_*.md`。若偵測到 `giveup.md` 則會跳過執行。
+- **動作**：掃描 `MISSION_DIR` 執行混合決策管線，將結果寫成 `result.md`。若發生錯誤，除了寫入 `failed_*.md` 外，**會刻意輸出帶有錯誤標記的 `result.md` 以推進狀態機至後續的退回流程**。若偵測到 `giveup.md` 則會直接跳過。
 
 ### 4. `MissionCommitor` (上鏈員)
 - **職責**：產出保護與提交。
-- **動作**：掃描本地 `MISSION_DIR` 找出執行完畢的 `result.md`。將其切塊並加密上傳至 Laria (IPFS) 取得 `resultCid`，接著呼叫合約的 `submitResult`，將任務推至 `PendingReview (1)`。
+- **動作**：掃描本地 `MISSION_DIR` 找出執行完畢的 `result.md`，並將其切塊加密上傳至 Laria 取得 `resultCid`。**同時，讀取 `execution_log.json` 總結 AI Token 消耗量**，將兩者一併透過 `submitResult` 送交合約，將任務推至 `PendingReview (1)`。
 
 ### 5. `IssueValidator` (自動化查帳員)
 - **職責**：取代傳統的人工覆核 (HITL)。
