@@ -47,7 +47,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **[第一順位：Architect 穩定性任務 (底層管線防護)]**
 - **✅ Done (2026-05-14)：廢除 Markdown 故事腦補與全域替換 JSON 擷取**：**(幻覺地雷拆彈)** 明令禁止要求 AI 撰寫「事件摘要或故事」。全面強制升級為 Gemini 的 `responseSchema` (Structured Output) 與 `application/json`，徹底拔除舊版脆弱的 `/\{[\s\S]*\}/` Regex 擷取，斷絕資料靜默遺失風險。
 - **✅ Done (2026-05-14)：極致去中心化與無退款防禦 (Decentralized Worker & DLQ)**：**取消**原本的 POSIX 原子鎖與 Saga 點數退款機制。確立 Worker 為獨立外部節點，負責從鏈上抓取檔案建立完全隔離的檔案系統，天然無 Race Condition。實作「無退款權限」原則，Worker 的唯一目標是**「無限重試至成功 (Retry-Until-Success)」**，摒棄傳統遇到錯誤就妥協退款的機制。
-- **⏳ In Progress (2026-05-15)：實作 Post-Parsing 攔截器與 Mock Facades (Backend Interceptors)**：接續 AI 降級決策，於核心寫入管線 (`document_sync.repo.ts`) 建置匯率 (FX)、會計科目 (AccountCode) 與碳排 (ESG) 三大攔截閘門。導入 Mock-First 策略預判外部模組介面，確保主引擎能即時阻斷 AI 的數學與邏輯幻覺。
+- **✅ Done (2026-05-15)：實作 Post-Parsing 攔截器與 Mock Facades (Backend Interceptors)**：接續 AI 降級決策，於核心寫入管線建置匯率 (FX)、會計科目 (AccountCode) 與碳排 (ESG) 三大攔截閘門。已完成 `VendorRegistry` Mock 與 `MoneyUtil` 防腐層，確保主引擎能即時阻斷 AI 的數學與邏輯幻覺。
 
 
 - **[第二順位：CPA 財務合規任務 (核心財務防禦)]**
