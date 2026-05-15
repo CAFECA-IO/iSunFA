@@ -115,7 +115,7 @@ export class DocumentSyncRepository {
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
             confidence,
             isVerified: confidence > 85,
-            aiNote: jd.aiNote ?? "無 AI 分析備註",
+            aiNote: jd.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]",
           };
 
           if (existingJournal) {
@@ -157,7 +157,7 @@ export class DocumentSyncRepository {
           const vd = {
             ...(voucherBase?.data || voucherBase || {}),
             ...(voucherLines?.data || voucherLines || {}),
-            aiNote: `- 基本資訊分析：${voucherBase?.aiNote || voucherBase?.data?.aiNote || ""}\n- 會計科目分錄分析：${voucherLines?.aiNote || voucherLines?.data?.aiNote || ""}`,
+            aiNote: `- [[I18N_BASE_INFO_ANALYSIS]]：${voucherBase?.aiNote || voucherBase?.data?.aiNote || ""}\n- [[I18N_ENTRY_ANALYSIS]]：${voucherLines?.aiNote || voucherLines?.data?.aiNote || ""}`,
           };
           const tradingDate = new Date(vd.tradingDate || new Date());
           const typeMap: Record<string, VoucherTradingType> = {
@@ -225,7 +225,7 @@ export class DocumentSyncRepository {
             accountBookId,
             confidence,
             isVerified: confidence > 85,
-            aiNote: vd.aiNote ?? "無 AI 分析備註",
+            aiNote: vd.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]",
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
             lines: {
               create: linesToCreate,
@@ -289,7 +289,8 @@ export class DocumentSyncRepository {
                 emissionFactor: new Prisma.Decimal(
                   String(ed.newCoefficient.emissionFactor) || "0",
                 ),
-                source: ed.newCoefficient.source || "AI 動態擷取",
+                source:
+                  ed.newCoefficient.source || "[[I18N_AI_DYNAMIC_EXTRACTION]]",
                 accountBookId: null,
                 isVerified: false, // Info: (20260514 - Tzuhan) 未經驗證的係數
               },
@@ -343,12 +344,12 @@ export class DocumentSyncRepository {
           }
 
           let calculatedEmissions = esgAmount.mul(emissionFactorValue);
-          let aiNote = ed.aiNote ?? "無 AI 分析備註";
+          let aiNote = ed.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]";
 
           if (isSuspense) {
             calculatedEmissions = new Prisma.Decimal(0);
             recordIsVerified = false;
-            aiNote = "🚨 懸記：缺少碳排係數主檔，已凍結計算。\n" + aiNote;
+            aiNote = "[[I18N_ESG_SUSPENSE_WARNING]]\n" + aiNote;
           }
 
           const esgData: Prisma.EsgRecordUncheckedCreateInput = {

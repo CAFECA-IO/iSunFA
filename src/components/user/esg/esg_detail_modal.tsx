@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-
 import {
   Calculator,
   ChartColumnDecreasing,
@@ -12,6 +10,7 @@ import {
   Save,
   X,
 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
@@ -27,6 +26,7 @@ import {
   EsgActivityTypeKey,
 } from "@/constants/esg_activity_type";
 import { MoneyUtil } from "@/lib/utils/money";
+import { translateAiNote } from "@/utils/ai_note_translator";
 
 interface IEsgDetailModalProps {
   isOpen: boolean;
@@ -272,7 +272,7 @@ export default function EsgDetailModal({
           <div className="ml-auto">
             <AiConfidence
               confidence={formData.confidence}
-              note={formData.aiNote}
+              note={translateAiNote(formData.aiNote, t)}
             />
           </div>
         </div>
