@@ -234,12 +234,12 @@ export async function processNext() {
         }
 
         let missionAmount = MoneyUtil.toDecimal(
-          order.amount as string | number,
+          order.amount.toString(),
         ).toNumber();
         let missionItems = orderDataObj.items || [];
 
         if (category === "CERTIFICATE_ANALYSIS" && itemsToProcess.length > 0) {
-          missionAmount = MoneyUtil.toDecimal(order.amount as string | number)
+          missionAmount = MoneyUtil.toDecimal(order.amount.toString())
             .dividedBy(itemsToProcess.length)
             .toDecimalPlaces(2)
             .toNumber();
