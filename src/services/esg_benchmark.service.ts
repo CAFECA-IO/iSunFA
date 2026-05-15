@@ -7,7 +7,7 @@ export class EsgBenchmarkService {
   // Info: (20260515 - Julian) 取得特定產業容損率
   // @param industry 產業類別
   // @returns 平均耗損率 (%)
-  getLossRatio(industry: string): number {
+  static getLossRatio(industry: string): number {
     // Info: (20260515 - Julian) 統一產業類別名稱
     const normalizedIndustry = industry?.trim() as IndustryCategory;
 
