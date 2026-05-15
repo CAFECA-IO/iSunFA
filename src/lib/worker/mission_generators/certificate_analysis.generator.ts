@@ -90,6 +90,10 @@ export function generateCertificateAnalysisMission(
           vendorName: { type: SchemaType.STRING },
           documentType: { type: SchemaType.STRING },
           totalAmount: { type: SchemaType.NUMBER },
+          currency: {
+            type: SchemaType.STRING,
+            description: "Currency code, e.g. TWD, USD, JPY",
+          },
           tradingDate: { type: SchemaType.STRING },
           tradingType: { type: SchemaType.STRING },
           note: { type: SchemaType.STRING },
@@ -100,6 +104,7 @@ export function generateCertificateAnalysisMission(
           "vendorName",
           "documentType",
           "totalAmount",
+          "currency",
           "tradingDate",
           "tradingType",
           "note",
