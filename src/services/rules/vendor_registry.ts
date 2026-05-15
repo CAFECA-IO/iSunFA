@@ -7,6 +7,11 @@
  * 此檔案僅提供一個非常迷你的測試用陣列，用來驗證攔截器。
  */
 
+import { ACCOUNTS } from "@/constants/accounts";
+
+const getTwCode = (code: string) =>
+  ACCOUNTS.TW.find((a) => a.code === code)?.code || code;
+
 export interface IVendorRule {
   accountingCode: string;
   isDebit: boolean;
@@ -26,12 +31,12 @@ const MOCK_VENDOR_RULES: IVendorEntry[] = [
     aliases: ["中華電信", "中華電信股份有限公司", "chunghwa telecom", "cht"],
     rules: {
       PAYMENT_RECEIPT: [
-        { accountingCode: "2171", isDebit: true }, // Info: (20260515 - Tzuhan) 借：應付帳款 (沖銷)
-        { accountingCode: "1103", isDebit: false }, // Info: (20260515 - Tzuhan) 貸：銀行存款
+        { accountingCode: getTwCode("2171"), isDebit: true }, // Info: (20260515 - Tzuhan) 借：應付帳款 (沖銷)
+        { accountingCode: getTwCode("1103"), isDebit: false }, // Info: (20260515 - Tzuhan) 貸：銀行存款
       ],
       BILL_NOTICE: [
-        { accountingCode: "6215", isDebit: true }, // Info: (20260515 - Tzuhan) 借：管理費用 - 郵電費
-        { accountingCode: "2171", isDebit: false }, // Info: (20260515 - Tzuhan) 貸：應付帳款
+        { accountingCode: getTwCode("6215"), isDebit: true }, // Info: (20260515 - Tzuhan) 借：管理費用 - 郵電費
+        { accountingCode: getTwCode("2171"), isDebit: false }, // Info: (20260515 - Tzuhan) 貸：應付帳款
       ],
     },
   },
