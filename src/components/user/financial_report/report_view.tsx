@@ -392,7 +392,7 @@ export default function ReportView() {
                           href={`/user/account_book/${accountBookId}/${item.type === "esg" ? "esg" : "voucher"}?openId=${item.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex flex-col text-[11px] font-medium text-red-500 hover:text-red-700 hover:underline"
+                          className="flex flex-col text-[11px] font-medium text-red-500 no-underline hover:text-red-700"
                         >
                           <span className="truncate">{item.id}</span>
                           <span className="truncate font-normal text-red-400">
