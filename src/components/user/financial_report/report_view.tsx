@@ -15,6 +15,7 @@ import { IApiResponse } from "@/lib/utils/response";
 import { downloadHtmlAsPdf } from "@/lib/utils/pdf";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import { useTranslation } from "@/i18n/i18n_context";
+import { translateAiNote } from "@/utils/ai_note_translator";
 
 export default function ReportView() {
   const { t } = useTranslation();
@@ -396,7 +397,7 @@ export default function ReportView() {
                         >
                           <span className="truncate">{item.id}</span>
                           <span className="truncate font-normal text-red-400">
-                            {item.note}
+                            {translateAiNote(item.note, t)}
                           </span>
                         </a>
                       </li>
