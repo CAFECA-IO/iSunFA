@@ -6,7 +6,7 @@ export function translateAiNote(
 
   let translated = note;
 
-  // Replace strictly formatted keys [[I18N_...]]
+  // Info: (20260515 - Tzuhan) Replace strictly formatted keys [[I18N_...]]
   translated = translated.replace(/\[\[I18N_(.*?)\]\]/g, (match, key) => {
     switch (key) {
       case "BASE_INFO_ANALYSIS":
@@ -24,7 +24,7 @@ export function translateAiNote(
     }
   });
 
-  // Backward compatibility for old Chinese hardcoded strings
+  // Info: (20260515 - Tzuhan) Backward compatibility for old Chinese hardcoded strings
   translated = translated.replace("無 AI 分析備註", t("common.ai_notes.empty"));
   translated = translated.replace(
     "- 基本資訊分析：",
