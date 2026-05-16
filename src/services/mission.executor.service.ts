@@ -112,7 +112,7 @@ export async function processNext() {
       const missionJsonStr = await fs.readFile(missionJsonPath, "utf8");
       const missionData = JSON.parse(missionJsonStr) as Record<string, unknown>;
       const pseudoMission: IPseudoMission = {
-        id: String(missionData.orderId || "MOCK_MISSION"),
+        id: String(folderName || "MOCK_MISSION"),
         data: missionData,
       };
 
@@ -241,10 +241,9 @@ export async function processNext() {
                   ctx.journalId ||
                   "default";
 
-                if (recordKey && ctx.accountBookId) {
+                if (recordKey) {
                   if (!aggregatedResultsByFileId[recordKey]) {
                     aggregatedResultsByFileId[recordKey] = {
-                      accountBookId: ctx.accountBookId,
                       fileId: ctx.fileId || "",
                       voucherIdContext: ctx.voucherId || "",
                       esgRecordIdContext: ctx.esgRecordId || "",

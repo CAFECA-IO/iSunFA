@@ -7,9 +7,10 @@ import {
   IAnalysisParams,
   IOrderParams,
 } from "@/lib/analysis/pricing";
-import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { accountBookRepo } from "@/repositories/account_book.repo";
+import { orderRepo } from "@/repositories/order.repo";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import {
   ANALYSIS_CATEGORY,
@@ -74,13 +75,7 @@ export async function generateAnalysisOrder(
   // Info: (20260320 - Tzuhan) Prerequisite check: Net Zero Emissions requires Carbon Health Check
   if (analysisData.category === ANALYSIS_CATEGORY.NET_ZERO_EMISSIONS) {
     if (!analysisData.keyword) {
-      throw new AppError({
-        code: "VA000099",
-        message: String(
-          "Missing company info (keyword) for net_zero_emissions",
-        ).slice(0, 30),
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      throw new AppError(API_ERRORS.VL_MISSING_COMPANY_INFO);
     }
     const prerequisite = await analysisRepo.findAnalysisByKeywordAndType(
       userId,
@@ -88,13 +83,7 @@ export async function generateAnalysisOrder(
       analysisData.keyword,
     );
     if (!prerequisite) {
-      throw new AppError({
-        code: "VA000099",
-        message: String(
-          "必須先完成該企業的「企業碳健檢（Carbon Health Check）」分析，才能產出「淨零碳排（Net Zero Emissions）」報告。",
-        ).slice(0, 30),
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      throw new AppError(API_ERRORS.VL_PREREQUISITE_FAILED);
     }
 
     const latestNetZero = await analysisRepo.findAnalysisByKeywordAndType(
@@ -107,13 +96,7 @@ export async function generateAnalysisOrder(
       latestNetZero &&
       prerequisite.createdAt.getTime() <= latestNetZero.createdAt.getTime()
     ) {
-      throw new AppError({
-        code: "VA000099",
-        message: String(
-          "您的企業碳健檢資料已過期！請先針對該企業「重新生成一份最新的碳健檢報告」，再產出淨零碳排報告。",
-        ).slice(0, 30),
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      throw new AppError(API_ERRORS.VL_EXPIRED_DATA);
     }
   }
 
@@ -139,23 +122,10 @@ export async function generateAnalysisOrder(
       const hasData = await accountBookRepo.hasAssociatedEsgData(userId, taxId);
 
       if (!hasData) {
-        throw new AppError({
-          code: "VA000099",
-          message: String(
-            "該企業尚未建立 ESG 或財務數據紀錄。請先上傳相關資料，或是改為申請「外部分析報告」。",
-          ).slice(0, 30),
-          status: ApiCode.VALIDATION_ERROR,
-        });
+        throw new AppError(API_ERRORS.VL_NO_ESG_DATA);
       }
     } else {
-      throw new AppError({
-        code: "VA000099",
-        message: String("內部分析報告需要提供有效之企業資訊 (統編)。").slice(
-          0,
-          30,
-        ),
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      throw new AppError(API_ERRORS.VL_MISSING_COMPANY_INFO);
     }
   }
 
@@ -243,27 +213,15 @@ export async function getPendingOrder(orderId: string, userId: string) {
   const order = await paymentRepo.getOrderById(orderId);
 
   if (!order) {
-    throw new AppError({
-      code: "NO000099",
-      message: "Order not found",
-      status: ApiCode.NOT_FOUND,
-    });
+    throw new AppError(API_ERRORS.NF_ORDER);
   }
 
   if (order.userId !== userId) {
-    throw new AppError({
-      code: "FO000099",
-      message: "Order does not belong to user",
-      status: ApiCode.FORBIDDEN,
-    });
+    throw new AppError(API_ERRORS.AUTH_PERMISSION_DENIED);
   }
 
   if (order.status !== ORDER_STATUS.PENDING) {
-    throw new AppError({
-      code: "VA000099",
-      message: "Order is not pending",
-      status: ApiCode.VALIDATION_ERROR,
-    });
+    throw new AppError(API_ERRORS.VL_INVALID_ORDER_STATUS);
   }
 
   return order;
@@ -291,4 +249,17 @@ export async function completeOrder(
 
 export async function failOrder(orderId: string, reason: string) {
   await paymentRepo.failOrder(orderId, reason);
+}
+
+export async function retryFailedOrder(orderId: string) {
+  const order = await paymentRepo.getOrderById(orderId);
+  if (!order) {
+    throw new AppError(API_ERRORS.NF_ORDER);
+  }
+
+  if (order.status !== ORDER_STATUS.FAILED) {
+    throw new AppError(API_ERRORS.VL_INVALID_ORDER_STATUS);
+  }
+
+  await orderRepo.updateStatus(orderId, ORDER_STATUS.PAID);
 }

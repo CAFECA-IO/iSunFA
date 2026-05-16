@@ -20,21 +20,13 @@ export function generateCertificateAnalysisMission(
     | IAccountBookBase
     | undefined;
 
-  const paramsObj = params as unknown as {
-    files?: string[];
-    accountBookId?: string;
-  };
-  const data =
-    (params.data as { files?: string[]; accountBookId?: string }) || {};
-  const accountBookId =
-    data.accountBookId || paramsObj.accountBookId || accountBook?.id || "";
   const fileId = params.fileId; // Info: (20260422 - Luphia) The single targeted file hash passed by MissionIssuer
 
   const tasks: ITaskDefinition[] = [];
 
   const context = JSON.stringify({
     fileId,
-    accountBookId,
+    accountBook,
   });
 
   tasks.push({

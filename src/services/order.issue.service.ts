@@ -42,7 +42,6 @@ export class OrderIssueService {
             if (Array.isArray(taskIds) && taskIds.length > 0) {
               let allCompleted = true;
               let anyFailed = false;
-              let anyPending = false;
               let anyExecuting = false;
 
               let totalConfidence = 0;
@@ -125,7 +124,6 @@ export class OrderIssueService {
                 }
 
                 if (taskStatus === ORDER_STATUS.FAILED) anyFailed = true;
-                if (taskStatus === ORDER_STATUS.PENDING) anyPending = true;
                 if (taskStatus === ORDER_STATUS.EXECUTING) anyExecuting = true;
                 if (taskStatus !== ORDER_STATUS.COMPLETED) allCompleted = false;
 
@@ -136,9 +134,14 @@ export class OrderIssueService {
               }
 
               if (anyFailed) executionStatus = ORDER_STATUS.FAILED;
-              else if (anyPending) executionStatus = ORDER_STATUS.PENDING;
-              else if (anyExecuting) executionStatus = ORDER_STATUS.EXECUTING;
               else if (allCompleted) executionStatus = ORDER_STATUS.COMPLETED;
+              else if (
+                anyExecuting ||
+                (confidenceCount > 0 && confidenceCount < taskIds.length)
+              ) {
+                // Info: (20260517 - Luphia) If any task is executing, or some (but not all) are completed, the whole order is EXECUTING
+                executionStatus = ORDER_STATUS.EXECUTING;
+              } else executionStatus = ORDER_STATUS.PENDING;
 
               if (confidenceCount > 0) {
                 executionConfidence = Math.round(

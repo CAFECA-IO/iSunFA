@@ -100,6 +100,31 @@ export const API_ERRORS = {
     message: "Schema validation failed",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  VL_INVALID_ORDER_STATUS: {
+    code: "VL000011",
+    message: "Invalid order status for this operation",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  VL_MISSING_COMPANY_INFO: {
+    code: "VL000012",
+    message: "Missing required company information",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  VL_PREREQUISITE_FAILED: {
+    code: "VL000013",
+    message: "Prerequisite task or condition not met",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  VL_EXPIRED_DATA: {
+    code: "VL000014",
+    message: "Prerequisite data is expired",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  VL_NO_ESG_DATA: {
+    code: "VL000015",
+    message: "No associated ESG or financial data found",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 
   // Info: (20260421 - Luphia) NF: Not Found Resources (000001 ~ 000099)
   NF_USER: {

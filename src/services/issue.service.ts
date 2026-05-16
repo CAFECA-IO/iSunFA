@@ -18,7 +18,7 @@ import { isuncoin } from "@/lib/viem_public";
 import { orderRepo } from "@/repositories/order.repo";
 import { ORDER_STATUS } from "@/constants/status";
 import { analysisRepo } from "@/repositories/analysis.repo";
-import { MoneyUtil } from "@/lib/utils/money";
+import { accountBookRepo } from "@/repositories/account_book.repo";
 
 // Info: (20260420 - Luphia) ERC20 & MissionBoard ABIs
 const CP_ABI = parseAbi([
@@ -204,62 +204,61 @@ export async function processNext() {
           };
         }
 
-        const itemData = item.fileInfo
+        const missionData = item.fileInfo
           ? JSON.parse(
               JSON.stringify({ ...orderDataObj, fileId: item.fileInfo.hash }),
             )
           : JSON.parse(JSON.stringify(orderDataObj));
 
-        // Info: (20260506 - Luphia) Deeply strip sensitive info from itemData for IPFS
-        if (itemData.data && Array.isArray(itemData.data.files)) {
-          itemData.data.files = itemData.data.files
-            .filter(
-              (f: Record<string, unknown>) =>
-                !item.fileInfo || f.hash === item.fileInfo.hash,
-            )
-            .map((f: Record<string, unknown>) => ({
-              hash: f.hash,
-              name: f.name,
-            }));
-        } else if (itemData.files && Array.isArray(itemData.files)) {
-          itemData.files = itemData.files
-            .filter(
-              (f: Record<string, unknown>) =>
-                !item.fileInfo || f.hash === item.fileInfo.hash,
-            )
-            .map((f: Record<string, unknown>) => ({
-              hash: f.hash,
-              name: f.name,
-            }));
-        }
+        // Info: (20260516 - Luphia) 移除不應外流至 AI 分析節點的訂單私密與計價資料
+        delete missionData.items;
+        delete missionData.amount;
+        delete missionData.unit;
+        delete missionData.type;
+        delete missionData.orderId;
+        delete missionData.cost;
 
-        let missionAmount = MoneyUtil.toDecimal(
-          order.amount.toString(),
-        ).toNumber();
-        let missionItems = orderDataObj.items || [];
-
-        if (category === "CERTIFICATE_ANALYSIS" && itemsToProcess.length > 0) {
-          missionAmount = MoneyUtil.toDecimal(order.amount.toString())
-            .dividedBy(itemsToProcess.length)
-            .toDecimalPlaces(2)
-            .toNumber();
-          if (Array.isArray(missionItems)) {
-            missionItems = missionItems.map((item) => {
-              const itemObj = item;
-              itemObj.quantity = 1;
-              return itemObj;
-            });
+        // Info: (20260516 - Luphia) 將 accountBookId 轉換為完整的 accountBook JSON 給 AI 解析器
+        const accBookId =
+          missionData.accountBookId || missionData.data?.accountBookId;
+        if (accBookId && category === "CERTIFICATE_ANALYSIS") {
+          try {
+            const accBook = await accountBookRepo.getAccountBookById(
+              accBookId as string,
+            );
+            if (accBook) {
+              missionData.accountBook = accBook;
+            }
+          } catch (e) {
+            console.warn(
+              `[MissionIssuer] Failed to fetch accountBook ${accBookId}`,
+              e,
+            );
           }
         }
 
-        const missionData = {
-          orderId: order.id,
-          type: order.type,
-          unit: order.unit,
-          amount: missionAmount,
-          ...itemData,
-          items: missionItems,
-        };
+        // Info: (20260506 - Luphia) Deeply strip sensitive info from missionData for IPFS
+        if (missionData.data && Array.isArray(missionData.data.files)) {
+          missionData.data.files = missionData.data.files
+            .filter(
+              (f: Record<string, unknown>) =>
+                !item.fileInfo || f.hash === item.fileInfo.hash,
+            )
+            .map((f: Record<string, unknown>) => ({
+              hash: f.hash,
+              name: f.name,
+            }));
+        } else if (missionData.files && Array.isArray(missionData.files)) {
+          missionData.files = missionData.files
+            .filter(
+              (f: Record<string, unknown>) =>
+                !item.fileInfo || f.hash === item.fileInfo.hash,
+            )
+            .map((f: Record<string, unknown>) => ({
+              hash: f.hash,
+              name: f.name,
+            }));
+        }
 
         const missionJsonStr = JSON.stringify(missionData, null, 2);
         const missionBlob = new Blob([missionJsonStr], {
@@ -355,6 +354,7 @@ This is an automated validation plan.
 1. Check if the output follows the expected analysis structure for category: ${category}.
 2. Ensure the resulting numerical figures are accurately derived from ${missionData.type}.
 ${category === "TRANSPORTATION_CARBON_FOOTPRINT" ? "3. Accept raw JSON output directly as it represents a highly precise logistics calculation data structure." : ""}
+${category === "CERTIFICATE_ANALYSIS" ? "3. CRITICAL: The result MUST contain a `dbSyncPayload` object. If `dbSyncPayload` is missing, you MUST rate confidence below 60 and reject it." : ""}
 `;
       await fs.writeFile(
         path.join(taskDir, "plan.validator.md"),
