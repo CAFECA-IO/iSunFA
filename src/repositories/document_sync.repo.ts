@@ -342,7 +342,7 @@ export class DocumentSyncRepository {
             emissionFactorValue = new Prisma.Decimal(
               String(ed.newCoefficient.emissionFactor) || "0",
             );
-            recordIsVerified = false; // AI generated new coefficient is unverified
+            recordIsVerified = false; // Info: (20260513 - Tzuhan) AI generated new coefficient is unverified
           } else if (finalCoefficientId) {
             const coefExists = await tx.coefficient.findUnique({
               where: { id: finalCoefficientId },
@@ -350,7 +350,7 @@ export class DocumentSyncRepository {
             if (coefExists) {
               emissionFactorValue = coefExists.emissionFactor;
               if (!coefExists.isVerified) {
-                recordIsVerified = false; // Using unverified coefficient makes record unverified
+                recordIsVerified = false; // Info: (20260513 - Tzuhan) Using unverified coefficient makes record unverified
               }
             } else {
               isSuspense = true;
