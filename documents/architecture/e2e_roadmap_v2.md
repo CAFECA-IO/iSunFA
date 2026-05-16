@@ -48,6 +48,9 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **✅ Done (2026-05-14)：廢除 Markdown 故事腦補與全域替換 JSON 擷取**：**(幻覺地雷拆彈)** 明令禁止要求 AI 撰寫「事件摘要或故事」。全面強制升級為 Gemini 的 `responseSchema` (Structured Output) 與 `application/json`，徹底拔除舊版脆弱的 `/\{[\s\S]*\}/` Regex 擷取，斷絕資料靜默遺失風險。
 - **✅ Done (2026-05-14)：極致去中心化與無退款防禦 (Decentralized Worker & DLQ)**：**取消**原本的 POSIX 原子鎖與 Saga 點數退款機制。確立 Worker 為獨立外部節點，負責從鏈上抓取檔案建立完全隔離的檔案系統，天然無 Race Condition。實作「無退款權限」原則，Worker 的唯一目標是**「無限重試至成功 (Retry-Until-Success)」**，摒棄傳統遇到錯誤就妥協退款的機制。
 - **✅ Done (2026-05-15)：實作 Post-Parsing 攔截器與 Mock Facades (Backend Interceptors)**：接續 AI 降級決策，於核心寫入管線建置匯率 (FX)、會計科目 (AccountCode) 與碳排 (ESG) 三大攔截閘門。已完成 `VendorRegistry` Mock 與 `MoneyUtil` 防腐層，確保主引擎能即時阻斷 AI 的數學與邏輯幻覺。
+- **⚠️ Pending：高精度防禦死角大掃蕩 (Precision Blackhole Cleanup)**：全面掃描專案中殘存的 `Number()` 或 `parseFloat()` 強制轉型。所有涉及財務傳票與碳排數據的運算與轉型，必須全面升級使用 `MoneyUtil` 或 `BigInt`。
+- **⚠️ Pending：報表引擎的「無偽造」大盤查 (Report Engine Integrity Audit)**：全面審查 `cash_flow_statement_generator.ts`, `balance_sheet_generator.ts`, `esg_report_generator.ts`, `income_statement_generator.ts` 四大報表產生器，拔除所有「虛擬配平」、「懸記補數」或任何與原始憑證無法 100% 勾稽的錯誤妥協邏輯。
+- **⚠️ Pending：輕量級 E2E 核心防護網 (Minimalistic Core E2E Testing)**：規劃基於 Jest 的整合測試機制。測試情境限縮於「註冊登入 -> 建立單據 -> 檢驗財排報表平衡」的最短路徑，用極低的時間成本驗證 Sprint 1 數學恆等目標。此機制必須掛載環境隔離 (Environment Isolation) 防護，嚴格禁止在 Production 環境執行，以免污染真實金流與碳排帳本。
 
 
 - **[第二順位：CPA 財務合規任務 (核心財務防禦)]**
@@ -103,6 +106,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
   - **Single Source of Truth (SSOT)**：因 `mission_board.sol` 智能合約已將所有任務指派與執行結果不可篡改地記錄於區塊鏈上，系統的「零信任」直接由底層合約保障。API 層僅作為輕量級傳輸通道，不需要過度防禦所謂的「權限污染」，這大幅降低了開發與維護的複雜度。
 
 - **[Architect 穩定性與區塊鏈任務]**
+- **⚠️ Pending：AI 服務解耦與統一路由 (AI Hub Service Orchestration)**：將 `@google/generative-ai` 等底層依賴全部限制於單一的 `ai_hub.service` 門面 (Facade) 中操作。系統的技能模組 (Skills) 或其他服務僅能透過此 Service 進行溝通，藉此集中實作動態的「模型選擇 (Model Selection)」與「多重 AI 服務來源切換 (Multi-Provider Routing)」。此架構確保了未來能平滑切換至不同供應商（如 Claude, OpenAI）或在國家級主權雲中部署地端開源模型，徹底消除 Vendor Lock-in 的資安風險。
 - **✅ Done (Architectural Decision): 全鏈上自動稽核軌跡 (Event Sourcing Logs)**：捨棄傳統的資料庫雜湊鏈，全面依賴 mission_board.sol 的鏈上事件，防禦 DBA 竄改與截斷攻擊。
 - **⚠️ Pending (Postponed): 全同態加密 (FHE) 與儲存隔離**：企業機密保護的終極型態。計畫於 `laria.ts` (寫入 IPFS 前後) 實作 FHE (Fully Homomorphic Encryption)，確保儲存節點無法窺探明文。
   - **架構決策 (延後實作)**：因 FHE 會導致 Payload 變為完全不可讀的密文，這將使現階段底層引擎（如財務與碳排計算）的除錯難度呈現指數級上升。為確保核心功能開發順利，此功能將嚴格推遲至「系統功能 100% 穩定」後再行整合。
