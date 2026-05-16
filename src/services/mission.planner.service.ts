@@ -155,7 +155,7 @@ export async function processNext() {
             );
             // Info: (20260420 - Luphia) Clean up dir to allow retry
             await fs.rm(taskDir, { recursive: true, force: true });
-            // Info: (20260512 - AI) Break to prevent incrementing lastCheckedTaskId
+            // Info: (20260512 - Tzuhan) Break to prevent incrementing lastCheckedTaskId
             break;
           }
         }
