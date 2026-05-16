@@ -411,7 +411,7 @@ export const runPhase2ReceiptAnalysis = async (
           vendor: esgData.vendor || "現金交易",
           amount: esgData.amount || 0,
           unit: esgData.unit || "N/A",
-          emissions: 0, // Info: (20260515) 兩段式架構，由主管線後算，此處預設 0
+          emissions: 0, // Info: (20260515 - Tzuhan) 兩段式架構，由主線程後算，此處預設 0
           confidence: esgData.confidence || 85,
           analysisStatus: "COMPLETED",
         },
