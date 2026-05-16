@@ -89,12 +89,12 @@ export function generateBalanceSheet(
       });
       totalAssets = totalAssets.plus(impact);
 
-      if (code.startsWith("110")) cashTotal = cashTotal.plus(impact); // 現金及約當現金
+      if (code.startsWith("110")) cashTotal = cashTotal.plus(impact); // Info: (20260513 - Tzuhan) 現金及約當現金
       if (code.startsWith("117"))
-        accountsReceivableTotal = accountsReceivableTotal.plus(impact); // 應收帳款
-      if (code.startsWith("13")) inventoryTotal = inventoryTotal.plus(impact); // 存貨
+        accountsReceivableTotal = accountsReceivableTotal.plus(impact); // Info: (20260513 - Tzuhan) 應收帳款
+      if (code.startsWith("13")) inventoryTotal = inventoryTotal.plus(impact); // Info: (20260513 - Tzuhan) 存貨
       if (code.startsWith("15") || code.startsWith("16")) {
-        fixedAssetsTotal = fixedAssetsTotal.plus(impact); // 不動產、廠房及設備
+        fixedAssetsTotal = fixedAssetsTotal.plus(impact); // Info: (20260513 - Tzuhan) 不動產、廠房及設備
       }
       if (
         code.startsWith("17") ||
@@ -102,7 +102,7 @@ export function generateBalanceSheet(
         code.startsWith("19")
       ) {
         if (code.startsWith("17"))
-          intangibleAssetsTotal = intangibleAssetsTotal.plus(impact); // 無形資產
+          intangibleAssetsTotal = intangibleAssetsTotal.plus(impact); // Info: (20260513 - Tzuhan) 無形資產
       }
     } else if (isLiability) {
       // Info: (20260331 - Julian) 負債增加在貸方
@@ -173,7 +173,8 @@ export function generateBalanceSheet(
 
   if (difference.gt(0)) {
     // Info: (20260514 - Tzuhan) 資產多了，需要增加負債 (貸方餘額)
-    const currentAmount = liabilityMap.get("2199")?.amount || MoneyUtil.toDecimal(0);
+    const currentAmount =
+      liabilityMap.get("2199")?.amount || MoneyUtil.toDecimal(0);
     liabilityMap.set("2199", {
       name: "suspense_receipt",
       amount: currentAmount.plus(difference),
@@ -183,7 +184,8 @@ export function generateBalanceSheet(
   } else if (difference.lt(0)) {
     // Info: (20260514 - Tzuhan) 負債+權益多了，需要增加資產 (借方餘額)
     const absDiff = difference.abs();
-    const currentAmount = assetMap.get("1199")?.amount || MoneyUtil.toDecimal(0);
+    const currentAmount =
+      assetMap.get("1199")?.amount || MoneyUtil.toDecimal(0);
     assetMap.set("1199", {
       name: "suspense_payment",
       amount: currentAmount.plus(absDiff),
