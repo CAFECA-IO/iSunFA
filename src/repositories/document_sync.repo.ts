@@ -216,6 +216,23 @@ export class DocumentSyncRepository {
             }
           }
 
+          let totalDebit = BigInt(0);
+          let totalCredit = BigInt(0);
+          for (const l of linesToCreate) {
+            if (l.isDebit) totalDebit += BigInt(l.amount as bigint);
+            else totalCredit += BigInt(l.amount as bigint);
+          }
+          const isBalanced =
+            totalDebit === totalCredit && linesToCreate.length > 0;
+          const finalAnalysisStatus = isBalanced
+            ? ("COMPLETED" as AIAnalysisStatus)
+            : ("FAILED" as AIAnalysisStatus);
+          const finalIsVerified = isBalanced ? confidence > 85 : false;
+          let finalAiNote = vd.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]";
+          if (!isBalanced) {
+            finalAiNote = "[[I18N_IMBALANCED_VOUCHER_WARNING]]\n" + finalAiNote;
+          }
+
           const dataPayload: Prisma.VoucherUncheckedCreateInput = {
             tradingDate,
             tradingType: trType as VoucherTradingType,
@@ -224,9 +241,9 @@ export class DocumentSyncRepository {
             fileId: realFileId,
             accountBookId,
             confidence,
-            isVerified: confidence > 85,
-            aiNote: vd.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]",
-            analysisStatus: "COMPLETED" as AIAnalysisStatus,
+            isVerified: finalIsVerified,
+            aiNote: finalAiNote,
+            analysisStatus: finalAnalysisStatus,
             lines: {
               create: linesToCreate,
             },

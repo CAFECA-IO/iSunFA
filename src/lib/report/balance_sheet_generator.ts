@@ -168,32 +168,6 @@ export function generateBalanceSheet(
       }));
   };
 
-  // Info: (20260514 - Tzuhan) 包容不完美揭露：若資產大於負債加權益，提列暫收款 (2199)；若資產小於負債加權益，提列暫付款 (1199)
-  const difference = totalAssets.minus(totalLiabilities.plus(totalEquity));
-
-  if (difference.gt(0)) {
-    // Info: (20260514 - Tzuhan) 資產多了，需要增加負債 (貸方餘額)
-    const currentAmount =
-      liabilityMap.get("2199")?.amount || MoneyUtil.toDecimal(0);
-    liabilityMap.set("2199", {
-      name: "suspense_receipt",
-      amount: currentAmount.plus(difference),
-      isCurrent: true,
-    });
-    totalLiabilities = totalLiabilities.plus(difference);
-  } else if (difference.lt(0)) {
-    // Info: (20260514 - Tzuhan) 負債+權益多了，需要增加資產 (借方餘額)
-    const absDiff = difference.abs();
-    const currentAmount =
-      assetMap.get("1199")?.amount || MoneyUtil.toDecimal(0);
-    assetMap.set("1199", {
-      name: "suspense_payment",
-      amount: currentAmount.plus(absDiff),
-      isCurrent: true,
-    });
-    totalAssets = totalAssets.plus(absDiff);
-  }
-
   // Info: (20260331 - Julian) 整理資產、負債、權益數據
   const currentAssetsItems = mapToArray(
     assetMap,
