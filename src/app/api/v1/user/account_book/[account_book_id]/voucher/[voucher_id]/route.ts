@@ -133,11 +133,7 @@ export async function PUT(
 
     if (totalDebit !== totalCredit) {
       console.error("Voucher is imbalanced");
-      return jsonFail({
-        code: "VA000100",
-        message: "Voucher is imbalanced",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VL_VOUCHER_IMBALANCED);
     }
 
     // Info: (20260311 - Julian) Update voucher

@@ -552,6 +552,11 @@ export const API_ERRORS = {
     message: "No associated ESG or financial data found",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  VL_VOUCHER_IMBALANCED: {
+    code: "VL000016",
+    message: "Voucher debits and credits are imbalanced",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 
   // Info: (20260421 - Luphia) NF: Not Found Resources (000001 ~ 000099)
   NF_USER: {
