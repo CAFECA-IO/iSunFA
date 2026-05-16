@@ -2,13 +2,20 @@ import fs from "fs/promises";
 import path from "path";
 import { getPriorityEnvConfig } from "@/services/env.service";
 import { ChatService } from "@/services/chat.service";
-import { MoneyUtil } from "@/lib/utils/money";
 import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { Schema } from "@google/generative-ai";
 import { JSONValue } from "@/validators/common";
+
+/**
+ * Info: (20260516 - Luphia) 禁止在此處撰寫工作流程相關邏輯
+ * 工作流程邏輯應記錄於 skills 資料夾內，此函式根據任務類別呼叫對應的 skill
+ * This executor MUST remain generic and stateless.
+ * DO NOT add any specific task execution logic (e.g., routing intercepts, fallback mechanisms for specific types) here.
+ * All domain-specific logic MUST be implemented within the respective skills under `src/skills`.
+ */
 
 export async function processNext() {
   console.log("[MissionExecutor] Scanning MISSION_DIR for tasks to execute...");
@@ -136,176 +143,40 @@ export async function processNext() {
           };
 
           // Info: (20260420 - Luphia) Build Prompt
-          let fullPrompt = await buildTaskPrompt(
+          const fullPrompt = await buildTaskPrompt(
             subTaskConfig,
             missionData,
             priorResults,
           );
           let taskResultStr = "";
-          let stage2Intercepted = false;
-          let esgRuleForFallback:
-            | import("@/services/rules/vendor_registry").IEsgRule
-            | null = null;
+          const skill = skillRegistry[subTaskConfig.type];
+          if (skill) {
+            console.log(`[MissionExecutor]      Invoking Skill: ${skill.name}`);
+            taskResultStr = await skill.execute(
+              pseudoTask,
+              pseudoMission,
+              fullPrompt,
+              chatService,
+              priorResults,
+            );
+          } else {
+            console.log(
+              `[MissionExecutor]      Invoking raw ChatService LLM...`,
+            );
+            const responseSchema = subTaskConfig.data?.responseSchema as
+              | Schema
+              | undefined;
+            taskResultStr = await chatService.generateRaw(
+              fullPrompt,
+              responseSchema,
+            );
 
-          // Info: (20260511 - Tzuhan) Stage 2 Deterministic Routing Intercept
-          if (subTaskConfig.type === "VOUCHER_LINES_PARSING") {
-            let baseParsed: Record<string, unknown> | null = null;
-            for (const prevResultStr of priorResults.values()) {
-              try {
-                const parsed = JSON.parse(prevResultStr);
-                const actualParsed = parsed.data || parsed;
-
-                // Info: (20260514) Intercept AI parsing errors to prevent silent Stage 3 hallucination
-                if (actualParsed.error) {
-                  throw new Error(`AI 解析失敗: ${actualParsed.error}`);
-                }
-
-                if (actualParsed.vendorName && actualParsed.documentType) {
-                  baseParsed = actualParsed;
-                  break;
-                }
-              } catch (err) {
-                // Info: (20260514) Rethrow if it's our explicit AI failure, otherwise ignore malformed JSON in prior results
-                if (
-                  err instanceof Error &&
-                  err.message.includes("AI 解析失敗")
-                ) {
-                  throw err;
-                }
-              }
-            }
-
-            if (baseParsed && baseParsed.vendorName) {
-              const ruleRegistry =
-                await import("@/services/rules/vendor_registry");
-              const matchedRules = ruleRegistry.VendorRegistry.match(
-                String(baseParsed.vendorName),
-                String(baseParsed.documentType || "BILL_NOTICE"),
-              );
-
-              if (matchedRules && matchedRules.length > 0) {
-                const lines = matchedRules.map((rule) => ({
-                  accountingCode: rule.accountingCode,
-                  isDebit: rule.isDebit,
-                  particular: rule.isDebit
-                    ? `支付 ${baseParsed.vendorName}`
-                    : `應付 ${baseParsed.vendorName}`,
-                  amount: MoneyUtil.parseInput(
-                    String(baseParsed.totalAmount || "0"),
-                  ),
-                }));
-
-                console.log(
-                  `[MissionExecutor] 🎯 Stage 2 Match: Deterministic rules applied for ${baseParsed.vendorName}`,
-                );
-                taskResultStr = JSON.stringify({
-                  generationSource: "RULE_ENGINE_STAGE_2",
-                  confidence: 100,
-                  aiNote:
-                    "Stage 2: Deterministic Routing Applied (TypeScript Rules)",
-                  lines: lines,
-                });
-                stage2Intercepted = true;
-              }
-            }
-          }
-
-          // Info: (20260515 - Tzuhan) Stage 2 Deterministic Routing Intercept for ESG
-          if (
-            (subTaskConfig.type === "ESG_PARSING" ||
-              subTaskConfig.type === "ESG") &&
-            !stage2Intercepted
-          ) {
-            let baseParsed: Record<string, unknown> | null = null;
-            for (const prevResultStr of priorResults.values()) {
-              try {
-                const parsed = JSON.parse(prevResultStr);
-                const actualParsed = parsed.data || parsed;
-                if (actualParsed.vendorName && actualParsed.documentType) {
-                  baseParsed = actualParsed;
-                  break;
-                }
-              } catch {}
-            }
-
-            if (baseParsed && baseParsed.vendorName) {
-              const ruleRegistry =
-                await import("@/services/rules/vendor_registry");
-              const esgRule = ruleRegistry.VendorRegistry.matchEsg(
-                String(baseParsed.vendorName),
-                String(baseParsed.documentType || "BILL_NOTICE"),
-              );
-
-              if (esgRule) {
-                if (esgRule.suppressEsg) {
-                  console.log(
-                    `[MissionExecutor] 🎯 Stage 2 Match: ESG suppressed for ${baseParsed.vendorName} (${baseParsed.documentType})`,
-                  );
-                  taskResultStr = JSON.stringify({
-                    generationSource: "RULE_ENGINE_STAGE_2",
-                    confidence: 100,
-                    aiNote:
-                      "系統判定：此為資金沖銷/繳費收據，非實體消耗，因此無須計算碳排。",
-                    scope: null,
-                    activityType: "N/A",
-                    amount: "0",
-                    unit: "KG",
-                  });
-                  stage2Intercepted = true;
-                } else {
-                  console.log(
-                    `[MissionExecutor] 🎯 Stage 2 Match: Deterministic ESG rules found for ${baseParsed.vendorName}, falling back to AI for coefficient estimation.`,
-                  );
-                  esgRuleForFallback = esgRule;
-                  fullPrompt += `\n\n【決定論攔截指示】\n系統已判定此廠商為 ${esgRule.esgScope} / ${esgRule.esgActivityType}。請你「強制」使用此範疇與活動類型，並專注於為這個供應商推估合理的碳排係數 (newCoefficient)。`;
-                }
-              }
-            }
-          }
-
-          if (!stage2Intercepted) {
-            const skill = skillRegistry[subTaskConfig.type];
-            if (skill) {
-              console.log(
-                `[MissionExecutor]      Invoking Skill: ${skill.name}`,
-              );
-              taskResultStr = await skill.execute(
-                pseudoTask,
-                pseudoMission,
-                fullPrompt,
-                chatService,
-              );
-            } else {
-              console.log(
-                `[MissionExecutor]      Invoking raw ChatService LLM...`,
-              );
-              const responseSchema = subTaskConfig.data?.responseSchema as
-                | Schema
-                | undefined;
-              taskResultStr = await chatService.generateRaw(
-                fullPrompt,
-                responseSchema,
-              );
-            }
-
-            // Info: (20260511 - Tzuhan) LLM/Skill 產出若為 JSON，補上 Fallback 標籤
+            // Info: (20260516 - Tzuhan) Add LLM_FALLBACK_STAGE_3 tag to raw LLM output if it is JSON
             try {
               const parsed = JSON.parse(taskResultStr);
-              if (typeof parsed === "object") {
-                if (esgRuleForFallback && !parsed.error) {
-                  parsed.scope = esgRuleForFallback.esgScope || parsed.scope;
-                  parsed.activityType =
-                    esgRuleForFallback.esgActivityType || parsed.activityType;
-                  parsed.unit = esgRuleForFallback.esgUnit || parsed.unit;
-                  parsed.generationSource = "HYBRID_STAGE_2_AND_3";
-                  if (parsed.aiNote) {
-                    parsed.aiNote = `[混合決策] 範疇與活動由規則引擎鎖定，係數由 AI 推估。原註記: ${parsed.aiNote}`;
-                  }
-                  taskResultStr = JSON.stringify(parsed);
-                } else if (!parsed.generationSource) {
-                  parsed.generationSource = "LLM_FALLBACK_STAGE_3";
-                  taskResultStr = JSON.stringify(parsed);
-                }
+              if (typeof parsed === "object" && !parsed.generationSource) {
+                parsed.generationSource = "LLM_FALLBACK_STAGE_3";
+                taskResultStr = JSON.stringify(parsed);
               }
             } catch {}
           }

@@ -22,5 +22,6 @@ export interface ITaskSkill {
     mission: IPseudoMission,
     fullPrompt: string,
     chatService: ChatService,
+    priorResults?: Map<string, string>,
   ): Promise<string>;
 }

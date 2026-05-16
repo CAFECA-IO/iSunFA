@@ -3,6 +3,7 @@ import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { SchemaType, Schema } from "@google/generative-ai";
+import { VendorRegistry, IEsgRule } from "@/services/rules/vendor_registry";
 
 export class EsgParsingSkill implements ITaskSkill {
   name = "ESG_PARSING";
@@ -28,6 +29,7 @@ export class EsgParsingSkill implements ITaskSkill {
     mission: IPseudoMission,
     fullPrompt: string,
     chatService: ChatService,
+    priorResults?: Map<string, string>,
   ): Promise<string> {
     const { images, parsedContext } = await prepareDocumentContext(task);
 
@@ -36,6 +38,53 @@ export class EsgParsingSkill implements ITaskSkill {
 
     if (parsedContext.journalText) {
       promptText += `\n\n【重要指示】\n使用者已提供/修正日記帳的最新內容如下。請優先依據以下文字資訊進行解析，若與圖片內容有衝突，以此文字為準：\n${parsedContext.journalText}`;
+    }
+
+    let esgRuleForFallback: IEsgRule | null = null;
+
+    if (priorResults) {
+      let baseParsed: Record<string, unknown> | null = null;
+      for (const prevResultStr of priorResults.values()) {
+        try {
+          const parsed = JSON.parse(prevResultStr);
+          const actualParsed = parsed.data || parsed;
+          if (actualParsed.vendorName && actualParsed.documentType) {
+            baseParsed = actualParsed;
+            break;
+          }
+        } catch {}
+      }
+
+      if (baseParsed && baseParsed.vendorName) {
+        const esgRule = VendorRegistry.matchEsg(
+          String(baseParsed.vendorName),
+          String(baseParsed.documentType || "BILL_NOTICE"),
+        );
+
+        if (esgRule) {
+          if (esgRule.suppressEsg) {
+            console.log(
+              `[EsgParsingSkill] 🎯 Stage 2 Match: ESG suppressed for ${baseParsed.vendorName} (${baseParsed.documentType})`,
+            );
+            return JSON.stringify({
+              generationSource: "RULE_ENGINE_STAGE_2",
+              confidence: 100,
+              aiNote:
+                "系統判定：此為資金沖銷/繳費收據，非實體消耗，因此無須計算碳排。",
+              scope: null,
+              activityType: "N/A",
+              amount: "0",
+              unit: "KG",
+            });
+          } else {
+            console.log(
+              `[EsgParsingSkill] 🎯 Stage 2 Match: Deterministic ESG rules found for ${baseParsed.vendorName}, falling back to AI for coefficient estimation.`,
+            );
+            esgRuleForFallback = esgRule;
+            promptText += `\n\n【決定論攔截指示】\n系統已判定此廠商為 ${esgRule.esgScope} / ${esgRule.esgActivityType}。請你「強制」使用此範疇與活動類型，並專注於為這個供應商推估合理的碳排係數 (newCoefficient)。`;
+          }
+        }
+      }
     }
 
     try {
@@ -83,13 +132,39 @@ export class EsgParsingSkill implements ITaskSkill {
         ],
       };
 
-      const text = await chatService.generateRawWithImages(
+      let text = await chatService.generateRawWithImages(
         promptText,
         images,
         true,
         responseSchema,
       );
-      return text.trim();
+
+      text = text.trim();
+
+      try {
+        const parsed = JSON.parse(text);
+        if (typeof parsed === "object") {
+          if (esgRuleForFallback && !parsed.error) {
+            parsed.scope = esgRuleForFallback.esgScope || parsed.scope;
+            parsed.activityType =
+              esgRuleForFallback.esgActivityType || parsed.activityType;
+            parsed.unit = esgRuleForFallback.esgUnit || parsed.unit;
+            parsed.generationSource = "HYBRID_STAGE_2_AND_3";
+            if (parsed.aiNote) {
+              parsed.aiNote = `[混合決策] 範疇與活動由規則引擎鎖定，係數由 AI 推估。原註記: ${parsed.aiNote}`;
+            } else {
+              parsed.aiNote =
+                "[混合決策] 範疇與活動由規則引擎鎖定，係數由 AI 推估。";
+            }
+            text = JSON.stringify(parsed);
+          } else if (!parsed.generationSource) {
+            parsed.generationSource = "LLM_FALLBACK_STAGE_3";
+            text = JSON.stringify(parsed);
+          }
+        }
+      } catch {}
+
+      return text;
     } catch (error) {
       console.error("[EsgParsingSkill] Error:", error);
       return JSON.stringify({
