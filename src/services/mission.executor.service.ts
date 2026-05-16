@@ -155,7 +155,7 @@ export async function processNext() {
                 const parsed = JSON.parse(prevResultStr);
                 const actualParsed = parsed.data || parsed;
 
-                // Info: (20260514) Intercept AI parsing errors to prevent silent Stage 3 hallucination
+                // Info: (20260514 - Tzuhan) Intercept AI parsing errors to prevent silent Stage 3 hallucination
                 if (actualParsed.error) {
                   throw new Error(`AI 解析失敗: ${actualParsed.error}`);
                 }
@@ -165,7 +165,7 @@ export async function processNext() {
                   break;
                 }
               } catch (err) {
-                // Info: (20260514) Rethrow if it's our explicit AI failure, otherwise ignore malformed JSON in prior results
+                // Info: (20260514 - Tzuhan) Rethrow if it's our explicit AI failure, otherwise ignore malformed JSON in prior results
                 if (
                   err instanceof Error &&
                   err.message.includes("AI 解析失敗")
