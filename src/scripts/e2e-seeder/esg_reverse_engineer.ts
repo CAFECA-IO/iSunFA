@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { randomUUID } from "crypto";
 import { Prisma } from "@/generated";
+import { MoneyUtil } from "@/lib/utils/money";
 
 interface IExtractedContextCache {
   financial: {
@@ -65,7 +66,7 @@ const findEsgValue = (
             if (rawValue.startsWith("(") && rawValue.endsWith(")")) {
               rawValue = "-" + rawValue.slice(1, -1);
             }
-            const val = parseFloat(rawValue);
+            const val = MoneyUtil.toDecimal(rawValue).toNumber();
             return isNaN(val) ? new Prisma.Decimal(0) : new Prisma.Decimal(val);
           }
         }

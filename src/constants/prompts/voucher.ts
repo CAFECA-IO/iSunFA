@@ -1,4 +1,3 @@
-import { ACCOUNTS } from "@/constants/accounts";
 import { IAccountBookBase } from "@/interfaces/account_book";
 
 /*
@@ -12,10 +11,14 @@ const ANTI_HALLUCINATION_RULES = `
 [CRITICAL STRICT RULES FOR DATA EXTRACTION]
 You are a pure data extractor. Do NOT perform any business logic judgments or math.
 
-1. Document Type Extraction:
+1. Document Type & Trading Type Extraction:
    - Identify if the document is a "BILL_NOTICE" (Unpaid, e.g., "繳費通知", "請於 XX 日前繳納").
    - Or a "PAYMENT_RECEIPT" (Paid, e.g., "收據", "已扣款", "繳費結果通知").
    - Output "OTHER" if it doesn't clearly match either.
+   - For "tradingType": Determine the voucher type. 
+     - If the company is RECEIVING money (Revenue/Income), output "INCOME".
+     - If the company is PAYING money (Expense/Payment), output "OUTCOME".
+     - If it's a non-cash transfer or unpaid bill notice (Accounts Payable/Receivable), output "TRANSFER".
 
 2. Date Hallucination Guard (Taiwan Region):
    - IF the document year is in ROC format (e.g., "115年"), you MUST add 1911 to convert it to the Gregorian calendar (e.g., "2026").
@@ -43,19 +46,6 @@ ${ANTI_HALLUCINATION_RULES}
 
 Write down your analysis logic in the "aiNote" field without any markdown formatting.
 IMPORTANT: Your output MUST be in the language of the uploaded document (e.g., Traditional Chinese).
-You MUST return ONLY a strictly valid JSON object. Do NOT include markdown code blocks or any extra text.
-
-JSON Schema:
-{
-  "aiNote": "string", // [Chain of Thought] ALWAYS write your step-by-step reasoning HERE FIRST before filling other fields. (Output in Traditional Chinese)
-  "vendorName": "string", // Extracted name of the vendor (e.g. 中華電信)
-  "documentType": "BILL_NOTICE" | "PAYMENT_RECEIPT" | "OTHER", // Identify the document type based on the rules
-  "totalAmount": 100, // The exact numeric total amount written on the document
-  "tradingDate": "YYYY-MM-DD", // Date of transaction (Apply ROC year conversion if needed)
-  "tradingType": "INCOME" | "OUTCOME" | "TRANSFER",
-  "note": "string", // Brief summary/note of the transaction
-  "confidence": 85 // Overall confidence score (0-100)
-}
 `;
 };
 
@@ -63,10 +53,8 @@ JSON Schema:
 export const getVoucherLinesPrompt = (
   accountBook?: IAccountBookBase | null,
 ) => {
+  // Info: (20260512 - Tzuhan) 廢除全域會計科目表暴力注入，改由後端 Hybrid Pipeline 處理
   const country = accountBook?.country || "TW";
-  const accountsStr = JSON.stringify(
-    ACCOUNTS[country as keyof typeof ACCOUNTS] || ACCOUNTS["TW"],
-  );
 
   const accountBookInfo = accountBook
     ? `\nAccounting Principle Country: ${country}, Base Currency: ${accountBook.currency}.`
@@ -81,24 +69,10 @@ ${ANTI_HALLUCINATION_RULES}
 
 Write down your logic for determining the debit and credit accounts in the "aiNote" field.
 IMPORTANT: Your output (particular, aiNote) MUST be in the language of the uploaded document (e.g., Traditional Chinese).
-You MUST return ONLY a strictly valid JSON object. Do NOT include markdown code blocks or any extra text.
 
-JSON Schema:
-{
-  "aiNote": "string", // [Chain of Thought] ALWAYS write your reasoning HERE FIRST. Especially verify if it's an UNPAID Notice or PAID Receipt. (Output in Traditional Chinese)
-  // Journal entries. The sum of debit amounts MUST equal the sum of credit amounts (A = L + E).
-  "lines": [ 
-    {
-      "accountingCode": "string", // Accounting code from the provided list
-      "particular": "string", // Summary of this specific entry (Output in Traditional Chinese)
-      "amount": 100, // Numeric amount
-      "isDebit": true // true = Debit, false = Credit
-    }
-  ]
-}
-
-AVAILABLE ACCOUNTING CODES:
-You MUST prioritize using these codes and names. Do NOT invent new codes.
-${accountsStr}
+[IMPORTANT]
+Do NOT invent exact numerical accounting codes if you don't know them. 
+Simply provide the most standard and descriptive account name (e.g., "Cash", "Accounts Payable", "Office Supplies") in the "accountingCode" field. 
+The backend system will map this to the exact local accounting code via Vector Search.
 `;
 };

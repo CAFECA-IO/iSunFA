@@ -136,7 +136,9 @@ export async function scanPendingTransactions() {
               } catch {}
             }
 
-            const expectedPaid = parseEther(Math.abs(order.amount).toString());
+            const expectedPaid = parseEther(
+              (order.amount < 0n ? -order.amount : order.amount).toString(),
+            );
             console.log(
               `[TxTracker] Found amount: ${formatEther(actualPaid)} ${order.unit}`,
             );

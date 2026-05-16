@@ -23,7 +23,14 @@ export async function GET(
   }
 
   try {
-    const filePath = path.join(process.cwd(), `documents/${slug}.md`);
+    const folder = [
+      "privacy_policy",
+      "refund_policy",
+      "terms_of_service",
+    ].includes(slug)
+      ? "legal/"
+      : "";
+    const filePath = path.join(process.cwd(), `documents/${folder}${slug}.md`);
     const content = await fs.readFile(filePath, "utf8");
 
     return jsonOk({ content });

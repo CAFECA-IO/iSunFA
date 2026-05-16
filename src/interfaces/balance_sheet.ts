@@ -1,7 +1,7 @@
 export interface IBalanceSheetItem {
   code: string;
   name: string;
-  amount: number;
+  amount: string | number;
   percentageOfAssetOrLiabEquity: number;
 }
 
@@ -28,18 +28,18 @@ export interface IBalanceSheetMetrics {
 
 export interface IBalanceSheet {
   assets: {
-    current: { items: IBalanceSheetItem[]; total: number };
-    nonCurrent: { items: IBalanceSheetItem[]; total: number };
-    total: number;
+    current: { items: IBalanceSheetItem[]; total: string | number };
+    nonCurrent: { items: IBalanceSheetItem[]; total: string | number };
+    total: string | number;
   };
   liabilities: {
-    current: { items: IBalanceSheetItem[]; total: number };
-    nonCurrent: { items: IBalanceSheetItem[]; total: number };
-    total: number;
+    current: { items: IBalanceSheetItem[]; total: string | number };
+    nonCurrent: { items: IBalanceSheetItem[]; total: string | number };
+    total: string | number;
   };
   equity: {
     items: IBalanceSheetItem[];
-    total: number;
+    total: string | number;
   };
   metrics: IBalanceSheetMetrics;
 }

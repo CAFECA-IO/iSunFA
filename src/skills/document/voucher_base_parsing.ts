@@ -2,6 +2,7 @@ import { ITaskSkill } from "@/skills/types";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { ChatService } from "@/services/chat.service";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
+import { Schema } from "@google/generative-ai";
 
 export class VoucherBaseParsingSkill implements ITaskSkill {
   name = "VOUCHER_BASE_PARSING";
@@ -38,19 +39,18 @@ export class VoucherBaseParsingSkill implements ITaskSkill {
     }
 
     try {
-      const text = await chatService.generateRawWithImages(promptText, images);
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.stringify({ data: JSON.parse(jsonMatch[0]) });
-      }
-      return JSON.stringify({
-        data: null,
-        error: "無法從 AI 回應中解析出有效的 JSON 格式",
-      });
+      const responseSchema = (task.data as Record<string, unknown>)
+        ?.responseSchema as Schema | undefined;
+      const text = await chatService.generateRawWithImages(
+        promptText,
+        images,
+        true,
+        responseSchema,
+      );
+      return text.trim();
     } catch (error) {
       console.error("[VoucherBaseParsingSkill] Error:", error);
       return JSON.stringify({
-        data: null,
         error: "AI 解析傳票基礎資料失敗，請稍後再試",
       });
     }

@@ -41,6 +41,7 @@ model User {
 
   orders                Order[]
   analyses              Analysis[]
+  coefficients          Coefficient[]
   comments              Comment[]
   receivedReplies       Comment[]              @relation("CommentRecipient")
   reactions             Reaction[]
@@ -106,7 +107,7 @@ model Order {
   userId          String   @map("user_id")
   user            User     @relation(fields: [userId], references: [id])
   type            String
-  amount          Int
+  amount          BigInt
   unit            String   @default("ICP")
   data            Json
   status          String   @default("PENDING")
@@ -268,7 +269,7 @@ model PaymentTransaction {
   orderId         String?        @map("order_id")
   order           Order?         @relation(fields: [orderId], references: [id])
   provider        String
-  amount          Int
+  amount          BigInt
   status          String         @default("PENDING") // Info: (20260302 - Tzuhan) PENDING, SUCCESS, FAILED
   errorMessage    String?        @map("error_message")
   rawData         Json?          @map("raw_data")
@@ -282,7 +283,7 @@ model Receipt {
   id        String   @id @default(uuid())
   orderId   String   @unique @map("order_id")
   order     Order    @relation(fields: [orderId], references: [id])
-  amount    Int
+  amount    BigInt
   data      Json?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -475,7 +476,7 @@ model VoucherLine {
   particular String? @db.Text
 
   // Info: (20260310 - Julian) 金額
-  amount Int
+  amount BigInt
 
   // Info: (20260310 - Julian) 是否為借方 (true=借方/Debit, false=貸方/Credit)
   isDebit Boolean @map("is_debit")
@@ -652,6 +653,19 @@ model Coefficient {
   emissionFactor Decimal @map("emission_factor")
   source         String
 
+  // Info: (20260514 - Tzuhan) 前端介面定義的類別 (e.g., STANDARD, CUSTOM)
+  category       String  @default("STANDARD") 
+
+  // Info: (20260514 - Tzuhan) 版本年份，方便未來依年份快速檢索對應的係數庫
+  versionYear    String? @map("version_year")
+
+  // Info: (20260514 - Tzuhan) 人工建立與覆核的 CPA 防線
+  isVerified     Boolean @default(true) @map("is_verified")
+  
+  // Info: (20260514 - Tzuhan) 追蹤是由哪一位使用者人工建立的 (AI 建立則為 Null)
+  userId         String? @map("user_id")
+  user           User?   @relation(fields: [userId], references: [id])
+
   // Info: (20260413 - Julian) 關聯帳本，沒有帳本代表是標準係數
   accountBookId String?      @map("account_book_id")
   accountBook   AccountBook? @relation(fields: [accountBookId], references: [id])
@@ -784,11 +798,12 @@ model Campaign {
 }
 
 model CampaignRegistration {
-  id           String   @id @default(uuid())
-  campaignId   String   @map("campaign_id")
-  campaign     Campaign @relation(fields: [campaignId], references: [id])
-  userId       String   @map("user_id")
-  user         User     @relation(fields: [userId], references: [id])
+  id         String   @id @default(uuid())
+  campaignId String   @map("campaign_id")
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id])
+
   entityType   String   @map("entity_type")
   entityName   String   @map("entity_name")
   contactEmail String   @map("contact_email")
@@ -798,4 +813,28 @@ model CampaignRegistration {
 
   @@unique([campaignId, userId])
   @@map("campaign_registration")
+}
+
+// Info: (20260513 - Tzuhan) 官方匯率表，支援 Sprint 1 匯率微服務與本位幣溯源
+model ExchangeRate {
+  id String @id @default(uuid())
+
+  // Info: (20260514 - Tzuhan) 匯率生效日期 (建議統一存 UTC 的 00:00:00)
+  date DateTime
+
+  // Info: (20260514 - Tzuhan) 雙幣別設計 (A幣 換 B幣)
+  baseCurrency   String @map("base_currency") // 基準本位幣 (例如: "TWD")
+  targetCurrency String @map("target_currency") // 目標外幣 (例如: "KRW", "USD", "EUR")
+
+  // Info: (20260514 - Tzuhan) 匯率數值 (代表 1 targetCurrency 兌換多少 baseCurrency)
+  rate Decimal
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Info: (20260514 - Tzuhan) 複合唯一鍵：同一天、同一個「基準-目標」貨幣對，絕對不能有重複的匯率
+  @@unique([date, baseCurrency, targetCurrency])
+  // Info: (20260514 - Tzuhan) 建立日期索引：因為未來主程式會頻繁用 date 去 WHERE 查詢，加 index 查詢才會快
+  @@index([date])
+  @@map("exchange_rate")
 }

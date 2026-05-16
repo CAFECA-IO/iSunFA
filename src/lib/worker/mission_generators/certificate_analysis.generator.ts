@@ -1,4 +1,5 @@
 import { ITaskDefinition } from "@/lib/worker/task.generator";
+import { SchemaType } from "@google/generative-ai";
 import {
   IMissionDefinition,
   IMissionParams,
@@ -19,21 +20,13 @@ export function generateCertificateAnalysisMission(
     | IAccountBookBase
     | undefined;
 
-  const paramsObj = params as unknown as {
-    files?: string[];
-    accountBookId?: string;
-  };
-  const data =
-    (params.data as { files?: string[]; accountBookId?: string }) || {};
-  const accountBookId =
-    data.accountBookId || paramsObj.accountBookId || accountBook?.id || "";
   const fileId = params.fileId; // Info: (20260422 - Luphia) The single targeted file hash passed by MissionIssuer
 
   const tasks: ITaskDefinition[] = [];
 
   const context = JSON.stringify({
     fileId,
-    accountBookId,
+    accountBook,
   });
 
   tasks.push({
@@ -43,6 +36,15 @@ export function generateCertificateAnalysisMission(
       key: `PRE_CHECK`,
       prompt: getDocumentDuplicateCheckPrompt(),
       context,
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          invoiceNumber: { type: SchemaType.STRING, nullable: true },
+          vendorTaxId: { type: SchemaType.STRING, nullable: true },
+          tradingDate: { type: SchemaType.STRING, nullable: true },
+          totalAmount: { type: SchemaType.NUMBER, nullable: true },
+        },
+      },
     },
   });
 
@@ -53,6 +55,16 @@ export function generateCertificateAnalysisMission(
       key: `JOURNAL`,
       prompt: getJournalPrompt(accountBook),
       context,
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          tradingDate: { type: SchemaType.STRING },
+          text: { type: SchemaType.STRING },
+          confidence: { type: SchemaType.INTEGER },
+          aiNote: { type: SchemaType.STRING },
+        },
+        required: ["tradingDate", "text", "confidence", "aiNote"],
+      },
     },
   });
 
@@ -63,6 +75,44 @@ export function generateCertificateAnalysisMission(
       key: `VOUCHER_BASE`,
       prompt: getBaseVoucherPrompt(accountBook),
       context,
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          aiNote: { type: SchemaType.STRING },
+          vendorName: { type: SchemaType.STRING },
+          documentType: {
+            type: SchemaType.STRING,
+            enum: ["BILL_NOTICE", "PAYMENT_RECEIPT", "OTHER"],
+            description: "Must strictly be one of the provided enums.",
+            format: "enum",
+          },
+          totalAmount: { type: SchemaType.NUMBER },
+          currency: {
+            type: SchemaType.STRING,
+            description: "Currency code, e.g. TWD, USD, JPY",
+          },
+          tradingDate: { type: SchemaType.STRING },
+          tradingType: {
+            type: SchemaType.STRING,
+            enum: ["INCOME", "OUTCOME", "TRANSFER"],
+            description: "Must strictly be one of the provided enums.",
+            format: "enum",
+          },
+          note: { type: SchemaType.STRING },
+          confidence: { type: SchemaType.INTEGER },
+        },
+        required: [
+          "aiNote",
+          "vendorName",
+          "documentType",
+          "totalAmount",
+          "currency",
+          "tradingDate",
+          "tradingType",
+          "note",
+          "confidence",
+        ],
+      },
     },
   });
 
@@ -73,6 +123,26 @@ export function generateCertificateAnalysisMission(
       key: `VOUCHER_LINES`,
       prompt: getVoucherLinesPrompt(accountBook),
       context,
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          aiNote: { type: SchemaType.STRING },
+          lines: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                accountingCode: { type: SchemaType.STRING },
+                particular: { type: SchemaType.STRING },
+                amount: { type: SchemaType.NUMBER },
+                isDebit: { type: SchemaType.BOOLEAN },
+              },
+              required: ["accountingCode", "particular", "amount", "isDebit"],
+            },
+          },
+        },
+        required: ["aiNote", "lines"],
+      },
     },
   });
 
@@ -83,6 +153,18 @@ export function generateCertificateAnalysisMission(
       key: `ESG`,
       prompt: getEsgPrompt(accountBook),
       context,
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          aiNote: { type: SchemaType.STRING },
+          isTarget: { type: SchemaType.BOOLEAN },
+          activityType: { type: SchemaType.STRING, nullable: true },
+          amount: { type: SchemaType.NUMBER, nullable: true },
+          unit: { type: SchemaType.STRING, nullable: true },
+          confidence: { type: SchemaType.INTEGER },
+        },
+        required: ["aiNote", "isTarget", "confidence"],
+      },
     },
   });
 

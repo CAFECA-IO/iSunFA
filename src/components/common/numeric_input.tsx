@@ -14,7 +14,7 @@ import {
 } from "react";
 
 import { numberWithCommas } from "@/lib/utils/common";
-// import BigNumberjs from 'bignumber.js';
+import { MoneyUtil } from "@/lib/utils/money";
 
 const KEYBOARD_EVENT_CODE = {
   ENTER: "Enter",
@@ -100,7 +100,7 @@ const NumericInput: FC<INumericInputProps> = ({
         (setValue as Dispatch<SetStateAction<number>>)(
           typeof dbValue === "number"
             ? dbValue
-            : parseFloat(dbValue.toString()) || 0,
+            : MoneyUtil.toDecimal(dbValue).toNumber(),
         );
       }
     }
@@ -115,21 +115,20 @@ const NumericInput: FC<INumericInputProps> = ({
     const minimum =
       props.min && typeof props.min === "number" ? props.min : undefined;
 
-    // Info: (20250709 - Julian) 移除逗號後轉為數字
-    const inputValueNum = parseFloat(inputValue.replace(/,/g, ""));
+    // Info: (20260514 - Tzuhan) 移除逗號
+    const inputDec = MoneyUtil.toDecimal(inputValue.replace(/,/g, ""));
 
-    // Info: (20250709 - Julian) 限制輸入的值在最大值和最小值之間
-    const availableValue =
-      maximum && inputValueNum > maximum
-        ? maximum
-        : minimum && inputValueNum < minimum
-          ? minimum
-          : inputValueNum;
+    // Info: (20260514 - Tzuhan) 限制輸入的值在最大值和最小值之間
+    let availableValueStr = inputDec.toString();
+    if (maximum !== undefined && inputDec.greaterThan(maximum)) {
+      availableValueStr = maximum.toString();
+    } else if (minimum !== undefined && inputDec.lessThan(minimum)) {
+      availableValueStr = minimum.toString();
+    }
 
     // Info: (20240723 - Liz) 整理輸入的值
     const sanitizedValue =
-      availableValue
-        .toString()
+      availableValueStr
         .replace(/^0+(\d)/, "$1") // Info: (20250319 - Anna) 避免 01，但允許 0.1
         .replace(/[^0-9.]/g, "") // Info: (20250319 - Anna) 移除非數字和小數點字符
         .replace(/(\..*)\./g, "$1") || "0"; // Info: (20250319 - Anna) 只允許一個小數點
@@ -180,17 +179,13 @@ const NumericInput: FC<INumericInputProps> = ({
           ) => void
         )(validNumericValue.toString(), event);
       } else {
-        // Info: (20250319 - Anna) BigNumber ➝ number：callback 傳原生數字
+        // Info: (20260514 - Tzuhan) Decimal ➝ number：callback 傳原生數字
         (
           triggerWhenChanged as (
             value: number,
             e: ChangeEvent<HTMLInputElement>,
           ) => void
-        )(
-          // validNumericValue.toNumber(),
-          parseFloat(validNumericValue),
-          event,
-        );
+        )(MoneyUtil.toDecimal(validNumericValue).toNumber(), event);
       }
     }
   };

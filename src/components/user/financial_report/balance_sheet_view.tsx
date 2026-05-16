@@ -12,6 +12,7 @@ import ReportPrintNote, {
   IReportNote,
 } from "@/components/user/financial_report/report_print_note";
 import { numberWithCommas } from "@/lib/utils/common";
+import { MoneyUtil } from "@/lib/utils/money";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
@@ -24,15 +25,14 @@ const BalanceSheetSection = ({
   titleText,
   titleValue,
   items,
-  total,
   barColor,
 }: {
   titleText: string;
-  titleValue: number;
+  titleValue: string | number;
   items: IBalanceSheetItem[];
-  total: number;
   barColor: string;
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="mb-4 lg:mb-6 print:mb-2 print:break-inside-avoid">
       <div className="mb-2 flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
@@ -49,13 +49,23 @@ const BalanceSheetSection = ({
           >
             <div className="flex w-2/3 flex-col">
               <span className="text-xs font-medium text-gray-600 lg:text-base print:text-sm">
-                {item.name}
+                {item.name === "suspense_receipt"
+                  ? t("balance_sheet_view.suspense_receipt") ===
+                    "balance_sheet_view.suspense_receipt"
+                    ? "暫收款"
+                    : t("balance_sheet_view.suspense_receipt")
+                  : item.name === "suspense_payment"
+                    ? t("balance_sheet_view.suspense_payment") ===
+                      "balance_sheet_view.suspense_payment"
+                      ? "暫付款"
+                      : t("balance_sheet_view.suspense_payment")
+                    : item.name}
               </span>
               <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                 <div
                   className={`h-full rounded-full ${barColor}`}
                   style={{
-                    width: `${(item.amount / total) * 100}%`,
+                    width: `${item.percentageOfAssetOrLiabEquity}%`,
                   }}
                 ></div>
               </div>
@@ -65,7 +75,7 @@ const BalanceSheetSection = ({
                 {numberWithCommas(item.amount)}
               </span>
               <span className="text-[10px] font-bold text-gray-400">
-                {((item.amount / total) * 100).toFixed(1)}%
+                {item.percentageOfAssetOrLiabEquity.toFixed(1)}%
               </span>
             </div>
           </div>
@@ -78,9 +88,13 @@ const BalanceSheetSection = ({
 export default function BalanceSheetView({
   period,
   year,
+  onUnverifiedItemsChange = () => {},
 }: {
   period: ReportPeriod;
   year: number;
+  onUnverifiedItemsChange?: (
+    items: { id: string; note: string; type: string }[],
+  ) => void;
 }) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
@@ -94,11 +108,22 @@ export default function BalanceSheetView({
       const fetchSummary = async () => {
         try {
           setIsLoading(true);
-          const res = await request<IApiResponse<{ report: IBalanceSheet }>>(
+          const res = await request<
+            IApiResponse<{
+              report: IBalanceSheet;
+              unverifiedItems?: { id: string; note: string; type: string }[];
+            }>
+          >(
             `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.BALANCE_SHEET}&period=${period}&year=${year}`,
           );
           if (res.payload) {
             setReportData(res.payload.report);
+            if (
+              res.payload.unverifiedItems !== undefined &&
+              onUnverifiedItemsChange
+            ) {
+              onUnverifiedItemsChange(res.payload.unverifiedItems);
+            }
           }
         } catch (error) {
           console.error("Failed to fetch balance sheet:", error);
@@ -110,7 +135,7 @@ export default function BalanceSheetView({
     } else {
       setIsLoading(false);
     }
-  }, [accountBookId, period, year]);
+  }, [accountBookId, period, year, onUnverifiedItemsChange]);
 
   if (isLoading) {
     return (
@@ -198,7 +223,13 @@ export default function BalanceSheetView({
   // Info: (20260409 - Julian) 計算前台固定資產總額，以判斷特殊分母為 0 的狀況
   const fixedAssetsTotal = assets.nonCurrent.items
     .filter((i) => i.code.startsWith("15") || i.code.startsWith("16"))
-    .reduce((acc, curr) => acc + curr.amount, 0);
+    .reduce(
+      (acc, curr) =>
+        MoneyUtil.toDecimal(acc)
+          .plus(MoneyUtil.toDecimal(curr.amount))
+          .toNumber(),
+      0,
+    );
   const isFixedAssetsZero = fixedAssetsTotal === 0;
 
   const balanceKeyMetricsData = [
@@ -258,14 +289,14 @@ export default function BalanceSheetView({
     },
     {
       title: t("balance_sheet_view.metric_dte_title"),
-      value:
-        equity.total === 0
-          ? "N/A"
-          : `${(metrics.debtToEquityRatio || 0).toFixed(1)}%`,
+      value: MoneyUtil.toDecimal(equity.total).isZero()
+        ? "N/A"
+        : `${(metrics.debtToEquityRatio || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_dte_desc"),
       textColor: "text-gray-900",
-      statusGood:
-        equity.total === 0 ? undefined : (metrics.debtToEquityRatio || 0) < 100,
+      statusGood: MoneyUtil.toDecimal(equity.total).isZero()
+        ? undefined
+        : (metrics.debtToEquityRatio || 0) < 100,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.LEFT,
     },
@@ -284,31 +315,27 @@ export default function BalanceSheetView({
     },
     {
       title: t("balance_sheet_view.metric_rer_title"),
-      value:
-        equity.total === 0
-          ? "N/A"
-          : `${(metrics.retainedEarningsRatio || 0).toFixed(1)}%`,
+      value: MoneyUtil.toDecimal(equity.total).isZero()
+        ? "N/A"
+        : `${(metrics.retainedEarningsRatio || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_rer_desc"),
       textColor: "text-gray-900",
-      statusGood:
-        equity.total === 0
-          ? undefined
-          : (metrics.retainedEarningsRatio || 0) > 0,
+      statusGood: MoneyUtil.toDecimal(equity.total).isZero()
+        ? undefined
+        : (metrics.retainedEarningsRatio || 0) > 0,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.LEFT,
     },
     {
       title: t("balance_sheet_view.metric_iar_title"),
-      value:
-        assets.total === 0
-          ? "N/A"
-          : `${(metrics.intangibleAssetsRatio || 0).toFixed(1)}%`,
+      value: MoneyUtil.toDecimal(assets.total).isZero()
+        ? "N/A"
+        : `${(metrics.intangibleAssetsRatio || 0).toFixed(1)}%`,
       description: t("balance_sheet_view.metric_iar_desc"),
       textColor: "text-gray-900",
-      statusGood:
-        assets.total === 0
-          ? undefined
-          : (metrics.intangibleAssetsRatio || 0) < 20,
+      statusGood: MoneyUtil.toDecimal(assets.total).isZero()
+        ? undefined
+        : (metrics.intangibleAssetsRatio || 0) < 20,
       className: "print:w-1/4",
       tooltipAlign: TooltipAlign.RIGHT,
     },
@@ -362,14 +389,12 @@ export default function BalanceSheetView({
           titleText={t("balance_sheet_view.current_assets")}
           titleValue={assets.current.total}
           items={assets.current.items}
-          total={assets.total}
           barColor="bg-blue-400"
         />
         <BalanceSheetSection
           titleText={t("balance_sheet_view.non_current_assets")}
           titleValue={assets.nonCurrent.total}
           items={assets.nonCurrent.items}
-          total={assets.total}
           barColor="bg-blue-400"
         />
       </div>
@@ -404,21 +429,18 @@ export default function BalanceSheetView({
             titleText={t("balance_sheet_view.current_liab")}
             titleValue={liabilities.current.total}
             items={liabilities.current.items}
-            total={liabilities.total + equity.total}
             barColor="bg-orange-400"
           />
           <BalanceSheetSection
             titleText={t("balance_sheet_view.non_current_liab")}
             titleValue={liabilities.nonCurrent.total}
             items={liabilities.nonCurrent.items}
-            total={liabilities.total + equity.total}
             barColor="bg-orange-400"
           />
           <BalanceSheetSection
             titleText={t("balance_sheet_view.equity")}
             titleValue={equity.total}
             items={equity.items}
-            total={liabilities.total + equity.total}
             barColor="bg-orange-300"
           />
         </div>
@@ -429,7 +451,10 @@ export default function BalanceSheetView({
           </span>
           <span className="text-lg font-black text-white lg:text-2xl">
             {numberWithCommas(
-              reportData.liabilities.total + reportData.equity.total,
+              MoneyUtil.add(
+                reportData.liabilities.total,
+                reportData.equity.total,
+              ),
             )}
           </span>
         </div>

@@ -19,5 +19,10 @@ export const orderManagement = {
     failed: "执行失败",
     unnamed_user: "未知用户",
     no_data: "目前没有任何订单。",
+    actions: "操作",
+    retry: "重新执行",
+    retry_confirm: "确定要重新执行此订单吗？",
+    retry_success: "已成功触发订单重新执行。",
+    retry_failed: "重新执行订单失败。",
   },
 };

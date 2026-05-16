@@ -8,6 +8,7 @@ import { esgRepo } from "@/repositories/esg.repo";
 import { auditLogRepo } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { IEsgRecordFilterOptions } from "@/interfaces/data_filter_option";
+import { MeasurementUnit } from "@/constants/enums";
 
 /**
  * Info: (20260312 - Julian) 新增 ESG 紀錄
@@ -68,7 +69,7 @@ export async function POST(
       activityType: "",
       vendor: "",
       amount: 0,
-      unit: "",
+      unit: MeasurementUnit.PIECE,
       emissions: 0,
       dqiScore: 0,
       confidence: 0,

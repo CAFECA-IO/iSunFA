@@ -26,6 +26,8 @@ import {
   IAIAnalysisOrderData,
   IAIAnalysisOrderFile,
 } from "@/interfaces/payment";
+import { MeasurementUnit } from "@/constants/enums";
+import { Prisma } from "@/generated";
 
 /**
  * Info: (20260318 - Julian) AI 分析：生成日記帳、傳票、碳排查
@@ -255,10 +257,10 @@ export async function POST(
           tradingDate: new Date(),
           activityType: "",
           vendor: "",
-          amount: 0,
-          unit: "",
-          emissions: 0,
-          dqiScore: 0,
+          amount: new Prisma.Decimal(0),
+          unit: MeasurementUnit.PIECE,
+          emissions: new Prisma.Decimal(0),
+          dqiScore: new Prisma.Decimal(0),
           aiNote: "",
           confidence: 0,
           isVerified: false,

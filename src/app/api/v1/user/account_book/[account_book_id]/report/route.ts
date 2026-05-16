@@ -4,7 +4,6 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
-import { VerifyStatus } from "@/constants/verify_status";
 import { generateBalanceSheet } from "@/lib/report/balance_sheet_generator";
 import { generateCashFlowStatement } from "@/lib/report/cash_flow_statement_generator";
 import { generateIncomeStatement } from "@/lib/report/income_statement_generator";
@@ -90,19 +89,30 @@ export async function GET(
         accountBookId,
         startDate: range.start,
         endDate: range.end,
-        verifyStatus: VerifyStatus.VERIFIED,
+        // Info: (20260514 - Tzuhan) 取消 isVerified 限制，將未核對的單據也納入碳排計算，並交由 UI 提示異常
         hideDeleted: true,
       });
 
+      const unverifiedItems = esgRecords
+        .filter((e) => !e.isVerified)
+        .map((e) => ({
+          id: e.id,
+          note: e.aiNote || "Unknown",
+          type: "esg",
+        }));
       const report = generateEsgReport(esgRecords);
-      return jsonOk({ report });
+      return jsonOk({
+        report,
+        unverifiedCount: unverifiedItems.length,
+        unverifiedItems,
+      });
     }
 
     // Info: (20260408 - Luphia) 資產負債表是從開立帳簿以來的累積餘額，因此不應限制 gte 起始日；損益表與現金流量表則是計算當期發生額，因此需限制 gte。
     // Info: (20260331 - Julian) 取得傳票與會計分錄
     const vouchers = await voucherRepo.getVouchersByFilter({
       accountBookId,
-      verifyStatus: VerifyStatus.VERIFIED, // Info: (20260331 - Julian) 僅取得「已核對」
+      // Info: (20260514 - Tzuhan) 取消 isVerified 限制，將未核對的傳票也納入財報計算，以反映最真實的狀況
       hideDeleted: true, // Info: (20260504 - Tzuhan) ⚠️修復：排除被軟刪除的傳票
       startDate:
         reportType !== ReportType.BALANCE_SHEET
@@ -127,8 +137,19 @@ export async function GET(
     };
 
     const report = await getReportData();
+    const unverifiedItems = vouchers
+      .filter((v) => !v.isVerified)
+      .map((v) => ({
+        id: v.id,
+        note: v.note || v.aiNote || "Unknown",
+        type: "voucher",
+      }));
 
-    return jsonOk({ report });
+    return jsonOk({
+      report,
+      unverifiedCount: unverifiedItems.length,
+      unverifiedItems,
+    });
   } catch (error) {
     console.error("Get report failed", error);
     return jsonFail(API_ERRORS.IS_DB_FAILED);

@@ -13,6 +13,7 @@ import {
   EsgScope as ClientEsgScope,
   EsgIntensity as ClientEsgIntensity,
 } from "@/interfaces/esg";
+import { MeasurementUnit } from "@/constants/enums";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { IEsgRecordDetail } from "@/interfaces/esg";
 
@@ -128,7 +129,9 @@ export async function PUT(
       ...(reqBody.amount !== undefined && {
         amount: reqBody.amount,
       }),
-      ...(reqBody.unit && { unit: reqBody.unit }),
+      ...(reqBody.unit && {
+        unit: reqBody.unit.toUpperCase() as MeasurementUnit,
+      }),
       ...(reqBody.emissions && { emissions: reqBody.emissions }),
       ...(reqBody.intensity && {
         intensity: reqBody.intensity.toUpperCase() as ClientEsgIntensity,
