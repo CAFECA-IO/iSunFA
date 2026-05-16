@@ -9,7 +9,7 @@ export enum TradingType {
 
 export interface IVoucherDashboardSummary {
   todayVoucherCount: number;
-  monthTotalAmount: number;
+  monthTotalAmount: number | bigint | string;
   pendingVoucherCount: number;
   aiAverageConfidence: number;
 }
@@ -18,7 +18,7 @@ export interface IVoucherLine {
   id: string;
   accounting: IAccount;
   particular: string;
-  amount: number;
+  amount: number | bigint | string;
   isDebit: boolean;
 }
 
@@ -27,7 +27,7 @@ export interface IVoucherLineUI {
   accountingCode: string;
   accounting: IAccount | null;
   particular: string;
-  amount: number;
+  amount: number | bigint | string;
   isDebit: boolean | null;
 }
 
@@ -45,7 +45,7 @@ export interface IVoucher {
   };
   lineItems: {
     lines: IVoucherLineUI[];
-    totalAmount: number;
+    totalAmount: number | bigint | string;
   };
   issuerName: string;
   confidence: number;
@@ -59,7 +59,7 @@ export interface IVoucher {
 export interface IParsedVoucherLine {
   accountingCode: string;
   particular: string;
-  amount: number;
+  amount: number | bigint | string;
   isDebit: boolean;
 }
 

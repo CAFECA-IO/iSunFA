@@ -26,7 +26,7 @@ export interface IDashboardResponse {
 
 export const useDashboardData = () => {
   const params = useParams();
-  const [timeUnit, setTimeUnit] = useState<TimeUnit>("30d");
+  const [timeUnit, setTimeUnit] = useState<TimeUnit>("1y");
   const [selectedYear, setSelectedYear] = useState<number>(
     new Date().getFullYear(),
   );

@@ -6,6 +6,8 @@ import { teamRepo } from "@/repositories/team.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
+import { Decimal } from "decimal.js";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export async function GET(
   req: NextRequest,
@@ -46,7 +48,13 @@ export async function GET(
       const date = new Date(v.tradingDate * 1000);
       const year = date.getFullYear();
       if (!yearlyData[year]) yearlyData[year] = { emissions: 0, revenue: 0 };
-      const val = v.lineItems.lines.reduce((a, l) => a + l.amount, 0) / 2;
+      const val = v.lineItems.lines
+        .reduce(
+          (a, l) => a.plus(new Decimal(l.amount as string | number)),
+          new Decimal(0),
+        )
+        .div(2)
+        .toNumber();
       yearlyData[year].revenue += val;
     });
 
@@ -67,7 +75,10 @@ export async function GET(
         year,
         emissions: data.emissions > 0 ? data.emissions : null,
         revenue: data.revenue > 0 ? data.revenue : null,
-        intensity: data.emissions > 0 ? parseFloat(intensity.toFixed(2)) : null,
+        intensity:
+          data.emissions > 0
+            ? MoneyUtil.toDecimal(intensity.toFixed(2)).toNumber()
+            : null,
         totalEmissionTarget: target?.totalEmissionTarget
           ? Number(target.totalEmissionTarget) / 1000
           : null,

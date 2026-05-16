@@ -30,6 +30,13 @@ export class OrderRepository {
     });
   }
 
+  async updateStatus(id: string, status: string) {
+    return prisma.order.update({
+      where: { id },
+      data: { status },
+    });
+  }
+
   async updateOrderData(id: string, data: JSONValue) {
     return prisma.order.update({
       where: { id },

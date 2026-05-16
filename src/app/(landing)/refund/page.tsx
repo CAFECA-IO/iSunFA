@@ -1,10 +1,10 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { MarkdownContent } from '@/components/common/markdown_content';
+import { promises as fs } from "fs";
+import path from "path";
+import { MarkdownContent } from "@/components/common/markdown_content";
 
 export default async function RefundPolicy() {
-  const filePath = path.join(process.cwd(), 'documents/refund_policy.md');
-  const content = await fs.readFile(filePath, 'utf8');
+  const filePath = path.join(process.cwd(), "documents/legal/refund_policy.md");
+  const content = await fs.readFile(filePath, "utf8");
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-800">

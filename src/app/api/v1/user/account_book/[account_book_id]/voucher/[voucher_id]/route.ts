@@ -120,6 +120,26 @@ export async function PUT(
       return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
     }
 
+    // Info: (20260516 - Luphia) 驗證借貸平衡
+    let totalDebit = BigInt(0);
+    let totalCredit = BigInt(0);
+    for (const row of rows) {
+      if (row.isDebit) {
+        totalDebit += BigInt(row.amount || 0);
+      } else {
+        totalCredit += BigInt(row.amount || 0);
+      }
+    }
+
+    if (totalDebit !== totalCredit) {
+      console.error("Voucher is imbalanced");
+      return jsonFail({
+        code: "VA000100",
+        message: "Voucher is imbalanced",
+        status: ApiCode.VALIDATION_ERROR,
+      });
+    }
+
     // Info: (20260311 - Julian) Update voucher
     const updatedVoucher = await voucherRepo.updateVoucher(voucherId, {
       id,
@@ -132,7 +152,7 @@ export async function PUT(
         create: rows.map((row) => ({
           accountingCode: row.accounting?.code || "",
           particular: row.particular || "",
-          amount: row.amount || 0,
+          amount: BigInt(row.amount || 0),
           isDebit: row.isDebit ?? false,
         })),
       },

@@ -1,4 +1,11 @@
 export const common = {
+  ai_notes: {
+    empty: "無 AI 分析備註",
+    base_info: "基本資訊分析",
+    entry: "會計科目分錄分析",
+    ai_dynamic_extraction: "AI 動態擷取",
+    esg_suspense_warning: "🚨 懸記：缺少碳排係數主檔，已凍結計算。",
+  },
   search: "搜尋",
   batch_download: "批次下載",
   download: "下載",

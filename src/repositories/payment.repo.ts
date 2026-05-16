@@ -125,7 +125,7 @@ export class PaymentRepository {
 
           shouldMint = true;
           creditsToMint = _creditsToMint;
-          amountPaid = order.amount;
+          amountPaid = Number(order.amount);
         }
       } else if (!isPaymentSuccess && order.status === ORDER_STATUS.PENDING) {
         await tx.paymentTransaction.updateMany({
@@ -192,7 +192,16 @@ export class PaymentRepository {
         `Invalid order unit. Must be one of: ${Object.values(CURRENCY_UNIT).join(", ")}`,
       );
     }
-    return prisma.order.create({ data });
+
+    const safeData = {
+      ...data,
+      amount:
+        typeof data.amount === "number"
+          ? BigInt(Math.round(data.amount))
+          : data.amount,
+    };
+
+    return prisma.order.create({ data: safeData });
   }
 
   async getOrderById(orderId: string) {
@@ -415,7 +424,7 @@ export class PaymentRepository {
           paymentMethodId: paymentMethodId,
           orderId: orderId,
           provider: "OEN",
-          amount: amount,
+          amount: BigInt(Math.round(amount)),
           status: PAYMENT_TRANSACTION_STATUS.PENDING,
         },
       });
@@ -478,7 +487,7 @@ export class PaymentRepository {
       const dbReceipt = await tx.receipt.create({
         data: {
           orderId: orderId,
-          amount: amount,
+          amount: BigInt(Math.round(amount)),
           data: {
             ...(oenData as Record<string, unknown>),
             receiptDetails: {
@@ -546,7 +555,7 @@ export class PaymentRepository {
       _sum: { amount: true },
       where,
     });
-    return agg._sum.amount || 0;
+    return Number(agg._sum.amount || 0n);
   }
 
   async getGlobalTransactingUsersCount(
@@ -608,7 +617,7 @@ export class PaymentRepository {
       _sum: { amount: true },
       where,
     });
-    return agg._sum.amount || 0;
+    return Number(agg._sum.amount || 0n);
   }
 
   async countGlobalOrders(startDate?: Date, endDate?: Date): Promise<number> {

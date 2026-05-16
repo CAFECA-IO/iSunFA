@@ -10,6 +10,7 @@ import {
   ICoefficient,
   ICoefficientInput,
 } from "@/interfaces/coefficient";
+import { Prisma } from "@/generated";
 import {
   TRUE_COEFFICIENT_DATA_PART_1,
   TRUE_COEFFICIENT_DATA_PART_2,
@@ -75,7 +76,7 @@ export async function POST(
     const newCoefficient = await esgRepo.createEsgCoefficient({
       name: input.name,
       description: input.description,
-      emissionFactor: input.emissionFactor,
+      emissionFactor: new Prisma.Decimal(String(input.emissionFactor)),
       unit: input.unit,
       source: accountBook.name,
       accountBook: { connect: { id: accountBook.id } },

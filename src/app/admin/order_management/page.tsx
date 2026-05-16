@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { request } from "@/lib/utils/request";
 import AdminPageHeader from "@/components/admin/common/admin_page_header";
-import { List, UserCircle } from "lucide-react";
+import { List, UserCircle, RefreshCw } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
+import ConfirmModal from "@/components/common/confirm_modal";
+import SuccessNotification from "@/components/common/success_notification";
 import { formatDate } from "@/lib/utils/date";
 import { ORDER_STATUS } from "@/constants/status";
 
@@ -43,6 +45,21 @@ export default function OrderManagementPage() {
     totalElements: 0,
     totalPages: 0,
   });
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    orderId: string | null;
+  }>({ isOpen: false, orderId: null });
+
+  const [alertModal, setAlertModal] = useState<{
+    isOpen: boolean;
+    message: string;
+  }>({ isOpen: false, message: "" });
+
+  const [successNotif, setSuccessNotif] = useState<{
+    isOpen: boolean;
+    message: string;
+  }>({ isOpen: false, message: "" });
 
   useEffect(() => {
     let ignore = false;
@@ -86,6 +103,37 @@ export default function OrderManagementPage() {
       ignore = true;
     };
   }, [page, limit]);
+
+  const handleRetryOrderClick = (orderId: string) => {
+    setConfirmModal({ isOpen: true, orderId });
+  };
+
+  const handleExecuteRetry = async () => {
+    if (!confirmModal.orderId) return;
+    const orderId = confirmModal.orderId;
+    setConfirmModal({ isOpen: false, orderId: null });
+
+    try {
+      const res = await request<{ payload: { success: boolean } }>(
+        `/api/v1/admin/orders/${orderId}/retry`,
+        { method: "POST" },
+      );
+      if (res.payload?.success) {
+        setSuccessNotif({
+          isOpen: true,
+          message: t("order_management.table.retry_success"),
+        });
+        setPage(page);
+        window.location.reload();
+      }
+    } catch (e) {
+      console.error(e);
+      setAlertModal({
+        isOpen: true,
+        message: t("order_management.table.retry_failed"),
+      });
+    }
+  };
 
   const columns: IDataTableColumn<IOrderManagementData>[] = [
     {
@@ -177,16 +225,29 @@ export default function OrderManagementPage() {
       key: "status",
       label: t("order_management.table.order_status"),
       render: (record) => (
-        <span
-          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
-            record.status === ORDER_STATUS.PAID ||
-            record.status === ORDER_STATUS.COMPLETED
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-orange-50 text-orange-700"
-          }`}
-        >
-          {record.status}
-        </span>
+        <div className="flex flex-col items-start gap-2">
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
+              record.status === ORDER_STATUS.PAID ||
+              record.status === ORDER_STATUS.COMPLETED
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-orange-50 text-orange-700"
+            }`}
+          >
+            {record.status}
+          </span>
+          {(record.status === ORDER_STATUS.FAILED ||
+            record.executionStatus === ORDER_STATUS.FAILED) && (
+            <button
+              onClick={() => handleRetryOrderClick(record.id)}
+              className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 focus:outline-none"
+              title="Retry Order"
+            >
+              <RefreshCw className="h-3 w-3" />
+              <span>{t("order_management.table.retry")}</span>
+            </button>
+          )}
+        </div>
       ),
     },
     {
@@ -290,6 +351,31 @@ export default function OrderManagementPage() {
           />
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, orderId: null })}
+        title={t("order_management.table.retry")}
+        message={t("order_management.table.retry_confirm")}
+        confirmText={t("common.confirm")}
+        cancelText={t("common.cancel")}
+        onConfirm={handleExecuteRetry}
+      />
+
+      <ConfirmModal
+        isOpen={alertModal.isOpen}
+        onClose={() => setAlertModal({ isOpen: false, message: "" })}
+        title="Error"
+        message={alertModal.message}
+        confirmText={t("common.close")}
+      />
+
+      <SuccessNotification
+        show={successNotif.isOpen}
+        title="Success"
+        message={successNotif.message}
+        onClose={() => setSuccessNotif({ isOpen: false, message: "" })}
+      />
     </div>
   );
 }

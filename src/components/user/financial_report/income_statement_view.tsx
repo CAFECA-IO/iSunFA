@@ -15,6 +15,7 @@ import ReportPrintNote, {
   IReportNote,
 } from "@/components/user/financial_report/report_print_note";
 import { numberWithCommas } from "@/lib/utils/common";
+import { MoneyUtil } from "@/lib/utils/money";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import {
@@ -27,14 +28,12 @@ const IncomeStatementSection = ({
   titleText,
   titleValue,
   items,
-  baseDivisor, // Info: (20260330 - Julian) 固定以營業收入做分母計算佔比
   barColor,
   isValueNegative = false, // Info: (20260330 - Julian) 若為費損，是否在顯示時加負號或特別標記
 }: {
   titleText: string;
-  titleValue: number;
+  titleValue: string | number;
   items: IIncomeStatementItem[];
-  baseDivisor: number;
   barColor: string;
   isValueNegative?: boolean;
 }) => {
@@ -44,16 +43,15 @@ const IncomeStatementSection = ({
       <div className="mb-2 flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
         <span className="font-bold text-gray-700">{titleText}</span>
         <span className="text-base font-bold text-gray-700 print:text-sm">
-          {titleValue < 0
-            ? `(${numberWithCommas(Math.abs(titleValue))})`
+          {MoneyUtil.toDecimal(titleValue).isNegative()
+            ? `(${numberWithCommas(MoneyUtil.toDecimal(titleValue).abs().toString())})`
             : numberWithCommas(titleValue)}
         </span>
       </div>
       {/* Info: (20260330 - Julian) 項目內容 */}
       <div className="flex flex-col gap-1 px-3">
         {items.map((item) => {
-          const percentage =
-            baseDivisor !== 0 ? (Math.abs(item.amount) / baseDivisor) * 100 : 0;
+          const percentage = item.percentageOfRevenue;
           return (
             <div
               key={item.code}
@@ -74,8 +72,9 @@ const IncomeStatementSection = ({
               </div>
               <div className="flex flex-col items-end">
                 <span className="text-base font-medium text-gray-700 print:text-sm">
-                  {item.amount < 0 || isValueNegative
-                    ? `(${numberWithCommas(Math.abs(item.amount))})`
+                  {MoneyUtil.toDecimal(item.amount).isNegative() ||
+                  isValueNegative
+                    ? `(${numberWithCommas(MoneyUtil.toDecimal(item.amount).abs().toString())})`
                     : numberWithCommas(item.amount)}
                 </span>
                 <span className="text-[10px] font-bold text-gray-400">
@@ -93,9 +92,13 @@ const IncomeStatementSection = ({
 export default function IncomeStatementView({
   period,
   year,
+  onUnverifiedItemsChange = () => {},
 }: {
   period: ReportPeriod;
   year: number;
+  onUnverifiedItemsChange?: (
+    items: { id: string; note: string; type: string }[],
+  ) => void;
 }) {
   const params = useParams();
   const accountBookId = params?.account_book_id as string;
@@ -110,11 +113,22 @@ export default function IncomeStatementView({
       const fetchSummary = async () => {
         try {
           setIsLoading(true);
-          const res = await request<IApiResponse<{ report: IIncomeStatement }>>(
+          const res = await request<
+            IApiResponse<{
+              report: IIncomeStatement;
+              unverifiedItems?: { id: string; note: string; type: string }[];
+            }>
+          >(
             `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.INCOME_STATEMENT}&period=${period}&year=${year}`,
           );
           if (res.payload) {
             setReportData(res.payload.report);
+            if (
+              res.payload.unverifiedItems !== undefined &&
+              onUnverifiedItemsChange
+            ) {
+              onUnverifiedItemsChange(res.payload.unverifiedItems);
+            }
           }
         } catch (error) {
           console.error("Failed to fetch balance sheet:", error);
@@ -126,7 +140,7 @@ export default function IncomeStatementView({
     } else {
       setIsLoading(false);
     }
-  }, [accountBookId, period, year]);
+  }, [accountBookId, period, year, onUnverifiedItemsChange]);
 
   if (isLoading) {
     return (
@@ -148,8 +162,6 @@ export default function IncomeStatementView({
 
   // Info: (20260330 - Julian) 解構報表資料
   const { metrics, sections } = reportData;
-  // Info: (20260330 - Julian) 營收做為 100% 基準
-  const baseRevenue = sections.revenue.total;
 
   // Info: (20260401 - Julian) 關鍵指標註解
   const incomeNotes: IReportNote[] = [
@@ -261,7 +273,6 @@ export default function IncomeStatementView({
           titleText={t("income_statement_view.section_rev")}
           titleValue={sections.revenue.total}
           items={sections.revenue.items}
-          baseDivisor={baseRevenue}
           barColor="bg-gray-300"
         />
 
@@ -269,7 +280,6 @@ export default function IncomeStatementView({
           titleText={t("income_statement_view.section_cogs")}
           titleValue={sections.cogs.total}
           items={sections.cogs.items}
-          baseDivisor={baseRevenue}
           barColor="bg-gray-200"
         />
 
@@ -286,7 +296,6 @@ export default function IncomeStatementView({
           titleText={t("income_statement_view.section_opex")}
           titleValue={sections.operatingExpenses.total}
           items={sections.operatingExpenses.items}
-          baseDivisor={baseRevenue}
           barColor="bg-gray-300"
         />
 
@@ -322,7 +331,6 @@ export default function IncomeStatementView({
           titleText={t("income_statement_view.section_nonop_inc")}
           titleValue={sections.nonOperating.total}
           items={sections.nonOperating.items}
-          baseDivisor={baseRevenue}
           barColor="bg-gray-300"
         />
 
@@ -339,7 +347,6 @@ export default function IncomeStatementView({
           titleText={t("income_statement_view.section_tax")}
           titleValue={sections.taxExpense.total}
           items={sections.taxExpense.items}
-          baseDivisor={baseRevenue}
           barColor="bg-gray-200"
         />
       </div>

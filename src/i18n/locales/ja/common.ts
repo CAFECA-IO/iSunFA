@@ -1,4 +1,12 @@
 export const common = {
+  ai_notes: {
+    empty: "AI分析の備考なし",
+    base_info: "基本情報分析",
+    entry: "勘定科目仕訳分析",
+    ai_dynamic_extraction: "AI 動的抽出",
+    esg_suspense_warning:
+      "🚨 懸案事項：炭素排出係数マスターが不足しているため、計算を凍結しました。",
+  },
   search: "検索",
   batch_download: "一括ダウンロード",
   download: "ダウンロード",

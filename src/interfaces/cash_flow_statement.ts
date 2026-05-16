@@ -1,7 +1,7 @@
 export interface ICashFlowStatementItem {
   code?: string;
   name: string;
-  amount: number;
+  amount: string | number;
 }
 
 export interface ICashFlowStatementMetrics {
@@ -15,19 +15,19 @@ export interface ICashFlowStatement {
   reportPeriod: string;
   currency: string;
   activities: {
-    operating: { items: ICashFlowStatementItem[]; total: number };
-    investing: { items: ICashFlowStatementItem[]; total: number };
-    financing: { items: ICashFlowStatementItem[]; total: number };
+    operating: { items: ICashFlowStatementItem[]; total: string | number };
+    investing: { items: ICashFlowStatementItem[]; total: string | number };
+    financing: { items: ICashFlowStatementItem[]; total: string | number };
   };
   summary: {
-    netIncreaseDecrease: number; // Info: (20260330 - Julian) 本期現金增加(減少)數
-    beginningBalance: number; // Info: (20260330 - Julian) 期初現金及約當現金餘額
-    endingBalance: number; // Info: (20260330 - Julian) 期末現金及約當現金餘額
+    netIncreaseDecrease: string | number; // Info: (20260330 - Julian) 本期現金增加(減少)數
+    beginningBalance: string | number; // Info: (20260330 - Julian) 期初現金及約當現金餘額
+    endingBalance: string | number; // Info: (20260330 - Julian) 期末現金及約當現金餘額
   };
-  supplementary: {
+  supplementary?: {
     // Info: (20260330 - Julian) 補充揭露
-    interestPaid: number;
-    taxesPaid: number;
+    interestPaid: string | number;
+    taxesPaid: string | number;
   };
   metrics: ICashFlowStatementMetrics;
 }

@@ -41,8 +41,8 @@ export async function GET(
           {
             name: (orderData.title as string) || "會員訂閱",
             quantity: 1,
-            unitPrice: t.amount,
-            amount: t.amount,
+            unitPrice: Number(t.amount),
+            amount: Number(t.amount),
             remark:
               orderData.billingInterval === "year"
                 ? "購買會員資格 (年繳)"
@@ -67,8 +67,8 @@ export async function GET(
         itemsFallback.push({
           name: `iSunFA ${base} 點`,
           quantity: 1,
-          unitPrice: t.amount,
-          amount: t.amount,
+          unitPrice: Number(t.amount),
+          amount: Number(t.amount),
           remark: `購買 ${base} 點`,
         });
 

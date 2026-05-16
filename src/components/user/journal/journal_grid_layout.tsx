@@ -6,6 +6,7 @@ import { FilePreview } from "@/components/common/file_preview";
 import { IJournal } from "@/interfaces/journal";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { timestampToString } from "@/lib/utils/common";
+import { translateAiNote } from "@/utils/ai_note_translator";
 
 const JournalGridItem = ({
   journal,
@@ -22,8 +23,8 @@ const JournalGridItem = ({
 
   const isAnalysisFailed = journal.analysisStatus === AIAnalysisStatus.FAILED;
   const failedMessage =
-    journal.aiNote && journal.aiNote !== "無 AI 分析備註"
-      ? journal.aiNote
+    journal.aiNote && journal.aiNote.trim().length > 0
+      ? translateAiNote(journal.aiNote, t)
       : (t("ocr.ai.failed") as string);
 
   const actionButtons = (

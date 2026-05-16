@@ -1,4 +1,12 @@
 export const common = {
+  ai_notes: {
+    empty: "AI 분석 비고 없음",
+    base_info: "기본 정보 분석",
+    entry: "회계 계정 분개 분석",
+    ai_dynamic_extraction: "AI 동적 추출",
+    esg_suspense_warning:
+      "🚨 미결: 탄소 배출 계수 마스터가 없어 계산이 동결되었습니다.",
+  },
   search: "검색",
   batch_download: "일괄 다운로드",
   download: "다운로드",

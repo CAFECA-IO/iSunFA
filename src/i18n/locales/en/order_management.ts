@@ -20,5 +20,10 @@ export const orderManagement = {
     failed: "Failed",
     unnamed_user: "Unnamed User",
     no_data: "No orders found.",
+    actions: "Actions",
+    retry: "Retry",
+    retry_confirm: "Are you sure you want to retry this order?",
+    retry_success: "Order retry triggered successfully.",
+    retry_failed: "Failed to retry order.",
   },
 };

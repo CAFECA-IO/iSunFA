@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { useTranslation } from "@/i18n/i18n_context";
+import { MoneyUtil } from "@/lib/utils/money";
 
 interface ICoefficientAddEditModalProps {
   selectedCoefficientId: string | null;
@@ -64,7 +65,7 @@ export default function CoefficientAddEditModal({
   const confirmCoefficient = () => {
     const input: ICoefficientInput = {
       name,
-      emissionFactor: parseFloat(emissionFactor),
+      emissionFactor: MoneyUtil.toDecimal(emissionFactor).toNumber(),
       unit,
       description,
       source: "", // Info: (20260414 - Julian) 預設為空，由 API 填入
@@ -84,8 +85,8 @@ export default function CoefficientAddEditModal({
     }
 
     // Info: (20260417 - Julian) 限制只能為零以上之正數
-    const num = parseFloat(value);
-    if (num < 0) {
+    const num = MoneyUtil.toDecimal(value);
+    if (num.isNegative()) {
       setEmissionFactor("0");
     } else {
       setEmissionFactor(value);

@@ -308,7 +308,6 @@ export const runPhase2ReceiptAnalysis = async (
           tradingDate: new Date(groundTruthVoucher.tradingDate),
           confidence: 85,
           analysisStatus: "COMPLETED",
-          isVerified: true,
           lines: {
             create: extractedLines.map((l: IExtractedLine) => ({
               accountingCode: l.accountingCode || "9999",
@@ -343,11 +342,16 @@ export const runPhase2ReceiptAnalysis = async (
   "vendor": "台灣電力公司",
   "amount": 5000,
   "unit": "度",
-  "emissions": 1234.56,
+  "newCoefficient": {
+    "name": "電力估算係數",
+    "emissionFactor": 0.495,
+    "unit": "度",
+    "source": "AI估算"
+  },
   "confidence": 95
 }
 注意：
-1. "emissions" 欄位請務必「準確提取」圖片中『本單據碳排量: xxx 公噸 CO2e』的數字，絕對不可自行捏造！若無則填 0。
+1. 若系統無對應係數，請根據行業知識估算 "newCoefficient"，嚴禁自行計算最終 emissions。
 2. 若無碳排資訊，請合理給予 SCOPE_3 或預設值。不可有任何 markdown 標籤，直接輸出 JSON 即可。`;
 
       process.stdout.write(
@@ -381,7 +385,7 @@ export const runPhase2ReceiptAnalysis = async (
         if (esgData.scope === formattedExpectedScope) {
           correctEsgCount++;
           console.log(
-            `✅ ESG Passed (Extracted Scope: ${esgData.scope}, Carbon: ${esgData.emissions})`,
+            `✅ ESG Passed (Extracted Scope: ${esgData.scope}, Est. Coefficient: ${esgData.newCoefficient?.emissionFactor || "None"})`,
           );
         } else {
           console.log(
@@ -407,10 +411,9 @@ export const runPhase2ReceiptAnalysis = async (
           vendor: esgData.vendor || "現金交易",
           amount: esgData.amount || 0,
           unit: esgData.unit || "N/A",
-          emissions: esgData.emissions || 0,
+          emissions: 0, // Info: (20260515 - Tzuhan) 兩段式架構，由主線程後算，此處預設 0
           confidence: esgData.confidence || 85,
           analysisStatus: "COMPLETED",
-          isVerified: true,
         },
       });
     } catch (err: unknown) {
@@ -442,7 +445,6 @@ export const runPhase2ReceiptAnalysis = async (
         tradingDate: new Date(adjV.tradingDate),
         confidence: 100,
         analysisStatus: "COMPLETED",
-        isVerified: true,
         lines: {
           create: adjV.lines.map((l: ISimulatedVoucherLine) => ({
             accountingCode: l.accountingCode,

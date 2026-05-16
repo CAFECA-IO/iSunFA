@@ -1,4 +1,11 @@
 export const common = {
+  ai_notes: {
+    empty: "无 AI 分析备注",
+    base_info: "基本信息分析",
+    entry: "会计科目分录分析",
+    ai_dynamic_extraction: "AI 动态提取",
+    esg_suspense_warning: "🚨 悬记：缺少碳排系数主档，已冻结计算。",
+  },
   search: "搜索",
   batch_download: "批次下载",
   download: "下载",
