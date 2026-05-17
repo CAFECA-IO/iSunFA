@@ -1,4 +1,5 @@
 import { ITaskSkill } from "@/skills/types";
+import { SchemaType } from "@google/generative-ai";
 import { AI_CONSULTATION_ROOM_PROMPT } from "@/constants/prompts/ai_consultation_room";
 import { ChatService } from "@/services/chat.service";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
@@ -84,19 +85,24 @@ export class AiConsultingSkill implements ITaskSkill {
     let tags = ["錯誤"];
 
     try {
+      const responseSchema = {
+        type: SchemaType.OBJECT,
+        properties: {
+          answer: { type: SchemaType.STRING },
+          tags: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+        },
+        required: ["answer", "tags"],
+      };
+
       const responseText = await chatService.generateRawWithImages(
         promptText,
         imagesForAi,
+        true,
+        responseSchema as import("@google/generative-ai").Schema,
       );
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        answer = parsed.answer || responseText;
-        tags = Array.isArray(parsed.tags) ? parsed.tags : ["其他"];
-      } else {
-        answer = responseText;
-        tags = ["其他"];
-      }
+      const parsed = JSON.parse(responseText);
+      answer = parsed.answer || responseText;
+      tags = Array.isArray(parsed.tags) ? parsed.tags : ["其他"];
     } catch (error) {
       console.error("[AiConsultingSkill] Error in AI consultation:", error);
     }

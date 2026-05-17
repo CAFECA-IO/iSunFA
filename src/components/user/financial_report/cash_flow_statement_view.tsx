@@ -16,6 +16,7 @@ import ReportPrintNote, {
   IReportNote,
 } from "@/components/user/financial_report/report_print_note";
 import { numberWithCommas } from "@/lib/utils/common";
+import { MoneyUtil } from "@/lib/utils/money";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import {
   LoadingPing,
@@ -32,7 +33,7 @@ const CashFlowSection = ({
   isMainTotal = false,
 }: {
   titleText: string;
-  titleValue: number;
+  titleValue: string | number;
   items: ICashFlowStatementItem[];
   barColor: string;
   totalAbsolute: number; // Info: (20260330 - Julian) 用於計算百分比佔比的基底分母
@@ -45,13 +46,16 @@ const CashFlowSection = ({
       <div className="mb-2 flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 shadow-none">
         <span className="font-bold text-gray-700">{titleText}</span>
         <span className={"text-base font-bold text-gray-900 print:text-sm"}>
-          {titleValue >= 0 ? "" : "-"}${numberWithCommas(Math.abs(titleValue))}
+          {!MoneyUtil.toDecimal(titleValue).isNegative() ? "" : "-"}$
+          {numberWithCommas(MoneyUtil.toDecimal(titleValue).abs().toString())}
         </span>
       </div>
       <div className="flex flex-col gap-1 px-3">
         {items.map((item, idx) => {
-          const isNegative = item.amount < 0;
-          const displayAmount = Math.abs(item.amount);
+          const isNegative = MoneyUtil.toDecimal(item.amount).isNegative();
+          const displayAmount = MoneyUtil.toDecimal(item.amount)
+            .abs()
+            .toNumber();
           const percentage =
             totalAbsolute > 0 ? (displayAmount / totalAbsolute) * 100 : 0;
           return (
@@ -94,9 +98,13 @@ const CashFlowSection = ({
 export default function CashFlowSheetView({
   period,
   year,
+  onUnverifiedItemsChange = () => {},
 }: {
   period: ReportPeriod;
   year: number;
+  onUnverifiedItemsChange?: (
+    items: { id: string; note: string; type: string }[],
+  ) => void;
 }) {
   const params = useParams();
   const { t } = useTranslation();
@@ -111,12 +119,21 @@ export default function CashFlowSheetView({
         try {
           setIsLoading(true);
           const res = await request<
-            IApiResponse<{ report: ICashFlowStatement }>
+            IApiResponse<{
+              report: ICashFlowStatement;
+              unverifiedItems?: { id: string; note: string; type: string }[];
+            }>
           >(
             `/api/v1/user/account_book/${accountBookId}/report?reportType=${ReportType.CASH_FLOW}&period=${period}&year=${year}`,
           );
           if (res.payload) {
             setReportData(res.payload.report);
+            if (
+              res.payload.unverifiedItems !== undefined &&
+              onUnverifiedItemsChange
+            ) {
+              onUnverifiedItemsChange(res.payload.unverifiedItems);
+            }
           }
         } catch (error) {
           console.error("Failed to fetch cash flow statement:", error);
@@ -128,7 +145,7 @@ export default function CashFlowSheetView({
     } else {
       setIsLoading(false);
     }
-  }, [accountBookId, period, year]);
+  }, [accountBookId, period, year, onUnverifiedItemsChange]);
 
   if (isLoading) {
     return (
@@ -210,14 +227,17 @@ export default function CashFlowSheetView({
       value: `$${numberWithCommas(summary.endingBalance)}`,
       description: t("cash_flow_statement_view.metric_ending_balance_desc"),
       textColor: "text-gray-900",
-      statusGood: summary.endingBalance >= 0,
+      statusGood: !MoneyUtil.toDecimal(summary.endingBalance).isNegative(),
       tooltipAlign: TooltipAlign.RIGHT,
     },
   ];
 
   // Info: (20260330 - Julian) 計算每個活動區塊內項目的絕對值總計，用於畫進度條
   const getTotalAbsolute = (items: ICashFlowStatementItem[]) =>
-    items.reduce((acc, curr) => acc + Math.abs(curr.amount), 0);
+    items.reduce(
+      (acc, curr) => acc + MoneyUtil.toDecimal(curr.amount).abs().toNumber(),
+      0,
+    );
 
   // Info: (20260330 - Julian) 取得各活動區塊的絕對值總計
   const operatingAbsolute = getTotalAbsolute(activities.operating.items);
@@ -324,8 +344,15 @@ export default function CashFlowSheetView({
                 {t("cash_flow_statement_view.section_net_change")}
               </span>
               <span className={"font-bold text-gray-900"}>
-                {summary.netIncreaseDecrease >= 0 ? "" : "-"}$
-                {numberWithCommas(Math.abs(summary.netIncreaseDecrease))}
+                {!MoneyUtil.toDecimal(summary.netIncreaseDecrease).isNegative()
+                  ? ""
+                  : "-"}
+                $
+                {numberWithCommas(
+                  MoneyUtil.toDecimal(summary.netIncreaseDecrease)
+                    .abs()
+                    .toString(),
+                )}
               </span>
             </div>
             <div className="mt-2 flex items-center justify-between rounded-xl bg-gray-900 p-6 px-6 text-white">

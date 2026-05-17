@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { IVoucher, TradingType, IVoucherLineUI } from "@/interfaces/voucher";
-import { numberWithCommas } from "@/lib/utils/common";
+import { MoneyUtil } from "@/lib/utils/money";
 import ConfirmModal from "@/components/common/confirm_modal";
 import AiConfidence from "@/components/common/ai_confidence";
 import { request } from "@/lib/utils/request";
@@ -24,6 +24,7 @@ import { ApiCode } from "@/lib/utils/status";
 import { useParams } from "next/navigation";
 import AccountBookSelector from "@/components/user/voucher/account_book_selector";
 import FilePreviewModal from "@/components/common/file_preview_modal";
+import { translateAiNote } from "@/utils/ai_note_translator";
 
 interface IVoucherDetailModalProps {
   isOpen: boolean;
@@ -82,7 +83,13 @@ const VoucherRow = ({
           type="number"
           aria-label={t("voucher.detail_modal.fields.debit")}
           placeholder="0"
-          value={row.isDebit === true ? row.amount || "" : ""}
+          value={
+            row.isDebit === true
+              ? row.amount !== 0 && row.amount !== "0" && row.amount !== 0n
+                ? row.amount.toString()
+                : ""
+              : ""
+          }
           disabled={row.isDebit === false}
           min={0}
           onWheel={(e) => e.currentTarget.blur()}
@@ -91,7 +98,7 @@ const VoucherRow = ({
             updateRow(row.id, {
               ...row,
               isDebit: val === "" ? null : true,
-              amount: val === "" ? 0 : Number(val),
+              amount: val === "" ? "0" : val,
             });
           }}
           className="h-full w-full appearance-none rounded-xl border border-slate-300 bg-white px-2 text-right text-[10px] font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 lg:px-4 lg:text-sm"
@@ -103,7 +110,13 @@ const VoucherRow = ({
           type="number"
           aria-label={t("voucher.detail_modal.fields.credit")}
           placeholder="0"
-          value={row.isDebit === false ? row.amount || "" : ""}
+          value={
+            row.isDebit === false
+              ? row.amount !== 0 && row.amount !== "0" && row.amount !== 0n
+                ? row.amount.toString()
+                : ""
+              : ""
+          }
           disabled={row.isDebit === true}
           min={0}
           onWheel={(e) => e.currentTarget.blur()}
@@ -112,7 +125,7 @@ const VoucherRow = ({
             updateRow(row.id, {
               ...row,
               isDebit: val === "" ? null : false,
-              amount: val === "" ? 0 : Number(val),
+              amount: val === "" ? "0" : val,
             });
           }}
           className="h-full w-full appearance-none rounded-xl border border-slate-300 bg-white px-2 text-right text-[10px] font-semibold text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 lg:px-4 lg:text-sm"
@@ -199,16 +212,18 @@ export default function VoucherDetailModal({
 
   // Info: (20260327 - Luphia) 使用 useMemo 計算金額，避免每次打字都重新計算
   const { totalCredit, totalDebit, isTotalBalanced } = useMemo(() => {
-    let credit = 0;
-    let debit = 0;
+    let credit = MoneyUtil.toDecimal(0);
+    let debit = MoneyUtil.toDecimal(0);
     rows.forEach((row) => {
-      if (row.isDebit === false) credit += row.amount;
-      if (row.isDebit === true) debit += row.amount;
+      if (row.isDebit === false)
+        credit = credit.plus(MoneyUtil.toDecimal(row.amount));
+      if (row.isDebit === true)
+        debit = debit.plus(MoneyUtil.toDecimal(row.amount));
     });
     return {
-      totalCredit: credit,
-      totalDebit: debit,
-      isTotalBalanced: credit > 0 && debit > 0 && credit === debit, // Info: (20260327 - Luphia) 確保不全是 0
+      totalCredit: credit.toString(),
+      totalDebit: debit.toString(),
+      isTotalBalanced: credit.gt(0) && debit.gt(0) && credit.equals(debit), // Info: (20260327 - Luphia) 確保不全是 0
     };
   }, [rows]);
 
@@ -219,7 +234,10 @@ export default function VoucherDetailModal({
       voucherType == null ||
       !isTotalBalanced ||
       rows.length === 0 ||
-      rows.some((row) => row.accounting === null || row.amount === 0)
+      rows.some(
+        (row) =>
+          row.accounting === null || MoneyUtil.toDecimal(row.amount).isZero(),
+      )
     );
   }, [editedVoucherId, inputDate, voucherType, isTotalBalanced, rows]);
 
@@ -232,7 +250,7 @@ export default function VoucherDetailModal({
         accountingCode: "",
         accounting: null,
         particular: "",
-        amount: 0,
+        amount: "0",
         isDebit: null,
       },
     ]);
@@ -369,7 +387,7 @@ export default function VoucherDetailModal({
           <div className="ml-auto">
             <AiConfidence
               confidence={activeVoucher.confidence}
-              note={activeVoucher.aiNote}
+              note={translateAiNote(activeVoucher.aiNote, t)}
             />
           </div>
         </div>
@@ -543,7 +561,14 @@ export default function VoucherDetailModal({
                 {t("voucher.detail_modal.fields.total_amount")}
               </span>
               <span className="text-2xl font-black tracking-tight text-slate-800">
-                $ {numberWithCommas(Math.max(totalDebit, totalCredit))}
+                ${" "}
+                {MoneyUtil.format(
+                  MoneyUtil.toDecimal(totalDebit).gt(
+                    MoneyUtil.toDecimal(totalCredit),
+                  )
+                    ? totalDebit
+                    : totalCredit,
+                )}
               </span>
             </div>
           </div>

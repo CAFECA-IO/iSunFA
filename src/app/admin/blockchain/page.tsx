@@ -22,6 +22,7 @@ import { type IBlockchainDashboardData } from "@/services/admin.blockchain.servi
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
 import { useTranslation } from "@/i18n/i18n_context";
 import { CURRENCY_UNIT } from "@/constants/price";
+import { MoneyUtil } from "@/lib/utils/money";
 function usePolling<T>(fetcher: () => Promise<T>, interval = 5000) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<unknown>(null);
@@ -132,8 +133,8 @@ export default function BlockchainDashboardPage() {
 
   const handleMintSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const amt = parseFloat(mintAmount);
-    if (!amt || amt <= 0) {
+    const amtDec = MoneyUtil.toDecimal(mintAmount);
+    if (amtDec.isZero() || amtDec.isNegative()) {
       setToastMessage({
         type: "error",
         text: t("admin_blockchain.page.invalid_amount"),
@@ -146,7 +147,7 @@ export default function BlockchainDashboardPage() {
 
   const executeMint = async () => {
     setIsMinting(true);
-    const amt = parseFloat(mintAmount);
+    const amtStr = MoneyUtil.toDecimal(mintAmount).toString();
     try {
       const { challenge, token } = await getLoginOptions();
       const authentication = await fido2ClientService.startLogin({ challenge });
@@ -157,7 +158,7 @@ export default function BlockchainDashboardPage() {
       }>("/api/v1/admin/blockchain/mint", {
         method: "POST",
         body: JSON.stringify({
-          amount: amt,
+          amount: amtStr,
           fido2Signature: {
             authentication,
             challengeToken: token,
@@ -205,8 +206,8 @@ export default function BlockchainDashboardPage() {
 
   const estimatedIscCost =
     data && mintAmount
-      ? parseFloat(mintAmount) * parseFloat(data.collateralRate)
-      : 0;
+      ? MoneyUtil.toDecimal(mintAmount).times(data.collateralRate)
+      : MoneyUtil.toDecimal(0);
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -243,13 +244,7 @@ export default function BlockchainDashboardPage() {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <AdminMetricCard
             title={t("admin_blockchain.page.admin_isc")}
-            value={
-              data
-                ? parseFloat(data.adminIscBalance).toLocaleString(undefined, {
-                    maximumFractionDigits: 4,
-                  })
-                : "---"
-            }
+            value={data ? MoneyUtil.format(data.adminIscBalance, 4) : "---"}
             unit="ISC"
             icon={Landmark}
             showSmallIcon={false}
@@ -261,13 +256,7 @@ export default function BlockchainDashboardPage() {
 
           <AdminMetricCard
             title={t("admin_blockchain.page.system_icp")}
-            value={
-              data
-                ? parseFloat(data.systemTotalIcp).toLocaleString(undefined, {
-                    maximumFractionDigits: 4,
-                  })
-                : "---"
-            }
+            value={data ? MoneyUtil.format(data.systemTotalIcp, 4) : "---"}
             unit={CURRENCY_UNIT.ICP}
             icon={Coins}
             showSmallIcon={false}
@@ -282,10 +271,7 @@ export default function BlockchainDashboardPage() {
             title={t("admin_blockchain.page.member_icp")}
             value={
               data
-                ? parseFloat(data.membershipSystemIcpInventory).toLocaleString(
-                    undefined,
-                    { maximumFractionDigits: 4 },
-                  )
+                ? MoneyUtil.format(data.membershipSystemIcpInventory, 4)
                 : "---"
             }
             unit={CURRENCY_UNIT.ICP}
@@ -350,14 +336,18 @@ export default function BlockchainDashboardPage() {
             title={t("admin_blockchain.page.modal_title")}
             description={t("admin_blockchain.page.modal_desc")}
             isProcessing={isMinting}
-            disabled={parseFloat(data.adminIscBalance) < estimatedIscCost}
+            disabled={MoneyUtil.toDecimal(data.adminIscBalance).lessThan(
+              estimatedIscCost,
+            )}
             alertNode={
-              parseFloat(data.adminIscBalance) < estimatedIscCost ? (
+              MoneyUtil.toDecimal(data.adminIscBalance).lessThan(
+                estimatedIscCost,
+              ) ? (
                 <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600">
                   <Network className="mt-0.5 h-4 w-4 shrink-0" />
                   <p>
                     {t("admin_blockchain.page.insufficient_prefix")}{" "}
-                    {estimatedIscCost}
+                    {estimatedIscCost.toFixed(6)}
                     {t("admin_blockchain.page.insufficient_mid")}{" "}
                     {data.adminIscBalance} ISC.
                   </p>
@@ -379,8 +369,12 @@ export default function BlockchainDashboardPage() {
               </span>
               <span className="font-bold text-gray-700">
                 ~
-                {data.totalMembers > 0 && parseFloat(mintAmount) > 0
-                  ? Math.floor(parseFloat(mintAmount) / (data.totalMembers * 5))
+                {data.totalMembers > 0 &&
+                !MoneyUtil.toDecimal(mintAmount).isZero()
+                  ? MoneyUtil.toDecimal(mintAmount)
+                      .dividedBy(data.totalMembers * 5)
+                      .floor()
+                      .toString()
                   : "0"}{" "}
                 {t("admin_blockchain.page.days")}
               </span>
@@ -397,11 +391,7 @@ export default function BlockchainDashboardPage() {
                 {t("admin_blockchain.page.total_deduction")}
               </span>
               <span className="font-bold text-red-500">
-                -
-                {estimatedIscCost.toLocaleString(undefined, {
-                  maximumFractionDigits: 6,
-                })}{" "}
-                ISC
+                -{MoneyUtil.format(estimatedIscCost.toString(), 6)} ISC
               </span>
             </div>
           </FidoConfirmModal>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronUp, ChevronDown, Search, FileStack } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -56,6 +56,16 @@ export default function VoucherTableSection() {
   const [voucherToDelete, setVoucherToDelete] = useState<string | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] =
     useState<boolean>(false);
+
+  const searchParams = useSearchParams();
+  const openId = searchParams?.get("openId");
+
+  useEffect(() => {
+    if (openId) {
+      setSelectedVoucherId(openId);
+      setIsModalOpen(true);
+    }
+  }, [openId]);
 
   useEffect(() => {
     if (!accountBookId) return;

@@ -41,7 +41,7 @@ export const voucher = {
       types: {
         outcome: "출금 전표",
         income: "입금 전표",
-        transfer: "이체 전표",
+        transfer: "대체 전표",
         unknown: "알 수 없는 전표",
       },
       headers: {

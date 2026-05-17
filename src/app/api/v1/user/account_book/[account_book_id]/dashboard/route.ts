@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { accountBookRepo } from "@/repositories/account_book.repo";
+import { Decimal } from "decimal.js";
 import { voucherRepo } from "@/repositories/voucher.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -173,8 +174,13 @@ export async function GET(
       const tradingDateMs = v.tradingDate * 1000;
       const tradingDateObj = new Date(tradingDateMs);
       const isCurrent = tradingDateMs >= start.getTime();
-      const val =
-        v.lineItems.lines.reduce((acc, line) => acc + line.amount, 0) / 2; // Info: (20260321 - Luphia) Derived from lines
+      const val = v.lineItems.lines
+        .reduce(
+          (acc, line) => acc.plus(new Decimal(line.amount as string | number)),
+          new Decimal(0),
+        )
+        .div(2)
+        .toNumber(); // Info: (20260321 - Luphia) Derived from lines
 
       if (isCurrent) {
         if (v.tradingType === "INCOME") currentIncome += val;

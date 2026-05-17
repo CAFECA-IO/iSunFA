@@ -6,8 +6,36 @@ import {
   EsgScope,
   EsgIntensity,
 } from "@/generated";
+import { MeasurementUnit } from "@/constants/enums";
 import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
-import { IParsedVoucherLine } from "@/interfaces/voucher";
+import { ACCOUNTS, IAccount } from "@/constants/accounts";
+import { ExchangeRateService } from "@/services/exchange_rate.service";
+import { VendorRegistry } from "@/services/rules/vendor_registry";
+
+function mapAccountingCode(country: string, keyword: string): string {
+  const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
+    ACCOUNTS["TW"]) as IAccount[];
+  if (!keyword) return accountList[0]?.code || "UNKNOWN";
+
+  // Info: (20260513 - Tzuhan) exact match on code
+  const exactCode = accountList.find((a: IAccount) => a.code === keyword);
+  if (exactCode) return exactCode.code;
+
+  // Info: (20260513 - Tzuhan) partial match on name
+  const matchName = accountList.find(
+    (a: IAccount) => a.name.includes(keyword) || keyword.includes(a.name),
+  );
+  if (matchName) return matchName.code;
+
+  return keyword; // Info: (20260513 - Tzuhan) fallback
+}
+
+function getAccountName(country: string, code: string): string {
+  const accountList = (ACCOUNTS[country as keyof typeof ACCOUNTS] ||
+    ACCOUNTS["TW"]) as IAccount[];
+  const exactCode = accountList.find((a: IAccount) => a.code === code);
+  return exactCode ? exactCode.name : code;
+}
 
 export class DocumentSyncRepository {
   async syncDocumentResultToDatabase({
@@ -41,7 +69,9 @@ export class DocumentSyncRepository {
 
       let realFileId: string | undefined = undefined;
       if (fileId) {
-        let fileNode = await tx.file.findFirst({ where: { hash: fileId } });
+        let fileNode = await tx.file.findFirst({
+          where: { hash: fileId },
+        });
         if (!fileNode) {
           fileNode = await tx.file.create({ data: { hash: fileId } });
         }
@@ -55,9 +85,10 @@ export class DocumentSyncRepository {
           existingJournal = await tx.journal.findUnique({
             where: { id: journalIdContext },
           });
-        } else if (realFileId && accountBookId) {
+        } else if (fileId && accountBookId) {
           existingJournal = await tx.journal.findFirst({
-            where: { fileId: realFileId, accountBookId },
+            where: { file: { hash: fileId }, accountBookId },
+            orderBy: { createdAt: "desc" },
           });
         }
 
@@ -84,7 +115,7 @@ export class DocumentSyncRepository {
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
             confidence,
             isVerified: confidence > 85,
-            aiNote: jd.aiNote ?? "無 AI 分析備註",
+            aiNote: jd.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]",
           };
 
           if (existingJournal) {
@@ -105,9 +136,10 @@ export class DocumentSyncRepository {
           existingVoucher = await tx.voucher.findUnique({
             where: { id: voucherIdContext },
           });
-        } else if (realFileId && accountBookId) {
+        } else if (fileId && accountBookId) {
           existingVoucher = await tx.voucher.findFirst({
-            where: { fileId: realFileId, accountBookId },
+            where: { file: { hash: fileId }, accountBookId },
+            orderBy: { createdAt: "desc" },
           });
         }
 
@@ -125,17 +157,81 @@ export class DocumentSyncRepository {
           const vd = {
             ...(voucherBase?.data || voucherBase || {}),
             ...(voucherLines?.data || voucherLines || {}),
-            aiNote: `- 基本資訊分析：${voucherBase?.aiNote || voucherBase?.data?.aiNote || ""}\n- 會計科目分錄分析：${voucherLines?.aiNote || voucherLines?.data?.aiNote || ""}`,
+            aiNote: `- [[I18N_BASE_INFO_ANALYSIS]]：${voucherBase?.aiNote || voucherBase?.data?.aiNote || ""}\n- [[I18N_ENTRY_ANALYSIS]]：${voucherLines?.aiNote || voucherLines?.data?.aiNote || ""}`,
           };
           const tradingDate = new Date(vd.tradingDate || new Date());
           const typeMap: Record<string, VoucherTradingType> = {
             income: "INCOME",
+            receipt: "INCOME",
             outcome: "OUTCOME",
+            expense: "OUTCOME",
+            payment: "OUTCOME",
             transfer: "TRANSFER",
           };
-          const trType =
-            typeMap[String(vd.tradingType).toLowerCase()] || "INCOME";
+          const rawType = String(
+            vd.tradingType || (vd as Record<string, unknown>).type || "",
+          ).toLowerCase();
+          const trType = typeMap[rawType] || "INCOME";
           const confidence = parseInt(String(vd.confidence)) || 0;
+
+          // Info: (20260515 - Tzuhan) 攔截器實作：AccountCode Interceptor 與 FX Interceptor
+          const vdRecord = vd as Record<string, unknown>;
+          const vendorNameStr = String(vdRecord.vendorName || "");
+          const vendorMatch = VendorRegistry.match(vendorNameStr);
+          const linesToCreate: Prisma.VoucherLineCreateWithoutVoucherInput[] =
+            [];
+
+          if (vendorMatch) {
+            for (const rule of vendorMatch) {
+              const fx = await ExchangeRateService.convert({
+                amount: Number(vdRecord.totalAmount) || 0,
+                fromCurrency: vd.currency || "TWD",
+                toCurrency: "TWD",
+                date: tradingDate,
+              });
+              linesToCreate.push({
+                accountingCode: rule.accountingCode,
+                particular: `${getAccountName(accountBook.country || "TW", rule.accountingCode)} - ${vendorNameStr}`,
+                amount: BigInt(fx.convertedAmount.round().toFixed(0)),
+                isDebit: rule.isDebit,
+              });
+            }
+          } else {
+            for (const l of vd.lines || []) {
+              const fx = await ExchangeRateService.convert({
+                amount: Number(l.amount) || 0,
+                fromCurrency: vd.currency || "TWD",
+                toCurrency: "TWD",
+                date: tradingDate,
+              });
+              linesToCreate.push({
+                accountingCode: mapAccountingCode(
+                  accountBook.country || "TW",
+                  l.accountingCode || "",
+                ),
+                particular: l.particular || null,
+                amount: BigInt(fx.convertedAmount.round().toFixed(0)),
+                isDebit: l.isDebit === true,
+              });
+            }
+          }
+
+          let totalDebit = BigInt(0);
+          let totalCredit = BigInt(0);
+          for (const l of linesToCreate) {
+            if (l.isDebit) totalDebit += BigInt(l.amount as bigint);
+            else totalCredit += BigInt(l.amount as bigint);
+          }
+          const isBalanced =
+            totalDebit === totalCredit && linesToCreate.length > 0;
+          const finalAnalysisStatus = isBalanced
+            ? ("COMPLETED" as AIAnalysisStatus)
+            : ("FAILED" as AIAnalysisStatus);
+          const finalIsVerified = isBalanced ? confidence > 85 : false;
+          let finalAiNote = vd.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]";
+          if (!isBalanced) {
+            finalAiNote = "[[I18N_IMBALANCED_VOUCHER_WARNING]]\n" + finalAiNote;
+          }
 
           const dataPayload: Prisma.VoucherUncheckedCreateInput = {
             tradingDate,
@@ -145,16 +241,11 @@ export class DocumentSyncRepository {
             fileId: realFileId,
             accountBookId,
             confidence,
-            isVerified: confidence > 85,
-            aiNote: vd.aiNote ?? "無 AI 分析備註",
-            analysisStatus: "COMPLETED" as AIAnalysisStatus,
+            isVerified: finalIsVerified,
+            aiNote: finalAiNote,
+            analysisStatus: finalAnalysisStatus,
             lines: {
-              create: (vd.lines || []).map((l: IParsedVoucherLine) => ({
-                accountingCode: l.accountingCode || "",
-                particular: l.particular || null,
-                amount: parseFloat(String(l.amount)) || 0,
-                isDebit: l.isDebit === true,
-              })),
+              create: linesToCreate,
             },
           };
 
@@ -182,9 +273,10 @@ export class DocumentSyncRepository {
           existingEsg = await tx.esgRecord.findUnique({
             where: { id: esgRecordIdContext },
           });
-        } else if (realFileId && accountBookId) {
+        } else if (fileId && accountBookId) {
           existingEsg = await tx.esgRecord.findFirst({
-            where: { fileId: realFileId, accountBookId },
+            where: { file: { hash: fileId }, accountBookId },
+            orderBy: { createdAt: "desc" },
           });
         }
 
@@ -211,10 +303,13 @@ export class DocumentSyncRepository {
                 name: ed.newCoefficient.name,
                 description: ed.newCoefficient.description || "",
                 unit: ed.newCoefficient.unit || "",
-                emissionFactor:
-                  parseFloat(String(ed.newCoefficient.emissionFactor)) || 0,
-                source: ed.newCoefficient.source || "AI 動態擷取",
+                emissionFactor: new Prisma.Decimal(
+                  String(ed.newCoefficient.emissionFactor) || "0",
+                ),
+                source:
+                  ed.newCoefficient.source || "[[I18N_AI_DYNAMIC_EXTRACTION]]",
                 accountBookId: null,
+                isVerified: false, // Info: (20260514 - Tzuhan) 未經驗證的係數
               },
             });
             finalCoefficientId = newCoef.id;
@@ -231,18 +326,47 @@ export class DocumentSyncRepository {
             finalEmissionSourceId = newEmissionSource.id;
           }
 
-          if (finalCoefficientId) {
-            const coefExists = await tx.coefficient.findUnique({
-              where: { id: finalCoefficientId },
-            });
-            if (!coefExists) finalCoefficientId = null;
-          }
-
           if (finalEmissionSourceId) {
             const sourceExists = await tx.emissionSource.findUnique({
               where: { id: finalEmissionSourceId },
             });
             if (!sourceExists) finalEmissionSourceId = null;
+          }
+
+          const esgAmount = new Prisma.Decimal(String(ed.amount) || "0");
+          let emissionFactorValue = new Prisma.Decimal(0);
+          let isSuspense = false;
+          let recordIsVerified = confidence > 85;
+
+          if (ed.newCoefficient && ed.newCoefficient.name) {
+            emissionFactorValue = new Prisma.Decimal(
+              String(ed.newCoefficient.emissionFactor) || "0",
+            );
+            recordIsVerified = false; // Info: (20260513 - Tzuhan) AI generated new coefficient is unverified
+          } else if (finalCoefficientId) {
+            const coefExists = await tx.coefficient.findUnique({
+              where: { id: finalCoefficientId },
+            });
+            if (coefExists) {
+              emissionFactorValue = coefExists.emissionFactor;
+              if (!coefExists.isVerified) {
+                recordIsVerified = false; // Info: (20260513 - Tzuhan) Using unverified coefficient makes record unverified
+              }
+            } else {
+              isSuspense = true;
+              finalCoefficientId = null;
+            }
+          } else {
+            isSuspense = true;
+          }
+
+          let calculatedEmissions = esgAmount.mul(emissionFactorValue);
+          let aiNote = ed.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]";
+
+          if (isSuspense) {
+            calculatedEmissions = new Prisma.Decimal(0);
+            recordIsVerified = false;
+            aiNote = "[[I18N_ESG_SUSPENSE_WARNING]]\n" + aiNote;
           }
 
           const esgData: Prisma.EsgRecordUncheckedCreateInput = {
@@ -252,14 +376,18 @@ export class DocumentSyncRepository {
             scope: (ed.scope as EsgScope) || "SCOPE_1",
             activityType: ed.activityType || "",
             vendor: ed.vendor || "",
-            amount: parseFloat(String(ed.amount)) || 0,
-            unit: ed.unit || "",
-            emissions: parseFloat(String(ed.emissions)) || 0,
+            amount: esgAmount,
+            unit: (Object.values(MeasurementUnit).includes(
+              ed.unit as MeasurementUnit,
+            )
+              ? ed.unit
+              : MeasurementUnit.KG) as MeasurementUnit,
+            emissions: calculatedEmissions,
             intensity: (ed.intensity as EsgIntensity) || null,
-            dqiScore: parseFloat(String(ed.dqiScore)) || 0,
+            dqiScore: new Prisma.Decimal(String(ed.dqiScore || "0")),
             confidence,
-            isVerified: confidence > 85,
-            aiNote: ed.aiNote ?? "無 AI 分析備註",
+            isVerified: recordIsVerified,
+            aiNote,
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
             coefficientId: finalCoefficientId,
             emissionSourceId: finalEmissionSourceId,

@@ -1,4 +1,12 @@
 export const common = {
+  ai_notes: {
+    empty: "No AI analysis note",
+    base_info: "Basic Info Analysis",
+    entry: "Accounting Entry Analysis",
+    ai_dynamic_extraction: "AI Dynamic Extraction",
+    esg_suspense_warning:
+      "🚨 Suspense: Missing Carbon Emission Factor, calculation frozen.",
+  },
   search: "Search",
   batch_download: "Batch Download",
   download: "Download",

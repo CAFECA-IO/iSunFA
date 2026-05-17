@@ -6,6 +6,7 @@ import {
 } from "@/services/route.service";
 import { parseMultipleRoutesFromText } from "@/services/route.smart.service";
 import { MILEAGE_ACTION, ROUTE_MODE } from "@/constants/analysis";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill {
   name = "TRANSPORTATION_CARBON_FOOTPRINT";
@@ -233,7 +234,9 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
       Number(origin.lng),
       Number(dest.lat),
       Number(dest.lng),
-      Number(weightKg || 1000),
+      MoneyUtil.toDecimal(
+        MoneyUtil.parseInput(String(weightKg || 1000)),
+      ).toNumber(),
     );
 
     return JSON.stringify(plan, null, 2);

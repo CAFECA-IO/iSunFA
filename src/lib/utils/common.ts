@@ -1,4 +1,5 @@
 import { MonthEnum } from "@/constants/month";
+import { MoneyUtil, MoneyValue } from "@/lib/utils/money";
 
 export const isProduction = () => {
   const result = process.env.NEXT_PUBLIC_APP_URL?.includes("isunfa.com");
@@ -84,9 +85,7 @@ export function formatTime(timestamp: number, now: number) {
   }
 }
 
-// Info: (20260224 - Julian) 千分位符號、括號
-export function numberWithCommas(number: number | string) {
-  const num = typeof number === "string" ? parseFloat(number) : number;
-  const formattedNumber = new Intl.NumberFormat().format(Math.abs(num));
-  return num < 0 ? `(${formattedNumber})` : formattedNumber;
+// Info: (20260512 - Tzuhan) 千分位符號、括號 (Delegated to MoneyUtil)
+export function numberWithCommas(number: MoneyValue) {
+  return MoneyUtil.format(number);
 }

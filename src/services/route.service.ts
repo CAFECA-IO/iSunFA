@@ -11,6 +11,7 @@ import {
 import { calculateSeaPath } from "@/lib/utils/route.sea";
 import { calculateAirPath } from "@/lib/utils/route.air";
 import { ILogisticsPlan, ITransportSegment } from "@/interfaces/logistics";
+import { MoneyUtil } from "@/lib/utils/money";
 
 function calculateDistanceKm(
   lat1: number,
@@ -310,7 +311,10 @@ export async function calculateLogisticsPlanFromText(
     throw new Error("Could not resolve origin or destination from text.");
   }
 
-  const weight = Number(externalWeight || parsed.weightKg || 1000);
+  const weightStr = String(externalWeight || parsed.weightKg || 1000);
+  const weight = MoneyUtil.toDecimal(
+    MoneyUtil.parseInput(weightStr),
+  ).toNumber();
   const plan = await calculateLogisticsPlan(
     parsed.origin.lat,
     parsed.origin.lng,

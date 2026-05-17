@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, ChangeEvent } from 'react';
+import { useState, useEffect, ChangeEvent } from "react";
 
 import { useParams } from "next/navigation";
-import { Filter, Download } from "lucide-react";
+import { Filter, AlertTriangle, Download } from "lucide-react";
 import EmbedGenerateModal from "@/components/user/financial_report/embed_generate_modal";
 import BalanceSheetView from "@/components/user/financial_report/balance_sheet_view";
 import CashFlowSheetView from "@/components/user/financial_report/cash_flow_statement_view";
@@ -15,6 +15,7 @@ import { IApiResponse } from "@/lib/utils/response";
 import { downloadHtmlAsPdf } from "@/lib/utils/pdf";
 import { ReportType, ReportPeriod } from "@/constants/financial_report";
 import { useTranslation } from "@/i18n/i18n_context";
+import { translateAiNote } from "@/utils/ai_note_translator";
 
 export default function ReportView() {
   const { t } = useTranslation();
@@ -39,6 +40,9 @@ export default function ReportView() {
   } | null>(null);
   const [countOfVerifiedVouchers, setCountOfVerifiedVouchers] =
     useState<number>(0);
+  const [unverifiedItems, setUnverifiedItems] = useState<
+    { id: string; note: string; type: string }[]
+  >([]);
 
   // Info: (20260401 - Julian) 從 API 取得「帳簿名稱」
   useEffect(() => {
@@ -147,6 +151,7 @@ export default function ReportView() {
 
   // Info: (20260330 - Julian) 產出報表
   const handleGenerateReport = () => {
+    setUnverifiedItems([]);
     setGeneratedConfig({
       type: selectedReportType,
       period: selectedReportPeriod,
@@ -164,9 +169,7 @@ export default function ReportView() {
   };
 
   // Info: (20260330 - Julian) 變更報表期間
-  const handleReportPeriodChange = (
-    e: ChangeEvent<HTMLSelectElement>,
-  ) => {
+  const handleReportPeriodChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSelectedReportPeriod(e.target.value as ReportPeriod);
   };
 
@@ -250,6 +253,7 @@ export default function ReportView() {
           <BalanceSheetView
             period={generatedConfig.period}
             year={generatedConfig.year}
+            onUnverifiedItemsChange={setUnverifiedItems}
           />
         );
       case ReportType.CASH_FLOW:
@@ -257,6 +261,7 @@ export default function ReportView() {
           <CashFlowSheetView
             period={generatedConfig.period}
             year={generatedConfig.year}
+            onUnverifiedItemsChange={setUnverifiedItems}
           />
         );
       case ReportType.INCOME_STATEMENT:
@@ -264,6 +269,7 @@ export default function ReportView() {
           <IncomeStatementView
             period={generatedConfig.period}
             year={generatedConfig.year}
+            onUnverifiedItemsChange={setUnverifiedItems}
           />
         );
       case ReportType.ESG_REPORT:
@@ -271,6 +277,7 @@ export default function ReportView() {
           <EsgReportView
             period={generatedConfig.period}
             year={generatedConfig.year}
+            onUnverifiedItemsChange={setUnverifiedItems}
           />
         );
       default:
@@ -360,12 +367,44 @@ export default function ReportView() {
             </button>
 
             {/* Info:(20260319 - Julian) 傳票核對數提示 */}
-            <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-2 lg:p-4">
-              <p className="text-xs leading-relaxed font-medium text-gray-600">
-                {t("report_view.hint_verified_count", {
-                  count: numberWithCommas(countOfVerifiedVouchers),
-                })}
-              </p>
+            <div className="flex flex-col gap-2">
+              <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-2 lg:p-4">
+                <p className="text-xs leading-relaxed font-medium text-gray-600">
+                  {t("report_view.hint_verified_count", {
+                    count: numberWithCommas(countOfVerifiedVouchers),
+                  })}
+                </p>
+              </div>
+
+              {unverifiedItems.length > 0 && generatedConfig && (
+                <div className="rounded-xl border border-red-200 bg-red-50/50 p-3 shadow-sm lg:p-4 print:hidden">
+                  <div className="mb-2 flex items-start gap-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500 lg:h-5 lg:w-5" />
+                    <p className="text-xs leading-relaxed font-bold text-red-600 lg:text-sm">
+                      {t("report_view.unverified_warning", {
+                        count: numberWithCommas(unverifiedItems.length),
+                      })}
+                    </p>
+                  </div>
+                  <ul className="mt-2 max-h-32 space-y-1 overflow-y-auto border-t border-red-100 pt-2">
+                    {unverifiedItems.map((item) => (
+                      <li key={item.id}>
+                        <a
+                          href={`/user/account_book/${accountBookId}/${item.type === "esg" ? "esg" : "voucher"}?openId=${item.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex flex-col text-[11px] font-medium text-red-500 no-underline hover:text-red-700"
+                        >
+                          <span className="truncate">{item.id}</span>
+                          <span className="truncate font-normal text-red-400">
+                            {translateAiNote(item.note, t)}
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </div>

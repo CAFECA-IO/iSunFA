@@ -1,48 +1,15 @@
 import { IAccountBookBase } from "@/interfaces/account_book";
 import { ICoefficient } from "@/interfaces/coefficient";
-import {
-  TRUE_COEFFICIENT_DATA_PART_1,
-  TRUE_COEFFICIENT_DATA_PART_2,
-  TRUE_COEFFICIENT_DATA_PART_3,
-  TRUE_COEFFICIENT_DATA_PART_4,
-  TRUE_COEFFICIENT_DATA_PART_5,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_1,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_2,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_3,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_4,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_5,
-  TRUE_COEFFICIENT_DATA_DEFRA_PART_6,
-  TRUE_COEFFICIENT_DATA_TAIWAN,
-} from "@/constants/true_esg_coefficients";
 import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
 import { IEmissionSources } from "@/interfaces/emission_sources";
-
-// Info: (20260423 - Julian) 集合所有係數清單
-const ALL_TRUE_COEFFICIENT_DATA = [
-  ...TRUE_COEFFICIENT_DATA_PART_1,
-  ...TRUE_COEFFICIENT_DATA_PART_2,
-  ...TRUE_COEFFICIENT_DATA_PART_3,
-  ...TRUE_COEFFICIENT_DATA_PART_4,
-  ...TRUE_COEFFICIENT_DATA_PART_5,
-  ...TRUE_COEFFICIENT_DATA_DEFRA_PART_1,
-  ...TRUE_COEFFICIENT_DATA_DEFRA_PART_2,
-  ...TRUE_COEFFICIENT_DATA_DEFRA_PART_3,
-  ...TRUE_COEFFICIENT_DATA_DEFRA_PART_4,
-  ...TRUE_COEFFICIENT_DATA_DEFRA_PART_5,
-  ...TRUE_COEFFICIENT_DATA_DEFRA_PART_6,
-  ...TRUE_COEFFICIENT_DATA_TAIWAN,
-];
 
 export const getEsgPrompt = (
   accountBook?: IAccountBookBase | null,
   coefficients?: Partial<ICoefficient>[],
   emissionSources?: Partial<IEmissionSources>[],
 ) => {
-  // Info: (20260423 - Julian) 將外部傳入的 coefficients 與 ALL_TRUE_COEFFICIENT_DATA 合併
-  const allCoefficients = [
-    ...ALL_TRUE_COEFFICIENT_DATA,
-    ...(coefficients || []),
-  ];
+  // Info: (20260513 - Tzuhan) 將外部傳入的 coefficients 作為 context (廢除了全域係數的暴力注入)
+  const allCoefficients = [...(coefficients || [])];
 
   // Info: (20260423 - Julian) 建立「單位」清單，並篩掉空值與重複項目
   const allUnits = [...new Set(allCoefficients.map((c) => c.unit))];
@@ -100,11 +67,11 @@ export const getEsgPrompt = (
   - 若無符合的係數，或清單為空，請尋找來源可靠的外部係數（例如：經濟部能源署發布之溫室氣體排放係數、固定燃燒排放源排放係數等），並將新找到的係數資訊填入回傳 JSON 的 \`newCoefficient\` 物件中，同時將 \`coefficientId\` 設為 null。
   - 如果連外部都沒有可靠係數可以參考，請將 \`emissions\` 填為 0，並將 \`coefficientId\` 與 \`newCoefficient\` 皆設為 null。
 
-  【碳排放量計算標準】：
-  1. 活動數據 (Activity Data)：用戶提供的數據（如：用電度數、天然氣用量等）。
-  2. 排放係數 (Emission Factor)：依據您上述選擇（既有或新尋找的係數數值）。
-  3. 碳排放量 (Emissions)：活動數據 × 排放係數。
-  請將最終計算出的碳排數字填入 \`emissions\`。`;
+  【活動數據萃取標準】：
+  [CRITICAL STRICT RULES FOR DATA EXTRACTION]
+  You are a pure data extractor. Do NOT perform any business logic judgments or math.
+  - 絕對禁止計算碳排放量 (Emissions)。
+  - 僅萃取活動數據 (Activity Data) 與單位。`;
 
   // Info: (20260430 - Julian) 建立排放源 instruction
   const emissionSourcesInstruction = `
@@ -134,34 +101,5 @@ export const getEsgPrompt = (
   5. 數據可靠性 (Re)：數據來源是否可靠。優質標準：數據來源為政府機構、學術研究或國際組織等權威機構。
   請用以上五個分數，計算出平均 DQI 分數，並填入 dqiScore 欄位。
 
-  並請在 aiNote 欄位寫下 AI 分析碳盤查的邏輯，不需要任何標題，直接寫下分析邏輯或列點描述即可。 
-  請務必回傳一個 JSON 格式，包含以下欄位（不要加入任何額外的文字，也不要包裝在 markdown 程式碼區塊中，直接回傳 JSON 字串）：
-  {
-    "tradingDate": "YYYY-MM-DD", // 交易日期 
-    "scope": "SCOPE_1", // 溫室氣體範疇 ("SCOPE_1" | "SCOPE_2" | "SCOPE_3")
-    "activityType": "EMPLOYEE_COMMUTING", // 活動類型
-    "vendor": "心心小舖", // 供應商
-    "amount": 2.01, // 活動數據 (數字)
-    "unit": "kWh", // 單位
-    "emissions": 123.45, // 排放量 (數字，單位為 kgCO2e)
-    "intensity": "HIGH", // 排放強度 ("HIGH" | "MEDIUM" | "LOW")
-    "dqiScore": 1.2, // 數據品質分數 (數字 1-5)
-    "confidence": 85, // AI 分析的整體信心度 (數字 0-100)
-    "coefficientId": "string | null", // 使用既有係數之 ID，若使用新係數或無適合係數則為 null
-    "newCoefficient": { 
-        // 若找不到適合的既有係數，所尋找到的可靠外部係數資訊 (若有使用既有係數，則為 null)
-        "name": "string", // 係數名稱，須符合「XX 係數」的格式
-        "description": "string", // 係數描述
-        "unit": "string", // 係數單位，不包含 'kgCO2e'，例如：kgCO2e/kg，即為 kg (盡量以國際通用單位為主，不要寫中文)
-        "emissionFactor": 1.23, // 排放係數 (數字)
-        "source": "string" // 來源，如「經濟部能源署」等
-    },
-    "emissionSourceId": "string | null", // 使用既有排放源歸口 ID，若使用新排放源歸口或無適合排放源歸口則為 null
-    "newEmissionSource": {
-        // 若找不到適合的既有排放源歸口，所建立的新排放源歸口資訊 (若有使用既有排放源歸口，則為 null)
-        "name": "string", // 排放源名稱
-    },
-    "aiNote": "string" // AI 分析的備註
-  }
-`;
+  並請在 aiNote 欄位寫下 AI 分析碳盤查的邏輯，不需要任何標題，直接寫下分析邏輯或列點描述即可。`;
 };

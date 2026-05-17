@@ -19,5 +19,10 @@ export const orderManagement = {
     failed: "실패",
     unnamed_user: "이름 없는 사용자",
     no_data: "주문을 찾을 수 없습니다.",
+    actions: "작업",
+    retry: "재실행",
+    retry_confirm: "이 주문을 재실행하시겠습니까?",
+    retry_success: "주문 재실행이 성공적으로 트리거되었습니다.",
+    retry_failed: "주문 재실행에 실패했습니다.",
   },
 };

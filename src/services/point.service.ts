@@ -50,7 +50,7 @@ export class PointService {
         });
       } else if (order.type !== "OEN_BINDING") {
         // Info: (20260409 - Luphia) ANALYSIS, CHAT etc (consumed points)
-        if (order.amount !== 0) {
+        if (order.amount !== 0n) {
           const data = order.data as {
             category?: string;
             data?: { category?: string };

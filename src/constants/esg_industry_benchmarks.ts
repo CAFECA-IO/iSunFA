@@ -165,3 +165,22 @@ export const ESG_INDUSTRY_LOSS_RATIO_BENCHMARKS: Record<
       "特別是染整製程中，染料、助劑與化學溶劑易隨廢水排出或於烘乾過程中揮發；紡紗與織布亦有飛花與下腳料耗損（約 5% ~ 10%）。",
   },
 } as const;
+/**
+ * Info: (20260515 - Tzuhan)
+ * EsgBenchmarkService (Mock Facade)
+ *
+ * 這是為了質量守恆防呆機制建置的 Mock。
+ * 在 Ticket 6 產業容損率建置完成前，提供安全的預設值供測試。
+ */
+export class EsgBenchmarkService {
+  /**
+   * Info: (20260515 - Tzuhan)
+   * 取得特定產業的合理原物料耗損/揮發率 (Loss Ratio)
+   * @param industry 產業別
+   * @returns 容損率 (如 0.05 代表 5%)
+   */
+  static getLossRatio(): number {
+    // Info: (20260515 - Tzuhan) Mock: 預設給予 5% 的容損空間
+    return 0.05;
+  }
+}

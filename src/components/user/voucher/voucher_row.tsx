@@ -17,6 +17,7 @@ import { FilePreview } from "@/components/common/file_preview";
 import AiConfidence from "@/components/common/ai_confidence";
 import { IVoucher, TradingType } from "@/interfaces/voucher";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
+import { translateAiNote } from "@/utils/ai_note_translator";
 
 export function VoucherRow({
   voucher,
@@ -189,8 +190,8 @@ export function VoucherRow({
   // Info: (20260320 - Julian) 分析出錯
   if (voucher.analysisStatus === AIAnalysisStatus.FAILED) {
     const failedMessage =
-      voucher.aiNote && voucher.aiNote !== "無 AI 分析備註"
-        ? voucher.aiNote
+      voucher.aiNote && voucher.aiNote.trim().length > 0
+        ? translateAiNote(voucher.aiNote, t)
         : (t("voucher.main_view.table.ai.failed") as string);
 
     return (

@@ -61,12 +61,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   const run = async () => {
     if (targetStock === "all") {
-      const companies = await prisma.company.findMany({
-        where: { stockId: { startsWith: "E2E-" } },
+      const books = await prisma.accountBook.findMany({
+        where: { id: { startsWith: "e2e-book-" } },
       });
-      console.log(`Found ${companies.length} E2E companies to export.`);
-      for (const c of companies) {
-        const sId = c.stockId.replace("E2E-", "");
+      console.log(`Found ${books.length} E2E account books to export.`);
+      for (const b of books) {
+        const sId = b.id.replace("e2e-book-", "");
         await exportPhase2Db(sId);
       }
     } else {

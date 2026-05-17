@@ -10,6 +10,7 @@ import { getAccountByCode } from "@/lib/utils/account";
 import { IVoucherLineUI } from "@/interfaces/voucher";
 import { IAccount } from "@/constants/accounts";
 import { esgRepo } from "@/repositories/esg.repo";
+import { MoneyUtil } from "@/lib/utils/money";
 
 const parseFinanceNumber = (val: string): Prisma.Decimal => {
   if (!val) return new Prisma.Decimal(0);
@@ -71,17 +72,23 @@ export const runCrossValidation = async (stockId: string) => {
       /"value":\s*"([^"]+)",\s*"ctrType":\s*"number",\s*"imageUrl":\s*null,\s*"code":\s*"grossScope1GreenhouseGasEmissions"/,
     );
     if (s1)
-      goldenScope1 = new Prisma.Decimal(parseFloat(s1[1].replace(/,/g, "")));
+      goldenScope1 = new Prisma.Decimal(
+        MoneyUtil.toDecimal(s1[1].replace(/,/g, "")).toNumber(),
+      );
     const s2 = esgStr.match(
       /"value":\s*"([^"]+)",\s*"ctrType":\s*"number",\s*"imageUrl":\s*null,\s*"code":\s*"grossScope2GreenhouseGasEmissions"/,
     );
     if (s2)
-      goldenScope2 = new Prisma.Decimal(parseFloat(s2[1].replace(/,/g, "")));
+      goldenScope2 = new Prisma.Decimal(
+        MoneyUtil.toDecimal(s2[1].replace(/,/g, "")).toNumber(),
+      );
     const s3 = esgStr.match(
       /"value":\s*"([^"]+)",\s*"ctrType":\s*"number",\s*"imageUrl":\s*null,\s*"code":\s*"grossScope3GreenhouseGasEmissions"/,
     );
     if (s3)
-      goldenScope3 = new Prisma.Decimal(parseFloat(s3[1].replace(/,/g, "")));
+      goldenScope3 = new Prisma.Decimal(
+        MoneyUtil.toDecimal(s3[1].replace(/,/g, "")).toNumber(),
+      );
   }
 
   // Info: (20260504 - Tzuhan) 2. 從資料庫讀取 AI 解析的傳票 (Vouchers) 與 碳排 (ESG)
@@ -90,7 +97,6 @@ export const runCrossValidation = async (stockId: string) => {
     where: {
       accountBookId,
       analysisStatus: "COMPLETED",
-      isVerified: true,
       deletedAt: null,
     },
     include: { lines: true },
@@ -165,30 +171,31 @@ export const runCrossValidation = async (stockId: string) => {
 
   // Info: (20260505 - Tzuhan) [Internal Articulation] 驗證三表連動性
   const isAccountingEquationBalanced =
-    balanceSheet.assets.total ===
-    balanceSheet.liabilities.total + balanceSheet.equity.total;
+    Number(balanceSheet.assets.total) ===
+    Number(balanceSheet.liabilities.total) + Number(balanceSheet.equity.total);
 
   const isIncomeStatementNetIncome = incomeStatement.sections.netIncome.total;
   const bsRetainedEarnings =
     balanceSheet.equity.items.find(
-      (i: { code: string; amount: number }) => i.code === "3200",
+      (i: { code: string; amount: string | number }) => i.code === "3200",
     )?.amount || 0;
   const cfStartingNetIncome =
     cashFlowStatement.activities.operating.items.find(
-      (i: { name: string; amount: number }) => i.name === "本期稅後淨利",
+      (i: { name: string; amount: string | number }) =>
+        i.name === "本期稅後淨利",
     )?.amount || 0;
 
   const isNetIncomeArticulated =
-    isIncomeStatementNetIncome === bsRetainedEarnings &&
-    isIncomeStatementNetIncome === cfStartingNetIncome;
+    Number(isIncomeStatementNetIncome) === Number(bsRetainedEarnings) &&
+    Number(isIncomeStatementNetIncome) === Number(cfStartingNetIncome);
 
   const bsEndingCash =
     balanceSheet.assets.current.items.find(
-      (i: { code: string; amount: number }) => i.code === "1100",
+      (i: { code: string; amount: string | number }) => i.code === "1100",
     )?.amount || 0;
   const cfEndingCash = cashFlowStatement.summary.endingBalance;
 
-  const isCashArticulated = bsEndingCash === cfEndingCash;
+  const isCashArticulated = Number(bsEndingCash) === Number(cfEndingCash);
 
   const report = {
     metadata: {

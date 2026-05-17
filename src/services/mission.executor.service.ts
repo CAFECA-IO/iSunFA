@@ -9,6 +9,14 @@ import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { Schema } from "@google/generative-ai";
 import { JSONValue } from "@/validators/common";
 
+/**
+ * Info: (20260516 - Luphia) 禁止在此處撰寫工作流程相關邏輯
+ * 工作流程邏輯應記錄於 skills 資料夾內，此函式根據任務類別呼叫對應的 skill
+ * This executor MUST remain generic and stateless.
+ * DO NOT add any specific task execution logic (e.g., routing intercepts, fallback mechanisms for specific types) here.
+ * All domain-specific logic MUST be implemented within the respective skills under `src/skills`.
+ */
+
 export async function processNext() {
   console.log("[MissionExecutor] Scanning MISSION_DIR for tasks to execute...");
 
@@ -93,20 +101,20 @@ export async function processNext() {
       `[MissionExecutor] Found pending execution for Task ID: ${folderName} (Using ${useJsonPlan ? "JSON" : "MD"} Plan)`,
     );
 
+    let aggregatedResult: JSONValue = "Execution completed statically.";
+    const aggregatedResultsByFileId: Record<
+      string,
+      Record<string, JSONValue>
+    > = {};
+
     try {
       // Info: (20260420 - Luphia) Read mission data
       const missionJsonStr = await fs.readFile(missionJsonPath, "utf8");
       const missionData = JSON.parse(missionJsonStr) as Record<string, unknown>;
       const pseudoMission: IPseudoMission = {
-        id: String(missionData.orderId || "MOCK_MISSION"),
+        id: String(folderName || "MOCK_MISSION"),
         data: missionData,
       };
-
-      let aggregatedResult: JSONValue = "Execution completed statically.";
-      const aggregatedResultsByFileId: Record<
-        string,
-        Record<string, JSONValue>
-      > = {};
 
       if (useJsonPlan) {
         // Info: (20260420 - Luphia) Complex LLM & Skill sequence execution
@@ -141,82 +149,29 @@ export async function processNext() {
             priorResults,
           );
           let taskResultStr = "";
-          let stage2Intercepted = false;
+          const skill = skillRegistry[subTaskConfig.type];
+          if (skill) {
+            console.log(`[MissionExecutor]      Invoking Skill: ${skill.name}`);
+            taskResultStr = await skill.execute(
+              pseudoTask,
+              pseudoMission,
+              fullPrompt,
+              chatService,
+              priorResults,
+            );
+          } else {
+            console.log(
+              `[MissionExecutor]      Invoking raw ChatService LLM...`,
+            );
+            const responseSchema = subTaskConfig.data?.responseSchema as
+              | Schema
+              | undefined;
+            taskResultStr = await chatService.generateRaw(
+              fullPrompt,
+              responseSchema,
+            );
 
-          // Info: (20260511 - Tzuhan) Stage 2 Deterministic Routing Intercept
-          if (subTaskConfig.type === "VOUCHER_LINES_PARSING") {
-            let baseParsed: Record<string, unknown> | null = null;
-            for (const prevResultStr of priorResults.values()) {
-              try {
-                const parsed = JSON.parse(prevResultStr);
-                if (parsed.vendorName && parsed.documentType) {
-                  baseParsed = parsed;
-                  break;
-                }
-              } catch {}
-            }
-
-            if (baseParsed && baseParsed.vendorName) {
-              const ruleRegistry =
-                await import("@/services/rules/vendor_registry");
-              const vendorKey = Object.keys(
-                ruleRegistry.VENDOR_RULE_REGISTRY,
-              ).find((k) => String(baseParsed!.vendorName).includes(k));
-
-              if (vendorKey) {
-                const ruleProcessor =
-                  ruleRegistry.VENDOR_RULE_REGISTRY[vendorKey];
-                const lines = ruleProcessor({
-                  documentType: baseParsed.documentType as
-                    | "BILL_NOTICE"
-                    | "PAYMENT_RECEIPT"
-                    | "OTHER",
-                  amount: Number(baseParsed.totalAmount) || 0,
-                });
-
-                if (lines) {
-                  console.log(
-                    `[MissionExecutor] 🎯 Stage 2 Match: Deterministic rules applied for ${vendorKey}`,
-                  );
-                  taskResultStr = JSON.stringify({
-                    generationSource: "RULE_ENGINE_STAGE_2",
-                    confidence: 100,
-                    aiNote:
-                      "Stage 2: Deterministic Routing Applied (TypeScript Rules)",
-                    lines: lines,
-                  });
-                  stage2Intercepted = true;
-                }
-              }
-            }
-          }
-
-          if (!stage2Intercepted) {
-            const skill = skillRegistry[subTaskConfig.type];
-            if (skill) {
-              console.log(
-                `[MissionExecutor]      Invoking Skill: ${skill.name}`,
-              );
-              taskResultStr = await skill.execute(
-                pseudoTask,
-                pseudoMission,
-                fullPrompt,
-                chatService,
-              );
-            } else {
-              console.log(
-                `[MissionExecutor]      Invoking raw ChatService LLM...`,
-              );
-              const responseSchema = subTaskConfig.data?.responseSchema as
-                | Schema
-                | undefined;
-              taskResultStr = await chatService.generateRaw(
-                fullPrompt,
-                responseSchema,
-              );
-            }
-
-            // Info: (20260511 - Tzuhan) LLM/Skill 產出若為 JSON，補上 Fallback 標籤
+            // Info: (20260516 - Tzuhan) Add LLM_FALLBACK_STAGE_3 tag to raw LLM output if it is JSON
             try {
               const parsed = JSON.parse(taskResultStr);
               if (typeof parsed === "object" && !parsed.generationSource) {
@@ -246,32 +201,32 @@ export async function processNext() {
           priorResults.set(taskKey, taskResultStr);
 
           let cleanedTaskResultStr = taskResultStr.trim();
+          // Info: (20260514 - Tzuhan) 即使廢除了 Regex 擷取，LLM 有時還是會固執地包上 Markdown，必須移除前後綴
+          if (cleanedTaskResultStr.startsWith("```json")) {
+            cleanedTaskResultStr = cleanedTaskResultStr
+              .replace(/^```json/, "")
+              .replace(/```$/, "")
+              .trim();
+          } else if (cleanedTaskResultStr.startsWith("```")) {
+            cleanedTaskResultStr = cleanedTaskResultStr
+              .replace(/^```/, "")
+              .replace(/```$/, "")
+              .trim();
+          }
+
           let isJson = false;
           let parsedVal: JSONValue | undefined;
 
           try {
-            // Info: (20260430 - Luphia) Try to parse as JSON
+            // Info: (20260514 - Tzuhan) Phase 1.1: Strict JSON Schema parsing, removing Regex fallback
             parsedVal = JSON.parse(cleanedTaskResultStr) as JSONValue;
             isJson = true;
           } catch {
-            // Info: (20260430 - Luphia) 若失敗，嘗試只擷取第一對大括號內的內容（應對有前後文的情境）
-            const globalMatch = taskResultStr.match(/\{[\s\S]*\}/);
-            if (globalMatch) {
-              try {
-                parsedVal = JSON.parse(globalMatch[0]) as JSONValue;
-                cleanedTaskResultStr = globalMatch[0];
-                isJson = true;
-              } catch {
-                /**
-                 * Info: (20260430 - Luphia)
-                 * 擷取出來的也不是合法的 JSON，這代表它是一般的 Markdown 文本
-                 * 因此我們應該保留原始的 taskResultStr，不要破壞它
-                 */
-                cleanedTaskResultStr = taskResultStr;
-              }
-            } else {
-              cleanedTaskResultStr = taskResultStr;
-            }
+            // Info: (20260514 - Tzuhan) If it fails to parse, we log the failure but do NOT fallback to Regex
+            console.error(
+              `[MissionExecutor] ❌ JSON Parsing Failed for Task ${taskKey}. Expected strict JSON from AI. Raw: ${cleanedTaskResultStr.substring(0, 50)}...`,
+            );
+            cleanedTaskResultStr = taskResultStr;
           }
 
           if (isJson && parsedVal !== undefined) {
@@ -286,10 +241,9 @@ export async function processNext() {
                   ctx.journalId ||
                   "default";
 
-                if (recordKey && ctx.accountBookId) {
+                if (recordKey) {
                   if (!aggregatedResultsByFileId[recordKey]) {
                     aggregatedResultsByFileId[recordKey] = {
-                      accountBookId: ctx.accountBookId,
                       fileId: ctx.fileId || "",
                       voucherIdContext: ctx.voucherId || "",
                       esgRecordIdContext: ctx.esgRecordId || "",
@@ -297,15 +251,31 @@ export async function processNext() {
                     };
                   }
 
-                  if (subTaskConfig.type === "JOURNAL_PARSING")
+                  if (
+                    subTaskConfig.type === "JOURNAL_PARSING" ||
+                    subTaskConfig.type === "JOURNAL" ||
+                    subTaskConfig.data?.key === "JOURNAL"
+                  )
                     aggregatedResultsByFileId[recordKey].journal = parsedVal;
-                  if (subTaskConfig.type === "VOUCHER_BASE_PARSING")
+                  if (
+                    subTaskConfig.type === "VOUCHER_BASE_PARSING" ||
+                    subTaskConfig.type === "VOUCHER_BASE" ||
+                    subTaskConfig.data?.key === "VOUCHER_BASE"
+                  )
                     aggregatedResultsByFileId[recordKey].voucherBase =
                       parsedVal;
-                  if (subTaskConfig.type === "VOUCHER_LINES_PARSING")
+                  if (
+                    subTaskConfig.type === "VOUCHER_LINES_PARSING" ||
+                    subTaskConfig.type === "VOUCHER_LINES" ||
+                    subTaskConfig.data?.key === "VOUCHER_LINES"
+                  )
                     aggregatedResultsByFileId[recordKey].voucherLines =
                       parsedVal;
-                  if (subTaskConfig.type === "ESG_PARSING")
+                  if (
+                    subTaskConfig.type === "ESG_PARSING" ||
+                    subTaskConfig.type === "ESG" ||
+                    subTaskConfig.data?.key === "ESG"
+                  )
                     aggregatedResultsByFileId[recordKey].esg = parsedVal;
                 }
               } catch {}
@@ -424,6 +394,19 @@ export async function processNext() {
             finalResult.dbSyncPayload = aggregatedResultsByFileId;
           }
           aggregatedResult = finalResult;
+        } else if (
+          tasksConfig.length === 1 &&
+          typeof aggregatedResult === "object" &&
+          aggregatedResult !== null &&
+          useJsonPlan
+        ) {
+          const finalResult: Record<string, JSONValue> = {
+            ...(aggregatedResult as Record<string, JSONValue>),
+          };
+          if (Object.keys(aggregatedResultsByFileId).length > 0) {
+            finalResult.dbSyncPayload = aggregatedResultsByFileId;
+          }
+          aggregatedResult = finalResult;
         }
       } else {
         // Info: (20260420 - Luphia) Fallback MD behavior
@@ -453,6 +436,34 @@ export async function processNext() {
         execErr,
       );
       const errorMessage = `[Error at ${new Date().toISOString()}]\n${execErr instanceof Error ? execErr.message : String(execErr)}\n`;
+
+      // Info: (20260514 - Tzuhan) 解決 Worker 殭屍狀態：將錯誤包裝進 dbSyncPayload，讓 IssueRecorder 得以標記為 FAILED
+      const errorResult: Record<string, JSONValue> = {
+        answer: "Execution failed.",
+        tags: ["error"],
+      };
+
+      if (Object.keys(aggregatedResultsByFileId).length > 0) {
+        for (const key of Object.keys(aggregatedResultsByFileId)) {
+          aggregatedResultsByFileId[key].failureReason =
+            execErr instanceof Error ? execErr.message : String(execErr);
+        }
+        errorResult.dbSyncPayload = aggregatedResultsByFileId;
+      } else {
+        errorResult.dbSyncPayload = {
+          default: {
+            failureReason:
+              execErr instanceof Error ? execErr.message : String(execErr),
+          },
+        };
+      }
+
+      await fs.writeFile(
+        path.join(taskDir, "result.md"),
+        JSON.stringify(errorResult, null, 2),
+        "utf8",
+      );
+
       await fs.writeFile(
         path.join(taskDir, `failed_${Date.now()}.md`),
         errorMessage,
