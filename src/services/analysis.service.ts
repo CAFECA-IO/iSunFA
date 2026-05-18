@@ -398,16 +398,12 @@ export class AnalysisService {
                   matchedAccountBook?.parValue || 10,
                 );
             } else if (params.category === ANALYSIS_CATEGORY.CASH_FLOW) {
-              // Info: (20260518 - Tzuhan) [AUDIT FIX] 必須強制傳入期初現金。在 Phase 6 期初餘額模組上線前，暫時傳入 0。
+              // Info: (20260518 - Tzuhan) [AUDIT FIX] 必須強制傳入期初現金。在 Roadmap V2 Sprint 2 期初餘額模組上線前，暫時傳入 0。
               parsedPrerequisiteParams.cashFlowReport =
                 generateCashFlowStatement(periodLines, 0);
             } else if (params.category === ANALYSIS_CATEGORY.INCOME_STATEMENT) {
-              // Info: (20260518 - Tzuhan) [AUDIT FIX] 傳入 parValue 供 EPS 計算
               parsedPrerequisiteParams.incomeStatementReport =
-                generateIncomeStatement(
-                  periodLines,
-                  matchedAccountBook?.parValue || 10,
-                );
+                generateIncomeStatement(periodLines);
             } else if (
               params.category === ANALYSIS_CATEGORY.FINANCIAL_COMPLIANCE ||
               params.category === ANALYSIS_CATEGORY.FINANCIAL_HEALTH ||
@@ -420,10 +416,7 @@ export class AnalysisService {
                 matchedAccountBook?.parValue || 10,
               );
               const cfReport = generateCashFlowStatement(periodLines, 0);
-              const isReport = generateIncomeStatement(
-                periodLines,
-                matchedAccountBook?.parValue || 10,
-              );
+              const isReport = generateIncomeStatement(periodLines);
 
               parsedPrerequisiteParams.balanceSheetReport = bsReport;
               parsedPrerequisiteParams.cashFlowReport = cfReport;
@@ -431,7 +424,7 @@ export class AnalysisService {
 
               // Info: (20260518 - Tzuhan) 呼叫跨表指標引擎，將精準的綜合指標餵給 AI
               parsedPrerequisiteParams.crossReportMetrics =
-                calculateCrossReportMetrics(bsReport, cfReport);
+                calculateCrossReportMetrics(bsReport, cfReport, isReport);
             }
 
             if (esgRecords.length > 0) {

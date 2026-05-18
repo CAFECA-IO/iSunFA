@@ -8,21 +8,17 @@ import { Decimal } from "decimal.js";
 
 export function generateIncomeStatement(
   lineItems: IVoucherLineUI[],
-  parValue: number = 10,
+  // Info: (20260518 - Tzuhan) [AUDIT FIX] 拔除 parValue，EPS 計算已移交跨表引擎
 ): IIncomeStatement {
-  // Info: (20260331 - Julian) 建立會計科目分類的 Map
   const revenueMap = new Map<string, { name: string; amount: Decimal }>();
   const cogsMap = new Map<string, { name: string; amount: Decimal }>();
   const opexMap = new Map<string, { name: string; amount: Decimal }>();
   const nonOpMap = new Map<string, { name: string; amount: Decimal }>();
   const taxMap = new Map<string, { name: string; amount: Decimal }>();
 
-  // Info: (20260331 - Julian) 用於 EBITDA 和利息保障倍數計算的變數
+  // Info: (20260330 - Julian) 追蹤 EBITDA 相關調整項目
   let depreciationAndAmortization = MoneyUtil.toDecimal(0);
   let interestExpense = MoneyUtil.toDecimal(0);
-
-  // Info: (20260512 - Tzuhan) 計算股本總額以計算 EPS
-  let commonStockCapitalTotal = MoneyUtil.toDecimal(0);
 
   lineItems.forEach((line) => {
     const code = line.accountingCode || line.accounting?.code;
@@ -53,13 +49,6 @@ export function generateIncomeStatement(
           );
         }
       }
-    }
-
-    // Info: (20260512 - Tzuhan) 擷取股本科目(31開頭)計算在外流通股數
-    if (code.startsWith("31")) {
-      const amountDec = MoneyUtil.toDecimal(amount);
-      const impact = isDebit ? amountDec : amountDec.negated();
-      commonStockCapitalTotal = commonStockCapitalTotal.minus(impact);
     }
 
     // Info: (20260330 - Julian) 只處理損益表科目（4 ~ 9 開頭）來做後續分類
@@ -186,17 +175,6 @@ export function generateIncomeStatement(
   // Info: (20260330 - Julian) 計算 EBITDA
   const ebitda = operatingIncome.plus(depreciationAndAmortization);
 
-  // Info: (20260512 - Tzuhan) 結合面額與股本，計算流通在外股數與每股盈餘(EPS)
-  // Info: (20260518 - Tzuhan) [AUDIT FIX] 增加對 parValue <= 0 (無面額股) 的防禦，避免 Decimal 拋出 Division by zero
-  const outstandingShares =
-    parValue > 0
-      ? commonStockCapitalTotal.dividedBy(parValue)
-      : MoneyUtil.toDecimal(0);
-
-  const eps = outstandingShares.gt(0)
-    ? netIncome.dividedBy(outstandingShares).toNumber()
-    : 0;
-
   // Info: (20260330 - Julian) 計算財務比率
   const metrics = {
     grossMargin: MoneyUtil.safeRatio(grossProfit, totalRevenue),
@@ -209,7 +187,8 @@ export function generateIncomeStatement(
     interestCoverageRatio: interestExpense.isZero()
       ? null
       : operatingIncome.dividedBy(interestExpense).toNumber(),
-    eps,
+    // Info: (20260518 - Tzuhan) [AUDIT FIX] EPS 為跨表指標 (需 BS 總股本)，已交由 CrossReportMetrics 計算
+    eps: null,
     taxRate: MoneyUtil.safeRatio(totalTax, incomeBeforeTax),
   };
 

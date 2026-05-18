@@ -1,12 +1,14 @@
 // Info: (20260518 - Tzuhan) 建立跨報表指標計算核心，徹底解耦單一報表引擎
 import { IBalanceSheet } from "@/interfaces/balance_sheet";
 import { ICashFlowStatement } from "@/interfaces/cash_flow_statement";
+import { IIncomeStatement } from "@/interfaces/income_statement";
 import { MoneyUtil } from "@/lib/utils/money";
 
 export interface ICrossReportMetrics {
   operatingCashFlowRatio: number | null; // Info: (20260518 - Tzuhan) 營業現金流量比率
   cashFlowAdequacyRatio: number | null; // Info: (20260518 - Tzuhan) 現金流量允當比率
   cashReinvestmentRatio: number | null; // Info: (20260518 - Tzuhan) 現金再投資比率
+  eps: number | null; // Info: (20260518 - Tzuhan) 新增精確版 EPS
 }
 
 /**
@@ -14,10 +16,12 @@ export interface ICrossReportMetrics {
  * CPA 認證級別 - 跨報表高級財務指標計算引擎
  * @param balanceSheet 已結算完成之資產負債表
  * @param cashFlow 已結算完成之現金流量表
+ * @param incomeStatement 已結算完成之綜合損益表
  */
 export function calculateCrossReportMetrics(
   balanceSheet: IBalanceSheet,
   cashFlow: ICashFlowStatement,
+  incomeStatement: IIncomeStatement,
 ): ICrossReportMetrics {
   // Info: (20260518 - Tzuhan) 1. 營業現金流量比率 = 營業活動現金流量 (CF) / 流動負債期末總額 (BS)
   // Info: (20260518 - Tzuhan) [CPA 正確定義] 解決了舊版拿傳票變動數當分母的重大錯誤
@@ -79,9 +83,34 @@ export function calculateCrossReportMetrics(
     denominatorReinvestment,
   );
 
+  // Info: (20260518 - Tzuhan) 4. 每股盈餘 (EPS) = 本期稅後淨利 (IS) / 期末流通在外股數 (BS)
+  // Info: (20260518 - Tzuhan) [CPA 正確定義] 徹底解決了 IS 單表引擎只能拿到「當期增資股數」導致 EPS 永遠為 0 的荒謬錯誤
+  const netIncome = MoneyUtil.toDecimal(
+    incomeStatement.sections.netIncome.total,
+  );
+  const parValue = MoneyUtil.toDecimal(balanceSheet.metrics.parValue || 10);
+
+  // Info: (20260518 - Tzuhan) 找出股本總額 (從權益項目中撈取 31 開頭)
+  const commonStockCapital = balanceSheet.equity.items
+    .filter((item) => item.code.startsWith("31"))
+    .reduce(
+      (acc, curr) => acc.plus(MoneyUtil.toDecimal(curr.amount)),
+      MoneyUtil.toDecimal(0),
+    );
+
+  // Info: (20260518 - Tzuhan) 計算流通在外股數 (防禦無面額股)
+  const outstandingShares = parValue.gt(0)
+    ? commonStockCapital.dividedBy(parValue)
+    : MoneyUtil.toDecimal(0);
+
+  const eps = outstandingShares.gt(0)
+    ? netIncome.dividedBy(outstandingShares).toNumber()
+    : 0;
+
   return {
     operatingCashFlowRatio,
     cashFlowAdequacyRatio,
     cashReinvestmentRatio,
+    eps,
   };
 }
