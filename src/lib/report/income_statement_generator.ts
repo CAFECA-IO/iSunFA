@@ -26,7 +26,13 @@ export function generateIncomeStatement(
 
   lineItems.forEach((line) => {
     const code = line.accountingCode || line.accounting?.code;
-    if (!code || line.isDebit === null) return;
+
+    // Info: (20260518 - Tzuhan) [AUDIT FIX] 拔除沉默丟失，改為 CPA 級別阻斷防護
+    if (!code || line.isDebit === null) {
+      throw new Error(
+        `[Data Integrity Violation] 發現無法勾稽的傳票明細，缺乏會計代碼或借貸方向 (Line ID: ${line.id})`,
+      );
+    }
 
     const name = line.accounting?.name || line.particular || code;
     const { isDebit, amount } = line;
@@ -59,12 +65,13 @@ export function generateIncomeStatement(
     // Info: (20260330 - Julian) 只處理損益表科目（4 ~ 9 開頭）來做後續分類
     if (!code.match(/^[456789]/)) return;
 
+    // Info: (20260518 - Tzuhan) [AUDIT FIX] 修正邏輯短路悖論，將 79 與其他 7 開頭徹底互斥
     const isRevenue = code.startsWith("4");
     const isCOGS = code.startsWith("5");
     const isOpex = code.startsWith("6");
     const isTax = code.startsWith("79");
-    // Info: (20260504 - Tzuhan) ⚠️修復邏輯短路：真正的非營業收支是 7 與 8，移除 9 (9 為其他綜合損益 OCI)
-    const isNonOp = code.startsWith("7") || code.startsWith("8");
+    // Info: (20260518 - Tzuhan) [AUDIT FIX] 必須排除 isTax，否則 79 會讓 isNonOp 變成 true
+    const isNonOp = (code.startsWith("7") && !isTax) || code.startsWith("8");
 
     // Info: (20260504 - Tzuhan) ⚠️修復：不再用中文「利息費用」判斷，改以標準代碼 (7510 利息費用, 7050 財務成本)
     if (isNonOp && (code.startsWith("751") || code.startsWith("705"))) {
@@ -75,7 +82,7 @@ export function generateIncomeStatement(
       interestExpense = interestExpense.plus(impact);
     }
 
-    if (isTax && !isNonOp) {
+    if (isTax) {
       // Info: (20260330 - Julian) 費用: 借方增加
       const impact = isDebit
         ? MoneyUtil.toDecimal(amount)
@@ -106,13 +113,18 @@ export function generateIncomeStatement(
       opexMap.set(code, { name, amount: currentAmount.plus(impact) });
     } else if (isNonOp) {
       // Info: (20260330 - Julian) 營業外: 貸方為收益(正數), 借方為費損(負數)
-      // TODO: 在 UI 呈現時，可以加總後看是正數淨收入還是負數淨費損
       const impact = isDebit
         ? MoneyUtil.toDecimal(amount).negated()
         : MoneyUtil.toDecimal(amount);
       const currentAmount =
         nonOpMap.get(code)?.amount || MoneyUtil.toDecimal(0);
       nonOpMap.set(code, { name, amount: currentAmount.plus(impact) });
+    } else {
+      // Info: (20260518 - Tzuhan) [AUDIT FIX] 攔截 9 (其他綜合損益) 或任何未知 4~9 科目
+      // 杜絕靜默遺失導致與資產負債表 (BS) 結轉的本期損益無法勾稽
+      throw new Error(
+        `[Data Integrity Violation] 損益表遇到無法歸類的代碼，可能是尚未支援的其他綜合損益科目 (Code: ${code}, Line ID: ${line.id})`,
+      );
     }
   });
 
@@ -175,7 +187,12 @@ export function generateIncomeStatement(
   const ebitda = operatingIncome.plus(depreciationAndAmortization);
 
   // Info: (20260512 - Tzuhan) 結合面額與股本，計算流通在外股數與每股盈餘(EPS)
-  const outstandingShares = commonStockCapitalTotal.dividedBy(parValue);
+  // Info: (20260518 - Tzuhan) [AUDIT FIX] 增加對 parValue <= 0 (無面額股) 的防禦，避免 Decimal 拋出 Division by zero
+  const outstandingShares =
+    parValue > 0
+      ? commonStockCapitalTotal.dividedBy(parValue)
+      : MoneyUtil.toDecimal(0);
+
   const eps = outstandingShares.gt(0)
     ? netIncome.dividedBy(outstandingShares).toNumber()
     : 0;
