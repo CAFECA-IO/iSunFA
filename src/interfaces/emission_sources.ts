@@ -16,15 +16,15 @@ export interface IEmissionSources {
 
 export interface IEsgEmissionSourcesUI extends IEmissionSources {
   records: IEsgRecordBrief[];
-  totalEmission: number;
+  totalEmission: string;
 }
 
 export interface IEsgEmissionSourcesSummary {
   totalEmissionSourcesCount: number;
-  estimatedAnnualTotalEmission: number;
+  estimatedAnnualTotalEmission: string;
   top3EmissionSources: {
     name: string;
-    value: number;
+    value: string;
   }[];
   scopeDistribution: {
     scope: EsgScope;
@@ -43,9 +43,9 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1760411000,
         activityType: "STATIONARY_COMBUSTION",
         vendor: "台灣中油",
-        amount: 1500,
+        amount: "1500",
         unit: "公秉",
-        emissions: 2310.5,
+        emissions: "2310.5",
         emissionSourceTag: "一號鍋爐",
       },
       {
@@ -53,9 +53,9 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713168000,
         activityType: "PURCHASED_GOODS",
         vendor: "台灣電力公司",
-        amount: 800,
+        amount: "800",
         unit: "度",
-        emissions: 405.6,
+        emissions: "405.6",
         emissionSourceTag: "一號鍋爐",
       },
       {
@@ -63,9 +63,9 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713254400,
         activityType: "PROCESS_EMISSION",
         vendor: "自產煤氣",
-        amount: 3200,
+        amount: "3200",
         unit: "千立方公尺",
-        emissions: 1530.2,
+        emissions: "1530.2",
         emissionSourceTag: "熱軋產線",
       },
       {
@@ -73,13 +73,13 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713340800,
         activityType: "MOBILE_COMBUSTION",
         vendor: "台塑石化",
-        amount: 300,
+        amount: "300",
         unit: "公升",
-        emissions: 790.2,
+        emissions: "790.2",
         emissionSourceTag: "公務車",
       },
     ],
-    totalEmission: 5036.5,
+    totalEmission: "5036.5",
   },
   {
     id: "DSC-TC-002",
@@ -92,9 +92,9 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713168000,
         activityType: "STATIONARY_COMBUSTION",
         vendor: "進口無煙煤",
-        amount: 45000,
+        amount: "45000",
         unit: "噸",
-        emissions: 102500.5,
+        emissions: "102500.5",
         emissionSourceTag: "二號高爐",
       },
       {
@@ -102,13 +102,13 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713427200,
         activityType: "ELECTRICITY_USAGE",
         vendor: "台灣電力公司",
-        amount: 92000,
+        amount: "92000",
         unit: "千度",
-        emissions: 45540.0,
+        emissions: "45540.0",
         emissionSourceTag: "電弧爐",
       },
     ],
-    totalEmission: 148040.5,
+    totalEmission: "148040.5",
   },
   {
     id: "CHSC-KS-003",
@@ -121,9 +121,9 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713168000,
         activityType: "ELECTRICITY_USAGE",
         vendor: "台灣電力公司",
-        amount: 4500,
+        amount: "4500",
         unit: "千度",
-        emissions: 2227.5,
+        emissions: "2227.5",
         emissionSourceTag: "冷軋線",
       },
       {
@@ -131,13 +131,13 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713513600,
         activityType: "STATIONARY_COMBUSTION",
         vendor: "台灣中油",
-        amount: 210,
+        amount: "210",
         unit: "千立方公尺",
-        emissions: 450.8,
+        emissions: "450.8",
         emissionSourceTag: "空調系統",
       },
     ],
-    totalEmission: 2678.3,
+    totalEmission: "2678.3",
   },
   {
     id: "CSVC-VN-004",
@@ -150,9 +150,9 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713168000,
         activityType: "ELECTRICITY_USAGE",
         vendor: "越南國家電力局 (EVN)",
-        amount: 11200,
+        amount: "11200",
         unit: "千度",
-        emissions: 8064.0,
+        emissions: "8064.0",
         emissionSourceTag: "連續退火線",
       },
       {
@@ -160,12 +160,12 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713600000,
         activityType: "MOBILE_COMBUSTION",
         vendor: "Petrolimex",
-        amount: 1500,
+        amount: "1500",
         unit: "公升",
-        emissions: 3995.5,
+        emissions: "3995.5",
       },
     ],
-    totalEmission: 12059.5,
+    totalEmission: "12059.5",
   },
   {
     id: "CSCC-KS-005",
@@ -178,9 +178,9 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713168000,
         activityType: "STATIONARY_COMBUSTION",
         vendor: "中鋼公司",
-        amount: 850,
+        amount: "850",
         unit: "噸",
-        emissions: 2210.0,
+        emissions: "2210.0",
         emissionSourceTag: "精餾塔",
       },
       {
@@ -188,13 +188,13 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713686400,
         activityType: "ELECTRICITY_USAGE",
         vendor: "台灣電力公司",
-        amount: 3200,
+        amount: "3200",
         unit: "千度",
-        emissions: 1584.0,
+        emissions: "1584.0",
         emissionSourceTag: "瀝青加工線",
       },
     ],
-    totalEmission: 3794.0,
+    totalEmission: "3794.0",
   },
   {
     id: "CSSC-YC-006",
@@ -207,9 +207,9 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713168000,
         activityType: "STATIONARY_COMBUSTION",
         vendor: "天泰銲材",
-        amount: 120,
+        amount: "120",
         unit: "公斤",
-        emissions: 32.5,
+        emissions: "32.5",
         emissionSourceTag: "自動銲接區",
       },
       {
@@ -217,13 +217,13 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713772800,
         activityType: "ELECTRICITY_USAGE",
         vendor: "台灣電力公司",
-        amount: 450,
+        amount: "450",
         unit: "千度",
-        emissions: 222.7,
+        emissions: "222.7",
         emissionSourceTag: "自動銲接區",
       },
     ],
-    totalEmission: 255.2,
+    totalEmission: "255.2",
   },
   {
     id: "CSAL-KS-007",
@@ -236,9 +236,9 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713168000,
         activityType: "STATIONARY_COMBUSTION",
         vendor: "台灣中油",
-        amount: 520,
+        amount: "520",
         unit: "千立方公尺",
-        emissions: 1092.5,
+        emissions: "1092.5",
         emissionSourceTag: "熔鋁爐",
       },
       {
@@ -246,13 +246,13 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713859200,
         activityType: "ELECTRICITY_USAGE",
         vendor: "台灣電力公司",
-        amount: 2100,
+        amount: "2100",
         unit: "千度",
-        emissions: 1039.5,
+        emissions: "1039.5",
         emissionSourceTag: "熱軋線",
       },
     ],
-    totalEmission: 2132.0,
+    totalEmission: "2132.0",
   },
   {
     id: "CSCI-IN-008",
@@ -265,9 +265,9 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713168000,
         activityType: "ELECTRICITY_USAGE",
         vendor: "MGVCL",
-        amount: 1850,
+        amount: "1850",
         unit: "千度",
-        emissions: 1480.0,
+        emissions: "1480.0",
         emissionSourceTag: "冷軋退火線",
       },
       {
@@ -275,11 +275,11 @@ export const mockEmissionSources: IEsgEmissionSourcesUI[] = [
         tradingDate: 1713945600,
         activityType: "MOBILE_COMBUSTION",
         vendor: "Indian Oil",
-        amount: 450,
+        amount: "450",
         unit: "公升",
-        emissions: 1195.8,
+        emissions: "1195.8",
       },
     ],
-    totalEmission: 2675.8,
+    totalEmission: "2675.8",
   },
 ];

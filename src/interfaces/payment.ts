@@ -14,7 +14,7 @@ export type IOenCallbackData = {
 
 export type IOenOrderData = {
   credits: number;
-  amount: number;
+  amount: string;
   paymentId?: string;
   paymentMethodId?: string;
   timestamp?: string;

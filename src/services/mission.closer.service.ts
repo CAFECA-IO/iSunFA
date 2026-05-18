@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { createPublicClient, http, parseAbi, formatEther } from "viem";
 import { getPriorityEnvConfig } from "@/services/env.service";
+import { Decimal } from "decimal.js";
 
 const MB_ABI = parseAbi([
   "function tasks(uint256) external view returns (address creator, string contentCid, uint256 reward, uint256 createdAt, uint256 updatedAt, uint8 status, uint256 submissionCount)",
@@ -85,21 +86,22 @@ export async function processNext() {
 
         if (status === 3) {
           // Info: (20260430 - Luphia) TaskStatus.Closed -> Approved!
-          const revenue = Number(formatEther(reward));
+          const revenueStr = formatEther(reward);
+          const revenueDec = new Decimal(revenueStr);
           const timeSpentMs = submittedAt.getTime() - Number(createdAt) * 1000;
           const timeSpentSec = timeSpentMs > 0 ? timeSpentMs / 1000 : 1;
 
           const tokenUnitPrice =
-            Number(consumedTokens) > 0
-              ? (revenue / Number(consumedTokens)).toFixed(6)
+            consumedTokens > 0n
+              ? revenueDec.dividedBy(consumedTokens.toString()).toFixed(6)
               : "N/A";
-          const timeUnitPrice = (revenue / timeSpentSec).toFixed(6);
+          const timeUnitPrice = revenueDec.dividedBy(timeSpentSec).toFixed(6);
 
           const closeContent = `# Closure Record
 - Task ID: ${taskId}
 - Status: Approved
 - Consumed Tokens: ${consumedTokens}
-- Revenue Gained (ISC): ${revenue}
+- Revenue Gained (ISC): ${revenueStr}
 - Time Spent (seconds): ${timeSpentSec.toFixed(2)}
 - Token Unit Price (ISC/Token): ${tokenUnitPrice}
 - Time Unit Price (ISC/second): ${timeUnitPrice}

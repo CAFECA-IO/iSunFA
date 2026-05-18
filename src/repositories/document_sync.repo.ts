@@ -184,7 +184,7 @@ export class DocumentSyncRepository {
           if (vendorMatch) {
             for (const rule of vendorMatch) {
               const fx = await ExchangeRateService.convert({
-                amount: Number(vdRecord.totalAmount) || 0,
+                amount: String(vdRecord.totalAmount || 0),
                 fromCurrency: vd.currency || "TWD",
                 toCurrency: "TWD",
                 date: tradingDate,
@@ -199,7 +199,7 @@ export class DocumentSyncRepository {
           } else {
             for (const l of vd.lines || []) {
               const fx = await ExchangeRateService.convert({
-                amount: Number(l.amount) || 0,
+                amount: l.amount || 0,
                 fromCurrency: vd.currency || "TWD",
                 toCurrency: "TWD",
                 date: tradingDate,

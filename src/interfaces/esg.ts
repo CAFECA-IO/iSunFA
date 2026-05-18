@@ -15,21 +15,21 @@ export enum EsgIntensity {
 }
 
 export interface IEsgTotalEmissions {
-  value: number;
+  value: string;
   unit: string;
-  estimatedEndOfMonth: number;
+  estimatedEndOfMonth: string;
   estimatedUnit: string;
 }
 
 export interface IEsgEmissionIntensity {
-  value: number | null;
+  value: string | null;
   unit: string;
-  industryAverage: number;
+  industryAverage: string;
 }
 
 export interface IEsgScopeDistributionData {
   scope: EsgScope;
-  value: number;
+  value: string;
   percentage: number;
 }
 
@@ -48,9 +48,9 @@ export interface IEsgRecordBrief {
   tradingDate: number;
   activityType: EsgActivityTypeKey | null;
   vendor: string; // Info: (20260424 - Julian) 排放源名稱
-  amount: number; // Info: (20260424 - Julian) 排放量
+  amount: string; // Info: (20260424 - Julian) 排放量
   unit: string; // Info: (20260424 - Julian) 單位
-  emissions: number; // Info: (20260424 - Julian) 碳排放量
+  emissions: string; // Info: (20260424 - Julian) 碳排放量
   emissionSourceTag?: string; // Info: (20260424 - Julian) 排放源標籤（例：第一號鍋爐）
 }
 
@@ -81,6 +81,6 @@ export interface IEsgTarget {
   id: string;
   accountBookId: string;
   year: number; // Info: (20260507 - Julian) 年度
-  totalEmissionTarget: number; // Info: (20260507 - Julian) 總排放量目標
-  revenueEmissionTarget: number; // Info: (20260507 - Julian) 營收排放量目標
+  totalEmissionTarget: string; // Info: (20260507 - Julian) 總排放量目標
+  revenueEmissionTarget: string; // Info: (20260507 - Julian) 營收排放量目標
 }
