@@ -55,6 +55,8 @@ export const voucher = {
         confidence: "AI Confidence",
         status: "Status",
       },
+      no_account_code: "Empty",
+      no_account_name: "Unselected Accounting Subject",
       no_entries: "No Entries",
       no_file: "No File",
       filter_btn: "Filters",
