@@ -28,7 +28,7 @@ export const getJournalPrompt = (accountBook?: IAccountBookBase | null) => {
       (A 1-2 sentence objective summary of the transaction based ONLY on visible facts. Do not guess the business intent.)
 
       ### 憑證資訊
-      (Use bullet points to list all extracted key-value pairs visibly printed, such as Vendor, Date, Items, Amounts, Contract Terms, etc.)
+      (Use bullet points to list all extracted key-value pairs visibly printed that are critical for financial accounting and ESG carbon footprint tracking, such as Vendor, Date, Items, Amounts, Contract Terms, etc.)
 
       ### 異常與備註
       (List any logical errors, formatting issues, or anomalies. If none, state "無異常".)
