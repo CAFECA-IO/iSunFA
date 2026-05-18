@@ -1,24 +1,19 @@
 /**
- * Info: (20260515 - Tzuhan)
- * VendorRegistry (Mock Facade)
+ * Info: (20260518 - Tzuhan/Julian)
+ * VendorRegistry
  *
- * 這是為了 Post-Parsing 架構而建置的 Mock Registry。
- * 在 Ticket 5 完成 Alias Array 或是 Embedding 升級前，
- * 此檔案僅提供一個非常迷你的測試用陣列，用來驗證攔截器。
+ * 根據廠商名稱與單據類型，使用模糊比對回傳 CPA 認證的分錄陣列與 ESG 規則。
  */
 
-import { ACCOUNTS } from "@/constants/accounts";
+import { VENDOR_RULES } from "@/constants/vendor_rules";
 import { EsgScope } from "@/interfaces/esg";
 import { MeasurementUnit } from "@/constants/enums";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 
-const getTwCode = (code: string) =>
-  ACCOUNTS.TW.find((a) => a.code === code)?.code || code;
-
 export interface IEsgRule {
   esgScope?: EsgScope | null;
   esgActivityType?: EsgActivityTypeKey;
-  esgUnit?: MeasurementUnit;
+  esgUnit?: MeasurementUnit | string;
   suppressEsg?: boolean;
 }
 
@@ -38,38 +33,9 @@ export interface IVendorEntry {
   };
 }
 
-const MOCK_VENDOR_RULES: IVendorEntry[] = [
-  {
-    vendorId: "chunghwa_telecom",
-    aliases: ["中華電信", "中華電信股份有限公司", "chunghwa telecom", "cht"],
-    rules: {
-      PAYMENT_RECEIPT: [
-        { accountingCode: getTwCode("2171"), isDebit: true }, // Info: (20260515 - Tzuhan) 借：應付帳款 (沖銷)
-        { accountingCode: getTwCode("1103"), isDebit: false }, // Info: (20260515 - Tzuhan) 貸：銀行存款
-      ],
-      BILL_NOTICE: [
-        { accountingCode: getTwCode("6215"), isDebit: true }, // Info: (20260515 - Tzuhan) 借：管理費用 - 郵電費
-        { accountingCode: getTwCode("2171"), isDebit: false }, // Info: (20260515 - Tzuhan) 貸：應付帳款
-      ],
-    },
-    esgRules: {
-      PAYMENT_RECEIPT: {
-        suppressEsg: true,
-      },
-      BILL_NOTICE: {
-        esgScope: EsgScope.SCOPE_3,
-        esgActivityType: "PURCHASED_GOODS",
-        esgUnit: MeasurementUnit.TWD,
-      },
-    },
-  },
-];
-
 export class VendorRegistry {
   /**
-   * Info: (20260515 - Tzuhan)
-   * 根據廠商名稱與單據類型，比對並回傳對應的會計科目分錄規則。
-   * 若無精準匹配，回傳 null，交由 AI Fallback。
+   * Info: (20260518 - Tzuhan/Julian) 根據廠商名稱與單據類型，使用模糊比對回傳 CPA 認證的分錄陣列。
    */
   static match(
     vendorName: string,
@@ -79,19 +45,22 @@ export class VendorRegistry {
 
     const normalizedVendor = vendorName.toLowerCase().replace(/\s+/g, "");
 
-    for (const vendor of MOCK_VENDOR_RULES) {
-      const matchFound = vendor.aliases.some((alias) =>
+    for (const mapping of VENDOR_RULES as IVendorEntry[]) {
+      const matchFound = mapping.aliases.some((alias) =>
         normalizedVendor.includes(alias.toLowerCase().replace(/\s+/g, "")),
       );
 
-      if (matchFound && vendor.rules[documentType]) {
-        return vendor.rules[documentType];
+      if (matchFound && mapping.rules[documentType]) {
+        return mapping.rules[documentType];
       }
     }
 
     return null; // Info: (20260515 - Tzuhan) 交由後端模糊搜尋或 AI
   }
 
+  /**
+   * Info: (20260518 - Tzuhan/Julian) 根據廠商名稱與單據類型，決定 ESG 規則 (例如：是否凍結碳排計算)。
+   */
   static matchEsg(
     vendorName: string,
     documentType: string = "BILL_NOTICE",
@@ -100,13 +69,23 @@ export class VendorRegistry {
 
     const normalizedVendor = vendorName.toLowerCase().replace(/\s+/g, "");
 
-    for (const vendor of MOCK_VENDOR_RULES) {
-      const matchFound = vendor.aliases.some((alias) =>
+    for (const mapping of VENDOR_RULES as IVendorEntry[]) {
+      const matchFound = mapping.aliases.some((alias) =>
         normalizedVendor.includes(alias.toLowerCase().replace(/\s+/g, "")),
       );
 
-      if (matchFound && vendor.esgRules && vendor.esgRules[documentType]) {
-        return vendor.esgRules[documentType];
+      if (matchFound) {
+        // Info: (20260518 - Tzuhan) 優先使用特定廠商定義的 ESG 規則
+        if (mapping.esgRules && mapping.esgRules[documentType]) {
+          return mapping.esgRules[documentType];
+        }
+
+        // Info: (20260515 - Julian) 預設退場機制：收據階段金流沖銷，碳排已算過，所以 suppressEsg
+        if (documentType === "PAYMENT_RECEIPT") {
+          return { suppressEsg: true };
+        }
+
+        return null;
       }
     }
 
