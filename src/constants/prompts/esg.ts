@@ -24,6 +24,11 @@ export const getEsgPrompt = (
     ? `\n  請嚴格遵守以下帳本關於碳排或會計核算的特殊規則與偏好：\n  ${accountBook.rule}\n`
     : "";
 
+  // Info: (20260518 - Julian) 產出語言
+  const languageInstruction = accountBook?.country
+    ? `\n  請用${accountBook.country}為主要語言產出，特別是 vendor、aiNote 等欄位。`
+    : "";
+
   // Info: (20260430 - Julian) 建立排放源清單
   const emissionSourcesListStr =
     emissionSources && emissionSources.length > 0
@@ -86,6 +91,7 @@ export const getEsgPrompt = (
   請將用戶上傳的憑證（檔案/圖片）解析出碳盤查（Carbon Footprint Verification）相關資訊。${accountBookInfo}${rulesInstruction}
   ${emissionSourcesInstruction}
   ${coefficientsInstruction}
+  ${languageInstruction}
 
   【活動類型】請從以下清單中選擇最符合的活動類型，並將該活動類型的 key 填入回傳 JSON 的 \`activityType\` 欄位：
   ${EsgActivityTypeMapping.map((a) => `${a.key}(${a.scope}): ${a.value}，${a.description}`).join("\n")}

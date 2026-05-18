@@ -14,9 +14,14 @@ export const getJournalPrompt = (accountBook?: IAccountBookBase | null) => {
     ? `\n  請嚴格遵守以下帳本的特殊會計規則與偏好：\n  ${accountBook.rule}\n`
     : "";
 
+  // Info: (20260518 - Julian) 產出語言
+  const languageInstruction = accountBook?.country
+    ? `\n  請用${accountBook.country}為主要語言產出，特別是 aiNote 欄位。`
+    : "";
+
   return `
       今日日期：${today}。
-      請將用戶傳來的憑證（檔案/圖片）整理成結構化的日記帳格式。${accountBookInfo}${rulesInstruction}
+      請將用戶傳來的憑證（檔案/圖片）整理成結構化的日記帳格式。${accountBookInfo}${rulesInstruction}${languageInstruction}
       [CRITICAL WARNING - ZERO INVENTION POLICY]
       1. 嚴禁撰寫「事件摘要」或編造任何故事。請僅忠實條列這張憑證上「確切可見」的所有資訊（人事時地物）。
       2. You are strictly prohibited from calculating foreign exchange conversions. Do NOT attempt to convert the currency on the receipt to the base currency. You must extract and retain the original currency and amount as printed on the receipt.
