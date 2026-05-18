@@ -117,6 +117,15 @@ export class EsgParsingSkill implements ITaskSkill {
             },
             required: ["name", "emissionFactor", "unit"],
           },
+          coefficientId: {
+            type: SchemaType.STRING,
+            description: "選擇的既有係數 ID，若無則為 null",
+            nullable: true,
+          },
+          aiNote: {
+            type: SchemaType.STRING,
+            description: "AI 分析邏輯",
+          },
           confidence: {
             type: SchemaType.NUMBER,
             description: "信心指數 1-100",
@@ -128,6 +137,7 @@ export class EsgParsingSkill implements ITaskSkill {
           "vendor",
           "amount",
           "unit",
+          "aiNote",
           "confidence",
         ],
       };
