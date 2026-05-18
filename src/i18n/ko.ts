@@ -53,6 +53,8 @@ import { orderManagement } from "@/i18n/locales/ko/order_management";
 import { adminBilling } from "@/i18n/locales/ko/admin_billing";
 import { transportationCarbonFootprintCalculator } from "@/i18n/locales/ko/transportation_carbon_footprint_calculator";
 import { salaryCalculator } from "@/i18n/locales/ko/salary_calculator";
+import { adminCoupon } from "@/i18n/locales/en/admin_coupon";
+import { userCoupon } from "@/i18n/locales/en/user_coupon";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const ko = {
@@ -112,4 +114,6 @@ export const ko = {
   emission_sources: emissionSources,
   order_management: orderManagement,
   admin_campaign: adminCampaign,
+  admin_coupon: adminCoupon,
+  user_coupon: userCoupon,
 } satisfies BaseTranslation;

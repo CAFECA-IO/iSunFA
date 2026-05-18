@@ -53,6 +53,8 @@ import { currencyAlias } from "@/i18n/locales/ja/currency_alias";
 import { adminBilling } from "@/i18n/locales/ja/admin_billing";
 import { transportationCarbonFootprintCalculator } from "@/i18n/locales/ja/transportation_carbon_footprint_calculator";
 import { salaryCalculator } from "@/i18n/locales/ja/salary_calculator";
+import { adminCoupon } from "@/i18n/locales/en/admin_coupon";
+import { userCoupon } from "@/i18n/locales/en/user_coupon";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const ja = {
@@ -112,4 +114,6 @@ export const ja = {
   emission_sources: emissionSources,
   order_management: orderManagement,
   admin_campaign: adminCampaign,
+  admin_coupon: adminCoupon,
+  user_coupon: userCoupon,
 } satisfies BaseTranslation;
