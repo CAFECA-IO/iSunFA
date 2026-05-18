@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { talkRepo } from "@/repositories/talk.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -21,11 +20,7 @@ export async function POST(
 
     if (!user) {
       console.error("User not found");
-      return jsonFail({
-        code: "IN000099",
-        message: "User not found",
-        status: ApiCode.INTERNAL_SERVER_ERROR,
-      });
+      return jsonFail(API_ERRORS.IN_USER_NOT_FOUND);
     }
 
     const body = await request.json();
@@ -33,32 +28,20 @@ export async function POST(
 
     if (!reaction) {
       console.error("Reaction is required");
-      return jsonFail({
-        code: "IN000099",
-        message: "Reaction is required",
-        status: ApiCode.INTERNAL_SERVER_ERROR,
-      });
+      return jsonFail(API_ERRORS.IN_REACTION_IS_REQUIRED);
     }
 
     const { thread_id: threadId } = await params;
 
     if (!threadId) {
       console.error("ThreadId is required");
-      return jsonFail({
-        code: "IN000099",
-        message: "ThreadId is required",
-        status: ApiCode.INTERNAL_SERVER_ERROR,
-      });
+      return jsonFail(API_ERRORS.IN_THREADID_IS_REQUIRED);
     }
 
     const author = await webAuthnRepo.findUserByAddress(user.address);
     if (!author) {
       console.error("Author not found");
-      return jsonFail({
-        code: "IN000099",
-        message: "Author not found",
-        status: ApiCode.INTERNAL_SERVER_ERROR,
-      });
+      return jsonFail(API_ERRORS.IN_AUTHOR_NOT_FOUND);
     }
     const userId = user.id;
 

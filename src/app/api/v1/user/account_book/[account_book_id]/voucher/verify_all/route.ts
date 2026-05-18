@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -35,10 +34,6 @@ export async function PUT(
     return jsonOk({ count });
   } catch (error) {
     console.error("API Error:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to verify vouchers",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_VERIFY_VOUCHERS);
   }
 }

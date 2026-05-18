@@ -2,7 +2,6 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -28,11 +27,7 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Check permission (OWNER or ADMIN)
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
-      return jsonFail({
-        code: "FO000099",
-        message: "Permission denied. Only OWN...",
-        status: ApiCode.FORBIDDEN,
-      });
+      return jsonFail(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
     }
 
     const body = await request.json();
@@ -49,11 +44,7 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Fetch operator's current challenge
     const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
-      return jsonFail({
-        code: "UN000099",
-        message: "Missing WebAuthn challenge....",
-        status: ApiCode.UNAUTHORIZED,
-      });
+      return jsonFail(API_ERRORS.UN_MISSING_WEBAUTHN_CHALLENGE);
     }
 
     // Info: (20260325 - Tzuhan) Verify FIDO2 signature
@@ -78,11 +69,7 @@ export async function POST(
         teamId,
       );
       if (existingMember) {
-        return jsonFail({
-          code: "VA000099",
-          message: "User is already a member of...",
-          status: ApiCode.VALIDATION_ERROR,
-        });
+        return jsonFail(API_ERRORS.VA_USER_IS_ALREADY_A_MEMBER_OF);
       }
     }
 
@@ -94,11 +81,7 @@ export async function POST(
     );
 
     if (existingInvite) {
-      return jsonFail({
-        code: "VA000099",
-        message: "An invitation is already pe...",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_AN_INVITATION_IS_ALREADY_PE);
     }
 
     // Info: (20260325 - Tzuhan) Fetch team needed for the contract message

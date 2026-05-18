@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 import { esgRepo } from "@/repositories/esg.repo";
@@ -27,12 +26,7 @@ export async function GET(
       sessionUser.id,
       accountBook.teamId,
     );
-    if (!teamMember)
-      return jsonFail({
-        code: "FO000099",
-        message: "No permission to view this ...",
-        status: ApiCode.FORBIDDEN,
-      });
+    if (!teamMember) return jsonFail(API_ERRORS.FO_NO_PERMISSION_TO_VIEW_THIS);
 
     const esgRecords =
       await esgRepo.getVerifiedEsgRecordsByAccountBookId(accountBookId);
@@ -134,22 +128,13 @@ export async function POST(
       sessionUser.id,
       accountBook.teamId,
     );
-    if (!teamMember)
-      return jsonFail({
-        code: "FO000099",
-        message: "No permission to view this ...",
-        status: ApiCode.FORBIDDEN,
-      });
+    if (!teamMember) return jsonFail(API_ERRORS.FO_NO_PERMISSION_TO_VIEW_THIS);
 
     const body = await req.json();
     const { year, totalEmissionTarget, revenueEmissionTarget } = body;
 
     if (!year) {
-      return jsonFail({
-        code: "VA000099",
-        message: "Year is required",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_YEAR_IS_REQUIRED);
     }
 
     const target = await esgRepo.upsertEsgTarget({

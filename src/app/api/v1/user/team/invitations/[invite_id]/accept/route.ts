@@ -2,7 +2,6 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -31,19 +30,11 @@ export async function POST(
     const invitation = await teamRepo.getInvitationByIdWithDetails(inviteId);
 
     if (!invitation || invitation.status !== TEAM_INVITATION_STATUS.PENDING) {
-      return jsonFail({
-        code: "NO000099",
-        message: "Invitation not found or no ...",
-        status: ApiCode.NOT_FOUND,
-      });
+      return jsonFail(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
     }
 
     if (invitation.inviteeAddress !== sessionUser.address) {
-      return jsonFail({
-        code: "FO000099",
-        message: "You are not the intended re...",
-        status: ApiCode.FORBIDDEN,
-      });
+      return jsonFail(API_ERRORS.FO_YOU_ARE_NOT_THE_INTENDED_RE);
     }
 
     if (!authentication) {
@@ -53,11 +44,7 @@ export async function POST(
     // Info: (20260326 - Tzuhan) Fetch invitee's current challenge
     const inviteeUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!inviteeUser || !inviteeUser.currentChallenge) {
-      return jsonFail({
-        code: "UN000099",
-        message: "Missing WebAuthn challenge....",
-        status: ApiCode.UNAUTHORIZED,
-      });
+      return jsonFail(API_ERRORS.UN_MISSING_WEBAUTHN_CHALLENGE);
     }
 
     // Info: (20260326 - Tzuhan) Verify FIDO2 signature

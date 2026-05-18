@@ -23,11 +23,7 @@ export async function POST(
     const amount = Number(body.amount);
 
     if (isNaN(amount) || amount <= 0) {
-      return jsonFail({
-        code: "VA000099",
-        message: "Issue amount must be greate...",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_ISSUE_AMOUNT_MUST_BE_GREATE);
     }
 
     const targetUser = await webAuthnRepo.findUserById(userId);

@@ -38,11 +38,7 @@ export async function POST(
     const { authentication, orderId } = await request.json();
 
     if (!orderId || !authentication) {
-      return jsonFail({
-        code: "VA000099",
-        message: "Missing orderId or FIDO aut...",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_MISSING_ORDERID_OR_FIDO_AUT);
     }
 
     const dbUser = await webAuthnRepo.getUserWithPaymentMethods(user.id);
@@ -57,11 +53,7 @@ export async function POST(
     const providerToken = oenPaymentMethod?.token;
 
     if (!providerToken) {
-      return jsonFail({
-        code: "NO000099",
-        message: "Payment method not found or...",
-        status: ApiCode.NOT_FOUND,
-      });
+      return jsonFail(API_ERRORS.NO_PAYMENT_METHOD_NOT_FOUND_OR);
     }
 
     const order = await paymentRepo.getOrderById(orderId);
@@ -71,11 +63,7 @@ export async function POST(
       order.userId !== user.id ||
       order.status !== ORDER_STATUS.PENDING
     ) {
-      return jsonFail({
-        code: "VA000099",
-        message: "Invalid or expired order",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_INVALID_OR_EXPIRED_ORDER);
     }
 
     const orderData = order.data as IOenOrderData;
@@ -90,11 +78,7 @@ export async function POST(
       );
     } catch (error) {
       console.error("FIDO Verification failed during checkout:", error);
-      return jsonFail({
-        code: "UN000099",
-        message: "FIDO2 Signature verificatio...",
-        status: ApiCode.UNAUTHORIZED,
-      });
+      return jsonFail(API_ERRORS.UN_ERROR);
     }
 
     // Info: (20260305 - Tzuhan) Create an initial transaction record, marking it PENDING, and save FIDO payload

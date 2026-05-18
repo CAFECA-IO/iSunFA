@@ -4,7 +4,6 @@ import { analysisRepo } from "@/repositories/analysis.repo";
 import { shareRepo } from "@/repositories/share.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 
 export async function POST(
   request: NextRequest,
@@ -64,10 +63,6 @@ export async function POST(
     return jsonOk({ token: shareToken.token });
   } catch (error) {
     console.error("[API] /user/analysis/share POST error:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to generate share link",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_GENERATE_SHARE_LINK);
   }
 }

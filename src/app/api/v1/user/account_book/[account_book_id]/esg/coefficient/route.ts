@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
@@ -70,11 +69,7 @@ export async function POST(
     // Info: (20260413 - Julian) 驗證 coefficient 參數
     if (!input || !input.name) {
       console.error("Missing coefficient or coefficient name");
-      return jsonFail({
-        code: "VA000099",
-        message: "Coefficient is required",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_COEFFICIENT_IS_REQUIRED);
     }
 
     // Info: (20260413 - Julian) 建立自訂公式
@@ -90,11 +85,7 @@ export async function POST(
     return jsonOk({ coefficientId: newCoefficient.newId });
   } catch (error) {
     console.error("Error creating esg coefficient:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to create esg coeffi...",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_CREATE_ESG_COEFFI);
   }
 }
 
@@ -219,10 +210,6 @@ export async function GET(
     return jsonOk({ items: result, total });
   } catch (error) {
     console.error("Error fetching esg coefficients:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to fetch esg coeffic...",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_FETCH_ESG_COEFFIC);
   }
 }

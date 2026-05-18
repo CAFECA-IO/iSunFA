@@ -2,7 +2,6 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { lookupCompany } from "@/lib/utils/company_lookup";
 
 export const dynamic = "force-dynamic";
@@ -20,11 +19,7 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get("query");
 
     if (!query) {
-      return jsonFail({
-        code: "VA000099",
-        message: "Query parameter is required",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_QUERY_PARAMETER_IS_REQUIRED);
     }
 
     const results = await lookupCompany(query);

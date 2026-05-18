@@ -27,7 +27,8 @@ function measureFlops(): number {
   const flopsPerCore = (iterations * 2) / durationInSeconds;
   const totalCores = os.cpus().length;
 
-  cachedFlops = flopsPerCore * totalCores;
+  // Info: (20260512 - Luphia) Convert to TFLOPS
+  cachedFlops = (flopsPerCore * totalCores) / 1e12;
   return cachedFlops;
 }
 

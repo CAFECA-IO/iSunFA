@@ -44,11 +44,7 @@ export async function POST(request: NextRequest) {
         return jsonFail(API_ERRORS.VL_BAD_AMOUNT);
       }
       if (!paymentMethodId) {
-        return jsonFail({
-          code: "VA000099",
-          message: "paymentMethodId is required",
-          status: ApiCode.VALIDATION_ERROR,
-        });
+        return jsonFail(API_ERRORS.VA_PAYMENTMETHODID_IS_REQUIRED);
       }
       const result = await generatePaymentOrder(user.id, {
         amount,
@@ -75,11 +71,7 @@ export async function POST(request: NextRequest) {
 
       // Info: (20260128 - Luphia) Validate required analysis parameters
       if (!composedData.category) {
-        return jsonFail({
-          code: "VA000099",
-          message: "Missing required fields for...",
-          status: ApiCode.VALIDATION_ERROR,
-        });
+        return jsonFail(API_ERRORS.VA_MISSING_REQUIRED_FIELDS_FOR);
       }
 
       const isNonPeriodAnalysis = [
@@ -89,11 +81,7 @@ export async function POST(request: NextRequest) {
       ].some((category) => composedData.category === category);
 
       if (!isNonPeriodAnalysis && !composedData.periodType) {
-        return jsonFail({
-          code: "VA000099",
-          message: "Missing required fields for...",
-          status: ApiCode.VALIDATION_ERROR,
-        });
+        return jsonFail(API_ERRORS.VA_MISSING_REQUIRED_FIELDS_FOR);
       }
 
       const generateAnalysisParams: IGenerateAnalysisParams = {
@@ -109,11 +97,7 @@ export async function POST(request: NextRequest) {
       return jsonOk(result);
     }
 
-    return jsonFail({
-      code: "VA000099",
-      message: "Invalid order type",
-      status: ApiCode.VALIDATION_ERROR,
-    });
+    return jsonFail(API_ERRORS.VA_INVALID_ORDER_TYPE);
   } catch (error) {
     console.error("[API] /user/order POST error:", error);
     return jsonFail({

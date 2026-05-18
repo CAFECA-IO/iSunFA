@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 
@@ -33,11 +32,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     if (!body.name || typeof body.name !== "string" || !body.name.trim()) {
-      return jsonFail({
-        code: "VA000099",
-        message: "Team name is required",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_TEAM_NAME_IS_REQUIRED);
     }
 
     const team = await teamRepo.createTeam({ name: body.name.trim() });
