@@ -657,17 +657,17 @@ model Coefficient {
   source         String
 
   // Info: (20260514 - Tzuhan) 前端介面定義的類別 (e.g., STANDARD, CUSTOM)
-  category       String  @default("STANDARD") 
+  category String @default("STANDARD")
 
   // Info: (20260514 - Tzuhan) 版本年份，方便未來依年份快速檢索對應的係數庫
-  versionYear    String? @map("version_year")
+  versionYear String? @map("version_year")
 
   // Info: (20260514 - Tzuhan) 人工建立與覆核的 CPA 防線
-  isVerified     Boolean @default(true) @map("is_verified")
-  
+  isVerified Boolean @default(true) @map("is_verified")
+
   // Info: (20260514 - Tzuhan) 追蹤是由哪一位使用者人工建立的 (AI 建立則為 Null)
-  userId         String? @map("user_id")
-  user           User?   @relation(fields: [userId], references: [id])
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id])
 
   // Info: (20260413 - Julian) 關聯帳本，沒有帳本代表是標準係數
   accountBookId String?      @map("account_book_id")

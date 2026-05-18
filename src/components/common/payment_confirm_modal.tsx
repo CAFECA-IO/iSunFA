@@ -1,15 +1,27 @@
-'use client';
+"use client";
 
-import { Fragment, useState, useEffect, ReactNode } from 'react';
+import { Fragment, useState, useEffect, ReactNode } from "react";
 
-import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
-import { Coins, X, Loader2, Copy, Check, CheckCircle2 } from 'lucide-react';
-import { useTranslation } from '@/i18n/i18n_context';
-import { useAuth } from '@/contexts/auth_context';
-import { useRouter } from 'next/navigation';
-import ConfirmModal from '@/components/common/confirm_modal';
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Transition,
+  TransitionChild,
+} from "@headlessui/react";
+import { Coins, X, Loader2, Copy, Check, CheckCircle2 } from "lucide-react";
+import { useTranslation } from "@/i18n/i18n_context";
+import { useAuth } from "@/contexts/auth_context";
+import { useRouter } from "next/navigation";
+import ConfirmModal from "@/components/common/confirm_modal";
 
-export type PaymentStatus = 'idle' | 'preparing' | 'signing_payment' | 'submitting_payment' | 'payment_success' | 'error';
+export type PaymentStatus =
+  | "idle"
+  | "preparing"
+  | "signing_payment"
+  | "submitting_payment"
+  | "payment_success"
+  | "error";
 
 export interface IPaymentDetailItem {
   label: string;
@@ -44,7 +56,7 @@ export default function PaymentConfirmModal({
   description = undefined,
   confirmBtnText = undefined,
   isLoading = false,
-  status = 'idle',
+  status = "idle",
   errorMessage = undefined,
   txHash = undefined,
   extraContent = undefined,
@@ -75,13 +87,21 @@ export default function PaymentConfirmModal({
 
   const currentCredits = user.credits ?? 0;
 
-  const isProcessing = status !== 'idle' && status !== 'error' && status !== 'payment_success';
-  const isSuccess = status === 'payment_success';
+  const isProcessing =
+    status !== "idle" && status !== "error" && status !== "payment_success";
+  const isSuccess = status === "payment_success";
+
+  const balance = currentCredits - cost;
+  const isBalanceNegative = balance < 0;
 
   return (
     <>
       <Transition show={isOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={isProcessing ? () => { } : onClose}>
+        <Dialog
+          as="div"
+          className="relative z-50"
+          onClose={isProcessing ? () => {} : onClose}
+        >
           <TransitionChild
             as={Fragment}
             enter="ease-out duration-300"
@@ -105,11 +125,11 @@ export default function PaymentConfirmModal({
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
-                <DialogPanel className="relative transform overflow-hidden rounded-xl bg-white px-4 pb-4 pt-5 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:p-6">
-                  <div className="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
+                <DialogPanel className="relative transform overflow-hidden rounded-xl bg-white px-4 pt-5 pb-4 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:p-6">
+                  <div className="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                     <button
                       type="button"
-                      className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50"
+                      className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
                       onClick={onClose}
                       disabled={isProcessing}
                     >
@@ -119,42 +139,56 @@ export default function PaymentConfirmModal({
                   </div>
 
                   <div className="text-center sm:mt-0 sm:text-left">
-                    <DialogTitle as="h3" className="text-lg font-bold leading-6 text-gray-900 flex items-center gap-2">
-                      <div className="p-2 rounded-full bg-orange-100 text-orange-600">
+                    <DialogTitle
+                      as="h3"
+                      className="flex items-center gap-2 text-lg leading-6 font-bold text-gray-900"
+                    >
+                      <div className="rounded-full bg-orange-100 p-2 text-orange-600">
                         <Coins className="h-5 w-5" />
                       </div>
-                      {title || t('analysis.confirm_title')}
+                      {title || t("analysis.confirm_title")}
                     </DialogTitle>
 
                     {/* Info: (20260409 - Luphia) Processing / Error / Success View */}
-                    {isProcessing || status === 'error' || isSuccess ? (
+                    {isProcessing || status === "error" || isSuccess ? (
                       <div className="mt-6 space-y-6">
-
                         {/* Info: (20260409 - Luphia) Status Message */}
-                        <div className="text-center bg-gray-50 rounded-lg p-6 min-h-[120px] flex flex-col items-center justify-center">
-                          {status === 'error' ? (
+                        <div className="flex min-h-[120px] flex-col items-center justify-center rounded-lg bg-gray-50 p-6 text-center">
+                          {status === "error" ? (
                             <div className="space-y-2">
                               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                                <X className="h-6 w-6 text-red-600" aria-hidden="true" />
+                                <X
+                                  className="h-6 w-6 text-red-600"
+                                  aria-hidden="true"
+                                />
                               </div>
-                              <p className="text-sm text-red-600 font-medium">{errorMessage || t('auth_modal.failed')}</p>
+                              <p className="text-sm font-medium text-red-600">
+                                {errorMessage || t("auth_modal.failed")}
+                              </p>
                             </div>
                           ) : isSuccess ? (
-                            <div className="space-y-2 w-full">
+                            <div className="w-full space-y-2">
                               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
                                 <CheckCircle2 className="h-6 w-6 text-green-600" />
                               </div>
-                              <p className="text-sm text-green-600 font-bold">{t('analysis.steps.payment_success')}</p>
-                              <p className="text-xs text-gray-500">{t('analysis.success.message')}</p>
+                              <p className="text-sm font-bold text-green-600">
+                                {t("analysis.steps.payment_success")}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {t("analysis.success.message")}
+                              </p>
                               {txHash && (
-                                <div className="flex items-center justify-center gap-2 mt-2 bg-white p-2 rounded border border-gray-200 max-w-[200px] mx-auto">
-                                  <p className="text-xs font-mono text-gray-500 truncate" title={txHash}>
+                                <div className="mx-auto mt-2 flex max-w-[200px] items-center justify-center gap-2 rounded border border-gray-200 bg-white p-2">
+                                  <p
+                                    className="truncate font-mono text-xs text-gray-500"
+                                    title={txHash}
+                                  >
                                     {txHash}
                                   </p>
                                   <button
                                     type="button"
                                     onClick={handleCopy}
-                                    className="p-1 hover:bg-gray-100 rounded-full transition-colors shrink-0"
+                                    className="shrink-0 rounded-full p-1 transition-colors hover:bg-gray-100"
                                     title="Copy TxHash"
                                   >
                                     {isCopied ? (
@@ -168,8 +202,8 @@ export default function PaymentConfirmModal({
                             </div>
                           ) : (
                             <div className="space-y-4">
-                              <Loader2 className="h-8 w-8 text-orange-600 animate-spin mx-auto" />
-                              <p className="text-sm text-gray-700 font-medium animate-pulse">
+                              <Loader2 className="mx-auto h-8 w-8 animate-spin text-orange-600" />
+                              <p className="animate-pulse text-sm font-medium text-gray-700">
                                 {t(`analysis.steps.${status}`)}
                               </p>
                             </div>
@@ -179,22 +213,33 @@ export default function PaymentConfirmModal({
                     ) : (
                       /* Info: (20260409 - Luphia) Initial Confirmation View */
                       <div className="mt-4">
-                        <p className="text-sm text-gray-500 mb-4">
-                          {description || t('analysis.confirm_desc')}
+                        <p className="mb-4 text-sm text-gray-500">
+                          {description || t("analysis.confirm_desc")}
                         </p>
 
-                        <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-100">
+                        <div className="space-y-3 rounded-lg border border-gray-100 bg-gray-50 p-4">
                           {items.map((item, index) => (
-                            <div key={index} className="flex justify-between items-center text-sm">
-                              <span className="text-gray-500">{item.label}</span>
-                              <span className="font-medium text-gray-900 text-right">{item.value}</span>
+                            <div
+                              key={index}
+                              className="flex items-center justify-between text-sm"
+                            >
+                              <span className="text-gray-500">
+                                {item.label}
+                              </span>
+                              <span className="text-right font-medium text-gray-900">
+                                {item.value}
+                              </span>
                             </div>
                           ))}
 
-                          {items.length > 0 && <div className="h-px bg-gray-200 my-2" />}
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="text-gray-900 font-semibold">{t('analysis.confirm_cost')}</span>
-                            <span className="font-bold text-orange-600 flex items-center gap-1">
+                          {items.length > 0 && (
+                            <div className="my-2 h-px bg-gray-200" />
+                          )}
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="font-semibold text-gray-900">
+                              {t("analysis.confirm_cost")}
+                            </span>
+                            <span className="flex items-center gap-1 font-bold text-orange-600">
                               <Coins className="h-4 w-4" />
                               {cost}
                             </span>
@@ -202,36 +247,46 @@ export default function PaymentConfirmModal({
                         </div>
 
                         {extraContent && (
-                          <div className="mt-4">
-                            {extraContent}
-                          </div>
+                          <div className="mt-4">{extraContent}</div>
                         )}
 
-                        <p className="text-xs text-right text-gray-400 mt-4">
-                          {t('analysis.confirm_balance')}: <span className="font-medium">{currentCredits} - {cost} = {currentCredits - cost}</span>
-                        </p>
+                        <div className="mt-4 flex items-center justify-end gap-1 text-right text-xs text-gray-400">
+                          <p>{t("analysis.confirm_balance")}:</p>
+                          <p className="font-medium">
+                            {currentCredits} - {cost} ={" "}
+                            <span
+                              className={
+                                isBalanceNegative
+                                  ? "font-bold text-red-500"
+                                  : ""
+                              }
+                            >
+                              {balance}
+                            </span>
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>
 
                   <div className="mt-6 sm:mt-8 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                    {!isProcessing && status !== 'error' && (
+                    {!isProcessing && status !== "error" && (
                       <>
                         {isSuccess ? (
                           <button
                             type="button"
-                            className="inline-flex w-full justify-center items-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:col-span-2 transition-all"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:col-span-2"
                             onClick={() => {
                               onClose();
                             }}
                           >
-                            {t('common.close') || 'Close'}
+                            {t("common.close") || "Close"}
                           </button>
                         ) : (
                           <button
                             type="button"
                             disabled={isLoading}
-                            className="inline-flex w-full justify-center items-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:col-start-2 transition-all disabled:opacity-70 disabled:cursor-wait"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:cursor-wait disabled:opacity-70 sm:col-start-2"
                             onClick={() => {
                               if (currentCredits < cost) {
                                 setShowInsufficient(true);
@@ -240,8 +295,10 @@ export default function PaymentConfirmModal({
                               }
                             }}
                           >
-                            {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                            {confirmBtnText || t('analysis.confirm_action')}
+                            {isLoading && (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            )}
+                            {confirmBtnText || t("analysis.confirm_action")}
                           </button>
                         )}
 
@@ -249,21 +306,21 @@ export default function PaymentConfirmModal({
                           <button
                             type="button"
                             disabled={isLoading}
-                            className="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0 transition-all disabled:opacity-50"
+                            className="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 transition-all ring-inset hover:bg-gray-50 disabled:opacity-50 sm:col-start-1 sm:mt-0"
                             onClick={onClose}
                           >
-                            {t('common.cancel')}
+                            {t("common.cancel")}
                           </button>
                         )}
                       </>
                     )}
-                    {status === 'error' && (
+                    {status === "error" && (
                       <button
                         type="button"
-                        className="inline-flex w-full justify-center items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-span-2 transition-all"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 transition-all ring-inset hover:bg-gray-50 sm:col-span-2"
                         onClick={onClose}
                       >
-                        {t('common.close')}
+                        {t("common.close")}
                       </button>
                     )}
                   </div>
@@ -277,13 +334,13 @@ export default function PaymentConfirmModal({
       <ConfirmModal
         isOpen={showInsufficient}
         onClose={() => setShowInsufficient(false)}
-        title={t('analysis.insufficient_credits.title')}
-        message={t('analysis.insufficient_credits.message')}
-        confirmText={t('analysis.insufficient_credits.buy_btn')}
+        title={t("analysis.insufficient_credits.title")}
+        message={t("analysis.insufficient_credits.message")}
+        confirmText={t("analysis.insufficient_credits.buy_btn")}
         onConfirm={() => {
           setShowInsufficient(false);
           onClose();
-          router.push('/pricing?tab=credits');
+          router.push("/pricing?tab=credits");
         }}
       />
     </>
