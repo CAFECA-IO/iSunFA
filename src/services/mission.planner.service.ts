@@ -103,6 +103,14 @@ export async function processNext() {
               ...(missionObj.data || {}),
               category: missionObj.data?.category, // Info: (20260420 - Luphia) Ensure category is strictly at root
               data: missionObj.data || {},
+              prerequisiteData: {
+                ...(missionObj.prerequisiteData ||
+                  missionObj.data?.prerequisiteData ||
+                  {}),
+                ...(missionObj.accountBook
+                  ? { accountBook: missionObj.accountBook }
+                  : {}),
+              },
             } as IMissionParams;
 
             // Info: (20260420 - Luphia) 3. Generate Mission Definition using missionGenerator
