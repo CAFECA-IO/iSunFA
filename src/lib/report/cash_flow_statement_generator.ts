@@ -29,12 +29,11 @@ export function generateCashFlowStatement(
   // Info: (20260330 - Julian) 關鍵指標
   let netIncome = MoneyUtil.toDecimal(0);
   let depreciationAndAmortization = MoneyUtil.toDecimal(0);
-  let nonOperatingIncomeAndExpense = MoneyUtil.toDecimal(0);
+  // Info: (20260518 - Tzuhan) [AUDIT FIX] 拔除 nonOperatingIncomeAndExpense，禁止破壞恆等式的反向排除
   let interestPaid = MoneyUtil.toDecimal(0);
   let taxesPaid = MoneyUtil.toDecimal(0);
   let capitalExpenditure = MoneyUtil.toDecimal(0);
   let dividendsPaid = MoneyUtil.toDecimal(0);
-  // Info: (20260518 - Tzuhan) 新增：追蹤存貨增加額，供跨表允當比率計算使用
   let inventoryIncrease = MoneyUtil.toDecimal(0);
 
   lineItems.forEach((line) => {
@@ -50,12 +49,6 @@ export function generateCashFlowStatement(
     const name = line.accounting?.name || line.particular || code;
     const { isDebit, amount } = line;
 
-    /* Info: (20260330 - Julian)
-     * 1. 資產增加(借方)代表現金流出，減少(貸方)代表現金流入
-     * 2. 負債/權益/收益增加(貸方)代表現金流入，減少(借方)代表現金流出
-     * 3. 費損增加(借方)代表減少淨利
-     */
-
     // Info: (20260331 - Julian) 現金或淨利影響：貸方 = 現金流入/淨利增加 = 正向，借方 = 現金流出/淨利減少 = 負向
     const impact = isDebit
       ? MoneyUtil.toDecimal(amount).negated()
@@ -70,12 +63,6 @@ export function generateCashFlowStatement(
       code.startsWith("8")
     ) {
       netIncome = netIncome.plus(impact);
-
-      // Info: (20260504 - Tzuhan) ⚠️修復：反向調節營業外收支 (7,8 開頭)，避免與投資/籌資活動現金流重複計算
-      if (code.startsWith("7") || code.startsWith("8")) {
-        nonOperatingIncomeAndExpense =
-          nonOperatingIncomeAndExpense.plus(impact);
-      }
 
       // Info: (20260504 - Tzuhan) 補充揭露：使用代碼 (7510/7050 利息, 79 所得稅) 避免中文判斷失效
       if (code.startsWith("751") || code.startsWith("705"))
@@ -102,13 +89,12 @@ export function generateCashFlowStatement(
       // Info: (20260331 - Julian) 存貨
       addItem(operatingItems, `[營運資金] ${name}變動`, impact);
       // Info: (20260518 - Tzuhan) [AUDIT FIX] 資產借方增加 = 現金流負向(impact 為負)。
-      // Info: (20260518 - Tzuhan) 跨表指標需要的是「存貨增加額(正數)」，所以將 impact 反轉記錄。
       inventoryIncrease = inventoryIncrease.plus(impact.negated());
     }
 
     // Info: (20260330 - Julian) 流動負債變動 (營業活動)
     if (code.startsWith("21") || code.startsWith("22")) {
-      // Info: (20260504 - Tzuhan) ⚠️修復：改由底層字典的 isInterestBearing 標籤統一控管有息負債，實現資料與邏輯解耦
+      // Info: (20260504 - Tzuhan) 改由底層字典的 isInterestBearing 標籤統一控管有息負債
       if (line.accounting?.isInterestBearing) {
         addItem(financingItems, `短期借款/票券及一年內到期長債變動`, impact);
       } else {
@@ -124,7 +110,7 @@ export function generateCashFlowStatement(
       code.startsWith("18") ||
       code.startsWith("19")
     ) {
-      // Info: (20260504 - Tzuhan) ⚠️修復：改由備抵資產 (Contra-Asset) 的變動來精準捕捉折舊攤銷，完全捨棄中文關鍵字比對
+      // Info: (20260504 - Tzuhan) 改由備抵資產 (Contra-Asset) 的變動來精準捕捉折舊攤銷，完全捨棄中文關鍵字比對
       if (line.accounting && !line.accounting.isDebit) {
         if (!isDebit) {
           // Info: (20260512 - Tzuhan) 貸方增加代表提列折舊/攤銷，加回淨利
@@ -192,12 +178,8 @@ export function generateCashFlowStatement(
       amount: depreciationAndAmortization.toString(),
     });
   }
-  if (!nonOperatingIncomeAndExpense.isZero()) {
-    finalOperatingItems.push({
-      name: "營業外收支(反向排除)",
-      amount: nonOperatingIncomeAndExpense.negated().toString(), // Info: (20260518 - Tzuhan) 收益(正)轉負扣除，費損(負)轉正加回
-    });
-  }
+  // Info: (20260518 - Tzuhan) [AUDIT FIX] 拔除導致總現金流蒸發的「營業外收支反向排除」
+
   finalOperatingItems.push(...mapToArray(operatingItems));
 
   const totalOperating = finalOperatingItems.reduce(
