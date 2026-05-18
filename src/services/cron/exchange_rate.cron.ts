@@ -161,14 +161,14 @@ export async function syncExchangeRates() {
 
         if (fs.existsSync(constantsFilePath)) {
           let fileContent = fs.readFileSync(constantsFilePath, "utf-8");
-          // 移除最後的 closing bracket
+          // Info: (20260515 - Julian) 移除最後的 closing bracket
           fileContent = fileContent.replace(/\];?\s*$/, "");
 
           let appendContent = "";
           let appendedCount = 0;
 
           for (const entry of newRateEntries) {
-            // 檢查是否已存在同一天、同幣別的資料，避免 Cron 重複執行造成 Duplicate Append
+            // Info: (20260515 - Julian) 檢查是否已存在同一天、同幣別的資料，避免 Cron 重複執行造成 Duplicate Append
             const existsRegex = new RegExp(
               `date:\\s*["']${entry.date}["'],\\s*baseCurrency:\\s*["']${entry.baseCurrency}["'],\\s*targetCurrency:\\s*["']${entry.targetCurrency}["']`,
               "m",
