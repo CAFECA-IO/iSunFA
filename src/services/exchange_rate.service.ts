@@ -14,13 +14,7 @@ export interface IConversionResult {
   exchangeRate: Prisma.Decimal;
 }
 
-/**
- * Info: (20260515 - Tzuhan)
- * ExchangeRateService (Mock Facade)
- *
- * 這是為了 Post-Parsing 架構而建置的 Mock Service。
- * 在 Ticket 4 (FX CronJob) 完成前，此介面將直接放行，或針對測試幣別提供假定匯率。
- */
+// Info: (20260515 - Tzuhan) ExchangeRateService
 export class ExchangeRateService {
   // Info: (20260518 - Tzuhan) Refactor: 升級為 static method 以符合 Facade 模式
   static async convert({
@@ -61,8 +55,6 @@ export class ExchangeRateService {
    ** 3. 將計算後的結果回傳
    ** 4. 必須使用 Prisma.Decimal 確保計算精度無誤
    */
-  // Info: (20260514 - Julian) 找出最接近 date 的 TWD 匯率
-  // Info: (20260518 - Tzuhan) Refactor: 升級為 static method 以符合 Facade 模式
   static async getExchangeRateToTWD({
     currency,
     date,
@@ -82,9 +74,9 @@ export class ExchangeRateService {
     return { exchangeRate: exchangeRate.rate };
   }
 
-  /*
-   ** Info: (20260514 - Julian) 交叉匯率處理
-   ** Info: (20260518 - Tzuhan) Refactor: 導入 Promise.all 併發查詢，並升級為 static
+  /**
+   * Info: (20260514 - Julian) 交叉匯率處理
+   * Info: (20260518 - Tzuhan) Refactor: 導入 Promise.all 併發查詢，並升級為 static
    */
   static async getCrossExchangeRate({
     fromCurrency,
