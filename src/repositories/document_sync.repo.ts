@@ -308,7 +308,7 @@ export class DocumentSyncRepository {
                 ),
                 source:
                   ed.newCoefficient.source || "[[I18N_AI_DYNAMIC_EXTRACTION]]",
-                accountBookId: null,
+                accountBookId: accountBookId, // Info: (20260518 - Julian) AI 新增的係數屬於自訂係數，應歸屬到當前帳本
                 isVerified: false, // Info: (20260514 - Tzuhan) 未經驗證的係數
               },
             });
