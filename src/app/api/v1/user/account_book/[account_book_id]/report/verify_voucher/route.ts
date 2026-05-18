@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { voucherRepo } from "@/repositories/voucher.repo";
@@ -42,10 +41,6 @@ export async function GET(
     return jsonOk({ count: countOfVerifiedVouchers });
   } catch (error) {
     console.error("Get count of verified vouchers failed", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Get count of verified vouch...",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_GET_COUNT_OF_VERIFIED_VOUCH);
   }
 }

@@ -60,11 +60,7 @@ export async function POST(request: NextRequest) {
       });
     } catch (e) {
       console.warn("Failed to update identity address:", e);
-      return jsonFail({
-        code: "IN000099",
-        message: "Failed to update identity a...",
-        status: ApiCode.INTERNAL_SERVER_ERROR,
-      });
+      return jsonFail(API_ERRORS.IN_FAILED_TO_UPDATE_IDENTITY_A);
     }
   } catch (error) {
     console.error("[API] /user/kyc error:", error);

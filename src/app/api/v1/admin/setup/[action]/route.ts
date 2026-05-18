@@ -47,11 +47,7 @@ export async function POST(
     ) {
       const isComplete = await validateEnv();
       if (isComplete) {
-        return jsonFail({
-          code: "FO000099",
-          message: "System initialized already",
-          status: ApiCode.FORBIDDEN,
-        });
+        return jsonFail(API_ERRORS.FO_SYSTEM_INITIALIZED_ALREADY);
       }
     }
 

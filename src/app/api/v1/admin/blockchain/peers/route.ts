@@ -1,6 +1,5 @@
 import { addPeerAction } from "@/services/admin.blockchain.service";
 import { jsonFail, jsonOk } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 
 export async function POST(req: Request) {
@@ -11,29 +10,24 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     if (!body.enodeUrl) {
-      return jsonFail({
-        code: "IS000098",
-        message: "Missing enodeUrl",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.IS_MISSING_ENODEURL);
     }
 
     const result = await addPeerAction(body.enodeUrl, token);
 
     if (!result.success) {
       return jsonFail({
-        code: "IS000099",
+        ...API_ERRORS.IS_BLOCKCHAIN_FAILED,
         message: String(result.message || "Failed to add peer"),
-        status: ApiCode.INTERNAL_SERVER_ERROR,
       });
     }
 
     return jsonOk({ message: result.message });
   } catch (error) {
+    console.error("[API] /admin/blockchain/peers POST error:", error);
     return jsonFail({
-      code: "IS000099",
+      ...API_ERRORS.IS_UNKNOWN,
       message: String((error as Error).message),
-      status: ApiCode.INTERNAL_SERVER_ERROR,
     });
   }
 }

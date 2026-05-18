@@ -17,11 +17,7 @@ export async function GET(
     const STORAGE_DOMAIN = process.env.STORAGE_DOMAIN;
 
     if (!STORAGE_DOMAIN) {
-      return jsonFail({
-        code: "IN000099",
-        message: "STORAGE_DOMAIN is not defined",
-        status: ApiCode.INTERNAL_SERVER_ERROR,
-      });
+      return jsonFail(API_ERRORS.IN_STORAGE_DOMAIN_IS_NOT_DEFINED);
     }
 
     const targetUrl = `${STORAGE_DOMAIN}/api/v1/file/${fileId}`;

@@ -34,11 +34,15 @@ export async function request<T = unknown>(
     }
   }
 
-  const token = localStorage.getItem("dewt");
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("dewt") : null;
   const defaultHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   };
+
+  if (!(options.body instanceof FormData)) {
+    defaultHeaders["Content-Type"] = "application/json";
+  }
 
   const config: RequestInit = {
     ...rest,

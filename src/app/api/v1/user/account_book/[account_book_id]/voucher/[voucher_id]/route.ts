@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { voucherRepo } from "@/repositories/voucher.repo";
@@ -118,11 +117,7 @@ export async function PUT(
       isVerified === undefined
     ) {
       console.error("Invalid input data");
-      return jsonFail({
-        code: "VA000099",
-        message: "Invalid input data",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
     }
 
     // Info: (20260516 - Luphia) 驗證借貸平衡
@@ -138,11 +133,7 @@ export async function PUT(
 
     if (totalDebit !== totalCredit) {
       console.error("Voucher is imbalanced");
-      return jsonFail({
-        code: "VA000100",
-        message: "Voucher is imbalanced",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VL_VOUCHER_IMBALANCED);
     }
 
     // Info: (20260311 - Julian) Update voucher

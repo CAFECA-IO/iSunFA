@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
@@ -51,11 +50,7 @@ export async function POST(
     // Info: (20260312 - Julian) 驗證 file 參數
     if (!file || !file.hash) {
       console.error("Missing file or file hash");
-      return jsonFail({
-        code: "VA000099",
-        message: "File is required",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_FILE_IS_REQUIRED);
     }
 
     // Info: (20260312 - Julian) 建立空白 ESG 紀錄
@@ -89,11 +84,7 @@ export async function POST(
     return jsonOk({ esgRecordId: newRecord.newId });
   } catch (error) {
     console.error("Error creating esg record:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to create esg record",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_CREATE_ESG_RECORD);
   }
 }
 
@@ -165,10 +156,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching esg records:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to fetch esg records",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_FETCH_ESG_RECORDS);
   }
 }

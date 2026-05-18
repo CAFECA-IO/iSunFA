@@ -1,3 +1,4 @@
+import { digitalProductPassport } from "@/i18n/locales/ja/digital_product_passport";
 import { adminDashboard } from "@/i18n/locales/ja/admin_dashboard";
 import { adminCampaign } from "@/i18n/locales/ja/admin_campaign";
 import { common } from "@/i18n/locales/ja/common";
@@ -56,6 +57,7 @@ import { salaryCalculator } from "@/i18n/locales/ja/salary_calculator";
 import type { BaseTranslation } from "@/i18n/zh_tw";
 
 export const ja = {
+  digital_product_passport: digitalProductPassport,
   transportation_carbon_footprint_calculator:
     transportationCarbonFootprintCalculator,
   salary_calculator: salaryCalculator,

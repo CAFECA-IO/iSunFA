@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import {
   getAccountBooksByUserId,
@@ -56,11 +55,7 @@ export async function PUT(
     }
 
     if (accountBook.userRole !== "OWNER") {
-      return jsonFail({
-        code: "FO000099",
-        message: "Only the owner can edit the...",
-        status: ApiCode.FORBIDDEN,
-      });
+      return jsonFail(API_ERRORS.FO_ONLY_THE_OWNER_CAN_EDIT_THE);
     }
 
     const body = await request.json();
