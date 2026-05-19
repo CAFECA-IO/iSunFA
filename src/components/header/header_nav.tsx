@@ -17,7 +17,7 @@ export default function HeaderNav() {
   const { t } = useTranslation();
 
   const NAV_ITEMS = [
-    ...PUBLIC_MODULES.map((module) => ({
+    ...PUBLIC_MODULES.filter((module) => module.nav).map((module) => ({
       label: t(getModuleI18nKey(module.key)),
       href: `/${module.key}`,
     })),

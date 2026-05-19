@@ -40,16 +40,17 @@ export const MODULES = [
 ];
 
 export const PUBLIC_MODULES = [
-  { key: "analysis", icon: PieChart, basic: true },
-  { key: "ai_consultation_room", icon: Bot, basic: true },
-  { key: "digital_product_passport", icon: QrCode, basic: true },
-  { key: "salary_calculator", icon: Wallet, basic: true },
+  { key: "analysis", icon: PieChart, basic: true, nav: true },
+  { key: "ai_consultation_room", icon: Bot, basic: true, nav: true },
+  { key: "digital_product_passport", icon: QrCode, basic: true, nav: true },
+  { key: "salary_calculator", icon: Wallet, basic: true, nav: true },
   {
     key: "transportation_carbon_footprint_calculator",
     icon: Truck,
     basic: true,
+    nav: true,
   },
-  { key: "coupon", icon: Tag, basic: true },
+  { key: "coupon", icon: Tag, basic: true, nav: false },
 ];
 
 export const ADMIN_MODULES = [
