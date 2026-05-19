@@ -4,6 +4,7 @@ import { IPseudoTask } from "@/skills/types";
 import { prepareDocumentContext } from "@/skills/utils/document_helper";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 import { EsgIntensity } from "@/interfaces/esg";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export class EsgIntensityEvaluationSkill implements ITaskSkill {
   name = "ESG_INTENSITY_EVALUATION";
@@ -44,7 +45,7 @@ export class EsgIntensityEvaluationSkill implements ITaskSkill {
           | Record<string, unknown>
           | undefined;
         coefficient = coefObj?.emissionFactor
-          ? Number(coefObj.emissionFactor)
+          ? MoneyUtil.toDecimal(coefObj.emissionFactor as string).toNumber()
           : 0;
       }
     } catch (error) {

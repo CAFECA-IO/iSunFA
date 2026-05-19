@@ -245,7 +245,7 @@ export class EsgRepository implements IEsgRepository {
           updatedAt: Math.floor(
             esgRecord.coefficient.updatedAt.getTime() / 1000,
           ),
-          emissionFactor: Number(esgRecord.coefficient.emissionFactor),
+          emissionFactor: esgRecord.coefficient.emissionFactor.toString(),
         }
       : null;
 
@@ -412,7 +412,7 @@ export class EsgRepository implements IEsgRepository {
         : CoefficientCategory.STANDARD,
       createdAt: Math.floor(coefficient.createdAt.getTime() / 1000),
       updatedAt: Math.floor(coefficient.updatedAt.getTime() / 1000),
-      emissionFactor: Number(coefficient.emissionFactor),
+      emissionFactor: coefficient.emissionFactor.toString(),
     };
   }
 
@@ -621,7 +621,7 @@ export class EsgRepository implements IEsgRepository {
       coefficient: record.coefficient
         ? {
             ...record.coefficient,
-            emissionFactor: Number(record.coefficient.emissionFactor),
+            emissionFactor: record.coefficient.emissionFactor.toString(),
             category: !!record.coefficient.accountBookId
               ? CoefficientCategory.CUSTOM
               : CoefficientCategory.STANDARD,

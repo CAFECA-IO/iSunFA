@@ -100,15 +100,23 @@ export default function EsgDetailModal({
       };
     }
 
-    // Info: (20260416 - Julian) 轉換為數字
-    const amountNum = Number(amount) || 0;
-    const emissionFactorNum = Number(coefficient.emissionFactor) || 0;
+    // Info: (20260519 - Tzuhan) 轉換為高精度 (防止 IEEE 754 誤差)
+    const amountDec = MoneyUtil.toDecimal(amount || 0);
+    const emissionFactorDec = MoneyUtil.toDecimal(
+      coefficient.emissionFactor || 0,
+    );
 
-    // Info: (20260415 - Julian) 計算總排放量，取小數點後兩位
-    const totalEmissions = Number((emissionFactorNum * amountNum).toFixed(2));
+    // Info: (20260519 - Tzuhan) 計算總排放量，取小數點後兩位，並配合前端渲染允許最後轉回 number
+    const totalEmissions = parseFloat(
+      emissionFactorDec.times(amountDec).toFixed(2),
+    );
 
-    // Info: (20260415 - Julian) 計算排放強度分級
-    const intensity = amountNum > 0 ? totalEmissions / amountNum : 0;
+    // Info: (20260519 - Tzuhan) 計算排放強度分級
+    const intensity = amountDec.gt(0)
+      ? parseFloat(
+          MoneyUtil.toDecimal(totalEmissions).dividedBy(amountDec).toString(),
+        )
+      : 0;
     const intensityLevel =
       intensity < 1
         ? EsgIntensity.LOW
