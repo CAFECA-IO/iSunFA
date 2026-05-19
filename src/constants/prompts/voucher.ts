@@ -1,4 +1,5 @@
 import { IAccountBookBase } from "@/interfaces/account_book";
+import { getLanguageByCountry } from "@/constants/country";
 
 /*
  ** Info: (20260407 - Julian) 將傳票的分析拆解成「基本資料」和「會計分錄」
@@ -33,19 +34,28 @@ You are a pure data extractor. Do NOT perform any business logic judgments or ma
 //  Info: (20260407 - Julian) 分析傳票「基本資料」的 Prompt
 export const getBaseVoucherPrompt = (accountBook?: IAccountBookBase | null) => {
   const country = accountBook?.country || "TW";
+
+  // Info: (20260326 - Julian) 帳本資訊
   const accountBookInfo = accountBook
     ? `\nThis voucher will be recorded in the "${accountBook.name}" account book. Accounting Principle Country: ${country}, Base Currency: ${accountBook.currency}.`
     : "";
+
+  // Info: (20260326 - Julian) 帳本規則
   const rulesInstruction = accountBook?.rule
     ? `\nYou MUST strictly adhere to the following special accounting rules and preferences for this account book:\n${accountBook.rule}`
+    : "";
+
+  // Info: (20260518 - Julian) 帳本語系
+  const languageInstruction = accountBook?.country
+    ? `\n  Please use "${getLanguageByCountry(accountBook.country).english}" as the primary language for the aiNote field. For all other fields, you MUST strictly preserve the original text without any translation.`
     : "";
 
   return `
 Extract structured data from the user-uploaded document (file/image) to create an accounting voucher. ${accountBookInfo}${rulesInstruction}
 ${ANTI_HALLUCINATION_RULES}
+${languageInstruction}
 
 Write down your analysis logic in the "aiNote" field without any markdown formatting.
-IMPORTANT: Your output MUST be in the language of the uploaded document (e.g., Traditional Chinese).
 `;
 };
 
@@ -56,9 +66,12 @@ export const getVoucherLinesPrompt = (
   // Info: (20260512 - Tzuhan) 廢除全域會計科目表暴力注入，改由後端 Hybrid Pipeline 處理
   const country = accountBook?.country || "TW";
 
+  // Info: (20260326 - Julian) 帳本資訊
   const accountBookInfo = accountBook
     ? `\nAccounting Principle Country: ${country}, Base Currency: ${accountBook.currency}.`
     : "";
+
+  // Info: (20260326 - Julian) 帳本規則
   const rulesInstruction = accountBook?.rule
     ? `\nYou MUST strictly adhere to the following special accounting rules and preferences for this account book:\n${accountBook.rule}`
     : "";
@@ -68,11 +81,11 @@ Extract precise accounting journal entries from the user-uploaded document (file
 ${ANTI_HALLUCINATION_RULES}
 
 Write down your logic for determining the debit and credit accounts in the "aiNote" field.
-IMPORTANT: Your output (particular, aiNote) MUST be in the language of the uploaded document (e.g., Traditional Chinese).
 
 [IMPORTANT]
 Do NOT invent exact numerical accounting codes if you don't know them. 
 Simply provide the most standard and descriptive account name (e.g., "Cash", "Accounts Payable", "Office Supplies") in the "accountingCode" field. 
+You MUST strictly preserve the original text without any translation.
 The backend system will map this to the exact local accounting code via Vector Search.
 `;
 };

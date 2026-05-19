@@ -2,6 +2,7 @@ import { IAccountBookBase } from "@/interfaces/account_book";
 import { ICoefficient } from "@/interfaces/coefficient";
 import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
 import { IEmissionSources } from "@/interfaces/emission_sources";
+import { getLanguageByCountry } from "@/constants/country";
 
 export const getEsgPrompt = (
   accountBook?: IAccountBookBase | null,
@@ -22,6 +23,11 @@ export const getEsgPrompt = (
   // Info: (20260423 - Julian) 建立帳本規則
   const rulesInstruction = accountBook?.rule
     ? `\n  請嚴格遵守以下帳本關於碳排或會計核算的特殊規則與偏好：\n  ${accountBook.rule}\n`
+    : "";
+
+  // Info: (20260518 - Julian) 產出語言
+  const languageInstruction = accountBook?.country
+    ? `\n  請用「${getLanguageByCountry(accountBook.country).chinese}」作為主要語言產出 aiNote 欄位，其餘欄位請 100% 忠實保留原始文字，嚴禁翻譯。`
     : "";
 
   // Info: (20260430 - Julian) 建立排放源清單
@@ -86,6 +92,7 @@ export const getEsgPrompt = (
   請將用戶上傳的憑證（檔案/圖片）解析出碳盤查（Carbon Footprint Verification）相關資訊。${accountBookInfo}${rulesInstruction}
   ${emissionSourcesInstruction}
   ${coefficientsInstruction}
+  ${languageInstruction}
 
   【活動類型】請從以下清單中選擇最符合的活動類型，並將該活動類型的 key 填入回傳 JSON 的 \`activityType\` 欄位：
   ${EsgActivityTypeMapping.map((a) => `${a.key}(${a.scope}): ${a.value}，${a.description}`).join("\n")}
