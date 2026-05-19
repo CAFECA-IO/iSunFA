@@ -336,7 +336,7 @@ export class AnalysisService {
                       ? (acc as IAccount)
                       : ({ code, name: code } as IAccount), // Info: (20260502 - Tzuhan) ⚠️修復：正確綁定科目字典，消滅 AI 幻覺
                     particular: String(line.particular || ""),
-                    amount: Number(line.amount || 0),
+                    amount: line.amount?.toString() || "0",
                     isDebit: Boolean(line.isDebit),
                   } as unknown as IVoucherLineUI);
                 }
@@ -363,7 +363,7 @@ export class AnalysisService {
                     .map((l) => {
                       const code = String(l.accountingCode || "");
                       const acc = getAccountByCode(code);
-                      return `    - 科目: ${acc ? acc.name : code}, 金額:${Number(l.amount || 0)}, 摘要: ${l.particular || ""}, 借貸: ${l.isDebit ? "借方" : "貸方"}`;
+                      return `    - 科目: ${acc ? acc.name : code}, 金額:${l.amount?.toString() || "0"}, 摘要: ${l.particular || ""}, 借貸: ${l.isDebit ? "借方" : "貸方"}`;
                     })
                     .join("\n");
                   const dateStr =
@@ -436,7 +436,7 @@ export class AnalysisService {
                   const tradingDateStr = new Date(r.tradingDate * 1000)
                     .toISOString()
                     .split("T")[0];
-                  return `- 日期: ${tradingDateStr}, 活動: ${r.activityType}, 排放量: ${Number(r.emissions)} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
+                  return `- 日期: ${tradingDateStr}, 活動: ${r.activityType}, 排放量: ${r.emissions?.toString() || "0"} ${r.unit}, 範疇: ${r.scope}, 廠商: ${r.vendor}`;
                 });
                 parsedPrerequisiteParams.esgRecordsContext = `\n【內部 ESG 明細紀錄】:\n${esgContextLines.join("\n")}\n`;
               }

@@ -6,6 +6,8 @@ import {
   Coefficient,
   EmissionSource,
 } from "@/generated";
+import { Decimal } from "decimal.js";
+import { MoneyUtil } from "@/lib/utils/money";
 import {
   IEsgDashboardSummary,
   EsgScope,
@@ -221,8 +223,8 @@ export class EsgRepository implements IEsgRepository {
       id: esgTarget.id,
       accountBookId: esgTarget.accountBookId,
       year: esgTarget.year,
-      totalEmissionTarget: Number(esgTarget.totalEmissionTarget),
-      revenueEmissionTarget: Number(esgTarget.revenueEmissionTarget),
+      totalEmissionTarget: esgTarget.totalEmissionTarget?.toString() || "0",
+      revenueEmissionTarget: esgTarget.revenueEmissionTarget?.toString() || "0",
     };
     return result;
   }
@@ -269,8 +271,8 @@ export class EsgRepository implements IEsgRepository {
       fileId: esgRecord.fileId ?? "",
       file,
       tradingDate: Math.floor(esgRecord.tradingDate.getTime() / 1000),
-      amount: Number(esgRecord.amount),
-      emissions: Number(esgRecord.emissions),
+      amount: esgRecord.amount.toString(),
+      emissions: esgRecord.emissions.toString(),
       emissionSourceTag: esgRecord.emissionSourceTag ?? undefined,
       dqiScore: Number(esgRecord.dqiScore),
       scope: esgRecord.scope as EsgScope,
@@ -418,33 +420,36 @@ export class EsgRepository implements IEsgRepository {
   private transformEmissionSourceToFrontendFormat(
     source: EmissionSource & { esgRecords: EsgRecord[] },
   ): IEsgEmissionSourcesUI {
-    let totalEmission = 0;
-    const records = source.esgRecords
+    const validRecords = source.esgRecords
       // Info: (20260507 - Julian) 只選出有完成分析，且沒有被刪除的紀錄
       .filter((record) => record.analysisStatus === AIAnalysisStatus.COMPLETED)
-      .filter((record) => record.deletedAt === null)
-      .map((record) => {
-        totalEmission += Number(record.emissions || 0);
+      .filter((record) => record.deletedAt === null);
 
-        return {
-          id: record.id,
-          tradingDate: Math.floor(record.tradingDate.getTime() / 1000),
-          activityType: record.activityType as EsgActivityTypeKey,
-          vendor: record.vendor,
-          amount: Number(record.amount || 0),
-          unit: record.unit,
-          emissions: Number(record.emissions || 0),
-          emissionSourceTag: record.emissionSourceTag || undefined,
-        };
-      });
+    const totalEmission = validRecords.reduce(
+      (acc, curr) => acc.plus(MoneyUtil.toDecimal(curr.emissions || 0)),
+      MoneyUtil.toDecimal(0),
+    );
+
+    const records = validRecords.map((record) => {
+      return {
+        id: record.id,
+        tradingDate: Math.floor(record.tradingDate.getTime() / 1000),
+        activityType: record.activityType as EsgActivityTypeKey,
+        vendor: record.vendor,
+        amount: record.amount?.toString() || "0",
+        unit: record.unit,
+        emissions: record.emissions?.toString() || "0",
+        emissionSourceTag: record.emissionSourceTag || undefined,
+      };
+    });
 
     return {
       id: source.id,
       name: source.name,
       address: source.address || undefined,
-      intensity: this.computeIntensity(totalEmission),
+      intensity: this.computeIntensity(totalEmission.toNumber()),
       records,
-      totalEmission: Number(totalEmission.toFixed(2)),
+      totalEmission: totalEmission.toFixed(2),
     };
   }
 
@@ -526,9 +531,9 @@ export class EsgRepository implements IEsgRepository {
       tradingDate: Math.floor(record.tradingDate.getTime() / 1000),
       activityType: record.activityType as EsgActivityTypeKey,
       vendor: record.vendor,
-      amount: Number(record.amount),
+      amount: record.amount.toString(),
       unit: record.unit,
-      emissions: Number(record.emissions),
+      emissions: record.emissions.toString(),
       emissionSourceTag: record.emissionSourceTag ?? undefined,
     }));
 
@@ -594,9 +599,9 @@ export class EsgRepository implements IEsgRepository {
       tradingDate: Math.floor(record.tradingDate.getTime() / 1000),
       activityType: record.activityType as EsgActivityTypeKey,
       vendor: record.vendor,
-      amount: Number(record.amount),
+      amount: record.amount.toString(),
       unit: record.unit,
-      emissions: Number(record.emissions),
+      emissions: record.emissions.toString(),
       emissionSourceTag: record.emissionSourceTag ?? undefined,
       scope: record.scope as EsgScope,
       intensity: record.intensity as EsgIntensity,
@@ -801,14 +806,18 @@ export class EsgRepository implements IEsgRepository {
     let scope3 = 0;
 
     esgAggregations.forEach((aggr) => {
-      const e = Number(aggr._sum.emissions || 0);
+      const e = MoneyUtil.toDecimal(aggr._sum.emissions || 0).toNumber();
       totalEmissions += e;
       if (aggr.scope === "SCOPE_1") scope1 += e;
       else if (aggr.scope === "SCOPE_2") scope2 += e;
       else if (aggr.scope === "SCOPE_3") scope3 += e;
     });
 
-    const revenue = Number(incomeVoucherLinesAggr._sum.amount || 0) / 2;
+    const revenue = MoneyUtil.toDecimal(
+      incomeVoucherLinesAggr._sum.amount?.toString() || 0,
+    )
+      .dividedBy(2)
+      .toNumber();
 
     const totalEmissionsTons = totalEmissions / 1000;
     const scope1Tons = scope1 / 1000;
@@ -828,7 +837,7 @@ export class EsgRepository implements IEsgRepository {
     if (
       target &&
       target.totalEmissionTarget &&
-      Number(target.totalEmissionTarget) > 0
+      MoneyUtil.toDecimal(target.totalEmissionTarget).gt(0)
     ) {
       const msInYear =
         new Date(currentYear, 11, 31, 23, 59, 59, 999).getTime() -
@@ -838,8 +847,9 @@ export class EsgRepository implements IEsgRepository {
         msInYear,
       );
       const proportion = spanMs / msInYear;
-      const proportionalTarget =
-        Number(target.totalEmissionTarget) * proportion;
+      const proportionalTarget = MoneyUtil.toDecimal(target.totalEmissionTarget)
+        .times(proportion)
+        .toNumber();
       goalProgress = (totalEmissionsTons / proportionalTarget) * 100; // Info: (20260326 - Julian) 碳排放目標達成率，單位為百分比
     }
 
@@ -872,32 +882,32 @@ export class EsgRepository implements IEsgRepository {
     const scopeDistribution: IEsgScopeDistributionData[] = [
       {
         scope: EsgScope.SCOPE_1,
-        value: Number(scope1Tons.toFixed(2)),
+        value: scope1Tons.toFixed(2),
         percentage: Number(s1Pct.toFixed(1)),
       },
       {
         scope: EsgScope.SCOPE_2,
-        value: Number(scope2Tons.toFixed(2)),
+        value: scope2Tons.toFixed(2),
         percentage: Number(s2Pct.toFixed(1)),
       },
       {
         scope: EsgScope.SCOPE_3,
-        value: Number(scope3Tons.toFixed(2)),
+        value: scope3Tons.toFixed(2),
         percentage: Number(s3Pct.toFixed(1)),
       },
     ];
 
     const summary: IEsgDashboardSummary = {
       totalEmissions: {
-        value: Number(totalEmissionsTons.toFixed(2)),
+        value: totalEmissionsTons.toFixed(2),
         unit: "tCO2e",
-        estimatedEndOfMonth: Number(estimatedEndOfMonth.toFixed(2)),
+        estimatedEndOfMonth: estimatedEndOfMonth.toFixed(2),
         estimatedUnit: "tCO2e",
       },
       emissionIntensity: {
-        value: intensity !== null ? Number(intensity.toFixed(2)) : null,
+        value: intensity !== null ? intensity.toFixed(2) : null,
         unit: "tCO2e / 萬元營收",
-        industryAverage: Number(industryAverage.toFixed(2)),
+        industryAverage: industryAverage.toFixed(2),
       },
       scopeDistribution,
       goalProgress: {
@@ -1111,7 +1121,7 @@ export class EsgRepository implements IEsgRepository {
       const source = top3Sources.find((s) => s.id === aggr.emissionSourceId);
       return {
         name: source ? source.name : "未知排放源",
-        value: Number(aggr._sum.emissions) ?? 0,
+        value: aggr._sum.emissions?.toString() ?? "0",
       };
     });
 
@@ -1123,7 +1133,7 @@ export class EsgRepository implements IEsgRepository {
     const summary: IEsgEmissionSourcesSummary = {
       totalEmissionSourcesCount: totalEmissionSourcesCount ?? 0,
       estimatedAnnualTotalEmission:
-        Number(estimatedAnnualTotalEmission._sum.emissions) ?? 0,
+        estimatedAnnualTotalEmission._sum.emissions?.toString() ?? "0",
       top3EmissionSources,
       scopeDistribution,
     };

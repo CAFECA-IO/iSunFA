@@ -108,7 +108,7 @@ export default function EsgDetailModal({
     const totalEmissions = Number((emissionFactorNum * amountNum).toFixed(2));
 
     // Info: (20260415 - Julian) 計算排放強度分級
-    const intensity = amount > 0 ? totalEmissions / amount : 0;
+    const intensity = amountNum > 0 ? totalEmissions / amountNum : 0;
     const intensityLevel =
       intensity < 1
         ? EsgIntensity.LOW
@@ -144,7 +144,7 @@ export default function EsgDetailModal({
       const formPayload: IEsgRecordDetail = {
         ...formData,
         isVerified: isVerifiedState,
-        emissions: calculatedResult.totalEmissions,
+        emissions: calculatedResult.totalEmissions.toString(),
         intensity:
           calculatedResult.intensityLevel !== "-"
             ? (calculatedResult.intensityLevel as EsgIntensity)
@@ -400,7 +400,7 @@ export default function EsgDetailModal({
                   placeholder="0.00"
                   value={formData.amount || ""}
                   onChange={(e) => {
-                    const value = Number(e.target.value);
+                    const value = e.target.value;
                     setFormData({ ...formData, amount: value });
                   }}
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none lg:text-sm"
