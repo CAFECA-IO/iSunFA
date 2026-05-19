@@ -128,6 +128,23 @@ const buildReceiptSVG = (params: IReceiptParams, isNoisy: boolean): string => {
 
   const tableBottomY = currentY + 10;
 
+  // Info: (20260519 - Julian) 處理賣方名稱換行與動態高度
+  const chunkString = (str: string, size: number) => {
+    const chunks = [];
+    for (let i = 0; i < str.length; i += size) {
+      chunks.push(str.slice(i, i + size));
+    }
+    return chunks;
+  };
+  // Info: (20260519 - Julian) 每 9 個字換行
+  const sellerNameChunks = chunkString(sellerName, 9);
+  const extraLines = Math.max(0, sellerNameChunks.length - 1);
+  const extraHeight = extraLines * 20;
+
+  const row1Y = tableBottomY + 30;
+  const row2Y = tableBottomY + 60;
+  const row3Y = tableBottomY + 90 + extraHeight;
+
   // Info: (20260519 - Julian) 格線
   const vLines = `
     <!-- Top table vertical lines (Items area) -->
@@ -135,10 +152,10 @@ const buildReceiptSVG = (params: IReceiptParams, isNoisy: boolean): string => {
     <line x1="320" y1="250" x2="320" y2="${tableBottomY}" stroke="#000" stroke-width="1" />
     
     <!-- Full table vertical lines (Extend to bottom of totals) -->
-    <line x1="20" y1="250" x2="20" y2="${tableBottomY + 90}" stroke="#000" stroke-width="1" />
-    <line x1="420" y1="250" x2="420" y2="${tableBottomY + 90}" stroke="#000" stroke-width="1" />
-    <line x1="520" y1="250" x2="520" y2="${tableBottomY + 90}" stroke="#000" stroke-width="1" />
-    <line x1="680" y1="250" x2="680" y2="${tableBottomY + 90}" stroke="#000" stroke-width="1" />
+    <line x1="20" y1="250" x2="20" y2="${row3Y}" stroke="#000" stroke-width="1" />
+    <line x1="420" y1="250" x2="420" y2="${row3Y}" stroke="#000" stroke-width="1" />
+    <line x1="520" y1="250" x2="520" y2="${row3Y}" stroke="#000" stroke-width="1" />
+    <line x1="680" y1="250" x2="680" y2="${row3Y}" stroke="#000" stroke-width="1" />
   `;
 
   // Info: (20260519 - Julian) 雜訊效果
@@ -214,12 +231,12 @@ const buildReceiptSVG = (params: IReceiptParams, isNoisy: boolean): string => {
       <line x1="20" y1="${tableBottomY}" x2="680" y2="${tableBottomY}" stroke="#000" stroke-width="1" />
       
       <!-- Horizontal lines for totals -->
-      <line x1="20" y1="${tableBottomY + 30}" x2="520" y2="${tableBottomY + 30}" stroke="#000" stroke-width="1" />
-      <line x1="20" y1="${tableBottomY + 60}" x2="520" y2="${tableBottomY + 60}" stroke="#000" stroke-width="1" />
-      <line x1="20" y1="${tableBottomY + 90}" x2="680" y2="${tableBottomY + 90}" stroke="#000" stroke-width="1" />
+      <line x1="20" y1="${row1Y}" x2="520" y2="${row1Y}" stroke="#000" stroke-width="1" />
+      <line x1="20" y1="${row2Y}" x2="520" y2="${row2Y}" stroke="#000" stroke-width="1" />
+      <line x1="20" y1="${row3Y}" x2="680" y2="${row3Y}" stroke="#000" stroke-width="1" />
       
       <!-- Vertical line specific to Tax row -->
-      <line x1="120" y1="${tableBottomY + 30}" x2="120" y2="${tableBottomY + 60}" stroke="#000" stroke-width="1" />
+      <line x1="120" y1="${row1Y}" x2="120" y2="${row2Y}" stroke="#000" stroke-width="1" />
       
       <!-- Vertical Lines -->
       ${vLines}
@@ -232,14 +249,14 @@ const buildReceiptSVG = (params: IReceiptParams, isNoisy: boolean): string => {
       <text x="135" y="${tableBottomY + 50}" font-family="sans-serif" font-size="14" fill="#000">應稅 [ V ]　　零稅率 [　 ]　　免稅 [　 ]</text>
       <text x="510" y="${tableBottomY + 50}" font-family="sans-serif" font-size="14" fill="#000" text-anchor="end">${taxAmount.toLocaleString()}</text>
       
-      <text x="25" y="${tableBottomY + 80}" font-family="sans-serif" font-size="16" font-weight="bold" fill="#000">總計</text>
-      <text x="510" y="${tableBottomY + 80}" font-family="sans-serif" font-size="16" font-weight="bold" fill="#000" text-anchor="end">${totalAmount.toLocaleString()}</text>
+      <text x="25" y="${tableBottomY + 80 + extraHeight / 2}" font-family="sans-serif" font-size="16" font-weight="bold" fill="#000">總計</text>
+      <text x="510" y="${tableBottomY + 80 + extraHeight / 2}" font-family="sans-serif" font-size="16" font-weight="bold" fill="#000" text-anchor="end">${totalAmount.toLocaleString()}</text>
       
       <!-- Info: (20260519 - Julian) 右下角賣方專用章資訊塊 -->
       <text x="525" y="${tableBottomY + 20}" font-family="sans-serif" font-size="11" fill="#000">營業人蓋統一發票專用章</text>
-      <text x="525" y="${tableBottomY + 40}" font-family="sans-serif" font-size="11" fill="#000">賣　　方: ${sellerName}</text>
-      <text x="525" y="${tableBottomY + 60}" font-family="sans-serif" font-size="11" fill="#000">統一編號: ${sellerTaxId}</text>
-      <text x="525" y="${tableBottomY + 80}" font-family="sans-serif" font-size="11" fill="#000">地　　址: </text>
+      ${sellerNameChunks.map((chunk, i) => `<text x="525" y="${tableBottomY + 40 + i * 20}" font-family="sans-serif" font-size="11" fill="#000">${i === 0 ? "賣　　方: " : "　　　　  "}${chunk}</text>`).join("\n      ")}
+      <text x="525" y="${tableBottomY + 40 + extraLines * 20 + 20}" font-family="sans-serif" font-size="11" fill="#000">統一編號: ${sellerTaxId}</text>
+      <text x="525" y="${tableBottomY + 40 + extraLines * 20 + 40}" font-family="sans-serif" font-size="11" fill="#000">地　　址: </text>
       
       ${esgText}
       
