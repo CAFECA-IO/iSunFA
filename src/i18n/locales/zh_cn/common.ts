@@ -10,6 +10,8 @@ export const common = {
   batch_download: "批次下载",
   download: "下载",
   downloading: "下载中...",
+  uploading: "上传中...",
+  upload_image: "上传图片",
   zipping: "压缩中...",
   start_date: "开始日期",
   end_date: "结束日期",
@@ -83,4 +85,5 @@ export const common = {
   },
   other: "其他",
   pdf_tool: "PDF 工具",
+  please_login: "请先登录",
 };

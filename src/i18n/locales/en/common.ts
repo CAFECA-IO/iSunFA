@@ -11,6 +11,8 @@ export const common = {
   batch_download: "Batch Download",
   download: "Download",
   downloading: "Downloading...",
+  uploading: "Uploading...",
+  upload_image: "Upload Image",
   zipping: "Zipping...",
   start_date: "Start Date",
   end_date: "End Date",
@@ -85,4 +87,5 @@ export const common = {
   },
   other: "Other",
   pdf_tool: "PDF Tool",
+  please_login: "Please login to continue",
 };

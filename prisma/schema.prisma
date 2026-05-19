@@ -56,6 +56,7 @@ model User {
   checkins              Checkin[]
   reportShareTokens     ReportShareToken[]     @relation("ReportSharer")
   campaignRegistrations CampaignRegistration[]
+  userCouponRecords     UserCouponRecord[]
 
   @@index([address])
   @@map("user")
@@ -881,4 +882,41 @@ model ExchangeRate {
   // Info: (20260514 - Tzuhan) 建立日期索引：因為未來主程式會頻繁用 date 去 WHERE 查詢，加 index 查詢才會快
   @@index([date])
   @@map("exchange_rate")
+}
+
+// Info: (20260517 - Luphia) NFT Coupon Feature
+model CouponCampaign {
+  id                 String   @id @default(uuid())
+  metadataHash       String   @map("metadata_hash")
+  title              String   @default("Coupon") @map("title")
+  claimCode          String?  @unique @map("claim_code") // Info: null if airdrop only
+  redemptionDeadline DateTime @map("redemption_deadline")
+  usageDeadline      DateTime @map("usage_deadline")
+  maxClaims          Int      @default(0) @map("max_claims") // Info: 0 means unlimited
+  claimsCount        Int      @default(0) @map("claims_count")
+  isTransferable     Boolean  @default(true) @map("is_transferable")
+  customQrContent    String?  @map("custom_qr_content")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  userRecords UserCouponRecord[]
+
+  @@map("coupon_campaign")
+}
+
+model UserCouponRecord {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  campaignId  String   @map("campaign_id")
+  txHashClaim String   @map("tx_hash_claim")
+  txHashBurn  String?  @map("tx_hash_burn")
+  customQrContent String? @map("custom_qr_content")
+  status      String   @default("ACTIVE") // Info: (20260517 - Luphia) ACTIVE, USED, EXPIRED
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user     User           @relation(fields: [userId], references: [id])
+  campaign CouponCampaign @relation(fields: [campaignId], references: [id])
+
+  @@map("user_coupon_record")
 }

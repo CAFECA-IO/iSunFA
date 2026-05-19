@@ -11,6 +11,8 @@ export const common = {
   batch_download: "一括ダウンロード",
   download: "ダウンロード",
   downloading: "ダウンロード中...",
+  uploading: "Uploading...",
+  upload_image: "Upload Image",
   zipping: "圧縮中...",
   start_date: "開始日",
   end_date: "終了日",
@@ -86,4 +88,5 @@ export const common = {
   },
   other: "その他",
   pdf_tool: "PDF ツール",
+  please_login: "ログインしてください",
 };
