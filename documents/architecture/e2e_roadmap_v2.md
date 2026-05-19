@@ -3,7 +3,7 @@
 > **Date**: 2026-05-10
 > **Author**: Tzuhan
 > **Version**: 1.1
-> **Last Updated**: 2026-05-14
+> **Last Updated**: 2026-05-19
 
 > **Status**: 🔴 **UI/UX 進入全面凍結 (Freeze)**。全隊開發量能 100% 轉向底層報表與數據引擎的準確性構建。
 >
@@ -17,6 +17,7 @@
 ## 🏛️ 第一章：戰略共識與系統鐵則 (The Core Mandate)
 
 在探討具體的技術演進前，全體研發團隊必須將以下「最高指導原則」刻在每一行程式碼中。財務與碳盤查必須共用同一套嚴謹的底層防線：
+
 
 ### ⚖️ 鐵律一：零捏造的數據溯源 (Absolute Data Integrity)
 
@@ -51,7 +52,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 - **⚠️ Pending：高精度防禦死角大掃蕩 (Precision Blackhole Cleanup)**：全面掃描專案中殘存的 `Number()` 或 `parseFloat()` 強制轉型。所有涉及財務傳票與碳排數據的運算與轉型，必須全面升級使用 `MoneyUtil` 或 `BigInt`。
 - **⚠️ Pending：報表引擎的「無偽造」大盤查 (Report Engine Integrity Audit)**：全面審查 `cash_flow_statement_generator.ts`, `balance_sheet_generator.ts`, `esg_report_generator.ts`, `income_statement_generator.ts` 四大報表產生器，拔除所有「虛擬配平」、「懸記補數」或任何與原始憑證無法 100% 勾稽的錯誤妥協邏輯。
 - **⚠️ Pending：輕量級 E2E 核心防護網 (Minimalistic Core E2E Testing)**：規劃基於 Jest 的整合測試機制。測試情境限縮於「註冊登入 -> 建立單據 -> 檢驗財排報表平衡」的最短路徑，用極低的時間成本驗證 Sprint 1 數學恆等目標。此機制必須掛載環境隔離 (Environment Isolation) 防護，嚴格禁止在 Production 環境執行，以免污染真實金流與碳排帳本。
-
+  - 👉 **實作要求**：建立 `__tests__/e2e/core_pipeline.e2e.test.ts`，必須使用 Jest 框架，且在頂端強制加入防呆鎖 `if (process.env.NODE_ENV === 'production') throw new Error('嚴禁在正式機執行 E2E 測試');`。
 
 - **[第二順位：CPA 財務合規任務 (核心財務防禦)]**
 - **✅ Done (2026-05-14)：外幣與全域字典解耦 (Backend Rule Registry)**：徹底剝奪 AI 計算匯率與小數點乘法的權力，並拔除所有全域會計字典注入（節省巨量 Token）。外幣匯率微服務與黃金廠商映射引擎 (`VENDOR_RULE_REGISTRY`) 已獨立切分，正式交由 Julian 負責實作。
@@ -76,7 +77,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 **🎯 收斂目標 (DoD)**：數學引擎算得準之後，測試系統能否攔截人類或 AI 犯下的「業務邏輯錯誤與幻覺」。投入具備邏輯矛盾的 Payload，系統必須精準凍結。
 
 - **[CPA 財務合規任務]**
-- **⚠️ Pending：報表快照與期初餘額 (Snapshots & Opening Balance)**：**(效能地雷拆彈)** 若不實作期初餘額，E2E 盲測驗證龐大真實資料庫時，API 會因反覆重算數十萬筆傳票而觸發 OOM (Out of Memory) 崩潰。報表引擎必須基於 `本期報表 = 期初快照 + 當期變動明細` 打造。*(TODO: [20260518 - Tzuhan] Roadmap V2 Opening Balance，預計實作時間：Sprint 2)*
+- **⚠️ Pending：報表快照與期初餘額 (Snapshots & Opening Balance)**：**(效能地雷拆彈)** 若不實作期初餘額，E2E 盲測驗證龐大真實資料庫時，API 會因反覆重算數十萬筆傳票而觸發 OOM (Out of Memory) 崩潰。報表引擎必須基於 `本期報表 = 期初快照 + 當期變動明細` 打造。_(TODO: [20260518 - Tzuhan] Roadmap V2 Opening Balance，預計實作時間：Sprint 2)_
 - **⚠️ Pending：廢除不合理允當標準 (Zero Tolerance)**：日常上線的報表驗證 Threshold 嚴格鎖死在 **0%**。
 - **⚠️ Pending：防堵日期幻覺 (Anti-Date Hallucination)**：強制依賴 AI 輸出的 `tradingDate`，若發生跨期，系統必須報錯並阻斷財報生成。
 - **⚠️ Pending：追溯重編的「關聯性鎖死」 (Adjustment Voucher Audit Trail)**：實作前期損益調整時，追加帶有標籤 (`isRestatement=true`) 的當期調整傳票。**Schema 強制帶入 `targetVoucherId` (被更正的原始傳票 ID)**，形成雙向鏈結，杜絕幽靈調整傳票。
@@ -84,6 +85,7 @@ AI 在 iSunFA 僅作為「資料萃取器 (Extractor)」與「分類輔助 (Clas
 
 - **[CPA 碳排合規任務 (DPP 產品護照架構交由 Luphia 負責)]**
 - **⚠️ Pending：碳排暫存區與保守型推測機制 (SuspenseEsgRecord & AI Speculation)**：全面重構 RAG 未命中時的防護邏輯。廢除舊版無腦強制 emissions 設為 0 的剛性設計。允許 AI 進行官方大類的「語義降級推測」，並由後端套用該大類最高係數進行「保守型預估加總」。此類紀錄在寫入 DB 時，狀態強制鎖死為 `isVerified = false` 且 `generationSource = "AI_SPECULATIVE_STAGE_3"`。此設計既保證了前端儀表板具備即時算出碳排的優良體驗，又能透過「合規黃燈」在最終審計閘門阻斷正式報告的產出，完美兼顧產品商業力（PLG）與 CPA 確信標準。
+  - 👉 **實作要求**：更新 `prisma/schema.prisma` 確保支援此 Enum。在 `document_sync.repo.ts` 中，若係數由 `fallbackCategory` 匹配而來，必須強制將該筆紀錄寫入 `generationSource: "AI_SPECULATIVE_STAGE_3"` 以保全稽核軌跡。
 - **✅ Done (Architectural Decision: Immutable IDs)：排放係數時空快照 (Emission Factor Versioning)**：經過重新設計，不再將數值硬拷貝至 EsgRecord 造成 Schema 污染。改為全面採用「Immutable Coefficient IDs (如 epa-2025-t1-004)」，天然實現時空快照。
   - **🔒 Immutable Coefficient 兩大鐵律**：未來維護係數庫必須嚴格遵守：1. **禁止 UPDATE 數值** (避免污染歷史帳本)；2. **永遠只用 INSERT (Append-Only)**。
 - **⚠️ Pending (急迫)：官方標準係數資料庫轉移與自動化管線 (Standard Coefficients DB Migration & Scraper)**：
