@@ -8,6 +8,7 @@ import {
 import { IOenCallbackData, IOenOrderData } from "@/interfaces/payment";
 import { buildReceiptDataToSave } from "@/lib/utils/payment_helpers";
 import { CurrencyUnit, CURRENCY_UNIT } from "@/constants/price";
+import { MoneyUtil } from "@/lib/utils/money";
 
 export interface IOrderWithUser extends Order {
   user: User | null;
@@ -196,8 +197,8 @@ export class PaymentRepository {
     const safeData = {
       ...data,
       amount:
-        typeof data.amount === "number"
-          ? BigInt(Math.round(data.amount))
+        typeof data.amount === "number" || typeof data.amount === "string"
+          ? BigInt(MoneyUtil.toDecimal(data.amount).round().toString())
           : data.amount,
     };
 

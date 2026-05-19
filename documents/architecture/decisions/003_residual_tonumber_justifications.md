@@ -16,7 +16,7 @@
 
 未來任何 Pull Request (PR) 若要使用 `.toNumber()` 或 `Number()`，**必須**符合這六大例外分類之一。若不符合，該 PR 必須被直接退回 (Reject)。
 
-### 六大被允許的例外分類
+### 八大被允許的例外分類
 
 1. **時間戳、年份與座標轉換 (Timestamps, Dates & Coordinates)**
    - _出現位置_: `member.service.ts`, `period.ts`, `route.ts`, `dashboard_header.tsx`
@@ -42,6 +42,14 @@
    - _出現位置_: `fund_wallet_step.tsx`
    - _合規原因_: 使用 `Number(walletInfo.balance) < 1` 來作為決定 UI 流程是否進入下一步的布林值 (Boolean) 旗標，當中沒有任何算術運算。在原生的 JS 中直接拿來比較小數量的離散整數邊界，既安全又易讀。
 
+7. **UI 動畫與物理計算 (UI Animation & Physics)**
+   - _出現位置_: `wizard_header.tsx`, `walking_robot.tsx`
+   - _合規原因_: 前端元件中處理畫面補間動畫 (Tween) 與弧度計算 (`Math.PI * 2`)，這類視覺運算不涉及任何財務與後端狀態，可以直接依賴原生浮點數運算以達到最佳效能。
+
+8. **獨立非總帳之純前端試算工具 (Standalone UI Calculators - Non-Ledger)**
+   - _出現位置_: `transportation_carbon_footprint_calculator/page.tsx`, `salary_calculator.ts`
+   - _合規原因_: 當前這類工具 (例如薪資試算、通勤碳排試算) 被明確定義為「提供使用者初步估算的前端互動工具」，它們的計算結果並不會寫入系統核心總帳 (Ledger) 或區塊鏈。在這些獨立上下文 (Bounded Context) 中，考量效能與開發速度，允許使用原生的 `Math.round` 或 `parseFloat`，且其計算範圍內之法定四捨五入不會引發嚴重的溢位問題。
+
 ## 決策影響 (Consequences)
 
-透過明訂這六項例外鐵律，我們既保持了對 iSunFA 財務完整性的「零容忍」絕對精準度要求，同時又賦予了開發者必要的彈性，讓他們在處理時間、座標、React 前端套件、Prisma Schema 以及第三方 API 時能順暢介接，而不需要在安全的場景中過度塞滿強制轉字串的程式碼。這項決策為我們的「精準度防護架構」畫下了完美的休止符。
+透過明訂這八項例外鐵律，我們既保持了對 iSunFA 財務完整性的「零容忍」絕對精準度要求，同時又賦予了開發者必要的彈性，讓他們在處理時間、座標、React 前端套件、Prisma Schema 以及第三方 API 時能順暢介接，而不需要在安全的場景中過度塞滿強制轉字串的程式碼。這項決策為我們的「精準度防護架構」畫下了完美的休止符。
