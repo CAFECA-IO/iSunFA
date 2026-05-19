@@ -54,6 +54,8 @@ import { emissionSources } from "@/i18n/locales/zh_tw/emission_sources";
 import { orderManagement } from "@/i18n/locales/zh_tw/order_management";
 import { transportationCarbonFootprintCalculator } from "@/i18n/locales/zh_tw/transportation_carbon_footprint_calculator";
 import { salaryCalculator } from "@/i18n/locales/zh_tw/salary_calculator";
+import { adminCoupon } from "@/i18n/locales/zh_tw/admin_coupon";
+import { userCoupon } from "@/i18n/locales/zh_tw/user_coupon";
 
 export const zhTw = {
   digital_product_passport: digitalProductPassport,
@@ -113,6 +115,8 @@ export const zhTw = {
   emission_sources: emissionSources,
   order_management: orderManagement,
   admin_campaign: adminCampaign,
+  admin_coupon: adminCoupon,
+  user_coupon: userCoupon,
 } as const;
 
 export type BaseTranslation = typeof zhTw;

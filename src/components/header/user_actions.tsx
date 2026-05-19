@@ -82,14 +82,14 @@ export default function UserActions() {
                 <span
                   className={`text-center text-xs font-normal md:text-sm md:font-medium ${focus ? "text-orange-900" : "text-gray-700"}`}
                 >
-                  {t(getModuleI18nKey(module.key))}
+                  {t(getModuleI18nKey(module.key, isAdmin))}
                 </span>
               </Link>
             ) : (
               <div className="flex h-full w-full cursor-not-allowed flex-col items-center justify-center rounded-xl bg-gray-50/80 p-2 opacity-60 ring-1 ring-gray-100 md:rounded-lg md:bg-gray-50/50 md:p-3">
                 <Icon size={24} className="mb-1 text-gray-300 md:mb-2" />
                 <span className="text-center text-xs font-normal text-gray-400 md:text-sm md:font-medium">
-                  {t(getModuleI18nKey(module.key))}
+                  {t(getModuleI18nKey(module.key, isAdmin))}
                 </span>
               </div>
             )
@@ -118,7 +118,7 @@ export default function UserActions() {
               <span
                 className={`text-center text-xs font-normal md:text-sm md:font-medium ${focus ? "text-orange-900" : "text-gray-700"}`}
               >
-                {t(getModuleI18nKey(module.key))}
+                {t(getModuleI18nKey(module.key, isAdmin))}
               </span>
             </Link>
           )}
