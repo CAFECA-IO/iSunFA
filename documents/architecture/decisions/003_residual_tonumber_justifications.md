@@ -1,20 +1,20 @@
-# ADR 003: 剩餘 `.toNumber()` 與 `Number()` 合規決策與數值精準度防護
+# ADR 003: 剩餘 `.toNumber()`, `Number()`, `Math.round()` 與 `parseFloat()` 合規決策與數值精準度防護
 
 **Date**: 2026-05-19
-**Status**: Accepted (已核准)
+**Status**: Processing (處理中)
 **Author**: Tzuhan
 
 ## 背景脈絡 (Context)
 
 為了符合四大會計師 (Big 4) 嚴苛的查帳標準，iSunFA 系統必須維持 100% 絕對精確的決定論式 (Deterministic) 財務架構。在 Sprint 1 的重構中，我們已經成功地從核心的財務與碳排計算邏輯中，徹底拔除了不安全的浮點數運算 (請參考 [ADR 001](001_precision_refactor_removals.md))。而在近期的全系統最終稽核中，我們進一步清除了前端與 API 邊界層殘存的 `.toNumber()`，並全面升級為嚴格的字串 (`string`) 序列化來保護資料。
 
-儘管完成了全域的精準度重構，系統庫中仍刻意保留了極少數受到嚴格管控的 `.toNumber()` 與原生 `Number()` 呼叫。
+儘管完成了全域的精準度重構，系統庫中仍刻意保留了極少數受到嚴格管控的浮點數轉型與計算操作，包含 `.toNumber()`, `Number()`, `Math.round()` 以及 `parseFloat()`。
 
 ## 架構決策 (Decision)
 
-我們決議在程式碼庫中**刻意保留**這些剩餘的 `.toNumber()` 與 `Number()` 用法，因為它們明確屬於以下八大「絕對安全」的架構分類，不會引發 IEEE 754 的精準度飄移，亦不會對財務審計造成威脅。
+我們決議在程式碼庫中**刻意保留**這些剩餘的 `.toNumber()`, `Number()`, `Math.round()` 與 `parseFloat()` 用法，因為它們明確屬於以下八大「絕對安全」的架構分類，不會引發 IEEE 754 的精準度飄移，亦不會對財務審計造成威脅。
 
-未來任何 Pull Request (PR) 若要使用 `.toNumber()` 或 `Number()`，**必須**符合這八大例外分類之一。若不符合，該 PR 必須被直接退回 (Reject)。
+未來任何 Pull Request (PR) 若要使用 `.toNumber()`, `Number()`, `Math.round()` 或 `parseFloat()`，**必須**符合這八大例外分類之一。若不符合，該 PR 必須被直接退回 (Reject)。
 
 ### 八大被允許的例外分類
 
