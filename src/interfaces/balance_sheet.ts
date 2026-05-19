@@ -26,9 +26,9 @@ export interface IBalanceSheetMetrics {
   fixedAssetsToEquityRatio: number; // Info: (20260330 - Julian) 固定資產對權益比率
 
   // Info: (20260518 - Tzuhan) [AUDIT FIX] 補充揭露：供跨表指標 (如現金再投資比率) 計算使用之絕對數值
-  fixedAssetsTotal?: number; // Info: (20260518 - Tzuhan) 固定資產總額
-  longTermInvestmentsTotal?: number; // Info: (20260518 - Tzuhan) 長期投資總額
-  otherAssetsTotal?: number; // Info: (20260518 - Tzuhan) 其他資產總額
+  fixedAssetsTotal?: string; // Info: (20260518 - Tzuhan) 固定資產總額
+  longTermInvestmentsTotal?: string; // Info: (20260518 - Tzuhan) 長期投資總額
+  otherAssetsTotal?: string; // Info: (20260518 - Tzuhan) 其他資產總額
 }
 
 export interface IBalanceSheet {

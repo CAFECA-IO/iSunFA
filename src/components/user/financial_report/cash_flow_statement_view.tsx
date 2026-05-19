@@ -203,7 +203,7 @@ export default function CashFlowSheetView({
       value: `$${numberWithCommas(metrics.freeCashFlow)}`,
       description: t("cash_flow_statement_view.metric_fcf_desc"),
       textColor: "text-gray-900",
-      statusGood: metrics.freeCashFlow >= 0,
+      statusGood: !MoneyUtil.toDecimal(metrics.freeCashFlow).isNegative(),
       tooltipAlign: TooltipAlign.LEFT,
     },
     {

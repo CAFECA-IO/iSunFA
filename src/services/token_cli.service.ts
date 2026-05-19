@@ -10,7 +10,7 @@ export class Token {
     return mintToAddress(
       CONTRACT_ADDRESSES.CREDIT_POINT,
       toAddress,
-      Number(amount),
+      BigInt(amount),
     );
   }
 }

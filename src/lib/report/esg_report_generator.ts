@@ -59,7 +59,7 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
       id: record.id,
       activityType: name,
       // Info: (20260518 - Tzuhan) 套用防腐層確保解析安全
-      originalData: MoneyUtil.toDecimal(record.amount || 0).toNumber(),
+      originalData: MoneyUtil.toDecimal(record.amount || 0).toString(),
       unit: record.unit || "",
       // Info: (20260518 - Tzuhan) 維持 Decimal 字串精度，防堵微量碳排截斷
       emissions: emissionDecimal.toString(),
@@ -129,7 +129,7 @@ export function generateEsgReport(esgRecords: IEsgRecordDetail[]): IEsgReport {
       .map((record) => {
         // Info: (20260518 - Tzuhan) [AUDIT FIX] 暴露不合理數據 (若排放量不為 0 但原始數據為 0，直接拋錯)，使用防腐層驗證排放量
         if (
-          record.originalData === 0 &&
+          MoneyUtil.toDecimal(record.originalData).isZero() &&
           !MoneyUtil.toDecimal(record.emissions).isZero()
         ) {
           throw new Error(

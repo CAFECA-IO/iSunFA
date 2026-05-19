@@ -299,7 +299,7 @@ export class DocumentSyncRepository {
           // Info: (20260519 - Tzuhan) 使用 fallbackCategory 進行最大係數 (Max-Factor) 查詢
           const fallbackTag = ed.fallbackCategory?.trim();
           if (!finalCoefficientId && fallbackTag) {
-            // 防禦空字串地圖砲
+            // Info: (20260519 - Tzuhan) 防禦空字串地圖砲
             const matchedCoefficients = await tx.coefficient.findMany({
               where: {
                 AND: [

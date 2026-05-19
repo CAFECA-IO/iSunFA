@@ -7,7 +7,7 @@ export interface ICashFlowStatementItem {
 }
 
 export interface ICashFlowStatementMetrics {
-  freeCashFlow: number; // Info: (20260330 - Julian) 自由現金流 (Free Cash Flow)
+  freeCashFlow: string; // Info: (20260330 - Julian) 自由現金流 (Free Cash Flow)
   // Info: (20260518 - Tzuhan) [AUDIT FIX] 以下跨表比率已移至編排層 (AnalysisService) 計算，現金流引擎回傳 null
   operatingCashFlowRatio: number | null;
   cashFlowAdequacyRatio: number | null;
@@ -84,7 +84,7 @@ export const mockCashFlowStatementData: ICashFlowStatement = {
     dividendsPaid: 500000, // Info: (20260518 - Tzuhan) 對應籌資活動的發放股利
   },
   metrics: {
-    freeCashFlow: 850000, // Info: (20260330 - Julian) 1650000 - 800000
+    freeCashFlow: "850000", // Info: (20260330 - Julian) 1650000 - 800000
     // Info: (20260518 - Tzuhan) [AUDIT SIGN-OFF] 測試資料同步回歸真理，跨表指標在現金流單表輸出時一律為 null
     operatingCashFlowRatio: null,
     cashFlowAdequacyRatio: null,

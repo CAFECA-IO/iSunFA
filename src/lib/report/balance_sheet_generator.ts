@@ -287,9 +287,9 @@ export function generateBalanceSheet(
       totalEquity,
     ),
     // Info: (20260518 - Tzuhan) [AUDIT FIX] 將跨表指標所需之絕對數值精準輸出
-    fixedAssetsTotal: fixedAssetsTotal.toNumber(),
-    longTermInvestmentsTotal: longTermInvestmentsTotal.toNumber(),
-    otherAssetsTotal: otherAssetsTotal.toNumber(),
+    fixedAssetsTotal: fixedAssetsTotal.toString(),
+    longTermInvestmentsTotal: longTermInvestmentsTotal.toString(),
+    otherAssetsTotal: otherAssetsTotal.toString(),
   };
 
   return {

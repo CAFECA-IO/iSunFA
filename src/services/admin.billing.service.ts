@@ -31,8 +31,8 @@ export class AdminBillingService {
         ? new Decimal(totalRevenue.toString())
             .dividedBy(totalTransactingUsers)
             .round()
-            .toNumber()
-        : 0;
+            .toString()
+        : "0";
 
     // Info: (20260416 - Luphia) We need total points purchased to calculate burn ratio
     const totalPointsPurchased =

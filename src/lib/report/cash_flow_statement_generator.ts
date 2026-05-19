@@ -238,7 +238,7 @@ export function generateCashFlowStatement(
       dividendsPaid: dividendsPaid.toString(),
     },
     metrics: {
-      freeCashFlow: freeCashFlow.toNumber(),
+      freeCashFlow: freeCashFlow.toString(),
       /**Info: (20260518 - Tzuhan) [AUDIT FIX]
        * 以下比率需依賴「資產負債表期末餘額」或跨表存貨明細。
        * 現金流量表引擎僅持有當期傳票變動數，無權單獨捏造計算。為堅守「零捏造與絕對精準」鐵律，全數回傳 null。

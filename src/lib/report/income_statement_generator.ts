@@ -180,7 +180,7 @@ export function generateIncomeStatement(
     grossMargin: MoneyUtil.safeRatio(grossProfit, totalRevenue),
     operatingMargin: MoneyUtil.safeRatio(operatingIncome, totalRevenue),
     netProfitMargin: MoneyUtil.safeRatio(netIncome, totalRevenue),
-    ebitda: ebitda.toNumber(),
+    ebitda: ebitda.toString(),
     ebitdaMargin: MoneyUtil.safeRatio(ebitda, totalRevenue),
     operatingExpenseRatio: MoneyUtil.safeRatio(totalOpex, totalRevenue),
     nonOperatingIncomeRatio: MoneyUtil.safeRatio(totalNonOp, totalRevenue),

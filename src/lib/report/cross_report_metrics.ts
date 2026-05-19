@@ -8,7 +8,7 @@ export interface ICrossReportMetrics {
   operatingCashFlowRatio: number | null; // Info: (20260518 - Tzuhan) 營業現金流量比率
   cashFlowAdequacyRatio: number | null; // Info: (20260518 - Tzuhan) 現金流量允當比率
   cashReinvestmentRatio: number | null; // Info: (20260518 - Tzuhan) 現金再投資比率
-  eps: number | null; // Info: (20260518 - Tzuhan) 新增精確版 EPS
+  eps: string | null; // Info: (20260518 - Tzuhan) 新增精確版 EPS
 }
 
 /**
@@ -104,8 +104,8 @@ export function calculateCrossReportMetrics(
     : MoneyUtil.toDecimal(0);
 
   const eps = outstandingShares.gt(0)
-    ? netIncome.dividedBy(outstandingShares).toNumber()
-    : 0;
+    ? netIncome.dividedBy(outstandingShares).toString()
+    : "0";
 
   return {
     operatingCashFlowRatio,

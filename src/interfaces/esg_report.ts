@@ -8,7 +8,7 @@ export interface IEsgReportItem {
 export interface IEsgReportDetailedRecord {
   id: string;
   activityType: string;
-  originalData: number;
+  originalData: string;
   unit: string;
   emissions: string | number;
   emissionFactor: string | null; // Info: (20260512 - Tzuhan) Allow null to prevent greenwashing when originalData is 0
