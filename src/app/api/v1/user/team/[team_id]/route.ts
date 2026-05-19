@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 
@@ -23,20 +22,12 @@ export async function PATCH(
     const { name } = body;
 
     if (!name || typeof name !== "string") {
-      return jsonFail({
-        code: "VA000099",
-        message: "Invalid team name",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_INVALID_TEAM_NAME);
     }
 
     const member = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
-      return jsonFail({
-        code: "FO000099",
-        message: "Permission denied. Only OWN...",
-        status: ApiCode.FORBIDDEN,
-      });
+      return jsonFail(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
     }
 
     const updatedTeam = await teamRepo.updateTeam(teamId, { name });

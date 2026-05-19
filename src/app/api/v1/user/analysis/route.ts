@@ -425,10 +425,6 @@ export async function GET(request: NextRequest) {
     return jsonOk(history);
   } catch (error) {
     console.error("[API] GET /user/analysis error:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to fetch analysis hi...",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_FETCH_ANALYSIS_HI);
   }
 }

@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { journalRepo } from "@/repositories/journal.repo";
@@ -50,11 +49,7 @@ export async function POST(
 
     if (!fileId) {
       console.error("Missing fileId");
-      return jsonFail({
-        code: "VA000099",
-        message: "File is required",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_FILE_IS_REQUIRED);
     }
 
     /**

@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { mintIcpAction } from "@/services/admin.blockchain.service";
 import { jsonFail, jsonOk } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -9,11 +10,7 @@ export async function POST(req: Request) {
 
     // Info: (20260416 - Luphia) Parse body for amount
     if (typeof body.amount !== "number" || body.amount <= 0) {
-      return jsonFail({
-        code: "VA000099",
-        message: "Invalid minting amount",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_INVALID_MINTING_AMOUNT);
     }
 
     /**

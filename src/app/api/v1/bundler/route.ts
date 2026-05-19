@@ -1,3 +1,4 @@
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -14,11 +15,7 @@ export async function POST(req: NextRequest) {
     const { userOp, entryPointAddress } = await req.json();
 
     if (!entryPointAddress) {
-      return jsonFail({
-        code: "VA000099",
-        message: "entryPointAddress is required",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_ENTRYPOINTADDRESS_IS_REQUIRED);
     }
 
     const result = await bundlerService.sendUserOp(userOp, entryPointAddress);
@@ -52,19 +49,10 @@ export async function POST(req: NextRequest) {
       });
     }
     if (isZodError) {
-      return jsonFail({
-        code: "VA000099",
-        message: "Invalid UserOperation struc...",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+      return jsonFail(API_ERRORS.VA_INVALID_USEROPERATION_STRUC);
     }
 
-    if (isZodError)
-      return jsonFail({
-        code: "VA000099",
-        message: "Invalid UserOperation struc...",
-        status: ApiCode.VALIDATION_ERROR,
-      });
+    if (isZodError) return jsonFail(API_ERRORS.VA_INVALID_USEROPERATION_STRUC);
 
     return jsonOk({
       error: "Transaction failed or reverted",

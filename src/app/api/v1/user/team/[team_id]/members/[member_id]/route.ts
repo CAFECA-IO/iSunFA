@@ -2,7 +2,6 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -26,11 +25,7 @@ export async function PATCH(
 
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator || operator.role !== "OWNER") {
-      return jsonFail({
-        code: "FO000099",
-        message: "Permission denied. Only OWN...",
-        status: ApiCode.FORBIDDEN,
-      });
+      return jsonFail(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
     }
 
     const body = await request.json();
@@ -47,11 +42,7 @@ export async function PATCH(
     // Info: (20260326 - Tzuhan) Fetch operator's current challenge
     const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
-      return jsonFail({
-        code: "UN000099",
-        message: "Missing WebAuthn challenge....",
-        status: ApiCode.UNAUTHORIZED,
-      });
+      return jsonFail(API_ERRORS.UN_MISSING_WEBAUTHN_CHALLENGE);
     }
 
     // Info: (20260326 - Tzuhan) Verify FIDO2 signature
@@ -78,11 +69,7 @@ export async function PATCH(
         "OWNER",
       );
       if (ownersCount <= 1) {
-        return jsonFail({
-          code: "VA000099",
-          message: "Cannot change role of the l...",
-          status: ApiCode.VALIDATION_ERROR,
-        });
+        return jsonFail(API_ERRORS.VA_CANNOT_CHANGE_ROLE_OF_THE_L);
       }
     }
 
@@ -147,11 +134,7 @@ export async function DELETE(
 
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator) {
-      return jsonFail({
-        code: "FO000099",
-        message: "Permission denied. You are ...",
-        status: ApiCode.FORBIDDEN,
-      });
+      return jsonFail(API_ERRORS.FO_PERMISSION_DENIED_YOU_ARE);
     }
 
     const targetMember = await teamRepo.getTeamMemberById(memberId);
@@ -169,11 +152,7 @@ export async function DELETE(
     // Info: (20260326 - Tzuhan) Fetch operator's current challenge
     const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
     if (!operatorUser || !operatorUser.currentChallenge) {
-      return jsonFail({
-        code: "UN000099",
-        message: "Missing WebAuthn challenge....",
-        status: ApiCode.UNAUTHORIZED,
-      });
+      return jsonFail(API_ERRORS.UN_MISSING_WEBAUTHN_CHALLENGE);
     }
 
     // Info: (20260326 - Tzuhan) Verify FIDO2 signature
@@ -201,11 +180,7 @@ export async function DELETE(
         operator.role === "ADMIN" &&
         (targetMember.role === "OWNER" || targetMember.role === "ADMIN")
       ) {
-        return jsonFail({
-          code: "FO000099",
-          message: "ADMIN cannot remove other A...",
-          status: ApiCode.FORBIDDEN,
-        });
+        return jsonFail(API_ERRORS.FO_ADMIN_CANNOT_REMOVE_OTHER_A);
       }
     }
 
@@ -216,11 +191,7 @@ export async function DELETE(
         "OWNER",
       );
       if (ownersCount <= 1) {
-        return jsonFail({
-          code: "VA000099",
-          message: "Cannot remove the last OWNE...",
-          status: ApiCode.VALIDATION_ERROR,
-        });
+        return jsonFail(API_ERRORS.VA_CANNOT_REMOVE_THE_LAST_OWNE);
       }
     }
 

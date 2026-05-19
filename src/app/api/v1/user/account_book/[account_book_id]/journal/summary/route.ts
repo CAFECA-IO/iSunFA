@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { journalRepo } from "@/repositories/journal.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -32,11 +31,7 @@ export async function GET(
     );
 
     if (!accountBook) {
-      return jsonFail({
-        code: "NO000099",
-        message: "Accountbook not found or no...",
-        status: ApiCode.NOT_FOUND,
-      });
+      return jsonFail(API_ERRORS.NO_ACCOUNTBOOK_NOT_FOUND_OR_NO);
     }
 
     const { todayJournalCount, pendingJournalCount, aiAverageConfidence } =
@@ -52,10 +47,6 @@ export async function GET(
     return jsonOk(dashboardSummary);
   } catch (error) {
     console.error("Error fetching Journal summary:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to fetch Journal sum...",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_FETCH_JOURNAL_SUM);
   }
 }

@@ -32,7 +32,7 @@ export const MODULES = [
   { key: "financial_report", icon: FileText, basic: true },
   { key: "analysis", icon: PieChart, basic: true },
   { key: "pos", icon: Computer, basic: false },
-  { key: "digital_product_passport", icon: QrCode, basic: false },
+  { key: "digital_product_passport", icon: QrCode, basic: true },
   { key: "signing", icon: FileSignature, basic: false },
   { key: "cashier", icon: Wallet, basic: false },
   { key: "tax", icon: Landmark, basic: false },
@@ -42,6 +42,7 @@ export const MODULES = [
 export const PUBLIC_MODULES = [
   { key: "analysis", icon: PieChart, basic: true },
   { key: "ai_consultation_room", icon: Bot, basic: true },
+  { key: "digital_product_passport", icon: QrCode, basic: true },
   { key: "salary_calculator", icon: Wallet, basic: true },
   {
     key: "transportation_carbon_footprint_calculator",

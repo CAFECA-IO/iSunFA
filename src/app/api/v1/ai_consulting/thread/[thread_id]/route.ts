@@ -1,6 +1,5 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { talkRepo } from "@/repositories/talk.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { IFile, IThreadDetail } from "@/interfaces/ai_consulting";
@@ -25,11 +24,7 @@ export async function GET(
 
     if (!thread) {
       console.error(`Thread ${threadId} not found`);
-      return jsonFail({
-        code: "IN000099",
-        message: "Thread not found",
-        status: ApiCode.INTERNAL_SERVER_ERROR,
-      });
+      return jsonFail(API_ERRORS.IN_THREAD_NOT_FOUND);
     }
 
     // Info: (20260212 - Julian) 取得登入的使用者

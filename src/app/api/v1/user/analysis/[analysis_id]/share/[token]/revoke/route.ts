@@ -3,7 +3,6 @@ import { NextRequest } from "next/server";
 import { shareRepo } from "@/repositories/share.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 
 export async function PATCH(
   request: NextRequest,
@@ -31,10 +30,6 @@ export async function PATCH(
     return jsonOk({ isActive: updated.isActive });
   } catch (error) {
     console.error("[API] /user/analysis/share/revoke PATCH error:", error);
-    return jsonFail({
-      code: "IN000099",
-      message: "Failed to revoke. Token may...",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
+    return jsonFail(API_ERRORS.IN_FAILED_TO_REVOKE_TOKEN_MAY);
   }
 }
