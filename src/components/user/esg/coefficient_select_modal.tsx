@@ -11,7 +11,7 @@ import {
   TransitionChild,
 } from "@headlessui/react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { ICoefficient } from "@/interfaces/coefficient";
+import { ICoefficient, CoefficientCategory } from "@/interfaces/coefficient";
 import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 
@@ -33,6 +33,9 @@ export default function CoefficientSelectModal({
   const router = useRouter();
   const accountBookId = params?.account_book_id as string;
 
+  const [activeTab, setActiveTab] = useState<CoefficientCategory>(
+    CoefficientCategory.STANDARD,
+  );
   const [originalData, setOriginalData] = useState<ICoefficient[]>([]);
   const [filteredData, setFilteredData] = useState<ICoefficient[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -49,10 +52,11 @@ export default function CoefficientSelectModal({
         const searchQuery = keyword
           ? `&search=${encodeURIComponent(keyword)}`
           : "";
+        const tabQuery = activeTab ? `&tab=${activeTab}` : "";
         const data = await request<
           IApiResponse<{ items: ICoefficient[]; total: number }>
         >(
-          `/api/v1/user/account_book/${accountBookId}/esg/coefficient?tab=all${unitQuery}${searchQuery}`,
+          `/api/v1/user/account_book/${accountBookId}/esg/coefficient?${unitQuery}${searchQuery}${tabQuery}`,
         );
         if (data.payload) {
           if (!keyword) {
@@ -75,7 +79,7 @@ export default function CoefficientSelectModal({
     return () => {
       clearTimeout(handler);
     };
-  }, [accountBookId, unit, keyword]);
+  }, [accountBookId, unit, keyword, activeTab]);
 
   const gotoCoefficientPage = () => {
     // Info: (20260416 - Julian) 關閉這個 modal
@@ -83,6 +87,17 @@ export default function CoefficientSelectModal({
     // Info: (20260416 - Julian) 跳轉到係數管理頁面
     router.push(coefficientManagementUrl);
   };
+
+  const tabs = Object.values(CoefficientCategory).map((tab) => (
+    <button
+      key={tab}
+      type="button"
+      onClick={() => setActiveTab(tab)}
+      className={`${tab === activeTab ? "bg-white text-orange-600 shadow-sm" : "text-gray-600 hover:bg-gray-200"} rounded-md p-2 text-sm font-semibold text-slate-800 transition-all outline-none hover:text-slate-700`}
+    >
+      {t(`coefficient.tab.${tab.toLowerCase()}`)}
+    </button>
+  ));
 
   const coefficientList =
     filteredData.length > 0 ? (
@@ -140,6 +155,7 @@ export default function CoefficientSelectModal({
           className="w-full rounded-lg border border-slate-300 py-2 pr-4 pl-10 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
         />
       </div>
+
       <div className="flex max-h-[400px] flex-col gap-2 overflow-y-auto">
         {coefficientList}
       </div>
@@ -206,6 +222,11 @@ export default function CoefficientSelectModal({
                   >
                     {t("coefficient.select_modal.title")}
                   </DialogTitle>
+                </div>
+
+                {/* Info: (20260518 - Julian) Tab */}
+                <div className="grid grid-cols-2 rounded-lg bg-gray-100 p-1">
+                  {tabs}
                 </div>
 
                 {/* Info: (20260415 - Julian) Coefficient List */}

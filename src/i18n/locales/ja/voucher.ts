@@ -54,6 +54,8 @@ export const voucher = {
         confidence: "AI信頼度",
         status: "ステータス",
       },
+      no_account_code: "未選択",
+      no_account_name: "未選択会計科目",
       no_entries: "仕訳なし",
       no_file: "ファイルなし",
       filter_btn: "フィルター",
