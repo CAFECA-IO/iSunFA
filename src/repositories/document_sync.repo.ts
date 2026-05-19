@@ -115,7 +115,7 @@ export class DocumentSyncRepository {
             analysisStatus: "COMPLETED" as AIAnalysisStatus,
             confidence,
             isVerified: confidence > 85,
-            aiNote: jd.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]",
+            aiNote: jd.aiNote ?? "無 AI 分析備註",
           };
 
           if (existingJournal) {
@@ -157,7 +157,7 @@ export class DocumentSyncRepository {
           const vd = {
             ...(voucherBase?.data || voucherBase || {}),
             ...(voucherLines?.data || voucherLines || {}),
-            aiNote: `- [[I18N_BASE_INFO_ANALYSIS]]：${voucherBase?.aiNote || voucherBase?.data?.aiNote || ""}\n- [[I18N_ENTRY_ANALYSIS]]：${voucherLines?.aiNote || voucherLines?.data?.aiNote || ""}`,
+            aiNote: `- 基本資訊分析：${voucherBase?.aiNote || voucherBase?.data?.aiNote || ""}\n- 會計科目分錄分析：${voucherLines?.aiNote || voucherLines?.data?.aiNote || ""}`,
           };
           const tradingDate = new Date(vd.tradingDate || new Date());
           const typeMap: Record<string, VoucherTradingType> = {
@@ -228,9 +228,9 @@ export class DocumentSyncRepository {
             ? ("COMPLETED" as AIAnalysisStatus)
             : ("FAILED" as AIAnalysisStatus);
           const finalIsVerified = isBalanced ? confidence > 85 : false;
-          let finalAiNote = vd.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]";
+          let finalAiNote = vd.aiNote ?? "無 AI 分析備註";
           if (!isBalanced) {
-            finalAiNote = "[[I18N_IMBALANCED_VOUCHER_WARNING]]\n" + finalAiNote;
+            finalAiNote = "[系統稽核警告] 憑證借貸不平衡。\n" + finalAiNote;
           }
 
           const dataPayload: Prisma.VoucherUncheckedCreateInput = {
@@ -367,12 +367,14 @@ export class DocumentSyncRepository {
           }
 
           let calculatedEmissions = esgAmount.mul(emissionFactorValue);
-          let aiNote = ed.aiNote ?? "[[I18N_AI_NOTE_EMPTY]]";
+          let aiNote = ed.aiNote ?? "無 AI 分析備註";
 
           if (isSuspense) {
             calculatedEmissions = new Prisma.Decimal(0);
             recordIsVerified = false;
-            aiNote = "[[I18N_ESG_SUSPENSE_WARNING]]\n" + aiNote;
+            aiNote =
+              "[系統稽核警告] 缺乏對應的碳排係數主檔，系統已凍結計算並列入懸記。\n" +
+              aiNote;
           }
 
           const esgData: Prisma.EsgRecordUncheckedCreateInput = {

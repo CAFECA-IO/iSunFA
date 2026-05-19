@@ -26,7 +26,6 @@ import {
   EsgActivityTypeKey,
 } from "@/constants/esg_activity_type";
 import { MoneyUtil } from "@/lib/utils/money";
-import { translateAiNote } from "@/utils/ai_note_translator";
 
 interface IEsgDetailModalProps {
   isOpen: boolean;
@@ -276,7 +275,7 @@ export default function EsgDetailModal({
           <div className="ml-auto">
             <AiConfidence
               confidence={formData.confidence}
-              note={translateAiNote(formData.aiNote, t)}
+              note={formData.aiNote}
             />
           </div>
         </div>

@@ -18,7 +18,6 @@ import AiConfidence from "@/components/common/ai_confidence";
 import { useTranslation } from "@/i18n/i18n_context";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
-import { translateAiNote } from "@/utils/ai_note_translator";
 
 export function EsgRow({
   record,
@@ -269,7 +268,7 @@ export function EsgRow({
             </span>
           ) : (
             <p className="text-[10px] font-bold text-red-500 sm:text-xs lg:text-sm">
-              {translateAiNote(record.aiNote, t) || t("esg_table.ai.failed")}
+              {record.aiNote || t("esg_table.ai.failed")}
             </p>
           )}
         </td>
