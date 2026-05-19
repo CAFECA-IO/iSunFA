@@ -6,6 +6,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
 import CouponDetailModal from "@/components/user/coupon/coupon_detail_modal";
 import CouponCard from "@/components/user/coupon/coupon_card";
+import { COUPON_STATUS } from "@/constants/status";
 import { useAuth } from "@/contexts/auth_context";
 import LoginButton from "@/components/common/login_button";
 
@@ -22,14 +23,14 @@ interface ICouponCampaign {
   customQrContent: string | null;
 }
 
-export interface IUserCouponRecord {
+export interface ICoupon {
   id: string;
   userId: string;
   campaignId: string;
   txHashClaim: string;
   txHashBurn: string | null;
   customQrContent: string | null;
-  status: "ACTIVE" | "USED" | "EXPIRED";
+  status: (typeof COUPON_STATUS)[keyof typeof COUPON_STATUS];
   createdAt: string;
   updatedAt: string;
   campaign: ICouponCampaign;
@@ -38,7 +39,7 @@ export interface IUserCouponRecord {
 export default function UserCouponPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [coupons, setCoupons] = useState<IUserCouponRecord[]>([]);
+  const [coupons, setCoupons] = useState<ICoupon[]>([]);
   const [loading, setLoading] = useState(true);
   const [claimCode, setClaimCode] = useState("");
   const [isClaiming, setIsClaiming] = useState(false);
@@ -47,8 +48,7 @@ export default function UserCouponPage() {
     text: string;
   } | null>(null);
 
-  const [selectedCoupon, setSelectedCoupon] =
-    useState<IUserCouponRecord | null>(null);
+  const [selectedCoupon, setSelectedCoupon] = useState<ICoupon | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchCoupons = useCallback(async () => {
@@ -56,7 +56,7 @@ export default function UserCouponPage() {
     try {
       const res = await request<{
         success: boolean;
-        payload: IUserCouponRecord[];
+        payload: ICoupon[];
       }>("/api/v1/user/coupon");
       if (res.success && res.payload) {
         setCoupons(res.payload);
@@ -84,7 +84,7 @@ export default function UserCouponPage() {
     try {
       const res = await request<{
         success: boolean;
-        payload: IUserCouponRecord;
+        payload: ICoupon;
       }>("/api/v1/user/coupon/claim", {
         method: "POST",
         body: JSON.stringify({ claimCode: claimCode.trim() }),
@@ -115,9 +115,30 @@ export default function UserCouponPage() {
     }
   };
 
-  const openCouponDetail = (coupon: IUserCouponRecord) => {
+  const openCouponDetail = (coupon: ICoupon) => {
     setSelectedCoupon(coupon);
     setIsModalOpen(true);
+  };
+
+  const handleStatusChange = (id: string, newStatus: string) => {
+    setCoupons((prev) =>
+      prev.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              status: newStatus as ICoupon["status"],
+              updatedAt: new Date().toISOString(),
+            }
+          : c,
+      ),
+    );
+    if (selectedCoupon && selectedCoupon.id === id) {
+      setSelectedCoupon({
+        ...selectedCoupon,
+        status: newStatus as ICoupon["status"],
+        updatedAt: new Date().toISOString(),
+      });
+    }
   };
 
   if (!user) {
@@ -235,6 +256,7 @@ export default function UserCouponPage() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           coupon={selectedCoupon}
+          onStatusChange={handleStatusChange}
         />
       )}
     </div>

@@ -56,7 +56,7 @@ model User {
   checkins              Checkin[]
   reportShareTokens     ReportShareToken[]     @relation("ReportSharer")
   campaignRegistrations CampaignRegistration[]
-  userCouponRecords     UserCouponRecord[]
+  coupons               Coupon[]
 
   @@index([address])
   @@map("user")
@@ -899,12 +899,12 @@ model CouponCampaign {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
-  userRecords UserCouponRecord[]
+  coupons Coupon[]
 
   @@map("coupon_campaign")
 }
 
-model UserCouponRecord {
+model Coupon {
   id          String   @id @default(uuid())
   userId      String   @map("user_id")
   campaignId  String   @map("campaign_id")
@@ -918,5 +918,5 @@ model UserCouponRecord {
   user     User           @relation(fields: [userId], references: [id])
   campaign CouponCampaign @relation(fields: [campaignId], references: [id])
 
-  @@map("user_coupon_record")
+  @@map("coupon")
 }
