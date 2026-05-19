@@ -1,7 +1,7 @@
 # ADR 003: 剩餘 `.toNumber()` 與 `Number()` 合規決策與數值精準度防護
 
 **Date**: 2026-05-19
-**Status**: Processing (處理中)
+**Status**: Accepted (已核准)
 **Author**: Tzuhan
 
 ## 背景脈絡 (Context)
@@ -12,9 +12,9 @@
 
 ## 架構決策 (Decision)
 
-我們決議在程式碼庫中**刻意保留**這些剩餘的 `.toNumber()` 與 `Number()` 用法，因為它們明確屬於以下六大「絕對安全」的架構分類，不會引發 IEEE 754 的精準度飄移，亦不會對財務審計造成威脅。
+我們決議在程式碼庫中**刻意保留**這些剩餘的 `.toNumber()` 與 `Number()` 用法，因為它們明確屬於以下八大「絕對安全」的架構分類，不會引發 IEEE 754 的精準度飄移，亦不會對財務審計造成威脅。
 
-未來任何 Pull Request (PR) 若要使用 `.toNumber()` 或 `Number()`，**必須**符合這六大例外分類之一。若不符合，該 PR 必須被直接退回 (Reject)。
+未來任何 Pull Request (PR) 若要使用 `.toNumber()` 或 `Number()`，**必須**符合這八大例外分類之一。若不符合，該 PR 必須被直接退回 (Reject)。
 
 ### 八大被允許的例外分類
 
