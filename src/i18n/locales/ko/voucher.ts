@@ -57,6 +57,8 @@ export const voucher = {
       status: {
         deleted: "삭제됨",
       },
+      no_account_code: "빈칸",
+      no_account_name: "선택되지 않은 회계 과목",
       no_entries: "분개 없음",
       no_file: "파일 없음",
       filter_btn: "필터",

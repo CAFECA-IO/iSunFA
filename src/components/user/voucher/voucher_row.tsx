@@ -15,7 +15,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { timestampToString, numberWithCommas } from "@/lib/utils/common";
 import { FilePreview } from "@/components/common/file_preview";
 import AiConfidence from "@/components/common/ai_confidence";
-import { IVoucher, TradingType } from "@/interfaces/voucher";
+import { IVoucher, IVoucherLineUI, TradingType } from "@/interfaces/voucher";
 import { AIAnalysisStatus } from "@/constants/ai_analysis_status";
 import { translateAiNote } from "@/utils/ai_note_translator";
 
@@ -239,6 +239,49 @@ export function VoucherRow({
     );
   }
 
+  const renderAccountingNameAndCode = (line: IVoucherLineUI) => {
+    const { id, accounting, isDebit } = line;
+
+    const displayedName = accounting?.name ? (
+      <span
+        className={
+          isDebit
+            ? "font-bold text-slate-800"
+            : "ml-4 font-medium text-slate-700"
+        }
+      >
+        {accounting?.name}
+      </span>
+    ) : (
+      <span
+        className={`text-slate-400 ${
+          isDebit ? "font-bold" : "ml-4 font-medium"
+        }`}
+      >
+        {t("voucher.main_view.table.no_account_name")}
+      </span>
+    );
+
+    return (
+      <div
+        key={id}
+        className="flex h-[30px] items-center gap-2 border-dashed border-slate-300 not-last:border-b"
+      >
+        <p className="w-[55px] rounded bg-slate-200 px-1.5 py-0.5 text-center text-xs font-semibold">
+          <span
+            className={accounting?.code ? "text-slate-700" : "text-red-400"}
+          >
+            {accounting?.code || t("voucher.main_view.table.no_account_code")}
+          </span>
+        </p>
+        {/* Info: (20260316 - Julian) 借方靠左，貸方靠右 */}
+        <p className="max-w-[100px] truncate text-xs lg:max-w-[250px] lg:text-sm">
+          {displayedName}
+        </p>
+      </div>
+    );
+  };
+
   const voucherline =
     lineItems.length > 0 ? (
       <>
@@ -248,26 +291,7 @@ export function VoucherRow({
           className="py-2 pl-2 align-middle lg:py-4 lg:pl-6"
         >
           <div className="flex flex-col whitespace-nowrap">
-            {lineItems.map((line) => (
-              <div
-                key={line.id}
-                className="flex h-[30px] items-center gap-2 border-dashed border-slate-300 not-last:border-b"
-              >
-                <span className="w-[55px] rounded bg-slate-200 px-1.5 py-0.5 text-center text-xs font-semibold text-slate-700">
-                  {line.accounting?.code}
-                </span>
-                {/* Info: (20260316 - Julian) 借方靠左，貸方靠右 */}
-                <span
-                  className={`${
-                    line.isDebit
-                      ? "font-bold text-slate-800"
-                      : "ml-4 font-medium text-slate-700"
-                  } max-w-[100px] truncate text-xs lg:max-w-[250px] lg:text-sm`}
-                >
-                  {line.accounting?.name}
-                </span>
-              </div>
-            ))}
+            {lineItems.map((line) => renderAccountingNameAndCode(line))}
           </div>
         </td>
         {/* Info: (20260316 - Julian) Debit */}

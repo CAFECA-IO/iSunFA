@@ -21,6 +21,7 @@ import {
   Truck,
   Trophy,
   Computer,
+  Tag,
 } from "lucide-react";
 
 export const MODULES = [
@@ -48,6 +49,7 @@ export const PUBLIC_MODULES = [
     icon: Truck,
     basic: true,
   },
+  { key: "coupon", icon: Tag, basic: true },
 ];
 
 export const ADMIN_MODULES = [
@@ -58,6 +60,7 @@ export const ADMIN_MODULES = [
   { key: "user", icon: Users, basic: true },
   { key: "billing", icon: CreditCard, basic: true },
   { key: "campaign", icon: Trophy, basic: true },
+  { key: "coupon", icon: Tag, basic: true },
   { key: "pdf_tool", icon: FileText, basic: true },
 ];
 
@@ -138,6 +141,8 @@ export function getModuleI18nKey(key: string, isAdminContext: boolean = false) {
       return "features.items.digital_product_passport.title";
     case "campaign":
       return "admin_campaign.title";
+    case "coupon":
+      return isAdminContext ? "admin_coupon.title" : "user_coupon.title";
     case "pdf_tool":
       return "common.pdf_tool";
     default:

@@ -57,6 +57,8 @@ export const voucher = {
       status: {
         deleted: "已删除",
       },
+      no_account_code: "未选择",
+      no_account_name: "未选择会计科目",
       no_entries: "没有分录",
       no_file: "无文件",
       filter_btn: "筛选条件",
