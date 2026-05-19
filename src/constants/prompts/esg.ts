@@ -2,6 +2,7 @@ import { IAccountBookBase } from "@/interfaces/account_book";
 import { ICoefficient } from "@/interfaces/coefficient";
 import { EsgActivityTypeMapping } from "@/constants/esg_activity_type";
 import { IEmissionSources } from "@/interfaces/emission_sources";
+import { getLanguageByCountry } from "@/constants/country";
 
 export const getEsgPrompt = (
   accountBook?: IAccountBookBase | null,
@@ -26,7 +27,7 @@ export const getEsgPrompt = (
 
   // Info: (20260518 - Julian) 產出語言
   const languageInstruction = accountBook?.country
-    ? `\n  請用${accountBook.country}為主要語言產出，特別是 vendor、aiNote 等欄位。`
+    ? `\n  請用「${getLanguageByCountry(accountBook.country)}」為主要語言產出 aiNote 欄位，其餘欄位請 100% 忠實保留原始文字，嚴禁翻譯。`
     : "";
 
   // Info: (20260430 - Julian) 建立排放源清單

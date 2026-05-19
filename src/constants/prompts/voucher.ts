@@ -1,4 +1,5 @@
 import { IAccountBookBase } from "@/interfaces/account_book";
+import { getLanguageByCountry } from "@/constants/country";
 
 /*
  ** Info: (20260407 - Julian) 將傳票的分析拆解成「基本資料」和「會計分錄」
@@ -46,7 +47,7 @@ export const getBaseVoucherPrompt = (accountBook?: IAccountBookBase | null) => {
 
   // Info: (20260518 - Julian) 產出語言
   const languageInstruction = accountBook?.country
-    ? `\n  請用${accountBook.country}為主要語言產出，特別是 aiNote 欄位。`
+    ? `\n  請用「${getLanguageByCountry(accountBook.country)}」為主要語言產出 aiNote 欄位，其餘欄位請 100% 忠實保留原始文字，嚴禁翻譯。`
     : "";
 
   return `
@@ -76,15 +77,9 @@ export const getVoucherLinesPrompt = (
     ? `\nYou MUST strictly adhere to the following special accounting rules and preferences for this account book:\n${accountBook.rule}`
     : "";
 
-  // Info: (20260518 - Julian) 產出語言
-  const languageInstruction = accountBook?.country
-    ? `\n  請用${accountBook.country}為主要語言產出，特別是 particular 欄位。`
-    : "";
-
   return `
 Extract precise accounting journal entries from the user-uploaded document (file/image). ${accountBookInfo}${rulesInstruction}
 ${ANTI_HALLUCINATION_RULES}
-${languageInstruction}
 
 Write down your logic for determining the debit and credit accounts in the "aiNote" field.
 IMPORTANT: Your output (particular, aiNote) MUST be in the language of the uploaded document (e.g., Traditional Chinese).
