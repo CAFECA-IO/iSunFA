@@ -81,6 +81,22 @@ export const MoneyUtil = {
   },
 
   /**
+   * Info: (20260518 - Tzuhan) 安全相乘 (a * b)，專治 ESG 碳排係數運算
+   */
+  multiply(a: MoneyValue, b: MoneyValue): string {
+    return this.toDecimal(a).times(this.toDecimal(b)).toString();
+  },
+
+  /**
+   * Info: (20260518 - Tzuhan) 安全相除 (a / b)
+   */
+  divide(numerator: MoneyValue, denominator: MoneyValue): string {
+    const denom = this.toDecimal(denominator);
+    if (denom.isZero()) throw new Error("[MoneyUtil] Division by zero");
+    return this.toDecimal(numerator).dividedBy(denom).toString();
+  },
+
+  /**
    * Info: (20260512 - Tzuhan) 取絕對值
    */
   abs(val: MoneyValue): string {

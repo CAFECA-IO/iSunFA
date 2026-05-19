@@ -123,7 +123,10 @@ export const runCrossValidation = async (stockId: string) => {
   }
 
   const incomeStatement = generateIncomeStatement(allLines);
-  const cashFlowStatement = generateCashFlowStatement(allLines);
+  const cashFlowStatement = generateCashFlowStatement(
+    allLines,
+    0 /* TODO: (20260518 - Tzuhan) Roadmap V2 Sprint 2 Opening Balance */,
+  );
   const balanceSheet = generateBalanceSheet(allLines);
 
   const systemRevenue = new Prisma.Decimal(

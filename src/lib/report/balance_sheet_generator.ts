@@ -38,14 +38,22 @@ export function generateBalanceSheet(
   let intangibleAssetsTotal = MoneyUtil.toDecimal(0);
   let retainedEarningsTotal = MoneyUtil.toDecimal(0);
   let commonStockCapitalTotal = MoneyUtil.toDecimal(0);
-
   let currentPeriodEarnings = MoneyUtil.toDecimal(0);
+  // Info: (20260518 - Tzuhan) 新增追蹤長期投資與其他資產
+  let longTermInvestmentsTotal = MoneyUtil.toDecimal(0);
+  let otherAssetsTotal = MoneyUtil.toDecimal(0);
 
   lineItems.forEach((line) => {
     // Info: (20260331 - Julian) 確保有會計科目且借貸方有值
     // Info: (20260504 - Tzuhan) ⚠️修復：修正 JS 運算子優先級陷阱 (!line.isDebit === null 會永遠為 false)
     const code = line.accountingCode || line.accounting?.code;
-    if (!code || line.isDebit === null) return;
+
+    // Info: (20260518 - Tzuhan) [AUDIT FIX] 拔除沉默丟失，改為 CPA 級別阻斷防護
+    if (!code || line.isDebit === null) {
+      throw new Error(
+        `[Data Integrity Violation] 發現無法勾稽的傳票明細，缺乏會計代碼或借貸方向 (Line ID: ${line.id})`,
+      );
+    }
 
     const name = line.accounting?.name || line.particular || code;
     const { isDebit, amount } = line;
@@ -65,13 +73,10 @@ export function generateBalanceSheet(
     const isLiability = code.startsWith("2");
     const isEquity = code.startsWith("3");
 
-    // Info: (20260331 - Julian) 進一步細分「流動」與「非流動」資產
+    // Info: (20260518 - Tzuhan) [AUDIT FIX] 剔除 14 (長期投資)，確保流動資產純淨度
     const isCurrentAsset =
       isAsset &&
-      (code.startsWith("11") ||
-        code.startsWith("12") ||
-        code.startsWith("13") ||
-        code.startsWith("14"));
+      (code.startsWith("11") || code.startsWith("12") || code.startsWith("13"));
     const isCurrentLiability =
       isLiability &&
       (code.startsWith("21") || code.startsWith("22") || code.startsWith("23"));
@@ -89,20 +94,21 @@ export function generateBalanceSheet(
       });
       totalAssets = totalAssets.plus(impact);
 
-      if (code.startsWith("110")) cashTotal = cashTotal.plus(impact); // Info: (20260513 - Tzuhan) 現金及約當現金
-      if (code.startsWith("117"))
+      // Info: (20260518 - Tzuhan) [REFACTOR] 使用互斥的 else if 鏈清整混亂邏輯，拔除死碼
+      if (code.startsWith("110")) {
+        cashTotal = cashTotal.plus(impact); // Info: (20260513 - Tzuhan) 現金及約當現金
+      } else if (code.startsWith("117")) {
         accountsReceivableTotal = accountsReceivableTotal.plus(impact); // Info: (20260513 - Tzuhan) 應收帳款
-      if (code.startsWith("13")) inventoryTotal = inventoryTotal.plus(impact); // Info: (20260513 - Tzuhan) 存貨
-      if (code.startsWith("15") || code.startsWith("16")) {
+      } else if (code.startsWith("13")) {
+        inventoryTotal = inventoryTotal.plus(impact); // Info: (20260513 - Tzuhan) 存貨
+      } else if (code.startsWith("14")) {
+        longTermInvestmentsTotal = longTermInvestmentsTotal.plus(impact); // Info: (20260518 - Tzuhan) 長期投資
+      } else if (code.startsWith("15") || code.startsWith("16")) {
         fixedAssetsTotal = fixedAssetsTotal.plus(impact); // Info: (20260513 - Tzuhan) 不動產、廠房及設備
-      }
-      if (
-        code.startsWith("17") ||
-        code.startsWith("18") ||
-        code.startsWith("19")
-      ) {
-        if (code.startsWith("17"))
-          intangibleAssetsTotal = intangibleAssetsTotal.plus(impact); // Info: (20260513 - Tzuhan) 無形資產
+      } else if (code.startsWith("17")) {
+        intangibleAssetsTotal = intangibleAssetsTotal.plus(impact); // Info: (20260513 - Tzuhan) 無形資產
+      } else if (code.startsWith("18") || code.startsWith("19")) {
+        otherAssetsTotal = otherAssetsTotal.plus(impact); // Info: (20260518 - Tzuhan) 其他資產
       }
     } else if (isLiability) {
       // Info: (20260331 - Julian) 負債增加在貸方
@@ -115,7 +121,7 @@ export function generateBalanceSheet(
       });
       totalLiabilities = totalLiabilities.minus(impact);
 
-      // Info: (20260504 - Tzuhan) ⚠️修復：改由底層字典 (tw.ts 等) 的 isInterestBearing 標籤統一控管有息負債，實現資料與邏輯徹底解耦
+      // Info: (20260504 - Tzuhan) 改由底層字典的 isInterestBearing 標籤統一控管有息負債
       if (line.accounting?.isInterestBearing) {
         interestBearingDebtTotal = interestBearingDebtTotal.minus(impact);
       }
@@ -126,19 +132,27 @@ export function generateBalanceSheet(
       equityMap.set(code, { name, amount: currentAmount.minus(impact) });
       totalEquity = totalEquity.minus(impact);
 
-      // Info: (20260331 - Julian) 保留盈餘
-      if (code.startsWith("33"))
-        retainedEarningsTotal = retainedEarningsTotal.minus(impact);
-
-      // Info: (20260408 - Luphia) 股本
-      if (code.startsWith("31"))
-        commonStockCapitalTotal = commonStockCapitalTotal.minus(impact);
+      // Info: (20260518 - Tzuhan) 股本與保留盈餘同樣互斥，採用 else if
+      if (code.startsWith("33")) {
+        retainedEarningsTotal = retainedEarningsTotal.minus(impact); // Info: (20260518 - Tzuhan) 保留盈餘
+      } else if (code.startsWith("31")) {
+        commonStockCapitalTotal = commonStockCapitalTotal.minus(impact); // Info: (20260518 - Tzuhan) 股本
+      }
     }
   });
 
   if (!currentPeriodEarnings.isZero()) {
-    equityMap.set("3200", { name: "本期損益", amount: currentPeriodEarnings });
+    // Info: (20260518 - Tzuhan) [AUDIT FIX] 防禦靜默覆寫：若已有 3200 調整傳票，必須累加而非直接 set
+    const existing3200 =
+      equityMap.get("3200")?.amount || MoneyUtil.toDecimal(0);
+    equityMap.set("3200", {
+      name: "本期損益",
+      amount: existing3200.plus(currentPeriodEarnings),
+    });
+
     totalEquity = totalEquity.plus(currentPeriodEarnings);
+    // Info: (20260518 - Tzuhan) [AUDIT FIX] 將本期損益滾入保留盈餘總計，確保 retainedEarningsRatio 精準
+    retainedEarningsTotal = retainedEarningsTotal.plus(currentPeriodEarnings);
   }
 
   // Info: (20260331 - Julian) 轉換 Map 為 IBalanceSheetItem[]
@@ -213,8 +227,12 @@ export function generateBalanceSheet(
   );
   longTermFundsTotal = totalEquity.plus(nonCurrentLiabilitiesTotal);
 
-  // Info: (20260508 - Tzuhan) 已解耦，由外部傳入 parValue (因應彈性面額制度)
-  const outstandingShares = commonStockCapitalTotal.dividedBy(parValue);
+  // Info: (20260508 - Tzuhan) 已解耦，由外部傳入 parValue (因應彈性面額制度與無面額股防禦)
+  // Info: (20260518 - Tzuhan) [AUDIT FIX] 增加對 parValue <= 0 (無面額股) 的防禦，避免 Decimal 拋出 Division by zero 崩潰
+  const outstandingShares =
+    parValue > 0
+      ? commonStockCapitalTotal.dividedBy(parValue)
+      : MoneyUtil.toDecimal(0);
 
   // Info: (20260330 - Julian) 計算各項財務比率
   const metrics = {
@@ -268,6 +286,10 @@ export function generateBalanceSheet(
       fixedAssetsTotal,
       totalEquity,
     ),
+    // Info: (20260518 - Tzuhan) [AUDIT FIX] 將跨表指標所需之絕對數值精準輸出
+    fixedAssetsTotal: fixedAssetsTotal.toNumber(),
+    longTermInvestmentsTotal: longTermInvestmentsTotal.toNumber(),
+    otherAssetsTotal: otherAssetsTotal.toNumber(),
   };
 
   return {

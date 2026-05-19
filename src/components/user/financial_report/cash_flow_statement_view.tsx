@@ -208,18 +208,30 @@ export default function CashFlowSheetView({
     },
     {
       title: t("cash_flow_statement_view.metric_ocf_ratio_title"),
-      value: `${metrics.operatingCashFlowRatio.toFixed(1)}%`,
+      value:
+        metrics.operatingCashFlowRatio !== null
+          ? `${metrics.operatingCashFlowRatio.toFixed(1)}%`
+          : "N/A",
       description: t("cash_flow_statement_view.metric_ocf_ratio_desc"),
       textColor: "text-gray-900",
-      statusGood: metrics.operatingCashFlowRatio >= 100,
+      statusGood:
+        metrics.operatingCashFlowRatio !== null
+          ? metrics.operatingCashFlowRatio >= 100
+          : false,
       tooltipAlign: TooltipAlign.RIGHT,
     },
     {
       title: t("cash_flow_statement_view.metric_cf_adequacy_title"),
-      value: `${metrics.cashFlowAdequacyRatio.toFixed(1)}%`,
+      value:
+        metrics.cashFlowAdequacyRatio !== null
+          ? `${metrics.cashFlowAdequacyRatio.toFixed(1)}%`
+          : "N/A",
       description: t("cash_flow_statement_view.metric_cf_adequacy_desc"),
       textColor: "text-gray-900",
-      statusGood: metrics.cashFlowAdequacyRatio >= 100,
+      statusGood:
+        metrics.cashFlowAdequacyRatio !== null
+          ? metrics.cashFlowAdequacyRatio >= 100
+          : false,
       tooltipAlign: TooltipAlign.LEFT,
     },
     {

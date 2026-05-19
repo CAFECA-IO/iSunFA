@@ -74,7 +74,10 @@ export const runAiBlindTester = async (stockId: string) => {
 
   try {
     const bsReport = generateBalanceSheet(formattedLines);
-    const cfReport = generateCashFlowStatement(formattedLines);
+    const cfReport = generateCashFlowStatement(
+      formattedLines,
+      0 /* TODO: (20260518 - Tzuhan) Roadmap V2 Sprint 2 Opening Balance */,
+    );
     const isReport = generateIncomeStatement(formattedLines);
     const esgReport = generateEsgReport(esgRecords);
 
